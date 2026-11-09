@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  dart:
+    name: Dart gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.4
+          channel: stable
+          cache: true
+          pub-cache-key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+
+      # The analyzer plugin snapshot lives here; cache it between runs.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.dartServer
+          key: dartserver-${{ runner.os }}-${{ hashFiles('pubspec.lock', 'tool/architecture_lint/pubspec.lock') }}
+
+      - name: Resolve workspace
+        run: flutter pub get
+
+      - name: Resolve architecture lint package
+        working-directory: tool/architecture_lint
+        run: dart pub get
+
+      # flutter analyze, dart analyze (loads the architecture plugin),
+      # tool/check_architecture.dart, flutter test (app and kanaru_ui) and the
+      # gate's own tests. Same script as the local gate.
+      - name: Gate
+        run: tool/check
+
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      - name: Test
+        run: cargo test --manifest-path rust/Cargo.toml
+
+      - name: Clippy
+        run: cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings

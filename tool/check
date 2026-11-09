@@ -14,5 +14,5 @@ flutter test
 
 if [[ "${1:-}" == "--rust" ]]; then
   cargo test --manifest-path rust/Cargo.toml
-  cargo clippy --manifest-path rust/Cargo.toml --all-targets
+  cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
 fi
