@@ -16,7 +16,8 @@ Map of what exists. Module rules: [ARCHITECTURE.md](../ARCHITECTURE.md).
 
 | Module | Contents |
 |---|---|
-| `foundation/` | `result.dart` (sealed `Ok`/`Err`), `app_logger.dart` (`setupLogging`); `ids/` (`stableHashHex`, `stableUid`, `newUlid`, `isUlid`); `ordering/` (`generateKeyBetween`, `generateNKeysBetween`) |
+| `foundation/` | `result.dart` (sealed `Ok`/`Err`), `app_logger.dart` (`setupLogging`); `ids/` (`stableHashHex`, `stableUid`, `newUlid`, `isUlid`); `ordering/` (`generateKeyBetween`, `generateNKeysBetween`); `text/` (`foldDiacritics`, `foldedMatcher`, `foldedContains`) |
+| `media/domain/` | plain-Dart shared types: `TrackId`, `TrackInfo` (+`formatFromLocator`), `PlayContext`, `CoverColors`; `library_keys.dart` (`groupKey`, `searchForm`, `sortForm`, `songKey`, `albumKeyFor`, `AlbumKey`/`ArtistKey` encode/decode, `libraryKeysVersion`); `cover_files.dart` (`isCoverKey`, `coverRelativePath`, marker/temp names). One writer function per derived column; readers use the same function or the stored column. |
 | `platform/` | `domain/app_paths.dart` (`AppPaths`, `kanaruDirName = 'kanaru'`); `data/` `linux_app_paths.dart` (XDG), `android_app_paths.dart` (`path_provider`), `app_paths_factory.dart`, `native_library.dart` (loads Rust, the only importer of `lib/src/rust`), `json_settings_store.dart` (`settings.json` in the config dir), `file_device_id.dart` (`device_id` in the data dir), `atomic_file.dart`; `domain/` also `settings_store.dart` (`SettingsStore`), `setting.dart` (`Setting<T>`), `device_id.dart` (`DeviceIdSource`); `state/` `platform_providers.dart`, `settings_providers.dart` (`settingsStoreProvider`, `settingNotifierProvider`), `device_id_provider.dart` (`deviceIdProvider`) |
 | `database/` | `app_database.dart` (`AppDatabase`, `schemaVersion` 1, `sharedConnection`, `configureConnection`); `tables/` `library_source_tables.dart` (`sources`, `source_mounts`, `excluded_folders`), `library_track_tables.dart` (`tracks`, `track_details`) + `library_track_search.drift` (`track_search` FTS5, triggers), `playback_tables.dart` (`play_log`, `play_stats`) + `playback_stats.drift` (`play_stats_ctl`, stats triggers), `library_collection_tables.dart` (`playlists`, `playlist_entries`, `saved_items`), `extension_tables.dart` (`ExtensionSchema`); helpers `row_uids.dart`, `tombstone_upsert.dart` (`insertOrRevive`), `track_snapshot.dart` (`upsertTrackSnapshot`), `track_lifecycle.dart`, `track_gc.dart` (`collectOrphanTracks`), `track_visibility.dart`, `fts_query.dart` (`ftsPrefixQuery`), `play_stats_bulk.dart` (`runPlayStatsBulk`), `schema_guard.dart` (debug schema check); `tables.dart`, `database.dart` (barrel), `state/database_providers.dart`; generated `*.drift.dart`. Spec: [system-architecture-database.md](./system-architecture-database.md) |
 | `extension/` | `kanaru_extension.dart`; `domain/license.dart` (`ProFeature`, `LicenseStatus`, `LicenseService`, `FreeLicenseService`); `state/extension_registry.dart`, `registry_entries.dart` (`NavItem`, `SettingsSection`, `TopBarAction`, `StartupContext`, `StartupHook`), `extension_providers.dart` |
@@ -27,7 +28,7 @@ Map of what exists. Module rules: [ARCHITECTURE.md](../ARCHITECTURE.md).
 | `router/` | `app_router.dart` (`buildRouter` from the registry), `state/router_provider.dart`, `ui/kanaru_app.dart` |
 | `rust/` | Generated flutter_rust_bridge Dart code (do not edit) |
 
-Not yet present: `media`, `plugins`, `playback`, `storage`, `lyrics`.
+Not yet present: `plugins`, `playback`, `storage`, `lyrics`.
 
 ## Packages
 
