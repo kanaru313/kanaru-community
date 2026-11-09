@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and older auto backup. The device id must be new on a restored phone. -->
+<full-backup-content>
+    <exclude domain="file" path="data/device_id"/>
+</full-backup-content>

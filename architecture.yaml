@@ -11,6 +11,11 @@ domain_forbidden:
   - table_calendar
   - window_manager
   - file_selector
+  - audio_service
+  - audio_session
+  - permission_handler
+  - dbus
+  - gap
   - media_kit
   - media_kit_libs_audio
   - path_provider

@@ -27,8 +27,17 @@ main.dart
 - **Navigation**: go_router; one shell branch per tab nav item, other routes
   above the shell. Desktop keeps its own back/forward history.
 - **Persistence**: one SQLite file through drift, in
-  `<data dir>/kanaru-community/kanaru.db`. Tables and rules:
+  `<data dir>/kanaru/kanaru.db`. Tables and rules:
   [system-architecture-database.md](./system-architecture-database.md).
+- **Settings and device id**: per-device settings are one JSON file,
+  `<config dir>/settings.json` (`SettingsStore`: sync reads from memory,
+  coalesced atomic writes with a bounded retry after a failed save; `flush()` is
+  meant to be called on pause/exit by the app lifecycle seam, added with the
+  router/`KanaruApp` work of this wave, not wired by the store itself). A file that is unreadable,
+  has another `format` or a newer `version` is copied to
+  `settings.json.bad-<epoch ms>` and the store starts from defaults. The device
+  id is a ULID in `<data dir>/device_id`, outside the database, excluded from
+  Android backup. Both load at startup and reach the UI as provider overrides.
 - **Native**: Rust crates behind one FFI crate, built by cargokit for the
   Linux host and the Android ABIs.
 - **Extensions**: contribute through `ExtensionRegistry`; downstream builds

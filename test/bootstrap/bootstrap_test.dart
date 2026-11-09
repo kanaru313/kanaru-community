@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/kanaru.dart';
 import 'package:kanaru/kanaru_bootstrap.dart';
 import 'package:kanaru/src/platform/domain/app_paths.dart';
+import 'package:kanaru/src/platform/domain/settings_store.dart';
 
 class _Paths implements AppPaths {
   @override
@@ -15,6 +16,20 @@ class _Paths implements AppPaths {
   @override
   Directory get configDir => Directory.systemTemp;
 }
+
+class _Store implements SettingsStore {
+  @override
+  Object? read(String key) => null;
+  @override
+  Future<void> write(String key, Object? value) async {}
+  @override
+  Stream<String> get changes => const Stream.empty();
+  @override
+  Future<void> flush() async {}
+}
+
+Future<SettingsStore> _settings(AppPaths _) async => _Store();
+Future<String> _deviceId(AppPaths _) async => 'ID';
 
 class _Ext implements KanaruExtension {
   _Ext(this.log, {this.hook});
@@ -55,17 +70,27 @@ void main() {
         log.add('paths');
         return _Paths();
       },
+      openSettings: (_) async {
+        log.add('settings');
+        return _Store();
+      },
+      loadDeviceId: (_) async {
+        log.add('deviceId');
+        return 'ID';
+      },
       openDatabase: (_) {
         log.add('db');
         return db = AppDatabase(NativeDatabase.memory());
       },
     );
     addTearDown(result.database.close);
-    expect(log, ['native', 'paths', 'db', 'register', 'hook']);
+    expect(log, ['native', 'paths', 'settings', 'deviceId', 'db', 'register', 'hook']);
     expect(foreignKeys, 1);
     expect(hasSchemaTable, isTrue);
     expect(result.database, same(db));
     expect(result.nativeVersions, 'v');
+    expect(result.deviceId, 'ID');
+    expect(result.settings, isA<_Store>());
   });
 
   test('a failing hook closes the database and rethrows', () async {
@@ -76,6 +101,8 @@ void main() {
         extensions: [_Ext(log, hook: (_) async => throw StateError('boom'))],
         loadNative: () async => 'v',
         createPaths: () async => _Paths(),
+        openSettings: _settings,
+        loadDeviceId: _deviceId,
         openDatabase: (_) {
           opened = true;
           return AppDatabase(NativeDatabase.memory());
@@ -96,10 +123,38 @@ void main() {
           log.add('paths');
           return _Paths();
         },
+        openSettings: _settings,
+        loadDeviceId: _deviceId,
         openDatabase: (_) => AppDatabase(NativeDatabase.memory()),
       ),
       throwsStateError,
     );
     expect(log, isEmpty);
   });
+
+  test('database file name is kanaru.db, never library.db', () {
+    expect(databaseFileName, 'kanaru.db');
+    expect(databaseFileName, isNot('library.db'));
+  });
+
+  for (final failing in ['settings', 'deviceId']) {
+    test('a failing $failing step rethrows and never opens the database', () async {
+      var opened = false;
+      await expectLater(
+        bootstrap(
+          extensions: const [],
+          loadNative: () async => 'v',
+          createPaths: () async => _Paths(),
+          openSettings: failing == 'settings' ? (_) async => throw StateError('x') : _settings,
+          loadDeviceId: failing == 'deviceId' ? (_) async => throw StateError('x') : _deviceId,
+          openDatabase: (_) {
+            opened = true;
+            return AppDatabase(NativeDatabase.memory());
+          },
+        ),
+        throwsStateError,
+      );
+      expect(opened, isFalse);
+    });
+  }
 }

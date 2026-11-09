@@ -68,8 +68,8 @@ also rejects `// ignore:` comments for them, so the gate cannot be silenced.
 
 ## Running isolated
 
-Data lives in `<XDG data home>/kanaru-community/` (database `kanaru.db`),
-config and cache likewise under `kanaru-community`. To keep a dev run away from
+Data lives in `<XDG data home>/kanaru/` (database `kanaru.db`),
+config and cache likewise under `kanaru`. To keep a dev run away from
 real data, set all three XDG variables:
 
 ```bash

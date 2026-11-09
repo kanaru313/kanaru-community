@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:media_kit/media_kit.dart';
 
 import 'kanaru_bootstrap.dart';
 import 'kanaru_error_app.dart';
@@ -18,8 +19,12 @@ import 'src/foundation/app_logger.dart';
 import 'src/library/library_extension.dart';
 import 'src/online/online_extension.dart';
 import 'src/platform/data/app_paths_factory.dart';
+import 'src/platform/data/file_device_id.dart';
+import 'src/platform/data/json_settings_store.dart';
 import 'src/platform/data/native_library.dart';
+import 'src/platform/state/device_id_provider.dart';
 import 'src/platform/state/platform_providers.dart';
+import 'src/platform/state/settings_providers.dart';
 import 'src/router/ui/kanaru_app.dart';
 import 'src/screens/screens_extension.dart';
 
@@ -36,7 +41,7 @@ const List<KanaruExtension> builtInExtensions = [
   OnlineExtension(),
 ];
 
-/// Starts the app: native library, paths, database, extensions, then the UI.
+/// Starts the app: native library, paths, settings, device id, database, extensions, then the UI.
 /// [extensions] are registered after the built-in ones. A startup failure is
 /// logged and shown by a minimal error app instead of leaving a blank window.
 Future<void> runKanaru({List<KanaruExtension> extensions = const []}) async {
@@ -45,11 +50,16 @@ Future<void> runKanaru({List<KanaruExtension> extensions = const []}) async {
 
   final BootstrapResult started;
   try {
+    // The only place media_kit is initialised; modules never call it.
+    MediaKit.ensureInitialized();
     started = await bootstrap(
       extensions: [...builtInExtensions, ...extensions],
       loadNative: loadNativeLibrary,
       createPaths: createAppPaths,
-      openDatabase: (paths) => AppDatabase.file(File('${paths.dataDir.path}/kanaru.db')),
+      openSettings: (paths) =>
+          JsonSettingsStore.open(File('${paths.configDir.path}/settings.json')),
+      loadDeviceId: (paths) => FileDeviceId(File('${paths.dataDir.path}/device_id')).load(),
+      openDatabase: (paths) => AppDatabase.file(File('${paths.dataDir.path}/$databaseFileName')),
     );
   } on Object catch (e, st) {
     Logger('startup').severe('Startup failed', e, st);
@@ -62,6 +72,8 @@ Future<void> runKanaru({List<KanaruExtension> extensions = const []}) async {
       overrides: [
         nativeVersionsProvider.overrideWithValue(started.nativeVersions),
         appPathsProvider.overrideWithValue(started.paths),
+        settingsStoreProvider.overrideWithValue(started.settings),
+        deviceIdProvider.overrideWithValue(started.deviceId),
         appDatabaseProvider.overrideWithValue(started.database),
         extensionRegistryProvider.overrideWithValue(started.registry),
       ],
