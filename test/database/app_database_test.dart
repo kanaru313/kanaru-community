@@ -1,8 +1,12 @@
+import 'dart:io';
+
+import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/kanaru.dart';
 
 void main() {
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
   late AppDatabase db;
 
   setUp(() => db = AppDatabase(NativeDatabase.memory()));
@@ -27,7 +31,20 @@ void main() {
     expect(stored.version, 3);
   });
 
-  test('schemaVersion is 1', () {
-    expect(db.schemaVersion, 1);
+  test('reopening a file database keeps data and does not recreate tables', () async {
+    final dir = Directory.systemTemp.createTempSync('kanaru_db_');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final file = File('${dir.path}/kanaru.db');
+
+    final first = AppDatabase.file(file);
+    await first.into(first.extensionSchema).insert(
+          ExtensionSchemaCompanion.insert(extensionId: 'pro', version: 2),
+        );
+    await first.close();
+
+    final second = AppDatabase.file(file);
+    addTearDown(second.close);
+    final stored = await second.select(second.extensionSchema).getSingle();
+    expect(stored.version, 2);
   });
 }

@@ -20,7 +20,7 @@ class HomePage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: l10n.navSettings,
-            onPressed: () => context.go('/settings'),
+            onPressed: () => context.push('/settings'),
           ),
       ],
     );

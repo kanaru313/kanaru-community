@@ -17,14 +17,14 @@ class SettingsPage extends ConsumerWidget {
     final sections = ref.watch(extensionRegistryProvider).settingsSections;
     final native = ref.watch(nativeVersionsProvider);
     final textTheme = Theme.of(context).textTheme;
-    final isMobile = FormFactor.of(context) == FormFactor.mobile;
     return KPage(
       maxWidth: KLayout.settings,
       children: [
         PageHeader(
           title: l10n.navSettings,
-          // Mobile shows no bottom bar here, so it needs a way back.
-          onBack: isMobile ? () => context.go('/') : null,
+          // Full page above the shell: back pops, or goes Home when it is the
+          // only page (reached by history, not by push).
+          onBack: () => context.canPop() ? context.pop() : context.go('/'),
           backTooltip: l10n.tooltipBack,
         ),
         for (final section in sections) ...[

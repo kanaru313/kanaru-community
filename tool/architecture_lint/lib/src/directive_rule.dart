@@ -62,6 +62,7 @@ class _DirectiveVisitor extends SimpleAstVisitor<void> {
     final fileRel = p.isWithin(src, unit.file.path)
         ? p.posix.joinAll(p.split(p.relative(unit.file.path, from: src)))
         : null;
+    final inPackage = p.isWithin(p.join(root, 'packages', 'kanaru_ui'), unit.file.path);
     for (final lit in [main, ...alternatives]) {
       final uri = lit.stringValue;
       if (uri == null) continue;
@@ -71,12 +72,23 @@ class _DirectiveVisitor extends SimpleAstVisitor<void> {
         packageRoot: root,
         packageName: cfg.package,
       );
-      for (final v in checkDirective(
-        config: cfg,
-        fileRel: fileRel,
+      final rootFile = resolveToCompositionRoot(
         uri: uri,
-        targetRel: target,
-      )) {
+        filePath: unit.file.path,
+        packageRoot: root,
+        packageName: cfg.package,
+      );
+      final violations = [
+        ...checkDirective(
+          config: cfg,
+          fileRel: fileRel,
+          uri: uri,
+          targetRel: target,
+          targetRootFile: rootFile,
+        ),
+        if (inPackage) ...[packageImportsApp(cfg, uri)].nonNulls,
+      ];
+      for (final v in violations) {
         if (v.code == rule.name) rule.reportAtNode(lit, arguments: [v.message]);
       }
     }

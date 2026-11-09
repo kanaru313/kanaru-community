@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kanaru/kanaru.dart';
 import 'package:kanaru/src/extension/state/extension_providers.dart';
 import 'package:kanaru/src/platform/state/platform_providers.dart';
+import 'package:kanaru/src/router/app_router.dart';
 import 'package:kanaru/src/router/ui/kanaru_app.dart';
 
 class _Fake implements KanaruExtension {
@@ -22,8 +23,44 @@ class _Fake implements KanaruExtension {
         order: 45,
       ))
       ..addRoute(GoRoute(path: '/fake', builder: (_, _) => const Text('fake page')))
-      ..addRoute(GoRoute(path: '/hidden', builder: (_, _) => const Text('hidden page')));
+      ..addRoute(GoRoute(path: '/hidden', builder: (_, _) => const Text('hidden page')))
+      ..addRoute(GoRoute(
+        path: '/album/:id',
+        builder: (_, state) => Text('album ${state.pathParameters['id']}'),
+      ));
   }
+}
+
+class _Early implements KanaruExtension {
+  @override
+  String get id => 'early';
+  @override
+  void register(ExtensionRegistry r) {
+    r
+      ..addNavItem(NavItem(
+        id: 'early',
+        path: '/early',
+        icon: Icons.bolt_outlined,
+        selectedIcon: Icons.bolt,
+        label: (_) => 'EarlyNav',
+        order: 1,
+      ))
+      ..addRoute(GoRoute(path: '/early', builder: (_, _) => const Text('early page')));
+  }
+}
+
+class _Orphan implements KanaruExtension {
+  @override
+  String get id => 'orphan';
+  @override
+  void register(ExtensionRegistry r) => r.addNavItem(NavItem(
+        id: 'orphan',
+        path: '/orphan',
+        icon: Icons.circle,
+        selectedIcon: Icons.circle,
+        label: (_) => 'Orphan',
+        order: 1,
+      ));
 }
 
 Future<void> _pump(WidgetTester tester, double width,
@@ -73,6 +110,39 @@ void main() {
     expect(find.byType(NavigationBar), findsOneWidget);
   });
 
+  testWidgets('mobile system back from Settings returns to Home', (tester) async {
+    await _pump(tester, 360);
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Native libraries'), findsOneWidget);
+
+    final handled = await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(handled, isTrue);
+    expect(find.text('Native libraries'), findsNothing);
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.text('Your library is empty.'), findsNothing);
+    expect(find.byTooltip('Settings'), findsOneWidget); // Home header icon
+  });
+
+  testWidgets('desktop Settings opens from the sidebar and Back returns', (tester) async {
+    await _pump(tester, 1280);
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Native libraries'), findsOneWidget);
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(find.text('Native libraries'), findsNothing);
+    expect(find.byKey(const ValueKey('sidebar')), findsOneWidget);
+  });
+
+  testWidgets('desktop Home button goes to / even with a lower-order tab', (tester) async {
+    await _pump(tester, 1280, extra: [_Early()]);
+    await tester.tap(find.byTooltip('Home'));
+    await tester.pumpAndSettle();
+    expect(find.text('early page'), findsNothing);
+  });
+
   testWidgets('1199 px is mobile, 1200 px is desktop', (tester) async {
     await _pump(tester, 1199);
     expect(find.byType(NavigationBar), findsOneWidget);
@@ -117,12 +187,32 @@ void main() {
     expect(find.text('FakeNav'), findsOneWidget);
   });
 
-  testWidgets('a route without a nav item opens inside the shell', (tester) async {
+  testWidgets('a route without a nav item opens above the shell', (tester) async {
     await _pump(tester, 360, extra: [_Fake()]);
     final router = GoRouter.of(tester.element(find.byType(Scaffold).first));
-    router.go('/hidden');
+    router.push('/hidden');
     await tester.pumpAndSettle();
     expect(find.text('hidden page'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('hidden page'), findsNothing);
+  });
+
+  testWidgets('an extension route with a path parameter works', (tester) async {
+    await _pump(tester, 360, extra: [_Fake()]);
+    final router = GoRouter.of(tester.element(find.byType(Scaffold).first));
+    router.push('/album/42');
+    await tester.pumpAndSettle();
+    expect(find.text('album 42'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('album 42'), findsNothing);
+    expect(find.byType(NavigationBar), findsOneWidget);
+  });
+
+  testWidgets('a nav item without a route fails router creation', (tester) async {
+    final registry = ExtensionRegistry()..install([_Orphan()]);
+    expect(() => buildRouter(registry), throwsStateError);
   });
 
   testWidgets('vietnamese labels follow the locale', (tester) async {

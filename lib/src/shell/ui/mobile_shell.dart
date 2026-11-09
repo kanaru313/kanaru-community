@@ -9,7 +9,7 @@ class MobileShell extends StatelessWidget {
 
   final StatefulNavigationShell navigationShell;
 
-  /// Nav items in branch order.
+  /// Tab nav items in branch order (pushed pages are not shell branches).
   final List<NavItem> items;
 
   @override
@@ -22,7 +22,7 @@ class MobileShell extends StatelessWidget {
     final selected = tabs.indexOf(navigationShell.currentIndex);
     return Scaffold(
       body: SafeArea(bottom: false, child: navigationShell),
-      // Pages outside the tabs (Settings) are child pages with their own back.
+      // A branch that is not a tab has no bar entry, hence no bar.
       bottomNavigationBar: selected < 0
           ? null
           : NavigationBar(

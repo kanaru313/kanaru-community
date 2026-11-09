@@ -33,6 +33,7 @@ class LayoutApiRule extends AnalysisRule {
     final v = _LayoutVisitor(this, context);
     registry
       ..addMethodInvocation(this, v)
+      ..addPropertyAccess(this, v)
       ..addInstanceCreationExpression(this, v);
   }
 }
@@ -49,6 +50,12 @@ class _LayoutVisitor extends SimpleAstVisitor<void> {
   @override
   void visitMethodInvocation(MethodInvocation node) {
     final api = layoutApiOfInvocation(node);
+    if (api != null && !_allowed) rule.reportAtNode(node, arguments: [api]);
+  }
+
+  @override
+  void visitPropertyAccess(PropertyAccess node) {
+    final api = layoutApiOfProperty(node);
     if (api != null && !_allowed) rule.reportAtNode(node, arguments: [api]);
   }
 

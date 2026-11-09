@@ -9,8 +9,8 @@ import 'ui/home_page.dart';
 import 'ui/search_page.dart';
 import 'ui/settings_page.dart';
 
-/// Home, Search and Settings. Settings is not a mobile tab; desktop pins it
-/// at the foot of the sidebar.
+/// Home, Search and Settings. Settings is a pushed page (not a tab); desktop
+/// pins it at the foot of the sidebar.
 class ScreensExtension implements KanaruExtension {
   const ScreensExtension();
 
@@ -45,6 +45,7 @@ class ScreensExtension implements KanaruExtension {
         order: 100,
         mobileTab: false,
         footer: true,
+        pushed: true,
       ))
       ..addRoute(GoRoute(path: '/', builder: (_, _) => const HomePage()))
       ..addRoute(GoRoute(path: '/search', builder: (_, _) => const SearchPage()))

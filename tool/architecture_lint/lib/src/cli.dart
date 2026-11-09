@@ -88,24 +88,48 @@ List<String> _checkFile(File file, String root, ArchitectureConfig cfg) {
     offset += line.length + 1;
   }
 
-  // Import / export / part rules apply to files inside the app's lib/src.
+  // Import / export / part rules apply to files inside the app's lib/src; a
+  // kanaru_ui may not import the app.
   final src = p.join(root, 'lib', 'src');
   final fileRel = p.isWithin(src, file.path)
       ? p.posix.joinAll(p.split(p.relative(file.path, from: src)))
       : null;
+  final inPackage = p.isWithin(p.join(root, 'packages', 'kanaru_ui'), file.path);
   if (fileRel != null) {
+    final loose = fileOutsideModule(fileRel);
+    if (loose != null) {
+      report(0, loose.message, loose.code);
+    }
+  }
+  if (fileRel != null || inPackage) {
     for (final d in unit.directives.whereType<UriBasedDirective>()) {
       final lits = [d.uri, if (d is NamespaceDirective) ...d.configurations.map((c) => c.uri)];
       for (final lit in lits) {
         final uri = lit.stringValue;
         if (uri == null) continue;
-        final target = resolveToLibSrc(
-          uri: uri,
-          filePath: file.path,
-          packageRoot: root,
-          packageName: cfg.package,
-        );
-        for (final v in checkDirective(config: cfg, fileRel: fileRel, uri: uri, targetRel: target)) {
+        final violations = [
+          ...checkDirective(
+            config: cfg,
+            fileRel: fileRel,
+            uri: uri,
+            targetRel: resolveToLibSrc(
+              uri: uri,
+              filePath: file.path,
+              packageRoot: root,
+              packageName: cfg.package,
+            ),
+            targetRootFile: resolveToCompositionRoot(
+              uri: uri,
+              filePath: file.path,
+              packageRoot: root,
+              packageName: cfg.package,
+            ),
+          ),
+          if (inPackage) ...[packageImportsApp(cfg, uri)].nonNulls,
+        ];
+        for (final v in violations) {
+          // Reported once per file above.
+          if (v.message == outsideModuleMessage) continue;
           report(lit.offset, v.message, v.code);
         }
       }
@@ -133,6 +157,13 @@ class _LayoutScan extends RecursiveAstVisitor<void> {
     final api = layoutApiOfInvocation(node);
     if (api != null) onHit(node, api);
     super.visitMethodInvocation(node);
+  }
+
+  @override
+  void visitPropertyAccess(PropertyAccess node) {
+    final api = layoutApiOfProperty(node);
+    if (api != null) onHit(node, api);
+    super.visitPropertyAccess(node);
   }
 
   @override

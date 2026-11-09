@@ -9,7 +9,7 @@ class DesktopSidebar extends StatelessWidget {
   const DesktopSidebar({
     super.key,
     required this.items,
-    required this.selectedBranch,
+    required this.selectedIndex,
     required this.expanded,
     required this.onSelect,
   });
@@ -17,9 +17,9 @@ class DesktopSidebar extends StatelessWidget {
   static const double fullWidth = 240;
   static const double railWidth = 72;
 
-  /// Nav items in branch order.
+  /// Every nav item in nav order; [selectedIndex] and `onSelect` index into it.
   final List<NavItem> items;
-  final int selectedBranch;
+  final int selectedIndex;
   final bool expanded;
   final ValueChanged<int> onSelect;
 
@@ -59,7 +59,7 @@ class DesktopSidebar extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: KSpace.x1),
       child: _SidebarRow(
         item: item,
-        selected: branch == selectedBranch,
+        selected: branch == selectedIndex,
         expanded: expanded,
         onTap: () => onSelect(branch),
       ),

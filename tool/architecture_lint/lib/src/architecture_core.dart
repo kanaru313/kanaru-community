@@ -1,125 +1,63 @@
-// Pure Dart (no analyzer import): shared by the analyzer plugin and the CLI.
-import 'package:path/path.dart' as p;
-import 'package:yaml/yaml.dart';
+import 'architecture_config.dart';
 
-const layers = {'domain', 'data', 'state', 'ui'};
+export 'architecture_config.dart';
+export 'architecture_helpers.dart';
 
-class Violation {
-  Violation(this.code, this.message);
-  final String code; // module_dependency | domain_no_flutter | ...
-  final String message;
-}
+/// Message of the violation for a file placed directly in `lib/src/`.
+const outsideModuleMessage =
+    "File sits in 'lib/src/' outside any module folder; move it into a module.";
 
-/// Rule codes reported by the plugin and the CLI.
-const ruleCodes = {
-  'module_dependency',
-  'domain_no_flutter',
-  'screens_no_data',
-  'rust_only_from_data',
-  'layout_api_outside_shell',
-};
+/// Violation for an app package file at [fileRel] (relative to lib/src) that
+/// sits outside every module folder, or null.
+Violation? fileOutsideModule(String fileRel) =>
+    Place.of(fileRel) == null ? Violation('module_dependency', outsideModuleMessage) : null;
 
-class ArchitectureConfig {
-  ArchitectureConfig(this.direct, this.special, {this.package = 'kanaru'});
-
-  /// Dart package name of the app (`package:<name>/...` imports).
-  final String package;
-
-  /// module -> modules it declares as direct dependencies.
-  final Map<String, Set<String>> direct;
-
-  /// folders under lib/src that are outside the DAG (e.g. generated `rust`).
-  final Set<String> special;
-
-  late final Map<String, Set<String>> allowed = {
-    for (final m in direct.keys) m: _closure(m),
-  };
-
-  /// Transitive closure: A may import everything reachable from A's edges.
-  Set<String> _closure(String m) {
-    final seen = <String>{};
-    final stack = [...?direct[m]];
-    while (stack.isNotEmpty) {
-      final n = stack.removeLast();
-      if (seen.add(n)) stack.addAll(direct[n] ?? const {});
-    }
-    return seen;
-  }
-
-  /// Cycle in the declared DAG, or null.
-  List<String>? findCycle() {
-    for (final m in direct.keys) {
-      if (allowed[m]!.contains(m)) return [m, ...allowed[m]!];
-    }
-    return null;
-  }
-
-  static ArchitectureConfig parse(String source) {
-    final y = loadYaml(source) as YamlMap;
-    final mods = y['modules'] as YamlMap;
-    return ArchitectureConfig(package: y['package'] as String? ?? 'kanaru', {
-      for (final e in mods.entries)
-        e.key as String: {
-          for (final d in (e.value as YamlList? ?? YamlList())) d as String,
-        },
-    }, {for (final s in (y['special'] as YamlList? ?? YamlList())) s as String});
-  }
-}
-
-/// Where a file sits relative to `<pkg>/lib/src`.
-class Place {
-  Place(this.module, this.layer);
-  final String module;
-  final String? layer; // domain|data|state|ui or null
-  static Place? of(String libSrcRelative) {
-    final parts = p.posix.split(libSrcRelative);
-    if (parts.length < 2) return null; // lib/src/foo.dart: no module
-    return Place(parts[0], layers.contains(parts[1]) ? parts[1] : null);
-  }
-}
-
-/// Resolve an import/export/part [uri] written in [filePath] to a path
-/// relative to `<packageRoot>/lib/src`, or null when it points elsewhere.
-/// [packageName] is the app package (`kanaru`).
-String? resolveToLibSrc({
-  required String uri,
-  required String filePath,
-  required String packageRoot,
-  required String packageName,
-}) {
-  String abs;
-  if (uri.startsWith('package:$packageName/')) {
-    abs = p.join(packageRoot, 'lib', uri.substring('package:$packageName/'.length));
-  } else if (uri.contains(':')) {
-    return null;
-  } else {
-    abs = p.normalize(p.join(p.dirname(filePath), uri));
-  }
-  final srcRoot = p.join(packageRoot, 'lib', 'src');
-  if (!p.isWithin(srcRoot, abs)) return null;
-  return p.posix.joinAll(p.split(p.relative(abs, from: srcRoot)));
-}
+/// Violation when a file of `packages/kanaru_ui/lib` imports the app package.
+/// The design system stays unaware of the app (Pro packages may import it).
+Violation? packageImportsApp(ArchitectureConfig config, String uri) =>
+    uri.startsWith('package:${config.package}/')
+        ? Violation('package_imports_app',
+            "kanaru_ui may not import the app ('$uri').")
+        : null;
 
 /// All violations for one directive. [fileRel] is the importing file relative
-/// to lib/src (null when the file is outside lib/src).
+/// to lib/src (null when the file is outside lib/src). [targetRel] comes from
+/// `resolveToLibSrc`, [targetRootFile] from `resolveToCompositionRoot`.
 List<Violation> checkDirective({
   required ArchitectureConfig config,
   required String? fileRel,
   required String uri,
-  required String? targetRel, // from resolveToLibSrc
+  required String? targetRel,
+  String? targetRootFile,
 }) {
   final out = <Violation>[];
-  final from = fileRel == null ? null : Place.of(fileRel);
-  if (from == null) return out;
+  if (fileRel == null) return out;
+  final from = Place.of(fileRel);
+  if (from == null) {
+    // A loose file would launder any edge: it is an error as importer.
+    out.add(Violation('module_dependency', outsideModuleMessage));
+    return out;
+  }
 
-  if (from.layer == 'domain' &&
-      (uri.startsWith('package:flutter/') || uri.startsWith('package:flutter_'))) {
+  if (targetRootFile != null) {
+    out.add(Violation('module_dependency',
+        "Modules may not import the composition root 'lib/$targetRootFile'."));
+  }
+  if (from.layer == 'domain' && config.isForbiddenInDomain(uri)) {
     out.add(Violation('domain_no_flutter',
-        "'domain/' must stay pure Dart; '$uri' imports Flutter."));
+        "'domain/' must stay pure Dart; '$uri' depends on Flutter."));
   }
   final to = targetRel == null ? null : Place.of(targetRel);
+  if (targetRel != null && to == null) {
+    out.add(Violation('module_dependency', "Import target '$targetRel' is outside any module."));
+    return out;
+  }
   if (to == null) return out;
 
+  if (from.layer == 'domain' && (to.layer == 'data' || to.layer == 'state' || to.layer == 'ui')) {
+    out.add(Violation('domain_layer',
+        "'domain/' may not import '${to.layer}/' (found '${to.module}/${to.layer}')."));
+  }
   if (to.module == 'rust' && from.module != 'rust' && from.layer != 'data') {
     out.add(Violation('rust_only_from_data',
         "'rust/' (generated FFI) can only be imported from '<module>/data/'."));
@@ -143,33 +81,4 @@ List<Violation> checkDirective({
     }
   }
   return out;
-}
-
-/// Locate architecture.yaml by walking up from [filePath].
-String? findConfigPath(String filePath, bool Function(String) exists) {
-  var dir = p.dirname(filePath);
-  while (true) {
-    final c = p.join(dir, 'architecture.yaml');
-    if (exists(c)) return c;
-    final parent = p.dirname(dir);
-    if (parent == dir) return null;
-    dir = parent;
-  }
-}
-
-/// Width-based layout APIs (`MediaQuery.sizeOf`, `LayoutBuilder`) may only be
-/// used in `packages/kanaru_ui/` and `lib/src/shell/`.
-bool layoutApiAllowed(String filePath) {
-  final path = p.posix.joinAll(p.split(filePath));
-  return path.contains('/packages/kanaru_ui/') || path.contains('/lib/src/shell/');
-}
-
-/// True when [line] holds an `ignore` comment that silences an architecture
-/// rule. Such comments are forbidden; the gate must stay un-silenceable.
-bool isArchitectureIgnore(String line) {
-  final m = RegExp(r'//\s*ignore(?:_for_file)?\s*:(.*)').firstMatch(line);
-  if (m == null) return false;
-  final body = m.group(1)!;
-  return body.contains('kanaru_architecture') ||
-      ruleCodes.any((c) => RegExp('\\b$c\\b').hasMatch(body));
 }

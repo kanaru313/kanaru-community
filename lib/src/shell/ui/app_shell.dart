@@ -35,16 +35,16 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    final items = ref.watch(extensionRegistryProvider).navItems;
+    final registry = ref.watch(extensionRegistryProvider);
     return switch (FormFactor.of(context)) {
       FormFactor.desktop => DesktopShell(
           navigationShell: widget.navigationShell,
-          items: items,
+          items: registry.navItems,
           history: _history!,
         ),
       FormFactor.mobile => MobileShell(
           navigationShell: widget.navigationShell,
-          items: items,
+          items: registry.branchNavItems,
         ),
     };
   }

@@ -16,6 +16,7 @@ class DesktopShell extends StatefulWidget {
   });
 
   final StatefulNavigationShell navigationShell;
+  /// Every nav item in nav order, including pushed ones (Settings).
   final List<NavItem> items;
   final NavHistory history;
 
@@ -29,23 +30,32 @@ class _DesktopShellState extends State<DesktopShell> {
   @override
   Widget build(BuildContext context) {
     final shell = widget.navigationShell;
+    // Shell branches are the items that are not pushed pages, in nav order.
+    final tabs = [for (final i in widget.items) if (!i.pushed) i];
     return Scaffold(
       body: Column(
         children: [
           DesktopTopBar(
             history: widget.history,
             onToggleSidebar: () => setState(() => _expanded = !_expanded),
-            onHome: () => shell.goBranch(0),
+            onHome: () => context.go('/'),
           ),
           Expanded(
             child: Row(
               children: [
                 DesktopSidebar(
                   items: widget.items,
-                  selectedBranch: shell.currentIndex,
+                  selectedIndex: widget.items.indexOf(tabs[shell.currentIndex]),
                   expanded: _expanded,
-                  onSelect: (branch) =>
-                      shell.goBranch(branch, initialLocation: branch == shell.currentIndex),
+                  onSelect: (index) {
+                    final item = widget.items[index];
+                    if (item.pushed) {
+                      context.push(item.path);
+                      return;
+                    }
+                    final branch = tabs.indexOf(item);
+                    shell.goBranch(branch, initialLocation: branch == shell.currentIndex);
+                  },
                 ),
                 Expanded(child: shell),
               ],

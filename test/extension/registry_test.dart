@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kanaru/kanaru.dart';
 
 class _Ext implements KanaruExtension {
@@ -52,6 +53,64 @@ void main() {
   test('duplicate nav item id throws StateError', () {
     final r = ExtensionRegistry()..addNavItem(_nav('a', 1));
     expect(() => r.addNavItem(_nav('a', 2)), throwsStateError);
+  });
+
+  test('duplicate nav item path throws StateError', () {
+    final r = ExtensionRegistry()..addNavItem(_nav('a', 1));
+    final clash = NavItem(
+      id: 'b',
+      path: '/a',
+      icon: Icons.circle,
+      selectedIcon: Icons.circle,
+      label: (_) => 'b',
+      order: 2,
+    );
+    expect(() => r.addNavItem(clash), throwsStateError);
+  });
+
+  test('duplicate GoRoute path throws StateError', () {
+    final r = ExtensionRegistry()
+      ..addRoute(GoRoute(path: '/x', builder: (_, _) => const SizedBox()));
+    expect(
+      () => r.addRoute(GoRoute(path: '/x', builder: (_, _) => const SizedBox())),
+      throwsStateError,
+    );
+  });
+
+  test('duplicate settings section and top bar action ids throw StateError', () {
+    final r = ExtensionRegistry()
+      ..addSettingsSection(SettingsSection(id: 's', order: 1, builder: (_) => const SizedBox()))
+      ..addTopBarAction(TopBarAction(id: 't', order: 1, builder: (_) => const SizedBox()));
+    expect(
+      () => r.addSettingsSection(
+          SettingsSection(id: 's', order: 2, builder: (_) => const SizedBox())),
+      throwsStateError,
+    );
+    expect(
+      () => r.addTopBarAction(TopBarAction(id: 't', order: 2, builder: (_) => const SizedBox())),
+      throwsStateError,
+    );
+  });
+
+  test('a second license service throws StateError', () {
+    final r = ExtensionRegistry()..setLicenseService(_Granted());
+    expect(() => r.setLicenseService(_Granted()), throwsStateError);
+  });
+
+  test('branchNavItems leaves out pushed items', () {
+    final r = ExtensionRegistry()
+      ..addNavItem(_nav('a', 1))
+      ..addNavItem(NavItem(
+        id: 'p',
+        path: '/p',
+        icon: Icons.circle,
+        selectedIcon: Icons.circle,
+        label: (_) => 'p',
+        order: 2,
+        pushed: true,
+      ));
+    expect(r.branchNavItems.map((n) => n.id), ['a']);
+    expect(r.navItems, hasLength(2));
   });
 
   test('startup hooks keep registration order', () {

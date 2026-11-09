@@ -1,6 +1,5 @@
+import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:flutter/widgets.dart';
-
-import '../../database/app_database.dart';
 
 /// Entry of the navigation (bottom bar on mobile, sidebar on desktop).
 class NavItem {
@@ -13,6 +12,7 @@ class NavItem {
     required this.order,
     this.mobileTab = true,
     this.footer = false,
+    this.pushed = false,
   });
 
   final String id;
@@ -32,6 +32,10 @@ class NavItem {
 
   /// Desktop: pinned at the foot of the sidebar instead of the main list.
   final bool footer;
+
+  /// Opens above the shell as a full page with its own back (the sidebar still
+  /// lists it) instead of being a tab of the shell.
+  final bool pushed;
 }
 
 /// Block on the Settings page.
@@ -55,9 +59,11 @@ class TopBarAction {
 /// What a startup hook may use. Hooks run after the public database is open and
 /// migrated, so an extension can migrate its own tables here.
 class StartupContext {
-  const StartupContext({required this.database});
+  const StartupContext({required this.connection});
 
-  final AppDatabase database;
+  /// The public database's connection; an extension opens its own drift
+  /// database on it (`ProDatabase.connect(context.connection)`).
+  final DatabaseConnection connection;
 }
 
 typedef StartupHook = Future<void> Function(StartupContext context);

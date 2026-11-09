@@ -17,6 +17,10 @@ class AppDatabase extends $AppDatabase {
   /// connection with extension databases is proven.
   factory AppDatabase.file(File file) => AppDatabase(NativeDatabase(file));
 
+  /// The connection extension databases open on (`ProDatabase.connect`).
+  /// drift marks `connection` protected; this is the public hand-off.
+  DatabaseConnection get sharedConnection => connection;
+
   @override
   int get schemaVersion => 1;
 

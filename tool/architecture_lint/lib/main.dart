@@ -17,6 +17,8 @@ class KanaruArchitecturePlugin extends Plugin {
     for (final rule in [
       DirectiveRule('module_dependency', 'Import crosses the module DAG.'),
       DirectiveRule('domain_no_flutter', 'domain/ imports Flutter.'),
+      DirectiveRule('domain_layer', 'domain/ imports data/, state/ or ui/.'),
+      DirectiveRule('package_imports_app', 'kanaru_ui imports the app.'),
       DirectiveRule('screens_no_data', 'screens/ imports data/ or database/.'),
       DirectiveRule('rust_only_from_data', 'rust/ imported outside data/.'),
       LayoutApiRule(),
