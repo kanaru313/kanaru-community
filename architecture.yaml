@@ -1,0 +1,18 @@
+# Module DAG (03 §4). Direct edges; the checker allows the transitive closure.
+package: kanaru        # Dart package name of the app
+special: [rust]        # generated FFI under lib/src/rust: outside the DAG, own rule
+modules:
+  foundation: []
+  platform: [foundation]
+  database: [foundation]
+  extension: [foundation]
+  media: [extension, foundation]
+  plugins: [media, database, foundation]
+  playback: [media, platform, database]
+  storage: [media, platform]
+  library: [playback, storage, media, database, extension, platform]
+  lyrics: [library, playback, plugins]
+  online: [library, playback, plugins]
+  screens: [lyrics, online, library, playback, plugins, storage, extension, platform]
+  shell: [screens]
+  router: [shell, screens]
