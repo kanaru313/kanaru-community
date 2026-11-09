@@ -1,0 +1,16 @@
+name: kanaru_ui
+description: "Kanaru design system: tokens, theme and shared widgets. Knows nothing about the app."
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

@@ -31,6 +31,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+**/build/
 /coverage/
 
 # Symbolication related
@@ -51,3 +52,6 @@ app.*.map.json
 .direnv/
 result
 result-*
+
+# Pro overrides (created by the private kanaru-pro repo)
+pubspec_overrides.yaml

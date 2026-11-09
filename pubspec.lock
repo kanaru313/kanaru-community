@@ -133,10 +133,10 @@ packages:
     dependency: transitive
     description:
       name: cli_util
-      sha256: "89b8801ba49f8b593fbf2d3e59efd0f566c46cd4ba6837ae2610c72b52a0f899"
+      sha256: ff6785f7e9e3c38ac98b2fb035701789de90154024a75b6cb926445e83197d1c
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.0"
+    version: "0.4.2"
   clock:
     dependency: transitive
     description:
@@ -257,6 +257,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.2"
+  ffigen:
+    dependency: transitive
+    description:
+      name: ffigen
+      sha256: b7803707faeec4ce3c1b0c2274906504b796e3b70ad573577e72333bd1c9b3ba
+      url: "https://pub.dev"
+    source: hosted
+    version: "20.1.1"
   file:
     dependency: transitive
     description:
@@ -557,6 +565,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.12.0"
+  kanaru_extensions:
+    dependency: "direct main"
+    description:
+      path: "packages/kanaru_extensions"
+      relative: true
+    source: path
+    version: "0.0.0"
   leak_tracker:
     dependency: transitive
     description:
@@ -721,10 +736,10 @@ packages:
     dependency: transitive
     description:
       name: package_config
-      sha256: ffcf4cf3d6c0b74ac43708d9f56625506e8a68aa935abe9d267a7330f320eb5d
+      sha256: f096c55ebb7deb7e384101542bfba8c52696c1b56fca2eb62827989ef2353bbc
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "2.2.0"
   path:
     dependency: transitive
     description:
@@ -742,7 +757,7 @@ packages:
     source: hosted
     version: "1.1.0"
   path_provider:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path_provider
       sha256: a7f4874f987173da295a61c181b8ee71dab59b332a486b391babf26a1b884825
@@ -853,6 +868,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.7.0"
+  quiver:
+    dependency: transitive
+    description:
+      name: quiver
+      sha256: ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.2"
   recase:
     dependency: transitive
     description:
@@ -877,13 +900,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.5.0"
-  rust_lib_kanaru:
-    dependency: "direct main"
-    description:
-      path: rust_builder
-      relative: true
-    source: path
-    version: "0.0.1"
   safe_local_storage:
     dependency: transitive
     description:
