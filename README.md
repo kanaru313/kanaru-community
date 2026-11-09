@@ -10,7 +10,8 @@ Additional features can be added through extension packages (see
 
 License: GPL-3.0-or-later (see [LICENSE](LICENSE)).
 
-Status: repository skeleton (modules, shells, router, empty database, gate).
+Status: repository skeleton (modules, shells, router, gate) with the schema v1
+tables and database helpers; no library UI yet.
 Playback, library scanning and lyrics are not built yet; see
 [docs/project-roadmap.md](docs/project-roadmap.md).
 

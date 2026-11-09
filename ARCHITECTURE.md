@@ -152,7 +152,7 @@ modified by them.
   and SQL-only objects (FTS5 tables, triggers, seed rows) in a sibling `.drift` file.
 - The table-by-table spec of schema v1 is in
   [docs/system-architecture-database.md](docs/system-architecture-database.md).
-  It is the target: the coded groups land with the schema v1 foundation PR.
+  The coded groups match it; spec-only groups are marked there.
 - `PRAGMA foreign_keys = ON` on every connection. Every foreign key into
   `tracks` is `ON DELETE RESTRICT`: no CASCADE and no SET NULL. The track GC
   deletes owned child rows (`track_details`, `play_stats`) before a track, and

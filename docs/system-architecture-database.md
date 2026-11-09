@@ -2,7 +2,7 @@
 
 Table-level spec of the app database (`lib/src/database/`). It lists every table group: the groups coded in the schema v1 foundation, and the groups that their module adds before the first release. The code and the reviews check against this file.
 
-> **Status: target.** The coded groups land with the schema v1 foundation PR. Until it merges, `lib/src/database/` holds only `extension_schema`. A module that adds a spec-only group updates its section of this file in the same change.
+> **Status.** The coded groups exist in `lib/src/database/` and this file matches them (a test checks that every table, index and trigger is named here). Spec-only groups are not coded yet; their column lists are proposals. A module that adds a spec-only group updates its section of this file in the same change.
 
 Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITECTURE.md#database).
 
@@ -10,7 +10,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 
 - [Requirement map](#requirement-map)
 - [Rules](#rules)
-- [Foreign keys](#foreign-keys)
+- [Foreign key list](#foreign-key-list)
 - [Coded groups](#coded-groups)
 - [Spec-only groups](#spec-only-groups)
 - [Helpers](#helpers)
@@ -37,7 +37,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 - Booleans are `INTEGER NOT NULL CHECK (x IN (0, 1))`.
 - `CHECK` is used only on fixed sets: track status, rating range, booleans. Open-ended kinds (`sources.kind`, `playlists.kind`, `saved_items.kind`) are validated by Dart constants, so adding a kind needs no table rebuild.
 - `foreign_keys = ON` and `recursive_triggers = ON` on every connection, set by `configureConnection` in `NativeDatabase(setup:)` and again in `beforeOpen`.
-- The device id is stored in no table. It comes from a file outside the database (the helper arrives with playback). `play_log.device_id` records it per row.
+- The device id is stored in no table. It comes from a file outside the database (spec only: the helper arrives with playback). `play_log.device_id` records it per row; the column is plain text and the database does not check it.
 
 ### uid
 
@@ -82,7 +82,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 - Every `*track_id` column has a foreign key into `tracks` and an index whose first column is that column. A single `INTEGER PRIMARY KEY` counts as that index.
 - Every foreign key column is the first column of an index, or the primary key.
 
-The full list is in [Foreign keys](#foreign-keys).
+The full list is in [Foreign key list](#foreign-key-list).
 
 ### Track status
 
@@ -153,8 +153,8 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 - A name that does not decode as UTF-8 is skipped and reported as a scan error.
 - CUE track: `'<cue path>#NN'` (two-digit track number).
 - Id-based remotes (Google Drive, OneDrive, Subsonic): the locator is the provider file id. `rel_path` holds the display path. The scanner applies folder exclusions while listing.
-- Path-based folder filter (scanner module, spec only): `locator >= key || '/' AND locator < key || '0'`. Folder keys come from the same listing API.
-- Mount roots are canonicalized (real path, no trailing `/`) before they are saved. One mount per chosen folder. An SD card volume root is just a path.
+- Path-based folder filter (scanner module, spec only; `unhideTracks` already takes the range bounds): `locator >= key || '/' AND locator < key || '0'`. Folder keys come from the same listing API.
+- Mount roots are canonicalized (real path, no trailing `/`) by the caller before they are saved (the database only enforces the unique `source_mounts_root`). One mount per chosen folder. An SD card volume root is just a path.
 
 ### Sources and secrets
 
@@ -197,7 +197,7 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 
 - `schemaVersion` stays 1 until the first release. Developer databases from before this schema are deleted. A debug-only guard (`schema_guard.dart`) compares every table, index and trigger of a fresh in-memory `AppDatabase` with the file, ignoring in-memory databases, FTS5 shadow tables and objects only the file has (extension tables share the file). On a difference it fails with a message to delete the file that names the differing objects.
 
-## Foreign keys
+## Foreign key list
 
 | Child column | Parent | On delete | Group |
 |---|---|---|---|
@@ -467,7 +467,7 @@ Renaming a mood changes `name` and `name_key` only. Its uid stays. Constants: `P
 | `uid` | TEXT | NOT NULL | | UNIQUE. Favorites: `fav:` + hash. Others: ULID, so one track can repeat. |
 | `playlist_id` | INTEGER | NOT NULL | | FK `playlists.id` CASCADE. |
 | `track_id` | INTEGER | NOT NULL | | FK `tracks.id` RESTRICT. |
-| `sort_key` | TEXT | NOT NULL | | Fractional key in base62, compared in binary order (`COLLATE BINARY`). Read with `ORDER BY sort_key, uid`. |
+| `sort_key` | TEXT | NOT NULL | | Fractional key in base62, compared with SQLite's default binary text order. Read with `ORDER BY sort_key, uid`. |
 | `added_at` | INTEGER | NOT NULL | | |
 | `updated_at` | INTEGER | NOT NULL | | |
 | `deleted_at` | INTEGER | NULL | | Tombstone. |
@@ -543,18 +543,19 @@ AI chat, per-track translation config and smart playlists. Their spec lives in `
 
 ## Helpers
 
-Target Dart API. Later phases refine this list here. Names are final only when the code lands.
+Dart API of the coded groups. `lib/src/database/database.dart` is the barrel; the pure id and order helpers live in `lib/src/foundation/` and are imported from there.
 
 | Area | Names |
 |---|---|
-| Constants | `TrackStatus`, `SourceKind`, `PlaylistKind` (`favorites`, `mood`), `SavedItemKind`, `favoritesPlaylistUid`, `missingGraceMs`, `hiddenGraceMs`, `remoteGraceMs`, `trackOwnedChildTables` |
-| uids | `sourceUidForRemote` (rejects userinfo and query), `trackUid`, `excludedFolderUid`, `favoriteEntryUid`, `savedItemUid` |
-| ids and order (pure, `lib/src/foundation/`) | `stableHashHex`, `stableUid`, `newUlid`, `isUlid`, `generateKeyBetween`, `generateNKeysBetween` |
-| writes | `upsertTrackSnapshot`, `insertOrRevive` |
-| source lifecycle | `removeSource`, `setMountEnabled`, `reviveSource`, `unhideTracks` |
-| play stats | `runPlayStatsBulk` |
-| reads | `visibleTrackWhere`, `isVisibleTrack`, `ftsPrefixQuery` |
-| maintenance | `collectOrphanTracks` |
+| Constants | `TrackStatus`, `SourceKind`, `PlaylistKind` (`favorites`, `mood`), `SavedItemKind`, `favoritesPlaylistUid`, `missingGraceMs`, `hiddenGraceMs`, `remoteGraceMs`, `trackOwnedChildTables`, and the column sets `trackIdentityColumns`, `trackSnapshotColumns`, `trackUserColumns`, `trackLifecycleColumns` |
+| connection | `configureConnection(CommonDatabase)`, `AppDatabase.file(File)`, `AppDatabase.sharedConnection` |
+| uids | `sourceUidForRemote(kind, account, root)` (rejects userinfo and query), `trackUid(sourceUid, locator)`, `excludedFolderUid(sourceUid, folderKey)`, `favoriteEntryUid(playlistUid, trackUid)`, `savedItemUid(sourceUid, kind, remoteId)` |
+| ids and order (pure, `lib/src/foundation/`) | `stableHashHex(parts, length)`, `stableUid(prefix, parts)`, `newUlid({nowMs, random})`, `isUlid`, `generateKeyBetween(a, b)`, `generateNKeysBetween(a, b, n)` |
+| writes | `upsertTrackSnapshot(db, tracks, companion)`, `insertOrRevive(db, table, row, now:, reviveColumns:)` |
+| source lifecycle | `removeSource(db, sourceId, now)`, `setMountEnabled(db, sourceId, enabled, now)`, `reviveSource(db, sourceId, now, {name, account, configJson, credentialRef})`, `unhideTracks(db, sourceId, now, {locatorFrom, locatorTo})` |
+| play stats | `runPlayStatsBulk(db, write)` |
+| reads | `visibleTrackWhere(alias)`, `isVisibleTrack(tracks)`, `ftsPrefixQuery(input)` (null for empty input) |
+| maintenance | `collectOrphanTracks(db, now:)`; `verifyDevSchema`, `dumpSchema` (`schema_guard.dart`, not exported) |
 
 Database helpers live in `lib/src/database/`. `database.dart` exports the tables (`Sources`, `SourceMounts`, `ExcludedFolders`, `Tracks`, `TrackDetails`, `PlayLog`, `PlayStats`, `Playlists`, `PlaylistEntries`, `SavedItems`, `ExtensionSchema`) and the helpers above. It does not export the `play_stats_ctl` type (the generated `playStatsCtl` getter on `AppDatabase` is internal) and exports only `runPlayStatsBulk` from the bulk file.
 
