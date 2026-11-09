@@ -5,7 +5,7 @@ modules:
   foundation: []
   platform: [foundation]
   database: [foundation]
-  extension: [foundation]
+  extension: [database, foundation]   # startup hooks receive the AppDatabase
   media: [extension, foundation]
   plugins: [media, database, foundation]
   playback: [media, platform, database]

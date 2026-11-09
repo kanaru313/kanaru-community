@@ -8,6 +8,7 @@ export 'src/tokens/k_motion.dart';
 export 'src/tokens/k_shape.dart';
 export 'src/tokens/k_space.dart';
 export 'src/widgets/k_empty.dart';
+export 'src/widgets/k_empty_page.dart';
 export 'src/widgets/k_page.dart';
 export 'src/widgets/page_header.dart';
 export 'src/widgets/pro_badge.dart';
