@@ -77,11 +77,17 @@ its part's prefix, or a key missing in one locale.
 
 ## Rust
 
-- `unsafe` only in `kanaru_bridge/src/os.rs` (the file is created with the
-  first OS call that needs it).
+- `unsafe` only in `kanaru_bridge/src/os.rs` (thread priority).
 - `kanaru_media` and `kanaru_plugin_runtime` have no FFI and do not depend on
   each other; only `kanaru_bridge` knows flutter_rust_bridge. Explicit DTOs,
   no `#[frb(mirror)]`.
+- Every file is parsed under `guarded` (panic becomes `NativeError`), so
+  never set `panic = "abort"`. Work runs on the pools in `pools.rs`, not on
+  ad-hoc threads. Record a pass result only on success or a permanent
+  error kind; for a transient one (`NativeError.transient`: busy or dropped
+  mounts, `Timeout`, `Cancelled`) leave the pass version alone. `Panic` is
+  permanent.
+- Library code does not `unwrap` (lint); tests may.
 - `cargo clippy --all-targets -- -D warnings` must pass.
 
 ## Tests

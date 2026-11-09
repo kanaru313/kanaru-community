@@ -27,6 +27,41 @@ publish = false
 # crate pins the exact version (see flutter_rust_bridge.yaml and pubspec.yaml).
 flutter_rust_bridge = "=2.13.0"
 
+# Tags and embedded pictures.
+lofty = "=0.25.4"
+# Cover thumbnails: decode only the three formats covers come in, nothing else.
+image = { version = "=0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
+# Large JPEG covers are decoded at 1/2..1/8 scale (DCT scaling), which the
+# `image` crate's decoder cannot do. No rayon, so nothing inside a decode waits
+# on the cover pool.
+jpeg-decoder = { version = "=0.3.2", default-features = false }
+# Thumbnail resize, several times faster than `image`'s (SIMD picked at run
+# time). Without its rayon feature: nothing inside a resize waits on the cover pool.
+fast_image_resize = { version = "=6.1.0", default-features = false, features = ["std"] }
+# Thumbnail JPEG encoder, faster than `image`'s. `simd` only adds AVX2 code
+# paths taken after a run-time check, so the binary still runs without AVX2.
+jpeg-encoder = { version = "=0.7.1", default-features = false, features = ["std", "simd"] }
+# Cover cache keys: hash of the original image bytes. `pure` skips the C/asm
+# build, which keeps Android cross builds simple.
+blake3 = { version = "=1.8.7", default-features = false, features = ["std", "pure"] }
+# Cover colors (seed + palette) with the quantizer and scoring Flutter uses for
+# `ColorScheme.fromImageProvider`. 0.4.2 keeps rust-version 1.89 (0.5 needs 1.97).
+# `libm` is the no_std build: no serde, no second getrandom.
+material-colors = { version = "=0.4.2", default-features = false, features = ["libm"] }
+# Waveform levels: pure Rust audio decoding (MPL-2.0). Only the containers and
+# codecs the library scans are enabled; AIFF is left out (about 130 KB of
+# release binary), so those files show a flat seek bar.
+# `ogg` demuxes Vorbis. `id3v2` stays on: without it the probe scans a leading
+# ID3 tag as junk for at most 1 MiB, so an MP3 with a large cover would be
+# unsupported. 0.6 API (`next_packet() -> Result<Option<Packet>>`), not 0.5.
+symphonia = { version = "=0.6.1", default-features = false, features = ["mp3", "flac", "ogg", "vorbis", "aac", "alac", "isomp4", "pcm", "wav", "id3v2"] }
+# Title language detection. 0.18.0 declares no rust-version and compiles on 1.89.
+whatlang = "=0.18.0"
+# Worker pools in the bridge.
+rayon = "1"
+# Thread priority (setpriority) in the bridge's os.rs.
+libc = "0.2"
+
 kanaru_media = { path = "crates/kanaru_media" }
 kanaru_plugin_runtime = { path = "crates/kanaru_plugin_runtime" }
 
@@ -36,6 +71,11 @@ unsafe_code = "forbid"
 [workspace.lints.clippy]
 all = { level = "deny", priority = -1 }
 unwrap_used = "deny"
+
+# Panics inside one file's parser are caught per file (catch_unwind), which only
+# works with unwinding. Never set `panic = "abort"` in any profile.
+[profile.release]
+panic = "unwind"
 
 # Debug builds decode audio and images in the app; unoptimized they are too
 # slow to use.

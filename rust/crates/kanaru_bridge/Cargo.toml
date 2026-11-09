@@ -16,6 +16,8 @@ crate-type = ["cdylib", "rlib"]
 flutter_rust_bridge.workspace = true
 kanaru_media.workspace = true
 kanaru_plugin_runtime.workspace = true
+rayon.workspace = true
+libc.workspace = true
 
 # Not the workspace lints: generated FFI code needs `unsafe`. `unsafe` written
 # by hand belongs only in src/os.rs.

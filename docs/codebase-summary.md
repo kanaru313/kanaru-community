@@ -56,8 +56,14 @@ Not yet present: `plugins`, `storage`, `lyrics`. Seeds (`UnavailablePlaybackComm
 ## Rust (`rust/`, `rust_builder/`)
 
 Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
-`kanaru_bridge` (the only cdylib; `src/api/native_info.rs` is the one API so
-far). `rust_builder/` is the cargokit glue; generated bindings are
+`kanaru_bridge` (the only cdylib). `kanaru_media`: `error` (`MediaError`,
+`is_transient`), `cancel`, `limits`, and empty `tags/`, `covers/`, `waveform/`
+modules that feature work fills. `kanaru_bridge`: `guard` (`guarded`, panic to error), `pools` (`background`,
+`interactive`, `waveform`; 8 MiB stacks), `os` (thread priority, the only
+`unsafe`), `source` (`Source`, `open_source`: regular files only), and
+`api/{native_info,error,tags,covers,waveform}.rs` (`NativeError` DTO in `api/error.rs`). Third-party versions are pinned
+exactly in `rust/Cargo.toml` with the reason beside each. `rust_builder/` is the
+cargokit glue; generated bindings are
 `rust/crates/kanaru_bridge/src/frb_generated.rs` and `lib/src/rust/`.
 
 ## Tests (`test/`)

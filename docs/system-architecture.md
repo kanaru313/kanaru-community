@@ -47,7 +47,9 @@ main.dart
   id is a ULID in `<data dir>/device_id`, outside the database, excluded from
   Android backup. Both load at startup and reach the UI as provider overrides.
 - **Native**: Rust crates behind one FFI crate, built by cargokit for the
-  Linux host and the Android ABIs.
+  Linux host and the Android ABIs. The bridge owns the worker pools (background,
+  interactive, waveform), the panic guard and the error DTO; `kanaru_media`
+  stays plain Rust.
 - **Extensions**: contribute through `ExtensionRegistry`; downstream builds
   can supply more through `packages/kanaru_extensions`.
 
