@@ -96,6 +96,7 @@ The full list is in [Foreign keys](#foreign-keys).
 - The scanner and the lifecycle helpers never touch `remote` rows.
 - Hide (`removeSource`, `setMountEnabled(false)`): `present` and `missing` rows become `hidden`, and `scan_cursor` and `last_scan_at` reset, all in one transaction. Excluding a folder hides its rows the same way (applied by the scanner).
 - Unhide (`reviveSource`, `setMountEnabled(true)`, `unhideTracks`): `hidden` rows become `missing` with `missing_since = now`, and the cursor resets. A full scan then decides: files that are still there return to `present`, and deleted files never come back as ghosts.
+- Helpers live in `track_lifecycle.dart`: `removeSource(db, sourceId, now)`, `setMountEnabled(db, sourceId, enabled, now)`, `reviveSource(db, sourceId, now, {name, account, configJson, credentialRef})`, `unhideTracks(db, sourceId, now, {locatorFrom, locatorTo})`. Each runs in one transaction and notifies `tracks`, `sources` and `source_mounts` by table name. `locatorFrom` and `locatorTo` (both or neither) mean `locator >= from AND locator < to`; the scanner computes a folder's range bounds. `setMountEnabled(true)` and `unhideTracks` throw `StateError` for a removed source: only `reviveSource` brings one back.
 - Reviving a source forces a full scan.
 - An unreachable root leaves its rows untouched.
 
@@ -105,6 +106,9 @@ The full list is in [Foreign keys](#foreign-keys).
 - Otherwise it inserts `present`. On conflict on `(source_id, locator)`, the status is `hidden` if the row is `hidden`, else `present`.
 - On conflict, `missing_since` is set to `NULL` unless the row is `hidden`.
 - It writes snapshot columns only. `uid`, `added_at` and the user columns are never touched.
+- One statement (`INSERT ... ON CONFLICT (source_id, locator) DO UPDATE ... RETURNING id`); it returns `tracks.id` and notifies `tracks` and `track_search`. Search streams declare `readsFrom` both `tracks` and `track_search`. The source kind is read in the same statement.
+- The companion carries `source_id`, `locator`, `uid`, `title`, `rel_path`, `added_at`, `updated_at` (the insert needs them) and any snapshot fields. Any column outside identity (except `id`), snapshot, `added_at` and `updated_at` (`status`, `missing_since`, user columns) throws `ArgumentError`. On conflict only the snapshot fields present in the companion are rewritten: an absent field keeps the stored value, an explicit null writes null.
+- Column classification (SQL names, in `track_snapshot.dart`, each `tracks` column in exactly one set; a test enforces it): `trackIdentityColumns` (`id`, `uid`, `source_id`, `locator`), `trackSnapshotColumns` (rewritten on conflict), `trackUserColumns` (never touched), `trackLifecycleColumns` (`status`, `missing_since`, `added_at`, `updated_at`; derived or set once).
 
 ### Online rows
 

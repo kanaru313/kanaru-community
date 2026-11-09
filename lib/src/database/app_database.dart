@@ -31,6 +31,7 @@ void configureConnection(CommonDatabase db) {
     Tracks,
     TrackDetails,
   ],
+  include: {'tables/library_track_search.drift'},
 )
 class AppDatabase extends $AppDatabase {
   AppDatabase(QueryExecutor executor) : this._(executor, isReference: false);

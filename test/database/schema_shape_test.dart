@@ -42,6 +42,32 @@ void main() {
     );
   });
 
+  test('track_search and its three triggers exist', () async {
+    expect(await names('table'), contains('track_search'));
+    expect(
+      await names('trigger'),
+      containsAll({
+        'tracks_search_insert',
+        'tracks_search_delete',
+        'tracks_search_update',
+      }),
+    );
+  });
+
+  test('the update trigger WHEN mentions every indexed column', () async {
+    final ftsCols = (await rows("SELECT name FROM pragma_table_info('track_search')"))
+        .map((r) => r['name']! as String)
+        .toList();
+    expect(ftsCols, hasLength(5));
+    final sql = (await rows(
+            "SELECT sql FROM sqlite_master WHERE name = 'tracks_search_update'"))
+        .single['sql']! as String;
+    final when = sql.substring(sql.indexOf('WHEN'), sql.indexOf('BEGIN'));
+    for (final c in ftsCols) {
+      expect(when, contains('old.$c IS NOT new.$c'), reason: c);
+    }
+  });
+
   test('named indexes exist', () async {
     expect(
       await names('index'),
