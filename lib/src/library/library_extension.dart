@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/gen/app_localizations.dart';
@@ -21,16 +21,16 @@ class LibraryExtension implements KanaruExtension {
       ..addNavItem(NavItem(
         id: 'library',
         path: '/library',
-        icon: Icons.library_music_outlined,
-        selectedIcon: Icons.library_music,
+        icon: KIcons.library,
+        selectedIcon: KIcons.librarySelected,
         label: (c) => AppLocalizations.of(c).navLibrary,
         order: 20,
       ))
       ..addNavItem(NavItem(
         id: 'playlists',
         path: '/playlists',
-        icon: Icons.queue_music_outlined,
-        selectedIcon: Icons.queue_music,
+        icon: KIcons.playlists,
+        selectedIcon: KIcons.playlistsSelected,
         label: (c) => AppLocalizations.of(c).navPlaylists,
         order: 30,
       ))

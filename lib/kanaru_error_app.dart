@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Shown when startup fails before the real app can run. The localization
 /// delegates are not available yet, so the text is fixed English + Vietnamese.

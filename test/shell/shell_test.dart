@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -17,8 +18,8 @@ class _Fake implements KanaruExtension {
       ..addNavItem(NavItem(
         id: 'fake',
         path: '/fake',
-        icon: Icons.extension_outlined,
-        selectedIcon: Icons.extension,
+        icon: KIcons.extension,
+        selectedIcon: KIcons.extensionSelected,
         label: (_) => 'FakeNav',
         order: 45,
       ))
@@ -40,8 +41,8 @@ class _Early implements KanaruExtension {
       ..addNavItem(NavItem(
         id: 'early',
         path: '/early',
-        icon: Icons.bolt_outlined,
-        selectedIcon: Icons.bolt,
+        icon: KIcons.bolt,
+        selectedIcon: KIcons.boltSelected,
         label: (_) => 'EarlyNav',
         order: 1,
       ))
@@ -56,8 +57,8 @@ class _Orphan implements KanaruExtension {
   void register(ExtensionRegistry r) => r.addNavItem(NavItem(
         id: 'orphan',
         path: '/orphan',
-        icon: Icons.circle,
-        selectedIcon: Icons.circle,
+        icon: KIcons.placeholder,
+        selectedIcon: KIcons.placeholder,
         label: (_) => 'Orphan',
         order: 1,
       ));
@@ -87,32 +88,32 @@ void main() {
     await _pump(tester, 360);
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.byType(NavigationDestination), findsNWidgets(5));
-    expect(find.byTooltip('Show or hide the sidebar'), findsNothing);
+    expect(_byTooltip('Show or hide the sidebar'), findsNothing);
   });
 
   testWidgets('tapping a tab changes the page', (tester) async {
     await _pump(tester, 360);
     expect(find.text('Your library is empty.'), findsNothing);
-    await tester.tap(find.byTooltip('Library'));
+    await tester.tap(_byTooltip('Library'));
     await tester.pumpAndSettle();
     expect(find.text('Your library is empty.'), findsOneWidget);
   });
 
   testWidgets('mobile Settings opens from Home and hides the bar', (tester) async {
     await _pump(tester, 360);
-    await tester.tap(find.byTooltip('Settings'));
+    await tester.tap(_byTooltip('Settings'));
     await tester.pumpAndSettle();
     expect(find.text('Native libraries'), findsOneWidget);
     expect(find.text('bridge test'), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
-    await tester.tap(find.byTooltip('Back'));
+    await tester.tap(_byTooltip('Back'));
     await tester.pumpAndSettle();
     expect(find.byType(NavigationBar), findsOneWidget);
   });
 
   testWidgets('mobile system back from Settings returns to Home', (tester) async {
     await _pump(tester, 360);
-    await tester.tap(find.byTooltip('Settings'));
+    await tester.tap(_byTooltip('Settings'));
     await tester.pumpAndSettle();
     expect(find.text('Native libraries'), findsOneWidget);
 
@@ -122,7 +123,7 @@ void main() {
     expect(find.text('Native libraries'), findsNothing);
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.text('Your library is empty.'), findsNothing);
-    expect(find.byTooltip('Settings'), findsOneWidget); // Home header icon
+    expect(_byTooltip('Settings'), findsOneWidget); // Home header icon
   });
 
   testWidgets('desktop Settings opens from the sidebar and Back returns', (tester) async {
@@ -130,7 +131,7 @@ void main() {
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
     expect(find.text('Native libraries'), findsOneWidget);
-    await tester.tap(find.byTooltip('Back'));
+    await tester.tap(_byTooltip('Back'));
     await tester.pumpAndSettle();
     expect(find.text('Native libraries'), findsNothing);
     expect(find.byKey(const ValueKey('sidebar')), findsOneWidget);
@@ -138,7 +139,7 @@ void main() {
 
   testWidgets('desktop Home button goes to / even with a lower-order tab', (tester) async {
     await _pump(tester, 1280, extra: [_Early()]);
-    await tester.tap(find.byTooltip('Home'));
+    await tester.tap(_byTooltip('Home'));
     await tester.pumpAndSettle();
     expect(find.text('early page'), findsNothing);
   });
@@ -148,17 +149,17 @@ void main() {
     expect(find.byType(NavigationBar), findsOneWidget);
     await _pump(tester, 1200);
     expect(find.byType(NavigationBar), findsNothing);
-    expect(find.byTooltip('Show or hide the sidebar'), findsOneWidget);
+    expect(_byTooltip('Show or hide the sidebar'), findsOneWidget);
   });
 
   testWidgets('1280 px: top bar and sidebar toggles 240 and 72', (tester) async {
     await _pump(tester, 1280);
     expect(find.text('Kanaru'), findsOneWidget);
     expect(_sidebarWidth(tester), 240);
-    await tester.tap(find.byTooltip('Show or hide the sidebar'));
+    await tester.tap(_byTooltip('Show or hide the sidebar'));
     await tester.pumpAndSettle();
     expect(_sidebarWidth(tester), 72);
-    await tester.tap(find.byTooltip('Show or hide the sidebar'));
+    await tester.tap(_byTooltip('Show or hide the sidebar'));
     await tester.pumpAndSettle();
     expect(_sidebarWidth(tester), 240);
   });
@@ -168,10 +169,10 @@ void main() {
     await tester.tap(find.text('Library'));
     await tester.pumpAndSettle();
     expect(find.text('Your library is empty.'), findsOneWidget);
-    await tester.tap(find.byTooltip('Back'));
+    await tester.tap(_byTooltip('Back'));
     await tester.pumpAndSettle();
     expect(find.text('Your library is empty.'), findsNothing);
-    await tester.tap(find.byTooltip('Forward'));
+    await tester.tap(_byTooltip('Forward'));
     await tester.pumpAndSettle();
     expect(find.text('Your library is empty.'), findsOneWidget);
   });
@@ -179,7 +180,7 @@ void main() {
   testWidgets('an extension nav item and route appear in both shells', (tester) async {
     await _pump(tester, 360, extra: [_Fake()]);
     expect(find.byType(NavigationDestination), findsNWidgets(6));
-    await tester.tap(find.byTooltip('FakeNav'));
+    await tester.tap(_byTooltip('FakeNav'));
     await tester.pumpAndSettle();
     expect(find.text('fake page'), findsOneWidget);
 
@@ -219,6 +220,11 @@ void main() {
     tester.platformDispatcher.localesTestValue = const [Locale('vi')];
     addTearDown(tester.platformDispatcher.clearLocalesTestValue);
     await _pump(tester, 360);
-    expect(find.byTooltip('Thư viện'), findsOneWidget);
+    expect(_byTooltip('Thư viện'), findsOneWidget);
   });
 }
+
+/// flutter_test's `find.byTooltip` does not match the `Tooltip` of material_ui.
+Finder _byTooltip(String message) => find.byWidgetPredicate(
+      (w) => w is Tooltip && w.message == message,
+    );

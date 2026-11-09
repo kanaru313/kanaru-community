@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
@@ -21,11 +20,9 @@ class KanaruApp extends ConsumerWidget {
       themeMode: ThemeMode.system,
       routerConfig: ref.watch(routerProvider),
       localizationsDelegates: [
-        ...AppLocalizations.localizationsDelegates,
+        AppLocalizations.delegate,
         ...registry.l10nDelegates,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
+        ...GlobalMaterialLocalizations.delegates,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
     );

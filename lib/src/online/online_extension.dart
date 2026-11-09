@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/gen/app_localizations.dart';
@@ -20,8 +20,8 @@ class OnlineExtension implements KanaruExtension {
       ..addNavItem(NavItem(
         id: 'online',
         path: '/online',
-        icon: Icons.cloud_outlined,
-        selectedIcon: Icons.cloud,
+        icon: KIcons.online,
+        selectedIcon: KIcons.onlineSelected,
         label: (c) => AppLocalizations.of(c).navOnline,
         order: 50,
       ))

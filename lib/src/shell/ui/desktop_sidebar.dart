@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../extension/state/registry_entries.dart';

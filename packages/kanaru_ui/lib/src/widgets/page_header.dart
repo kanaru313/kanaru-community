@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import '../icons/k_icons.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../tokens/k_layout.dart';
 import '../tokens/k_space.dart';
@@ -30,7 +31,7 @@ class PageHeader extends StatelessWidget {
         children: [
           if (onBack != null)
             IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: const Icon(KIcons.back),
               tooltip: backTooltip ?? MaterialLocalizations.of(context).backButtonTooltip,
               onPressed: onBack,
             ),

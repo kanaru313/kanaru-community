@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/gen/app_localizations.dart';
@@ -23,24 +23,24 @@ class ScreensExtension implements KanaruExtension {
       ..addNavItem(NavItem(
         id: 'home',
         path: '/',
-        icon: Icons.home_outlined,
-        selectedIcon: Icons.home,
+        icon: KIcons.home,
+        selectedIcon: KIcons.homeSelected,
         label: (c) => AppLocalizations.of(c).navHome,
         order: 10,
       ))
       ..addNavItem(NavItem(
         id: 'search',
         path: '/search',
-        icon: Icons.search,
-        selectedIcon: Icons.search,
+        icon: KIcons.search,
+        selectedIcon: KIcons.search,
         label: (c) => AppLocalizations.of(c).navSearch,
         order: 40,
       ))
       ..addNavItem(NavItem(
         id: 'settings',
         path: '/settings',
-        icon: Icons.settings_outlined,
-        selectedIcon: Icons.settings,
+        icon: KIcons.settings,
+        selectedIcon: KIcons.settingsSelected,
         label: (c) => AppLocalizations.of(c).navSettings,
         order: 100,
         mobileTab: false,

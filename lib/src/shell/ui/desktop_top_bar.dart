@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
@@ -35,22 +35,22 @@ class DesktopTopBar extends ConsumerWidget {
             children: [
               const SizedBox(width: KSpace.x2),
               _BarButton(
-                icon: Icons.menu,
+                icon: KIcons.sidebarToggle,
                 tooltip: l10n.tooltipToggleSidebar,
                 onPressed: onToggleSidebar,
               ),
               _BarButton(
-                icon: Icons.arrow_back,
+                icon: KIcons.back,
                 tooltip: l10n.tooltipBack,
                 onPressed: history.canGoBack ? history.back : null,
               ),
               _BarButton(
-                icon: Icons.arrow_forward,
+                icon: KIcons.forward,
                 tooltip: l10n.tooltipForward,
                 onPressed: history.canGoForward ? history.forward : null,
               ),
               _BarButton(
-                icon: Icons.home_outlined,
+                icon: KIcons.home,
                 tooltip: l10n.tooltipHome,
                 onPressed: onHome,
               ),
@@ -59,7 +59,7 @@ class DesktopTopBar extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: KSpace.x2,
                   children: [
-                    Icon(Icons.music_note, size: KSpace.x5, color: scheme.primary),
+                    Icon(KIcons.appLogo, size: KSpace.x5, color: scheme.primary),
                     Text('Kanaru', style: Theme.of(context).textTheme.titleSmall),
                   ],
                 ),

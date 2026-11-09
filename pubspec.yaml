@@ -33,12 +33,7 @@ dependencies:
   flutter_secure_storage: 11.2.0
 
   # UI, Icons & Colors
-  dynamic_color: ^2.1.0
-  material_color_utilities: any
-  material_ui: ^1.7.0
-  fluentui_system_icons: ^1.1.273
-  flutter_svg: ^2.0.17
-  table_calendar: ^3.3.0
+  material_ui: ^1.10.0
 
   # Platform & Desktop integration
   dbus: ^0.8.0

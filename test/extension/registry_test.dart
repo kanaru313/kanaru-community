@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/kanaru.dart';
@@ -15,8 +16,8 @@ class _Ext implements KanaruExtension {
 NavItem _nav(String id, int order) => NavItem(
       id: id,
       path: '/$id',
-      icon: Icons.circle,
-      selectedIcon: Icons.circle,
+      icon: KIcons.placeholder,
+      selectedIcon: KIcons.placeholder,
       label: (_) => id,
       order: order,
     );
@@ -60,8 +61,8 @@ void main() {
     final clash = NavItem(
       id: 'b',
       path: '/a',
-      icon: Icons.circle,
-      selectedIcon: Icons.circle,
+      icon: KIcons.placeholder,
+      selectedIcon: KIcons.placeholder,
       label: (_) => 'b',
       order: 2,
     );
@@ -103,8 +104,8 @@ void main() {
       ..addNavItem(NavItem(
         id: 'p',
         path: '/p',
-        icon: Icons.circle,
-        selectedIcon: Icons.circle,
+        icon: KIcons.placeholder,
+        selectedIcon: KIcons.placeholder,
         label: (_) => 'p',
         order: 2,
         pushed: true,
