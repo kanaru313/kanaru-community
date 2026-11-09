@@ -8,7 +8,7 @@
    final schema (`tracks` and the tables around it) as one `schemaVersion`.
 3. **Core modules**, one at a time, each working on both shells: player,
    library (scan and index), lyrics, plugins.
-4. **Extensions**: real licensing in the private package, then its features
+4. **Extensions**: licensing support in an extension package, then its features
    one by one. Streaming runtime and remote sources live in this repo.
 
 An offline local player ships before any streaming or remote-source work.

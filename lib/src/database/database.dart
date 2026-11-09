@@ -1,4 +1,4 @@
-/// Public surface of the database module, also used by the Pro repo.
+/// Public surface of the database module, also used by extension packages.
 library;
 
 export 'app_database.dart';

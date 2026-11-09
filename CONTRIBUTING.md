@@ -30,11 +30,8 @@ Conventional commits: `type(scope): summary`, with types such as `feat`, `fix`,
 ## Contributor License Agreement
 
 Contributions from outside the project need a signed Contributor License
-Agreement before they can be merged. The project is GPL-3.0-or-later, and its
-author also distributes a separate proprietary build on top of it; the CLA
-lets the author keep distributing that build under terms other than the GPL
-while your contribution stays available to everyone under the GPL here. A
-maintainer will ask for it on your first pull request.
+Agreement before they can be merged. The project is GPL-3.0-or-later; a
+maintainer will provide the agreement on your first pull request.
 
 ## Plugins
 

@@ -1,5 +1,5 @@
 name: kanaru_extensions
-description: "Extension list of the app. Public stub: empty. The private Pro repo overrides this package."
+description: "Extension list of the app. Default stub: empty. Custom builds can override this package."
 publish_to: none
 
 environment:

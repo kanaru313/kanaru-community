@@ -8,7 +8,7 @@ environment:
   sdk: ^3.13.3
 
 # Pub workspace: members share one lockfile. kanaru_extensions is NOT a member
-# (the private Pro repo overrides it), only a plain path dependency.
+# (so external builds can override it), only a plain path dependency.
 workspace:
   - packages/kanaru_ui
   - rust_builder

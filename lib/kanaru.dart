@@ -1,5 +1,5 @@
-/// Public API of the Kanaru app package, used by `kanaru_extensions` and the
-/// private Pro repo.
+/// Public API of the Kanaru app package, used by `kanaru_extensions` and
+/// extension packages.
 library;
 
 import 'dart:io';

@@ -53,5 +53,5 @@ app.*.map.json
 result
 result-*
 
-# Pro overrides (created by the private kanaru-pro repo)
+# Extension overrides
 pubspec_overrides.yaml

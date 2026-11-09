@@ -35,7 +35,7 @@ Not yet present: `media`, `plugins`, `playback`, `storage`, `lyrics`.
   `KMotion`, `KIcons`, `buildKanaruTheme`, `FormFactor`, widgets `KPage`,
   `PageHeader`, `KEmpty`, `KEmptyPage`, `ProBadge`. Tests in
   `packages/kanaru_ui/test/`.
-- `packages/kanaru_extensions`: `bundledExtensions`, empty in the public repo.
+- `packages/kanaru_extensions`: `bundledExtensions`, empty by default in this repo.
 
 ## Gate (`tool/`)
 

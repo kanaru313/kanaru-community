@@ -3,8 +3,8 @@ extension type const ProFeature(String id) {}
 
 enum LicenseStatus { granted, locked }
 
-/// Answers whether a Pro feature is unlocked. The public build ships
-/// [FreeLicenseService]; the Pro repo replaces it.
+/// Answers whether a Pro feature is unlocked. The default build ships
+/// [FreeLicenseService]; extension packages can provide custom implementations.
 abstract interface class LicenseService {
   LicenseStatus statusOf(ProFeature feature);
 }

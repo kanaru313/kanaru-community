@@ -1,5 +1,5 @@
-# Modular drift: each file with tables gets its own .drift.dart so the private
-# Pro repo can import and extend the public tables.
+# Modular drift: each file with tables gets its own .drift.dart so extension
+# packages can import and extend the core tables.
 targets:
   $default:
     auto_apply_builders: false

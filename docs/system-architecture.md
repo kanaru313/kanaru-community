@@ -30,8 +30,8 @@ main.dart
   `<data dir>/kanaru-community/kanaru.db`.
 - **Native**: Rust crates behind one FFI crate, built by cargokit for the
   Linux host and the Android ABIs.
-- **Extensions**: contribute through `ExtensionRegistry`; the private build
-  supplies more through `packages/kanaru_extensions`.
+- **Extensions**: contribute through `ExtensionRegistry`; downstream builds
+  can supply more through `packages/kanaru_extensions`.
 
 ## Layout
 

@@ -125,25 +125,25 @@ The router builds from the registry only. Nav items that are tabs
 route (pushed items such as Settings, detail pages) is a top-level route above
 the shell.
 
-### One runner, optional private package
+### One runner, optional extension packages
 
 This repository is the only Flutter runner (`android/`, `linux/`, `rust/`,
 `rust_builder/`). `pubspec.yaml` depends on `kanaru_extensions` as a plain
-path dependency (not a workspace member). The public stub returns an empty
+path dependency (not a workspace member). The default stub returns an empty
 list:
 
 ```dart
 List<KanaruExtension> get bundledExtensions => const [];
 ```
 
-A private build checks this repository out as a submodule and overrides
+A downstream build can check this repository out as a submodule or override
 `kanaru_extensions` with its own package through an uncommitted
 `pubspec_overrides.yaml`. That package depends back on `kanaru` and returns its
-extensions; the entry point is unchanged. The public code contains no logic of
-the private features, only locked placeholders (`ProFeature`, `ProBadge`,
-`FreeLicenseService`). Pub does not allow nested workspaces, which is why the
-private build resolves with its own lockfile and the public repo is never
-modified by it.
+extensions; the entry point is unchanged. The core codebase contains no logic of
+external features, only extension points and placeholders (`ProFeature`, `ProBadge`,
+`FreeLicenseService`). Pub does not allow nested workspaces, which is why downstream
+builds resolve with their own lockfile and the public repo is never
+modified by them.
 
 ## Database
 
@@ -183,4 +183,4 @@ modified by it.
 | Nav entry, route, settings section, top bar action | Register in the module's `KanaruExtension` |
 | Calls into Rust | The module's `data/`, nowhere else |
 | Rust code | `rust/crates/kanaru_media` (tags, covers), `kanaru_plugin_runtime` (plugin JS), `kanaru_bridge` (FFI only) |
-| Private feature | The private package, registered through `KanaruExtension` |
+| Extension feature | The extension package, registered through `KanaruExtension` |
