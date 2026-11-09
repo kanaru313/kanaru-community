@@ -1,0 +1,14 @@
+# Modular drift: each file with tables gets its own .drift.dart so extension
+# packages can import and extend the core tables.
+targets:
+  $default:
+    auto_apply_builders: false
+    builders:
+      drift_dev:analyzer:
+        enabled: true
+        options: &options
+          sql:
+            dialects: [sqlite]
+      drift_dev:modular:
+        enabled: true
+        options: *options

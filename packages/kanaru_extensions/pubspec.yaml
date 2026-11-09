@@ -1,0 +1,12 @@
+name: kanaru_extensions
+description: "Extension list of the app. Default stub: empty. Custom builds can override this package."
+publish_to: none
+
+environment:
+  sdk: ^3.13.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  kanaru:
+    path: ../..

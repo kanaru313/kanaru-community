@@ -1,0 +1,32 @@
+# Module DAG (03 §4). Direct edges; the checker allows the transitive closure.
+package: kanaru        # Dart package name of the app
+special: [rust]        # generated FFI under lib/src/rust: outside the DAG, own rule
+# Packages domain/ may not import (it must run in plain Dart); `flutter`,
+# `kanaru_ui` and every `flutter_*` package are always forbidden.
+domain_forbidden:
+  - go_router
+  - material_ui
+  - dynamic_color
+  - fluentui_system_icons
+  - table_calendar
+  - window_manager
+  - file_selector
+  - media_kit
+  - media_kit_libs_audio
+  - path_provider
+  - rust_lib_kanaru
+modules:
+  foundation: []
+  platform: [foundation]
+  database: [foundation]
+  extension: [foundation]   # startup hooks get drift's DatabaseConnection, not AppDatabase
+  media: [extension, foundation]
+  plugins: [media, database, foundation]
+  playback: [media, platform, database]
+  storage: [media, platform]
+  library: [playback, storage, media, database, extension, platform]
+  lyrics: [library, playback, plugins]
+  online: [library, playback, plugins]
+  screens: [lyrics, online, library, playback, plugins, storage, extension, platform]
+  shell: [screens]
+  router: [shell, screens]

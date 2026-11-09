@@ -1,0 +1,43 @@
+# Kanaru native code: one Cargo workspace, three crates.
+#
+# - kanaru_media: tags, covers, waveform (lofty, symphonia, image). No FFI.
+# - kanaru_plugin_runtime: untrusted plugin JS (QuickJS). No FFI.
+# - kanaru_bridge: the only cdylib and the only crate that knows
+#   flutter_rust_bridge. It depends on both crates above; they never depend on
+#   each other.
+#
+# cargokit (rust_builder/) builds crates/kanaru_bridge; Cargo finds this
+# workspace from there, so every member is rebuilt when it changes.
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+# Edition 2021: flutter_rust_bridge 2.13 generates `#[no_mangle]`, which
+# edition 2024 rejects without `unsafe(...)`.
+edition = "2021"
+rust-version = "1.89"
+license = "GPL-3.0-or-later"
+publish = false
+
+# Every third-party version lives here, pinned exactly with the reason.
+[workspace.dependencies]
+# The generated Dart code must come from the same codegen version, so the
+# crate pins the exact version (see flutter_rust_bridge.yaml and pubspec.yaml).
+flutter_rust_bridge = "=2.13.0"
+
+kanaru_media = { path = "crates/kanaru_media" }
+kanaru_plugin_runtime = { path = "crates/kanaru_plugin_runtime" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+unwrap_used = "deny"
+
+# Debug builds decode audio and images in the app; unoptimized they are too
+# slow to use.
+[profile.dev]
+opt-level = 3

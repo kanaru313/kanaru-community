@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Full local gate. Run from anywhere inside the nix shell:
+#   tool/check            Dart checks
+#   tool/check --rust     plus cargo test and clippy
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+flutter analyze
+dart analyze
+dart run tool/check_architecture.dart
+flutter test
+(cd packages/kanaru_ui && flutter test)
+(cd tool/architecture_lint && dart test)
+
+if [[ "${1:-}" == "--rust" ]]; then
+  cargo test --manifest-path rust/Cargo.toml
+  cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
+fi

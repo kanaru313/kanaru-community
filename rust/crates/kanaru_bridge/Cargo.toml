@@ -1,0 +1,27 @@
+[package]
+name = "kanaru_bridge"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+# The library keeps the package name (libkanaru_bridge.so): cargokit looks the
+# artifact up by package name, and the Dart loader uses the same stem.
+# cdylib is loaded by Flutter; rlib lets integration tests link the crate.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+flutter_rust_bridge.workspace = true
+kanaru_media.workspace = true
+kanaru_plugin_runtime.workspace = true
+
+# Not the workspace lints: generated FFI code needs `unsafe`. `unsafe` written
+# by hand belongs only in src/os.rs.
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+unwrap_used = "deny"
