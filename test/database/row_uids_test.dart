@@ -46,4 +46,17 @@ void main() {
     expect(() => sourceUidForRemote('plugin', null, 'plugin-ab12cd34'), returnsNormally);
     expect(() => sourceUidForRemote('s3', null, 's3://bucket/prefix'), returnsNormally);
   });
+
+  test('collection uids match fixed vectors', () {
+    expect(favoritesPlaylistUid, 'favorites');
+    expect(favoriteEntryUid('favorites', 'trk:e9b2b3ee6541df64'), 'fav:a5e3651578a93b10');
+    expect(savedItemUid(source, 'album', 'alb-1'), 'saved:0fbbf90b59213acb');
+  });
+
+  test('saved item uid depends on kind and remote id', () {
+    expect(savedItemUid('src:a', 'album', '1'),
+        isNot(savedItemUid('src:a', 'artist', '1')));
+    expect(savedItemUid('src:a', 'album', '1'),
+        isNot(savedItemUid('src:a', 'album', '2')));
+  });
 }

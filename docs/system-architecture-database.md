@@ -70,6 +70,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
   ```
 
   Each group names its revive columns. Reviving a source rewrites `name`, `account`, `config_json`, `credential_ref`.
+  Code: `insertOrRevive(db, table, row, now:, reviveColumns:)` in `tombstone_upsert.dart`. It returns the row (same `id` on a conflict) and touches only that row. `deleted_at = NULL` and `updated_at = now` always. `reviveColumns` names columns taken from the new row only when the existing row is a tombstone (`CASE WHEN deleted_at IS NULL THEN old ELSE excluded END`), so a live row keeps its values (a second favorite keeps its place). It throws `ArgumentError` (failed future) for a table without `uid`, `deleted_at` or `updated_at`, an unknown column, `id`/`uid`/`deleted_at`/`updated_at`, or a column absent from the row. Revive columns: Favorites entry `sort_key`, `added_at`; saved item `snapshot_json`, `saved_at`; excluded folder `display_path`.
 - Deleting a playlist deletes its entries. Reviving a playlist does not revive its old entries.
 - Never use `INSERT OR REPLACE` on `tracks`, `play_log`, or any table with triggers or incoming foreign keys. Use `ON CONFLICT` upserts.
 
@@ -452,7 +453,9 @@ Partial unique indexes (live rows only):
 | `playlists_mood_name_unique` | `(name_key) WHERE kind = 'mood' AND deleted_at IS NULL` | One mood per name. |
 | `playlists_origin_unique` | `(origin_source_id, origin_locator) WHERE origin_source_id IS NOT NULL AND deleted_at IS NULL` | Importing the same file twice does not duplicate it. |
 
-Renaming a mood changes `name` and `name_key` only. Its uid stays.
+Plain index `playlists_origin_source` on `(origin_source_id)` serves the foreign key check (a partial index cannot). Mood rows must always set `name_key`: NULLs are distinct, so a NULL bypasses `playlists_mood_name_unique`.
+
+Renaming a mood changes `name` and `name_key` only. Its uid stays. Constants: `PlaylistKind` (`favorites`, `mood`), `SavedItemKind` (`album`, `artist`, `playlist_remote`). Uids: `favoritesPlaylistUid`, `favoriteEntryUid(playlistUid, trackUid)`, `savedItemUid(sourceUid, kind, remoteId)` in `row_uids.dart`.
 
 #### playlist_entries
 

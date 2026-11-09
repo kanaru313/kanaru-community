@@ -10,7 +10,9 @@ import 'package:kanaru/src/database/tables/playback_tables.drift.dart' as i4;
 import 'package:kanaru/src/database/tables/library_track_search.drift.dart'
     as i5;
 import 'package:kanaru/src/database/tables/extension_tables.drift.dart' as i6;
-import 'package:drift/internal/modular.dart' as i7;
+import 'package:kanaru/src/database/tables/library_collection_tables.drift.dart'
+    as i7;
+import 'package:drift/internal/modular.dart' as i8;
 
 abstract class $AppDatabase extends i0.GeneratedDatabase {
   $AppDatabase(i0.QueryExecutor e) : super(e);
@@ -27,8 +29,12 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
   late final i5.TrackSearch trackSearch = i5.TrackSearch(this);
   late final i6.$ExtensionSchemaTable extensionSchema = i6
       .$ExtensionSchemaTable(this);
+  late final i7.$PlaylistsTable playlists = i7.$PlaylistsTable(this);
+  late final i7.$PlaylistEntriesTable playlistEntries = i7
+      .$PlaylistEntriesTable(this);
+  late final i7.$SavedItemsTable savedItems = i7.$SavedItemsTable(this);
   i1.PlaybackStatsDrift get playbackStatsDrift =>
-      i7.ReadDatabaseContainer(this)
+      i8.ReadDatabaseContainer(this)
           .accessor<i1.PlaybackStatsDrift>(i1.PlaybackStatsDrift.new);
   @override
   Iterable<i0.TableInfo<i0.Table, Object?>> get allTables =>
@@ -64,6 +70,16 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
     i5.tracksSearchDelete,
     i5.tracksSearchUpdate,
     extensionSchema,
+    playlists,
+    playlistEntries,
+    savedItems,
+    i7.playlistsFavoritesUnique,
+    i7.playlistsMoodNameUnique,
+    i7.playlistsOriginUnique,
+    i7.playlistsOriginSource,
+    i7.playlistEntriesOrder,
+    i7.playlistEntriesTrack,
+    i7.savedItemsLookup,
   ];
   @override
   i0.StreamQueryUpdateRules get streamUpdateRules =>
@@ -133,6 +149,15 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
           ),
           result: [i0.TableUpdate('track_search', kind: i0.UpdateKind.insert)],
         ),
+        i0.WritePropagation(
+          on: i0.TableUpdateQuery.onTableName(
+            'playlists',
+            limitUpdateKind: i0.UpdateKind.delete,
+          ),
+          result: [
+            i0.TableUpdate('playlist_entries', kind: i0.UpdateKind.delete),
+          ],
+        ),
       ]);
 }
 
@@ -159,4 +184,10 @@ class $AppDatabaseManager {
       i5.$TrackSearchTableManager(_db, _db.trackSearch);
   i6.$$ExtensionSchemaTableTableManager get extensionSchema =>
       i6.$$ExtensionSchemaTableTableManager(_db, _db.extensionSchema);
+  i7.$$PlaylistsTableTableManager get playlists =>
+      i7.$$PlaylistsTableTableManager(_db, _db.playlists);
+  i7.$$PlaylistEntriesTableTableManager get playlistEntries =>
+      i7.$$PlaylistEntriesTableTableManager(_db, _db.playlistEntries);
+  i7.$$SavedItemsTableTableManager get savedItems =>
+      i7.$$SavedItemsTableTableManager(_db, _db.savedItems);
 }

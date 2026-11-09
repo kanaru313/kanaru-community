@@ -32,6 +32,9 @@ void configureConnection(CommonDatabase db) {
     TrackDetails,
     PlayLog,
     PlayStats,
+    Playlists,
+    PlaylistEntries,
+    SavedItems,
   ],
   include: {
     'tables/library_track_search.drift',

@@ -24,3 +24,14 @@ String trackUid(String sourceUid, String locator) =>
 /// Uid of an excluded folder: `exc:` + hash(source uid, folder key).
 String excludedFolderUid(String sourceUid, String folderKey) =>
     stableUid('exc', [sourceUid, folderKey]);
+
+/// Uid of the Favorites playlist. Fixed, so every device agrees on it.
+const favoritesPlaylistUid = 'favorites';
+
+/// Uid of a Favorites entry: `fav:` + hash(playlist uid, track uid).
+String favoriteEntryUid(String playlistUid, String trackUid) =>
+    stableUid('fav', [playlistUid, trackUid]);
+
+/// Uid of a saved item: `saved:` + hash(source uid, kind, remote id).
+String savedItemUid(String sourceUid, String kind, String remoteId) =>
+    stableUid('saved', [sourceUid, kind, remoteId]);

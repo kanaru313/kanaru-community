@@ -103,3 +103,43 @@ Future<int> addPlay(
             deletedAt: Value(deletedAt),
           ),
         );
+
+/// Inserts a playlist and returns its id. [uid] defaults to a unique value.
+Future<int> addPlaylist(
+  AppDatabase db, {
+  String name = 'Playlist',
+  String? kind,
+  String? nameKey,
+  String? uid,
+  int now = 1000,
+}) =>
+    db.into(db.playlists).insert(
+          PlaylistsCompanion.insert(
+            uid: uid ?? 'pl-${_uidCounter++}',
+            name: name,
+            kind: Value(kind),
+            nameKey: Value(nameKey),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+/// Inserts an entry of [trackId] in [playlistId] and returns its id.
+Future<int> addEntry(
+  AppDatabase db,
+  int playlistId,
+  int trackId, {
+  required String sortKey,
+  String? uid,
+  int now = 1000,
+}) =>
+    db.into(db.playlistEntries).insert(
+          PlaylistEntriesCompanion.insert(
+            uid: uid ?? 'pe-${_uidCounter++}',
+            playlistId: playlistId,
+            trackId: trackId,
+            sortKey: sortKey,
+            addedAt: now,
+            updatedAt: now,
+          ),
+        );
