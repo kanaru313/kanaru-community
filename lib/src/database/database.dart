@@ -10,3 +10,5 @@ export 'tombstone_upsert.dart';
 export 'tables.dart';
 export 'track_lifecycle.dart';
 export 'track_snapshot.dart';
+export 'track_gc.dart';
+export 'track_visibility.dart';

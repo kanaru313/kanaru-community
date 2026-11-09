@@ -143,3 +143,32 @@ Future<int> addEntry(
             updatedAt: now,
           ),
         );
+
+/// Inserts a track of [sourceId] whose `updated_at` (and, for `missing`,
+/// `missing_since`) is [at]; [missingSince] overrides it (null clears it).
+Future<int> addAgedTrack(
+  AppDatabase db,
+  int sourceId,
+  String locator,
+  String status, {
+  int at = 1000,
+  int? rating,
+  Object? missingSince = #sameAsAt,
+}) async {
+  final id = await addTrack(
+    db,
+    sourceId,
+    locator: locator,
+    status: status,
+    rating: rating,
+    now: at,
+  );
+  final since = missingSince == #sameAsAt ? at : missingSince as int?;
+  if (status == TrackStatus.missing) {
+    await db.customStatement(
+      'UPDATE tracks SET missing_since = ? WHERE id = ?',
+      [since, id],
+    );
+  }
+  return id;
+}

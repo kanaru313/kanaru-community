@@ -78,7 +78,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 
 - Every foreign key into `tracks` (public and Pro) is `ON DELETE RESTRICT`. No `CASCADE` and no `SET NULL` into `tracks`.
 - `CASCADE` only runs from a parent to a pure child outside `tracks`: playlist to entries, source to mount, source to excluded folders.
-- Owned one-to-one children of a track (`track_details`, `play_stats`, and `track_artists` once added) are `RESTRICT` too. The track GC deletes them before the track.
+- Owned one-to-one children of a track (`track_details`, `play_stats`, and `track_artists` once added) are `RESTRICT` too. The track GC deletes them before the track. Nothing may reference an owned child: the GC throws when a foreign key points at one.
 - Every `*track_id` column has a foreign key into `tracks` and an index whose first column is that column. A single `INTEGER PRIMARY KEY` counts as that index.
 - Every foreign key column is the first column of an index, or the primary key.
 
@@ -134,9 +134,11 @@ The full list is in [Foreign keys](#foreign-keys).
    | `remote` | `updated_at <= now - remoteGraceMs` (24 h). Keeps the now-playing and queued online track. |
 
 6. `present` rows are never deleted.
-7. The helper notifies streams for `tracks`, `track_details` and `play_stats`.
+7. The helper notifies streams for `tracks`, `track_details`, `play_stats` and `track_search` (the FTS delete trigger writes it), only when rows were deleted. It returns the number of deleted tracks.
 
-When the GC runs (startup, after a scan) is set by the library module. This file defines only the helper.
+Details: the checks and the candidate set are computed once per run (a `TEMP` table inside the transaction, dropped at the end), so the owned-children delete and the track delete use the same ids. A foreign key whose parent column is not named in the schema refers to `tracks.id`. Only the main schema is inspected. A composite foreign key into `tracks` throws like a non-`RESTRICT` one. Tables are addressed as `main.<table>`, so a temp table of the same name cannot hide a reference. A foreign key into an owned child table throws too. A `missing` row with `missing_since IS NULL` is never collected, so the scanner must set `missing_since` when it marks a row missing. Any failure leaves the database unchanged.
+
+Scheduling is the caller's: the library module runs the GC in the background, debounced on app startup and after each completed scan. This file defines only the helper.
 
 ### Library reads and search
 
