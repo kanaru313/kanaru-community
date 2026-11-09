@@ -27,7 +27,8 @@ main.dart
 - **Navigation**: go_router; one shell branch per tab nav item, other routes
   above the shell. Desktop keeps its own back/forward history.
 - **Persistence**: one SQLite file through drift, in
-  `<data dir>/kanaru-community/kanaru.db`.
+  `<data dir>/kanaru-community/kanaru.db`. Tables and rules:
+  [system-architecture-database.md](./system-architecture-database.md).
 - **Native**: Rust crates behind one FFI crate, built by cargokit for the
   Linux host and the Android ABIs.
 - **Extensions**: contribute through `ExtensionRegistry`; downstream builds

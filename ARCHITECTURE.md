@@ -148,10 +148,16 @@ modified by them.
 ## Database
 
 - One drift database, one file (`kanaru.db`). `AppDatabase` owns
-  `schemaVersion`; tables live in `lib/src/database/tables/<module>_tables.dart`.
-  Today there is one table, `extension_schema`; the library schema comes later.
-- `PRAGMA foreign_keys = ON` in `beforeOpen`. Foreign keys into `tracks` use
-  `ON DELETE RESTRICT`. There is one `tracks` table for every source.
+  `schemaVersion`; tables live in `lib/src/database/tables/<module>_<group>_tables.dart`,
+  and SQL-only objects (FTS5 tables, triggers, seed rows) in a sibling `.drift` file.
+- The table-by-table spec of schema v1 is in
+  [docs/system-architecture-database.md](docs/system-architecture-database.md).
+  It is the target: the coded groups land with the schema v1 foundation PR.
+- `PRAGMA foreign_keys = ON` on every connection. Every foreign key into
+  `tracks` is `ON DELETE RESTRICT`: no CASCADE and no SET NULL. The track GC
+  deletes owned child rows (`track_details`, `play_stats`) before a track, and
+  refuses to run when a foreign key into `tracks` is not RESTRICT. There is one
+  `tracks` table for every source.
 - Drift runs in modular mode (`build.yaml`), so another package can import the
   public tables and define its own database over the same connection.
 - Extensions never use drift's `schemaVersion` or `MigrationStrategy`. Each
@@ -176,7 +182,7 @@ modified by them.
 | Widget that knows nothing about music | `packages/kanaru_ui` |
 | Pure Dart function that belongs to no module | `foundation/` |
 | Linux and Android differ | `platform/` (interface in `domain/`, implementations in `data/`) |
-| Database table | `database/tables/<module>_tables.dart` |
+| Database table | `database/tables/<module>_<group>_tables.dart`; SQL-only entities (FTS5, triggers) in a sibling `.drift` file |
 | Root page that combines several modules | `screens/` |
 | Modal or widget that combines several modules | The lower module owns it; the higher one adds entries through the registry |
 | A lower module needs a higher module's capability | Interface below, implementation above |
