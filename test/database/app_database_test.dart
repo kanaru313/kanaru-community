@@ -1,20 +1,22 @@
 import 'dart:io';
 
-import 'package:drift/drift.dart' show driftRuntimeOptions;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/kanaru.dart';
 
+import 'support/test_db.dart';
+
 void main() {
-  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
   late AppDatabase db;
 
-  setUp(() => db = AppDatabase(NativeDatabase.memory()));
+  setUp(() => db = openTestDb());
   tearDown(() => db.close());
 
-  test('enables foreign keys on open', () async {
-    final row = await db.customSelect('PRAGMA foreign_keys').getSingle();
-    expect(row.read<int>('foreign_keys'), 1);
+  Future<int> pragma(AppDatabase d, String name) async =>
+      (await d.customSelect('PRAGMA $name').getSingle()).read<int>(name);
+
+  test('enables foreign keys and recursive triggers on the test helper', () async {
+    expect(await pragma(db, 'foreign_keys'), 1);
+    expect(await pragma(db, 'recursive_triggers'), 1);
   });
 
   test('creates extension_schema and stores a version', () async {
@@ -31,20 +33,76 @@ void main() {
     expect(stored.version, 3);
   });
 
-  test('reopening a file database keeps data and does not recreate tables', () async {
-    final dir = Directory.systemTemp.createTempSync('kanaru_db_');
-    addTearDown(() => dir.deleteSync(recursive: true));
-    final file = File('${dir.path}/kanaru.db');
+  group('file database', () {
+    late Directory dir;
+    late File file;
 
-    final first = AppDatabase.file(file);
-    await first.into(first.extensionSchema).insert(
-          ExtensionSchemaCompanion.insert(extensionId: 'pro', version: 2),
-        );
-    await first.close();
+    setUp(() {
+      dir = Directory.systemTemp.createTempSync('kanaru_db_');
+      file = File('${dir.path}/kanaru.db');
+    });
+    tearDown(() => dir.deleteSync(recursive: true));
 
-    final second = AppDatabase.file(file);
-    addTearDown(second.close);
-    final stored = await second.select(second.extensionSchema).getSingle();
-    expect(stored.version, 2);
+    test('enables both pragmas on AppDatabase.file', () async {
+      final d = AppDatabase.file(file);
+      addTearDown(d.close);
+      expect(await pragma(d, 'foreign_keys'), 1);
+      expect(await pragma(d, 'recursive_triggers'), 1);
+    });
+
+    test('reopening keeps data and passes the schema guard', () async {
+      final first = AppDatabase.file(file);
+      await first.into(first.extensionSchema).insert(
+            ExtensionSchemaCompanion.insert(extensionId: 'pro', version: 2),
+          );
+      await first.close();
+
+      final second = AppDatabase.file(file);
+      addTearDown(second.close);
+      final stored = await second.select(second.extensionSchema).getSingle();
+      expect(stored.version, 2);
+    });
+
+    test('the guard names an index dropped from an older file', () async {
+      final first = AppDatabase.file(file);
+      await first.customStatement('DROP INDEX tracks_song_key');
+      await first.close();
+
+      final second = AppDatabase.file(file);
+      addTearDown(second.close);
+      await expectLater(
+        second.customSelect('SELECT 1').get(),
+        throwsA(isA<StateError>().having(
+          (e) => e.message,
+          'message',
+          allOf(contains('delete it'), contains('index:tracks_song_key')),
+        )),
+      );
+    });
+
+    test('the guard names a stale trigger on a public table', () async {
+      final first = AppDatabase.file(file);
+      await first.customStatement(
+          'CREATE TRIGGER stale_tr AFTER INSERT ON tracks BEGIN SELECT 1; END');
+      await first.close();
+
+      final second = AppDatabase.file(file);
+      addTearDown(second.close);
+      await expectLater(
+        second.customSelect('SELECT 1').get(),
+        throwsA(isA<StateError>().having((e) => e.message, 'message',
+            allOf(contains('extra trigger:stale_tr'), contains(file.path)))),
+      );
+    });
+
+    test('the guard ignores tables added by an extension', () async {
+      final first = AppDatabase.file(file);
+      await first.customStatement('CREATE TABLE pro_extra (id INTEGER PRIMARY KEY)');
+      await first.close();
+
+      final second = AppDatabase.file(file);
+      addTearDown(second.close);
+      await second.customSelect('SELECT 1').get();
+    });
   });
 }

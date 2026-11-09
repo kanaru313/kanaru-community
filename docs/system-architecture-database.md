@@ -36,7 +36,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 - Times are epoch milliseconds, `INTEGER`.
 - Booleans are `INTEGER NOT NULL CHECK (x IN (0, 1))`.
 - `CHECK` is used only on fixed sets: track status, rating range, booleans. Open-ended kinds (`sources.kind`, `playlists.kind`, `saved_items.kind`) are validated by Dart constants, so adding a kind needs no table rebuild.
-- `foreign_keys = ON` and `recursive_triggers = ON` on every connection, set in `NativeDatabase(setup:)` and in `beforeOpen`.
+- `foreign_keys = ON` and `recursive_triggers = ON` on every connection, set by `configureConnection` in `NativeDatabase(setup:)` and again in `beforeOpen`.
 - The device id is stored in no table. It comes from a file outside the database (the helper arrives with playback). `play_log.device_id` records it per row.
 
 ### uid
@@ -178,6 +178,7 @@ When the GC runs (startup, after a scan) is set by the library module. This file
 - Pro views of online tracks expect `remote`. Library-style views use the visibility helper (`present` only).
 - Albums are derived, with no table. History is `play_log`.
 - Pro tables live in `kanaru-pro` (AI chat, per-track translation config, smart playlists). They are versioned in `extension_schema`, and any foreign key into `tracks` is `RESTRICT`.
+- Extensions never add indexes or triggers to public tables.
 - `play_stats_ctl` is private to `database/` and is not exported.
 - `kanaru-pro` runs the same foreign-key check against `trackOwnedChildTables` in its CI.
 
@@ -187,7 +188,7 @@ When the GC runs (startup, after a scan) is set by the library module. This file
 
 ### Schema version
 
-- `schemaVersion` stays 1 until the first release. Developer databases from before this schema are deleted. A debug-only guard compares the file's schema with a fresh in-memory database and fails with a message to delete the file.
+- `schemaVersion` stays 1 until the first release. Developer databases from before this schema are deleted. A debug-only guard (`schema_guard.dart`) compares every table, index and trigger of a fresh in-memory `AppDatabase` with the file, ignoring in-memory databases, FTS5 shadow tables and objects only the file has (extension tables share the file). On a difference it fails with a message to delete the file that names the differing objects.
 
 ## Foreign keys
 
@@ -338,7 +339,7 @@ The UNIQUE `(source_id, locator)` also creates an implicit index.
 
 #### track_search (FTS5)
 
-- `CREATE VIRTUAL TABLE track_search USING fts5(...)`: external content on `tracks` (`content='tracks'`, `content_rowid='id'`).
+- `CREATE VIRTUAL TABLE track_search USING fts5(...)` (needs `modules: [fts5]` in `build.yaml`): external content on `tracks` (`content='tracks'`, `content_rowid='id'`).
 - Indexed columns: `title_sort`, `artist_search`, `album_search`, `album_artist_search`, `genre_search`.
 - `tokenize='unicode61 remove_diacritics 0'` (accents are kept), `prefix='1 2 3'`.
 - Triggers:

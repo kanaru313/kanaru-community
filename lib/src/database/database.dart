@@ -3,4 +3,5 @@ library;
 
 export 'app_database.dart';
 export 'app_database.drift.dart';
+export 'row_uids.dart';
 export 'tables.dart';
