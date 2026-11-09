@@ -46,11 +46,24 @@ All user-visible text goes through `lib/l10n/app_en.arb` (template) and
 
 ## Database
 
-- Tables in `lib/src/database/tables/<module>_tables.dart`; change
-  `AppDatabase.schemaVersion` and add a migration step with every schema
-  change.
-- Foreign keys into `tracks` are `ON DELETE RESTRICT`.
-- Extensions migrate their own tables by hand through `extension_schema`.
+- Tables in `lib/src/database/tables/<module>_<group>_tables.dart`; SQL-only
+  objects (FTS5 tables, triggers, seed rows) in a sibling `.drift` file.
+- `schemaVersion` stays 1 until the first release. Change the tables in place;
+  the debug schema guard asks to delete the developer database when the file
+  differs. From the first release on, bump it and add a migration step.
+- Every foreign key into `tracks` is `ON DELETE RESTRICT`, written explicitly
+  (never the default `NO ACTION`). Owned child rows (`track_details`,
+  `play_stats`) are deleted by the track GC; nothing references an owned child.
+- Never `INSERT OR REPLACE` on `tracks` or `play_log`; use `ON CONFLICT`
+  (`upsertTrackSnapshot`, `insertOrRevive`).
+- Library reads filter with `visibleTrackWhere` / `isVisibleTrack`.
+- Build every FTS `MATCH` input with `ftsPrefixQuery`, never by hand.
+- An online track and the row that references it are written in one
+  transaction.
+- Extensions never add indexes or triggers to public tables; they migrate their
+  own tables by hand through `extension_schema`.
+- Update `docs/system-architecture-database.md` with every schema change; a
+  test checks that each table, index and trigger is named there.
 
 ## Rust
 

@@ -16,9 +16,9 @@ Map of what exists. Module rules: [ARCHITECTURE.md](../ARCHITECTURE.md).
 
 | Module | Contents |
 |---|---|
-| `foundation/` | `result.dart` (sealed `Ok`/`Err`), `app_logger.dart` (`setupLogging`) |
+| `foundation/` | `result.dart` (sealed `Ok`/`Err`), `app_logger.dart` (`setupLogging`); `ids/` (`stableHashHex`, `stableUid`, `newUlid`, `isUlid`); `ordering/` (`generateKeyBetween`, `generateNKeysBetween`) |
 | `platform/` | `domain/app_paths.dart` (`AppPaths`, `kanaruDirName = 'kanaru-community'`); `data/` `linux_app_paths.dart` (XDG), `android_app_paths.dart` (`path_provider`), `app_paths_factory.dart`, `native_library.dart` (loads Rust, the only importer of `lib/src/rust`); `state/platform_providers.dart` |
-| `database/` | `app_database.dart` (`AppDatabase`, `schemaVersion` 1, `sharedConnection`), `tables/extension_tables.dart` (`ExtensionSchema`), `tables.dart`, `database.dart` (barrel), `state/database_providers.dart`; generated `*.drift.dart` |
+| `database/` | `app_database.dart` (`AppDatabase`, `schemaVersion` 1, `sharedConnection`, `configureConnection`); `tables/` `library_source_tables.dart` (`sources`, `source_mounts`, `excluded_folders`), `library_track_tables.dart` (`tracks`, `track_details`) + `library_track_search.drift` (`track_search` FTS5, triggers), `playback_tables.dart` (`play_log`, `play_stats`) + `playback_stats.drift` (`play_stats_ctl`, stats triggers), `library_collection_tables.dart` (`playlists`, `playlist_entries`, `saved_items`), `extension_tables.dart` (`ExtensionSchema`); helpers `row_uids.dart`, `tombstone_upsert.dart` (`insertOrRevive`), `track_snapshot.dart` (`upsertTrackSnapshot`), `track_lifecycle.dart`, `track_gc.dart` (`collectOrphanTracks`), `track_visibility.dart`, `fts_query.dart` (`ftsPrefixQuery`), `play_stats_bulk.dart` (`runPlayStatsBulk`), `schema_guard.dart` (debug schema check); `tables.dart`, `database.dart` (barrel), `state/database_providers.dart`; generated `*.drift.dart`. Spec: [system-architecture-database.md](./system-architecture-database.md) |
 | `extension/` | `kanaru_extension.dart`; `domain/license.dart` (`ProFeature`, `LicenseStatus`, `LicenseService`, `FreeLicenseService`); `state/extension_registry.dart`, `registry_entries.dart` (`NavItem`, `SettingsSection`, `TopBarAction`, `StartupContext`, `StartupHook`), `extension_providers.dart` |
 | `library/` | `library_extension.dart`; `ui/` Library and Playlists placeholder pages |
 | `online/` | `online_extension.dart`; `ui/online_page.dart` |
@@ -55,6 +55,8 @@ far). `rust_builder/` is the cargokit glue; generated bindings are
 
 ## Tests (`test/`)
 
-`bootstrap/` (startup order, failure cleanup), `database/` (reopen keeps data),
-`extension/` (registry, license), `platform/` (Linux paths), `shell/` (shells,
+`bootstrap/` (startup order, failure cleanup), `database/` (schema shape and
+constraints, foreign keys, snapshot upsert, lifecycle, GC, play stats, search,
+collections, spec-vs-schema check; `support/` has the shared test database),
+`foundation/` (ids, fractional keys), `extension/` (registry, license), `platform/` (Linux paths), `shell/` (shells,
 router, nav).

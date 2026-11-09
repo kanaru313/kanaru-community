@@ -9,6 +9,8 @@ targets:
         options: &options
           sql:
             dialects: [sqlite]
+            options:
+              modules: [fts5]
       drift_dev:modular:
         enabled: true
         options: *options

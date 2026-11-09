@@ -4,8 +4,9 @@
 
 1. **Repository skeleton** (done): pub workspace, `kanaru_ui`, architecture
    gate, module DAG, two shells, router, registry, empty database, docs, CI.
-2. **Storage design and schema v1**: Android storage spike results, then the
-   final schema (`tracks` and the tables around it) as one `schemaVersion`.
+2. **Storage design and schema v1** (tables and helpers done; groups below are
+   spec only): Android storage spike results, then the final schema as one
+   `schemaVersion`.
 3. **Core modules**, one at a time, each working on both shells: player,
    library (scan and index), lyrics, plugins.
 4. **Extensions**: licensing support in an extension package, then its features
@@ -28,9 +29,23 @@ Database:
 - Background isolate (`createInBackground`) shared with an extension database
   is not proven; the UI isolate runs SQLite until then
   (`lib/src/database/app_database.dart`).
-- `AppDatabase` has no downgrade guard or `onUpgrade`; add with the first
-  schema bump.
-- Schema v1 (`tracks`...) does not exist; only `extension_schema` does.
+- `schemaVersion` stays 1 until the first release; `AppDatabase` has no
+  `onUpgrade` or downgrade guard yet. Add them with the first release that
+  must migrate user data (debug builds use the schema guard meanwhile).
+- Spec-only groups, added by their module before first release (spec:
+  `docs/system-architecture-database.md`): library `track_artists` and
+  `track_merges`; playback `queue_entries` and the device id file; lyrics
+  `lyrics_pins`, `lyrics_rejects`, `lyrics_translations`, `lyrics_search`;
+  plugins `plugins`, `plugin_data`, `plugin_repos`, `lyrics_source_prefs`;
+  cache `cover_colors`, `online_lyrics`.
+- Scanner (library module): pass-version columns on `tracks` (`tags_version`,
+  `keys_version`, `lyrics_version`, `cover_scan_version`, `scan_error`) with
+  their indexes; folder range filter on locators (feeds `unhideTracks`);
+  marking absent files `missing` with `missing_since` (the GC never collects a
+  `missing` row without it); scheduling `collectOrphanTracks` (debounced at
+  startup and after each scan).
+- Mood playlists: callers must set `name_key` (lower case, collapsed spaces,
+  NFC); the database does not compute it.
 - A failing startup hook of an extension stops the app at the error screen;
   per-extension disable is undecided (`lib/kanaru_bootstrap.dart`).
 
