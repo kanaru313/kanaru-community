@@ -120,8 +120,31 @@ The public modules register through it too, so it is always exercised:
 `ScreensExtension` (Home, Search, Settings), `LibraryExtension` (Library,
 Playlists), `OnlineExtension`.
 
+Nav items can sit inside another tab's branch (`NavItem.parentId`: the six
+library lists), be left out of the sidebar (`sidebar: false`, Search), be
+placeholders (`comingSoon`) or run an action (`onSelect`); only items that are
+`isBranch` get a shell branch. Mobile bar order is `mobileOrder` (defaults to
+`order`). `addFlushHook` registers work that runs, after the settings store is
+flushed, when the app is hidden or paused or asked to exit (capped at 2 s on exit).
+
+### Nav order bands
+
+The desktop sidebar draws a divider wherever `order ~/ 100` changes between
+neighbours, so pick `order` by band:
+
+| Band | Orders | Items |
+|---|---|---|
+| 0 | 10-99 | Home 10, Online 20 |
+| 1 | 100-199 | Library 105 (tab), Songs 110 … Folders 160 |
+| 2 | 200-299 | Playlists 210, Favorites 220, Queue 230, History 240, Most played 250 |
+| 9 | 900-999 | Search 900 (not in the sidebar) |
+
+Settings is the footer (order 1000). Extensions, Pro included, pick orders
+below 900 inside the bands above and never 1000 or more, which belongs to the
+Settings footer.
+
 The router builds from the registry only. Nav items that are tabs
-(`NavItem.pushed == false`) get one shell branch each, in `order`; every other
+(`isBranch`: not pushed, no `parentId`, not `comingSoon`, no `onSelect`) get one shell branch each, in `order`; every other
 route (pushed items such as Settings, detail pages) is a top-level route above
 the shell.
 

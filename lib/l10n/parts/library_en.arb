@@ -1,0 +1,11 @@
+{
+  "libraryTabSongs": "Songs",
+  "libraryTabAlbums": "Albums",
+  "libraryTabArtists": "Artists",
+  "libraryTabGenres": "Genres",
+  "libraryTabLanguages": "Languages",
+  "libraryTabFolders": "Folders",
+  "libraryNavFavorites": "Favorites",
+  "libraryNavHistory": "History",
+  "libraryNavMostPlayed": "Most played"
+}

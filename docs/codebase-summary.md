@@ -10,7 +10,7 @@ Map of what exists. Module rules: [ARCHITECTURE.md](../ARCHITECTURE.md).
 | `kanaru.dart` | `runKanaru`, `builtInExtensions`; exports extension, database, license and registry types |
 | `kanaru_bootstrap.dart` | `bootstrap(...)` startup sequence, `BootstrapResult` |
 | `kanaru_error_app.dart` | `KanaruErrorApp`, shown on startup failure |
-| `l10n/app_en.arb`, `app_vi.arb` | Strings; generated `l10n/gen/` (committed) |
+| `l10n/parts/<part>_<locale>.arb` | Hand-written strings per part; merged by `tool/merge_arb.dart` into `l10n/app_<locale>.arb`, then `l10n/gen/` (both committed) |
 
 ## Modules (`lib/src/`)
 

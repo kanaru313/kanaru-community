@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../extension/state/extension_providers.dart';
+import '../../library/domain/scan_status.dart';
+import '../../library/state/scan_providers.dart';
 import '../state/nav_history.dart';
 
 /// 40 dp bar above everything: navigation on the left, app name in the middle,
@@ -25,6 +29,8 @@ class DesktopTopBar extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final actions = ref.watch(extensionRegistryProvider).topBarActions;
+    final scanning = ref.watch(scanStatusProvider).value is ScanRunning;
+    final soon = l10n.appComingSoon;
     return ColoredBox(
       color: scheme.surfaceContainerLow,
       child: SizedBox(
@@ -54,16 +60,45 @@ class DesktopTopBar extends ConsumerWidget {
                 tooltip: l10n.tooltipHome,
                 onPressed: onHome,
               ),
+              _BarButton(
+                icon: KIcons.rescan,
+                tooltip: l10n.scanRescan,
+                onPressed: scanning
+                    ? null
+                    : () => unawaited(
+                        ref.read(libraryScanCommandsProvider).rescan(),
+                      ),
+              ),
+              // Target is outside this release: shown dimmed, does nothing.
+              _BarButton(
+                icon: KIcons.keymap,
+                tooltip: '${l10n.appKeymap} · $soon',
+                onPressed: null,
+              ),
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: KSpace.x2,
                   children: [
-                    Icon(KIcons.appLogo, size: KSpace.x5, color: scheme.primary),
-                    Text('Kanaru', style: Theme.of(context).textTheme.titleSmall),
+                    Icon(
+                      KIcons.appLogo,
+                      size: KSpace.x5,
+                      color: scheme.primary,
+                    ),
+                    Text(
+                      'Kanaru',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                   ],
                 ),
               ),
+              // A registered action (Pro chat) replaces the placeholder.
+              if (actions.isEmpty)
+                _BarButton(
+                  icon: KIcons.ai,
+                  tooltip: '${l10n.appAiChat} · $soon',
+                  onPressed: null,
+                ),
               for (final action in actions) action.builder(context),
               const SizedBox(width: KSpace.x2),
             ],
@@ -75,7 +110,11 @@ class DesktopTopBar extends ConsumerWidget {
 }
 
 class _BarButton extends StatelessWidget {
-  const _BarButton({required this.icon, required this.tooltip, required this.onPressed});
+  const _BarButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
 
   final IconData icon;
   final String tooltip;

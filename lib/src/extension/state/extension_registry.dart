@@ -16,6 +16,7 @@ class ExtensionRegistry {
   final _settingsSections = <SettingsSection>[];
   final _topBarActions = <TopBarAction>[];
   final _startupHooks = <StartupHook>[];
+  final _flushHooks = <FlushHook>[];
   final _l10nDelegates = <LocalizationsDelegate<Object?>>[];
   LicenseService _licenseService = const FreeLicenseService();
   bool _licenseServiceSet = false;
@@ -26,17 +27,20 @@ class ExtensionRegistry {
   /// Nav items by ascending `order`; ties keep registration order.
   List<NavItem> get navItems => _byOrder(_navItems, (n) => n.order);
 
-  /// Nav items that are shell tabs (not [NavItem.pushed]), in nav order. One
-  /// shell branch each.
+  /// Nav items that are shell tabs ([NavItem.isBranch]: not pushed, not a child
+  /// of another item, not coming soon, no `onSelect`), in nav order. One shell
+  /// branch each.
   List<NavItem> get branchNavItems =>
-      List.unmodifiable(navItems.where((n) => !n.pushed));
+      List.unmodifiable(navItems.where((n) => n.isBranch));
 
   List<SettingsSection> get settingsSections =>
       _byOrder(_settingsSections, (s) => s.order);
 
-  List<TopBarAction> get topBarActions => _byOrder(_topBarActions, (a) => a.order);
+  List<TopBarAction> get topBarActions =>
+      _byOrder(_topBarActions, (a) => a.order);
 
   List<StartupHook> get startupHooks => List.unmodifiable(_startupHooks);
+  List<FlushHook> get flushHooks => List.unmodifiable(_flushHooks);
   List<LocalizationsDelegate<Object?>> get l10nDelegates =>
       List.unmodifiable(_l10nDelegates);
 
@@ -57,7 +61,8 @@ class ExtensionRegistry {
   /// would silently match the first one, so a later extension could not
   /// replace a route, only be hidden by it.
   void addRoute(RouteBase route) {
-    if (route is GoRoute && _routes.any((r) => r is GoRoute && r.path == route.path)) {
+    if (route is GoRoute &&
+        _routes.any((r) => r is GoRoute && r.path == route.path)) {
       throw StateError('Duplicate route path "${route.path}"');
     }
     _routes.add(route);
@@ -69,6 +74,34 @@ class ExtensionRegistry {
     }
     if (_navItems.any((n) => n.path == item.path)) {
       throw StateError('Duplicate nav item path "${item.path}"');
+    }
+    final parentId = item.parentId;
+    if (parentId != null) {
+      final parent = _navItems.where((n) => n.id == parentId).firstOrNull;
+      if (parent == null) {
+        throw StateError(
+          'Nav item "${item.id}" names parent "$parentId", which is not registered '
+          '(register the parent first)',
+        );
+      }
+      if (parent.pushed || parent.parentId != null || !parent.isBranch) {
+        throw StateError(
+          'Nav item "${item.id}": parent "$parentId" must be a tab item',
+        );
+      }
+      if (item.mobileTab) {
+        throw StateError(
+          'Child nav item "${item.id}" must have mobileTab: false',
+        );
+      }
+      if (item.pushed) {
+        throw StateError('Child nav item "${item.id}" cannot be pushed');
+      }
+    }
+    if ((item.comingSoon || item.onSelect != null) && item.pushed) {
+      throw StateError(
+        'Nav item "${item.id}": comingSoon/onSelect cannot be pushed',
+      );
     }
     _navItems.add(item);
   }
@@ -88,6 +121,11 @@ class ExtensionRegistry {
   }
 
   void addStartupHook(StartupHook hook) => _startupHooks.add(hook);
+
+  /// Adds work to run when the app goes to the background or exits (after the
+  /// settings store is flushed). Hooks run in registration order; one that
+  /// throws does not stop the others.
+  void addFlushHook(FlushHook hook) => _flushHooks.add(hook);
   void addL10nDelegate(LocalizationsDelegate<Object?> delegate) =>
       _l10nDelegates.add(delegate);
   void setLicenseService(LicenseService service) {

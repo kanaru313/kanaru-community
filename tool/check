@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Full local gate. Run from anywhere inside the nix shell:
 #   tool/check            Dart checks
-#   tool/check --rust     plus cargo test and clippy
+#   tool/check --rust     plus cargo fmt, the unsafe grep, cargo test and clippy
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+dart run tool/merge_arb.dart --check
+flutter gen-l10n
 flutter analyze
 dart analyze
 dart run tool/check_architecture.dart
@@ -13,6 +15,13 @@ flutter test
 (cd tool/architecture_lint && dart test)
 
 if [[ "${1:-}" == "--rust" ]]; then
+  cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+  # `unsafe` lives only in the bridge's os.rs (and generated frb_generated.rs).
+  if grep -rnw --include='*.rs' unsafe rust/crates \
+      | grep -v -e 'kanaru_bridge/src/os\.rs:' -e 'frb_generated\.rs:'; then
+    echo "unsafe outside kanaru_bridge/src/os.rs" >&2
+    exit 1
+  fi
   cargo test --manifest-path rust/Cargo.toml
   cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
 fi

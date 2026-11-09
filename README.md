@@ -52,10 +52,10 @@ with plain `dart run`, which works because it spawns a pure Dart package).
 
 ```bash
 tool/check          # Dart checks
-tool/check --rust   # plus cargo test and clippy
+tool/check --rust   # plus cargo fmt --check, the `unsafe` grep, cargo test and clippy
 ```
 
-It runs `flutter analyze`, `dart analyze`, `dart run tool/check_architecture.dart`,
+It runs `dart run tool/merge_arb.dart --check`, `flutter gen-l10n`, `flutter analyze`, `dart analyze`, `dart run tool/check_architecture.dart`,
 `flutter test` in the app, in `packages/kanaru_ui` and the gate's own tests in
 `tool/architecture_lint`. Run it before opening a PR; CI runs the same checks.
 
@@ -84,7 +84,7 @@ XDG_CONFIG_HOME=$R/config XDG_DATA_HOME=$R/data XDG_CACHE_HOME=$R/cache \
 |---|---|
 | `lib/src/<module>/` | App modules by domain (see ARCHITECTURE.md) |
 | `lib/kanaru.dart`, `lib/kanaru_bootstrap.dart`, `lib/main.dart` | Public API, startup, entry point |
-| `lib/l10n/` | ARB files (en, vi); generated code in `lib/l10n/gen/` |
+| `lib/l10n/` | Strings: edit `parts/`, `tool/merge_arb.dart` merges them into `app_*.arb`, generated code in `lib/l10n/gen/` |
 | `packages/kanaru_ui/` | Design system (tokens, theme, widgets), knows nothing about music |
 | `packages/kanaru_extensions/` | Extension list of this build; empty in the public repo |
 | `rust/` | Cargo workspace: `kanaru_media`, `kanaru_plugin_runtime`, `kanaru_bridge` |

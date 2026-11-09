@@ -23,7 +23,8 @@ class OnlineExtension implements KanaruExtension {
         icon: KIcons.online,
         selectedIcon: KIcons.onlineSelected,
         label: (c) => AppLocalizations.of(c).navOnline,
-        order: 50,
+        order: 20,
+        mobileOrder: 50,
       ))
       ..addRoute(GoRoute(path: '/online', builder: (_, _) => const OnlinePage()));
   }

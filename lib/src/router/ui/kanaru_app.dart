@@ -1,18 +1,68 @@
+import 'dart:async';
+import 'dart:ui' show AppExitResponse;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:logging/logging.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../extension/state/extension_providers.dart';
 import '../../screens/settings/state/appearance_settings.dart';
+import '../state/app_flush.dart';
 import '../state/router_provider.dart';
 
-/// Root widget: theme, localization and the router.
-class KanaruApp extends ConsumerWidget {
+final _log = Logger('app.flush');
+
+/// Root widget: theme, localization and the router. Also flushes pending state
+/// when the app goes to the background and when it is asked to exit.
+class KanaruApp extends ConsumerStatefulWidget {
   const KanaruApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<KanaruApp> createState() => _KanaruAppState();
+}
+
+class _KanaruAppState extends ConsumerState<KanaruApp> {
+  late final AppLifecycleListener _lifecycle;
+  final _flusher = FlushCoordinator();
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(
+      onStateChange: _onState,
+      onExitRequested: _onExitRequested,
+    );
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    _flusher.dispose();
+    super.dispose();
+  }
+
+  void _onState(AppLifecycleState state) {
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      final container = ProviderScope.containerOf(context, listen: false);
+      unawaited(
+        _flusher.flush(container).catchError((Object error, StackTrace stack) {
+          _log.warning('flush on pause failed', error, stack);
+        }),
+      );
+    }
+  }
+
+  Future<AppExitResponse> _onExitRequested() async {
+    final container = ProviderScope.containerOf(context, listen: false);
+    await _flusher.flushForExit(container);
+    return AppExitResponse.exit;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final registry = ref.watch(extensionRegistryProvider);
     return MaterialApp.router(
       title: 'Kanaru',

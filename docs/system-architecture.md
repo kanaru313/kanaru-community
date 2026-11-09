@@ -25,7 +25,15 @@ main.dart
 - **State**: Riverpod. Startup results are provider overrides, so tests can
   replace any of them.
 - **Navigation**: go_router; one shell branch per tab nav item, other routes
-  above the shell. Desktop keeps its own back/forward history.
+  above the shell; child nav items nest under their tab's route. Every
+  location redirects to `/welcome` while `firstRunRequiredProvider` is true.
+  Desktop keeps its own back/forward history, a sidebar grouped by order band
+  (ARCHITECTURE.md), Rescan in the top bar, a page-header search icon and
+  Ctrl+F / Ctrl+K. Both shells render the library selection bar slot.
+- **Flush and exit**: `KanaruApp` owns one `AppLifecycleListener`; on
+  hidden/paused it flushes the settings store then the registry's flush hooks,
+  and on an exit request does the same capped at 2 s. Linux with a custom title
+  bar must later move exit handling to `window_manager`'s close callbacks.
 - **Persistence**: one SQLite file through drift, in
   `<data dir>/kanaru/kanaru.db`. Tables and rules:
   [system-architecture-database.md](./system-architecture-database.md).
