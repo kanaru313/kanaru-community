@@ -6,8 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:kanaru/kanaru.dart';
 import 'package:kanaru/src/extension/state/extension_providers.dart';
 import 'package:kanaru/src/platform/state/platform_providers.dart';
+import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:kanaru/src/router/app_router.dart';
 import 'package:kanaru/src/router/ui/kanaru_app.dart';
+
+import '../support/memory_settings_store.dart';
 
 class _Fake implements KanaruExtension {
   @override
@@ -74,6 +77,7 @@ Future<void> _pump(WidgetTester tester, double width,
     overrides: [
       extensionRegistryProvider.overrideWithValue(registry),
       nativeVersionsProvider.overrideWithValue('bridge test'),
+      settingsStoreProvider.overrideWithValue(MemorySettingsStore()),
     ],
     child: const KanaruApp(),
   ));

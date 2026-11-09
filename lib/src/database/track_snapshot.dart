@@ -92,7 +92,9 @@ final _writable = {
 ///
 /// [row] may also carry [trackScanColumns]. `title` and `title_search`
 /// (`searchForm(title)`), `genre` and `genre_key` (`groupKey(genre)`) go
-/// together in the same row, else [ArgumentError].
+/// together in the same row, and so do `album`, `album_title_key` and
+/// `album_artist_key` (`albumKeyFor`; both keys null for an empty album),
+/// else [ArgumentError].
 ///
 /// [row] needs `sourceId`, `locator`, `uid`, `title`, `relPath`, `addedAt`
 /// and `updatedAt`. Any other column (`id`, user columns, `status`,
@@ -130,6 +132,17 @@ Future<int> upsertTrackSnapshot(
   if (cols.containsKey('genre') != cols.containsKey('genre_key')) {
     throw ArgumentError(
       'genre and genre_key (groupKey(genre)) go together in a row',
+    );
+  }
+  final albumCols = [
+    cols.containsKey('album'),
+    cols.containsKey('album_title_key'),
+    cols.containsKey('album_artist_key'),
+  ];
+  if (albumCols.any((c) => c != albumCols.first)) {
+    throw ArgumentError(
+      'album, album_title_key and album_artist_key (albumKeyFor) go '
+      'together in a row',
     );
   }
   final names = cols.keys.toList();

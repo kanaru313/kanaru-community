@@ -43,6 +43,26 @@ main.dart
 - **Extensions**: contribute through `ExtensionRegistry`; downstream builds
   can supply more through `packages/kanaru_extensions`.
 
+## Cross-module contracts
+
+Modules talk through narrow Riverpod providers so a position tick or a ♥
+never rebuilds a list:
+
+- `nowPlayingProvider` (entry, track, playing flag, index) with
+  `isCurrentTrackProvider(id)`; commands go through `PlaybackCommands`
+  (`playTracks`, `playNext`, `enqueue`; validated before any state change).
+- Favorites are one `Set<TrackId>` stream; each tile selects from it
+  (`isFavoriteProvider(id)`). Every per-tile `.family` is `isAutoDispose`.
+- Lists build `TrackInfo` from their own query (`trackInfoFromRow`); only
+  single-item screens use `trackInfoProvider`.
+- Covers: `TrackCover` reports a missing file to `coverMissesProvider`, the
+  scanner re-extracts it. Cover colours come from `coverColorsProvider`.
+- Scan: `scanStatusProvider`, `libraryScanCommandsProvider`. Settings
+  `library.tabs`, `app.theme`, `app.language` are read through
+  `SettingNotifier`; theme and language apply at once.
+- Seeds stand in until the real part exists (playback, scanner, first-run
+  gate); a seed fails loudly or is a no-op by design.
+
 ## Layout
 
 Two shells, chosen only in `lib/src/shell/ui/app_shell.dart` by form factor

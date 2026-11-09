@@ -73,6 +73,38 @@ void main() {
     );
   });
 
+  test('album, album_title_key and album_artist_key go together', () async {
+    final base = TracksCompanion(
+      uid: const Value('u3'),
+      sourceId: Value(local),
+      locator: const Value('c'),
+      relPath: const Value('c'),
+      title: const Value('T'),
+      titleSearch: const Value('t'),
+      addedAt: const Value(1),
+      updatedAt: const Value(1),
+    );
+    expect(upsert(base.copyWith(album: const Value('A'))), throwsArgumentError);
+    expect(
+      upsert(
+        base.copyWith(album: const Value('A'), albumTitleKey: const Value('a')),
+      ),
+      throwsArgumentError,
+    );
+    expect(
+      upsert(base.copyWith(albumArtistKey: const Value('x'))),
+      throwsArgumentError,
+    );
+    // An empty album writes NULL keys, still together.
+    await upsert(
+      base.copyWith(
+        album: const Value(null),
+        albumTitleKey: const Value(null),
+        albumArtistKey: const Value(null),
+      ),
+    );
+  });
+
   test('title_search without title and genre_key without genre throw', () {
     final base = TracksCompanion(
       uid: const Value('u2'),

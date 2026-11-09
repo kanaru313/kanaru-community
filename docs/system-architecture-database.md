@@ -306,7 +306,7 @@ UNIQUE `(source_id, locator)`: the scanner's natural key, and the conflict targe
 | `artist_sort`, `album_sort` | TEXT | NULL | | |
 | `artist_search`, `album_search`, `album_artist_search`, `genre_search` | TEXT | NULL | | Search forms, indexed by `track_search`. |
 | `genre_key` | TEXT | NULL | | `groupKey(genre)`, grouping key of the Genres list (SQLite `lower()` is ASCII-only, so the key is stored). |
-| `album_artist_key`, `album_title_key` | TEXT | NULL | | Album grouping keys. An empty album is stored as NULL in both. |
+| `album_artist_key`, `album_title_key` | TEXT | NULL | | Album grouping keys, computed by the writer with `albumKeyFor` and written together with `album` (the snapshot upsert rejects a row that sets one without the others). An empty album is stored as NULL in both. |
 | `language_detected` | INTEGER | NOT NULL | `0` | `CHECK (language_detected IN (0,1))`. 1 = `language` was detected from the text, not read from a tag. |
 | `cover_key` | TEXT | NULL | | |
 | `cover_url` | TEXT | NULL | | |

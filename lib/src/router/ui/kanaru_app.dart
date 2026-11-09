@@ -4,6 +4,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../extension/state/extension_providers.dart';
+import '../../screens/settings/state/appearance_settings.dart';
 import '../state/router_provider.dart';
 
 /// Root widget: theme, localization and the router.
@@ -17,7 +18,8 @@ class KanaruApp extends ConsumerWidget {
       title: 'Kanaru',
       theme: buildKanaruTheme(brightness: Brightness.light),
       darkTheme: buildKanaruTheme(brightness: Brightness.dark),
-      themeMode: ThemeMode.system,
+      themeMode: ref.watch(themeChoiceProvider).mode,
+      locale: Locale(ref.watch(appLanguageProvider).name),
       routerConfig: ref.watch(routerProvider),
       localizationsDelegates: [
         AppLocalizations.delegate,
