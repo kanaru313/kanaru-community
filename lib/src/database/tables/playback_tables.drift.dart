@@ -775,6 +775,334 @@ typedef $$PlayStatsTableProcessedTableManager =
       i1.PlayStat,
       i0.PrefetchHooks Function({bool trackId})
     >;
+typedef $$QueueEntriesTableCreateCompanionBuilder =
+    i1.QueueEntriesCompanion Function({
+      i0.Value<int> id,
+      required int trackId,
+      required String sortKey,
+      i0.Value<String?> shuffleKey,
+      required int addedAt,
+    });
+typedef $$QueueEntriesTableUpdateCompanionBuilder =
+    i1.QueueEntriesCompanion Function({
+      i0.Value<int> id,
+      i0.Value<int> trackId,
+      i0.Value<String> sortKey,
+      i0.Value<String?> shuffleKey,
+      i0.Value<int> addedAt,
+    });
+
+final class $$QueueEntriesTableReferences
+    extends
+        i0.BaseReferences<
+          i0.GeneratedDatabase,
+          i1.$QueueEntriesTable,
+          i1.QueueEntryRow
+        > {
+  $$QueueEntriesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static i4.$TracksTable _trackIdTable(i0.GeneratedDatabase db) =>
+      i5.ReadDatabaseContainer(db)
+          .resultSet<i4.$TracksTable>('tracks')
+          .createAlias('queue_entries__track_id__tracks__id');
+
+  i4.$$TracksTableProcessedTableManager get trackId {
+    final $_column = $_itemColumn<int>('track_id')!;
+
+    final manager = i4
+        .$$TracksTableTableManager(
+          $_db,
+          i5.ReadDatabaseContainer($_db).resultSet<i4.$TracksTable>('tracks'),
+        )
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_trackIdTable($_db));
+    if (item == null) return manager;
+    return i0.ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$QueueEntriesTableFilterComposer
+    extends i0.Composer<i0.GeneratedDatabase, i1.$QueueEntriesTable> {
+  $$QueueEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  i0.ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<String> get sortKey => $composableBuilder(
+    column: $table.sortKey,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<String> get shuffleKey => $composableBuilder(
+    column: $table.shuffleKey,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<int> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i4.$$TracksTableFilterComposer get trackId {
+    final i4.$$TracksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.trackId,
+      referencedTable: i5.ReadDatabaseContainer($db)
+          .resultSet<i4.$TracksTable>('tracks'),
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => i4.$$TracksTableFilterComposer(
+            $db: $db,
+            $table: i5.ReadDatabaseContainer($db)
+                .resultSet<i4.$TracksTable>('tracks'),
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$QueueEntriesTableOrderingComposer
+    extends i0.Composer<i0.GeneratedDatabase, i1.$QueueEntriesTable> {
+  $$QueueEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  i0.ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<String> get sortKey => $composableBuilder(
+    column: $table.sortKey,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<String> get shuffleKey => $composableBuilder(
+    column: $table.shuffleKey,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<int> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i4.$$TracksTableOrderingComposer get trackId {
+    final i4.$$TracksTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.trackId,
+      referencedTable: i5.ReadDatabaseContainer($db)
+          .resultSet<i4.$TracksTable>('tracks'),
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => i4.$$TracksTableOrderingComposer(
+            $db: $db,
+            $table: i5.ReadDatabaseContainer($db)
+                .resultSet<i4.$TracksTable>('tracks'),
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$QueueEntriesTableAnnotationComposer
+    extends i0.Composer<i0.GeneratedDatabase, i1.$QueueEntriesTable> {
+  $$QueueEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  i0.GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  i0.GeneratedColumn<String> get sortKey =>
+      $composableBuilder(column: $table.sortKey, builder: (column) => column);
+
+  i0.GeneratedColumn<String> get shuffleKey => $composableBuilder(
+    column: $table.shuffleKey,
+    builder: (column) => column,
+  );
+
+  i0.GeneratedColumn<int> get addedAt =>
+      $composableBuilder(column: $table.addedAt, builder: (column) => column);
+
+  i4.$$TracksTableAnnotationComposer get trackId {
+    final i4.$$TracksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.trackId,
+      referencedTable: i5.ReadDatabaseContainer($db)
+          .resultSet<i4.$TracksTable>('tracks'),
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => i4.$$TracksTableAnnotationComposer(
+            $db: $db,
+            $table: i5.ReadDatabaseContainer($db)
+                .resultSet<i4.$TracksTable>('tracks'),
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$QueueEntriesTableTableManager
+    extends
+        i0.RootTableManager<
+          i0.GeneratedDatabase,
+          i1.$QueueEntriesTable,
+          i1.QueueEntryRow,
+          i1.$$QueueEntriesTableFilterComposer,
+          i1.$$QueueEntriesTableOrderingComposer,
+          i1.$$QueueEntriesTableAnnotationComposer,
+          $$QueueEntriesTableCreateCompanionBuilder,
+          $$QueueEntriesTableUpdateCompanionBuilder,
+          (i1.QueueEntryRow, i1.$$QueueEntriesTableReferences),
+          i1.QueueEntryRow,
+          i0.PrefetchHooks Function({bool trackId})
+        > {
+  $$QueueEntriesTableTableManager(
+    i0.GeneratedDatabase db,
+    i1.$QueueEntriesTable table,
+  ) : super(
+        i0.TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              i1.$$QueueEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              i1.$$QueueEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              i1.$$QueueEntriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                i0.Value<int> id = const i0.Value.absent(),
+                i0.Value<int> trackId = const i0.Value.absent(),
+                i0.Value<String> sortKey = const i0.Value.absent(),
+                i0.Value<String?> shuffleKey = const i0.Value.absent(),
+                i0.Value<int> addedAt = const i0.Value.absent(),
+              }) => i1.QueueEntriesCompanion(
+                id: id,
+                trackId: trackId,
+                sortKey: sortKey,
+                shuffleKey: shuffleKey,
+                addedAt: addedAt,
+              ),
+          createCompanionCallback:
+              ({
+                i0.Value<int> id = const i0.Value.absent(),
+                required int trackId,
+                required String sortKey,
+                i0.Value<String?> shuffleKey = const i0.Value.absent(),
+                required int addedAt,
+              }) => i1.QueueEntriesCompanion.insert(
+                id: id,
+                trackId: trackId,
+                sortKey: sortKey,
+                shuffleKey: shuffleKey,
+                addedAt: addedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<i1.$QueueEntriesTable, i1.QueueEntryRow>(table),
+                  i1.$$QueueEntriesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({trackId = false}) {
+            return i0.PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends i0.TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (trackId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.trackId,
+                        referencedTable: i1.$$QueueEntriesTableReferences
+                            ._trackIdTable(db),
+                        referencedColumn: i1.$$QueueEntriesTableReferences
+                            ._trackIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$QueueEntriesTableProcessedTableManager =
+    i0.ProcessedTableManager<
+      i0.GeneratedDatabase,
+      i1.$QueueEntriesTable,
+      i1.QueueEntryRow,
+      i1.$$QueueEntriesTableFilterComposer,
+      i1.$$QueueEntriesTableOrderingComposer,
+      i1.$$QueueEntriesTableAnnotationComposer,
+      $$QueueEntriesTableCreateCompanionBuilder,
+      $$QueueEntriesTableUpdateCompanionBuilder,
+      (i1.QueueEntryRow, i1.$$QueueEntriesTableReferences),
+      i1.QueueEntryRow,
+      i0.PrefetchHooks Function({bool trackId})
+    >;
 i0.Index get playLogTrackPlayed => i0.Index(
   'play_log_track_played',
   'CREATE INDEX play_log_track_played ON play_log (track_id, deleted_at, played_at, skipped)',
@@ -1838,3 +2166,380 @@ class PlayStatsCompanion extends i0.UpdateCompanion<i1.PlayStat> {
         .toString();
   }
 }
+
+i0.Index get queueEntriesTrack => i0.Index(
+  'queue_entries_track',
+  'CREATE INDEX queue_entries_track ON queue_entries (track_id)',
+);
+
+class $QueueEntriesTable extends i2.QueueEntries
+    with i0.TableInfo<$QueueEntriesTable, i1.QueueEntryRow> {
+  @override
+  final i0.GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $QueueEntriesTable(this.attachedDatabase, [this._alias]);
+  static const i0.VerificationMeta _idMeta = const i0.VerificationMeta('id');
+  @override
+  late final i0.GeneratedColumn<int> id = i0.GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: i0.GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const i0.VerificationMeta _trackIdMeta = const i0.VerificationMeta(
+    'trackId',
+  );
+  @override
+  late final i0.GeneratedColumn<int> trackId = i0.GeneratedColumn<int>(
+    'track_id',
+    aliasedName,
+    false,
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: i0.GeneratedColumn.constraintIsAlways(
+      'REFERENCES tracks (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const i0.VerificationMeta _sortKeyMeta = const i0.VerificationMeta(
+    'sortKey',
+  );
+  @override
+  late final i0.GeneratedColumn<String> sortKey = i0.GeneratedColumn<String>(
+    'sort_key',
+    aliasedName,
+    false,
+    type: i0.DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const i0.VerificationMeta _shuffleKeyMeta = const i0.VerificationMeta(
+    'shuffleKey',
+  );
+  @override
+  late final i0.GeneratedColumn<String> shuffleKey = i0.GeneratedColumn<String>(
+    'shuffle_key',
+    aliasedName,
+    true,
+    type: i0.DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const i0.VerificationMeta _addedAtMeta = const i0.VerificationMeta(
+    'addedAt',
+  );
+  @override
+  late final i0.GeneratedColumn<int> addedAt = i0.GeneratedColumn<int>(
+    'added_at',
+    aliasedName,
+    false,
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<i0.GeneratedColumn> get $columns => [
+    id,
+    trackId,
+    sortKey,
+    shuffleKey,
+    addedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'queue_entries';
+  @override
+  i0.VerificationContext validateIntegrity(
+    i0.Insertable<i1.QueueEntryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = i0.VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('track_id')) {
+      context.handle(
+        _trackIdMeta,
+        trackId.isAcceptableOrUnknown(data['track_id']!, _trackIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_trackIdMeta);
+    }
+    if (data.containsKey('sort_key')) {
+      context.handle(
+        _sortKeyMeta,
+        sortKey.isAcceptableOrUnknown(data['sort_key']!, _sortKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sortKeyMeta);
+    }
+    if (data.containsKey('shuffle_key')) {
+      context.handle(
+        _shuffleKeyMeta,
+        shuffleKey.isAcceptableOrUnknown(data['shuffle_key']!, _shuffleKeyMeta),
+      );
+    }
+    if (data.containsKey('added_at')) {
+      context.handle(
+        _addedAtMeta,
+        addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_addedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<i0.GeneratedColumn> get $primaryKey => {id};
+  @override
+  i1.QueueEntryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return i1.QueueEntryRow(
+      id: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      trackId: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}track_id'],
+      )!,
+      sortKey: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}sort_key'],
+      )!,
+      shuffleKey: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}shuffle_key'],
+      ),
+      addedAt: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}added_at'],
+      )!,
+    );
+  }
+
+  @override
+  $QueueEntriesTable createAlias(String alias) {
+    return $QueueEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class QueueEntryRow extends i0.DataClass
+    implements i0.Insertable<i1.QueueEntryRow> {
+  final int id;
+  final int trackId;
+
+  /// Fractional key: the order the user sees.
+  final String sortKey;
+
+  /// Order while shuffle is on; NULL when it is off.
+  final String? shuffleKey;
+  final int addedAt;
+  const QueueEntryRow({
+    required this.id,
+    required this.trackId,
+    required this.sortKey,
+    this.shuffleKey,
+    required this.addedAt,
+  });
+  @override
+  Map<String, i0.Expression> toColumns(bool nullToAbsent) {
+    final map = <String, i0.Expression>{};
+    map['id'] = i0.Variable<int>(id);
+    map['track_id'] = i0.Variable<int>(trackId);
+    map['sort_key'] = i0.Variable<String>(sortKey);
+    if (!nullToAbsent || shuffleKey != null) {
+      map['shuffle_key'] = i0.Variable<String>(shuffleKey);
+    }
+    map['added_at'] = i0.Variable<int>(addedAt);
+    return map;
+  }
+
+  i1.QueueEntriesCompanion toCompanion(bool nullToAbsent) {
+    return i1.QueueEntriesCompanion(
+      id: i0.Value(id),
+      trackId: i0.Value(trackId),
+      sortKey: i0.Value(sortKey),
+      shuffleKey: shuffleKey == null && nullToAbsent
+          ? const i0.Value.absent()
+          : i0.Value(shuffleKey),
+      addedAt: i0.Value(addedAt),
+    );
+  }
+
+  factory QueueEntryRow.fromJson(
+    Map<String, dynamic> json, {
+    i0.ValueSerializer? serializer,
+  }) {
+    serializer ??= i0.driftRuntimeOptions.defaultSerializer;
+    return QueueEntryRow(
+      id: serializer.fromJson<int>(json['id']),
+      trackId: serializer.fromJson<int>(json['trackId']),
+      sortKey: serializer.fromJson<String>(json['sortKey']),
+      shuffleKey: serializer.fromJson<String?>(json['shuffleKey']),
+      addedAt: serializer.fromJson<int>(json['addedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({i0.ValueSerializer? serializer}) {
+    serializer ??= i0.driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'trackId': serializer.toJson<int>(trackId),
+      'sortKey': serializer.toJson<String>(sortKey),
+      'shuffleKey': serializer.toJson<String?>(shuffleKey),
+      'addedAt': serializer.toJson<int>(addedAt),
+    };
+  }
+
+  i1.QueueEntryRow copyWith({
+    int? id,
+    int? trackId,
+    String? sortKey,
+    i0.Value<String?> shuffleKey = const i0.Value.absent(),
+    int? addedAt,
+  }) => i1.QueueEntryRow(
+    id: id ?? this.id,
+    trackId: trackId ?? this.trackId,
+    sortKey: sortKey ?? this.sortKey,
+    shuffleKey: shuffleKey.present ? shuffleKey.value : this.shuffleKey,
+    addedAt: addedAt ?? this.addedAt,
+  );
+  QueueEntryRow copyWithCompanion(i1.QueueEntriesCompanion data) {
+    return QueueEntryRow(
+      id: data.id.present ? data.id.value : this.id,
+      trackId: data.trackId.present ? data.trackId.value : this.trackId,
+      sortKey: data.sortKey.present ? data.sortKey.value : this.sortKey,
+      shuffleKey: data.shuffleKey.present
+          ? data.shuffleKey.value
+          : this.shuffleKey,
+      addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('QueueEntryRow(')
+          ..write('id: $id, ')
+          ..write('trackId: $trackId, ')
+          ..write('sortKey: $sortKey, ')
+          ..write('shuffleKey: $shuffleKey, ')
+          ..write('addedAt: $addedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, trackId, sortKey, shuffleKey, addedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is i1.QueueEntryRow &&
+          other.id == this.id &&
+          other.trackId == this.trackId &&
+          other.sortKey == this.sortKey &&
+          other.shuffleKey == this.shuffleKey &&
+          other.addedAt == this.addedAt);
+}
+
+class QueueEntriesCompanion extends i0.UpdateCompanion<i1.QueueEntryRow> {
+  final i0.Value<int> id;
+  final i0.Value<int> trackId;
+  final i0.Value<String> sortKey;
+  final i0.Value<String?> shuffleKey;
+  final i0.Value<int> addedAt;
+  const QueueEntriesCompanion({
+    this.id = const i0.Value.absent(),
+    this.trackId = const i0.Value.absent(),
+    this.sortKey = const i0.Value.absent(),
+    this.shuffleKey = const i0.Value.absent(),
+    this.addedAt = const i0.Value.absent(),
+  });
+  QueueEntriesCompanion.insert({
+    this.id = const i0.Value.absent(),
+    required int trackId,
+    required String sortKey,
+    this.shuffleKey = const i0.Value.absent(),
+    required int addedAt,
+  }) : trackId = i0.Value(trackId),
+       sortKey = i0.Value(sortKey),
+       addedAt = i0.Value(addedAt);
+  static i0.Insertable<i1.QueueEntryRow> custom({
+    i0.Expression<int>? id,
+    i0.Expression<int>? trackId,
+    i0.Expression<String>? sortKey,
+    i0.Expression<String>? shuffleKey,
+    i0.Expression<int>? addedAt,
+  }) {
+    return i0.RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (trackId != null) 'track_id': trackId,
+      if (sortKey != null) 'sort_key': sortKey,
+      if (shuffleKey != null) 'shuffle_key': shuffleKey,
+      if (addedAt != null) 'added_at': addedAt,
+    });
+  }
+
+  i1.QueueEntriesCompanion copyWith({
+    i0.Value<int>? id,
+    i0.Value<int>? trackId,
+    i0.Value<String>? sortKey,
+    i0.Value<String?>? shuffleKey,
+    i0.Value<int>? addedAt,
+  }) {
+    return i1.QueueEntriesCompanion(
+      id: id ?? this.id,
+      trackId: trackId ?? this.trackId,
+      sortKey: sortKey ?? this.sortKey,
+      shuffleKey: shuffleKey ?? this.shuffleKey,
+      addedAt: addedAt ?? this.addedAt,
+    );
+  }
+
+  @override
+  Map<String, i0.Expression> toColumns(bool nullToAbsent) {
+    final map = <String, i0.Expression>{};
+    if (id.present) {
+      map['id'] = i0.Variable<int>(id.value);
+    }
+    if (trackId.present) {
+      map['track_id'] = i0.Variable<int>(trackId.value);
+    }
+    if (sortKey.present) {
+      map['sort_key'] = i0.Variable<String>(sortKey.value);
+    }
+    if (shuffleKey.present) {
+      map['shuffle_key'] = i0.Variable<String>(shuffleKey.value);
+    }
+    if (addedAt.present) {
+      map['added_at'] = i0.Variable<int>(addedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('QueueEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('trackId: $trackId, ')
+          ..write('sortKey: $sortKey, ')
+          ..write('shuffleKey: $shuffleKey, ')
+          ..write('addedAt: $addedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+i0.Index get queueEntriesOrder => i0.Index(
+  'queue_entries_order',
+  'CREATE INDEX queue_entries_order ON queue_entries (sort_key, id)',
+);
+i0.Index get queueEntriesShuffle => i0.Index(
+  'queue_entries_shuffle',
+  'CREATE INDEX queue_entries_shuffle ON queue_entries (shuffle_key, id) WHERE shuffle_key IS NOT NULL',
+);

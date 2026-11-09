@@ -4,6 +4,8 @@ export 'tables/library_collection_tables.dart';
 export 'tables/library_collection_tables.drift.dart';
 export 'tables/library_source_tables.dart';
 export 'tables/library_source_tables.drift.dart';
+export 'tables/library_cover_tables.dart';
+export 'tables/library_cover_tables.drift.dart';
 export 'tables/library_track_tables.dart';
 export 'tables/library_track_tables.drift.dart';
 export 'tables/playback_tables.dart';

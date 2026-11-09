@@ -33,7 +33,10 @@ void main() {
 
   test('public tables referencing tracks include the owned children', () async {
     final tables = (await intoTracks()).map((r) => r['tbl']).toSet();
-    expect(tables, containsAll({'play_log', 'playlist_entries'}));
+    expect(
+      tables,
+      containsAll({'play_log', 'playlist_entries', 'queue_entries'}),
+    );
     expect(tables, containsAll(trackOwnedChildTables));
   });
 

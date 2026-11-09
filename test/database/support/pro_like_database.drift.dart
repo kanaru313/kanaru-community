@@ -316,6 +316,10 @@ abstract class $ProLikeDatabase extends i0.GeneratedDatabase {
     i2.tracksSongKey,
     i2.tracksRelPath,
     i2.tracksLanguage,
+    i2.tracksTagsVersion,
+    i2.tracksKeysVersion,
+    i2.tracksCoverVersion,
+    i2.tracksGenreKey,
   ];
 }
 

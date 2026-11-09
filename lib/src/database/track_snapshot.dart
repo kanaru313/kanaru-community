@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import 'exclusion_sql.dart';
 import 'tables.dart';
 
 /// Columns that identify a row; never rewritten by an upsert.
@@ -17,6 +18,7 @@ const trackSnapshotColumns = {
   'song_key',
   'title',
   'title_sort',
+  'title_search',
   'artist',
   'album',
   'album_artist',
@@ -30,6 +32,8 @@ const trackSnapshotColumns = {
   'album_search',
   'album_artist_search',
   'genre_search',
+  'genre_key',
+  'language_detected',
   'album_artist_key',
   'album_title_key',
   'cover_key',
@@ -44,6 +48,17 @@ const trackSnapshotColumns = {
   'sample_rate',
   'bit_depth',
   'channels',
+  'codec',
+};
+
+/// Columns the scanner passes own: pass versions and the last error. An
+/// upsert rewrites the ones its companion carries, like the snapshot ones.
+const trackScanColumns = {
+  'tags_version',
+  'keys_version',
+  'cover_scan_version',
+  'lyrics_version',
+  'scan_error',
 };
 
 /// Columns the user owns; survive every snapshot upsert.
@@ -66,6 +81,7 @@ const trackLifecycleColumns = {
 final _writable = {
   ...trackIdentityColumns.difference({'id'}),
   ...trackSnapshotColumns,
+  ...trackScanColumns,
   'added_at',
   'updated_at',
 };
@@ -74,11 +90,15 @@ final _writable = {
 /// returns `tracks.id`. [tracks] is the table instance of [db] (any database
 /// on the shared connection, also inside its transaction).
 ///
+/// [row] may also carry [trackScanColumns]. `title` and `title_search`
+/// (`searchForm(title)`), `genre` and `genre_key` (`groupKey(genre)`) go
+/// together in the same row, else [ArgumentError].
+///
 /// [row] needs `sourceId`, `locator`, `uid`, `title`, `relPath`, `addedAt`
 /// and `updatedAt`. Any other column (`id`, user columns, `status`,
 /// `missing_since`) throws [ArgumentError]; the status comes from the
 /// source kind (`plugin` gives `remote`; otherwise a new row is `present`
-/// and a conflict keeps `hidden` and turns everything else `present`).
+/// (`hidden` inside a live folder exclusion of its source) and a conflict keeps `hidden` and turns everything else `present`).
 /// `missing_since` clears unless the row stays `hidden`. On conflict on
 /// `(source_id, locator)` only the snapshot fields present in [row] are
 /// rewritten (absent keeps the stored value, an explicit null writes null),
@@ -101,6 +121,17 @@ Future<int> upsertTrackSnapshot(
   if (!row.sourceId.present || !row.locator.present) {
     throw ArgumentError('sourceId and locator are required');
   }
+  // The stored forms are derived by the writer, never by the database.
+  if (cols.containsKey('title') != cols.containsKey('title_search')) {
+    throw ArgumentError(
+      'title and title_search (searchForm(title)) go together in a row',
+    );
+  }
+  if (cols.containsKey('genre') != cols.containsKey('genre_key')) {
+    throw ArgumentError(
+      'genre and genre_key (groupKey(genre)) go together in a row',
+    );
+  }
   final names = cols.keys.toList();
   final sourceId = cols['source_id']!;
 
@@ -110,7 +141,8 @@ Future<int> upsertTrackSnapshot(
   const stays = "tracks.status = '${TrackStatus.hidden}'";
   final updates = [
     for (final n in names)
-      if (trackSnapshotColumns.contains(n)) '$n = excluded.$n',
+      if (trackSnapshotColumns.contains(n) || trackScanColumns.contains(n))
+        '$n = excluded.$n',
     'updated_at = excluded.updated_at',
     "status = CASE WHEN $isPlugin THEN '${TrackStatus.remote}' "
         "WHEN $stays THEN '${TrackStatus.hidden}' "
@@ -122,16 +154,21 @@ Future<int> upsertTrackSnapshot(
       'INSERT INTO tracks (${names.join(', ')}, status) '
       "VALUES (${List.filled(names.length, '?').join(', ')}, "
       "CASE WHEN $isPlugin THEN '${TrackStatus.remote}' "
+      "WHEN ${liveExclusionCovers('?', '?')} THEN '${TrackStatus.hidden}' "
       "ELSE '${TrackStatus.present}' END) "
       'ON CONFLICT (source_id, locator) DO UPDATE SET ${updates.join(', ')} '
       'RETURNING id';
-  // Placeholders appear in this order: values, insert status, conflict
-  // status, conflict missing_since.
+  // Placeholders appear in this order: values, insert status (plugin check),
+  // exclusion check (source id, locator, locator), conflict status,
+  // conflict missing_since.
   final rows = await db.customWriteReturning(
     sql,
     variables: [
       for (final n in names) cols[n]! as Variable,
       sourceId as Variable,
+      sourceId,
+      cols['locator']! as Variable,
+      cols['locator']! as Variable,
       sourceId,
       sourceId,
     ],

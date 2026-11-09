@@ -53,7 +53,7 @@ All user-visible text goes through `lib/l10n/app_en.arb` (template) and
   differs. From the first release on, bump it and add a migration step.
 - Every foreign key into `tracks` is `ON DELETE RESTRICT`, written explicitly
   (never the default `NO ACTION`). Owned child rows (`track_details`,
-  `play_stats`) are deleted by the track GC; nothing references an owned child.
+  `play_stats`, `track_artists`) are deleted by the track GC; nothing references an owned child.
 - Never `INSERT OR REPLACE` on `tracks` or `play_log`; use `ON CONFLICT`
   (`upsertTrackSnapshot`, `insertOrRevive`).
 - Library reads filter with `visibleTrackWhere` / `isVisibleTrack`.

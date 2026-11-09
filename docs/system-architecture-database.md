@@ -26,6 +26,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 | DATA-05 Playlist order | `playlist_entries.sort_key` |
 | DATA-06 Song key | `tracks.song_key`, `online_lyrics.cache_key` |
 | DATA-09 Track details | `track_details` |
+| Artists of a track, play queue, cover colours | `track_artists`, `queue_entries`, `cover_colors` |
 | DATA-10 Rating and mood playlists | `tracks.rating`, `playlists.name_key` |
 | DATA-11 Plugin install ids | `plugins.install_id` (spec only) |
 
@@ -95,8 +96,9 @@ The full list is in [Foreign key list](#foreign-key-list).
 
 - A rescan upsert keeps `hidden`.
 - The scanner and the lifecycle helpers never touch `remote` rows.
-- Hide (`removeSource`, `setMountEnabled(false)`): `present` and `missing` rows become `hidden`, and `scan_cursor` and `last_scan_at` reset, all in one transaction. Excluding a folder hides its rows the same way (applied by the scanner).
-- Unhide (`reviveSource`, `setMountEnabled(true)`, `unhideTracks`): `hidden` rows become `missing` with `missing_since = now`, and the cursor resets. A full scan then decides: files that are still there return to `present`, and deleted files never come back as ghosts.
+- Hide (`removeSource`, `setMountEnabled(false)`): `present` and `missing` rows become `hidden`, and `scan_cursor` and `last_scan_at` reset, all in one transaction. Excluding a folder hides its rows the same way, through the folder-exclusion helpers (`applyFolderExclusion`, `removeFolderExclusion`), never by hand. Hide-then-unhide paths (`setMountEnabled(true)`, `reviveSource`, `unhideTracks`) leave a row `hidden` while a live exclusion of its source covers it. A new file inserted by `upsertTrackSnapshot` under a live exclusion is inserted `hidden`.
+- Folder exclusion has its own helpers (`folder_exclusion.dart`, see Helpers): they hide and unhide by folder range and, unlike `unhideTracks`, never unhide a row that another live exclusion, a disabled mount or a removed source still holds.
+- Unhide (`reviveSource`, `setMountEnabled(true)`, `unhideTracks`; rows covered by a live folder exclusion stay hidden): `hidden` rows become `missing` with `missing_since = now`, and the cursor resets. A full scan then decides: files that are still there return to `present`, and deleted files never come back as ghosts.
 - Helpers live in `track_lifecycle.dart`: `removeSource(db, sourceId, now)`, `setMountEnabled(db, sourceId, enabled, now)`, `reviveSource(db, sourceId, now, {name, account, configJson, credentialRef})`, `unhideTracks(db, sourceId, now, {locatorFrom, locatorTo})`. Each runs in one transaction and notifies `tracks`, `sources` and `source_mounts` by table name. `locatorFrom` and `locatorTo` (both or neither) mean `locator >= from AND locator < to`; the scanner computes a folder's range bounds. `setMountEnabled(true)` and `unhideTracks` throw `StateError` for a removed source: only `reviveSource` brings one back.
 - Reviving a source forces a full scan.
 - An unreachable root leaves its rows untouched.
@@ -108,8 +110,8 @@ The full list is in [Foreign key list](#foreign-key-list).
 - On conflict, `missing_since` is set to `NULL` unless the row is `hidden`.
 - It writes snapshot columns only. `uid`, `added_at` and the user columns are never touched.
 - One statement (`INSERT ... ON CONFLICT (source_id, locator) DO UPDATE ... RETURNING id`); it returns `tracks.id` and notifies `tracks` and `track_search`. Search streams declare `readsFrom` both `tracks` and `track_search`. The source kind is read in the same statement.
-- The companion carries `source_id`, `locator`, `uid`, `title`, `rel_path`, `added_at`, `updated_at` (the insert needs them) and any snapshot fields. Any column outside identity (except `id`), snapshot, `added_at` and `updated_at` (`status`, `missing_since`, user columns) throws `ArgumentError`. On conflict only the snapshot fields present in the companion are rewritten: an absent field keeps the stored value, an explicit null writes null.
-- Column classification (SQL names, in `track_snapshot.dart`, each `tracks` column in exactly one set; a test enforces it): `trackIdentityColumns` (`id`, `uid`, `source_id`, `locator`), `trackSnapshotColumns` (rewritten on conflict), `trackUserColumns` (never touched), `trackLifecycleColumns` (`status`, `missing_since`, `added_at`, `updated_at`; derived or set once).
+- The companion carries `source_id`, `locator`, `uid`, `title`, `rel_path`, `added_at`, `updated_at` (the insert needs them) and any snapshot or scan fields (`trackSnapshotColumns`, `trackScanColumns`). `title` and `title_search`, `genre` and `genre_key` go together in the same row (the writer derives them: `title_search = searchForm(title)`, `genre_key = groupKey(genre)`), else `ArgumentError`. Any column outside identity (except `id`), snapshot, `added_at` and `updated_at` (`status`, `missing_since`, user columns) throws `ArgumentError`. On conflict only the snapshot fields present in the companion are rewritten: an absent field keeps the stored value, an explicit null writes null.
+- Column classification (SQL names, in `track_snapshot.dart`, each `tracks` column in exactly one set; a test enforces it): `trackIdentityColumns` (`id`, `uid`, `source_id`, `locator`), `trackSnapshotColumns` and `trackScanColumns` (rewritten on conflict), `trackUserColumns` (never touched), `trackLifecycleColumns` (`status`, `missing_since`, `added_at`, `updated_at`; derived or set once).
 
 ### Online rows
 
@@ -124,7 +126,7 @@ The full list is in [Foreign key list](#foreign-key-list).
 1. Refuse to run when `PRAGMA foreign_keys` is 0.
 2. Find every foreign key into `tracks` at run time (`sqlite_master` joined with `pragma_foreign_key_list`). Pro tables are included.
 3. Throw if any of them is not `RESTRICT`.
-4. Ignore the owned-child tables `trackOwnedChildTables` = `{track_details, play_stats}` (plus `track_artists` once added) when deciding whether a track is referenced. Delete their rows before the track rows, in the same transaction.
+4. Ignore the owned-child tables `trackOwnedChildTables` = `{track_details, play_stats, track_artists}` when deciding whether a track is referenced. Delete their rows before the track rows, in the same transaction.
 5. Delete a track only if no other foreign key row points at it (tombstoned rows count), `rating IS NULL AND lyrics_offset_ms = 0`, and one of:
 
    | Status | Condition |
@@ -134,7 +136,7 @@ The full list is in [Foreign key list](#foreign-key-list).
    | `remote` | `updated_at <= now - remoteGraceMs` (24 h). Keeps the now-playing and queued online track. |
 
 6. `present` rows are never deleted.
-7. The helper notifies streams for `tracks`, `track_details`, `play_stats` and `track_search` (the FTS delete trigger writes it), only when rows were deleted. It returns the number of deleted tracks.
+7. The helper notifies streams for `tracks`, `track_details`, `play_stats`, `track_artists` and `track_search` (the FTS delete trigger writes it), only when rows were deleted. It returns the number of deleted tracks.
 
 Details: the checks and the candidate set are computed once per run (a `TEMP` table inside the transaction, dropped at the end), so the owned-children delete and the track delete use the same ids. A foreign key whose parent column is not named in the schema refers to `tracks.id`. Only the main schema is inspected. A composite foreign key into `tracks` throws like a non-`RESTRICT` one. Tables are addressed as `main.<table>`, so a temp table of the same name cannot hide a reference. A foreign key into an owned child table throws too. A `missing` row with `missing_since IS NULL` is never collected, so the scanner must set `missing_since` when it marks a row missing. Any failure leaves the database unchanged.
 
@@ -211,8 +213,8 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 | `playlist_entries.playlist_id` | `playlists.id` | CASCADE | collections (coded) |
 | `playlist_entries.track_id` | `tracks.id` | RESTRICT | collections (coded) |
 | `saved_items.source_id` | `sources.id` | RESTRICT | collections (coded) |
-| `track_artists.track_id` | `tracks.id` | RESTRICT | library (spec only) |
-| `queue_entries.track_id` | `tracks.id` | RESTRICT | playback (spec only) |
+| `track_artists.track_id` | `tracks.id` | RESTRICT | library (coded) |
+| `queue_entries.track_id` | `tracks.id` | RESTRICT | playback (coded) |
 | `lyrics_pins.track_id` | `tracks.id` | RESTRICT | lyrics (spec only) |
 | Any other track reference (lyrics, Pro) | `tracks.id` | RESTRICT | rule |
 
@@ -270,7 +272,7 @@ Index `source_mounts_root`: UNIQUE `(root) WHERE root IS NOT NULL`. Plugin sourc
 
 Index `excluded_folders_source` on `(source_id, folder_key)`, not unique.
 
-### tracks: Coded in schema v1 foundation
+### tracks: Coded in schema v1 foundation, extended in wave 1
 
 Owner: library. File: `tables/library_track_tables.dart`, with `tables/library_track_search.drift` for the FTS table and triggers. Sync: derived index, rebuilt by the scanner. The user columns (`rating`, `lyrics_offset_ms`) have their own timestamps, so each merges last-write-wins.
 
@@ -297,16 +299,32 @@ UNIQUE `(source_id, locator)`: the scanner's natural key, and the conflict targe
 | `end_ms` | INTEGER | NULL | | CUE end. NULL = to end of file. |
 | `song_key` | TEXT | NULL | | Hash of normalized metadata (DATA-06). |
 | `title` | TEXT | NOT NULL | | |
-| `title_sort` | TEXT | NOT NULL | `''` | Sort form of the title. |
+| `title_sort` | TEXT | NOT NULL | `''` | Sort form of the title (a TITLESORT tag may replace the title here). |
+| `title_search` | TEXT | NOT NULL | `''` | Search form of the title (never from a TITLESORT tag), indexed by `track_search`. |
 | `artist`, `album`, `album_artist`, `genre`, `composer`, `language` | TEXT | NULL | | |
 | `album_display_artist` | TEXT | NULL | | |
 | `artist_sort`, `album_sort` | TEXT | NULL | | |
 | `artist_search`, `album_search`, `album_artist_search`, `genre_search` | TEXT | NULL | | Search forms, indexed by `track_search`. |
-| `album_artist_key`, `album_title_key` | TEXT | NULL | | Album grouping keys. |
+| `genre_key` | TEXT | NULL | | `groupKey(genre)`, grouping key of the Genres list (SQLite `lower()` is ASCII-only, so the key is stored). |
+| `album_artist_key`, `album_title_key` | TEXT | NULL | | Album grouping keys. An empty album is stored as NULL in both. |
+| `language_detected` | INTEGER | NOT NULL | `0` | `CHECK (language_detected IN (0,1))`. 1 = `language` was detected from the text, not read from a tag. |
 | `cover_key` | TEXT | NULL | | |
 | `cover_url` | TEXT | NULL | | |
 | `track_no`, `track_total`, `disc_no`, `disc_total`, `year` | INTEGER | NULL | | |
 | `duration_ms`, `bitrate`, `sample_rate`, `bit_depth`, `channels` | INTEGER | NULL | | |
+| `codec` | TEXT | NULL | | Format the decoder reported (`FLAC`, `MP3`), written by the scanner. NULL = derive the format from the extension of `rel_path`. |
+
+#### tracks: scan state (written by the scanner passes)
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `tags_version` | INTEGER | NOT NULL | `0` | Tag pass that produced the snapshot. |
+| `keys_version` | INTEGER | NOT NULL | `0` | Version of the key, sort and search derivation. |
+| `cover_scan_version` | INTEGER | NOT NULL | `0` | Cover pass version. |
+| `lyrics_version` | INTEGER | NOT NULL | `0` | Reserved for the lyrics module; 0 = no lyrics tokens in `lyrics_search`. |
+| `scan_error` | TEXT | NULL | | Error kind of the last failed pass (a native error kind name or `non_utf8_name`); NULL = ok. |
+
+The snapshot upsert rewrites the scan columns its companion carries, like snapshot columns.
 
 #### tracks: user columns (last write wins per field)
 
@@ -324,7 +342,7 @@ User columns survive every snapshot upsert.
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `status` | TEXT | NOT NULL | `'present'` | `CHECK (status IN ('present','missing','hidden','remote'))`. See [Track status](#track-status). |
-| `missing_since` | INTEGER | NULL | | Set when a row becomes `missing`. |
+| `missing_since` | INTEGER | NULL | | Set when a row becomes `missing`. Table `CHECK` `tracks_missing_since`: `(status <> 'missing' OR missing_since IS NOT NULL)`, so the GC can always age a `missing` row. |
 | `added_at` | INTEGER | NOT NULL | | |
 | `updated_at` | INTEGER | NOT NULL | | |
 
@@ -339,22 +357,26 @@ User columns survive every snapshot upsert.
 | `tracks_song_key` | `(song_key)` | |
 | `tracks_rel_path` | `(source_id, rel_path)` | Folder tree. |
 | `tracks_language` | `(language)` | |
+| `tracks_tags_version` | `(tags_version) WHERE status = 'present'` | Scanner: rows with an old tag pass. |
+| `tracks_keys_version` | `(keys_version) WHERE status = 'present'` | Scanner: rows with old keys. |
+| `tracks_cover_version` | `(cover_scan_version) WHERE status = 'present'` | Scanner: rows with an old cover pass. |
+| `tracks_genre_key` | `(genre_key) WHERE status = 'present'` | Genres list. |
 
 The UNIQUE `(source_id, locator)` also creates an implicit index.
 
-**Spec only, added by the scanner (library) before first release:** the pass-version columns `tags_version`, `keys_version`, `lyrics_version`, `cover_scan_version` (`INTEGER NOT NULL DEFAULT 0`), and `scan_error` (TEXT NULL), with the indexes the scanner needs on them.
+`lyrics_version` gets its index with the lyrics module.
 
 #### track_search (FTS5)
 
 - `CREATE VIRTUAL TABLE track_search USING fts5(...)` (needs `modules: [fts5]` in `build.yaml`): external content on `tracks` (`content='tracks'`, `content_rowid='id'`).
-- Indexed columns: `title_sort`, `artist_search`, `album_search`, `album_artist_search`, `genre_search`.
+- Indexed columns: `title_search`, `artist_search`, `album_search`, `album_artist_search`, `genre_search`.
 - `tokenize='unicode61 remove_diacritics 0'` (accents are kept), `prefix='1 2 3'`.
 - Triggers:
   - `tracks_search_insert`: AFTER INSERT on `tracks`, adds the row to the index.
   - `tracks_search_delete`: AFTER DELETE on `tracks`, removes the row from the index.
   - `tracks_search_update`: AFTER UPDATE OF the five indexed columns, `WHEN` any of them `IS NOT` its old value. Its `WHEN` lists every indexed column, so no change to an indexed column is missed.
 
-### track_details: Coded in schema v1 foundation
+### track_details: Coded in schema v1 foundation, extended in wave 1
 
 Owner: library. File: `tables/library_track_tables.dart`. Sync: derived. Owned child of `tracks`.
 
@@ -368,6 +390,45 @@ Owner: library. File: `tables/library_track_tables.dart`. Sync: derived. Owned c
 | `cover_src` | TEXT | NULL | | External cover image (locator or server image id). |
 
 No other indexes.
+
+### track_artists: Coded in wave 1
+
+Owner: library. File: `tables/library_track_tables.dart`. Sync: derived. Owned child of `tracks` (joins `trackOwnedChildTables`).
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `track_id` | INTEGER | NOT NULL | | FK `tracks.id` RESTRICT. |
+| `artist_key` | TEXT | NOT NULL | | `groupKey(artist_name)`. |
+| `artist_name` | TEXT | NOT NULL | | Name as tagged. |
+| `position` | INTEGER | NOT NULL | | Order in the tag, from 0 (the "2 artists" chips). |
+
+Primary key `(artist_key, track_id)`; index `track_artists_track` on `(track_id)`. The scanner rewrites a track's rows with `replaceTrackArtists` in the same transaction as its snapshot upsert.
+
+### cover_colors: Coded in wave 1
+
+Owner: library. File: `tables/library_cover_tables.dart`. Sync: cache (may be dropped at any time).
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `cover_key` | TEXT | PK | | Same value as `tracks.cover_key`. No foreign key: a content hash shared by many tracks. |
+| `seed` | INTEGER | NOT NULL | | ARGB seed colour. |
+| `colors` | TEXT | NOT NULL | | JSON array of ARGB ints, most dominant first. |
+| `version` | INTEGER | NOT NULL | | Version of the algorithm that produced the row. |
+| `updated_at` | INTEGER | NOT NULL | | |
+
+### queue_entries: Coded in wave 1
+
+Owner: playback. File: `tables/playback_tables.dart`. Sync: per device, not synced. The current entry, position, shuffle and repeat live in settings, not here.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` | INTEGER | PK | autoincrement | Entry identity; a track may repeat. |
+| `track_id` | INTEGER | NOT NULL | | FK `tracks.id` RESTRICT, so a queued track is never collected. |
+| `sort_key` | TEXT | NOT NULL | | Fractional key (`generateKeyBetween`): the user's order. |
+| `shuffle_key` | TEXT | NULL | | Order while shuffle is on; NULL when it is off. |
+| `added_at` | INTEGER | NOT NULL | | |
+
+Indexes: `queue_entries_track` on `(track_id)`, `queue_entries_order` on `(sort_key, id)`, `queue_entries_shuffle` on `(shuffle_key, id) WHERE shuffle_key IS NOT NULL`.
 
 ### play: Coded in schema v1 foundation
 
@@ -504,15 +565,9 @@ Each group below is added by its owning module before the first release. The sch
 
 ### library: Spec only, added by library before first release
 
-**track_artists** (owned child of `tracks`, derived). Columns: `track_id` INTEGER NOT NULL, FK `tracks.id` RESTRICT; `artist_key` TEXT NOT NULL; `artist_name` TEXT NOT NULL. Primary key `(artist_key, track_id)`; index `track_artists_track` on `(track_id)`. When added, `track_artists` joins `trackOwnedChildTables`.
-
 **track_merges** (synced). Columns: `uid` TEXT NOT NULL UNIQUE (ULID); `from_track_uid` TEXT NOT NULL; `to_track_uid` TEXT NOT NULL; `at` INTEGER NOT NULL; `moved_row_ids_json` TEXT NOT NULL; `undone_at` INTEGER NULL; `updated_at` INTEGER NOT NULL; `deleted_at` INTEGER NULL. No foreign key (it holds uids). A merge repoints the child rows to the target track and sets the source row to `hidden`.
 
 **Spec-only tracks columns** are listed under `tracks`.
-
-### playback: Spec only, added by playback before first release
-
-**queue_entries** (per device, not synced). Columns: `id` INTEGER PK autoincrement; `track_id` INTEGER NOT NULL, FK `tracks.id` RESTRICT; `sort_key` TEXT NOT NULL (fractional, as in `playlist_entries`); `added_at` INTEGER NOT NULL. Index `queue_entries_track` on `(track_id)`.
 
 ### lyrics: Spec only, added by lyrics before first release
 
@@ -533,8 +588,6 @@ Each group below is added by its owning module before the first release. The sch
 
 ### cache: Spec only, added by the owning module before first release
 
-**cover_colors** (cache). Cover colour data keyed by the cover key. Columns set by the library module.
-
 **online_lyrics** (cache). `cache_key` = `song_key` (DATA-06). Columns set by the lyrics module. Safe to drop.
 
 ### Pro: Spec only, added by kanaru-pro before first release
@@ -547,19 +600,31 @@ Dart API of the coded groups. `lib/src/database/database.dart` is the barrel; th
 
 | Area | Names |
 |---|---|
-| Constants | `TrackStatus`, `SourceKind`, `PlaylistKind` (`favorites`, `mood`), `SavedItemKind`, `favoritesPlaylistUid`, `missingGraceMs`, `hiddenGraceMs`, `remoteGraceMs`, `trackOwnedChildTables`, and the column sets `trackIdentityColumns`, `trackSnapshotColumns`, `trackUserColumns`, `trackLifecycleColumns` |
+| Constants | `TrackStatus`, `SourceKind`, `PlaylistKind` (`favorites`, `mood`), `SavedItemKind`, `favoritesPlaylistUid`, `missingGraceMs`, `hiddenGraceMs`, `remoteGraceMs`, `trackOwnedChildTables`, and the column sets `trackIdentityColumns`, `trackSnapshotColumns`, `trackScanColumns`, `trackUserColumns`, `trackLifecycleColumns` |
 | connection | `configureConnection(CommonDatabase)`, `AppDatabase.file(File)`, `AppDatabase.sharedConnection` |
 | uids | `sourceUidForRemote(kind, account, root)` (rejects userinfo and query), `trackUid(sourceUid, locator)`, `excludedFolderUid(sourceUid, folderKey)`, `favoriteEntryUid(playlistUid, trackUid)`, `savedItemUid(sourceUid, kind, remoteId)` |
 | ids and order (pure, `lib/src/foundation/`) | `stableHashHex(parts, length)`, `stableUid(prefix, parts)`, `newUlid({nowMs, random})`, `isUlid`, `generateKeyBetween(a, b)`, `generateNKeysBetween(a, b, n)` |
 | writes | `upsertTrackSnapshot(db, tracks, companion)`, `insertOrRevive(db, table, row, now:, reviveColumns:)` |
+| folders | `folderLocatorRange(folderKey)`, `applyFolderExclusion(db, {sourceId, folderKey, displayPath, now})`, `removeFolderExclusion(db, {sourceId, folderKey, now})`, `excludedFolderKeys(db, sourceId)` |
+| scanner writes | `markTracksMissing(db, trackIds, now)`, `replaceTrackArtists(db, trackId, artists)`, `upsertTrackDetails(db, companion)`, `upsertCoverColors(db, {...})`, `coverColorsFor(db, coverKey)` (decoded `({seed, colors, version})?`, null for a missing or malformed row; an upsert with an older `version` is ignored) |
+| queue | `readQueue(db, {shuffled})`, `replaceQueue(db, trackIds, now)` |
 | source lifecycle | `removeSource(db, sourceId, now)`, `setMountEnabled(db, sourceId, enabled, now)`, `reviveSource(db, sourceId, now, {name, account, configJson, credentialRef})`, `unhideTracks(db, sourceId, now, {locatorFrom, locatorTo})` |
 | play stats | `runPlayStatsBulk(db, write)` |
 | reads | `visibleTrackWhere(alias)`, `isVisibleTrack(tracks)`, `ftsPrefixQuery(input)` (null for empty input) |
 | maintenance | `collectOrphanTracks(db, now:)`; `verifyDevSchema`, `dumpSchema` (`schema_guard.dart`, not exported) |
 
-Database helpers live in `lib/src/database/`. `database.dart` exports the tables (`Sources`, `SourceMounts`, `ExcludedFolders`, `Tracks`, `TrackDetails`, `PlayLog`, `PlayStats`, `Playlists`, `PlaylistEntries`, `SavedItems`, `ExtensionSchema`) and the helpers above. It does not export the `play_stats_ctl` type (the generated `playStatsCtl` getter on `AppDatabase` is internal) and exports only `runPlayStatsBulk` from the bulk file.
+Database helpers live in `lib/src/database/`. `database.dart` exports the tables (`Sources`, `SourceMounts`, `ExcludedFolders`, `Tracks`, `TrackDetails`, `TrackArtists`, `CoverColors`, `PlayLog`, `PlayStats`, `QueueEntries`, `Playlists`, `PlaylistEntries`, `SavedItems`, `ExtensionSchema`) and the helpers above. It does not export the `play_stats_ctl` type (the generated `playStatsCtl` getter on `AppDatabase` is internal) and exports only `runPlayStatsBulk` from the bulk file.
 
 Contract for every database helper:
 
 - It takes a `DatabaseConnectionUser`, plus the table instance of that same database where a typed statement needs one. So it can run inside a transaction of any database that shares the connection.
 - It notifies streams by table name.
+
+Folder, scanner and queue helpers:
+
+- **Folder range.** `folderLocatorRange('a')` is `('a/', 'a0')`: `locator >= 'a/' AND locator < 'a0'` holds exactly the files under `a`. `'/'` is 0x2F and `'0'` is 0x30, so `a b/x`, `a.b/x`, `a-b/x` and `a0` are outside. The root `''` has no bound (null). Path-based sources only; a key with a leading or trailing slash throws `ArgumentError`.
+- **Exclusion.** `applyFolderExclusion` inserts or revives the `excluded_folders` row (uid `excludedFolderUid`, built from the source uid read in the same transaction) and hides the `present` and `missing` rows in the range, in one transaction; it throws `StateError` for a removed source. `removeFolderExclusion` tombstones it and turns `hidden` rows of the range into `missing` (`missing_since = now`) except rows another live exclusion of the source still covers, and none at all while the source is removed or its mount is disabled; it resets the mount's scan cursor. Both notify `tracks`, `excluded_folders` and `source_mounts`. `excludedFolderKeys` lists the live keys.
+- **`markTracksMissing`** changes only `present` rows (`hidden`, `remote` and already `missing` rows keep their state), 500 ids per statement, one transaction; the caller decides reachability.
+- **`replaceTrackArtists`** keeps the first of repeated keys and numbers `position` from 0 without gaps. **`upsertTrackDetails`** is `ON CONFLICT (track_id) DO UPDATE` over the scanner columns present in the companion.
+- **`replaceQueue`** deletes the queue and inserts the ids with `generateNKeysBetween` keys, 500 rows per insert, in one transaction. **`readQueue(shuffled: true)`** orders by `shuffle_key IS NULL, shuffle_key, sort_key, id` and never drops a row. Rule: while shuffle is on, every entry has a `shuffle_key`; rows without one sort after, in user order. `replaceQueue(..., shuffleOrder:)` takes a permutation of the indexes of `trackIds` and writes the shuffle keys in that order (invalid permutation: `ArgumentError`, nothing written). Richer queue edits are written by playback against the table.
+- **Empty album.** The scanner stores an empty album as NULL in `album_title_key` and `album_artist_key`.

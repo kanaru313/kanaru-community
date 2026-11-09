@@ -23,6 +23,7 @@ typedef $$TracksTableCreateCompanionBuilder = i1.TracksCompanion Function({
   i0.Value<String?> songKey,
   required String title,
   i0.Value<String> titleSort,
+  i0.Value<String> titleSearch,
   i0.Value<String?> artist,
   i0.Value<String?> album,
   i0.Value<String?> albumArtist,
@@ -36,6 +37,8 @@ typedef $$TracksTableCreateCompanionBuilder = i1.TracksCompanion Function({
   i0.Value<String?> albumSearch,
   i0.Value<String?> albumArtistSearch,
   i0.Value<String?> genreSearch,
+  i0.Value<String?> genreKey,
+  i0.Value<int> languageDetected,
   i0.Value<String?> albumArtistKey,
   i0.Value<String?> albumTitleKey,
   i0.Value<String?> coverKey,
@@ -50,6 +53,12 @@ typedef $$TracksTableCreateCompanionBuilder = i1.TracksCompanion Function({
   i0.Value<int?> sampleRate,
   i0.Value<int?> bitDepth,
   i0.Value<int?> channels,
+  i0.Value<String?> codec,
+  i0.Value<int> tagsVersion,
+  i0.Value<int> keysVersion,
+  i0.Value<int> coverScanVersion,
+  i0.Value<int> lyricsVersion,
+  i0.Value<String?> scanError,
   i0.Value<int?> rating,
   i0.Value<int?> ratingUpdatedAt,
   i0.Value<int> lyricsOffsetMs,
@@ -73,6 +82,7 @@ typedef $$TracksTableUpdateCompanionBuilder = i1.TracksCompanion Function({
   i0.Value<String?> songKey,
   i0.Value<String> title,
   i0.Value<String> titleSort,
+  i0.Value<String> titleSearch,
   i0.Value<String?> artist,
   i0.Value<String?> album,
   i0.Value<String?> albumArtist,
@@ -86,6 +96,8 @@ typedef $$TracksTableUpdateCompanionBuilder = i1.TracksCompanion Function({
   i0.Value<String?> albumSearch,
   i0.Value<String?> albumArtistSearch,
   i0.Value<String?> genreSearch,
+  i0.Value<String?> genreKey,
+  i0.Value<int> languageDetected,
   i0.Value<String?> albumArtistKey,
   i0.Value<String?> albumTitleKey,
   i0.Value<String?> coverKey,
@@ -100,6 +112,12 @@ typedef $$TracksTableUpdateCompanionBuilder = i1.TracksCompanion Function({
   i0.Value<int?> sampleRate,
   i0.Value<int?> bitDepth,
   i0.Value<int?> channels,
+  i0.Value<String?> codec,
+  i0.Value<int> tagsVersion,
+  i0.Value<int> keysVersion,
+  i0.Value<int> coverScanVersion,
+  i0.Value<int> lyricsVersion,
+  i0.Value<String?> scanError,
   i0.Value<int?> rating,
   i0.Value<int?> ratingUpdatedAt,
   i0.Value<int> lyricsOffsetMs,
@@ -153,6 +171,29 @@ final class $$TracksTableReferences
         .filter((f) => f.trackId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_trackDetailsRefsTable($_db));
+    return i0.ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static i0.MultiTypedResultKey<i1.$TrackArtistsTable, List<i1.TrackArtist>>
+  _trackArtistsRefsTable(i0.GeneratedDatabase db) =>
+      i0.MultiTypedResultKey.fromTable(
+        i5.ReadDatabaseContainer(db)
+            .resultSet<i1.$TrackArtistsTable>('track_artists'),
+        aliasName: 'tracks__id__track_artists__track_id',
+      );
+
+  i1.$$TrackArtistsTableProcessedTableManager get trackArtistsRefs {
+    final manager = i1
+        .$$TrackArtistsTableTableManager(
+          $_db,
+          i5.ReadDatabaseContainer($_db)
+              .resultSet<i1.$TrackArtistsTable>('track_artists'),
+        )
+        .filter((f) => f.trackId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_trackArtistsRefsTable($_db));
     return i0.ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -228,6 +269,11 @@ class $$TracksTableFilterComposer
     builder: (column) => i0.ColumnFilters(column),
   );
 
+  i0.ColumnFilters<String> get titleSearch => $composableBuilder(
+    column: $table.titleSearch,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
   i0.ColumnFilters<String> get artist => $composableBuilder(
     column: $table.artist,
     builder: (column) => i0.ColumnFilters(column),
@@ -290,6 +336,16 @@ class $$TracksTableFilterComposer
 
   i0.ColumnFilters<String> get genreSearch => $composableBuilder(
     column: $table.genreSearch,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<String> get genreKey => $composableBuilder(
+    column: $table.genreKey,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<int> get languageDetected => $composableBuilder(
+    column: $table.languageDetected,
     builder: (column) => i0.ColumnFilters(column),
   );
 
@@ -360,6 +416,36 @@ class $$TracksTableFilterComposer
 
   i0.ColumnFilters<int> get channels => $composableBuilder(
     column: $table.channels,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<String> get codec => $composableBuilder(
+    column: $table.codec,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<int> get tagsVersion => $composableBuilder(
+    column: $table.tagsVersion,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<int> get keysVersion => $composableBuilder(
+    column: $table.keysVersion,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<int> get coverScanVersion => $composableBuilder(
+    column: $table.coverScanVersion,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<int> get lyricsVersion => $composableBuilder(
+    column: $table.lyricsVersion,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<String> get scanError => $composableBuilder(
+    column: $table.scanError,
     builder: (column) => i0.ColumnFilters(column),
   );
 
@@ -454,6 +540,33 @@ class $$TracksTableFilterComposer
     );
     return f(composer);
   }
+
+  i0.Expression<bool> trackArtistsRefs(
+    i0.Expression<bool> Function(i1.$$TrackArtistsTableFilterComposer f) f,
+  ) {
+    final i1.$$TrackArtistsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: i5.ReadDatabaseContainer($db)
+          .resultSet<i1.$TrackArtistsTable>('track_artists'),
+      getReferencedColumn: (t) => t.trackId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => i1.$$TrackArtistsTableFilterComposer(
+            $db: $db,
+            $table: i5.ReadDatabaseContainer($db)
+                .resultSet<i1.$TrackArtistsTable>('track_artists'),
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$TracksTableOrderingComposer
@@ -525,6 +638,11 @@ class $$TracksTableOrderingComposer
     builder: (column) => i0.ColumnOrderings(column),
   );
 
+  i0.ColumnOrderings<String> get titleSearch => $composableBuilder(
+    column: $table.titleSearch,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
   i0.ColumnOrderings<String> get artist => $composableBuilder(
     column: $table.artist,
     builder: (column) => i0.ColumnOrderings(column),
@@ -587,6 +705,16 @@ class $$TracksTableOrderingComposer
 
   i0.ColumnOrderings<String> get genreSearch => $composableBuilder(
     column: $table.genreSearch,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<String> get genreKey => $composableBuilder(
+    column: $table.genreKey,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<int> get languageDetected => $composableBuilder(
+    column: $table.languageDetected,
     builder: (column) => i0.ColumnOrderings(column),
   );
 
@@ -657,6 +785,36 @@ class $$TracksTableOrderingComposer
 
   i0.ColumnOrderings<int> get channels => $composableBuilder(
     column: $table.channels,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<String> get codec => $composableBuilder(
+    column: $table.codec,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<int> get tagsVersion => $composableBuilder(
+    column: $table.tagsVersion,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<int> get keysVersion => $composableBuilder(
+    column: $table.keysVersion,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<int> get coverScanVersion => $composableBuilder(
+    column: $table.coverScanVersion,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<int> get lyricsVersion => $composableBuilder(
+    column: $table.lyricsVersion,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<String> get scanError => $composableBuilder(
+    column: $table.scanError,
     builder: (column) => i0.ColumnOrderings(column),
   );
 
@@ -771,6 +929,11 @@ class $$TracksTableAnnotationComposer
   i0.GeneratedColumn<String> get titleSort =>
       $composableBuilder(column: $table.titleSort, builder: (column) => column);
 
+  i0.GeneratedColumn<String> get titleSearch => $composableBuilder(
+    column: $table.titleSearch,
+    builder: (column) => column,
+  );
+
   i0.GeneratedColumn<String> get artist =>
       $composableBuilder(column: $table.artist, builder: (column) => column);
 
@@ -821,6 +984,14 @@ class $$TracksTableAnnotationComposer
 
   i0.GeneratedColumn<String> get genreSearch => $composableBuilder(
     column: $table.genreSearch,
+    builder: (column) => column,
+  );
+
+  i0.GeneratedColumn<String> get genreKey =>
+      $composableBuilder(column: $table.genreKey, builder: (column) => column);
+
+  i0.GeneratedColumn<int> get languageDetected => $composableBuilder(
+    column: $table.languageDetected,
     builder: (column) => column,
   );
 
@@ -875,6 +1046,32 @@ class $$TracksTableAnnotationComposer
 
   i0.GeneratedColumn<int> get channels =>
       $composableBuilder(column: $table.channels, builder: (column) => column);
+
+  i0.GeneratedColumn<String> get codec =>
+      $composableBuilder(column: $table.codec, builder: (column) => column);
+
+  i0.GeneratedColumn<int> get tagsVersion => $composableBuilder(
+    column: $table.tagsVersion,
+    builder: (column) => column,
+  );
+
+  i0.GeneratedColumn<int> get keysVersion => $composableBuilder(
+    column: $table.keysVersion,
+    builder: (column) => column,
+  );
+
+  i0.GeneratedColumn<int> get coverScanVersion => $composableBuilder(
+    column: $table.coverScanVersion,
+    builder: (column) => column,
+  );
+
+  i0.GeneratedColumn<int> get lyricsVersion => $composableBuilder(
+    column: $table.lyricsVersion,
+    builder: (column) => column,
+  );
+
+  i0.GeneratedColumn<String> get scanError =>
+      $composableBuilder(column: $table.scanError, builder: (column) => column);
 
   i0.GeneratedColumn<int> get rating =>
       $composableBuilder(column: $table.rating, builder: (column) => column);
@@ -959,6 +1156,33 @@ class $$TracksTableAnnotationComposer
     );
     return f(composer);
   }
+
+  i0.Expression<T> trackArtistsRefs<T extends Object>(
+    i0.Expression<T> Function(i1.$$TrackArtistsTableAnnotationComposer a) f,
+  ) {
+    final i1.$$TrackArtistsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: i5.ReadDatabaseContainer($db)
+          .resultSet<i1.$TrackArtistsTable>('track_artists'),
+      getReferencedColumn: (t) => t.trackId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => i1.$$TrackArtistsTableAnnotationComposer(
+            $db: $db,
+            $table: i5.ReadDatabaseContainer($db)
+                .resultSet<i1.$TrackArtistsTable>('track_artists'),
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$TracksTableTableManager
@@ -974,7 +1198,11 @@ class $$TracksTableTableManager
           $$TracksTableUpdateCompanionBuilder,
           (i1.Track, i1.$$TracksTableReferences),
           i1.Track,
-          i0.PrefetchHooks Function({bool sourceId, bool trackDetailsRefs})
+          i0.PrefetchHooks Function({
+            bool sourceId,
+            bool trackDetailsRefs,
+            bool trackArtistsRefs,
+          })
         > {
   $$TracksTableTableManager(i0.GeneratedDatabase db, i1.$TracksTable table)
     : super(
@@ -1002,6 +1230,7 @@ class $$TracksTableTableManager
                 i0.Value<String?> songKey = const i0.Value.absent(),
                 i0.Value<String> title = const i0.Value.absent(),
                 i0.Value<String> titleSort = const i0.Value.absent(),
+                i0.Value<String> titleSearch = const i0.Value.absent(),
                 i0.Value<String?> artist = const i0.Value.absent(),
                 i0.Value<String?> album = const i0.Value.absent(),
                 i0.Value<String?> albumArtist = const i0.Value.absent(),
@@ -1015,6 +1244,8 @@ class $$TracksTableTableManager
                 i0.Value<String?> albumSearch = const i0.Value.absent(),
                 i0.Value<String?> albumArtistSearch = const i0.Value.absent(),
                 i0.Value<String?> genreSearch = const i0.Value.absent(),
+                i0.Value<String?> genreKey = const i0.Value.absent(),
+                i0.Value<int> languageDetected = const i0.Value.absent(),
                 i0.Value<String?> albumArtistKey = const i0.Value.absent(),
                 i0.Value<String?> albumTitleKey = const i0.Value.absent(),
                 i0.Value<String?> coverKey = const i0.Value.absent(),
@@ -1029,6 +1260,12 @@ class $$TracksTableTableManager
                 i0.Value<int?> sampleRate = const i0.Value.absent(),
                 i0.Value<int?> bitDepth = const i0.Value.absent(),
                 i0.Value<int?> channels = const i0.Value.absent(),
+                i0.Value<String?> codec = const i0.Value.absent(),
+                i0.Value<int> tagsVersion = const i0.Value.absent(),
+                i0.Value<int> keysVersion = const i0.Value.absent(),
+                i0.Value<int> coverScanVersion = const i0.Value.absent(),
+                i0.Value<int> lyricsVersion = const i0.Value.absent(),
+                i0.Value<String?> scanError = const i0.Value.absent(),
                 i0.Value<int?> rating = const i0.Value.absent(),
                 i0.Value<int?> ratingUpdatedAt = const i0.Value.absent(),
                 i0.Value<int> lyricsOffsetMs = const i0.Value.absent(),
@@ -1051,6 +1288,7 @@ class $$TracksTableTableManager
                 songKey: songKey,
                 title: title,
                 titleSort: titleSort,
+                titleSearch: titleSearch,
                 artist: artist,
                 album: album,
                 albumArtist: albumArtist,
@@ -1064,6 +1302,8 @@ class $$TracksTableTableManager
                 albumSearch: albumSearch,
                 albumArtistSearch: albumArtistSearch,
                 genreSearch: genreSearch,
+                genreKey: genreKey,
+                languageDetected: languageDetected,
                 albumArtistKey: albumArtistKey,
                 albumTitleKey: albumTitleKey,
                 coverKey: coverKey,
@@ -1078,6 +1318,12 @@ class $$TracksTableTableManager
                 sampleRate: sampleRate,
                 bitDepth: bitDepth,
                 channels: channels,
+                codec: codec,
+                tagsVersion: tagsVersion,
+                keysVersion: keysVersion,
+                coverScanVersion: coverScanVersion,
+                lyricsVersion: lyricsVersion,
+                scanError: scanError,
                 rating: rating,
                 ratingUpdatedAt: ratingUpdatedAt,
                 lyricsOffsetMs: lyricsOffsetMs,
@@ -1102,6 +1348,7 @@ class $$TracksTableTableManager
                 i0.Value<String?> songKey = const i0.Value.absent(),
                 required String title,
                 i0.Value<String> titleSort = const i0.Value.absent(),
+                i0.Value<String> titleSearch = const i0.Value.absent(),
                 i0.Value<String?> artist = const i0.Value.absent(),
                 i0.Value<String?> album = const i0.Value.absent(),
                 i0.Value<String?> albumArtist = const i0.Value.absent(),
@@ -1115,6 +1362,8 @@ class $$TracksTableTableManager
                 i0.Value<String?> albumSearch = const i0.Value.absent(),
                 i0.Value<String?> albumArtistSearch = const i0.Value.absent(),
                 i0.Value<String?> genreSearch = const i0.Value.absent(),
+                i0.Value<String?> genreKey = const i0.Value.absent(),
+                i0.Value<int> languageDetected = const i0.Value.absent(),
                 i0.Value<String?> albumArtistKey = const i0.Value.absent(),
                 i0.Value<String?> albumTitleKey = const i0.Value.absent(),
                 i0.Value<String?> coverKey = const i0.Value.absent(),
@@ -1129,6 +1378,12 @@ class $$TracksTableTableManager
                 i0.Value<int?> sampleRate = const i0.Value.absent(),
                 i0.Value<int?> bitDepth = const i0.Value.absent(),
                 i0.Value<int?> channels = const i0.Value.absent(),
+                i0.Value<String?> codec = const i0.Value.absent(),
+                i0.Value<int> tagsVersion = const i0.Value.absent(),
+                i0.Value<int> keysVersion = const i0.Value.absent(),
+                i0.Value<int> coverScanVersion = const i0.Value.absent(),
+                i0.Value<int> lyricsVersion = const i0.Value.absent(),
+                i0.Value<String?> scanError = const i0.Value.absent(),
                 i0.Value<int?> rating = const i0.Value.absent(),
                 i0.Value<int?> ratingUpdatedAt = const i0.Value.absent(),
                 i0.Value<int> lyricsOffsetMs = const i0.Value.absent(),
@@ -1151,6 +1406,7 @@ class $$TracksTableTableManager
                 songKey: songKey,
                 title: title,
                 titleSort: titleSort,
+                titleSearch: titleSearch,
                 artist: artist,
                 album: album,
                 albumArtist: albumArtist,
@@ -1164,6 +1420,8 @@ class $$TracksTableTableManager
                 albumSearch: albumSearch,
                 albumArtistSearch: albumArtistSearch,
                 genreSearch: genreSearch,
+                genreKey: genreKey,
+                languageDetected: languageDetected,
                 albumArtistKey: albumArtistKey,
                 albumTitleKey: albumTitleKey,
                 coverKey: coverKey,
@@ -1178,6 +1436,12 @@ class $$TracksTableTableManager
                 sampleRate: sampleRate,
                 bitDepth: bitDepth,
                 channels: channels,
+                codec: codec,
+                tagsVersion: tagsVersion,
+                keysVersion: keysVersion,
+                coverScanVersion: coverScanVersion,
+                lyricsVersion: lyricsVersion,
+                scanError: scanError,
                 rating: rating,
                 ratingUpdatedAt: ratingUpdatedAt,
                 lyricsOffsetMs: lyricsOffsetMs,
@@ -1196,13 +1460,20 @@ class $$TracksTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({sourceId = false, trackDetailsRefs = false}) {
+              ({
+                sourceId = false,
+                trackDetailsRefs = false,
+                trackArtistsRefs = false,
+              }) {
                 return i0.PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (trackDetailsRefs)
                       i5.ReadDatabaseContainer(db)
                           .resultSet<i1.$TrackDetailsTable>('track_details'),
+                    if (trackArtistsRefs)
+                      i5.ReadDatabaseContainer(db)
+                          .resultSet<i1.$TrackArtistsTable>('track_artists'),
                   ],
                   addJoins:
                       <
@@ -1253,6 +1524,23 @@ class $$TracksTableTableManager
                           referencedColumn: 'track_id',
                           typedResults: items,
                         ),
+                      if (trackArtistsRefs)
+                        await i0.$_getPrefetchedDataByColumns<
+                          i1.Track,
+                          i1.$TracksTable,
+                          i1.TrackArtist,
+                          i1.$TrackArtistsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: i1.$$TracksTableReferences
+                              ._trackArtistsRefsTable(db),
+                          managerFromTypedResult: (p0) => i1
+                              .$$TracksTableReferences(db, table, p0)
+                              .trackArtistsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'track_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -1273,7 +1561,11 @@ typedef $$TracksTableProcessedTableManager =
       $$TracksTableUpdateCompanionBuilder,
       (i1.Track, i1.$$TracksTableReferences),
       i1.Track,
-      i0.PrefetchHooks Function({bool sourceId, bool trackDetailsRefs})
+      i0.PrefetchHooks Function({
+        bool sourceId,
+        bool trackDetailsRefs,
+        bool trackArtistsRefs,
+      })
     >;
 typedef $$TrackDetailsTableCreateCompanionBuilder =
     i1.TrackDetailsCompanion Function({
@@ -1624,6 +1916,321 @@ typedef $$TrackDetailsTableProcessedTableManager =
       i1.TrackDetail,
       i0.PrefetchHooks Function({bool trackId})
     >;
+typedef $$TrackArtistsTableCreateCompanionBuilder =
+    i1.TrackArtistsCompanion Function({
+      required int trackId,
+      required String artistKey,
+      required String artistName,
+      required int position,
+      i0.Value<int> rowid,
+    });
+typedef $$TrackArtistsTableUpdateCompanionBuilder =
+    i1.TrackArtistsCompanion Function({
+      i0.Value<int> trackId,
+      i0.Value<String> artistKey,
+      i0.Value<String> artistName,
+      i0.Value<int> position,
+      i0.Value<int> rowid,
+    });
+
+final class $$TrackArtistsTableReferences
+    extends
+        i0.BaseReferences<
+          i0.GeneratedDatabase,
+          i1.$TrackArtistsTable,
+          i1.TrackArtist
+        > {
+  $$TrackArtistsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static i1.$TracksTable _trackIdTable(i0.GeneratedDatabase db) =>
+      i5.ReadDatabaseContainer(db)
+          .resultSet<i1.$TracksTable>('tracks')
+          .createAlias('track_artists__track_id__tracks__id');
+
+  i1.$$TracksTableProcessedTableManager get trackId {
+    final $_column = $_itemColumn<int>('track_id')!;
+
+    final manager = i1
+        .$$TracksTableTableManager(
+          $_db,
+          i5.ReadDatabaseContainer($_db).resultSet<i1.$TracksTable>('tracks'),
+        )
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_trackIdTable($_db));
+    if (item == null) return manager;
+    return i0.ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$TrackArtistsTableFilterComposer
+    extends i0.Composer<i0.GeneratedDatabase, i1.$TrackArtistsTable> {
+  $$TrackArtistsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  i0.ColumnFilters<String> get artistKey => $composableBuilder(
+    column: $table.artistKey,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<String> get artistName => $composableBuilder(
+    column: $table.artistName,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i1.$$TracksTableFilterComposer get trackId {
+    final i1.$$TracksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.trackId,
+      referencedTable: i5.ReadDatabaseContainer($db)
+          .resultSet<i1.$TracksTable>('tracks'),
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => i1.$$TracksTableFilterComposer(
+            $db: $db,
+            $table: i5.ReadDatabaseContainer($db)
+                .resultSet<i1.$TracksTable>('tracks'),
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TrackArtistsTableOrderingComposer
+    extends i0.Composer<i0.GeneratedDatabase, i1.$TrackArtistsTable> {
+  $$TrackArtistsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  i0.ColumnOrderings<String> get artistKey => $composableBuilder(
+    column: $table.artistKey,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<String> get artistName => $composableBuilder(
+    column: $table.artistName,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i1.$$TracksTableOrderingComposer get trackId {
+    final i1.$$TracksTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.trackId,
+      referencedTable: i5.ReadDatabaseContainer($db)
+          .resultSet<i1.$TracksTable>('tracks'),
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => i1.$$TracksTableOrderingComposer(
+            $db: $db,
+            $table: i5.ReadDatabaseContainer($db)
+                .resultSet<i1.$TracksTable>('tracks'),
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TrackArtistsTableAnnotationComposer
+    extends i0.Composer<i0.GeneratedDatabase, i1.$TrackArtistsTable> {
+  $$TrackArtistsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  i0.GeneratedColumn<String> get artistKey =>
+      $composableBuilder(column: $table.artistKey, builder: (column) => column);
+
+  i0.GeneratedColumn<String> get artistName => $composableBuilder(
+    column: $table.artistName,
+    builder: (column) => column,
+  );
+
+  i0.GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  i1.$$TracksTableAnnotationComposer get trackId {
+    final i1.$$TracksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.trackId,
+      referencedTable: i5.ReadDatabaseContainer($db)
+          .resultSet<i1.$TracksTable>('tracks'),
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => i1.$$TracksTableAnnotationComposer(
+            $db: $db,
+            $table: i5.ReadDatabaseContainer($db)
+                .resultSet<i1.$TracksTable>('tracks'),
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TrackArtistsTableTableManager
+    extends
+        i0.RootTableManager<
+          i0.GeneratedDatabase,
+          i1.$TrackArtistsTable,
+          i1.TrackArtist,
+          i1.$$TrackArtistsTableFilterComposer,
+          i1.$$TrackArtistsTableOrderingComposer,
+          i1.$$TrackArtistsTableAnnotationComposer,
+          $$TrackArtistsTableCreateCompanionBuilder,
+          $$TrackArtistsTableUpdateCompanionBuilder,
+          (i1.TrackArtist, i1.$$TrackArtistsTableReferences),
+          i1.TrackArtist,
+          i0.PrefetchHooks Function({bool trackId})
+        > {
+  $$TrackArtistsTableTableManager(
+    i0.GeneratedDatabase db,
+    i1.$TrackArtistsTable table,
+  ) : super(
+        i0.TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              i1.$$TrackArtistsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              i1.$$TrackArtistsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              i1.$$TrackArtistsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                i0.Value<int> trackId = const i0.Value.absent(),
+                i0.Value<String> artistKey = const i0.Value.absent(),
+                i0.Value<String> artistName = const i0.Value.absent(),
+                i0.Value<int> position = const i0.Value.absent(),
+                i0.Value<int> rowid = const i0.Value.absent(),
+              }) => i1.TrackArtistsCompanion(
+                trackId: trackId,
+                artistKey: artistKey,
+                artistName: artistName,
+                position: position,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int trackId,
+                required String artistKey,
+                required String artistName,
+                required int position,
+                i0.Value<int> rowid = const i0.Value.absent(),
+              }) => i1.TrackArtistsCompanion.insert(
+                trackId: trackId,
+                artistKey: artistKey,
+                artistName: artistName,
+                position: position,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<i1.$TrackArtistsTable, i1.TrackArtist>(table),
+                  i1.$$TrackArtistsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({trackId = false}) {
+            return i0.PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends i0.TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (trackId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.trackId,
+                        referencedTable: i1.$$TrackArtistsTableReferences
+                            ._trackIdTable(db),
+                        referencedColumn: i1.$$TrackArtistsTableReferences
+                            ._trackIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$TrackArtistsTableProcessedTableManager =
+    i0.ProcessedTableManager<
+      i0.GeneratedDatabase,
+      i1.$TrackArtistsTable,
+      i1.TrackArtist,
+      i1.$$TrackArtistsTableFilterComposer,
+      i1.$$TrackArtistsTableOrderingComposer,
+      i1.$$TrackArtistsTableAnnotationComposer,
+      $$TrackArtistsTableCreateCompanionBuilder,
+      $$TrackArtistsTableUpdateCompanionBuilder,
+      (i1.TrackArtist, i1.$$TrackArtistsTableReferences),
+      i1.TrackArtist,
+      i0.PrefetchHooks Function({bool trackId})
+    >;
 i0.Index get tracksPresentTitle => i0.Index(
   'tracks_present_title',
   'CREATE INDEX tracks_present_title ON tracks (title_sort, id) WHERE status = \'present\'',
@@ -1782,6 +2389,19 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
     requiredDuringInsert: false,
     defaultValue: const i3.Constant(''),
   );
+  static const i0.VerificationMeta _titleSearchMeta = const i0.VerificationMeta(
+    'titleSearch',
+  );
+  @override
+  late final i0.GeneratedColumn<String> titleSearch =
+      i0.GeneratedColumn<String>(
+        'title_search',
+        aliasedName,
+        false,
+        type: i0.DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const i3.Constant(''),
+      );
   static const i0.VerificationMeta _artistMeta = const i0.VerificationMeta(
     'artist',
   );
@@ -1928,6 +2548,29 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
         type: i0.DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const i0.VerificationMeta _genreKeyMeta = const i0.VerificationMeta(
+    'genreKey',
+  );
+  @override
+  late final i0.GeneratedColumn<String> genreKey = i0.GeneratedColumn<String>(
+    'genre_key',
+    aliasedName,
+    true,
+    type: i0.DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const i0.VerificationMeta _languageDetectedMeta =
+      const i0.VerificationMeta('languageDetected');
+  @override
+  late final i0.GeneratedColumn<int> languageDetected = i0.GeneratedColumn<int>(
+    'language_detected',
+    aliasedName,
+    false,
+    check: () => languageDetected.isIn(const [0, 1]),
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const i3.Constant(0),
+  );
   static const i0.VerificationMeta _albumArtistKeyMeta =
       const i0.VerificationMeta('albumArtistKey');
   @override
@@ -2082,6 +2725,74 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
     type: i0.DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const i0.VerificationMeta _codecMeta = const i0.VerificationMeta(
+    'codec',
+  );
+  @override
+  late final i0.GeneratedColumn<String> codec = i0.GeneratedColumn<String>(
+    'codec',
+    aliasedName,
+    true,
+    type: i0.DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const i0.VerificationMeta _tagsVersionMeta = const i0.VerificationMeta(
+    'tagsVersion',
+  );
+  @override
+  late final i0.GeneratedColumn<int> tagsVersion = i0.GeneratedColumn<int>(
+    'tags_version',
+    aliasedName,
+    false,
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const i3.Constant(0),
+  );
+  static const i0.VerificationMeta _keysVersionMeta = const i0.VerificationMeta(
+    'keysVersion',
+  );
+  @override
+  late final i0.GeneratedColumn<int> keysVersion = i0.GeneratedColumn<int>(
+    'keys_version',
+    aliasedName,
+    false,
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const i3.Constant(0),
+  );
+  static const i0.VerificationMeta _coverScanVersionMeta =
+      const i0.VerificationMeta('coverScanVersion');
+  @override
+  late final i0.GeneratedColumn<int> coverScanVersion = i0.GeneratedColumn<int>(
+    'cover_scan_version',
+    aliasedName,
+    false,
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const i3.Constant(0),
+  );
+  static const i0.VerificationMeta _lyricsVersionMeta =
+      const i0.VerificationMeta('lyricsVersion');
+  @override
+  late final i0.GeneratedColumn<int> lyricsVersion = i0.GeneratedColumn<int>(
+    'lyrics_version',
+    aliasedName,
+    false,
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const i3.Constant(0),
+  );
+  static const i0.VerificationMeta _scanErrorMeta = const i0.VerificationMeta(
+    'scanError',
+  );
+  @override
+  late final i0.GeneratedColumn<String> scanError = i0.GeneratedColumn<String>(
+    'scan_error',
+    aliasedName,
+    true,
+    type: i0.DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const i0.VerificationMeta _ratingMeta = const i0.VerificationMeta(
     'rating',
   );
@@ -2188,6 +2899,7 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
     songKey,
     title,
     titleSort,
+    titleSearch,
     artist,
     album,
     albumArtist,
@@ -2201,6 +2913,8 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
     albumSearch,
     albumArtistSearch,
     genreSearch,
+    genreKey,
+    languageDetected,
     albumArtistKey,
     albumTitleKey,
     coverKey,
@@ -2215,6 +2929,12 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
     sampleRate,
     bitDepth,
     channels,
+    codec,
+    tagsVersion,
+    keysVersion,
+    coverScanVersion,
+    lyricsVersion,
+    scanError,
     rating,
     ratingUpdatedAt,
     lyricsOffsetMs,
@@ -2321,6 +3041,15 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
         titleSort.isAcceptableOrUnknown(data['title_sort']!, _titleSortMeta),
       );
     }
+    if (data.containsKey('title_search')) {
+      context.handle(
+        _titleSearchMeta,
+        titleSearch.isAcceptableOrUnknown(
+          data['title_search']!,
+          _titleSearchMeta,
+        ),
+      );
+    }
     if (data.containsKey('artist')) {
       context.handle(
         _artistMeta,
@@ -2417,6 +3146,21 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
         ),
       );
     }
+    if (data.containsKey('genre_key')) {
+      context.handle(
+        _genreKeyMeta,
+        genreKey.isAcceptableOrUnknown(data['genre_key']!, _genreKeyMeta),
+      );
+    }
+    if (data.containsKey('language_detected')) {
+      context.handle(
+        _languageDetectedMeta,
+        languageDetected.isAcceptableOrUnknown(
+          data['language_detected']!,
+          _languageDetectedMeta,
+        ),
+      );
+    }
     if (data.containsKey('album_artist_key')) {
       context.handle(
         _albumArtistKeyMeta,
@@ -2505,6 +3249,54 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
       context.handle(
         _channelsMeta,
         channels.isAcceptableOrUnknown(data['channels']!, _channelsMeta),
+      );
+    }
+    if (data.containsKey('codec')) {
+      context.handle(
+        _codecMeta,
+        codec.isAcceptableOrUnknown(data['codec']!, _codecMeta),
+      );
+    }
+    if (data.containsKey('tags_version')) {
+      context.handle(
+        _tagsVersionMeta,
+        tagsVersion.isAcceptableOrUnknown(
+          data['tags_version']!,
+          _tagsVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('keys_version')) {
+      context.handle(
+        _keysVersionMeta,
+        keysVersion.isAcceptableOrUnknown(
+          data['keys_version']!,
+          _keysVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cover_scan_version')) {
+      context.handle(
+        _coverScanVersionMeta,
+        coverScanVersion.isAcceptableOrUnknown(
+          data['cover_scan_version']!,
+          _coverScanVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('lyrics_version')) {
+      context.handle(
+        _lyricsVersionMeta,
+        lyricsVersion.isAcceptableOrUnknown(
+          data['lyrics_version']!,
+          _lyricsVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('scan_error')) {
+      context.handle(
+        _scanErrorMeta,
+        scanError.isAcceptableOrUnknown(data['scan_error']!, _scanErrorMeta),
       );
     }
     if (data.containsKey('rating')) {
@@ -2636,6 +3428,10 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
         i0.DriftSqlType.string,
         data['${effectivePrefix}title_sort'],
       )!,
+      titleSearch: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}title_search'],
+      )!,
       artist: attachedDatabase.typeMapping.read(
         i0.DriftSqlType.string,
         data['${effectivePrefix}artist'],
@@ -2688,6 +3484,14 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
         i0.DriftSqlType.string,
         data['${effectivePrefix}genre_search'],
       ),
+      genreKey: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}genre_key'],
+      ),
+      languageDetected: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}language_detected'],
+      )!,
       albumArtistKey: attachedDatabase.typeMapping.read(
         i0.DriftSqlType.string,
         data['${effectivePrefix}album_artist_key'],
@@ -2743,6 +3547,30 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
       channels: attachedDatabase.typeMapping.read(
         i0.DriftSqlType.int,
         data['${effectivePrefix}channels'],
+      ),
+      codec: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}codec'],
+      ),
+      tagsVersion: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}tags_version'],
+      )!,
+      keysVersion: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}keys_version'],
+      )!,
+      coverScanVersion: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}cover_scan_version'],
+      )!,
+      lyricsVersion: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}lyrics_version'],
+      )!,
+      scanError: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}scan_error'],
       ),
       rating: attachedDatabase.typeMapping.read(
         i0.DriftSqlType.int,
@@ -2801,6 +3629,10 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
   final String? songKey;
   final String title;
   final String titleSort;
+
+  /// Search form of the title, indexed by `track_search` (a TITLESORT tag
+  /// changes `title_sort` but must not change what search finds).
+  final String titleSearch;
   final String? artist;
   final String? album;
   final String? albumArtist;
@@ -2814,6 +3646,13 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
   final String? albumSearch;
   final String? albumArtistSearch;
   final String? genreSearch;
+
+  /// `groupKey(genre)`: grouping key of the Genres list. Stored because
+  /// SQLite `lower()` is ASCII-only.
+  final String? genreKey;
+
+  /// True when `language` was detected from the text, not read from a tag.
+  final int languageDetected;
   final String? albumArtistKey;
   final String? albumTitleKey;
   final String? coverKey;
@@ -2828,6 +3667,25 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
   final int? sampleRate;
   final int? bitDepth;
   final int? channels;
+
+  /// Format the decoder reported (`FLAC`, `MP3`); NULL = derive it from the
+  /// extension of `rel_path`.
+  final String? codec;
+
+  /// Tag pass that produced the snapshot.
+  final int tagsVersion;
+
+  /// Version of the key, sort and search derivation.
+  final int keysVersion;
+
+  /// Cover pass version.
+  final int coverScanVersion;
+
+  /// Reserved for the lyrics module; 0 = no lyrics tokens.
+  final int lyricsVersion;
+
+  /// Error kind of the last failed pass; NULL = ok.
+  final String? scanError;
   final int? rating;
   final int? ratingUpdatedAt;
   final int lyricsOffsetMs;
@@ -2852,6 +3710,7 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     this.songKey,
     required this.title,
     required this.titleSort,
+    required this.titleSearch,
     this.artist,
     this.album,
     this.albumArtist,
@@ -2865,6 +3724,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     this.albumSearch,
     this.albumArtistSearch,
     this.genreSearch,
+    this.genreKey,
+    required this.languageDetected,
     this.albumArtistKey,
     this.albumTitleKey,
     this.coverKey,
@@ -2879,6 +3740,12 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     this.sampleRate,
     this.bitDepth,
     this.channels,
+    this.codec,
+    required this.tagsVersion,
+    required this.keysVersion,
+    required this.coverScanVersion,
+    required this.lyricsVersion,
+    this.scanError,
     this.rating,
     this.ratingUpdatedAt,
     required this.lyricsOffsetMs,
@@ -2916,6 +3783,7 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     }
     map['title'] = i0.Variable<String>(title);
     map['title_sort'] = i0.Variable<String>(titleSort);
+    map['title_search'] = i0.Variable<String>(titleSearch);
     if (!nullToAbsent || artist != null) {
       map['artist'] = i0.Variable<String>(artist);
     }
@@ -2955,6 +3823,10 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     if (!nullToAbsent || genreSearch != null) {
       map['genre_search'] = i0.Variable<String>(genreSearch);
     }
+    if (!nullToAbsent || genreKey != null) {
+      map['genre_key'] = i0.Variable<String>(genreKey);
+    }
+    map['language_detected'] = i0.Variable<int>(languageDetected);
     if (!nullToAbsent || albumArtistKey != null) {
       map['album_artist_key'] = i0.Variable<String>(albumArtistKey);
     }
@@ -2996,6 +3868,16 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     }
     if (!nullToAbsent || channels != null) {
       map['channels'] = i0.Variable<int>(channels);
+    }
+    if (!nullToAbsent || codec != null) {
+      map['codec'] = i0.Variable<String>(codec);
+    }
+    map['tags_version'] = i0.Variable<int>(tagsVersion);
+    map['keys_version'] = i0.Variable<int>(keysVersion);
+    map['cover_scan_version'] = i0.Variable<int>(coverScanVersion);
+    map['lyrics_version'] = i0.Variable<int>(lyricsVersion);
+    if (!nullToAbsent || scanError != null) {
+      map['scan_error'] = i0.Variable<String>(scanError);
     }
     if (!nullToAbsent || rating != null) {
       map['rating'] = i0.Variable<int>(rating);
@@ -3043,6 +3925,7 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
           : i0.Value(songKey),
       title: i0.Value(title),
       titleSort: i0.Value(titleSort),
+      titleSearch: i0.Value(titleSearch),
       artist: artist == null && nullToAbsent
           ? const i0.Value.absent()
           : i0.Value(artist),
@@ -3082,6 +3965,10 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
       genreSearch: genreSearch == null && nullToAbsent
           ? const i0.Value.absent()
           : i0.Value(genreSearch),
+      genreKey: genreKey == null && nullToAbsent
+          ? const i0.Value.absent()
+          : i0.Value(genreKey),
+      languageDetected: i0.Value(languageDetected),
       albumArtistKey: albumArtistKey == null && nullToAbsent
           ? const i0.Value.absent()
           : i0.Value(albumArtistKey),
@@ -3124,6 +4011,16 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
       channels: channels == null && nullToAbsent
           ? const i0.Value.absent()
           : i0.Value(channels),
+      codec: codec == null && nullToAbsent
+          ? const i0.Value.absent()
+          : i0.Value(codec),
+      tagsVersion: i0.Value(tagsVersion),
+      keysVersion: i0.Value(keysVersion),
+      coverScanVersion: i0.Value(coverScanVersion),
+      lyricsVersion: i0.Value(lyricsVersion),
+      scanError: scanError == null && nullToAbsent
+          ? const i0.Value.absent()
+          : i0.Value(scanError),
       rating: rating == null && nullToAbsent
           ? const i0.Value.absent()
           : i0.Value(rating),
@@ -3162,6 +4059,7 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
       songKey: serializer.fromJson<String?>(json['songKey']),
       title: serializer.fromJson<String>(json['title']),
       titleSort: serializer.fromJson<String>(json['titleSort']),
+      titleSearch: serializer.fromJson<String>(json['titleSearch']),
       artist: serializer.fromJson<String?>(json['artist']),
       album: serializer.fromJson<String?>(json['album']),
       albumArtist: serializer.fromJson<String?>(json['albumArtist']),
@@ -3179,6 +4077,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
         json['albumArtistSearch'],
       ),
       genreSearch: serializer.fromJson<String?>(json['genreSearch']),
+      genreKey: serializer.fromJson<String?>(json['genreKey']),
+      languageDetected: serializer.fromJson<int>(json['languageDetected']),
       albumArtistKey: serializer.fromJson<String?>(json['albumArtistKey']),
       albumTitleKey: serializer.fromJson<String?>(json['albumTitleKey']),
       coverKey: serializer.fromJson<String?>(json['coverKey']),
@@ -3193,6 +4093,12 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
       sampleRate: serializer.fromJson<int?>(json['sampleRate']),
       bitDepth: serializer.fromJson<int?>(json['bitDepth']),
       channels: serializer.fromJson<int?>(json['channels']),
+      codec: serializer.fromJson<String?>(json['codec']),
+      tagsVersion: serializer.fromJson<int>(json['tagsVersion']),
+      keysVersion: serializer.fromJson<int>(json['keysVersion']),
+      coverScanVersion: serializer.fromJson<int>(json['coverScanVersion']),
+      lyricsVersion: serializer.fromJson<int>(json['lyricsVersion']),
+      scanError: serializer.fromJson<String?>(json['scanError']),
       rating: serializer.fromJson<int?>(json['rating']),
       ratingUpdatedAt: serializer.fromJson<int?>(json['ratingUpdatedAt']),
       lyricsOffsetMs: serializer.fromJson<int>(json['lyricsOffsetMs']),
@@ -3222,6 +4128,7 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
       'songKey': serializer.toJson<String?>(songKey),
       'title': serializer.toJson<String>(title),
       'titleSort': serializer.toJson<String>(titleSort),
+      'titleSearch': serializer.toJson<String>(titleSearch),
       'artist': serializer.toJson<String?>(artist),
       'album': serializer.toJson<String?>(album),
       'albumArtist': serializer.toJson<String?>(albumArtist),
@@ -3235,6 +4142,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
       'albumSearch': serializer.toJson<String?>(albumSearch),
       'albumArtistSearch': serializer.toJson<String?>(albumArtistSearch),
       'genreSearch': serializer.toJson<String?>(genreSearch),
+      'genreKey': serializer.toJson<String?>(genreKey),
+      'languageDetected': serializer.toJson<int>(languageDetected),
       'albumArtistKey': serializer.toJson<String?>(albumArtistKey),
       'albumTitleKey': serializer.toJson<String?>(albumTitleKey),
       'coverKey': serializer.toJson<String?>(coverKey),
@@ -3249,6 +4158,12 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
       'sampleRate': serializer.toJson<int?>(sampleRate),
       'bitDepth': serializer.toJson<int?>(bitDepth),
       'channels': serializer.toJson<int?>(channels),
+      'codec': serializer.toJson<String?>(codec),
+      'tagsVersion': serializer.toJson<int>(tagsVersion),
+      'keysVersion': serializer.toJson<int>(keysVersion),
+      'coverScanVersion': serializer.toJson<int>(coverScanVersion),
+      'lyricsVersion': serializer.toJson<int>(lyricsVersion),
+      'scanError': serializer.toJson<String?>(scanError),
       'rating': serializer.toJson<int?>(rating),
       'ratingUpdatedAt': serializer.toJson<int?>(ratingUpdatedAt),
       'lyricsOffsetMs': serializer.toJson<int>(lyricsOffsetMs),
@@ -3274,6 +4189,7 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     i0.Value<String?> songKey = const i0.Value.absent(),
     String? title,
     String? titleSort,
+    String? titleSearch,
     i0.Value<String?> artist = const i0.Value.absent(),
     i0.Value<String?> album = const i0.Value.absent(),
     i0.Value<String?> albumArtist = const i0.Value.absent(),
@@ -3287,6 +4203,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     i0.Value<String?> albumSearch = const i0.Value.absent(),
     i0.Value<String?> albumArtistSearch = const i0.Value.absent(),
     i0.Value<String?> genreSearch = const i0.Value.absent(),
+    i0.Value<String?> genreKey = const i0.Value.absent(),
+    int? languageDetected,
     i0.Value<String?> albumArtistKey = const i0.Value.absent(),
     i0.Value<String?> albumTitleKey = const i0.Value.absent(),
     i0.Value<String?> coverKey = const i0.Value.absent(),
@@ -3301,6 +4219,12 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     i0.Value<int?> sampleRate = const i0.Value.absent(),
     i0.Value<int?> bitDepth = const i0.Value.absent(),
     i0.Value<int?> channels = const i0.Value.absent(),
+    i0.Value<String?> codec = const i0.Value.absent(),
+    int? tagsVersion,
+    int? keysVersion,
+    int? coverScanVersion,
+    int? lyricsVersion,
+    i0.Value<String?> scanError = const i0.Value.absent(),
     i0.Value<int?> rating = const i0.Value.absent(),
     i0.Value<int?> ratingUpdatedAt = const i0.Value.absent(),
     int? lyricsOffsetMs,
@@ -3323,6 +4247,7 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     songKey: songKey.present ? songKey.value : this.songKey,
     title: title ?? this.title,
     titleSort: titleSort ?? this.titleSort,
+    titleSearch: titleSearch ?? this.titleSearch,
     artist: artist.present ? artist.value : this.artist,
     album: album.present ? album.value : this.album,
     albumArtist: albumArtist.present ? albumArtist.value : this.albumArtist,
@@ -3340,6 +4265,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
         ? albumArtistSearch.value
         : this.albumArtistSearch,
     genreSearch: genreSearch.present ? genreSearch.value : this.genreSearch,
+    genreKey: genreKey.present ? genreKey.value : this.genreKey,
+    languageDetected: languageDetected ?? this.languageDetected,
     albumArtistKey: albumArtistKey.present
         ? albumArtistKey.value
         : this.albumArtistKey,
@@ -3358,6 +4285,12 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     sampleRate: sampleRate.present ? sampleRate.value : this.sampleRate,
     bitDepth: bitDepth.present ? bitDepth.value : this.bitDepth,
     channels: channels.present ? channels.value : this.channels,
+    codec: codec.present ? codec.value : this.codec,
+    tagsVersion: tagsVersion ?? this.tagsVersion,
+    keysVersion: keysVersion ?? this.keysVersion,
+    coverScanVersion: coverScanVersion ?? this.coverScanVersion,
+    lyricsVersion: lyricsVersion ?? this.lyricsVersion,
+    scanError: scanError.present ? scanError.value : this.scanError,
     rating: rating.present ? rating.value : this.rating,
     ratingUpdatedAt: ratingUpdatedAt.present
         ? ratingUpdatedAt.value
@@ -3386,6 +4319,9 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
       songKey: data.songKey.present ? data.songKey.value : this.songKey,
       title: data.title.present ? data.title.value : this.title,
       titleSort: data.titleSort.present ? data.titleSort.value : this.titleSort,
+      titleSearch: data.titleSearch.present
+          ? data.titleSearch.value
+          : this.titleSearch,
       artist: data.artist.present ? data.artist.value : this.artist,
       album: data.album.present ? data.album.value : this.album,
       albumArtist: data.albumArtist.present
@@ -3413,6 +4349,10 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
       genreSearch: data.genreSearch.present
           ? data.genreSearch.value
           : this.genreSearch,
+      genreKey: data.genreKey.present ? data.genreKey.value : this.genreKey,
+      languageDetected: data.languageDetected.present
+          ? data.languageDetected.value
+          : this.languageDetected,
       albumArtistKey: data.albumArtistKey.present
           ? data.albumArtistKey.value
           : this.albumArtistKey,
@@ -3437,6 +4377,20 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
           : this.sampleRate,
       bitDepth: data.bitDepth.present ? data.bitDepth.value : this.bitDepth,
       channels: data.channels.present ? data.channels.value : this.channels,
+      codec: data.codec.present ? data.codec.value : this.codec,
+      tagsVersion: data.tagsVersion.present
+          ? data.tagsVersion.value
+          : this.tagsVersion,
+      keysVersion: data.keysVersion.present
+          ? data.keysVersion.value
+          : this.keysVersion,
+      coverScanVersion: data.coverScanVersion.present
+          ? data.coverScanVersion.value
+          : this.coverScanVersion,
+      lyricsVersion: data.lyricsVersion.present
+          ? data.lyricsVersion.value
+          : this.lyricsVersion,
+      scanError: data.scanError.present ? data.scanError.value : this.scanError,
       rating: data.rating.present ? data.rating.value : this.rating,
       ratingUpdatedAt: data.ratingUpdatedAt.present
           ? data.ratingUpdatedAt.value
@@ -3472,6 +4426,7 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
           ..write('songKey: $songKey, ')
           ..write('title: $title, ')
           ..write('titleSort: $titleSort, ')
+          ..write('titleSearch: $titleSearch, ')
           ..write('artist: $artist, ')
           ..write('album: $album, ')
           ..write('albumArtist: $albumArtist, ')
@@ -3485,6 +4440,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
           ..write('albumSearch: $albumSearch, ')
           ..write('albumArtistSearch: $albumArtistSearch, ')
           ..write('genreSearch: $genreSearch, ')
+          ..write('genreKey: $genreKey, ')
+          ..write('languageDetected: $languageDetected, ')
           ..write('albumArtistKey: $albumArtistKey, ')
           ..write('albumTitleKey: $albumTitleKey, ')
           ..write('coverKey: $coverKey, ')
@@ -3499,6 +4456,12 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
           ..write('sampleRate: $sampleRate, ')
           ..write('bitDepth: $bitDepth, ')
           ..write('channels: $channels, ')
+          ..write('codec: $codec, ')
+          ..write('tagsVersion: $tagsVersion, ')
+          ..write('keysVersion: $keysVersion, ')
+          ..write('coverScanVersion: $coverScanVersion, ')
+          ..write('lyricsVersion: $lyricsVersion, ')
+          ..write('scanError: $scanError, ')
           ..write('rating: $rating, ')
           ..write('ratingUpdatedAt: $ratingUpdatedAt, ')
           ..write('lyricsOffsetMs: $lyricsOffsetMs, ')
@@ -3526,6 +4489,7 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     songKey,
     title,
     titleSort,
+    titleSearch,
     artist,
     album,
     albumArtist,
@@ -3539,6 +4503,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     albumSearch,
     albumArtistSearch,
     genreSearch,
+    genreKey,
+    languageDetected,
     albumArtistKey,
     albumTitleKey,
     coverKey,
@@ -3553,6 +4519,12 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     sampleRate,
     bitDepth,
     channels,
+    codec,
+    tagsVersion,
+    keysVersion,
+    coverScanVersion,
+    lyricsVersion,
+    scanError,
     rating,
     ratingUpdatedAt,
     lyricsOffsetMs,
@@ -3579,6 +4551,7 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
           other.songKey == this.songKey &&
           other.title == this.title &&
           other.titleSort == this.titleSort &&
+          other.titleSearch == this.titleSearch &&
           other.artist == this.artist &&
           other.album == this.album &&
           other.albumArtist == this.albumArtist &&
@@ -3592,6 +4565,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
           other.albumSearch == this.albumSearch &&
           other.albumArtistSearch == this.albumArtistSearch &&
           other.genreSearch == this.genreSearch &&
+          other.genreKey == this.genreKey &&
+          other.languageDetected == this.languageDetected &&
           other.albumArtistKey == this.albumArtistKey &&
           other.albumTitleKey == this.albumTitleKey &&
           other.coverKey == this.coverKey &&
@@ -3606,6 +4581,12 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
           other.sampleRate == this.sampleRate &&
           other.bitDepth == this.bitDepth &&
           other.channels == this.channels &&
+          other.codec == this.codec &&
+          other.tagsVersion == this.tagsVersion &&
+          other.keysVersion == this.keysVersion &&
+          other.coverScanVersion == this.coverScanVersion &&
+          other.lyricsVersion == this.lyricsVersion &&
+          other.scanError == this.scanError &&
           other.rating == this.rating &&
           other.ratingUpdatedAt == this.ratingUpdatedAt &&
           other.lyricsOffsetMs == this.lyricsOffsetMs &&
@@ -3630,6 +4611,7 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
   final i0.Value<String?> songKey;
   final i0.Value<String> title;
   final i0.Value<String> titleSort;
+  final i0.Value<String> titleSearch;
   final i0.Value<String?> artist;
   final i0.Value<String?> album;
   final i0.Value<String?> albumArtist;
@@ -3643,6 +4625,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
   final i0.Value<String?> albumSearch;
   final i0.Value<String?> albumArtistSearch;
   final i0.Value<String?> genreSearch;
+  final i0.Value<String?> genreKey;
+  final i0.Value<int> languageDetected;
   final i0.Value<String?> albumArtistKey;
   final i0.Value<String?> albumTitleKey;
   final i0.Value<String?> coverKey;
@@ -3657,6 +4641,12 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
   final i0.Value<int?> sampleRate;
   final i0.Value<int?> bitDepth;
   final i0.Value<int?> channels;
+  final i0.Value<String?> codec;
+  final i0.Value<int> tagsVersion;
+  final i0.Value<int> keysVersion;
+  final i0.Value<int> coverScanVersion;
+  final i0.Value<int> lyricsVersion;
+  final i0.Value<String?> scanError;
   final i0.Value<int?> rating;
   final i0.Value<int?> ratingUpdatedAt;
   final i0.Value<int> lyricsOffsetMs;
@@ -3679,6 +4669,7 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     this.songKey = const i0.Value.absent(),
     this.title = const i0.Value.absent(),
     this.titleSort = const i0.Value.absent(),
+    this.titleSearch = const i0.Value.absent(),
     this.artist = const i0.Value.absent(),
     this.album = const i0.Value.absent(),
     this.albumArtist = const i0.Value.absent(),
@@ -3692,6 +4683,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     this.albumSearch = const i0.Value.absent(),
     this.albumArtistSearch = const i0.Value.absent(),
     this.genreSearch = const i0.Value.absent(),
+    this.genreKey = const i0.Value.absent(),
+    this.languageDetected = const i0.Value.absent(),
     this.albumArtistKey = const i0.Value.absent(),
     this.albumTitleKey = const i0.Value.absent(),
     this.coverKey = const i0.Value.absent(),
@@ -3706,6 +4699,12 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     this.sampleRate = const i0.Value.absent(),
     this.bitDepth = const i0.Value.absent(),
     this.channels = const i0.Value.absent(),
+    this.codec = const i0.Value.absent(),
+    this.tagsVersion = const i0.Value.absent(),
+    this.keysVersion = const i0.Value.absent(),
+    this.coverScanVersion = const i0.Value.absent(),
+    this.lyricsVersion = const i0.Value.absent(),
+    this.scanError = const i0.Value.absent(),
     this.rating = const i0.Value.absent(),
     this.ratingUpdatedAt = const i0.Value.absent(),
     this.lyricsOffsetMs = const i0.Value.absent(),
@@ -3729,6 +4728,7 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     this.songKey = const i0.Value.absent(),
     required String title,
     this.titleSort = const i0.Value.absent(),
+    this.titleSearch = const i0.Value.absent(),
     this.artist = const i0.Value.absent(),
     this.album = const i0.Value.absent(),
     this.albumArtist = const i0.Value.absent(),
@@ -3742,6 +4742,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     this.albumSearch = const i0.Value.absent(),
     this.albumArtistSearch = const i0.Value.absent(),
     this.genreSearch = const i0.Value.absent(),
+    this.genreKey = const i0.Value.absent(),
+    this.languageDetected = const i0.Value.absent(),
     this.albumArtistKey = const i0.Value.absent(),
     this.albumTitleKey = const i0.Value.absent(),
     this.coverKey = const i0.Value.absent(),
@@ -3756,6 +4758,12 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     this.sampleRate = const i0.Value.absent(),
     this.bitDepth = const i0.Value.absent(),
     this.channels = const i0.Value.absent(),
+    this.codec = const i0.Value.absent(),
+    this.tagsVersion = const i0.Value.absent(),
+    this.keysVersion = const i0.Value.absent(),
+    this.coverScanVersion = const i0.Value.absent(),
+    this.lyricsVersion = const i0.Value.absent(),
+    this.scanError = const i0.Value.absent(),
     this.rating = const i0.Value.absent(),
     this.ratingUpdatedAt = const i0.Value.absent(),
     this.lyricsOffsetMs = const i0.Value.absent(),
@@ -3785,6 +4793,7 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     i0.Expression<String>? songKey,
     i0.Expression<String>? title,
     i0.Expression<String>? titleSort,
+    i0.Expression<String>? titleSearch,
     i0.Expression<String>? artist,
     i0.Expression<String>? album,
     i0.Expression<String>? albumArtist,
@@ -3798,6 +4807,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     i0.Expression<String>? albumSearch,
     i0.Expression<String>? albumArtistSearch,
     i0.Expression<String>? genreSearch,
+    i0.Expression<String>? genreKey,
+    i0.Expression<int>? languageDetected,
     i0.Expression<String>? albumArtistKey,
     i0.Expression<String>? albumTitleKey,
     i0.Expression<String>? coverKey,
@@ -3812,6 +4823,12 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     i0.Expression<int>? sampleRate,
     i0.Expression<int>? bitDepth,
     i0.Expression<int>? channels,
+    i0.Expression<String>? codec,
+    i0.Expression<int>? tagsVersion,
+    i0.Expression<int>? keysVersion,
+    i0.Expression<int>? coverScanVersion,
+    i0.Expression<int>? lyricsVersion,
+    i0.Expression<String>? scanError,
     i0.Expression<int>? rating,
     i0.Expression<int>? ratingUpdatedAt,
     i0.Expression<int>? lyricsOffsetMs,
@@ -3835,6 +4852,7 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
       if (songKey != null) 'song_key': songKey,
       if (title != null) 'title': title,
       if (titleSort != null) 'title_sort': titleSort,
+      if (titleSearch != null) 'title_search': titleSearch,
       if (artist != null) 'artist': artist,
       if (album != null) 'album': album,
       if (albumArtist != null) 'album_artist': albumArtist,
@@ -3849,6 +4867,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
       if (albumSearch != null) 'album_search': albumSearch,
       if (albumArtistSearch != null) 'album_artist_search': albumArtistSearch,
       if (genreSearch != null) 'genre_search': genreSearch,
+      if (genreKey != null) 'genre_key': genreKey,
+      if (languageDetected != null) 'language_detected': languageDetected,
       if (albumArtistKey != null) 'album_artist_key': albumArtistKey,
       if (albumTitleKey != null) 'album_title_key': albumTitleKey,
       if (coverKey != null) 'cover_key': coverKey,
@@ -3863,6 +4883,12 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
       if (sampleRate != null) 'sample_rate': sampleRate,
       if (bitDepth != null) 'bit_depth': bitDepth,
       if (channels != null) 'channels': channels,
+      if (codec != null) 'codec': codec,
+      if (tagsVersion != null) 'tags_version': tagsVersion,
+      if (keysVersion != null) 'keys_version': keysVersion,
+      if (coverScanVersion != null) 'cover_scan_version': coverScanVersion,
+      if (lyricsVersion != null) 'lyrics_version': lyricsVersion,
+      if (scanError != null) 'scan_error': scanError,
       if (rating != null) 'rating': rating,
       if (ratingUpdatedAt != null) 'rating_updated_at': ratingUpdatedAt,
       if (lyricsOffsetMs != null) 'lyrics_offset_ms': lyricsOffsetMs,
@@ -3889,6 +4915,7 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     i0.Value<String?>? songKey,
     i0.Value<String>? title,
     i0.Value<String>? titleSort,
+    i0.Value<String>? titleSearch,
     i0.Value<String?>? artist,
     i0.Value<String?>? album,
     i0.Value<String?>? albumArtist,
@@ -3902,6 +4929,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     i0.Value<String?>? albumSearch,
     i0.Value<String?>? albumArtistSearch,
     i0.Value<String?>? genreSearch,
+    i0.Value<String?>? genreKey,
+    i0.Value<int>? languageDetected,
     i0.Value<String?>? albumArtistKey,
     i0.Value<String?>? albumTitleKey,
     i0.Value<String?>? coverKey,
@@ -3916,6 +4945,12 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     i0.Value<int?>? sampleRate,
     i0.Value<int?>? bitDepth,
     i0.Value<int?>? channels,
+    i0.Value<String?>? codec,
+    i0.Value<int>? tagsVersion,
+    i0.Value<int>? keysVersion,
+    i0.Value<int>? coverScanVersion,
+    i0.Value<int>? lyricsVersion,
+    i0.Value<String?>? scanError,
     i0.Value<int?>? rating,
     i0.Value<int?>? ratingUpdatedAt,
     i0.Value<int>? lyricsOffsetMs,
@@ -3939,6 +4974,7 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
       songKey: songKey ?? this.songKey,
       title: title ?? this.title,
       titleSort: titleSort ?? this.titleSort,
+      titleSearch: titleSearch ?? this.titleSearch,
       artist: artist ?? this.artist,
       album: album ?? this.album,
       albumArtist: albumArtist ?? this.albumArtist,
@@ -3952,6 +4988,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
       albumSearch: albumSearch ?? this.albumSearch,
       albumArtistSearch: albumArtistSearch ?? this.albumArtistSearch,
       genreSearch: genreSearch ?? this.genreSearch,
+      genreKey: genreKey ?? this.genreKey,
+      languageDetected: languageDetected ?? this.languageDetected,
       albumArtistKey: albumArtistKey ?? this.albumArtistKey,
       albumTitleKey: albumTitleKey ?? this.albumTitleKey,
       coverKey: coverKey ?? this.coverKey,
@@ -3966,6 +5004,12 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
       sampleRate: sampleRate ?? this.sampleRate,
       bitDepth: bitDepth ?? this.bitDepth,
       channels: channels ?? this.channels,
+      codec: codec ?? this.codec,
+      tagsVersion: tagsVersion ?? this.tagsVersion,
+      keysVersion: keysVersion ?? this.keysVersion,
+      coverScanVersion: coverScanVersion ?? this.coverScanVersion,
+      lyricsVersion: lyricsVersion ?? this.lyricsVersion,
+      scanError: scanError ?? this.scanError,
       rating: rating ?? this.rating,
       ratingUpdatedAt: ratingUpdatedAt ?? this.ratingUpdatedAt,
       lyricsOffsetMs: lyricsOffsetMs ?? this.lyricsOffsetMs,
@@ -4020,6 +5064,9 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     if (titleSort.present) {
       map['title_sort'] = i0.Variable<String>(titleSort.value);
     }
+    if (titleSearch.present) {
+      map['title_search'] = i0.Variable<String>(titleSearch.value);
+    }
     if (artist.present) {
       map['artist'] = i0.Variable<String>(artist.value);
     }
@@ -4060,6 +5107,12 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     }
     if (genreSearch.present) {
       map['genre_search'] = i0.Variable<String>(genreSearch.value);
+    }
+    if (genreKey.present) {
+      map['genre_key'] = i0.Variable<String>(genreKey.value);
+    }
+    if (languageDetected.present) {
+      map['language_detected'] = i0.Variable<int>(languageDetected.value);
     }
     if (albumArtistKey.present) {
       map['album_artist_key'] = i0.Variable<String>(albumArtistKey.value);
@@ -4102,6 +5155,24 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     }
     if (channels.present) {
       map['channels'] = i0.Variable<int>(channels.value);
+    }
+    if (codec.present) {
+      map['codec'] = i0.Variable<String>(codec.value);
+    }
+    if (tagsVersion.present) {
+      map['tags_version'] = i0.Variable<int>(tagsVersion.value);
+    }
+    if (keysVersion.present) {
+      map['keys_version'] = i0.Variable<int>(keysVersion.value);
+    }
+    if (coverScanVersion.present) {
+      map['cover_scan_version'] = i0.Variable<int>(coverScanVersion.value);
+    }
+    if (lyricsVersion.present) {
+      map['lyrics_version'] = i0.Variable<int>(lyricsVersion.value);
+    }
+    if (scanError.present) {
+      map['scan_error'] = i0.Variable<String>(scanError.value);
     }
     if (rating.present) {
       map['rating'] = i0.Variable<int>(rating.value);
@@ -4148,6 +5219,7 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
           ..write('songKey: $songKey, ')
           ..write('title: $title, ')
           ..write('titleSort: $titleSort, ')
+          ..write('titleSearch: $titleSearch, ')
           ..write('artist: $artist, ')
           ..write('album: $album, ')
           ..write('albumArtist: $albumArtist, ')
@@ -4161,6 +5233,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
           ..write('albumSearch: $albumSearch, ')
           ..write('albumArtistSearch: $albumArtistSearch, ')
           ..write('genreSearch: $genreSearch, ')
+          ..write('genreKey: $genreKey, ')
+          ..write('languageDetected: $languageDetected, ')
           ..write('albumArtistKey: $albumArtistKey, ')
           ..write('albumTitleKey: $albumTitleKey, ')
           ..write('coverKey: $coverKey, ')
@@ -4175,6 +5249,12 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
           ..write('sampleRate: $sampleRate, ')
           ..write('bitDepth: $bitDepth, ')
           ..write('channels: $channels, ')
+          ..write('codec: $codec, ')
+          ..write('tagsVersion: $tagsVersion, ')
+          ..write('keysVersion: $keysVersion, ')
+          ..write('coverScanVersion: $coverScanVersion, ')
+          ..write('lyricsVersion: $lyricsVersion, ')
+          ..write('scanError: $scanError, ')
           ..write('rating: $rating, ')
           ..write('ratingUpdatedAt: $ratingUpdatedAt, ')
           ..write('lyricsOffsetMs: $lyricsOffsetMs, ')
@@ -4211,6 +5291,22 @@ i0.Index get tracksRelPath => i0.Index(
 i0.Index get tracksLanguage => i0.Index(
   'tracks_language',
   'CREATE INDEX tracks_language ON tracks (language)',
+);
+i0.Index get tracksTagsVersion => i0.Index(
+  'tracks_tags_version',
+  'CREATE INDEX tracks_tags_version ON tracks (tags_version) WHERE status = \'present\'',
+);
+i0.Index get tracksKeysVersion => i0.Index(
+  'tracks_keys_version',
+  'CREATE INDEX tracks_keys_version ON tracks (keys_version) WHERE status = \'present\'',
+);
+i0.Index get tracksCoverVersion => i0.Index(
+  'tracks_cover_version',
+  'CREATE INDEX tracks_cover_version ON tracks (cover_scan_version) WHERE status = \'present\'',
+);
+i0.Index get tracksGenreKey => i0.Index(
+  'tracks_genre_key',
+  'CREATE INDEX tracks_genre_key ON tracks (genre_key) WHERE status = \'present\'',
 );
 
 class $TrackDetailsTable extends i2.TrackDetails
@@ -4639,6 +5735,341 @@ class TrackDetailsCompanion extends i0.UpdateCompanion<i1.TrackDetail> {
           ..write('lrcLocator: $lrcLocator, ')
           ..write('lrcRevision: $lrcRevision, ')
           ..write('coverSrc: $coverSrc')
+          ..write(')'))
+        .toString();
+  }
+}
+
+i0.Index get trackArtistsTrack => i0.Index(
+  'track_artists_track',
+  'CREATE INDEX track_artists_track ON track_artists (track_id)',
+);
+
+class $TrackArtistsTable extends i2.TrackArtists
+    with i0.TableInfo<$TrackArtistsTable, i1.TrackArtist> {
+  @override
+  final i0.GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TrackArtistsTable(this.attachedDatabase, [this._alias]);
+  static const i0.VerificationMeta _trackIdMeta = const i0.VerificationMeta(
+    'trackId',
+  );
+  @override
+  late final i0.GeneratedColumn<int> trackId = i0.GeneratedColumn<int>(
+    'track_id',
+    aliasedName,
+    false,
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: i0.GeneratedColumn.constraintIsAlways(
+      'REFERENCES tracks (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const i0.VerificationMeta _artistKeyMeta = const i0.VerificationMeta(
+    'artistKey',
+  );
+  @override
+  late final i0.GeneratedColumn<String> artistKey = i0.GeneratedColumn<String>(
+    'artist_key',
+    aliasedName,
+    false,
+    type: i0.DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const i0.VerificationMeta _artistNameMeta = const i0.VerificationMeta(
+    'artistName',
+  );
+  @override
+  late final i0.GeneratedColumn<String> artistName = i0.GeneratedColumn<String>(
+    'artist_name',
+    aliasedName,
+    false,
+    type: i0.DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const i0.VerificationMeta _positionMeta = const i0.VerificationMeta(
+    'position',
+  );
+  @override
+  late final i0.GeneratedColumn<int> position = i0.GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<i0.GeneratedColumn> get $columns => [
+    trackId,
+    artistKey,
+    artistName,
+    position,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'track_artists';
+  @override
+  i0.VerificationContext validateIntegrity(
+    i0.Insertable<i1.TrackArtist> instance, {
+    bool isInserting = false,
+  }) {
+    final context = i0.VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('track_id')) {
+      context.handle(
+        _trackIdMeta,
+        trackId.isAcceptableOrUnknown(data['track_id']!, _trackIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_trackIdMeta);
+    }
+    if (data.containsKey('artist_key')) {
+      context.handle(
+        _artistKeyMeta,
+        artistKey.isAcceptableOrUnknown(data['artist_key']!, _artistKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_artistKeyMeta);
+    }
+    if (data.containsKey('artist_name')) {
+      context.handle(
+        _artistNameMeta,
+        artistName.isAcceptableOrUnknown(data['artist_name']!, _artistNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_artistNameMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<i0.GeneratedColumn> get $primaryKey => {artistKey, trackId};
+  @override
+  i1.TrackArtist map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return i1.TrackArtist(
+      trackId: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}track_id'],
+      )!,
+      artistKey: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}artist_key'],
+      )!,
+      artistName: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}artist_name'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+    );
+  }
+
+  @override
+  $TrackArtistsTable createAlias(String alias) {
+    return $TrackArtistsTable(attachedDatabase, alias);
+  }
+}
+
+class TrackArtist extends i0.DataClass
+    implements i0.Insertable<i1.TrackArtist> {
+  final int trackId;
+
+  /// `groupKey(name)`.
+  final String artistKey;
+  final String artistName;
+
+  /// Order of the artist in the tag, from 0.
+  final int position;
+  const TrackArtist({
+    required this.trackId,
+    required this.artistKey,
+    required this.artistName,
+    required this.position,
+  });
+  @override
+  Map<String, i0.Expression> toColumns(bool nullToAbsent) {
+    final map = <String, i0.Expression>{};
+    map['track_id'] = i0.Variable<int>(trackId);
+    map['artist_key'] = i0.Variable<String>(artistKey);
+    map['artist_name'] = i0.Variable<String>(artistName);
+    map['position'] = i0.Variable<int>(position);
+    return map;
+  }
+
+  i1.TrackArtistsCompanion toCompanion(bool nullToAbsent) {
+    return i1.TrackArtistsCompanion(
+      trackId: i0.Value(trackId),
+      artistKey: i0.Value(artistKey),
+      artistName: i0.Value(artistName),
+      position: i0.Value(position),
+    );
+  }
+
+  factory TrackArtist.fromJson(
+    Map<String, dynamic> json, {
+    i0.ValueSerializer? serializer,
+  }) {
+    serializer ??= i0.driftRuntimeOptions.defaultSerializer;
+    return TrackArtist(
+      trackId: serializer.fromJson<int>(json['trackId']),
+      artistKey: serializer.fromJson<String>(json['artistKey']),
+      artistName: serializer.fromJson<String>(json['artistName']),
+      position: serializer.fromJson<int>(json['position']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({i0.ValueSerializer? serializer}) {
+    serializer ??= i0.driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'trackId': serializer.toJson<int>(trackId),
+      'artistKey': serializer.toJson<String>(artistKey),
+      'artistName': serializer.toJson<String>(artistName),
+      'position': serializer.toJson<int>(position),
+    };
+  }
+
+  i1.TrackArtist copyWith({
+    int? trackId,
+    String? artistKey,
+    String? artistName,
+    int? position,
+  }) => i1.TrackArtist(
+    trackId: trackId ?? this.trackId,
+    artistKey: artistKey ?? this.artistKey,
+    artistName: artistName ?? this.artistName,
+    position: position ?? this.position,
+  );
+  TrackArtist copyWithCompanion(i1.TrackArtistsCompanion data) {
+    return TrackArtist(
+      trackId: data.trackId.present ? data.trackId.value : this.trackId,
+      artistKey: data.artistKey.present ? data.artistKey.value : this.artistKey,
+      artistName: data.artistName.present
+          ? data.artistName.value
+          : this.artistName,
+      position: data.position.present ? data.position.value : this.position,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TrackArtist(')
+          ..write('trackId: $trackId, ')
+          ..write('artistKey: $artistKey, ')
+          ..write('artistName: $artistName, ')
+          ..write('position: $position')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(trackId, artistKey, artistName, position);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is i1.TrackArtist &&
+          other.trackId == this.trackId &&
+          other.artistKey == this.artistKey &&
+          other.artistName == this.artistName &&
+          other.position == this.position);
+}
+
+class TrackArtistsCompanion extends i0.UpdateCompanion<i1.TrackArtist> {
+  final i0.Value<int> trackId;
+  final i0.Value<String> artistKey;
+  final i0.Value<String> artistName;
+  final i0.Value<int> position;
+  final i0.Value<int> rowid;
+  const TrackArtistsCompanion({
+    this.trackId = const i0.Value.absent(),
+    this.artistKey = const i0.Value.absent(),
+    this.artistName = const i0.Value.absent(),
+    this.position = const i0.Value.absent(),
+    this.rowid = const i0.Value.absent(),
+  });
+  TrackArtistsCompanion.insert({
+    required int trackId,
+    required String artistKey,
+    required String artistName,
+    required int position,
+    this.rowid = const i0.Value.absent(),
+  }) : trackId = i0.Value(trackId),
+       artistKey = i0.Value(artistKey),
+       artistName = i0.Value(artistName),
+       position = i0.Value(position);
+  static i0.Insertable<i1.TrackArtist> custom({
+    i0.Expression<int>? trackId,
+    i0.Expression<String>? artistKey,
+    i0.Expression<String>? artistName,
+    i0.Expression<int>? position,
+    i0.Expression<int>? rowid,
+  }) {
+    return i0.RawValuesInsertable({
+      if (trackId != null) 'track_id': trackId,
+      if (artistKey != null) 'artist_key': artistKey,
+      if (artistName != null) 'artist_name': artistName,
+      if (position != null) 'position': position,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  i1.TrackArtistsCompanion copyWith({
+    i0.Value<int>? trackId,
+    i0.Value<String>? artistKey,
+    i0.Value<String>? artistName,
+    i0.Value<int>? position,
+    i0.Value<int>? rowid,
+  }) {
+    return i1.TrackArtistsCompanion(
+      trackId: trackId ?? this.trackId,
+      artistKey: artistKey ?? this.artistKey,
+      artistName: artistName ?? this.artistName,
+      position: position ?? this.position,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, i0.Expression> toColumns(bool nullToAbsent) {
+    final map = <String, i0.Expression>{};
+    if (trackId.present) {
+      map['track_id'] = i0.Variable<int>(trackId.value);
+    }
+    if (artistKey.present) {
+      map['artist_key'] = i0.Variable<String>(artistKey.value);
+    }
+    if (artistName.present) {
+      map['artist_name'] = i0.Variable<String>(artistName.value);
+    }
+    if (position.present) {
+      map['position'] = i0.Variable<int>(position.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = i0.Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TrackArtistsCompanion(')
+          ..write('trackId: $trackId, ')
+          ..write('artistKey: $artistKey, ')
+          ..write('artistName: $artistName, ')
+          ..write('position: $position, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }

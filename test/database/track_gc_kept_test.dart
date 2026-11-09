@@ -55,18 +55,6 @@ void main() {
     expect(await collectOrphanTracks(db, now: _now), 0);
   });
 
-  test('a missing row without missing_since', () async {
-    final id = await addAgedTrack(
-      db,
-      local,
-      'm',
-      TrackStatus.missing,
-      missingSince: null,
-    );
-    expect(await collectOrphanTracks(db, now: _now), 0);
-    expect(await remaining(), {id});
-  });
-
   test('hidden in a live source with a disabled mount', () async {
     await addMount(db, local, root: '/m');
     final id = await addAgedTrack(db, local, 'h', TrackStatus.present);

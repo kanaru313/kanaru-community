@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
 
@@ -91,6 +92,7 @@ void main() {
         locator: 'p.flac',
         relPath: 'p.flac',
         title: 'T',
+        titleSearch: const Value('t'),
         addedAt: 70,
         updatedAt: 70,
       ),

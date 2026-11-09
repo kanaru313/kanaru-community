@@ -30,22 +30,22 @@ void configureConnection(CommonDatabase db) {
     ExcludedFolders,
     Tracks,
     TrackDetails,
+    TrackArtists,
+    CoverColors,
     PlayLog,
     PlayStats,
+    QueueEntries,
     Playlists,
     PlaylistEntries,
     SavedItems,
   ],
-  include: {
-    'tables/library_track_search.drift',
-    'tables/playback_stats.drift',
-  },
+  include: {'tables/library_track_search.drift', 'tables/playback_stats.drift'},
 )
 class AppDatabase extends $AppDatabase {
   AppDatabase(QueryExecutor executor) : this._(executor, isReference: false);
 
   AppDatabase._(super.executor, {required bool isReference})
-      : _isReferenceDatabase = isReference;
+    : _isReferenceDatabase = isReference;
 
   final bool _isReferenceDatabase;
 
@@ -64,19 +64,20 @@ class AppDatabase extends $AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) => m.createAll(),
-        beforeOpen: (details) async {
-          await customStatement('PRAGMA foreign_keys = ON');
-          await customStatement('PRAGMA recursive_triggers = ON');
-          if (kDebugMode && !_isReferenceDatabase) {
-            await verifyDevSchema(this, openReference: _ReferenceAppDatabase.new);
-          }
-          // No transaction is in flight at open, so a set switch is stale
-          // (left by a crash) and would freeze the stats triggers.
-          await customStatement(
-              'UPDATE play_stats_ctl SET bulk = 0 WHERE bulk <> 0');
-        },
+    onCreate: (m) => m.createAll(),
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+      await customStatement('PRAGMA recursive_triggers = ON');
+      if (kDebugMode && !_isReferenceDatabase) {
+        await verifyDevSchema(this, openReference: _ReferenceAppDatabase.new);
+      }
+      // No transaction is in flight at open, so a set switch is stale
+      // (left by a crash) and would freeze the stats triggers.
+      await customStatement(
+        'UPDATE play_stats_ctl SET bulk = 0 WHERE bulk <> 0',
       );
+    },
+  );
 }
 
 /// The fresh in-memory copy the schema guard compares a file against. It is
@@ -84,6 +85,8 @@ class AppDatabase extends $AppDatabase {
 /// runs the guard itself, so it cannot recurse.
 class _ReferenceAppDatabase extends AppDatabase {
   _ReferenceAppDatabase()
-      : super._(NativeDatabase.memory(setup: configureConnection),
-            isReference: true);
+    : super._(
+        NativeDatabase.memory(setup: configureConnection),
+        isReference: true,
+      );
 }

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' show Value, Variable;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
+import 'package:kanaru/src/media/domain/library_keys.dart';
 
 import 'support/test_db.dart';
 
@@ -22,7 +23,7 @@ void main() {
           locator: locator,
           relPath: locator,
           title: titleSort,
-          titleSort: Value(titleSort),
+          titleSearch: Value(titleSort),
           artistSearch: Value(artist),
           addedAt: 1,
           updatedAt: 1,
@@ -51,10 +52,10 @@ void main() {
     expect(await match('zzz'), isEmpty);
   });
 
-  test('changing title_sort replaces the indexed term', () async {
+  test('changing title_search replaces the indexed term', () async {
     final id = await add('a.flac', 'moonlight');
     await (db.update(db.tracks)..where((t) => t.id.equals(id))).write(
-      const TracksCompanion(titleSort: Value('sunrise')),
+      const TracksCompanion(titleSearch: Value('sunrise')),
     );
     expect(await match('moon'), isEmpty);
     expect(await match('sun'), [id]);
@@ -77,7 +78,7 @@ void main() {
         locator: 'a.flac',
         relPath: 'a.flac',
         title: 'moonlight',
-        titleSort: const Value('moonlight'),
+        titleSearch: const Value('moonlight'),
         revision: const Value('r2'),
         addedAt: 1,
         updatedAt: 2,
@@ -102,7 +103,7 @@ void main() {
       const TracksCompanion(artistSearch: Value('y')),
     );
     await (db.update(db.tracks)..where((t) => t.id.equals(b))).write(
-      const TracksCompanion(titleSort: Value('delta')),
+      const TracksCompanion(titleSearch: Value('delta')),
     );
     await (db.delete(db.tracks)..where((t) => t.id.equals(a))).go();
     await integrity();
@@ -113,5 +114,43 @@ void main() {
     final id = await add('a.flac', 'đường');
     expect(await match('đườ'), [id]);
     expect(await match('duong'), isEmpty);
+  });
+
+  test(
+    'search forms of a Vietnamese name are found by an unaccented prefix',
+    () async {
+      // The scanner stores the search form; the query gets the same form.
+      final stored = searchForm('Vũ Cát Tường');
+      final id = await db
+          .into(db.tracks)
+          .insert(
+            TracksCompanion.insert(
+              uid: 'uid-vu',
+              sourceId: sourceId,
+              locator: 'vu.flac',
+              relPath: 'vu.flac',
+              title: 'Vũ Cát Tường',
+              titleSearch: Value(stored),
+              artistSearch: Value(stored),
+              addedAt: 1,
+              updatedAt: 1,
+            ),
+          );
+      expect(await match(searchForm('vu')), [id]);
+      expect(await match(searchForm('VŨ')), [id]);
+      // NFD input: u + combining tilde.
+      expect(await match(searchForm('vu\u0303')), [id]);
+      expect(await match(searchForm('tuong cat')), [id]);
+      expect(await match(searchForm('xyz')), isEmpty);
+    },
+  );
+
+  test('a sort-title change does not change what search finds', () async {
+    final id = await add('a.flac', 'moonlight');
+    await (db.update(db.tracks)..where((t) => t.id.equals(id))).write(
+      const TracksCompanion(titleSort: Value('zzz sonata')),
+    );
+    expect(await match('moon'), [id]);
+    expect(await match('zzz'), isEmpty);
   });
 }

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import 'exclusion_sql.dart';
 import 'tables.dart';
 
 /// Streams over these tables re-emit after every lifecycle change.
@@ -55,9 +56,12 @@ Future<void> _unhide(
   String? to,
 ) async {
   final extra = from == null ? '' : ' AND locator >= ? AND locator < ?';
+  // A row inside a live folder exclusion stays hidden for that reason.
+  final notExcluded =
+      ' AND NOT ${liveExclusionCovers('tracks.source_id', 'tracks.locator')}';
   await db.customStatement(
     "UPDATE tracks SET status = '${TrackStatus.missing}', missing_since = ?, "
-    "updated_at = ? WHERE source_id = ? AND status = '${TrackStatus.hidden}'$extra",
+    "updated_at = ? WHERE source_id = ? AND status = '${TrackStatus.hidden}'$extra$notExcluded",
     [
       now,
       now,
@@ -86,7 +90,8 @@ Future<void> removeSource(DatabaseConnectionUser db, int sourceId, int now) =>
 
 /// Enables or disables the mount of a live source. Disabling hides its
 /// tracks; enabling unhides them as `missing` for the next full scan. The
-/// scan cursor resets either way.
+/// scan cursor resets either way. Rows covered by a live folder exclusion
+/// stay hidden.
 Future<void> setMountEnabled(
   DatabaseConnectionUser db,
   int sourceId,
@@ -104,7 +109,8 @@ Future<void> setMountEnabled(
 
 /// Brings a tombstoned source back: rewrites its editable fields, enables
 /// the mount and unhides its tracks as `missing` (never `present`; only a
-/// full scan decides that).
+/// full scan decides that). Rows covered by a live folder exclusion stay
+/// hidden.
 Future<void> reviveSource(
   DatabaseConnectionUser db,
   int sourceId,
@@ -128,7 +134,8 @@ Future<void> reviveSource(
 /// [locatorTo] (both or neither) limit it to `locator >= from AND locator <
 /// to`, for example the range of a folder that is no longer excluded.
 /// `remote` rows never change. Throws [StateError] for a removed source:
-/// only [reviveSource] brings one back.
+/// only [reviveSource] brings one back. Rows covered by a live folder
+/// exclusion stay hidden.
 Future<void> unhideTracks(
   DatabaseConnectionUser db,
   int sourceId,

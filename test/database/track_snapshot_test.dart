@@ -18,6 +18,7 @@ TracksCompanion _row(
   locator: locator,
   relPath: locator,
   title: title,
+  titleSearch: Value(title.toLowerCase()),
   addedAt: at,
   updatedAt: at,
 );
@@ -41,12 +42,94 @@ void main() {
     final all = [
       ...trackIdentityColumns,
       ...trackSnapshotColumns,
+      ...trackScanColumns,
       ...trackUserColumns,
       ...trackLifecycleColumns,
     ];
     final actual = db.tracks.$columns.map((c) => c.name).toList();
     expect(all.toSet(), hasLength(all.length));
     expect(all.toSet(), actual.toSet());
+  });
+
+  test('title without title_search and genre without genre_key throw', () {
+    final noTitleSearch = TracksCompanion(
+      uid: const Value('u'),
+      sourceId: Value(local),
+      locator: const Value('a'),
+      relPath: const Value('a'),
+      title: const Value('T'),
+      addedAt: const Value(1),
+      updatedAt: const Value(1),
+    );
+    expect(upsert(noTitleSearch), throwsArgumentError);
+    expect(
+      upsert(
+        noTitleSearch.copyWith(
+          titleSearch: const Value('t'),
+          genre: const Value('Pop'),
+        ),
+      ),
+      throwsArgumentError,
+    );
+  });
+
+  test('title_search without title and genre_key without genre throw', () {
+    final base = TracksCompanion(
+      uid: const Value('u2'),
+      sourceId: Value(local),
+      locator: const Value('b'),
+      relPath: const Value('b'),
+      addedAt: const Value(1),
+      updatedAt: const Value(1),
+    );
+    expect(
+      upsert(base.copyWith(titleSearch: const Value('t'))),
+      throwsArgumentError,
+    );
+    expect(
+      upsert(
+        base.copyWith(
+          title: const Value('T'),
+          titleSearch: const Value('t'),
+          genreKey: const Value('pop'),
+        ),
+      ),
+      throwsArgumentError,
+    );
+  });
+
+  test('scan columns are written and rewritten', () async {
+    final id = await upsert(
+      _row(
+        local,
+        'a.flac',
+      ).copyWith(tagsVersion: const Value(2), scanError: const Value('io')),
+    );
+    expect((await read(id)).tagsVersion, 2);
+    await upsert(
+      _row(local, 'a.flac', at: 2000).copyWith(scanError: const Value(null)),
+    );
+    final r = await read(id);
+    expect((r.tagsVersion, r.scanError), (2, null));
+  });
+
+  test('a new file inside a live exclusion is inserted hidden', () async {
+    await addMount(db, local, root: '/m');
+    await applyFolderExclusion(
+      db,
+      sourceId: local,
+      folderKey: 'A',
+      displayPath: 'A',
+      now: 1,
+    );
+    final inside = await upsert(_row(local, 'A/x.flac'));
+    final outside = await upsert(_row(local, 'A B/x.flac'));
+    expect((await read(inside)).status, TrackStatus.hidden);
+    expect((await read(outside)).status, TrackStatus.present);
+    await removeFolderExclusion(db, sourceId: local, folderKey: 'A', now: 2);
+    expect((await read(inside)).status, TrackStatus.missing);
+    await upsert(_row(local, 'A/x.flac', at: 3000));
+    expect((await read(inside)).status, TrackStatus.present);
   });
 
   test('scan cycle keeps user data and clears missing_since', () async {
