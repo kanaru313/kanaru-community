@@ -1,0 +1,74 @@
+import 'playback_tables.dart';
+
+-- One row, per device, private to the database module. `bulk = 1` switches the
+-- stats triggers off while `runPlayStatsBulk` rewrites play_log. The row is
+-- seeded on create: without it the triggers' `WHEN (SELECT bulk ...) = 0`
+-- would be NULL and silently never run.
+CREATE TABLE play_stats_ctl (
+  id   INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
+  bulk INTEGER NOT NULL DEFAULT 0 CHECK (bulk IN (0, 1))
+);
+
+@create: INSERT INTO play_stats_ctl (id, bulk) VALUES (1, 0);
+
+-- Stats are added and subtracted per play. On removal, min/max are looked up
+-- again only when the removed play was the first or last one. listened_ms is
+-- not in UPDATE OF: the recorder updates it several times per play.
+--
+-- The insert side is an UPSERT on purpose: an `INSERT OR ...` inside a
+-- trigger takes the outer statement's conflict policy; ON CONFLICT does not.
+-- Needs `PRAGMA recursive_triggers = ON` on every connection that writes
+-- play_log, so a REPLACE conflict fires the delete trigger.
+CREATE TRIGGER play_log_stats_insert AFTER INSERT ON play_log
+WHEN (SELECT bulk FROM play_stats_ctl WHERE id = 1) = 0 BEGIN
+  INSERT INTO play_stats (track_id, play_count, skip_count, first_played_at, last_played_at)
+    SELECT new.track_id, new.skipped = 0, new.skipped = 1,
+           CASE WHEN new.skipped = 0 THEN new.played_at END, CASE WHEN new.skipped = 0 THEN new.played_at END
+    WHERE new.deleted_at IS NULL
+    ON CONFLICT (track_id) DO UPDATE SET
+      play_count      = play_count + excluded.play_count,
+      skip_count      = skip_count + excluded.skip_count,
+      first_played_at = min(coalesce(first_played_at, excluded.first_played_at), coalesce(excluded.first_played_at, first_played_at)),
+      last_played_at  = max(coalesce(last_played_at, excluded.last_played_at), coalesce(excluded.last_played_at, last_played_at));
+END;
+
+CREATE TRIGGER play_log_stats_update AFTER UPDATE OF track_id, played_at, skipped, deleted_at ON play_log
+WHEN (SELECT bulk FROM play_stats_ctl WHERE id = 1) = 0 AND (old.track_id IS NOT new.track_id OR old.played_at IS NOT new.played_at
+  OR old.skipped IS NOT new.skipped OR old.deleted_at IS NOT new.deleted_at) BEGIN
+  UPDATE play_stats SET
+      play_count = play_count - (old.skipped = 0),
+      skip_count = skip_count - (old.skipped = 1),
+      first_played_at = CASE WHEN old.skipped = 0 AND old.played_at <= first_played_at THEN
+        (SELECT played_at FROM play_log WHERE track_id = old.track_id AND deleted_at IS NULL AND skipped = 0
+         ORDER BY played_at LIMIT 1) ELSE first_played_at END,
+      last_played_at = CASE WHEN old.skipped = 0 AND old.played_at >= last_played_at THEN
+        (SELECT played_at FROM play_log WHERE track_id = old.track_id AND deleted_at IS NULL AND skipped = 0
+         ORDER BY played_at DESC LIMIT 1) ELSE last_played_at END
+    WHERE track_id = old.track_id AND old.deleted_at IS NULL;
+  DELETE FROM play_stats WHERE track_id = old.track_id AND play_count <= 0 AND skip_count <= 0;
+  INSERT INTO play_stats (track_id, play_count, skip_count, first_played_at, last_played_at)
+    SELECT new.track_id, new.skipped = 0, new.skipped = 1,
+           CASE WHEN new.skipped = 0 THEN new.played_at END, CASE WHEN new.skipped = 0 THEN new.played_at END
+    WHERE new.deleted_at IS NULL
+    ON CONFLICT (track_id) DO UPDATE SET
+      play_count      = play_count + excluded.play_count,
+      skip_count      = skip_count + excluded.skip_count,
+      first_played_at = min(coalesce(first_played_at, excluded.first_played_at), coalesce(excluded.first_played_at, first_played_at)),
+      last_played_at  = max(coalesce(last_played_at, excluded.last_played_at), coalesce(excluded.last_played_at, last_played_at));
+END;
+
+-- Hard delete (clear history, tombstone cleanup).
+CREATE TRIGGER play_log_stats_delete AFTER DELETE ON play_log
+WHEN (SELECT bulk FROM play_stats_ctl WHERE id = 1) = 0 BEGIN
+  UPDATE play_stats SET
+      play_count = play_count - (old.skipped = 0),
+      skip_count = skip_count - (old.skipped = 1),
+      first_played_at = CASE WHEN old.skipped = 0 AND old.played_at <= first_played_at THEN
+        (SELECT played_at FROM play_log WHERE track_id = old.track_id AND deleted_at IS NULL AND skipped = 0
+         ORDER BY played_at LIMIT 1) ELSE first_played_at END,
+      last_played_at = CASE WHEN old.skipped = 0 AND old.played_at >= last_played_at THEN
+        (SELECT played_at FROM play_log WHERE track_id = old.track_id AND deleted_at IS NULL AND skipped = 0
+         ORDER BY played_at DESC LIMIT 1) ELSE last_played_at END
+    WHERE track_id = old.track_id AND old.deleted_at IS NULL;
+  DELETE FROM play_stats WHERE track_id = old.track_id AND play_count <= 0 AND skip_count <= 0;
+END;

@@ -95,6 +95,37 @@ void main() {
       );
     });
 
+    test('the guard names a missing play_stats_ctl seed row', () async {
+      final first = AppDatabase.file(file);
+      await first.customStatement('DELETE FROM play_stats_ctl');
+      await first.close();
+
+      final second = AppDatabase.file(file);
+      addTearDown(second.close);
+      await expectLater(
+        second.customSelect('SELECT 1').get(),
+        throwsA(isA<StateError>().having(
+            (e) => e.message, 'message', contains('play_stats_ctl'))),
+      );
+    });
+
+    test('a stale bulk switch is reset on open', () async {
+      final first = AppDatabase.file(file);
+      await first.customStatement('UPDATE play_stats_ctl SET bulk = 1');
+      await first.close();
+
+      final second = AppDatabase.file(file);
+      addTearDown(second.close);
+      final bulk = await second
+          .customSelect('SELECT bulk FROM play_stats_ctl')
+          .getSingle();
+      expect(bulk.read<int>('bulk'), 0);
+      final source = await addSource(second);
+      final track = await addTrack(second, source, locator: 'a.flac');
+      await addPlay(second, track, playedAt: 5);
+      expect((await second.select(second.playStats).getSingle()).playCount, 1);
+    });
+
     test('the guard ignores tables added by an extension', () async {
       final first = AppDatabase.file(file);
       await first.customStatement('CREATE TABLE pro_extra (id INTEGER PRIMARY KEY)');

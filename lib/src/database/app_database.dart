@@ -30,8 +30,13 @@ void configureConnection(CommonDatabase db) {
     ExcludedFolders,
     Tracks,
     TrackDetails,
+    PlayLog,
+    PlayStats,
   ],
-  include: {'tables/library_track_search.drift'},
+  include: {
+    'tables/library_track_search.drift',
+    'tables/playback_stats.drift',
+  },
 )
 class AppDatabase extends $AppDatabase {
   AppDatabase(QueryExecutor executor) : this._(executor, isReference: false);
@@ -63,6 +68,10 @@ class AppDatabase extends $AppDatabase {
           if (kDebugMode && !_isReferenceDatabase) {
             await verifyDevSchema(this, openReference: _ReferenceAppDatabase.new);
           }
+          // No transaction is in flight at open, so a set switch is stale
+          // (left by a crash) and would freeze the stats triggers.
+          await customStatement(
+              'UPDATE play_stats_ctl SET bulk = 0 WHERE bulk <> 0');
         },
       );
 }

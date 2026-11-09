@@ -28,7 +28,7 @@ void main() {
           r['name']! as String,
       };
 
-  test('a fresh database has the six coded tables', () async {
+  test('a fresh database has the coded tables', () async {
     expect(
       await names('table'),
       containsAll({
@@ -38,7 +38,25 @@ void main() {
         'excluded_folders',
         'tracks',
         'track_details',
+        'play_log',
+        'play_stats',
+        'play_stats_ctl',
       }),
+    );
+  });
+
+  test('play stats triggers and indexes exist', () async {
+    expect(
+      await names('trigger'),
+      containsAll({
+        'play_log_stats_insert',
+        'play_log_stats_update',
+        'play_log_stats_delete',
+      }),
+    );
+    expect(
+      await names('index'),
+      containsAll({'play_log_track_played', 'play_log_played_at', 'play_stats_last'}),
     );
   });
 

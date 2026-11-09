@@ -67,10 +67,20 @@ Future<void> verifyDevSchema(
           !expected.containsKey(e.key) &&
           expected.containsKey('table:${e.value.table}'))
         'extra ${e.key}',
+    if (actual.containsKey('table:play_stats_ctl') && !await _hasStatsSeed(db))
+      'missing seed row of play_stats_ctl',
   ]..sort();
   if (differing.isEmpty) return;
   throw StateError(
     'kanaru.db was created by an older build of schema v1; delete it '
     '(dev builds only): $path. Differing schema objects: ${differing.join(', ')}',
   );
+}
+
+/// The stats triggers only run while `play_stats_ctl` has its row 1.
+Future<bool> _hasStatsSeed(DatabaseConnectionUser db) async {
+  final rows = await db
+      .customSelect('SELECT 1 FROM play_stats_ctl WHERE id = 1')
+      .get();
+  return rows.isNotEmpty;
 }

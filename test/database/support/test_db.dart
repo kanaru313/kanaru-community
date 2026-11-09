@@ -81,3 +81,25 @@ Future<int> addTrack(
             updatedAt: now,
           ),
         );
+
+/// Inserts a play of [trackId] and returns its id. [uid] defaults to a
+/// unique value.
+Future<int> addPlay(
+  AppDatabase db,
+  int trackId, {
+  required int playedAt,
+  bool skipped = false,
+  int? deletedAt,
+  String? uid,
+}) =>
+    db.into(db.playLog).insert(
+          PlayLogCompanion.insert(
+            uid: uid ?? 'play-${_uidCounter++}',
+            trackId: trackId,
+            playedAt: playedAt,
+            deviceId: 'device-1',
+            skipped: Value(skipped),
+            updatedAt: playedAt,
+            deletedAt: Value(deletedAt),
+          ),
+        );

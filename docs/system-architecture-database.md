@@ -412,7 +412,7 @@ Index `play_stats_last`: `(last_played_at) WHERE last_played_at IS NOT NULL`. A 
 | `id` | INTEGER | PK | | `CHECK (id = 1)`. One row. |
 | `bulk` | INTEGER | NOT NULL | `0` | `CHECK (bulk IN (0, 1))`. 1 while a bulk recompute runs. |
 
-The row is seeded by `@create`. Not exported from `database.dart`.
+The row is seeded by `@create`. The table type is not exported through the barrels. drift generates an internal `playStatsCtl` getter on `AppDatabase`; nothing writes the table outside `play_stats_bulk.dart` and the open-time reset. `beforeOpen` resets a stale `bulk = 1` to 0.
 
 #### play stats triggers
 
@@ -420,7 +420,8 @@ The row is seeded by `@create`. Not exported from `database.dart`.
 - `play_log_stats_update`, AFTER UPDATE OF `track_id, played_at, skipped, deleted_at`, `WHEN bulk = 0`: removes the old values and adds the new ones.
 - `play_log_stats_delete`, AFTER DELETE, `WHEN bulk = 0`: removes the play.
 - `first_played_at` and `last_played_at` are looked up again only when the removed play was the first or the last one.
-- Bulk changes go through `runPlayStatsBulk`. It is re-entrant. While `bulk = 1`, TEMP triggers record the old and new `track_id` of every touched row in a TEMP table. The outer call recomputes those tracks with `GROUP BY`, clears the TEMP table, sets `bulk = 0`, all in one transaction.
+- `play_count` counts live plays with `skipped = 0`. A track with only skips has a row with `play_count` 0 and NULL first/last.
+- Bulk changes go through `runPlayStatsBulk(db, write)`. It is re-entrant. While `bulk = 1`, TEMP triggers record the old and new `track_id` of every touched row in a TEMP table. The outer call recomputes those tracks with `GROUP BY` (`playStatsAggregateSql` is the one definition of correct stats), clears the TEMP table, sets `bulk = 0`, all in one transaction; an exception rolls everything back. A nested call only runs its write. TEMP objects are per connection and created by each outer call (`IF NOT EXISTS`); they are not in `sqlite_master`, so the schema guard does not see them. The guard also requires the `play_stats_ctl` row 1.
 
 ### collections: Coded in schema v1 foundation
 
@@ -550,7 +551,7 @@ Target Dart API. Later phases refine this list here. Names are final only when t
 | reads | `visibleTrackWhere`, `isVisibleTrack`, `ftsPrefixQuery` |
 | maintenance | `collectOrphanTracks` |
 
-Database helpers live in `lib/src/database/`. `database.dart` exports the tables (`Sources`, `SourceMounts`, `ExcludedFolders`, `Tracks`, `TrackDetails`, `PlayLog`, `PlayStats`, `Playlists`, `PlaylistEntries`, `SavedItems`, `ExtensionSchema`) and the helpers above. It does not export `play_stats_ctl`.
+Database helpers live in `lib/src/database/`. `database.dart` exports the tables (`Sources`, `SourceMounts`, `ExcludedFolders`, `Tracks`, `TrackDetails`, `PlayLog`, `PlayStats`, `Playlists`, `PlaylistEntries`, `SavedItems`, `ExtensionSchema`) and the helpers above. It does not export the `play_stats_ctl` type (the generated `playStatsCtl` getter on `AppDatabase` is internal) and exports only `runPlayStatsBulk` from the bulk file.
 
 Contract for every database helper:
 
