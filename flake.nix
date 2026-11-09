@@ -4,12 +4,36 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    # nixpkgs' rustc ships only the host target; Android needs the NDK targets.
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { nixpkgs, flake-utils, ... }:
+  outputs = { nixpkgs, flake-utils, rust-overlay, ... }:
     flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ rust-overlay.overlays.default ];
+        };
+
+        hostTriple = pkgs.stdenv.hostPlatform.rust.rustcTarget;
+        # Targets cargokit builds: the Linux host plus the Android ABIs. Release
+        # ships arm64-v8a, armeabi-v7a and x86_64; debug builds also add x86
+        # (cargokit mirrors flutter.gradle there), hence i686.
+        rustTargets = [
+          hostTriple
+          "aarch64-linux-android"
+          "armv7-linux-androideabi"
+          "x86_64-linux-android"
+          "i686-linux-android"
+        ];
+        rustToolchain = pkgs.rust-bin.stable.latest.default.override {
+          extensions = [ "rust-src" "rust-analyzer" "clippy" "rustfmt" ];
+          targets = rustTargets;
+        };
 
         # Native libraries the Linux desktop build links against.
         nativeLibs = with pkgs; [
@@ -52,27 +76,26 @@
             ninja
             pkg-config
 
-            # Rust (tag reading via lofty + flutter_rust_bridge)
-            rustc
-            cargo
-            rustfmt
-            clippy
-            rust-analyzer
+            # Rust (rust/ workspace via flutter_rust_bridge): one stable
+            # toolchain with rustfmt, clippy, rust-analyzer and the Android
+            # targets (see rustTargets).
+            rustToolchain
             flutter_rust_bridge_codegen
             # flutter_rust_bridge_codegen shells out to `cargo expand`
             # (run it with RUSTC_BOOTSTRAP=1 on the stable toolchain).
             cargo-expand
             # Cargokit (flutter_rust_bridge's build glue) always calls rustup.
             # Nix has one stable toolchain and no rustup, so answer exactly the
-            # three calls cargokit makes and reject everything else.
+            # three calls cargokit makes and reject everything else. The
+            # installed targets are the ones baked into rustToolchain, so
+            # cargokit never tries `rustup target add`.
             (writeShellScriptBin "rustup" ''
-              triple="${stdenv.hostPlatform.rust.rustcTarget}"
               case "$1 $2" in
                 "toolchain list")
-                  echo "stable-$triple (default)" ;;
+                  echo "stable-${hostTriple} (default)" ;;
                 "target list")
                   if [ "$3" = "--toolchain" ] && [ "$5" = "--installed" ] || [ "$3" = "--installed" ]; then
-                    echo "$triple"
+                    printf '%s\n' ${lib.escapeShellArgs rustTargets}
                   else
                     echo "rustup shim: only 'target list --installed' is supported: $*" >&2; exit 1
                   fi ;;
@@ -101,6 +124,10 @@
 
           shellHook = ''
             export PATH="$HOME/.pub-cache/bin:$PATH"
+            # Android SDK installed by Android Studio (outside Nix). Gradle and
+            # cargokit find the NDK from here; nix-ld runs its prebuilt binaries.
+            export ANDROID_HOME="''${ANDROID_HOME:-$HOME/Android/Sdk}"
+            export ANDROID_SDK_ROOT="$ANDROID_HOME"
             export XDG_DATA_DIRS="${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}:''${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
             echo "kanaru dev shell — $(flutter --version 2>/dev/null | head -1)" >&2
           '';
