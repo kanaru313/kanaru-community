@@ -34,8 +34,13 @@ Not yet present: `plugins`, `playback`, `storage`, `lyrics`.
 
 - `packages/kanaru_ui`: `KSpace`, `KRadius`, `KShape`, `KLayout`, `KBreakpoints`,
   `KMotion`, `KIcons`, `buildKanaruTheme`, `FormFactor`, widgets `KPage`,
-  `PageHeader`, `KEmpty`, `KEmptyPage`, `ProBadge`. Tests in
-  `packages/kanaru_ui/test/`.
+  `PageHeader`, `KEmpty`, `KEmptyPage`, `ProBadge`; shared widgets
+  `SelectionRow`, `showSelectionPicker`, `showKSheet`, `showKDialog`,
+  `confirmAction`, `showAppSnackBar`, `KPressable`, `KCover`,
+  `KEqualizerIcon`, `KContextRegion`, `KListRow`, `KChip`, `PageHeaderScope`,
+  `KGap`. Lane widgets go in the group folders `widgets/{setup,media,
+  collections}/` and are exported from their barrel. Tests in
+  `packages/kanaru_ui/test/` (shared helper `test/support/host.dart`).
 - `packages/kanaru_extensions`: `bundledExtensions`, empty by default in this repo.
 
 ## Gate (`tool/`)

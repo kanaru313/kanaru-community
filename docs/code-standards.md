@@ -23,6 +23,10 @@ enforced by the gate. This file covers the rest.
 - Widgets and layout tokens come from `kanaru_ui` (`KSpace`, `KRadius`,
   `KShape`, `KLayout`, `KMotion`); no width-based switching outside
   `kanaru_ui` and `shell/`.
+- Spacing between siblings is `KGap(KSpace.xN)`, not a sized box. Choice lists
+  use `SelectionRow` / `showSelectionPicker` (no radios); a choice needing
+  confirmation goes through `confirm:`, never pop-then-ask. `kanaru_ui` has no
+  music types; app covers wrap `KCover`.
 - Errors: expected failures are values (`Result`, sealed `Ok`/`Err` in
   `foundation/result.dart`); unexpected ones propagate and are logged with
   `package:logging`. No silent catches.

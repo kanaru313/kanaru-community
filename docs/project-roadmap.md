@@ -54,8 +54,6 @@ UI:
   bar Rescan, Keymap and AI buttons (`lib/src/shell/ui/`).
 - Mobile: the Settings entry (icon in the Home header) is a placeholder
   (`lib/src/screens/ui/`).
-- `SelectionRow` and `SelectionPicker` are not in `kanaru_ui` yet; add with
-  the first screen that picks a value.
 - Icon set undecided; `KIcons` wraps Material Icons so the choice is one file.
 
 Gate and tooling:
