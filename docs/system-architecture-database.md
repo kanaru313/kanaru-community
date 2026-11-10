@@ -323,7 +323,7 @@ UNIQUE `(source_id, locator)`: the scanner's natural key, and the conflict targe
 | `keys_version` | INTEGER | NOT NULL | `0` | Version of the key, sort and search derivation. |
 | `cover_scan_version` | INTEGER | NOT NULL | `0` | Cover pass version. |
 | `lyrics_version` | INTEGER | NOT NULL | `0` | Reserved for the lyrics module; 0 = no lyrics tokens in `lyrics_search`. |
-| `scan_error` | TEXT | NULL | | Error kind of the last failed pass (a native error kind name or `non_utf8_name`); NULL = ok. |
+| `scan_error` | TEXT | NULL | | Error kind of the last failed pass (a native error kind name); NULL = ok. |
 
 The snapshot upsert rewrites the scan columns its companion carries, like snapshot columns.
 

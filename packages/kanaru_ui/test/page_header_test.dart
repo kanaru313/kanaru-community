@@ -18,6 +18,37 @@ void main() {
     expect(backs, 1);
   });
 
+  testWidgets('root page shows the scope leading and rootTrailing', (tester) async {
+    await tester.pumpWidget(_host(const PageHeaderScope(
+      leading: Icon(Icons.menu),
+      trailing: [Icon(Icons.search)],
+      rootTrailing: [Icon(Icons.settings)],
+      child: PageHeader(title: 'Home'),
+    )));
+    expect(find.byIcon(Icons.menu), findsOneWidget);
+    expect(find.byIcon(Icons.search), findsOneWidget);
+    expect(find.byIcon(Icons.settings), findsOneWidget);
+    // Order: leading, title, trailing, rootTrailing.
+    final xs = [Icons.menu, Icons.search, Icons.settings]
+        .map((i) => tester.getCenter(find.byIcon(i)).dx)
+        .toList();
+    expect(xs[0] < tester.getCenter(find.text('Home')).dx, isTrue);
+    expect(xs[1] < xs[2], isTrue);
+  });
+
+  testWidgets('child page hides the scope leading and rootTrailing', (tester) async {
+    await tester.pumpWidget(_host(PageHeaderScope(
+      leading: const Icon(Icons.menu),
+      trailing: const [Icon(Icons.search)],
+      rootTrailing: const [Icon(Icons.settings)],
+      child: PageHeader(title: 'Album', onBack: () {}),
+    )));
+    expect(find.byIcon(Icons.menu), findsNothing);
+    expect(find.byIcon(Icons.settings), findsNothing);
+    expect(find.byIcon(Icons.search), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+  });
+
   testWidgets('KEmpty shows message and action', (tester) async {
     await tester.pumpWidget(_host(KEmpty(
       icon: Icons.music_note,
