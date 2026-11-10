@@ -4,6 +4,8 @@ import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../playback/ui/spring_to_rest.dart';
+
 /// Share of the cover width a drag must pass to change track.
 const double coverSwipeThreshold = 0.25;
 
@@ -72,7 +74,7 @@ class _CoverSwiperState extends State<CoverSwiper>
       final from = -_leftTo * (_side + _gap);
       _leftTo = 0;
       _x.value = from;
-      KSpring.animateTo(context, _x, 0, KSpring.gentle);
+      animateSpringTo(context, _x, 0, KSpring.gentle);
     }
   }
 
@@ -100,7 +102,7 @@ class _CoverSwiperState extends State<CoverSwiper>
     final allowed = sign < 0 ? widget.hasNext : widget.hasPrevious;
     final commit = (fast || far) && sign != 0 && allowed;
     if (!commit) {
-      await KSpring.animateTo(context, _x, 0, KSpring.snappy);
+      await animateSpringTo(context, _x, 0, KSpring.snappy);
       return;
     }
     _leftTo = sign;
@@ -114,7 +116,7 @@ class _CoverSwiperState extends State<CoverSwiper>
     _giveUp = Timer(KMotion.slow * 2, () {
       if (!mounted || _leftTo == 0) return;
       _leftTo = 0;
-      KSpring.animateTo(context, _x, 0, KSpring.snappy);
+      animateSpringTo(context, _x, 0, KSpring.snappy);
     });
   }
 

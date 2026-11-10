@@ -4,6 +4,8 @@ import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../spring_to_rest.dart';
+
 /// Pointers that may drag a row away. A trackpad two-finger pan scrolls the
 /// list on desktop, so it is left out.
 const Set<PointerDeviceKind> queueSwipeDevices = {
@@ -66,7 +68,7 @@ class _QueueSwipeRemoveState extends State<QueueSwipeRemove>
   Future<void> _end(DragEndDetails d) async {
     if (_leaving) return;
     if (_dx.value.abs() < _width * queueSwipeThreshold) {
-      await KSpring.animateTo(context, _dx, 0, KSpring.snappy);
+      await animateSpringTo(context, _dx, 0, KSpring.snappy);
       return;
     }
     _leaving = true;
@@ -94,7 +96,7 @@ class _QueueSwipeRemoveState extends State<QueueSwipeRemove>
     // is gone with its state.
     if (!removed && mounted) {
       _leaving = false;
-      await KSpring.animateTo(context, _dx, 0, KSpring.snappy);
+      await animateSpringTo(context, _dx, 0, KSpring.snappy);
     }
   }
 
@@ -109,6 +111,9 @@ class _QueueSwipeRemoveState extends State<QueueSwipeRemove>
       onHorizontalDragStart: (_) => _width = context.size?.width ?? 1,
       onHorizontalDragUpdate: _update,
       onHorizontalDragEnd: _end,
+      onHorizontalDragCancel: () {
+        if (!_leaving) animateSpringTo(context, _dx, 0, KSpring.snappy);
+      },
       child: AnimatedBuilder(
         animation: _dx,
         builder: (context, child) {

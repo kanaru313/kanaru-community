@@ -118,6 +118,21 @@ void main() {
     expect(tester.getTopLeft(find.byType(NavigationBar)).dx, closeTo(0, 1));
   });
 
+  testWidgets('after closing, the page underneath takes taps again', (
+    tester,
+  ) async {
+    final h = await _pump(tester);
+    await _open(tester);
+    await tester.tapAt(_scrim);
+    await tester.pumpAndSettle();
+    expect(h.open, isFalse);
+    // The scrim is gone, not just transparent: the spring ends exactly at 0.
+    expect(find.bySemanticsLabel('Close menu'), findsNothing);
+    await tester.tap(_tab('Beta'));
+    await tester.pumpAndSettle();
+    expect(_location(tester), '/beta');
+  });
+
   testWidgets('dragging the content left closes it from 61 dp, not 59', (
     tester,
   ) async {

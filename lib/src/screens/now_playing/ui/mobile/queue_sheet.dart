@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../playback/ui/spring_to_rest.dart';
+
 import '../../../../playback/state/cover_providers.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/state/track_info_providers.dart';
@@ -111,7 +113,7 @@ class _QueueSheetPageState extends ConsumerState<QueueSheetPage>
     if (_drag.value > queueSheetCloseDistance) {
       _close();
     } else {
-      KSpring.animateTo(context, _drag, 0, KSpring.gentle);
+      animateSpringTo(context, _drag, 0, KSpring.gentle);
     }
   }
 

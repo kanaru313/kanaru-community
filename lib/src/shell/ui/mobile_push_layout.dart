@@ -4,6 +4,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
+import '../../playback/ui/spring_to_rest.dart';
 import '../state/mobile_sidebar_state.dart';
 import 'mobile_sidebar.dart';
 
@@ -62,7 +63,7 @@ class _MobilePushLayoutState extends ConsumerState<MobilePushLayout>
     final l10n = AppLocalizations.of(context);
     final open = ref.watch(mobileSidebarOpenProvider);
     ref.listen(mobileSidebarOpenProvider, (_, isOpen) {
-      KSpring.animateTo(context, _controller, isOpen ? 1 : 0, KSpring.gentle);
+      animateSpringTo(context, _controller, isOpen ? 1 : 0, KSpring.gentle);
     });
     return BackButtonListener(
       onBackButtonPressed: () async {

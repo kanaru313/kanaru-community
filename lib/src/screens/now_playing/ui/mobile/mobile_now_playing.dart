@@ -10,6 +10,7 @@ import '../../../../playback/state/cover_providers.dart';
 import '../../../../playback/state/playback_settings_providers.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/ui/flight_source.dart';
+import '../../../../playback/ui/spring_to_rest.dart';
 import '../../../../playback/state/track_info_providers.dart';
 import '../../../../playback/ui/track_cover.dart';
 import '../favorite_button.dart';
@@ -69,7 +70,7 @@ class _MobileNowPlayingState extends ConsumerState<MobileNowPlaying>
     if (_pull.value > nowPlayingCloseDistance) {
       widget.onClose();
     } else {
-      KSpring.animateTo(context, _pull, 0, KSpring.snappy);
+      animateSpringTo(context, _pull, 0, KSpring.snappy);
     }
   }
 

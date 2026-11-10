@@ -65,6 +65,15 @@ void main() {
       expect(events, ['removed']);
     });
 
+    testWidgets('a short swipe leaves no delete icon behind', (tester) async {
+      final events = <String>[];
+      await pumpFakeQueue(tester, _swipeRow(events), view: fakeView(1));
+      await _swipe(tester, find.text('row'), 0.2);
+      await tester.pumpAndSettle();
+      expect(events, isEmpty);
+      expect(find.byIcon(KIcons.delete), findsNothing);
+    });
+
     testWidgets('both directions remove', (tester) async {
       final events = <String>[];
       await pumpFakeQueue(tester, _swipeRow(events), view: fakeView(1));
