@@ -335,6 +335,46 @@ class AppLocalizationsVi extends AppLocalizations {
   String get scanVolumeUsb => 'USB';
 
   @override
+  String get scanHomeScanning => 'Đang quét thư viện';
+
+  @override
+  String scanHomeProgress(int done, int total) {
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Đọc tag và ảnh bìa · $doneString / $totalString bài';
+  }
+
+  @override
+  String scanHomeAdded(int added) {
+    final intl.NumberFormat addedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String addedString = addedNumberFormat.format(added);
+
+    return 'Đã thêm $addedString bài';
+  }
+
+  @override
+  String scanHomeAddedDetail(int albums, int artists) {
+    final intl.NumberFormat albumsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String albumsString = albumsNumberFormat.format(albums);
+    final intl.NumberFormat artistsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String artistsString = artistsNumberFormat.format(artists);
+
+    return '$albumsString album · $artistsString nghệ sĩ';
+  }
+
+  @override
+  String get scanHomeNoTracks => 'Không tìm thấy bài nào';
+
+  @override
   String get playbackCover => 'Ảnh bìa';
 
   @override

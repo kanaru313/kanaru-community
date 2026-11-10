@@ -159,5 +159,42 @@
   "scanSetupRetry": "Thử lại",
   "scanVolumeInternal": "Bộ nhớ trong",
   "scanVolumeSdCard": "Thẻ nhớ",
-  "scanVolumeUsb": "USB"
+  "scanVolumeUsb": "USB",
+  "scanHomeScanning": "Đang quét thư viện",
+  "scanHomeProgress": "Đọc tag và ảnh bìa · {done} / {total} bài",
+  "@scanHomeProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "scanHomeAdded": "Đã thêm {added} bài",
+  "@scanHomeAdded": {
+    "placeholders": {
+      "added": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "scanHomeAddedDetail": "{albums} album · {artists} nghệ sĩ",
+  "@scanHomeAddedDetail": {
+    "placeholders": {
+      "albums": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "artists": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "scanHomeNoTracks": "Không tìm thấy bài nào"
 }

@@ -349,6 +349,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanVolumeUsb => 'USB drive';
 
   @override
+  String get scanHomeScanning => 'Scanning the library';
+
+  @override
+  String scanHomeProgress(int done, int total) {
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Reading tags and covers · $doneString / $totalString songs';
+  }
+
+  @override
+  String scanHomeAdded(int added) {
+    final intl.NumberFormat addedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String addedString = addedNumberFormat.format(added);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: 'Added $addedString songs',
+      one: 'Added 1 song',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scanHomeAddedDetail(int albums, int artists) {
+    final intl.NumberFormat albumsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String albumsString = albumsNumberFormat.format(albums);
+    final intl.NumberFormat artistsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String artistsString = artistsNumberFormat.format(artists);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      albums,
+      locale: localeName,
+      other: '$albumsString albums',
+      one: '1 album',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      artists,
+      locale: localeName,
+      other: '$artistsString artists',
+      one: '1 artist',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String get scanHomeNoTracks => 'No songs found';
+
+  @override
   String get playbackCover => 'Cover art';
 
   @override

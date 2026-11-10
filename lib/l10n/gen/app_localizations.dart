@@ -668,6 +668,36 @@ abstract class AppLocalizations {
   /// **'USB drive'**
   String get scanVolumeUsb;
 
+  /// No description provided for @scanHomeScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning the library'**
+  String get scanHomeScanning;
+
+  /// No description provided for @scanHomeProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading tags and covers · {done} / {total} songs'**
+  String scanHomeProgress(int done, int total);
+
+  /// No description provided for @scanHomeAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{added, plural, =1{Added 1 song} other{Added {added} songs}}'**
+  String scanHomeAdded(int added);
+
+  /// No description provided for @scanHomeAddedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{albums, plural, =1{1 album} other{{albums} albums}} · {artists, plural, =1{1 artist} other{{artists} artists}}'**
+  String scanHomeAddedDetail(int albums, int artists);
+
+  /// No description provided for @scanHomeNoTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'No songs found'**
+  String get scanHomeNoTracks;
+
   /// No description provided for @playbackCover.
   ///
   /// In en, this message translates to:

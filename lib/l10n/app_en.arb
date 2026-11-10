@@ -186,6 +186,43 @@
   "scanVolumeInternal": "Internal storage",
   "scanVolumeSdCard": "SD card",
   "scanVolumeUsb": "USB drive",
+  "scanHomeScanning": "Scanning the library",
+  "scanHomeProgress": "Reading tags and covers · {done} / {total} songs",
+  "@scanHomeProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "scanHomeAdded": "{added, plural, =1{Added 1 song} other{Added {added} songs}}",
+  "@scanHomeAdded": {
+    "placeholders": {
+      "added": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "scanHomeAddedDetail": "{albums, plural, =1{1 album} other{{albums} albums}} · {artists, plural, =1{1 artist} other{{artists} artists}}",
+  "@scanHomeAddedDetail": {
+    "placeholders": {
+      "albums": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "artists": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "scanHomeNoTracks": "No songs found",
   "playbackCover": "Cover art",
   "playbackNavQueue": "Queue",
   "libraryTabSongs": "Songs",
