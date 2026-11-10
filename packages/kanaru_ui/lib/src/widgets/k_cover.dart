@@ -43,7 +43,9 @@ class KCoverPlaceholderColors {
 
 /// Square (or round) cover art. Decodes at `size x devicePixelRatio`, fades in
 /// and falls back to a placeholder (colour picked from [placeholderSeed]) when
-/// [image] is null or fails to load.
+/// [image] is null or fails to load. [errorFallback], when given, replaces the
+/// placeholder only for a load failure (for example a custom cover that no
+/// longer decodes falls back to the automatic cover).
 class KCover extends StatelessWidget {
   const KCover({
     super.key,
@@ -53,6 +55,7 @@ class KCover extends StatelessWidget {
     this.radius,
     this.circle = false,
     this.placeholderIcon,
+    this.errorFallback,
   });
 
   final ImageProvider? image;
@@ -61,6 +64,9 @@ class KCover extends StatelessWidget {
   final BorderRadius? radius;
   final bool circle;
   final IconData? placeholderIcon;
+
+  /// Shown instead of the placeholder when [image] fails to load.
+  final Widget? errorFallback;
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +91,7 @@ class KCover extends StatelessWidget {
             height: size,
             fit: BoxFit.cover,
             gaplessPlayback: true,
-            errorBuilder: (_, _, _) => placeholder,
+            errorBuilder: (_, _, _) => errorFallback ?? placeholder,
             frameBuilder: (context, child, frame, sync) {
               if (sync) return child;
               return Stack(

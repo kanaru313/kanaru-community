@@ -108,6 +108,7 @@ abstract final class KIcons {
   static const IconData add = Icons.add;
   static const IconData arrowForward = Icons.arrow_forward;
   static const IconData permission = Icons.lock_open;
+  static const IconData permissionMissing = Icons.gpp_maybe_outlined;
   static const IconData settingsApp = Icons.app_settings_alt;
   static const IconData image = Icons.image_outlined;
   static const IconData musicFile = Icons.audio_file;

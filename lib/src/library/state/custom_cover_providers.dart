@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +27,11 @@ final customCoverControllerProvider = Provider<CustomCoverController>(
 
 /// Identifies one item: [itemKey] is the playlist uid, `AlbumKey.encode()` or
 /// `ArtistKey.encode()`.
+/// How long a custom cover stays loaded after its last tile goes away.
+final customCoverKeepAliveProvider = Provider<Duration>(
+  (ref) => const Duration(seconds: 5),
+);
+
 typedef CustomCoverItem = ({CustomCoverKind kind, String itemKey});
 
 /// The image file the user chose for an item, or null when there is none or
@@ -37,6 +43,14 @@ final customCoverFileProvider = StreamProvider.family<File?, CustomCoverItem>((
   ref,
   item,
 ) {
+  // Kept a few seconds after the last listener, so a tile scrolled back in
+  // shows its custom cover at once instead of the source cover for a frame.
+  final link = ref.keepAlive();
+  Timer? release;
+  final keep = ref.read(customCoverKeepAliveProvider);
+  ref.onCancel(() => release = Timer(keep, link.close));
+  ref.onResume(() => release?.cancel());
+  ref.onDispose(() => release?.cancel());
   final store = ref.watch(_storeProvider);
   return watchCustomCoverKey(
     ref.watch(appDatabaseProvider),
