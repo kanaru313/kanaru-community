@@ -1,15 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../playback/domain/playback_notice.dart';
-import '../../playback/state/queue_view_provider.dart';
+import '../../playback/state/playback_providers.dart';
 
 /// Turns the player's notices into snack bars. Once started it listens for
 /// good, track or not, so a notice raised as the last track goes is not lost.
-/// Notices raised by a UI action (remove with undo, empty queue) are shown by
-/// that action instead; the player does not emit them.
+/// The remove/undo toast is shown by the UI action that removes; every other
+/// notice, "queue is empty" included, comes from the player.
 ///
 /// Listening creates the player, which must not happen while the first frame
 /// builds: by default it starts after the first frame. A shell that creates
@@ -33,7 +35,7 @@ class PlaybackNoticeListener extends ConsumerStatefulWidget {
 
 class PlaybackNoticeListenerState
     extends ConsumerState<PlaybackNoticeListener> {
-  ProviderSubscription<AsyncValue<PlaybackNotice>>? _subscription;
+  StreamSubscription<PlaybackNotice>? _subscription;
 
   @override
   void initState() {
@@ -46,22 +48,21 @@ class PlaybackNoticeListenerState
   /// Starts listening (once). Safe to call from a post-frame callback.
   void start() {
     if (_subscription != null || !mounted) return;
-    _subscription = ref.listenManual<AsyncValue<PlaybackNotice>>(
-      playbackNoticesProvider,
-      (_, next) {
-        final notice = next.value;
-        if (notice == null || !mounted) return;
-        showAppSnackBar(
-          context,
-          noticeText(AppLocalizations.of(context), notice),
-        );
-      },
-    );
+    // The controller's own stream, not a provider: a provider drops an
+    // update equal to the last one, and notices such as "end of the queue"
+    // are equal every time.
+    _subscription = ref.read(playerControllerProvider).notices.listen((notice) {
+      if (!mounted) return;
+      showAppSnackBar(
+        context,
+        noticeText(AppLocalizations.of(context), notice),
+      );
+    });
   }
 
   @override
   void dispose() {
-    _subscription?.close();
+    unawaited(_subscription?.cancel());
     super.dispose();
   }
 

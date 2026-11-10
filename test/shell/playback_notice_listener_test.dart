@@ -97,4 +97,22 @@ void main() {
     expect(find.text('This is the first track'), findsOneWidget);
     expect(find.byType(SnackBar), findsOneWidget);
   });
+
+  testWidgets('the same notice twice shows twice', (tester) async {
+    final host = await pumpWithPlayer(
+      tester,
+      const PlaybackNoticeListener(child: Text('page')),
+    );
+    await tester.pump();
+    await host.run(tester, host.h.c.previous);
+    await host.letStreamsArrive(tester);
+    expect(find.text('This is the first track'), findsOneWidget);
+    // Clear the first toast, then raise the very same (const) notice again.
+    ScaffoldMessenger.of(tester.element(find.text('page'))).clearSnackBars();
+    await tester.pump();
+    expect(find.byType(SnackBar), findsNothing);
+    await host.run(tester, host.h.c.previous);
+    await host.letStreamsArrive(tester);
+    expect(find.text('This is the first track'), findsOneWidget);
+  });
 }
