@@ -69,3 +69,25 @@ class PlayStats extends Table {
   @override
   Set<Column> get primaryKey => {trackId};
 }
+
+/// The play queue of this device (not synced). A track may appear several
+/// times. The current entry, position, shuffle and repeat live in settings.
+@DataClassName('QueueEntryRow')
+@TableIndex(name: 'queue_entries_track', columns: {#trackId})
+@TableIndex(name: 'queue_entries_order', columns: {#sortKey, #id})
+@TableIndex.sql(
+  'CREATE INDEX queue_entries_shuffle ON queue_entries (shuffle_key, id) '
+  'WHERE shuffle_key IS NOT NULL',
+)
+class QueueEntries extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get trackId =>
+      integer().references(Tracks, #id, onDelete: KeyAction.restrict)();
+
+  /// Fractional key: the order the user sees.
+  TextColumn get sortKey => text()();
+
+  /// Order while shuffle is on; NULL when it is off.
+  TextColumn get shuffleKey => text().nullable()();
+  IntColumn get addedAt => integer()();
+}

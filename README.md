@@ -10,9 +10,10 @@ Additional features can be added through extension packages (see
 
 License: GPL-3.0-or-later (see [LICENSE](LICENSE)).
 
-Status: repository skeleton (modules, shells, router, gate) with the schema v1
-tables and database helpers; no library UI yet.
-Playback, library scanning and lyrics are not built yet; see
+Status: wave-1 foundation (shared contracts, settings, device id, navigation,
+design system, Rust base). The app starts on Android and Linux with an empty
+library. Playback, library scanning and the library UI are built next in
+parallel lanes, and lyrics after them; see
 [docs/project-roadmap.md](docs/project-roadmap.md).
 
 ## Development setup
@@ -35,6 +36,7 @@ flutter run -d linux                     # or: -d <adb serial>
 flutter analyze                          # Dart lints only
 dart analyze                             # lints plus the architecture analyzer plugin
 dart run tool/check_architecture.dart    # architecture gate (rejects `// ignore:`)
+dart run tool/merge_arb.dart             # merge lib/l10n/parts into app_*.arb (then: flutter gen-l10n)
 flutter test                             # app tests
 (cd packages/kanaru_ui && flutter test)  # design system tests
 (cd tool/architecture_lint && dart test) # gate tests
@@ -52,10 +54,10 @@ with plain `dart run`, which works because it spawns a pure Dart package).
 
 ```bash
 tool/check          # Dart checks
-tool/check --rust   # plus cargo test and clippy
+tool/check --rust   # plus cargo fmt --check, the `unsafe` grep, cargo test and clippy
 ```
 
-It runs `flutter analyze`, `dart analyze`, `dart run tool/check_architecture.dart`,
+It runs `dart run tool/merge_arb.dart --check`, `flutter gen-l10n`, `flutter analyze`, `dart analyze`, `dart run tool/check_architecture.dart`,
 `flutter test` in the app, in `packages/kanaru_ui` and the gate's own tests in
 `tool/architecture_lint`. Run it before opening a PR; CI runs the same checks.
 
@@ -68,8 +70,8 @@ also rejects `// ignore:` comments for them, so the gate cannot be silenced.
 
 ## Running isolated
 
-Data lives in `<XDG data home>/kanaru-community/` (database `kanaru.db`),
-config and cache likewise under `kanaru-community`. To keep a dev run away from
+Data lives in `<XDG data home>/kanaru/` (database `kanaru.db`),
+config and cache likewise under `kanaru`. To keep a dev run away from
 real data, set all three XDG variables:
 
 ```bash
@@ -84,12 +86,12 @@ XDG_CONFIG_HOME=$R/config XDG_DATA_HOME=$R/data XDG_CACHE_HOME=$R/cache \
 |---|---|
 | `lib/src/<module>/` | App modules by domain (see ARCHITECTURE.md) |
 | `lib/kanaru.dart`, `lib/kanaru_bootstrap.dart`, `lib/main.dart` | Public API, startup, entry point |
-| `lib/l10n/` | ARB files (en, vi); generated code in `lib/l10n/gen/` |
+| `lib/l10n/` | Strings: edit `parts/`, `tool/merge_arb.dart` merges them into `app_*.arb`, generated code in `lib/l10n/gen/` |
 | `packages/kanaru_ui/` | Design system (tokens, theme, widgets), knows nothing about music |
 | `packages/kanaru_extensions/` | Extension list of this build; empty in the public repo |
 | `rust/` | Cargo workspace: `kanaru_media`, `kanaru_plugin_runtime`, `kanaru_bridge` |
 | `rust_builder/` | cargokit glue that builds `kanaru_bridge` |
-| `tool/` | `check` (gate), `check_architecture.dart`, `architecture_lint/` (analyzer plugin and CLI) |
+| `tool/` | `check` (gate), `check_architecture.dart`, `merge_arb.dart` (l10n parts), `architecture_lint/` (analyzer plugin and CLI) |
 | `architecture.yaml` | Module DAG used by the gate |
 | `android/`, `linux/` | Platform runners |
 

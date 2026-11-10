@@ -7,6 +7,15 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+lofty.workspace = true
+symphonia.workspace = true
+image.workspace = true
+jpeg-decoder.workspace = true
+fast_image_resize.workspace = true
+jpeg-encoder.workspace = true
+blake3.workspace = true
+material-colors.workspace = true
+whatlang.workspace = true
 
 [lints]
 workspace = true

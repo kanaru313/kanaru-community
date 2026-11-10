@@ -8,6 +8,7 @@ enforced by the gate. This file covers the rest.
 - Dart: `snake_case.dart` files, `UpperCamelCase` types, `lowerCamelCase`
   members.
 - Rust: `snake_case.rs`, standard Rust naming.
+- Settings keys: `<module>.<name>`, `<name>` in snake_case (see Settings below).
 - Tests mirror the source path: `lib/src/extension/...` is tested in
   `test/extension/`.
 
@@ -23,6 +24,10 @@ enforced by the gate. This file covers the rest.
 - Widgets and layout tokens come from `kanaru_ui` (`KSpace`, `KRadius`,
   `KShape`, `KLayout`, `KMotion`); no width-based switching outside
   `kanaru_ui` and `shell/`.
+- Spacing between siblings is `KGap(KSpace.xN)`, not a sized box. Choice lists
+  use `SelectionRow` / `showSelectionPicker` (no radios); a choice needing
+  confirmation goes through `confirm:`, never pop-then-ask. `kanaru_ui` has no
+  music types; app covers wrap `KCover`.
 - Errors: expected failures are values (`Result`, sealed `Ok`/`Err` in
   `foundation/result.dart`); unexpected ones propagate and are logged with
   `package:logging`. No silent catches.
@@ -31,18 +36,78 @@ enforced by the gate. This file covers the rest.
 - Choice lists in UI are rows with the value on the left and a check mark on
   the right of the selected row, not radio buttons.
 
+## Riverpod
+
+- Every `.family` provider is `isAutoDispose: true`. Riverpod 3 keeps families
+  alive otherwise.
+- A widget watches the narrowest value it needs: `select` on a shared stream
+  (`isCurrentTrackProvider(id)`, `isFavoriteProvider(id)`). Lists never watch a
+  per-row stream and never watch `nowPlayingProvider` whole.
+- Startup results are provider overrides (`runKanaru`). Tests override them the
+  same way.
+
+## Shared files and lanes
+
+- Frozen (F) and seeded (S) files are listed in ARCHITECTURE.md. An F file is
+  not edited by a lane; a contract change is a follow-up PR into `dev`.
+- A seed body is replaced by its owner lane, which keeps the F declarations
+  with the same names and types, and deletes every "not yet" stand-in.
+- Each module registers from one file per concern (`*_registration.dart`), so
+  lanes never share a file.
+- Lanes add no dependency to `pubspec.yaml` or `packages/*/pubspec.yaml`, and no
+  crate to `rust/Cargo.toml` without a follow-up PR first. The wave-1 set is
+  already in place: `audio_service`, `audio_session`, `permission_handler`,
+  `gap`, `unorm_dart` (pinned), and the Rust crates in `rust/Cargo.toml`
+  (`lofty`, `image`, `symphonia`, `blake3`, `material-colors`, `whatlang`, ...).
+
 ## Generated code
 
 Never edit: `*.g.dart`, `*.drift.dart`, `lib/src/rust/`, `lib/l10n/gen/`,
 `frb_generated.rs`. They are committed so a clean checkout analyzes. Regenerate
 with the commands in the README (drift: `build_runner`; Rust bridge:
-`flutter_rust_bridge_codegen generate`; l10n: `flutter pub get` or
-`flutter gen-l10n`) and commit the result.
+`flutter_rust_bridge_codegen generate`; l10n: see Strings) and commit the result.
 
 ## Strings
 
-All user-visible text goes through `lib/l10n/app_en.arb` (template) and
-`app_vi.arb`. Add the key to both.
+All user-visible text goes through the part files
+`lib/l10n/parts/<part>_<locale>.arb`. `en` is the template, `vi` must have the
+same keys.
+
+| Part | Key prefix | Owner |
+|---|---|---|
+| `app` | every key without another part's prefix | foundation |
+| `scan` | `scan…` | scanner lane |
+| `playback` | `playback…` | playback lane |
+| `library` | `library…` | library UI lane |
+
+Workflow:
+
+1. Add the key to `en` and `vi` of your part.
+2. `dart run tool/merge_arb.dart` (writes `lib/l10n/app_<locale>.arb`).
+3. `flutter gen-l10n` (writes `lib/l10n/gen/`).
+
+`tool/check` runs `merge_arb --check` and `flutter gen-l10n`, so a stale merge
+fails the gate. The merge fails on a duplicate key, a key outside its part's
+prefix, a key missing in one locale, or an unknown part file.
+
+`lib/l10n/app_*.arb` and `lib/l10n/gen/` are generated: never edit them. On a
+rebase conflict, take either side and run the two commands again.
+
+## Settings
+
+- One store: `SettingsStore` (`settings.json` in `configDir`). Do not add a second
+  store (no `shared_preferences`, no table for settings).
+- Declare each key once as a top-level `Setting<T>` in the owning module, with a
+  default and JSON `decode` / `encode`. Declare one top-level provider per key
+  (`final xProvider = settingNotifierProvider(xSetting);` or a `SettingNotifier`
+  subclass). `settingNotifierProvider` builds a new provider on each call: never
+  call it inside a widget or provider body.
+- Name it `<module>.<name>` (`app` is the prefix for global appearance keys). A value a decoder does not understand falls back to
+  the default and is logged; a store is never a reason to crash.
+- Write through the notifier's `set`, which updates state at once. Nothing
+  reads the file directly.
+- A setting that must survive a crash mid-action is flushed by a flush hook
+  (ARCHITECTURE.md, Flush and exit).
 
 ## Database
 
@@ -53,11 +118,15 @@ All user-visible text goes through `lib/l10n/app_en.arb` (template) and
   differs. From the first release on, bump it and add a migration step.
 - Every foreign key into `tracks` is `ON DELETE RESTRICT`, written explicitly
   (never the default `NO ACTION`). Owned child rows (`track_details`,
-  `play_stats`) are deleted by the track GC; nothing references an owned child.
+  `play_stats`, `track_artists`) are deleted by the track GC; nothing references
+  an owned child.
 - Never `INSERT OR REPLACE` on `tracks` or `play_log`; use `ON CONFLICT`
   (`upsertTrackSnapshot`, `insertOrRevive`).
 - Library reads filter with `visibleTrackWhere` / `isVisibleTrack`.
 - Build every FTS `MATCH` input with `ftsPrefixQuery`, never by hand.
+- Derived columns have one writer function (the stored-column rule in
+  [system-architecture-library.md](./system-architecture-library.md#stored-column-rule)).
+- Chunk `IN (...)` lists and multi-row inserts at 500 ids or rows.
 - An online track and the row that references it are written in one
   transaction.
 - Extensions never add indexes or triggers to public tables; they migrate their
@@ -65,19 +134,37 @@ All user-visible text goes through `lib/l10n/app_en.arb` (template) and
 - Update `docs/system-architecture-database.md` with every schema change; a
   test checks that each table, index and trigger is named there.
 
+## Covers and files
+
+- Cover images live under `cacheDir/covers/` only. The database stores the
+  cover key, never a path. Build paths with `coverRelativePath`; never join a
+  key by hand.
+- A file path from the database is validated (`isCoverKey`) before use.
+
 ## Rust
 
-- `unsafe` only in `kanaru_bridge/src/os.rs` (the file is created with the
-  first OS call that needs it).
+- `unsafe` only in `kanaru_bridge/src/os.rs` (thread priority). `tool/check --rust`
+  greps for it.
 - `kanaru_media` and `kanaru_plugin_runtime` have no FFI and do not depend on
   each other; only `kanaru_bridge` knows flutter_rust_bridge. Explicit DTOs,
   no `#[frb(mirror)]`.
+- Every file is parsed under `guarded` (panic becomes `NativeError`), so
+  never set `panic = "abort"`. Work runs on the pools in `pools.rs`, not on
+  ad-hoc threads. Record a pass result only on success or a permanent
+  error kind; for a transient one (`NativeError.transient`: busy or dropped
+  mounts, `Timeout`, `Cancelled`) leave the pass version alone. `Panic` is
+  permanent.
+- Third-party versions are pinned in `rust/Cargo.toml` with the reason beside
+  each. Pin exactly, unless the comment there says why not.
+- Library code does not `unwrap` (lint); tests may.
 - `cargo clippy --all-targets -- -D warnings` must pass.
 
 ## Tests
 
 - New logic comes with tests for the main path and the failure cases.
 - Run the narrowest tests while working, `tool/check --rust` before a PR.
+- Tests of a seed check the real provider type, and a seed is not shipped:
+  its owner lane deletes it and tests the real body.
 - With `material_ui`, `find.byTooltip` does not match its `Tooltip`; use a
   local finder as in `test/shell/shell_test.dart`.
 

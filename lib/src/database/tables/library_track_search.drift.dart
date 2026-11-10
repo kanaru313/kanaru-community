@@ -5,7 +5,7 @@ import 'package:kanaru/src/database/tables/library_track_search.drift.dart'
     as i1;
 
 typedef $TrackSearchCreateCompanionBuilder = i1.TrackSearchCompanion Function({
-  required String titleSort,
+  required String titleSearch,
   required String artistSearch,
   required String albumSearch,
   required String albumArtistSearch,
@@ -13,7 +13,7 @@ typedef $TrackSearchCreateCompanionBuilder = i1.TrackSearchCompanion Function({
   i0.Value<int> rowid,
 });
 typedef $TrackSearchUpdateCompanionBuilder = i1.TrackSearchCompanion Function({
-  i0.Value<String> titleSort,
+  i0.Value<String> titleSearch,
   i0.Value<String> artistSearch,
   i0.Value<String> albumSearch,
   i0.Value<String> albumArtistSearch,
@@ -30,8 +30,8 @@ class $TrackSearchFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  i0.ColumnFilters<String> get titleSort => $composableBuilder(
-    column: $table.titleSort,
+  i0.ColumnFilters<String> get titleSearch => $composableBuilder(
+    column: $table.titleSearch,
     builder: (column) => i0.ColumnFilters(column),
   );
 
@@ -65,8 +65,8 @@ class $TrackSearchOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  i0.ColumnOrderings<String> get titleSort => $composableBuilder(
-    column: $table.titleSort,
+  i0.ColumnOrderings<String> get titleSearch => $composableBuilder(
+    column: $table.titleSearch,
     builder: (column) => i0.ColumnOrderings(column),
   );
 
@@ -100,8 +100,10 @@ class $TrackSearchAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  i0.GeneratedColumn<String> get titleSort =>
-      $composableBuilder(column: $table.titleSort, builder: (column) => column);
+  i0.GeneratedColumn<String> get titleSearch => $composableBuilder(
+    column: $table.titleSearch,
+    builder: (column) => column,
+  );
 
   i0.GeneratedColumn<String> get artistSearch => $composableBuilder(
     column: $table.artistSearch,
@@ -159,14 +161,14 @@ class $TrackSearchTableManager
               i1.$TrackSearchAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                i0.Value<String> titleSort = const i0.Value.absent(),
+                i0.Value<String> titleSearch = const i0.Value.absent(),
                 i0.Value<String> artistSearch = const i0.Value.absent(),
                 i0.Value<String> albumSearch = const i0.Value.absent(),
                 i0.Value<String> albumArtistSearch = const i0.Value.absent(),
                 i0.Value<String> genreSearch = const i0.Value.absent(),
                 i0.Value<int> rowid = const i0.Value.absent(),
               }) => i1.TrackSearchCompanion(
-                titleSort: titleSort,
+                titleSearch: titleSearch,
                 artistSearch: artistSearch,
                 albumSearch: albumSearch,
                 albumArtistSearch: albumArtistSearch,
@@ -175,14 +177,14 @@ class $TrackSearchTableManager
               ),
           createCompanionCallback:
               ({
-                required String titleSort,
+                required String titleSearch,
                 required String artistSearch,
                 required String albumSearch,
                 required String albumArtistSearch,
                 required String genreSearch,
                 i0.Value<int> rowid = const i0.Value.absent(),
               }) => i1.TrackSearchCompanion.insert(
-                titleSort: titleSort,
+                titleSearch: titleSearch,
                 artistSearch: artistSearch,
                 albumSearch: albumSearch,
                 albumArtistSearch: albumArtistSearch,
@@ -236,17 +238,18 @@ class TrackSearch extends i0.Table
   final i0.GeneratedDatabase attachedDatabase;
   final String? _alias;
   TrackSearch(this.attachedDatabase, [this._alias]);
-  static const i0.VerificationMeta _titleSortMeta = const i0.VerificationMeta(
-    'titleSort',
+  static const i0.VerificationMeta _titleSearchMeta = const i0.VerificationMeta(
+    'titleSearch',
   );
-  late final i0.GeneratedColumn<String> titleSort = i0.GeneratedColumn<String>(
-    'title_sort',
-    aliasedName,
-    false,
-    type: i0.DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: '',
-  );
+  late final i0.GeneratedColumn<String> titleSearch =
+      i0.GeneratedColumn<String>(
+        'title_search',
+        aliasedName,
+        false,
+        type: i0.DriftSqlType.string,
+        requiredDuringInsert: true,
+        $customConstraints: '',
+      );
   static const i0.VerificationMeta _artistSearchMeta =
       const i0.VerificationMeta('artistSearch');
   late final i0.GeneratedColumn<String> artistSearch =
@@ -295,7 +298,7 @@ class TrackSearch extends i0.Table
       );
   @override
   List<i0.GeneratedColumn> get $columns => [
-    titleSort,
+    titleSearch,
     artistSearch,
     albumSearch,
     albumArtistSearch,
@@ -313,13 +316,16 @@ class TrackSearch extends i0.Table
   }) {
     final context = i0.VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('title_sort')) {
+    if (data.containsKey('title_search')) {
       context.handle(
-        _titleSortMeta,
-        titleSort.isAcceptableOrUnknown(data['title_sort']!, _titleSortMeta),
+        _titleSearchMeta,
+        titleSearch.isAcceptableOrUnknown(
+          data['title_search']!,
+          _titleSearchMeta,
+        ),
       );
     } else if (isInserting) {
-      context.missing(_titleSortMeta);
+      context.missing(_titleSearchMeta);
     }
     if (data.containsKey('artist_search')) {
       context.handle(
@@ -374,9 +380,9 @@ class TrackSearch extends i0.Table
   i1.TrackSearchData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return i1.TrackSearchData(
-      titleSort: attachedDatabase.typeMapping.read(
+      titleSearch: attachedDatabase.typeMapping.read(
         i0.DriftSqlType.string,
-        data['${effectivePrefix}title_sort'],
+        data['${effectivePrefix}title_search'],
       )!,
       artistSearch: attachedDatabase.typeMapping.read(
         i0.DriftSqlType.string,
@@ -406,18 +412,18 @@ class TrackSearch extends i0.Table
   bool get dontWriteConstraints => true;
   @override
   String get moduleAndArgs =>
-      'fts5(title_sort, artist_search, album_search, album_artist_search, genre_search, content=\'tracks\', content_rowid=\'id\', tokenize=\'unicode61 remove_diacritics 0\', prefix=\'1 2 3\')';
+      'fts5(title_search, artist_search, album_search, album_artist_search, genre_search, content=\'tracks\', content_rowid=\'id\', tokenize=\'unicode61 remove_diacritics 0\', prefix=\'1 2 3\')';
 }
 
 class TrackSearchData extends i0.DataClass
     implements i0.Insertable<i1.TrackSearchData> {
-  final String titleSort;
+  final String titleSearch;
   final String artistSearch;
   final String albumSearch;
   final String albumArtistSearch;
   final String genreSearch;
   const TrackSearchData({
-    required this.titleSort,
+    required this.titleSearch,
     required this.artistSearch,
     required this.albumSearch,
     required this.albumArtistSearch,
@@ -426,7 +432,7 @@ class TrackSearchData extends i0.DataClass
   @override
   Map<String, i0.Expression> toColumns(bool nullToAbsent) {
     final map = <String, i0.Expression>{};
-    map['title_sort'] = i0.Variable<String>(titleSort);
+    map['title_search'] = i0.Variable<String>(titleSearch);
     map['artist_search'] = i0.Variable<String>(artistSearch);
     map['album_search'] = i0.Variable<String>(albumSearch);
     map['album_artist_search'] = i0.Variable<String>(albumArtistSearch);
@@ -436,7 +442,7 @@ class TrackSearchData extends i0.DataClass
 
   i1.TrackSearchCompanion toCompanion(bool nullToAbsent) {
     return i1.TrackSearchCompanion(
-      titleSort: i0.Value(titleSort),
+      titleSearch: i0.Value(titleSearch),
       artistSearch: i0.Value(artistSearch),
       albumSearch: i0.Value(albumSearch),
       albumArtistSearch: i0.Value(albumArtistSearch),
@@ -450,7 +456,7 @@ class TrackSearchData extends i0.DataClass
   }) {
     serializer ??= i0.driftRuntimeOptions.defaultSerializer;
     return TrackSearchData(
-      titleSort: serializer.fromJson<String>(json['title_sort']),
+      titleSearch: serializer.fromJson<String>(json['title_search']),
       artistSearch: serializer.fromJson<String>(json['artist_search']),
       albumSearch: serializer.fromJson<String>(json['album_search']),
       albumArtistSearch: serializer.fromJson<String>(
@@ -463,7 +469,7 @@ class TrackSearchData extends i0.DataClass
   Map<String, dynamic> toJson({i0.ValueSerializer? serializer}) {
     serializer ??= i0.driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'title_sort': serializer.toJson<String>(titleSort),
+      'title_search': serializer.toJson<String>(titleSearch),
       'artist_search': serializer.toJson<String>(artistSearch),
       'album_search': serializer.toJson<String>(albumSearch),
       'album_artist_search': serializer.toJson<String>(albumArtistSearch),
@@ -472,13 +478,13 @@ class TrackSearchData extends i0.DataClass
   }
 
   i1.TrackSearchData copyWith({
-    String? titleSort,
+    String? titleSearch,
     String? artistSearch,
     String? albumSearch,
     String? albumArtistSearch,
     String? genreSearch,
   }) => i1.TrackSearchData(
-    titleSort: titleSort ?? this.titleSort,
+    titleSearch: titleSearch ?? this.titleSearch,
     artistSearch: artistSearch ?? this.artistSearch,
     albumSearch: albumSearch ?? this.albumSearch,
     albumArtistSearch: albumArtistSearch ?? this.albumArtistSearch,
@@ -486,7 +492,9 @@ class TrackSearchData extends i0.DataClass
   );
   TrackSearchData copyWithCompanion(i1.TrackSearchCompanion data) {
     return TrackSearchData(
-      titleSort: data.titleSort.present ? data.titleSort.value : this.titleSort,
+      titleSearch: data.titleSearch.present
+          ? data.titleSearch.value
+          : this.titleSearch,
       artistSearch: data.artistSearch.present
           ? data.artistSearch.value
           : this.artistSearch,
@@ -505,7 +513,7 @@ class TrackSearchData extends i0.DataClass
   @override
   String toString() {
     return (StringBuffer('TrackSearchData(')
-          ..write('titleSort: $titleSort, ')
+          ..write('titleSearch: $titleSearch, ')
           ..write('artistSearch: $artistSearch, ')
           ..write('albumSearch: $albumSearch, ')
           ..write('albumArtistSearch: $albumArtistSearch, ')
@@ -516,7 +524,7 @@ class TrackSearchData extends i0.DataClass
 
   @override
   int get hashCode => Object.hash(
-    titleSort,
+    titleSearch,
     artistSearch,
     albumSearch,
     albumArtistSearch,
@@ -526,7 +534,7 @@ class TrackSearchData extends i0.DataClass
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is i1.TrackSearchData &&
-          other.titleSort == this.titleSort &&
+          other.titleSearch == this.titleSearch &&
           other.artistSearch == this.artistSearch &&
           other.albumSearch == this.albumSearch &&
           other.albumArtistSearch == this.albumArtistSearch &&
@@ -534,14 +542,14 @@ class TrackSearchData extends i0.DataClass
 }
 
 class TrackSearchCompanion extends i0.UpdateCompanion<i1.TrackSearchData> {
-  final i0.Value<String> titleSort;
+  final i0.Value<String> titleSearch;
   final i0.Value<String> artistSearch;
   final i0.Value<String> albumSearch;
   final i0.Value<String> albumArtistSearch;
   final i0.Value<String> genreSearch;
   final i0.Value<int> rowid;
   const TrackSearchCompanion({
-    this.titleSort = const i0.Value.absent(),
+    this.titleSearch = const i0.Value.absent(),
     this.artistSearch = const i0.Value.absent(),
     this.albumSearch = const i0.Value.absent(),
     this.albumArtistSearch = const i0.Value.absent(),
@@ -549,19 +557,19 @@ class TrackSearchCompanion extends i0.UpdateCompanion<i1.TrackSearchData> {
     this.rowid = const i0.Value.absent(),
   });
   TrackSearchCompanion.insert({
-    required String titleSort,
+    required String titleSearch,
     required String artistSearch,
     required String albumSearch,
     required String albumArtistSearch,
     required String genreSearch,
     this.rowid = const i0.Value.absent(),
-  }) : titleSort = i0.Value(titleSort),
+  }) : titleSearch = i0.Value(titleSearch),
        artistSearch = i0.Value(artistSearch),
        albumSearch = i0.Value(albumSearch),
        albumArtistSearch = i0.Value(albumArtistSearch),
        genreSearch = i0.Value(genreSearch);
   static i0.Insertable<i1.TrackSearchData> custom({
-    i0.Expression<String>? titleSort,
+    i0.Expression<String>? titleSearch,
     i0.Expression<String>? artistSearch,
     i0.Expression<String>? albumSearch,
     i0.Expression<String>? albumArtistSearch,
@@ -569,7 +577,7 @@ class TrackSearchCompanion extends i0.UpdateCompanion<i1.TrackSearchData> {
     i0.Expression<int>? rowid,
   }) {
     return i0.RawValuesInsertable({
-      if (titleSort != null) 'title_sort': titleSort,
+      if (titleSearch != null) 'title_search': titleSearch,
       if (artistSearch != null) 'artist_search': artistSearch,
       if (albumSearch != null) 'album_search': albumSearch,
       if (albumArtistSearch != null) 'album_artist_search': albumArtistSearch,
@@ -579,7 +587,7 @@ class TrackSearchCompanion extends i0.UpdateCompanion<i1.TrackSearchData> {
   }
 
   i1.TrackSearchCompanion copyWith({
-    i0.Value<String>? titleSort,
+    i0.Value<String>? titleSearch,
     i0.Value<String>? artistSearch,
     i0.Value<String>? albumSearch,
     i0.Value<String>? albumArtistSearch,
@@ -587,7 +595,7 @@ class TrackSearchCompanion extends i0.UpdateCompanion<i1.TrackSearchData> {
     i0.Value<int>? rowid,
   }) {
     return i1.TrackSearchCompanion(
-      titleSort: titleSort ?? this.titleSort,
+      titleSearch: titleSearch ?? this.titleSearch,
       artistSearch: artistSearch ?? this.artistSearch,
       albumSearch: albumSearch ?? this.albumSearch,
       albumArtistSearch: albumArtistSearch ?? this.albumArtistSearch,
@@ -599,8 +607,8 @@ class TrackSearchCompanion extends i0.UpdateCompanion<i1.TrackSearchData> {
   @override
   Map<String, i0.Expression> toColumns(bool nullToAbsent) {
     final map = <String, i0.Expression>{};
-    if (titleSort.present) {
-      map['title_sort'] = i0.Variable<String>(titleSort.value);
+    if (titleSearch.present) {
+      map['title_search'] = i0.Variable<String>(titleSearch.value);
     }
     if (artistSearch.present) {
       map['artist_search'] = i0.Variable<String>(artistSearch.value);
@@ -623,7 +631,7 @@ class TrackSearchCompanion extends i0.UpdateCompanion<i1.TrackSearchData> {
   @override
   String toString() {
     return (StringBuffer('TrackSearchCompanion(')
-          ..write('titleSort: $titleSort, ')
+          ..write('titleSearch: $titleSearch, ')
           ..write('artistSearch: $artistSearch, ')
           ..write('albumSearch: $albumSearch, ')
           ..write('albumArtistSearch: $albumArtistSearch, ')
@@ -635,14 +643,14 @@ class TrackSearchCompanion extends i0.UpdateCompanion<i1.TrackSearchData> {
 }
 
 i0.Trigger get tracksSearchInsert => i0.Trigger(
-  'CREATE TRIGGER tracks_search_insert AFTER INSERT ON tracks BEGIN INSERT INTO track_search ("rowid", title_sort, artist_search, album_search, album_artist_search, genre_search) VALUES (new.id, new.title_sort, new.artist_search, new.album_search, new.album_artist_search, new.genre_search);END',
+  'CREATE TRIGGER tracks_search_insert AFTER INSERT ON tracks BEGIN INSERT INTO track_search ("rowid", title_search, artist_search, album_search, album_artist_search, genre_search) VALUES (new.id, new.title_search, new.artist_search, new.album_search, new.album_artist_search, new.genre_search);END',
   'tracks_search_insert',
 );
 i0.Trigger get tracksSearchDelete => i0.Trigger(
-  'CREATE TRIGGER tracks_search_delete AFTER DELETE ON tracks BEGIN INSERT INTO track_search (track_search, "rowid", title_sort, artist_search, album_search, album_artist_search, genre_search) VALUES (\'delete\', old.id, old.title_sort, old.artist_search, old.album_search, old.album_artist_search, old.genre_search);END',
+  'CREATE TRIGGER tracks_search_delete AFTER DELETE ON tracks BEGIN INSERT INTO track_search (track_search, "rowid", title_search, artist_search, album_search, album_artist_search, genre_search) VALUES (\'delete\', old.id, old.title_search, old.artist_search, old.album_search, old.album_artist_search, old.genre_search);END',
   'tracks_search_delete',
 );
 i0.Trigger get tracksSearchUpdate => i0.Trigger(
-  'CREATE TRIGGER tracks_search_update AFTER UPDATE OF title_sort, artist_search, album_search, album_artist_search, genre_search ON tracks WHEN old.title_sort IS NOT new.title_sort OR old.artist_search IS NOT new.artist_search OR old.album_search IS NOT new.album_search OR old.album_artist_search IS NOT new.album_artist_search OR old.genre_search IS NOT new.genre_search BEGIN INSERT INTO track_search (track_search, "rowid", title_sort, artist_search, album_search, album_artist_search, genre_search) VALUES (\'delete\', old.id, old.title_sort, old.artist_search, old.album_search, old.album_artist_search, old.genre_search);INSERT INTO track_search ("rowid", title_sort, artist_search, album_search, album_artist_search, genre_search) VALUES (new.id, new.title_sort, new.artist_search, new.album_search, new.album_artist_search, new.genre_search);END',
+  'CREATE TRIGGER tracks_search_update AFTER UPDATE OF title_search, artist_search, album_search, album_artist_search, genre_search ON tracks WHEN old.title_search IS NOT new.title_search OR old.artist_search IS NOT new.artist_search OR old.album_search IS NOT new.album_search OR old.album_artist_search IS NOT new.album_artist_search OR old.genre_search IS NOT new.genre_search BEGIN INSERT INTO track_search (track_search, "rowid", title_search, artist_search, album_search, album_artist_search, genre_search) VALUES (\'delete\', old.id, old.title_search, old.artist_search, old.album_search, old.album_artist_search, old.genre_search);INSERT INTO track_search ("rowid", title_search, artist_search, album_search, album_artist_search, genre_search) VALUES (new.id, new.title_search, new.artist_search, new.album_search, new.album_artist_search, new.genre_search);END',
   'tracks_search_update',
 );

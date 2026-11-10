@@ -19,10 +19,11 @@ void main() {
       (await db.customSelect(sql).get()).map((r) => r.data).toList();
 
   Future<Set<String>> names(String type) async => {
-        for (final r in await rows(
-            "SELECT name FROM sqlite_master WHERE type = '$type'"))
-          r['name']! as String,
-      };
+    for (final r in await rows(
+      "SELECT name FROM sqlite_master WHERE type = '$type'",
+    ))
+      r['name']! as String,
+  };
 
   test('a fresh database has the coded tables', () async {
     expect(
@@ -40,6 +41,9 @@ void main() {
         'playlists',
         'playlist_entries',
         'saved_items',
+        'track_artists',
+        'queue_entries',
+        'cover_colors',
       }),
     );
   });
@@ -55,7 +59,11 @@ void main() {
     );
     expect(
       await names('index'),
-      containsAll({'play_log_track_played', 'play_log_played_at', 'play_stats_last'}),
+      containsAll({
+        'play_log_track_played',
+        'play_log_played_at',
+        'play_stats_last',
+      }),
     );
   });
 
@@ -72,13 +80,15 @@ void main() {
   });
 
   test('the update trigger WHEN mentions every indexed column', () async {
-    final ftsCols = (await rows("SELECT name FROM pragma_table_info('track_search')"))
-        .map((r) => r['name']! as String)
-        .toList();
+    final ftsCols = (await rows(
+      "SELECT name FROM pragma_table_info('track_search')",
+    )).map((r) => r['name']! as String).toList();
     expect(ftsCols, hasLength(5));
-    final sql = (await rows(
-            "SELECT sql FROM sqlite_master WHERE name = 'tracks_search_update'"))
-        .single['sql']! as String;
+    final sql =
+        (await rows(
+              "SELECT sql FROM sqlite_master WHERE name = 'tracks_search_update'",
+            )).single['sql']!
+            as String;
     final when = sql.substring(sql.indexOf('WHEN'), sql.indexOf('BEGIN'));
     for (final c in ftsCols) {
       expect(when, contains('old.$c IS NOT new.$c'), reason: c);
@@ -98,6 +108,14 @@ void main() {
         'tracks_song_key',
         'tracks_rel_path',
         'tracks_language',
+        'tracks_tags_version',
+        'tracks_keys_version',
+        'tracks_cover_version',
+        'tracks_genre_key',
+        'track_artists_track',
+        'queue_entries_track',
+        'queue_entries_order',
+        'queue_entries_shuffle',
         'playlists_favorites_unique',
         'playlists_mood_name_unique',
         'playlists_origin_unique',
@@ -110,7 +128,8 @@ void main() {
   });
 
   test('every foreign key into tracks is RESTRICT', () async {
-    final into = (await rows(_allForeignKeys)).where((r) => r['parent'] == 'tracks');
+    final into = (await rows(_allForeignKeys))
+        .where((r) => r['parent'] == 'tracks');
     expect(into, isNotEmpty);
     expect(into.map((r) => r['action']), everyElement('RESTRICT'));
   });
@@ -127,7 +146,8 @@ void main() {
   test('collection foreign keys have the documented actions', () async {
     final fks = await rows(_allForeignKeys);
     String action(String tbl, String col) =>
-        fks.singleWhere((r) => r['tbl'] == tbl && r['col'] == col)['action']! as String;
+        fks.singleWhere((r) => r['tbl'] == tbl && r['col'] == col)['action']!
+            as String;
     expect(action('playlist_entries', 'playlist_id'), 'CASCADE');
     expect(action('playlist_entries', 'track_id'), 'RESTRICT');
     expect(action('playlists', 'origin_source_id'), 'RESTRICT');
@@ -144,29 +164,39 @@ void main() {
     expect(cols, isNotEmpty);
     for (final c in cols) {
       expect(
-        fks.any((f) =>
-            f['tbl'] == c['tbl'] && f['col'] == c['col'] && f['parent'] == 'tracks'),
+        fks.any(
+          (f) =>
+              f['tbl'] == c['tbl'] &&
+              f['col'] == c['col'] &&
+              f['parent'] == 'tracks',
+        ),
         isTrue,
         reason: '${c['tbl']}.${c['col']} has no FK into tracks',
       );
     }
   });
 
-  test('every foreign key column leads an index or is the integer key', () async {
-    for (final fk in await rows(_allForeignKeys)) {
-      final tbl = fk['tbl']! as String;
-      final col = fk['col']! as String;
-      final indexed = await rows('''
+  test(
+    'every foreign key column leads an index or is the integer key',
+    () async {
+      for (final fk in await rows(_allForeignKeys)) {
+        final tbl = fk['tbl']! as String;
+        final col = fk['col']! as String;
+        final indexed = await rows('''
         SELECT 1 FROM pragma_index_list('$tbl') AS i
         WHERE i.partial = 0 AND (SELECT name FROM pragma_index_info(i.name) WHERE seqno = 0) = '$col'
       ''');
-      final pk = await rows('''
+        final pk = await rows('''
         SELECT 1 FROM pragma_table_info('$tbl')
         WHERE name = '$col' AND pk = 1 AND type = 'INTEGER'
           AND (SELECT count(*) FROM pragma_table_info('$tbl') WHERE pk > 0) = 1
       ''');
-      expect(indexed.isNotEmpty || pk.isNotEmpty, isTrue,
-          reason: '$tbl.$col is not indexed');
-    }
-  });
+        expect(
+          indexed.isNotEmpty || pk.isNotEmpty,
+          isTrue,
+          reason: '$tbl.$col is not indexed',
+        );
+      }
+    },
+  );
 }

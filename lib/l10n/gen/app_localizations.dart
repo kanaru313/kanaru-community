@@ -211,6 +211,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Home'**
   String get tooltipHome;
+
+  /// No description provided for @appComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get appComingSoon;
+
+  /// No description provided for @appKeymap.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts'**
+  String get appKeymap;
+
+  /// No description provided for @appAiChat.
+  ///
+  /// In en, this message translates to:
+  /// **'AI chat'**
+  String get appAiChat;
+
+  /// No description provided for @appSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get appSearch;
+
+  /// No description provided for @appRescan.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan library'**
+  String get appRescan;
+
+  /// No description provided for @playbackCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover art'**
+  String get playbackCover;
+
+  /// No description provided for @playbackNavQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get playbackNavQueue;
+
+  /// No description provided for @libraryTabSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs'**
+  String get libraryTabSongs;
+
+  /// No description provided for @libraryTabAlbums.
+  ///
+  /// In en, this message translates to:
+  /// **'Albums'**
+  String get libraryTabAlbums;
+
+  /// No description provided for @libraryTabArtists.
+  ///
+  /// In en, this message translates to:
+  /// **'Artists'**
+  String get libraryTabArtists;
+
+  /// No description provided for @libraryTabGenres.
+  ///
+  /// In en, this message translates to:
+  /// **'Genres'**
+  String get libraryTabGenres;
+
+  /// No description provided for @libraryTabLanguages.
+  ///
+  /// In en, this message translates to:
+  /// **'Languages'**
+  String get libraryTabLanguages;
+
+  /// No description provided for @libraryTabFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders'**
+  String get libraryTabFolders;
+
+  /// No description provided for @libraryNavFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get libraryNavFavorites;
+
+  /// No description provided for @libraryNavHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get libraryNavHistory;
+
+  /// No description provided for @libraryNavMostPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Most played'**
+  String get libraryNavMostPlayed;
 }
 
 class _AppLocalizationsDelegate

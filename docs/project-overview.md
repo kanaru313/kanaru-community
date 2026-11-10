@@ -31,7 +31,9 @@ and cargokit, `media_kit` for playback (planned use).
 
 ## Current state
 
-Skeleton: pub workspace, design system (`packages/kanaru_ui`), architecture
-gate, module DAG, two shells with Home, Search, Library, Playlists, Online and
-Settings placeholder pages, extension registry, empty database
-(`extension_schema` only). See [project-roadmap.md](project-roadmap.md).
+Wave-1 foundation: pub workspace, design system (`packages/kanaru_ui`),
+architecture gate, module DAG, two shells, extension registry, the settings
+store and device id, the schema v1 tables and helpers, and the shared contracts
+the playback and library lanes code against. Playback, the scanner and the
+library UI are seeds until those lanes land. See
+[project-roadmap.md](project-roadmap.md).

@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "io.github.kanaru313.kanaru_community"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = maxOf(flutter.compileSdkVersion, 37) // permission_handler_android needs 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

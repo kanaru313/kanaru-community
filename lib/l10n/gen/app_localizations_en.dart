@@ -65,4 +65,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tooltipHome => 'Home';
+
+  @override
+  String get appComingSoon => 'Coming soon';
+
+  @override
+  String get appKeymap => 'Keyboard shortcuts';
+
+  @override
+  String get appAiChat => 'AI chat';
+
+  @override
+  String get appSearch => 'Search';
+
+  @override
+  String get appRescan => 'Rescan library';
+
+  @override
+  String get playbackCover => 'Cover art';
+
+  @override
+  String get playbackNavQueue => 'Queue';
+
+  @override
+  String get libraryTabSongs => 'Songs';
+
+  @override
+  String get libraryTabAlbums => 'Albums';
+
+  @override
+  String get libraryTabArtists => 'Artists';
+
+  @override
+  String get libraryTabGenres => 'Genres';
+
+  @override
+  String get libraryTabLanguages => 'Languages';
+
+  @override
+  String get libraryTabFolders => 'Folders';
+
+  @override
+  String get libraryNavFavorites => 'Favorites';
+
+  @override
+  String get libraryNavHistory => 'History';
+
+  @override
+  String get libraryNavMostPlayed => 'Most played';
 }

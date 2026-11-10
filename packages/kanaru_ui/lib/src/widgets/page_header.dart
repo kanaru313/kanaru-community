@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../tokens/k_layout.dart';
 import '../tokens/k_space.dart';
+import 'page_header_scope.dart';
 
 /// Header of every page: `[<]` (child pages only), title, spacer, actions.
 /// Root pages pass no [onBack], so the back button is hidden.
@@ -44,6 +45,7 @@ class PageHeader extends StatelessWidget {
             ),
           ),
           ...actions,
+          ...?PageHeaderScope.of(context)?.trailing,
         ],
       ),
     );

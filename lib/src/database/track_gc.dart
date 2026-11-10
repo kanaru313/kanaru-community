@@ -2,9 +2,10 @@ import 'package:drift/drift.dart';
 
 import 'tables.dart';
 
-/// One-to-one rows derived from a track. The GC ignores them when deciding
-/// whether a track is referenced and deletes them together with the track.
-const trackOwnedChildTables = {'track_details', 'play_stats'};
+/// Child tables whose rows are owned by the track (one-to-one or one-to-many,
+/// e.g. `track_artists`). The GC ignores them when deciding whether a track is
+/// referenced and deletes them together with the track.
+const trackOwnedChildTables = {'track_details', 'play_stats', 'track_artists'};
 
 /// A `missing` track is kept this long (ms) after `missing_since`.
 const missingGraceMs = 7 * 24 * 60 * 60 * 1000;
@@ -135,7 +136,13 @@ Future<int> collectOrphanTracks(
   if (deleted > 0) {
     // The FTS delete trigger writes `track_search` too.
     db.notifyUpdates({
-      for (final t in ['tracks', 'track_details', 'play_stats', 'track_search'])
+      for (final t in [
+        'tracks',
+        'track_details',
+        'play_stats',
+        'track_artists',
+        'track_search',
+      ])
         TableUpdate(t),
     });
   }

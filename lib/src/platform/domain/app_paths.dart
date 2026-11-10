@@ -1,8 +1,8 @@
 import 'dart:io';
 
-/// Folder name under the platform data/config/cache roots. Distinct from the
-/// old app's `kanaru` folder so the two never share a database.
-const String kanaruDirName = 'kanaru-community';
+/// Folder name under the platform data/config/cache roots. The database file is
+/// `kanaru.db`, so a leftover old-app `library.db` in the same folder is never opened.
+const String kanaruDirName = 'kanaru';
 
 /// Where the app keeps its files. One implementation per platform.
 abstract interface class AppPaths {

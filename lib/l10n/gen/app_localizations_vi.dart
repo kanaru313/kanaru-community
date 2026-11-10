@@ -65,4 +65,52 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tooltipHome => 'Trang chủ';
+
+  @override
+  String get appComingSoon => 'Sắp có';
+
+  @override
+  String get appKeymap => 'Phím tắt';
+
+  @override
+  String get appAiChat => 'Trò chuyện AI';
+
+  @override
+  String get appSearch => 'Tìm kiếm';
+
+  @override
+  String get appRescan => 'Quét lại thư viện';
+
+  @override
+  String get playbackCover => 'Ảnh bìa';
+
+  @override
+  String get playbackNavQueue => 'Hàng đợi';
+
+  @override
+  String get libraryTabSongs => 'Bài hát';
+
+  @override
+  String get libraryTabAlbums => 'Album';
+
+  @override
+  String get libraryTabArtists => 'Nghệ sĩ';
+
+  @override
+  String get libraryTabGenres => 'Thể loại';
+
+  @override
+  String get libraryTabLanguages => 'Ngôn ngữ';
+
+  @override
+  String get libraryTabFolders => 'Thư mục';
+
+  @override
+  String get libraryNavFavorites => 'Yêu thích';
+
+  @override
+  String get libraryNavHistory => 'Lịch sử';
+
+  @override
+  String get libraryNavMostPlayed => 'Phát nhiều nhất';
 }

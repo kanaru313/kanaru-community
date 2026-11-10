@@ -54,7 +54,7 @@ void main() {
       '{',
       '+',
       ',',
-      'title_sort : x',
+      'title_search : x',
       '\u0000',
       'a\u0000b',
       'foo \u0000',
@@ -78,7 +78,7 @@ void main() {
     final source = await addSource(db);
     final id = await addTrack(db, source, locator: 'a.flac');
     await db.customStatement(
-      "UPDATE tracks SET title_sort = 'Nắng ấm xa dần', artist_search = 'Sơn Tùng' WHERE id = ?",
+      "UPDATE tracks SET title_search = 'Nắng ấm xa dần', artist_search = 'Sơn Tùng' WHERE id = ?",
       [id],
     );
     for (final text in ['nắng', 'ấm xa', 'sơn tù']) {

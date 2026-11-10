@@ -9,9 +9,9 @@ void main() {
       'XDG_CACHE_HOME': '/x/cache',
       'XDG_CONFIG_HOME': '/x/config',
     });
-    expect(paths.dataDir.path, '/x/data/kanaru-community');
-    expect(paths.cacheDir.path, '/x/cache/kanaru-community');
-    expect(paths.configDir.path, '/x/config/kanaru-community');
+    expect(paths.dataDir.path, '/x/data/kanaru');
+    expect(paths.cacheDir.path, '/x/cache/kanaru');
+    expect(paths.configDir.path, '/x/config/kanaru');
   });
 
   test('falls back to HOME defaults, ignoring relative XDG values', () {
@@ -19,9 +19,9 @@ void main() {
       'HOME': '/home/u',
       'XDG_DATA_HOME': 'relative/path',
     });
-    expect(paths.dataDir.path, '/home/u/.local/share/kanaru-community');
-    expect(paths.cacheDir.path, '/home/u/.cache/kanaru-community');
-    expect(paths.configDir.path, '/home/u/.config/kanaru-community');
+    expect(paths.dataDir.path, '/home/u/.local/share/kanaru');
+    expect(paths.cacheDir.path, '/home/u/.cache/kanaru');
+    expect(paths.configDir.path, '/home/u/.config/kanaru');
   });
 
   test('throws without HOME or XDG', () {
