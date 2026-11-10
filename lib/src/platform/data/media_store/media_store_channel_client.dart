@@ -96,11 +96,16 @@ class MediaStoreChannelClient {
     required String root,
   }) async {
     final m = await _map('listAudio', {'likePattern': likePattern, 'root': root});
+    final paths = _strings(m, 'paths');
+    final sizes = _ints(m, 'sizes');
+    final modifiedSec = _ints(m, 'modifiedSec');
+    final durationsMs = _ints(m, 'durationsMs');
+    _sameLength('listAudio', paths.length, [sizes, modifiedSec, durationsMs]);
     return MediaStoreAudioRows(
-      paths: _strings(m, 'paths'),
-      sizes: _ints(m, 'sizes'),
-      modifiedSec: _ints(m, 'modifiedSec'),
-      durationsMs: _ints(m, 'durationsMs'),
+      paths: paths,
+      sizes: sizes,
+      modifiedSec: modifiedSec,
+      durationsMs: durationsMs,
       emptyPaths: (m['emptyPaths'] as int?) ?? 0,
     );
   }
@@ -110,10 +115,14 @@ class MediaStoreChannelClient {
     required String root,
   }) async {
     final m = await _map('listLyrics', {'likePattern': likePattern, 'root': root});
+    final paths = _strings(m, 'paths');
+    final sizes = _ints(m, 'sizes');
+    final modifiedSec = _ints(m, 'modifiedSec');
+    _sameLength('listLyrics', paths.length, [sizes, modifiedSec]);
     return MediaStoreLyricsRows(
-      paths: _strings(m, 'paths'),
-      sizes: _ints(m, 'sizes'),
-      modifiedSec: _ints(m, 'modifiedSec'),
+      paths: paths,
+      sizes: sizes,
+      modifiedSec: modifiedSec,
     );
   }
 
@@ -152,6 +161,17 @@ class MediaStoreChannelClient {
       );
     } on MissingPluginException catch (e) {
       throw MediaStoreException(MediaStoreErrorKind.unavailable, e.message);
+    }
+  }
+
+  /// The parallel lists of a reply must have one entry per path; a mismatch
+  /// is an io failure here, not a `RangeError` later.
+  static void _sameLength(String method, int length, List<List<Object?>> others) {
+    if (others.any((l) => l.length != length)) {
+      throw MediaStoreException(
+        MediaStoreErrorKind.io,
+        '$method: reply lists differ in length',
+      );
     }
   }
 

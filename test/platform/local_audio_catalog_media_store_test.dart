@@ -222,6 +222,31 @@ void main() {
       expect(listing.unreachableReason, UnreachableReason.failed);
     });
 
+    test('parallel lists of different length are an io failure', () async {
+      handlers['listAudio'] = (_) => {
+        ...audioReply([('$_music/a.mp3', 1, 1, 1000)]),
+        'sizes': <int>[],
+      };
+      final listing = await catalog().listAudio(
+        root: _music,
+        excludedKeys: const {},
+      );
+      expect(listing.unreachableReason, UnreachableReason.failed);
+    });
+
+    test('lyrics lists of different length are an io failure', () async {
+      handlers['listAudio'] = (_) => audioReply([('$_music/a.mp3', 1, 1, 1000)]);
+      handlers['listLyrics'] = (_) => {
+        ...lyricsReply(['$_music/a.lrc']),
+        'modifiedSec': <int>[],
+      };
+      final listing = await catalog().listAudio(
+        root: _music,
+        excludedKeys: const {},
+      );
+      expect(listing.unreachableReason, UnreachableReason.failed);
+    });
+
     test('rows with an empty path are counted in skippedOut', () async {
       handlers['listAudio'] = (_) => {
         ...audioReply([('$_music/a.mp3', 1, 1, 1000)]),
