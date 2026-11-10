@@ -86,19 +86,21 @@ void main() {
       expect(h.settings.read('playback.shuffle'), false);
     });
 
-    test('shuffle on keeps the play next run in order after the current one',
-        () async {
-      await h.play(start: 1);
-      await h.c.playNext([h.tracks[4], h.tracks[5]]);
-      await h.c.setShuffle(true);
-      expect(h.order().sublist(0, 4), [0, 1, 4, 5]);
-      expect(h.c.queueState.playNextRun, 2);
-      await h.c.playNext([h.tracks[3]]);
-      expect(h.order().sublist(0, 5), [0, 1, 4, 5, 3]);
-      await h.c.setShuffle(false);
-      expect(h.c.queueState.shuffled, isFalse);
-      expect(h.c.queueState.currentItem?.trackId, h.tracks[1]);
-    });
+    test(
+      'shuffle on keeps the play next run in order after the current one',
+      () async {
+        await h.play(start: 1);
+        await h.c.playNext([h.tracks[4], h.tracks[5]]);
+        await h.c.setShuffle(true);
+        expect(h.order().sublist(0, 4), [0, 1, 4, 5]);
+        expect(h.c.queueState.playNextRun, 2);
+        await h.c.playNext([h.tracks[3]]);
+        expect(h.order().sublist(0, 5), [0, 1, 4, 5, 3]);
+        await h.c.setShuffle(false);
+        expect(h.c.queueState.shuffled, isFalse);
+        expect(h.c.queueState.currentItem?.trackId, h.tracks[1]);
+      },
+    );
 
     test(
       'playNext and enqueue on an empty queue behave like playTracks',
@@ -319,6 +321,45 @@ void main() {
       expect(h.settings.read('playback.volume'), 100);
       await h.c.setVolume(35);
       expect(h.engine.commands, contains('volume:35'));
+    });
+
+    test('mute remembers the level, also across a restart', () async {
+      await h.c.setVolume(40);
+      await h.c.toggleMute();
+      expect(h.settings.read('playback.volume'), 0);
+      expect(h.settings.read('playback.volume_before_mute'), 40);
+
+      await h.restart();
+      await h.settle();
+      await h.c.toggleMute();
+      expect(h.settings.read('playback.volume'), 40);
+      expect(h.settings.read('playback.volume_before_mute'), isNull);
+    });
+
+    test('scrolling steps continue from the level before the mute', () async {
+      await h.c.setVolume(40);
+      await h.c.changeVolumeBy(-5);
+      expect(h.settings.read('playback.volume'), 35);
+      await h.c.toggleMute();
+      await h.c.changeVolumeBy(5);
+      expect(h.settings.read('playback.volume'), 40);
+      expect(h.settings.read('playback.volume_before_mute'), isNull);
+      await h.c.changeVolumeBy(500);
+      expect(h.settings.read('playback.volume'), 100);
+      await h.c.setVolume(0);
+      await h.c.setVolume(0);
+      expect(h.settings.read('playback.volume_before_mute'), 100);
+      await h.c.setVolume(20);
+      expect(h.settings.read('playback.volume_before_mute'), isNull);
+    });
+
+    test('unmuting a volume with no remembered level goes to 100', () async {
+      await h.restart();
+      await h.settings.write('playback.volume', 0);
+      await h.restart();
+      await h.settle();
+      await h.c.toggleMute();
+      expect(h.settings.read('playback.volume'), 100);
     });
 
     test('shuffle on and off, repeat mode saved', () async {

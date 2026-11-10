@@ -6,3 +6,6 @@ import '../domain/playback_settings.dart';
 final shuffleSettingProvider = settingNotifierProvider(shuffleSetting);
 final repeatSettingProvider = settingNotifierProvider(repeatSetting);
 final volumeSettingProvider = settingNotifierProvider(volumeSetting);
+final volumeBeforeMuteSettingProvider = settingNotifierProvider(
+  volumeBeforeMuteSetting,
+);

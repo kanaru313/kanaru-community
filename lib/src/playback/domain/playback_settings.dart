@@ -110,3 +110,12 @@ final Setting<int> volumeSetting = Setting<int>(
   decode: (json) => _int(json).clamp(0, 100),
   encode: (v) => v.clamp(0, 100),
 );
+
+/// The level to return to when unmuting, set while the volume is 0 and null
+/// otherwise. Kept so that a muted start still unmutes to the earlier level.
+final Setting<int?> volumeBeforeMuteSetting = Setting<int?>(
+  'playback.volume_before_mute',
+  null,
+  decode: (json) => json == null ? null : _int(json).clamp(1, 100),
+  encode: (v) => v?.clamp(1, 100),
+);

@@ -9,6 +9,9 @@ extension _Session on PlayerController {
   /// user acts.
   Future<void> _restore() async {
     _volume = readSetting(_settings, volumeSetting);
+    _volumeBeforeMute = _volume == 0
+        ? readSetting(_settings, volumeBeforeMuteSetting)
+        : null;
     final session = await loadSession(repo: _repo, settings: _settings);
     if (session == null) {
       // Nothing to put back, but shuffle and repeat are the user's modes.

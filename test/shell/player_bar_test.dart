@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
@@ -200,6 +201,36 @@ void main() {
       expect(host.container.read(volumeSettingProvider), 0);
       await host.tap(tester, find.byTooltip('Unmute'));
       expect(host.container.read(volumeSettingProvider), 40);
+    });
+
+    testWidgets('the scroll wheel steps the volume by 5, from the level '
+        'before a mute', (tester) async {
+      final host = await _pump(tester, 1280);
+      int volume() => host.container.read(volumeSettingProvider);
+      final control = find.byType(VolumeControl);
+      final pointer = TestPointer(1, PointerDeviceKind.mouse);
+      Future<void> scroll(double dy) async {
+        await tester.runAsync(() async {
+          await tester.sendEventToBinding(
+            pointer.hover(tester.getCenter(control)),
+          );
+          await tester.sendEventToBinding(pointer.scroll(Offset(0, dy)));
+          await host.h.settle();
+        });
+        await tester.pump();
+      }
+
+      await host.run(tester, () => host.h.c.setVolume(40));
+      await scroll(-20);
+      expect(volume(), 45);
+      await scroll(20);
+      await scroll(20);
+      expect(volume(), 35);
+
+      await host.tap(tester, find.byTooltip('Mute'));
+      expect(volume(), 0);
+      await scroll(-20);
+      expect(volume(), 40, reason: 'continues from 35, not from 0');
     });
   });
 }

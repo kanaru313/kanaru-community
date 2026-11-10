@@ -111,6 +111,9 @@ class PlayerController implements PlaybackCommands {
   Duration _startAt = Duration.zero;
   Duration? _duration;
   int _volume = 100;
+
+  /// The level a mute (volume 0) came from; null while not muted.
+  int? _volumeBeforeMute;
   bool _atEnd = false;
 
   /// Extra plays of the current entry still to come under a counted repeat;
@@ -525,11 +528,37 @@ class PlayerController implements PlaybackCommands {
     if (!_seekCtrl.isClosed) _seekCtrl.add(p);
   }
 
-  Future<void> setVolume(int volume) => _cmd(() async {
-    _volume = volume.clamp(0, 100);
-    _write(volumeSetting.key, _volume);
-    await _engine?.setVolume(_volume.toDouble());
+  /// Sets the volume (0-100). Reaching 0 remembers the level it left, a
+  /// later non-zero volume forgets it (see [toggleMute]).
+  Future<void> setVolume(int volume) =>
+      _cmd(() => _applyVolume(volume.clamp(0, 100)), reconcile: false);
+
+  /// Mutes (volume 0), or returns to the level before the mute (100 when
+  /// none is known).
+  Future<void> toggleMute() => _cmd(
+    () => _applyVolume(_volume == 0 ? (_volumeBeforeMute ?? 100) : 0),
+    reconcile: false,
+  );
+
+  /// Volume steps from a scroll wheel. A muted player continues from the
+  /// level before the mute, which also unmutes it.
+  Future<void> changeVolumeBy(int delta) => _cmd(() {
+    final base = _volume == 0 ? (_volumeBeforeMute ?? 0) : _volume;
+    return _applyVolume((base + delta).clamp(0, 100));
   }, reconcile: false);
+
+  Future<void> _applyVolume(int volume) async {
+    if (volume == 0 && _volume > 0) {
+      _volumeBeforeMute = _volume;
+      _write(volumeBeforeMuteSetting.key, _volumeBeforeMute);
+    } else if (volume > 0 && _volumeBeforeMute != null) {
+      _volumeBeforeMute = null;
+      _write(volumeBeforeMuteSetting.key, null);
+    }
+    _volume = volume;
+    _write(volumeSetting.key, volume);
+    await _engine?.setVolume(volume.toDouble());
+  }
 
   /// Sets the base repeat mode. Also ends a counted repeat, even when the mode
   /// is the one already set.
