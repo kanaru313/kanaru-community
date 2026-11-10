@@ -271,7 +271,7 @@ extension _Reconcile on PlayerController {
   /// current itself under repeat one), or the first playable one after it
   /// (looking at most 50 ahead). Entries passed over are reported in `skip`.
   Future<_NextPick?> _nextCandidate(Map<int, Playable> cache) async {
-    var i = nextIndex(_queue, auto: true);
+    var i = nextIndex(_queue, auto: true, loops: _repeatTimes);
     if (i == null) return null;
     final start = _queue.current!;
     var skipped = 0;

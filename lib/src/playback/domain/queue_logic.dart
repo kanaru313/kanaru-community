@@ -230,13 +230,19 @@ QueueEdit move(QueueState s, int entryId, int toIndex, KeyGen keys) {
 
 /// Index to play after the current entry, or null when the queue ends (or is
 /// empty). [auto] = the entry ended by itself; a manual Next ignores repeat
-/// one. With nothing current, the first entry.
-int? nextIndex(QueueState s, {required bool auto}) {
+/// one and a counted repeat. [loops] = extra plays of the current entry still
+/// to come (a counted repeat): an automatic advance plays it again first.
+/// With nothing current, the first entry.
+///
+/// After the last entry, [RepeatMode.allShuffled] has no automatic next (the
+/// caller starts a new pass); a manual Next wraps to the first entry.
+int? nextIndex(QueueState s, {required bool auto, int loops = 0}) {
   if (s.items.isEmpty) return null;
   final c = s.current;
   if (c == null) return 0;
-  if (auto && s.repeat == RepeatMode.one) return c;
+  if (auto && (s.repeat == RepeatMode.one || loops > 0)) return c;
   if (c + 1 < s.length) return c + 1;
+  if (s.repeat == RepeatMode.allShuffled) return auto ? null : 0;
   return s.repeat == RepeatMode.all ? 0 : null;
 }
 

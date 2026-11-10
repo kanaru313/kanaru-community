@@ -16,6 +16,7 @@ extension _Session on PlayerController {
       return;
     }
     _queue = session.queue;
+    _repeatTimes = session.repeatTimes;
     _context = session.context;
     _position = session.position;
     _startAt = session.position;

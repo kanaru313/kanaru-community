@@ -30,6 +30,15 @@ void main() {
       expect(roundTrip(repeatSetting, m), m);
     }
     expect(repeatSetting.encode(RepeatMode.one), 'one');
+    expect(repeatSetting.encode(RepeatMode.allShuffled), 'allShuffled');
+    for (final old in ['off', 'all', 'one']) {
+      expect(repeatSetting.decode(old).name, old, reason: 'values kept');
+    }
+    expect(repeatCountSetting.key, 'playback.repeat_count');
+    expect(roundTrip(repeatCountSetting, 7), 7);
+    expect(repeatCountSetting.decode(400), maxRepeatTimes);
+    expect(repeatCountSetting.decode(-2), 0);
+    expect(() => repeatCountSetting.decode('3'), throwsFormatException);
     expect(roundTrip(volumeSetting, 35), 35);
     const ctx = PlayContext(PlayContextKind.folder, ref: 's:f', label: 'Rock');
     expect(roundTrip(contextSetting, ctx), ctx);

@@ -43,12 +43,22 @@ final Setting<bool> shuffleSetting = Setting<bool>(
   encode: (v) => v,
 );
 
-/// Stored as `'off' | 'all' | 'one'`.
+/// Stored as `'off' | 'all' | 'one' | 'allShuffled'`: the first three are the
+/// original values, the last one is the reshuffled repeat of the whole queue.
 final Setting<RepeatMode> repeatSetting = Setting<RepeatMode>(
   'playback.repeat',
   RepeatMode.off,
   decode: (json) => _enumByName(RepeatMode.values, json),
   encode: (v) => v.name,
+);
+
+/// Extra plays of the loaded entry still to come under a counted repeat
+/// (0 = none, at most 99). Out-of-range stored values are clamped.
+final Setting<int> repeatCountSetting = Setting<int>(
+  'playback.repeat_count',
+  0,
+  decode: (json) => _int(json).clamp(0, maxRepeatTimes),
+  encode: (v) => v.clamp(0, maxRepeatTimes),
 );
 
 /// Where the queue was started: `{kind, ref, label}`. An unknown kind (a

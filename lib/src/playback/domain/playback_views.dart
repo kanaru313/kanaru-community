@@ -37,12 +37,22 @@ class QueueView {
     this.current,
     this.shuffled = false,
     this.repeat = RepeatMode.off,
+    this.repeatTimes = 0,
+    this.stopped = false,
   });
 
   final List<QueueItem> items;
   final int? current;
   final bool shuffled;
   final RepeatMode repeat;
+
+  /// Extra plays of the current entry still to come under a counted repeat;
+  /// 0 = none. The base mode stays in [repeat] and takes over when it ends.
+  final int repeatTimes;
+
+  /// Playback is stopped, or the queue ran out and waits for Play: a counted
+  /// repeat cannot be armed now.
+  final bool stopped;
 
   int get length => items.length;
 
@@ -54,11 +64,19 @@ class QueueView {
       identical(other.items, items) &&
       other.current == current &&
       other.shuffled == shuffled &&
-      other.repeat == repeat;
+      other.repeat == repeat &&
+      other.repeatTimes == repeatTimes &&
+      other.stopped == stopped;
 
   @override
-  int get hashCode =>
-      Object.hash(identityHashCode(items), current, shuffled, repeat);
+  int get hashCode => Object.hash(
+    identityHashCode(items),
+    current,
+    shuffled,
+    repeat,
+    repeatTimes,
+    stopped,
+  );
 }
 
 /// The transport state the system media controls follow: what the user asked
@@ -74,7 +92,9 @@ class TransportView {
 
   @override
   bool operator ==(Object other) =>
-      other is TransportView && other.intent == intent && other.volume == volume;
+      other is TransportView &&
+      other.intent == intent &&
+      other.volume == volume;
 
   @override
   int get hashCode => Object.hash(intent, volume);

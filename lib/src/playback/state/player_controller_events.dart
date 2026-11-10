@@ -37,9 +37,14 @@ extension _Events on PlayerController {
     // A reload is already decided (a jump, a removal of C): it wins.
     if (_forceReload) return;
     final index = _queue.indexOfEntry(token.entryId);
-    final follows = nextIndex(_queue, auto: true);
+    final follows = nextIndex(_queue, auto: true, loops: _repeatTimes);
     if (index >= 0 && (token == _handedNext || index == follows)) {
       final skip = token == _handedNext ? _handedSkip : null;
+      // The same entry again: a loop of a counted repeat uses one play up.
+      if (index == _queue.current && _repeatTimes > 0) {
+        _repeatTimes--;
+        _write(repeatCountSetting.key, _repeatTimes);
+      }
       _queue = _queue.withCurrent(index, _queue.playNextRunIds);
       _loaded = token;
       _handedNext = null;
@@ -64,7 +69,13 @@ extension _Events on PlayerController {
     _generation++;
     _handedNext = null;
     _handedSkip = null;
-    if (follows == null) {
+    var go = follows;
+    if (go == null && _endsPass(auto: true)) {
+      // C ended a reshuffled pass: the next pass starts with its first entry.
+      await _newPass();
+      go = 0;
+    }
+    if (go == null) {
       // C was the last entry and what the engine plays is gone: stop it.
       _loaded = null;
       await _engine?.stop();
@@ -73,7 +84,7 @@ extension _Events on PlayerController {
       _startAt = _position;
       return;
     }
-    _jump(follows, user: false);
+    _jump(go, user: false);
   }
 
   Future<void> _onFailed(EngineToken token) async {
@@ -115,7 +126,7 @@ extension _Events on PlayerController {
       return;
     }
     if (token == _loaded) {
-      final i = nextIndex(_queue, auto: false);
+      final i = await _stepIndex(auto: false);
       if (i == null) {
         _intent = PlayIntent.stopped;
         _notice(const QueueEnd());
@@ -126,7 +137,7 @@ extension _Events on PlayerController {
   }
 
   Future<void> _onEnded() async {
-    final i = nextIndex(_queue, auto: true);
+    final i = await _stepIndex(auto: true);
     if (i == null) {
       // Paused at the end: a song added later waits, paused. The engine is
       // told, so a late hand-over does not start playing by itself.

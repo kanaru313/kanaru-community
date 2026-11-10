@@ -221,13 +221,44 @@ class MediaSessionBridge implements PlaybackFocus {
       canNext: hasTrack && nextIndex(queue, auto: false) != null,
       canSeek: hasTrack && (_duration ?? Duration.zero) > Duration.zero,
       shuffle: _queue.shuffled,
-      repeat: switch (_queue.repeat) {
-        RepeatMode.off => MediaRepeat.none,
-        RepeatMode.one => MediaRepeat.track,
-        RepeatMode.all => MediaRepeat.playlist,
-      },
+      repeat: _shownRepeat,
       volume: _transport.volume / 100,
     );
+  }
+
+  /// Repeat as the system shows it: `track` for repeat one and while a counted
+  /// repeat runs (the current entry plays again), `playlist` for both repeat
+  /// all modes.
+  MediaRepeat get _shownRepeat {
+    if (_queue.repeatTimes > 0) return MediaRepeat.track;
+    return switch (_queue.repeat) {
+      RepeatMode.off => MediaRepeat.none,
+      RepeatMode.one => MediaRepeat.track,
+      RepeatMode.all || RepeatMode.allShuffled => MediaRepeat.playlist,
+    };
+  }
+
+  /// A repeat request from the system. Asking for what it already shows keeps
+  /// the mode behind it (a client that sets `playlist` must not turn "repeat
+  /// all reshuffled" into plain "repeat all", nor end a count by saying
+  /// `track`). `playlist` over a counted repeat on a wrapping base only ends
+  /// the count. Otherwise `track` is endless repeat one, `playlist` repeat
+  /// all and `none` stop at the end.
+  Future<void>? _setRepeatFromSystem(
+    PlayerController controller,
+    MediaRepeat repeat,
+  ) {
+    if (repeat == _shownRepeat) return null;
+    if (repeat == MediaRepeat.playlist &&
+        _queue.repeatTimes > 0 &&
+        _queue.repeat.wrapsQueue) {
+      return controller.setRepeatTimes(0);
+    }
+    return controller.setRepeat(switch (repeat) {
+      MediaRepeat.none => RepeatMode.off,
+      MediaRepeat.track => RepeatMode.one,
+      MediaRepeat.playlist => RepeatMode.all,
+    });
   }
 
   Future<MediaControlsItem?> _currentItem() async {
@@ -327,11 +358,9 @@ class MediaSessionBridge implements PlaybackFocus {
       case SetShuffle(:final on):
         run = controller.setShuffle(on);
       case SetRepeat(:final repeat):
-        run = controller.setRepeat(switch (repeat) {
-          MediaRepeat.none => RepeatMode.off,
-          MediaRepeat.track => RepeatMode.one,
-          MediaRepeat.playlist => RepeatMode.all,
-        });
+        final request = _setRepeatFromSystem(controller, repeat);
+        if (request == null) return;
+        run = request;
       case SetVolume(:final volume):
         run = controller.setVolume((volume * 100).round());
     }

@@ -282,7 +282,7 @@ void main() {
       expect(h.engine.commands, contains('volume:35'));
     });
 
-    test('shuffle on and off, repeat cycle', () async {
+    test('shuffle on and off, repeat mode saved', () async {
       await h.play(start: 1);
       await h.settle();
       final before = h.order();
@@ -293,10 +293,10 @@ void main() {
       await h.c.setShuffle(false);
       expect(h.order(), before, reason: 'shuffle off restores the user order');
       expect(h.c.queueState.currentItem?.trackId, h.tracks[1]);
-      await h.c.cycleRepeat();
+      await h.c.setRepeat(RepeatMode.all);
       expect(h.c.queueState.repeat, RepeatMode.all);
-      await h.c.cycleRepeat();
-      await h.c.cycleRepeat();
+      expect(h.settings.read('playback.repeat'), 'all');
+      await h.c.setRepeat(RepeatMode.off);
       expect(h.c.queueState.repeat, RepeatMode.off);
       expect(h.settings.read('playback.repeat'), 'off');
     });

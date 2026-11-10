@@ -310,6 +310,107 @@ void main() {
     });
   });
 
+  group('repeat mapping', () {
+    Future<MediaRepeat> shown() async {
+      await settleAll();
+      return controls.updates.last.$2.repeat;
+    }
+
+    test('the modes reach the controls as none, track and playlist', () async {
+      await make();
+      await h.play(start: 1);
+      await settleAll();
+      expect(await shown(), MediaRepeat.none);
+      await h.c.setRepeat(RepeatMode.one);
+      expect(await shown(), MediaRepeat.track);
+      await h.c.setRepeat(RepeatMode.all);
+      expect(await shown(), MediaRepeat.playlist);
+      await h.c.setRepeat(RepeatMode.allShuffled);
+      expect(await shown(), MediaRepeat.playlist);
+      await h.c.setRepeat(RepeatMode.off);
+      expect(await shown(), MediaRepeat.none);
+    });
+
+    test('a counted repeat shows as track whatever the base is', () async {
+      await make();
+      await h.play(start: 1);
+      await settleAll();
+      await h.c.setRepeatTimes(3);
+      expect(await shown(), MediaRepeat.track);
+      await h.c.setRepeat(RepeatMode.allShuffled);
+      await h.c.setRepeatTimes(3);
+      expect(await shown(), MediaRepeat.track);
+      await h.c.setRepeatTimes(0);
+      expect(await shown(), MediaRepeat.playlist);
+    });
+
+    Future<void> send(MediaRepeat r) async {
+      controls.commandCtrl.add(SetRepeat(r));
+      await settleAll();
+    }
+
+    test('the system asks: track is endless one, playlist all, none off',
+        () async {
+      await make();
+      await h.play(start: 1);
+      await settleAll();
+      await send(MediaRepeat.track);
+      expect(h.c.queueState.repeat, RepeatMode.one);
+      await send(MediaRepeat.playlist);
+      expect(h.c.queueState.repeat, RepeatMode.all);
+      await send(MediaRepeat.none);
+      expect(h.c.queueState.repeat, RepeatMode.off);
+    });
+
+    test('asking for what is shown keeps the mode behind it', () async {
+      await make();
+      await h.play(start: 1);
+      await settleAll();
+      await h.c.setRepeat(RepeatMode.allShuffled);
+      await settleAll();
+      await send(MediaRepeat.playlist);
+      expect(h.c.queueState.repeat, RepeatMode.allShuffled);
+
+      await h.c.setRepeatTimes(2);
+      await settleAll();
+      await send(MediaRepeat.track);
+      expect((await h.c.queueView.first).repeatTimes, 2, reason: 'count kept');
+    });
+
+    test('playlist over a count on a wrapping base only ends the count',
+        () async {
+      await make();
+      await h.play(start: 1);
+      await settleAll();
+      await h.c.setRepeat(RepeatMode.allShuffled);
+      await h.c.setRepeatTimes(2);
+      await send(MediaRepeat.playlist);
+      expect((await h.c.queueView.first).repeatTimes, 0);
+      expect(h.c.queueState.repeat, RepeatMode.allShuffled);
+    });
+
+    test('playlist over a count on stop-at-the-end sets repeat all', () async {
+      await make();
+      await h.play(start: 1);
+      await settleAll();
+      await h.c.setRepeatTimes(2);
+      await send(MediaRepeat.playlist);
+      expect(h.c.queueState.repeat, RepeatMode.all);
+      expect((await h.c.queueView.first).repeatTimes, 0);
+    });
+
+    test('canNext is true on the last entry under both repeat-all modes',
+        () async {
+      await make();
+      await h.play(start: 5);
+      await settleAll();
+      expect(controls.updates.last.$2.canNext, isFalse);
+      await h.c.setRepeat(RepeatMode.allShuffled);
+      await settleAll();
+      expect(controls.updates.last.$2.canNext, isTrue);
+    });
+  });
+
   group('commands', () {
     test('map to controller methods', () async {
       await make();

@@ -113,6 +113,11 @@ class PlayerController implements PlaybackCommands {
   int _volume = 100;
   bool _atEnd = false;
 
+  /// Extra plays of the current entry still to come under a counted repeat;
+  /// 0 = none. The base mode stays in `_queue.repeat` and takes over when the
+  /// count runs out. Any change of the current entry ends the count.
+  int _repeatTimes = 0;
+
   /// A restored session is held: nothing about position, current entry or
   /// context is written, and an unplayable current is not skipped. Lifted
   /// when the restored file loads or the user starts something.
@@ -213,6 +218,8 @@ class PlayerController implements PlaybackCommands {
   }
 
   void _publish() {
+    // Playback stopped or ran out: a count has nothing left to loop.
+    if (_stoppedOrEnded) _dropRepeatTimes();
     final cur = _queue.currentItem;
     _now.add(
       NowPlaying(
@@ -230,6 +237,8 @@ class PlayerController implements PlaybackCommands {
         current: _queue.current,
         shuffled: _queue.shuffled,
         repeat: _queue.repeat,
+        repeatTimes: _repeatTimes,
+        stopped: _stoppedOrEnded,
       ),
     );
     _pos.add(
@@ -330,6 +339,7 @@ class PlayerController implements PlaybackCommands {
 
   /// A new current entry: forget position, failures and skipped marks.
   void _resetPlayback() {
+    _dropRepeatTimes();
     _rewind();
     _duration = null;
     _failuresInRow = 0;
@@ -422,7 +432,7 @@ class PlayerController implements PlaybackCommands {
 
   Future<void> next() => _cmd(() async {
     if (_queue.items.isEmpty) return;
-    final i = nextIndex(_queue, auto: false);
+    final i = await _stepIndex(auto: false);
     if (i == null) {
       _notice(const QueueEnd());
       return;
@@ -451,6 +461,7 @@ class PlayerController implements PlaybackCommands {
 
   /// Makes the entry at play-order [index] current (a user action).
   void _jump(int index, {bool user = true}) {
+    _dropRepeatTimes();
     _queue = _queue.withCurrent(index, _queue.playNextRunIds);
     _rewind();
     _duration = null;
@@ -496,17 +507,69 @@ class PlayerController implements PlaybackCommands {
     await _engine?.setVolume(_volume.toDouble());
   }, reconcile: false);
 
+  /// Sets the base repeat mode. Also ends a counted repeat, even when the mode
+  /// is the one already set.
   Future<void> setRepeat(RepeatMode mode) => _cmd(() async {
+    if (_queue.repeat == mode && _repeatTimes == 0) return;
     _queue = _queue.copyWith(repeat: mode);
     _write(repeatSetting.key, repeatSetting.encode(mode));
+    _dropRepeatTimes();
   });
 
-  Future<void> cycleRepeat() => _cmd(() async {
-    final mode =
-        RepeatMode.values[(_queue.repeat.index + 1) % RepeatMode.values.length];
-    _queue = _queue.copyWith(repeat: mode);
-    _write(repeatSetting.key, repeatSetting.encode(mode));
+  /// Plays the current entry [times] more times, then goes on in the repeat
+  /// mode set now (1 to [maxRepeatTimes]; 0 ends the count). Under repeat one
+  /// the base becomes off: looping forever would make the count meaningless.
+  /// Does nothing without a queue, or while stopped or after the queue ran out.
+  Future<void> setRepeatTimes(int times) => _cmd(() async {
+    if (_queue.items.isEmpty || _stoppedOrEnded) return;
+    final count = times.clamp(0, maxRepeatTimes);
+    if (count == _repeatTimes) return;
+    if (count == 0) {
+      _dropRepeatTimes();
+      return;
+    }
+    if (_queue.repeat == RepeatMode.one) {
+      _queue = _queue.copyWith(repeat: RepeatMode.off);
+      _write(repeatSetting.key, repeatSetting.encode(RepeatMode.off));
+    }
+    _repeatTimes = count;
+    _write(repeatCountSetting.key, count);
   });
+
+  /// Playback is stopped, or the queue ran out and waits for Play.
+  bool get _stoppedOrEnded => _intent == PlayIntent.stopped || _atEnd;
+
+  /// Ends a counted repeat. Nothing happens when none runs.
+  void _dropRepeatTimes() {
+    if (_repeatTimes == 0) return;
+    _repeatTimes = 0;
+    _write(repeatCountSetting.key, 0);
+  }
+
+  /// The last entry of a pass under "repeat all, reshuffled", with no extra
+  /// plays of it left (for an automatic advance): going on starts a new pass.
+  bool _endsPass({required bool auto}) =>
+      _queue.repeat == RepeatMode.allShuffled &&
+      _queue.current != null &&
+      _queue.current == _queue.length - 1 &&
+      (!auto || _repeatTimes == 0);
+
+  /// Starts a new pass: a fresh random order of the whole queue, shuffle on,
+  /// the first entry current.
+  Future<void> _newPass() async {
+    await _applyEdit(reshufflePass(_queue, _random, _keys));
+    _write(shuffleSetting.key, true);
+  }
+
+  /// The index to go on to. At the end of a reshuffled pass the new pass is
+  /// made first and its first entry is returned.
+  Future<int?> _stepIndex({required bool auto}) async {
+    if (_endsPass(auto: auto)) {
+      await _newPass();
+      return 0;
+    }
+    return nextIndex(_queue, auto: auto, loops: _repeatTimes);
+  }
 
   /// Shuffle on shuffles the entries after the current one; off restores the
   /// order the user built.

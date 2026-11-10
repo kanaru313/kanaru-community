@@ -73,3 +73,36 @@ QueueEdit unshuffle(QueueState s) {
     clearShuffleKeys: true,
   );
 }
+
+/// The next pass of "repeat all, reshuffled": every entry gets a fresh random
+/// position, shuffle turns on and the first entry is current. With two or
+/// more entries the first one is never the entry that just played (the
+/// current one). Sort keys stay, so turning shuffle off gives back the order
+/// the user built. Fewer than two entries have nothing to reorder: no change.
+QueueEdit reshufflePass(QueueState s, Random random, KeyGen keys) {
+  if (s.length < 2) return QueueEdit.none(s);
+  final fresh = [...s.items]..shuffle(random);
+  if (fresh.first.entryId == s.currentItem?.entryId) {
+    final j = 1 + random.nextInt(fresh.length - 1);
+    final first = fresh[0];
+    fresh[0] = fresh[j];
+    fresh[j] = first;
+  }
+  final shuffleKeys = keys.betweenN(null, null, fresh.length);
+  final items = [
+    for (var i = 0; i < fresh.length; i++)
+      fresh[i].withKeys(shuffleKey: shuffleKeys[i]),
+  ];
+  return QueueEdit(
+    next: QueueState(
+      items: items,
+      current: 0,
+      shuffled: true,
+      repeat: s.repeat,
+    ),
+    rekeyed: {
+      for (final i in items)
+        i.entryId: (sortKey: null, shuffleKey: i.shuffleKey),
+    },
+  );
+}

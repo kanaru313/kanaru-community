@@ -6,6 +6,7 @@ import '../../platform/domain/settings_store.dart';
 import '../data/queue_repository.dart';
 import '../domain/playback_settings.dart';
 import '../domain/queue_state.dart';
+import '../domain/repeat_mode.dart';
 
 final _log = Logger('SessionRestore');
 
@@ -19,11 +20,15 @@ class RestoredSession {
     required this.queue,
     required this.context,
     required this.position,
+    this.repeatTimes = 0,
   });
 
   final QueueState queue;
   final PlayContext? context;
   final Duration position;
+
+  /// Extra plays of the entry still to come under a counted repeat.
+  final int repeatTimes;
 }
 
 /// The stored value of [setting], or its default when missing or unreadable.
@@ -67,8 +72,7 @@ Future<RestoredSession?> loadSession({
   if (position > Duration.zero) {
     final durationMs = await repo.trackDurationMs(items[index].trackId);
     if (durationMs != null &&
-        position >=
-            Duration(milliseconds: durationMs) - restoreEndSlack) {
+        position >= Duration(milliseconds: durationMs) - restoreEndSlack) {
       position = Duration.zero;
     }
   }
@@ -91,5 +95,9 @@ Future<RestoredSession?> loadSession({
     ),
     context: context,
     position: position,
+    // A count only goes with a base mode that ends: endless one has none.
+    repeatTimes: repeat == RepeatMode.one
+        ? 0
+        : readSetting(settings, repeatCountSetting),
   );
 }

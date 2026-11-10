@@ -229,6 +229,29 @@ void main() {
       expect(await playCount(h, h.tracks[0].value), 3);
     });
 
+    test('a counted repeat of 2 over one entry writes three rows', () async {
+      final h = await Harness.create(tracks: 2);
+      addTearDown(h.close);
+      await h.play();
+      await h.settle();
+      await h.c.setRepeatTimes(2);
+      await h.settle();
+      final tokens = <EngineToken>[h.loadedToken];
+      for (var play = 0; play < 3; play++) {
+        await listen(h, tokens.last, 40);
+        if (play < 2) {
+          final next = h.engine.nexts.last!.token;
+          tokens.add(next);
+          h.engine.emit(EngineAdvanced(next));
+          await h.settle();
+        }
+      }
+      await h.c.flushPlayback();
+      expect(tokens.map((t) => t.handoff).toSet(), hasLength(3));
+      expect(await count(h), 3);
+      expect(await playCount(h, h.tracks[0].value), 3);
+    });
+
     test('a one-entry queue with repeat all counts both passes', () async {
       final h = await Harness.create(tracks: 1);
       addTearDown(h.close);

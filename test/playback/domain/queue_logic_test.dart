@@ -264,6 +264,11 @@ void main() {
       (RepeatMode.one, 1, true, 1, 0),
       (RepeatMode.one, 1, false, 2, 0),
       (RepeatMode.one, 2, false, null, 1),
+      // After the last entry a reshuffled repeat has no automatic next (a new
+      // pass starts); Next wraps like repeat all.
+      (RepeatMode.allShuffled, 1, true, 2, 0),
+      (RepeatMode.allShuffled, 2, true, null, 1),
+      (RepeatMode.allShuffled, 2, false, 0, 1),
     ];
     for (final (repeat, cur, auto, next, prev) in cases) {
       test('$repeat at $cur auto=$auto', () {
@@ -273,10 +278,52 @@ void main() {
       });
     }
 
+    test('extra plays of the current entry come before anything else', () {
+      for (final repeat in RepeatMode.values) {
+        final s = makeQueue(3, current: 2, repeat: repeat);
+        expect(nextIndex(s, auto: true, loops: 2), 2, reason: '$repeat');
+        expect(
+          nextIndex(s, auto: false, loops: 2),
+          repeat.wrapsQueue ? 0 : null,
+          reason: 'a manual Next ignores the count',
+        );
+      }
+    });
+
     test('empty and unloaded queues', () {
       expect(nextIndex(makeQueue(0), auto: true), isNull);
       expect(nextIndex(makeQueue(2), auto: true), 0);
       expect(previousIndex(makeQueue(2)), isNull);
+    });
+  });
+
+  group('reshuffled pass', () {
+    test('a fresh order of every entry, the first is never the last played',
+        () {
+      for (var seed = 0; seed < 30; seed++) {
+        final s = makeQueue(6, current: 5, repeat: RepeatMode.allShuffled);
+        final e = reshufflePass(s, Random(seed), const KeyGen());
+        final ids = [for (final i in e.next.items) i.entryId];
+        expect([...ids]..sort(), [for (final i in s.items) i.entryId]..sort());
+        expect(ids.first, isNot(s.items[5].entryId), reason: 'seed $seed');
+        expect(e.next.current, 0);
+        expect(e.next.shuffled, isTrue);
+        expect(e.next.repeat, RepeatMode.allShuffled);
+        expect(e.rekeyed.keys.toSet(), ids.toSet());
+        final keys = [for (final i in e.next.items) i.shuffleKey!];
+        expect([...keys]..sort(), keys, reason: 'keys follow the order');
+        expect(e.next.items.map((i) => i.sortKey),
+            unorderedEquals(s.items.map((i) => i.sortKey)));
+      }
+    });
+
+    test('fewer than two entries stay as they are', () {
+      for (final n in [0, 1]) {
+        final s = makeQueue(n, current: n == 0 ? null : 0);
+        final e = reshufflePass(s, Random(1), const KeyGen());
+        expect(e.isNoop, isTrue);
+        expect(e.next, s);
+      }
     });
   });
 
