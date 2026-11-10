@@ -121,6 +121,25 @@ void main() {
     },
   );
 
+  test('panel surfaces: lookup by id, order, duplicate id throws', () {
+    final r = ExtensionRegistry()
+      ..addPanelSurface(
+        PanelSurface(id: 'b', order: 2, body: (_) => const SizedBox()),
+      )
+      ..addPanelSurface(
+        PanelSurface(id: 'chat', order: 1, body: (_) => const SizedBox()),
+      );
+    expect(r.panelSurfaces.map((p) => p.id), ['chat', 'b']);
+    expect(r.panelSurface('chat')?.id, 'chat');
+    expect(r.panelSurface('none'), isNull);
+    expect(
+      () => r.addPanelSurface(
+        PanelSurface(id: 'chat', order: 3, body: (_) => const SizedBox()),
+      ),
+      throwsStateError,
+    );
+  });
+
   test('a second license service throws StateError', () {
     final r = ExtensionRegistry()..setLicenseService(_Granted());
     expect(() => r.setLicenseService(_Granted()), throwsStateError);

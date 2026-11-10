@@ -88,6 +88,28 @@ class SettingsSection {
   final WidgetBuilder builder;
 }
 
+/// Content an extension shows in the shell's shared right panel (desktop),
+/// beside the built-in queue. The shell looks surfaces up by [id]; `'chat'` is
+/// the AI chat (Pro). One surface per id.
+class PanelSurface {
+  const PanelSurface({
+    required this.id,
+    required this.order,
+    required this.body,
+    this.menu,
+  });
+
+  /// Stable id the shell asks for, e.g. `'chat'`.
+  final String id;
+  final int order;
+
+  /// Fills the panel under its header.
+  final WidgetBuilder body;
+
+  /// The header's ⋮ menu; null shows no button.
+  final WidgetBuilder? menu;
+}
+
 /// Widget in the right side of the desktop top bar.
 class TopBarAction {
   const TopBarAction({
