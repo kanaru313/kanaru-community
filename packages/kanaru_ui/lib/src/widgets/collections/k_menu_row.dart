@@ -45,6 +45,7 @@ class KMenuRow {
     required this.title,
     this.subtitle,
     this.icon,
+    this.leading,
     this.onTap,
     this.opens,
     this.chips = const [],
@@ -59,6 +60,9 @@ class KMenuRow {
   final String title;
   final String? subtitle;
   final IconData? icon;
+
+  /// A picture (a cover) in place of [icon]; it should be square, about 40.
+  final Widget? leading;
   final VoidCallback? onTap;
   final KMenuPage? opens;
   final List<KMenuChip> chips;
@@ -94,6 +98,8 @@ class KMenuButton {
 /// One page of a layered menu: optional [header] (cover, name), groups of
 /// rows split by lines (empty groups are skipped) and a [footer] pinned below
 /// the scrolling groups. A sub-page shows `[←] title` instead of the header.
+/// A group may have a heading ([groupTitles]); the header may open a sub-page
+/// ([headerOpens]).
 class KMenuPage {
   const KMenuPage({
     this.title,
@@ -101,12 +107,20 @@ class KMenuPage {
     required this.groups,
     this.footer = const [],
     this.note,
+    this.groupTitles = const [],
+    this.headerOpens,
   });
 
   final String? title;
   final Widget? header;
   final List<List<KMenuRow>> groups;
   final List<KMenuButton> footer;
+
+  /// Heading above each group by index; missing or null = none.
+  final List<String?> groupTitles;
+
+  /// Makes the [header] a button (with a `›`) that shows this page.
+  final KMenuPage? headerOpens;
 
   /// Explanatory line above the groups (sub-pages).
   final String? note;
@@ -178,7 +192,10 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
                   ),
                   child: Row(
                     children: [
-                      if (row.icon != null) ...[
+                      if (row.leading != null) ...[
+                        row.leading!,
+                        const KGap(KSpace.x4),
+                      ] else if (row.icon != null) ...[
                         Icon(row.icon, size: 22, color: soft),
                         const KGap(KSpace.x4),
                       ],

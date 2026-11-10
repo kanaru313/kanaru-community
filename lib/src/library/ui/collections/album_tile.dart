@@ -15,6 +15,9 @@ import '../browse/library_labels.dart';
 import '../browse/library_navigation.dart';
 import '../browse/play_actions.dart';
 import '../library_locations.dart';
+import '../menus/menu_origin.dart';
+import '../menus/more_button.dart';
+import '../menus/open_menu.dart';
 
 /// `artist • year` (list) or `artist · year` (grid): whichever parts exist.
 String albumByLine(AlbumSummary album, {String separator = ' • '}) => [
@@ -33,32 +36,55 @@ void _open(BuildContext context, AlbumSummary album) {
   openLibraryPage(context, LibraryLocations.album(key));
 }
 
+void _menu(BuildContext context, AlbumSummary album, MenuOrigin origin) {
+  final key = AlbumKey.decode(album.key);
+  if (key == null) {
+    _log.warning('undecodable album key: ${album.key}');
+    return;
+  }
+  openAlbumMenu(context, key, origin: origin);
+}
+
 /// Album row: cover, title / `artist • year` / `N songs • M min`, ▶ plays the
 /// whole album. Gets its summary by value, so it watches nothing.
 class AlbumTile extends ConsumerWidget {
-  const AlbumTile({super.key, required this.album});
+  const AlbumTile({
+    super.key,
+    required this.album,
+    this.origin = const MenuOrigin.list(),
+  });
 
   final AlbumSummary album;
+
+  /// The page the tile is on, so its menu never links back to it.
+  final MenuOrigin origin;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    return KMediaCard(
-      title: album.title,
-      line2: albumByLine(album),
-      line3: l10n.libraryAlbumStats(
-        album.trackCount,
-        minutesOf(album.durationMs),
+    return KContextRegion(
+      onOpen: (_) => _menu(context, album, origin),
+      child: KMediaCard(
+        title: album.title,
+        line2: albumByLine(album),
+        line3: l10n.libraryAlbumStats(
+          album.trackCount,
+          minutesOf(album.durationMs),
+        ),
+        leading: AlbumCover(
+          itemKey: album.key,
+          coverKey: album.coverKey,
+          dimension: KMediaCard.coverSize,
+          radius: BorderRadius.circular(10),
+        ),
+        onAction: () => _play(ref, context),
+        actionLabel: l10n.libraryPlayAlbum,
+        trailing: LibraryMoreButton(
+          onPressed: () => _menu(context, album, origin),
+        ),
+        revealTrailingOnHover: true,
+        onTap: () => _open(context, album),
       ),
-      leading: AlbumCover(
-        itemKey: album.key,
-        coverKey: album.coverKey,
-        dimension: KMediaCard.coverSize,
-        radius: BorderRadius.circular(10),
-      ),
-      onAction: () => _play(ref, context),
-      actionLabel: l10n.libraryPlayAlbum,
-      onTap: () => _open(context, album),
     );
   }
 
@@ -80,21 +106,32 @@ class AlbumTile extends ConsumerWidget {
 
 /// Album tile of the grid: square cover, title, `artist · year`.
 class AlbumCard extends StatelessWidget {
-  const AlbumCard({super.key, required this.album});
+  const AlbumCard({
+    super.key,
+    required this.album,
+    this.origin = const MenuOrigin.list(),
+  });
 
   final AlbumSummary album;
 
+  /// The page the card is on, so its menu never links back to it.
+  final MenuOrigin origin;
+
   @override
   Widget build(BuildContext context) {
-    return KGridCard(
-      title: album.title,
-      subtitle: albumByLine(album, separator: ' · '),
-      onTap: () => _open(context, album),
-      coverBuilder: (context, side) => AlbumCover(
-        itemKey: album.key,
-        coverKey: album.coverKey,
-        dimension: side,
-        radius: BorderRadius.circular(14),
+    return KContextRegion(
+      onOpen: (_) => _menu(context, album, origin),
+      child: KGridCard(
+        title: album.title,
+        subtitle: albumByLine(album, separator: ' · '),
+        onTap: () => _open(context, album),
+        more: LibraryMoreButton(onPressed: () => _menu(context, album, origin)),
+        coverBuilder: (context, side) => AlbumCover(
+          itemKey: album.key,
+          coverKey: album.coverKey,
+          dimension: side,
+          radius: BorderRadius.circular(14),
+        ),
       ),
     );
   }

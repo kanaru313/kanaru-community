@@ -8,6 +8,7 @@ import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../state/browse/song_list_providers.dart';
 import '../browse/library_list_scaffold.dart';
+import '../menus/open_menu.dart';
 import 'folder_locations.dart';
 import 'folder_place.dart';
 import 'folder_tile.dart';
@@ -58,6 +59,13 @@ Widget levelFoldersSliver(
         countLine: folderCounts(l10n, target),
         coverKey: row.chain.first.coverKey,
         seed: target.key,
+        onMenu: () => openFolderMenu(
+          context,
+          folder: place.root.folder,
+          key: target.key,
+          name: row.label,
+          subfolders: target.subfolders,
+        ),
         onTap: () =>
             open(FolderLocation(sourceUid: place.sourceUid, key: target.key)),
       );
@@ -83,6 +91,13 @@ Widget rootsSliver(
         dimLine: folderLocationLabel(l10n, root.folder, mobile: mobile),
         countLine: folderCounts(l10n, root.node),
         leading: RootIcon(volume: root.folder.volume),
+        onMenu: () => openFolderMenu(
+          context,
+          folder: root.folder,
+          key: '',
+          name: root.node.name,
+          subfolders: root.node.subfolders,
+        ),
         onTap: () => open(FolderLocation(sourceUid: root.folder.sourceUid)),
       );
     },
@@ -109,6 +124,14 @@ Widget flatFoldersSliver(
         countLine: l10n.librarySongCount(folder.songCount),
         coverKey: folder.node.directCoverKey,
         seed: folder.node.key,
+        onMenu: () => openFolderMenu(
+          context,
+          folder: folder.root.folder,
+          key: folder.node.key,
+          name: folder.node.key.isEmpty ? folder.root.node.name : folder.name,
+          subfolders: 0,
+          flat: true,
+        ),
         onTap: () => open(
           FolderLocation(
             sourceUid: folder.root.folder.sourceUid,

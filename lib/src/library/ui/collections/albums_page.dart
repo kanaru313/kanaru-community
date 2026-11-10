@@ -11,6 +11,7 @@ import '../../state/browse/collection_providers.dart';
 import '../browse/library_list_frame.dart';
 import '../browse/library_list_scaffold.dart';
 import 'album_tile.dart';
+import '../selection/selection_inset.dart';
 import 'collection_parts.dart';
 
 /// The Albums list: a grid of covers or rows, sorted and filtered.
@@ -98,7 +99,7 @@ class _AlbumsBody extends ConsumerWidget {
                 ),
               ),
             ),
-          const SliverToBoxAdapter(child: KGap(KSpace.x4)),
+          const SelectionInsetSliver(),
         ],
       );
     });

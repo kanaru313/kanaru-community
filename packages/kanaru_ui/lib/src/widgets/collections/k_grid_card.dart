@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
+import 'k_engage_region.dart';
 
 /// Tile of an album or artist grid: a square cover (or a round photo) as wide
 /// as the tile, a title and a subtitle under it. Both texts take one line, so
@@ -20,6 +21,7 @@ class KGridCard extends StatelessWidget {
     this.circle = false,
     this.onTap,
     this.onLongPress,
+    this.more,
   });
 
   /// Draws the cover in a square of the given side.
@@ -31,6 +33,9 @@ class KGridCard extends StatelessWidget {
   final bool circle;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+
+  /// Button over the cover's top-right corner (the ⋮ of the item).
+  final Widget? more;
 
   static const double _titleSize = 14;
   static const double _subtitleSize = 12;
@@ -48,7 +53,7 @@ class KGridCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final align = circle ? TextAlign.center : TextAlign.start;
-    return Semantics(
+    final card = Semantics(
       button: onTap != null,
       child: InkWell(
         onTap: onTap,
@@ -100,6 +105,20 @@ class KGridCard extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+    final button = more;
+    if (button == null) return card;
+    return KEngageRegion(
+      builder: (context, engaged) => Stack(
+        children: [
+          card,
+          Positioned(
+            top: KSpace.x1,
+            right: KSpace.x1,
+            child: KCardCorner(engaged: engaged, child: button),
+          ),
+        ],
       ),
     );
   }

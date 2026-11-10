@@ -13,6 +13,8 @@ import '../../state/browse/detail_providers.dart';
 import '../browse/item_covers.dart';
 import '../browse/library_navigation.dart';
 import '../library_locations.dart';
+import '../menus/menu_origin.dart';
+import '../menus/open_menu.dart';
 import 'detail_header.dart';
 import 'detail_songs.dart';
 import 'see_all_page.dart';
@@ -81,6 +83,8 @@ class ArtistPage extends ConsumerWidget {
             list: BrowseList.detailSongs,
             item: artistId,
             playContext: playContext,
+            onMenu: (c) =>
+                openArtistMenu(c, key, origin: const MenuOrigin.own()),
           ),
         ),
         slivers: [
@@ -89,6 +93,7 @@ class ArtistPage extends ConsumerWidget {
               child: AlbumShelf(
                 title: l10n.libraryTabAlbums,
                 albums: albums.own,
+                origin: MenuOrigin.artist(key),
                 onSeeAll: () =>
                     openLibraryPage(context, SeeAllLocations.artistAlbums(key)),
               ),
@@ -98,6 +103,7 @@ class ArtistPage extends ConsumerWidget {
               child: AlbumShelf(
                 title: l10n.libraryAppearsIn,
                 albums: albums.appears,
+                origin: MenuOrigin.artist(key),
                 onSeeAll: () => openLibraryPage(
                   context,
                   SeeAllLocations.artistAppears(key),

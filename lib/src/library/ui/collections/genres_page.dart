@@ -13,6 +13,9 @@ import '../browse/library_list_frame.dart';
 import '../browse/library_list_scaffold.dart';
 import '../browse/library_navigation.dart';
 import '../library_locations.dart';
+import '../menus/more_button.dart';
+import '../menus/open_menu.dart';
+import '../selection/selection_inset.dart';
 import 'collection_parts.dart';
 
 /// The Genres list: coloured tiles with the genre name and its song count.
@@ -86,17 +89,25 @@ class _GenresBody extends ConsumerWidget {
             padding: EdgeInsets.symmetric(horizontal: gutter),
             itemBuilder: (context, i) {
               final genre = genres[i];
-              return KColorTile(
-                seed: genre.name,
-                title: genre.name,
-                subtitle: l10n.librarySongCount(genre.trackCount),
-                icon: KIcons.genres,
-                onTap: () =>
-                    openLibraryPage(context, LibraryLocations.genre(genre.key)),
+              void menu() =>
+                  openGenreMenu(context, genreKey: genre.key, name: genre.name);
+              return KContextRegion(
+                onOpen: (_) => menu(),
+                child: KColorTile(
+                  seed: genre.name,
+                  title: genre.name,
+                  subtitle: l10n.librarySongCount(genre.trackCount),
+                  icon: KIcons.genres,
+                  onTap: () => openLibraryPage(
+                    context,
+                    LibraryLocations.genre(genre.key),
+                  ),
+                  more: LibraryMoreButton(onPressed: menu),
+                ),
               );
             },
           ),
-          const SliverToBoxAdapter(child: KGap(KSpace.x4)),
+          const SelectionInsetSliver(),
         ],
       );
     });

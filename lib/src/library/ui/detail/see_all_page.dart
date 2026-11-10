@@ -10,7 +10,9 @@ import '../../state/browse/detail_providers.dart';
 import '../browse/library_list_scaffold.dart';
 import '../collections/album_tile.dart';
 import '../collections/artist_tile.dart';
+import '../menus/menu_origin.dart';
 import '../library_locations.dart';
+import '../selection/selection_inset.dart';
 import 'detail_header.dart';
 import 'group_page.dart';
 
@@ -65,7 +67,10 @@ class ArtistAlbumsPage extends ConsumerWidget {
           ? l10n.libraryAppearsInOf(title)
           : l10n.libraryAlbumsOf(title),
       fallback: LibraryLocations.artist(key),
-      child: _AlbumGrid(albums: appears ? data.appears : data.own),
+      child: _AlbumGrid(
+        albums: appears ? data.appears : data.own,
+        origin: MenuOrigin.artist(key),
+      ),
     );
   }
 }
@@ -121,9 +126,13 @@ class GroupSeeAllPage extends ConsumerWidget {
 }
 
 class _AlbumGrid extends StatelessWidget {
-  const _AlbumGrid({required this.albums});
+  const _AlbumGrid({
+    required this.albums,
+    this.origin = const MenuOrigin.list(),
+  });
 
   final List<AlbumSummary> albums;
+  final MenuOrigin origin;
 
   @override
   Widget build(BuildContext context) => CustomScrollView(
@@ -134,9 +143,10 @@ class _AlbumGrid extends StatelessWidget {
         desktopMinTileWidth: 160,
         footerExtent: KGridCard.footerExtent(MediaQuery.textScalerOf(context)),
         padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
-        itemBuilder: (context, i) => AlbumCard(album: albums[i]),
+        itemBuilder: (context, i) =>
+            AlbumCard(album: albums[i], origin: origin),
       ),
-      const SliverToBoxAdapter(child: KGap(KSpace.x4)),
+      const SelectionInsetSliver(),
     ],
   );
 }
@@ -157,7 +167,7 @@ class _ArtistGrid extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
         itemBuilder: (context, i) => ArtistCard(artist: artists[i]),
       ),
-      const SliverToBoxAdapter(child: KGap(KSpace.x4)),
+      const SelectionInsetSliver(),
     ],
   );
 }

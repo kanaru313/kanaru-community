@@ -15,6 +15,9 @@ import '../browse/library_labels.dart';
 import '../browse/library_navigation.dart';
 import '../browse/play_actions.dart';
 import '../library_locations.dart';
+import '../menus/menu_origin.dart';
+import '../menus/more_button.dart';
+import '../menus/open_menu.dart';
 
 final _log = Logger('library.artist_tile');
 
@@ -27,33 +30,56 @@ void _open(BuildContext context, ArtistSummary artist) {
   openLibraryPage(context, LibraryLocations.artist(key));
 }
 
+void _menu(BuildContext context, ArtistSummary artist, MenuOrigin origin) {
+  final key = ArtistKey.decode(artist.key);
+  if (key == null) {
+    _log.warning('undecodable artist key: ${artist.key}');
+    return;
+  }
+  openArtistMenu(context, key, origin: origin);
+}
+
 /// Artist row: round photo, name / `N albums` / `M songs • length`, ▶ plays
 /// every song of the artist. The photo is the cover of the artist's newest
 /// album that has one (the summary carries it), else a letter placeholder.
 class ArtistTile extends ConsumerWidget {
-  const ArtistTile({super.key, required this.artist});
+  const ArtistTile({
+    super.key,
+    required this.artist,
+    this.origin = const MenuOrigin.list(),
+  });
 
   final ArtistSummary artist;
+
+  /// The page the tile is on, so its menu never links back to it.
+  final MenuOrigin origin;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    return KMediaCard(
-      title: artist.name,
-      line2: l10n.libraryAlbumCount(artist.albumCount),
-      line3:
-          '${l10n.librarySongCount(artist.trackCount)} • '
-          '${formatTotalDuration(l10n, artist.durationMs)}',
-      leading: ArtistCover(
-        itemKey: artist.key,
-        name: artist.name,
-        coverKey: artist.coverKey,
-        dimension: KMediaCard.coverSize,
+    return KContextRegion(
+      onOpen: (_) => _menu(context, artist, origin),
+      child: KMediaCard(
+        title: artist.name,
+        line2: l10n.libraryAlbumCount(artist.albumCount),
+        line3:
+            '${l10n.librarySongCount(artist.trackCount)} • '
+            '${formatTotalDuration(l10n, artist.durationMs)}',
+        leading: ArtistCover(
+          itemKey: artist.key,
+          name: artist.name,
+          coverKey: artist.coverKey,
+          dimension: KMediaCard.coverSize,
+        ),
+        circleLeading: true,
+        onAction: () => _play(ref, context),
+        actionLabel: l10n.libraryPlayArtist,
+        trailing: LibraryMoreButton(
+          onPressed: () => _menu(context, artist, origin),
+        ),
+        revealTrailingOnHover: true,
+        onTap: () => _open(context, artist),
       ),
-      circleLeading: true,
-      onAction: () => _play(ref, context),
-      actionLabel: l10n.libraryPlayArtist,
-      onTap: () => _open(context, artist),
     );
   }
 
@@ -75,23 +101,36 @@ class ArtistTile extends ConsumerWidget {
 
 /// Artist tile of the grid: round photo, name, `N songs`.
 class ArtistCard extends StatelessWidget {
-  const ArtistCard({super.key, required this.artist});
+  const ArtistCard({
+    super.key,
+    required this.artist,
+    this.origin = const MenuOrigin.list(),
+  });
 
   final ArtistSummary artist;
 
+  /// The page the card is on, so its menu never links back to it.
+  final MenuOrigin origin;
+
   @override
   Widget build(BuildContext context) {
-    return KGridCard(
-      circle: true,
-      title: artist.name,
-      subtitle: AppLocalizations.of(context)
-          .librarySongCount(artist.trackCount),
-      onTap: () => _open(context, artist),
-      coverBuilder: (context, side) => ArtistCover(
-        itemKey: artist.key,
-        name: artist.name,
-        coverKey: artist.coverKey,
-        dimension: side,
+    return KContextRegion(
+      onOpen: (_) => _menu(context, artist, origin),
+      child: KGridCard(
+        circle: true,
+        title: artist.name,
+        subtitle: AppLocalizations.of(context)
+            .librarySongCount(artist.trackCount),
+        onTap: () => _open(context, artist),
+        more: LibraryMoreButton(
+          onPressed: () => _menu(context, artist, origin),
+        ),
+        coverBuilder: (context, side) => ArtistCover(
+          itemKey: artist.key,
+          name: artist.name,
+          coverKey: artist.coverKey,
+          dimension: side,
+        ),
       ),
     );
   }

@@ -4,6 +4,7 @@ import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_cover.dart';
 import '../k_gap.dart';
+import 'k_engage_region.dart';
 
 /// Pastel fill and ink for [seed]: the colours a cover placeholder gets, so a
 /// genre tile and its placeholder agree.
@@ -23,6 +24,7 @@ class KColorTile extends StatelessWidget {
     this.subtitle,
     this.onTap,
     this.onLongPress,
+    this.more,
   });
 
   /// Picks the colour (the name, or a key).
@@ -33,10 +35,16 @@ class KColorTile extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
+  /// Button over the top-right corner (the ⋮ of the item).
+  final Widget? more;
+
   static const double minHeight = 88;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      more == null ? _tile(context, false) : KEngageRegion(builder: _tile);
+
+  Widget _tile(BuildContext context, bool engaged) {
     final tones = _tones(context, seed);
     final textTheme = Theme.of(context).textTheme;
     return Semantics(
@@ -90,6 +98,12 @@ class KColorTile extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (more != null)
+                  Positioned(
+                    top: KSpace.x1,
+                    right: KSpace.x1,
+                    child: KCardCorner(engaged: engaged, child: more!),
+                  ),
               ],
             ),
           ),

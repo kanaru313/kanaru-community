@@ -16,6 +16,7 @@ import '../songs/song_list.dart';
 import 'folder_back.dart';
 import 'folder_bar.dart';
 import 'folder_locations.dart';
+import '../selection/selection_inset.dart';
 import 'folder_place.dart';
 import 'folder_slivers.dart';
 import 'folder_tile.dart';
@@ -74,7 +75,7 @@ class _FoldersBody extends ConsumerWidget {
   final FolderLocation entry;
   final FolderNavigator open;
 
-  static const Widget _bottom = SliverToBoxAdapter(child: KGap(KSpace.x4));
+  static const Widget _bottom = SelectionInsetSliver();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

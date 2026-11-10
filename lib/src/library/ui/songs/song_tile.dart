@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:logging/logging.dart';
@@ -10,9 +11,14 @@ import '../../../media/domain/track_id.dart';
 import '../../../media/domain/track_info.dart';
 import '../../../playback/state/playback_providers.dart';
 import '../../../playback/ui/track_cover.dart';
+import '../../state/browse/selection_providers.dart';
 import '../../state/favorites_providers.dart';
 import '../browse/library_labels.dart';
 import '../browse/play_actions.dart';
+import '../menus/menu_origin.dart';
+import '../menus/more_button.dart';
+import '../menus/open_menu.dart';
+import '../selection/selection_shortcuts.dart';
 
 final _log = Logger('library.song_tile');
 
@@ -51,6 +57,7 @@ class SongTile extends ConsumerWidget {
     required this.playContext,
     this.showNumber = false,
     this.showDetected = false,
+    this.origin = const MenuOrigin.list(),
   });
 
   final TrackInfo info;
@@ -63,43 +70,69 @@ class SongTile extends ConsumerWidget {
   /// pages).
   final bool showDetected;
 
+  /// The page the list is on, so the song's menu never links back to it.
+  final MenuOrigin origin;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final current = ref.watch(isCurrentTrackProvider(info.id));
-    final favorite = ref.watch(isFavoriteProvider(info.id));
+    final selected = ref.watch(isSelectedProvider(info.id));
     final duration = info.durationMs;
-    return KMediaCard(
-      title: info.title,
-      titleLabel: showDetected && info.languageDetected
-          ? l10n.libraryAutoDetectedTag
-          : null,
-      line2: songArtistLine(info),
-      line3: songAlbumLine(info),
-      leading: showNumber
-          ? _NumberColumn(number: info.trackNo, current: current)
-          : _SongCover(info: info, current: current),
-      top: duration == null ? null : Text(formatClock(duration)),
-      bottom: _FavoriteButton(
-        favorite: favorite,
-        addLabel: l10n.libraryFavoriteAdd,
-        removeLabel: l10n.libraryFavoriteRemove,
-        onPressed: () => _toggleFavorite(ref, context),
+    void menu() => openSongMenu(context, info, origin: origin);
+    // Long press on a song selects it (the menu has ⋮, right click, Menu).
+    return KContextRegion(
+      longPressOpens: false,
+      // Right click on one of several selected songs is about the selection.
+      onOpen: (_) {
+        final selection = ref.read(librarySelectionProvider);
+        if (selection.set.contains(info.id) && selection.ids.length > 1) {
+          openSelectionMenu(context);
+        } else {
+          menu();
+        }
+      },
+      child: KMediaCard(
+        title: info.title,
+        titleLabel: showDetected && info.languageDetected
+            ? l10n.libraryAutoDetectedTag
+            : null,
+        line2: songArtistLine(info),
+        line3: songAlbumLine(info),
+        leading: showNumber
+            ? _NumberColumn(number: info.trackNo, current: current)
+            : _SongCover(info: info, current: current),
+        top: duration == null ? null : Text(formatClock(duration)),
+        bottom: SongFavoriteButton(info: info),
+        trailing: LibraryMoreButton(onPressed: menu),
+        revealTrailingOnHover: true,
+        current: current,
+        currentLabel: l10n.libraryNowPlaying,
+        selected: selected,
+        onLongPress: selected ? null : () => _select(ref),
+        onTap: () => _tap(ref, context),
       ),
-      current: current,
-      currentLabel: l10n.libraryNowPlaying,
-      onTap: () => playFrom(ref, context, ids, index, playContext),
     );
   }
 
-  Future<void> _toggleFavorite(WidgetRef ref, BuildContext context) async {
-    final message = AppLocalizations.of(context).libraryFavoriteFailed;
-    try {
-      await ref.read(favoritesControllerProvider).toggle(info.id);
-    } on Object catch (e, s) {
-      _log.warning('toggling favorite of ${info.id} failed', e, s);
-      if (context.mounted) showAppSnackBar(context, message);
+  /// A tap or click: with Shift it extends the selection to this row, with
+  /// Ctrl / ⌘ or once something is selected it toggles the row, else it plays.
+  void _tap(WidgetRef ref, BuildContext context) {
+    final selection = ref.read(librarySelectionProvider.notifier);
+    switch (songClick(selecting: !ref.read(librarySelectionProvider).isEmpty)) {
+      case SongClick.range:
+        selection.selectRangeTo(ids, info.id);
+      case SongClick.toggle:
+        selection.toggle(info.id);
+      case SongClick.play:
+        playFrom(ref, context, ids, index, playContext);
     }
+  }
+
+  /// Long press: starts (or adds to) the selection, with a light tick.
+  void _select(WidgetRef ref) {
+    HapticFeedback.selectionClick();
+    ref.read(librarySelectionProvider.notifier).toggle(info.id);
   }
 }
 
@@ -168,30 +201,36 @@ class _PlayingMark extends ConsumerWidget {
       KEqualizerIcon(playing: ref.watch(isPlayingProvider), color: color);
 }
 
-class _FavoriteButton extends StatelessWidget {
-  const _FavoriteButton({
-    required this.favorite,
-    required this.addLabel,
-    required this.removeLabel,
-    required this.onPressed,
-  });
+/// The ♥ of a song row: filled for a favourite, toggles on press. Watches
+/// only its own answer.
+class SongFavoriteButton extends ConsumerWidget {
+  const SongFavoriteButton({super.key, required this.info});
 
-  final bool favorite;
-  final String addLabel;
-  final String removeLabel;
-  final VoidCallback onPressed;
+  final TrackInfo info;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final favorite = ref.watch(isFavoriteProvider(info.id));
     final scheme = Theme.of(context).colorScheme;
     return IconButton(
-      tooltip: favorite ? removeLabel : addLabel,
+      tooltip: favorite ? l10n.libraryFavoriteRemove : l10n.libraryFavoriteAdd,
       isSelected: favorite,
-      onPressed: onPressed,
+      onPressed: () => _toggle(ref, context),
       iconSize: 20,
       // Default 48 dp tap target; the card lets this slot reach into the row.
       icon: const Icon(KIcons.heart),
       selectedIcon: Icon(KIcons.heartFilled, color: scheme.primary),
     );
+  }
+
+  Future<void> _toggle(WidgetRef ref, BuildContext context) async {
+    final message = AppLocalizations.of(context).libraryFavoriteFailed;
+    try {
+      await ref.read(favoritesControllerProvider).toggle(info.id);
+    } on Object catch (e, s) {
+      _log.warning('toggling favorite of ${info.id} failed', e, s);
+      if (context.mounted) showAppSnackBar(context, message);
+    }
   }
 }

@@ -14,6 +14,8 @@ import '../browse/library_labels.dart';
 import '../browse/library_list_scaffold.dart';
 import '../browse/library_navigation.dart';
 import '../library_locations.dart';
+import '../menus/menu_origin.dart';
+import '../menus/open_menu.dart';
 import 'detail_header.dart';
 import 'detail_songs.dart';
 import 'see_all_page.dart';
@@ -139,6 +141,18 @@ class GroupPage extends ConsumerWidget {
                     list: BrowseList.detailSongs,
                     item: '${kind.name}:$id',
                     playContext: playContext,
+                    onMenu: (c) => language
+                        ? openLanguageMenu(
+                            c,
+                            target.code,
+                            origin: const MenuOrigin.own(),
+                          )
+                        : openGenreMenu(
+                            c,
+                            genreKey: target.genreKey!,
+                            name: title,
+                            origin: const MenuOrigin.own(),
+                          ),
                   ),
                 ),
               ),

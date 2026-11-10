@@ -4,6 +4,7 @@ import '../../../database/database.dart' show AppDatabase;
 import '../../../database/state/database_providers.dart';
 import '../../../media/domain/track_id.dart';
 import '../../data/browse/menu_queries.dart';
+import 'song_list_providers.dart';
 
 /// What is selected, in selection order, with an index for O(1) lookups.
 /// Never mutated: every change builds a new state.
@@ -83,7 +84,9 @@ class LibrarySelection extends Notifier<SelectionState> {
     );
   }
 
-  /// Replaces the selection with [ids] (deduplicated, order kept).
+  /// Replaces the selection with [ids] (deduplicated, order kept). The panel
+  /// and Ctrl+A use [addRange] instead, so picks from other screens stay; this
+  /// is the replace-all primitive for callers that mean to start over.
   void selectAll(Iterable<TrackId> ids) {
     final set = <TrackId>{};
     final list = <TrackId>[];
@@ -216,6 +219,9 @@ final selectionSummaryProvider = FutureProvider.autoDispose<SelectionSummary>((
 ) async {
   final ids = ref.watch(librarySelectionProvider.select((s) => s.ids));
   final db = ref.watch(appDatabaseProvider);
+  // Also after the library changed (a scan, an exclusion), so tracks that
+  // vanished leave the selection without the user touching it.
+  ref.watch(songRowsRevisionProvider);
   var disposed = false;
   ref.onDispose(() => disposed = true);
   // Coalesces a burst of toggles into one query.

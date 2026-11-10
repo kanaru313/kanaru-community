@@ -16,6 +16,7 @@
 - Folder tree, detail data, menu data, selection state.
 - File manager and the `kanaru_ui` collection widgets (parts 1 and 2).
 - Navigation and routes, the Songs list, collection lists, detail pages, the Folders tab (UI).
+- Context menus (models, link rules, rendering, actions, song info) and multi-select (UI).
 
 ## Keys
 
@@ -383,10 +384,115 @@ live: a menu acts on what it showed.
   the last change; ids that are no longer visible are removed from the
   selection.
 
-## Selection bar slot
+## Context menus
 
-`lib/src/library/ui/selection/selection_bar.dart`: `LibrarySelectionBar`, an
-empty slot until lane C fills it. Both shells render it above the player.
+`lib/src/library/ui/menus/`. One menu model per kind of item, one renderer for
+both shells. The builders are pure functions of loaded data (no
+`BuildContext`, no providers), so they are unit-tested without widgets.
+
+| File | Role |
+|---|---|
+| `menu_origin.dart` | `MenuOrigin`: `list`, `album(key)`, `artist(key)`, `genre(key)`, `language(code)`, `folder(sourceId, key)`, `own`. `MenuOrigin.ofScope(scope)` gives the origin of the songs of a list. It travels page -> tile -> builder |
+| `menu_model.dart` | `MenuSpec` (header, groups, `advanced` groups, named `pages`, `queueIds`), `MenuItemSpec` (id, icon, title, subtitle, `action` or `page` or `chips`, `trailing`, `enabled`, `soon`, `danger`, `pro`), `MenuAction` (`go`, `favorite`, `exclude`, `copy`, `reveal`, `select`, `play`), `MenuEnv` (l10n, `canReveal`, folder paths, Trash wording) |
+| `link_rows.dart` | The "Go to ..." rules in one place (below) |
+| `{song,album,artist,group,folder,selection}_menu.dart` | The builder of each kind (`group` = genre and language) |
+| `menu_items.dart` | Shared rows: Play / Shuffle, add all to favorites, the dimmed rows, the "Advanced" row |
+
+**Link rules** (`contextModalLinksPageFrom = 4`, `linkPageFrom`): no target ->
+a dimmed row saying "No album" / "No artist"; one -> a plain row with the name
+that goes there; several -> a count line with the names as chips, open while
+fewer than four; four or more -> a sub-page (album, artist, genre and language
+targets). A song's artists are always chips (folded from four) and its
+"Go to album artist" appears only when the album artists are not all among the
+song's. The folder row: none -> no row; one -> the folder's path and a trailing
+"Show in file manager" button; several -> `N songs in M folders` opening a page
+with an intro and one row per folder. An artist's albums list its own albums
+first, then the ones it appears on, under two headings on the page.
+
+**Origins**: a menu never links to the page it was opened from. A song on its
+album page has no "Go to album"; on its folder's page "Show in file manager"
+replaces "Go to folder"; on an artist's page that artist is left out of the
+artist chips (the row goes when none is left). An album card on an artist's
+page leaves that artist out of its artist link. On an item's own page (`own`,
+the page's ⋮) the self link, Play and Shuffle are left out.
+
+**Items per kind** follow mockup 04c. Rows that are not built yet are dimmed
+with "Coming soon" (`appComingSoon`) and inert: add to playlist, edit info,
+find lyrics online, ask AI (with the Pro badge), remove from library, delete
+files (Trash wording on desktop), split or merge artists / genres, "how
+languages are detected". "Exclude from
+library" of a folder (not on a music folder) is real, with undo. "Show in
+file manager" is dimmed where `FileManager.canReveal` is false (Android).
+`queueIds` are captured when the menu is built, so the footer buttons act on
+what the menu showed.
+
+### Opening and acting
+
+- `open_menu.dart`: `openSongMenu`, `openAlbumMenu`, `openArtistMenu`,
+  `openGenreMenu`, `openLanguageMenu`, `openFolderMenu`, `openSelectionMenu`.
+  Each loads its data once (`menu_loaders.dart`: direct one-shot reads), builds
+  the spec, and shows it with `showKLayeredMenu` on the root navigator (sheet
+  on the mobile shell, centred dialog on desktop). A second tap while one is
+  loading opens nothing; a failed load is a toast.
+- `menu_renderer.dart` maps a `MenuSpec` to `KMenuPage`s (`menu_header.dart`
+  draws the picture and names). `KMenuPage` got `groupTitles` (headings) and
+  `headerOpens` (the song header opens the song info page).
+- Triggers: a ⋮ on every tile, card and page (`LibraryMoreButton`, on desktop
+  shown on hover or focus), right click / Menu / Shift+F10 (`KContextRegion`),
+  and a long press on an album, artist, genre, language or folder card on the
+  mobile shell. A long press on a song selects it instead. The page ⋮ opens
+  the same centred dialog on desktop.
+- `menu_action_runner.dart` holds the `ProviderContainer` and a context of the
+  root navigator, so an action chosen after its tile scrolled away still runs
+  and its toast still shows. Every call is awaited; a failure is logged and
+  shown as a toast. Navigation is a push (Back returns to the page the menu
+  was opened from). Exclusion is immediate with a toast whose undo holds the
+  `FolderExclusions` instance and the key, not the page.
+- `song_info_page.dart`: the song info sub-page (format, bitrate, sample rate,
+  bit depth, size, copyable path, play count) built from `songInfo`.
+
+## Multi-select
+
+`lib/src/library/ui/selection/`. The selection lives in
+`librarySelectionProvider` (see Selection state), so it follows the user
+between screens.
+
+- Enter: a long press on a song (mobile, with a light tick), Ctrl / ⌘ click or
+  Shift click (desktop; Shift extends from the last clicked row in the order on
+  screen), Ctrl+A, or "Select" in a song's menu. While a selection exists a tap
+  on any `SongTile` toggles it instead of playing. A selected tile is tinted
+  `secondaryContainer` with a check over its cover.
+- Ctrl+A (`SelectAllShortcut`): a global key handler registered by the song
+  list that is on screen, so it works right after a click on the sidebar. It
+  adds the songs of `activeTrackListProvider` to the selection (it does not
+  replace what other screens contributed) and stays quiet while a dialog,
+  sheet or page covers the app or a text field has focus.
+- `LibrarySelectionBar` (const, in both shells' slot) shows `SelectionPanel`
+  when something is selected. The panel is a `KSelectionPanel`: clear, `N songs`
+  (and the length when open), play all (replaces the queue with the selection
+  in panel order; the selection stays), edit and add to playlist (dimmed), the
+  selection's menu, "select all songs of this screen" (off without a list), and
+  open / collapse. Open, it lists the selected songs in play order with a drag
+  handle, a ♥ and the song's menu; that list is a `ReorderableListView.builder`
+  over a `TrackWindow` that exists only while the panel is open, so a selection
+  of thousands loads only the rows in view. The length is the chunked read of
+  `selectionSummaryProvider`, also what drops tracks that vanished.
+- Back and Esc (`SelectionBackScope`): they collapse the panel and never clear
+  the selection (only the panel's ✕ does). Back is a `BackButtonListener`: the
+  root dispatcher asks listeners before the router pops a sheet or dialog, so
+  it answers only when the panel is open and its route is the current one
+  (`ModalRoute.isCurrent`), else the modal closes first. Esc is a key handler
+  with the same two conditions that also yields to a focused text field.
+  Because the listener sits at the root, an open panel collapses before a page
+  filter field or a folder level takes Back.
+- Desktop slot: the shell puts the bar in a `Center` over the page, so the
+  empty slot and the space beside the 440 wide panel pass clicks to the page.
+  `SelectionInsetSliver` ends every library scroll view (lists, folders,
+  see-all grids, the songs of detail pages) with room as high as the panel
+  (`KSelectionPanel.heightFor`, which includes the cap at half the window), so
+  the last row scrolls clear of it while the page keeps its full height and the
+  rows beside the panel stay reachable. On the mobile shell the panel sits in
+  the bottom bar and pushes the page up by itself.
 
 ## Navigation and routes
 
@@ -520,8 +626,7 @@ routes in `ui/browse/library_routes.dart`.
   (push): Back returns one page at a time. A page that was the first of the
   stack (a link from outside) goes back to its list.
 - `DetailFrame`: `PageHeader(title: name, onBack)` and the page. No ⋮ in the
-  header. `DetailActions`: Play (filled), shuffle (tonal), ⋮ (dimmed with "Coming
-  soon" until the page menu exists). Play and shuffle take every song of the
+  header. `DetailActions`: Play (filled), shuffle (tonal), ⋮ (the page's own menu: a sheet on the mobile shell, a centred dialog on desktop). Play and shuffle take every song of the
   page in the page's current sort, ignoring its filter; the context carries the
   encoded key and the name.
 - `DetailSongsHost(list, scope, ...)` owns the page's filter and builds the
@@ -676,12 +781,16 @@ Sizes that the mockups give and the tokens lack (card radius 14, panel radius
 
 ## kanaru_ui collections, part 2: menu, detail, selection
 
+`KGridCard` and `KColorTile` take a `more` widget (the ⋮ of the item) laid over a corner of the card: always visible on the mobile shell, on hover or focus on desktop (`KEngageRegion`, `KCardCorner`).
+
 | Widget | Notes |
 |---|---|
 | `KDetailLayout` | `header` plus list `slivers`. Under 840 px of page width (measured on the page, not the window) the header sits above the list; from 840 the header is a fixed 320 column, bottom aligned and scrolling on its own when the window is short. `tint` washes the background (alpha at most 0.18 light, 0.24 dark) |
 | `KDetailHero` | Top of an album or artist page for the `header` slot: narrow = 132 cover on the left, text and buttons aligned to its bottom; wide (asked of `KDetailLayout.isWide`) = cover as wide as the column, faded at the bottom and right edges (a round photo is not), text below |
 | `KBlurredBar`, `KStickyBarSliver` | Translucent blurred background and a pinned sliver bar over it, so the tint is not cut by a flat bar. Blur only on these bars |
 | `showKLayeredMenu` | `KMenuPage` (header, groups of `KMenuRow`, footer of two `KMenuButton`s, note). A row either runs `onTap`, opens a sub-page (`opens`), or folds chips (`chips`); `soonLabel` or `enabled: false` dims it and makes it inert; `danger`, `proLabel`, `trailing` icon button. A chosen row closes the menu first and then runs its callback. Back, the arrow and Esc on a sub-page return one page; on the root they close |
+| `KMenuRow.leading` | A picture (an album cover) in place of the row's icon |
+| `KMenuPage` extras | `groupTitles` (a heading above each group; an empty group loses its heading) and `headerOpens` (the header becomes a button with a `›` that shows that page) |
 | `KSelectionPanel` | Frame of the multi-select panel: `header`, optional expanded `body` clamped to 460 dp (`bodyHeight`), no state. Mobile: full width minus 8, radius 20. Desktop: 440 wide, centred, radius 22, shadow. The frame is only as high as its content, so a full-width slot does not take taps beside it |
 
 `showKLayeredMenu` on the mobile shell is a bottom sheet (at most 85 % of the

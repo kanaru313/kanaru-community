@@ -103,15 +103,41 @@ class _MenuBodyState extends State<_MenuBody> {
     effect();
   }
 
+  /// The header; a button with a `›` when it opens a page.
+  Widget _header(KMenuPage page) {
+    final opens = page.headerOpens;
+    final header = page.header!;
+    if (opens == null) return header;
+    return InkWell(
+      borderRadius: KRadius.sm,
+      onTap: () => setState(() => _stack.add(opens)),
+      child: Row(
+        children: [
+          Expanded(child: header),
+          Icon(
+            KIcons.chevronRight,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final page = _page;
     final sub = _stack.length > 1;
-    final groups = [
-      for (final g in page.groups)
-        if (g.isNotEmpty) g,
-    ];
+    // Empty groups are skipped; their headings go with them.
+    final groups = <List<KMenuRow>>[];
+    final groupIndexTitles = <String?>[];
+    for (var i = 0; i < page.groups.length; i++) {
+      if (page.groups[i].isEmpty) continue;
+      groups.add(page.groups[i]);
+      groupIndexTitles.add(
+        i < page.groupTitles.length ? page.groupTitles[i] : null,
+      );
+    }
     var first = true;
     final children = <Widget>[];
     for (var gi = 0; gi < groups.length; gi++) {
@@ -126,6 +152,28 @@ class _MenuBodyState extends State<_MenuBody> {
               height: 1,
               thickness: 1,
               color: scheme.outlineVariant,
+            ),
+          ),
+        );
+      }
+      final heading = gi < groupIndexTitles.length
+          ? groupIndexTitles[gi]
+          : null;
+      if (heading != null) {
+        children.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              KSpace.x4,
+              KSpace.x2,
+              KSpace.x4,
+              KSpace.x1,
+            ),
+            child: Text(
+              heading,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         );
@@ -171,7 +219,7 @@ class _MenuBodyState extends State<_MenuBody> {
                     KSpace.x4,
                     KSpace.x2,
                   ),
-                  child: page.header,
+                  child: _header(page),
                 ),
               Flexible(
                 child: AnimatedSwitcher(

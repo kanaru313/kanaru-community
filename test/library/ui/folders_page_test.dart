@@ -365,4 +365,20 @@ void main() {
     expect(h.location, _at(folder, ''));
     await unmountApp(tester);
   });
+
+  testWidgets('a folder row has its menu button and, on mobile, the arrow', (
+    tester,
+  ) async {
+    await _single(tester);
+    final tile = find.byType(FolderTile).first;
+    expect(
+      find.descendant(of: tile, matching: find.byIcon(KIcons.moreVert)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: tile, matching: find.byIcon(KIcons.chevronRight)),
+      findsOneWidget,
+    );
+    await unmountApp(tester);
+  });
 }

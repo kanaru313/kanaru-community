@@ -11,6 +11,7 @@ import '../../state/browse/collection_providers.dart';
 import '../browse/library_list_frame.dart';
 import '../browse/library_list_scaffold.dart';
 import 'artist_tile.dart';
+import '../selection/selection_inset.dart';
 import 'collection_parts.dart';
 
 /// The Artists list: a grid of round photos or rows, sorted and filtered.
@@ -98,7 +99,7 @@ class _ArtistsBody extends ConsumerWidget {
                 ),
               ),
             ),
-          const SliverToBoxAdapter(child: KGap(KSpace.x4)),
+          const SelectionInsetSliver(),
         ],
       );
     });

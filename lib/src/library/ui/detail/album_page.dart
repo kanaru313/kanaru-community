@@ -13,6 +13,8 @@ import '../../state/browse/detail_providers.dart';
 import '../browse/item_covers.dart';
 import '../browse/library_navigation.dart';
 import '../library_locations.dart';
+import '../menus/menu_origin.dart';
+import '../menus/open_menu.dart';
 import 'detail_header.dart';
 import 'detail_songs.dart';
 
@@ -82,6 +84,8 @@ class AlbumPage extends ConsumerWidget {
               list: BrowseList.albumTracks,
               item: albumId,
               playContext: playContext,
+              onMenu: (c) =>
+                  openAlbumMenu(c, key, origin: const MenuOrigin.own()),
             ),
           ),
           slivers: songs,

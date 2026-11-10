@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -97,5 +98,65 @@ void main() {
       tester.widget<Text>(find.text('Title 0')).textAlign,
       TextAlign.center,
     );
+  });
+
+  testWidgets('the more button shows at once on mobile and runs', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    var taps = 0;
+    await tester.pumpWidget(
+      host(
+        SizedBox(
+          width: 180,
+          child: KGridCard(
+            title: 'T',
+            coverBuilder: (context, side) => SizedBox.square(dimension: side),
+            more: IconButton(
+              tooltip: 'More',
+              onPressed: () => taps++,
+              icon: const Icon(KIcons.moreVert),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byTooltip('More'));
+    expect(taps, 1);
+  });
+
+  testWidgets('on desktop the more button waits for the pointer', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(1300, 900));
+    var taps = 0;
+    await tester.pumpWidget(
+      host(
+        Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 180,
+            child: KGridCard(
+              title: 'T',
+              coverBuilder: (context, side) => SizedBox.square(dimension: side),
+              more: IconButton(
+                tooltip: 'More',
+                onPressed: () => taps++,
+                icon: const Icon(KIcons.moreVert),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byTooltip('More'), warnIfMissed: false);
+    expect(taps, 0);
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    addTearDown(mouse.removePointer);
+    await mouse.moveTo(tester.getCenter(find.text('T')));
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.tap(find.byTooltip('More'));
+    expect(taps, 1);
   });
 }

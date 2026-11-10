@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/ui/browse/item_covers.dart';
+import 'package:kanaru/src/library/ui/detail/detail_header.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/library/ui/songs/song_tile.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
@@ -12,6 +13,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../support/fake_playback_commands.dart';
+import 'menus/menu_pump.dart';
 import 'support/detail_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
@@ -93,14 +95,39 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('the page menu button is dimmed until menus exist', (
+  testWidgets('the page menu is the album menu of its own page', (
     tester,
   ) async {
     await _pump(tester);
-    final more = tester.widget<IconButton>(
-      find.widgetWithIcon(IconButton, KIcons.moreVert),
+    await tester.tap(
+      find.descendant(
+        of: find.byType(DetailActions),
+        matching: find.byIcon(KIcons.moreVert),
+      ),
     );
-    expect(more.onPressed, isNull);
+    await pumpMenu(tester);
+    final sheet = find.byType(BottomSheet);
+    expect(sheet, findsOneWidget);
+    // Links to the artist, but not back to this album; no Play (the page has
+    // the buttons).
+    expect(
+      find.descendant(of: sheet, matching: find.text('Go to artist')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('Go to album')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('Play')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('Play next')),
+      findsOneWidget,
+    );
+    await tester.tapAt(const Offset(195, 20));
+    await tester.pumpAndSettle();
     await unmountApp(tester);
   });
 

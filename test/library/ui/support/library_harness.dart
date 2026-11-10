@@ -122,6 +122,9 @@ class LibraryHarness {
 /// Pumps the library routes at [initial] on a window of [width] x [height].
 ///
 /// [header] wraps the pages the way the app shell does (a header scope).
+/// [selectionBar] puts the selection slot under the pages in a shell route,
+/// as the mobile shell does: inside the router, in the page route of the root
+/// navigator, with the library pages in a navigator of their own.
 /// Write fixtures after this returns: the database is the harness's own.
 Future<LibraryHarness> pumpLibrary(
   WidgetTester tester, {
@@ -134,6 +137,7 @@ Future<LibraryHarness> pumpLibrary(
   List<MusicFolder> folders = const [],
   ScanStatus scan = const ScanIdle(),
   Locale locale = const Locale('en'),
+  Widget? selectionBar,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, height);
@@ -143,19 +147,33 @@ Future<LibraryHarness> pumpLibrary(
   final db = openTestDb();
   addTearDown(db.close);
   final player = playback ?? FakePlaybackCommands();
+  final pages = <RouteBase>[
+    libraryRoute(),
+    GoRoute(
+      path: '/probe',
+      builder: (context, _) => Column(
+        children: [
+          PageHeader(title: 'Probe', onBack: context.pop),
+          const Text('probe page'),
+        ],
+      ),
+    ),
+  ];
   final router = GoRouter(
     initialLocation: initial,
     routes: [
-      libraryRoute(),
-      GoRoute(
-        path: '/probe',
-        builder: (context, _) => Column(
-          children: [
-            PageHeader(title: 'Probe', onBack: context.pop),
-            const Text('probe page'),
-          ],
+      if (selectionBar == null)
+        ...pages
+      else
+        ShellRoute(
+          builder: (context, state, child) => Column(
+            children: [
+              Expanded(child: child),
+              selectionBar,
+            ],
+          ),
+          routes: pages,
         ),
-      ),
     ],
   );
   addTearDown(router.dispose);

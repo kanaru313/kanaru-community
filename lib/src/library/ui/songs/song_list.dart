@@ -11,6 +11,9 @@ import '../../state/browse/selection_providers.dart';
 import '../../state/browse/song_list_providers.dart';
 import '../../state/browse/track_window.dart';
 import '../browse/library_list_scaffold.dart';
+import '../menus/menu_origin.dart';
+import '../selection/selection_inset.dart';
+import '../selection/selection_shortcuts.dart';
 import 'song_tile.dart';
 
 /// Windowed list of the songs of a scope, in a sort, narrowed by a filter.
@@ -53,6 +56,7 @@ class SongList extends StatelessWidget {
         playContext: playContext,
         showNumber: showNumber,
       ),
+      const SelectionInsetSliver(),
     ],
   );
 }
@@ -92,6 +96,9 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
   );
   late final ActiveTrackList _active;
 
+  /// Ctrl+A while this list is the one on screen.
+  late final SelectAllShortcut _selectAll;
+
   /// The id list last handed to the window.
   List<TrackId>? _fed;
 
@@ -105,11 +112,16 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
   void initState() {
     super.initState();
     _active = ref.read(activeTrackListProvider.notifier);
+    _selectAll = SelectAllShortcut(
+      context,
+      ProviderScope.containerOf(context, listen: false),
+    );
   }
 
   @override
   void dispose() {
     final registered = _registered;
+    _selectAll.detach();
     _window.dispose();
     if (registered != null) {
       // Not while the tree is being torn down: listeners rebuild widgets.
@@ -119,6 +131,11 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
   }
 
   void _syncActive(bool current) {
+    if (current) {
+      _selectAll.attach();
+    } else {
+      _selectAll.detach();
+    }
     final ids = _window.ids;
     if (current && !identical(_registered, ids)) {
       _registered = ids;
@@ -159,6 +176,7 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
     final ids = _window.ids;
     final extent = KMediaCard.extentOf(MediaQuery.textScalerOf(context));
     final gutter = libraryGutter(context);
+    final origin = MenuOrigin.ofScope(widget.scope);
     return SliverMainAxisGroup(
       slivers: [
         if (_window.error != null)
@@ -180,6 +198,7 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
                   playContext: widget.playContext,
                   showNumber: widget.showNumber,
                   showDetected: widget.showDetected,
+                  origin: origin,
                 );
               },
             ),

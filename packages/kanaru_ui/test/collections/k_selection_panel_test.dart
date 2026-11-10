@@ -144,4 +144,31 @@ void main() {
     expect(find.bySemanticsLabel(RegExp('Selection')), findsOneWidget);
     handle.dispose();
   });
+
+  testWidgets('the body never takes more than half of a short window', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(1300, 600));
+    late BuildContext context;
+    await tester.pumpWidget(
+      host(
+        Builder(
+          builder: (c) {
+            context = c;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    expect(KSelectionPanel.bodyHeightFor(context, 1000), 300);
+    expect(KSelectionPanel.bodyHeightFor(context, 100), 100);
+    expect(
+      KSelectionPanel.heightFor(context, expanded: true, bodyHeight: 1000),
+      KSelectionPanel.headerHeight + 300,
+    );
+    expect(
+      KSelectionPanel.heightFor(context, expanded: false, bodyHeight: 1000),
+      KSelectionPanel.headerHeight,
+    );
+  });
 }

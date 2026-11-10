@@ -12,6 +12,9 @@ import '../browse/library_list_frame.dart';
 import '../browse/library_list_scaffold.dart';
 import '../browse/library_navigation.dart';
 import '../library_locations.dart';
+import '../menus/more_button.dart';
+import '../menus/open_menu.dart';
+import '../selection/selection_inset.dart';
 import 'collection_parts.dart';
 
 /// The Languages list: one row per language, "unknown" last, with a note on
@@ -95,6 +98,7 @@ class _LanguagesBody extends ConsumerWidget {
               itemBuilder: (context, i) => _LanguageRow(language: languages[i]),
             ),
           ),
+          const SelectionInsetSliver(),
         ],
       ),
     );
@@ -110,17 +114,21 @@ class _LanguageRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final detected = language.detectedCount;
-    return KListRow(
-      leading: Icon(language.code == null ? KIcons.help : KIcons.languages),
-      title: Text(languageDisplayName(l10n, language.code)),
-      subtitle: Text(
-        detected > 0
-            ? l10n.libraryLanguageStatsDetected(language.trackCount, detected)
-            : l10n.librarySongCount(language.trackCount),
+    void menu() => openLanguageMenu(context, language.code);
+    return KContextRegion(
+      onOpen: (_) => menu(),
+      child: KListRow(
+        leading: Icon(language.code == null ? KIcons.help : KIcons.languages),
+        title: Text(languageDisplayName(l10n, language.code)),
+        subtitle: Text(
+          detected > 0
+              ? l10n.libraryLanguageStatsDetected(language.trackCount, detected)
+              : l10n.librarySongCount(language.trackCount),
+        ),
+        trailing: LibraryMoreButton(onPressed: menu),
+        onTap: () =>
+            openLibraryPage(context, LibraryLocations.language(language.code)),
       ),
-      trailing: const Icon(KIcons.chevronRight),
-      onTap: () =>
-          openLibraryPage(context, LibraryLocations.language(language.code)),
     );
   }
 }

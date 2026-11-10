@@ -5,6 +5,7 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/browse/folder_tree.dart';
 import '../../domain/music_folder.dart';
 import '../../../platform/domain/storage_volumes.dart';
+import '../menus/more_button.dart';
 import 'folder_art.dart';
 
 /// Row of a folder: [FolderArt], name (two lines for a chain), a dim line
@@ -20,6 +21,7 @@ class FolderTile extends StatelessWidget {
     this.seed = '',
     this.chain = false,
     this.leading,
+    this.onMenu,
   });
 
   /// Folder name, or a chain's names joined with ` › `.
@@ -38,18 +40,37 @@ class FolderTile extends StatelessWidget {
   final Widget? leading;
   final VoidCallback onTap;
 
+  /// Opens the folder's menu (⋮ and right click); null = no menu.
+  final VoidCallback? onMenu;
+
   @override
   Widget build(BuildContext context) {
     final mobile = FormFactor.of(context) == FormFactor.mobile;
-    return KMediaCard(
+    final menu = onMenu;
+    final card = KMediaCard(
       title: title,
       titleLines: chain ? 2 : 1,
       line2: dimLine,
       line3: countLine,
       leading: leading ?? FolderArt(coverKey: coverKey, seed: seed),
-      trailing: mobile ? const Icon(KIcons.chevronRight) : null,
+      trailing: menu == null
+          ? (mobile ? const Icon(KIcons.chevronRight) : null)
+          : mobile
+          // 04a: ⋮ and, on the mobile shell, a › as well.
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                LibraryMoreButton(onPressed: menu),
+                const Icon(KIcons.chevronRight),
+              ],
+            )
+          : LibraryMoreButton(onPressed: menu),
+      revealTrailingOnHover: menu != null,
       onTap: onTap,
     );
+    return menu == null
+        ? card
+        : KContextRegion(onOpen: (_) => menu(), child: card);
   }
 }
 

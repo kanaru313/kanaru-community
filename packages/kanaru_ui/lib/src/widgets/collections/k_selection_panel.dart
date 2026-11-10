@@ -32,6 +32,25 @@ class KSelectionPanel extends StatelessWidget {
 
   static const double desktopWidth = 440;
   static const double maxBodyHeight = 460;
+
+  /// Height of the controls row the caller puts in [header].
+  static const double headerHeight = 56;
+
+  /// Height the body gets: [bodyHeight] clamped to [maxBodyHeight] and to
+  /// half the window, so the page stays reachable on a short one.
+  static double bodyHeightFor(BuildContext context, double bodyHeight) =>
+      math.min(
+        math.min(bodyHeight, maxBodyHeight),
+        MediaQuery.sizeOf(context).height * 0.5,
+      );
+
+  /// Height of the whole panel (the single source for the panel and for the
+  /// room a page leaves for it).
+  static double heightFor(
+    BuildContext context, {
+    required bool expanded,
+    required double bodyHeight,
+  }) => headerHeight + (expanded ? bodyHeightFor(context, bodyHeight) : 0);
   static const double _margin = KSpace.x1;
 
   @override
@@ -56,10 +75,7 @@ class KSelectionPanel extends StatelessWidget {
           children: [
             header,
             if (expanded && body != null)
-              SizedBox(
-                height: math.min(bodyHeight, maxBodyHeight),
-                child: body,
-              ),
+              SizedBox(height: bodyHeightFor(context, bodyHeight), child: body),
           ],
         ),
       ),

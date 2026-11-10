@@ -14,6 +14,8 @@ import '../browse/library_list_scaffold.dart';
 import '../browse/play_actions.dart';
 import '../collections/album_tile.dart';
 import '../collections/artist_tile.dart';
+import '../menus/menu_origin.dart';
+import '../menus/more_button.dart';
 
 /// Frame of a detail page: the page [title] in a header with a back button
 /// (no root slots, no ⋮), and the page below it. Back pops one page; a page
@@ -95,7 +97,6 @@ class DetailPending extends StatelessWidget {
 /// [▶ Play] · [shuffle] · [⋮] of a detail page. Play and shuffle take every
 /// song of [DetailActions.scope] in the sort the page is in (the page filter
 /// is ignored).
-/// The page menu is not built yet: its button is dimmed.
 class DetailActions extends ConsumerWidget {
   const DetailActions({
     super.key,
@@ -103,6 +104,7 @@ class DetailActions extends ConsumerWidget {
     required this.list,
     required this.item,
     required this.playContext,
+    required this.onMenu,
   });
 
   /// The songs Play and shuffle take.
@@ -112,6 +114,10 @@ class DetailActions extends ConsumerWidget {
   /// Id of the page's item, which keys its sort.
   final String item;
   final PlayContext playContext;
+
+  /// Opens the page's own menu (a centred dialog on desktop, a sheet on the
+  /// mobile shell).
+  final void Function(BuildContext context) onMenu;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -140,11 +146,7 @@ class DetailActions extends ConsumerWidget {
               : null,
           icon: const Icon(KIcons.shuffle),
         ),
-        IconButton(
-          tooltip: l10n.appComingSoon,
-          onPressed: null,
-          icon: const Icon(KIcons.moreVert),
-        ),
+        LibraryMoreButton(onPressed: () => onMenu(context)),
       ],
     );
   }
@@ -161,18 +163,22 @@ class AlbumShelf extends StatelessWidget {
     required this.title,
     required this.albums,
     required this.onSeeAll,
+    this.origin = const MenuOrigin.list(),
   });
 
   final String title;
   final List<AlbumSummary> albums;
   final VoidCallback onSeeAll;
 
+  /// The page the shelf is on, so a card's menu never links back to it.
+  final MenuOrigin origin;
+
   @override
   Widget build(BuildContext context) => _Shelf(
     title: title,
     count: albums.length,
     onSeeAll: onSeeAll,
-    card: (i) => AlbumCard(album: albums[i]),
+    card: (i) => AlbumCard(album: albums[i], origin: origin),
   );
 }
 

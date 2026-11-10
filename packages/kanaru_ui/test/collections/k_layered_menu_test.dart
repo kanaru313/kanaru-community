@@ -363,4 +363,87 @@ void main() {
     expect(rootKey.currentState!.canPop(), isTrue, reason: 'menu is on root');
     expect(nestedKey.currentState!.canPop(), isFalse);
   });
+
+  testWidgets('a group has its heading; an empty group loses it', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        _opener(
+          KMenuPage(
+            groups: [
+              [KMenuRow(title: 'Mine')],
+              const [],
+              [KMenuRow(title: 'Guest')],
+            ],
+            groupTitles: const ['Albums', 'Hidden', 'Appears on'],
+          ),
+        ),
+      ),
+    );
+    await _open(tester);
+    expect(find.text('Albums'), findsOneWidget);
+    expect(find.text('Appears on'), findsOneWidget);
+    expect(find.text('Hidden'), findsNothing);
+  });
+
+  testWidgets('the header opens its page and Back returns', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        _opener(
+          KMenuPage(
+            header: const Text('Song'),
+            headerOpens: KMenuPage(
+              title: 'Song info',
+              groups: [
+                [KMenuRow(title: 'Format', subtitle: 'FLAC')],
+              ],
+            ),
+            groups: [
+              [KMenuRow(title: 'Play')],
+            ],
+          ),
+        ),
+      ),
+    );
+    await _open(tester);
+    expect(find.byIcon(KIcons.chevronRight), findsOneWidget);
+    await tester.tap(find.text('Song'));
+    await tester.pumpAndSettle();
+    expect(find.text('Song info'), findsOneWidget);
+    expect(find.text('Format'), findsOneWidget);
+    expect(find.text('Play'), findsNothing);
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(find.text('Play'), findsOneWidget);
+  });
+
+  testWidgets('a row can show a picture in place of its icon', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        _opener(
+          KMenuPage(
+            groups: [
+              [
+                KMenuRow(
+                  title: 'Blue',
+                  icon: KIcons.album,
+                  leading: const SizedBox.square(
+                    key: ValueKey('cover'),
+                    dimension: 40,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+    await _open(tester);
+    expect(find.byKey(const ValueKey('cover')), findsOneWidget);
+    expect(find.byIcon(KIcons.album), findsNothing);
+  });
 }

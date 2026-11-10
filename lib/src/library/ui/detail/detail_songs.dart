@@ -13,6 +13,7 @@ import '../../state/browse/song_list_providers.dart';
 import '../browse/library_labels.dart';
 import '../browse/library_list_scaffold.dart';
 import '../browse/list_sort_popover.dart';
+import '../selection/selection_inset.dart';
 import '../songs/song_list.dart';
 
 /// The songs part of a detail page: a sticky list bar (`N songs · length`,
@@ -149,6 +150,7 @@ class _DetailSongsHostState extends ConsumerState<DetailSongsHost> {
           showDetected: widget.showDetected,
         ),
       ],
+      const SelectionInsetSliver(),
     ];
     return PopScope(
       canPop: !_filterOpen,

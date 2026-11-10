@@ -709,5 +709,189 @@
   },
   "libraryAutoDetectedTag": "tự nhận diện",
   "libraryLanguageDetectedNote": "Bài có nhãn “tự nhận diện” không có tag ngôn ngữ; Kanaru đoán từ tên bài và lời.",
-  "libraryLanguageUnknownNote": "Các bài này không có tag ngôn ngữ và Kanaru không nhận diện được (thường là nhạc không lời). Thêm tag ngôn ngữ trong Sửa thông tin bài, hoặc đổi cách nhận diện trong Cài đặt › Thư viện."
+  "libraryLanguageUnknownNote": "Các bài này không có tag ngôn ngữ và Kanaru không nhận diện được (thường là nhạc không lời). Thêm tag ngôn ngữ trong Sửa thông tin bài, hoặc đổi cách nhận diện trong Cài đặt › Thư viện.",
+  "libraryMenuGoAlbum": "Đi tới album",
+  "libraryMenuGoArtist": "Đi tới nghệ sĩ",
+  "libraryMenuGoAlbumArtist": "Đi tới nghệ sĩ album",
+  "libraryMenuGoGenre": "Đi tới thể loại",
+  "libraryMenuGoLanguage": "Đi tới ngôn ngữ",
+  "libraryMenuGoFolder": "Đi tới thư mục",
+  "libraryMenuReveal": "Mở trong trình quản lý tệp",
+  "libraryMenuNoAlbum": "Không có album",
+  "libraryMenuNoArtist": "Không có nghệ sĩ",
+  "libraryMenuAppearsCount": "xuất hiện trong {count}",
+  "@libraryMenuAppearsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuSongsInFolders": "{songs} bài trong {folders} thư mục",
+  "@libraryMenuSongsInFolders": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuFoldersOf": "Thư mục · {name}",
+  "@libraryMenuFoldersOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryMenuFoldersIntroAlbum": "Các bài của album này được lưu trong {count} thư mục. Chọn một thư mục để mở trong mục Thư mục.",
+  "@libraryMenuFoldersIntroAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuFoldersIntroArtist": "Các bài của nghệ sĩ này được lưu trong {count} thư mục. Chọn một thư mục để mở trong mục Thư mục.",
+  "@libraryMenuFoldersIntroArtist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuFoldersIntroGenre": "Các bài hát thuộc thể loại này được lưu trong {count} thư mục. Chọn một thư mục để mở trong mục Thư mục.",
+  "@libraryMenuFoldersIntroGenre": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuFoldersIntroLanguage": "Các bài của ngôn ngữ này được lưu trong {count} thư mục. Chọn một thư mục để mở trong mục Thư mục.",
+  "@libraryMenuFoldersIntroLanguage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuAddToPlaylist": "Thêm vào playlist…",
+  "libraryMenuFavoriteAll": "Thêm tất cả vào Yêu thích",
+  "libraryMenuEditSong": "Sửa thông tin bài",
+  "libraryMenuEditAlbum": "Sửa thông tin album",
+  "libraryMenuSelect": "Chọn",
+  "libraryMenuDeselect": "Bỏ chọn",
+  "libraryMenuAskAiSong": "Hỏi AI về bài này",
+  "libraryMenuAskAiAlbum": "Hỏi AI về album này",
+  "libraryMenuAskAiArtist": "Hỏi AI về nghệ sĩ này",
+  "libraryMenuAskAiSongs": "Hỏi AI về các bài này",
+  "libraryMenuAdvanced": "Nâng cao",
+  "libraryMenuFindLyrics": "Tìm lời online…",
+  "libraryMenuHide": "Loại khỏi thư viện",
+  "libraryMenuHideNote": "Giữ nguyên tệp; bỏ loại trong Cài đặt › Thư viện",
+  "libraryMenuDeleteFiles": "Xoá tệp khỏi thiết bị",
+  "libraryMenuMoveToTrash": "Chuyển tệp vào Thùng rác",
+  "libraryMenuFileCount": "{count, plural, other{{count} tệp}}",
+  "@libraryMenuFileCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuSplitArtists": "Tách hoặc gộp nghệ sĩ",
+  "libraryMenuSplitArtistsNote": "Coi một tên là hai nghệ sĩ, hoặc gộp các cách viết",
+  "libraryMenuSplitGenres": "Tách hoặc gộp thể loại",
+  "libraryMenuSplitGenresNote": "Tách thể loại ghép trong tag, hoặc gộp các cách viết",
+  "libraryMenuLanguageDetection": "Cách nhận diện ngôn ngữ",
+  "libraryMenuLanguageDetectionNote": "Cài đặt › Thư viện",
+  "libraryMenuCopyPath": "Sao chép đường dẫn",
+  "libraryMenuExclude": "Loại trừ khỏi thư viện",
+  "libraryMenuExcludeNote": "Giữ nguyên tệp; bỏ loại trong Cài đặt › Thư viện › Thư mục",
+  "libraryMenuIncludesSubfolders": "Gồm thư mục con",
+  "libraryMenuPlayDirect": "Chỉ phát bài trong thư mục này",
+  "libraryMenuPlayDirectNote": "{count, plural, other{{count} bài}}, không gồm thư mục con",
+  "@libraryMenuPlayDirectNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuSelectionTitle": "{count, plural, other{{count} bài đã chọn}}",
+  "@libraryMenuSelectionTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuMore": "Tùy chọn khác",
+  "libraryMenuBack": "Quay lại",
+  "libraryMenuPlayNext": "Phát tiếp theo",
+  "libraryMenuAddToQueue": "Thêm vào hàng đợi",
+  "libraryMenuPlayingNext": "Sẽ phát tiếp theo",
+  "libraryMenuQueued": "Đã thêm vào hàng đợi",
+  "libraryMenuQueueFailed": "Không đổi được hàng đợi",
+  "libraryMenuExcluded": "Đã loại trừ “{name}” khỏi thư viện",
+  "@libraryMenuExcluded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryMenuUndo": "Hoàn tác",
+  "libraryMenuExcludeFailed": "Không loại trừ được thư mục",
+  "libraryMenuUndoFailed": "Không hoàn tác được",
+  "libraryMenuPathCopied": "Đã chép đường dẫn",
+  "libraryMenuRevealFailed": "Không mở được trình quản lý tệp",
+  "libraryMenuLoadFailed": "Không mở được menu",
+  "libraryMenuSongInfo": "Thông tin bài",
+  "libraryInfoFormat": "Định dạng",
+  "libraryInfoBitrate": "Bitrate",
+  "libraryInfoBitrateValue": "{kbps} kbps",
+  "@libraryInfoBitrateValue": {
+    "placeholders": {
+      "kbps": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoSampleRate": "Tần số lấy mẫu",
+  "libraryInfoSampleRateValue": "{khz} kHz",
+  "@libraryInfoSampleRateValue": {
+    "placeholders": {
+      "khz": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoBitDepth": "Độ sâu bit",
+  "libraryInfoBitDepthValue": "{bits}-bit",
+  "@libraryInfoBitDepthValue": {
+    "placeholders": {
+      "bits": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoSize": "Kích thước",
+  "libraryInfoPath": "Tệp",
+  "libraryInfoPlayCount": "Số lần nghe",
+  "libraryInfoUnknown": "Không rõ",
+  "libraryPanelLabel": "Các bài đã chọn",
+  "libraryPanelClear": "Bỏ chọn tất cả",
+  "libraryPanelPlayAll": "Phát tất cả bài đã chọn",
+  "libraryPanelEdit": "Sửa thông tin",
+  "libraryPanelAddToPlaylist": "Thêm vào playlist…",
+  "libraryPanelMore": "Tùy chọn cho các bài đã chọn",
+  "libraryPanelSelectAll": "Chọn tất cả bài ở màn này",
+  "libraryPanelExpand": "Mở danh sách đã chọn",
+  "libraryPanelCollapse": "Thu gọn",
+  "libraryPanelReorder": "Kéo để đổi thứ tự phát",
+  "libraryMenuCopyFailed": "Không sao chép được"
 }
