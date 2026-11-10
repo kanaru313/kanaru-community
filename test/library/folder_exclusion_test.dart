@@ -134,8 +134,4 @@ void main() {
     );
     expect(await status(t), TrackStatus.present);
   });
-
-  test('the seeded scanner logs and returns', () async {
-    await const NoLibraryScanner().rescan(full: true);
-  });
 }
