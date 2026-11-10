@@ -113,6 +113,11 @@ abstract final class KIcons {
   static const IconData musicFile = Icons.audio_file;
   static const IconData circleOutline = Icons.circle_outlined;
 
+  // Theme choice (first run, settings).
+  static const IconData themeSystem = Icons.brightness_auto_outlined;
+  static const IconData themeDark = Icons.dark_mode_outlined;
+  static const IconData themeLight = Icons.light_mode_outlined;
+
   // Library sort criteria and menus.
   static const IconData duration = Icons.timer;
   static const IconData playCount = Icons.headphones;
