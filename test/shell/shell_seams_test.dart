@@ -1,22 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/kanaru.dart';
-import 'package:kanaru/src/extension/state/extension_providers.dart';
 import 'package:kanaru/src/library/domain/scan_status.dart';
-import 'package:kanaru/src/library/state/scan_providers.dart';
 import 'package:kanaru/src/platform/domain/settings_store.dart';
-import 'package:kanaru/src/platform/state/platform_providers.dart';
-import 'package:kanaru/src/platform/state/settings_providers.dart';
-import 'package:kanaru/src/router/ui/kanaru_app.dart';
 import 'package:kanaru/src/shell/ui/mobile_shell.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../support/app_harness.dart';
 import '../support/memory_settings_store.dart';
+import '../support/nav_fixture.dart';
 
 class _CountingStore extends MemorySettingsStore {
   int flushes = 0;
@@ -27,12 +23,6 @@ class _CountingStore extends MemorySettingsStore {
 class _ThrowingStore extends MemorySettingsStore {
   @override
   Future<void> flush() => Future.error(StateError('disk'));
-}
-
-class _Scanner implements LibraryScanCommands {
-  int rescans = 0;
-  @override
-  Future<void> rescan({bool full = false}) async => rescans++;
 }
 
 class _Ext implements KanaruExtension {
@@ -49,27 +39,17 @@ Future<void> _pump(
   double width, {
   List<KanaruExtension> extra = const [],
   SettingsStore? store,
-  _Scanner? scanner,
+  NoopScanCommands? scanner,
   ScanStatus scan = const ScanIdle(),
 }) async {
-  tester.view.devicePixelRatio = 1;
-  tester.view.physicalSize = Size(width, 800);
-  addTearDown(tester.view.reset);
-  final registry = ExtensionRegistry()
-    ..install([...builtInExtensions, ...extra]);
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        extensionRegistryProvider.overrideWithValue(registry),
-        nativeVersionsProvider.overrideWithValue('bridge test'),
-        settingsStoreProvider.overrideWithValue(store ?? MemorySettingsStore()),
-        libraryScanCommandsProvider.overrideWithValue(scanner ?? _Scanner()),
-        scanStatusProvider.overrideWith((ref) => Stream.value(scan)),
-      ],
-      child: const KanaruApp(),
-    ),
+  await pumpKanaruApp(
+    tester,
+    width: width,
+    extensions: [const NavFixture(), ...extra],
+    settings: store,
+    scanner: scanner,
+    scan: scan,
   );
-  await tester.pumpAndSettle();
 }
 
 Finder _byTooltip(String message) =>
@@ -91,64 +71,47 @@ Color? _rowColor(WidgetTester tester, String label) {
 
 void main() {
   group('desktop sidebar', () {
-    testWidgets(
-      'lists every item in order, dividers between bands, no Search',
-      (tester) async {
-        await _pump(tester, 1280);
-        final sidebar = find.byKey(const ValueKey('sidebar'));
-        final labels = [
-          'Home',
-          'Online',
-          'Library',
-          'Playlists',
-          'Favorites',
-          'Queue',
-          'History',
-          'Most played',
-          'Settings',
-        ];
-        double? previous;
-        for (final label in labels) {
-          final item = find.descendant(of: sidebar, matching: find.text(label));
-          expect(item, findsOneWidget, reason: label);
-          final y = tester.getTopLeft(item).dy;
-          expect(y, greaterThan(previous ?? -1), reason: label);
-          previous = y;
-        }
-        expect(
-          find.descendant(of: sidebar, matching: find.text('Search')),
-          findsNothing,
-        );
-        expect(
-          find.descendant(of: sidebar, matching: find.byType(Divider)),
-          findsNWidgets(2),
-        );
-      },
-    );
-
-    testWidgets('out-of-scope items are dimmed with a tooltip and do nothing', (
+    testWidgets('lists items in order with dividers between bands', (
       tester,
     ) async {
       await _pump(tester, 1280);
+      final sidebar = find.byKey(const ValueKey('sidebar'));
+      double? previous;
+      for (final label in ['Alpha', 'Beta', 'Gamma', 'Soon', 'Gear']) {
+        final item = find.descendant(of: sidebar, matching: find.text(label));
+        expect(item, findsOneWidget, reason: label);
+        final y = tester.getTopLeft(item).dy;
+        expect(y, greaterThan(previous ?? -1), reason: label);
+        previous = y;
+      }
+      // Alpha|Beta and Beta|Gamma change band; Gamma|Soon share one.
       expect(
-        _byTooltip('Coming soon'),
-        findsNWidgets(4),
-      ); // Favorites, Queue, History, Most played
-      await tester.tap(find.text('Favorites'));
-      await tester.pumpAndSettle();
-      expect(_location(tester), '/');
+        find.descendant(of: sidebar, matching: find.byType(Divider)),
+        findsNWidgets(2),
+      );
     });
+
+    testWidgets(
+      'a coming-soon item is dimmed with a tooltip and does nothing',
+      (tester) async {
+        await _pump(tester, 1280);
+        expect(_byTooltip('Coming soon'), findsOneWidget);
+        await tester.tap(find.text('Soon'));
+        await tester.pumpAndSettle();
+        expect(_location(tester), '/');
+      },
+    );
 
     testWidgets('the item of the open page is tinted', (tester) async {
       await _pump(tester, 1280);
       final scheme = Theme.of(tester.element(find.byType(Scaffold).first))
           .colorScheme;
-      expect(_rowColor(tester, 'Home'), scheme.secondaryContainer);
-      expect(_rowColor(tester, 'Library'), Colors.transparent);
-      await tester.tap(find.text('Library'));
+      expect(_rowColor(tester, 'Alpha'), scheme.secondaryContainer);
+      expect(_rowColor(tester, 'Beta'), Colors.transparent);
+      await tester.tap(find.text('Beta'));
       await tester.pumpAndSettle();
-      expect(_rowColor(tester, 'Library'), scheme.secondaryContainer);
-      expect(_rowColor(tester, 'Home'), Colors.transparent);
+      expect(_rowColor(tester, 'Beta'), scheme.secondaryContainer);
+      expect(_rowColor(tester, 'Alpha'), Colors.transparent);
     });
 
     testWidgets('a child item is selected under its path and navigates', (
@@ -235,18 +198,18 @@ void main() {
       await _pump(tester, 1280);
       await tester.tap(_byTooltip('Search'));
       await tester.pumpAndSettle();
-      expect(find.text('Search your music.'), findsOneWidget);
+      expect(find.text('page /search'), findsOneWidget);
     });
 
     testWidgets('Ctrl+F and Ctrl+K open Search', (tester) async {
       for (final key in [LogicalKeyboardKey.keyF, LogicalKeyboardKey.keyK]) {
         await _pump(tester, 1280);
-        expect(find.text('Search your music.'), findsNothing);
+        expect(find.text('page /search'), findsNothing);
         await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
         await tester.sendKeyEvent(key);
         await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
         await tester.pumpAndSettle();
-        expect(find.text('Search your music.'), findsOneWidget, reason: '$key');
+        expect(find.text('page /search'), findsOneWidget, reason: '$key');
         GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/');
         await tester.pumpAndSettle();
       }
@@ -271,20 +234,16 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pumpAndSettle();
-      expect(find.text('Search your music.'), findsOneWidget);
+      expect(find.text('page /search'), findsOneWidget);
     });
 
-    testWidgets('mobile has no header search icon, only the tab', (
-      tester,
-    ) async {
+    testWidgets('mobile has no header search icon', (tester) async {
       await _pump(tester, 360);
-      expect(_byTooltip('Search'), findsOneWidget); // the bottom bar tab
+      expect(_byTooltip('Search'), findsNothing);
     });
   });
 
-  testWidgets('mobile bar order: Home, Library, Playlists, Search, Online', (
-    tester,
-  ) async {
+  testWidgets('mobile bar follows mobileOrder, not nav order', (tester) async {
     await _pump(tester, 360);
     final labels = [
       for (final d in tester.widgetList<NavigationDestination>(
@@ -292,12 +251,12 @@ void main() {
       ))
         d.label,
     ];
-    expect(labels, ['Home', 'Library', 'Playlists', 'Search', 'Online']);
+    expect(labels, ['Alpha', 'Gamma', 'Beta']);
   });
 
   group('top bar', () {
     testWidgets('Rescan calls the scanner', (tester) async {
-      final scanner = _Scanner();
+      final scanner = NoopScanCommands();
       await _pump(tester, 1280, scanner: scanner);
       await tester.tap(_byTooltip('Rescan library'));
       await tester.pump();
@@ -305,7 +264,7 @@ void main() {
     });
 
     testWidgets('Rescan is disabled while a scan runs', (tester) async {
-      final scanner = _Scanner();
+      final scanner = NoopScanCommands();
       await _pump(
         tester,
         1280,

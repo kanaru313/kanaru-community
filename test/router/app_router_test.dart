@@ -2,17 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/kanaru.dart';
-import 'package:kanaru/src/extension/state/extension_providers.dart';
-import 'package:kanaru/src/platform/state/platform_providers.dart';
-import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:kanaru/src/router/app_router.dart';
 import 'package:kanaru/src/router/state/router_provider.dart';
-import 'package:kanaru/src/router/ui/kanaru_app.dart';
 import 'package:kanaru/src/screens/first_run/state/first_run_gate.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../support/memory_settings_store.dart';
+import '../support/app_harness.dart';
+import '../support/nav_fixture.dart';
 
 class _GateNotifier extends Notifier<bool> {
   _GateNotifier([this.initial = false]);
@@ -80,27 +77,14 @@ Future<ProviderContainer> _pump(
   WidgetTester tester,
   KanaruExtension ext, {
   bool required = false,
-}) async {
-  tester.view.devicePixelRatio = 1;
-  tester.view.physicalSize = const Size(1280, 800);
-  addTearDown(tester.view.reset);
-  final registry = ExtensionRegistry()..install([...builtInExtensions, ext]);
-  final container = ProviderContainer(
-    overrides: [
-      extensionRegistryProvider.overrideWithValue(registry),
-      nativeVersionsProvider.overrideWithValue('bridge test'),
-      settingsStoreProvider.overrideWithValue(MemorySettingsStore()),
-      _gate.overrideWith(() => _GateNotifier(required)),
-      firstRunRequiredProvider.overrideWith((ref) => ref.watch(_gate)),
-    ],
-  );
-  addTearDown(container.dispose);
-  await tester.pumpWidget(
-    UncontrolledProviderScope(container: container, child: const KanaruApp()),
-  );
-  await tester.pumpAndSettle();
-  return container;
-}
+}) => pumpKanaruApp(
+  tester,
+  extensions: [const NavFixture(), ext],
+  overrides: [_gate.overrideWith(() => _GateNotifier(required))],
+  firstRunRequired: firstRunRequiredProvider.overrideWith(
+    (ref) => ref.watch(_gate),
+  ),
+);
 
 String _location(ProviderContainer c) =>
     c.read(routerProvider).routerDelegate.currentConfiguration.uri.path;
@@ -110,7 +94,7 @@ void main() {
     'a child nav item resolves to a nested route and is not a branch',
     (tester) async {
       final registry = ExtensionRegistry()
-        ..install([...builtInExtensions, _tabWithChild()]);
+        ..install([const NavFixture(), _tabWithChild()]);
       expect(
         registry.branchNavItems.map((n) => n.id),
         isNot(contains('songs')),
@@ -286,7 +270,7 @@ void main() {
 
   test('first run required without a welcome route fails router creation', () {
     final registry = ExtensionRegistry()
-      ..install([...builtInExtensions, _tabWithChild(welcome: false)]);
+      ..install([const NavFixture(), _tabWithChild(welcome: false)]);
     expect(
       () => buildRouter(registry, firstRunRequired: () => true),
       throwsA(

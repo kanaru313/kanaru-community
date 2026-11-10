@@ -27,6 +27,7 @@ them, the library reads the stored columns.
 | `albumArtistKeyFor({String? albumArtist, required List<String> artists})` | Raw (apply `groupKey` yourself): album artist, else first non-empty track artist, else `''`. |
 | `songKey({required String title, required List<String> artists})` | Stable 16-hex hash of `groupKey(title)` and `groupKey(first artist)`. |
 | `albumKeyFor({String? album, String? albumArtist, required List<String> artists})` | `AlbumKey?`; null when the album is empty. Both parts go through `groupKey`. |
+| `languageKey(String? raw)` | ISO 639-3 key of a language code: trims, lower-cases, maps ISO 639-1 and ISO 639-2/B codes of common languages (`vi` to `vie`, `chi` to `zho`, `fre` to `fra`), keeps any other three-letter `[a-z]` code. `und`, `zxx`, `mul`, empty and anything else give null (unknown). |
 | `encodeKey(String)` / `decodeKey(String)` | base64url of UTF-8, no padding. `decodeKey` returns null for anything that is not the canonical encoding. |
 
 - `AlbumKey(artistKey, titleKey)`: `encode()` and `static decode(String)`.
@@ -43,10 +44,17 @@ recompute it, so a writer and a reader cannot disagree.
 
 | Stored column | Written from |
 |---|---|
+| `title_sort` | `sortForm(titleSortTag ?? title)` |
 | `title_search` | `searchForm(title)` |
+| `artist_search` | `searchForm(artists.join(' '))` |
+| `album_search` | `searchForm(album)` |
+| `album_artist_search` | `searchForm(albumArtist ?? first non-blank artist)` |
+| `genre_search` | `searchForm(genre)` |
 | `genre_key` | `groupKey(genre)` |
 | `album_artist_key`, `album_title_key` | `albumKeyFor`; both NULL for an empty album |
 | `song_key` | `songKey` |
+| `language` | `languageKey(tag or detected)`: ISO 639-3 lower case, NULL = unknown ("Chưa rõ") |
+| `language_detected` | 1 when `language` comes from detection, 0 when read from a tag |
 
 `upsertTrackSnapshot` throws `ArgumentError` when `title` and `title_search`,
 `genre` and `genre_key`, or `album` and its keys do not go together.
@@ -116,7 +124,7 @@ these functions and never build the paths themselves.
 
 ## Favorites
 
-`lib/src/library/data/favorites_repository.dart`, `lib/src/library/state/favorites_providers.dart`.
+`lib/src/library/domain/favorites.dart` (interface), `lib/src/library/data/favorites_repository.dart` (implementation), `lib/src/library/state/favorites_providers.dart`.
 Favorites is the playlist with uid `favorites`. Unfavorite is a hard delete of
 the entry; a tombstoned Favorites playlist is revived by the next favorite.
 
@@ -160,7 +168,7 @@ the entry; a tombstoned Favorites playlist is revived by the next favorite.
 
 ## Exclusions
 
-`lib/src/library/data/folder_exclusion_repository.dart`, `lib/src/library/state/folder_exclusion_providers.dart`.
+`lib/src/library/domain/folder_exclusions.dart` (interface), `lib/src/library/data/folder_exclusion_repository.dart` (implementation), `lib/src/library/state/folder_exclusion_providers.dart`.
 
 | Symbol | Behaviour |
 |---|---|

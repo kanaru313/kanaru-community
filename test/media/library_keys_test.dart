@@ -152,4 +152,104 @@ void main() {
       expect(foldedContains(stored, 'VŨ cát'), isTrue);
     });
   });
+
+  group('languageKey', () {
+    test('two-letter codes map to ISO 639-3', () {
+      const expected = {
+        'vi': 'vie',
+        'en': 'eng',
+        'ja': 'jpn',
+        'ko': 'kor',
+        'zh': 'zho',
+        'fr': 'fra',
+        'de': 'deu',
+        'es': 'spa',
+        'it': 'ita',
+        'pt': 'por',
+        'ru': 'rus',
+        'th': 'tha',
+        'id': 'ind',
+        'ms': 'msa',
+        'hi': 'hin',
+        'ar': 'ara',
+        'nl': 'nld',
+        'pl': 'pol',
+        'tr': 'tur',
+        'sv': 'swe',
+        'uk': 'ukr',
+        'cs': 'ces',
+        'el': 'ell',
+        'fa': 'fas',
+        'ro': 'ron',
+        'sk': 'slk',
+        'he': 'heb',
+      };
+      expected.forEach(
+        (raw, key) => expect(languageKey(raw), key, reason: raw),
+      );
+    });
+    test('bibliographic three-letter codes map to the ISO 639-3 code', () {
+      const expected = {
+        'chi': 'zho',
+        'fre': 'fra',
+        'ger': 'deu',
+        'dut': 'nld',
+        'cze': 'ces',
+        'gre': 'ell',
+        'per': 'fas',
+        'rum': 'ron',
+        'slo': 'slk',
+      };
+      expected.forEach(
+        (raw, key) => expect(languageKey(raw), key, reason: raw),
+      );
+    });
+    test('the table maps every key to a three-letter code', () {
+      for (final key in languageCodeTable.keys) {
+        expect(languageKey(key), matches(RegExp(r'^[a-z]{3}$')), reason: key);
+      }
+      expect(languageCodeTable.keys.where((k) => k.length == 2).length, 183);
+    });
+    test('more fixed vectors', () {
+      expect(languageKey('sl'), 'slv');
+      expect(languageKey('lt'), 'lit');
+      expect(languageKey('ur'), 'urd');
+      expect(languageKey('af'), 'afr');
+      expect(languageKey('ga'), 'gle');
+      expect(languageKey('no'), 'nor');
+      expect(languageKey('sw'), 'swa');
+      expect(languageKey('bh'), isNull);
+    });
+    test('trims and lower-cases', () {
+      expect(languageKey(' VI '), 'vie');
+      expect(languageKey('ENG'), 'eng');
+      expect(languageKey('\tZho\n'), 'zho');
+    });
+    test('other three-letter codes are kept', () {
+      expect(languageKey('vie'), 'vie');
+      expect(languageKey('deu'), 'deu');
+      expect(languageKey('yue'), 'yue');
+    });
+    test('undetermined, empty and malformed values are unknown', () {
+      for (final raw in [
+        null,
+        '',
+        '   ',
+        'und',
+        'UND',
+        'zxx',
+        'mul',
+        'x',
+        'xx',
+        'abcd',
+        'v1e',
+        'en-US',
+        'vi_VN',
+        'ti\u1ebfng vi\u1ec7t',
+        '123',
+      ]) {
+        expect(languageKey(raw), isNull, reason: '$raw');
+      }
+    });
+  });
 }

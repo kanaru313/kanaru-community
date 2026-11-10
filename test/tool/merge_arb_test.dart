@@ -18,8 +18,9 @@ Directory _l10n(Map<String, String> parts) {
 final _okParts = {
   'app_en': '{"navHome": "Home"}',
   'app_vi': '{"navHome": "Trang chu"}',
-  'scan_en': '{"scanRescan": "Rescan", "@scanRescan": {"description": "x"}}',
-  'scan_vi': '{"scanRescan": "Quet lai", "@scanRescan": {"description": "x"}}',
+  'scan_en': '{"scanExample": "Rescan", "@scanExample": {"description": "x"}}',
+  'scan_vi':
+      '{"scanExample": "Quet lai", "@scanExample": {"description": "x"}}',
 };
 
 void main() {
@@ -38,15 +39,15 @@ void main() {
     final en = merged['en']!;
     expect(en, contains('"@@locale": "en"'));
     expect(en, contains(generatedMarker));
-    expect(en.indexOf('navHome') < en.indexOf('scanRescan'), isTrue);
-    expect(en, contains('"@scanRescan"'));
+    expect(en.indexOf('navHome') < en.indexOf('scanExample'), isTrue);
+    expect(en, contains('"@scanExample"'));
   });
 
   test('a duplicate key across parts fails', () {
-    // `scanRescan` is defined by the scan part and again by the app part.
+    // `scanExample` is defined by the scan part and again by the app part.
     final dir = _l10n({
       ..._okParts,
-      'app_en': '{"navHome": "Home", "scanRescan": "dup"}',
+      'app_en': '{"navHome": "Home", "scanExample": "dup"}',
     });
     expect(
       () => mergeArbParts(dir),
@@ -54,7 +55,7 @@ void main() {
         isA<ArbMergeException>().having(
           (e) => e.message,
           'message',
-          contains('scanRescan'),
+          contains('scanExample'),
         ),
       ),
     );
@@ -86,7 +87,7 @@ void main() {
         isA<ArbMergeException>().having(
           (e) => e.message,
           'message',
-          contains('scanRescan'),
+          contains('scanExample'),
         ),
       ),
     );

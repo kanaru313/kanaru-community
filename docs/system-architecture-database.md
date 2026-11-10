@@ -106,11 +106,11 @@ The full list is in [Foreign key list](#foreign-key-list).
 ### Track snapshot upsert
 
 - `upsertTrackSnapshot` derives the status from the source kind. Callers never pass a status. `plugin` gives `remote`, on insert and on conflict.
-- Otherwise it inserts `present`. On conflict on `(source_id, locator)`, the status is `hidden` if the row is `hidden`, else `present`.
+- Otherwise a new row is inserted `present`, or `hidden` when a live folder exclusion of its source covers it. On conflict on `(source_id, locator)`, the status is `hidden` if the row is `hidden`, else `present`.
 - On conflict, `missing_since` is set to `NULL` unless the row is `hidden`.
-- It writes snapshot columns only. `uid`, `added_at` and the user columns are never touched.
+- It writes snapshot and scan columns only. `uid`, `added_at` and the user columns are never touched.
 - One statement (`INSERT ... ON CONFLICT (source_id, locator) DO UPDATE ... RETURNING id`); it returns `tracks.id` and notifies `tracks` and `track_search`. Search streams declare `readsFrom` both `tracks` and `track_search`. The source kind is read in the same statement.
-- The companion carries `source_id`, `locator`, `uid`, `title`, `rel_path`, `added_at`, `updated_at` (the insert needs them) and any snapshot or scan fields (`trackSnapshotColumns`, `trackScanColumns`). `title` and `title_search`, `genre` and `genre_key` go together in the same row (the writer derives them: `title_search = searchForm(title)`, `genre_key = groupKey(genre)`), else `ArgumentError`. Any column outside identity (except `id`), snapshot, `added_at` and `updated_at` (`status`, `missing_since`, user columns) throws `ArgumentError`. On conflict only the snapshot fields present in the companion are rewritten: an absent field keeps the stored value, an explicit null writes null.
+- The companion carries `source_id`, `locator`, `uid`, `title`, `rel_path`, `added_at`, `updated_at` (the insert needs them) and any snapshot or scan fields (`trackSnapshotColumns`, `trackScanColumns`). `title` and `title_search`, `genre` and `genre_key`, and `album` with `album_title_key` and `album_artist_key` go together in the same row (the writer derives them: `title_search = searchForm(title)`, `genre_key = groupKey(genre)`, the album keys with `albumKeyFor`, both NULL for an empty album), else `ArgumentError`. Any column outside identity (except `id`), snapshot, `added_at` and `updated_at` (`status`, `missing_since`, user columns) throws `ArgumentError`. On conflict only the snapshot fields present in the companion are rewritten: an absent field keeps the stored value, an explicit null writes null.
 - Column classification (SQL names, in `track_snapshot.dart`, each `tracks` column in exactly one set; a test enforces it): `trackIdentityColumns` (`id`, `uid`, `source_id`, `locator`), `trackSnapshotColumns` and `trackScanColumns` (rewritten on conflict), `trackUserColumns` (never touched), `trackLifecycleColumns` (`status`, `missing_since`, `added_at`, `updated_at`; derived or set once).
 
 ### Online rows
@@ -299,12 +299,13 @@ UNIQUE `(source_id, locator)`: the scanner's natural key, and the conflict targe
 | `end_ms` | INTEGER | NULL | | CUE end. NULL = to end of file. |
 | `song_key` | TEXT | NULL | | Hash of normalized metadata (DATA-06). |
 | `title` | TEXT | NOT NULL | | |
-| `title_sort` | TEXT | NOT NULL | `''` | Sort form of the title (a TITLESORT tag may replace the title here). |
-| `title_search` | TEXT | NOT NULL | `''` | Search form of the title (never from a TITLESORT tag), indexed by `track_search`. |
-| `artist`, `album`, `album_artist`, `genre`, `composer`, `language` | TEXT | NULL | | |
+| `title_sort` | TEXT | NOT NULL | `''` | `sortForm(titleSortTag ?? title)` (a TITLESORT tag may replace the title here). |
+| `title_search` | TEXT | NOT NULL | `''` | `searchForm(title)` (never from a TITLESORT tag), indexed by `track_search`. |
+| `artist`, `album`, `album_artist`, `genre`, `composer` | TEXT | NULL | | |
+| `language` | TEXT | NULL | | `languageKey(tag or detected)`: ISO 639-3, lower case. NULL = unknown (shown as "Chưa rõ"). |
 | `album_display_artist` | TEXT | NULL | | |
 | `artist_sort`, `album_sort` | TEXT | NULL | | |
-| `artist_search`, `album_search`, `album_artist_search`, `genre_search` | TEXT | NULL | | Search forms, indexed by `track_search`. |
+| `artist_search`, `album_search`, `album_artist_search`, `genre_search` | TEXT | NULL | | Search forms, indexed by `track_search`: `artist_search = searchForm(artists.join(' '))`, `album_search = searchForm(album)`, `album_artist_search = searchForm(albumArtist ?? first non-blank artist)`, `genre_search = searchForm(genre)`. |
 | `genre_key` | TEXT | NULL | | `groupKey(genre)`, grouping key of the Genres list (SQLite `lower()` is ASCII-only, so the key is stored). |
 | `album_artist_key`, `album_title_key` | TEXT | NULL | | Album grouping keys, computed by the writer with `albumKeyFor` and written together with `album` (the snapshot upsert rejects a row that sets one without the others). An empty album is stored as NULL in both. |
 | `language_detected` | INTEGER | NOT NULL | `0` | `CHECK (language_detected IN (0,1))`. 1 = `language` was detected from the text, not read from a tag. |

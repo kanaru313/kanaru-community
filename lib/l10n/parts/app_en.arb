@@ -21,5 +21,6 @@
   "appComingSoon": "Coming soon",
   "appKeymap": "Keyboard shortcuts",
   "appAiChat": "AI chat",
-  "appSearch": "Search"
+  "appSearch": "Search",
+  "appRescan": "Rescan library"
 }

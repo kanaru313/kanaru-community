@@ -87,6 +87,10 @@ abstract final class KIcons {
   static const IconData chevronRight = Icons.chevron_right;
   static const IconData folderOpen = Icons.folder_open;
   static const IconData folderOff = Icons.folder_off;
+  static const IconData folderAdd = Icons.create_new_folder;
+  static const IconData theme = Icons.palette;
+  static const IconData language = Icons.language;
+  static const IconData multiSelect = Icons.checklist;
   static const IconData sdCard = Icons.sd_card;
   static const IconData help = Icons.help_outline;
   static const IconData openInNew = Icons.open_in_new;

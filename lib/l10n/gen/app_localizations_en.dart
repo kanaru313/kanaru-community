@@ -79,7 +79,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appSearch => 'Search';
 
   @override
-  String get scanRescan => 'Rescan library';
+  String get appRescan => 'Rescan library';
 
   @override
   String get playbackCover => 'Cover art';

@@ -62,7 +62,7 @@ class DesktopTopBar extends ConsumerWidget {
               ),
               _BarButton(
                 icon: KIcons.rescan,
-                tooltip: l10n.scanRescan,
+                tooltip: l10n.appRescan,
                 onPressed: scanning
                     ? null
                     : () => unawaited(

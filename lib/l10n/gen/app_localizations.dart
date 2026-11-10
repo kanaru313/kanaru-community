@@ -236,11 +236,11 @@ abstract class AppLocalizations {
   /// **'Search'**
   String get appSearch;
 
-  /// No description provided for @scanRescan.
+  /// No description provided for @appRescan.
   ///
   /// In en, this message translates to:
   /// **'Rescan library'**
-  String get scanRescan;
+  String get appRescan;
 
   /// No description provided for @playbackCover.
   ///

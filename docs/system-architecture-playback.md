@@ -11,6 +11,7 @@
 - Queue table and its helpers: this file.
 - Settings keys and restore rules: this file.
 - Media controls (MPRIS, `audio_service`): lane B adds the section.
+- Android notification icon: `android/app/src/main/res/drawable/ic_stat_kanaru.xml` is the monochrome (white) status-bar icon. `AudioServiceConfig.androidNotificationIcon` must be `'drawable/ic_stat_kanaru'`; the launcher icon is coloured and shows as a grey square in the status bar.
 
 ## Commands
 

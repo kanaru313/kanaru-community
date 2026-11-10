@@ -24,7 +24,7 @@
   "appKeymap": "Keyboard shortcuts",
   "appAiChat": "AI chat",
   "appSearch": "Search",
-  "scanRescan": "Rescan library",
+  "appRescan": "Rescan library",
   "playbackCover": "Cover art",
   "playbackNavQueue": "Queue",
   "libraryTabSongs": "Songs",

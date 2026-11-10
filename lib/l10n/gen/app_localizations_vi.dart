@@ -79,7 +79,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appSearch => 'Tìm kiếm';
 
   @override
-  String get scanRescan => 'Quét lại thư viện';
+  String get appRescan => 'Quét lại thư viện';
 
   @override
   String get playbackCover => 'Ảnh bìa';

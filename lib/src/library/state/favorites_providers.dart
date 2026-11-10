@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../database/state/database_providers.dart';
 import '../../media/domain/track_id.dart';
 import '../data/favorites_repository.dart';
+import '../domain/favorites.dart';
 
-export '../data/favorites_repository.dart' show FavoritesController;
+export '../domain/favorites.dart' show FavoritesController;
 
 final _repositoryProvider = Provider<FavoritesRepository>(
   (ref) => FavoritesRepository(ref.watch(appDatabaseProvider)),

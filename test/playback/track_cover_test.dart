@@ -56,11 +56,8 @@ void main() {
   testWidgets('a valid key whose file is gone is reported once', (
     tester,
   ) async {
-    await tester.runAsync(() async {
-      await tester.pumpWidget(app(key));
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-    });
-    await tester.pump();
+    await tester.runAsync(() => tester.pumpWidget(app(key)));
+    await _pumpUntil(tester, () => misses.isNotEmpty);
     expect(misses, [key]);
     expect(find.byType(KCover), findsOneWidget);
     expect(tester.widget<KCover>(find.byType(KCover)).image, isNull);
@@ -85,12 +82,32 @@ void main() {
       '${cache.path}/${coverRelativePath(key, CoverSize.thumb)}',
     )..createSync(recursive: true);
     file.writeAsBytesSync(const [0]);
-    await tester.runAsync(() async {
-      await tester.pumpWidget(app(key));
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-    });
-    await tester.pump();
+    await tester.runAsync(() => tester.pumpWidget(app(key)));
+    await _pumpUntil(
+      tester,
+      () => tester.widget<KCover>(find.byType(KCover)).image != null,
+    );
     expect(tester.widget<KCover>(find.byType(KCover)).image, isNotNull);
     expect(misses, isEmpty);
   });
+}
+
+/// Lets real async work (file checks) run and pumps frames until [done] holds;
+/// fails after [timeout] instead of guessing a fixed delay.
+Future<void> _pumpUntil(
+  WidgetTester tester,
+  bool Function() done, {
+  Duration timeout = const Duration(seconds: 5),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  await tester.pump();
+  while (!done()) {
+    if (DateTime.now().isAfter(deadline)) {
+      fail('condition not met within $timeout');
+    }
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
+    await tester.pump();
+  }
 }

@@ -4,16 +4,14 @@ import 'dart:ui';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kanaru/kanaru.dart';
-import 'package:kanaru/src/extension/state/extension_providers.dart';
 import 'package:kanaru/src/platform/data/json_settings_store.dart';
-import 'package:kanaru/src/platform/state/platform_providers.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
-import 'package:kanaru/src/router/ui/kanaru_app.dart';
 import 'package:kanaru/src/screens/settings/state/appearance_settings.dart';
 import 'package:material_ui/material_ui.dart' show MaterialApp, ThemeMode;
 
+import '../support/app_harness.dart';
 import '../support/memory_settings_store.dart';
+import '../support/nav_fixture.dart';
 
 void main() {
   late Directory dir;
@@ -58,20 +56,7 @@ void main() {
   });
 
   testWidgets('KanaruApp applies theme and language at once', (tester) async {
-    final c = ProviderContainer(
-      overrides: [
-        settingsStoreProvider.overrideWithValue(MemorySettingsStore()),
-        nativeVersionsProvider.overrideWithValue('test'),
-        extensionRegistryProvider.overrideWithValue(
-          ExtensionRegistry()..install(builtInExtensions),
-        ),
-      ],
-    );
-    addTearDown(c.dispose);
-    await tester.pumpWidget(
-      UncontrolledProviderScope(container: c, child: const KanaruApp()),
-    );
-    await tester.pumpAndSettle();
+    final c = await pumpKanaruApp(tester, extensions: [const NavFixture()]);
     MaterialApp app() => tester.widget<MaterialApp>(find.byType(MaterialApp));
 
     await c.read(themeChoiceProvider.notifier).set(ThemeChoice.dark);
