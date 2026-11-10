@@ -25,6 +25,20 @@ final Setting<int?> currentEntrySetting = Setting<int?>(
   encode: (v) => v,
 );
 
+/// Entry ids of the play-next run: the entries added with "play next" that
+/// still wait right after the current one. Kept so that a later "play next"
+/// goes behind them after a restart. Ids that are no longer a contiguous run
+/// after the current entry are ignored on restore.
+final Setting<List<int>> playNextRunSetting = Setting<List<int>>(
+  'playback.queue.play_next_run',
+  const [],
+  decode: (json) {
+    if (json is! List) throw FormatException('Not a list: $json');
+    return [for (final v in json) _int(v)];
+  },
+  encode: (v) => v,
+);
+
 /// Last saved position in the loaded entry, ms.
 final Setting<int> positionMsSetting = Setting<int>(
   'playback.position_ms',

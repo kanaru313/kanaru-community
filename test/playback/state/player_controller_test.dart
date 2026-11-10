@@ -68,6 +68,38 @@ void main() {
       expect(h.settings.read('playback.shuffle'), true);
     });
 
+    test('opening a queue keeps shuffle as it was', () async {
+      await h.play(start: 1);
+      await h.c.setShuffle(true);
+      await h.play(start: 3);
+      await h.settle();
+      expect(h.c.queueState.shuffled, isTrue);
+      expect(h.c.queueState.current, 0);
+      expect(h.c.queueState.currentItem?.trackId, h.tracks[3]);
+      expect(h.settings.read('playback.shuffle'), true);
+
+      await h.c.setShuffle(false);
+      await h.play(start: 2);
+      await h.settle();
+      expect(h.c.queueState.shuffled, isFalse);
+      expect(h.c.queueState.current, 2);
+      expect(h.settings.read('playback.shuffle'), false);
+    });
+
+    test('shuffle on keeps the play next run in order after the current one',
+        () async {
+      await h.play(start: 1);
+      await h.c.playNext([h.tracks[4], h.tracks[5]]);
+      await h.c.setShuffle(true);
+      expect(h.order().sublist(0, 4), [0, 1, 4, 5]);
+      expect(h.c.queueState.playNextRun, 2);
+      await h.c.playNext([h.tracks[3]]);
+      expect(h.order().sublist(0, 5), [0, 1, 4, 5, 3]);
+      await h.c.setShuffle(false);
+      expect(h.c.queueState.shuffled, isFalse);
+      expect(h.c.queueState.currentItem?.trackId, h.tracks[1]);
+    });
+
     test(
       'playNext and enqueue on an empty queue behave like playTracks',
       () async {
@@ -115,9 +147,15 @@ void main() {
       await h.c.play();
       await h.settle();
       expect(h.engine.commands.last, 'play');
+      h.engine.emit(EngineLoaded(h.loadedToken, const Duration(seconds: 100)));
+      await h.settle();
+      h.engine.tickPosition(const Duration(seconds: 42));
+      await pumpEventQueue();
       await h.c.stop();
       await h.settle();
       expect(h.engine.commands.last, 'stop');
+      expect((await h.c.position.first).position, Duration.zero);
+      expect(h.settings.read('playback.position_ms'), 0);
       expect(h.c.queueState.current, 0, reason: 'the entry stays');
       expect(h.focus.deactivations, 1);
       await h.c.play();
@@ -127,6 +165,7 @@ void main() {
         hasLength(2),
         reason: 'a stopped engine loads again',
       );
+      expect(h.engine.lastStart, Duration.zero, reason: 'from the beginning');
     });
 
     test('playPause toggles', () async {

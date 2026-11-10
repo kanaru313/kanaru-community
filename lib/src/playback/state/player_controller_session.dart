@@ -11,6 +11,8 @@ extension _Session on PlayerController {
     _volume = readSetting(_settings, volumeSetting);
     final session = await loadSession(repo: _repo, settings: _settings);
     if (session == null) {
+      // Nothing to put back, but shuffle and repeat are the user's modes.
+      _queue = emptyQueueWithModes(_settings);
       restoring = false;
       _publish();
       return;
@@ -22,6 +24,7 @@ extension _Session on PlayerController {
     _startAt = session.position;
     _intent = PlayIntent.paused;
     _savedCurrent = _queue.currentItem?.entryId;
+    _savedRun = _queue.playNextRunIds.toList();
     _forceReload = true;
     _dirty = true;
     _publish();

@@ -43,6 +43,13 @@ T readSetting<T>(SettingsStore store, Setting<T> setting) {
   }
 }
 
+/// Shuffle and repeat as saved, for a start with no queue to restore: they
+/// are the user's modes and apply to the next queue they open.
+QueueState emptyQueueWithModes(SettingsStore settings) => QueueState(
+  shuffled: readSetting(settings, shuffleSetting),
+  repeat: readSetting(settings, repeatSetting),
+);
+
 /// Reads the saved session. Null when the queue is empty. It only reads:
 /// `queue_entries` and the settings are never rewritten here.
 ///
@@ -86,12 +93,18 @@ Future<RestoredSession?> loadSession({
     context = const PlayContext(PlayContextKind.queue);
   }
 
+  // The saved run counts only as far as it still follows the current entry.
+  final runIds = found
+      ? readSetting(settings, playNextRunSetting).toSet()
+      : const <int>{};
+
   return RestoredSession(
     queue: QueueState(
       items: items,
       current: index,
       shuffled: shuffled,
       repeat: repeat,
+      playNextRun: runLength(items, index, runIds),
     ),
     context: context,
     position: position,

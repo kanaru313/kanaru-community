@@ -139,6 +139,7 @@ class PlayerController implements PlaybackCommands {
   int _failuresInRow = 0;
   final Set<int> _bad = {};
   int? _savedCurrent;
+  List<int> _savedRun = const [];
 
   /// Entries skipped on the way to the handed-over next, announced when the
   /// engine really gets there.
@@ -257,6 +258,7 @@ class PlayerController implements PlaybackCommands {
     );
     _observeListen();
     _persistCurrent();
+    _persistRun();
   }
 
   void _persistCurrent() {
@@ -265,6 +267,24 @@ class PlayerController implements PlaybackCommands {
     if (id == _savedCurrent) return;
     _savedCurrent = id;
     _write(currentEntrySetting.key, id);
+  }
+
+  /// The play-next run, written when it changes, so a "play next" after a
+  /// restart still goes behind it.
+  void _persistRun() {
+    if (restoring) return;
+    final ids = _queue.playNextRunIds.toList();
+    if (_sameIds(ids, _savedRun)) return;
+    _savedRun = ids;
+    _write(playNextRunSetting.key, playNextRunSetting.encode(ids));
+  }
+
+  static bool _sameIds(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   void _write(String key, Object? value) {
@@ -304,8 +324,11 @@ class PlayerController implements PlaybackCommands {
     bool shuffle,
     PlayContext context,
   ) async {
+    // Opening a queue keeps the user's shuffle mode: with shuffle already on
+    // the new queue is shuffled too, and `shuffle: true` turns it on.
+    final shuffled = shuffle || _queue.shuffled;
     List<int>? order;
-    if (shuffle) {
+    if (shuffled) {
       final rest = [
         for (var i = 0; i < tracks.length; i++)
           if (i != startIndex) i,
@@ -315,8 +338,8 @@ class PlayerController implements PlaybackCommands {
     final items = await _repo.replace(tracks, _nowMs(), shuffleOrder: order);
     _queue = QueueState(
       items: items,
-      current: shuffle ? 0 : startIndex,
-      shuffled: shuffle,
+      current: shuffled ? 0 : startIndex,
+      shuffled: shuffled,
       repeat: _queue.repeat,
     );
     _context = context;
@@ -324,7 +347,7 @@ class PlayerController implements PlaybackCommands {
     _undo = null;
     _resetPlayback();
     _thaw();
-    _write(shuffleSetting.key, shuffle);
+    _write(shuffleSetting.key, shuffled);
     _write(contextSetting.key, contextSetting.encode(context));
     _write(positionMsSetting.key, 0);
   }
@@ -387,16 +410,21 @@ class PlayerController implements PlaybackCommands {
       _notice(const QueueEmpty());
       return;
     }
-    _thaw();
-    _failuresInRow = 0;
-    _bad.clear();
+    _startPlaying();
+  });
+
+  /// Play intent on. After the queue ran out, play starts it over from the
+  /// first entry in play order.
+  void _startPlaying() {
     if (_atEnd) {
-      _rewind();
-      _atEnd = false;
-      _forceReload = true;
+      _jump(0);
+    } else {
+      _thaw();
+      _failuresInRow = 0;
+      _bad.clear();
     }
     _intent = PlayIntent.playing;
-  });
+  }
 
   Future<void> pause() => _cmd(() async {
     if (_intent == PlayIntent.playing) {
@@ -412,21 +440,17 @@ class PlayerController implements PlaybackCommands {
     } else if (_queue.items.isEmpty) {
       _notice(const QueueEmpty());
     } else {
-      _thaw();
-      _failuresInRow = 0;
-      _bad.clear();
-      if (_atEnd) {
-        _rewind();
-        _atEnd = false;
-        _forceReload = true;
-      }
-      _intent = PlayIntent.playing;
+      _startPlaying();
     }
   });
 
-  /// A real state: the entry stays current, the engine is emptied.
+  /// A real state: the entry stays current, the engine is emptied and the
+  /// position goes back to 0 (also the saved one), so Play starts the entry
+  /// from the beginning.
   Future<void> stop() => _cmd(() async {
+    _thaw();
     _intent = PlayIntent.stopped;
+    _rewind();
     _saveNow();
   });
 

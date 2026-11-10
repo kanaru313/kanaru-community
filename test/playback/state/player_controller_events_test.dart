@@ -185,6 +185,28 @@ void main() {
     },
   );
 
+  test('play after the end starts again from the first entry in play order',
+      () async {
+    await h.play(start: 3, shuffle: true);
+    await h.settle();
+    final first = h.c.queueState.items.first.entryId;
+    // Walk to the last entry of the shuffled order, then let it end.
+    final last = h.c.queueState.length - 1;
+    await h.c.playEntry(h.c.queueState.items[last].entryId);
+    await h.settle();
+    h.engine.emit(EngineLoaded(h.loadedToken, const Duration(seconds: 10)));
+    h.engine.emit(EngineEnded(h.loadedToken));
+    await h.settle();
+    expect(h.c.queueState.current, last);
+    await h.c.play();
+    await h.settle();
+    expect(h.c.queueState.current, 0);
+    expect(h.c.queueState.currentItem!.entryId, first);
+    expect(h.c.intent, PlayIntent.playing);
+    expect(h.engine.loads.last.token.entryId, first);
+    expect(h.engine.lastStart, Duration.zero);
+  });
+
   test('a missing entry is skipped with one notice for the run', () async {
     await h.markMissing(h.tracks[0]);
     await h.markMissing(h.tracks[1]);

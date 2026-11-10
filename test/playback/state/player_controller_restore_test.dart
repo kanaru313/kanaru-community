@@ -5,6 +5,7 @@ import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:kanaru/src/playback/domain/playback_notice.dart';
 import 'package:kanaru/src/playback/domain/queue_logic.dart';
+import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 
 import '../support/controller_harness.dart';
 
@@ -57,6 +58,79 @@ void main() {
       expect(h.engine.commands, ['volume:100', 'load']);
       expect((await h.c.position.first).position, const Duration(seconds: 30));
       expect(h.focus.activations, 1, reason: 'only the first run played');
+    });
+
+    test('a play next after a restart still goes behind the earlier ones',
+        () async {
+      final h = await Harness.create();
+      addTearDown(h.close);
+      await h.c.playTracks(h.tracks.sublist(0, 3), context: _album);
+      await h.c.playNext(h.tracks.sublist(3, 5));
+      await h.settle();
+      await h.c.pause();
+      await h.settle();
+
+      await h.restart();
+      await h.settle();
+      expect(h.c.queueState.playNextRun, 2);
+      await h.c.playNext([h.tracks[5]]);
+      await h.settle();
+      expect(h.order(), [0, 3, 4, 5, 1, 2]);
+      expect(h.c.queueState.playNextRun, 3);
+    });
+
+    test('a play next that already played is not restored as a run', () async {
+      final h = await Harness.create();
+      addTearDown(h.close);
+      await h.c.playTracks(h.tracks.sublist(0, 3), context: _album);
+      await h.c.playNext(h.tracks.sublist(3, 5));
+      await h.c.next();
+      await h.settle();
+      await h.c.pause();
+      await h.settle();
+
+      await h.restart();
+      await h.settle();
+      expect(h.c.queueState.playNextRun, 1, reason: 'only the entry left');
+      await h.c.playNext([h.tracks[5]]);
+      await h.settle();
+      expect(h.order(), [0, 3, 4, 5, 1, 2]);
+    });
+
+    test('a stored run that no longer follows the current entry is dropped',
+        () async {
+      final h = await Harness.create(
+        prepare: (h) async {
+          await saveSession(h, current: 1);
+          await h.settings.write('playback.queue.play_next_run', [
+            // Not after entry 1: the run must be contiguous behind it.
+            (await QueueRepository(h.db).load(shuffled: false))[4].entryId,
+            'bad',
+          ]);
+        },
+      );
+      addTearDown(h.close);
+      await h.settle();
+      expect(h.c.queueState.playNextRun, 0);
+    });
+
+    test('shuffle and repeat come back although the queue is empty', () async {
+      final h = await Harness.create(
+        prepare: (h) async {
+          await h.settings.write('playback.repeat', 'all');
+          await h.settings.write('playback.shuffle', true);
+        },
+      );
+      addTearDown(h.close);
+      await h.settle();
+      expect(h.c.queueState.items, isEmpty);
+      expect(h.c.queueState.repeat, RepeatMode.all);
+      expect(h.c.queueState.shuffled, isTrue);
+      await h.play(start: 2);
+      await h.settle();
+      expect(h.c.queueState.repeat, RepeatMode.all);
+      expect(h.c.queueState.shuffled, isTrue);
+      expect(h.c.queueState.currentItem?.trackId, h.tracks[2]);
     });
 
     test('empty queue: nothing loads and persistence is live', () async {
@@ -251,7 +325,11 @@ void main() {
       h.engine.tickPosition(const Duration(seconds: 7));
       await pumpEventQueue();
       await h.c.stop();
-      expect(h.settings.read('playback.position_ms'), 7000);
+      expect(
+        h.settings.read('playback.position_ms'),
+        0,
+        reason: 'stop rewinds to the start and saves it',
+      );
     });
 
     test(
