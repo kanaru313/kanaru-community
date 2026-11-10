@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:drift/isolate.dart' show DriftRemoteException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/kanaru.dart';
 
@@ -10,6 +11,12 @@ void main() {
 
   setUp(() => db = openTestDb());
   tearDown(() => db.close());
+
+  /// The schema guard runs in `beforeOpen` on the calling isolate; its
+  /// StateError reaches the caller wrapped (twice) in DriftRemoteException.
+  /// Only toString() is the contract: it is the original message, which the
+  /// startup error screen prints.
+  final guardError = isA<DriftRemoteException>();
 
   Future<int> pragma(AppDatabase d, String name) async =>
       (await d.customSelect('PRAGMA $name').getSingle()).read<int>(name);
@@ -72,8 +79,8 @@ void main() {
       addTearDown(second.close);
       await expectLater(
         second.customSelect('SELECT 1').get(),
-        throwsA(isA<StateError>().having(
-          (e) => e.message,
+        throwsA(guardError.having(
+          (e) => e.toString(),
           'message',
           allOf(contains('delete it'), contains('index:tracks_song_key')),
         )),
@@ -90,7 +97,7 @@ void main() {
       addTearDown(second.close);
       await expectLater(
         second.customSelect('SELECT 1').get(),
-        throwsA(isA<StateError>().having((e) => e.message, 'message',
+        throwsA(guardError.having((e) => e.toString(), 'message',
             allOf(contains('extra trigger:stale_tr'), contains(file.path)))),
       );
     });
@@ -104,8 +111,8 @@ void main() {
       addTearDown(second.close);
       await expectLater(
         second.customSelect('SELECT 1').get(),
-        throwsA(isA<StateError>().having(
-            (e) => e.message, 'message', contains('play_stats_ctl'))),
+        throwsA(guardError.having(
+            (e) => e.toString(), 'message', contains('play_stats_ctl'))),
       );
     });
 

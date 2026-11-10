@@ -111,6 +111,7 @@ rebase conflict, take either side and run the two commands again.
 
 ## Database
 
+- DB errors from the file database arrive as `DriftRemoteException`. For a SQLite error, `remoteCause` is the `SqliteException` itself (one level): unwrap it in one helper in `lib/src/database/`, never `on SqliteException` in `lib/`. Errors from `beforeOpen` and the schema guard are nested; rely only on their `toString()`.
 - Tables in `lib/src/database/tables/<module>_<group>_tables.dart`; SQL-only
   objects (FTS5 tables, triggers, seed rows) in a sibling `.drift` file.
 - `schemaVersion` stays 1 until the first release. Change the tables in place;

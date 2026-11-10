@@ -50,7 +50,7 @@ Future<BootstrapResult> bootstrap({
     final registry = ExtensionRegistry()..install(extensions);
     // After the public database is open, so extensions can migrate their tables.
     for (final hook in registry.startupHooks) {
-      await hook(StartupContext(connection: database.sharedConnection));
+      await hook(StartupContext(connection: await database.openedConnection()));
     }
     return BootstrapResult(
       nativeVersions: nativeVersions,

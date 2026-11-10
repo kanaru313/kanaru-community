@@ -43,8 +43,8 @@ Registry and platform:
 - `AndroidAppPaths` has only been built, not run on a device.
 
 Database:
-- Background isolate (`createInBackground`) shared with an extension database
-  is not proven; the UI isolate runs SQLite until then
+- Done: the file database runs on a background isolate
+  (`createInBackground`), shared with extension databases
   (`lib/src/database/app_database.dart`).
 - `schemaVersion` stays 1 until the first release; `AppDatabase` has no
   `onUpgrade` or downgrade guard yet. Add them with the first release that

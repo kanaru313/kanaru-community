@@ -37,7 +37,8 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 - Times are epoch milliseconds, `INTEGER`.
 - Booleans are `INTEGER NOT NULL CHECK (x IN (0, 1))`.
 - `CHECK` is used only on fixed sets: track status, rating range, booleans. Open-ended kinds (`sources.kind`, `playlists.kind`, `saved_items.kind`) are validated by Dart constants, so adding a kind needs no table rebuild.
-- `foreign_keys = ON` and `recursive_triggers = ON` on every connection, set by `configureConnection` in `NativeDatabase(setup:)` and again in `beforeOpen`.
+- `foreign_keys = ON` and `recursive_triggers = ON` on every connection, set by `configureConnection` in `setup:` (runs inside the database isolate, so it must stay a top-level function; register any future custom SQL function or collation there too) and again in `beforeOpen`.
+- `AppDatabase.file` uses `NativeDatabase.createInBackground`: SQLite runs on its own isolate. `await appDb.openedConnection()` opens the database and returns the connection extension databases open on (`ProDatabase.connect(await appDb.openedConnection())`); bootstrap hands startup hooks that result. This is enforced in code because the remote executor runs the migration of the last database that touched it: an extension that queried before `AppDatabase` opened would run its own create step. `sharedConnection` is the raw getter, valid only after open. Extension databases, watch streams and transactions behave as on an in-memory database (`test/database/background_isolate_test.dart`). `beforeOpen` and the schema guard run on the calling isolate; their errors and SQLite's reach callers as `DriftRemoteException` (nested for `beforeOpen`). For a SQLite error, `remoteCause` is the `SqliteException` itself (one level), unwrapped by one helper; for `beforeOpen` and guard errors rely only on `toString()` (the original message, so the startup error screen shows the same text). The connection must stay single (no `readPool`): TEMP tables and transactions are per connection. Journal mode is SQLite's default (rollback journal, no WAL), so every commit is durable when it returns and nothing flushes or closes the database on exit.
 - The device id is stored in no table. It comes from `dataDir/device_id` (`FileDeviceId`), exposed as `deviceIdProvider`. `play_log.device_id` records it per row; the column is plain text and the database does not check it.
 
 ### uid
@@ -602,7 +603,7 @@ Dart API of the coded groups. `lib/src/database/database.dart` is the barrel; th
 | Area | Names |
 |---|---|
 | Constants | `TrackStatus`, `SourceKind`, `PlaylistKind` (`favorites`, `mood`), `SavedItemKind`, `favoritesPlaylistUid`, `missingGraceMs`, `hiddenGraceMs`, `remoteGraceMs`, `trackOwnedChildTables`, and the column sets `trackIdentityColumns`, `trackSnapshotColumns`, `trackScanColumns`, `trackUserColumns`, `trackLifecycleColumns` |
-| connection | `configureConnection(CommonDatabase)`, `AppDatabase.file(File)`, `AppDatabase.sharedConnection` |
+| connection | `configureConnection(CommonDatabase)`, `AppDatabase.file(File)`, `AppDatabase.openedConnection()`, `AppDatabase.sharedConnection` |
 | uids | `sourceUidForRemote(kind, account, root)` (rejects userinfo and query), `trackUid(sourceUid, locator)`, `excludedFolderUid(sourceUid, folderKey)`, `favoriteEntryUid(playlistUid, trackUid)`, `savedItemUid(sourceUid, kind, remoteId)` |
 | ids and order (pure, `lib/src/foundation/`) | `stableHashHex(parts, length)`, `stableUid(prefix, parts)`, `newUlid({nowMs, random})`, `isUlid`, `generateKeyBetween(a, b)`, `generateNKeysBetween(a, b, n)` |
 | writes | `upsertTrackSnapshot(db, tracks, companion)`, `insertOrRevive(db, table, row, now:, reviveColumns:)` |

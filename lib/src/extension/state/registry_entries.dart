@@ -106,7 +106,8 @@ class TopBarAction {
 class StartupContext {
   const StartupContext({required this.connection});
 
-  /// The public database's connection; an extension opens its own drift
+  /// The public database's connection, already open and migrated (from
+  /// `AppDatabase.openedConnection()`); an extension opens its own drift
   /// database on it (`ProDatabase.connect(context.connection)`).
   final DatabaseConnection connection;
 }

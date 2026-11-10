@@ -335,16 +335,23 @@ in one locale, or an unknown part file.
 - Extensions never use drift's `schemaVersion` or `MigrationStrategy`. Each
   records its table version in `extension_schema(extension_id, version)` and
   migrates by hand in a startup hook, after the public database has opened.
-  `AppDatabase.sharedConnection` is the hand-off: an extension database is
-  created with `ExtDatabase.connect(context.connection)`.
-- Open order is mandatory: `AppDatabase` first. Whoever touches the executor
-  first decides the migration, and drift does not report a mismatch.
+  `await AppDatabase.openedConnection()` is the hand-off (bootstrap puts it in
+  `StartupContext.connection`): an extension database is created with
+  `ExtDatabase.connect(context.connection)`. `sharedConnection` is the raw
+  getter, valid only after open.
+- Open order is mandatory and enforced: `openedConnection()` awaits the open of
+  `AppDatabase` before an extension can connect. Whoever touches the executor
+  last decides the migration (background isolate), and drift does not report a
+  mismatch.
 - Never mix two database objects in one transaction: an atomic operation that
   touches extension and public tables goes entirely through the extension's
   database.
-- The database runs on the UI isolate for now (`NativeDatabase`, not
-  `createInBackground`) until sharing a connection on a background isolate is
-  proven.
+- The file database runs SQLite on a background isolate
+  (`NativeDatabase.createInBackground`), so queries and scanner writes never
+  block frames. Extension databases share it through `openedConnection()`
+  (proven in `test/database/background_isolate_test.dart`). Errors from the
+  isolate, the schema guard's included, arrive as `DriftRemoteException`
+  whose `toString()` is the original message.
 
 ## Where does it go
 
