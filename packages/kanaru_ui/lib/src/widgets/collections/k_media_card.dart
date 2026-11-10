@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
@@ -18,6 +20,7 @@ class KMediaCard extends StatefulWidget {
     super.key,
     required this.title,
     this.titleLabel,
+    this.titleLines = 1,
     this.line2,
     this.line3,
     this.leading,
@@ -41,6 +44,11 @@ class KMediaCard extends StatefulWidget {
 
   /// Small tag after the title (for example "auto-detected").
   final String? titleLabel;
+
+  /// 1 (default) or 2. Two lines let a long name (a chain of folders) wrap;
+  /// they take the room of the title and [line2], which is then not shown, so
+  /// the card keeps its height.
+  final int titleLines;
   final String? line2;
   final String? line3;
 
@@ -53,7 +61,7 @@ class KMediaCard extends StatefulWidget {
   /// Right column, upper slot (duration).
   final Widget? top;
 
-  /// Right column, lower slot (favourite button, at most 32 dp tall).
+  /// Right column, lower slot (favourite button, up to 48 dp tall; it overlaps the upper slot's row, which holds a short label).
   final Widget? bottom;
 
   /// Last slot (the "more" button).
@@ -194,12 +202,51 @@ class _KMediaCardState extends State<KMediaCard> {
                 Row(
                   children: [
                     Flexible(
-                      child: line(
-                        widget.title,
-                        KMediaCard._titleSize,
-                        titleStyle,
-                        ink,
-                      ),
+                      child: widget.titleLines == 2
+                          ? SizedBox(
+                              height:
+                                  KMediaCard._line(
+                                    scaler,
+                                    KMediaCard._titleSize,
+                                  ) +
+                                  KMediaCard._line(
+                                    scaler,
+                                    KMediaCard._lineSize,
+                                  ),
+                              child: Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: Text(
+                                  widget.title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: titleStyle?.copyWith(
+                                    fontSize: KMediaCard._titleSize,
+                                    color: ink,
+                                    // Two lines in the room of a title and a
+                                    // second line.
+                                    height:
+                                        (KMediaCard._line(
+                                              scaler,
+                                              KMediaCard._titleSize,
+                                            ) +
+                                            KMediaCard._line(
+                                              scaler,
+                                              KMediaCard._lineSize,
+                                            )) /
+                                        (2 *
+                                            scaler.scale(
+                                              KMediaCard._titleSize,
+                                            )),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : line(
+                              widget.title,
+                              KMediaCard._titleSize,
+                              titleStyle,
+                              ink,
+                            ),
                     ),
                     if (widget.titleLabel != null) ...[
                       const KGap(KSpace.x2),
@@ -211,12 +258,13 @@ class _KMediaCardState extends State<KMediaCard> {
                     ],
                   ],
                 ),
-                line(
-                  widget.line2,
-                  KMediaCard._lineSize,
-                  textTheme.bodySmall,
-                  soft,
-                ),
+                if (widget.titleLines != 2)
+                  line(
+                    widget.line2,
+                    KMediaCard._lineSize,
+                    textTheme.bodySmall,
+                    soft,
+                  ),
                 line(
                   widget.line3,
                   KMediaCard._lineSize,
@@ -228,17 +276,28 @@ class _KMediaCardState extends State<KMediaCard> {
           ),
           if (widget.top != null || widget.bottom != null) ...[
             const KGap(KSpace.x2),
+            // As high as the cover, so a 48 dp button in [bottom] fits.
             SizedBox(
-              height: KMediaCard._textBlock(scaler),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
+              height: leading != null
+                  ? math.max(
+                      KMediaCard.coverSize,
+                      KMediaCard._textBlock(scaler),
+                    )
+                  : KMediaCard._textBlock(scaler),
+              child: Stack(
+                alignment: Alignment.topRight,
                 children: [
-                  DefaultTextStyle.merge(
-                    style: textTheme.labelSmall?.copyWith(color: soft),
-                    child: widget.top ?? const SizedBox.shrink(),
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: DefaultTextStyle.merge(
+                      style: textTheme.labelSmall?.copyWith(color: soft),
+                      child: widget.top ?? const SizedBox.shrink(),
+                    ),
                   ),
-                  widget.bottom ?? const SizedBox.shrink(),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: widget.bottom ?? const SizedBox.shrink(),
+                  ),
                 ],
               ),
             ),

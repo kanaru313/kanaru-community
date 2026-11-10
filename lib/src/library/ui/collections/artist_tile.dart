@@ -1,0 +1,101 @@
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:logging/logging.dart';
+import 'package:material_ui/material_ui.dart';
+
+import '../../../../l10n/gen/app_localizations.dart';
+import '../../../media/domain/cover_files.dart';
+import '../../../media/domain/library_keys.dart';
+import '../../../media/domain/play_context.dart';
+import '../../../playback/ui/track_cover.dart';
+import '../../domain/browse/browse_items.dart';
+import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/song_scope.dart';
+import '../browse/library_labels.dart';
+import '../browse/library_navigation.dart';
+import '../browse/play_actions.dart';
+import '../library_locations.dart';
+
+final _log = Logger('library.artist_tile');
+
+void _open(BuildContext context, ArtistSummary artist) {
+  final key = ArtistKey.decode(artist.key);
+  if (key == null) {
+    _log.warning('undecodable artist key: ${artist.key}');
+    return;
+  }
+  openLibraryPage(context, LibraryLocations.artist(key));
+}
+
+/// Artist row: round photo, name / `N albums` / `M songs • length`, ▶ plays
+/// every song of the artist. The photo is the cover of the artist's newest
+/// album that has one (the summary carries it), else a letter placeholder.
+class ArtistTile extends ConsumerWidget {
+  const ArtistTile({super.key, required this.artist});
+
+  final ArtistSummary artist;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    return KMediaCard(
+      title: artist.name,
+      line2: l10n.libraryAlbumCount(artist.albumCount),
+      line3:
+          '${l10n.librarySongCount(artist.trackCount)} • '
+          '${formatTotalDuration(l10n, artist.durationMs)}',
+      leading: TrackCover(
+        coverKey: artist.coverKey,
+        seed: artist.name,
+        size: CoverSize.thumb,
+        dimension: KMediaCard.coverSize,
+        circle: true,
+      ),
+      circleLeading: true,
+      onAction: () => _play(ref, context),
+      actionLabel: l10n.libraryPlayArtist,
+      onTap: () => _open(context, artist),
+    );
+  }
+
+  Future<void> _play(WidgetRef ref, BuildContext context) async {
+    final key = ArtistKey.decode(artist.key);
+    if (key == null) {
+      _log.warning('undecodable artist key: ${artist.key}');
+      return;
+    }
+    await playScope(
+      ref,
+      context,
+      SongScope.artist(key),
+      BrowseList.detailSongs,
+      PlayContext(PlayContextKind.artist, ref: artist.key, label: artist.name),
+    );
+  }
+}
+
+/// Artist tile of the grid: round photo, name, `N songs`.
+class ArtistCard extends StatelessWidget {
+  const ArtistCard({super.key, required this.artist});
+
+  final ArtistSummary artist;
+
+  @override
+  Widget build(BuildContext context) {
+    return KGridCard(
+      circle: true,
+      title: artist.name,
+      subtitle: AppLocalizations.of(context)
+          .librarySongCount(artist.trackCount),
+      onTap: () => _open(context, artist),
+      coverBuilder: (context, side) => TrackCover(
+        coverKey: artist.coverKey,
+        seed: artist.name,
+        size: CoverSize.thumb,
+        dimension: side,
+        circle: true,
+      ),
+    );
+  }
+}

@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../support/app_harness.dart';
+import 'support/ui_harness.dart';
 
 /// The navigation the public app ships: sidebar list and order, mobile bar
 /// and the Library page. Shell mechanics are tested with a synthetic
@@ -26,7 +28,12 @@ void main() {
         const labels = [
           'Home',
           'Online',
-          'Library',
+          'Songs',
+          'Albums',
+          'Artists',
+          'Genres',
+          'Languages',
+          'Folders',
           'Playlists',
           'Favorites',
           'Queue',
@@ -69,11 +76,13 @@ void main() {
       final scheme = Theme.of(tester.element(find.byType(Scaffold).first))
           .colorScheme;
       expect(_rowColor(tester, 'Home'), scheme.secondaryContainer);
-      expect(_rowColor(tester, 'Library'), Colors.transparent);
-      await tester.tap(find.text('Library'));
+      expect(_rowColor(tester, 'Songs'), Colors.transparent);
+      await tester.tap(find.text('Songs'));
       await tester.pumpAndSettle();
-      expect(_rowColor(tester, 'Library'), scheme.secondaryContainer);
+      expect(_rowColor(tester, 'Songs'), scheme.secondaryContainer);
+      expect(_rowColor(tester, 'Albums'), Colors.transparent);
       expect(_rowColor(tester, 'Home'), Colors.transparent);
+      await unmountApp(tester);
     });
 
     testWidgets('Search opens from the page header and has its own page', (
@@ -85,17 +94,18 @@ void main() {
       expect(find.text('Search your music.'), findsOneWidget);
     });
 
-    testWidgets('Back and Forward follow the Library page', (tester) async {
+    testWidgets('Back and Forward follow the Library pages', (tester) async {
       await pumpKanaruApp(tester);
-      await tester.tap(find.text('Library'));
+      await tester.tap(find.text('Songs'));
       await tester.pumpAndSettle();
-      expect(find.text('Your library is empty.'), findsOneWidget);
+      expect(find.text('Library is empty'), findsOneWidget);
       await tester.tap(_byTooltip('Back'));
       await tester.pumpAndSettle();
-      expect(find.text('Your library is empty.'), findsNothing);
+      expect(find.text('Library is empty'), findsNothing);
       await tester.tap(_byTooltip('Forward'));
       await tester.pumpAndSettle();
-      expect(find.text('Your library is empty.'), findsOneWidget);
+      expect(find.text('Library is empty'), findsOneWidget);
+      await unmountApp(tester);
     });
   });
 
@@ -111,12 +121,16 @@ void main() {
       expect(labels, ['Home', 'Library', 'Playlists', 'Search', 'Online']);
     });
 
-    testWidgets('the Library tab shows the Library page', (tester) async {
+    testWidgets('the Library tab shows the Songs list under sub-tabs', (
+      tester,
+    ) async {
       await pumpKanaruApp(tester, width: 360);
-      expect(find.text('Your library is empty.'), findsNothing);
+      expect(find.text('Library is empty'), findsNothing);
       await tester.tap(_byTooltip('Library'));
       await tester.pumpAndSettle();
-      expect(find.text('Your library is empty.'), findsOneWidget);
+      expect(find.text('Library is empty'), findsOneWidget);
+      expect(find.byType(KSubTabBar), findsOneWidget);
+      await unmountApp(tester);
     });
 
     testWidgets('no header search icon, only the tab', (tester) async {

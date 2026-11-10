@@ -179,12 +179,15 @@ class ActiveTrackList extends Notifier<List<TrackId>?> {
   @override
   List<TrackId>? build() => null;
 
-  void set(List<TrackId> ids) => state = ids;
+  void set(List<TrackId> ids) {
+    if (ref.mounted) state = ids;
+  }
 
   /// Clears only when [ids] is still the registered list, so a page that
-  /// closes late cannot drop the list of the page that replaced it.
+  /// closes late cannot drop the list of the page that replaced it. A page
+  /// that is torn down after the container is gone has nothing to clear.
   void clear(List<TrackId> ids) {
-    if (identical(state, ids)) state = null;
+    if (ref.mounted && identical(state, ids)) state = null;
   }
 }
 

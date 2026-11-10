@@ -69,6 +69,39 @@ void main() {
       );
     });
 
+    for (final scale in [1.0, 1.5]) {
+      testWidgets('a two-line title keeps the height at $scale x', (
+        tester,
+      ) async {
+        useWindow(tester, const Size(400, 800));
+        await tester.pumpWidget(
+          host(
+            const Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: 200,
+                child: KMediaCard(
+                  title:
+                      'Hi-Res > 24bit-96kHz > Bui Lan Huong > Nguoi bat tu OST',
+                  titleLines: 2,
+                  line2: 'never shown',
+                  line3: '12 songs',
+                  leading: ColoredBox(color: Color(0xFF888888)),
+                ),
+              ),
+            ),
+            textScale: scale,
+          ),
+        );
+        expect(
+          tester.getSize(find.byType(KMediaCard)).height,
+          closeTo(KMediaCard.extentOf(TextScaler.linear(scale)), 0.5),
+        );
+        expect(find.text('never shown'), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
     testWidgets('empty lines keep their room', (tester) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(host(_card(full: false)));

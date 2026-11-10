@@ -1,9 +1,8 @@
 # Library
 
-> **Contract stub.** Owner: lane C (library UI). The foundation declares the
-> contracts below; they are frozen. Lane C replaces this text with its own
-> design (lists, detail pages, menus, selection, sub-tabs) when it lands. The
-> library scanner that fills the data is described in
+> Owner: lane C (library UI). The foundation contracts below are frozen; lane C
+> documents its own design (lists, detail pages, menus, selection, sub-tabs)
+> after them as it lands. The library scanner that fills the data is described in
 > [system-architecture-library-scan.md](./system-architecture-library-scan.md).
 
 ## Contents
@@ -16,6 +15,7 @@
 - List queries: song scopes, sort and filter SQL, aggregates, providers.
 - Folder tree, detail data, menu data, selection state.
 - File manager and the `kanaru_ui` collection widgets (parts 1 and 2).
+- Navigation and routes, the Songs list, collection lists, the Folders tab (UI).
 
 ## Keys
 
@@ -388,16 +388,165 @@ live: a menu acts on what it showed.
 `lib/src/library/ui/selection/selection_bar.dart`: `LibrarySelectionBar`, an
 empty slot until lane C fills it. Both shells render it above the player.
 
-## Navigation items
+## Navigation and routes
 
-`lib/src/library/ui/library_browse_registration.dart`:
+`lib/src/library/ui/library_browse_registration.dart`,
+`lib/src/library/ui/browse/{library_routes,library_navigation}.dart`.
 
 | Item | Order | Notes |
 |---|---|---|
-| Library | 105 (mobile 20) | Tab, route `/library` |
-| Songs to Folders | 110-160 | Children of `library` (`parentId`); reserved for the library UI lane, not registered yet |
+| Library | 105 (mobile 20) | Tab, route `/library`; `sidebar: false` (the six lists replace it in the desktop sidebar) |
+| Songs to Folders | 110-160 | Children of `library` (`parentId`, `mobileTab: false`), paths `LibraryLocations.list(tab)`; always all six in the sidebar, in default order (the tab setting steers the mobile sub-tabs only) |
 | Playlists | 210 (mobile 30) | Tab, route `/playlists` |
 | Favorites, History, Most played | 220, 240, 250 | `comingSoon`, `mobileTab: false` until their mockup exists |
+
+- `libraryRoute()` is `/library` with six sibling list routes under it
+  (`songs` ... `folders`, `NoTransitionPage`, `state.pageKey`). The parent has
+  no page: its redirect returns the last visited visible list (or the first
+  visible one) **only when `state.uri.path == '/library'`**. go_router runs the
+  redirect of every route in a matched chain, parents included, so an unguarded
+  redirect would rewrite every `/library/...` location. It reads Riverpod with
+  `ProviderScope.containerOf(context, listen: false)`.
+- `openLibraryPage(context, location)` is `context.push`: every open of a
+  detail, see-all or folder page from another page uses it, so Back steps one
+  page at a time. Switching list (sub-tab tap, swipe, sidebar) is `go`; folder
+  levels are `replace` (see Folders tab).
+- `lastLibraryTabProvider` (memory) holds the list shown last;
+  `subTabOffsetProvider` the scroll offset of the mobile sub-tab row.
+
+### List page frame
+
+`LibraryListScaffold(tab, child)` is the frame of a list page. `PageHeader`
+without `onBack` (a root page, so the shell's `PageHeaderScope` slots show);
+the title is "Library" on the mobile shell and the list name on desktop. The
+mobile shell adds `KSubTabBar` (the visible tabs from `libraryTabsProvider`;
+a disabled tab's route still works, with no tab selected) and a horizontal
+drag of more than 60 px moves to the next or previous visible tab. Only the
+body slides in (from the side the new tab lies on, by the index change from
+the last visited tab); the header and tab row do not move and the tab row
+keeps its offset. `ScanBanner` shows under the tabs while a scan runs:
+`listing` "Scanning…", `tags` "Scanning · done / total songs" with a
+determinate bar (count only when the total is 0), `covers` "Fetching covers ·
+done / total". A library with no visible track (and no scan running) shows
+`LibraryEmptyState` in place of the body; its "Choose music folders" button is
+dimmed with "Coming soon" until Settings has the folders screen.
+
+`LibraryListFrame(list, filterHint, builder)` adds the list bar
+(`KListSortFilterBar`: the page's left group, the sort chip, the filter
+toggle) and the filter field. The builder gets `LibraryListInput` (remembered
+sort and view, filter text, whether the field is open) and returns the left
+group and the body. The sort chip opens `showKSortPopover` (order buttons keep
+it open) and stores the choice in `libraryListViewsProvider`. The filter text
+is the page's own state and is never stored; closing the field clears it. On
+the mobile shell Back closes the field first.
+
+`play_actions.dart`: `playFrom`, `playAll`, `shuffleAll` (shuffle with a random
+start) and `playScope` / `shuffleScope` (read the ids of a scope with a direct
+`songIds` call, then play; for a ▶ on a tile that does not hold its ids).
+Every call is awaited; a failure is logged and shows a snack bar.
+
+## Songs list
+
+`lib/src/library/ui/songs/{song_tile,song_list,songs_page}.dart`.
+
+- `SongTile(info, index, ids, playContext, {showNumber})` on `KMediaCard`:
+  cover (`TrackCover`, seed album key else title), title, artists joined with
+  ", " (else the artist tag), `album • year`, duration `m:ss` over the heart.
+  Tap = `playTracks(ids, startIndex: index)`. The playing row is
+  `primaryContainer` with the equalizer over the cover (over the number with
+  `showNumber`, which replaces the cover with the track number). The tile
+  watches only `isCurrentTrackProvider(id)` and `isFavoriteProvider(id)`; the
+  equalizer widget alone watches play / pause. No per-row stream provider.
+- `SongList(scope, sort, filter, playContext, {showNumber, leadingSlivers})`
+  is a `CustomScrollView` with a `SliverFixedExtentList`. `songIdsProvider`
+  gives the ids; a `TrackWindow` reads the rows. The list tells the window the
+  range it has **built** (`didFinishLayout`, cache extent included), calls
+  `setIds` on every ids emission and `invalidate` on every
+  `songRowsRevisionProvider` tick (a cover or title changed, the order did
+  not). A page not read yet is a same-size placeholder card. The tap handler
+  passes `window.ids`, so `ids[index]` is the painted row. `trackRowLoaderProvider`
+  is the window's loader (tests override it).
+- Select-all target: while its page is the current route and not offstage
+  (`ModalRoute.isCurrentOf` and `TickerMode`), the list registers its ids in
+  `activeTrackListProvider`; it clears them when the page goes under another
+  one or is disposed. A notifier that is already disposed ignores `set` and
+  `clear`.
+- Songs page: left group is shuffle and play all (icons on the mobile shell,
+  labelled buttons on desktop) and the count (`36 songs`, `6 / 34 songs` while
+  filtering). The context is `PlayContext(songs, label)`.
+
+## Collection lists
+
+`lib/src/library/ui/collections/`.
+
+- Albums and Artists: a grid (`KCollectionGrid` of `KGridCard`; albums 150 /
+  160 px minimum, artists 100 / 160) or rows (`AlbumTile`, `ArtistTile` on
+  `KMediaCard`, ▶ always on mobile and on hover or focus on desktop). The view
+  switch (`LibraryViewToggle`: one icon on mobile, a double button on desktop)
+  is stored per list. Albums open as a grid, every other list as rows, on both
+  shells. Tiles get their summary by value and watch nothing.
+- Album ▶ plays the album in track order (`playScope` with the `albumTracks`
+  default sort), artist ▶ plays every song of the artist (`detailSongs`
+  default); both with the album / artist `PlayContext`.
+- Artist photo: the `coverKey` of `ArtistSummary` (the cover of the newest own
+  album that has one), a round `TrackCover`, else a letter placeholder seeded
+  by the name.
+- Genres: `KColorTile` in a grid (150 / 200 px minimum); the tile height is
+  88 times the text scale.
+- Languages: `KListRow` per language with `languages` (`help` for "unknown",
+  always last), `N songs · M auto-detected` (the second part only when
+  nonzero), and the note above the list. `languageDisplayName`: the native
+  name, plus the name in the app language when it differs; an unknown code
+  shows as the code.
+- A tap on an item is `openLibraryPage` to the album, artist, genre or
+  language location. A long press opens the item's menu (menus are a later
+  phase), not multi-select.
+- Counts: `34 albums`, or `6 / 34 albums` while filtering (the total is the
+  unfiltered summary count).
+
+## Folders tab
+
+`lib/src/library/ui/folders/`.
+
+- Location (`FolderLocation`): `/library/folders` (top),
+  `?at=<encodeKey('<sourceUid>/<folderKey>')>` for a level and `&view=flat` for
+  a level opened from the flat list. Anything malformed is the top.
+  `resolveFolderPlace` turns a location and the trees into a place: the list
+  of music folders (several), the only music folder (one), a level, the flat
+  list, or one flat folder. A level that is gone opens its nearest ancestor;
+  an unknown music folder is the top. `folderPlaceProvider` caches it.
+- Moving between levels is `context.replace(location)`: the page stays the same
+  page, so a Folders page that was pushed from elsewhere keeps the page below
+  it. Entering from another page is `openLibraryPage`.
+- Tree level: sub-folder rows first (`FolderTile`: `FolderArt`, name, counts;
+  a merged chain is one row of up to two lines and opens its last folder; a
+  chevron on mobile), then "Songs in this folder · N" and a `SongList` of the
+  direct songs by title. The sort chip orders the folders (name in natural
+  order, or number of songs below); the filter narrows folders by name (chain
+  included) and the songs. Several music folders: a first level of rows with
+  their location. Mobile names the location ("Internal storage", "SD card",
+  "USB drive"); desktop shows the path with the home folder as `~`.
+- Breadcrumb (`folderSegments`, `FolderBreadcrumb`): "All folders" first with
+  several music folders; with one it starts at its location (desktop `~/Music`;
+  mobile "Internal storage › Music"). Music folders that share a name are told
+  apart by location. `KBreadcrumb` collapses deep paths; "…" opens a
+  `showSelectionPicker` of the hidden levels and the open one, indented by
+  depth, and choosing one replaces to it.
+- Flat view (`FolderView.flat`, remembered): every folder with songs of its
+  own; row = name, the folders above (mobile keeps the first and the two
+  nearest), `N songs`. Opening one shows its direct songs only under "N songs
+  in this folder (not including subfolders)", with the full path dim above and
+  the breadcrumb "All folders › name". The view switch replaces to the top.
+- Play and shuffle in the bar play the songs below the level (tree) or its
+  direct songs (flat), with `PlayContext(folder, ref: '<sourceUid>:<folderKey>')`;
+  a tap on a song plays the level's direct songs with the same context.
+- Back (mobile): `FolderBackGuard`. The page leaves at the top of the tab and at
+  the level it was opened at; elsewhere Back replaces to the parent level
+  (the music-folder list above a root, the flat list above a flat folder).
+  While the filter field is open Back only closes it. A Folders page pushed
+  from an album and drilled two levels deep needs three presses to return to
+  the album. Desktop has the in-app back button and the breadcrumb; Alt+←,
+  mouse buttons and Esc as history keys belong to the shell.
 
 ## kanaru_ui widgets used
 
@@ -438,14 +587,15 @@ callbacks come from the caller. Width-based layout lives here.
 
 | Widget | Notes |
 |---|---|
-| `KMediaCard` | Row card of song, album, artist and folder lists. Three text lines always reserved; `leading`, right column (`top` duration, `bottom` heart), `trailing`, optional round `onAction` (always on mobile, hover or focus on desktop), `revealTrailingOnHover`; states `current`, `selected` (check over the leading), `dimmed`. `KMediaCard.extentOf(TextScaler)` is the exact height with its bottom gap, for fixed list extents (it assumes a 56 dp leading; `hasLeading: false` for cards without one); `currentLabel` gives the playing state a screen-reader value; a test pins it to the laid-out height at 1.0, 1.3 and 1.5 |
+| `KMediaCard` | Row card of song, album, artist and folder lists. Three text lines always reserved (`titleLines: 2` lets a long name wrap over the title and second line, which is then not shown, in the same height); `leading`, right column (`top` duration, `bottom` heart), `trailing`, optional round `onAction` (always on mobile, hover or focus on desktop), `revealTrailingOnHover`; states `current`, `selected` (check over the leading), `dimmed`. `KMediaCard.extentOf(TextScaler)` is the exact height with its bottom gap, for fixed list extents (it assumes a 56 dp leading; `hasLeading: false` for cards without one); `currentLabel` gives the playing state a screen-reader value; a test pins it to the laid-out height at 1.0, 1.3 and 1.5 |
 | `KListSortFilterBar` | `leading` group, criterion chip (label and direction arrow) and filter toggle. The chip is announced as `<tooltip>: <criterion>`; it passes an anchor key to `onSortPressed`; 52 tall on mobile, 48 on desktop |
 | `showKSortPopover<T>` | Anchored under the chip on both shells. Order buttons keep it open (`onAscendingChanged`); a criterion (`KSortCriterion`, shown as a `SelectionRow`) closes it and is the result. Criteria scroll, the order row stays. Root navigator; Esc closes. Its anchored layout copies the private one of `selection_picker.dart` (follow-up: export one helper) |
 | `KFilterField` | Outlined, 48 tall, autofocus; the cross and Esc clear the controller and call `onClose` |
 | `KBreadcrumb` | `KBreadcrumbSegment`s, last one bold. Desktop above four levels: first and last three, rest behind "..."; mobile above two levels: tonal "..." then the open level. `onShowHidden` gets the hidden levels; the caller opens a `showSelectionPicker` |
 | `KShelf` | Titled horizontal list of fixed-width items; the `>` on the title row opens "see all" (`seeAllLabel` is its semantics label) |
 | `KCollectionGrid` | Sliver; column count from the width and the shell's minimum tile width (`mobileMinTileWidth`, `desktopMinTileWidth`); tile height is width times `tileAspect` plus `footerExtent` |
-| `KColorTile`, `KColorBanner` | Pastel tile or banner for genres and languages; hue from the same hash as the cover placeholder |
+| `KGridCard` | Tile of an album or artist grid: a cover as wide as the tile (drawn by `coverBuilder(context, side)`), one title line, one subtitle line; `footerExtent(scaler)` is the height under the cover for `KCollectionGrid`; `circle` centres the texts for round photos |
+| `KColorTile`, `KColorBanner` | Pastel tile or banner for genres and languages; fill and ink from `KCoverPlaceholderColors.of(seed, brightness)`, so a tile matches the cover placeholder of the same seed |
 | `KSubTabBar` | Scrolling tab row, underline on the selected tab, which scrolls to the centre. `initialOffset` and `onOffsetChanged` let the next page start where this row was |
 
 Sizes that the mockups give and the tokens lack (card radius 14, panel radius
@@ -464,8 +614,10 @@ Sizes that the mockups give and the tokens lack (card radius 14, panel radius
 height, grip, sticky footer); on desktop a centred dialog 400 wide and at most
 640 tall on a 45 % barrier, first row focused, arrow keys move. Both open on
 the root navigator, so the shortcut guard and the selection Back handling see
-a modal route. It builds its own sheet instead of `showKSheet`, which cannot
-target the root navigator.
+a modal route. It builds its own sheet instead of `showKSheet` (which can target the
+root navigator since `useRootNavigator`): `showKSheet` turns into a 640 wide
+dialog from 600 px, but this menu stays a sheet up to the desktop form factor
+(1200 px) and is a 400 wide dialog above it.
 
 ## Old app references
 

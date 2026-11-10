@@ -63,6 +63,10 @@ class TrackWindow {
   List<TrackId> get ids => _ids;
   int get length => _ids.length;
 
+  /// Whether the page holding index [i] failed to read (until the next
+  /// [setIds], [invalidate], or the page leaving the range).
+  bool isFailed(int i) => _failed.contains(i ~/ pageSize);
+
   /// Number of cached rows (for tests and diagnostics).
   int get cachedRows => _rows.length;
 
@@ -105,6 +109,8 @@ class TrackWindow {
     _absent.clear();
     _failed.clear();
     error = null;
+    // The failed rows show their retry state until this: redraw at once.
+    onChanged();
     _pump();
   }
 
@@ -118,6 +124,13 @@ class TrackWindow {
     if (_disposed) return;
     _first = first;
     _last = last;
+    // A page that failed and left the range is tried again when it returns.
+    if (_failed.isNotEmpty) {
+      final firstPage = (first < 0 ? 0 : first) ~/ pageSize;
+      final lastPage = (last < 0 ? 0 : last) ~/ pageSize;
+      _failed.removeWhere((p) => p < firstPage || p > lastPage);
+      if (_failed.isEmpty) error = null;
+    }
     _pump();
   }
 

@@ -7,6 +7,7 @@ export 'k_breadcrumb.dart';
 export 'k_collection_grid.dart';
 export 'k_color_tile.dart';
 export 'k_filter_field.dart';
+export 'k_grid_card.dart';
 export 'k_list_sort_filter_bar.dart';
 export 'k_media_card.dart';
 export 'k_shelf.dart';

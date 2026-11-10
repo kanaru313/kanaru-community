@@ -7,5 +7,224 @@
   "libraryTabFolders": "Thư mục",
   "libraryNavFavorites": "Yêu thích",
   "libraryNavHistory": "Lịch sử",
-  "libraryNavMostPlayed": "Phát nhiều nhất"
+  "libraryNavMostPlayed": "Phát nhiều nhất",
+  "librarySongCount": "{count, plural, other{{count} bài}}",
+  "@librarySongCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryAlbumCount": "{count, plural, other{{count} album}}",
+  "@libraryAlbumCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryArtistCount": "{count, plural, other{{count} nghệ sĩ}}",
+  "@libraryArtistCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryGenreCount": "{count, plural, other{{count} thể loại}}",
+  "@libraryGenreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryLanguageCount": "{count, plural, other{{count} ngôn ngữ}}",
+  "@libraryLanguageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryFolderCount": "{count, plural, other{{count} thư mục}}",
+  "@libraryFolderCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryCountOf": "{shown} / {total} {unit}",
+  "@libraryCountOf": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryUnitSongs": "bài",
+  "libraryUnitAlbums": "album",
+  "libraryUnitArtists": "nghệ sĩ",
+  "libraryUnitGenres": "thể loại",
+  "libraryUnitLanguages": "ngôn ngữ",
+  "libraryUnitFolders": "thư mục",
+  "libraryPlayAll": "Phát tất cả",
+  "libraryShuffle": "Phát ngẫu nhiên",
+  "libraryPlayAlbum": "Phát cả album",
+  "libraryPlayArtist": "Phát mọi bài",
+  "libraryFilter": "Lọc",
+  "libraryFilterClose": "Đóng ô lọc",
+  "libraryFilterSongsHint": "Lọc bài hát",
+  "libraryFilterAlbumsHint": "Lọc album",
+  "libraryFilterArtistsHint": "Lọc nghệ sĩ",
+  "libraryFilterGenresHint": "Lọc thể loại",
+  "libraryFilterLanguagesHint": "Lọc ngôn ngữ",
+  "libraryFilterFoldersHint": "Lọc trong thư mục này",
+  "libraryOrderTooltip": "Sắp xếp",
+  "libraryOrderAscText": "A → Z",
+  "libraryOrderDescText": "Z → A",
+  "libraryOrderAscNumber": "Tăng dần",
+  "libraryOrderDescNumber": "Giảm dần",
+  "librarySortTitle": "Tên",
+  "librarySortArtist": "Nghệ sĩ",
+  "librarySortAlbum": "Album",
+  "librarySortYear": "Năm",
+  "librarySortDateAdded": "Ngày thêm",
+  "librarySortPlayCount": "Lượt nghe",
+  "librarySortDuration": "Thời lượng",
+  "librarySortTrackCount": "Số bài",
+  "librarySortAlbumCount": "Số album",
+  "librarySortTrackNumber": "Số thứ tự",
+  "libraryViewGrid": "Lưới",
+  "libraryViewList": "Danh sách",
+  "libraryViewTree": "Cây thư mục",
+  "libraryViewFlat": "Liệt kê",
+  "libraryScanning": "Đang quét…",
+  "libraryScanningTags": "Đang quét · {done} / {total} bài",
+  "@libraryScanningTags": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryScanningTagsCount": "Đang quét · {done} bài",
+  "@libraryScanningTagsCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryScanningCovers": "Đang lấy ảnh bìa · {done} / {total}",
+  "@libraryScanningCovers": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryScanningCoversStart": "Đang lấy ảnh bìa…",
+  "libraryEmptyTitle": "Thư viện trống",
+  "libraryEmptyMessage": "Không có bài nào trong các thư mục đã chọn.",
+  "libraryChooseFolders": "Chọn thư mục nhạc",
+  "libraryPlayFailed": "Không phát được",
+  "libraryLoadFailed": "Không tải được danh sách",
+  "libraryNowPlaying": "Đang phát",
+  "libraryFavoriteAdd": "Thêm vào Yêu thích",
+  "libraryFavoriteRemove": "Bỏ khỏi Yêu thích",
+  "libraryFavoriteFailed": "Không đổi được Yêu thích",
+  "libraryDurationMinutes": "{minutes} phút",
+  "@libraryDurationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryDurationHoursMinutes": "{hours} giờ {minutes} phút",
+  "@libraryDurationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryAlbumStats": "{songs} bài • {minutes} phút",
+  "@libraryAlbumStats": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryLanguageUnknown": "Chưa rõ",
+  "libraryLanguageStatsDetected": "{songs} bài · {detected} tự nhận diện",
+  "@libraryLanguageStatsDetected": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "detected": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryLanguagesNote": "Lấy từ tag ngôn ngữ của bài; bài không có tag thì Kanaru tự nhận diện. Đổi trong Cài đặt › Thư viện.",
+  "libraryFoldersAll": "Tất cả thư mục",
+  "libraryFoldersHidden": "Các cấp bị ẩn",
+  "libraryGoToFolder": "Đi tới thư mục",
+  "libraryVolumeInternal": "Bộ nhớ trong",
+  "libraryVolumeSdCard": "Thẻ SD",
+  "libraryVolumeUsb": "Ổ USB",
+  "libraryFolderCounts": "{songs} bài · {folders} thư mục",
+  "@libraryFolderCounts": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryFolderSongsHeader": "Bài trong thư mục này · {count}",
+  "@libraryFolderSongsHeader": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryFlatSongsHeader": "{count} bài trong thư mục này (không gồm thư mục con)",
+  "@libraryFlatSongsHeader": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryRetry": "Thử lại",
+  "libraryPermissionMissing": "Thiếu quyền đọc nhạc",
+  "libraryGrantPermission": "Cấp quyền"
 }

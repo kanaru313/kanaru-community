@@ -703,4 +703,298 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get libraryNavMostPlayed => 'Phát nhiều nhất';
+
+  @override
+  String librarySongCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bài',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryAlbumCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count album',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryArtistCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nghệ sĩ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryGenreCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count thể loại',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryLanguageCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ngôn ngữ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryFolderCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count thư mục',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryCountOf(int shown, int total, String unit) {
+    return '$shown / $total $unit';
+  }
+
+  @override
+  String get libraryUnitSongs => 'bài';
+
+  @override
+  String get libraryUnitAlbums => 'album';
+
+  @override
+  String get libraryUnitArtists => 'nghệ sĩ';
+
+  @override
+  String get libraryUnitGenres => 'thể loại';
+
+  @override
+  String get libraryUnitLanguages => 'ngôn ngữ';
+
+  @override
+  String get libraryUnitFolders => 'thư mục';
+
+  @override
+  String get libraryPlayAll => 'Phát tất cả';
+
+  @override
+  String get libraryShuffle => 'Phát ngẫu nhiên';
+
+  @override
+  String get libraryPlayAlbum => 'Phát cả album';
+
+  @override
+  String get libraryPlayArtist => 'Phát mọi bài';
+
+  @override
+  String get libraryFilter => 'Lọc';
+
+  @override
+  String get libraryFilterClose => 'Đóng ô lọc';
+
+  @override
+  String get libraryFilterSongsHint => 'Lọc bài hát';
+
+  @override
+  String get libraryFilterAlbumsHint => 'Lọc album';
+
+  @override
+  String get libraryFilterArtistsHint => 'Lọc nghệ sĩ';
+
+  @override
+  String get libraryFilterGenresHint => 'Lọc thể loại';
+
+  @override
+  String get libraryFilterLanguagesHint => 'Lọc ngôn ngữ';
+
+  @override
+  String get libraryFilterFoldersHint => 'Lọc trong thư mục này';
+
+  @override
+  String get libraryOrderTooltip => 'Sắp xếp';
+
+  @override
+  String get libraryOrderAscText => 'A → Z';
+
+  @override
+  String get libraryOrderDescText => 'Z → A';
+
+  @override
+  String get libraryOrderAscNumber => 'Tăng dần';
+
+  @override
+  String get libraryOrderDescNumber => 'Giảm dần';
+
+  @override
+  String get librarySortTitle => 'Tên';
+
+  @override
+  String get librarySortArtist => 'Nghệ sĩ';
+
+  @override
+  String get librarySortAlbum => 'Album';
+
+  @override
+  String get librarySortYear => 'Năm';
+
+  @override
+  String get librarySortDateAdded => 'Ngày thêm';
+
+  @override
+  String get librarySortPlayCount => 'Lượt nghe';
+
+  @override
+  String get librarySortDuration => 'Thời lượng';
+
+  @override
+  String get librarySortTrackCount => 'Số bài';
+
+  @override
+  String get librarySortAlbumCount => 'Số album';
+
+  @override
+  String get librarySortTrackNumber => 'Số thứ tự';
+
+  @override
+  String get libraryViewGrid => 'Lưới';
+
+  @override
+  String get libraryViewList => 'Danh sách';
+
+  @override
+  String get libraryViewTree => 'Cây thư mục';
+
+  @override
+  String get libraryViewFlat => 'Liệt kê';
+
+  @override
+  String get libraryScanning => 'Đang quét…';
+
+  @override
+  String libraryScanningTags(int done, int total) {
+    return 'Đang quét · $done / $total bài';
+  }
+
+  @override
+  String libraryScanningTagsCount(int done) {
+    return 'Đang quét · $done bài';
+  }
+
+  @override
+  String libraryScanningCovers(int done, int total) {
+    return 'Đang lấy ảnh bìa · $done / $total';
+  }
+
+  @override
+  String get libraryScanningCoversStart => 'Đang lấy ảnh bìa…';
+
+  @override
+  String get libraryEmptyTitle => 'Thư viện trống';
+
+  @override
+  String get libraryEmptyMessage =>
+      'Không có bài nào trong các thư mục đã chọn.';
+
+  @override
+  String get libraryChooseFolders => 'Chọn thư mục nhạc';
+
+  @override
+  String get libraryPlayFailed => 'Không phát được';
+
+  @override
+  String get libraryLoadFailed => 'Không tải được danh sách';
+
+  @override
+  String get libraryNowPlaying => 'Đang phát';
+
+  @override
+  String get libraryFavoriteAdd => 'Thêm vào Yêu thích';
+
+  @override
+  String get libraryFavoriteRemove => 'Bỏ khỏi Yêu thích';
+
+  @override
+  String get libraryFavoriteFailed => 'Không đổi được Yêu thích';
+
+  @override
+  String libraryDurationMinutes(int minutes) {
+    return '$minutes phút';
+  }
+
+  @override
+  String libraryDurationHoursMinutes(int hours, int minutes) {
+    return '$hours giờ $minutes phút';
+  }
+
+  @override
+  String libraryAlbumStats(int songs, int minutes) {
+    return '$songs bài • $minutes phút';
+  }
+
+  @override
+  String get libraryLanguageUnknown => 'Chưa rõ';
+
+  @override
+  String libraryLanguageStatsDetected(int songs, int detected) {
+    return '$songs bài · $detected tự nhận diện';
+  }
+
+  @override
+  String get libraryLanguagesNote =>
+      'Lấy từ tag ngôn ngữ của bài; bài không có tag thì Kanaru tự nhận diện. Đổi trong Cài đặt › Thư viện.';
+
+  @override
+  String get libraryFoldersAll => 'Tất cả thư mục';
+
+  @override
+  String get libraryFoldersHidden => 'Các cấp bị ẩn';
+
+  @override
+  String get libraryGoToFolder => 'Đi tới thư mục';
+
+  @override
+  String get libraryVolumeInternal => 'Bộ nhớ trong';
+
+  @override
+  String get libraryVolumeSdCard => 'Thẻ SD';
+
+  @override
+  String get libraryVolumeUsb => 'Ổ USB';
+
+  @override
+  String libraryFolderCounts(int songs, int folders) {
+    return '$songs bài · $folders thư mục';
+  }
+
+  @override
+  String libraryFolderSongsHeader(int count) {
+    return 'Bài trong thư mục này · $count';
+  }
+
+  @override
+  String libraryFlatSongsHeader(int count) {
+    return '$count bài trong thư mục này (không gồm thư mục con)';
+  }
+
+  @override
+  String get libraryRetry => 'Thử lại';
+
+  @override
+  String get libraryPermissionMissing => 'Thiếu quyền đọc nhạc';
+
+  @override
+  String get libraryGrantPermission => 'Cấp quyền';
 }

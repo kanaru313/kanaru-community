@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../database/state/database_providers.dart';
 import '../../../media/domain/track_id.dart';
+import '../../../media/domain/track_info.dart';
+import '../../../playback/data/track_info_rows.dart';
 import '../../data/browse/song_ids_query.dart';
 import '../../data/browse/throttled_query.dart';
 import '../../domain/browse/list_sort.dart';
@@ -16,6 +18,14 @@ final browseRefreshIntervalProvider = Provider<Duration>(
 final folderRefreshIntervalProvider = Provider<Duration>(
   (ref) => folderRefreshInterval,
 );
+
+/// Reads the rows of a page of ids for a [TrackWindow]; tests override it.
+typedef TrackRowLoader = Future<List<TrackInfo>> Function(List<TrackId> ids);
+
+final trackRowLoaderProvider = Provider<TrackRowLoader>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return (ids) => loadTrackInfos(db, ids);
+});
 
 /// What a song list shows: which tracks, in which order, narrowed by text.
 typedef SongListKey = ({SongScope scope, SortSpec sort, String filter});

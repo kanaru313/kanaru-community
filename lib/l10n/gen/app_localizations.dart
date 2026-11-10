@@ -1291,6 +1291,462 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Most played'**
   String get libraryNavMostPlayed;
+
+  /// No description provided for @librarySongCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}}'**
+  String librarySongCount(int count);
+
+  /// No description provided for @libraryAlbumCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 album} other{{count} albums}}'**
+  String libraryAlbumCount(int count);
+
+  /// No description provided for @libraryArtistCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 artist} other{{count} artists}}'**
+  String libraryArtistCount(int count);
+
+  /// No description provided for @libraryGenreCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 genre} other{{count} genres}}'**
+  String libraryGenreCount(int count);
+
+  /// No description provided for @libraryLanguageCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 language} other{{count} languages}}'**
+  String libraryLanguageCount(int count);
+
+  /// No description provided for @libraryFolderCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 folder} other{{count} folders}}'**
+  String libraryFolderCount(int count);
+
+  /// No description provided for @libraryCountOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} / {total} {unit}'**
+  String libraryCountOf(int shown, int total, String unit);
+
+  /// No description provided for @libraryUnitSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'songs'**
+  String get libraryUnitSongs;
+
+  /// No description provided for @libraryUnitAlbums.
+  ///
+  /// In en, this message translates to:
+  /// **'albums'**
+  String get libraryUnitAlbums;
+
+  /// No description provided for @libraryUnitArtists.
+  ///
+  /// In en, this message translates to:
+  /// **'artists'**
+  String get libraryUnitArtists;
+
+  /// No description provided for @libraryUnitGenres.
+  ///
+  /// In en, this message translates to:
+  /// **'genres'**
+  String get libraryUnitGenres;
+
+  /// No description provided for @libraryUnitLanguages.
+  ///
+  /// In en, this message translates to:
+  /// **'languages'**
+  String get libraryUnitLanguages;
+
+  /// No description provided for @libraryUnitFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'folders'**
+  String get libraryUnitFolders;
+
+  /// No description provided for @libraryPlayAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Play all'**
+  String get libraryPlayAll;
+
+  /// No description provided for @libraryShuffle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle'**
+  String get libraryShuffle;
+
+  /// No description provided for @libraryPlayAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Play album'**
+  String get libraryPlayAlbum;
+
+  /// No description provided for @libraryPlayArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Play all songs'**
+  String get libraryPlayArtist;
+
+  /// No description provided for @libraryFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get libraryFilter;
+
+  /// No description provided for @libraryFilterClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close filter'**
+  String get libraryFilterClose;
+
+  /// No description provided for @libraryFilterSongsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter songs'**
+  String get libraryFilterSongsHint;
+
+  /// No description provided for @libraryFilterAlbumsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter albums'**
+  String get libraryFilterAlbumsHint;
+
+  /// No description provided for @libraryFilterArtistsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter artists'**
+  String get libraryFilterArtistsHint;
+
+  /// No description provided for @libraryFilterGenresHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter genres'**
+  String get libraryFilterGenresHint;
+
+  /// No description provided for @libraryFilterLanguagesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter languages'**
+  String get libraryFilterLanguagesHint;
+
+  /// No description provided for @libraryFilterFoldersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter in this folder'**
+  String get libraryFilterFoldersHint;
+
+  /// No description provided for @libraryOrderTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get libraryOrderTooltip;
+
+  /// No description provided for @libraryOrderAscText.
+  ///
+  /// In en, this message translates to:
+  /// **'A → Z'**
+  String get libraryOrderAscText;
+
+  /// No description provided for @libraryOrderDescText.
+  ///
+  /// In en, this message translates to:
+  /// **'Z → A'**
+  String get libraryOrderDescText;
+
+  /// No description provided for @libraryOrderAscNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Ascending'**
+  String get libraryOrderAscNumber;
+
+  /// No description provided for @libraryOrderDescNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Descending'**
+  String get libraryOrderDescNumber;
+
+  /// No description provided for @librarySortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get librarySortTitle;
+
+  /// No description provided for @librarySortArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get librarySortArtist;
+
+  /// No description provided for @librarySortAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get librarySortAlbum;
+
+  /// No description provided for @librarySortYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get librarySortYear;
+
+  /// No description provided for @librarySortDateAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Date added'**
+  String get librarySortDateAdded;
+
+  /// No description provided for @librarySortPlayCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Play count'**
+  String get librarySortPlayCount;
+
+  /// No description provided for @librarySortDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get librarySortDuration;
+
+  /// No description provided for @librarySortTrackCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs'**
+  String get librarySortTrackCount;
+
+  /// No description provided for @librarySortAlbumCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Albums'**
+  String get librarySortAlbumCount;
+
+  /// No description provided for @librarySortTrackNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Track number'**
+  String get librarySortTrackNumber;
+
+  /// No description provided for @libraryViewGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get libraryViewGrid;
+
+  /// No description provided for @libraryViewList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get libraryViewList;
+
+  /// No description provided for @libraryViewTree.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder tree'**
+  String get libraryViewTree;
+
+  /// No description provided for @libraryViewFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'Flat list'**
+  String get libraryViewFlat;
+
+  /// No description provided for @libraryScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning…'**
+  String get libraryScanning;
+
+  /// No description provided for @libraryScanningTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning · {done} / {total} songs'**
+  String libraryScanningTags(int done, int total);
+
+  /// No description provided for @libraryScanningTagsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning · {done} songs'**
+  String libraryScanningTagsCount(int done);
+
+  /// No description provided for @libraryScanningCovers.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching covers · {done} / {total}'**
+  String libraryScanningCovers(int done, int total);
+
+  /// No description provided for @libraryScanningCoversStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching covers…'**
+  String get libraryScanningCoversStart;
+
+  /// No description provided for @libraryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Library is empty'**
+  String get libraryEmptyTitle;
+
+  /// No description provided for @libraryEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No songs in the chosen folders.'**
+  String get libraryEmptyMessage;
+
+  /// No description provided for @libraryChooseFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose music folders'**
+  String get libraryChooseFolders;
+
+  /// No description provided for @libraryPlayFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start playback'**
+  String get libraryPlayFailed;
+
+  /// No description provided for @libraryLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the list'**
+  String get libraryLoadFailed;
+
+  /// No description provided for @libraryNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing'**
+  String get libraryNowPlaying;
+
+  /// No description provided for @libraryFavoriteAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get libraryFavoriteAdd;
+
+  /// No description provided for @libraryFavoriteRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get libraryFavoriteRemove;
+
+  /// No description provided for @libraryFavoriteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change favorites'**
+  String get libraryFavoriteFailed;
+
+  /// No description provided for @libraryDurationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String libraryDurationMinutes(int minutes);
+
+  /// No description provided for @libraryDurationHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String libraryDurationHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @libraryAlbumStats.
+  ///
+  /// In en, this message translates to:
+  /// **'{songs, plural, =1{1 song} other{{songs} songs}} • {minutes} min'**
+  String libraryAlbumStats(int songs, int minutes);
+
+  /// No description provided for @libraryLanguageUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get libraryLanguageUnknown;
+
+  /// No description provided for @libraryLanguageStatsDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'{songs, plural, =1{1 song} other{{songs} songs}} · {detected} auto-detected'**
+  String libraryLanguageStatsDetected(int songs, int detected);
+
+  /// No description provided for @libraryLanguagesNote.
+  ///
+  /// In en, this message translates to:
+  /// **'From the language tag of each song; songs without a tag are detected by Kanaru. Change this in Settings › Library.'**
+  String get libraryLanguagesNote;
+
+  /// No description provided for @libraryFoldersAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All folders'**
+  String get libraryFoldersAll;
+
+  /// No description provided for @libraryFoldersHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden levels'**
+  String get libraryFoldersHidden;
+
+  /// No description provided for @libraryGoToFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to folder'**
+  String get libraryGoToFolder;
+
+  /// No description provided for @libraryVolumeInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal storage'**
+  String get libraryVolumeInternal;
+
+  /// No description provided for @libraryVolumeSdCard.
+  ///
+  /// In en, this message translates to:
+  /// **'SD card'**
+  String get libraryVolumeSdCard;
+
+  /// No description provided for @libraryVolumeUsb.
+  ///
+  /// In en, this message translates to:
+  /// **'USB drive'**
+  String get libraryVolumeUsb;
+
+  /// No description provided for @libraryFolderCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{songs, plural, =1{1 song} other{{songs} songs}} · {folders, plural, =1{1 folder} other{{folders} folders}}'**
+  String libraryFolderCounts(int songs, int folders);
+
+  /// No description provided for @libraryFolderSongsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs in this folder · {count}'**
+  String libraryFolderSongsHeader(int count);
+
+  /// No description provided for @libraryFlatSongsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} songs in this folder (not including subfolders)'**
+  String libraryFlatSongsHeader(int count);
+
+  /// No description provided for @libraryRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get libraryRetry;
+
+  /// No description provided for @libraryPermissionMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing permission to read music'**
+  String get libraryPermissionMissing;
+
+  /// No description provided for @libraryGrantPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant'**
+  String get libraryGrantPermission;
 }
 
 class _AppLocalizationsDelegate
