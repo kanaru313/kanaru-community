@@ -586,7 +586,7 @@ class $CoverColorsTable extends i2.CoverColors
 
 class CoverColorsRow extends i0.DataClass
     implements i0.Insertable<i1.CoverColorsRow> {
-  /// Same value as `tracks.cover_key`.
+  /// Same value as `tracks.cover_key` or `custom_covers.cover_key`.
   final String coverKey;
 
   /// ARGB seed colour (input of `ColorScheme.fromSeed`).
@@ -943,7 +943,8 @@ class CustomCoverRow extends i0.DataClass
   /// Playlist uid, or the encoded `AlbumKey` / `ArtistKey`.
   final String itemKey;
 
-  /// Content hash of the stored image (SHA-256, lower-case hex).
+  /// Key of the processed cover: `<2 hex>/<32 hex>` (blake3 of the image
+  /// bytes, made by the Rust import; same form as `tracks.cover_key`).
   final String coverKey;
   final int updatedAt;
   const CustomCoverRow({
