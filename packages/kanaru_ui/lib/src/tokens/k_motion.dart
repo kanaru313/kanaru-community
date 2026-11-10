@@ -45,7 +45,15 @@ abstract final class KSpring {
       return controller.animateTo(target, duration: Duration.zero);
     }
     return controller.animateWith(
-      SpringSimulation(spring, controller.value, target, velocity),
+      // Snap to the exact target when settled: a spring ends within its
+      // tolerance (~0.001), and a check like `t > 0` would then stay true.
+      SpringSimulation(
+        spring,
+        controller.value,
+        target,
+        velocity,
+        snapToEnd: true,
+      ),
     );
   }
 }
