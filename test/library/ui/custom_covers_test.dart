@@ -10,7 +10,9 @@ import 'package:kanaru/src/library/state/browse/custom_cover_index_providers.dar
 import 'package:kanaru/src/library/state/custom_cover_providers.dart';
 import 'package:kanaru/src/library/ui/browse/item_covers.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
+import 'package:kanaru/src/media/domain/cover_colors.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
+import 'package:kanaru/src/playback/state/cover_providers.dart';
 import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru/src/platform/state/platform_providers.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -155,6 +157,34 @@ void main() {
     expect(_images<AlbumCover>(tester).where(_isCustom), hasLength(1));
     await _remove(tester, h, CustomCoverKind.album, id);
     expect(_images<AlbumCover>(tester).where(_isCustom), isEmpty);
+    await unmountApp(tester);
+  });
+
+  testWidgets('the album page is tinted by the track cover, not by a custom '
+      'one', (tester) async {
+    final h = await _pump(
+      tester,
+      initial: '/library/songs',
+      overrides: [
+        coverColorsProvider.overrideWith(
+          (ref, key) => Stream.value(
+            const CoverColors(seed: 0xFFCC3322, palette: [0xFFCC3322]),
+          ),
+        ),
+      ],
+    );
+    final id = albumId('Blue', 'Zed');
+    h.router.push(LibraryLocations.album(AlbumKey.decode(id)!));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await h.settle(tester);
+    Color? tint() =>
+        tester.widget<KDetailLayout>(find.byType(KDetailLayout)).tint;
+    expect(tint(), const Color(0xFFCC3322));
+    await _choose(tester, h, CustomCoverKind.album, id);
+    expect(tint(), isNull);
+    await _remove(tester, h, CustomCoverKind.album, id);
+    expect(tint(), const Color(0xFFCC3322));
     await unmountApp(tester);
   });
 

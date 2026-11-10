@@ -4,6 +4,7 @@ import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/library/data/browse/menu_queries.dart';
 import 'package:kanaru/src/library/state/browse/selection_providers.dart';
+import 'package:kanaru/src/library/state/browse/song_list_providers.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 
 import '../../database/support/test_db.dart';
@@ -219,6 +220,54 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 150));
       expect(reads, hasLength(1));
       expect(reads.single, hasLength(6));
+    });
+
+    test('a scan re-reads the selection at most once per interval', () async {
+      final tracks = [
+        for (var i = 0; i < 3; i++)
+          await addLibraryTrack(
+            db,
+            source: src,
+            locator: '$i.flac',
+            durationMs: 10,
+          ),
+      ];
+      c.dispose();
+      c = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          browseRefreshIntervalProvider.overrideWithValue(
+            const Duration(milliseconds: 400),
+          ),
+          selectionDurationReaderProvider.overrideWithValue((db, ids) {
+            reads.add(ids);
+            return selectionDuration(db, ids);
+          }),
+        ],
+      );
+      addTearDown(c.dispose);
+      sel = c.read(librarySelectionProvider.notifier);
+      sel.selectAll(ids(tracks));
+      final sub = c.listen(selectionSummaryProvider, (_, _) {});
+      addTearDown(sub.close);
+      await until(
+        () => c.read(selectionSummaryProvider).value?.durationMs == 30,
+      );
+      expect(reads, hasLength(1));
+      // A scan writes in a stream of small transactions.
+      for (var i = 0; i < 5; i++) {
+        await addLibraryTrack(
+          db,
+          source: src,
+          locator: 'x$i.flac',
+          durationMs: 10,
+        );
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(reads, hasLength(1), reason: 'inside the interval');
+      await until(() => reads.length == 2);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      expect(reads, hasLength(2), reason: 'the writes were one reload');
     });
   });
 }

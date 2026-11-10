@@ -9,7 +9,9 @@ import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../domain/library_tabs.dart';
+import '../../state/browse/custom_cover_index_providers.dart';
 import '../../state/browse/detail_providers.dart';
+import '../../state/custom_cover_providers.dart';
 import '../browse/item_covers.dart';
 import '../browse/library_navigation.dart';
 import '../library_locations.dart';
@@ -41,7 +43,12 @@ class AlbumPage extends ConsumerWidget {
           : DetailPending(fallback: _fallback, failed: detail.hasError);
     }
     final coverKey = album.coverKey;
-    final seed = coverKey == null
+    // A custom cover wins over the tracks' cover and its colours are not
+    // extracted yet: no tint rather than the tint of a picture not shown.
+    final custom = ref.watch(
+      hasCustomCoverProvider((kind: CustomCoverKind.album, itemKey: albumId)),
+    );
+    final seed = coverKey == null || custom
         ? null
         : ref.watch(coverColorsProvider(coverKey)).value?.seed;
     final playContext = PlayContext(

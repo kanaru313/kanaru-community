@@ -15,6 +15,7 @@ import '../../state/browse/track_window.dart';
 import '../browse/library_labels.dart';
 import '../browse/play_actions.dart';
 import '../menus/open_menu.dart';
+import '../songs/song_row_placeholder.dart';
 import 'selection_back.dart';
 import 'selection_row.dart';
 
@@ -218,14 +219,38 @@ class _SelectedListState extends ConsumerState<_SelectedList> {
       if (mounted) setState(() {});
     },
   );
+  final ScrollController _scroll = ScrollController();
   List<TrackId>? _fed;
   int _first = 1 << 30;
   int _last = -1;
+  double _extent = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_onScroll);
+  }
 
   @override
   void dispose() {
+    _scroll
+      ..removeListener(_onScroll)
+      ..dispose();
     _window.dispose();
     super.dispose();
+  }
+
+  /// A scroll builds rows without rebuilding this state, so the rows now in
+  /// view (fixed height, two spare rows each side) are reported from the
+  /// scroll position.
+  void _onScroll() {
+    if (!_scroll.hasClients || _extent <= 0) return;
+    final position = _scroll.position;
+    if (!position.hasViewportDimension) return;
+    final first = (position.pixels / _extent).floor() - 2;
+    final last =
+        ((position.pixels + position.viewportDimension) / _extent).ceil() + 2;
+    _window.viewport(math.max(first, 0), last);
   }
 
   @override
@@ -236,6 +261,7 @@ class _SelectedListState extends ConsumerState<_SelectedList> {
       _window.setIds(ids);
     }
     final extent = KMediaCard.extentOf(MediaQuery.textScalerOf(context));
+    _extent = extent;
     _first = 1 << 30;
     _last = -1;
     // The rows built this frame are the range the window reads.
@@ -243,6 +269,7 @@ class _SelectedListState extends ConsumerState<_SelectedList> {
       if (mounted && _last >= 0) _window.viewport(_first, _last);
     });
     return ReorderableListView.builder(
+      scrollController: _scroll,
       buildDefaultDragHandles: false,
       itemExtent: extent,
       padding: const EdgeInsets.fromLTRB(KSpace.x2, 0, KSpace.x2, KSpace.x2),
@@ -257,7 +284,7 @@ class _SelectedListState extends ConsumerState<_SelectedList> {
         return KeyedSubtree(
           key: ValueKey(ids[i]),
           child: info == null
-              ? SelectedSongPlaceholder(extent: extent)
+              ? SongRowPlaceholder(extent: extent)
               : SelectedSongRow(info: info, index: i),
         );
       },

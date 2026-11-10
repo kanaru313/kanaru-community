@@ -190,11 +190,12 @@ void main() {
   });
 
   testWidgets('the filter narrows the songs and the count', (tester) async {
-    await _pump(tester);
+    final h = await _pump(tester);
     await tester.tap(find.byTooltip('Filter'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'blue 2');
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await h.settle(tester);
     await tester.pump(const Duration(seconds: 2));
     expect(tileTitles(tester), ['Blue 2']);
     expect(find.text('1 / 3 songs'), findsOneWidget);

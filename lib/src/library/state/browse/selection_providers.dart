@@ -4,6 +4,7 @@ import '../../../database/database.dart' show AppDatabase;
 import '../../../database/state/database_providers.dart';
 import '../../../media/domain/track_id.dart';
 import '../../data/browse/menu_queries.dart';
+import '../../data/browse/throttled_query.dart';
 import 'song_list_providers.dart';
 
 /// What is selected, in selection order, with an index for O(1) lookups.
@@ -212,25 +213,38 @@ final selectionDurationReaderProvider =
       )
     >((ref) => selectionDuration);
 
-/// Duration of the selection, recomputed shortly after it stops changing.
-/// Tracks that are no longer visible are dropped from the selection.
-final selectionSummaryProvider = FutureProvider.autoDispose<SelectionSummary>((
+/// Duration of the selection, recomputed shortly after it stops changing and
+/// again after the library changed (a scan, an exclusion), at most once per
+/// refresh interval and never sooner than the last read took, like the other
+/// library readers. Tracks that are no longer visible are dropped from the
+/// selection.
+final selectionSummaryProvider = StreamProvider.autoDispose<SelectionSummary>((
   ref,
-) async {
+) {
   final ids = ref.watch(librarySelectionProvider.select((s) => s.ids));
   final db = ref.watch(appDatabaseProvider);
-  // Also after the library changed (a scan, an exclusion), so tracks that
-  // vanished leave the selection without the user touching it.
-  ref.watch(songRowsRevisionProvider);
+  final read = ref.read(selectionDurationReaderProvider);
   var disposed = false;
+  var first = true;
   ref.onDispose(() => disposed = true);
-  // Coalesces a burst of toggles into one query.
-  await Future<void>.delayed(const Duration(milliseconds: 60));
-  if (disposed) return const SelectionSummary(durationMs: 0);
-  final result = await ref.read(selectionDurationReaderProvider)(db, ids);
-  if (disposed) return const SelectionSummary(durationMs: 0);
-  if (result.absent.isNotEmpty) {
-    ref.read(librarySelectionProvider.notifier).removeAll(result.absent);
-  }
-  return SelectionSummary(durationMs: result.durationMs);
+  return throttledQuery(
+    db,
+    {db.tracks},
+    () async {
+      if (first) {
+        first = false;
+        // Coalesces a burst of toggles into one query.
+        await Future<void>.delayed(const Duration(milliseconds: 60));
+      }
+      if (disposed) return const SelectionSummary(durationMs: 0);
+      final result = await read(db, ids);
+      if (disposed) return const SelectionSummary(durationMs: 0);
+      if (result.absent.isNotEmpty) {
+        ref.read(librarySelectionProvider.notifier).removeAll(result.absent);
+      }
+      return SelectionSummary(durationMs: result.durationMs);
+    },
+    interval: ref.watch(browseRefreshIntervalProvider),
+    equals: (a, b) => a.durationMs == b.durationMs,
+  );
 });

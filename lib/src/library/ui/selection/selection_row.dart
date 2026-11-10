@@ -56,24 +56,3 @@ class SelectedSongRow extends StatelessWidget {
     );
   }
 }
-
-/// A row whose page is still being read.
-class SelectedSongPlaceholder extends StatelessWidget {
-  const SelectedSongPlaceholder({super.key, required this.extent});
-
-  final double extent;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: KMediaCard.gap),
-    child: SizedBox(
-      height: extent - KMediaCard.gap,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(14),
-        ),
-      ),
-    ),
-  );
-}

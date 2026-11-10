@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
 import '../../domain/browse/list_sort.dart';
@@ -14,6 +13,7 @@ import '../browse/library_list_scaffold.dart';
 import '../menus/menu_origin.dart';
 import '../selection/selection_inset.dart';
 import '../selection/selection_shortcuts.dart';
+import 'song_row_placeholder.dart';
 import 'song_tile.dart';
 
 /// Windowed list of the songs of a scope, in a sort, narrowed by a filter.
@@ -64,7 +64,7 @@ class SongList extends StatelessWidget {
 /// The rows of a song list as one sliver, for pages that put them in a scroll
 /// view of their own (album and artist pages, with a header and a sticky bar
 /// before them). Owns the [TrackWindow], the select-all registration and the
-/// read-failed notice, exactly as [SongList] describes.
+/// failed-page retry rows, exactly as [SongList] describes.
 class SongSlivers extends ConsumerStatefulWidget {
   const SongSlivers({
     super.key,
@@ -179,8 +179,6 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
     final origin = MenuOrigin.ofScope(widget.scope);
     return SliverMainAxisGroup(
       slivers: [
-        if (_window.error != null)
-          SliverToBoxAdapter(child: _ReadFailed(onRetry: _window.invalidate)),
         SliverPadding(
           padding: EdgeInsets.fromLTRB(gutter, 0, gutter, KSpace.x4),
           sliver: SliverFixedExtentList(
@@ -190,7 +188,14 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
               onLayout: _window.viewport,
               builder: (context, i) {
                 final info = _window.rowAt(i);
-                if (info == null) return _PlaceholderCard(extent: extent);
+                if (info == null) {
+                  return _window.isFailed(i)
+                      ? SongRowFailed(
+                          extent: extent,
+                          onRetry: _window.invalidate,
+                        )
+                      : SongRowPlaceholder(extent: extent);
+                }
                 return SongTile(
                   info: info,
                   index: i,
@@ -223,56 +228,4 @@ class _WindowDelegate extends SliverChildBuilderDelegate {
   @override
   void didFinishLayout(int firstIndex, int lastIndex) =>
       onLayout(firstIndex, lastIndex);
-}
-
-/// A row whose page is still being read: same size, no content.
-class _PlaceholderCard extends StatelessWidget {
-  const _PlaceholderCard({required this.extent});
-
-  final double extent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: KMediaCard.gap),
-      child: SizedBox(
-        height: extent - KMediaCard.gap,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A page of rows could not be read: say so, with a way to try again.
-class _ReadFailed extends StatelessWidget {
-  const _ReadFailed({required this.onRetry});
-
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: libraryGutter(context),
-        vertical: KSpace.x2,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              l10n.libraryLoadFailed,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ),
-          TextButton(onPressed: onRetry, child: Text(l10n.libraryRetry)),
-        ],
-      ),
-    );
-  }
 }

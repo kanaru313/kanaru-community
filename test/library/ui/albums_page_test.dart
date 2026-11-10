@@ -104,6 +104,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'yan');
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(AlbumCard), findsOneWidget);
     expect(find.text('1 / 3 albums'), findsOneWidget);
     await unmountApp(tester);
@@ -164,4 +165,25 @@ void main() {
       await unmountApp(tester);
     });
   }
+
+  testWidgets('the filter text reaches the list after typing pauses', (
+    tester,
+  ) async {
+    await _pump(tester);
+    await tester.tap(find.byTooltip('Filter'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'ya');
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.enterText(find.byType(TextField), 'yan');
+    await tester.pump(const Duration(milliseconds: 200));
+    // 300 ms since the first key, 200 since the last: not applied yet.
+    expect(find.byType(AlbumCard), findsNWidgets(3));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(AlbumCard), findsOneWidget);
+    // Emptying the field applies at once.
+    await tester.enterText(find.byType(TextField), '');
+    await tester.pump();
+    expect(find.byType(AlbumCard), findsNWidgets(3));
+    await unmountApp(tester);
+  });
 }

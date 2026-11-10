@@ -11,6 +11,7 @@ import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../support/fake_playback_commands.dart';
+import '../../browse/support/library_fixture.dart';
 import '../menus/menu_pump.dart';
 import '../support/library_harness.dart';
 import '../support/ui_harness.dart';
@@ -287,6 +288,49 @@ void main() {
     expect(loads, isNotEmpty);
     expect(loads.every((n) => n <= 100), isTrue, reason: '$loads');
     expect(find.byType(SongTile), findsNothing);
+    await unmountApp(tester);
+  });
+
+  testWidgets('scrolling the open panel past the first page reads the rows', (
+    tester,
+  ) async {
+    final h = await pumpSelection(tester, albums: 0);
+    for (var i = 0; i < 250; i++) {
+      await addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 's${i.toString().padLeft(4, '0')}.flac',
+        title: 'Song ${i.toString().padLeft(4, '0')}',
+      );
+    }
+    await h.settle(tester);
+    final ids = await allIds(h);
+    h.selection.addRange(ids);
+    h.selection.setExpanded(true);
+    await h.settle(tester, rounds: 3);
+    Finder inPanel(String title) => find.descendant(
+      of: find.byType(KSelectionPanel),
+      matching: find.text(title),
+    );
+    expect(inPanel('Song 0000'), findsOneWidget);
+    final list = find.descendant(
+      of: find.byType(KSelectionPanel),
+      matching: find.byType(Scrollable),
+    );
+    final position = tester.state<ScrollableState>(list.first).position;
+    final extent = KMediaCard.extentOf(TextScaler.noScaling);
+    // Row 150 is in the second page, never in view when the panel opened.
+    position.jumpTo(150 * extent);
+    await h.settle(tester, rounds: 3);
+    expect(inPanel('Song 0150'), findsOneWidget);
+    final row = find.ancestor(
+      of: inPanel('Song 0150'),
+      matching: find.byType(SelectedSongRow),
+    );
+    expect(
+      find.descendant(of: row, matching: find.byIcon(KIcons.dragHandle)),
+      findsOneWidget,
+    );
     await unmountApp(tester);
   });
 }

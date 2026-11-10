@@ -10,6 +10,7 @@ import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../state/browse/list_prefs_providers.dart';
 import '../../state/browse/song_list_providers.dart';
+import '../browse/filter_debouncer.dart';
 import '../browse/library_labels.dart';
 import '../browse/library_list_scaffold.dart';
 import '../browse/list_sort_popover.dart';
@@ -64,9 +65,11 @@ class _DetailSongsHostState extends ConsumerState<DetailSongsHost> {
   final TextEditingController _controller = TextEditingController();
   bool _filterOpen = false;
   String _filter = '';
+  final FilterDebouncer _debounce = FilterDebouncer();
 
   @override
   void dispose() {
+    _debounce.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -79,11 +82,14 @@ class _DetailSongsHostState extends ConsumerState<DetailSongsHost> {
     }
   }
 
-  void _closeFilter() => setState(() {
-    _controller.clear();
-    _filter = '';
-    _filterOpen = false;
-  });
+  void _closeFilter() {
+    _debounce.cancel();
+    setState(() {
+      _controller.clear();
+      _filter = '';
+      _filterOpen = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +142,9 @@ class _DetailSongsHostState extends ConsumerState<DetailSongsHost> {
                 controller: _controller,
                 hint: l10n.libraryFilterSongsHint,
                 closeTooltip: l10n.libraryFilterClose,
-                onChanged: (text) => setState(() => _filter = text),
+                onChanged: (text) => _debounce(text, (text) {
+                  if (mounted) setState(() => _filter = text);
+                }),
                 onClose: _closeFilter,
               ),
             ),

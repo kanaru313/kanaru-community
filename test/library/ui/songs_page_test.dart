@@ -39,7 +39,7 @@ PlayTracksCall _only(FakePlaybackCommands playback) =>
 
 /// Placeholder rows (a page that is not read yet) among the built rows.
 Finder _placeholders() => find.byWidgetPredicate(
-  (w) => w.runtimeType.toString() == '_PlaceholderCard',
+  (w) => w.runtimeType.toString() == 'SongRowPlaceholder',
 );
 
 void main() {
@@ -328,7 +328,7 @@ void main() {
     expect(h.container.read(activeTrackListProvider), isNull);
   });
 
-  testWidgets('a page that cannot be read says so and reads again on retry', (
+  testWidgets('a page that cannot be read says so in its rows and retries', (
     tester,
   ) async {
     var failures = 1;
@@ -347,12 +347,55 @@ void main() {
     );
     await _addSongs(h, ['Alpha', 'Bravo']);
     await h.settle(tester);
-    expect(find.text('Could not load the list'), findsOneWidget);
+    // In the place of the two rows; nothing above the list.
+    expect(find.text('Could not load the list'), findsNWidgets(2));
     expect(h.songTitles(tester), isEmpty);
-    await tester.tap(find.text('Retry'));
+    await tester.tap(find.text('Retry').first);
     await h.settle(tester);
     expect(find.text('Could not load the list'), findsNothing);
     expect(h.songTitles(tester), ['Alpha', 'Bravo']);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a far page that fails shows its retry in the rows on screen', (
+    tester,
+  ) async {
+    var failLast = false;
+    final h = await pumpLibrary(
+      tester,
+      initial: '/library/songs',
+      overrides: [
+        trackRowLoaderProvider.overrideWith((ref) {
+          final db = ref.watch(appDatabaseProvider);
+          return (ids) async {
+            // The last page holds the 60 songs after the second hundred.
+            if (failLast && ids.length == 60) throw StateError('disk');
+            return loadTrackInfos(db, ids);
+          };
+        }),
+      ],
+    );
+    for (var i = 0; i < 260; i++) {
+      await addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 's${i.toString().padLeft(4, '0')}.flac',
+        title: 'Song ${i.toString().padLeft(4, '0')}',
+      );
+    }
+    await h.settle(tester);
+    expect(find.text('Could not load the list'), findsNothing);
+    final list = find.byType(Scrollable).last;
+    final position = tester.state<ScrollableState>(list).position;
+    failLast = true;
+    position.jumpTo(position.maxScrollExtent);
+    await h.settle(tester);
+    expect(find.text('Could not load the list'), findsWidgets);
+    failLast = false;
+    await tester.tap(find.text('Retry').last);
+    await h.settle(tester);
+    expect(find.text('Could not load the list'), findsNothing);
+    expect(find.text('Song 0259'), findsOneWidget);
     await unmountApp(tester);
   });
 }

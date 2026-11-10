@@ -295,6 +295,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'singles');
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(FolderTile), findsOneWidget);
     expect(find.text('1 / 3 folders'), findsOneWidget);
     await unmountApp(tester);

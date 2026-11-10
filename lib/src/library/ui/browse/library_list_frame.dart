@@ -7,6 +7,7 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/list_view_prefs.dart';
 import '../../state/browse/list_prefs_providers.dart';
+import 'filter_debouncer.dart';
 import 'library_labels.dart';
 import 'library_list_scaffold.dart';
 import 'list_sort_popover.dart';
@@ -55,14 +56,22 @@ class _LibraryListFrameState extends ConsumerState<LibraryListFrame> {
   final TextEditingController _controller = TextEditingController();
   bool _filterOpen = false;
   String _filter = '';
+  final FilterDebouncer _debounce = FilterDebouncer();
 
   @override
   void dispose() {
+    _debounce.cancel();
     _controller.dispose();
     super.dispose();
   }
 
+  /// The text field is immediate; the list query follows once typing pauses.
+  void _onFilterChanged(String text) => _debounce(text, (text) {
+    if (mounted) setState(() => _filter = text);
+  });
+
   void _toggleFilter() {
+    _debounce.cancel();
     setState(() {
       if (_filterOpen) _controller.clear();
       _filterOpen = !_filterOpen;
@@ -70,11 +79,14 @@ class _LibraryListFrameState extends ConsumerState<LibraryListFrame> {
     });
   }
 
-  void _closeFilter() => setState(() {
-    _controller.clear();
-    _filter = '';
-    _filterOpen = false;
-  });
+  void _closeFilter() {
+    _debounce.cancel();
+    setState(() {
+      _controller.clear();
+      _filter = '';
+      _filterOpen = false;
+    });
+  }
 
   Future<void> _openSort(GlobalKey anchor) {
     final notifier = ref.read(libraryListViewsProvider.notifier);
@@ -128,7 +140,7 @@ class _LibraryListFrameState extends ConsumerState<LibraryListFrame> {
                 controller: _controller,
                 hint: widget.filterHint,
                 closeTooltip: l10n.libraryFilterClose,
-                onChanged: (text) => setState(() => _filter = text),
+                onChanged: _onFilterChanged,
                 onClose: _closeFilter,
               ),
             ),
