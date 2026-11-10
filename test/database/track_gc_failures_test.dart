@@ -1,3 +1,4 @@
+import 'package:drift/isolate.dart' show DriftRemoteException;
 import 'package:drift/native.dart' show SqliteException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
@@ -84,7 +85,7 @@ void main() {
     );
     await expectLater(
       collectOrphanTracks(db, now: _now),
-      throwsA(isA<SqliteException>()),
+      throwsA(anyOf(isA<SqliteException>(), isA<DriftRemoteException>())),
     );
     expect(await count(), 1);
     final temp = await db

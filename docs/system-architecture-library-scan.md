@@ -54,7 +54,7 @@ to an `Io` error of kind `Other`.
 
 ## Database helpers
 
-`lib/src/database/`. Every helper runs on the UI isolate and takes the database
+`lib/src/database/`. Helper code runs on the calling isolate (the SQL itself runs on the database isolate) and takes the database
 (or its table instance) explicitly.
 
 | Helper | Purpose |
@@ -88,7 +88,7 @@ to an `Io` error of kind `Other`.
 ### Track lifecycle rules
 
 - Lane rule: write in batches of at most 200 rows per transaction, and yield
-  between batches. The database runs on the UI isolate.
+  between batches. The database runs on its own isolate, so other queries can interleave between batches.
 - Lane rule: notify the UI at most about every 300 ms during a scan.
 - Only `present` rows become `missing`, and only explicit ids.
 - Never mark a row missing when its root is unreachable, or when the root lists

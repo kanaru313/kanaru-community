@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
+import 'package:drift/isolate.dart' show DriftRemoteException;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/app_database.dart';
@@ -9,11 +10,26 @@ int _uidCounter = 0;
 
 /// Matches a future that fails with a `SqliteException` whose message
 /// contains [fragment], so a constraint test cannot pass for another reason.
+///
+/// The file database (background isolate) wraps SQLite errors in a
+/// `DriftRemoteException` whose `remoteCause` is the `SqliteException`; the
+/// in-memory test database throws the `SqliteException` itself. Accept both.
 Matcher throwsConstraint(String fragment) => throwsA(
-  isA<SqliteException>().having(
-    (e) => e.message,
-    'message',
-    contains(fragment),
+  anyOf(
+    isA<SqliteException>().having(
+      (e) => e.message,
+      'message',
+      contains(fragment),
+    ),
+    isA<DriftRemoteException>().having(
+      (e) => e.remoteCause,
+      'remoteCause',
+      isA<SqliteException>().having(
+        (e) => e.message,
+        'message',
+        contains(fragment),
+      ),
+    ),
   ),
 );
 

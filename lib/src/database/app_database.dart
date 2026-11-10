@@ -11,9 +11,10 @@ import 'tables.dart';
 
 /// Per-connection settings every Kanaru database connection needs: foreign
 /// keys enforced and triggers firing recursively. Extensions open on
-/// `AppDatabase.sharedConnection`, never on an executor of their own. Pass it as
-/// `NativeDatabase(setup:)`; [AppDatabase] runs the same pragmas again when
-/// it opens, so a connection created elsewhere is covered too.
+/// `AppDatabase.openedConnection()`, never on an executor of their own. Pass it
+/// as `NativeDatabase(setup:)` / `createInBackground(setup:)`; [AppDatabase]
+/// runs the same pragmas again when it opens, so a connection created
+/// elsewhere is covered too.
 void configureConnection(CommonDatabase db) {
   db
     ..execute('PRAGMA foreign_keys = ON')
@@ -49,14 +50,32 @@ class AppDatabase extends $AppDatabase {
 
   final bool _isReferenceDatabase;
 
-  /// Opens (or creates) the database file on the calling isolate. A
-  /// background isolate (`createInBackground`) waits until sharing its
-  /// connection with extension databases is proven.
-  factory AppDatabase.file(File file) =>
-      AppDatabase(NativeDatabase(file, setup: configureConnection));
+  /// Opens (or creates) the database file on a background isolate, so queries
+  /// and scanner writes never block UI frames. [configureConnection] runs
+  /// inside that isolate and must stay a top-level function. `beforeOpen` (and
+  /// the schema guard in it) runs on the calling isolate; its errors and
+  /// SQLite's reach callers as `DriftRemoteException` (nested for `beforeOpen`).
+  /// For a SQLite error `remoteCause` is the `SqliteException` (one level);
+  /// for `beforeOpen` errors rely only on `toString()`.
+  ///
+  /// Keep it a single connection (no `readPool`): TEMP tables and triggers
+  /// (play stats bulk, track GC), pragmas and transactions are per connection.
+  factory AppDatabase.file(File file) => AppDatabase(
+    NativeDatabase.createInBackground(file, setup: configureConnection),
+  );
 
-  /// The connection extension databases open on (`ProDatabase.connect`).
-  /// drift marks `connection` protected; this is the public hand-off.
+  /// Opens this database (migration, schema guard) and returns the connection
+  /// extension databases open on (`ProDatabase.connect(await db.openedConnection())`).
+  /// Always use this for extensions: the remote executor runs the migration of
+  /// the last database that touched it, so an extension that queried first
+  /// would run its own create step against the file.
+  Future<DatabaseConnection> openedConnection() async {
+    await doWhenOpened((_) async {});
+    return connection;
+  }
+
+  /// The raw connection (drift marks `connection` protected). Only valid after
+  /// the database opened; prefer [openedConnection].
   DatabaseConnection get sharedConnection => connection;
 
   @override
