@@ -21,6 +21,7 @@ void main() {
   late int garbageRuns;
   late int coverRuns;
   Object? coverError;
+  Completer<void>? missGate;
   late StreamController<String> misses;
   late ScanController controller;
   late List<ScanStatus> seen;
@@ -43,6 +44,7 @@ void main() {
       },
       runCoverMisses: (session, hooks, keys) async {
         missJobs.add(keys);
+        await missGate?.future;
         return ScanOutcome();
       },
       isSetupDone: () => setupDone,
@@ -172,6 +174,7 @@ void main() {
       runCoverMisses: (_, _, _) async => ScanOutcome(),
       isSetupDone: () => throw StateError('no store'),
       collectGarbage: () async {},
+      collectCoverFiles: () async {},
       timer: timers.create,
     );
     addTearDown(broken.dispose);
@@ -304,6 +307,7 @@ void main() {
       },
       runCoverMisses: (_, _, _) async => ScanOutcome(),
       isSetupDone: () => true,
+      collectCoverFiles: () async {},
       collectGarbage: () async {
         collecting = true;
         await gate.future;
@@ -369,6 +373,60 @@ void main() {
     await controller.rescan();
     await timers.settle();
     expect(afterIdle().whereType<ScanFinished>().single.added, 1);
+  });
+
+  test('added kept for a resume is dropped by a rescan that arrives while '
+      'a cover job runs', () async {
+    final never = Completer<void>();
+    missGate = Completer<void>();
+    onPass = (session, _, _) async {
+      if (passes.length == 1) {
+        session.stuck.add('/a');
+        return ScanOutcome()
+          ..added = 3
+          ..failureKind = 'native_timeout'
+          ..pending.add((key: '/a', future: never.future));
+      }
+      return _done(added: 1);
+    };
+    await controller.rescan();
+    await timers.settle();
+    misses.add('ab/0123456789abcdef0123456789abcdef');
+    await timers.settle();
+    await timers.advance(const Duration(seconds: 3));
+    expect(missJobs, isNotEmpty); // the loop is busy with the cover job
+    await controller.rescan();
+    missGate!.complete();
+    await timers.settle();
+    expect(afterIdle().whereType<ScanFinished>().single.added, 1);
+  });
+
+  test('a rescan during the resume pass keeps that pass\'s count', () async {
+    final call = Completer<void>();
+    final resumeGate = Completer<void>();
+    onPass = (session, _, _) async {
+      if (passes.length == 1) {
+        session.stuck.add('/a');
+        return ScanOutcome()
+          ..added = 3
+          ..failureKind = 'native_timeout'
+          ..pending.add((key: '/a', future: call.future));
+      }
+      if (passes.length == 2) {
+        await resumeGate.future;
+        return _done(added: 1);
+      }
+      return _done(added: 0);
+    };
+    await controller.rescan();
+    await timers.settle();
+    call.complete();
+    await timers.settle();
+    expect(passes, hasLength(2)); // the resume pass is running
+    await controller.rescan();
+    resumeGate.complete();
+    await timers.settle();
+    expect(afterIdle().whereType<ScanFinished>().single.added, 4);
   });
 
   test('added is dropped after a failure with nothing pending', () async {

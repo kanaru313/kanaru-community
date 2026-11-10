@@ -37,7 +37,7 @@ class ScanController implements LibraryScanCommands {
     required this.runCoverMisses,
     required this.isSetupDone,
     required this.collectGarbage,
-    this.collectCoverFiles,
+    required this.collectCoverFiles,
     Stream<String>? coverMisses,
     DateTime Function()? clock,
     TimerFactory? timer,
@@ -76,7 +76,7 @@ class ScanController implements LibraryScanCommands {
 
   /// Removes custom cover files no row refers to; runs right after
   /// [collectGarbage], on the same schedule. A failure is logged only.
-  final Future<void> Function()? collectCoverFiles;
+  final Future<void> Function() collectCoverFiles;
   final Duration startupDelay, garbageDelay, missDebounce;
   final DateTime Function() _clock;
   final TimerFactory _timer;
@@ -101,6 +101,10 @@ class ScanController implements LibraryScanCommands {
   /// scan that follows publishes the sum.
   int _added = 0;
 
+  /// [_added] belongs to a failed pass that left a native call pending, and
+  /// waits for the automatic resume. A request from outside drops it.
+  bool _keptForResume = false;
+
   bool _garbageWanted = false;
   bool _garbageSinceStartup = false;
 
@@ -117,7 +121,7 @@ class ScanController implements LibraryScanCommands {
       }
       // A request from outside while nothing runs starts a fresh summary:
       // a count kept for an automatic resume that never came is dropped.
-      if (!_looping) _added = 0;
+      if (_keptForResume || !_looping) _resetAdded();
       _requestScan(full: full);
     } on Object catch (e, st) {
       _log.severe('rescan failed', e, st);
@@ -159,6 +163,11 @@ class ScanController implements LibraryScanCommands {
     _kick();
   }
 
+  void _resetAdded() {
+    _added = 0;
+    _keptForResume = false;
+  }
+
   void _kick() {
     if (_looping || _disposed) return;
     _looping = true;
@@ -175,6 +184,8 @@ class ScanController implements LibraryScanCommands {
           final full = _queuedFull;
           _scanQueued = false;
           _queuedFull = false;
+          // The pass that runs now is the resume the count waited for.
+          _keptForResume = false;
           final out = await _guarded(
             () => runPass(_session, _hooks, full: full),
           );
@@ -185,7 +196,11 @@ class ScanController implements LibraryScanCommands {
           final counts = out.counts;
           if (out.failureKind != null) {
             _status.finish(ScanFailed(out.failureKind!));
-            if (out.pending.isEmpty) _added = 0;
+            if (out.pending.isEmpty) {
+              _resetAdded();
+            } else {
+              _keptForResume = true;
+            }
           } else if (counts != null) {
             _status.finish(
               ScanFinished(
@@ -196,7 +211,7 @@ class ScanController implements LibraryScanCommands {
                 at: _clock(),
               ),
             );
-            _added = 0;
+            _resetAdded();
             await _runGarbage();
           }
         } else if (_misses.ready) {
@@ -241,7 +256,7 @@ class ScanController implements LibraryScanCommands {
       _log.severe('garbage collection failed', e, st);
     }
     try {
-      await collectCoverFiles?.call();
+      await collectCoverFiles();
     } on Object catch (e, st) {
       _log.severe('custom cover cleanup failed', e, st);
     }
