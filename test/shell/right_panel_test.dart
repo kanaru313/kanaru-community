@@ -322,5 +322,35 @@ void main() {
         DesktopSidebar.fullWidth,
       );
     });
+
+    Future<bool> toggleEnabled(
+      WidgetTester tester, {
+      required double window,
+      required bool panel,
+    }) async {
+      await sidebarWidth(tester, window: window, panel: panel);
+      final button = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, KIcons.sidebarToggle),
+      );
+      return button.onPressed != null;
+    }
+
+    testWidgets('the top bar toggle is dimmed while the rail is forced', (
+      tester,
+    ) async {
+      expect(await toggleEnabled(tester, window: 1200, panel: true), isFalse);
+    });
+
+    testWidgets('the top bar toggle works when the left part is wide', (
+      tester,
+    ) async {
+      expect(await toggleEnabled(tester, window: 1440, panel: true), isTrue);
+    });
+
+    testWidgets('the top bar toggle works with the panel closed', (
+      tester,
+    ) async {
+      expect(await toggleEnabled(tester, window: 1200, panel: false), isTrue);
+    });
   });
 }

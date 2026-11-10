@@ -49,12 +49,40 @@ void main() {
     expect(find.textContaining('12 h 59 min left'), findsOneWidget);
     // The test font is far wider than the app's, so the width cannot be
     // judged by clipping here. The head gives the line the room the 40 dp
-    // buttons leave: 420 - 24 padding - 5 x 40 - 8 divider = 188 dp, about
-    // 30 characters at 12 sp in the app fonts.
+    // buttons leave: 420 - 24 padding - 5 x 40 - 8 divider - 3 x 8 gaps =
+    // 164 dp, about 26 characters at 12 sp in the app fonts.
     final room = tester.getSize(find.byType(QueueCounts)).width;
-    expect(room, greaterThanOrEqualTo(188 - 1));
-    final buttons = tester.getSize(find.byTooltip('Shuffle'));
-    expect(buttons.width, 40);
+    expect(room, greaterThanOrEqualTo(164 - 1));
+    expect(tester.getSize(find.byTooltip('Shuffle')).width, 40);
+  });
+
+  testWidgets('the head buttons keep 8 dp between them', (tester) async {
+    await pumpWithPlayer(
+      tester,
+      const QueuePanel(host: QueueHost.panel),
+      size: const Size(420, 700),
+    );
+    final shuffle = tester.getRect(find.byTooltip('Shuffle'));
+    final add = tester.getRect(find.byTooltip('Add tracks · Coming soon'));
+    expect(add.left - shuffle.right, greaterThanOrEqualTo(8));
+  });
+
+  testWidgets('a cut count line shows in full in the tooltip', (tester) async {
+    await pumpWithPlayer(
+      tester,
+      const QueuePanel(host: QueueHost.panel),
+      size: const Size(420, 700),
+      overrides: [
+        queueRemainingProvider.overrideWith(
+          (ref) => Stream.value(const Duration(hours: 12, minutes: 59)),
+        ),
+      ],
+    );
+    // In the wide test font the line is cut: the tooltip repeats it.
+    expect(
+      find.byTooltip('6 tracks · 12 h 59 min left\nPlaying track 1'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('the time left comes from the database sum, not row infos', (

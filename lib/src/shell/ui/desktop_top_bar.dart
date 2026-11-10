@@ -22,7 +22,9 @@ class DesktopTopBar extends ConsumerWidget {
   });
 
   final NavHistory history;
-  final VoidCallback onToggleSidebar;
+
+  /// Null while the sidebar is forced to the rail: the toggle is dimmed.
+  final VoidCallback? onToggleSidebar;
   final VoidCallback onHome;
 
   @override

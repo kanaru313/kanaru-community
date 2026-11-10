@@ -85,26 +85,29 @@ Future<DesktopHost> pumpDesktopShell(
       ),
     ],
   );
+  final registry = ExtensionRegistry();
+  if (withChat) {
+    registry.addPanelSurface(
+      PanelSurface(
+        id: 'chat',
+        order: 0,
+        body: (_) => GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => host.chatTaps++,
+          child: const Center(child: Text('chat panel')),
+        ),
+        menu: (_) => const Icon(KIcons.moreVert, key: ValueKey('chat menu')),
+      ),
+    );
+  }
   final container = ProviderContainer(
     overrides: [
-      extensionRegistryProvider.overrideWithValue(ExtensionRegistry()),
+      extensionRegistryProvider.overrideWithValue(registry),
       playerControllerProvider.overrideWithValue(h.c),
       appDatabaseProvider.overrideWithValue(h.db),
       settingsStoreProvider.overrideWithValue(h.settings),
       scanStatusProvider.overrideWith((ref) => Stream.value(const ScanIdle())),
       libraryScanCommandsProvider.overrideWithValue(NoopScanCommands()),
-      if (withChat)
-        chatPanelSurfaceProvider.overrideWithValue(
-          ChatPanelSurface(
-            body: (_) => GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => host.chatTaps++,
-              child: const Center(child: Text('chat panel')),
-            ),
-            menu: (_) =>
-                const Icon(KIcons.moreVert, key: ValueKey('chat menu')),
-          ),
-        ),
       ...overrides,
     ],
   );

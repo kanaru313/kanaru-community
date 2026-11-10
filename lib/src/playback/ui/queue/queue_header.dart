@@ -42,16 +42,21 @@ class QueueCounts extends ConsumerWidget {
         : (left == null
               ? l10n.playbackQueuePanelShort(total)
               : l10n.playbackQueuePanelCounts(total, left));
-    final line = Text(
-      text,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: Theme.of(context).textTheme.bodySmall
-          ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+    final style = Theme.of(context).textTheme.bodySmall
+        ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant);
+    if (mobile) {
+      return Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: style,
+      );
+    }
+    return KOverflowTooltip(
+      text: text,
+      message: l10n.playbackQueuePlayingAt(position),
+      style: style,
     );
-    return mobile
-        ? line
-        : Tooltip(message: l10n.playbackQueuePlayingAt(position), child: line);
   }
 }
 

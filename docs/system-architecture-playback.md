@@ -10,6 +10,7 @@
 - Queue model, persistence, playable resolver, play log writer, settings keys: this file.
 - Restore, position saves, listens and the exit flush: this file.
 - Media controls (MPRIS, `audio_service`) and audio focus: this file.
+- Waveform (Rust decode, cache, loader, seek bar): this file, section Waveform.
 - Android notification icon: `android/app/src/main/res/drawable/ic_stat_kanaru.xml` is the monochrome (white) status-bar icon. `AudioServiceConfig.androidNotificationIcon` must be `'drawable/ic_stat_kanaru'`; the launcher icon is coloured and shows as a grey square in the status bar.
 
 ## Commands
@@ -484,12 +485,12 @@ Playback widgets and where each lives (UI layers import `state/`, never `data/`;
 | `KProgressLine`, `KSeekBar`, `KToggleIconButton`, `CoverTintBackground` | `packages/kanaru_ui/.../widgets/media/` | Flat 2 dp line; flat 4 dp seek bar (tap, drag, Left/Right 5 s, `onSeek` once per drag); toggle with a dot when on; cover gradient (alpha-only fade when the colours go). No app imports. |
 | `MiniPlayer({onOpen, onOpenQueue})` | `playback/ui/mini_player.dart` | Mobile, 64 dp. Tap/Enter/Space or swipe up > 30 dp open; long press 500 ms (cancelled by a 10 dp move) gives a haptic and opens the queue. Only `_Progress` listens to the position. |
 | `PlayPauseButton`, `NextButton`, `PreviousButton`, `ShuffleButton`, `RepeatButton` | `playback/ui/` | Watch narrow providers; call the controller with `ref.read` on tap. |
-| `PlaybackTimeLabel`, `PlaybackSeekBar`, `VolumeControl` | `playback/ui/` | Labels select whole seconds. Volume is the persisted setting; mute remembers the last level. |
+| `PlaybackTimeLabel`, `PlaybackSeekBar`, `VolumeControl` | `playback/ui/` | Labels select whole seconds. Volume is the persisted setting; mute remembers the last level. `PlaybackSeekBar` is the flat bar (mini player, player bar); `PlaybackWaveformSeekBar` is the Now Playing one (see Waveform). |
 | `FavoriteButton(trackId)` | `screens/now_playing/ui/` | `isFavoriteProvider` + `favoritesControllerProvider`. |
 | `PlayerBar` | `shell/ui/player_bar.dart` | Desktop, 88 dp, under the page. Left part < 1000 dp: no volume, sleep timer, heart; < 760: no shuffle/repeat. Lyrics, cover and expand open Now Playing (the bar is offstage while it is open); Queue toggles the shell's right panel and is tonal while it is open. The heart sits right after the title/artist block (the text takes only the width it needs; user decision, matches 02) and goes with the volume and sleep timer under 1000 dp. |
 | `PlaybackNoticeListener` | `shell/ui/` | Wraps both shells. `AppShell` creates the player and calls `start()` in the same post-frame callback, so no notice falls between the two (a test or another host leaves `autoStart` on and it starts after its first frame). Listens for good, track or not, so a notice raised as the last track goes is not lost; the child never moves. Notices raised by a UI action (remove with undo, "queue is empty") are shown by that action; the controller emits none for them, so there is one toast. |
 | `NowPlayingPanel` | `playback/state/now_playing_panel.dart` (one import path; no re-export) | `{open, covered}`. `covered` makes the desktop left region `Offstage`; `close()` clears it. |
-| `RightPanel` | `shell/state/right_panel.dart` | `closed`, `queue` or `chat`; one at a time. `show`, `toggle`, `close`; every change is stored in `shell.right_panel` and read back at the next launch (chat last time but no chat surface in this build: starts closed; a chat request without a surface is ignored). `chatPanelSurfaceProvider` is null in the public build; not wired yet (no extension path can override a provider; a registry slot is requested, today only tests fill it); the Pro build is meant to override it with a `ChatPanelSurface(body, menu?)`. |
+| `RightPanel` | `shell/state/right_panel.dart` | `closed`, `queue` or `chat`; one at a time. `show`, `toggle`, `close`; every change is stored in `shell.right_panel` and read back at the next launch (chat last time but no chat surface in this build: starts closed; a chat request without a surface is ignored). `chatPanelSurfaceProvider` is the extension registry's `PanelSurface` with id `chat` (`registry.panelSurface('chat')`); the public build registers none, so it is null there and the AI button is dimmed; a Pro extension adds the surface with `addPanelSurface(PanelSurface(id: 'chat', order, body, menu?))`. |
 | `RightPanelHost` | `shell/ui/right_panel/` | 420 dp, no drag handle, header (name, the chat's own ⋮, ✕) over `QueuePanel(host: panel)` or the chat body. Opening from closed and closing do not animate; switching slides the content sideways in top-bar button order (Queue to Chat left, Chat to Queue right, 340 ms, `AnimatedSwitcher`; none under reduced motion). |
 | `DesktopHistoryInput` | `shell/ui/desktop_history_input.dart` | Alt+Left/Right and mouse Back/Forward walk `NavHistory`; Esc goes back unless a text field is focused. `interceptBack` is asked first for Esc and the mouse Back button: the shell passes "close Now Playing", so an open screen closes before history moves. |
 | `MobilePushLayout`, `MobileSidebar` | `shell/ui/` | Push sidebar (256 dp) driven by `KSpring.gentle`; open state in `mobileSidebarOpenProvider`. |
@@ -503,7 +504,7 @@ Rules:
   Now Playing overlay]), RightPanelHost]]`. Now Playing covers only the left region; the right panel is a
   sibling of that Stack and stays visible and tappable while the left region is covered. The left part
   shrinks by 420 dp and stays the desktop layout (the form factor follows the whole window). When the
-  left part is under 1000 dp the sidebar is forced to its 72 dp rail whatever the toggle says (the ☰ drawer is not built yet).
+  left part is under 1000 dp the sidebar is forced to its 72 dp rail whatever the toggle says, and the top bar sidebar toggle is dimmed meanwhile (it would flip a state that shows nothing; the ☰ drawer is not built yet).
   Top bar: a Queue button (tonal while the queue panel is open, Ctrl+Shift+Q) next to the AI button (tonal
   while the chat is open, Ctrl+J; dimmed "Coming soon" when the build has no chat and no registered top
   bar action). The shortcuts are taken by the shell's global key handler and work while Now Playing is open.
@@ -521,7 +522,7 @@ Rules:
 The queue content is shared by the mobile sheet and the desktop right panel. Widgets live in
 `playback/ui/queue/` (no library imports); the row menu, the ♥ and navigation to the library live in
 `screens/now_playing/ui/` (`queue_row_menu.dart`, `queue_row_trailing.dart`, `track_navigation.dart`) and are handed
-to the list as hooks (`QueueRowMenu`, `QueueRowTrailing`). `QueuePanel(host: sheet | panel)` composes them. On the panel the shell draws the header ("Queue" and ✕); `QueuePanel` adds the line under it: counts left (`N tracks · time left`, the playing position in the tooltip; 40 dp action buttons so it fits 420 dp), Shuffle, Add tracks (soon), Clean up, Save as playlist (soon) | ⋮ right, no footer.
+to the list as hooks (`QueueRowMenu`, `QueueRowTrailing`). `QueuePanel(host: sheet | panel)` composes them. On the panel the shell draws the header ("Queue" and ✕); `QueuePanel` adds the line under it: counts left (`N tracks · time left`; the tooltip has the playing position, and the whole line first when the panel cut it short; 40 dp action buttons with 8 dp between them, about 164 dp for the line), Shuffle, Add tracks (soon), Clean up, Save as playlist (soon) | ⋮ right, no footer.
 
 - **List** (`queue_list.dart`): one `ReorderableListView.builder`, fixed row extent (mobile 60, desktop 72), keys by
   entry id, `buildDefaultDragHandles: false`, bottom padding 72. A drop is resolved by the dragged entry's id, not by
@@ -635,7 +636,62 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
 - **Queue nav item**: a dimmed "Coming soon" on both shells (saved queues, no mockup yet). The live queue is the right panel (desktop;
   top bar or player bar button) and the sheet (mobile; mini player long press, Queue button of Now Playing).
 - **Left out of the port**: the cover-only mode, the lyrics keys `L` and `T`, the narrow tabs layout (it is the mobile page).
-- **Waveform**: not yet; `NowPlayingSeekSlot` draws the flat `KSeekBar` in the 48 dp slot.
+- **Waveform**: `NowPlayingSeekSlot` holds `PlaybackWaveformSeekBar` in the same 48 dp slot (see Waveform).
+
+## Waveform
+
+Levels for the Now Playing seek bar on both shells. The mini player and the player bar keep the flat `KSeekBar`.
+
+**Decode** (`rust/crates/kanaru_media/src/waveform/`, no FFI). `compute(source, ext_hint, cancel) -> Waveform { levels, duration_ms }`
+with symphonia 0.6 (`next_packet() -> Result<Option<Packet>>`), codecs of the Cargo features: MP3, FLAC, Ogg Vorbis, AAC and
+ALAC in MP4, WAV/PCM.
+- `decode.rs`: refuses APE, WavPack, DSD, AIFF and Opus before probing (extension, or the first four bytes: `MAC `, `wvpk`,
+  `DSD `, `FRM8`, `FORM`); probes with the extension as a hint; first audio track that has a decoder; `Cancel::check()` before
+  every packet; a truncated file gives the levels up to its end; `ResetRequired` re-opens the decoder.
+- `limits.rs`: sample rate 8 kHz to 768 kHz, 1 to 32 channels, at most 24 h (`TooLarge`), shape fixed for the whole stream, at
+  most 32 failed packets in a row and 1000 in total (`Corrupt`). The 60 s deadline of the bridge ends as `Timeout`.
+- `levels.rs`: an 8192-slot accumulator, 10 ms per slot at the start; when the slots are full neighbours merge and the window
+  doubles, so memory is constant for any length. `finish()`: at most 1000 buckets, RMS per bucket, normalised to the loudest,
+  square-rooted, 0..=255 (`u8`); silence is all zeros; under 10 ms is empty.
+- Measured: a 5-minute stereo 44.1 kHz FLAC decodes in about 0.28 s on the dev machine (`decode_time_of_a_real_file`, ignored
+  test, `KANARU_WAVEFORM_FILE`).
+
+**Bridge** (`kanaru_bridge/src/api/waveform.rs`). `WaveformJob` is an opaque handle (`new()` and `cancel()`, both sync);
+`waveform_levels(path, &job) -> WaveformDto { levels, duration_ms }` opens the path with `open_source`, then decodes on
+`pools::waveform()` (one thread) inside `guarded`, with the job's flag plus a 60 s deadline. A job cancelled while it waits for
+the pool ends before it opens the file. `Cancelled` and `Timeout` are transient; `Unsupported`, `Corrupt`, `TooLarge` and
+`Panic` are permanent.
+
+**Cache** (`playback/data/waveform_{codec,cache,repository}.dart`). Folder `<cache>/waveforms/v1/`, one `<sha1>.kwf` per file
+version, key `sha1("$path\0$size\0$mtimeMs")` from a `stat`. Layout (little endian): `KWF1` | kind u8 (0 ready, 1 negative, 2 negative from timeouts) |
+duration ms u32 | count u16 | levels, so about 1 KB. Written to a temporary name and renamed; a damaged file is a miss and is
+rewritten; a hit touches the mtime ("last used"). Sweep once per run, at the first load: above 20 000 files delete the least
+recently used down to 18 000. The sweep also deletes `.kwf.tmp*` files older than an hour (a write that never finished).
+`WaveformRepository.load(path)` returns a `WaveformLoad { result, cancel() }`:
+- `Ready(levels, durationMs)`: cached. A track under 10 ms (no levels) becomes `NoWaveform`.
+- `NoWaveform`: a permanent kind (`Unsupported`, `Corrupt`, `TooLarge`, `Panic`), cached as a negative so the file is not decoded again.
+- `RetryLater`: never cached. Cancelled, timed out, a transient error, a missing or unreadable file, a library that did not start.
+- A Dart-side timeout (20 s plus the file size at 8 MiB/s, capped at 55 s, under the native 60 s deadline; the size stands for the duration) calls `job.cancel()` (frees the native thread at the next packet) and gives `RetryLater`. Two timeouts in a row for the same file version (a native `Timeout` counts like a Dart one) cache a negative of kind 2, which stores its write time (in the duration field) and is a miss after 7 days, so a later view tries again. Negatives from `Unsupported`, `Corrupt`, `TooLarge` and `Panic` never expire.
+- One native job at a time: the next one starts only after the previous one ended (finished, or cancelled and returned). A job stuck in a kernel read (a dead mount) therefore holds one FRB worker and one waveform thread, never more; later loads wait up to their own timeout and give `RetryLater`.
+- Only the error kind is logged; paths are personal data.
+
+**Loader** (`playback/state/waveform_{loader,providers}.dart`). `waveformProvider` is an auto-dispose `StreamProvider<WaveformView>`
+(`entryId`, `levels?`, `durationMs`, `instant`) fed by the queue view: the current entry, then the next in play order (none under
+repeat one; the first entry under repeat all). It runs jobs **only while a seek bar watches it**: with Now Playing closed nothing is
+decoded. One native job at a time, current first, then next; a job for an entry that is neither is cancelled, and every job when
+the last watcher goes (Riverpod disposes an unwatched provider after the frame, so a same-frame remount keeps the job). An 8-entry
+memory LRU (by cache key, so a changed file misses) survives the views. `instant` is decided at the entry change: levels in the memory or on disk show at once,
+levels that arrive from a decode fade in. A retry waits for a new entry or a new view; an entry dropped because the queue moved on
+may be tried again.
+
+**Display** (`packages/kanaru_ui/lib/src/widgets/media/`). `KWaveformSeekBar` has the input of `KSeekBar` (`KSeekGestureArea`: tap,
+drag, left/right 5 s, slider semantics) at 48 dp. Mirrored rounded bars 3 dp wide, 2 dp apart, 2 to 32 dp tall, centred; played
+bars `primary` at 85 %, the rest at 35 %; an upright 4 x 36 dp thumb with 6 dp cleared on each side. `waveform_bars.dart` (pure):
+bars map time, not index (mean of the levels inside the bar's share of the duration; a shorter waveform leaves minimal bars; a
+longer one is cut), after a contrast stretch (the quietest tenth to 0, the loudest percent to full; a steady tone stays full;
+silence stays flat). The two colours are recorded once as pictures; a position tick only moves two clips and the thumb. Flat
+`KFlatSeekTrack` while there are no levels or no duration; the bars fade in over 200 ms (none with `instant` or reduced motion).
+`PlaybackWaveformSeekBar` draws the levels of the playing entry only, never the previous track's.
 
 ## Rules lane B keeps
 
@@ -660,7 +716,7 @@ these before changing the design:
 |---|---|
 | Player and queue | `lib/core/player/player_service.dart`, `play_queue.dart`, `player_queue_commands.dart`, `mpv_playlist_tracker.dart`, `gapless_sync.dart` |
 | Media controls | `lib/core/media_controls/media_controls.dart`, `lib/core/media_controls/mpris/` (`mpris_media_controls.dart`, `mpris_properties.dart`, `mpris_bus_name.dart`) |
-| Waveform | `rust/src/waveform_job.rs` |
+| Waveform | `rust/src/{waveform_levels,waveform_decode,waveform_decode_limits,waveform_job}.rs`, `lib/features/player/waveform/` |
 
 Pitfalls the old app hit, and where the design answers them:
 

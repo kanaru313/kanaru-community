@@ -16,15 +16,24 @@ import 'queue_remove_action.dart';
 /// [menuUp]: the clean-up dropdown opens upward (mobile footer); desktop opens
 /// it downward.
 class QueueActions extends StatelessWidget {
-  const QueueActions({super.key, this.menuUp = false, this.includeSave = true});
+  const QueueActions({
+    super.key,
+    this.menuUp = false,
+    this.includeSave = true,
+    this.gap = 0,
+  });
 
   final bool menuUp;
   final bool includeSave;
+
+  /// Space between two buttons (the panel head keeps 8 dp between targets).
+  final double gap;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
+      spacing: gap,
       children: [
         const QueueShuffleButton(),
         const QueueSoonButton.add(),

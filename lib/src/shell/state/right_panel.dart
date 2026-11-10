@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../extension/state/extension_providers.dart';
+import '../../extension/state/registry_entries.dart';
 import '../../platform/domain/setting.dart';
 import '../../platform/state/settings_providers.dart';
 
@@ -26,19 +27,12 @@ final Setting<RightPanelKind> rightPanelSetting = Setting<RightPanelKind>(
 
 final rightPanelSettingProvider = settingNotifierProvider(rightPanelSetting);
 
-/// The AI chat content of the right panel. The public build has none (the
-/// chat is a Pro surface); the Pro build overrides [chatPanelSurfaceProvider].
-class ChatPanelSurface {
-  const ChatPanelSurface({required this.body, this.menu});
-
-  /// The chat itself, filling the panel under its header.
-  final WidgetBuilder body;
-
-  /// The header's ⋮ button (the chat's own menu); none shows no button.
-  final WidgetBuilder? menu;
-}
-
-final chatPanelSurfaceProvider = Provider<ChatPanelSurface?>((ref) => null);
+/// The AI chat content of the right panel: the extension registry's panel
+/// surface with id `chat`. The public build registers none (the chat is a Pro
+/// surface), so this is null there and the AI button is dimmed.
+final chatPanelSurfaceProvider = Provider<PanelSurface?>(
+  (ref) => ref.watch(extensionRegistryProvider).panelSurface('chat'),
+);
 
 /// Opens and closes the right panel and remembers the state.
 class RightPanel extends Notifier<RightPanelKind> {

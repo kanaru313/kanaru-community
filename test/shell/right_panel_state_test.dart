@@ -1,22 +1,28 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/extension/state/extension_providers.dart';
+import 'package:kanaru/src/extension/state/extension_registry.dart';
+import 'package:kanaru/src/extension/state/registry_entries.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:kanaru/src/shell/state/right_panel.dart';
 
 import '../support/memory_settings_store.dart';
 
-const _chat = ChatPanelSurface(body: _body);
+const _chat = PanelSurface(id: 'chat', order: 0, body: _body);
 Widget _body(BuildContext _) => const SizedBox();
 
-ProviderContainer _container(
-  MemorySettingsStore store, {
-  ChatPanelSurface? chat,
-}) {
+ExtensionRegistry _registry(PanelSurface? chat) {
+  final r = ExtensionRegistry();
+  if (chat != null) r.addPanelSurface(chat);
+  return r;
+}
+
+ProviderContainer _container(MemorySettingsStore store, {PanelSurface? chat}) {
   final c = ProviderContainer(
     overrides: [
       settingsStoreProvider.overrideWithValue(store),
-      chatPanelSurfaceProvider.overrideWithValue(chat),
+      extensionRegistryProvider.overrideWithValue(_registry(chat)),
     ],
   );
   addTearDown(c.dispose);

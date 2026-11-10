@@ -125,7 +125,8 @@ class _PanelHead extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 40 dp buttons (the desktop minimum) leave the count line room in 420 dp.
+    // 40 dp buttons (the desktop minimum) with 8 dp between them; the count
+    // line takes the rest of the 420 dp and shows in full in its tooltip.
     return Theme(
       data: Theme.of(context).copyWith(
         iconButtonTheme: IconButtonThemeData(
@@ -139,7 +140,7 @@ class _PanelHead extends StatelessWidget {
           child: Row(
             children: [
               const Expanded(child: QueueCounts(mobile: false)),
-              const QueueActions(),
+              const QueueActions(gap: KSpace.x2),
               const VerticalDivider(
                 width: KSpace.x2,
                 indent: 12,

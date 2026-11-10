@@ -251,48 +251,57 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     final location = GoRouterState.of(context).uri.path;
     final l10n = AppLocalizations.of(context);
     final covered = ref.watch(nowPlayingPanelProvider.select((s) => s.covered));
+    final panelOpen = ref.watch(rightPanelProvider) != RightPanelKind.closed;
     _closeOnNavigation(location);
     return Scaffold(
       body: DesktopHistoryInput(
         history: widget.history,
         focusNode: _historyNode,
         interceptBack: _closeNowPlaying,
-        child: Column(
-          children: [
-            DesktopTopBar(
-              history: widget.history,
-              onToggleSidebar: () => setState(() => _expanded = !_expanded),
-              onHome: () => context.go('/'),
-            ),
-            Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // Offstage keeps the region's state and stops
-                        // painting it while Now Playing covers it.
-                        Offstage(
-                          offstage: covered,
-                          // Offstage hides and blocks the pointer; this also
-                          // takes the region out of Tab traversal.
-                          child: ExcludeFocus(
-                            excluding: covered,
-                            child: _leftRegion(l10n, shell, location),
-                          ),
-                        ),
-                        // Covers the region above, player bar's place
-                        // included; never the right panel.
-                        const DesktopNowPlayingOverlay(),
-                      ],
-                    ),
-                  ),
-                  const RightPanelHost(),
-                ],
+        child: LayoutBuilder(
+          builder: (context, box) => Column(
+            children: [
+              DesktopTopBar(
+                history: widget.history,
+                // The left part under 1000 dp is a rail whatever the toggle
+                // says, so the toggle is dimmed instead of flipping silently.
+                onToggleSidebar:
+                    box.maxWidth - (panelOpen ? rightPanelWidth : 0) <
+                        desktopFullSidebarMinWidth
+                    ? null
+                    : () => setState(() => _expanded = !_expanded),
+                onHome: () => context.go('/'),
               ),
-            ),
-          ],
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // Offstage keeps the region's state and stops
+                          // painting it while Now Playing covers it.
+                          Offstage(
+                            offstage: covered,
+                            // Offstage hides and blocks the pointer; this also
+                            // takes the region out of Tab traversal.
+                            child: ExcludeFocus(
+                              excluding: covered,
+                              child: _leftRegion(l10n, shell, location),
+                            ),
+                          ),
+                          // Covers the region above, player bar's place
+                          // included; never the right panel.
+                          const DesktopNowPlayingOverlay(),
+                        ],
+                      ),
+                    ),
+                    const RightPanelHost(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
