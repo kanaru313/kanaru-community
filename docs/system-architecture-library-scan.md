@@ -1,7 +1,8 @@
 # Library scan
 
 > **Contract stub.** Owner: lane A (scanner and first run). Tag reading, covers and
-> colours (Rust and its Dart API) are described below. The foundation
+> colours (Rust and its Dart API) and the "Scan pipeline" section (walk, diff,
+> tag pass, cover pass, GC: as implemented) are described below. The foundation
 > declares the database helpers, the cover layout, the Rust plumbing and the
 > scan contracts below; they are frozen. Lane A replaces this text with its
 > own design (walk, passes, first-run flow, Home scan card) when it lands. The
@@ -13,6 +14,7 @@
 - Pass versions and errors: this file.
 - Database helpers and track lifecycle: this file.
 - Cover files, marker, misses and colours: this file.
+- Walk and diff, artists, tag pass, cover pass, GC (as implemented): this file, "Scan pipeline".
 - Scan status as produced, first run and permissions: this file.
 - Rust pools, guard, sources and limits: this file.
 
@@ -242,6 +244,175 @@ bodies lane A's). The seed emits `ScanIdle` and logs `rescan` calls.
   `READ_MEDIA_VISUAL_USER_SELECTED` (Android 14 partial access counts as not
   granted), `READ_EXTERNAL_STORAGE` up to SDK 32. Never
   `MANAGE_EXTERNAL_STORAGE`. `POST_NOTIFICATIONS` is not declared.
+
+## Scan pipeline
+
+Code: `lib/src/storage/` (listing to locators), `lib/src/library/domain/scan/`
+(pure rules, no Flutter, no database, no Rust) and `lib/src/library/data/scan/`
+(database writes and the two native calls). The controller that runs the passes
+and the providers are described with the scan status above.
+
+### Walk and diff
+
+- `LocalFolderSource.list(({root}), excludedKeys, skipShorterThanMs)` calls the
+  catalog and returns a `SourceListing`: `files` (`ListedFile`: locator, size,
+  mtime, duration), `.lrc` `lyrics` by folder key, `uncertainPrefixes`
+  (unreadable and empty folders as locator prefixes with a trailing `/`; `''` is the
+  whole root), `unstattable`, the counts, `droppedOutsideRoot`. `filteredOut =
+  excludedOut + shortOut`, never `skippedOut`. A path outside the root, or with an
+  empty, `.` or `..` segment, is dropped and counted, never thrown; a catalog that
+  throws reads as unreachable (`failed`), never as empty. `storage` takes a plain
+  `({String root})`, not `MusicFolder`, because it sits below `library`.
+- A locator is the path below the root, `/` separators, no leading `/`, bytes as
+  listed.
+- `diffScan(listing, storedRows, tagsVersion, keysVersion, full)` is pure.
+  `toRead`: new file; size or mtime differ; stored `tags_version` or
+  `keys_version` below the current one (keys are recomputed by re-reading the file:
+  raw sort tags are not stored); stored `status = missing` (a listed file revives
+  only through the upsert, which is the one writer that sets `present`); `full`.
+  `missingCandidates`: stored `present` rows not listed, not under an uncertain
+  prefix, not unstattable. `rootSuspect`: reachable, 0 files, `filteredOut == 0`,
+  stored `present` rows exist: no candidates. An unreachable listing gives an empty
+  diff. `lrcUpdates`: an unchanged file whose sidecar was added, changed or removed.
+- `.lrc` match: same folder, same stem, any case; revision `'<mtimeMs>:<size>'`.
+- The caller runs the diff in `Isolate.run` when a source has more than 5 000
+  stored rows. Stored rows (`present` and `missing`, with `track_details` sidecar
+  columns) are read in pages of 1 000 ordered by locator, with a yield between pages.
+- Root rules (`checkNewRoot`): `/` or empty is too broad; the same folder or a folder
+  inside a root is `insideExisting`; a folder that contains a root is
+  `containsExisting`; comparison is by whole path segments after dropping trailing
+  slashes (`Live Albums` is not inside `Live`).
+- Versions: `tagsPassVersion` and `coverPassVersion` are 1
+  (`library/domain/scan/scan_versions.dart`). Bump the first when the tag mapping
+  changes, the second when the cover rules change; present rows below it are visited
+  again.
+
+### Artists
+
+`splitArtists(values)` (`artist_split.dart`) works on the raw artist values Rust
+returns. It splits on `;` and `/`, on `feat.`, `feat`, `ft.`, `ft` and `featuring`
+between whitespace (any case), and takes the names of a bracketed `(feat. B)`. It
+never splits on `,`, `&` or ` with `, and keeps `AC/DC` whole. Names are trimmed,
+empty parts dropped, repeats removed by `groupKey` keeping the first spelling.
+`artistsForRow` pairs each name with its `groupKey` for `replaceTrackArtists`.
+
+### Tag pass
+
+`runTagPass(folder, listing, deps, full)` per music folder:
+
+1. Stored rows, diff, then `.lrc`-only updates through `upsertTrackDetails`.
+2. Tag reads in batches of `ceil(n / 20)` files clamped to 32..256, one Rust call
+   each with a 90 s timeout. A timeout stops the folder with `nativeStuck` and a
+   `pendingNative` future that completes when the call returns; a throwing call ends
+   it with `failureKind = native_unavailable`. Neither marks anything missing.
+3. Each answer becomes a `TracksCompanion` (`track_row_builder.dart`) by the
+   stored-column rule, using only the `library_keys.dart` functions. Identity and file
+   columns: `uid = trackUid(source.uid, locator)`, `rel_path = locator`, `mtime_ms`,
+   `size_bytes`, `revision = '<mtimeMs>:<size>'`, `added_at = updated_at = now`,
+   `tags_version = tagsPassVersion`, `keys_version = libraryKeysVersion`,
+   `scan_error = NULL`. `artist` is the raw artist values joined with `; `, `album_artist` and `genre` likewise; `language =
+   languageKey(tag) ?? languageKey(detected)` and `language_detected = 1` only when
+   the detection supplied it. A blank title falls back to the file stem. An empty
+   album stores `album` and both album keys as NULL. `cover_scan_version` is set to 0
+   for a new row and when the revision changed; a keys-only re-read keeps it.
+   `track_details` gets the comment and the sidecar columns (written when there is a
+   comment or sidecar, or a details row already exists, so a removed sidecar is
+   cleared).
+4. Errors: `notFound` means the listing was stale: no insert, an existing present row
+   becomes a missing candidate (`staleListing`). These rows are marked only after
+   the required `TagPassDeps.rootStillThere()` confirms the folder, built by
+   `LocalFolderSource.presenceCheck(root)` **before** the listing
+   (`storage/data/root_presence.dart`). Linux: the folder exists, lists at least one
+   entry (an unplugged drive leaves an empty mount-point folder, so `exists()` alone
+   is fooled), and every mount it sat on or contained when the check was built is
+   still in `/proc/self/mounts`; an unreadable mounts file changes nothing. A nested
+   mount that vanished only protects the files under it (`keptUnderLostMount`).
+   Android: the catalog still reaches the folder. If the folder is not present,
+   nothing is marked, the report says `unreachable` and the result has
+   `rootVanished`. A new file with another error gets a
+   filename-only row with `scan_error = kind`; permanent: `tags_version` current with
+   mtime, size and revision; transient: `tags_version` 0 and mtime, size, revision
+   NULL, so the next scan reads it again. An existing row with a transient error is
+   not written at all (`transientSkipped`; its stored mtime and size stay old, so the
+   next scan re-reads it, and a `missing` row stays `missing` until a clean read). An
+   existing row with a permanent error gets a filename-only snapshot only when the
+   file changed (its stored revision differs); on an unchanged file (a permission or
+   parser change, a version bump) the row is kept as it is (`permanentKept`, one count in
+   the folder summary). Its versions stay old, so it is read again on every scan and its
+   keys are not recomputed until the file parses or changes.
+5. Short files (setting on): a file under 30 s after the read is not stored; its
+   `(source, locator, mtime, size)` goes into a session memo so it is not read
+   again, and a stored present row becomes a missing candidate. Both count in
+   `filteredOut`.
+6. Rows are written 64 per transaction (`writeBatchRows`) through the frozen helpers
+   only (`upsertTrackSnapshot`, `replaceTrackArtists`, `upsertTrackDetails`), with
+   the source checked live and its mount enabled inside the same transaction. If it
+   is gone the folder stops with no more writes and no marks. A failing batch is
+   retried one item at a time, so one bad row costs one row (`writeFailed`, logged).
+   Three failures in a row (a lone bad row is just that row) mean the database itself is failing: the folder ends with
+   `failureKind = io`, no marks and no `last_scan_at`. `ArgumentError` and `StateError`
+   are rethrown. A stop requested during a native call is honoured before its results
+   are written.
+   A time budget of about 6 ms decides when to yield to the event loop between
+   transactions.
+7. `markTracksMissing` over the candidates in calls of 200 ids with a yield between,
+   unless the folder was unreachable, suspect, stopped or stuck. Then
+   `source_mounts.last_scan_at = now`.
+
+`added` is the number of `present` rows of the source with an id greater than
+`MAX(tracks.id)` read before the folder was processed (ids are `AUTOINCREMENT`), so a
+row inserted `hidden` under an exclusion, or an old row hidden meanwhile, is not
+counted. Exclusions are read when the listing starts: an
+exclusion applied later hides rows through the helper (new rows under it are inserted
+`hidden`); one removed later leaves its rows `missing` for the next scan, which
+re-reads and revives them. `ScanReport` carries the counts of a folder.
+
+### Cover pass
+
+`runCoverPass(deps, sourceIds, onlyKeys)`:
+
+1. `ensureCoverLayout`: if `<cache>/covers/.layout-v1` is missing, every row with a
+   non-zero `cover_scan_version` goes back to 0 in statements of at most 200 rows with
+   a yield between, then `covers/thumb`, `covers/full` and the marker are created
+   (marker last, so a cut-short reset runs again). A cache folder that cannot be
+   written is logged and the pass still runs.
+2. Work set: ids of present rows of enabled mounts with `cover_scan_version <
+   coverPassVersion`, ordered by source and locator, minus the session skip set.
+   Batches of 32 tracks, one Rust call each with a 60 s timeout (own `stuck` flag with
+   `pendingNative`). Progress `(done, total)` after each batch.
+3. Per result: `Found` stores `cover_key` and the version and clears `scan_error`;
+   the reported `thumb_rel`/`full_rel` must equal `coverRelativePath(key, ...)`, else
+   the result is a transient failure (`scan_error = coverLayout`). `NoCover` clears
+   `cover_key` and bumps the version, except without sidecars (Android without the
+   images permission), where key and version stay so a sidecar cover arrives later.
+   A transient failure records `scan_error` and keeps key and version. A permanent
+   failure (the audio file itself is unreadable) clears the key and bumps the
+   version. An error writing under the cache folder (`detail` starts with `cover
+   cache`; the literal is `CACHE_DETAIL_PREFIX` in `kanaru_bridge/src/api/covers.rs`,
+   guarded by a Rust test) ends the pass after that batch's writes. A `panic` keeps the
+   stored `cover_key` and only moves the version. Failed ids join the skip set.
+4. Updates run in transactions of at most 64 rows, one `tracks` notification each.
+5. `reExtractCovers(deps, keys)` (for `coverMissesProvider`): malformed keys are
+   ignored, the layout is ensured, `cover_scan_version` of the present rows holding
+   those keys goes to 0 (statements of at most 200 keys), then a pass runs over just
+   those rows (its work set is read in key chunks of 200). Run it one at a time with the
+   main cover pass.
+
+### Cover colours (write side, as implemented)
+
+A found cover with colours stores them with `upsertCoverColors` (version
+`coverColorsVersion`). A found cover whose files already existed carries no colours:
+at the end of the pass its key is checked and, when no row of the current version
+exists (one query per 200 keys), `cover_colors_for` fills it. Keys answered "no
+colours" are remembered for the session; a colours call past its timeout sets `stuck`. A near-gray cover has no
+colours by design: it gets a `cover_key` and no `cover_colors` row.
+
+### GC
+
+`runTrackGc(db, now)` wraps `collectOrphanTracks`: it returns the number deleted, or
+null when the helper refused (`StateError` from its fail-closed checks) or the
+database failed; it never throws. The controller calls it once after startup and
+after each completed scan.
 
 ## Audio sources
 
