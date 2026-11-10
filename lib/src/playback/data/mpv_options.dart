@@ -31,6 +31,11 @@ abstract interface class MpvProperties {
   Future<String> get(String name);
 }
 
+/// [MpvProperties] plus raw commands; the media_kit player in production.
+abstract interface class MpvConsole implements MpvProperties {
+  Future<void> command(List<String> args);
+}
+
 /// Applies [mpvOptions] and warns about every [mpvExpected] value that did not
 /// stick. Returns the properties that differ (for tests and the smoke test).
 Future<Map<String, String>> applyMpvOptions(MpvProperties mpv) async {

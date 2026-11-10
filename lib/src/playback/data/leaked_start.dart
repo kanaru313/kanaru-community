@@ -1,4 +1,4 @@
-import 'mpv_append.dart';
+import 'mpv_options.dart';
 
 /// Whether the position read after an advance is the previous entry's resume
 /// offset leaking into the new entry (media_kit's `on_load` hook can apply

@@ -397,7 +397,7 @@ void main() {
     },
   );
 
-  test('a next the engine never appended is no failure: the end of the current loads it', () async {
+  test('the end of the current entry loads the following one when the handed next never arrived', () async {
     await h.play();
     await h.settle();
     expect(h.engine.nexts.single, isNotNull, reason: 'handed at load');

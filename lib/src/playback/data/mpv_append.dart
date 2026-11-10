@@ -1,13 +1,9 @@
 import 'package:logging/logging.dart';
 
+import 'mpv_log_filter.dart';
 import 'mpv_options.dart';
 
 final _log = Logger('mpv');
-
-/// [MpvProperties] plus raw commands; the media_kit player in production.
-abstract interface class MpvConsole implements MpvProperties {
-  Future<void> command(List<String> args);
-}
 
 /// The entry [appendEntry] added: its mpv entry id and the playlist length
 /// after it.
@@ -24,7 +20,9 @@ typedef AppendedEntry = ({int id, int count});
 /// differ from [currentId] (an id lookup on an unchanged playlist returns the
 /// playing entry's own id).
 ///
-/// Returns null, with a warning, when the entry was not appended.
+/// Returns null, with a warning, when the entry was not appended or could not
+/// be verified. The command may still have landed then: the caller removes
+/// what follows the playing entry with [removeEntriesAfter].
 Future<AppendedEntry?> appendEntry(
   MpvConsole mpv,
   String uri, {
@@ -35,13 +33,13 @@ Future<AppendedEntry?> appendEntry(
   final after = await _readInt(mpv, 'playlist-count') ?? 0;
   if (after != before + 1) {
     _log.warning(
-      'append of $uri not applied: playlist-count $before -> $after',
+      'append of ${scrubPaths(uri)} not applied: playlist-count $before -> $after',
     );
     return null;
   }
   final id = await _readInt(mpv, 'playlist/${after - 1}/id');
   if (id == null || id == currentId) {
-    _log.warning('append of $uri gave no new entry id (got $id)');
+    _log.warning('append of ${scrubPaths(uri)} gave no new entry id (got $id)');
     return null;
   }
   return (id: id, count: after);
@@ -52,5 +50,15 @@ Future<int?> _readInt(MpvProperties mpv, String name) async {
     return int.tryParse(await mpv.get(name));
   } on Object {
     return null; // unavailable while nothing is loaded
+  }
+}
+
+/// Removes every playlist entry after position [playingPos], last first, so
+/// nothing untracked stays behind the playing entry.
+Future<void> removeEntriesAfter(MpvConsole mpv, int playingPos) async {
+  if (playingPos < 0) return;
+  final count = await _readInt(mpv, 'playlist-count') ?? 0;
+  for (var i = count - 1; i > playingPos; i--) {
+    await mpv.command(['playlist-remove', '$i']);
   }
 }

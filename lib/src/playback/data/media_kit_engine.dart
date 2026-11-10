@@ -7,6 +7,7 @@ import '../domain/audio_engine.dart';
 import 'leaked_start.dart';
 import 'load_failure_guard.dart';
 import 'mpv_append.dart';
+import 'mpv_log_filter.dart';
 import 'mpv_options.dart';
 import 'mpv_playlist_tracker.dart';
 
@@ -38,15 +39,21 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
           ) {
     _native = _player.platform as NativePlayer;
     // A rejected mpv command does not throw: it only shows in mpv's log.
+    // `stream.error` repeats part of this stream, so it is not listened to.
     _subs.add(_player.stream.log.listen(_logMpv));
-    _subs.add(
-      _player.stream.error.listen((e) => _log.warning('mpv error: $e')),
-    );
   }
 
-  static void _logMpv(PlayerLog l) {
-    if (l.level == 'error' || l.level == 'warn' || l.level == 'fatal') {
-      _log.warning('mpv ${l.level} [${l.prefix}] ${l.text}');
+  final _logFilter = MpvLogFilter();
+
+  void _logMpv(PlayerLog l) {
+    final lines = _logFilter.accept(
+      level: l.level,
+      prefix: l.prefix,
+      text: l.text,
+      nowMs: DateTime.now().millisecondsSinceEpoch,
+    );
+    for (final line in lines) {
+      _log.warning(line);
     }
   }
 
@@ -255,11 +262,10 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
       if (appended == null) {
         // Not appended (already logged): the current entry plays fine, so it
         // is not failed. No next is handed; at its end the controller loads
-        // the following entry instead of a gapless advance. A previous next
-        // still in mpv would advance to a stale entry, so it goes too.
-        if (hadNext && s.count > s.playingPos + 1) {
-          await _native.command(['playlist-remove', '${s.playingPos + 1}']);
-        }
+        // the following entry instead of a gapless advance. Whatever mpv
+        // holds after the playing entry (a stale next, or an append that
+        // landed but could not be verified) would advance untracked: remove it.
+        await removeEntriesAfter(this, s.playingPos);
         _tracker.clearNext();
         return;
       }
@@ -269,10 +275,7 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
       if (hadNext && s.playingPos + 1 < count - 1) {
         await _native.command(['playlist-remove', '${s.playingPos + 1}']);
       }
-      if (!_tracker.registerNext(next.token, appended.id)) {
-        _log.warning('appended entry has the current entry id; dropped');
-        return;
-      }
+      _tracker.registerNext(next.token, appended.id);
       s = await _snapshot();
       if (_tracker.needsPlaylistNext(s)) {
         // The file ended before the append: step on, and unpause if asked.
