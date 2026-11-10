@@ -1,22 +1,10 @@
 # Library
 
-> Owner: lane C (library UI). The foundation contracts below are frozen; lane C
-> documents its own design (lists, detail pages, menus, selection, sub-tabs)
-> after them as it lands. The library scanner that fills the data is described in
+> Design of the library module: stored-column rules and contracts consumed by
+> other modules (first half), then the browse data layer, the library UI
+> (lists, detail pages, folders, menus, multi-select) and the `kanaru_ui`
+> collection widgets it uses. The scanner that fills the data is in
 > [system-architecture-library-scan.md](./system-architecture-library-scan.md).
-
-## Contents
-
-- Keys and the stored-column rule: this file.
-- Track identity and info: this file.
-- Locations, favorites, tabs, folders, exclusions: this file.
-- Scan status as consumed: this file.
-- Browse data: refresh and sort.
-- List queries: song scopes, sort and filter SQL, aggregates, providers.
-- Folder tree, detail data, menu data, selection state.
-- File manager and the `kanaru_ui` collection widgets (parts 1 and 2).
-- Navigation and routes, the Songs list, collection lists, detail pages, the Folders tab (UI).
-- Context menus (models, link rules, rendering, actions, song info) and multi-select (UI).
 
 ## Keys
 
@@ -187,7 +175,7 @@ key `''` has no range and covers the whole source.
 
 ## Scan status as consumed
 
-`lib/src/library/domain/scan_status.dart` (frozen). The scanner produces the
+`lib/src/library/domain/scan_status.dart`. The scanner produces the
 values (see [system-architecture-library-scan.md](./system-architecture-library-scan.md)).
 
 | Symbol | Meaning |
@@ -225,9 +213,9 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
   it, not drift's `.watch()` (which restarts per write and never emits during
   a scan). The first load runs on listen; a write only marks the result dirty;
   a running load is never cancelled and two never overlap; the next load
-  starts after the previous ended, at least `interval` later (`browseRefreshInterval`
-  1 s, `folderRefreshInterval` 3 s) and at least as long as that load
-  took, at most 5 s: the database runs on a background isolate (frames stay
+  starts after the previous ended, `max(interval, duration of that load)`
+  later (`browseRefreshInterval` 1 s, `folderRefreshInterval` 3 s), capped at
+  `maxRefreshWait` (5 s): the database runs on a background isolate (frames stay
   free) but it is one serial worker shared with the scanner's writes, so
   back-to-back whole-library reloads (albums: 200-600 ms on 20k tracks) of one
   query may use only about half of it (several lists reload on their own
@@ -287,15 +275,15 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
   `setIds`, cached rows of ids still listed stay and are read again when in
   view; rows delivered by a read that began before the last `setIds` are also
   marked for a re-read. Ids with no row, and rows that are not `present`, are absent. A failed read is exposed
-  as `error` and not retried until the next `setIds`. `invalidate()` marks
+  as `error` and `isFailed(i)` (per page); it is read again by `invalidate()`
+  (a revision tick or the Retry button) and when the failed page leaves the
+  range and comes back, and cleared by `setIds`. `invalidate()` marks
   every cached row stale and re-reads the pages in view: the list calls it on
   each tick of `songRowsRevisionProvider`, a throttled counter over `tracks`
   and `track_artists` that is never deduplicated, because a cover or title
   can change while the id order stays the same and `songIdsProvider` then
   emits nothing.
-- Settings: `library.list_views` (`libraryListViewsProvider`: `setSort`,
-  `setView`, `setFolderView`), `library.compact_folders` (default true, no UI
-  yet).
+- Settings: see "Settings keys".
 
 ## Folder tree
 
@@ -347,10 +335,10 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
 
 `lib/src/library/data/browse/menu_queries.dart`,
 `lib/src/library/domain/browse/menu_targets.dart`,
-`lib/src/library/state/browse/menu_providers.dart`.
+`lib/src/library/ui/menus/menu_loaders.dart`.
 
-Loaded once when a menu opens (`FutureProvider.family`, autoDispose), never
-live: a menu acts on what it showed.
+Loaded once by `menu_loaders.dart` with direct reads when a menu opens (no
+provider), never live: a menu acts on what it showed.
 
 - `trackLinks(db, id)`: album key and title (null without an album), track
   artists in tag order, the album artist when its stored key is not among
@@ -381,8 +369,10 @@ live: a menu acts on what it showed.
 - `activeTrackListProvider`: the ordered ids of the list on screen for "select
   all"; `clear(ids)` only clears when `ids` is still the registered list.
 - `selectionSummaryProvider`: duration of the selection, computed 60 ms after
-  the last change; ids that are no longer visible are removed from the
-  selection.
+  the last change and again after a write to `tracks`, through `throttledQuery`
+  like the other library readers (at most once per refresh interval, never
+  sooner than the last read took, so a big selection backs off during a scan);
+  ids that are no longer visible are removed from the selection.
 
 ## Context menus
 
@@ -416,12 +406,9 @@ artist chips (the row goes when none is left). An album card on an artist's
 page leaves that artist out of its artist link. On an item's own page (`own`,
 the page's ⋮) the self link, Play and Shuffle are left out.
 
-**Items per kind** follow mockup 04c. Rows that are not built yet are dimmed
-with "Coming soon" (`appComingSoon`) and inert: add to playlist, edit info,
-find lyrics online, ask AI (with the Pro badge), remove from library, delete
-files (Trash wording on desktop), split or merge artists / genres, "how
-languages are detected". "Exclude from
-library" of a folder (not on a music folder) is real, with undo. "Show in
+**Items per kind** follow mockup 04c. Rows not built yet are dimmed and inert
+(see "Coming soon"). "Exclude from library" of a folder (not on a music
+folder) is real, with undo. "Show in
 file manager" is dimmed where `FileManager.canReveal` is false (Android).
 `queueIds` are captured when the menu is built, so the footer buttons act on
 what the menu showed.
@@ -475,7 +462,9 @@ between screens.
   open / collapse. Open, it lists the selected songs in play order with a drag
   handle, a ♥ and the song's menu; that list is a `ReorderableListView.builder`
   over a `TrackWindow` that exists only while the panel is open, so a selection
-  of thousands loads only the rows in view. The length is the chunked read of
+  of thousands loads only the rows in view: the range is reported from the
+  scroll position (fixed row height, two spare rows each side) as well as from
+  the first build, since a scroll does not rebuild the state. The length is the chunked read of
   `selectionSummaryProvider`, also what drops tracks that vanished.
 - Back and Esc (`SelectionBackScope`): they collapse the panel and never clear
   the selection (only the panel's ✕ does). Back is a `BackButtonListener`: the
@@ -543,7 +532,9 @@ toggle) and the filter field. The builder gets `LibraryListInput` (remembered
 sort and view, filter text, whether the field is open) and returns the left
 group and the body. The sort chip opens `showKSortPopover` (order buttons keep
 it open) and stores the choice in `libraryListViewsProvider`. The filter text
-is the page's own state and is never stored; closing the field clears it. On
+is the page's own state and is never stored; closing the field clears it. The
+text reaches the list query 250 ms after the last keystroke (`FilterDebouncer`,
+also on the detail pages); emptying or closing the field applies at once. On
 the mobile shell Back closes the field first.
 
 `play_actions.dart`: `playFrom`, `playAll`, `shuffleAll` (shuffle with a random
@@ -561,7 +552,8 @@ Every call is awaited; a failure is logged and shows a snack bar.
   Tap = `playTracks(ids, startIndex: index)`. The playing row is
   `primaryContainer` with the equalizer over the cover (over the number with
   `showNumber`, which replaces the cover with the track number). The tile
-  watches only `isCurrentTrackProvider(id)` and `isFavoriteProvider(id)`; the
+  watches only `isCurrentTrackProvider(id)`, `isSelectedProvider(id)` and
+  `isFavoriteProvider(id)` (all `select`); the
   equalizer widget alone watches play / pause. No per-row stream provider.
 - `SongList(scope, sort, filter, playContext, {showNumber, leadingSlivers})`
   is a `CustomScrollView` with a `SliverFixedExtentList`. `songIdsProvider`
@@ -569,7 +561,10 @@ Every call is awaited; a failure is logged and shows a snack bar.
   range it has **built** (`didFinishLayout`, cache extent included), calls
   `setIds` on every ids emission and `invalidate` on every
   `songRowsRevisionProvider` tick (a cover or title changed, the order did
-  not). A page not read yet is a same-size placeholder card. The tap handler
+  not). A page not read yet is a same-size placeholder row (`SongRowPlaceholder`, shared
+  with the selection panel); a page that failed shows "Could not load" with
+  Retry in the place of its rows (`SongRowFailed`), and Retry reads again at
+  once. The tap handler
   passes `window.ids`, so `ids[index]` is the painted row. `trackRowLoaderProvider`
   is the window's loader (tests override it).
 - Select-all target: while its page is the current route and not offstage
@@ -605,8 +600,8 @@ Every call is awaited; a failure is logged and shows a snack bar.
   name, plus the name in the app language when it differs; an unknown code
   shows as the code.
 - A tap on an item is `openLibraryPage` to the album, artist, genre or
-  language location. A long press opens the item's menu (menus are a later
-  phase), not multi-select.
+  language location. A long press (mobile shell) opens the item's menu (see
+  "Context menus"), not multi-select.
 - Counts: `34 albums`, or `6 / 34 albums` while filtering (the total is the
   unfiltered summary count).
 
@@ -644,7 +639,7 @@ routes in `ui/browse/library_routes.dart`.
 - Album: `KDetailLayout` (wide from 840 px of page width) with `KDetailHero`:
   cover and, bottom aligned or under it, the album artist (primary colour, opens
   the artist page; plain text for the unknown artist), the year and the
-  buttons. The page tint is `coverColorsProvider(coverKey).seed`. Rows are
+  buttons. The page tint is `coverColorsProvider(coverKey).seed`; an album with a custom cover has no tint (its palette is not extracted yet). Rows are
   `SongTile(showNumber: true)`; no disc headers and no "other albums".
 - Artist: round photo (not faded), `N albums` (own; the line is left out when
   the artist owns none), shelves Albums (newest
@@ -673,13 +668,14 @@ routes in `ui/browse/library_routes.dart`.
   drawn through `KCover`, so it decodes at display size), else the cover of the
   tracks (`coverKey`), else a placeholder. `itemKey` is the encoded `AlbumKey` /
   `ArtistKey`. A list holds thousands of covers, so they never watch the
-  per-item `customCoverFileProvider` directly: `hasCustomCoverProvider` selects
+  per-item `customCoverFileProvider` (`state/custom_cover_providers.dart`)
+  directly: `hasCustomCoverProvider` selects
   the item's answer from ONE stream per kind (`customCoverIndexProvider`, in
   `state/browse/custom_cover_index_providers.dart`, a watch of the item keys in
   `custom_covers`), and only an item in that set watches its file. While the
   file resolves, or when it is gone (a restored backup), the automatic cover
   stays. `customCoverFileProvider` stays loaded 5 s after its last listener
-  (`customCoverKeepAliveProvider`), so a tile scrolled back in within that time
+  (`customCoverKeepAliveProvider`, 5 s; tests shorten it), so a tile scrolled back in within that time
   shows its custom cover at once instead of flashing the automatic one. A file
   that exists but cannot be decoded shows the automatic cover too (passed to
   `KCover` as `errorFallback`).
@@ -728,6 +724,31 @@ routes in `ui/browse/library_routes.dart`.
   the album. Desktop has the in-app back button and the breadcrumb; Alt+←,
   mouse buttons and Esc as history keys belong to the shell.
 
+## Settings keys
+
+| Key | Setting / provider | Default | Used by |
+|---|---|---|---|
+| `library.tabs` | `libraryTabsSetting`, `libraryTabsProvider` | all six tabs, default order | mobile sub-tabs; Settings reorder UI is not built |
+| `library.list_views` | `libraryListViewsSetting`, `libraryListViewsProvider` (`setSort`, `setView`, `setFolderView`) | first criterion per list (descending for detail songs and languages), albums as grid, others as rows, folders as tree | sort chip, view switch, folder view switch |
+| `library.compact_folders` | `compactFoldersSetting`, `compactFoldersProvider` | `true` | `folders_page.dart` merges single-subfolder chains; no Settings toggle yet |
+
+## Coming soon
+
+Dimmed and inert, with the tooltip or subtitle "Coming soon" (`appComingSoon`,
+"Sắp có" in Vietnamese). Each waits for a feature outside this lane:
+
+| Where | Item | Waits for |
+|---|---|---|
+| Context menus (`soonRow`) | Add to playlist (all kinds), edit song / album info, find lyrics online, remove from library, delete files (Move to Trash wording when `MenuEnv.trash`), split genres / artists, language detection settings | playlists, tag editor, lyrics, library management, Settings |
+| Context menus (`proRow`) | Ask AI (song, album, artist, selection), with the Pro badge | the Pro build |
+| Context menus | "Show in file manager" where `FileManager.canReveal` is false (Android) | a platform implementation |
+| Selection panel | Edit, Add to playlist | tag editor, playlists |
+| Library empty state | "Choose music folders" | the Settings folders screen |
+| Scan banner (failed scan) | "Grant permission" | the Android permission flow |
+| Sidebar (`comingSoon: true`) | Favorites, History, Most played | their mockups |
+
+The app l10n key `emptyLibrary` is unused (the empty state uses `libraryEmptyMessage`).
+
 ## kanaru_ui widgets used
 
 `SelectionRow`, `showSelectionPicker` (`options`, `selected`, `title`, `header`,
@@ -759,7 +780,7 @@ bus and the process start are injected (`FileManagerBus`, `DetachedStarter`),
 so the tests need no bus. A Flatpak portal (`OpenDirectory`) is a later
 packaging step.
 
-## kanaru_ui collections, part 1: lists
+## kanaru_ui collections: lists
 
 `packages/kanaru_ui/lib/src/widgets/collections/`, exported by
 `collection_widgets.dart`. Presentational, no music types: strings, covers and
@@ -781,7 +802,7 @@ callbacks come from the caller. Width-based layout lives here.
 Sizes that the mockups give and the tokens lack (card radius 14, panel radius
 22) are constants inside the widget.
 
-## kanaru_ui collections, part 2: menu, detail, selection
+## kanaru_ui collections: menu, detail, selection
 
 `KGridCard` and `KColorTile` take a `more` widget (the ⋮ of the item) laid over a corner of the card: always visible on the mobile shell, on hover or focus on desktop (`KEngageRegion`, `KCardCorner`).
 
@@ -804,25 +825,15 @@ root navigator since `useRootNavigator`): `showKSheet` turns into a 640 wide
 dialog from 600 px, but this menu stays a sheet up to the desktop form factor
 (1200 px) and is a 400 wide dialog above it.
 
-## Old app references
+## Design pitfalls answered
 
-The old prototype (retired repo, code only):
-
-| Area | Old code |
-|---|---|
-| Song, album, artist and genre menus | `lib/shared/song_modal/`, `lib/shared/album_modal/`, `lib/shared/artist_modal/`, `lib/shared/genre_modal/` |
-| Folder links | `lib/shared/folder_links/folder_link_row.dart` |
-| Library pages | `lib/features/library/` |
-
-Pitfalls the old app hit, and where the design answers them:
-
-- Wide providers rebuilt every tile on each change. Answer: per-tile families
-  are `isAutoDispose`; tiles select from one set.
-- Exclusion matched by prefix, so `Live` also hid `Live Albums`. Answer:
-  `folderLocatorRange` bounds whole path components.
-- "Play next" meant move in one menu and copy in another. Answer: `playNext`
-  always inserts new entries.
-- The queue row menu and the song menu are two implementations of one menu.
-  Keep their item sets in sync by review; a shared menu model is a follow-up.
-- Accents folded in the group key merged different artists. Answer: `groupKey`
-  keeps accents; only `searchForm` folds them.
+- Wide providers rebuilt every tile on each change: per-tile families are
+  `isAutoDispose`; tiles select from one set.
+- Prefix exclusion hid `Live Albums` with `Live`: `folderLocatorRange` bounds
+  whole path components.
+- "Play next" moved in one menu and copied in another: `playNext` always
+  inserts new entries.
+- The queue row menu and the song menu are separate implementations; keep
+  their item sets in sync by review (a shared menu model is a follow-up).
+- Folding accents in the group key merged different artists: `groupKey` keeps
+  accents; only `searchForm` folds them.
