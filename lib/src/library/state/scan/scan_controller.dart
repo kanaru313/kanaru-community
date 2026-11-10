@@ -5,6 +5,7 @@ import 'package:logging/logging.dart';
 import '../../data/scan/scan_pipeline_types.dart';
 import '../../domain/scan_status.dart';
 import 'native_resume.dart';
+import 'scan_capabilities.dart';
 import 'scan_miss_queue.dart';
 import 'scan_status_throttle.dart';
 
@@ -31,7 +32,8 @@ typedef CoverMissRunner = Future<ScanOutcome> Function(
 /// Requests made while a scan runs collapse into one follow-up pass. Nothing
 /// happens at construction: no timer, no I/O. Ports are reached only through
 /// the runner functions, when a pass starts.
-class ScanController implements LibraryScanCommands {
+class ScanController
+    implements LibraryScanCommands, ScanStartupWork, ScanOrigin {
   ScanController({
     required this.runPass,
     required this.runCoverMisses,
@@ -94,6 +96,10 @@ class ScanController implements LibraryScanCommands {
   /// A scan was accepted in this session (the startup scan is then not needed).
   bool _scanRequested = false;
   bool _startupCalled = false;
+
+  /// A caller of [rescan] asked for the scan that is queued or running.
+  bool _callerScan = false;
+  bool _finishWasRequested = false;
   Timer? _startupTimer, _garbageTimer;
 
   /// Tracks new in the scans since the last published summary; kept across
@@ -107,6 +113,9 @@ class ScanController implements LibraryScanCommands {
 
   bool _garbageWanted = false;
   bool _garbageSinceStartup = false;
+
+  @override
+  bool get lastFinishWasRequested => _finishWasRequested;
 
   /// Status stream; a new listener first gets the latest value.
   Stream<ScanStatus> get status => _status.stream;
@@ -122,6 +131,7 @@ class ScanController implements LibraryScanCommands {
       // A request from outside while nothing runs starts a fresh summary:
       // a count kept for an automatic resume that never came is dropped.
       if (_keptForResume || !_looping) _resetAdded();
+      _callerScan = true;
       _requestScan(full: full);
     } on Object catch (e, st) {
       _log.severe('rescan failed', e, st);
@@ -131,6 +141,7 @@ class ScanController implements LibraryScanCommands {
   /// Called once by Home after its first frame. When setup is done and no
   /// scan was requested yet, scans after a short delay; collects orphan
   /// tracks a little later. Starts nothing while setup is not done.
+  @override
   void ensureStartupWork() {
     if (_disposed || _startupCalled) return;
     _startupCalled = true;
@@ -184,6 +195,8 @@ class ScanController implements LibraryScanCommands {
           final full = _queuedFull;
           _scanQueued = false;
           _queuedFull = false;
+          final requested = _callerScan;
+          _callerScan = false;
           // The pass that runs now is the resume the count waited for.
           _keptForResume = false;
           final out = await _guarded(
@@ -202,6 +215,8 @@ class ScanController implements LibraryScanCommands {
               _keptForResume = true;
             }
           } else if (counts != null) {
+            // Set before publishing, so a reader of the status sees it.
+            _finishWasRequested = requested;
             _status.finish(
               ScanFinished(
                 tracks: counts.tracks,

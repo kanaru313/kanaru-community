@@ -268,6 +268,36 @@ void main() {
       expect(garbageRuns, 1);
     });
 
+    test('the startup scan is not a requested one, a rescan is', () async {
+      controller.ensureStartupWork();
+      await timers.advance(const Duration(seconds: 3));
+      expect(passes, hasLength(1));
+      expect(controller.lastFinishWasRequested, isFalse);
+
+      await controller.rescan();
+      await timers.settle();
+      expect(passes, hasLength(2));
+      expect(controller.lastFinishWasRequested, isTrue);
+    });
+
+    test(
+      'a rescan during the startup scan makes the finish a requested one',
+      () async {
+        final gate = Completer<void>();
+        onPass = (_, _, _) async {
+          await gate.future;
+          return _done();
+        };
+        controller.ensureStartupWork();
+        await timers.advance(const Duration(seconds: 3));
+        await controller.rescan();
+        gate.complete();
+        await timers.settle();
+        expect(passes, hasLength(2));
+        expect(controller.lastFinishWasRequested, isTrue);
+      },
+    );
+
     test('a scan requested earlier means no second scan', () async {
       await controller.rescan();
       await timers.settle();
