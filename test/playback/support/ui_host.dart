@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
@@ -13,10 +14,13 @@ import 'controller_harness.dart';
 /// A widget under test wired to a real [PlayerController] on an in-memory
 /// database with a fake engine.
 class UiHost {
-  UiHost(this.h, this.container);
+  UiHost(this.h, this.container, {this.router});
 
   final Harness h;
   final ProviderContainer container;
+
+  /// Set when the widget was pumped with [pumpWithPlayer]'s `routes`.
+  final GoRouter? router;
 
   /// Lets database streams (track info, favorites) deliver their first value.
   Future<void> letStreamsArrive(WidgetTester tester) async {
@@ -53,7 +57,7 @@ class UiHost {
 }
 
 /// Pumps [child] in a themed, localized app. With [play] the six harness
-/// tracks are queued and the first one is current (paused). The player and
+/// tracks are queued and the first one is current and playing. The player and
 /// every provider it needs are overridden; [overrides] adds more.
 Future<UiHost> pumpWithPlayer(
   WidgetTester tester,
@@ -63,6 +67,9 @@ Future<UiHost> pumpWithPlayer(
   Size size = const Size(400, 800),
   Brightness brightness = Brightness.light,
   double textScale = 1,
+
+  /// Extra routes: the app then runs on a `GoRouter` whose `/` shows [child].
+  List<RouteBase>? routes,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -76,27 +83,48 @@ Future<UiHost> pumpWithPlayer(
       ...overrides,
     ],
   );
-  final host = UiHost(h, container);
+  final router = routes == null
+      ? null
+      : GoRouter(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => Scaffold(body: child),
+            ),
+            ...routes,
+          ],
+        );
+  final host = UiHost(h, container, router: router);
   addTearDown(() async {
     container.dispose();
     await host.letStreamsArrive(tester);
     await tester.runAsync(h.close);
   });
   if (play) await host.run(tester, h.play);
+  Widget scale(BuildContext context, Widget? app) => MediaQuery(
+    data: MediaQuery.of(context)
+        .copyWith(textScaler: TextScaler.linear(textScale)),
+    child: app!,
+  );
+  final theme = buildKanaruTheme(brightness: brightness);
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: MaterialApp(
-        theme: buildKanaruTheme(brightness: brightness),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        builder: (context, app) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(textScale)),
-          child: app!,
-        ),
-        home: Scaffold(body: child),
-      ),
+      child: router == null
+          ? MaterialApp(
+              theme: theme,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              builder: scale,
+              home: Scaffold(body: child),
+            )
+          : MaterialApp.router(
+              theme: theme,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              builder: scale,
+              routerConfig: router,
+            ),
     ),
   );
   await tester.pump();

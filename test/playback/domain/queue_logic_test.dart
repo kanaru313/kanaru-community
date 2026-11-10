@@ -323,6 +323,17 @@ void main() {
       expect(back.next, s);
     });
 
+    test('keeps the live current entry when the removal did not take it', () {
+      final s = makeQueue(5, current: 1);
+      final removed = remove(s, {4});
+      // The player advanced to entry 3 during the undo window.
+      final advanced = removed.next.withCurrent(2, const {});
+      expect(advanced.currentItem?.entryId, 3);
+      final back = undo(advanced, removed.undo!, keys);
+      expect(back.next.currentItem?.entryId, 3);
+      expect(back.next.length, 5);
+    });
+
     test('restores the only entry', () {
       final s = makeQueue(1, current: 0);
       final removed = remove(s, {1});

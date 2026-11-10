@@ -8,8 +8,10 @@ import 'undo_token.dart';
 /// A key is kept only if no live entry has it in that order: a "play next" or
 /// a move inside the undo window can have produced the same key (the
 /// generator is deterministic), and equal keys would later make it throw.
-/// Such an entry gets a key between its live neighbours instead. The current
-/// entry becomes the one that was current at removal time.
+/// Such an entry gets a key between its live neighbours instead. The entry that
+/// was current at removal time becomes current again only if that removal took
+/// it out; otherwise the live current entry stays (the player may have
+/// advanced during the undo window).
 QueueEdit undo(QueueState s, UndoToken token, KeyGen keys) {
   final live = {for (final i in s.items) i.entryId};
   final toRestore = [
@@ -40,7 +42,10 @@ QueueEdit undo(QueueState s, UndoToken token, KeyGen keys) {
   }
 
   final items = byShuffle ?? bySort;
-  final curId = token.previousCurrentEntryId ?? s.currentItem?.entryId;
+  final previous = token.previousCurrentEntryId;
+  final wasRemoved =
+      previous != null && toRestore.any((i) => i.entryId == previous);
+  final curId = wasRemoved ? previous : s.currentItem?.entryId;
   var cur = curId == null ? -1 : items.indexWhere((i) => i.entryId == curId);
   if (cur < 0 && s.currentItem != null) {
     cur = items.indexWhere((i) => i.entryId == s.currentItem!.entryId);

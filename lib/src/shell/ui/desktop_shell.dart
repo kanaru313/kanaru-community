@@ -9,12 +9,18 @@ import '../../extension/state/registry_entries.dart';
 import '../../library/ui/selection/selection_bar.dart';
 import '../../playback/state/playback_providers.dart';
 import '../state/nav_history.dart';
-import '../state/now_playing_panel.dart';
+import '../state/right_panel.dart';
+import '../../playback/state/now_playing_panel.dart';
 import 'desktop_history_input.dart';
+import 'desktop_now_playing_overlay.dart';
 import 'desktop_sidebar.dart';
 import 'nav_groups.dart';
 import 'desktop_top_bar.dart';
 import 'player_bar.dart';
+import 'right_panel/right_panel_host.dart';
+
+/// Narrowest left part that keeps the full 240 dp sidebar.
+const double desktopFullSidebarMinWidth = 1000;
 
 /// Where the search icon and Ctrl+F / Ctrl+K lead (the Search tab).
 const _searchPath = '/search';
@@ -26,7 +32,6 @@ class DesktopShell extends ConsumerStatefulWidget {
     required this.navigationShell,
     required this.items,
     required this.history,
-    this.rightPanel,
   });
 
   final StatefulNavigationShell navigationShell;
@@ -35,17 +40,16 @@ class DesktopShell extends ConsumerStatefulWidget {
   final List<NavItem> items;
   final NavHistory history;
 
-  /// Docked panel to the right of the left region (the AI chat). It is a
-  /// sibling of the region Now Playing covers, so it stays visible and usable
-  /// while Now Playing is open.
-  final Widget? rightPanel;
-
   @override
   ConsumerState<DesktopShell> createState() => _DesktopShellState();
 }
 
 class _DesktopShellState extends ConsumerState<DesktopShell> {
   bool _expanded = true;
+
+  /// Location of the last build, to close Now Playing when it changes.
+  String? _lastLocation;
+
   final FocusNode _historyNode = FocusNode(debugLabel: 'desktop history input');
 
   void _select(NavItem item) {
@@ -93,14 +97,32 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     if (event is! KeyDownEvent) return false;
     if (_onHistoryKey(event)) return true;
     final key = event.logicalKey;
+    if (!HardwareKeyboard.instance.isControlPressed) return false;
+    if (ModalRoute.of(context)?.isCurrent == false) return false;
+    if (_onPanelKey(key)) return true;
     if (key != LogicalKeyboardKey.keyF && key != LogicalKeyboardKey.keyK) {
       return false;
     }
-    if (!HardwareKeyboard.instance.isControlPressed) return false;
-    if (ModalRoute.of(context)?.isCurrent == false) return false;
     // The page under Now Playing is hidden: no search from there.
     if (ref.read(nowPlayingPanelProvider).covered) return false;
     _openSearch();
+    return true;
+  }
+
+  /// Ctrl+Shift+Q toggles the queue panel, Ctrl+J the chat (when this build
+  /// has one). Both work while Now Playing is open: the panel stays usable.
+  bool _onPanelKey(LogicalKeyboardKey key) {
+    final shift = HardwareKeyboard.instance.isShiftPressed;
+    final RightPanelKind kind;
+    if (key == LogicalKeyboardKey.keyQ && shift) {
+      kind = RightPanelKind.queue;
+    } else if (key == LogicalKeyboardKey.keyJ && !shift) {
+      if (ref.read(chatPanelSurfaceProvider) == null) return false;
+      kind = RightPanelKind.chat;
+    } else {
+      return false;
+    }
+    ref.read(rightPanelProvider.notifier).toggle(kind);
     return true;
   }
 
@@ -117,6 +139,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     final key = event.logicalKey;
     if (key == LogicalKeyboardKey.escape) {
       if (!DesktopHistoryInput.shellOwnsFocus(_historyNode)) return false;
+      if (_closeNowPlaying()) return true;
       if (!history.canGoBack) return false;
       history.back();
       return true;
@@ -130,6 +153,25 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     return true;
   }
 
+  /// Going to another page closes Now Playing (after the frame: the panel
+  /// state cannot change while the shell builds).
+  void _closeOnNavigation(String location) {
+    final changed = _lastLocation != null && _lastLocation != location;
+    _lastLocation = location;
+    if (!changed || !ref.read(nowPlayingPanelProvider).open) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(nowPlayingPanelProvider.notifier).close();
+    });
+  }
+
+  /// Back (Esc with no focus, the mouse Back button) closes Now Playing
+  /// before it walks the history. True when it did.
+  bool _closeNowPlaying() {
+    if (!ref.read(nowPlayingPanelProvider).open) return false;
+    ref.read(nowPlayingPanelProvider.notifier).close();
+    return true;
+  }
+
   void _openSearch() => context.go(_searchPath);
 
   Widget _leftRegion(
@@ -138,6 +180,26 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     String location,
   ) {
     final hasTrack = ref.watch(hasCurrentTrackProvider);
+    return LayoutBuilder(
+      builder: (context, box) => _leftColumn(
+        l10n,
+        shell,
+        location,
+        hasTrack,
+        // Under 1000 dp (the right panel is open) the sidebar is a rail
+        // whatever the top bar toggle says.
+        expanded: _expanded && box.maxWidth >= desktopFullSidebarMinWidth,
+      ),
+    );
+  }
+
+  Widget _leftColumn(
+    AppLocalizations l10n,
+    StatefulNavigationShell shell,
+    String location,
+    bool hasTrack, {
+    required bool expanded,
+  }) {
     return Column(
       children: [
         Expanded(
@@ -149,7 +211,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                     if (i.sidebar) i,
                 ],
                 selectedId: selectedNavId(widget.items, location),
-                expanded: _expanded,
+                expanded: expanded,
                 onSelect: _select,
               ),
               Expanded(
@@ -189,10 +251,12 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     final location = GoRouterState.of(context).uri.path;
     final l10n = AppLocalizations.of(context);
     final covered = ref.watch(nowPlayingPanelProvider.select((s) => s.covered));
+    _closeOnNavigation(location);
     return Scaffold(
       body: DesktopHistoryInput(
         history: widget.history,
         focusNode: _historyNode,
+        interceptBack: _closeNowPlaying,
         child: Column(
           children: [
             DesktopTopBar(
@@ -218,11 +282,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                             child: _leftRegion(l10n, shell, location),
                           ),
                         ),
-                        // The Now Playing overlay is added here.
+                        // Covers the region above, player bar's place
+                        // included; never the right panel.
+                        const DesktopNowPlayingOverlay(),
                       ],
                     ),
                   ),
-                  ?widget.rightPanel,
+                  const RightPanelHost(),
                 ],
               ),
             ),

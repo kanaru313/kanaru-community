@@ -6,41 +6,67 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../playback/domain/playback_notice.dart';
 import '../../playback/state/queue_view_provider.dart';
 
-/// Turns the player's notices into snack bars. Once [enabled] it listens
-/// for good, track or not, so a notice raised as the last track goes is not
-/// lost. Notices raised by a UI action (remove with undo) are shown by that
-/// action instead.
-class PlaybackNoticeListener extends ConsumerWidget {
+/// Turns the player's notices into snack bars. Once started it listens for
+/// good, track or not, so a notice raised as the last track goes is not lost.
+/// Notices raised by a UI action (remove with undo, empty queue) are shown by
+/// that action instead; the player does not emit them.
+///
+/// Listening creates the player, which must not happen while the first frame
+/// builds: by default it starts after the first frame. A shell that creates
+/// the player itself sets [autoStart] to false and calls
+/// [PlaybackNoticeListenerState.start] in the same callback, so no notice
+/// falls between the player's creation and the first listener.
+class PlaybackNoticeListener extends ConsumerStatefulWidget {
   const PlaybackNoticeListener({
     super.key,
     required this.child,
-    this.enabled = true,
+    this.autoStart = true,
   });
 
   final Widget child;
-
-  /// False until the shell has created the player: listening creates it, and
-  /// that must not happen while the first frame builds.
-  final bool enabled;
+  final bool autoStart;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // The child stays in the same place whether or not we listen.
-    if (enabled) {
-      ref.listen<AsyncValue<PlaybackNotice>>(playbackNoticesProvider, (
-        _,
-        next,
-      ) {
+  ConsumerState<PlaybackNoticeListener> createState() =>
+      PlaybackNoticeListenerState();
+}
+
+class PlaybackNoticeListenerState
+    extends ConsumerState<PlaybackNoticeListener> {
+  ProviderSubscription<AsyncValue<PlaybackNotice>>? _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.autoStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => start());
+    }
+  }
+
+  /// Starts listening (once). Safe to call from a post-frame callback.
+  void start() {
+    if (_subscription != null || !mounted) return;
+    _subscription = ref.listenManual<AsyncValue<PlaybackNotice>>(
+      playbackNoticesProvider,
+      (_, next) {
         final notice = next.value;
-        if (notice == null) return;
+        if (notice == null || !mounted) return;
         showAppSnackBar(
           context,
           noticeText(AppLocalizations.of(context), notice),
         );
-      });
-    }
-    return child;
+      },
+    );
   }
+
+  @override
+  void dispose() {
+    _subscription?.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// Words for [notice].

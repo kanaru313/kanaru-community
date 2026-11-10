@@ -63,5 +63,149 @@
   "playbackNoticeQueueEmpty": "Hàng đợi trống",
   "playbackNoticeFocusDenied": "Không phát được: ứng dụng khác đang dùng âm thanh",
   "playbackSidebarOpen": "Menu",
-  "playbackSidebarClose": "Đóng menu"
+  "playbackSidebarClose": "Đóng menu",
+  "playbackQueueMobileCounts": "{position}/{total} · còn {remaining}",
+  "@playbackQueueMobileCounts": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackRemainingHoursMinutes": "{hours} giờ {minutes} phút",
+  "@playbackRemainingHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackRemainingMinutes": "{minutes} phút",
+  "@playbackRemainingMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackRemainingUnderMinute": "dưới 1 phút",
+  "playbackMore": "Thêm",
+  "playbackMinimize": "Thu nhỏ",
+  "playbackQueueSelectMany": "Chọn nhiều",
+  "playbackQueueAddTracks": "Thêm bài",
+  "playbackQueueCleanup": "Dọn dẹp",
+  "playbackQueueSavePlaylist": "Lưu thành playlist",
+  "playbackQueueCleanupTitle": "Bỏ khỏi hàng đợi",
+  "playbackCleanupDuplicates": "Bài hát trùng lặp",
+  "playbackCleanupBefore": "Bài trước đó",
+  "playbackCleanupAfter": "Bài sau đó",
+  "playbackCleanupAll": "Tất cả (trừ bài đang phát)",
+  "playbackQueueLocate": "Về bài đang phát",
+  "playbackQueueReorder": "Kéo để đổi thứ tự",
+  "playbackQueueRemovedOne": "Đã bỏ “{title}”",
+  "@playbackQueueRemovedOne": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackQueueRemovedMany": "Đã bỏ {count} bài",
+  "@playbackQueueRemovedMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackUndo": "Hoàn tác",
+  "playbackRowPlay": "Phát bài này",
+  "playbackRowPlayNext": "Phát tiếp theo",
+  "playbackGoAlbum": "Đến album",
+  "playbackGoArtist": "Đến nghệ sĩ",
+  "playbackAskAi": "Hỏi AI",
+  "playbackRemoveFromQueue": "Bỏ khỏi hàng đợi",
+  "playbackQueueStale": "Bài này không còn trong hàng đợi",
+  "playbackPickArtist": "Chọn nghệ sĩ",
+  "playbackSourceSongs": "Bài hát",
+  "playbackSourceAlbum": "Album",
+  "playbackSourceArtist": "Nghệ sĩ",
+  "playbackSourceGenre": "Thể loại",
+  "playbackSourceLanguage": "Ngôn ngữ",
+  "playbackSourceFolder": "Thư mục",
+  "playbackSourceFavorites": "Yêu thích",
+  "playbackSourceSelection": "Đã chọn",
+  "playbackSourceQueue": "Hàng đợi",
+  "playbackLyricsCard": "Lời bài hát",
+  "playbackAddToPlaylist": "Thêm vào playlist",
+  "playbackLyricsSource": "Nguồn lời bài",
+  "playbackTranslateLyrics": "Dịch lời…",
+  "playbackVisualEffects": "Hiệu ứng hình ảnh",
+  "playbackTrackInfo": "Thông tin bài",
+  "playbackInfoPlays": "{count} lượt nghe",
+  "@playbackInfoPlays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackInfoSampleRate": "{khz} kHz",
+  "@playbackInfoSampleRate": {
+    "placeholders": {
+      "khz": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackInfoBitrate": "{kbps} kbps",
+  "@playbackInfoBitrate": {
+    "placeholders": {
+      "kbps": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackToggleCoverColumn": "Ẩn/hiện cột bìa",
+  "playbackTranslate": "Dịch",
+  "playbackTabLyrics": "Lời bài",
+  "playbackLyricsTabSoon": "Lời bài: sắp có",
+  "playbackPanelClose": "Đóng khung",
+  "playbackQueuePanelCounts": "{total} bài · còn {remaining}",
+  "@playbackQueuePanelCounts": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackQueuePanelShort": "{total} bài",
+  "@playbackQueuePanelShort": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackQueuePlayingAt": "Đang phát bài {position}",
+  "@playbackQueuePlayingAt": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackQueueEmpty": "Hàng đợi trống"
 }

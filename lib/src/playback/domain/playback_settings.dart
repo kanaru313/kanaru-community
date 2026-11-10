@@ -2,9 +2,6 @@ import '../../media/domain/play_context.dart';
 import '../../platform/domain/setting.dart';
 import 'repeat_mode.dart';
 
-/// Tabs of the Now Playing panel (desktop); remembered between runs.
-enum NowPlayingTab { lyrics, queue }
-
 T _enumByName<T extends Enum>(List<T> values, Object? json) {
   if (json is String) {
     for (final v in values) {
@@ -88,12 +85,4 @@ final Setting<int> volumeSetting = Setting<int>(
   100,
   decode: (json) => _int(json).clamp(0, 100),
   encode: (v) => v.clamp(0, 100),
-);
-
-/// Last tab of the Now Playing panel.
-final Setting<NowPlayingTab> npTabSetting = Setting<NowPlayingTab>(
-  'playback.np_tab',
-  NowPlayingTab.lyrics,
-  decode: (json) => _enumByName(NowPlayingTab.values, json),
-  encode: (v) => v.name,
 );

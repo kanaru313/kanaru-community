@@ -4,7 +4,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../media/domain/cover_files.dart';
-import '../../playback/domain/playback_settings.dart';
 import '../../playback/state/playback_providers.dart';
 import '../../playback/state/track_info_providers.dart';
 import '../../playback/ui/play_pause_button.dart';
@@ -13,7 +12,8 @@ import '../../playback/ui/track_cover.dart';
 import '../../playback/ui/transport_buttons.dart';
 import '../../playback/ui/volume_control.dart';
 import '../../screens/now_playing/ui/favorite_button.dart';
-import '../state/now_playing_panel.dart';
+import '../../playback/state/now_playing_panel.dart';
+import '../state/right_panel.dart';
 
 /// Left-part widths below which the bar drops controls: under [wide] no
 /// volume, sleep timer or favorite; under [narrow] no shuffle or repeat.
@@ -21,8 +21,8 @@ const double playerBarWide = 1000;
 const double playerBarNarrow = 760;
 
 /// Desktop player bar under the page: 88 dp, shown only while a track is
-/// current. Every button opens Now Playing (the bar is offstage while it is
-/// open), none closes it.
+/// current. Lyrics, the cover and expand open Now Playing (the bar is offstage
+/// while it is open); Queue toggles the shell's right panel.
 class PlayerBar extends ConsumerWidget {
   const PlayerBar({super.key});
 
@@ -89,13 +89,12 @@ class _TrackPart extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     return Row(
-      spacing: KSpace.x3,
       children: [
         Tooltip(
           message: l10n.playbackOpenNowPlaying,
           child: KPressable(
             radius: KRadius.xs,
-            onTap: () => ref.read(nowPlayingPanelProvider.notifier).openLast(),
+            onTap: () => ref.read(nowPlayingPanelProvider.notifier).open(),
             child: TrackCover(
               coverKey: info?.coverKey,
               seed: info?.albumKey?.toString() ?? info?.title ?? '',
@@ -105,7 +104,10 @@ class _TrackPart extends ConsumerWidget {
             ),
           ),
         ),
-        Expanded(
+        const SizedBox(width: KSpace.x3),
+        // The text takes only the width it needs, so the heart sits right
+        // after the title/artist block.
+        Flexible(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,6 +178,7 @@ class _ToolsPart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final panel = ref.read(nowPlayingPanelProvider.notifier);
+    final queueOpen = ref.watch(rightPanelProvider) == RightPanelKind.queue;
     final soon = l10n.appComingSoon;
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -189,18 +192,31 @@ class _ToolsPart extends ConsumerWidget {
         IconButton(
           icon: const Icon(KIcons.lyrics),
           tooltip: l10n.playbackLyrics,
-          onPressed: () => panel.open(NowPlayingTab.lyrics),
+          onPressed: panel.open,
         ),
         IconButton(
           icon: const Icon(KIcons.queueMusic),
           tooltip: l10n.playbackNavQueue,
-          onPressed: () => panel.open(NowPlayingTab.queue),
+          isSelected: queueOpen,
+          style: queueOpen
+              ? IconButton.styleFrom(
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .secondaryContainer,
+                  foregroundColor: Theme.of(context)
+                      .colorScheme
+                      .onSecondaryContainer,
+                )
+              : null,
+          onPressed: () => ref
+              .read(rightPanelProvider.notifier)
+              .toggle(RightPanelKind.queue),
         ),
         if (full) const VolumeControl(),
         IconButton(
           icon: const Icon(KIcons.openFull),
           tooltip: l10n.playbackExpand,
-          onPressed: panel.openLast,
+          onPressed: panel.open,
         ),
       ],
     );

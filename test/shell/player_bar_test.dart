@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
-import 'package:kanaru/src/playback/domain/playback_settings.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/playback/ui/volume_control.dart';
 import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
-import 'package:kanaru/src/shell/state/now_playing_panel.dart';
+import 'package:kanaru/src/playback/state/now_playing_panel.dart';
+import 'package:kanaru/src/shell/state/right_panel.dart';
 import 'package:kanaru/src/shell/ui/player_bar.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart' hide RepeatMode;
@@ -47,6 +47,20 @@ void main() {
     );
     expect(button.onPressed, isNull);
     expect(button.tooltip, contains('Coming soon'));
+  });
+
+  testWidgets('the heart sits right after the title text', (tester) async {
+    await _pump(tester, 1280);
+    final title = find.descendant(
+      of: find.byType(PlayerBar),
+      matching: find.text('T0'),
+    );
+    // Text edge to the 24 dp icon: the button's own 12 dp padding.
+    final gap =
+        tester.getCenter(find.byIcon(KIcons.heart)).dx -
+        12 -
+        tester.getTopRight(title).dx;
+    expect(gap, inInclusiveRange(0, 16));
   });
 
   testWidgets('under 1000 the volume, sleep timer and heart go', (
@@ -93,32 +107,50 @@ void main() {
     expect(text.overflow, TextOverflow.ellipsis);
   });
 
-  testWidgets('Lyrics, Queue, cover and expand only open Now Playing', (
-    tester,
-  ) async {
+  testWidgets('Lyrics, cover and expand open Now Playing', (tester) async {
     final host = await _pump(tester, 1280);
     NowPlayingPanelState panel() =>
         host.container.read(nowPlayingPanelProvider);
 
-    await tester.tap(find.byTooltip('Queue'));
-    await tester.pump();
-    expect(panel().open, isTrue);
-    expect(panel().tab, NowPlayingTab.queue);
-
     await tester.tap(find.byTooltip('Lyrics'));
     await tester.pump();
-    expect(panel().tab, NowPlayingTab.lyrics);
+    expect(panel().open, isTrue);
 
     host.container.read(nowPlayingPanelProvider.notifier).close();
     await tester.tap(find.byTooltip('Open Now Playing').first);
     await tester.pump();
     expect(panel().open, isTrue);
-    expect(panel().tab, NowPlayingTab.lyrics); // the tab used last
 
     host.container.read(nowPlayingPanelProvider.notifier).close();
     await tester.tap(find.byIcon(KIcons.openFull));
     await tester.pump();
     expect(panel().open, isTrue);
+  });
+
+  testWidgets('Queue toggles the right panel and is tonal while it is open', (
+    tester,
+  ) async {
+    final host = await _pump(tester, 1280);
+    RightPanelKind kind() => host.container.read(rightPanelProvider);
+    IconButton button() => tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, KIcons.queueMusic),
+    );
+
+    expect(button().isSelected, isFalse);
+    await tester.tap(find.byTooltip('Queue'));
+    await tester.pump();
+    expect(kind(), RightPanelKind.queue);
+    expect(button().isSelected, isTrue);
+    expect(
+      host.container.read(nowPlayingPanelProvider).open,
+      isFalse,
+      reason: 'the Queue button never opens Now Playing',
+    );
+
+    await tester.tap(find.byTooltip('Queue'));
+    await tester.pump();
+    expect(kind(), RightPanelKind.closed);
+    expect(button().isSelected, isFalse);
   });
 
   group('controls drive the player', () {

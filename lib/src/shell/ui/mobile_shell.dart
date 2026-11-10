@@ -7,8 +7,11 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../extension/state/extension_providers.dart';
 import '../../extension/state/registry_entries.dart';
 import '../../library/ui/selection/selection_bar.dart';
+import '../../playback/state/mini_player_flight.dart';
 import '../../playback/state/playback_providers.dart';
 import '../../playback/ui/mini_player.dart';
+import '../../screens/now_playing/now_playing_path.dart';
+import '../../screens/now_playing/ui/mobile/queue_sheet.dart';
 import '../state/mobile_sidebar_state.dart';
 import 'mobile_push_layout.dart';
 import 'mobile_sidebar.dart';
@@ -39,11 +42,10 @@ class MobileShell extends ConsumerWidget {
   /// selection bar; replaceable so the shell can be tested with a stand-in.
   final Widget selectionBar;
 
-  /// Mini player: tap or swipe up. Null until Now Playing exists; the mini
-  /// player then does nothing on tap.
+  /// Mini player: tap or swipe up. Null opens the Now Playing route.
   final VoidCallback? onOpenNowPlaying;
 
-  /// Mini player: long press.
+  /// Mini player: long press. Null opens the queue sheet.
   final VoidCallback? onOpenQueue;
 
   void _select(
@@ -86,6 +88,7 @@ class MobileShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final hasTrack = ref.watch(hasCurrentTrackProvider);
+    final flight = ref.watch(miniPlayerFlightProvider);
     final aiActions = [
       for (final a in ref.watch(extensionRegistryProvider).topBarActions)
         if (a.id == 'ai') a,
@@ -152,8 +155,12 @@ class MobileShell extends ConsumerWidget {
                 selectionBar,
                 if (hasTrack)
                   MiniPlayer(
-                    onOpen: onOpenNowPlaying ?? () {},
-                    onOpenQueue: onOpenQueue ?? () {},
+                    flight: flight,
+                    onOpen:
+                        onOpenNowPlaying ?? () => context.push(nowPlayingPath),
+                    onOpenQueue:
+                        onOpenQueue ??
+                        () => showQueueSheet(context, from: flight),
                   ),
                 if (selected >= 0)
                   NavigationBar(

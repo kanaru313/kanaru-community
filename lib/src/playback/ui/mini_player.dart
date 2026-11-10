@@ -12,6 +12,7 @@ import '../../media/domain/track_id.dart';
 import '../state/playback_position_provider.dart';
 import '../state/playback_providers.dart';
 import '../state/track_info_providers.dart';
+import 'flight_source.dart';
 import 'play_pause_button.dart';
 import 'track_cover.dart';
 import 'transport_buttons.dart';
@@ -29,6 +30,7 @@ class MiniPlayer extends ConsumerStatefulWidget {
     super.key,
     required this.onOpen,
     required this.onOpenQueue,
+    this.flight,
   });
 
   static const double height = 64;
@@ -39,6 +41,10 @@ class MiniPlayer extends ConsumerStatefulWidget {
 
   final VoidCallback onOpen;
   final VoidCallback onOpenQueue;
+
+  /// Where the queue sheet flies from and back to; its pieces are hidden
+  /// while the sheet is up.
+  final FlightSource? flight;
 
   @override
   ConsumerState<MiniPlayer> createState() => _MiniPlayerState();
@@ -86,6 +92,10 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
     _cancelLongPress();
     super.dispose();
   }
+
+  Widget _piece(FlightPiece piece, Widget child) => widget.flight == null
+      ? child
+      : FlightPieceHost(source: widget.flight!, piece: piece, child: child);
 
   @override
   Widget build(BuildContext context) {
@@ -137,12 +147,15 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                           child: KPressable(
                             radius: miniRadius,
                             onTap: _onTap,
-                            child: _Body(trackId: trackId),
+                            child: _Body(
+                              trackId: trackId,
+                              flight: widget.flight,
+                            ),
                           ),
                         ),
                       ),
-                      const PlayPauseButton(),
-                      const NextButton(),
+                      _piece(FlightPiece.play, const PlayPauseButton()),
+                      _piece(FlightPiece.next, const NextButton()),
                     ],
                   ),
                   const Positioned(
@@ -162,52 +175,62 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
 }
 
 class _Body extends ConsumerWidget {
-  const _Body({required this.trackId});
+  const _Body({required this.trackId, required this.flight});
 
   final TrackId trackId;
+  final FlightSource? flight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final info = ref.watch(trackInfoProvider(trackId)).value;
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
+    Widget wrap(FlightPiece piece, Widget child) => flight == null
+        ? child
+        : FlightPieceHost(source: flight!, piece: piece, child: child);
     return Padding(
       padding: const EdgeInsets.only(left: KSpace.x2),
       child: Row(
         spacing: KSpace.x3,
         children: [
-          TrackCover(
-            coverKey: info?.coverKey,
-            seed: info?.albumKey?.toString() ?? info?.title ?? '',
-            size: CoverSize.thumb,
-            dimension: 48,
-            radius: KRadius.xs,
+          wrap(
+            FlightPiece.cover,
+            TrackCover(
+              coverKey: info?.coverKey,
+              seed: info?.albumKey?.toString() ?? info?.title ?? '',
+              size: CoverSize.thumb,
+              dimension: 48,
+              radius: KRadius.xs,
+            ),
           ),
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  info?.title ?? '',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.bodyMedium?.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (info?.artist != null)
+            child: wrap(
+              FlightPiece.text,
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    info!.artist!,
+                    info?.title ?? '',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: text.bodySmall?.copyWith(
-                      fontSize: 12,
-                      color: scheme.onSurfaceVariant,
+                    style: text.bodyMedium?.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-              ],
+                  if (info?.artist != null)
+                    Text(
+                      info!.artist!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.bodySmall?.copyWith(
+                        fontSize: 12,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],

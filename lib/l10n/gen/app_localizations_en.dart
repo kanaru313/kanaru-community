@@ -509,6 +509,217 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackSidebarClose => 'Close menu';
 
   @override
+  String playbackQueueMobileCounts(int position, int total, String remaining) {
+    return '$position/$total · $remaining left';
+  }
+
+  @override
+  String playbackRemainingHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String playbackRemainingMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get playbackRemainingUnderMinute => 'under 1 min';
+
+  @override
+  String get playbackMore => 'More';
+
+  @override
+  String get playbackMinimize => 'Minimise';
+
+  @override
+  String get playbackQueueSelectMany => 'Select several';
+
+  @override
+  String get playbackQueueAddTracks => 'Add tracks';
+
+  @override
+  String get playbackQueueCleanup => 'Clean up';
+
+  @override
+  String get playbackQueueSavePlaylist => 'Save as playlist';
+
+  @override
+  String get playbackQueueCleanupTitle => 'Remove from queue';
+
+  @override
+  String get playbackCleanupDuplicates => 'Duplicate tracks';
+
+  @override
+  String get playbackCleanupBefore => 'Earlier tracks';
+
+  @override
+  String get playbackCleanupAfter => 'Later tracks';
+
+  @override
+  String get playbackCleanupAll => 'All except the current track';
+
+  @override
+  String get playbackQueueLocate => 'Go to current track';
+
+  @override
+  String get playbackQueueReorder => 'Drag to reorder';
+
+  @override
+  String playbackQueueRemovedOne(String title) {
+    return 'Removed “$title”';
+  }
+
+  @override
+  String playbackQueueRemovedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Removed $count tracks',
+      one: 'Removed 1 track',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playbackUndo => 'Undo';
+
+  @override
+  String get playbackRowPlay => 'Play this track';
+
+  @override
+  String get playbackRowPlayNext => 'Play next';
+
+  @override
+  String get playbackGoAlbum => 'Go to album';
+
+  @override
+  String get playbackGoArtist => 'Go to artist';
+
+  @override
+  String get playbackAskAi => 'Ask AI';
+
+  @override
+  String get playbackRemoveFromQueue => 'Remove from queue';
+
+  @override
+  String get playbackQueueStale => 'That track is no longer in the queue';
+
+  @override
+  String get playbackPickArtist => 'Choose an artist';
+
+  @override
+  String get playbackSourceSongs => 'Songs';
+
+  @override
+  String get playbackSourceAlbum => 'Album';
+
+  @override
+  String get playbackSourceArtist => 'Artist';
+
+  @override
+  String get playbackSourceGenre => 'Genre';
+
+  @override
+  String get playbackSourceLanguage => 'Language';
+
+  @override
+  String get playbackSourceFolder => 'Folder';
+
+  @override
+  String get playbackSourceFavorites => 'Favorites';
+
+  @override
+  String get playbackSourceSelection => 'Selection';
+
+  @override
+  String get playbackSourceQueue => 'Queue';
+
+  @override
+  String get playbackLyricsCard => 'Lyrics';
+
+  @override
+  String get playbackAddToPlaylist => 'Add to playlist';
+
+  @override
+  String get playbackLyricsSource => 'Lyrics source';
+
+  @override
+  String get playbackTranslateLyrics => 'Translate lyrics…';
+
+  @override
+  String get playbackVisualEffects => 'Visual effects';
+
+  @override
+  String get playbackTrackInfo => 'Track info';
+
+  @override
+  String playbackInfoPlays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plays',
+      one: '1 play',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playbackInfoSampleRate(String khz) {
+    return '$khz kHz';
+  }
+
+  @override
+  String playbackInfoBitrate(int kbps) {
+    return '$kbps kbps';
+  }
+
+  @override
+  String get playbackToggleCoverColumn => 'Show or hide the cover column';
+
+  @override
+  String get playbackTranslate => 'Translate';
+
+  @override
+  String get playbackTabLyrics => 'Lyrics';
+
+  @override
+  String get playbackLyricsTabSoon => 'Lyrics: coming soon';
+
+  @override
+  String get playbackPanelClose => 'Close panel';
+
+  @override
+  String playbackQueuePanelCounts(int total, String remaining) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total tracks',
+      one: '1 track',
+    );
+    return '$_temp0 · $remaining left';
+  }
+
+  @override
+  String playbackQueuePanelShort(int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total tracks',
+      one: '1 track',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playbackQueuePlayingAt(int position) {
+    return 'Playing track $position';
+  }
+
+  @override
+  String get playbackQueueEmpty => 'The queue is empty';
+
+  @override
   String get libraryTabSongs => 'Songs';
 
   @override

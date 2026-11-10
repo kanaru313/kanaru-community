@@ -19,6 +19,7 @@ class DesktopHistoryInput extends StatefulWidget {
     required this.history,
     required this.focusNode,
     required this.child,
+    this.interceptBack,
   });
 
   final NavHistory history;
@@ -27,6 +28,10 @@ class DesktopHistoryInput extends StatefulWidget {
   /// global key handler can ask [shellOwnsFocus].
   final FocusNode focusNode;
   final Widget child;
+
+  /// Asked before a Back (Esc, the mouse Back button) walks the history: true
+  /// means something else took it (the Now Playing overlay closed).
+  final bool Function()? interceptBack;
 
   /// Whether keys reach the shell's focus tree, or nobody inside it is
   /// focused: nothing has focus, the root scope has it, or an ancestor scope
@@ -107,9 +112,9 @@ class _DesktopHistoryInputState extends State<DesktopHistoryInput> {
     if (event.logicalKey != LogicalKeyboardKey.escape) {
       return KeyEventResult.ignored;
     }
-    if (_textFieldFocused() || !widget.history.canGoBack) {
-      return KeyEventResult.ignored;
-    }
+    if (_textFieldFocused()) return KeyEventResult.ignored;
+    if (widget.interceptBack?.call() ?? false) return KeyEventResult.handled;
+    if (!widget.history.canGoBack) return KeyEventResult.ignored;
     widget.history.back();
     return KeyEventResult.handled;
   }
@@ -119,6 +124,7 @@ class _DesktopHistoryInputState extends State<DesktopHistoryInput> {
     // Focus in another route's scope (a menu or modal): it owns the input.
     if (!DesktopHistoryInput.shellHasFocus(_node)) return;
     if (e.buttons & kBackMouseButton != 0) {
+      if (widget.interceptBack?.call() ?? false) return;
       widget.history.back();
     } else if (e.buttons & kForwardMouseButton != 0) {
       widget.history.forward();

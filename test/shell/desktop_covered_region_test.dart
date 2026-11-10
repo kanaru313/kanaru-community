@@ -3,22 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/kanaru.dart';
-import 'package:kanaru/l10n/gen/app_localizations.dart';
-import 'package:kanaru/src/database/state/database_providers.dart';
-import 'package:kanaru/src/extension/state/extension_providers.dart';
-import 'package:kanaru/src/library/domain/scan_status.dart';
-import 'package:kanaru/src/playback/domain/playback_settings.dart';
-import 'package:kanaru/src/library/state/scan_providers.dart';
-import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
-import 'package:kanaru/src/shell/state/nav_history.dart';
-import 'package:kanaru/src/shell/state/now_playing_panel.dart';
-import 'package:kanaru/src/shell/ui/desktop_shell.dart';
+import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru/src/shell/ui/player_bar.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../playback/support/controller_harness.dart';
 import '../support/app_harness.dart';
 import '../support/nav_fixture.dart';
 
@@ -151,90 +141,12 @@ void main() {
   testWidgets('close clears covered', (tester) async {
     final c = await _pump(tester);
     final panel = c.read(nowPlayingPanelProvider.notifier);
-    panel.open(NowPlayingTab.queue);
+    panel.open();
     panel.setCovered(true);
     expect(c.read(nowPlayingPanelProvider).covered, isTrue);
     panel.close();
     final state = c.read(nowPlayingPanelProvider);
     expect(state.open, isFalse);
     expect(state.covered, isFalse);
-    expect(state.tab, NowPlayingTab.queue);
-  });
-
-  testWidgets('a docked right panel stays painted and tappable when covered', (
-    tester,
-  ) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(1280, 800);
-    addTearDown(tester.view.reset);
-    final h = (await tester.runAsync(() => Harness.create()))!;
-    var taps = 0;
-    late GoRouter router;
-    router = GoRouter(
-      routes: [
-        StatefulShellRoute.indexedStack(
-          builder: (context, state, shell) => DesktopShell(
-            navigationShell: shell,
-            items: const [],
-            history: NavHistory(router),
-            rightPanel: SizedBox(
-              width: 300,
-              child: GestureDetector(
-                onTap: () => taps++,
-                child: const ColoredBox(
-                  color: Colors.teal,
-                  child: Center(child: Text('chat panel')),
-                ),
-              ),
-            ),
-          ),
-          branches: [
-            StatefulShellBranch(
-              routes: [
-                GoRoute(path: '/', builder: (_, _) => const Text('left page')),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-    final container = ProviderContainer(
-      overrides: [
-        extensionRegistryProvider.overrideWithValue(ExtensionRegistry()),
-        playerControllerProvider.overrideWithValue(h.c),
-        appDatabaseProvider.overrideWithValue(h.db),
-        settingsStoreProvider.overrideWithValue(h.settings),
-        hasCurrentTrackProvider.overrideWithValue(true),
-        scanStatusProvider.overrideWith(
-          (ref) => Stream.value(const ScanIdle()),
-        ),
-        libraryScanCommandsProvider.overrideWithValue(NoopScanCommands()),
-      ],
-    );
-    addTearDown(() async {
-      container.dispose();
-      router.dispose();
-      await tester.runAsync(h.close);
-    });
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: MaterialApp.router(
-          routerConfig: router,
-          theme: buildKanaruTheme(brightness: Brightness.light),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('left page'), findsOneWidget);
-
-    container.read(nowPlayingPanelProvider.notifier).setCovered(true);
-    await tester.pump();
-    expect(find.text('left page'), findsNothing);
-    expect(find.byType(PlayerBar), findsNothing);
-    expect(find.text('chat panel'), findsOneWidget);
-    await tester.tap(find.text('chat panel'));
-    expect(taps, 1);
   });
 }

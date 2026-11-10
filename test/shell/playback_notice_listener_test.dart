@@ -66,14 +66,35 @@ void main() {
     expect(find.text('page'), findsOneWidget);
   });
 
-  testWidgets('a disabled listener shows nothing', (tester) async {
+  testWidgets('a listener that was not started shows nothing', (tester) async {
     final host = await pumpWithPlayer(
       tester,
-      const PlaybackNoticeListener(enabled: false, child: Text('page')),
+      const PlaybackNoticeListener(autoStart: false, child: Text('page')),
       play: false,
     );
     await host.run(tester, host.h.c.play);
     await host.letStreamsArrive(tester);
     expect(find.byType(SnackBar), findsNothing);
+  });
+
+  testWidgets('start() listens at once, in the caller\'s frame', (
+    tester,
+  ) async {
+    final key = GlobalKey<PlaybackNoticeListenerState>();
+    final host = await pumpWithPlayer(
+      tester,
+      PlaybackNoticeListener(
+        key: key,
+        autoStart: false,
+        child: const Text('page'),
+      ),
+    );
+    key.currentState!.start();
+    // A second start does not subscribe twice.
+    key.currentState!.start();
+    await host.run(tester, host.h.c.previous);
+    await host.letStreamsArrive(tester);
+    expect(find.text('This is the first track'), findsOneWidget);
+    expect(find.byType(SnackBar), findsOneWidget);
   });
 }

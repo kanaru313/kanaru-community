@@ -321,8 +321,8 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
 
 Pure `Setting<T>` constants in `playback/domain/playback_settings.dart`; one top-level
 `settingNotifierProvider` per key a widget watches in `playback/state/playback_settings_providers.dart`
-(`shuffleSettingProvider`, `repeatSettingProvider`, `volumeSettingProvider`, `npTabSettingProvider`).
-The UI only reads them. Every change goes through a player controller command, which writes
+(`shuffleSettingProvider`, `repeatSettingProvider`, `volumeSettingProvider`).
+The UI only reads them. (`shell.right_panel` is the shell's own key, see UI: widgets and shell.) Every change goes through a player controller command, which writes
 `SettingsStore` (single writer). A bad stored value reads as the default.
 
 | Key | Setting | Holds |
@@ -333,7 +333,6 @@ The UI only reads them. Every change goes through a player controller command, w
 | `playback.repeat` | `repeatSetting` | `'off'`, `'all'` or `'one'` |
 | `playback.context` | `contextSetting` | `{kind, ref, label}` of the `PlayContext`; an unknown kind reads as `queue` |
 | `playback.volume` | `volumeSetting` | 0-100 (default 100; out of range is clamped) |
-| `playback.np_tab` | `npTabSetting` | `'lyrics'` (default) or `'queue'` (last tab of the Now Playing panel) |
 
 ## Restore
 
@@ -487,10 +486,12 @@ Playback widgets and where each lives (UI layers import `state/`, never `data/`;
 | `PlayPauseButton`, `NextButton`, `PreviousButton`, `ShuffleButton`, `RepeatButton` | `playback/ui/` | Watch narrow providers; call the controller with `ref.read` on tap. |
 | `PlaybackTimeLabel`, `PlaybackSeekBar`, `VolumeControl` | `playback/ui/` | Labels select whole seconds. Volume is the persisted setting; mute remembers the last level. |
 | `FavoriteButton(trackId)` | `screens/now_playing/ui/` | `isFavoriteProvider` + `favoritesControllerProvider`. |
-| `PlayerBar` | `shell/ui/player_bar.dart` | Desktop, 88 dp, under the page. Left part < 1000 dp: no volume, sleep timer, heart; < 760: no shuffle/repeat. Every button opens Now Playing (the bar is offstage while it is open). |
-| `PlaybackNoticeListener` | `shell/ui/` | Wraps both shells. Listens to `playbackNoticesProvider` for good once `AppShell` has created the player (`enabled`), so a notice raised as the last track goes is not lost; the child never moves. Notices raised by a UI action (undo, empty queue) are shown by that action. |
-| `NowPlayingPanel` | `shell/state/now_playing_panel.dart` | `{open, tab, covered}`; last tab in `playback.np_tab`. `covered` makes the desktop left region `Offstage`; `close()` clears it. |
-| `DesktopHistoryInput` | `shell/ui/desktop_history_input.dart` | Alt+Left/Right and mouse Back/Forward walk `NavHistory`; Esc goes back unless a text field is focused. |
+| `PlayerBar` | `shell/ui/player_bar.dart` | Desktop, 88 dp, under the page. Left part < 1000 dp: no volume, sleep timer, heart; < 760: no shuffle/repeat. Lyrics, cover and expand open Now Playing (the bar is offstage while it is open); Queue toggles the shell's right panel and is tonal while it is open. The heart sits right after the title/artist block (the text takes only the width it needs; user decision, matches 02) and goes with the volume and sleep timer under 1000 dp. |
+| `PlaybackNoticeListener` | `shell/ui/` | Wraps both shells. `AppShell` creates the player and calls `start()` in the same post-frame callback, so no notice falls between the two (a test or another host leaves `autoStart` on and it starts after its first frame). Listens for good, track or not, so a notice raised as the last track goes is not lost; the child never moves. Notices raised by a UI action (remove with undo, "queue is empty") are shown by that action; the controller emits none for them, so there is one toast. |
+| `NowPlayingPanel` | `playback/state/now_playing_panel.dart` (one import path; no re-export) | `{open, covered}`. `covered` makes the desktop left region `Offstage`; `close()` clears it. |
+| `RightPanel` | `shell/state/right_panel.dart` | `closed`, `queue` or `chat`; one at a time. `show`, `toggle`, `close`; every change is stored in `shell.right_panel` and read back at the next launch (chat last time but no chat surface in this build: starts closed; a chat request without a surface is ignored). `chatPanelSurfaceProvider` is null in the public build; not wired yet (no extension path can override a provider; a registry slot is requested, today only tests fill it); the Pro build is meant to override it with a `ChatPanelSurface(body, menu?)`. |
+| `RightPanelHost` | `shell/ui/right_panel/` | 420 dp, no drag handle, header (name, the chat's own ⋮, ✕) over `QueuePanel(host: panel)` or the chat body. Opening from closed and closing do not animate; switching slides the content sideways in top-bar button order (Queue to Chat left, Chat to Queue right, 340 ms, `AnimatedSwitcher`; none under reduced motion). |
+| `DesktopHistoryInput` | `shell/ui/desktop_history_input.dart` | Alt+Left/Right and mouse Back/Forward walk `NavHistory`; Esc goes back unless a text field is focused. `interceptBack` is asked first for Esc and the mouse Back button: the shell passes "close Now Playing", so an open screen closes before history moves. |
 | `MobilePushLayout`, `MobileSidebar` | `shell/ui/` | Push sidebar (256 dp) driven by `KSpring.gentle`; open state in `mobileSidebarOpenProvider`. |
 
 Rules:
@@ -498,9 +499,14 @@ Rules:
   first frame, and buttons read it on tap.
 - `MiniPlayer` appears when `hasCurrentTrackProvider` is true; with no track there is no mini player and
   no player bar.
-- Desktop layout: `DesktopHistoryInput > Column[top bar, Row[Expanded(Stack[Offstage(left region)]),
-  rightPanel?]]`. Now Playing covers only the left region; a docked `rightPanel` (the AI chat) is a
-  sibling of that Stack and stays visible and tappable while the left region is covered.
+- Desktop layout: `DesktopHistoryInput > Column[top bar, Row[Expanded(Stack[Offstage(left region),
+  Now Playing overlay]), RightPanelHost]]`. Now Playing covers only the left region; the right panel is a
+  sibling of that Stack and stays visible and tappable while the left region is covered. The left part
+  shrinks by 420 dp and stays the desktop layout (the form factor follows the whole window). When the
+  left part is under 1000 dp the sidebar is forced to its 72 dp rail whatever the toggle says (the ☰ drawer is not built yet).
+  Top bar: a Queue button (tonal while the queue panel is open, Ctrl+Shift+Q) next to the AI button (tonal
+  while the chat is open, Ctrl+J; dimmed "Coming soon" when the build has no chat and no registered top
+  bar action). The shortcuts are taken by the shell's global key handler and work while Now Playing is open.
 - Key handling: Alt+arrows are taken by the shell's global key handler (a text field would keep them);
   Esc is taken there only when nothing in the shell has focus, otherwise by the focus-tree handler. Focus in
   a dialog, sheet or popup menu route disables both, and the mouse buttons too. A `MenuAnchor` menu that
@@ -509,6 +515,127 @@ Rules:
 - Mobile Back order: sidebar, top layer, child page, tab root to Home (`MobileShell` listener), then exit.
 - Widget tests that run controller commands from a widget callback must alternate real delays and pumps
   (`UiHost.tap` runs the tap in the real zone and settles; `UiHost.letStreamsArrive` alternates for streams); the controller keeps the zone it was built in.
+
+## Queue UI
+
+The queue content is shared by the mobile sheet and the desktop right panel. Widgets live in
+`playback/ui/queue/` (no library imports); the row menu, the ♥ and navigation to the library live in
+`screens/now_playing/ui/` (`queue_row_menu.dart`, `queue_row_trailing.dart`, `track_navigation.dart`) and are handed
+to the list as hooks (`QueueRowMenu`, `QueueRowTrailing`). `QueuePanel(host: sheet | panel)` composes them. On the panel the shell draws the header ("Queue" and ✕); `QueuePanel` adds the line under it: counts left (`N tracks · time left`, the playing position in the tooltip; 40 dp action buttons so it fits 420 dp), Shuffle, Add tracks (soon), Clean up, Save as playlist (soon) | ⋮ right, no footer.
+
+- **List** (`queue_list.dart`): one `ReorderableListView.builder`, fixed row extent (mobile 60, desktop 72), keys by
+  entry id, `buildDefaultDragHandles: false`, bottom padding 72. A drop is resolved by the dragged entry's id, not by
+  the index the list reports, so an edit during the drag cannot move another entry. `QueueScrollController` keeps the
+  start offset inside the content (a short queue starts at the top). On open the current row is the second visible.
+- **Rows** (`queue_row.dart`): current = `secondaryContainer` fill plus `KEqualizerIcon` over the cover (pause glyph
+  when paused); played rows have text and cover at 50 %; tap plays (the current row ignores it); Enter and Delete on a
+  focused desktop row play and remove. A row whose info has not loaded draws a placeholder of the same height.
+- **Row infos** (`state/queue_row_infos.dart`): `TrackInfo`s are loaded for the viewport ± 50 rows into a 1 000-entry
+  LRU; the window is O(1) from the scroll offset. A `tracks` change reloads only the last window, 1 s after the last
+  change. Rows read their own entry with a `select`. The header time ("còn …") is `queueRemainingProvider`.
+- **Remove** (`queue_swipe_remove.dart`, `queue_remove_action.dart`): a horizontal drag past 40 % of the row (either way)
+  slides the row out and removes it; the row fades, a red `delete` icon shows on the free side. Trackpad pans are
+  ignored. It is not a `Dismissible` because that one wants the row gone in the same frame while the removal is
+  persisted first. The toast ("Removed …" / "Removed N tracks", Undo, 4 s) is shown from the root navigator's context,
+  so it survives the host closing; undo never reopens a closed host. The player emits no notice for a removal, so there is
+  one toast. Removing the last entry calls `onEmptied`.
+- **Locate button** (`queue_locate_button.dart`): 48 dp, bottom right, only while the current row is out of view; arrow by
+  direction; rebuilds only when the side changes.
+- **Actions** (`queue_actions.dart`, `queue_header.dart`): Shuffle (reshuffles the upcoming and turns shuffle on), Add
+  tracks and Save as playlist (dimmed "Coming soon"), Clean up (`MenuAnchor`, four choices with counts worked out when
+  it opens; 0 = dimmed; opens up on the sheet, down on the panel; the toast counts what the controller removed when the choice ran, not what the menu promised), ⋮ (only a dimmed "Select several").
+- **Row menu** (`screens/now_playing/ui/queue_row_menu.dart`): Play this | Play next (queues a **copy**) | Go to album,
+  Go to artist (a `showSelectionPicker` when the track has several artists), Ask AI (dimmed) | Remove. A popup at the
+  pointer on the panel, a sheet on mobile (long press). Every action first checks the entry is still queued ("That track is
+  no longer in the queue"). Keep its item set in line with lane C's song menu.
+- **Undo** restores the entry that was current at removal time only if that removal took it out; if the player moved on
+  meanwhile, the live current entry stays.
+
+## Now Playing mobile
+
+Route `/now-playing` (`screens/now_playing/now_playing_registration.dart`, path in `now_playing_path.dart`), a top-level
+route above the shell. It slides up with the `bouncy` spring played as a curve over a 500 ms route, stopped at the top edge (an overshoot would uncover the page below); it slides down on an ease-in curve over 300 ms (a fade under reduced motion). The mini player opens it by `context.push`; the mini player's own tap, swipe and Enter all call the same
+`onOpen`.
+
+- `NowPlayingPage` picks what to show. At desktop width, or with no track, it leaves once (guarded by a flag, after
+  the frame); at desktop width it first calls `nowPlayingPanelProvider.open()`, so a resize drag across 1200 dp ends
+  with the panel open and no route. While the player has not answered yet it does not leave. The panel state lives in
+  `playback/state/now_playing_panel.dart` so `screens/` can reach it.
+- `MobileNowPlaying` (`ui/mobile/`): header (56) with a drag-to-close title area (release past 120 dp closes, less
+  springs back), cover, title row, `NowPlayingSeekSlot` (48 dp; flat bar for now), controls, button row, dimmed lyrics
+  card, info card. It sits on `CoverTintBackground` fed by `coverColorsProvider`; the colours never reach the app theme.
+  It owns a `FlightSource` (cover, text, play, next pieces) for the queue flights.
+- The cover box is `kanaru_ui` `NowPlayingCoverBox` (`min(420, width - 64)`, radius 20); the page gives it the full
+  width and pads the other rows.
+- `CoverSwiper` is a plain widget (entry id, has previous/next, callbacks): left = next, right = previous; 25 % of the
+  cover width or a fling over 160 dp/s commits; where there is no track to go to the cover moves at most 30 % and
+  springs back (the buttons raise the notices). With repeat all the last entry's left swipe wraps to the first, like Next. The new cover slides in when the entry id changes; if it never does, the
+  cover comes back after 800 ms.
+- `NowPlayingMoreSheet` (⋮): the head and `nowPlayingMoreItems`, shared with the desktop dropdown. Only Go to album and Go
+  to artist work; the rest is dimmed "Coming soon", Visual effects carries the Pro badge. `track_navigation.dart` goes
+  through `LibraryLocations` with `context.go`, and asks which artist first through `showSelectionPicker`.
+- The source line is `playContextText`: kind prefix plus the label captured when playback started. It opens nothing.
+
+## Queue sheet and flights (mobile)
+
+`showQueueSheet(context, from: FlightSource)` (`screens/now_playing/ui/mobile/queue_sheet.dart`) pushes a `PopupRoute`
+on the root navigator, so Back pops the sheet before Now Playing, and Now Playing before the shell. The route covers the
+screen: the cover tint, a strip at the top (cover 72, title and artist, play/pause 56, next 48), and the sheet below it
+(radius 28, grip, `QueuePanel(host: sheet)`), fixed height from under the strip to the bottom. Opened by the Queue button
+of Now Playing and by a long press on the mini player (any screen; Now Playing is not opened). The Queue nav item is a dimmed "Coming soon" on both shells (saved queues).
+
+- **Flight** (`KSharedFlight`, `kanaru_ui`): four layers (cover, text, play, next) go from the source's rects to the strip
+  rects as the progress goes 0 to 1. Progress = route animation (420 ms) x (1 - pull); a pull on the grip or head is
+  `pulled / 240`. A layer with no readable source rect, or any layer under reduced motion, fades in instead. Layers live in
+  one `Stack` with a `RepaintBoundary` each. The strip geometry and the page measurement are `kanaru_ui`
+  (`KQueueStripGeometry`, `KFlightStage`), because `screens/` has no width APIs.
+- **Source** (`playback/ui/flight_source.dart`): `FlightSource` has a key per piece and a `hidden` flag. The surface wraps
+  its pieces in `FlightPieceHost`, which draws them invisible (still laid out, so the rect stays readable) while the
+  route exists. Under reduced motion the sheet fades in place instead of sliding. Now Playing makes its own source; the mini player's is `miniPlayerFlightProvider`.
+- **Close**: chevron, a tap on the strip (cover, title or empty), Back, or a pull on the head of more than 100 dp (99 dp
+  springs back with `KSpring.gentle`). The flight runs in reverse with the route; a pull in progress carries on from where
+  the finger left it. Scrolling the list never moves the sheet (only the grip and head are drag handles).
+- **Last entry removed**: `onEmptied` closes the sheet; Now Playing leaves by itself (no track) and the mini player
+  disappears. Undo does not reopen anything.
+- **Not measured yet**: frame times of the flight in profile mode on Linux and on the phone (only the widget tests ran).
+
+## Now Playing desktop
+
+A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`), as an overlay of the desktop shell.
+
+- **Overlay** (`shell/ui/desktop_now_playing_overlay.dart`): a child of `DesktopShell`'s left `Stack`, after the left region, so
+  it covers the sidebar, the page and the player bar's place, under the top bar, and never the right panel (a sibling of that
+  `Stack`). It slides up in 500 ms with the old curve `Cubic(0.65, 0.05, 0.36, 1)` (the one timed curve kept over a spring).
+  The screen exists only while the panel is open or leaving. When the slide ends it sets `covered`, and the shell takes the left
+  region `Offstage` (state kept, nothing painted); when closing starts `covered` is cleared in the same frame. Under reduced motion
+  both are instant. The overlay is pointer-opaque and gives focus back to what had it before. The screen has its own `Scaffold`,
+  so toasts show on top of it.
+- **Closing**: the chevron, Esc (handled inside the screen's focus scope, before the history input), the mouse Back button and
+  Esc with no focus (`interceptBack`), a location change (`DesktopShell` closes the panel after the frame), the shell turning mobile
+  (`AppShell` closes the panel and pushes the mobile page once, guarded by a flag; `DesktopShell.dispose` does nothing).
+  Widening with the mobile page open is the page's job (see Now Playing mobile).
+- **Screen** (`screens/now_playing/ui/desktop/`): `DesktopNowPlaying` (focus, Esc, `V`, tint, transparent `Scaffold`) over
+  `DesktopNowPlayingBody` (auto-hiding header, then the split or the side pane alone, 300 ms cross-fade, the outgoing body ignores
+  pointer and focus). `V` flips the cover column only with no modifier, no menu open and no text field focused; the choice lives in
+  `coverColumnShownProvider` for the session.
+- **Header** (`desktop_now_playing_header.dart`, 64 dp): `[⌄] [cover column] | [♥] [add to playlist, soon] [Translate chip, soon]`
+  and `[repeat] [sleep timer, soon] [volume] [⋮]`. No Shuffle, no window buttons. The ⋮ menu (`desktop_more_menu.dart`) is the head row
+  plus the shared items; while it is open the header stays shown (`floatingOpen`). `now_playing_auto_hide.dart` is the old controller
+  as it was: hides after 3 s still, shows on a move (throttled to 300 ms) or any key, pinned while the pointer is on the header or the
+  track column or a menu is open, hidden at once when the pointer leaves the window.
+- **Split geometry** (`kanaru_ui` `now_playing_split_geometry.dart`, `now_playing_split_layout.dart`): column 42 % of the body clamped
+  to 300..600; padding 24 / 16; cover side = min(column inner width, 500, body height - reserve - padding), at least 96; gaps 24 / 16 / 8;
+  transport row 52; the text reserve counts two title lines (26 bold), an artist line and an album line under the text scale. The
+  reserve is fixed, so a wrapping title or a late album moves nothing; a window too short even for 96 scales the block down
+  (`FittedBox`). `DesktopTrackColumn` draws cover (radius 32, shadow), title, artist and album lines (each a link to the library),
+  the 48 dp seek slot, and elapsed | previous, play, next | total.
+- **Side pane** (`desktop_side_pane.dart`): only the lyrics, titled like one tab with no other tab; the body is a "coming soon"
+  placeholder. The queue is not here: it is the shell's right panel (see UI: widgets and shell). The player bar's Lyrics, cover and
+  expand buttons open the screen.
+- **Queue nav item**: a dimmed "Coming soon" on both shells (saved queues, no mockup yet). The live queue is the right panel (desktop;
+  top bar or player bar button) and the sheet (mobile; mini player long press, Queue button of Now Playing).
+- **Left out of the port**: the cover-only mode, the lyrics keys `L` and `T`, the narrow tabs layout (it is the mobile page).
+- **Waveform**: not yet; `NowPlayingSeekSlot` draws the flat `KSeekBar` in the 48 dp slot.
 
 ## Rules lane B keeps
 
