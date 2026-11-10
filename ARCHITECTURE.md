@@ -146,10 +146,12 @@ abstract interface class KanaruExtension {
 ```
 
 `ExtensionRegistry` holds only list-like extension points (something is added
-to a list): routes, nav items, settings sections, top bar actions, startup
-hooks, flush hooks, l10n delegates and the one license service. It throws
-`StateError` on a duplicate extension id, route path, nav id or path, settings
-section id, top bar action id, or a second license service. More points are
+to a list): routes, nav items, settings sections, top bar actions, panel
+surfaces (content of the desktop right panel, looked up by id; `'chat'` is the
+AI chat), startup hooks, flush and before-exit hooks, l10n delegates and the
+one license service. It throws `StateError` on a duplicate extension id, route
+path, nav id or path, settings section id, top bar action id, panel surface
+id, or a second license service. More points are
 added together with the module that uses them. The registry is not for
 composing UI between public modules; those use the DAG.
 

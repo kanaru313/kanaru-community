@@ -15,6 +15,7 @@ class ExtensionRegistry {
   final _navItems = <NavItem>[];
   final _settingsSections = <SettingsSection>[];
   final _topBarActions = <TopBarAction>[];
+  final _panelSurfaces = <PanelSurface>[];
   final _startupHooks = <StartupHook>[];
   final _flushHooks = <FlushHook>[];
   final _beforeExitHooks = <FlushHook>[];
@@ -39,6 +40,17 @@ class ExtensionRegistry {
 
   List<TopBarAction> get topBarActions =>
       _byOrder(_topBarActions, (a) => a.order);
+
+  List<PanelSurface> get panelSurfaces =>
+      _byOrder(_panelSurfaces, (p) => p.order);
+
+  /// The surface registered under [id], or null.
+  PanelSurface? panelSurface(String id) {
+    for (final p in _panelSurfaces) {
+      if (p.id == id) return p;
+    }
+    return null;
+  }
 
   List<StartupHook> get startupHooks => List.unmodifiable(_startupHooks);
   List<FlushHook> get flushHooks => List.unmodifiable(_flushHooks);
@@ -120,6 +132,14 @@ class ExtensionRegistry {
       throw StateError('Duplicate top bar action id "${action.id}"');
     }
     _topBarActions.add(action);
+  }
+
+  /// Throws [StateError] for a second surface with the same id.
+  void addPanelSurface(PanelSurface surface) {
+    if (_panelSurfaces.any((p) => p.id == surface.id)) {
+      throw StateError('Duplicate panel surface id "${surface.id}"');
+    }
+    _panelSurfaces.add(surface);
   }
 
   void addStartupHook(StartupHook hook) => _startupHooks.add(hook);
