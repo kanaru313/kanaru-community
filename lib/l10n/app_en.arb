@@ -25,6 +25,167 @@
   "appAiChat": "AI chat",
   "appSearch": "Search",
   "appRescan": "Rescan library",
+  "scanSetupWelcomeTitle": "Welcome to Kanaru",
+  "scanSetupWelcomeSubtitle": "A few basics to set up. You can change them in Settings at any time.",
+  "scanSetupPermissionsTitle": "Permissions",
+  "scanSetupPermissionAudioTitle": "Music and audio",
+  "scanSetupPermissionAudioSubtitle": "Find and play songs on the device, read .lrc lyrics",
+  "scanSetupPermissionImagesTitle": "Photos and videos",
+  "scanSetupPermissionImagesSubtitle": "Only to read cover art (cover.jpg) in music folders. Kanaru does not look at your photos or videos.",
+  "scanSetupPermissionAllowedLabel": "Allowed",
+  "scanSetupPermissionMissingLabel": "Not allowed",
+  "scanSetupPermissionsGranted": "All permissions allowed · Music and audio · Photos and videos",
+  "scanSetupGrant": "Allow",
+  "scanSetupGrantMissing": "Allow the missing permission",
+  "scanSetupOpenAppSettings": "Open app settings",
+  "scanSetupPermissionNote": "Both are needed to continue. Kanaru does not ask for “All files access”.",
+  "scanSetupPermissionBlockedNote": "Android will not ask again because the permission was denied several times. Turn on both permissions in Settings › Apps › Kanaru › Permissions, then come back here.",
+  "scanSetupAudioDenied": "Music permission is needed to find songs on the device.",
+  "scanSetupImagesDenied": "Photos permission is needed to read cover art in music folders.",
+  "scanSetupImagesLimited": "Choosing only some photos cannot read cover.jpg: choose “Allow all”.",
+  "scanSetupAppearanceTitle": "Appearance",
+  "scanSetupThemeLabel": "Theme",
+  "scanSetupLanguageLabel": "Language",
+  "scanSetupThemeSystem": "Follow system",
+  "scanSetupThemeDark": "Dark",
+  "scanSetupThemeLight": "Light",
+  "scanSetupLanguageVietnamese": "Tiếng Việt",
+  "scanSetupLanguageEnglish": "English",
+  "scanSetupTabsTitle": "Library tabs",
+  "scanSetupTabsHint": "Turn on the tabs you want, drag to reorder. At least one tab stays on.",
+  "scanSetupTabShow": "Show the {tab} tab",
+  "@scanSetupTabShow": {
+    "placeholders": {
+      "tab": {
+        "type": "String"
+      }
+    }
+  },
+  "scanSetupTabDrag": "Drag to reorder",
+  "scanSetupTabLocked": "At least one tab stays on",
+  "scanSetupFoldersTitle": "Music folders",
+  "scanSetupFoldersHint": "Kanaru scans these folders and everything inside them.",
+  "scanSetupFoldersHintCount": "Kanaru scans these folders · about {count, plural, =1{1 song} other{{count} songs}}",
+  "@scanSetupFoldersHintCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanSetupFoldersNeedPermission": "Allow music access to see the folders that have music.",
+  "scanSetupFoldersEmpty": "No folder chosen yet.",
+  "scanSetupFoldersNoSystemMusic": "Kanaru could not find the system Music folder. Add the folder that holds your music.",
+  "scanSetupAddFolder": "Add folder",
+  "scanSetupAddFolderDialog": "Add folder…",
+  "scanSetupFolderSuggested": "Suggested",
+  "scanSetupFolderRemove": "Remove {name}",
+  "@scanSetupFolderRemove": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scanSetupFolderSongs": "{count, plural, =1{1 song} other{{count} songs}}",
+  "@scanSetupFolderSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanSetupFolderPickerTitle": "Add music folders",
+  "scanSetupFolderPickerHint": "Folders with music that Android found.",
+  "scanSetupFolderPickerEmpty": "Every folder with music is already chosen.",
+  "scanSetupSheetAdd": "Add",
+  "scanSetupSheetAddCount": "Add {count}",
+  "@scanSetupSheetAddCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanSetupSheetCancel": "Cancel",
+  "scanSetupExclusionsTitle": "Excluded",
+  "scanSetupExclusionsHint": "Skip these sub-folders when scanning (ringtones, recordings…).",
+  "scanSetupExclusionsEmpty": "No folder excluded.",
+  "scanSetupAddExclusion": "Add excluded folder",
+  "scanSetupAddExclusionDialog": "Add excluded folder…",
+  "scanSetupExclusionPickerTitle": "Exclude folders",
+  "scanSetupExclusionPickerHint": "Sub-folders of the music folders you chose.",
+  "scanSetupExclusionPickerEmpty": "There are no sub-folders to exclude.",
+  "scanSetupRefusedAlreadyChosen": "“{folder}” is already chosen.",
+  "@scanSetupRefusedAlreadyChosen": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanSetupRefusedInside": "“{folder}” is already inside “{root}”.",
+  "@scanSetupRefusedInside": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      },
+      "root": {
+        "type": "String"
+      }
+    }
+  },
+  "scanSetupRefusedContains": "“{folder}” contains “{root}”, which is already chosen.",
+  "@scanSetupRefusedContains": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      },
+      "root": {
+        "type": "String"
+      }
+    }
+  },
+  "scanSetupRefusedTooBroad": "“{folder}” is too broad to scan.",
+  "@scanSetupRefusedTooBroad": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanSetupRefusedNotFolder": "“{folder}” is not a folder.",
+  "@scanSetupRefusedNotFolder": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanSetupRefusedOutside": "“{folder}” is not inside a music folder.",
+  "@scanSetupRefusedOutside": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanSetupRefusedAlreadyExcluded": "“{folder}” is already excluded.",
+  "@scanSetupRefusedAlreadyExcluded": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "scanSetupWriteFailed": "Could not save that change. Try again.",
+  "scanSetupNext": "Continue",
+  "scanSetupNextDisabled": "Add at least one music folder",
+  "scanSetupLoadFailed": "Could not load this section.",
+  "scanSetupRetry": "Try again",
+  "scanVolumeInternal": "Internal storage",
+  "scanVolumeSdCard": "SD card",
+  "scanVolumeUsb": "USB drive",
   "playbackCover": "Cover art",
   "playbackNavQueue": "Queue",
   "libraryTabSongs": "Songs",

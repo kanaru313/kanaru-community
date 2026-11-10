@@ -206,28 +206,80 @@ file fails it; `UPDATE_FIXTURES=1 cargo test` rewrites it); a Dart test compares
 
 ## Scan status as produced
 
-`lib/src/library/domain/scan_status.dart` declares the values; lane A implements
-`scanStatusProvider` and `libraryScanCommandsProvider` (declarations frozen,
-bodies lane A's). The seed emits `ScanIdle` and logs `rescan` calls.
+`lib/src/library/domain/scan_status.dart` declares the values (frozen).
+`scanStatusProvider` is the controller's `status` stream and
+`libraryScanCommandsProvider` is the controller itself
+(`lib/src/library/state/scan/scan_controller.dart`).
 
-- `ScanRunning(phase, done, total)` with `phase` `listing`, `tags` or `covers`,
-  at most about every 300 ms.
-- `ScanFinished(...)` at the end, with totals and `added`.
-- `ScanFailed(kind)` on an error (`permission`, `io`, ...). Failures never throw
-  out of `rescan`.
-- `rescan({bool full = false})` completes when the request is accepted or
-  queued, and absorbs requests while a scan runs. The shell's Rescan button calls it.
+- `ScanRunning(phase, done, total)`: `listing` (0 of 0) when a scan starts,
+  then `tags` (files to read) and `covers` (tracks that need a cover). Counts
+  are per phase and sum over the music folders; `done` is counted after each
+  batch. A reader maps `tags` to the first half of a bar and `covers` to the
+  second, so the bar never goes back. Published at most once per 300 ms; the
+  newest progress is always delivered (a timer at the end of the interval),
+  and a final state goes out at once. A new listener first gets the latest
+  value.
+- `ScanFinished(tracks, albums, artists, added, at)`: counts of the visible
+  library (present tracks, distinct albums with both keys, distinct artists of
+  those tracks). `added` is summed over a scan and the follow-up pass that
+  absorbed requests made while it ran.
+- `ScanFailed(kind)`, `kind` one of `permission` (Android without audio
+  access), `native_timeout` (a native call is stuck, or a stuck folder was
+  skipped), `native_unavailable` (the Rust library did not answer), `io`
+  (database or file trouble). Failures never throw out of `rescan`. A folder
+  whose pass fails does not stop the other folders; the first failure kind of
+  the scan is the one published.
+- `rescan({full})` is ignored (logged) while `library.setup_done` is false,
+  otherwise it completes at once. While a scan runs, any number of requests
+  become one follow-up pass (`full` is or-ed). Cover re-extraction for keys
+  that `coverMissesProvider` reports runs as a quiet job through the same
+  queue (no status): keys are collected, debounced 2 s, then `reExtractCovers`.
+- A scan is quiet unless it has work: the Home card (lane A) shows
+  only `ScanRunning` in `tags` or `covers` with `total > 0`, and the summary
+  only when `added > 0` and `at` is under 10 s old.
+
+### Scheduling
+
+- The controller is `scanControllerProvider`. It watches only
+  `appDatabaseProvider` and `appPathsProvider`; settings, permissions, the
+  catalog and the Rust ports are read when a pass starts, so a settings
+  change (for example `completeSetup`) never rebuilds it mid-scan. Creating it
+  starts no timer and does no I/O.
+- `ensureStartupWork()` is called once by Home after its first frame. With
+  setup done and no scan requested in this session it scans 2 s later and
+  collects orphan tracks at 12 s (or right after the scan, when that is still
+  running). With setup not done it starts nothing. Known coupling: the trigger
+  depends on Home being built; a future "restore last tab" must call it too.
+- One pass at a time. After each completed scan the controller publishes
+  `ScanFinished` and then runs `runTrackGc` (which never throws). A pass that
+  fails or is stopped publishes `ScanFailed` or nothing and collects nothing.
+- Stuck native calls: a tag call past 90 s marks that music folder stuck
+  (`ScanSession.stuck`): it is skipped, with no reads and no missing marks,
+  until the pending call returns; other folders keep scanning. A cover call
+  past 60 s marks the cover pass (`ScanSession.coversKey`). When the pending
+  call returns, the mark clears and one automatic scan runs, once per folder
+  or kind per session (an automatic scan arms nothing further).
+- Dispose sets a flag checked before every batch; a running pass ends without
+  further writes and publishes nothing.
+- Session memory (`ScanSession`): short files already seen, track ids whose
+  cover failed, cover keys with no colours, stuck marks. The pass is
+  `runScanPass` in `library/data/scan/scan_pipeline.dart`: permission check
+  (Android: audio must be granted; images only decide `sidecars`), per folder
+  exclusions, listing, tag pass (folders whose pass finished are collected),
+  then one cover pass over those folders, then the counts. Database errors of
+  a folder end that folder with `io`.
 
 ## First run
 
 `lib/src/screens/first_run/state/first_run_gate.dart`:
 
-- `firstRunRequiredProvider` (`Provider<bool>`): true until the setting
-  `library.setup_done` is set (key owned by lane A). Seed: `false`.
+- `firstRunRequiredProvider` (`Provider<bool>`): `!setupDoneProvider`, true
+  until the setting `library.setup_done` is written.
 - `firstRunPath` is `/welcome`. While the gate is true, the router redirects
   every location there. The route is registered from
   `screens/first_run/first_run_registration.dart`. If the gate is true and no
-  route serves `/welcome`, the router throws `StateError` when it builds.
+  route serves `/welcome`, the router throws `StateError` when it builds. The
+  route is top level (outside the shell) and serves `FirstRunPage`.
 - Media permissions state: `MediaPermissions` (`platform/domain/media_permissions.dart`,
   provider `mediaPermissionsProvider`) reports `audio` and `images` as
   `granted`, `denied`, `permanentlyDenied`, `limited` or `notApplicable`.
@@ -244,6 +296,80 @@ bodies lane A's). The seed emits `ScanIdle` and logs `rescan` calls.
   `READ_MEDIA_VISUAL_USER_SELECTED` (Android 14 partial access counts as not
   granted), `READ_EXTERNAL_STORAGE` up to SDK 32. Never
   `MANAGE_EXTERNAL_STORAGE`. `POST_NOTIFICATIONS` is not declared.
+
+Settings of the scanner (`library/state/scan/scan_settings.dart`):
+`library.setup_done` (false), `library.skip_short_tracks` (true; files under
+30 s are not scanned; no screen yet) and `library.setup_defaults_applied`
+(false; the defaults are added once, so removing `Music` later does not bring
+it back).
+
+### Music folders
+
+`MusicFolderEditor` (`library/state/scan/music_folder_editor.dart`, provider
+`musicFolderEditorProvider`) is the write side of music folders and their
+exclusions. Every call returns a value and never throws; the screen resets its
+buttons in `finally`.
+
+- `addFolder(path, {fromCatalog})`: the path is canonicalised through the
+  catalog (not for a path the catalog itself listed, such as a MediaStore
+  folder, which is only normalised), must be a folder, and is checked against
+  the live roots with `checkNewRoot`. Results: `FolderAdded(revived)`,
+  `FolderAlreadyChosen`, `FolderTooBroad`, `FolderInsideExisting(root)`,
+  `FolderContainsExisting(root)`, `FolderNotADirectory`, `FolderWriteFailed`.
+  The write (`addLocalSource`) is one transaction: a plain insert of `sources`
+  (kind `local`, ULID uid, name = folder name) and `source_mounts`; a root that
+  was chosen before keeps its source id and returns through `reviveSource`
+  (its tracks come back `missing` for the next scan; removed exclusions stay
+  removed).
+- `removeFolder(folder)`: one transaction, `removeFolderExclusion` for every
+  live exclusion of the source, then `removeSource`.
+- `excludeFolder(folder, path)` / `excludeInAnyFolder(folders, path)`: the
+  parent of the path is canonicalised and the last part joined back (the leaf
+  link is not followed). The path must be strictly inside a chosen folder;
+  the folder key is the relative path and `display_path` stores the absolute
+  path (the screen shortens it with `folderDisplayPathOf`). Results:
+  `excluded`, `outsideFolder`, `alreadyExcluded`, `writeFailed`.
+  `includeFolder` undoes it (and asks for a scan, ignored before setup).
+- `applyFirstRunDefaults()`: once, only when audio may be read and no folder
+  is chosen. The flag is set before anything is written. Linux adds the XDG
+  music folder (shown with a "Suggested" badge while a root equals it).
+  Android adds `<internal>/Music` when MediaStore has audio in it and
+  excludes its direct `Ringtones`, `Notifications` and `Alarms` folders that
+  have audio (any letter case).
+- Android lists: `folderCandidates()` (MediaStore folders not chosen, not
+  inside or containing a chosen one), `exclusionCandidates()` (strictly inside
+  a chosen folder, not excluded), `estimatedTrackCount()` and `subtreeCounts()`
+  (counts from the catalog's pre-filtered numbers minus excluded subtrees;
+  null on Linux). Providers in `folder_candidates_provider.dart` refresh after
+  each edit (`folderEditsProvider`) and when `musicFoldersProvider` changes.
+
+### The screen
+
+`FirstRunPage` (`screens/first_run/ui/`), one scrolling column (at most 640
+wide): header, permissions (only where `MediaPermissionState.applies`),
+appearance, library tabs, music folders, exclusions, and the floating arrow
+(`SetupNextButton`). Shell differences come from the platform, not from the
+width: the permission group from `MediaPermissionState.applies`, the folder
+dialog or MediaStore sheet from `LocalAudioCatalog.folderChoice`.
+
+- Every choice is written at once (folders, exclusions, theme, language,
+  tabs), so reopening the page mid-setup shows the earlier choices.
+- Permissions: `mediaPermissionStateProvider` (`AsyncNotifier`) holds the
+  state; `request()` asks for audio and, once audio is granted, for images.
+  The page re-reads the state when the app returns to the foreground
+  (page-local `AppLifecycleListener`). A permanent denial is kept by the
+  Android class until a read shows anything but `denied`, so "Open app
+  settings" survives that read. Photos "limited" is not granted and explains
+  why in a snackbar.
+- The arrow: Android shows it (scale-in) only with both permissions and at
+  least one folder; Linux always shows it, dimmed with a tooltip until a folder
+  exists. `completeSetup` reads its dependencies before any await (setting
+  `library.setup_done` re-runs the router redirect and disposes the page),
+  sets the flag, requests the scan, awaits the write and flushes the settings.
+  Home's `ensureStartupWork` then sees the requested scan and schedules no
+  second one.
+- Each list switches on `AsyncValue`: a short spinner, an error line with
+  "Try again", the empty note, or the rows.
 
 ## Scan pipeline
 
