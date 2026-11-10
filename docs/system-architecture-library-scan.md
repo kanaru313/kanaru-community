@@ -390,12 +390,13 @@ Dart wrapper: `lib/src/library/data/scan/native_cover_import.dart`
   image bytes (the same key an embedded picture with those bytes gets). Both files
   are always written again, so importing the same image repairs a damaged file.
   `outDir` is never the data root and never the cache folder.
-- Status: the call and its Dart wrapper exist and are tested, but no caller uses them
-  yet. The custom cover store (`CustomCoverStore`) still copies the chosen file as it
-  is to `<data>/custom_covers/<key>.<ext>` (key = SHA-256 of the bytes), and its
-  cleanup (below) looks only at files directly in that folder. A caller of this call
-  must pick an `outDir` outside that folder, or extend the cleanup to the `covers/`
-  subtree it would create.
+- Status: `CustomCoverStore` is the caller. It passes `outDir = <data>/custom_covers`,
+  writes the colours into `cover_colors` and the row in `custom_covers` in the same
+  serial step as the import, and its cleanup walks `covers/{thumb,full}/<shard>/` of
+  that folder (see the database doc, `custom_covers`). Failures map to Dart
+  exceptions: permanent = `FormatException`, transient, `permissionDenied` and a 60 s
+  timeout = `FileSystemException`. The scan controller waits at most 30 s for the
+  store's GC (`coverGcTimeout`), so a stuck import never holds the scan loop.
 - `colors`: seed and palette as in Cover colours; null (with `key` set) for a
   near-gray image (chroma below 5).
 - Errors: transient for I/O (`io`) and for failing to write under `outDir`
@@ -504,8 +505,8 @@ after each completed scan.
 
 Right after it the controller removes custom cover files
 (`customCoverControllerProvider.collectUnreferencedFiles()`): files in
-`<data>/custom_covers/` that no `custom_covers` row refers to, and leftover temp files,
-when older than one hour. A failure there is logged and never fails the scan.
+`<data>/custom_covers/covers/{thumb,full}/` that no `custom_covers` row refers to, and
+leftover native temp files older than one hour. A failure there is logged and never fails the scan.
 
 ## Scheduling
 
