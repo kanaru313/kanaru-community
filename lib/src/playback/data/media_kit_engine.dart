@@ -5,6 +5,7 @@ import 'package:media_kit/media_kit.dart';
 
 import '../domain/audio_engine.dart';
 import 'leaked_start.dart';
+import 'load_failure_guard.dart';
 import 'mpv_options.dart';
 import 'mpv_playlist_tracker.dart';
 
@@ -179,26 +180,33 @@ class MediaKitEngine implements AudioEngine, MpvProperties {
     EngineMedia? next,
     required bool play,
     Duration start = Duration.zero,
-  }) => _run(() async {
-    await _start();
-    _tracker.reset();
-    _afterEnd = false;
-    _resumeStart = start;
-    _wantPlay = play;
-    await _player.open(
-      Media(
-        Uri.file(current.path).toString(),
-        start: start > Duration.zero ? start : null,
-      ),
-      play: false,
-    );
-    final id = await _idOfIndex(0);
-    if (id == null) throw StateError('mpv has no entry after open');
-    _tracker.startLoad(current.token, id);
-    await _setNext(next);
-    if (play) await _player.play();
-    await _poll();
-  });
+  }) => _run(
+    () => guardLoad(
+      current: current,
+      emit: (e) => _emit([e]),
+      onFailed: _tracker.reset,
+      body: () async {
+        await _start();
+        _tracker.reset();
+        _afterEnd = false;
+        _resumeStart = start;
+        _wantPlay = play;
+        await _player.open(
+          Media(
+            Uri.file(current.path).toString(),
+            start: start > Duration.zero ? start : null,
+          ),
+          play: false,
+        );
+        final id = await _idOfIndex(0);
+        if (id == null) throw StateError('mpv has no entry after open');
+        _tracker.startLoad(current.token, id);
+        await _setNext(next);
+        if (play) await _player.play();
+        await _poll();
+      },
+    ),
+  );
 
   @override
   Future<void> setNext(EngineMedia? next) => _run(() => _setNext(next));

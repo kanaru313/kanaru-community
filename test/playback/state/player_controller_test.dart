@@ -218,6 +218,61 @@ void main() {
       ]);
     });
 
+    group('position ticks around a seek', () {
+      late Completer<void> gate;
+      late Future<void> seek;
+
+      // Not h.pumpTicks()/settle(): they wait for the chain, which the
+      // pending seek holds.
+      Future<void> letEventsRun() async {
+        for (var i = 0; i < 5; i++) {
+          await Future<void>.delayed(Duration.zero);
+        }
+      }
+
+      Future<void> startSeek(Duration to) async {
+        await h.play();
+        await h.settle();
+        h.engine.emit(
+          EngineLoaded(h.loadedToken, const Duration(seconds: 200)),
+        );
+        await h.settle();
+        h.engine.tickPosition(const Duration(seconds: 10));
+        await h.settle();
+        gate = Completer<void>();
+        h.engine.seekGate = gate.future;
+        seek = h.c.seek(to);
+        await letEventsRun();
+      }
+
+      test('an old tick while the seek is in flight is dropped', () async {
+        await startSeek(const Duration(seconds: 120));
+        h.engine.tickPosition(const Duration(seconds: 11));
+        await letEventsRun();
+        gate.complete();
+        await seek;
+        await h.settle();
+        expect(h.settings.read('playback.position_ms'), 120000);
+        h.engine.tickPosition(const Duration(seconds: 12));
+        await h.settle();
+        h.engine.tickPosition(const Duration(seconds: 120, milliseconds: 400));
+        await h.settle();
+        final p = await h.c.position.first;
+        expect(p.position, const Duration(seconds: 120, milliseconds: 400));
+      });
+
+      test('a seek that never lands does not freeze the position', () async {
+        await startSeek(const Duration(seconds: 120));
+        gate.complete();
+        await seek;
+        h.now += 3500;
+        h.engine.tickPosition(const Duration(seconds: 15));
+        await h.settle();
+        final p = await h.c.position.first;
+        expect(p.position, const Duration(seconds: 15));
+      });
+    });
+
     test('volume is clamped, stored and sent', () async {
       await h.play();
       await h.settle();

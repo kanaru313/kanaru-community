@@ -70,6 +70,7 @@ extension _Reconcile on PlayerController {
               !_enginePlaying) {
             return;
           }
+          if (_staleAfterSeek(p)) return;
           _position = p;
           _saver.observe(
             entryId: _queue.currentItem?.entryId,
@@ -90,6 +91,22 @@ extension _Reconcile on PlayerController {
     });
     unawaited(engine.setVolume(_volume.toDouble()));
     return engine;
+  }
+
+  /// True for a tick that predates the last seek: the seek is still in
+  /// flight, the tick is far from its target and the guard has not run out.
+  /// A tick near the target, a new file or the deadline ends the guard.
+  bool _staleAfterSeek(Duration tick) {
+    final target = _seekTarget;
+    if (target == null) return false;
+    if (_seekFile != _loaded ||
+        _nowMs() > _seekDeadlineMs ||
+        (tick - target).abs() <= PlayerController._seekLanded) {
+      _seekTarget = null;
+      _seekFile = null;
+      return false;
+    }
+    return true;
   }
 
   Future<void> _reconcile() async {

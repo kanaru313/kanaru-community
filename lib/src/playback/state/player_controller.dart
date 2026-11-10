@@ -95,6 +95,17 @@ class PlayerController implements PlaybackCommands {
   PlayContext? _context;
   Duration _position = Duration.zero;
 
+  /// Where the last seek was sent, the file it was sent to and when the
+  /// guard against older position ticks ends. Until the engine reports a
+  /// tick near the target (or the deadline passes) a tick far from it is a
+  /// leftover from before the seek and is dropped; the deadline keeps a seek
+  /// that never lands from freezing the position.
+  Duration? _seekTarget;
+  EngineToken? _seekFile;
+  int _seekDeadlineMs = 0;
+  static const _seekGuard = Duration(seconds: 3);
+  static const _seekLanded = Duration(seconds: 1);
+
   /// Where the next load starts. Commands set it; the live [_position] never
   /// feeds a load, so a tick of the old file cannot leak into the new one.
   Duration _startAt = Duration.zero;
@@ -469,9 +480,13 @@ class PlayerController implements PlaybackCommands {
     _atEnd = false;
     if (_loaded != null) {
       _thaw();
+      _seekTarget = p;
+      _seekFile = _loaded;
+      _seekDeadlineMs = _nowMs() + _seekGuard.inMilliseconds;
       await _engine?.seek(p);
     }
-    _saveNow();
+    // The target, not whatever tick came in while the seek was in flight.
+    _saver.save(p);
     if (!_seekCtrl.isClosed) _seekCtrl.add(p);
   }
 

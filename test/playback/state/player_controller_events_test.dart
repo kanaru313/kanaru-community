@@ -190,6 +190,27 @@ void main() {
     expect(h.engine.loads.single.path, '/music/t2.mp3');
   });
 
+  test('a load that throws in the engine posts a notice and skips', () async {
+    h.engine.loadError = StateError('open failed');
+    await h.play();
+    await h.settle();
+    expect(h.notices.whereType<TrackFailed>().first.title, 'T0');
+    expect(h.engine.loads.length, greaterThan(1), reason: 'moved on');
+    expect(h.c.queueState.current, greaterThan(0));
+  });
+
+  test('every load failing stops at the failure cap', () async {
+    h.engine.loadError = StateError('open failed');
+    await h.play();
+    await h.settle();
+    expect(h.c.intent, PlayIntent.stopped);
+    expect(h.engine.loads, hasLength(h.c.queueState.length));
+    expect(
+      h.notices.whereType<TrackFailed>(),
+      hasLength(h.c.queueState.length),
+    );
+  });
+
   test('a failed entry posts a notice and the queue moves on', () async {
     await h.play();
     await h.settle();

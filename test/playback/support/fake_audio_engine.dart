@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:kanaru/src/playback/data/load_failure_guard.dart';
 import 'package:kanaru/src/playback/domain/audio_engine.dart';
 
 /// A scripted [AudioEngine]: records every command, and a test pushes events
@@ -12,6 +13,14 @@ class FakeAudioEngine implements AudioEngine {
   bool lastLoadPlay = false;
   bool disposed = false;
   Future<void>? loadGate;
+
+  /// Holds `seek` open, so a test can emit ticks while a seek is in flight.
+  Future<void>? seekGate;
+
+  /// When set, `load` throws it after recording the call, the way an engine
+  /// whose open fails does; the failure is reported through the same guard
+  /// the real engine uses.
+  Object? loadError;
   final _events = StreamController<EngineEvent>.broadcast();
   final _position = StreamController<Duration>.broadcast();
   final _playing = StreamController<bool>.broadcast();
@@ -31,7 +40,16 @@ class FakeAudioEngine implements AudioEngine {
     nexts.add(next);
     lastStart = start;
     lastLoadPlay = play;
-    await loadGate;
+    await guardLoad(
+      current: current,
+      emit: _events.add,
+      onFailed: () {},
+      body: () async {
+        await loadGate;
+        final error = loadError;
+        if (error != null) throw error;
+      },
+    );
   }
 
   @override
@@ -50,8 +68,10 @@ class FakeAudioEngine implements AudioEngine {
   Future<void> stop() async => commands.add('stop');
 
   @override
-  Future<void> seek(Duration position) async =>
-      commands.add('seek:${position.inMilliseconds}');
+  Future<void> seek(Duration position) async {
+    commands.add('seek:${position.inMilliseconds}');
+    await seekGate;
+  }
 
   @override
   Future<void> setVolume(double volume0to100) async =>

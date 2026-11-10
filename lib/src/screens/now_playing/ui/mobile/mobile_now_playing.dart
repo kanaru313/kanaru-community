@@ -181,7 +181,6 @@ class _Cover extends ConsumerWidget {
       ),
     );
     final (entryId, index, length) = place;
-    final controller = ref.read(playerControllerProvider);
     // Repeat all wraps the last entry to the first, like the Next button.
     final wraps = ref.watch(repeatSettingProvider) == RepeatMode.all;
     final trackId = ref.watch(
@@ -196,8 +195,8 @@ class _Cover extends ConsumerWidget {
       hasNext:
           index != null &&
           ((wraps && (length ?? 0) > 1) || index < (length ?? 0) - 1),
-      onPrevious: controller.previous,
-      onNext: controller.next,
+      onPrevious: () => ref.read(playerControllerProvider).previous(),
+      onNext: () => ref.read(playerControllerProvider).next(),
       child: NowPlayingCoverBox(
         builder: (context, side) => FlightPieceHost(
           source: flight,
