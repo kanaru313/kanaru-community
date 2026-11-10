@@ -390,8 +390,7 @@ mod tests {
     }
 
     #[test]
-    fn a_read_failure_after_open_is_a_retry_not_no_cover() {
-        // Reading a directory handle fails with EISDIR after a successful open.
+    fn a_directory_is_skipped_and_an_io_error_maps_to_retry() {
         let dir = std::env::temp_dir();
         let open_dir = |p: &Path| File::open(p).map_err(MediaError::from);
         // A directory is not a regular file: skipped, not retried.

@@ -187,10 +187,19 @@ fn relative_cache_error() -> NativeError {
     )
 }
 
+/// Start of the `detail` of every cache failure. The Dart scanner reads it
+/// (`coverCacheErrorPrefix` in `native_cover_maker.dart`) to end the cover
+/// pass early, so changing it needs the Dart constant changed too.
+const CACHE_DETAIL_PREFIX: &str = "cover cache";
+
 /// Any error writing under the cache folder is transient, whatever its kind:
 /// the cover is fine, the folder is not.
 fn cache_error(e: &std::io::Error) -> NativeError {
-    NativeError::new(NativeErrorKind::Io, format!("cover cache: {e}"), true)
+    NativeError::new(
+        NativeErrorKind::Io,
+        format!("{CACHE_DETAIL_PREFIX}: {e}"),
+        true,
+    )
 }
 
 /// Runs `work` for every item on the background pool. Items are grouped by
@@ -254,7 +263,7 @@ fn run_item(
             item.track_id,
             NativeError::new(
                 NativeErrorKind::Io,
-                "cover cache is not writable; item skipped",
+                format!("{CACHE_DETAIL_PREFIX} is not writable; item skipped"),
                 true,
             ),
         );
@@ -497,6 +506,29 @@ mod tests {
             .error
             .as_ref()
             .is_some_and(|e| e.detail.contains("cover cache")));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /// The Dart scanner matches this literal; both cache failure details must
+    /// keep starting with it.
+    #[test]
+    fn cache_failure_details_start_with_the_prefix_dart_matches() {
+        assert_eq!(CACHE_DETAIL_PREFIX, "cover cache");
+        let first = cache_error(&std::io::Error::from(std::io::ErrorKind::PermissionDenied));
+        assert!(first.detail.starts_with("cover cache"), "{first:?}");
+        let dir = temp_dir("cacheprefix");
+        let items: Vec<_> = (0..2)
+            .map(|i| request(i, &dir.join(format!("{i}.mp3"))))
+            .collect();
+        let out = run_batch(items, |_, _| {
+            Err(Failure::Cache(cache_error(&std::io::Error::from(
+                std::io::ErrorKind::PermissionDenied,
+            ))))
+        });
+        for r in &out {
+            let err = r.error.as_ref().expect("error");
+            assert!(err.detail.starts_with("cover cache"), "{err:?}");
+        }
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
