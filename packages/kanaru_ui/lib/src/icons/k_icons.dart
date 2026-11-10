@@ -106,6 +106,7 @@ abstract final class KIcons {
   // First-run setup.
   static const IconData dragIndicator = Icons.drag_indicator;
   static const IconData add = Icons.add;
+  static const IconData remove = Icons.remove;
   static const IconData arrowForward = Icons.arrow_forward;
   static const IconData permission = Icons.lock_open;
   static const IconData permissionMissing = Icons.gpp_maybe_outlined;
