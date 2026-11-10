@@ -19,6 +19,8 @@ void main() {
   late Future<ScanOutcome> Function(ScanSession, ScanHooks, bool full) onPass;
   late List<Set<String>> missJobs;
   late int garbageRuns;
+  late int coverRuns;
+  Object? coverError;
   late StreamController<String> misses;
   late ScanController controller;
   late List<ScanStatus> seen;
@@ -29,6 +31,8 @@ void main() {
     passes = [];
     missJobs = [];
     garbageRuns = 0;
+    coverRuns = 0;
+    coverError = null;
     onPass = (_, _, _) async => _done();
     misses = StreamController<String>.broadcast();
     addTearDown(misses.close);
@@ -43,6 +47,10 @@ void main() {
       },
       isSetupDone: () => setupDone,
       collectGarbage: () async => garbageRuns++,
+      collectCoverFiles: () async {
+        coverRuns++;
+        if (coverError != null) throw coverError!;
+      },
       coverMisses: misses.stream,
       clock: () => timers.now,
       timer: timers.create,
@@ -117,6 +125,37 @@ void main() {
     expect(finished.added, 3);
     expect(finished.tracks, 5);
     expect(garbageRuns, 1);
+  });
+
+  test('custom cover files are cleaned next to the track GC, after a '
+      'completed scan', () async {
+    await controller.rescan();
+    await timers.settle();
+    expect((garbageRuns, coverRuns), (1, 1));
+  });
+
+  test(
+    'a failing cover cleanup is logged and the scan still finishes',
+    () async {
+      coverError = StateError('disk');
+      await controller.rescan();
+      await timers.settle();
+      expect(afterIdle().last, isA<ScanFinished>());
+      expect(coverRuns, 1);
+    },
+  );
+
+  test('no cover cleanup after a failed scan', () async {
+    onPass = (_, _, _) async => ScanOutcome()..failureKind = 'io';
+    await controller.rescan();
+    await timers.settle();
+    expect((garbageRuns, coverRuns), (0, 0));
+  });
+
+  test('the startup run cleans cover files once with the track GC', () async {
+    controller.ensureStartupWork();
+    await timers.advance(const Duration(seconds: 30));
+    expect((garbageRuns, coverRuns), (1, 1));
   });
 
   test('rescan never throws: a throwing pass ends as io', () async {

@@ -37,6 +37,7 @@ class ScanController implements LibraryScanCommands {
     required this.runCoverMisses,
     required this.isSetupDone,
     required this.collectGarbage,
+    this.collectCoverFiles,
     Stream<String>? coverMisses,
     DateTime Function()? clock,
     TimerFactory? timer,
@@ -72,6 +73,10 @@ class ScanController implements LibraryScanCommands {
   /// Reads `library.setup_done` from the store at call time.
   final bool Function() isSetupDone;
   final Future<void> Function() collectGarbage;
+
+  /// Removes custom cover files no row refers to; runs right after
+  /// [collectGarbage], on the same schedule. A failure is logged only.
+  final Future<void> Function()? collectCoverFiles;
   final Duration startupDelay, garbageDelay, missDebounce;
   final DateTime Function() _clock;
   final TimerFactory _timer;
@@ -234,6 +239,11 @@ class ScanController implements LibraryScanCommands {
       await collectGarbage();
     } on Object catch (e, st) {
       _log.severe('garbage collection failed', e, st);
+    }
+    try {
+      await collectCoverFiles?.call();
+    } on Object catch (e, st) {
+      _log.severe('custom cover cleanup failed', e, st);
     }
   }
 

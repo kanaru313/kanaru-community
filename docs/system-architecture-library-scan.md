@@ -251,7 +251,11 @@ file fails it; `UPDATE_FIXTURES=1 cargo test` rewrites it); a Dart test compares
   running). With setup not done it starts nothing. Known coupling: the trigger
   depends on Home being built; a future "restore last tab" must call it too.
 - One pass at a time. After each completed scan the controller publishes
-  `ScanFinished` and then runs `runTrackGc` (which never throws). A pass that
+  `ScanFinished` and then runs `runTrackGc` (which never throws) and, right
+  after it, `customCoverControllerProvider.collectUnreferencedFiles()` (custom
+  cover files no row refers to). The startup timer runs both through the same
+  loop. Each is injected (`collectGarbage`, `collectCoverFiles`) and each
+  failure is caught and logged, so neither can break a scan. A pass that
   fails or is stopped publishes `ScanFailed` or nothing and collects nothing.
 - Stuck native calls: a tag call past 90 s marks that music folder stuck
   (`ScanSession.stuck`): it is skipped, with no reads and no missing marks,

@@ -8,6 +8,7 @@ import '../../../platform/state/platform_providers.dart';
 import '../../../platform/state/settings_providers.dart';
 import '../../../playback/state/cover_providers.dart';
 import '../../../storage/state/local_folder_source_provider.dart';
+import '../custom_cover_providers.dart';
 import '../../data/scan/native_cover_maker.dart';
 import '../../data/scan/native_tag_reader.dart';
 import '../../data/scan/scan_pipeline.dart';
@@ -55,6 +56,8 @@ final scanControllerProvider = Provider<ScanController>((ref) {
     collectGarbage: () async {
       await runTrackGc(db, now: now());
     },
+    collectCoverFiles: () =>
+        ref.read(customCoverControllerProvider).collectUnreferencedFiles(),
     coverMisses: ref.read(coverMissesProvider).misses,
   );
   ref.onDispose(controller.dispose);
