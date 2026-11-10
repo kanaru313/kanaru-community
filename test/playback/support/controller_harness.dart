@@ -12,6 +12,8 @@ import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/playable.dart';
 import 'package:kanaru/src/playback/domain/playback_focus.dart';
 import 'package:kanaru/src/playback/domain/playback_notice.dart';
+import 'package:kanaru/src/playback/data/play_log_writer.dart';
+import 'package:kanaru/src/playback/state/listen_recorder.dart';
 import 'package:kanaru/src/playback/state/player_controller.dart';
 
 import '../../database/support/test_db.dart';
@@ -44,7 +46,7 @@ class Harness {
   Harness._(this.db, this.engine, this.focus, this.settings, this.tracks);
 
   final AppDatabase db;
-  final FakeAudioEngine engine;
+  FakeAudioEngine engine;
   final FakeFocus focus;
   final MemorySettingsStore settings;
   final List<TrackId> tracks;
@@ -53,10 +55,17 @@ class Harness {
   int engineCreations = 0;
   int now = 1000;
 
+  /// The recorder's monotonic clock; tests advance it with the ticks.
+  Duration mono = Duration.zero;
+
   static Future<Harness> create({
     int tracks = 6,
     Duration focusTimeout = const Duration(seconds: 2),
     PlayableResolver Function(PlayableResolver real)? wrapResolver,
+
+    /// Runs after the tracks exist and before the controller is made: put a
+    /// saved session in the database and settings here.
+    Future<void> Function(Harness h)? prepare,
   }) async {
     final db = openTestDb();
     final src = await addSource(db, root: '/music');
@@ -72,24 +81,50 @@ class Harness {
       MemorySettingsStore(),
       ids,
     );
-    h.c = PlayerController(
-      repo: QueueRepository(db),
-      resolver: wrapResolver == null
-          ? LocalPlayableResolver(db)
-          : wrapResolver(LocalPlayableResolver(db)),
-      settings: h.settings,
-      engineFactory: () {
-        h.engineCreations++;
-        return h.engine;
-      },
-      focus: h.focus,
-      titles: DbTrackTitleLookup(db),
-      clock: () => h.now,
-      random: Random(7),
-      focusTimeout: focusTimeout,
-    );
-    h.c.notices.listen(h.notices.add);
+    h._wrapResolver = wrapResolver;
+    h._focusTimeout = focusTimeout;
+    await prepare?.call(h);
+    h._makeController();
     return h;
+  }
+
+  PlayableResolver Function(PlayableResolver real)? _wrapResolver;
+  Duration _focusTimeout = const Duration(seconds: 2);
+
+  void _makeController() {
+    c = PlayerController(
+      repo: QueueRepository(db),
+      resolver: _wrapResolver == null
+          ? LocalPlayableResolver(db)
+          : _wrapResolver!(LocalPlayableResolver(db)),
+      settings: settings,
+      engineFactory: () {
+        engineCreations++;
+        return engine;
+      },
+      focus: focus,
+      titles: DbTrackTitleLookup(db),
+      listens: ListenRecorder(
+        writer: PlayLogWriter(db),
+        deviceId: () => 'test-device',
+        wallClock: () => now,
+        monotonic: () => mono,
+      ),
+      clock: () => now,
+      random: Random(7),
+      focusTimeout: _focusTimeout,
+    );
+    c.notices.listen(notices.add);
+  }
+
+  /// A new controller and engine on the same database and settings, as after
+  /// a restart of the app. The old controller is disposed.
+  Future<void> restart() async {
+    await c.dispose();
+    engine = FakeAudioEngine();
+    engineCreations = 0;
+    notices.clear();
+    _makeController();
   }
 
   Future<void> close() async {

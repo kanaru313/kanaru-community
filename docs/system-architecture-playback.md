@@ -8,8 +8,8 @@
 - Commands and now playing: this file.
 - Queue table and its helpers: this file.
 - Queue model, persistence, playable resolver, play log writer, settings keys: this file.
-- Restore rules: this file.
-- Media controls (MPRIS, `audio_service`): lane B adds the section.
+- Restore, position saves, listens and the exit flush: this file.
+- Media controls (MPRIS, `audio_service`) and audio focus: this file.
 - Android notification icon: `android/app/src/main/res/drawable/ic_stat_kanaru.xml` is the monochrome (white) status-bar icon. `AudioServiceConfig.androidNotificationIcon` must be `'drawable/ic_stat_kanaru'`; the launcher icon is coloured and shows as a grey square in the status bar.
 
 ## Commands
@@ -297,15 +297,17 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
 - **Intent** (`PlayIntent`: playing, paused, stopped) is the only source of play/pause. Stop empties
   the engine and gives focus back; the entry stays.
 - **Audio focus:** every transition to playing awaits `PlaybackFocus.activate()` (2 s timeout = denied).
-  Denied: the intent stays paused and `FocusDenied` is posted. `playbackFocusProvider` grants
-  everything until the media-controls bridge overrides it.
+  Denied: the intent stays paused and `FocusDenied` is posted. The focus is the media-session bridge
+  (see Media controls); a test overrides `playbackFocusProvider`.
 - **Undo:** `remove`/`cleanup` return an `UndoToken`; `undo` works for 4 s and only for the latest
   token; replacing the queue drops it. It restores ids, keys, the current entry and the position. If
   the removal emptied the player (intent stopped), the intent comes back from the token.
-- **Streams:** `nowPlaying` and `queueView` are replay-1 and distinct; `position` ticks apart from
-  `nowPlaying`; `notices` is a broadcast stream of `PlaybackNotice`.
-- **Providers:** `playerControllerProvider` (reads, not watches, its dependencies, so a later override of
-  the focus provider cannot dispose the controller; created by `nowPlayingProvider` or a command; the engine is made
+- **Streams:** `nowPlaying`, `queueView` and `transport` (`TransportView`: intent and volume, which tell
+  a stop from a pause) are replay-1 and distinct; `position` ticks apart from `nowPlaying`; `seeks`
+  carries the position after each explicit seek; `notices` is a broadcast stream of `PlaybackNotice`.
+- **Providers:** `playerControllerProvider` (reads, not watches, its dependencies, so a rebuild of the
+  focus provider cannot dispose the controller; it asks focus through the provider's current value and
+  attaches a rebuilt media bridge again; created by `nowPlayingProvider` or a command; the engine is made
   on the first load), `playbackPositionProvider`, `queueViewProvider`, `playbackNoticesProvider`,
   `queueRemainingProvider` (one `SUM(duration_ms)` query after the current entry; re-run on queue
   changes at once and on `tracks` changes after 1 s).
@@ -333,26 +335,156 @@ The UI only reads them. Every change goes through a player controller command, w
 | `playback.volume` | `volumeSetting` | 0-100 (default 100; out of range is clamped) |
 | `playback.np_tab` | `npTabSetting` | `'lyrics'` (default) or `'queue'` (last tab of the Now Playing panel) |
 
-## Flush
+## Restore
 
-Lane B registers one flush hook from `screens/now_playing/now_playing_registration.dart`
-with `registry.addFlushHook`. It saves the position and writes the in-flight
-listen to `play_log`. Flushes run on pause and on exit (see
-[ARCHITECTURE.md](../ARCHITECTURE.md#flush-and-exit)).
+The controller's first chain task (`player_controller_session.dart`, `session_restore.dart`) reads the
+saved session; commands made meanwhile queue behind it and apply to the restored state.
 
-`play_log` has no entry column (it holds `track_id`, `context_kind`, `context_ref`): attribute the listen to the track of the entry current at event time. `device_id` comes
-from `deviceIdProvider`, which is fixed at bootstrap.
+- `loadSession(repo, settings)` returns null for an empty queue. It reads `queue_entries` in the saved
+  shuffle order and the `playback.*` keys; it never writes. The current entry is the saved one; an id
+  that no longer exists falls back to the first entry at position 0. A position at or after
+  `duration_ms - 1 s` restores as 0. A context that cannot be read becomes the plain `queue`. The
+  volume comes back with the session.
+- The entry loads **paused**, `Media(uri, start: position)`, through the normal reconcile.
+- **Frozen:** until the restored file reports a duration, or the user starts something (play, a new
+  queue, next/previous, a seek on a loaded file, undo, removing the current entry), nothing about the
+  position, the current entry or the context is written (`PositionSaver.frozen`, the controller's
+  `restoring`). An unplayable restored current stays current: no skip, no write, no notice. The same holds
+  when the library lists the file but the engine cannot open it (drive unplugged, file moved): the
+  failure is swallowed, the rest of that load's events are dropped, and nothing walks through the queue.
+  A user Play lifts the freeze, retries the file once, then skips forward with a notice. A missing drive therefore keeps the good session.
+
+## Position saves
+
+`state/position_saver.dart` keeps the controller's last entry, context and position, and writes
+`playback.position_ms` right away on pause, seek, track change and stop, and again every 15 s of progress
+while playing (tick-driven, no timer, on every platform; the store coalesces writes). A crash or an OEM
+kill therefore loses at most 15 s; a normal Linux close is covered by the exit flush.
+The controller's position follows engine ticks only while playing (a paused open reports a stray 0).
+
+## Listens
+
+`domain/listen_accumulator.dart` (pure) and `state/listen_recorder.dart`.
+
+- One accumulator per full `EngineToken` (entry, generation, handoff), so each loop of repeat one, each
+  pass over a one-entry queue with repeat all and each side of a gapless advance is its own listen.
+- Time counts between two playing samples whose position moved forward; a position jump beyond the
+  clock by more than 1 s (a seek) counts only the clock time. The track length is locked at the first
+  value seen (gapless reports the next track's length at the end).
+- A listen counts when the track is longer than 30 s and was heard for half of it, at most 4 min
+  (kept below the length minus 1 s). `played_at` is the wall time of the load's first playing sample.
+- The row is inserted when the listen counts; `listened_ms` is updated every 10 s of listening, on
+  pause, when the load changes (final value) and on flush. `context_kind`/`context_ref` come from the
+  `PlayContext`, `device_id` from `deviceIdProvider` (read when a row is written).
+- Writes run on the recorder's own `SerialChain`, are never awaited by a command, and a failed write is
+  logged; a row is never inserted twice. Skips write nothing.
+
+## Flush and exit
+
+`screens/now_playing/now_playing_registration.dart` registers three hooks:
+
+- `addBeforeExitHook(pausePlaybackOnExitHook)`: pauses the controller (exit only, before the normal
+  flush, within half the 2 s cap). It goes through the chain, so a command stuck on the engine leaves
+  it running in the background; a pause racing the flush is harmless.
+- `addFlushHook(playbackFlushHook)`: does nothing (and creates nothing) if the controller does not
+  exist. Otherwise it writes `playback.position_ms`, `current_entry` and `context` from the saver's
+  last snapshot (not when frozen), calls `SettingsStore.flush()`, then flushes the open listen through
+  the recorder's own chain (so a busy database cannot delay the position). It never waits on the
+  command chain.
+- `addStartupHook(mediaSessionStartHook())`: `initAndroidMediaSession()` with a 3 s timeout and a
+  catch; Android only, returns at once elsewhere; a failure is logged and never stops bootstrap.
+
+On Linux the window-close guard runs the exit flush on close (hide, flush within 2 s, destroy).
+Flushes also run on pause and hide (see [ARCHITECTURE.md](../ARCHITECTURE.md#flush-and-exit)).
+
+`play_log` has no entry column (it holds `track_id`, `context_kind`, `context_ref`): the listen belongs
+to the track of the entry whose token the accumulator was made for.
+
+## Media controls
+
+`platform/domain/media_controls.dart` (pure): `MediaControls` with `start`, `update(item, state)`,
+`updatePosition`, `seeked`, `commands`, `activate`, `deactivate`, `dispose`; `MediaControlsItem`
+(id = queue entry id, title, artists, album, duration, `file:` art), `MediaControlsState` (equality
+ignores the position) and the sealed `MediaCommand` (`Play`, `Pause`, `PlayPause`, `Stop`, `Next`,
+`Previous`, `Seek(offset)`, `SetPosition(id, position)`, `SetShuffle`, `SetRepeat`, `SetVolume`).
+`updatePosition` is silent: the live position for readers that ask (MPRIS `Position`); it is never
+signalled.
+
+`playback/state/media_session_bridge.dart` (`MediaSessionBridge`, also the `PlaybackFocus`):
+
+- Follows the controller's plain streams (`nowPlaying`, `queueView`, `transport`, `position`,
+  `seeks`), not Riverpod providers. Changes are coalesced (150 ms) into one `update`, diffed against
+  the last one. Ticks update the stored position only. A seek waits for any update already running, sends the pending
+  changes, then calls `seeked`.
+- The item comes from `loadTrackInfos`; the art is the `full` cover file under the cache folder, only
+  when the file exists. The length is the engine's once loaded.
+- `start()` runs on Linux as soon as the restored session has a current entry (media keys and
+  `playerctl` work after launch, **once the controller exists**), and on any platform at the first
+  play. Nothing creates the controller at launch yet: the shell must create it at its root (an explicit
+  listen on `playerControllerProvider`) for the restore and MPRIS to start without a tap. Android keeps
+  `processingState: idle` (no notification) until something played.
+- Commands go through the controller's chain (`Seek` is `seekRelative`; `SetPosition` is ignored for
+  an entry that is no longer current). A request that came before the controller existed is held by the
+  platform's command buffer (Android) and arrives after the attach.
+- Focus: `activate()` asks the controls with a 2 s timeout (timeout = denied); `deactivate()` on stop.
+- `mediaSessionBridgeProvider` builds it; `playbackFocusProvider` is the bridge; `mediaControlsProvider`
+  picks the implementation (MPRIS on Linux, the audio service on Android after its startup hook, a no-op
+  elsewhere and under `flutter test`).
+
+### Linux: MPRIS (`platform/data/media_controls/mpris/`)
+
+- `org.mpris.MediaPlayer2` and `.Player` on `/org/mpris/MediaPlayer2` over `dbus`. Bus name
+  `org.mpris.MediaPlayer2.kanaru_community`, then `.instance<pid>`, then `.instance<pid>_1` to `_5`,
+  always with `doNotQueue` (without it the bus queues and never refuses). None free: idle and one
+  log line.
+- Root: `Identity` Kanaru, `DesktopEntry` `io.github.kanaru313.kanaru_community`, `CanRaise`,
+  `CanQuit`, `HasTrackList` false, empty scheme and MIME lists.
+- Player: `PlaybackStatus` (Stopped comes from the app state), `LoopStatus`, `Shuffle`, `Volume`,
+  `Rate`/`MinimumRate`/`MaximumRate` 1, `Position` (microseconds, live), `Can*`, `CanControl`.
+  Metadata keys: `mpris:trackid` (object path of the entry), `mpris:length` (only when > 0),
+  `xesam:title`, `xesam:artist` (array), `xesam:album`, `mpris:artUrl` (`file://` only, `#` and other
+  characters escaped); empty strings are left out.
+- Every handler is guarded and replies at once; a throw answers `Failed`. Methods check their
+  signatures (`InvalidArgs`) and post a command. `Seek` past the end is `Next`, before the start goes
+  to the start, `SetPosition` is ignored for another track id or a position outside the track.
+  `Set`: `LoopStatus`, `Shuffle`, `Volume` are validated; `Rate` 1 is accepted, 0 pauses, anything else
+  is `InvalidArgs`; other properties are read-only.
+- Introspection marks `Position` and `CanControl` with `EmitsChangedSignal=false`; `Position` is never
+  in `PropertiesChanged`. `Seeked` goes out after pending properties.
+- `start()` never throws: the connect is bounded to 3 s, a client that cannot be built or a missing bus
+  leave the controls idle. A connection that finishes after the timeout releases its name and closes. The first failed send marks the bus as lost. Dispose bounds each step to 1 s
+  and is never awaited on the exit path.
+
+### Android: `audio_service` and `audio_session`
+
+- `initAndroidMediaSession()` (startup hook, once per process) runs `AudioService.init` with the
+  `drawable/ic_stat_kanaru` icon, channel `io.github.kanaru313.kanaru_community.playback`, and
+  configures the audio session for music. `AndroidMediaHandler` maps `play/pause/stop/skip*/seek/
+  setShuffleMode/setRepeatMode/click` to commands; headset `click` is `PlayPause`.
+- `AndroidMediaControls.update` publishes the `MediaItem` and a `PlaybackState` (previous, play or
+  pause, next; the seek action; `idle` until started). Identical updates publish nothing.
+- **Audio focus:** `activate()` = `setActive(true)`, before every transition to playing (denied: stay
+  paused with a `FocusDenied` notice); `deactivate()` on stop. Becoming noisy pauses. An interruption
+  that asks for a pause pauses and remembers it only if playback was running; its end with "resume"
+  plays again. A user pause before or during the interruption is never undone. Ducking is left to
+  the system.
+- Commands that arrive before anyone listens are held (the last, if younger than 10 s) and replayed to
+  the first listener (`CommandBuffer`).
+- Not covered by tests, checked on the phone later: the notification on Android 13, lock screen,
+  headset and Bluetooth buttons, focus taken from another app, calls and alarms, cold start from the
+  notification.
 
 ## Rules lane B keeps
 
 - Validate before any state change.
 - Restore the queue paused. Clamp the saved position against `tracks.duration_ms`.
-  Do not rewrite the queue until a track loads or the user acts.
+  Do not rewrite the queue, the position, the current entry or the context until a track loads or the
+  user acts.
 - A dangling `playback.queue.current_entry` falls back to the first entry.
 - A queued track that became `missing` or `hidden` is skipped, with a toast.
 - The engine owns the advance after an error, one error per entry.
-- Media controls: one `update` call per track change with the complete tag set;
-  drop empty strings; `artUri` is `file://` only (the `full` cover file).
+- Media controls: one coalesced `update` per change with the complete tag set;
+  drop empty strings; `artUri` is `file://` only (the `full` cover file); never signal `Position`.
 - Keep the Rescan, Keymap and AI buttons, the page-header search scope, the
   flush seam and the selection bar slot in the shell.
 

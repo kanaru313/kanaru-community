@@ -11,6 +11,8 @@ extension _Events on PlayerController {
         _duration = duration;
         _loadedOk = true;
         _failuresInRow = 0;
+        // The restored file opened: the saved session is real.
+        restoring = false;
       case EngineAdvanced(:final token):
         if (token.generation != _generation) return;
         await _onAdvanced(token);
@@ -47,6 +49,7 @@ extension _Events on PlayerController {
       _atEnd = false;
       _position = Duration.zero;
       _startAt = Duration.zero;
+      _saveNow();
       if (skip != null) {
         _notice(
           TrackSkipped(
@@ -74,6 +77,23 @@ extension _Events on PlayerController {
   }
 
   Future<void> _onFailed(EngineToken token) async {
+    if (restoring && (token == _loaded || token == _handedNext)) {
+      // The restored file did not open (drive gone, file moved) although the
+      // library lists it. It stays current; nothing is said, skipped or
+      // saved. Bumping the generation drops the rest of this load's events
+      // (the handed next failing or loading). A user Play retries once, then
+      // skips with a notice.
+      final current = _queue.currentItem;
+      if (current != null) _bad.add(current.entryId);
+      _generation++;
+      _loaded = null;
+      _handedNext = null;
+      _handedSkip = null;
+      _loadedOk = false;
+      _enginePlaying = false;
+      await _engine?.stop();
+      return;
+    }
     final item = _queue.items.where((i) => i.entryId == token.entryId);
     final title = item.isEmpty ? '' : await _titles.titleOf(item.first.trackId);
     _notice(TrackFailed(title));
@@ -122,6 +142,7 @@ extension _Events on PlayerController {
     _enginePlaying = false;
     _atEnd = true;
     _position = _duration ?? _position;
+    _saveNow();
     _notice(const QueueEnd());
   }
 }

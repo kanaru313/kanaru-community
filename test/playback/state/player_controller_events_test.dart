@@ -302,6 +302,12 @@ void main() {
       EngineLoaded(small.engine.nexts.last!.token, const Duration(seconds: 5)),
     );
     await small.settle();
+    // The position follows ticks while playing, not while paused.
+    small.engine.tickPosition(const Duration(seconds: 3));
+    await pumpEventQueue();
+    expect((await small.c.position.first).position, Duration.zero);
+    await small.c.play();
+    await small.settle();
     small.engine.tickPosition(const Duration(seconds: 1));
     await pumpEventQueue();
     expect((await small.c.position.first).position, const Duration(seconds: 1));

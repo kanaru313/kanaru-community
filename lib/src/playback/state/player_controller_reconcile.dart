@@ -61,8 +61,23 @@ extension _Reconcile on PlayerController {
       _subs.add(
         engine.position.listen((p) {
           // Ticks of a file that is about to be replaced do not count.
-          if (_loaded == null || _atEnd || !_loadedOk || _forceReload) return;
+          // Only a playing file moves the position: a paused open reports a
+          // stray 0.
+          if (_loaded == null ||
+              _atEnd ||
+              !_loadedOk ||
+              _forceReload ||
+              !_enginePlaying) {
+            return;
+          }
           _position = p;
+          _saver.observe(
+            entryId: _queue.currentItem?.entryId,
+            context: _context,
+            position: p,
+            playing: true,
+          );
+          _observeListen();
           _pos.add(
             PlaybackPosition(
               entryId: _queue.currentItem?.entryId,

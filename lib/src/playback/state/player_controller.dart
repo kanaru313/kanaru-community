@@ -21,10 +21,14 @@ import '../domain/playback_views.dart';
 import '../domain/queue_logic.dart' hide remove, move, undo, enqueue;
 import '../domain/queue_logic.dart' as q show remove, move, undo, enqueue;
 import 'command_chain.dart';
+import 'listen_recorder.dart';
+import 'position_saver.dart';
 import 'replay_stream.dart';
+import 'session_restore.dart';
 
 part 'player_controller_events.dart';
 part 'player_controller_reconcile.dart';
+part 'player_controller_session.dart';
 
 final _log = Logger('PlayerController');
 
@@ -43,6 +47,7 @@ class PlayerController implements PlaybackCommands {
     required this._engineFactory,
     required this._focus,
     required this._titles,
+    required this._listens,
     int Function()? clock,
     Random? random,
     this._keys = const KeyGen(),
@@ -50,8 +55,22 @@ class PlayerController implements PlaybackCommands {
     this._focusTimeout = const Duration(seconds: 2),
   }) : _clock = clock ?? (() => DateTime.now().millisecondsSinceEpoch),
        _random = random ?? Random(),
-       _homeZone = Zone.current {
+       _homeZone = Zone.current,
+       _saver = PositionSaver(_settings) {
     _chain = SerialChain(onDrain: _reconcileIfDirty);
+    // The saved session comes back as the first task: commands made while it
+    // runs apply to the restored state.
+    unawaited(
+      _chain
+          .run(_restore)
+          .then<void>(
+            (_) {},
+            onError: (Object e, StackTrace st) {
+              _log.warning('restore failed: $e', e, st);
+              restoring = false;
+            },
+          ),
+    );
   }
 
   final QueueRepository _repo;
@@ -60,6 +79,8 @@ class PlayerController implements PlaybackCommands {
   final AudioEngine Function() _engineFactory;
   final PlaybackFocus _focus;
   final TrackTitleLookup _titles;
+  final ListenRecorder _listens;
+  final PositionSaver _saver;
   final int Function() _clock;
   final Random _random;
   final KeyGen _keys;
@@ -81,9 +102,11 @@ class PlayerController implements PlaybackCommands {
   int _volume = 100;
   bool _atEnd = false;
 
-  /// Persistence and skipping stay quiet while a restored session is held
-  /// (set by the restore code).
-  bool restoring = false;
+  /// A restored session is held: nothing about position, current entry or
+  /// context is written, and an unplayable current is not skipped. Lifted
+  /// when the restored file loads or the user starts something.
+  bool get restoring => _saver.frozen;
+  set restoring(bool value) => _saver.frozen = value;
 
   // What the engine has.
   AudioEngine? _engine;
@@ -113,6 +136,8 @@ class PlayerController implements PlaybackCommands {
   final _now = ReplayStream<NowPlaying>(NowPlaying.none);
   final _view = ReplayStream<QueueView>(const QueueView());
   final _pos = ReplayStream<PlaybackPosition>(PlaybackPosition.none);
+  final _transport = ReplayStream<TransportView>(const TransportView());
+  final _seekCtrl = StreamController<Duration>.broadcast();
   final _noticeCtrl = StreamController<PlaybackNotice>.broadcast();
 
   /// What is loaded, with the latest value for a late listener.
@@ -120,6 +145,13 @@ class PlayerController implements PlaybackCommands {
   Stream<QueueView> get queueView => _view.stream;
   Stream<PlaybackPosition> get position => _pos.stream;
   Stream<PlaybackNotice> get notices => _noticeCtrl.stream;
+
+  /// Play, pause or stop, and the volume.
+  Stream<TransportView> get transport => _transport.stream;
+
+  /// The position after each explicit seek (a seek command, or Previous at
+  /// the first entry), not the ticks of normal playback.
+  Stream<Duration> get seeks => _seekCtrl.stream;
   QueueState get queueState => _queue;
   PlayIntent get intent => _intent;
   PlayContext? get context => _context;
@@ -136,6 +168,32 @@ class PlayerController implements PlaybackCommands {
 
   /// Completes when the queued commands and the reconcile after them are done.
   Future<void> settled() => _chain.whenIdle();
+
+  /// Writes the session (position, current entry, context) and the open
+  /// listen, for the exit and background flushes. It reads the saver's last
+  /// snapshot and the recorder's own queue, never the command chain, so a
+  /// command stuck on the engine cannot hold it up. Does not flush the
+  /// settings store itself.
+  Future<void> flushPlayback({bool listens = true}) async {
+    final saved = _saver.snapshot();
+    if (saved != null) {
+      for (final (key, value) in [
+        (positionMsSetting.key, saved.position.inMilliseconds),
+        (currentEntrySetting.key, saved.entryId),
+        (contextSetting.key, contextSetting.encode(saved.context)),
+      ]) {
+        try {
+          await _settings.write(key, value);
+        } on Object catch (e) {
+          _log.warning('could not save $key on flush: $e');
+        }
+      }
+    }
+    if (listens) await _listens.flush();
+  }
+
+  /// Writes the open listen and waits for the recorder's own queue.
+  Future<void> flushListens() => _listens.flush();
 
   int _nowMs() => _clock();
 
@@ -170,6 +228,14 @@ class PlayerController implements PlaybackCommands {
         duration: _loadedOk ? _duration : null,
       ),
     );
+    _transport.add(TransportView(intent: _intent, volume: _volume));
+    _saver.observe(
+      entryId: cur?.entryId,
+      context: _context,
+      position: _position,
+      playing: _intent == PlayIntent.playing && _enginePlaying,
+    );
+    _observeListen();
     _persistCurrent();
   }
 
@@ -237,6 +303,7 @@ class PlayerController implements PlaybackCommands {
     _intent = PlayIntent.playing;
     _undo = null;
     _resetPlayback();
+    _thaw();
     _write(shuffleSetting.key, shuffle);
     _write(contextSetting.key, contextSetting.encode(context));
     _write(positionMsSetting.key, 0);
@@ -299,6 +366,7 @@ class PlayerController implements PlaybackCommands {
       _notice(const QueueEmpty());
       return;
     }
+    _thaw();
     _failuresInRow = 0;
     _bad.clear();
     if (_atEnd) {
@@ -310,15 +378,20 @@ class PlayerController implements PlaybackCommands {
   });
 
   Future<void> pause() => _cmd(() async {
-    if (_intent == PlayIntent.playing) _intent = PlayIntent.paused;
+    if (_intent == PlayIntent.playing) {
+      _intent = PlayIntent.paused;
+      _saveNow();
+    }
   });
 
   Future<void> playPause() => _cmd(() async {
     if (_intent == PlayIntent.playing) {
       _intent = PlayIntent.paused;
+      _saveNow();
     } else if (_queue.items.isEmpty) {
       _notice(const QueueEmpty());
     } else {
+      _thaw();
       _failuresInRow = 0;
       _bad.clear();
       if (_atEnd) {
@@ -333,6 +406,7 @@ class PlayerController implements PlaybackCommands {
   /// A real state: the entry stays current, the engine is emptied.
   Future<void> stop() => _cmd(() async {
     _intent = PlayIntent.stopped;
+    _saveNow();
   });
 
   Future<void> next() => _cmd(() async {
@@ -371,6 +445,8 @@ class PlayerController implements PlaybackCommands {
     _duration = null;
     _atEnd = false;
     _forceReload = true;
+    if (user) _thaw();
+    _saveNow();
     if (user) {
       _failuresInRow = 0;
       _bad.clear();
@@ -391,7 +467,12 @@ class PlayerController implements PlaybackCommands {
     _position = p;
     _startAt = p;
     _atEnd = false;
-    if (_loaded != null) await _engine?.seek(p);
+    if (_loaded != null) {
+      _thaw();
+      await _engine?.seek(p);
+    }
+    _saveNow();
+    if (!_seekCtrl.isClosed) _seekCtrl.add(p);
   }
 
   Future<void> setVolume(int volume) => _cmd(() async {
@@ -443,6 +524,7 @@ class PlayerController implements PlaybackCommands {
     if (edit.isNoop) return null;
     await _applyEdit(edit);
     if (currentId != null && entryIds.contains(currentId)) {
+      _thaw();
       _resetPlayback();
       if (_queue.current == null) _intent = PlayIntent.stopped;
     }
@@ -483,6 +565,7 @@ class PlayerController implements PlaybackCommands {
     }
     final before = _queue.currentItem?.entryId;
     await _applyEdit(q.undo(_queue, token, _keys));
+    _thaw();
     _undo = null;
     final now = _queue.currentItem?.entryId;
     if (now != null && now != before && now != _loaded?.entryId) {
@@ -510,9 +593,12 @@ class PlayerController implements PlaybackCommands {
       await s.cancel();
     }
     await _engine?.dispose();
+    await _listens.close();
     await _now.close();
     await _view.close();
     await _pos.close();
+    await _transport.close();
+    await _seekCtrl.close();
     await _noticeCtrl.close();
   }
 }

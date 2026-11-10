@@ -27,6 +27,17 @@ class QueueRepository {
       ),
   ];
 
+  /// `duration_ms` of a track; null when unknown or the track is gone.
+  Future<int?> trackDurationMs(TrackId id) async {
+    final rows = await _db
+        .customSelect(
+          'SELECT duration_ms FROM tracks WHERE id = ?',
+          variables: [Variable.withInt(id.value)],
+        )
+        .get();
+    return rows.isEmpty ? null : rows.first.readNullable<int>('duration_ms');
+  }
+
   /// Replaces the queue with new entries for [trackIds] in one transaction
   /// and returns them in play order (the order of [shuffleOrder] when given:
   /// `shuffleOrder[k]` is the index in [trackIds] of the k-th track to play).

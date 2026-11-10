@@ -1,4 +1,5 @@
 import '../../media/domain/track_id.dart';
+import 'play_intent.dart';
 import 'queue_state.dart';
 import 'repeat_mode.dart';
 
@@ -58,4 +59,23 @@ class QueueView {
   @override
   int get hashCode =>
       Object.hash(identityHashCode(items), current, shuffled, repeat);
+}
+
+/// The transport state the system media controls follow: what the user asked
+/// for (play, pause, stop) and the volume. Playing and paused look the same
+/// in `NowPlaying` for a stop, so this tells them apart.
+class TransportView {
+  const TransportView({this.intent = PlayIntent.paused, this.volume = 100});
+
+  final PlayIntent intent;
+
+  /// 0-100.
+  final int volume;
+
+  @override
+  bool operator ==(Object other) =>
+      other is TransportView && other.intent == intent && other.volume == volume;
+
+  @override
+  int get hashCode => Object.hash(intent, volume);
 }
