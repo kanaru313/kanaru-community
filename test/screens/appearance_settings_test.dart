@@ -42,9 +42,15 @@ void main() {
   });
 
   test('language default follows the device locale', () {
-    expect(defaultLanguageFor('vi'), AppLanguage.vi);
-    expect(defaultLanguageFor('en'), AppLanguage.en);
-    expect(defaultLanguageFor('fr'), AppLanguage.en);
+    expect(defaultLanguageFor(['vi']), AppLanguage.vi);
+    expect(defaultLanguageFor(['en']), AppLanguage.en);
+    expect(defaultLanguageFor(['fr']), AppLanguage.en);
+    // The first shipped language in the device's preference order wins.
+    expect(defaultLanguageFor(['fr', 'vi', 'en']), AppLanguage.vi);
+    expect(defaultLanguageFor(['ja', 'en', 'vi']), AppLanguage.en);
+    // No usable language (Linux C / POSIX gives 'und' or nothing): English.
+    expect(defaultLanguageFor(['und']), AppLanguage.en);
+    expect(defaultLanguageFor(const []), AppLanguage.en);
   });
 
   test('set persists under the documented keys', () async {
