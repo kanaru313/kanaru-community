@@ -670,5 +670,44 @@
   },
   "libraryRetry": "Thử lại",
   "libraryPermissionMissing": "Thiếu quyền đọc nhạc",
-  "libraryGrantPermission": "Cấp quyền"
+  "libraryGrantPermission": "Cấp quyền",
+  "libraryNotFoundTitle": "Không tìm thấy",
+  "libraryNotFoundMessage": "Mục này không còn trong thư viện.",
+  "libraryPlay": "Phát",
+  "libraryAppearsIn": "Xuất hiện trong",
+  "libraryAlbumsOf": "Album · {name}",
+  "@libraryAlbumsOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryArtistsOf": "Nghệ sĩ · {name}",
+  "@libraryArtistsOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryAppearsInOf": "Xuất hiện trong · {name}",
+  "@libraryAppearsInOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryDetectedCount": "{count} tự nhận diện",
+  "@libraryDetectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryAutoDetectedTag": "tự nhận diện",
+  "libraryLanguageDetectedNote": "Bài có nhãn “tự nhận diện” không có tag ngôn ngữ; Kanaru đoán từ tên bài và lời.",
+  "libraryLanguageUnknownNote": "Các bài này không có tag ngôn ngữ và Kanaru không nhận diện được (thường là nhạc không lời). Thêm tag ngôn ngữ trong Sửa thông tin bài, hoặc đổi cách nhận diện trong Cài đặt › Thư viện."
 }

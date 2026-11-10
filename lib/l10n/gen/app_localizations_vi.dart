@@ -997,4 +997,47 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get libraryGrantPermission => 'Cấp quyền';
+
+  @override
+  String get libraryNotFoundTitle => 'Không tìm thấy';
+
+  @override
+  String get libraryNotFoundMessage => 'Mục này không còn trong thư viện.';
+
+  @override
+  String get libraryPlay => 'Phát';
+
+  @override
+  String get libraryAppearsIn => 'Xuất hiện trong';
+
+  @override
+  String libraryAlbumsOf(String name) {
+    return 'Album · $name';
+  }
+
+  @override
+  String libraryArtistsOf(String name) {
+    return 'Nghệ sĩ · $name';
+  }
+
+  @override
+  String libraryAppearsInOf(String name) {
+    return 'Xuất hiện trong · $name';
+  }
+
+  @override
+  String libraryDetectedCount(int count) {
+    return '$count tự nhận diện';
+  }
+
+  @override
+  String get libraryAutoDetectedTag => 'tự nhận diện';
+
+  @override
+  String get libraryLanguageDetectedNote =>
+      'Bài có nhãn “tự nhận diện” không có tag ngôn ngữ; Kanaru đoán từ tên bài và lời.';
+
+  @override
+  String get libraryLanguageUnknownNote =>
+      'Các bài này không có tag ngôn ngữ và Kanaru không nhận diện được (thường là nhạc không lời). Thêm tag ngôn ngữ trong Sửa thông tin bài, hoặc đổi cách nhận diện trong Cài đặt › Thư viện.';
 }

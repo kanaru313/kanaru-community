@@ -1747,6 +1747,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Grant'**
   String get libraryGrantPermission;
+
+  /// No description provided for @libraryNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not found'**
+  String get libraryNotFoundTitle;
+
+  /// No description provided for @libraryNotFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This is no longer in your library.'**
+  String get libraryNotFoundMessage;
+
+  /// No description provided for @libraryPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get libraryPlay;
+
+  /// No description provided for @libraryAppearsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Appears on'**
+  String get libraryAppearsIn;
+
+  /// No description provided for @libraryAlbumsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Albums · {name}'**
+  String libraryAlbumsOf(String name);
+
+  /// No description provided for @libraryArtistsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Artists · {name}'**
+  String libraryArtistsOf(String name);
+
+  /// No description provided for @libraryAppearsInOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Appears on · {name}'**
+  String libraryAppearsInOf(String name);
+
+  /// No description provided for @libraryDetectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} auto-detected'**
+  String libraryDetectedCount(int count);
+
+  /// No description provided for @libraryAutoDetectedTag.
+  ///
+  /// In en, this message translates to:
+  /// **'auto-detected'**
+  String get libraryAutoDetectedTag;
+
+  /// No description provided for @libraryLanguageDetectedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs labelled “auto-detected” have no language tag; Kanaru guesses it from the title and lyrics.'**
+  String get libraryLanguageDetectedNote;
+
+  /// No description provided for @libraryLanguageUnknownNote.
+  ///
+  /// In en, this message translates to:
+  /// **'These songs have no language tag and Kanaru could not detect one (often instrumentals). Add a language tag in Edit info, or change how languages are detected in Settings › Library.'**
+  String get libraryLanguageUnknownNote;
 }
 
 class _AppLocalizationsDelegate

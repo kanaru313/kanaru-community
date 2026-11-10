@@ -1089,4 +1089,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryGrantPermission => 'Grant';
+
+  @override
+  String get libraryNotFoundTitle => 'Not found';
+
+  @override
+  String get libraryNotFoundMessage => 'This is no longer in your library.';
+
+  @override
+  String get libraryPlay => 'Play';
+
+  @override
+  String get libraryAppearsIn => 'Appears on';
+
+  @override
+  String libraryAlbumsOf(String name) {
+    return 'Albums · $name';
+  }
+
+  @override
+  String libraryArtistsOf(String name) {
+    return 'Artists · $name';
+  }
+
+  @override
+  String libraryAppearsInOf(String name) {
+    return 'Appears on · $name';
+  }
+
+  @override
+  String libraryDetectedCount(int count) {
+    return '$count auto-detected';
+  }
+
+  @override
+  String get libraryAutoDetectedTag => 'auto-detected';
+
+  @override
+  String get libraryLanguageDetectedNote =>
+      'Songs labelled “auto-detected” have no language tag; Kanaru guesses it from the title and lyrics.';
+
+  @override
+  String get libraryLanguageUnknownNote =>
+      'These songs have no language tag and Kanaru could not detect one (often instrumentals). Add a language tag in Edit info, or change how languages are detected in Settings › Library.';
 }

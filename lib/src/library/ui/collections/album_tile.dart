@@ -5,13 +5,12 @@ import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
-import '../../../media/domain/cover_files.dart';
 import '../../../media/domain/library_keys.dart';
 import '../../../media/domain/play_context.dart';
-import '../../../playback/ui/track_cover.dart';
 import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/song_scope.dart';
+import '../browse/item_covers.dart';
 import '../browse/library_labels.dart';
 import '../browse/library_navigation.dart';
 import '../browse/play_actions.dart';
@@ -51,10 +50,9 @@ class AlbumTile extends ConsumerWidget {
         album.trackCount,
         minutesOf(album.durationMs),
       ),
-      leading: TrackCover(
+      leading: AlbumCover(
+        itemKey: album.key,
         coverKey: album.coverKey,
-        seed: album.key,
-        size: CoverSize.thumb,
         dimension: KMediaCard.coverSize,
         radius: BorderRadius.circular(10),
       ),
@@ -92,10 +90,9 @@ class AlbumCard extends StatelessWidget {
       title: album.title,
       subtitle: albumByLine(album, separator: ' · '),
       onTap: () => _open(context, album),
-      coverBuilder: (context, side) => TrackCover(
+      coverBuilder: (context, side) => AlbumCover(
+        itemKey: album.key,
         coverKey: album.coverKey,
-        seed: album.key,
-        size: CoverSize.thumb,
         dimension: side,
         radius: BorderRadius.circular(14),
       ),

@@ -5,13 +5,12 @@ import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
-import '../../../media/domain/cover_files.dart';
 import '../../../media/domain/library_keys.dart';
 import '../../../media/domain/play_context.dart';
-import '../../../playback/ui/track_cover.dart';
 import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/song_scope.dart';
+import '../browse/item_covers.dart';
 import '../browse/library_labels.dart';
 import '../browse/library_navigation.dart';
 import '../browse/play_actions.dart';
@@ -45,12 +44,11 @@ class ArtistTile extends ConsumerWidget {
       line3:
           '${l10n.librarySongCount(artist.trackCount)} • '
           '${formatTotalDuration(l10n, artist.durationMs)}',
-      leading: TrackCover(
+      leading: ArtistCover(
+        itemKey: artist.key,
+        name: artist.name,
         coverKey: artist.coverKey,
-        seed: artist.name,
-        size: CoverSize.thumb,
         dimension: KMediaCard.coverSize,
-        circle: true,
       ),
       circleLeading: true,
       onAction: () => _play(ref, context),
@@ -89,12 +87,11 @@ class ArtistCard extends StatelessWidget {
       subtitle: AppLocalizations.of(context)
           .librarySongCount(artist.trackCount),
       onTap: () => _open(context, artist),
-      coverBuilder: (context, side) => TrackCover(
+      coverBuilder: (context, side) => ArtistCover(
+        itemKey: artist.key,
+        name: artist.name,
         coverKey: artist.coverKey,
-        seed: artist.name,
-        size: CoverSize.thumb,
         dimension: side,
-        circle: true,
       ),
     );
   }

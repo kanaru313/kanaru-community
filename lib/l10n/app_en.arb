@@ -670,5 +670,44 @@
   },
   "libraryRetry": "Retry",
   "libraryPermissionMissing": "Missing permission to read music",
-  "libraryGrantPermission": "Grant"
+  "libraryGrantPermission": "Grant",
+  "libraryNotFoundTitle": "Not found",
+  "libraryNotFoundMessage": "This is no longer in your library.",
+  "libraryPlay": "Play",
+  "libraryAppearsIn": "Appears on",
+  "libraryAlbumsOf": "Albums · {name}",
+  "@libraryAlbumsOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryArtistsOf": "Artists · {name}",
+  "@libraryArtistsOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryAppearsInOf": "Appears on · {name}",
+  "@libraryAppearsInOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryDetectedCount": "{count} auto-detected",
+  "@libraryDetectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryAutoDetectedTag": "auto-detected",
+  "libraryLanguageDetectedNote": "Songs labelled “auto-detected” have no language tag; Kanaru guesses it from the title and lyrics.",
+  "libraryLanguageUnknownNote": "These songs have no language tag and Kanaru could not detect one (often instrumentals). Add a language tag in Edit info, or change how languages are detected in Settings › Library."
 }

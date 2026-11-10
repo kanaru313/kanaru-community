@@ -30,13 +30,18 @@ class KDetailLayout extends StatelessWidget {
   static const double wideBreakpoint = 840;
   static const double columnWidth = 320;
 
+  /// Whether the [header] below this layout sits in the wide left column.
+  /// False outside a [KDetailLayout].
+  static bool isWide(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_DetailMode>()?.wide ?? false;
+
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= wideBreakpoint;
-        final Widget content = wide
+        Widget content = wide
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -65,6 +70,7 @@ class KDetailLayout extends StatelessWidget {
                   ...slivers,
                 ],
               );
+        content = _DetailMode(wide: wide, child: content);
         final color = tint;
         if (color == null) return content;
         return DecoratedBox(
@@ -150,4 +156,13 @@ class _BarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_BarDelegate old) =>
       height != old.height || child != old.child;
+}
+
+class _DetailMode extends InheritedWidget {
+  const _DetailMode({required this.wide, required super.child});
+
+  final bool wide;
+
+  @override
+  bool updateShouldNotify(_DetailMode old) => old.wide != wide;
 }

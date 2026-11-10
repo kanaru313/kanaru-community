@@ -40,7 +40,8 @@ String songAlbumLine(TrackInfo info) {
 ///
 /// [ids] is the list the row belongs to, as the list currently holds it, and
 /// [index] the row's place in it. With [showNumber] the cover gives way to
-/// the track number (album pages).
+/// the track number (album pages); with [showDetected] a song with a
+/// detected language carries a small "auto-detected" tag after its title.
 class SongTile extends ConsumerWidget {
   const SongTile({
     super.key,
@@ -49,6 +50,7 @@ class SongTile extends ConsumerWidget {
     required this.ids,
     required this.playContext,
     this.showNumber = false,
+    this.showDetected = false,
   });
 
   final TrackInfo info;
@@ -56,6 +58,10 @@ class SongTile extends ConsumerWidget {
   final List<TrackId> ids;
   final PlayContext playContext;
   final bool showNumber;
+
+  /// Tags a song whose language was detected, not read from a tag (language
+  /// pages).
+  final bool showDetected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,6 +71,9 @@ class SongTile extends ConsumerWidget {
     final duration = info.durationMs;
     return KMediaCard(
       title: info.title,
+      titleLabel: showDetected && info.languageDetected
+          ? l10n.libraryAutoDetectedTag
+          : null,
       line2: songArtistLine(info),
       line3: songAlbumLine(info),
       leading: showNumber

@@ -24,7 +24,7 @@ import 'song_tile.dart';
 /// [leadingSlivers] come first in the same scroll view (the folder page puts
 /// its sub-folders there). While the page is the one on screen, the list
 /// registers its ids as the target of "select all"; an offstage page does not.
-class SongList extends ConsumerStatefulWidget {
+class SongList extends StatelessWidget {
   const SongList({
     super.key,
     required this.scope,
@@ -43,10 +43,47 @@ class SongList extends ConsumerStatefulWidget {
   final List<Widget> leadingSlivers;
 
   @override
-  ConsumerState<SongList> createState() => _SongListState();
+  Widget build(BuildContext context) => CustomScrollView(
+    slivers: [
+      ...leadingSlivers,
+      SongSlivers(
+        scope: scope,
+        sort: sort,
+        filter: filter,
+        playContext: playContext,
+        showNumber: showNumber,
+      ),
+    ],
+  );
 }
 
-class _SongListState extends ConsumerState<SongList> {
+/// The rows of a song list as one sliver, for pages that put them in a scroll
+/// view of their own (album and artist pages, with a header and a sticky bar
+/// before them). Owns the [TrackWindow], the select-all registration and the
+/// read-failed notice, exactly as [SongList] describes.
+class SongSlivers extends ConsumerStatefulWidget {
+  const SongSlivers({
+    super.key,
+    required this.scope,
+    required this.sort,
+    required this.filter,
+    required this.playContext,
+    this.showNumber = false,
+    this.showDetected = false,
+  });
+
+  final SongScope scope;
+  final SortSpec sort;
+  final String filter;
+  final PlayContext playContext;
+  final bool showNumber;
+  final bool showDetected;
+
+  @override
+  ConsumerState<SongSlivers> createState() => _SongSliversState();
+}
+
+class _SongSliversState extends ConsumerState<SongSlivers> {
   late final TrackWindow _window = TrackWindow(
     load: (ids) => ref.read(trackRowLoaderProvider)(ids),
     onChanged: () {
@@ -122,9 +159,8 @@ class _SongListState extends ConsumerState<SongList> {
     final ids = _window.ids;
     final extent = KMediaCard.extentOf(MediaQuery.textScalerOf(context));
     final gutter = libraryGutter(context);
-    return CustomScrollView(
+    return SliverMainAxisGroup(
       slivers: [
-        ...widget.leadingSlivers,
         if (_window.error != null)
           SliverToBoxAdapter(child: _ReadFailed(onRetry: _window.invalidate)),
         SliverPadding(
@@ -143,6 +179,7 @@ class _SongListState extends ConsumerState<SongList> {
                   ids: ids,
                   playContext: widget.playContext,
                   showNumber: widget.showNumber,
+                  showDetected: widget.showDetected,
                 );
               },
             ),

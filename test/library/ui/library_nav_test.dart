@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/library/ui/library_locations.dart';
+import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -82,6 +87,32 @@ void main() {
       expect(_rowColor(tester, 'Songs'), scheme.secondaryContainer);
       expect(_rowColor(tester, 'Albums'), Colors.transparent);
       expect(_rowColor(tester, 'Home'), Colors.transparent);
+      await unmountApp(tester);
+    });
+
+    testWidgets('a detail page keeps its list lit in the sidebar', (
+      tester,
+    ) async {
+      await pumpKanaruApp(tester);
+      final scheme = Theme.of(tester.element(find.byType(Scaffold).first))
+          .colorScheme;
+      final router = GoRouter.of(tester.element(find.byType(Scaffold).first));
+      for (final (location, label) in [
+        (LibraryLocations.album(AlbumKey('a', 'b')), 'Albums'),
+        (LibraryLocations.artist(ArtistKey('a')), 'Artists'),
+        ('${LibraryLocations.artist(ArtistKey('a'))}/albums', 'Artists'),
+        (LibraryLocations.genre('rock'), 'Genres'),
+        (LibraryLocations.language('eng'), 'Languages'),
+      ]) {
+        unawaited(router.push(location));
+        await tester.pumpAndSettle();
+        expect(
+          _rowColor(tester, label),
+          scheme.secondaryContainer,
+          reason: location,
+        );
+        expect(_rowColor(tester, 'Songs'), Colors.transparent);
+      }
       await unmountApp(tester);
     });
 

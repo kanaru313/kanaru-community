@@ -8,6 +8,10 @@ import '../collections/albums_page.dart';
 import '../collections/artists_page.dart';
 import '../collections/genres_page.dart';
 import '../collections/languages_page.dart';
+import '../detail/album_page.dart';
+import '../detail/artist_page.dart';
+import '../detail/group_page.dart';
+import '../detail/see_all_page.dart';
 import '../folders/folder_locations.dart';
 import '../folders/folders_page.dart';
 import '../library_locations.dart';
@@ -41,8 +45,50 @@ GoRoute libraryRoute() => GoRoute(
           child: _pageOf(tab, state),
         ),
       ),
+    ..._detailRoutes(),
   ],
 );
+
+/// Detail and see-all pages. Flat siblings of the list routes (no nesting),
+/// so each location shows exactly one page and a push stacks one page.
+List<GoRoute> _detailRoutes() => [
+  GoRoute(
+    path: 'albums/:album',
+    builder: (context, state) =>
+        AlbumPage(albumId: state.pathParameters['album']!),
+  ),
+  GoRoute(
+    path: 'artists/:artist',
+    builder: (context, state) =>
+        ArtistPage(artistId: state.pathParameters['artist']!),
+  ),
+  for (final appears in [false, true])
+    GoRoute(
+      path: 'artists/:artist/${appears ? 'appears' : 'albums'}',
+      builder: (context, state) => ArtistAlbumsPage(
+        artistId: state.pathParameters['artist']!,
+        appears: appears,
+      ),
+    ),
+  for (final kind in GroupKind.values) ...[
+    GoRoute(
+      path: '${kind.name == 'genre' ? 'genres' : 'languages'}/:${kind.name}',
+      builder: (context, state) =>
+          GroupPage(kind: kind, id: state.pathParameters[kind.name]!),
+    ),
+    for (final artists in [true, false])
+      GoRoute(
+        path:
+            '${kind.name == 'genre' ? 'genres' : 'languages'}/:${kind.name}/'
+            '${artists ? 'artists' : 'albums'}',
+        builder: (context, state) => GroupSeeAllPage(
+          kind: kind,
+          id: state.pathParameters[kind.name]!,
+          artists: artists,
+        ),
+      ),
+  ],
+];
 
 Widget _pageOf(LibraryTab tab, GoRouterState state) => switch (tab) {
   LibraryTab.songs => const SongsPage(),

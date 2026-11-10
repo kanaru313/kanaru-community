@@ -43,3 +43,29 @@ final Setting<bool> compactFoldersSetting = Setting(
 );
 
 final compactFoldersProvider = settingNotifierProvider(compactFoldersSetting);
+
+/// One detail page: the kind of its song list and the item it shows (the
+/// encoded album / artist key, or the genre / language id).
+typedef DetailPageKey = ({BrowseList list, String item});
+
+/// Sorts chosen on detail pages during this session. A page nobody changed
+/// starts with the remembered default of its kind (`library.list_views`).
+class DetailSortOverrides extends Notifier<Map<DetailPageKey, SortSpec>> {
+  @override
+  Map<DetailPageKey, SortSpec> build() => const {};
+
+  Future<void> set(DetailPageKey page, SortSpec sort) async =>
+      state = {...state, page: sort};
+}
+
+final detailSortOverridesProvider =
+    NotifierProvider<DetailSortOverrides, Map<DetailPageKey, SortSpec>>(
+      DetailSortOverrides.new,
+    );
+
+/// Sort in use on one detail page: its override, else the kind's default.
+final detailSortProvider = Provider.autoDispose.family<SortSpec, DetailPageKey>(
+  (ref, page) =>
+      ref.watch(detailSortOverridesProvider.select((m) => m[page])) ??
+      ref.watch(libraryListViewsProvider.select((v) => v.of(page.list).sort)),
+);

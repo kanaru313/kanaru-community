@@ -33,6 +33,8 @@ void addScope(SqlWhere w, SongScope scope) {
         't.id IN (SELECT track_id FROM track_artists WHERE artist_key = ?)',
         [Variable.withString(key.key)],
       );
+    case AlbumArtistSongs(:final key):
+      w.add('t.album_artist_key = ?', [Variable.withString(key.key)]);
     case GenreSongs(:final genreKey):
       w.add('t.genre_key = ?', [Variable.withString(genreKey)]);
     case LanguageSongs(:final code):

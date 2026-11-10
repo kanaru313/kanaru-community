@@ -15,7 +15,7 @@
 - List queries: song scopes, sort and filter SQL, aggregates, providers.
 - Folder tree, detail data, menu data, selection state.
 - File manager and the `kanaru_ui` collection widgets (parts 1 and 2).
-- Navigation and routes, the Songs list, collection lists, the Folders tab (UI).
+- Navigation and routes, the Songs list, collection lists, detail pages, the Folders tab (UI).
 
 ## Keys
 
@@ -504,6 +504,70 @@ Every call is awaited; a failure is logged and shows a snack bar.
 - Counts: `34 albums`, or `6 / 34 albums` while filtering (the total is the
   unfiltered summary count).
 
+## Detail pages
+
+`lib/src/library/ui/detail/{album_page,artist_page,group_page,see_all_page,detail_header,detail_songs}.dart`,
+routes in `ui/browse/library_routes.dart`.
+
+- Routes are flat siblings of the six list routes (a nested route would stack
+  its parent page under it): `albums/:album`, `artists/:artist`,
+  `artists/:artist/{albums,appears}`, `genres/:genre`,
+  `genres/:genre/{artists,albums}`, `languages/:language` (`_unknown` = songs
+  without a language) and `languages/:language/{artists,albums}`. They match
+  `LibraryLocations` exactly, so Now Playing and the queue menus open the same
+  pages. An id that does not decode, or an item no visible track has, shows
+  "Not found" with a back button. Every open from a page is `openLibraryPage`
+  (push): Back returns one page at a time. A page that was the first of the
+  stack (a link from outside) goes back to its list.
+- `DetailFrame`: `PageHeader(title: name, onBack)` and the page. No ⋮ in the
+  header. `DetailActions`: Play (filled), shuffle (tonal), ⋮ (dimmed with "Coming
+  soon" until the page menu exists). Play and shuffle take every song of the
+  page in the page's current sort, ignoring its filter; the context carries the
+  encoded key and the name.
+- `DetailSongsHost(list, scope, ...)` owns the page's filter and builds the
+  song slivers: a `KStickyBarSliver` list bar (`N songs · length`, or `6 / 34
+  songs` while filtering; sort chip through `openListSort`; filter toggle), the
+  filter field and `SongSlivers` (the rows of `SongList` as one sliver, same
+  `TrackWindow` built-range rule). The sort starts at the remembered default
+  of the page kind (`albumTracks`, `detailSongs`); a sort chosen on a page is
+  kept for the session for that page only (`detailSortProvider`, keyed by kind
+  and item id; not persisted). The host stays in the tree when an artist has no
+  songs yet (`hasSongs: false` only drops the songs part), so a first song
+  arriving keeps the filter and scroll. The sort popover is
+  `openListSort` (`ui/browse/list_sort_popover.dart`). On the mobile shell Back
+  closes the filter first.
+- Album: `KDetailLayout` (wide from 840 px of page width) with `KDetailHero`:
+  cover and, bottom aligned or under it, the album artist (primary colour, opens
+  the artist page; plain text for the unknown artist), the year and the
+  buttons. The page tint is `coverColorsProvider(coverKey).seed`. Rows are
+  `SongTile(showNumber: true)`; no disc headers and no "other albums".
+- Artist: round photo (not faded), `N albums` (own; the line is left out when
+  the artist owns none), shelves Albums (newest
+  first) and Appears on, then the songs. A shelf with no item and the songs
+  part of an artist with no `track_artists` row are left out. Play and shuffle
+  of such an album-artist-only page play `SongScope.albumArtist(key)` (tracks
+  whose stored album artist key is the artist's); `ArtistSongs` is not widened. Name:
+  `artistNameProvider` (tag name, else the display artist of its first album).
+- Genre / language: `KColorBanner` (colour from the name, big `N songs`,
+  `M artists · length`, language adds `· K auto-detected`), artist shelf and
+  album shelf from two items up, capped at 10 (mobile shell) or 8 (desktop),
+  then the songs (`detailSongs`, most played first). Language pages note what
+  "auto-detected" means when the page has detected songs (the unknown group
+  always has its own note) and
+  `SongTile(showDetected)` tags songs whose language was detected.
+- See all: `ArtistAlbumsPage(appears)` and `GroupSeeAllPage(artists)` are
+  `KCollectionGrid`s of `AlbumCard` / `ArtistCard`, titled `Albums · name`,
+  `Appears on · name`, `Artists · name`. `SeeAllLocations` builds the paths. A
+  group that does not exist (or has no track) is "Not found" here too.
+- Data: `albumDetailProvider`, `artistDetailProvider`, `artistNameProvider`,
+  `genreNameProvider` on top of the throttled summaries; the shelves and totals
+  are in "Detail data".
+- Covers: `ui/browse/item_covers.dart` has `AlbumCover` and `ArtistCover`, the
+  one place that decides which picture an album or artist shows (tiles, grid
+  cards and page headers all use them). Today they draw the cover of the tracks
+  (or a placeholder). A cover the user chose plugs in here, ahead of `coverKey`,
+  keyed by the encoded `AlbumKey` / `ArtistKey` (`itemKey`).
+
 ## Folders tab
 
 `lib/src/library/ui/folders/`.
@@ -606,6 +670,7 @@ Sizes that the mockups give and the tokens lack (card radius 14, panel radius
 | Widget | Notes |
 |---|---|
 | `KDetailLayout` | `header` plus list `slivers`. Under 840 px of page width (measured on the page, not the window) the header sits above the list; from 840 the header is a fixed 320 column, bottom aligned and scrolling on its own when the window is short. `tint` washes the background (alpha at most 0.18 light, 0.24 dark) |
+| `KDetailHero` | Top of an album or artist page for the `header` slot: narrow = 132 cover on the left, text and buttons aligned to its bottom; wide (asked of `KDetailLayout.isWide`) = cover as wide as the column, faded at the bottom and right edges (a round photo is not), text below |
 | `KBlurredBar`, `KStickyBarSliver` | Translucent blurred background and a pinned sliver bar over it, so the tint is not cut by a flat bar. Blur only on these bars |
 | `showKLayeredMenu` | `KMenuPage` (header, groups of `KMenuRow`, footer of two `KMenuButton`s, note). A row either runs `onTap`, opens a sub-page (`opens`), or folds chips (`chips`); `soonLabel` or `enabled: false` dims it and makes it inert; `danger`, `proLabel`, `trailing` icon button. A chosen row closes the menu first and then runs its callback. Back, the arrow and Esc on a sub-page return one page; on the root they close |
 | `KSelectionPanel` | Frame of the multi-select panel: `header`, optional expanded `body` clamped to 460 dp (`bodyHeight`), no state. Mobile: full width minus 8, radius 20. Desktop: 440 wide, centred, radius 22, shadow. The frame is only as high as its content, so a full-width slot does not take taps beside it |

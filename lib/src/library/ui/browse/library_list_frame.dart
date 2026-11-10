@@ -9,6 +9,7 @@ import '../../domain/browse/list_view_prefs.dart';
 import '../../state/browse/list_prefs_providers.dart';
 import 'library_labels.dart';
 import 'library_list_scaffold.dart';
+import 'list_sort_popover.dart';
 
 /// What a list page shows right now: remembered sort and layout, the text
 /// typed in the filter field (empty when it is closed) and whether the field
@@ -75,45 +76,15 @@ class _LibraryListFrameState extends ConsumerState<LibraryListFrame> {
     _filterOpen = false;
   });
 
-  Future<void> _openSort(GlobalKey anchor) async {
-    final l10n = AppLocalizations.of(context);
+  Future<void> _openSort(GlobalKey anchor) {
     final notifier = ref.read(libraryListViewsProvider.notifier);
     final list = widget.list;
-    final current = ref.read(libraryListViewsProvider).of(list).sort;
-    final numeric = current.criterion.isNumeric;
-    final picked = await showKSortPopover<SortCriterion>(
+    return openListSort(
       context,
+      list: list,
       anchor: anchor,
-      criteria: [
-        for (final c in criteriaOf(list))
-          KSortCriterion(
-            value: c,
-            label: sortCriterionLabel(l10n, c),
-            icon: sortCriterionIcon(c),
-          ),
-      ],
-      selected: current.criterion,
-      ascending: !current.descending,
-      ascendingLabel: numeric
-          ? l10n.libraryOrderAscNumber
-          : l10n.libraryOrderAscText,
-      descendingLabel: numeric
-          ? l10n.libraryOrderDescNumber
-          : l10n.libraryOrderDescText,
-      onAscendingChanged: (ascending) => notifier.setSort(
-        list,
-        ref
-            .read(libraryListViewsProvider)
-            .of(list)
-            .sort
-            .withDirection(descending: !ascending),
-      ),
-    );
-    if (picked == null) return;
-    final latest = ref.read(libraryListViewsProvider).of(list).sort;
-    await notifier.setSort(
-      list,
-      SortSpec(picked, descending: latest.descending),
+      read: () => ref.read(libraryListViewsProvider).of(list).sort,
+      write: (sort) => notifier.setSort(list, sort),
     );
   }
 

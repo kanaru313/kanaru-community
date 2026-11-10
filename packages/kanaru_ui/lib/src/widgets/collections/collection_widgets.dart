@@ -13,6 +13,7 @@ export 'k_media_card.dart';
 export 'k_shelf.dart';
 export 'k_sort_popover.dart';
 export 'k_sub_tab_bar.dart';
+export 'k_detail_hero.dart';
 export 'k_detail_layout.dart';
 export 'k_layered_menu.dart';
 export 'k_selection_panel.dart';

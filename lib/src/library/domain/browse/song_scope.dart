@@ -14,6 +14,11 @@ sealed class SongScope {
   /// Tracks one artist takes part in (any `track_artists` row).
   const factory SongScope.artist(ArtistKey key) = ArtistSongs;
 
+  /// Tracks whose stored album artist key is [key]: what an artist that is
+  /// only an album artist (a compilation's "Various Artists") owns. Used to
+  /// play such a page; it never replaces [SongScope.artist].
+  const factory SongScope.albumArtist(ArtistKey key) = AlbumArtistSongs;
+
   /// Tracks of one genre ([genreKey] is the stored `genre_key`).
   const factory SongScope.genre(String genreKey) = GenreSongs;
 
@@ -60,6 +65,18 @@ class ArtistSongs extends SongScope {
 
   @override
   int get hashCode => Object.hash('artist', key);
+}
+
+class AlbumArtistSongs extends SongScope {
+  const AlbumArtistSongs(this.key);
+  final ArtistKey key;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AlbumArtistSongs && other.key == key;
+
+  @override
+  int get hashCode => Object.hash('albumArtist', key);
 }
 
 class GenreSongs extends SongScope {

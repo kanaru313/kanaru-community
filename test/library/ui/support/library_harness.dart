@@ -147,13 +147,6 @@ Future<LibraryHarness> pumpLibrary(
     initialLocation: initial,
     routes: [
       libraryRoute(),
-      // Stand-ins for the detail pages, so a push has somewhere to go.
-      for (final kind in ['albums', 'artists', 'genres', 'languages'])
-        GoRoute(
-          path: '/library/$kind/:key',
-          builder: (_, state) =>
-              Text('detail $kind ${state.pathParameters['key']}'),
-        ),
       GoRoute(
         path: '/probe',
         builder: (context, _) => Column(
