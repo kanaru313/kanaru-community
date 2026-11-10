@@ -152,7 +152,7 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 
 - `tracks.locator` is UTF-8 text as the platform listing API returns it: the path relative to the mount root, `/` as separator, no leading or trailing `/`.
 - Locators are never Unicode-normalized. NFC and NFD names are different locators.
-- A name that does not decode as UTF-8 is skipped and reported as a scan error.
+- A name that does not decode as UTF-8 is skipped (no row is written); the scan counts and logs it.
 - CUE track: `'<cue path>#NN'` (two-digit track number).
 - Id-based remotes (Google Drive, OneDrive, Subsonic): the locator is the provider file id. `rel_path` holds the display path. The scanner applies folder exclusions while listing.
 - Path-based folder filter: `folderLocatorRange` (`database/folder_range.dart`) returns `[key/, key0)` (`locator >= key || '/' AND locator < key || '0'`), and null for the root (every row). The exclusion and unhide helpers use it. Folder keys come from the same listing API.
