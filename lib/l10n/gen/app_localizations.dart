@@ -242,6 +242,462 @@ abstract class AppLocalizations {
   /// **'Rescan library'**
   String get appRescan;
 
+  /// No description provided for @scanSetupWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Kanaru'**
+  String get scanSetupWelcomeTitle;
+
+  /// No description provided for @scanSetupWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A few basics to set up. You can change them in Settings at any time.'**
+  String get scanSetupWelcomeSubtitle;
+
+  /// No description provided for @scanSetupPermissionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get scanSetupPermissionsTitle;
+
+  /// No description provided for @scanSetupPermissionAudioTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Music and audio'**
+  String get scanSetupPermissionAudioTitle;
+
+  /// No description provided for @scanSetupPermissionAudioSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find and play songs on the device, read .lrc lyrics'**
+  String get scanSetupPermissionAudioSubtitle;
+
+  /// No description provided for @scanSetupPermissionImagesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and videos'**
+  String get scanSetupPermissionImagesTitle;
+
+  /// No description provided for @scanSetupPermissionImagesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Only to read cover art (cover.jpg) in music folders. Kanaru does not look at your photos or videos.'**
+  String get scanSetupPermissionImagesSubtitle;
+
+  /// No description provided for @scanSetupPermissionAllowedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed'**
+  String get scanSetupPermissionAllowedLabel;
+
+  /// No description provided for @scanSetupPermissionMissingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Not allowed'**
+  String get scanSetupPermissionMissingLabel;
+
+  /// No description provided for @scanSetupPermissionsGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'All permissions allowed · Music and audio · Photos and videos'**
+  String get scanSetupPermissionsGranted;
+
+  /// No description provided for @scanSetupGrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get scanSetupGrant;
+
+  /// No description provided for @scanSetupGrantMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow the missing permission'**
+  String get scanSetupGrantMissing;
+
+  /// No description provided for @scanSetupOpenAppSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open app settings'**
+  String get scanSetupOpenAppSettings;
+
+  /// No description provided for @scanSetupPermissionNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Both are needed to continue. Kanaru does not ask for “All files access”.'**
+  String get scanSetupPermissionNote;
+
+  /// No description provided for @scanSetupPermissionBlockedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Android will not ask again because the permission was denied several times. Turn on both permissions in Settings › Apps › Kanaru › Permissions, then come back here.'**
+  String get scanSetupPermissionBlockedNote;
+
+  /// No description provided for @scanSetupAudioDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Music permission is needed to find songs on the device.'**
+  String get scanSetupAudioDenied;
+
+  /// No description provided for @scanSetupImagesDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos permission is needed to read cover art in music folders.'**
+  String get scanSetupImagesDenied;
+
+  /// No description provided for @scanSetupImagesLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Choosing only some photos cannot read cover.jpg: choose “Allow all”.'**
+  String get scanSetupImagesLimited;
+
+  /// No description provided for @scanSetupAppearanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get scanSetupAppearanceTitle;
+
+  /// No description provided for @scanSetupThemeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get scanSetupThemeLabel;
+
+  /// No description provided for @scanSetupLanguageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get scanSetupLanguageLabel;
+
+  /// No description provided for @scanSetupThemeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow system'**
+  String get scanSetupThemeSystem;
+
+  /// No description provided for @scanSetupThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get scanSetupThemeDark;
+
+  /// No description provided for @scanSetupThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get scanSetupThemeLight;
+
+  /// No description provided for @scanSetupLanguageVietnamese.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiếng Việt'**
+  String get scanSetupLanguageVietnamese;
+
+  /// No description provided for @scanSetupLanguageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get scanSetupLanguageEnglish;
+
+  /// No description provided for @scanSetupTabsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Library tabs'**
+  String get scanSetupTabsTitle;
+
+  /// No description provided for @scanSetupTabsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on the tabs you want, drag to reorder. At least one tab stays on.'**
+  String get scanSetupTabsHint;
+
+  /// No description provided for @scanSetupTabShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the {tab} tab'**
+  String scanSetupTabShow(String tab);
+
+  /// No description provided for @scanSetupTabDrag.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get scanSetupTabDrag;
+
+  /// No description provided for @scanSetupTabLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one tab stays on'**
+  String get scanSetupTabLocked;
+
+  /// No description provided for @scanSetupFoldersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Music folders'**
+  String get scanSetupFoldersTitle;
+
+  /// No description provided for @scanSetupFoldersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru scans these folders and everything inside them.'**
+  String get scanSetupFoldersHint;
+
+  /// No description provided for @scanSetupFoldersHintCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru scans these folders · about {count, plural, =1{1 song} other{{count} songs}}'**
+  String scanSetupFoldersHintCount(int count);
+
+  /// No description provided for @scanSetupFoldersNeedPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow music access to see the folders that have music.'**
+  String get scanSetupFoldersNeedPermission;
+
+  /// No description provided for @scanSetupFoldersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No folder chosen yet.'**
+  String get scanSetupFoldersEmpty;
+
+  /// No description provided for @scanSetupFoldersNoSystemMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru could not find the system Music folder. Add the folder that holds your music.'**
+  String get scanSetupFoldersNoSystemMusic;
+
+  /// No description provided for @scanSetupAddFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add folder'**
+  String get scanSetupAddFolder;
+
+  /// No description provided for @scanSetupAddFolderDialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Add folder…'**
+  String get scanSetupAddFolderDialog;
+
+  /// No description provided for @scanSetupFolderSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get scanSetupFolderSuggested;
+
+  /// No description provided for @scanSetupFolderRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}'**
+  String scanSetupFolderRemove(String name);
+
+  /// No description provided for @scanSetupFolderSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}}'**
+  String scanSetupFolderSongs(int count);
+
+  /// No description provided for @scanSetupFolderPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add music folders'**
+  String get scanSetupFolderPickerTitle;
+
+  /// No description provided for @scanSetupFolderPickerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders with music that Android found.'**
+  String get scanSetupFolderPickerHint;
+
+  /// No description provided for @scanSetupFolderPickerEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Every folder with music is already chosen.'**
+  String get scanSetupFolderPickerEmpty;
+
+  /// No description provided for @scanSetupSheetAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get scanSetupSheetAdd;
+
+  /// No description provided for @scanSetupSheetAddCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {count}'**
+  String scanSetupSheetAddCount(int count);
+
+  /// No description provided for @scanSetupSheetCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get scanSetupSheetCancel;
+
+  /// No description provided for @scanSetupExclusionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded'**
+  String get scanSetupExclusionsTitle;
+
+  /// No description provided for @scanSetupExclusionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip these sub-folders when scanning (ringtones, recordings…).'**
+  String get scanSetupExclusionsHint;
+
+  /// No description provided for @scanSetupExclusionsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No folder excluded.'**
+  String get scanSetupExclusionsEmpty;
+
+  /// No description provided for @scanSetupAddExclusion.
+  ///
+  /// In en, this message translates to:
+  /// **'Add excluded folder'**
+  String get scanSetupAddExclusion;
+
+  /// No description provided for @scanSetupAddExclusionDialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Add excluded folder…'**
+  String get scanSetupAddExclusionDialog;
+
+  /// No description provided for @scanSetupExclusionPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude folders'**
+  String get scanSetupExclusionPickerTitle;
+
+  /// No description provided for @scanSetupExclusionPickerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-folders of the music folders you chose.'**
+  String get scanSetupExclusionPickerHint;
+
+  /// No description provided for @scanSetupExclusionPickerEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no sub-folders to exclude.'**
+  String get scanSetupExclusionPickerEmpty;
+
+  /// No description provided for @scanSetupRefusedAlreadyChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'“{folder}” is already chosen.'**
+  String scanSetupRefusedAlreadyChosen(String folder);
+
+  /// No description provided for @scanSetupRefusedInside.
+  ///
+  /// In en, this message translates to:
+  /// **'“{folder}” is already inside “{root}”.'**
+  String scanSetupRefusedInside(String folder, String root);
+
+  /// No description provided for @scanSetupRefusedContains.
+  ///
+  /// In en, this message translates to:
+  /// **'“{folder}” contains “{root}”, which is already chosen.'**
+  String scanSetupRefusedContains(String folder, String root);
+
+  /// No description provided for @scanSetupRefusedTooBroad.
+  ///
+  /// In en, this message translates to:
+  /// **'“{folder}” is too broad to scan.'**
+  String scanSetupRefusedTooBroad(String folder);
+
+  /// No description provided for @scanSetupRefusedNotFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'“{folder}” is not a folder.'**
+  String scanSetupRefusedNotFolder(String folder);
+
+  /// No description provided for @scanSetupRefusedOutside.
+  ///
+  /// In en, this message translates to:
+  /// **'“{folder}” is not inside a music folder.'**
+  String scanSetupRefusedOutside(String folder);
+
+  /// No description provided for @scanSetupRefusedAlreadyExcluded.
+  ///
+  /// In en, this message translates to:
+  /// **'“{folder}” is already excluded.'**
+  String scanSetupRefusedAlreadyExcluded(String folder);
+
+  /// No description provided for @scanSetupWriteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save that change. Try again.'**
+  String get scanSetupWriteFailed;
+
+  /// No description provided for @scanSetupNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get scanSetupNext;
+
+  /// No description provided for @scanSetupNextDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one music folder'**
+  String get scanSetupNextDisabled;
+
+  /// No description provided for @scanSetupLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this section.'**
+  String get scanSetupLoadFailed;
+
+  /// No description provided for @scanSetupRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get scanSetupRetry;
+
+  /// No description provided for @scanVolumeInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal storage'**
+  String get scanVolumeInternal;
+
+  /// No description provided for @scanVolumeSdCard.
+  ///
+  /// In en, this message translates to:
+  /// **'SD card'**
+  String get scanVolumeSdCard;
+
+  /// No description provided for @scanVolumeUsb.
+  ///
+  /// In en, this message translates to:
+  /// **'USB drive'**
+  String get scanVolumeUsb;
+
+  /// No description provided for @scanHomeScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning the library'**
+  String get scanHomeScanning;
+
+  /// No description provided for @scanHomeProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading tags and covers · {done} / {total} songs'**
+  String scanHomeProgress(int done, int total);
+
+  /// No description provided for @scanHomeAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{added, plural, =1{Added 1 song} other{Added {added} songs}}'**
+  String scanHomeAdded(int added);
+
+  /// No description provided for @scanHomeAddedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{albums, plural, =1{1 album} other{{albums} albums}} · {artists, plural, =1{1 artist} other{{artists} artists}}'**
+  String scanHomeAddedDetail(int albums, int artists);
+
+  /// No description provided for @scanHomeNoTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'No songs found'**
+  String get scanHomeNoTracks;
+
   /// No description provided for @playbackCover.
   ///
   /// In en, this message translates to:

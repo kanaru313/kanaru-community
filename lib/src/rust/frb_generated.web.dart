@@ -6,7 +6,10 @@
 // Static analysis wrongly picks the IO variant, thus ignore this
 // ignore_for_file: argument_type_not_assignable
 
+import 'api/covers.dart';
+import 'api/error.dart';
 import 'api/native_info.dart';
+import 'api/tags.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -27,7 +30,99 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  bool dco_decode_bool(dynamic raw);
+
+  @protected
+  CoverColorsDto dco_decode_box_autoadd_cover_colors_dto(dynamic raw);
+
+  @protected
+  int dco_decode_box_autoadd_i_32(dynamic raw);
+
+  @protected
+  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  NativeError dco_decode_box_autoadd_native_error(dynamic raw);
+
+  @protected
+  TagFieldsDto dco_decode_box_autoadd_tag_fields_dto(dynamic raw);
+
+  @protected
+  CoverColorsDto dco_decode_cover_colors_dto(dynamic raw);
+
+  @protected
+  CoverColorsResultDto dco_decode_cover_colors_result_dto(dynamic raw);
+
+  @protected
+  CoverImportDto dco_decode_cover_import_dto(dynamic raw);
+
+  @protected
+  CoverRequestDto dco_decode_cover_request_dto(dynamic raw);
+
+  @protected
+  CoverResultDto dco_decode_cover_result_dto(dynamic raw);
+
+  @protected
+  CoverStatusDto dco_decode_cover_status_dto(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
+
+  @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw);
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<CoverColorsResultDto> dco_decode_list_cover_colors_result_dto(
+    dynamic raw,
+  );
+
+  @protected
+  List<CoverRequestDto> dco_decode_list_cover_request_dto(dynamic raw);
+
+  @protected
+  List<CoverResultDto> dco_decode_list_cover_result_dto(dynamic raw);
+
+  @protected
+  Int64List dco_decode_list_prim_i_64_strict(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<TagReadDto> dco_decode_list_tag_read_dto(dynamic raw);
+
+  @protected
+  NativeError dco_decode_native_error(dynamic raw);
+
+  @protected
+  NativeErrorKind dco_decode_native_error_kind(dynamic raw);
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  CoverColorsDto? dco_decode_opt_box_autoadd_cover_colors_dto(dynamic raw);
+
+  @protected
+  int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
+
+  @protected
+  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  NativeError? dco_decode_opt_box_autoadd_native_error(dynamic raw);
+
+  @protected
+  TagFieldsDto? dco_decode_opt_box_autoadd_tag_fields_dto(dynamic raw);
+
+  @protected
+  TagFieldsDto dco_decode_tag_fields_dto(dynamic raw);
+
+  @protected
+  TagReadDto dco_decode_tag_read_dto(dynamic raw);
 
   @protected
   int dco_decode_u_8(dynamic raw);
@@ -39,7 +134,115 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  CoverColorsDto sse_decode_box_autoadd_cover_colors_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  NativeError sse_decode_box_autoadd_native_error(SseDeserializer deserializer);
+
+  @protected
+  TagFieldsDto sse_decode_box_autoadd_tag_fields_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CoverColorsDto sse_decode_cover_colors_dto(SseDeserializer deserializer);
+
+  @protected
+  CoverColorsResultDto sse_decode_cover_colors_result_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CoverImportDto sse_decode_cover_import_dto(SseDeserializer deserializer);
+
+  @protected
+  CoverRequestDto sse_decode_cover_request_dto(SseDeserializer deserializer);
+
+  @protected
+  CoverResultDto sse_decode_cover_result_dto(SseDeserializer deserializer);
+
+  @protected
+  CoverStatusDto sse_decode_cover_status_dto(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<CoverColorsResultDto> sse_decode_list_cover_colors_result_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<CoverRequestDto> sse_decode_list_cover_request_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<CoverResultDto> sse_decode_list_cover_result_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<TagReadDto> sse_decode_list_tag_read_dto(SseDeserializer deserializer);
+
+  @protected
+  NativeError sse_decode_native_error(SseDeserializer deserializer);
+
+  @protected
+  NativeErrorKind sse_decode_native_error_kind(SseDeserializer deserializer);
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  CoverColorsDto? sse_decode_opt_box_autoadd_cover_colors_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  NativeError? sse_decode_opt_box_autoadd_native_error(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  TagFieldsDto? sse_decode_opt_box_autoadd_tag_fields_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  TagFieldsDto sse_decode_tag_fields_dto(SseDeserializer deserializer);
+
+  @protected
+  TagReadDto sse_decode_tag_read_dto(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -48,13 +251,106 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
-
-  @protected
-  bool sse_decode_bool(SseDeserializer deserializer);
-
-  @protected
   void sse_encode_String(String self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_cover_colors_dto(
+    CoverColorsDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_i_64(
+    PlatformInt64 self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_native_error(
+    NativeError self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_tag_fields_dto(
+    TagFieldsDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_cover_colors_dto(
+    CoverColorsDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_cover_colors_result_dto(
+    CoverColorsResultDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_cover_import_dto(
+    CoverImportDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_cover_request_dto(
+    CoverRequestDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_cover_result_dto(
+    CoverResultDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_cover_status_dto(
+    CoverStatusDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_cover_colors_result_dto(
+    List<CoverColorsResultDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_cover_request_dto(
+    List<CoverRequestDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_cover_result_dto(
+    List<CoverResultDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_prim_i_64_strict(
+    Int64List self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_u_8_strict(
@@ -63,16 +359,61 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_tag_read_dto(
+    List<TagReadDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_native_error(NativeError self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_native_error_kind(
+    NativeErrorKind self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_cover_colors_dto(
+    CoverColorsDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_i_64(
+    PlatformInt64? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_native_error(
+    NativeError? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_tag_fields_dto(
+    TagFieldsDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_tag_fields_dto(TagFieldsDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tag_read_dto(TagReadDto self, SseSerializer serializer);
+
+  @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer);
 }
 
 // Section: wire_class
