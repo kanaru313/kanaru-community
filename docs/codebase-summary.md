@@ -1,75 +1,102 @@
 # Codebase summary
 
 Map of what exists. Module rules: [ARCHITECTURE.md](../ARCHITECTURE.md).
+Generated from the source tree; the file names here are the real ones.
 
 ## Entry and composition root (`lib/`)
 
 | File | What |
 |---|---|
 | `main.dart` | `runKanaru(extensions: bundledExtensions)` |
-| `kanaru.dart` | `runKanaru`, `builtInExtensions`; exports extension, database, license and registry types |
-| `kanaru_bootstrap.dart` | `bootstrap(...)` startup sequence, `BootstrapResult` |
+| `kanaru.dart` | `runKanaru`, `builtInExtensions`; exports the database, extension, license and registry types |
+| `kanaru_bootstrap.dart` | `bootstrap(...)`: native library, paths, settings, device id, database, registry, startup hooks; `BootstrapResult`; `databaseFileName = 'kanaru.db'` |
 | `kanaru_error_app.dart` | `KanaruErrorApp`, shown on startup failure |
-| `l10n/parts/<part>_<locale>.arb` | Hand-written strings per part; merged by `tool/merge_arb.dart` into `l10n/app_<locale>.arb`, then `l10n/gen/` (both committed) |
+| `l10n/parts/<part>_<locale>.arb` | Strings per part (`app`, `scan`, `playback`, `library`); merged by `tool/merge_arb.dart` into `l10n/app_<locale>.arb`, then generated into `l10n/gen/` (both committed) |
 
 ## Modules (`lib/src/`)
 
 | Module | Contents |
 |---|---|
-| `foundation/` | `result.dart` (sealed `Ok`/`Err`), `app_logger.dart` (`setupLogging`); `ids/` (`stableHashHex`, `stableUid`, `newUlid`, `isUlid`); `ordering/` (`generateKeyBetween`, `generateNKeysBetween`); `text/` (`foldDiacritics`, `foldedMatcher`, `foldedContains`) |
-| `media/domain/` | plain-Dart shared types: `TrackId`, `TrackInfo` (+`formatFromLocator`), `PlayContext`, `CoverColors`; `library_keys.dart` (`groupKey`, `searchForm`, `sortForm`, `songKey`, `albumKeyFor`, `AlbumKey`/`ArtistKey` encode/decode, `libraryKeysVersion`); `cover_files.dart` (`isCoverKey`, `coverRelativePath`, marker/temp names). One writer function per derived column; readers use the same function or the stored column. |
-| `platform/` | `domain/app_paths.dart` (`AppPaths`, `kanaruDirName = 'kanaru'`); `data/` `linux_app_paths.dart` (XDG), `android_app_paths.dart` (`path_provider`), `app_paths_factory.dart`, `native_library.dart` (loads Rust, the only importer of `lib/src/rust`), `json_settings_store.dart` (`settings.json` in the config dir), `file_device_id.dart` (`device_id` in the data dir), `atomic_file.dart`; `domain/` also `settings_store.dart` (`SettingsStore`), `setting.dart` (`Setting<T>`), `device_id.dart` (`DeviceIdSource`); `state/` `platform_providers.dart`, `settings_providers.dart` (`settingsStoreProvider`, `settingNotifierProvider`), `device_id_provider.dart` (`deviceIdProvider`); storage volumes: `domain/storage_volumes.dart` (`StorageVolumes`, `StorageVolume`, `volumeForPath`), `data/{android,linux}_storage_volumes.dart`, `state/storage_volumes_provider.dart` |
-| `database/` | `app_database.dart` (`AppDatabase`, `schemaVersion` 1, `sharedConnection`, `configureConnection`); `tables/` `library_source_tables.dart` (`sources`, `source_mounts`, `excluded_folders`), `library_track_tables.dart` (`tracks`, `track_details`) + `library_track_search.drift` (`track_search` FTS5, triggers), `playback_tables.dart` (`play_log`, `play_stats`) + `playback_stats.drift` (`play_stats_ctl`, stats triggers), `library_collection_tables.dart` (`playlists`, `playlist_entries`, `saved_items`), `extension_tables.dart` (`ExtensionSchema`); helpers `row_uids.dart`, `tombstone_upsert.dart` (`insertOrRevive`), `track_snapshot.dart` (`upsertTrackSnapshot`), `track_lifecycle.dart`, `track_gc.dart` (`collectOrphanTracks`), `track_visibility.dart`, `fts_query.dart` (`ftsPrefixQuery`), `play_stats_bulk.dart` (`runPlayStatsBulk`), `schema_guard.dart` (debug schema check); `tables.dart`, `database.dart` (barrel), `state/database_providers.dart`; generated `*.drift.dart`. Spec: [system-architecture-database.md](./system-architecture-database.md) |
-| `extension/` | `kanaru_extension.dart`; `domain/license.dart` (`ProFeature`, `LicenseStatus`, `LicenseService`, `FreeLicenseService`); `state/extension_registry.dart`, `registry_entries.dart` (`NavItem`, `SettingsSection`, `TopBarAction`, `StartupContext`, `StartupHook`), `extension_providers.dart` |
-| `playback/` | Cross-lane contracts only (the player is not built yet): `domain/` `playback_commands.dart` (`PlaybackCommands`), `now_playing.dart` (`NowPlaying`); `data/` `track_info_rows.dart` (`trackInfoFromRow`, `loadTrackInfos` in chunks of 500, `watchTrackInfo`), `cover_colors_rows.dart`, `unavailable_playback.dart` (seed: throws `StateError`); `state/` `playback_providers.dart` (`playbackCommandsProvider` seed, `nowPlayingProvider`, narrow `isCurrentTrackProvider`/`hasCurrentTrackProvider`/`isPlayingProvider`), `track_info_providers.dart`, `cover_providers.dart` (`coverMissesProvider`, `coverColorsProvider`); `ui/track_cover.dart` (`TrackCover`). Every `.family` here is `isAutoDispose: true` |
-| `library/` | `library_extension.dart`; `ui/` Library and Playlists placeholder pages; `domain/` `library_tabs.dart`, `music_folder.dart`, `scan_status.dart` (`ScanStatus`, `LibraryScanCommands`); `data/` `favorites_repository.dart`, `folder_exclusion_repository.dart`, `music_folders_repository.dart`; `state/` `library_tabs_providers.dart` (setting `library.tabs`), `favorites_providers.dart` (one `Set<TrackId>` stream + `isFavoriteProvider` select), `music_folders_providers.dart`, `folder_exclusion_providers.dart`, `scan_providers.dart` (seeds: idle status, `NoLibraryScanner`) |
-| `online/` | `online_extension.dart`; `ui/online_page.dart` |
-| `screens/` | `screens_extension.dart`; `ui/` Home, Search, Settings; `settings/state/appearance_settings.dart` (`themeChoiceProvider` `app.theme`, `appLanguageProvider` `app.language`, read by `KanaruApp`); `first_run/state/first_run_gate.dart` (`firstRunRequiredProvider` seed false, `firstRunPath`) |
-| `shell/` | `ui/` `app_shell.dart` (the one place that picks desktop or mobile), `mobile_shell.dart`, `desktop_shell.dart`, `desktop_top_bar.dart`, `desktop_sidebar.dart`; `state/nav_history.dart` (desktop back and forward) |
-| `router/` | `app_router.dart` (`buildRouter` from the registry), `state/router_provider.dart`, `ui/kanaru_app.dart` |
+| `foundation/` | `result.dart` (sealed `Ok`/`Err`), `app_logger.dart` (`setupLogging`); `ids/` (`stableHashHex`, `stableUid`, `newUlid`, `isUlid`); `ordering/fractional_keys.dart` (`generateKeyBetween`, `generateNKeysBetween`); `text/text_fold.dart` (`foldDiacritics`, `foldedMatcher`, `foldedContains`) |
+| `media/domain/` | Plain-Dart shared types, no Flutter: `track_id.dart` (`TrackId`), `track_info.dart` (`TrackInfo`, `TrackAvailability`, `formatFromLocator`), `play_context.dart` (`PlayContext`, `PlayContextKind`), `cover_colors.dart` (`CoverColors`, `coverColorsVersion`), `library_keys.dart` (`groupKey`, `searchForm`, `sortForm`, `songKey`, `albumKeyFor`, `albumArtistKeyFor`, `encodeKey`/`decodeKey`, `AlbumKey`, `ArtistKey`, `libraryKeysVersion`), `cover_files.dart` (`isCoverKey`, `coverRelativePath`, `CoverSize`, `coverTempPrefix`, `coverLayoutMarker`) |
+| `platform/` | `domain/`: `app_paths.dart` (`AppPaths`, `kanaruDirName = 'kanaru'`), `settings_store.dart` (`SettingsStore`), `setting.dart` (`Setting<T>`), `device_id.dart` (`DeviceIdSource`), `storage_volumes.dart` (`StorageVolumes`, `StorageVolume`, `StorageVolumeKind`, `volumeForPath`). `data/`: `linux_app_paths.dart` (XDG), `android_app_paths.dart` (`path_provider`), `app_paths_factory.dart` (`createAppPaths`), `native_library.dart` (loads Rust; the only importer of `lib/src/rust`), `json_settings_store.dart` (`JsonSettingsStore`), `file_device_id.dart` (`FileDeviceId`), `atomic_file.dart`, `linux_storage_volumes.dart`, `android_storage_volumes.dart`. `state/`: `platform_providers.dart` (`appPathsProvider`, `nativeVersionsProvider`), `settings_providers.dart` (`settingsStoreProvider`, `settingNotifierProvider`, `SettingNotifier`), `device_id_provider.dart` (`deviceIdProvider`), `storage_volumes_provider.dart` (`storageVolumesProvider`) |
+| `database/` | `app_database.dart` (`AppDatabase`, `schemaVersion` 1, `AppDatabase.file`, `sharedConnection`). `tables/`: `library_source_tables.dart` (`sources`, `source_mounts`, `excluded_folders`), `library_track_tables.dart` (`tracks`, `track_details`) with `library_track_search.drift` (`track_search` FTS5, triggers), `library_cover_tables.dart` (`cover_colors`), `playback_tables.dart` (`play_log`, `play_stats`, `queue_entries`) with `playback_stats.drift`, `library_collection_tables.dart` (`playlists`, `playlist_entries`, `saved_items`), `extension_tables.dart` (`extension_schema`). Helpers: `track_snapshot.dart` (`upsertTrackSnapshot`), `track_artists_write.dart` (`replaceTrackArtists`), `track_details_write.dart` (`upsertTrackDetails`), `track_missing.dart` (`markTracksMissing`), `track_lifecycle.dart` (`removeSource`, `reviveSource`, `setMountEnabled`, `unhideTracks`), `track_gc.dart` (`collectOrphanTracks`), `track_visibility.dart` (`visibleTrackWhere`, `isVisibleTrack`), `tombstone_upsert.dart` (`insertOrRevive`), `folder_exclusion.dart` (`applyFolderExclusion`, `removeFolderExclusion`, `excludedFolderKeys`), `folder_range.dart` (`folderLocatorRange`), `exclusion_sql.dart`, `queue_store.dart` (`readQueue`, `replaceQueue`), `cover_colors_store.dart` (`upsertCoverColors`, `coverColorsFor`), `fts_query.dart` (`ftsPrefixQuery`), `play_stats_bulk.dart` (`runPlayStatsBulk`), `row_uids.dart`, `schema_guard.dart` (debug schema check); `tables.dart` and `database.dart` (barrels), `state/database_providers.dart` (`appDatabaseProvider`). Generated `*.drift.dart`. Spec: [system-architecture-database.md](./system-architecture-database.md) |
+| `extension/` | `kanaru_extension.dart` (`KanaruExtension`); `domain/license.dart` (`ProFeature`, `LicenseStatus`, `LicenseService`, `FreeLicenseService`); `state/extension_registry.dart` (`ExtensionRegistry`); `state/registry_entries.dart` (`NavItem`, `SettingsSection`, `TopBarAction`, `StartupContext`, `StartupHook`, `FlushHook`); `state/extension_providers.dart` (`extensionRegistryProvider`) |
+| `playback/` | Contracts, seeds at the lane boundary. `domain/`: `playback_commands.dart` (`PlaybackCommands`), `now_playing.dart` (`NowPlaying`). `data/`: `track_info_rows.dart` (`trackInfoFromRow`, `loadTrackInfos`, `watchTrackInfo`), `cover_colors_rows.dart` (`loadCoverColors`, `watchCoverColors`), `unavailable_playback.dart` (seed, throws `StateError`). `state/`: `playback_providers.dart` (`playbackCommandsProvider`, `nowPlayingProvider`, `isCurrentTrackProvider`, `hasCurrentTrackProvider`, `isPlayingProvider`), `track_info_providers.dart` (`trackInfoProvider`), `cover_providers.dart` (`coverMissesProvider`, `CoverMissSink`, `coverColorsProvider`). `ui/track_cover.dart` (`TrackCover`). Every `.family` is `isAutoDispose: true`. Contract: [system-architecture-playback.md](./system-architecture-playback.md) |
+| `library/` | `library_extension.dart` (`LibraryExtension`). `domain/`: `library_tabs.dart` (`LibraryTab`, `LibraryTabsConfig`), `music_folder.dart` (`MusicFolder`), `scan_status.dart` (`ScanStatus` and its variants, `ScanPhase`, `LibraryScanCommands`). `data/`: `favorites_repository.dart` (`FavoritesController`, `FavoritesRepository`), `folder_exclusion_repository.dart` (`FolderExclusions`), `music_folders_repository.dart` (`watchMusicFolders`). `state/`: `library_tabs_providers.dart` (`libraryTabsSetting`, `libraryTabsProvider`), `favorites_providers.dart` (`favoriteTrackIdsProvider`, `isFavoriteProvider`, `favoritesControllerProvider`), `music_folders_providers.dart` (`musicFoldersProvider`), `folder_exclusion_providers.dart` (`folderExclusionsProvider`), `scan_providers.dart` (`scanStatusProvider`, `libraryScanCommandsProvider`, `NoLibraryScanner` seed). `ui/`: `library_browse_registration.dart` (nav items and routes of Library and Playlists), `library_locations.dart` (`LibraryLocations`), `library_page.dart` and `playlists_page.dart` (placeholders), `scan/library_scan_registration.dart` (empty), `selection/selection_bar.dart` (`LibrarySelectionBar`, empty slot). Contract: [system-architecture-library.md](./system-architecture-library.md) |
+| `online/` | `online_extension.dart`; `ui/online_page.dart` (placeholder) |
+| `screens/` | `screens_extension.dart` (`ScreensExtension`); `ui/`: `home_page.dart`, `search_page.dart`, `settings_page.dart`; `settings/state/appearance_settings.dart` (`themeChoiceProvider` for `app.theme`, `appLanguageProvider` for `app.language`, read by `KanaruApp`); `first_run/state/first_run_gate.dart` (`firstRunRequiredProvider` seed `false`, `firstRunPath`); `first_run/first_run_registration.dart` (empty); `now_playing/now_playing_registration.dart` (Queue nav item, `comingSoon`) |
+| `shell/` | `ui/app_shell.dart` (the one place that picks desktop or mobile), `mobile_shell.dart`, `desktop_shell.dart` (Ctrl+F / Ctrl+K), `desktop_top_bar.dart` (Rescan, placeholders), `desktop_sidebar.dart` (sidebar grouped by order band, footer); `state/nav_history.dart` (desktop back and forward) |
+| `router/` | `app_router.dart` (`buildRouter` from the registry, first-run redirect), `state/router_provider.dart` (`routerProvider`), `state/app_flush.dart` (`flushApp`, `FlushCoordinator`, `exitFlushCap`), `ui/kanaru_app.dart` (`KanaruApp`: theme, locale, router, lifecycle listener) |
 | `rust/` | Generated flutter_rust_bridge Dart code (do not edit) |
 
-Not yet present: `plugins`, `storage`, `lyrics`. Seeds (`UnavailablePlaybackCommands`, `NoLibraryScanner`, the idle scan status, the first-run gate) are replaced by the lane that builds the real thing; their declarations stay.
+Not yet present: `plugins`, `storage`, `lyrics`, and the scanner, playback and
+library UI bodies (their seeds are in the table above).
 
 ## Packages
 
-- `packages/kanaru_ui`: `KSpace`, `KRadius`, `KShape`, `KLayout`, `KBreakpoints`,
-  `KMotion`, `KIcons`, `buildKanaruTheme`, `FormFactor`, widgets `KPage`,
-  `PageHeader`, `KEmpty`, `KEmptyPage`, `ProBadge`; shared widgets
-  `SelectionRow`, `showSelectionPicker`, `showKSheet`, `showKDialog`,
-  `confirmAction`, `showAppSnackBar`, `KPressable`, `KCover`,
-  `KEqualizerIcon`, `KContextRegion`, `KListRow`, `KChip`, `PageHeaderScope`,
-  `KGap`. Lane widgets go in the group folders `widgets/{setup,media,
-  collections}/` and are exported from their barrel. Tests in
-  `packages/kanaru_ui/test/` (shared helper `test/support/host.dart`).
+- `packages/kanaru_ui` (no music types, imports no app code):
+  - Tokens and theme: `KSpace`, `KRadius`, `KShape`, `KLayout`, `KBreakpoints`, `KMotion`, `buildKanaruTheme`, `FormFactor`.
+  - Icons: `KIcons` (the only file that names `Icons`).
+  - Pages and headers: `KPage`, `PageHeader`, `PageHeaderScope`, `KEmpty`, `KEmptyPage`, `ProBadge`.
+  - Choice and feedback: `SelectionRow`, `SelectionOption`, `showSelectionPicker` (with `confirm`, `header`, `anchor`), `showKSheet`, `showKDialog`, `confirmAction`, `showAppSnackBar`.
+  - Rows and tiles: `KListRow`, `KChip`, `KPressable`, `KContextRegion`, `KCover`, `KEqualizerIcon`, `KGap` (typedef of `Gap`).
+  - Group folders, exported from their barrels and owned by the lanes: `widgets/setup/` (scanner lane), `widgets/media/` (playback lane), `widgets/collections/` (library lane). Empty in the foundation.
+  - Tests in `packages/kanaru_ui/test/`, with a shared host helper in `test/support/`.
 - `packages/kanaru_extensions`: `bundledExtensions`, empty by default in this repo.
 
 ## Gate (`tool/`)
 
-- `check`: bash script running the full gate (`--rust` adds cargo).
+- `check`: bash script running the full gate (`--rust` adds fmt, the `unsafe` grep, cargo test and clippy).
+- `merge_arb.dart`: merges the l10n parts (`--check` for the gate).
 - `check_architecture.dart`: wrapper that runs the CLI of the lint package.
 - `architecture_lint/`: pure Dart package, analyzer plugin (`lib/main.dart`)
   and CLI (`bin/check_architecture.dart`); rules in `lib/src/`; tests in
   `test/`. Has its own `pubspec.lock`, keep it committed.
-- `architecture.yaml` (repo root): module DAG and `domain_forbidden` list.
+- `architecture.yaml` (repo root): module DAG and the `domain_forbidden` list.
 
 ## Rust (`rust/`, `rust_builder/`)
 
 Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
-`kanaru_bridge` (the only cdylib). `kanaru_media`: `error` (`MediaError`,
-`is_transient`), `cancel`, `limits`, and empty `tags/`, `covers/`, `waveform/`
-modules that feature work fills. `kanaru_bridge`: `guard` (`guarded`, panic to error), `pools` (`background`,
-`interactive`, `waveform`; 8 MiB stacks), `os` (thread priority, the only
-`unsafe`), `source` (`Source`, `open_source`: regular files only), and
-`api/{native_info,error,tags,covers,waveform}.rs` (`NativeError` DTO in `api/error.rs`). Third-party versions are pinned
-exactly in `rust/Cargo.toml` with the reason beside each. `rust_builder/` is the
-cargokit glue; generated bindings are
-`rust/crates/kanaru_bridge/src/frb_generated.rs` and `lib/src/rust/`.
+`kanaru_bridge` (the only cdylib).
+
+- `kanaru_media`: `error.rs` (`MediaError`, `is_transient`), `cancel.rs` (`Cancel`),
+  `limits.rs` (size, pixel and duration caps), `lib.rs` (`CRATE_VERSION`). Empty
+  modules that lanes fill: `tags/`, `covers/`, `waveform/`.
+- `kanaru_plugin_runtime`: placeholder for the plugin JavaScript runtime. No FFI and no dependency on `kanaru_media`.
+- `kanaru_bridge`: `guard.rs` (`guarded`, panic to `NativeError`), `pools.rs`
+  (`background`, `interactive`, `waveform`; 8 MiB stacks), `os.rs` (thread
+  priority, the only `unsafe`), `source.rs` (`Source`, `open_source`: regular
+  files only), `api/{native_info,error,tags,covers,waveform}.rs` (`native_versions`,
+  `NativeError` DTO; `tags`, `covers` and `waveform` are empty until their lanes).
+  `frb_generated.rs` is generated.
+- Third-party versions are in `rust/Cargo.toml`, with the reason beside each.
+- `rust_builder/` is the cargokit glue that builds `kanaru_bridge` for the
+  host and the Android ABIs. Generated bindings: `rust/crates/kanaru_bridge/src/frb_generated.rs`
+  and `lib/src/rust/`.
+
+## Platform runners
+
+`android/` (`MainActivity.kt` registers the `kanaru/media_store` channel from
+`MediaStoreChannel.kt`, a seed that answers "not implemented" until the scanner
+lane adds its methods; the manifest declares the `READ_MEDIA_*` permissions and the
+backup rules exclude the device id) and `linux/` (GTK runner). `MainActivity.kt`
+and the manifest are hotspots: no lane edits them.
 
 ## Tests (`test/`)
 
-`bootstrap/` (startup order, failure cleanup), `database/` (schema shape and
-constraints, foreign keys, snapshot upsert, lifecycle, GC, play stats, search,
-collections, spec-vs-schema check; `support/` has the shared test database),
-`foundation/` (ids, fractional keys), `extension/` (registry, license), `platform/` (Linux paths, settings, storage volumes), `playback/` (track info rows, narrow providers, `TrackCover`), `library/` (tabs, favorites, folder exclusion, music folders), `screens/` (appearance), `support/` (fake `PlaybackCommands`, memory settings store), `shell/` (shells,
-router, nav).
+| Folder | Covers |
+|---|---|
+| `bootstrap/` | Startup order and failure cleanup |
+| `database/` | Schema shape and constraints, foreign keys, snapshot upsert, lifecycle, GC, play stats, search, collections, queue store, cover colours, folder exclusions and ranges, spec-versus-schema check; `support/` holds the shared test database |
+| `extension/` | Registry (duplicates, nav rules, flush hooks), license |
+| `foundation/` | ids, fractional keys, diacritic folding |
+| `library/` | Tabs, favorites, music folders, folder exclusion |
+| `media/` | Library keys, cover file layout, play context |
+| `platform/` | Linux paths, settings store, device id, storage volumes, `Setting` |
+| `playback/` | Track info rows, narrow providers, `TrackCover` |
+| `router/` | Router build, nested routes, first-run redirect |
+| `screens/` | Appearance settings |
+| `shell/` | Shells, seams, nav, selection bar slot |
+| `tool/` | The l10n merge tool |
+| `support/` | Fake `PlaybackCommands`, memory settings store |

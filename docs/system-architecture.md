@@ -1,24 +1,34 @@
 # System architecture
 
-Short overview. The module rules, DAG, startup order, registry, extension
-mechanism and database rules are in [ARCHITECTURE.md](../ARCHITECTURE.md);
-this file shows how the pieces fit at runtime.
+Short overview. The module rules, DAG, startup order, registry and database
+rules are in [ARCHITECTURE.md](../ARCHITECTURE.md); this file shows how the
+pieces fit at runtime.
 
 ```
 main.dart
   runKanaru(extensions)
     bootstrap
-      native library (Rust via flutter_rust_bridge)
+      native library      (Rust via flutter_rust_bridge)
       AppPaths            (platform/)
-      AppDatabase         (database/, kanaru.db, migrated)
+      SettingsStore       (configDir/settings.json)
+      device id           (dataDir/device_id)
+      AppDatabase         (database/, dataDir/kanaru.db, migrated)
       ExtensionRegistry   (extension/): built-in extensions, then bundled ones
       startup hooks       (receive the database connection)
-    ProviderScope(overrides: paths, database, registry, native versions)
+    ProviderScope(overrides: paths, settings, device id, database, registry, native versions)
       KanaruApp           (router/)
         GoRouter built from the registry
           AppShell        (shell/): desktop sidebar + top bar, or mobile bottom bar
             pages         (screens/, library/, online/, extensions)
 ```
+
+## Contents
+
+- [ARCHITECTURE.md](../ARCHITECTURE.md): modules, frozen and seeded files, nav bands, settings keys, l10n parts.
+- [system-architecture-database.md](./system-architecture-database.md): tables, keys and helpers of schema v1.
+- [system-architecture-playback.md](./system-architecture-playback.md): playback commands, now playing, queue, media controls (contract stub until lane B lands).
+- [system-architecture-library.md](./system-architecture-library.md): library keys, track info, lists, favorites, tabs, folders, exclusions (contract stub until lane C lands).
+- [system-architecture-library-scan.md](./system-architecture-library-scan.md): scanner, pass versions, covers, first run, Rust pools (contract stub until lane A lands).
 
 ## Runtime pieces
 
@@ -30,26 +40,29 @@ main.dart
   Desktop keeps its own back/forward history, a sidebar grouped by order band
   (ARCHITECTURE.md), Rescan in the top bar, a page-header search icon and
   Ctrl+F / Ctrl+K. Both shells render the library selection bar slot.
-- **Flush and exit**: `KanaruApp` owns one `AppLifecycleListener`; on
-  hidden/paused it flushes the settings store then the registry's flush hooks,
-  and on an exit request does the same capped at 2 s. Linux with a custom title
-  bar must later move exit handling to `window_manager`'s close callbacks.
-- **Persistence**: one SQLite file through drift, in
-  `<data dir>/kanaru/kanaru.db`. Tables and rules:
+- **Flush and exit**: `KanaruApp` owns one `AppLifecycleListener`. On hidden or
+  paused it flushes the settings store, then the registry's flush hooks. On an
+  exit request it does the same, capped at 2 s. Linux with a custom title bar
+  must later move exit handling to `window_manager`'s close callbacks.
+- **Settings**: per-device JSON file `configDir/settings.json`, one
+  `Setting<T>` per key (`<module>.<name>`). Sync reads from memory, writes are
+  coalesced and atomic, and a file that is unusable is moved aside to
+  `settings.json.bad-<epoch ms>` while the store starts from defaults.
+  Details in ARCHITECTURE.md.
+- **Device id**: a ULID in `dataDir/device_id`, outside the database,
+  excluded from Android backup. Loaded at bootstrap and exposed as
+  `deviceIdProvider`.
+- **Persistence**: one SQLite file through drift, `kanaru.db` in `AppPaths.dataDir`.
+  On Linux `dataDir` is `$XDG_DATA_HOME/kanaru` (default `~/.local/share/kanaru`);
+  the file is `~/.local/share/kanaru/kanaru.db`. Tables and rules:
   [system-architecture-database.md](./system-architecture-database.md).
-- **Settings and device id**: per-device settings are one JSON file,
-  `<config dir>/settings.json` (`SettingsStore`: sync reads from memory,
-  coalesced atomic writes with a bounded retry after a failed save; `flush()` is
-  meant to be called on pause/exit by the app lifecycle seam, added with the
-  router/`KanaruApp` work of this wave, not wired by the store itself). A file that is unreadable,
-  has another `format` or a newer `version` is copied to
-  `settings.json.bad-<epoch ms>` and the store starts from defaults. The device
-  id is a ULID in `<data dir>/device_id`, outside the database, excluded from
-  Android backup. Both load at startup and reach the UI as provider overrides.
+- **Covers**: image files under `cacheDir/covers/` (Linux `cacheDir` is
+  `$XDG_CACHE_HOME/kanaru`), one size per file (`thumb` for tiles, `full` for
+  Now Playing and the media session). The database keeps only the cover key.
 - **Native**: Rust crates behind one FFI crate, built by cargokit for the
-  Linux host and the Android ABIs. The bridge owns the worker pools (background,
-  interactive, waveform), the panic guard and the error DTO; `kanaru_media`
-  stays plain Rust.
+  Linux host and the Android ABIs. The bridge owns the worker pools
+  (background, interactive, waveform), the panic guard and the error DTO
+  (`NativeError`); `kanaru_media` stays plain Rust.
 - **Extensions**: contribute through `ExtensionRegistry`; downstream builds
   can supply more through `packages/kanaru_extensions`.
 
@@ -58,20 +71,29 @@ main.dart
 Modules talk through narrow Riverpod providers so a position tick or a ♥
 never rebuilds a list:
 
-- `nowPlayingProvider` (entry, track, playing flag, index) with
-  `isCurrentTrackProvider(id)`; commands go through `PlaybackCommands`
-  (`playTracks`, `playNext`, `enqueue`; validated before any state change).
-- Favorites are one `Set<TrackId>` stream; each tile selects from it
-  (`isFavoriteProvider(id)`). Every per-tile `.family` is `isAutoDispose`.
+- Playback: `playbackCommandsProvider` (`PlaybackCommands`: `playTracks`,
+  `playNext`, `enqueue`; validated before any state change) and
+  `nowPlayingProvider` (`NowPlaying`, identity is the queue entry). Tiles use
+  `isCurrentTrackProvider(id)`, `hasCurrentTrackProvider`, `isPlayingProvider`.
+  Details: [system-architecture-playback.md](./system-architecture-playback.md).
+- Favorites: one `Set<TrackId>` stream (`favoriteTrackIdsProvider`); each tile
+  selects from it (`isFavoriteProvider(id)`).
 - Lists build `TrackInfo` from their own query (`trackInfoFromRow`); only
   single-item screens use `trackInfoProvider`.
-- Covers: `TrackCover` reports a missing file to `coverMissesProvider`, the
-  scanner re-extracts it. Cover colours come from `coverColorsProvider`.
-- Scan: `scanStatusProvider`, `libraryScanCommandsProvider`. Settings
-  `library.tabs`, `app.theme`, `app.language` are read through
-  `SettingNotifier`; theme and language apply at once.
-- Seeds stand in until the real part exists (playback, scanner, first-run
-  gate); a seed fails loudly or is a no-op by design.
+- Covers: `TrackCover` reports a missing file to `coverMissesProvider`, and
+  the scanner re-extracts it. Cover colours come from
+  `coverColorsProvider` and tint pages and the Now Playing background only.
+- Scan: `scanStatusProvider` and `libraryScanCommandsProvider`. The scan
+  request completes when it is accepted; failures arrive as `ScanFailed`.
+  Details: [system-architecture-library-scan.md](./system-architecture-library-scan.md).
+- Settings are read through one top-level provider per key: `libraryTabsProvider`
+  (`library.tabs`), `themeChoiceProvider` (`app.theme`), `appLanguageProvider`
+  (`app.language`). Theme and language apply at once; nothing else in the app
+  theme changes at runtime.
+- Seeds stand in until the real part exists: `UnavailablePlaybackCommands`
+  (throws `StateError`), `NoLibraryScanner` (logs and returns), the idle scan
+  status, and the first-run gate (`false`). A seed fails loudly or is a no-op
+  by design, and its owner lane deletes it.
 
 ## Layout
 

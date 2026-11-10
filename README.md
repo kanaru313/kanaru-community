@@ -10,9 +10,10 @@ Additional features can be added through extension packages (see
 
 License: GPL-3.0-or-later (see [LICENSE](LICENSE)).
 
-Status: repository skeleton (modules, shells, router, gate) with the schema v1
-tables and database helpers; no library UI yet.
-Playback, library scanning and lyrics are not built yet; see
+Status: wave-1 foundation (shared contracts, settings, device id, navigation,
+design system, Rust base). The app starts on Android and Linux with an empty
+library. Playback, library scanning and the library UI are built next in
+parallel lanes, and lyrics after them; see
 [docs/project-roadmap.md](docs/project-roadmap.md).
 
 ## Development setup
@@ -35,6 +36,7 @@ flutter run -d linux                     # or: -d <adb serial>
 flutter analyze                          # Dart lints only
 dart analyze                             # lints plus the architecture analyzer plugin
 dart run tool/check_architecture.dart    # architecture gate (rejects `// ignore:`)
+dart run tool/merge_arb.dart             # merge lib/l10n/parts into app_*.arb (then: flutter gen-l10n)
 flutter test                             # app tests
 (cd packages/kanaru_ui && flutter test)  # design system tests
 (cd tool/architecture_lint && dart test) # gate tests
@@ -89,7 +91,7 @@ XDG_CONFIG_HOME=$R/config XDG_DATA_HOME=$R/data XDG_CACHE_HOME=$R/cache \
 | `packages/kanaru_extensions/` | Extension list of this build; empty in the public repo |
 | `rust/` | Cargo workspace: `kanaru_media`, `kanaru_plugin_runtime`, `kanaru_bridge` |
 | `rust_builder/` | cargokit glue that builds `kanaru_bridge` |
-| `tool/` | `check` (gate), `check_architecture.dart`, `architecture_lint/` (analyzer plugin and CLI) |
+| `tool/` | `check` (gate), `check_architecture.dart`, `merge_arb.dart` (l10n parts), `architecture_lint/` (analyzer plugin and CLI) |
 | `architecture.yaml` | Module DAG used by the gate |
 | `android/`, `linux/` | Platform runners |
 

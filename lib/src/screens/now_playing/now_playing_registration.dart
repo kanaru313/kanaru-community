@@ -4,8 +4,8 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../extension/state/extension_registry.dart';
 import '../../extension/state/registry_entries.dart';
 
-/// Now Playing route, queue nav item and playback flush hook. Queue is a
-/// placeholder until playback can open the queue.
+/// Queue nav item (placeholder). The playback module adds the Now Playing route
+/// and the flush hook here.
 void registerNowPlaying(ExtensionRegistry registry) {
   registry.addNavItem(
     NavItem(

@@ -38,7 +38,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 - Booleans are `INTEGER NOT NULL CHECK (x IN (0, 1))`.
 - `CHECK` is used only on fixed sets: track status, rating range, booleans. Open-ended kinds (`sources.kind`, `playlists.kind`, `saved_items.kind`) are validated by Dart constants, so adding a kind needs no table rebuild.
 - `foreign_keys = ON` and `recursive_triggers = ON` on every connection, set by `configureConnection` in `NativeDatabase(setup:)` and again in `beforeOpen`.
-- The device id is stored in no table. It comes from a file outside the database (spec only: the helper arrives with playback). `play_log.device_id` records it per row; the column is plain text and the database does not check it.
+- The device id is stored in no table. It comes from `dataDir/device_id` (`FileDeviceId`), exposed as `deviceIdProvider`. `play_log.device_id` records it per row; the column is plain text and the database does not check it.
 
 ### uid
 
@@ -155,7 +155,7 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 - A name that does not decode as UTF-8 is skipped and reported as a scan error.
 - CUE track: `'<cue path>#NN'` (two-digit track number).
 - Id-based remotes (Google Drive, OneDrive, Subsonic): the locator is the provider file id. `rel_path` holds the display path. The scanner applies folder exclusions while listing.
-- Path-based folder filter (scanner module, spec only; `unhideTracks` already takes the range bounds): `locator >= key || '/' AND locator < key || '0'`. Folder keys come from the same listing API.
+- Path-based folder filter: `folderLocatorRange` (`database/folder_range.dart`) returns `[key/, key0)` (`locator >= key || '/' AND locator < key || '0'`), and null for the root (every row). The exclusion and unhide helpers use it. Folder keys come from the same listing API.
 - Mount roots are canonicalized (real path, no trailing `/`) by the caller before they are saved (the database only enforces the unique `source_mounts_root`). One mount per chosen folder. An SD card volume root is just a path.
 
 ### Sources and secrets

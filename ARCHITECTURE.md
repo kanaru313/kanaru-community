@@ -33,9 +33,10 @@ higher one, the lower module declares an interface and the higher module
 implements it.
 
 Present in `lib/src/` today: `foundation`, `platform`, `database`,
-`extension`, `library`, `online`, `screens`, `shell`, `router` (plus
-`lib/src/rust/`, generated FFI). `media`, `plugins`, `playback`, `storage` and
-`lyrics` are in the DAG but have no code yet.
+`extension`, `media` (domain types only), `playback` (contracts and seeds),
+`library` (contracts and seeds, plus the Library and Playlists pages),
+`online`, `screens`, `shell`, `router`, and `lib/src/rust/` (generated FFI).
+`plugins`, `storage` and `lyrics` are in the DAG but have no code yet.
 
 Outside the DAG:
 
@@ -68,8 +69,8 @@ Rules the gate checks:
 | `package_imports_app` | `packages/kanaru_ui` never imports `package:kanaru/`. |
 | `architecture_ignore` (CLI only) | No `// ignore:` / `ignore_for_file:` for the rules above. |
 
-Never edit generated code: `*.g.dart`, `*.drift.dart`, `lib/src/rust/`,
-`lib/l10n/gen/`, `rust/crates/kanaru_bridge/src/frb_generated.rs`.
+Never edit generated code: `*.g.dart`, `*.drift.dart`, `*.freezed.dart`,
+`lib/src/rust/`, `lib/l10n/gen/`, `rust/crates/kanaru_bridge/src/frb_generated.rs`.
 
 ## Composition root
 
@@ -84,20 +85,56 @@ Files directly in `lib/` wire modules together; modules never import them.
 
 ## Startup order
 
-`runKanaru` calls `bootstrap`, which does, in this order:
+`runKanaru` calls `MediaKit.ensureInitialized()` and then `bootstrap`, which
+does, in this order:
 
 1. Load the native library (`loadNativeLibrary`), returns its version string.
 2. Create `AppPaths` (Linux: XDG dirs; Android: `path_provider`).
-3. Open `AppDatabase` (`<dataDir>/kanaru.db`) and force it open so migrations
+3. Open `SettingsStore` (`configDir/settings.json`). Never throws: an
+   unusable file is moved aside and the store starts empty.
+4. Load the device id (`dataDir/device_id`, created when missing).
+5. Open `AppDatabase` (`dataDir/kanaru.db`) and force it open so migrations
    and `beforeOpen` (`PRAGMA foreign_keys = ON`) run now.
-4. Build the `ExtensionRegistry` and install built-in plus bundled
+6. Build the `ExtensionRegistry` and install built-in plus bundled
    extensions, in that order.
-5. Run each startup hook with a `StartupContext(connection: ...)`.
+7. Run each startup hook with a `StartupContext(connection: ...)`.
 
-Any failure closes the database and rethrows; `runKanaru` logs it and shows
-`KanaruErrorApp`. On success the results are injected as `ProviderScope`
-overrides (`nativeVersionsProvider`, `appPathsProvider`, `appDatabaseProvider`,
-`extensionRegistryProvider`) and `KanaruApp` starts.
+Any failure in steps 5-7 closes the database and rethrows; `runKanaru` logs it
+and shows `KanaruErrorApp`. On success the results are injected as `ProviderScope`
+overrides (`nativeVersionsProvider`, `appPathsProvider`, `settingsStoreProvider`,
+`deviceIdProvider`, `appDatabaseProvider`, `extensionRegistryProvider`) and
+`KanaruApp` starts.
+
+## Shared files: frozen (F) and seeded (S)
+
+The wave-1 lanes (scanner, playback, library UI) code against the same
+files. Each file is one of two kinds:
+
+- **F (frozen)**: no lane edits it. Its declarations are the contract. A change
+  goes through a small follow-up PR into `dev`, and the affected lanes rebase.
+- **S (seeded)**: created with a placeholder body ("not yet", a stand-in that
+  fails loudly or does nothing). One owner lane replaces the body and deletes
+  the seed. It keeps the declarations marked F, with the same names and types.
+  Other lanes never touch it.
+
+| Area | F (frozen) | S (seeded, owner lane) |
+|---|---|---|
+| Platform | `platform/domain/{settings_store,setting,device_id,storage_volumes,app_paths}.dart`, `platform/data/{json_settings_store,file_device_id}.dart`, `platform/state/{settings_providers,device_id_provider,storage_volumes_provider,platform_providers}.dart` | Lane files created by their lanes: `local_audio_catalog`, `media_permissions` (A); `media_controls` (B); `platform/{domain,data,state}/file_manager*` (C: new, Linux implementation, Android unsupported). Android seed: `MediaStoreChannel.kt` (A) |
+| Media | everything in `media/domain/` | none |
+| Database | `database/**` (tables, helpers, schema) | none |
+| Extension and router | `extension/**`, `router/**` | none |
+| Playback | `playback/domain/{playback_commands,now_playing}.dart`, `playback/data/{track_info_rows,cover_colors_rows}.dart`, `playback/state/{track_info_providers,cover_providers}.dart`, `playback/ui/track_cover.dart` | `playback/state/playback_providers.dart` (declarations F, body B), `playback/data/unavailable_playback.dart` (B deletes) |
+| Library | `library/domain/**`, `library/data/{favorites,folder_exclusion,music_folders}_repository.dart`, `library/state/{library_tabs,favorites,music_folders,folder_exclusion}_providers.dart`, `library/ui/library_locations.dart` | `library/state/scan_providers.dart` (declarations F, body A), `library/ui/selection/selection_bar.dart` (C), lane folders `library/{domain,data,state}/scan/**` (A) and `library/{domain,data,state}/browse/**` (C), registration files (below) |
+| Screens | `screens/settings/state/appearance_settings.dart` | `screens/first_run/state/first_run_gate.dart` (declarations F, body A), `screens/first_run/first_run_registration.dart` (A), `screens/now_playing/now_playing_registration.dart` (B), `screens/ui/home_page.dart` (A, Home scan card) |
+| Registration | none | `library/ui/scan/library_scan_registration.dart` (A), `library/ui/library_browse_registration.dart` (C) |
+| Foundation | `foundation/**` | none |
+| kanaru_ui | every widget and token of the foundation, `KIcons` | group barrels `widgets/setup/` (A), `widgets/media/` (B), `widgets/collections/` (C) |
+| Rust | `kanaru_media` `error`, `cancel`, `limits`; `kanaru_bridge` `error`, `guard`, `pools`, `os`, `source`, `api/error.rs`; manifests | `kanaru_media` `tags/` and `covers/` (A), `waveform/` (B), `kanaru_bridge` `api/{tags,covers}.rs` (A), `api/waveform.rs` (B) |
+| l10n | `lib/l10n/parts/app_*.arb`, `l10n.yaml`, `tool/**` | `scan_*.arb` (A), `playback_*.arb` (B), `library_*.arb` (C) |
+
+Generated files (`lib/src/rust/`, `frb_generated.rs`, `lib/l10n/app_*.arb`,
+`lib/l10n/gen/`) are never hand-merged: on a conflict take either side and
+regenerate.
 
 ## Extensions and the registry
 
@@ -110,22 +147,54 @@ abstract interface class KanaruExtension {
 
 `ExtensionRegistry` holds only list-like extension points (something is added
 to a list): routes, nav items, settings sections, top bar actions, startup
-hooks, l10n delegates and the one license service. It throws `StateError` on a
-duplicate extension id, route path, nav id or path, settings section id, top
-bar action id, or a second license service. More points are added together
-with the module that uses them. The registry is not for composing UI between
-public modules; those use the DAG.
+hooks, flush hooks, l10n delegates and the one license service. It throws
+`StateError` on a duplicate extension id, route path, nav id or path, settings
+section id, top bar action id, or a second license service. More points are
+added together with the module that uses them. The registry is not for
+composing UI between public modules; those use the DAG.
 
 The public modules register through it too, so it is always exercised:
 `ScreensExtension` (Home, Search, Settings), `LibraryExtension` (Library,
-Playlists), `OnlineExtension`.
+Playlists), `OnlineExtension`. Each module splits its registration into one
+file per concern (`*_registration.dart`), so lanes never share a file.
 
-Nav items can sit inside another tab's branch (`NavItem.parentId`: the six
-library lists), be left out of the sidebar (`sidebar: false`, Search), be
-placeholders (`comingSoon`) or run an action (`onSelect`); only items that are
-`isBranch` get a shell branch. Mobile bar order is `mobileOrder` (defaults to
-`order`). `addFlushHook` registers work that runs, after the settings store is
-flushed, when the app is hidden or paused or asked to exit (capped at 2 s on exit).
+### Nav items
+
+`NavItem` (`extension/state/registry_entries.dart`):
+
+| Field | Meaning |
+|---|---|
+| `id`, `path` | Unique id; absolute location of the item's root page. The registry must hold a route with exactly `path`. |
+| `icon`, `selectedIcon`, `label` | `IconData`; `label` is `(BuildContext) => String`. |
+| `order` | Desktop sidebar order (ascending, ties keep registration order). |
+| `mobileOrder` | Position in the mobile bottom bar; defaults to `order`. |
+| `mobileTab` | Shown in the mobile bottom bar (default true). |
+| `footer` | Desktop: pinned at the foot of the sidebar (Settings). |
+| `pushed` | Opens above the shell as a full page with its own back. |
+| `parentId` | A child item: its route nests under the parent's tab route. Not a branch, not in the mobile bar. |
+| `sidebar` | Listed in the desktop sidebar (default true; Search is false). |
+| `comingSoon` | Dimmed "coming soon" entry, not selectable, needs no route. |
+| `onSelect` | Runs instead of navigating to `path`; needs no route at `path`. |
+
+`isBranch` is true when the item is not pushed, has no `parentId`, is not
+`comingSoon` and has no `onSelect`. Each branch item gets one shell branch,
+in `order`. Every other route (pushed items, detail pages) is a top-level
+route above the shell. `addNavItem` throws `StateError` for:
+
+- a duplicate `id` or `path`;
+- a child whose parent is not registered yet (register the parent first);
+- a parent that is pushed, is itself a child, or is not a branch (it must be a
+  tab item);
+- a child with `mobileTab: true`, or a child that is `pushed`;
+- a `comingSoon` or `onSelect` item that is `pushed`.
+
+`buildRouter` (`router/app_router.dart`) throws `StateError` at build when a
+nav item has no route at its `path` (child items: nested under the parent's
+route), when a child names an unknown parent, or when there is no tab item.
+`comingSoon` and `onSelect` items are skipped by that check.
+
+Mobile bottom bar today: Home (10), Library (20), Playlists (30), Search (40),
+Online (50).
 
 ### Nav order bands
 
@@ -135,38 +204,104 @@ neighbours, so pick `order` by band:
 | Band | Orders | Items |
 |---|---|---|
 | 0 | 10-99 | Home 10, Online 20 |
-| 1 | 100-199 | Library 105 (tab), Songs 110 … Folders 160 |
+| 1 | 100-199 | Library 105 (tab); its six list items (Songs to Folders) take 110-160 as children of `library` (reserved for the library UI lane, not registered yet) |
 | 2 | 200-299 | Playlists 210, Favorites 220, Queue 230, History 240, Most played 250 |
-| 9 | 900-999 | Search 900 (not in the sidebar) |
+| 9 | 900-999 | Search 900 (`sidebar: false`) |
+| footer | 1000 | Settings (`footer: true`, `pushed: true`) |
 
-Settings is the footer (order 1000). Extensions, Pro included, pick orders
-below 900 inside the bands above and never 1000 or more, which belongs to the
-Settings footer.
+Extensions, Pro included, pick orders below 900 inside the bands above and
+never 1000 or more, which belongs to the Settings footer.
 
-The router builds from the registry only. Nav items that are tabs
-(`isBranch`: not pushed, no `parentId`, not `comingSoon`, no `onSelect`) get one shell branch each, in `order`; every other
-route (pushed items such as Settings, detail pages) is a top-level route above
-the shell.
+## Flush and exit
 
-### One runner, optional extension packages
+- `registry.addFlushHook(FlushHook)` registers work to persist state that is
+  otherwise written lazily. `typedef FlushHook = Future<void> Function(ProviderContainer container)`.
+- `flushApp` (`router/state/app_flush.dart`) runs the settings store's
+  `flush()` first, then every flush hook in registration order. A failing step
+  is logged and the others still run.
+- `KanaruApp` owns the only `AppLifecycleListener`. Hidden or paused: flush.
+  Exit request: flush, capped at 2 s in total (`exitFlushCap`).
+- `FlushCoordinator` shares one running flush between callers. A run older than
+  2 s is no longer joined. A joined run older than 250 ms is followed by one
+  more flush on exit.
+- Modules register hooks from their own registration file. They never add
+  their own lifecycle listener.
 
-This repository is the only Flutter runner (`android/`, `linux/`, `rust/`,
-`rust_builder/`). `pubspec.yaml` depends on `kanaru_extensions` as a plain
-path dependency (not a workspace member). The default stub returns an empty
-list:
+## Riverpod providers
 
-```dart
-List<KanaruExtension> get bundledExtensions => const [];
-```
+- Startup results are provider overrides, so tests replace any of them.
+- Every `.family` provider is `isAutoDispose: true`. Riverpod 3 keeps families
+  alive otherwise, and per-tile families leak.
+- Narrow providers: a tile watches `select` of a shared stream
+  (`isCurrentTrackProvider(id)`, `isFavoriteProvider(id)`), never the whole
+  value.
+- One provider file per platform service: its interface in `platform/domain/`,
+  its implementation in `platform/data/`, its provider in `platform/state/`
+  (`settings_providers.dart`, `device_id_provider.dart`,
+  `storage_volumes_provider.dart`, and later `media_controls_provider.dart`).
 
-A downstream build can check this repository out as a submodule or override
-`kanaru_extensions` with its own package through an uncommitted
-`pubspec_overrides.yaml`. That package depends back on `kanaru` and returns its
-extensions; the entry point is unchanged. The core codebase contains no logic of
-external features, only extension points and placeholders (`ProFeature`, `ProBadge`,
-`FreeLicenseService`). Pub does not allow nested workspaces, which is why downstream
-builds resolve with their own lockfile and the public repo is never
-modified by them.
+## Settings
+
+- Store: `SettingsStore` (`platform/domain/settings_store.dart`), implemented by
+  `JsonSettingsStore` in `configDir/settings.json`. Reads come from memory, writes
+  are coalesced (250 ms) and atomic, and `flush()` writes now.
+- Key: `<module>.<name>`. `<module>` is the owning module (`app` is the prefix
+  for global appearance keys), `<name>` is snake_case. A sub-group may add a dot (`playback.queue.current_entry`).
+  Keys are unique across the app.
+- Declare each key once as a top-level `Setting<T>` with a default, `decode`
+  (throws `FormatException` on a value it does not understand; the default is
+  used) and `encode` (JSON-encodable).
+- Read and write through one top-level provider per key:
+  `final xProvider = settingNotifierProvider(xSetting);` (or a `SettingNotifier`
+  subclass). `settingNotifierProvider` is a plain function that builds a new
+  provider on each call, so never call it inside a widget or provider body.
+  `set(value)` updates state at once, then writes.
+- A file that is unreadable or has another `format` or a newer `version` is moved
+  to `settings.json.bad-<epoch ms>` (copied if the rename fails), and the store
+  starts from defaults.
+
+| Key | Type | Default | Declared in |
+|---|---|---|---|
+| `app.theme` | `ThemeChoice` | `system` | `screens/settings/state/appearance_settings.dart` |
+| `app.language` | `AppLanguage` (`vi`, `en`) | device locale (`vi` or `en`) | same |
+| `library.tabs` | `LibraryTabsConfig` | all tabs, default order | `library/state/library_tabs_providers.dart` |
+| `library.setup_done` | bool | false | reserved, scanner lane (A) |
+| `playback.queue.current_entry`, `playback.position_ms`, `playback.shuffle`, `playback.repeat` | reserved | | playback lane (B) |
+
+## Device id
+
+A ULID in `dataDir/device_id`, loaded at bootstrap, exposed as
+`deviceIdProvider` (`platform/state/device_id_provider.dart`). It is in no table;
+`play_log.device_id` records it. The file is excluded from Android backup
+(`res/xml/backup_rules.xml`, `res/xml/data_extraction_rules.xml`).
+
+## Platform identifiers
+
+- MPRIS bus name: `org.mpris.MediaPlayer2.kanaru_community`. A second instance
+  (or a hot restart while the first holds the name) uses
+  `org.mpris.MediaPlayer2.kanaru_community.instance<pid>`. Lane B implements it
+  in `platform/data/media_controls/`.
+- Platform differences (paths, media controls, file access, secrets, window)
+  sit behind interfaces in `platform/`, with a Linux and an Android
+  implementation. Every module must work on both shells.
+
+## Localisation
+
+Strings live in parts, one file per part and locale:
+`lib/l10n/parts/<part>_<locale>.arb`. `en` is the template.
+
+| Part | Files | Key prefix | Owner |
+|---|---|---|---|
+| `app` | `app_en.arb`, `app_vi.arb` | none of the other prefixes | foundation |
+| `scan` | `scan_en.arb`, `scan_vi.arb` | `scan` | lane A |
+| `playback` | `playback_en.arb`, `playback_vi.arb` | `playback` | lane B |
+| `library` | `library_en.arb`, `library_vi.arb` | `library` | lane C |
+
+`dart run tool/merge_arb.dart` merges the parts into `lib/l10n/app_<locale>.arb`,
+then `flutter gen-l10n` generates `AppLocalizations` (one class for every part).
+`tool/check` runs the merge in `--check` mode and fails on a stale merge. The
+merge fails on a duplicate key, a key outside its part's prefix, a key missing
+in one locale, or an unknown part file.
 
 ## Database
 
@@ -178,9 +313,13 @@ modified by them.
   The coded groups match it; spec-only groups are marked there.
 - `PRAGMA foreign_keys = ON` on every connection. Every foreign key into
   `tracks` is `ON DELETE RESTRICT`: no CASCADE and no SET NULL. The track GC
-  deletes owned child rows (`track_details`, `play_stats`) before a track, and
-  refuses to run when a foreign key into `tracks` is not RESTRICT. There is one
-  `tracks` table for every source.
+  deletes owned child rows (`track_details`, `track_artists`, `play_stats`)
+  before a track, and refuses to run when a foreign key into `tracks` is not
+  RESTRICT. There is one `tracks` table for every source.
+- Writes: `upsertTrackSnapshot` (not `INSERT OR REPLACE`), `insertOrRevive` for
+  tombstoned rows, `replaceTrackArtists`, `markTracksMissing`, `upsertTrackDetails`,
+  `upsertCoverColors`, and the folder exclusion helpers. Library reads filter
+  with `visibleTrackWhere`.
 - Drift runs in modular mode (`build.yaml`), so another package can import the
   public tables and define its own database over the same connection.
 - Extensions never use drift's `schemaVersion` or `MigrationStrategy`. Each
@@ -205,11 +344,16 @@ modified by them.
 | Widget that knows nothing about music | `packages/kanaru_ui` |
 | Pure Dart function that belongs to no module | `foundation/` |
 | Linux and Android differ | `platform/` (interface in `domain/`, implementations in `data/`) |
+| A setting | Top-level `Setting<T>` in the owning module (`<module>.<name>`), read through a top-level provider built with `settingNotifierProvider`; the file is `settings.json` in `AppPaths.configDir` |
+| Device id | `deviceIdProvider` (`platform/state/`); the file `dataDir/device_id`; never in a table |
+| Cover image | `cacheDir/covers/{thumb,full}/<key>.jpg`, written by the scanner (Rust computes the key); the database stores only `coverKey`. Layout marker `cacheDir/covers/.layout-v1` |
+| Cover colours | `cover_colors` table, read through `coverColorsProvider`; never drives `MaterialApp.theme` |
+| A user-visible string | The owning lane's part `lib/l10n/parts/<part>_<locale>.arb` (add to `en` and `vi`), never `app_*.arb` |
 | Database table | `database/tables/<module>_<group>_tables.dart`; SQL-only entities (FTS5, triggers) in a sibling `.drift` file |
 | Root page that combines several modules | `screens/` |
 | Modal or widget that combines several modules | The lower module owns it; the higher one adds entries through the registry |
 | A lower module needs a higher module's capability | Interface below, implementation above |
-| Nav entry, route, settings section, top bar action | Register in the module's `KanaruExtension` |
+| Nav entry, route, settings section, top bar action, flush hook | Register in the module's `KanaruExtension` (from its registration file) |
 | Calls into Rust | The module's `data/`, nowhere else |
-| Rust code | `rust/crates/kanaru_media` (tags, covers), `kanaru_plugin_runtime` (plugin JS), `kanaru_bridge` (FFI only) |
+| Rust code | `rust/crates/kanaru_media` (tags, covers, waveform), `kanaru_plugin_runtime` (plugin JS), `kanaru_bridge` (FFI, pools, guard, error DTO) |
 | Extension feature | The extension package, registered through `KanaruExtension` |
