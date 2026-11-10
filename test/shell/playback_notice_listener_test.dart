@@ -107,9 +107,10 @@ void main() {
     await host.run(tester, host.h.c.previous);
     await host.letStreamsArrive(tester);
     expect(find.text('This is the first track'), findsOneWidget);
-    // Clear the first toast, then raise the very same (const) notice again.
-    ScaffoldMessenger.of(tester.element(find.text('page'))).clearSnackBars();
-    await tester.pump();
+    // Let the first toast expire (4 s), then raise the same (const) notice.
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(seconds: 1));
+    }
     expect(find.byType(SnackBar), findsNothing);
     await host.run(tester, host.h.c.previous);
     await host.letStreamsArrive(tester);

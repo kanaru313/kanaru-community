@@ -187,6 +187,34 @@ void main() {
       expect(after, before);
     });
 
+    testWidgets('Undo inside the 4 s window brings the row back', (
+      tester,
+    ) async {
+      final host = await pumpWithPlayer(tester, list);
+      final before = [for (final i in host.h.c.queueState.items) i.entryId];
+      await _removeRow(tester, host, 'T2');
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.text('Undo'), findsOneWidget);
+      await host.tap(tester, find.text('Undo'));
+      expect([for (final i in host.h.c.queueState.items) i.entryId], before);
+    });
+
+    testWidgets('left alone, the toast and its Undo go after 5 s', (
+      tester,
+    ) async {
+      final host = await pumpWithPlayer(tester, list);
+      await _removeRow(tester, host, 'T3');
+      expect(find.text('Undo'), findsOneWidget);
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
+      // The exit animation needs one more frame after the timer fired.
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(SnackBar), findsNothing);
+      expect(find.text('Undo'), findsNothing);
+      expect(host.h.c.queueState.length, 5);
+    });
+
     testWidgets('removing the current row while paused stays paused', (
       tester,
     ) async {
