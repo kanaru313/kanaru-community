@@ -156,6 +156,18 @@ bodies lane A's). The seed emits `ScanIdle` and logs `rescan` calls.
   every location there. The route is registered from
   `screens/first_run/first_run_registration.dart`. If the gate is true and no
   route serves `/welcome`, the router throws `StateError` when it builds.
+- Media permissions state: `MediaPermissions` (`platform/domain/media_permissions.dart`,
+  provider `mediaPermissionsProvider`) reports `audio` and `images` as
+  `granted`, `denied`, `permanentlyDenied`, `limited` or `notApplicable`.
+  `allGranted` is false for `limited` (Android 14 partial photo access). The
+  screen asks for audio first and for images only after audio is granted.
+  Linux uses `NoMediaPermissions` (everything `notApplicable`). Android uses
+  `permission_handler` (`Permission.storage` for both rows up to SDK 32,
+  `Permission.audio` and `Permission.photos` from SDK 33). The plugin reports a
+  permanent denial as `denied` from a status read, so the Android class keeps
+  the last `request()` result per row and never downgrades `permanentlyDenied`
+  to `denied` until a read returns anything but `denied` (`mergeStatus`); requests are
+  serialized and a repeated request shares the one in flight.
 - Media permissions (manifest): `READ_MEDIA_AUDIO`, `READ_MEDIA_IMAGES` and
   `READ_MEDIA_VISUAL_USER_SELECTED` (Android 14 partial access counts as not
   granted), `READ_EXTERNAL_STORAGE` up to SDK 32. Never
@@ -164,6 +176,73 @@ bodies lane A's). The seed emits `ScanIdle` and logs `rescan` calls.
 ## Audio sources
 
 - Android: MediaStore, through `MediaStoreChannel.kt` (lane A). Linux: a `dart:io` walk.
+- Both sit behind `LocalAudioCatalog` (`platform/domain/local_audio_catalog.dart`,
+  pure Dart; the provider `localAudioCatalogProvider` picks the implementation
+  by OS). One call per root: `listAudio(root, excludedKeys, skipShorterThanMs)`
+  returns an `AudioListing` with `audio`, `.lrc` `lyrics`, and what could not be
+  seen: `reachable`, `unreadableDirs`, `emptyDirs`, `unstattable`, counts
+  (`excludedOut`, `skippedOut`, `shortOut`, `skippedLinks`, `undecodableNames`
+  with up to 3 sample folders). `unreachableReason` says `missing`, `timedOut`
+  or `busy`. `excludedOut` counts items (files on Android, whole folders on
+  Linux, which does not enter them); `skippedOut` counts hidden audio and `.lrc`
+  files only; `shortOut` counts files dropped by the Android duration
+  pre-filter. `filteredOut = excludedOut + shortOut`: only the user's own
+  filters may switch off the empty-root guard (never `skippedOut`, since
+  `.stfolder`, `lost+found` or `@eaDir` sit in many roots). Failures are reported there, never thrown.
+- The catalog also answers `audioFolders()` (Android MediaStore folders; Linux
+  none), `suggestedMusicFolder()`, `canonicalize(path)`, `folderChoice`
+  (`systemDialog` or `mediaStoreSheet`) and `pickFolder()` (Linux only).
+- Android (`platform/data/media_store/`): `MediaStoreChannel.kt` (channel
+  `kanaru/media_store`; queries on a small pool of background threads, replies on the
+  main looper, every `Throwable` answered) answers `sdkInt`, `primaryRoot` (shared
+  storage of the current user), `listAudio`, `listLyrics` (Files collection,
+  `.lrc`) and `audioFolders` as parallel lists. A null cursor is an error, not
+  an empty result. The `LIKE` pattern is built and escaped in Dart
+  (`mediaStoreLikePattern`: `%`, `_`, `\`) and keeps the root's spelling for
+  audio and lyrics alike (SQLite folds ASCII case only, so no lower-casing: a
+  root such as `Nhạc Đỏ` must still match). Kotlin binds it and re-checks the
+  prefix. `MediaStoreAudioCatalog` re-checks the prefix in Dart with the same
+  ASCII-only case rule (rows outside the root, such as copies under
+  `/sdcard/Library`, are dropped and logged with 3 samples), drops rows under
+  skipped folders, the `<volume>/Android/` tree by absolute path (app data,
+  messenger voice notes; a root the user picked inside it is listed as chosen)
+  and hidden files (`skippedOut`), excluded keys (`excludedOut`) and short
+  rows (`shortOut`, duration known and below `skipShorterThanMs`). Rows with an
+  empty `_data` are counted in `skippedOut` and logged.
+- The Android catalog never throws for a platform failure: a refused query, a
+  failed query or one past the 120 s limit comes back as an unreachable listing
+  with `unreachableReason` `permission`, `failed` or `timedOut` (no lyrics query
+  starts after the audio query timed out); an absent root
+  is `missing`. `audioFolders()` and `suggestedMusicFolder()` return empty/null
+  on failure. `canonicalize` only normalises paths that came from `audioFolders()`
+  or the suggestion (already in `_data` form); other input has `/sdcard` and
+  `/storage/self/primary` mapped to the primary root, then links resolved.
+  `suggestedMusicFolder()` is `<primary>/Music` when any audio folder lies in its
+  subtree. `audioFolders()` counts only the scanned audio extensions and rows of
+  30 s or more, and skips junk, dot and `<volume>/Android/` folders, so the first-run
+  estimate matches the scan.
+- Rules on both shells: a scan never enters a dot-folder or a junk folder
+  (`lost+found`, `@eaDir`, `.Trash*`, `$RECYCLE.BIN`, snapshot and old-version
+  folders, `#recycle`, `@Recycle`, `.@__thumb`, `.AppleDouble`) below a root;
+  the root itself may be a dot-folder. Hidden files are not listed.
+  Extensions: mp3 flac m4a aac alac ogg oga opus wav aif aiff ape wv dsf dff.
+- Linux walk (`platform/data/local_files/`): a synchronous walk on a worker
+  isolate that is killed after 120 s per root (`WalkIsolateRunner`). The root
+  counts as unreachable for that scan. A killed isolate stays in a "busy" set
+  until its exit port fires; while a root is busy it is reported unreachable at
+  once and no second isolate is spawned. Folder links are not followed but
+  counted and logged; file links are followed with `stat`; FIFOs, sockets and
+  devices are never listed; a broken file link goes to `unstattable`; a name
+  that is not valid UTF-8 is counted, not listed. A listed-empty sub-folder is
+  reported in `emptyDirs` only when it is a mount point (`/proc/self/mounts`) or
+  lies under `/media`, `/run/media` or `/mnt` (an unplugged drive looks the
+  same); otherwise it is an ordinary empty folder. An excluded key matches a
+  folder when `relative == key || relative.startsWith('$key/')`; such folders
+  are not entered and count once in `excludedOut`.
+- Linux suggestion: `XDG_MUSIC_DIR` from `user-dirs.dirs` (absolute
+  `XDG_CONFIG_HOME` only, else `~/.config`), falling back to `~/Music`. Values
+  that are `$HOME`, `/`, a parent of home, relative, contain `..`, or do not
+  exist are dropped.
 - Rust reads regular files only. `source::open_source` opens the file with
   `O_NONBLOCK` and checks the type on the open handle, so a FIFO or a socket
   never blocks a scan.
