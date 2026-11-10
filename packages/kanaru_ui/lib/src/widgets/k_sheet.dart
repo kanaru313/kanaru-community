@@ -12,17 +12,21 @@ import '../tokens/k_space.dart';
 /// The sheet has rounded top corners, a grip, a scrim, closes on Back
 /// (including predictive back) and on dragging down. [fixedHeight] makes it
 /// [maxHeightFraction] of the screen instead of fitting its content.
+/// [useRootNavigator] shows it above every nested navigator (for example over
+/// the shell's bottom bar and mini player).
 Future<T?> showKSheet<T>(
   BuildContext context, {
   required WidgetBuilder builder,
   bool draggable = true,
   double maxHeightFraction = 0.85,
   bool fixedHeight = false,
+  bool useRootNavigator = false,
 }) {
   final size = MediaQuery.sizeOf(context);
   if (size.width >= KBreakpoints.compactSheet) {
     return showDialog<T>(
       context: context,
+      useRootNavigator: useRootNavigator,
       builder: (context) => Dialog(
         shape: KShape.of(KRadius.xl, continuous: true),
         clipBehavior: Clip.antiAlias,
@@ -40,6 +44,7 @@ Future<T?> showKSheet<T>(
   final maxHeight = size.height * maxHeightFraction;
   return showModalBottomSheet<T>(
     context: context,
+    useRootNavigator: useRootNavigator,
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
