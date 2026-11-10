@@ -32,22 +32,34 @@ final Setting<ThemeChoice> themeChoiceSetting = Setting(
   encode: (v) => v.name,
 );
 
-/// Vietnamese devices start in Vietnamese, every other in English.
-AppLanguage defaultLanguageFor(String deviceLanguageCode) =>
-    deviceLanguageCode == 'vi' ? AppLanguage.vi : AppLanguage.en;
-
-/// First preferred language of the device.
-String _deviceLanguageCode() {
-  final dispatcher = WidgetsBinding.instance.platformDispatcher;
-  return (dispatcher.locales.firstOrNull ?? dispatcher.locale).languageCode;
+/// The first of the device's preferred languages (in order) that the app
+/// ships; English when none matches or the device reports none (Linux `C` /
+/// `POSIX`). Used only as the default before the user picks a language.
+AppLanguage defaultLanguageFor(Iterable<String> deviceLanguageCodes) {
+  for (final code in deviceLanguageCodes) {
+    for (final language in AppLanguage.values) {
+      if (language.name == code.toLowerCase()) return language;
+    }
+  }
+  return AppLanguage.en;
 }
 
-Setting<AppLanguage> _languageSetting(String deviceLanguageCode) => Setting(
-  'app.language',
-  defaultLanguageFor(deviceLanguageCode),
-  decode: (j) => _byName(AppLanguage.values, j),
-  encode: (v) => v.name,
-);
+/// The device's preferred languages, most preferred first.
+List<String> _deviceLanguageCodes() {
+  final dispatcher = WidgetsBinding.instance.platformDispatcher;
+  final locales = dispatcher.locales.isEmpty
+      ? [dispatcher.locale]
+      : dispatcher.locales;
+  return [for (final l in locales) l.languageCode];
+}
+
+Setting<AppLanguage> _languageSetting(List<String> deviceLanguageCodes) =>
+    Setting(
+      'app.language',
+      defaultLanguageFor(deviceLanguageCodes),
+      decode: (j) => _byName(AppLanguage.values, j),
+      encode: (v) => v.name,
+    );
 
 final themeChoiceProvider =
     NotifierProvider<SettingNotifier<ThemeChoice>, ThemeChoice>(
@@ -57,5 +69,5 @@ final themeChoiceProvider =
 /// Settings key `app.language`; default from the device locale.
 final appLanguageProvider =
     NotifierProvider<SettingNotifier<AppLanguage>, AppLanguage>(
-      () => SettingNotifier(_languageSetting(_deviceLanguageCode())),
+      () => SettingNotifier(_languageSetting(_deviceLanguageCodes())),
     );
