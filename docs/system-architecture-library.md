@@ -564,9 +564,18 @@ routes in `ui/browse/library_routes.dart`.
   are in "Detail data".
 - Covers: `ui/browse/item_covers.dart` has `AlbumCover` and `ArtistCover`, the
   one place that decides which picture an album or artist shows (tiles, grid
-  cards and page headers all use them). Today they draw the cover of the tracks
-  (or a placeholder). A cover the user chose plugs in here, ahead of `coverKey`,
-  keyed by the encoded `AlbumKey` / `ArtistKey` (`itemKey`).
+  cards and page headers all use them). Order: the cover the user chose (a file
+  drawn through `KCover`, so it decodes at display size), else the cover of the
+  tracks (`coverKey`), else a placeholder. `itemKey` is the encoded `AlbumKey` /
+  `ArtistKey`. A list holds thousands of covers, so they never watch the
+  per-item `customCoverFileProvider` directly: `hasCustomCoverProvider` selects
+  the item's answer from ONE stream per kind (`customCoverIndexProvider`, in
+  `state/browse/custom_cover_index_providers.dart`, a watch of the item keys in
+  `custom_covers`), and only an item in that set watches its file. While the
+  file resolves (a tile scrolled back in can show the automatic cover for a
+  frame or two, the file provider being autoDispose) or when it is gone (a
+  restored backup), the automatic cover stays. A file that exists but cannot
+  be decoded falls to the `KCover` placeholder, not the track cover.
 
 ## Folders tab
 
