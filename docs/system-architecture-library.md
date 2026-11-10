@@ -15,6 +15,7 @@
 - Browse data: refresh and sort.
 - List queries: song scopes, sort and filter SQL, aggregates, providers.
 - Folder tree, detail data, menu data, selection state.
+- File manager and the `kanaru_ui` collection widgets (parts 1 and 2).
 
 ## Keys
 
@@ -404,6 +405,65 @@ empty slot until lane C fills it. Both shells render it above the player.
 `KListRow`, `KChip`, `PageHeaderScope`, `KIcons`. A width-based layout (for
 example the album page at 840 px and up) goes into a `collections` widget of
 `kanaru_ui`, not into `library/ui`.
+
+## File manager
+
+"Open in file manager" is a platform service, so `library/ui` never touches
+D-Bus or processes.
+
+| File | Role |
+|---|---|
+| `platform/domain/file_manager.dart` | `FileManager { canReveal; reveal(absolutePath) -> Result<void, FileManagerError> }`; errors `unsupported`, `notFound`, `failed` |
+| `platform/data/file_manager_linux.dart` | `LinuxFileManager`: `org.freedesktop.FileManager1` on the session bus |
+| `platform/data/file_manager_unsupported.dart` | `UnsupportedFileManager`: `canReveal` false, `reveal` gives `unsupported` (Android; the menu row is dimmed) |
+| `platform/state/file_manager_provider.dart` | `fileManagerProvider`, by platform; tests override it |
+
+Linux rules: a file calls `ShowItems`, a directory calls `ShowFolders` (`ShowItems`
+on a directory would select it inside its parent). URIs come from `Uri.file`
+(percent-encoded). The bus connection is created per call and closed after it,
+also on error. Any bus failure (no session bus, no service) falls back to
+`xdg-open` on the parent folder of a file, or on the directory itself,
+started detached. A missing path is `notFound` before anything is called. The
+bus and the process start are injected (`FileManagerBus`, `DetachedStarter`),
+so the tests need no bus. A Flatpak portal (`OpenDirectory`) is a later
+packaging step.
+
+## kanaru_ui collections, part 1: lists
+
+`packages/kanaru_ui/lib/src/widgets/collections/`, exported by
+`collection_widgets.dart`. Presentational, no music types: strings, covers and
+callbacks come from the caller. Width-based layout lives here.
+
+| Widget | Notes |
+|---|---|
+| `KMediaCard` | Row card of song, album, artist and folder lists. Three text lines always reserved; `leading`, right column (`top` duration, `bottom` heart), `trailing`, optional round `onAction` (always on mobile, hover or focus on desktop), `revealTrailingOnHover`; states `current`, `selected` (check over the leading), `dimmed`. `KMediaCard.extentOf(TextScaler)` is the exact height with its bottom gap, for fixed list extents (it assumes a 56 dp leading; `hasLeading: false` for cards without one); `currentLabel` gives the playing state a screen-reader value; a test pins it to the laid-out height at 1.0, 1.3 and 1.5 |
+| `KListSortFilterBar` | `leading` group, criterion chip (label and direction arrow) and filter toggle. The chip is announced as `<tooltip>: <criterion>`; it passes an anchor key to `onSortPressed`; 52 tall on mobile, 48 on desktop |
+| `showKSortPopover<T>` | Anchored under the chip on both shells. Order buttons keep it open (`onAscendingChanged`); a criterion (`KSortCriterion`, shown as a `SelectionRow`) closes it and is the result. Criteria scroll, the order row stays. Root navigator; Esc closes. Its anchored layout copies the private one of `selection_picker.dart` (follow-up: export one helper) |
+| `KFilterField` | Outlined, 48 tall, autofocus; the cross and Esc clear the controller and call `onClose` |
+| `KBreadcrumb` | `KBreadcrumbSegment`s, last one bold. Desktop above four levels: first and last three, rest behind "..."; mobile above two levels: tonal "..." then the open level. `onShowHidden` gets the hidden levels; the caller opens a `showSelectionPicker` |
+| `KShelf` | Titled horizontal list of fixed-width items; the `>` on the title row opens "see all" (`seeAllLabel` is its semantics label) |
+| `KCollectionGrid` | Sliver; column count from the width and the shell's minimum tile width (`mobileMinTileWidth`, `desktopMinTileWidth`); tile height is width times `tileAspect` plus `footerExtent` |
+| `KColorTile`, `KColorBanner` | Pastel tile or banner for genres and languages; hue from the same hash as the cover placeholder |
+| `KSubTabBar` | Scrolling tab row, underline on the selected tab, which scrolls to the centre. `initialOffset` and `onOffsetChanged` let the next page start where this row was |
+
+Sizes that the mockups give and the tokens lack (card radius 14, panel radius
+22) are constants inside the widget.
+
+## kanaru_ui collections, part 2: menu, detail, selection
+
+| Widget | Notes |
+|---|---|
+| `KDetailLayout` | `header` plus list `slivers`. Under 840 px of page width (measured on the page, not the window) the header sits above the list; from 840 the header is a fixed 320 column, bottom aligned and scrolling on its own when the window is short. `tint` washes the background (alpha at most 0.18 light, 0.24 dark) |
+| `KBlurredBar`, `KStickyBarSliver` | Translucent blurred background and a pinned sliver bar over it, so the tint is not cut by a flat bar. Blur only on these bars |
+| `showKLayeredMenu` | `KMenuPage` (header, groups of `KMenuRow`, footer of two `KMenuButton`s, note). A row either runs `onTap`, opens a sub-page (`opens`), or folds chips (`chips`); `soonLabel` or `enabled: false` dims it and makes it inert; `danger`, `proLabel`, `trailing` icon button. A chosen row closes the menu first and then runs its callback. Back, the arrow and Esc on a sub-page return one page; on the root they close |
+| `KSelectionPanel` | Frame of the multi-select panel: `header`, optional expanded `body` clamped to 460 dp (`bodyHeight`), no state. Mobile: full width minus 8, radius 20. Desktop: 440 wide, centred, radius 22, shadow. The frame is only as high as its content, so a full-width slot does not take taps beside it |
+
+`showKLayeredMenu` on the mobile shell is a bottom sheet (at most 85 % of the
+height, grip, sticky footer); on desktop a centred dialog 400 wide and at most
+640 tall on a 45 % barrier, first row focused, arrow keys move. Both open on
+the root navigator, so the shortcut guard and the selection Back handling see
+a modal route. It builds its own sheet instead of `showKSheet`, which cannot
+target the root navigator.
 
 ## Old app references
 
