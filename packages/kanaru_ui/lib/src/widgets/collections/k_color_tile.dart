@@ -5,17 +5,11 @@ import '../../tokens/k_space.dart';
 import '../k_cover.dart';
 import '../k_gap.dart';
 
-/// Pastel fill and ink for [seed]; the hue is the one a cover placeholder
-/// gets, so a genre tile and its placeholder agree.
+/// Pastel fill and ink for [seed]: the colours a cover placeholder gets, so a
+/// genre tile and its placeholder agree.
 ({Color fill, Color ink}) _tones(BuildContext context, String seed) {
-  final dark = Theme.of(context).brightness == Brightness.dark;
-  // The hash is shared with the cover placeholder on purpose.
-  // ignore: invalid_use_of_visible_for_testing_member
-  final hue = (coverSeedHash(seed) % 360).toDouble();
-  return (
-    fill: HSLColor.fromAHSL(1, hue, 0.35, dark ? 0.28 : 0.82).toColor(),
-    ink: HSLColor.fromAHSL(1, hue, 0.35, dark ? 0.85 : 0.22).toColor(),
-  );
+  final colors = KCoverPlaceholderColors.of(seed, Theme.of(context).brightness);
+  return (fill: colors.fill, ink: colors.ink);
 }
 
 /// Rounded colour tile of a genre or language grid: bold name, count, a faint

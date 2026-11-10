@@ -22,6 +22,10 @@ export 'k_menu_row.dart'
 /// navigator, whatever nested navigator [context] belongs to, so the app's
 /// shortcut guard and Back handling see it as a modal.
 ///
+/// It does not use `showKSheet`: that one switches to a dialog from 600 px
+/// and is 640 wide, while this menu is a sheet up to the desktop form factor
+/// and a 400 wide dialog above it.
+///
 /// A chosen row closes the menu first and then runs its callback, so the
 /// callback may navigate.
 Future<void> showKLayeredMenu(

@@ -86,6 +86,21 @@ void main() {
     expect(a, isNot(c));
   });
 
+  testWidgets('fill is the cover placeholder colour of the seed', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    const tile = SizedBox(
+      width: 150,
+      child: KColorTile(seed: 'Indie', title: 'Indie', icon: KIcons.genres),
+    );
+    await tester.pumpWidget(host(tile));
+    expect(
+      _fill(tester, find.byType(KColorTile)),
+      KCoverPlaceholderColors.of('Indie', Brightness.light).fill,
+    );
+  });
+
   testWidgets('dark mode uses a darker fill', (tester) async {
     useWindow(tester, const Size(400, 800));
     const tile = SizedBox(
