@@ -4,12 +4,12 @@ import 'package:logging/logging.dart';
 import 'package:media_kit/media_kit.dart';
 
 import '../domain/audio_engine.dart';
-import 'leaked_start.dart';
 import 'load_failure_guard.dart';
 import 'mpv_append.dart';
 import 'mpv_log_filter.dart';
 import 'mpv_options.dart';
 import 'mpv_playlist_tracker.dart';
+import 'mpv_resume.dart';
 
 final _log = Logger('MediaKitEngine');
 
@@ -22,9 +22,8 @@ final _log = Logger('MediaKitEngine');
 /// fresh values from mpv (never `player.state.playlist`, which lags) and does
 /// the commands.
 ///
-/// Resume uses `Media(uri, start:)`: media_kit applies it in its `on_load`
-/// hook and resets mpv's `start` in `on_unload`, so setting the property
-/// directly would be undone. An entry appended with a raw `loadfile` has no
+/// Resume: the file opens paused without a start offset, then one seek moves
+/// it (see [seekToResume]). An entry appended with a raw `loadfile` has no
 /// media_kit counterpart; its lookup in `on_load` is out of range and
 /// swallowed there, which is harmless because only `open` (which resets
 /// media_kit's list) ever reloads an entry.
@@ -72,14 +71,6 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
   /// Play unpauses mpv directly (its own `play()` would seek to entry 0).
   bool _afterEnd = false;
 
-  /// The resume offset of the last `load`. media_kit's `on_load` hook can
-  /// apply it to the entry that follows (it picks the media by playlist
-  /// index, which a trim can shift), so after the first advance the position
-  /// is checked and put back to 0.
-  Duration _resumeStart = Duration.zero;
-
-  /// Counts user seeks, to tell a seek from a leaked offset.
-  int _seeks = 0;
   bool _polling = false;
   bool _pollAgain = false;
 
@@ -191,9 +182,6 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
     for (var i = _tracker.entriesToTrim(s); i > 0; i--) {
       await _native.command(['playlist-remove', '0']);
     }
-    if (events.any((e) => e is EngineAdvanced)) {
-      await _undoLeakedStart(_seeks);
-    }
     for (final e in events) {
       if (e is EngineEnded) _afterEnd = true;
       if (!_events.isClosed) _events.add(e);
@@ -218,18 +206,15 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
         await _start();
         _tracker.reset();
         _afterEnd = false;
-        _resumeStart = start;
         _wantPlay = play;
         await _player.open(
-          Media(
-            Uri.file(current.path).toString(),
-            start: start > Duration.zero ? start : null,
-          ),
+          Media(Uri.file(current.path).toString()),
           play: false,
         );
         final id = await _idOfIndex(0);
         if (id == null) throw StateError('mpv has no entry after open');
         _tracker.startLoad(current.token, id);
+        await seekToResume(this, start, disposed: () => _disposed);
         await _setNext(next);
         if (play) await _player.play();
         await _poll();
@@ -290,25 +275,12 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
     }
   }
 
-  Future<void> _undoLeakedStart(int seeksAtAdvance) {
-    final leaked = _resumeStart;
-    _resumeStart = Duration.zero;
-    return undoLeakedStart(
-      this,
-      leaked: leaked,
-      seekedSinceAdvance: () => _seeks != seeksAtAdvance,
-      disposed: () => _disposed,
-    );
-  }
-
   /// Unpauses mpv directly. After `playlist-next` at the end of a file,
   /// media_kit's `play()` would seek to the first playlist entry while its
   /// `completed` flag is still set, so it is not used here.
   Future<void> _unpause() => _native.setProperty('pause', 'no');
 
   void _emit(List<EngineEvent> events) {
-    // A promotion seen here consumes the offset: a later advance is unrelated.
-    if (events.any((e) => e is EngineAdvanced)) _resumeStart = Duration.zero;
     for (final e in events) {
       if (!_events.isClosed) _events.add(e);
     }
@@ -339,7 +311,6 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
 
   @override
   Future<void> seek(Duration position) => _run(() async {
-    _seeks++;
     await _player.seek(position);
     _eof = false;
     if (!_events.isClosed) _events.add(EngineSeeked(position));

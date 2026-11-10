@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kanaru/src/playback/data/leaked_start.dart';
 import 'package:kanaru/src/playback/data/mpv_append.dart';
 import 'package:kanaru/src/playback/data/mpv_options.dart';
 
@@ -83,63 +82,6 @@ void main() {
   test('an id equal to the current one is refused', () async {
     final mpv = FakeMpv();
     expect(await appendEntry(mpv, 'file:///b.flac', currentId: 11), isNull);
-  });
-
-  group('resume offset after an advance', () {
-    const resume = Duration(milliseconds: 2400);
-
-    Future<FakeMpv> run(String? timePos, {bool seeked = false}) async {
-      final mpv = FakeMpv();
-      if (timePos != null) mpv.props['time-pos'] = timePos;
-      await undoLeakedStart(
-        mpv,
-        leaked: resume,
-        seekedSinceAdvance: () => seeked,
-        disposed: () => false,
-        pollEvery: Duration.zero,
-      );
-      return mpv;
-    }
-
-    test('a position at the offset is put back to 0', () async {
-      final mpv = await run('2.4');
-      expect(mpv.commands, [
-        ['seek', '0', 'absolute'],
-      ]);
-    });
-
-    test('a position at 0 or a user seek is left alone', () async {
-      expect((await run('0.1')).commands, isEmpty);
-      expect((await run('2.4', seeked: true)).commands, isEmpty);
-    });
-
-    test('no offset means nothing is read or sent', () async {
-      final mpv = FakeMpv();
-      await undoLeakedStart(
-        mpv,
-        leaked: Duration.zero,
-        seekedSinceAdvance: () => false,
-        disposed: () => false,
-      );
-      expect(mpv.commands, isEmpty);
-    });
-
-    test('waits until mpv reports a position', () async {
-      final mpv = FakeMpv();
-      final done = undoLeakedStart(
-        mpv,
-        leaked: resume,
-        seekedSinceAdvance: () => false,
-        disposed: () => false,
-        pollEvery: const Duration(milliseconds: 5),
-      );
-      await Future<void>.delayed(const Duration(milliseconds: 12));
-      mpv.props['time-pos'] = '2.3';
-      await done;
-      expect(mpv.commands, [
-        ['seek', '0', 'absolute'],
-      ]);
-    });
   });
 
   test(

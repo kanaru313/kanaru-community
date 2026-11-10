@@ -114,12 +114,18 @@ void main() {
       final handed = nextToken();
       expect(handed.entryId, h.c.queueState.currentItem!.entryId);
       h.engine.emit(EngineAdvanced(handed));
+      h.engine.emit(EngineLoaded(handed, const Duration(seconds: 10)));
       await h.settle();
       tokens.add(handed);
     }
     expect(tokens, hasLength(4));
     expect(h.c.queueState.current, 0);
     expect(h.engine.loads, hasLength(1));
+    expect(
+      h.engine.commands.where((c) => c == 'setNext'),
+      hasLength(3),
+      reason: 'one hand-over per loop, no extra ones',
+    );
   });
 
   test('repeat all wraps to the first entry', () async {

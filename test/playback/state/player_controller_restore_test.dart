@@ -4,6 +4,7 @@ import 'package:kanaru/src/playback/data/queue_repository.dart';
 import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:kanaru/src/playback/domain/playback_notice.dart';
+import 'package:kanaru/src/playback/domain/queue_logic.dart';
 
 import '../support/controller_harness.dart';
 
@@ -17,7 +18,10 @@ Future<void> saveSession(
   int positionMs = 30000,
 }) async {
   final items = await QueueRepository(h.db).replace(h.tracks, 1000);
-  await h.settings.write('playback.queue.current_entry', items[current].entryId);
+  await h.settings.write(
+    'playback.queue.current_entry',
+    items[current].entryId,
+  );
   await h.settings.write('playback.position_ms', positionMs);
   await h.settings.write('playback.context', {
     'kind': 'album',
@@ -168,16 +172,59 @@ void main() {
       expect(h.c.restoring, isTrue);
     });
 
-    test('commands made during the restore apply to the restored state', () async {
+    test(
+      'commands made during the restore apply to the restored state',
+      () async {
+        final h = await Harness.create(prepare: saveSession);
+        addTearDown(h.close);
+        // No settle: the restore is still the first task of the chain.
+        await h.c.next();
+        await h.settle();
+        expect(h.c.queueState.current, 3);
+        expect(h.engine.loads.single.path, '/music/t3.mp3');
+        expect(h.engine.lastStart, Duration.zero);
+      },
+    );
+  });
+
+  group('resume offset', () {
+    test('repeat one loops after a restore all start at 0', () async {
       final h = await Harness.create(prepare: saveSession);
       addTearDown(h.close);
-      // No settle: the restore is still the first task of the chain.
-      await h.c.next();
       await h.settle();
-      expect(h.c.queueState.current, 3);
-      expect(h.engine.loads.single.path, '/music/t3.mp3');
-      expect(h.engine.lastStart, Duration.zero);
+      expect(h.engine.lastStart, const Duration(seconds: 30));
+      await h.c.setRepeat(RepeatMode.one);
+      await h.settle();
+      for (var i = 0; i < 3; i++) {
+        final handed = h.engine.nexts.where((n) => n != null).last!.token;
+        h.engine.emit(EngineAdvanced(handed));
+        h.engine.emit(EngineLoaded(handed, const Duration(seconds: 200)));
+        await h.settle();
+        expect(
+          (await h.c.position.first).position,
+          Duration.zero,
+          reason: 'loop $i',
+        );
+      }
+      expect(h.engine.loads, hasLength(1), reason: 'no reload, so no offset');
+      expect(h.engine.lastStart, const Duration(seconds: 30));
     });
+
+    test(
+      'a seek made before the load lands replaces the resume offset',
+      () async {
+        final h = await Harness.create(prepare: saveSession);
+        addTearDown(h.close);
+        await h.c.seek(const Duration(seconds: 90));
+        await h.settle();
+        expect(h.engine.loads, hasLength(1));
+        expect(h.engine.lastStart, const Duration(seconds: 90));
+        // A seek after the load lands goes to the engine behind it.
+        await h.c.seek(const Duration(seconds: 100));
+        await h.settle();
+        expect(h.engine.commands, containsAllInOrder(['load', 'seek:100000']));
+      },
+    );
   });
 
   group('position saves', () {
@@ -207,36 +254,41 @@ void main() {
       expect(h.settings.read('playback.position_ms'), 7000);
     });
 
-    test('playing saves again every 15 s of progress, paused does not', () async {
-      final h = await Harness.create();
-      addTearDown(h.close);
-      await h.play();
-      await h.settle();
-      h.engine.emit(EngineLoaded(h.loadedToken, const Duration(seconds: 300)));
-      await h.settle();
-      Future<void> tick(int s) async {
-        h.engine.tickPosition(Duration(seconds: s));
+    test(
+      'playing saves again every 15 s of progress, paused does not',
+      () async {
+        final h = await Harness.create();
+        addTearDown(h.close);
+        await h.play();
+        await h.settle();
+        h.engine.emit(
+          EngineLoaded(h.loadedToken, const Duration(seconds: 300)),
+        );
+        await h.settle();
+        Future<void> tick(int s) async {
+          h.engine.tickPosition(Duration(seconds: s));
+          await pumpEventQueue();
+        }
+
+        for (var s = 1; s <= 14; s++) {
+          await tick(s);
+        }
+        expect(h.settings.read('playback.position_ms'), 0);
+        await tick(15);
+        expect(h.settings.read('playback.position_ms'), 15000);
+        await tick(29);
+        expect(h.settings.read('playback.position_ms'), 15000);
+        await tick(30);
+        expect(h.settings.read('playback.position_ms'), 30000);
+
+        await h.c.pause();
+        await h.settle();
+        expect(h.settings.read('playback.position_ms'), 30000);
+        h.engine.tickPosition(const Duration(seconds: 100));
         await pumpEventQueue();
-      }
-
-      for (var s = 1; s <= 14; s++) {
-        await tick(s);
-      }
-      expect(h.settings.read('playback.position_ms'), 0);
-      await tick(15);
-      expect(h.settings.read('playback.position_ms'), 15000);
-      await tick(29);
-      expect(h.settings.read('playback.position_ms'), 15000);
-      await tick(30);
-      expect(h.settings.read('playback.position_ms'), 30000);
-
-      await h.c.pause();
-      await h.settle();
-      expect(h.settings.read('playback.position_ms'), 30000);
-      h.engine.tickPosition(const Duration(seconds: 100));
-      await pumpEventQueue();
-      expect(h.settings.read('playback.position_ms'), 30000);
-    });
+        expect(h.settings.read('playback.position_ms'), 30000);
+      },
+    );
 
     test('a paused open does not move the position', () async {
       final h = await Harness.create(prepare: saveSession);
