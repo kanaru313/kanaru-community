@@ -1,20 +1,39 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../media/domain/track_id.dart';
-import '../data/unavailable_playback.dart';
+import '../../platform/state/settings_providers.dart';
 import '../domain/now_playing.dart';
 import '../domain/playback_commands.dart';
+import 'audio_engine_provider.dart';
+import 'player_controller.dart';
+import 'playback_data_providers.dart';
 
-/// The player's command surface for the library and screens. The real
-/// controller replaces the body; the declaration is fixed.
+/// The player. Created by [nowPlayingProvider] and by commands, never while a
+/// widget builds. The engine inside is made on the first load.
+final playerControllerProvider = Provider<PlayerController>((ref) {
+  // `read`, not `watch`: a rebuild of a dependency (the focus bridge arrives
+  // later) must not dispose the controller and drop the queue and the engine.
+  final controller = PlayerController(
+    repo: ref.read(queueRepositoryProvider),
+    resolver: ref.read(playableResolverProvider),
+    settings: ref.read(settingsStoreProvider),
+    engineFactory: ref.read(audioEngineFactoryProvider),
+    focus: ref.read(playbackFocusProvider),
+    titles: ref.read(trackTitleLookupProvider),
+  );
+  ref.onDispose(controller.dispose);
+  return controller;
+});
+
+/// The player's command surface for the library and screens.
 final playbackCommandsProvider = Provider<PlaybackCommands>(
-  (ref) => const UnavailablePlaybackCommands(),
+  (ref) => ref.watch(playerControllerProvider),
 );
 
 /// What is loaded now. Never watch it whole from a list: use the narrow
 /// providers below so a play/pause or track change rebuilds only what changed.
 final nowPlayingProvider = StreamProvider<NowPlaying>(
-  (ref) => Stream.value(NowPlaying.none),
+  (ref) => ref.watch(playerControllerProvider).nowPlaying,
 );
 
 /// Rebuilds only the tiles whose answer changes. Families never auto-dispose
