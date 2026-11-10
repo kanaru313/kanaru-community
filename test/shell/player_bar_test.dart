@@ -1,0 +1,170 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/playback/domain/play_intent.dart';
+import 'package:kanaru/src/playback/domain/playback_settings.dart';
+import 'package:kanaru/src/playback/domain/repeat_mode.dart';
+import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
+import 'package:kanaru/src/playback/ui/transport_buttons.dart';
+import 'package:kanaru/src/playback/ui/volume_control.dart';
+import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
+import 'package:kanaru/src/shell/state/now_playing_panel.dart';
+import 'package:kanaru/src/shell/ui/player_bar.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:material_ui/material_ui.dart' hide RepeatMode;
+
+import '../playback/support/ui_host.dart';
+
+Widget get _bar =>
+    const Align(alignment: Alignment.bottomCenter, child: PlayerBar());
+
+Future<UiHost> _pump(WidgetTester tester, double width) =>
+    pumpWithPlayer(tester, _bar, size: Size(width, 700));
+
+void main() {
+  testWidgets('full layout at 1280: every control is there, 88 dp tall', (
+    tester,
+  ) async {
+    await _pump(tester, 1280);
+    expect(tester.getSize(find.byType(PlayerBar)).height, 88);
+    expect(find.byType(FavoriteButton), findsOneWidget);
+    expect(find.byType(ShuffleButton), findsOneWidget);
+    expect(find.byType(RepeatButton), findsOneWidget);
+    expect(find.byType(VolumeControl), findsOneWidget);
+    expect(find.byType(KSeekBar), findsOneWidget);
+    expect(find.byTooltip('Lyrics'), findsOneWidget);
+    expect(find.byTooltip('Queue'), findsOneWidget);
+    expect(find.byTooltip('Open Now Playing'), findsWidgets);
+  });
+
+  testWidgets('sleep timer is dimmed with a coming-soon tooltip', (
+    tester,
+  ) async {
+    await _pump(tester, 1280);
+    final button = tester.widget<IconButton>(
+      find.ancestor(
+        of: find.byIcon(KIcons.sleepTimer),
+        matching: find.byType(IconButton),
+      ),
+    );
+    expect(button.onPressed, isNull);
+    expect(button.tooltip, contains('Coming soon'));
+  });
+
+  testWidgets('under 1000 the volume, sleep timer and heart go', (
+    tester,
+  ) async {
+    await _pump(tester, 999);
+    expect(find.byType(VolumeControl), findsNothing);
+    expect(find.byIcon(KIcons.sleepTimer), findsNothing);
+    expect(find.byType(FavoriteButton), findsNothing);
+    expect(find.byType(ShuffleButton), findsOneWidget);
+    expect(find.byType(RepeatButton), findsOneWidget);
+    expect(find.byTooltip('Lyrics'), findsOneWidget);
+  });
+
+  testWidgets('under 760 shuffle and repeat go too', (tester) async {
+    await _pump(tester, 759);
+    expect(find.byType(ShuffleButton), findsNothing);
+    expect(find.byType(RepeatButton), findsNothing);
+    expect(find.byTooltip('Next'), findsOneWidget);
+    expect(find.byTooltip('Previous'), findsOneWidget);
+    expect(find.byTooltip('Queue'), findsOneWidget);
+  });
+
+  testWidgets('a 200-character title ellipsizes at 760 without overflow', (
+    tester,
+  ) async {
+    final host = await pumpWithPlayer(
+      tester,
+      _bar,
+      size: const Size(760, 700),
+      play: false,
+    );
+    final id = host.h.tracks.first.value;
+    final title = 'T' * 200;
+    await tester.runAsync(
+      () => host.h.db.customStatement(
+        "UPDATE tracks SET title = '$title' WHERE id = $id",
+      ),
+    );
+    await tester.runAsync(() => host.h.play());
+    await host.letStreamsArrive(tester);
+    expect(tester.takeException(), isNull);
+    final text = tester.widget<Text>(find.text(title));
+    expect(text.overflow, TextOverflow.ellipsis);
+  });
+
+  testWidgets('Lyrics, Queue, cover and expand only open Now Playing', (
+    tester,
+  ) async {
+    final host = await _pump(tester, 1280);
+    NowPlayingPanelState panel() =>
+        host.container.read(nowPlayingPanelProvider);
+
+    await tester.tap(find.byTooltip('Queue'));
+    await tester.pump();
+    expect(panel().open, isTrue);
+    expect(panel().tab, NowPlayingTab.queue);
+
+    await tester.tap(find.byTooltip('Lyrics'));
+    await tester.pump();
+    expect(panel().tab, NowPlayingTab.lyrics);
+
+    host.container.read(nowPlayingPanelProvider.notifier).close();
+    await tester.tap(find.byTooltip('Open Now Playing').first);
+    await tester.pump();
+    expect(panel().open, isTrue);
+    expect(panel().tab, NowPlayingTab.lyrics); // the tab used last
+
+    host.container.read(nowPlayingPanelProvider.notifier).close();
+    await tester.tap(find.byIcon(KIcons.openFull));
+    await tester.pump();
+    expect(panel().open, isTrue);
+  });
+
+  group('controls drive the player', () {
+    testWidgets('Play/Pause, Next and Previous', (tester) async {
+      final host = await _pump(tester, 1280);
+      await host.tap(tester, find.byTooltip('Pause'));
+      expect(host.h.c.intent, PlayIntent.paused);
+      await host.tap(tester, find.byTooltip('Next'));
+      expect(host.h.c.queueState.currentItem?.trackId, host.h.tracks[1]);
+      await host.tap(tester, find.byTooltip('Previous'));
+      expect(host.h.c.queueState.currentItem?.trackId, host.h.tracks[0]);
+    });
+
+    testWidgets('Shuffle toggles on and off', (tester) async {
+      final host = await _pump(tester, 1280);
+      expect(host.container.read(shuffleSettingProvider), isFalse);
+      await host.tap(tester, find.byTooltip('Shuffle'));
+      expect(host.container.read(shuffleSettingProvider), isTrue);
+      expect(find.byKey(KToggleIconButton.dotKey), findsOneWidget);
+      await host.tap(tester, find.byTooltip('Shuffle'));
+      expect(host.container.read(shuffleSettingProvider), isFalse);
+    });
+
+    testWidgets('Repeat cycles off, all, one, off', (tester) async {
+      final host = await _pump(tester, 1280);
+      RepeatMode mode() => host.container.read(repeatSettingProvider);
+      expect(mode(), RepeatMode.off);
+      await host.tap(tester, find.byTooltip('Repeat: off'));
+      expect(mode(), RepeatMode.all);
+      await host.tap(tester, find.byTooltip('Repeat: all'));
+      expect(mode(), RepeatMode.one);
+      expect(find.byIcon(KIcons.repeatOne), findsOneWidget);
+      await host.tap(tester, find.byTooltip('Repeat: one track'));
+      expect(mode(), RepeatMode.off);
+    });
+
+    testWidgets('mute sets volume 0 and unmute restores the level', (
+      tester,
+    ) async {
+      final host = await _pump(tester, 1280);
+      await host.run(tester, () => host.h.c.setVolume(40));
+      expect(host.container.read(volumeSettingProvider), 40);
+      await host.tap(tester, find.byTooltip('Mute'));
+      expect(host.container.read(volumeSettingProvider), 0);
+      await host.tap(tester, find.byTooltip('Unmute'));
+      expect(host.container.read(volumeSettingProvider), 40);
+    });
+  });
+}

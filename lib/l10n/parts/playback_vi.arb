@@ -1,4 +1,67 @@
 {
   "playbackCover": "Ảnh bìa",
-  "playbackNavQueue": "Hàng đợi"
+  "playbackNavQueue": "Hàng đợi",
+  "playbackPlay": "Phát",
+  "playbackPause": "Tạm dừng",
+  "playbackNext": "Bài tiếp",
+  "playbackPrevious": "Bài trước",
+  "playbackShuffle": "Trộn bài",
+  "playbackRepeatOff": "Lặp lại: tắt",
+  "playbackRepeatAll": "Lặp lại: tất cả",
+  "playbackRepeatOne": "Lặp lại: một bài",
+  "playbackFavoriteAdd": "Thêm vào yêu thích",
+  "playbackFavoriteRemove": "Bỏ khỏi yêu thích",
+  "playbackSleepTimer": "Hẹn giờ ngủ",
+  "playbackLyrics": "Lời bài",
+  "playbackVolume": "Âm lượng",
+  "playbackMute": "Tắt tiếng",
+  "playbackUnmute": "Bật tiếng",
+  "playbackExpand": "Mở Now Playing",
+  "playbackOpenNowPlaying": "Mở Now Playing",
+  "playbackPlayer": "Trình phát",
+  "playbackSeek": "Vị trí phát",
+  "playbackPositionValue": "{position} trên {duration}",
+  "@playbackPositionValue": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkipped": "Bỏ qua “{title}”: tệp không còn",
+  "@playbackNoticeSkipped": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkippedMany": "Bỏ qua “{title}” và {others} bài nữa: tệp không còn",
+  "@playbackNoticeSkippedMany": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "others": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeFailed": "Không phát được “{title}”",
+  "@playbackNoticeFailed": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeFirstTrack": "Đây là bài đầu",
+  "playbackNoticeQueueEnd": "Hết hàng đợi",
+  "playbackNoticeQueueEmpty": "Hàng đợi trống",
+  "playbackNoticeFocusDenied": "Không phát được: ứng dụng khác đang dùng âm thanh",
+  "playbackSidebarOpen": "Menu",
+  "playbackSidebarClose": "Đóng menu"
 }

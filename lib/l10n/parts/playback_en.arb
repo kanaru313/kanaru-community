@@ -1,4 +1,67 @@
 {
   "playbackCover": "Cover art",
-  "playbackNavQueue": "Queue"
+  "playbackNavQueue": "Queue",
+  "playbackPlay": "Play",
+  "playbackPause": "Pause",
+  "playbackNext": "Next",
+  "playbackPrevious": "Previous",
+  "playbackShuffle": "Shuffle",
+  "playbackRepeatOff": "Repeat: off",
+  "playbackRepeatAll": "Repeat: all",
+  "playbackRepeatOne": "Repeat: one track",
+  "playbackFavoriteAdd": "Add to favorites",
+  "playbackFavoriteRemove": "Remove from favorites",
+  "playbackSleepTimer": "Sleep timer",
+  "playbackLyrics": "Lyrics",
+  "playbackVolume": "Volume",
+  "playbackMute": "Mute",
+  "playbackUnmute": "Unmute",
+  "playbackExpand": "Open Now Playing",
+  "playbackOpenNowPlaying": "Open Now Playing",
+  "playbackPlayer": "Player",
+  "playbackSeek": "Playback position",
+  "playbackPositionValue": "{position} of {duration}",
+  "@playbackPositionValue": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkipped": "Skipped “{title}”: file is gone",
+  "@playbackNoticeSkipped": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkippedMany": "Skipped “{title}” and {others} more: files are gone",
+  "@playbackNoticeSkippedMany": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "others": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeFailed": "Could not play “{title}”",
+  "@playbackNoticeFailed": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeFirstTrack": "This is the first track",
+  "playbackNoticeQueueEnd": "End of the queue",
+  "playbackNoticeQueueEmpty": "The queue is empty",
+  "playbackNoticeFocusDenied": "Could not play: another app is using the audio",
+  "playbackSidebarOpen": "Menu",
+  "playbackSidebarClose": "Close menu"
 }

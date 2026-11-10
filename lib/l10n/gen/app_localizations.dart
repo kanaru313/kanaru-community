@@ -710,6 +710,180 @@ abstract class AppLocalizations {
   /// **'Queue'**
   String get playbackNavQueue;
 
+  /// No description provided for @playbackPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get playbackPlay;
+
+  /// No description provided for @playbackPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get playbackPause;
+
+  /// No description provided for @playbackNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get playbackNext;
+
+  /// No description provided for @playbackPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get playbackPrevious;
+
+  /// No description provided for @playbackShuffle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle'**
+  String get playbackShuffle;
+
+  /// No description provided for @playbackRepeatOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat: off'**
+  String get playbackRepeatOff;
+
+  /// No description provided for @playbackRepeatAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat: all'**
+  String get playbackRepeatAll;
+
+  /// No description provided for @playbackRepeatOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat: one track'**
+  String get playbackRepeatOne;
+
+  /// No description provided for @playbackFavoriteAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get playbackFavoriteAdd;
+
+  /// No description provided for @playbackFavoriteRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get playbackFavoriteRemove;
+
+  /// No description provided for @playbackSleepTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer'**
+  String get playbackSleepTimer;
+
+  /// No description provided for @playbackLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get playbackLyrics;
+
+  /// No description provided for @playbackVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get playbackVolume;
+
+  /// No description provided for @playbackMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get playbackMute;
+
+  /// No description provided for @playbackUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get playbackUnmute;
+
+  /// No description provided for @playbackExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Now Playing'**
+  String get playbackExpand;
+
+  /// No description provided for @playbackOpenNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Now Playing'**
+  String get playbackOpenNowPlaying;
+
+  /// No description provided for @playbackPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Player'**
+  String get playbackPlayer;
+
+  /// No description provided for @playbackSeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback position'**
+  String get playbackSeek;
+
+  /// No description provided for @playbackPositionValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{position} of {duration}'**
+  String playbackPositionValue(String position, String duration);
+
+  /// No description provided for @playbackNoticeSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped “{title}”: file is gone'**
+  String playbackNoticeSkipped(String title);
+
+  /// No description provided for @playbackNoticeSkippedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped “{title}” and {others} more: files are gone'**
+  String playbackNoticeSkippedMany(String title, String others);
+
+  /// No description provided for @playbackNoticeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not play “{title}”'**
+  String playbackNoticeFailed(String title);
+
+  /// No description provided for @playbackNoticeFirstTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the first track'**
+  String get playbackNoticeFirstTrack;
+
+  /// No description provided for @playbackNoticeQueueEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End of the queue'**
+  String get playbackNoticeQueueEnd;
+
+  /// No description provided for @playbackNoticeQueueEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The queue is empty'**
+  String get playbackNoticeQueueEmpty;
+
+  /// No description provided for @playbackNoticeFocusDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not play: another app is using the audio'**
+  String get playbackNoticeFocusDenied;
+
+  /// No description provided for @playbackSidebarOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get playbackSidebarOpen;
+
+  /// No description provided for @playbackSidebarClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close menu'**
+  String get playbackSidebarClose;
+
   /// No description provided for @libraryTabSongs.
   ///
   /// In en, this message translates to:

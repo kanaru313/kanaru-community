@@ -419,9 +419,10 @@ signalled.
 - The item comes from `loadTrackInfos`; the art is the `full` cover file under the cache folder, only
   when the file exists. The length is the engine's once loaded.
 - `start()` runs on Linux as soon as the restored session has a current entry (media keys and
-  `playerctl` work after launch, **once the controller exists**), and on any platform at the first
-  play. Nothing creates the controller at launch yet: the shell must create it at its root (an explicit
-  listen on `playerControllerProvider`) for the restore and MPRIS to start without a tap. Android keeps
+  `playerctl` work after launch), and on any platform at the first play. `AppShell` creates the
+  controller after its first frame (an explicit `ref.read(playerControllerProvider)` in a post-frame
+  callback, for both shells), so the restore and MPRIS start at launch without a tap on the mini player.
+  Android keeps
   `processingState: idle` (no notification) until something played.
 - Commands go through the controller's chain (`Seek` is `seekRelative`; `SetPosition` is ignored for
   an entry that is no longer current). A request that came before the controller existed is held by the
@@ -473,6 +474,41 @@ signalled.
 - Not covered by tests, checked on the phone later: the notification on Android 13, lock screen,
   headset and Bluetooth buttons, focus taken from another app, calls and alarms, cold start from the
   notification.
+
+## UI: widgets and shell
+
+Playback widgets and where each lives (UI layers import `state/`, never `data/`; no width APIs in
+`playback/ui` or `screens/`, width logic is in `kanaru_ui` and `shell/`):
+
+| Widget | Where | Notes |
+|---|---|---|
+| `KProgressLine`, `KSeekBar`, `KToggleIconButton`, `CoverTintBackground` | `packages/kanaru_ui/.../widgets/media/` | Flat 2 dp line; flat 4 dp seek bar (tap, drag, Left/Right 5 s, `onSeek` once per drag); toggle with a dot when on; cover gradient (alpha-only fade when the colours go). No app imports. |
+| `MiniPlayer({onOpen, onOpenQueue})` | `playback/ui/mini_player.dart` | Mobile, 64 dp. Tap/Enter/Space or swipe up > 30 dp open; long press 500 ms (cancelled by a 10 dp move) gives a haptic and opens the queue. Only `_Progress` listens to the position. |
+| `PlayPauseButton`, `NextButton`, `PreviousButton`, `ShuffleButton`, `RepeatButton` | `playback/ui/` | Watch narrow providers; call the controller with `ref.read` on tap. |
+| `PlaybackTimeLabel`, `PlaybackSeekBar`, `VolumeControl` | `playback/ui/` | Labels select whole seconds. Volume is the persisted setting; mute remembers the last level. |
+| `FavoriteButton(trackId)` | `screens/now_playing/ui/` | `isFavoriteProvider` + `favoritesControllerProvider`. |
+| `PlayerBar` | `shell/ui/player_bar.dart` | Desktop, 88 dp, under the page. Left part < 1000 dp: no volume, sleep timer, heart; < 760: no shuffle/repeat. Every button opens Now Playing (the bar is offstage while it is open). |
+| `PlaybackNoticeListener` | `shell/ui/` | Wraps both shells. Listens to `playbackNoticesProvider` for good once `AppShell` has created the player (`enabled`), so a notice raised as the last track goes is not lost; the child never moves. Notices raised by a UI action (undo, empty queue) are shown by that action. |
+| `NowPlayingPanel` | `shell/state/now_playing_panel.dart` | `{open, tab, covered}`; last tab in `playback.np_tab`. `covered` makes the desktop left region `Offstage`; `close()` clears it. |
+| `DesktopHistoryInput` | `shell/ui/desktop_history_input.dart` | Alt+Left/Right and mouse Back/Forward walk `NavHistory`; Esc goes back unless a text field is focused. |
+| `MobilePushLayout`, `MobileSidebar` | `shell/ui/` | Push sidebar (256 dp) driven by `KSpring.gentle`; open state in `mobileSidebarOpenProvider`. |
+
+Rules:
+- Nothing in `shell/` reads `playerControllerProvider` while building. The shell reads it once, after the
+  first frame, and buttons read it on tap.
+- `MiniPlayer` appears when `hasCurrentTrackProvider` is true; with no track there is no mini player and
+  no player bar.
+- Desktop layout: `DesktopHistoryInput > Column[top bar, Row[Expanded(Stack[Offstage(left region)]),
+  rightPanel?]]`. Now Playing covers only the left region; a docked `rightPanel` (the AI chat) is a
+  sibling of that Stack and stays visible and tappable while the left region is covered.
+- Key handling: Alt+arrows are taken by the shell's global key handler (a text field would keep them);
+  Esc is taken there only when nothing in the shell has focus, otherwise by the focus-tree handler. Focus in
+  a dialog, sheet or popup menu route disables both, and the mouse buttons too. A `MenuAnchor` menu that
+  has not taken focus is not detected for the mouse buttons.
+- `MobilePushLayout` starts where `mobileSidebarOpenProvider` is (the state outlives the shell across the 1200 dp swap). While `covered`, the left region is also `ExcludeFocus` and Ctrl+F/K do nothing. Only the mini player body takes the long press; it also exposes "open Now Playing" and "queue" as custom semantics actions.
+- Mobile Back order: sidebar, top layer, child page, tab root to Home (`MobileShell` listener), then exit.
+- Widget tests that run controller commands from a widget callback must alternate real delays and pumps
+  (`UiHost.tap` runs the tap in the real zone and settles; `UiHost.letStreamsArrive` alternates for streams); the controller keeps the zone it was built in.
 
 ## Rules lane B keeps
 

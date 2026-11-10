@@ -381,6 +381,102 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playbackNavQueue => 'Hàng đợi';
 
   @override
+  String get playbackPlay => 'Phát';
+
+  @override
+  String get playbackPause => 'Tạm dừng';
+
+  @override
+  String get playbackNext => 'Bài tiếp';
+
+  @override
+  String get playbackPrevious => 'Bài trước';
+
+  @override
+  String get playbackShuffle => 'Trộn bài';
+
+  @override
+  String get playbackRepeatOff => 'Lặp lại: tắt';
+
+  @override
+  String get playbackRepeatAll => 'Lặp lại: tất cả';
+
+  @override
+  String get playbackRepeatOne => 'Lặp lại: một bài';
+
+  @override
+  String get playbackFavoriteAdd => 'Thêm vào yêu thích';
+
+  @override
+  String get playbackFavoriteRemove => 'Bỏ khỏi yêu thích';
+
+  @override
+  String get playbackSleepTimer => 'Hẹn giờ ngủ';
+
+  @override
+  String get playbackLyrics => 'Lời bài';
+
+  @override
+  String get playbackVolume => 'Âm lượng';
+
+  @override
+  String get playbackMute => 'Tắt tiếng';
+
+  @override
+  String get playbackUnmute => 'Bật tiếng';
+
+  @override
+  String get playbackExpand => 'Mở Now Playing';
+
+  @override
+  String get playbackOpenNowPlaying => 'Mở Now Playing';
+
+  @override
+  String get playbackPlayer => 'Trình phát';
+
+  @override
+  String get playbackSeek => 'Vị trí phát';
+
+  @override
+  String playbackPositionValue(String position, String duration) {
+    return '$position trên $duration';
+  }
+
+  @override
+  String playbackNoticeSkipped(String title) {
+    return 'Bỏ qua “$title”: tệp không còn';
+  }
+
+  @override
+  String playbackNoticeSkippedMany(String title, String others) {
+    return 'Bỏ qua “$title” và $others bài nữa: tệp không còn';
+  }
+
+  @override
+  String playbackNoticeFailed(String title) {
+    return 'Không phát được “$title”';
+  }
+
+  @override
+  String get playbackNoticeFirstTrack => 'Đây là bài đầu';
+
+  @override
+  String get playbackNoticeQueueEnd => 'Hết hàng đợi';
+
+  @override
+  String get playbackNoticeQueueEmpty => 'Hàng đợi trống';
+
+  @override
+  String get playbackNoticeFocusDenied =>
+      'Không phát được: ứng dụng khác đang dùng âm thanh';
+
+  @override
+  String get playbackSidebarOpen => 'Menu';
+
+  @override
+  String get playbackSidebarClose => 'Đóng menu';
+
+  @override
   String get libraryTabSongs => 'Bài hát';
 
   @override

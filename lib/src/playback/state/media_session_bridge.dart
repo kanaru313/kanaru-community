@@ -138,6 +138,10 @@ class MediaSessionBridge implements PlaybackFocus {
 
   void _schedule() {
     if (_disposed) return;
+    // Nothing loaded, nothing played, nothing published: a publish would do
+    // nothing, so do not arm the timer (the shell creates the player at
+    // launch, often with an empty queue).
+    if (_lastState == null && !_now.hasTrack && !_everPlayed) return;
     _timer ??= Timer(window, () {
       _timer = null;
       unawaited(_flush());

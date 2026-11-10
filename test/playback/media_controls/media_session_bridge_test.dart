@@ -220,6 +220,21 @@ void main() {
     });
   });
 
+  test('an empty queue publishes nothing; the first track still does', () async {
+    await make(startOnRestore: true);
+    // Attached with nothing loaded: well past the window, nothing was sent
+    // and the controls were not started.
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    expect(controls.log, isEmpty);
+    expect(controls.starts, 0);
+
+    await h.play();
+    await h.settle();
+    await until(() => controls.updates.isNotEmpty);
+    expect(controls.updates.single.$1!.title, 'T0');
+    expect(controls.starts, 1);
+  });
+
   test('the window timer sends changes on its own', () async {
     await make();
     await h.play();

@@ -413,6 +413,102 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackNavQueue => 'Queue';
 
   @override
+  String get playbackPlay => 'Play';
+
+  @override
+  String get playbackPause => 'Pause';
+
+  @override
+  String get playbackNext => 'Next';
+
+  @override
+  String get playbackPrevious => 'Previous';
+
+  @override
+  String get playbackShuffle => 'Shuffle';
+
+  @override
+  String get playbackRepeatOff => 'Repeat: off';
+
+  @override
+  String get playbackRepeatAll => 'Repeat: all';
+
+  @override
+  String get playbackRepeatOne => 'Repeat: one track';
+
+  @override
+  String get playbackFavoriteAdd => 'Add to favorites';
+
+  @override
+  String get playbackFavoriteRemove => 'Remove from favorites';
+
+  @override
+  String get playbackSleepTimer => 'Sleep timer';
+
+  @override
+  String get playbackLyrics => 'Lyrics';
+
+  @override
+  String get playbackVolume => 'Volume';
+
+  @override
+  String get playbackMute => 'Mute';
+
+  @override
+  String get playbackUnmute => 'Unmute';
+
+  @override
+  String get playbackExpand => 'Open Now Playing';
+
+  @override
+  String get playbackOpenNowPlaying => 'Open Now Playing';
+
+  @override
+  String get playbackPlayer => 'Player';
+
+  @override
+  String get playbackSeek => 'Playback position';
+
+  @override
+  String playbackPositionValue(String position, String duration) {
+    return '$position of $duration';
+  }
+
+  @override
+  String playbackNoticeSkipped(String title) {
+    return 'Skipped “$title”: file is gone';
+  }
+
+  @override
+  String playbackNoticeSkippedMany(String title, String others) {
+    return 'Skipped “$title” and $others more: files are gone';
+  }
+
+  @override
+  String playbackNoticeFailed(String title) {
+    return 'Could not play “$title”';
+  }
+
+  @override
+  String get playbackNoticeFirstTrack => 'This is the first track';
+
+  @override
+  String get playbackNoticeQueueEnd => 'End of the queue';
+
+  @override
+  String get playbackNoticeQueueEmpty => 'The queue is empty';
+
+  @override
+  String get playbackNoticeFocusDenied =>
+      'Could not play: another app is using the audio';
+
+  @override
+  String get playbackSidebarOpen => 'Menu';
+
+  @override
+  String get playbackSidebarClose => 'Close menu';
+
+  @override
   String get libraryTabSongs => 'Songs';
 
   @override
