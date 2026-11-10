@@ -1,0 +1,24 @@
+import 'library_collection_tables.dart';
+import 'library_cover_tables.dart';
+
+-- A playlist's custom cover goes with the playlist. User deletes are hard
+-- DELETEs, so this runs on every delete (it also covers a future purge of
+-- tombstones). A tombstoned playlist keeps its row. The image file is
+-- removed later by the custom cover GC, which looks at the table only.
+CREATE TRIGGER custom_covers_playlist_delete AFTER DELETE ON playlists BEGIN
+  DELETE FROM custom_covers WHERE kind = 'playlist' AND item_key = old.uid;
+END;
+
+-- A playlist cover needs its playlist: a row for a deleted or unknown uid
+-- (a delete that lands while an import is copying) would never be cleaned.
+CREATE TRIGGER custom_covers_playlist_exists_insert BEFORE INSERT ON custom_covers
+WHEN new.kind = 'playlist'
+  AND NOT EXISTS (SELECT 1 FROM playlists WHERE uid = new.item_key) BEGIN
+  SELECT RAISE(ABORT, 'custom_covers: no such playlist');
+END;
+
+CREATE TRIGGER custom_covers_playlist_exists_update BEFORE UPDATE OF kind, item_key ON custom_covers
+WHEN new.kind = 'playlist'
+  AND NOT EXISTS (SELECT 1 FROM playlists WHERE uid = new.item_key) BEGIN
+  SELECT RAISE(ABORT, 'custom_covers: no such playlist');
+END;

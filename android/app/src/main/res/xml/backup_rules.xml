@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 11 and older auto backup. The device id must be new on a restored phone. -->
+<!-- Android 11 and older auto backup. The device id must be new on a restored phone; custom cover images could pass the 25 MB backup quota (rows restore, the automatic cover shows until the user picks again). -->
 <full-backup-content>
     <exclude domain="file" path="data/device_id"/>
+    <exclude domain="file" path="data/custom_covers"/>
 </full-backup-content>

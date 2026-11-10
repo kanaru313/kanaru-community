@@ -9,12 +9,14 @@ import 'package:kanaru/src/database/tables/library_track_tables.drift.dart'
 import 'package:kanaru/src/database/tables/playback_tables.drift.dart' as i4;
 import 'package:kanaru/src/database/tables/library_track_search.drift.dart'
     as i5;
-import 'package:kanaru/src/database/tables/extension_tables.drift.dart' as i6;
+import 'package:kanaru/src/database/tables/library_collection_tables.drift.dart'
+    as i6;
 import 'package:kanaru/src/database/tables/library_cover_tables.drift.dart'
     as i7;
-import 'package:kanaru/src/database/tables/library_collection_tables.drift.dart'
+import 'package:kanaru/src/database/tables/custom_cover_triggers.drift.dart'
     as i8;
-import 'package:drift/internal/modular.dart' as i9;
+import 'package:kanaru/src/database/tables/extension_tables.drift.dart' as i9;
+import 'package:drift/internal/modular.dart' as i10;
 
 abstract class $AppDatabase extends i0.GeneratedDatabase {
   $AppDatabase(i0.QueryExecutor e) : super(e);
@@ -31,15 +33,16 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
   late final i2.$ExcludedFoldersTable excludedFolders = i2
       .$ExcludedFoldersTable(this);
   late final i5.TrackSearch trackSearch = i5.TrackSearch(this);
-  late final i6.$ExtensionSchemaTable extensionSchema = i6
-      .$ExtensionSchemaTable(this);
+  late final i6.$PlaylistsTable playlists = i6.$PlaylistsTable(this);
+  late final i7.$CustomCoversTable customCovers = i7.$CustomCoversTable(this);
   late final i7.$CoverColorsTable coverColors = i7.$CoverColorsTable(this);
-  late final i8.$PlaylistsTable playlists = i8.$PlaylistsTable(this);
-  late final i8.$PlaylistEntriesTable playlistEntries = i8
+  late final i6.$PlaylistEntriesTable playlistEntries = i6
       .$PlaylistEntriesTable(this);
-  late final i8.$SavedItemsTable savedItems = i8.$SavedItemsTable(this);
+  late final i6.$SavedItemsTable savedItems = i6.$SavedItemsTable(this);
+  late final i9.$ExtensionSchemaTable extensionSchema = i9
+      .$ExtensionSchemaTable(this);
   i1.PlaybackStatsDrift get playbackStatsDrift =>
-      i9.ReadDatabaseContainer(this)
+      i10.ReadDatabaseContainer(this)
           .accessor<i1.PlaybackStatsDrift>(i1.PlaybackStatsDrift.new);
   @override
   Iterable<i0.TableInfo<i0.Table, Object?>> get allTables =>
@@ -84,18 +87,23 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
     i5.tracksSearchInsert,
     i5.tracksSearchDelete,
     i5.tracksSearchUpdate,
-    extensionSchema,
-    coverColors,
     playlists,
+    customCovers,
+    i8.customCoversPlaylistDelete,
+    i8.customCoversPlaylistExistsInsert,
+    i8.customCoversPlaylistExistsUpdate,
+    coverColors,
+    i7.customCoversCoverKey,
     playlistEntries,
     savedItems,
-    i8.playlistsFavoritesUnique,
-    i8.playlistsMoodNameUnique,
-    i8.playlistsOriginUnique,
-    i8.playlistsOriginSource,
-    i8.playlistEntriesOrder,
-    i8.playlistEntriesTrack,
-    i8.savedItemsLookup,
+    i6.playlistsFavoritesUnique,
+    i6.playlistsMoodNameUnique,
+    i6.playlistsOriginUnique,
+    i6.playlistsOriginSource,
+    i6.playlistEntriesOrder,
+    i6.playlistEntriesTrack,
+    i6.savedItemsLookup,
+    extensionSchema,
   ];
   @override
   i0.StreamQueryUpdateRules get streamUpdateRules =>
@@ -170,6 +178,27 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
             'playlists',
             limitUpdateKind: i0.UpdateKind.delete,
           ),
+          result: [i0.TableUpdate('custom_covers', kind: i0.UpdateKind.delete)],
+        ),
+        i0.WritePropagation(
+          on: i0.TableUpdateQuery.onTableName(
+            'custom_covers',
+            limitUpdateKind: i0.UpdateKind.insert,
+          ),
+          result: [],
+        ),
+        i0.WritePropagation(
+          on: i0.TableUpdateQuery.onTableName(
+            'custom_covers',
+            limitUpdateKind: i0.UpdateKind.update,
+          ),
+          result: [],
+        ),
+        i0.WritePropagation(
+          on: i0.TableUpdateQuery.onTableName(
+            'playlists',
+            limitUpdateKind: i0.UpdateKind.delete,
+          ),
           result: [
             i0.TableUpdate('playlist_entries', kind: i0.UpdateKind.delete),
           ],
@@ -202,14 +231,16 @@ class $AppDatabaseManager {
       i2.$$ExcludedFoldersTableTableManager(_db, _db.excludedFolders);
   i5.$TrackSearchTableManager get trackSearch =>
       i5.$TrackSearchTableManager(_db, _db.trackSearch);
-  i6.$$ExtensionSchemaTableTableManager get extensionSchema =>
-      i6.$$ExtensionSchemaTableTableManager(_db, _db.extensionSchema);
+  i6.$$PlaylistsTableTableManager get playlists =>
+      i6.$$PlaylistsTableTableManager(_db, _db.playlists);
+  i7.$$CustomCoversTableTableManager get customCovers =>
+      i7.$$CustomCoversTableTableManager(_db, _db.customCovers);
   i7.$$CoverColorsTableTableManager get coverColors =>
       i7.$$CoverColorsTableTableManager(_db, _db.coverColors);
-  i8.$$PlaylistsTableTableManager get playlists =>
-      i8.$$PlaylistsTableTableManager(_db, _db.playlists);
-  i8.$$PlaylistEntriesTableTableManager get playlistEntries =>
-      i8.$$PlaylistEntriesTableTableManager(_db, _db.playlistEntries);
-  i8.$$SavedItemsTableTableManager get savedItems =>
-      i8.$$SavedItemsTableTableManager(_db, _db.savedItems);
+  i6.$$PlaylistEntriesTableTableManager get playlistEntries =>
+      i6.$$PlaylistEntriesTableTableManager(_db, _db.playlistEntries);
+  i6.$$SavedItemsTableTableManager get savedItems =>
+      i6.$$SavedItemsTableTableManager(_db, _db.savedItems);
+  i9.$$ExtensionSchemaTableTableManager get extensionSchema =>
+      i9.$$ExtensionSchemaTableTableManager(_db, _db.extensionSchema);
 }
