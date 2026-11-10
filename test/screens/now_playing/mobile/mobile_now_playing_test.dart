@@ -25,12 +25,17 @@ final _routes = <RouteBase>[
 ];
 
 /// A host whose home page is a stand-in, with Now Playing pushed on top.
-Future<UiHost> _open(WidgetTester tester, {Size? size}) async {
+Future<UiHost> _open(
+  WidgetTester tester, {
+  Size? size,
+  double textScale = 1,
+}) async {
   final host = await pumpWithPlayer(
     tester,
     const Center(child: Text('home page')),
     routes: _routes,
     size: size ?? const Size(390, 844),
+    textScale: textScale,
   );
   host.router!.push('/now-playing');
   await tester.pump();
@@ -43,6 +48,24 @@ String _location(UiHost host) =>
     host.router!.routerDelegate.currentConfiguration.last.matchedLocation;
 
 void main() {
+  for (final (size, scale) in [
+    (const Size(360, 640), 1.0),
+    (const Size(360, 640), 1.3),
+    (const Size(320, 568), 1.3),
+    (const Size(390, 844), 1.3),
+  ]) {
+    testWidgets('lays out without overflow at $size, text ×$scale', (
+      tester,
+    ) async {
+      await _open(tester, size: size, textScale: scale);
+      expect(tester.takeException(), isNull);
+      // The page scrolls to its end without an error either.
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -2000));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('opens at the top of the page', (tester) async {
     await _open(tester);
     final scroll = tester.state<ScrollableState>(find.byType(Scrollable).first);

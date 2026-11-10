@@ -21,26 +21,31 @@ class NowPlayingControls extends StatelessWidget {
           child: PlaybackTimeLabel(textAlign: TextAlign.start),
         ),
         Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            spacing: KSpace.x3,
-            children: [
-              const PreviousButton(iconSize: 32),
-              FlightPieceHost(
-                source: flight,
-                piece: FlightPiece.play,
-                child: const PlayPauseButton(
-                  filled: true,
-                  iconSize: 36,
-                  size: 72,
+          // Scales down on a narrow screen instead of overflowing.
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: KSpace.x3,
+              children: [
+                const PreviousButton(iconSize: 32),
+                FlightPieceHost(
+                  source: flight,
+                  piece: FlightPiece.play,
+                  child: const PlayPauseButton(
+                    filled: true,
+                    iconSize: 36,
+                    size: 72,
+                  ),
                 ),
-              ),
-              FlightPieceHost(
-                source: flight,
-                piece: FlightPiece.next,
-                child: const NextButton(iconSize: 32),
-              ),
-            ],
+                FlightPieceHost(
+                  source: flight,
+                  piece: FlightPiece.next,
+                  child: const NextButton(iconSize: 32),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(

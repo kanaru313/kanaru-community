@@ -21,6 +21,8 @@ import 'more_sheet.dart';
 import 'now_playing_button_row.dart';
 import 'now_playing_controls.dart';
 import 'now_playing_header.dart';
+import 'queue_strip.dart'
+    show nowPlayingArtistLineHeight, nowPlayingTitleLineHeight;
 import 'track_info_card.dart';
 
 /// Pull of the header, in dp, past which letting go closes the page.
@@ -242,6 +244,7 @@ class _TitleRow extends StatelessWidget {
                 style: text.headlineSmall?.copyWith(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
+                  height: nowPlayingTitleLineHeight,
                 ),
               ),
               if (artist != null)
@@ -251,6 +254,7 @@ class _TitleRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: text.bodyMedium?.copyWith(
                     fontSize: 15,
+                    height: nowPlayingArtistLineHeight,
                     color: scheme.onSurfaceVariant,
                   ),
                 ),

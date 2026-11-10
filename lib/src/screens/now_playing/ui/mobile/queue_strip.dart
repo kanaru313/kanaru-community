@@ -31,6 +31,12 @@ class StripCover extends ConsumerWidget {
 }
 
 /// Title and artist; the type size follows the flight.
+/// Line heights of the title and artist on Now Playing and in the strip. The
+/// flying text is laid out in the rect of the Now Playing title block, so the
+/// two must agree or the flight overflows that rect by a few pixels.
+const double nowPlayingTitleLineHeight = 1.2;
+const double nowPlayingArtistLineHeight = 1.3;
+
 class StripText extends ConsumerWidget {
   const StripText({super.key, required this.t});
 
@@ -53,6 +59,7 @@ class StripText extends ConsumerWidget {
           style: text.titleMedium?.copyWith(
             fontSize: 16 + 6 * (1 - t),
             fontWeight: FontWeight.w700,
+            height: nowPlayingTitleLineHeight,
           ),
         ),
         if (info?.artist != null)
@@ -62,6 +69,7 @@ class StripText extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
             style: text.bodyMedium?.copyWith(
               fontSize: 13 + 2 * (1 - t),
+              height: nowPlayingArtistLineHeight,
               color: scheme.onSurfaceVariant,
             ),
           ),
