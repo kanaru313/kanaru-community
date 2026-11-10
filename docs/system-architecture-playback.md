@@ -245,10 +245,9 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
   `start` in `on_unload`, so the `start` property is never set directly. A raw-appended entry has
   no media_kit counterpart; its `on_load` lookup is out of range and swallowed there, harmless
   because only `open` ever reloads an entry.
-- **`setNext`:** the append carries `start=0` (`loadfile … append -1 start=0`): an appended entry has no media_kit
-  counterpart, so the previous entry's resume offset would otherwise apply to it. Promote first if mpv already moved on; `loadfile append`; re-read: idle drops the
-  append; the old next is removed only after the new one is in. After each promotion the entries
-  before the playing one are removed, so the playlist holds at most two.
+- **`setNext`:** promote first if mpv already moved on, then append with `loadfile <uri> append` (`mpv_append.dart`), the only form valid on every mpv: 0.35 (Android's libmpv) reads the third argument as options and rejects `append -1 start=0`, and from 0.38 it is the index, which rejects `append start=0`. mpv reports a rejected command through its log, never by throwing, so the append is verified: `playlist-count` must grow by exactly one and the new entry id must differ from the current one (the tracker refuses such a next too). The resume offset of the entry before the append can leak into the appended one (it has no media_kit counterpart), so after the first advance `undoLeakedStart` seeks back to 0 when the position is at the offset and the user did not seek. Re-read: idle drops the append; the old next is removed only after the new one is in. After each promotion the entries before the playing one are removed, so the playlist holds at most two.
+- **Failed append:** logged at WARNING, no next is handed, and the current entry is not failed (it plays fine). A previous next still in mpv is removed so it cannot advance. At the end of the current entry the tracker reports `Ended`, and the controller loads the entry that follows (a non-gapless advance) instead of finishing the queue.
+- **mpv log:** the engine logs mpv's `warn`/`error`/`fatal` messages and its error stream at WARNING (`PlayerConfiguration.logLevel` is `warn`), so a rejected command shows in logcat.
 - **Tracker rules** (`mpv_playlist_tracker.dart`, pure, driven by `MpvSnapshot`): entries are matched
   by mpv entry id, never by path. Promote only when mpv plays the handed-over id. An entry failed iff
   mpv left it without ever reporting a duration; idle with a next queued fails the current only if

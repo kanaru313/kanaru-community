@@ -396,4 +396,22 @@ void main() {
       expect(big.c.intent, PlayIntent.playing);
     },
   );
+
+  test('a next the engine never appended is no failure: the end of the current loads it', () async {
+    await h.play();
+    await h.settle();
+    expect(h.engine.nexts.single, isNotNull, reason: 'handed at load');
+    // The engine could not append it, so it reports nothing for it; the
+    // current entry plays on and finishes.
+    h.engine.emit(EngineLoaded(h.loadedToken, const Duration(seconds: 10)));
+    await h.settle();
+    expect(h.notices.whereType<TrackFailed>(), isEmpty);
+    h.engine.emit(EngineEnded(h.loadedToken));
+    await h.settle();
+    expect(h.c.queueState.current, 1);
+    expect(h.engine.loads, hasLength(2));
+    expect(h.engine.loads.last.path, '/music/t1.mp3');
+    expect(h.c.intent, PlayIntent.playing);
+    expect(h.notices.whereType<TrackFailed>(), isEmpty);
+  });
 }

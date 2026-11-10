@@ -46,6 +46,7 @@ class MpvPlaylistTracker {
   EngineToken? get currentToken => _current?.token;
   EngineToken? get nextToken => _next?.token;
   int? get nextMpvId => _next?.mpvId;
+  int? get currentMpvId => _current?.mpvId;
 
   /// Forgets everything (a new load replaces the playlist).
   void reset() {
@@ -60,10 +61,17 @@ class MpvPlaylistTracker {
     _current = _Entry(mpvId, token);
   }
 
-  /// [token] was appended as the entry after the current one.
-  void registerNext(EngineToken token, int mpvId) {
+  /// [token] was appended as the entry after the current one. Refused (false,
+  /// no next kept) when [mpvId] is the current entry's own id: promoting it
+  /// would report the playing entry as failed and skip it.
+  bool registerNext(EngineToken token, int mpvId) {
+    if (mpvId == _current?.mpvId) {
+      _next = null;
+      return false;
+    }
     _next = _Entry(mpvId, token);
     _endedReported = false;
+    return true;
   }
 
   void clearNext() => _next = null;

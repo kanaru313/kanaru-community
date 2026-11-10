@@ -185,4 +185,13 @@ void main() {
     t.reset();
     expect(t.onSnapshot(snap(id: 10, seconds: 3)), isEmpty);
   });
+
+  test('a next with the current entry id is refused and never promoted', () {
+    expect(t.registerNext(tok(2, handoff: 2), 10), isFalse);
+    expect(t.nextToken, isNull);
+    // The playing entry has no duration yet: it must not be reported failed.
+    expect(t.onSnapshot(snap(id: 10)), isEmpty);
+    expect(t.registerNext(tok(2, handoff: 2), 11), isTrue);
+    expect(t.currentMpvId, 10);
+  });
 }

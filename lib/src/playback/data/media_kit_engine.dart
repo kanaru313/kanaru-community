@@ -6,6 +6,7 @@ import 'package:media_kit/media_kit.dart';
 import '../domain/audio_engine.dart';
 import 'leaked_start.dart';
 import 'load_failure_guard.dart';
+import 'mpv_append.dart';
 import 'mpv_options.dart';
 import 'mpv_playlist_tracker.dart';
 
@@ -26,9 +27,27 @@ final _log = Logger('MediaKitEngine');
 /// media_kit counterpart; its lookup in `on_load` is out of range and
 /// swallowed there, which is harmless because only `open` (which resets
 /// media_kit's list) ever reloads an entry.
-class MediaKitEngine implements AudioEngine, MpvProperties {
-  MediaKitEngine({Player? player}) : _player = player ?? Player() {
+class MediaKitEngine implements AudioEngine, MpvConsole {
+  MediaKitEngine({Player? player})
+    : _player =
+          player ??
+          Player(
+            configuration: const PlayerConfiguration(
+              logLevel: MPVLogLevel.warn,
+            ),
+          ) {
     _native = _player.platform as NativePlayer;
+    // A rejected mpv command does not throw: it only shows in mpv's log.
+    _subs.add(_player.stream.log.listen(_logMpv));
+    _subs.add(
+      _player.stream.error.listen((e) => _log.warning('mpv error: $e')),
+    );
+  }
+
+  static void _logMpv(PlayerLog l) {
+    if (l.level == 'error' || l.level == 'warn' || l.level == 'fatal') {
+      _log.warning('mpv ${l.level} [${l.prefix}] ${l.text}');
+    }
   }
 
   final Player _player;
@@ -102,6 +121,9 @@ class MediaKitEngine implements AudioEngine, MpvProperties {
 
   @override
   Future<String> get(String name) => _native.getProperty(name);
+
+  @override
+  Future<void> command(List<String> args) => _native.command(args);
 
   /// A property changed: read a snapshot and act, once at a time. Bursts
   /// collapse into one more read.
@@ -217,34 +239,40 @@ class MediaKitEngine implements AudioEngine, MpvProperties {
     _emit(_tracker.onSnapshot(s));
     final hadNext = _tracker.nextMpvId != null;
     if (next != null) {
-      await _native.command([
-        'loadfile',
+      final appended = await appendEntry(
+        this,
         Uri.file(next.path).toString(),
-        'append',
-        '-1',
-        // An appended entry has no media_kit counterpart, so the resume
-        // offset of the entry before it would otherwise apply to it too.
-        'start=0',
-      ]);
-      final count = int.tryParse(await _try('playlist-count') ?? '') ?? 0;
+        currentId: _tracker.currentMpvId,
+      );
       s = await _snapshot();
       if (s.idle) {
         // mpv went idle while the append was in flight: drop it.
-        if (count > 0) await _native.command(['playlist-clear']);
+        if (s.count > 0) await _native.command(['playlist-clear']);
         _tracker.clearNext();
         _emit(_tracker.onSnapshot(s));
         return;
       }
-      final newId = await _idOfIndex(count - 1);
-      if (newId == null) {
-        throw StateError('mpv has no id for the appended entry');
+      if (appended == null) {
+        // Not appended (already logged): the current entry plays fine, so it
+        // is not failed. No next is handed; at its end the controller loads
+        // the following entry instead of a gapless advance. A previous next
+        // still in mpv would advance to a stale entry, so it goes too.
+        if (hadNext && s.count > s.playingPos + 1) {
+          await _native.command(['playlist-remove', '${s.playingPos + 1}']);
+        }
+        _tracker.clearNext();
+        return;
       }
+      final count = appended.count;
       // Remove the previous next only after the new one is in (a playlist
       // never goes empty behind the playing entry).
       if (hadNext && s.playingPos + 1 < count - 1) {
         await _native.command(['playlist-remove', '${s.playingPos + 1}']);
       }
-      _tracker.registerNext(next.token, newId);
+      if (!_tracker.registerNext(next.token, appended.id)) {
+        _log.warning('appended entry has the current entry id; dropped');
+        return;
+      }
       s = await _snapshot();
       if (_tracker.needsPlaylistNext(s)) {
         // The file ended before the append: step on, and unpause if asked.
@@ -259,26 +287,15 @@ class MediaKitEngine implements AudioEngine, MpvProperties {
     }
   }
 
-  Future<void> _undoLeakedStart(int seeksAtAdvance) async {
+  Future<void> _undoLeakedStart(int seeksAtAdvance) {
     final leaked = _resumeStart;
     _resumeStart = Duration.zero;
-    if (leaked <= Duration.zero) return;
-    // The offset is applied while the file opens, so wait (briefly) until
-    // mpv reports a position.
-    for (var i = 0; i < 10 && !_disposed; i++) {
-      final at = double.tryParse(await _try('time-pos') ?? '');
-      if (at != null) {
-        if (isLeakedStart(
-          resumeStart: leaked,
-          positionSeconds: at,
-          seekedSinceAdvance: _seeks != seeksAtAdvance,
-        )) {
-          await _native.command(['seek', '0', 'absolute']);
-        }
-        return;
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-    }
+    return undoLeakedStart(
+      this,
+      leaked: leaked,
+      seekedSinceAdvance: () => _seeks != seeksAtAdvance,
+      disposed: () => _disposed,
+    );
   }
 
   /// Unpauses mpv directly. After `playlist-next` at the end of a file,
