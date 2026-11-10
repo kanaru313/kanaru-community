@@ -170,6 +170,10 @@ class _PanelHeader extends ConsumerWidget {
           .warning('checking the selection failed', e, s);
     }
     if (!context.mounted) return;
+    if (ids.isEmpty) {
+      showAppSnackBar(context, l10n.librarySelectionGone);
+      return;
+    }
     await playAll(
       ref,
       context,

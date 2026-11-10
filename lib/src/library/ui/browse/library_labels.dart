@@ -62,11 +62,14 @@ int minutesOf(int milliseconds) {
   return m < 1 ? 1 : m;
 }
 
-/// `12 min` or `2 h 05 min`.
+/// `12 min`, `2 h` (whole hours) or `2 h 5 min`.
 String formatTotalDuration(AppLocalizations l10n, int milliseconds) {
   final minutes = minutesOf(milliseconds);
   if (minutes < 60) return l10n.libraryDurationMinutes(minutes);
-  return l10n.libraryDurationHoursMinutes(minutes ~/ 60, minutes % 60);
+  final hours = minutes ~/ 60;
+  final rest = minutes % 60;
+  if (rest == 0) return l10n.libraryDurationHours(hours);
+  return l10n.libraryDurationHoursMinutes(hours, rest);
 }
 
 /// Name of a language for a list row or page: its own name, plus the name in

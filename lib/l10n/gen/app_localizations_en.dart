@@ -1003,6 +1003,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String libraryDurationHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String get librarySelectionGone =>
+      'The selected songs are no longer in the library';
+
+  @override
   String libraryDurationHoursMinutes(int hours, int minutes) {
     return '$hours h $minutes min';
   }

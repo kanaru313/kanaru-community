@@ -58,7 +58,7 @@ void main() {
       MenuItemId.hide,
       MenuItemId.delete,
     ]);
-    expect(spec.header.subtitle, '2 albums · 10 songs · 1 h 0 min');
+    expect(spec.header.subtitle, '2 albums · 10 songs · 1 h');
     expect(rowOf(spec, MenuItemId.split).soon, isTrue);
   });
 

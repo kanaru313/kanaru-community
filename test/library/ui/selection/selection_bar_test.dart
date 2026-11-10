@@ -87,6 +87,30 @@ void main() {
     await unmountApp(tester);
   });
 
+  testWidgets('play all with every selected song gone says so, plays nothing', (
+    tester,
+  ) async {
+    final playback = FakePlaybackCommands();
+    final h = await pumpSelection(tester, playback: playback);
+    final ids = (await allIds(h)).take(2).toList();
+    h.selection.addRange(ids);
+    await tester.pump();
+    // Missing tracks are not visible any more: the same as gone.
+    await h.db.customStatement(
+      "UPDATE tracks SET status = 'missing', missing_since = 1 "
+      'WHERE id IN (${ids.map((i) => i.value).join(',')})',
+    );
+    await tester.tap(_button('Play all selected'));
+    await h.settle(tester, rounds: 3);
+    expect(playback.calls, isEmpty);
+    expect(
+      find.text('The selected songs are no longer in the library'),
+      findsOneWidget,
+    );
+    expect(h.selected.isEmpty, isTrue);
+    await unmountApp(tester);
+  });
+
   testWidgets('clear empties the selection and the panel goes', (tester) async {
     final h = await pumpSelection(tester);
     h.selection.addRange((await allIds(h)).take(3));

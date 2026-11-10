@@ -47,7 +47,7 @@ class FolderBackGuard extends StatelessWidget {
   /// level the page was opened at, which is where Back hands over to the page
   /// below.
   FolderLocation? _stopAtEntry(FolderLocation? up) {
-    if (up == null || up.sourceUid == null) return up;
+    if (up == null || up.sourceUid == null || entry.key.isEmpty) return up;
     final inside =
         entry.sourceUid == up.sourceUid &&
         entry.key != current.key &&

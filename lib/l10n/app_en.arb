@@ -600,6 +600,15 @@
       }
     }
   },
+  "libraryDurationHours": "{hours} h",
+  "@libraryDurationHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "librarySelectionGone": "The selected songs are no longer in the library",
   "libraryDurationHoursMinutes": "{hours} h {minutes} min",
   "@libraryDurationHoursMinutes": {
     "placeholders": {

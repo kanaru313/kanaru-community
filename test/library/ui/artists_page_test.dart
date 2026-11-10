@@ -71,7 +71,7 @@ void main() {
       await _pump(tester);
       expect(find.byType(ArtistTile), findsNWidgets(2));
       expect(find.text('2 albums'), findsOneWidget);
-      expect(find.text('3 songs • 3 h 0 min'), findsOneWidget);
+      expect(find.text('3 songs • 3 h'), findsOneWidget);
       expect(find.text('1 song • 1 min'), findsOneWidget);
       final covers = [
         for (final c in tester.widgetList<TrackCover>(find.byType(TrackCover)))

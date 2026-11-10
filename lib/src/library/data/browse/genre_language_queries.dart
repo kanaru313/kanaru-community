@@ -29,7 +29,7 @@ Future<List<LanguageSummary>> languageSummaries(AppDatabase db) async {
   final rows = await db
       .customSelect(
         'SELECT t.language AS code, COUNT(*) AS tracks, '
-        'SUM(t.language_detected) AS detected '
+        'coalesce(SUM(t.language_detected), 0) AS detected '
         "FROM tracks t WHERE ${visibleTrackWhere('t')} GROUP BY t.language",
         readsFrom: {db.tracks},
       )

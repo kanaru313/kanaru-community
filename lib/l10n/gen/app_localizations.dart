@@ -1646,6 +1646,18 @@ abstract class AppLocalizations {
   /// **'{minutes} min'**
   String libraryDurationMinutes(int minutes);
 
+  /// No description provided for @libraryDurationHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h'**
+  String libraryDurationHours(int hours);
+
+  /// No description provided for @librarySelectionGone.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected songs are no longer in the library'**
+  String get librarySelectionGone;
+
   /// No description provided for @libraryDurationHoursMinutes.
   ///
   /// In en, this message translates to:

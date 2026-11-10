@@ -156,6 +156,15 @@
       }
     }
   },
+  "libraryDurationHours": "{hours} giờ",
+  "@libraryDurationHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "librarySelectionGone": "Các bài đã chọn không còn trong thư viện",
   "libraryDurationHoursMinutes": "{hours} giờ {minutes} phút",
   "@libraryDurationHoursMinutes": {
     "placeholders": {

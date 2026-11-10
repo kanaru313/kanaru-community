@@ -935,6 +935,14 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String libraryDurationHours(int hours) {
+    return '$hours giờ';
+  }
+
+  @override
+  String get librarySelectionGone => 'Các bài đã chọn không còn trong thư viện';
+
+  @override
   String libraryDurationHoursMinutes(int hours, int minutes) {
     return '$hours giờ $minutes phút';
   }
