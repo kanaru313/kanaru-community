@@ -79,6 +79,23 @@ void main() {
     expect(await result, isFalse);
   });
 
+  testWidgets('an action snack bar closes after its duration', (tester) async {
+    await tester.pumpWidget(host(Builder(
+      builder: (context) => TextButton(
+        onPressed: () => showAppSnackBar(context, 'Removed',
+            actionLabel: 'Undo', onAction: () {},
+            duration: const Duration(seconds: 4)),
+        child: const Text('go'),
+      ),
+    )));
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    expect(find.text('Undo'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.text('Removed'), findsNothing);
+  });
+
   testWidgets('showAppSnackBar shows message and action, replaces previous', (tester) async {
     var undone = 0;
     await tester.pumpWidget(host(Builder(
