@@ -390,6 +390,31 @@ void main() {
       ]);
     });
 
+    test('stays loaded for a while after the last listener', () async {
+      final short = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          appPathsProvider.overrideWithValue(
+            _Paths(Directory('${root.path}/data')),
+          ),
+          customCoverKeepAliveProvider.overrideWithValue(
+            const Duration(milliseconds: 200),
+          ),
+        ],
+      );
+      addTearDown(short.dispose);
+      final item = (kind: CustomCoverKind.album, itemKey: _album);
+      short.listen(customCoverFileProvider(item), (_, _) {}).close();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      // `exists` is deprecated for an experimental `.exist`; fine in a test.
+      // ignore: deprecated_member_use
+      expect(short.exists(customCoverFileProvider(item)), isTrue);
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      // `exists` is deprecated for an experimental `.exist`; fine in a test.
+      // ignore: deprecated_member_use
+      expect(short.exists(customCoverFileProvider(item)), isFalse);
+    });
+
     test('a row whose file is missing (restored backup) gives null', () async {
       await db.customStatement(
         "INSERT INTO custom_covers VALUES ('album', '$_album', '${'c' * 64}', 1)",

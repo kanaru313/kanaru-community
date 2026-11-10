@@ -95,6 +95,21 @@ void main() {
     expect(provider.height, 150);
   });
 
+  testWidgets('load error shows errorFallback when given', (tester) async {
+    await tester.pumpWidget(host(
+      Center(
+        child: KCover(
+          image: _BadImage(),
+          size: 50,
+          placeholderSeed: 's',
+          errorFallback: const Text('source cover'),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('source cover'), findsOneWidget);
+  });
+
   testWidgets('load error falls back to the placeholder', (tester) async {
     await tester.pumpWidget(host(
       Center(child: KCover(image: _BadImage(), size: 50, placeholderSeed: 's')),
