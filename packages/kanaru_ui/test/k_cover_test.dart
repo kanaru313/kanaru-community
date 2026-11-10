@@ -138,4 +138,19 @@ void main() {
     // 100x60 fitted into 50x50 -> 50x30, not squashed to 50x50.
     expect(decoded!.width / decoded.height, closeTo(100 / 60, 0.1));
   });
+
+  test('placeholder colours are stable per seed and differ by brightness', () {
+    final a = KCoverPlaceholderColors.of('Album A', Brightness.light);
+    expect(KCoverPlaceholderColors.of('Album A', Brightness.light).fill, a.fill);
+    expect(
+      KCoverPlaceholderColors.of('Album B', Brightness.light).fill,
+      isNot(a.fill),
+    );
+    final dark = KCoverPlaceholderColors.of('Album A', Brightness.dark);
+    expect(dark.fill, isNot(a.fill));
+    expect(
+      HSLColor.fromColor(dark.fill).hue.round(),
+      HSLColor.fromColor(a.fill).hue.round(),
+    );
+  });
 }

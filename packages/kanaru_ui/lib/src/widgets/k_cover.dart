@@ -18,6 +18,29 @@ int coverSeedHash(String seed) {
   return h;
 }
 
+/// Colours of the cover placeholder for a seed, so other surfaces (a colour
+/// tile, a genre chip) can match the placeholder a [KCover] would draw.
+class KCoverPlaceholderColors {
+  const KCoverPlaceholderColors._(this.fill, this.ink);
+
+  /// Colours for [seed] in [brightness]: the hue comes from the seed's stable
+  /// hash, so the same seed always gets the same colour.
+  factory KCoverPlaceholderColors.of(String seed, Brightness brightness) {
+    final dark = brightness == Brightness.dark;
+    final hue = (coverSeedHash(seed) % 360).toDouble();
+    return KCoverPlaceholderColors._(
+      HSLColor.fromAHSL(1, hue, 0.35, dark ? 0.28 : 0.82).toColor(),
+      HSLColor.fromAHSL(1, hue, 0.35, dark ? 0.75 : 0.35).toColor(),
+    );
+  }
+
+  /// Background of the placeholder.
+  final Color fill;
+
+  /// Icon colour on [fill].
+  final Color ink;
+}
+
 /// Square (or round) cover art. Decodes at `size x devicePixelRatio`, fades in
 /// and falls back to a placeholder (colour picked from [placeholderSeed]) when
 /// [image] is null or fails to load.
@@ -93,10 +116,9 @@ class _Placeholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final hue = (coverSeedHash(seed) % 360).toDouble();
-    final fill = HSLColor.fromAHSL(1, hue, 0.35, dark ? 0.28 : 0.82).toColor();
-    final ink = HSLColor.fromAHSL(1, hue, 0.35, dark ? 0.75 : 0.35).toColor();
+    final colors = KCoverPlaceholderColors.of(seed, Theme.of(context).brightness);
+    final fill = colors.fill;
+    final ink = colors.ink;
     return DecoratedBox(
       decoration: BoxDecoration(color: fill),
       child: SizedBox.square(

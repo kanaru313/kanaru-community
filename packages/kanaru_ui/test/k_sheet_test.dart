@@ -105,4 +105,27 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getSize(find.descendant(of: find.byType(Dialog), matching: find.byType(ConstrainedBox)).last).height, closeTo(680, 1));
   });
+
+  testWidgets('useRootNavigator shows the sheet on the root navigator', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    final nestedKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(host(Navigator(
+      key: nestedKey,
+      onGenerateRoute: (_) => MaterialPageRoute<void>(
+        builder: (context) => TextButton(
+          onPressed: () => showKSheet<void>(
+            context,
+            useRootNavigator: true,
+            builder: (_) => const Text('content'),
+          ),
+          child: const Text('open'),
+        ),
+      ),
+    )));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('content'), findsOneWidget);
+    // The nested navigator still holds only its page; the sheet went to the root.
+    expect(nestedKey.currentState!.canPop(), isFalse);
+  });
 }
