@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/widgets.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
@@ -15,13 +16,17 @@ Future<void> animateSpringTo(
   double target,
   SpringDescription spring, {
   double velocity = 0,
+  @visibleForTesting
+  TickerFuture Function(
+        BuildContext,
+        AnimationController,
+        double,
+        SpringDescription, {
+        double velocity,
+      })
+      animate =
+      KSpring.animateTo,
 }) async {
-  await KSpring.animateTo(
-    context,
-    controller,
-    target,
-    spring,
-    velocity: velocity,
-  );
+  await animate(context, controller, target, spring, velocity: velocity);
   controller.value = target;
 }
