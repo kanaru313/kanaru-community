@@ -126,4 +126,22 @@ void main() {
     expect(ratio(KSpring.snappy), closeTo(0.9, 1e-9));
     expect(ratio(KSpring.gentle), closeTo(1.0, 1e-9));
   });
+
+  testWidgets('animateTo ends exactly on the target', (tester) async {
+    late AnimationController c;
+    late BuildContext ctx;
+    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) {
+      ctx = context;
+      return const SizedBox();
+    })));
+    c = AnimationController.unbounded(vsync: tester, value: 1);
+    addTearDown(c.dispose);
+    for (final spring in [KSpring.snappy, KSpring.gentle, KSpring.bouncy]) {
+      c.value = 1;
+      KSpring.animateTo(ctx, c, 0, spring);
+      await tester.pumpAndSettle();
+      expect(c.value, 0.0);
+      expect(c.isAnimating, isFalse);
+    }
+  });
 }
