@@ -677,10 +677,12 @@ routes in `ui/browse/library_routes.dart`.
   the item's answer from ONE stream per kind (`customCoverIndexProvider`, in
   `state/browse/custom_cover_index_providers.dart`, a watch of the item keys in
   `custom_covers`), and only an item in that set watches its file. While the
-  file resolves (a tile scrolled back in can show the automatic cover for a
-  frame or two, the file provider being autoDispose) or when it is gone (a
-  restored backup), the automatic cover stays. A file that exists but cannot
-  be decoded falls to the `KCover` placeholder, not the track cover.
+  file resolves, or when it is gone (a restored backup), the automatic cover
+  stays. `customCoverFileProvider` stays loaded 5 s after its last listener
+  (`customCoverKeepAliveProvider`), so a tile scrolled back in within that time
+  shows its custom cover at once instead of flashing the automatic one. A file
+  that exists but cannot be decoded shows the automatic cover too (passed to
+  `KCover` as `errorFallback`).
 
 ## Folders tab
 

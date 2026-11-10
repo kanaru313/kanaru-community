@@ -88,7 +88,11 @@ class _PermissionBanner extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(KIcons.permission, size: 18, color: scheme.onErrorContainer),
+              Icon(
+                KIcons.permissionMissing,
+                size: 18,
+                color: scheme.onErrorContainer,
+              ),
               const KGap(KSpace.x2),
               Expanded(
                 child: Text(

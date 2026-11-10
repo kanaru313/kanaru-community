@@ -11,6 +11,7 @@ import 'package:kanaru/src/library/state/custom_cover_providers.dart';
 import 'package:kanaru/src/library/ui/browse/item_covers.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
+import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru/src/platform/state/platform_providers.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
@@ -204,6 +205,37 @@ void main() {
     await h.settle(tester, rounds: 4);
     expect(_images<AlbumCover>(tester).where(_isCustom), isEmpty);
     expect(find.byType(AlbumCover), findsNWidgets(3));
+    await unmountApp(tester);
+  });
+
+  testWidgets('a file that is not a valid image shows the source cover', (
+    tester,
+  ) async {
+    final h = await _pump(tester);
+    final hash = 'd' * 64;
+    final dir = h.container.read(appPathsProvider).dataDir;
+    final folder = Directory('${dir.path}/custom_covers')
+      ..createSync(recursive: true);
+    File('${folder.path}/$hash.png').writeAsBytesSync([1, 2, 3, 4]);
+    final blueKey = albumId('Blue', 'Zed');
+    await setCustomCover(h.db, 'album', blueKey, hash);
+    await h.settle(tester, rounds: 4);
+    final blue = find.byWidgetPredicate(
+      (w) => w is AlbumCover && w.itemKey == blueKey,
+    );
+    final blueSource = find.descendant(
+      of: blue,
+      matching: find.byType(TrackCover),
+    );
+    final blueFile = find.descendant(of: blue, matching: find.byType(KCover));
+    expect(blueFile, findsOneWidget);
+    expect(_isCustom(tester.widget<KCover>(blueFile).image), isTrue);
+    // The decode fails in real time: poll until the error frame shows the
+    // source cover inside Blue's tile (bounded).
+    for (var i = 0; i < 80 && blueSource.evaluate().isEmpty; i++) {
+      await h.settle(tester, rounds: 1);
+    }
+    expect(blueSource, findsOneWidget);
     await unmountApp(tester);
   });
 

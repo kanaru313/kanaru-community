@@ -86,8 +86,8 @@ class ArtistCover extends StatelessWidget {
 /// A list holds thousands of these, so the check is the per-kind index (one
 /// stream, `select`ed to this item's answer). Only an item that has a custom
 /// cover opens the per-item file stream. The file goes through [KCover], which
-/// decodes at display size. While the file resolves, and when it is gone,
-/// [automatic] stays on screen.
+/// decodes at display size. While the file resolves, when it is gone and when
+/// it cannot be decoded, [automatic] is on screen.
 class _ItemCover extends ConsumerWidget {
   const _ItemCover({
     required this.item,
@@ -116,6 +116,8 @@ class _ItemCover extends ConsumerWidget {
       placeholderSeed: seed,
       radius: radius,
       circle: circle,
+      // A file that exists but cannot be decoded shows the source cover.
+      errorFallback: automatic,
     );
   }
 }
