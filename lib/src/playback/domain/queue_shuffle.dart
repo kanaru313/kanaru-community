@@ -7,12 +7,16 @@ import 'queue_state.dart';
 /// Turns shuffle on and shuffles the entries after the current one. Entries
 /// before it and the current one keep their place. The first time (no shuffle
 /// keys yet) every entry gets a key, in its present order for the kept ones.
-/// The play-next run is shuffled with the rest.
+/// The play-next run (the entries added with "play next", right after the
+/// current one) keeps its order and its place; only the entries behind it are
+/// shuffled.
 QueueEdit shuffleUpcoming(QueueState s, Random random, KeyGen keys) {
   final c = s.current;
   final keptCount = c == null ? 0 : c + 1;
   final kept = s.items.sublist(0, keptCount);
-  final upcoming = s.items.sublist(keptCount)..shuffle(random);
+  final runEnd = c == null ? 0 : min(keptCount + s.playNextRun, s.length);
+  final run = s.items.sublist(keptCount, runEnd);
+  final upcoming = s.items.sublist(runEnd)..shuffle(random);
   final hasKeys = s.shuffled && kept.every((i) => i.shuffleKey != null);
   final rekeyed = <int, KeyChange>{};
   var items = kept;
@@ -30,10 +34,12 @@ QueueEdit shuffleUpcoming(QueueState s, Random random, KeyGen keys) {
     }
     after = fresh.isEmpty ? null : fresh.last;
   }
-  final upKeys = keys.betweenN(after, null, upcoming.length);
+  // The run and the shuffled rest take consecutive keys behind the kept ones.
+  final ordered = [...run, ...upcoming];
+  final upKeys = keys.betweenN(after, null, ordered.length);
   final shuffled = [
-    for (var i = 0; i < upcoming.length; i++)
-      upcoming[i].withKeys(shuffleKey: upKeys[i]),
+    for (var i = 0; i < ordered.length; i++)
+      ordered[i].withKeys(shuffleKey: upKeys[i]),
   ];
   for (final i in shuffled) {
     rekeyed[i.entryId] = (sortKey: null, shuffleKey: i.shuffleKey);
@@ -44,6 +50,7 @@ QueueEdit shuffleUpcoming(QueueState s, Random random, KeyGen keys) {
       current: c,
       shuffled: true,
       repeat: s.repeat,
+      playNextRun: run.length,
     ),
     rekeyed: rekeyed,
   );

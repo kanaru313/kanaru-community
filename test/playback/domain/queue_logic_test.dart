@@ -220,6 +220,48 @@ void main() {
     });
   });
 
+  group('shuffle with a play-next run', () {
+    QueueState withRun({required bool shuffled}) {
+      final base = makeQueue(8, current: 1, shuffled: shuffled);
+      return insertPlayNext(base, ids([90, 91, 92]), keys).next;
+    }
+
+    for (final shuffled in [false, true]) {
+      test('the run stays right after the current entry, in order '
+          '(already shuffled: $shuffled)', () {
+        final s = withRun(shuffled: shuffled);
+        for (var seed = 0; seed < 20; seed++) {
+          final e = shuffleUpcoming(s, Random(seed), keys);
+          final t = tracks(e.next);
+          expect(t.sublist(0, 2), tracks(s).sublist(0, 2));
+          expect(t.sublist(2, 5), [90, 91, 92]);
+          expect(e.next.playNextRun, 3);
+          expect(t.sublist(5).toSet(), tracks(s).sublist(5).toSet());
+          expectHealthy(e.next);
+        }
+      });
+    }
+
+    test('only the entries behind the run are shuffled', () {
+      final s = withRun(shuffled: false);
+      final rests = {
+        for (var seed = 0; seed < 20; seed++)
+          tracks(shuffleUpcoming(s, Random(seed), keys).next)
+              .sublist(5)
+              .join(','),
+      };
+      expect(rests.length, greaterThan(1));
+    });
+
+    test('turning shuffle off gives back the order the user built', () {
+      final s = withRun(shuffled: false);
+      final on = shuffleUpcoming(s, Random(5), keys).next;
+      final off = unshuffle(on).next;
+      expect(tracks(off), tracks(s));
+      expect(off.playNextRun, 3);
+    });
+  });
+
   group('cleanup', () {
     test('counts duplicates, played, upcoming and all but current', () {
       final s = _withTracks([1, 2, 1, 3, 2, 4], current: 2);
