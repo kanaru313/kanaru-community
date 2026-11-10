@@ -329,6 +329,8 @@ void main() {
       );
       expect(r.colorsWritten, 0);
       expect(await coverColorsFor(db, keyFor(1)), isNull);
+      expect(r.stopped, isTrue);
+      expect(r.finished, isFalse);
     });
 
     test(

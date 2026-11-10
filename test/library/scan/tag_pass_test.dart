@@ -644,6 +644,22 @@ void main() {
       expect((await trackAt(db, folder.sourceId, 'b.mp3')).status, 'missing');
     });
 
+    test('the report notes an unreadable mount table', () async {
+      await run(_listing([listed('a.mp3')]));
+      reader.byName['a.mp3'] = failed('notFound', transient: false);
+      final r = await run(
+        _listing([listed('a.mp3', mtime: 9)]),
+        deps: passDeps(
+          db,
+          reader,
+          presence: () async =>
+              const RootPresence(present: true, mountsUnreadable: true),
+        ),
+      );
+      expect(r.report.mountsUnreadable, isTrue);
+      expect(r.report.toString(), contains('MOUNTS UNREADABLE'));
+    });
+
     test('a permanent error on an unchanged file keeps the tags', () async {
       reader.byName['a.mp3'] = tagged(
         'Good',

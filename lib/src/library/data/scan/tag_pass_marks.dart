@@ -39,6 +39,7 @@ Future<MarkOutcome> markMissingRows(
       report.unreachable = true;
       return MarkOutcome.rootVanished;
     }
+    if (presence.mountsUnreadable) report.mountsUnreadable = true;
     for (final e in notFound.entries) {
       if (presence.isLost(e.value)) {
         report.keptUnderLostMount++;

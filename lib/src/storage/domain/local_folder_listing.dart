@@ -116,7 +116,11 @@ String folderKeyOf(String locator) {
 /// Whether a music folder is still there, asked after a pass saw files
 /// vanish (see `LocalFolderSource.presenceCheck`).
 class RootPresence {
-  const RootPresence({required this.present, this.lostPrefixes = const []});
+  const RootPresence({
+    required this.present,
+    this.lostPrefixes = const [],
+    this.mountsUnreadable = false,
+  });
 
   /// The folder exists, has content and (on Linux) the mount it sat on is
   /// still mounted. False: nothing may be concluded about files under it.
@@ -125,6 +129,10 @@ class RootPresence {
   /// Locator prefixes (with trailing `/`) of mounts nested inside the folder
   /// that disappeared; files under them are not known to be gone.
   final List<String> lostPrefixes;
+
+  /// The mount table could not be read, so the mount checks did not run and
+  /// only the "folder lists an entry" rule protected the rows.
+  final bool mountsUnreadable;
 
   bool isLost(String locator) {
     for (final p in lostPrefixes) {

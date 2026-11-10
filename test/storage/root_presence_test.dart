@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 import 'package:kanaru/src/platform/domain/local_audio_catalog.dart';
 import 'package:kanaru/src/storage/data/root_presence.dart';
 
@@ -110,7 +111,44 @@ void main() {
       root: root,
       readMounts: () => calls++ == 0 ? {root} : <String>{},
     );
-    expect((await check()).present, isTrue);
+    final p = await check();
+    expect(p.present, isTrue);
+    expect(p.mountsUnreadable, isTrue);
+  });
+
+  test(
+    'a mounts file unreadable from the start warns and is flagged',
+    () async {
+      addFile();
+      final warnings = <LogRecord>[];
+      final sub = Logger.root.onRecord
+          .where((r) => r.level >= Level.WARNING)
+          .listen(warnings.add);
+      addTearDown(sub.cancel);
+      final check = rootPresenceCheck(
+        catalog: _Catalog(),
+        root: root,
+        readMounts: () => <String>{},
+      );
+      final p = await check();
+      await Future<void>.delayed(Duration.zero);
+      expect(p.present, isTrue);
+      expect(p.mountsUnreadable, isTrue);
+      expect(
+        warnings.where((r) => r.message.contains('unreadable')),
+        isNotEmpty,
+      );
+    },
+  );
+
+  test('a readable mounts file is not flagged', () async {
+    addFile();
+    final check = rootPresenceCheck(
+      catalog: _Catalog(),
+      root: root,
+      readMounts: () => {'/'},
+    );
+    expect((await check()).mountsUnreadable, isFalse);
   });
 
   test('a nested mount that vanished is reported by prefix', () async {

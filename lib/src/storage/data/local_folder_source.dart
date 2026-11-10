@@ -16,6 +16,11 @@ class LocalFolderSource {
 
   final LocalAudioCatalog _catalog;
   static final _log = Logger('storage.source');
+  bool _mountsWarned = false;
+
+  /// Starts a scan: the unreadable-mounts warning may be logged again (once
+  /// per scan, however many folders it covers).
+  void beginScan() => _mountsWarned = false;
 
   /// The check for `TagPassDeps.rootStillThere`, to be built before [list]
   /// (see [rootPresenceCheck] for the rule).
@@ -24,6 +29,11 @@ class LocalFolderSource {
         catalog: _catalog,
         root: root.root,
         readMounts: readMounts ?? readMountPoints,
+        warn: (message) {
+          if (_mountsWarned) return;
+          _mountsWarned = true;
+          _log.warning(message);
+        },
       );
 
   /// [root] is the absolute path of the folder. [excludedKeys] are folder

@@ -106,8 +106,9 @@ Future<CoverPassResult> runCoverPass(
     await deps.yielder.now();
   }
   if (!result.cacheFailed) {
-    await _fillColors(deps, checkColors, result);
-    result.finished = !result.stuck;
+    final stopped = await _fillColors(deps, checkColors, result);
+    if (stopped) result.stopped = true;
+    result.finished = !result.stuck && !stopped;
   }
   return result;
 }
@@ -115,7 +116,8 @@ Future<CoverPassResult> runCoverPass(
 /// Computes colours for covers whose files already existed, when no colour
 /// row of the current version is stored. One query per 200 keys finds the
 /// missing ones; keys answered "no colours" are remembered for the session.
-Future<void> _fillColors(
+/// Returns true when a stop request ended the phase early.
+Future<bool> _fillColors(
   CoverPassDeps deps,
   Set<String> keys,
   CoverPassResult result,
@@ -134,7 +136,7 @@ Future<void> _fillColors(
     missing.addAll(part.where((k) => !current.contains(k)));
   }
   for (var i = 0; i < missing.length; i += coverBatchSize) {
-    if (deps.shouldStop()) return;
+    if (deps.shouldStop()) return true;
     final part = missing.sublist(
       i,
       i + coverBatchSize > missing.length ? missing.length : i + coverBatchSize,
@@ -148,12 +150,12 @@ Future<void> _fillColors(
       result
         ..stuck = true
         ..pendingNative = call.then((_) {}, onError: (Object _) {});
-      return;
+      return false;
     } on Object catch (e, st) {
       _log.warning('cover colours failed', e, st);
-      return;
+      return false;
     }
-    if (deps.shouldStop()) return;
+    if (deps.shouldStop()) return true;
     for (final a in answers) {
       final c = a.colors;
       if (a.error != null) {
@@ -174,4 +176,5 @@ Future<void> _fillColors(
     }
     await deps.yielder.now();
   }
+  return false;
 }

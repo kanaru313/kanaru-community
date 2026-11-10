@@ -20,9 +20,6 @@ export 'tag_pass_types.dart';
 
 final _log = Logger('library.scan.tags');
 
-/// Ids per `markTracksMissing` call.
-const int missingMarkChunk = 200;
-
 /// Runs the tag pass of one music folder: stored rows, diff, tag reads in
 /// batches, rows written in small transactions, then the missing marks.
 ///

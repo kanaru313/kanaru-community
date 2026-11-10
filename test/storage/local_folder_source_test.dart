@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 import 'package:kanaru/src/platform/domain/local_audio_catalog.dart';
 import 'package:kanaru/src/storage/data/local_folder_source.dart';
 import 'package:kanaru/src/storage/domain/local_folder_listing.dart';
@@ -151,5 +152,34 @@ void main() {
     final listing = await LocalFolderSource(catalog).list(root);
     expect(listing.reachable, isFalse);
     expect(listing.unreachableReason, UnreachableReason.failed);
+  });
+
+  test('an unreadable mount table is warned about once per scan', () async {
+    final source = LocalFolderSource(
+      _FakeCatalog(const AudioListing()),
+      readMounts: () => <String>{},
+    );
+    final warnings = <LogRecord>[];
+    final sub = Logger.root.onRecord
+        .where((r) => r.level >= Level.WARNING)
+        .listen(warnings.add);
+    addTearDown(sub.cancel);
+
+    source.beginScan();
+    source.presenceCheck((root: '/a'));
+    source.presenceCheck((root: '/b'));
+    await Future<void>.delayed(Duration.zero);
+    expect(
+      warnings.where((r) => r.message.contains('unreadable')),
+      hasLength(1),
+    );
+
+    source.beginScan();
+    source.presenceCheck((root: '/a'));
+    await Future<void>.delayed(Duration.zero);
+    expect(
+      warnings.where((r) => r.message.contains('unreadable')),
+      hasLength(2),
+    );
   });
 }

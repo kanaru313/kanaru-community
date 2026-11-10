@@ -52,6 +52,10 @@ class ScanReport {
   bool rootSuspect = false;
   bool unreachable = false;
 
+  /// The Linux mount table could not be read when missing files were judged:
+  /// mount protection did not run for this folder.
+  bool mountsUnreadable = false;
+
   /// Adds [other]'s counts (flags are or-ed).
   void merge(ScanReport other) {
     read += other.read;
@@ -71,6 +75,7 @@ class ScanReport {
     writeBatches += other.writeBatches;
     rootSuspect = rootSuspect || other.rootSuspect;
     unreachable = unreachable || other.unreachable;
+    mountsUnreadable = mountsUnreadable || other.mountsUnreadable;
   }
 
   @override
@@ -81,5 +86,6 @@ class ScanReport {
       'transient $transientSkipped, permanentKept $permanentKept, lostMount $keptUnderLostMount, writeFailed $writeFailed, '
       'batches $writeBatches'
       '${rootSuspect ? ', ROOT SUSPECT' : ''}'
-      '${unreachable ? ', UNREACHABLE' : ''}';
+      '${unreachable ? ', UNREACHABLE' : ''}'
+      '${mountsUnreadable ? ', MOUNTS UNREADABLE' : ''}';
 }
