@@ -112,4 +112,17 @@ abstract final class KIcons {
   static const IconData image = Icons.image_outlined;
   static const IconData musicFile = Icons.audio_file;
   static const IconData circleOutline = Icons.circle_outlined;
+
+  // Library sort criteria and menus.
+  static const IconData duration = Icons.timer;
+  static const IconData playCount = Icons.headphones;
+  static const IconData dateAdded = Icons.today;
+  static const IconData year = Icons.calendar_month;
+  static const IconData count = Icons.tag;
+  static const IconData trackNumber = Icons.format_list_numbered;
+  static const IconData albumArtist = Icons.person_pin;
+  static const IconData artistsMany = Icons.group;
+  static const IconData deselect = Icons.remove_done;
+  static const IconData advanced = Icons.tune;
+  static const IconData hideFromLibrary = Icons.visibility_off;
 }
