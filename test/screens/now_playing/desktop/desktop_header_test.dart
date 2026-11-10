@@ -1,11 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/playback/domain/repeat_mode.dart';
+import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/playback/ui/volume_control.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_now_playing_header.dart';
 import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
 import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
 import '../../../shell/support/desktop_now_playing_host.dart';
 
@@ -53,6 +55,18 @@ void main() {
       xs.first,
       greaterThan(_x(tester, _in(header, find.text('Translate')))),
     );
+  });
+
+  testWidgets('the header repeat button opens the repeat menu', (tester) async {
+    final host = await _open(tester);
+    await host.tap(tester, _in(header, find.byType(RepeatButton)));
+    await tester.pumpAndSettle();
+    expect(find.byType(SelectionRow), findsNWidgets(5));
+    await host.tap(tester, find.text('Repeat this song'));
+    await tester.pumpAndSettle();
+    expect(host.container.read(repeatSettingProvider), RepeatMode.one);
+    expect(_in(header, find.byIcon(KIcons.repeatOne)), findsOneWidget);
+    expect(_in(header, find.byKey(KToggleIconButton.dotKey)), findsOneWidget);
   });
 
   testWidgets('there is no Shuffle in the header', (tester) async {

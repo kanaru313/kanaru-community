@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
-import 'package:material_ui/material_ui.dart' hide RepeatMode;
+import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
-import '../domain/repeat_mode.dart';
 import '../state/playback_providers.dart';
 import '../state/playback_settings_providers.dart';
+
+export 'repeat_button.dart' show RepeatButton;
 
 /// Next track. Reads the controller on tap only.
 class NextButton extends ConsumerWidget {
@@ -50,27 +51,6 @@ class ShuffleButton extends ConsumerWidget {
       active: on,
       tooltip: AppLocalizations.of(context).playbackShuffle,
       onPressed: () => ref.read(playerControllerProvider).setShuffle(!on),
-    );
-  }
-}
-
-/// Repeat: off, then all, then one track.
-class RepeatButton extends ConsumerWidget {
-  const RepeatButton({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final mode = ref.watch(repeatSettingProvider);
-    return KToggleIconButton(
-      icon: mode == RepeatMode.one ? KIcons.repeatOne : KIcons.repeat,
-      active: mode != RepeatMode.off,
-      tooltip: switch (mode) {
-        RepeatMode.off => l10n.playbackRepeatOff,
-        RepeatMode.all => l10n.playbackRepeatAll,
-        RepeatMode.one => l10n.playbackRepeatOne,
-      },
-      onPressed: () => ref.read(playerControllerProvider).cycleRepeat(),
     );
   }
 }

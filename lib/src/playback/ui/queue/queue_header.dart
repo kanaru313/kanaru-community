@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../domain/repeat_mode.dart';
 import '../../state/queue_totals_provider.dart';
 import '../../state/queue_view_provider.dart';
 
@@ -18,7 +19,9 @@ String formatRemaining(AppLocalizations l10n, Duration d) {
 /// Mobile: `8/23 · 1 h 5 min left`. Panel (desktop): `23 tracks · 1 h 5 min left`, the playing position in the
 /// tooltip so the line fits the 420 dp panel.
 /// The time comes from `queueRemainingProvider` (one SQL sum), never from
-/// adding up row infos; until it arrives the line has no time part.
+/// adding up row infos; until it arrives the line has no time part. Under a
+/// repeat mode (the queue never ends) it has none either; a counted repeat on
+/// top of "stop at the end" keeps it.
 class QueueCounts extends ConsumerWidget {
   const QueueCounts({super.key, required this.mobile});
 
@@ -31,7 +34,13 @@ class QueueCounts extends ConsumerWidget {
     final current = ref.watch(
       queueViewProvider.select((v) => v.value?.current),
     );
-    final remaining = ref.watch(queueRemainingProvider).value;
+    // Under any repeat the queue never runs out, so there is no time left.
+    final endless = ref.watch(
+      queueViewProvider.select(
+        (v) => (v.value?.repeat ?? RepeatMode.off) != RepeatMode.off,
+      ),
+    );
+    final remaining = endless ? null : ref.watch(queueRemainingProvider).value;
     if (total == null || total == 0) return const SizedBox.shrink();
     final position = (current ?? -1) + 1;
     final left = remaining == null ? null : formatRemaining(l10n, remaining);

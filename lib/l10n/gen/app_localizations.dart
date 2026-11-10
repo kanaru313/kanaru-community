@@ -743,20 +743,44 @@ abstract class AppLocalizations {
   /// No description provided for @playbackRepeatOff.
   ///
   /// In en, this message translates to:
-  /// **'Repeat: off'**
+  /// **'Stop at the end'**
   String get playbackRepeatOff;
-
-  /// No description provided for @playbackRepeatAll.
-  ///
-  /// In en, this message translates to:
-  /// **'Repeat: all'**
-  String get playbackRepeatAll;
 
   /// No description provided for @playbackRepeatOne.
   ///
   /// In en, this message translates to:
-  /// **'Repeat: one track'**
+  /// **'Repeat this song'**
   String get playbackRepeatOne;
+
+  /// No description provided for @playbackRepeatTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Repeat this song 1 more time} other{Repeat this song {count} more times}}'**
+  String playbackRepeatTimes(int count);
+
+  /// No description provided for @playbackRepeatAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat the whole queue'**
+  String get playbackRepeatAll;
+
+  /// No description provided for @playbackRepeatAllShuffled.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat the whole queue, reshuffled every pass'**
+  String get playbackRepeatAllShuffled;
+
+  /// No description provided for @playbackRepeatFewer.
+  ///
+  /// In en, this message translates to:
+  /// **'One time fewer'**
+  String get playbackRepeatFewer;
+
+  /// No description provided for @playbackRepeatMore.
+  ///
+  /// In en, this message translates to:
+  /// **'One time more'**
+  String get playbackRepeatMore;
 
   /// No description provided for @playbackFavoriteAdd.
   ///

@@ -230,9 +230,20 @@
   "playbackNext": "Bài tiếp",
   "playbackPrevious": "Bài trước",
   "playbackShuffle": "Trộn bài",
-  "playbackRepeatOff": "Lặp lại: tắt",
-  "playbackRepeatAll": "Lặp lại: tất cả",
-  "playbackRepeatOne": "Lặp lại: một bài",
+  "playbackRepeatOff": "Dừng ở cuối",
+  "playbackRepeatOne": "Lặp bài này",
+  "playbackRepeatTimes": "Lặp bài này thêm {count} lần",
+  "@playbackRepeatTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackRepeatAll": "Lặp cả hàng đợi",
+  "playbackRepeatAllShuffled": "Lặp cả hàng đợi, trộn lại mỗi lượt",
+  "playbackRepeatFewer": "Bớt một lần",
+  "playbackRepeatMore": "Thêm một lần",
   "playbackFavoriteAdd": "Thêm vào yêu thích",
   "playbackFavoriteRemove": "Bỏ khỏi yêu thích",
   "playbackSleepTimer": "Hẹn giờ ngủ",

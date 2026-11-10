@@ -2,21 +2,27 @@ import 'package:material_ui/material_ui.dart';
 
 /// Icon button for an on/off state (shuffle, repeat). On shows the icon in
 /// the primary colour with a small dot below it, so the state is not told by
-/// colour alone. Off shows the plain icon.
+/// colour alone. Off shows the plain icon. Give [icon], or [iconWidget] for a
+/// drawing that changes with the state (the repeat glyphs).
 class KToggleIconButton extends StatelessWidget {
   const KToggleIconButton({
     super.key,
-    required this.icon,
+    this.icon,
+    this.iconWidget,
     required this.active,
     required this.onPressed,
     required this.tooltip,
     this.iconSize,
-  });
+  }) : assert(
+         (icon == null) != (iconWidget == null),
+         'give exactly one of icon and iconWidget',
+       );
 
   /// Key of the dot, for tests.
   static const dotKey = ValueKey('k-toggle-dot');
 
-  final IconData icon;
+  final IconData? icon;
+  final Widget? iconWidget;
   final bool active;
   final VoidCallback? onPressed;
   final String tooltip;
@@ -29,8 +35,8 @@ class KToggleIconButton extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         IconButton(
-          icon: Icon(icon),
-          selectedIcon: Icon(icon),
+          icon: iconWidget ?? Icon(icon),
+          selectedIcon: iconWidget ?? Icon(icon),
           isSelected: active,
           iconSize: iconSize,
           tooltip: tooltip,

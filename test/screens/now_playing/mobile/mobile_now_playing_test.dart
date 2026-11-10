@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
+import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
@@ -192,6 +193,25 @@ void main() {
     expect(find.text('0:00'), findsWidgets);
   });
 
+  testWidgets('the repeat button of the row opens the repeat menu', (
+    tester,
+  ) async {
+    final host = await _open(tester);
+    final row = find.byType(NowPlayingButtonRow);
+    await host.tap(tester, find.descendant(of: row, matching: find.byType(RepeatButton)));
+    await tester.pumpAndSettle();
+    expect(find.byType(SelectionRow), findsNWidgets(5));
+    expect(find.text('Repeat the whole queue'), findsOneWidget);
+    await host.tap(tester, find.text('Repeat the whole queue'));
+    await tester.pumpAndSettle();
+    expect(host.container.read(repeatSettingProvider), RepeatMode.all);
+    expect(find.byType(SelectionRow), findsNothing);
+    expect(
+      find.descendant(of: row, matching: find.byKey(KToggleIconButton.dotKey)),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('button row: shuffle, repeat, Ask AI (soon), queue', (
     tester,
   ) async {
@@ -309,6 +329,18 @@ void main() {
       expect(host.h.c.queueState.current, 5);
       await swipeNext(tester, host);
       expect(host.h.c.queueState.current, 0);
+    });
+
+    testWidgets('repeat all reshuffled: a left swipe starts a new pass', (
+      tester,
+    ) async {
+      final host = await openAtLast(tester, RepeatMode.allShuffled);
+      final lastId = host.h.c.queueState.currentItem!.entryId;
+      await swipeNext(tester, host);
+      final q = host.h.c.queueState;
+      expect(q.current, 0);
+      expect(q.shuffled, isTrue);
+      expect(q.items.first.entryId, isNot(lastId));
     });
 
     testWidgets('repeat off: a left swipe at the last entry bounces back', (

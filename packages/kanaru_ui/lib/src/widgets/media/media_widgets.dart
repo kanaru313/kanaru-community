@@ -3,9 +3,12 @@
 library;
 
 export 'cover_tint_background.dart';
+export 'k_count_stepper.dart';
+export 'k_menu_width.dart';
 export 'k_overflow_tooltip.dart';
 export 'k_progress_line.dart';
 export 'k_queue_strip.dart';
+export 'k_repeat_icon.dart';
 export 'k_shared_flight.dart';
 export 'k_seek_bar.dart';
 export 'k_seek_gesture_area.dart';

@@ -70,4 +70,21 @@ void main() {
     expect(data.flagsCollection.isButton, isTrue);
     handle.dispose();
   });
+
+  testWidgets('an icon widget replaces the icon and keeps the dot', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        KToggleIconButton(
+          iconWidget: const Text('7'),
+          active: true,
+          tooltip: 'Repeat',
+          onPressed: () {},
+        ),
+      ),
+    );
+    expect(find.text('7'), findsOneWidget);
+    expect(find.byKey(KToggleIconButton.dotKey), findsOneWidget);
+  });
 }

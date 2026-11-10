@@ -174,17 +174,20 @@ void main() {
       expect(host.container.read(shuffleSettingProvider), isFalse);
     });
 
-    testWidgets('Repeat cycles off, all, one, off', (tester) async {
+    testWidgets('Repeat opens a menu; a row sets the mode', (tester) async {
       final host = await _pump(tester, 1280);
       RepeatMode mode() => host.container.read(repeatSettingProvider);
       expect(mode(), RepeatMode.off);
-      await host.tap(tester, find.byTooltip('Repeat: off'));
-      expect(mode(), RepeatMode.all);
-      await host.tap(tester, find.byTooltip('Repeat: all'));
+      await host.tap(tester, find.byTooltip('Stop at the end'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SelectionRow), findsNWidgets(5));
+      expect(mode(), RepeatMode.off, reason: 'the button only opens it');
+      await host.tap(tester, find.text('Repeat this song'));
+      await tester.pumpAndSettle();
       expect(mode(), RepeatMode.one);
       expect(find.byIcon(KIcons.repeatOne), findsOneWidget);
-      await host.tap(tester, find.byTooltip('Repeat: one track'));
-      expect(mode(), RepeatMode.off);
+      expect(find.byTooltip('Repeat this song'), findsOneWidget);
+      expect(find.byType(SelectionRow), findsNothing);
     });
 
     testWidgets('mute sets volume 0 and unmute restores the level', (

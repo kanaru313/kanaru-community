@@ -396,13 +396,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playbackShuffle => 'Trộn bài';
 
   @override
-  String get playbackRepeatOff => 'Lặp lại: tắt';
+  String get playbackRepeatOff => 'Dừng ở cuối';
 
   @override
-  String get playbackRepeatAll => 'Lặp lại: tất cả';
+  String get playbackRepeatOne => 'Lặp bài này';
 
   @override
-  String get playbackRepeatOne => 'Lặp lại: một bài';
+  String playbackRepeatTimes(int count) {
+    return 'Lặp bài này thêm $count lần';
+  }
+
+  @override
+  String get playbackRepeatAll => 'Lặp cả hàng đợi';
+
+  @override
+  String get playbackRepeatAllShuffled => 'Lặp cả hàng đợi, trộn lại mỗi lượt';
+
+  @override
+  String get playbackRepeatFewer => 'Bớt một lần';
+
+  @override
+  String get playbackRepeatMore => 'Thêm một lần';
 
   @override
   String get playbackFavoriteAdd => 'Thêm vào yêu thích';

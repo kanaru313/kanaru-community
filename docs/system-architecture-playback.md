@@ -166,9 +166,11 @@ Future<void> replaceQueue(DatabaseConnectionUser db, List<int> trackIds, int now
   run included) and turns shuffle on. The first time, played entries and the current one get keys in
   their present order; a reshuffle writes keys for upcoming rows only. `unshuffle` returns to
   `sort_key` order, keeps the current entry and clears every `shuffle_key`.
-- **Repeat:** `nextIndex(auto: true)` repeats the current entry with repeat one; a manual Next ignores
-  repeat one. Repeat all wraps to the first entry. `previousIndex` returns null at the first
-  entry: the caller seeks to 0.
+- **Repeat:** see [Repeat](#repeat). `nextIndex(s, auto, loops)` is the pure rule; `previousIndex`
+  returns null at the first entry (the caller seeks to 0) in every mode.
+- **Reshuffled pass:** `reshufflePass` gives every entry a fresh `shuffle_key` (one transaction, sort
+  keys untouched), turns shuffle on, makes the first entry current and never puts the entry that just
+  played first (two or more entries; fewer stay as they are).
 - **Cleanup:** duplicates keep the first entry of each track in play order; the current entry is
   always kept and stands for its track (every other entry of that track counts as a duplicate).
 - **Keys never collide.** `placeKeys` gives entries that sit next to equal or unordered keys fresh
@@ -258,7 +260,7 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
 
 `state/player_controller.dart` implements `PlaybackCommands` and adds transport (`play`, `pause`,
 `playPause`, `stop`, `next`, `previous`, `playEntry`, `seek`, `seekRelative`, `setVolume`,
-`setShuffle`, `reshuffleUpcoming`, `setRepeat`, `cycleRepeat`) and queue edits (`remove`,
+`setShuffle`, `reshuffleUpcoming`, `setRepeat`, `setRepeatTimes`) and queue edits (`remove`,
 `cleanup`, `undo`, `move`).
 
 - **One chain** (`command_chain.dart`): UI commands, media-control commands and engine events run in
@@ -273,7 +275,7 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
   changed or a reload is forced, else `setNext` when the wanted next differs from `_handedNext`, then
   play or pause to match the intent. Entries are resolved in windows of 50 (one query), so skipping
   many dead entries costs a few lookups. The next entry is the following one (the same entry under
-  repeat one, the first one under repeat all); unplayable or failed entries after the current are
+  repeat one or while a counted repeat has plays left, the first one under repeat all, none at the end of a reshuffled pass); unplayable or failed entries after the current are
   passed over (looking at most 50 ahead), and the skip is announced when the engine arrives. `seek`
   and `setVolume` do not trigger a reconcile.
 - **Position:** a load starts at `_startAt`, set by commands (a jump, an undo, a restore), never at the
@@ -314,6 +316,43 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
 - **Debug bound:** `playTracks` with 20 000 entries stays under 2 s in debug (test). The profile-mode
   budget (150 ms of UI-isolate work) is not measured yet.
 
+## Repeat
+
+Ported from the old app (`core/player/repeat_mode.dart`, `player_settings_commands.dart`,
+`play_queue_pass.dart`). Two parts: the **base mode** `QueueState.repeat` (`RepeatMode`: `off`, `all`,
+`one`, `allShuffled`) and, on top of it, a **count** `_repeatTimes` (0 to `maxRepeatTimes` = 99): the
+current entry plays that many more times, then the base mode goes on.
+
+- **Commands** (all on the chain, nothing on `PlaybackCommands`): `setRepeat(mode)` sets the base and
+  ends the count, even for the mode already set. `setRepeatTimes(n)` arms the count (`n` clamped to
+  0-99; 0 ends it); armed over `one` the base becomes `off` (endless looping would make the count
+  meaningless); it does nothing with an empty queue, while stopped, or after the queue ran out.
+- **Engine mechanism:** no `loop-file`. Every loop is the current entry handed again as "next" with a
+  new handoff, so each loop is its own load, its own listen and its own event match. `nextIndex(auto:
+  true, loops: _repeatTimes)` returns the current entry under `one` or while the count has plays
+  left. `Advanced(t)` for the current entry itself is a loop: the count goes down by one; at 0 the
+  next reconcile hands the entry that follows (or nothing). A manual Next / Previous ignores `one` and
+  the count.
+- **The count ends** on any change of the current entry (`_jump`, a new queue, the current entry
+  removed, a pick from the queue), on `setRepeat`, and when playback stops or the queue ends
+  (`_publish` drops it whenever the intent is stopped or the queue ran out). Pause, seek, shuffle and
+  queue edits that keep the current entry leave it. The count is persisted (below) and restored.
+- **`allShuffled`:** wraps like `all`, and every pass is a new random order of the whole queue. On
+  the last entry of a pass no next is handed (`nextIndex(auto: true)` is null); at its `Ended` (or an
+  `Advanced` to a replaced next, or a manual Next, or a failure there) `_newPass` runs `reshufflePass`
+  and the first entry of the new order loads. A short gap at the pass boundary is accepted (as in the
+  old app). With a count armed on the last entry, the entry loops first and the pass ends after it.
+  The shuffle toggle is independent: shuffle off restores the user's order and keeps the mode; the
+  next pass shuffles again and turns shuffle on.
+- **Views:** `QueueView.repeat`, `repeatTimes` and `stopped` (stopped, or the queue ran out: the
+  stepper of the menu is dimmed). The repeat button reads them through `queueViewProvider`; the
+  settings providers still hold the stored values.
+- **Time left** ("còn …" in the queue head): hidden under any repeat mode (the queue never runs out),
+  as in the old app; with "stop at the end" it stays "after the current entry", counted loops not
+  added.
+- **Previous** keeps the shipped rule (first entry: back to 0) in every mode. The old app wrapped
+  Previous to the last entry under `all`; not ported (a user decision on Previous is needed first).
+
 ## Settings keys
 
 Pure `Setting<T>` constants in `playback/domain/playback_settings.dart`; one top-level
@@ -327,7 +366,8 @@ The UI only reads them. (`shell.right_panel` is the shell's own key, see UI: wid
 | `playback.queue.current_entry` | `currentEntrySetting` | `entryId` of the loaded entry (null = none) |
 | `playback.position_ms` | `positionMsSetting` | Last saved position, ms (default 0) |
 | `playback.shuffle` | `shuffleSetting` | Shuffle on or off |
-| `playback.repeat` | `repeatSetting` | `'off'`, `'all'` or `'one'` |
+| `playback.repeat` | `repeatSetting` | `'off'`, `'all'`, `'one'` or `'allShuffled'` (the first three are the original values) |
+| `playback.repeat_count` | `repeatCountSetting` | Plays of the loaded entry still to come under a counted repeat, 0-99 (default 0; clamped; ignored on restore while the mode is `one`) |
 | `playback.context` | `contextSetting` | `{kind, ref, label}` of the `PlayContext`; an unknown kind reads as `queue` |
 | `playback.volume` | `volumeSetting` | 0-100 (default 100; out of range is clamped) |
 
@@ -340,7 +380,8 @@ saved session; commands made meanwhile queue behind it and apply to the restored
   shuffle order and the `playback.*` keys; it never writes. The current entry is the saved one; an id
   that no longer exists falls back to the first entry at position 0. A position at or after
   `duration_ms - 1 s` restores as 0. A context that cannot be read becomes the plain `queue`. The
-  volume comes back with the session.
+  volume comes back with the session, and so do `playback.repeat` (`allShuffled` included) and the
+  counted-repeat count (`playback.repeat_count`, ignored while the mode is `one`).
 - The entry loads **paused**, with the saved position as the load's start offset (the engine seeks once after the open, see Resume), through the normal reconcile.
 - **Frozen:** until the restored file reports a duration, or the user starts something (play, a new
   queue, next/previous, a seek on a loaded file, undo, removing the current entry), nothing about the
@@ -436,7 +477,7 @@ signalled.
   log line.
 - Root: `Identity` Kanaru, `DesktopEntry` `io.github.kanaru313.kanaru_community`, `CanRaise`,
   `CanQuit`, `HasTrackList` false, empty scheme and MIME lists.
-- Player: `PlaybackStatus` (Stopped comes from the app state), `LoopStatus`, `Shuffle`, `Volume`,
+- Player: `PlaybackStatus` (Stopped comes from the app state), `LoopStatus` (see Repeat mapping), `Shuffle`, `Volume`,
   `Rate`/`MinimumRate`/`MaximumRate` 1, `Position` (microseconds, live), `Can*`, `CanControl`.
   Metadata keys: `mpris:trackid` (object path of the entry), `mpris:length` (only when > 0),
   `xesam:title`, `xesam:artist` (array), `xesam:album`, `mpris:artUrl` (`file://` only, `#` and other
@@ -451,6 +492,16 @@ signalled.
 - `start()` never throws: the connect is bounded to 3 s, a client that cannot be built or a missing bus
   leave the controls idle. A connection that finishes after the timeout releases its name and closes. The first failed send marks the bus as lost. Dispose bounds each step to 1 s
   and is never awaited on the exit path.
+
+### Repeat mapping
+
+`MediaRepeat` is `none` / `track` / `playlist` (MPRIS `LoopStatus` `None` / `Track` / `Playlist`;
+Android `AudioServiceRepeatMode` none / one / all). Out: `one` and a running count give `track` (the
+count wins over the base), `all` and `allShuffled` give `playlist`, `off` gives `none`. In
+(`MediaSessionBridge._setRepeatFromSystem`): `track` sets endless `one`, `playlist` sets `all`,
+`none` sets `off`. Asking for what is already shown does nothing (a client that sets `playlist`
+must not turn `allShuffled` into `all`, nor end a count by saying `track`); `playlist` while a count
+runs over a wrapping base only ends the count. Same mapping as the old app.
 
 ### Android: `audio_service` and `audio_session`
 
@@ -478,9 +529,10 @@ Playback widgets and where each lives (UI layers import `state/`, never `data/`;
 
 | Widget | Where | Notes |
 |---|---|---|
-| `KProgressLine`, `KSeekBar`, `KToggleIconButton`, `CoverTintBackground` | `packages/kanaru_ui/.../widgets/media/` | Flat 2 dp line; flat 4 dp seek bar (tap, drag, Left/Right 5 s, `onSeek` once per drag); toggle with a dot when on; cover gradient (alpha-only fade when the colours go). No app imports. |
+| `KProgressLine`, `KSeekBar`, `KToggleIconButton`, `KRepeatIcon`, `KCountStepper`, `CoverTintBackground` | `packages/kanaru_ui/.../widgets/media/` | Flat 2 dp line; flat 4 dp seek bar (tap, drag, Left/Right 5 s, `onSeek` once per drag); toggle with a dot when on; cover gradient (alpha-only fade when the colours go). No app imports. |
 | `MiniPlayer({onOpen, onOpenQueue})` | `playback/ui/mini_player.dart` | Mobile, 64 dp. Tap/Enter/Space or swipe up > 30 dp open; long press 500 ms (cancelled by a 10 dp move) gives a haptic and opens the queue. Only `_Progress` listens to the position. |
-| `PlayPauseButton`, `NextButton`, `PreviousButton`, `ShuffleButton`, `RepeatButton` | `playback/ui/` | Watch narrow providers; call the controller with `ref.read` on tap. |
+| `PlayPauseButton`, `NextButton`, `PreviousButton`, `ShuffleButton` | `playback/ui/` | Watch narrow providers; call the controller with `ref.read` on tap. |
+| `RepeatButton` (`repeat_button.dart`), `RepeatMenuRows` (`repeat_menu.dart`) | `playback/ui/` | One button for the player bar, both Now Playing shells (the mini player and the queue head have no repeat control). A `MenuAnchor` opens five `SelectionRow`s: Stop at the end, Repeat this song, Repeat this song N more times (the row carries the count; a `KCountStepper` minus/plus inside it, 1-99, dimmed while stopped), Repeat the whole queue, Repeat the whole queue reshuffled every pass. Selected row = tonal fill + primary check; a counted repeat selects the counted row, not the base row. The number the row arms with while no count runs (`draft`) lives in the button state. Icon: `KRepeatIcon` (plain arrows, repeat-one, arrows with a shuffle badge, the remaining count in a circle) inside `KToggleIconButton(iconWidget:)`; lit (primary + dot) unless the mode is stop-at-the-end; disabled with an empty queue. Tooltip = the mode label. |
 | `PlaybackTimeLabel`, `PlaybackSeekBar`, `VolumeControl` | `playback/ui/` | Labels select whole seconds. Volume is the persisted setting; mute remembers the last level. `PlaybackSeekBar` is the flat bar (mini player, player bar); `PlaybackWaveformSeekBar` is the Now Playing one (see Waveform). |
 | `FavoriteButton(trackId)` | `screens/now_playing/ui/` | `isFavoriteProvider` + `favoritesControllerProvider`. |
 | `PlayerBar` | `shell/ui/player_bar.dart` | Desktop, 88 dp, under the page. Left part < 1000 dp: no volume, sleep timer, heart; < 760: no shuffle/repeat. Lyrics, cover and expand open Now Playing (the bar is offstage while it is open); Queue toggles the shell's right panel and is tonal while it is open. The heart sits right after the title/artist block (the text takes only the width it needs; user decision, matches 02) and goes with the volume and sleep timer under 1000 dp. |
@@ -566,7 +618,7 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
   width and pads the other rows.
 - `CoverSwiper` is a plain widget (entry id, has previous/next, callbacks): left = next, right = previous; 25 % of the
   cover width or a fling over 160 dp/s commits; where there is no track to go to the cover moves at most 30 % and
-  springs back (the buttons raise the notices). With repeat all the last entry's left swipe wraps to the first, like Next. The new cover slides in when the entry id changes; if it never does, the
+  springs back (the buttons raise the notices). With either repeat-all mode the last entry's left swipe wraps to the first, like Next (reshuffled: a new pass). The new cover slides in when the entry id changes; if it never does, the
   cover comes back after 800 ms.
 - `NowPlayingMoreSheet` (⋮): the head and `nowPlayingMoreItems`, shared with the desktop dropdown. Only Go to album and Go
   to artist work; the rest is dimmed "Coming soon", Visual effects carries the Pro badge. `track_navigation.dart` goes

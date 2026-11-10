@@ -230,9 +230,20 @@
   "playbackNext": "Next",
   "playbackPrevious": "Previous",
   "playbackShuffle": "Shuffle",
-  "playbackRepeatOff": "Repeat: off",
-  "playbackRepeatAll": "Repeat: all",
-  "playbackRepeatOne": "Repeat: one track",
+  "playbackRepeatOff": "Stop at the end",
+  "playbackRepeatOne": "Repeat this song",
+  "playbackRepeatTimes": "{count, plural, =1{Repeat this song 1 more time} other{Repeat this song {count} more times}}",
+  "@playbackRepeatTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackRepeatAll": "Repeat the whole queue",
+  "playbackRepeatAllShuffled": "Repeat the whole queue, reshuffled every pass",
+  "playbackRepeatFewer": "One time fewer",
+  "playbackRepeatMore": "One time more",
   "playbackFavoriteAdd": "Add to favorites",
   "playbackFavoriteRemove": "Remove from favorites",
   "playbackSleepTimer": "Sleep timer",

@@ -428,13 +428,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackShuffle => 'Shuffle';
 
   @override
-  String get playbackRepeatOff => 'Repeat: off';
+  String get playbackRepeatOff => 'Stop at the end';
 
   @override
-  String get playbackRepeatAll => 'Repeat: all';
+  String get playbackRepeatOne => 'Repeat this song';
 
   @override
-  String get playbackRepeatOne => 'Repeat: one track';
+  String playbackRepeatTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Repeat this song $count more times',
+      one: 'Repeat this song 1 more time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playbackRepeatAll => 'Repeat the whole queue';
+
+  @override
+  String get playbackRepeatAllShuffled =>
+      'Repeat the whole queue, reshuffled every pass';
+
+  @override
+  String get playbackRepeatFewer => 'One time fewer';
+
+  @override
+  String get playbackRepeatMore => 'One time more';
 
   @override
   String get playbackFavoriteAdd => 'Add to favorites';

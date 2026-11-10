@@ -5,7 +5,6 @@ import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
 import '../../../../media/domain/cover_files.dart';
 import '../../../../media/domain/track_id.dart';
-import '../../../../playback/domain/repeat_mode.dart';
 import '../../../../playback/state/cover_providers.dart';
 import '../../../../playback/state/playback_settings_providers.dart';
 import '../../../../playback/state/playback_providers.dart';
@@ -184,8 +183,8 @@ class _Cover extends ConsumerWidget {
       ),
     );
     final (entryId, index, length) = place;
-    // Repeat all wraps the last entry to the first, like the Next button.
-    final wraps = ref.watch(repeatSettingProvider) == RepeatMode.all;
+    // Both repeat-all modes wrap the last entry to the first, like Next.
+    final wraps = ref.watch(repeatSettingProvider).wrapsQueue;
     final trackId = ref.watch(
       nowPlayingProvider.select((n) => n.value?.trackId),
     );
