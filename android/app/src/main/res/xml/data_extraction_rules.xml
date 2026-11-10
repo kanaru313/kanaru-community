@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 12+ backup and device transfer. The device id must be new on a restored phone. -->
+<!-- Android 12+ backup and device transfer. The device id must be new on a restored phone. Custom cover images are left out of cloud backup only, where they could pass the 25 MB quota (rows restore, the automatic cover shows until the user picks again); device transfer has no such quota, so they move with the phone. -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="file" path="data/device_id"/>
+        <exclude domain="file" path="data/custom_covers"/>
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="data/device_id"/>

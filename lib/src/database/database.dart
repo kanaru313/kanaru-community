@@ -4,6 +4,7 @@ library;
 export 'app_database.dart';
 export 'app_database.drift.dart';
 export 'cover_colors_store.dart';
+export 'custom_covers_store.dart';
 export 'folder_exclusion.dart';
 export 'folder_range.dart';
 export 'fts_query.dart';

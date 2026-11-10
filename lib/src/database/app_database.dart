@@ -33,6 +33,7 @@ void configureConnection(CommonDatabase db) {
     TrackDetails,
     TrackArtists,
     CoverColors,
+    CustomCovers,
     PlayLog,
     PlayStats,
     QueueEntries,
@@ -40,7 +41,11 @@ void configureConnection(CommonDatabase db) {
     PlaylistEntries,
     SavedItems,
   ],
-  include: {'tables/library_track_search.drift', 'tables/playback_stats.drift'},
+  include: {
+    'tables/custom_cover_triggers.drift',
+    'tables/library_track_search.drift',
+    'tables/playback_stats.drift',
+  },
 )
 class AppDatabase extends $AppDatabase {
   AppDatabase(QueryExecutor executor) : this._(executor, isReference: false);

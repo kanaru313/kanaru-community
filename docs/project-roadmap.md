@@ -61,7 +61,7 @@ Database:
 - Cover colour rows are never collected (`cover_colors`, `lib/src/database/cover_colors_store.dart`).
 
 Scanner (lane A, on the foundation's columns and helpers):
-- GC scheduling (`collectOrphanTracks`) at startup and after each scan.
+- GC scheduling (`collectOrphanTracks`) at startup and after each scan. Next to it, call `customCoverControllerProvider.collectUnreferencedFiles()` (custom cover images no row references); it is serialized with imports, so it is safe at any time.
 - Pass versions, missing marks and exclusion helpers exist (foundation); the
   passes that write them are lane A.
 

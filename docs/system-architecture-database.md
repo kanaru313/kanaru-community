@@ -27,6 +27,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 | DATA-06 Song key | `tracks.song_key`, `online_lyrics.cache_key` |
 | DATA-09 Track details | `track_details` |
 | Artists of a track, play queue, cover colours | `track_artists`, `queue_entries`, `cover_colors` |
+| Cover chosen by the user (playlist, album, artist) | `custom_covers`; [custom_covers](#custom_covers-coded-in-wave-1) |
 | DATA-10 Rating and mood playlists | `tracks.rating`, `playlists.name_key` |
 | DATA-11 Plugin install ids | `plugins.install_id` (spec only) |
 
@@ -36,7 +37,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 
 - Times are epoch milliseconds, `INTEGER`.
 - Booleans are `INTEGER NOT NULL CHECK (x IN (0, 1))`.
-- `CHECK` is used only on fixed sets: track status, rating range, booleans. Open-ended kinds (`sources.kind`, `playlists.kind`, `saved_items.kind`) are validated by Dart constants, so adding a kind needs no table rebuild.
+- `CHECK` is used only on fixed sets: track status, rating range, booleans, `custom_covers.kind` (adding a kind after the first release is a table rebuild). Open-ended kinds (`sources.kind`, `playlists.kind`, `saved_items.kind`) are validated by Dart constants, so adding a kind needs no table rebuild.
 - `foreign_keys = ON` and `recursive_triggers = ON` on every connection, set by `configureConnection` in `setup:` (runs inside the database isolate, so it must stay a top-level function; register any future custom SQL function or collation there too) and again in `beforeOpen`.
 - `AppDatabase.file` uses `NativeDatabase.createInBackground`: SQLite runs on its own isolate. `await appDb.openedConnection()` opens the database and returns the connection extension databases open on (`ProDatabase.connect(await appDb.openedConnection())`); bootstrap hands startup hooks that result. This is enforced in code because the remote executor runs the migration of the last database that touched it: an extension that queried before `AppDatabase` opened would run its own create step. `sharedConnection` is the raw getter, valid only after open. Extension databases, watch streams and transactions behave as on an in-memory database (`test/database/background_isolate_test.dart`). `beforeOpen` and the schema guard run on the calling isolate; their errors and SQLite's reach callers as `DriftRemoteException` (nested for `beforeOpen`). For a SQLite error, `remoteCause` is the `SqliteException` itself (one level), unwrapped by one helper; for `beforeOpen` and guard errors rely only on `toString()` (the original message, so the startup error screen shows the same text). The connection must stay single (no `readPool`): TEMP tables and transactions are per connection. Journal mode is SQLite's default (rollback journal, no WAL), so every commit is durable when it returns and nothing flushes or closes the database on exit.
 - The device id is stored in no table. It comes from `dataDir/device_id` (`FileDeviceId`), exposed as `deviceIdProvider`. `play_log.device_id` records it per row; the column is plain text and the database does not check it.
@@ -216,6 +217,7 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 | `saved_items.source_id` | `sources.id` | RESTRICT | collections (coded) |
 | `track_artists.track_id` | `tracks.id` | RESTRICT | library (coded) |
 | `queue_entries.track_id` | `tracks.id` | RESTRICT | playback (coded) |
+| `custom_covers.item_key` | none | none | library (coded): not a foreign key, see [custom_covers](#custom_covers-coded-in-wave-1) |
 | `lyrics_pins.track_id` | `tracks.id` | RESTRICT | lyrics (spec only) |
 | Any other track reference (lyrics, Pro) | `tracks.id` | RESTRICT | rule |
 
@@ -418,6 +420,27 @@ Owner: library. File: `tables/library_cover_tables.dart`. Sync: cache (may be dr
 | `version` | INTEGER | NOT NULL | | Version of the algorithm that produced the row. |
 | `updated_at` | INTEGER | NOT NULL | | |
 
+### custom_covers: Coded in wave 1
+
+Owner: library. File: `tables/library_cover_tables.dart`, trigger in `tables/custom_cover_triggers.drift`. Sync: per device for now. A synced version needs `uid`, `updated_at` and `deleted_at` (a hard delete for "back to automatic" cannot propagate) and must carry the image files. Songs and the Favorites playlist are not supported (Favorites shows a fixed heart tile; `CustomCoverStore` rejects its uid).
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `kind` | TEXT | NOT NULL | | `CHECK (kind IN ('playlist','album','artist'))` (`CustomCoverKind`). A fixed set, so a CHECK is fine here. |
+| `item_key` | TEXT | NOT NULL | | Playlist uid, `AlbumKey.encode()` or `ArtistKey.encode()`. |
+| `cover_key` | TEXT | NOT NULL | | Content hash of the stored image: SHA-256, 64 lower-case hex. |
+| `updated_at` | INTEGER | NOT NULL | | |
+
+Primary key `(kind, item_key)`; index `custom_covers_cover_key` on `(cover_key)` (is another row using this file?).
+
+- **No foreign key.** Albums and artists have no table (they are derived from `tracks`), so `item_key` cannot reference anything, and a derived album or artist disappearing must not cascade into the user's choice. The playlist side is a real table, but one generic table keeps a single path for the three kinds, so the rule is enforced by a trigger instead of a foreign key.
+- **Playlist must exist.** Triggers `custom_covers_playlist_exists_insert` and `custom_covers_playlist_exists_update` abort a `playlist` row whose uid has no `playlists` row, so a delete that lands while an import is copying never leaves an orphan row. Failures arrive as `SqliteException`, wrapped in `DriftRemoteException` on the file database.
+- **Playlist delete.** Trigger `custom_covers_playlist_delete`: AFTER DELETE on `playlists` deletes `kind = 'playlist' AND item_key = old.uid`. User deletes are hard `DELETE`s (see [Deletes, tombstones and revive](#deletes-tombstones-and-revive)), so it runs on every delete. A future tombstone (`deleted_at` set) keeps the row: a tombstone is undoable by sync, and the row goes when the tombstone is purged by a hard delete. Reads of a tombstoned playlist never show it, so a kept row is invisible.
+- **Key stability.** `item_key` for albums and artists is `AlbumKey.encode()` / `ArtistKey.encode()`, a base64url of `groupKey` output. A change to `groupKey` (normalisation) must migrate `custom_covers.item_key` (and `saved_items`), or the covers are orphaned. `CustomCoverStore` accepts only keys that `AlbumKey.decode` / `ArtistKey.decode` return.
+- **Albums and artists.** A row for an album or artist that no longer exists in the library is harmless and kept: the album may come back with a rescan, and the user's choice returns with it. Only the explicit "back to automatic" removes it.
+- **Files.** `<dataDir>/custom_covers/<cover_key>.<ext>` (jpg, png, webp, gif, bmp), copied as chosen (not resized; cap 8 MiB, regular local files only, `content://` URIs must be copied to a temp `File` first), written to a temp file, fsynced and renamed over the target. Never in the cache dir (the OS may clear it) and never as a path to the source. On Android `data/custom_covers/` is excluded from cloud backup and device transfer (`backup_rules.xml`, `data_extraction_rules.xml`): images could pass the 25 MB Auto Backup quota and make the whole backup, database included, be skipped. A restored database keeps the rows; their files are missing, `customCoverFileProvider` returns null and the automatic cover shows. Several rows may share a key (same image chosen twice). A file is deleted when its last row goes. `collectUnreferencedFiles()` deletes files and leftover temp files that no row references and that are older than one hour (an in-flight import, a second process); the library schedules it with the track GC (on startup, debounced; not at every change).
+- **Display precedence.** Custom cover, else the current source (album: embedded cover of its tracks; artist: what the app uses today; playlist: automatic 2x2 / first cover), else the placeholder. The provider `customCoverFileProvider((kind: CustomCoverKind.album, itemKey: ...))` returns the file or null. Show it through `KCover` (it decodes at display size), not a plain `FileImage`. `CustomCoverKind` is an enum in `library/domain/`; the database keeps its string set `CustomCoverKinds`, and a test keeps the two equal.
+
 ### queue_entries: Coded in wave 1
 
 Owner: playback. File: `tables/playback_tables.dart`. Sync: per device, not synced. The current entry, position, shuffle and repeat live in settings, not here.
@@ -609,13 +632,14 @@ Dart API of the coded groups. `lib/src/database/database.dart` is the barrel; th
 | writes | `upsertTrackSnapshot(db, tracks, companion)`, `insertOrRevive(db, table, row, now:, reviveColumns:)` |
 | folders | `folderLocatorRange(folderKey)`, `applyFolderExclusion(db, {sourceId, folderKey, displayPath, now})`, `removeFolderExclusion(db, {sourceId, folderKey, now})`, `excludedFolderKeys(db, sourceId)` |
 | scanner writes | `markTracksMissing(db, trackIds, now)`, `replaceTrackArtists(db, trackId, artists)`, `upsertTrackDetails(db, companion)`, `upsertCoverColors(db, {...})`, `coverColorsFor(db, coverKey)` (decoded `({seed, colors, version})?`, null for a missing or malformed row; an upsert with an older `version` is ignored) |
+| custom covers | `setCustomCover(db, kind, itemKey, coverKey)` (returns the replaced key), `clearCustomCover(db, kind, itemKey)` (returns the removed key), `customCoverKey(db, kind, itemKey)`, `watchCustomCoverKey(appDb, kind, itemKey)`, `referencedCustomCoverKeys(db)`, `isCustomCoverKeyReferenced(db, coverKey)`; `CustomCoverKind` |
 | queue | `readQueue(db, {shuffled})`, `replaceQueue(db, trackIds, now)` |
 | source lifecycle | `removeSource(db, sourceId, now)`, `setMountEnabled(db, sourceId, enabled, now)`, `reviveSource(db, sourceId, now, {name, account, configJson, credentialRef})`, `unhideTracks(db, sourceId, now, {locatorFrom, locatorTo})` |
 | play stats | `runPlayStatsBulk(db, write)` |
 | reads | `visibleTrackWhere(alias)`, `isVisibleTrack(tracks)`, `ftsPrefixQuery(input)` (null for empty input) |
 | maintenance | `collectOrphanTracks(db, now:)`; `verifyDevSchema`, `dumpSchema` (`schema_guard.dart`, not exported) |
 
-Database helpers live in `lib/src/database/`. `database.dart` exports the tables (`Sources`, `SourceMounts`, `ExcludedFolders`, `Tracks`, `TrackDetails`, `TrackArtists`, `CoverColors`, `PlayLog`, `PlayStats`, `QueueEntries`, `Playlists`, `PlaylistEntries`, `SavedItems`, `ExtensionSchema`) and the helpers above. It does not export the `play_stats_ctl` type (the generated `playStatsCtl` getter on `AppDatabase` is internal) and exports only `runPlayStatsBulk` from the bulk file.
+Database helpers live in `lib/src/database/`. `database.dart` exports the tables (`Sources`, `SourceMounts`, `ExcludedFolders`, `Tracks`, `TrackDetails`, `TrackArtists`, `CoverColors`, `CustomCovers`, `PlayLog`, `PlayStats`, `QueueEntries`, `Playlists`, `PlaylistEntries`, `SavedItems`, `ExtensionSchema`) and the helpers above. It does not export the `play_stats_ctl` type (the generated `playStatsCtl` getter on `AppDatabase` is internal) and exports only `runPlayStatsBulk` from the bulk file.
 
 Contract for every database helper:
 
