@@ -122,11 +122,39 @@ void main() {
     await _cancel(tester, sub);
   });
 
-  testWidgets('a slow load stretches the wait to four times its duration', (
+  testWidgets(
+    'a load slower than the interval stretches the wait to its duration',
+    (tester) async {
+      // The clock is advanced by the load itself: Stopwatch and DateTime do not
+      // follow fake time.
+      var clock = DateTime(2026);
+      const work = Duration(milliseconds: 1600);
+      final sub = throttledReload<int>(
+        () => changes.stream,
+        () async {
+          loads++;
+          await Future<void>.delayed(work);
+          clock = clock.add(work);
+          return loads;
+        },
+        interval: _gap,
+        now: () => clock,
+      ).listen((_) {});
+      await tester.pump();
+      changes.add(null);
+      await tester.pump(work); // load 1 ends; the wait is max(1 s, 1.6 s)
+      await tester.pump(work - _ms);
+      expect(loads, 1);
+      await tester.pump(_ms);
+      expect(loads, 2);
+      await tester.pump(work);
+      await _cancel(tester, sub);
+    },
+  );
+
+  testWidgets('a load shorter than the interval waits exactly the interval', (
     tester,
   ) async {
-    // The clock is advanced by the load itself: Stopwatch and DateTime do not
-    // follow fake time.
     var clock = DateTime(2026);
     const work = Duration(milliseconds: 400);
     final sub = throttledReload<int>(
@@ -142,8 +170,8 @@ void main() {
     ).listen((_) {});
     await tester.pump();
     changes.add(null);
-    await tester.pump(work); // load 1 ends; the wait is max(1 s, 1.6 s)
-    await tester.pump(_gap + const Duration(milliseconds: 599));
+    await tester.pump(work); // load 1 ends; the wait is max(1 s, 0.4 s)
+    await tester.pump(_gap - _ms);
     expect(loads, 1);
     await tester.pump(_ms);
     expect(loads, 2);

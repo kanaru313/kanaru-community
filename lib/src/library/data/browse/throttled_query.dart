@@ -12,11 +12,6 @@ const browseRefreshInterval = Duration(seconds: 1);
 /// Reload interval of the folder tree (heavier to build).
 const folderRefreshInterval = Duration(seconds: 3);
 
-/// A load that took `t` keeps the next one waiting at least `t * this`, so
-/// a slow whole-library query cannot take more than about a fifth of the UI
-/// isolate's time (the database runs on it).
-const loadCostFactor = 4;
-
 /// Longest adaptive wait.
 const maxRefreshWait = Duration(seconds: 5);
 
@@ -33,7 +28,13 @@ const maxRefreshWait = Duration(seconds: 5);
 /// paused nothing loads; resuming after a write loads once. Cancelling stops
 /// the timer and drops a result that arrives afterwards. Single-subscription.
 ///
-/// The wait after a load is `max(interval, loadCostFactor * its duration)`,
+/// The database runs on a background isolate, so a load no longer blocks
+/// frames, but it shares that one serial worker with the scanner's writes:
+/// waiting as long as the last load took keeps one query from taking more
+/// than about half of the worker during a scan (several lists reload on their
+/// own timers, so the total can be higher).
+///
+/// The wait after a load is `max(interval, its duration)`,
 /// at most [maxRefreshWait]. A result [equals] to the one before is not
 /// emitted ([equals] defaults to `==`); an error resets that memory, so the
 /// same data after a failure is emitted again.
@@ -150,7 +151,7 @@ class _ThrottledQuery<T> {
       _loading = false;
     }
     if (_cancelled) return;
-    final cost = _now().difference(started) * loadCostFactor;
+    final cost = _now().difference(started);
     var wait = cost > _interval ? cost : _interval;
     if (wait > maxRefreshWait) wait = maxRefreshWait;
     if (wait > Duration.zero) {

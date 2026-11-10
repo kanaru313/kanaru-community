@@ -225,12 +225,14 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
   a scan). The first load runs on listen; a write only marks the result dirty;
   a running load is never cancelled and two never overlap; the next load
   starts after the previous ended, at least `interval` later (`browseRefreshInterval`
-  1 s, `folderRefreshInterval` 3 s) and at least 4 times as long as that load
-  took, at most 5 s: the database runs on the UI isolate, so a slow
-  whole-library query (albums: 200-600 ms on 20k tracks) may use only about a
-  fifth of it. A result equal to the previous one (`equals`, default `==`) is
-  not emitted; an error resets that memory. Errors are emitted and later writes still
-  load. Pause defers loading, cancel stops the timer and drops a late result.
+  1 s, `folderRefreshInterval` 3 s) and at least as long as that load
+  took, at most 5 s: the database runs on a background isolate (frames stay
+  free) but it is one serial worker shared with the scanner's writes, so
+  back-to-back whole-library reloads (albums: 200-600 ms on 20k tracks) of one
+  query may use only about half of it (several lists reload on their own
+  timers, so the total can be higher). A result equal to the previous one
+  (`equals`, default `==`) is not emitted; an error resets that memory. Errors
+  are emitted and later writes still load. Pause defers loading, cancel stops the timer and drops a late result.
 
 ## List queries
 
