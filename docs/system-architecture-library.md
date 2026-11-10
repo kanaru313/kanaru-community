@@ -12,7 +12,9 @@
 - Track identity and info: this file.
 - Locations, favorites, tabs, folders, exclusions: this file.
 - Scan status as consumed: this file.
-- Lists, detail pages and menus: lane C adds the sections.
+- Browse data: refresh and sort.
+- List queries: song scopes, sort and filter SQL, aggregates, providers.
+- Folder tree, detail data, menu data, selection state.
 
 ## Keys
 
@@ -195,6 +197,188 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
 | `scanStatusProvider` | `StreamProvider<ScanStatus>`; the status stream of the `ScanController` (starts at `ScanIdle`) |
 | `libraryScanCommandsProvider` | `Provider<LibraryScanCommands>`; the `ScanController` |
 | `LibraryScanCommands.rescan({bool full = false})` | Completes when the request is accepted or queued. Never waits for the scan. Failures come through `ScanFailed`. |
+
+## Browse data: refresh and sort
+
+`lib/src/library/domain/browse/` (no Flutter) and
+`lib/src/library/data/browse/throttled_query.dart`.
+
+- `BrowseList` (songs, albums, artists, genres, languages, folders,
+  albumTracks, detailSongs), `SortCriterion` (`isNumeric` picks the direction
+  wording: "Tăng dần/Giảm dần" vs "A → Z / Z → A"), `SortSpec(criterion,
+  descending)`. `criteriaOf(list)` lists the criteria in menu order; the first
+  is the default (`defaultSortOf`; detail songs default to play count and
+  languages to track count, both descending).
+- `LibraryListViews`: sort and `CollectionView` (grid/list) per list plus
+  `FolderView` (tree/flat). `toJson`/`fromJson` ignore unknown lists,
+  criteria the list does not offer and unknown views (defaults); only a
+  non-map throws `FormatException`. Albums default to a grid, the rest to rows.
+- `AlbumSummary`, `ArtistSummary`, `GenreSummary`, `LanguageSummary` (code
+  null = unknown): value types the list queries return.
+- `naturalCompare`: digit runs by value (any length), then folded text, then
+  the raw strings, so names sort "2" before "10".
+- `languageNameOf(code)`: native, English and Vietnamese names for about 40
+  ISO 639-3 codes (also `cmn`, the detector's Mandarin); null for others (the UI shows the code).
+- `throttledQuery(db, tables, load, {interval})`: lists are reloaded through
+  it, not drift's `.watch()` (which restarts per write and never emits during
+  a scan). The first load runs on listen; a write only marks the result dirty;
+  a running load is never cancelled and two never overlap; the next load
+  starts after the previous ended, at least `interval` later (`browseRefreshInterval`
+  1 s, `folderRefreshInterval` 3 s) and at least 4 times as long as that load
+  took, at most 5 s: the database runs on the UI isolate, so a slow
+  whole-library query (albums: 200-600 ms on 20k tracks) may use only about a
+  fifth of it. A result equal to the previous one (`equals`, default `==`) is
+  not emitted; an error resets that memory. Errors are emitted and later writes still
+  load. Pause defers loading, cancel stops the timer and drops a late result.
+
+## List queries
+
+`lib/src/library/domain/browse/song_scope.dart`,
+`lib/src/library/data/browse/{song_ids_query,scope_sql,album_artist_queries,genre_language_queries}.dart`,
+`lib/src/library/state/browse/{song_list_providers,collection_providers,track_window,list_prefs_providers}.dart`.
+
+- `SongScope` (value type): `all`, `album(AlbumKey)`, `artist(ArtistKey)`
+  (any `track_artists` row), `genre(genreKey)`, `language(code?)` (null = no
+  language), `folder(sourceId, folderKey, direct:)` (a locator range from
+  `folderLocatorRange`; `direct` = no further `/`, so `Live` never matches
+  `Live Albums`). `addScope` in `scope_sql.dart` turns a scope into `WHERE`
+  clauses on `tracks t`; every value is a bound variable.
+- `songIds(db, scope, sort, filter)`: ids of visible (`present`) tracks. Sort
+  keys: title `title_sort`, artist `artist_search`, album `album_search`, year,
+  date added, play count (`LEFT JOIN play_stats`, only for this criterion),
+  duration, track number (`disc_no, track_no`, both flip when descending).
+  Every nullable key sorts NULL last in both directions
+  (`(col IS NULL), col`). Ties end with `title_sort, id`; only the main key
+  flips when descending.
+- Filter: tokens of `searchForm(input)`; each must occur (`instr`, so `%` and
+  `_` are literal) in `title_search + char(31) + artist_search + char(31) +
+  album_search`. `songCount(db, scope)` is the unfiltered count ("6 / 34").
+- Aggregates, name order (stored `album_search` / `genre_search`; artists by
+  `sortKeyOf(name)`, a memoized `sortForm`): `albumSummaries` (grouped by album
+  artist key and title key; albums without an album tag are not listed;
+  display artist = `album_display_artist`, else `album_artist`, else the first
+  `track_artists` entry of the group's lowest track id; optional `scope`,
+  `ownedBy`, `notOwnedBy`, `newestFirst`), `artistSummaries` (one row per
+  `track_artists` key; album count = own albums, photo = cover of the newest
+  own album that has one), `genreSummaries`, `languageSummaries` (null code =
+  unknown).
+- Providers: every stream goes through `throttledQuery`. `songIdsProvider`
+  watches `tracks`, `track_artists`, and `play_stats` only when sorted by play
+  count, so playback does not refresh other lists. `albumSummariesProvider`,
+  `artistSummariesProvider`, `genreSummariesProvider`,
+  `languageSummariesProvider` watch the tables their query reads. An emission
+  equal to the previous one is dropped. `albumListProvider` and its siblings
+  return the sorted, filtered `AsyncValue` for a `CollectionViewKey`; "Chưa
+  rõ" is last in both directions and shown only without a filter. All family
+  providers are `isAutoDispose`. One-shot readers (play buttons) call
+  `songIds` directly. `browseRefreshIntervalProvider` and
+  `folderRefreshIntervalProvider` let tests shorten the interval.
+- `TrackWindow`: rows of a song list keyed by `TrackId`, pages of 100, at most
+  1200 cached (LRU by id), at most 2 reads in flight. The list calls
+  `viewport(first, last)` each build with the whole range it has built, cache
+  extent included (not only the painted rows, or the first row of each new
+  page paints as a placeholder); only the pages of that range are read,
+  nearest the centre first, and a queued page that left the range is dropped.
+  `rowAt(i)` is `ids[i]`'s row or null, never another index's row. After
+  `setIds`, cached rows of ids still listed stay and are read again when in
+  view; rows delivered by a read that began before the last `setIds` are also
+  marked for a re-read. Ids with no row, and rows that are not `present`, are absent. A failed read is exposed
+  as `error` and not retried until the next `setIds`. `invalidate()` marks
+  every cached row stale and re-reads the pages in view: the list calls it on
+  each tick of `songRowsRevisionProvider`, a throttled counter over `tracks`
+  and `track_artists` that is never deduplicated, because a cover or title
+  can change while the id order stays the same and `songIdsProvider` then
+  emits nothing.
+- Settings: `library.list_views` (`libraryListViewsProvider`: `setSort`,
+  `setView`, `setFolderView`), `library.compact_folders` (default true, no UI
+  yet).
+
+## Folder tree
+
+`lib/src/library/domain/browse/folder_tree.dart`,
+`lib/src/library/data/browse/folder_rows_query.dart`,
+`lib/src/library/state/browse/folder_providers.dart`.
+
+- Input: the visible files as `FolderRow` records `(sourceId, locator,
+  coverKey)`; locators are `/`-separated paths relative to the music folder.
+  `buildFolderTrees(musicFolders, rows)` returns one `FolderRoot` per music
+  folder: `folder`, `node`, `ambiguous` (another root has the same name).
+- `FolderNode`: `key` (`''` = root), `name`, `directSongs`, `deepSongs`,
+  `subfolders`, `children` in `naturalCompare` order, `directCoverKey` (the
+  cover of most direct files, ties to the smaller key), `coverKey` (direct,
+  else the subfolder with most files that has one, ties to the first).
+  Excluded folders are absent because their tracks are hidden.
+- `compactChain(child)`: the child plus, while the last one has no files and
+  exactly one subfolder, that subfolder (the row joins the names with ` › `
+  and opens the last). The switch is `library.compact_folders`.
+- `flatFolders(roots)`: every folder with direct files, root included, with
+  its ancestor names (the music folder's name first).
+- `folderTreesProvider` combines `musicFoldersProvider` with a throttled read
+  of the rows (folder refresh interval, 3 s). From `folderIsolateThreshold`
+  (5000) rows the tree is built with `Isolate.run`, decided on the row count.
+  The provider is autoDispose, so nothing reloads once the page is gone, and
+  a paused subscription does not reload either. It depends on the music
+  folders by value: a rewrite of `sources` or `source_mounts` that leaves
+  the folders equal (scan cursor, timestamps) does not rebuild the stream.
+
+## Detail data
+
+`lib/src/library/data/browse/detail_queries.dart`,
+`lib/src/library/domain/browse/detail_data.dart`,
+`lib/src/library/state/browse/detail_providers.dart`.
+
+- `artistAlbums(db, artist)` returns `ArtistAlbums`: `own` (album artist key =
+  the artist, newest first, no year last) and `appears` (other album artists'
+  albums with a track by the artist; the count is the whole album, as the
+  mockup shows).
+- `groupShelves(db, scope)` (genre or language): artists, most tracks first,
+  and albums, newest first, counted inside the scope. The page shows a shelf
+  from two items up and caps it.
+- `groupTotals(db, scope)`: tracks, distinct artists, duration, tracks whose
+  language was detected.
+- The providers are throttled streams (`artistAlbumsProvider`,
+  `groupShelvesProvider`, `groupTotalsProvider`), deduplicated.
+
+## Menu data
+
+`lib/src/library/data/browse/menu_queries.dart`,
+`lib/src/library/domain/browse/menu_targets.dart`,
+`lib/src/library/state/browse/menu_providers.dart`.
+
+Loaded once when a menu opens (`FutureProvider.family`, autoDispose), never
+live: a menu acts on what it showed.
+
+- `trackLinks(db, id)`: album key and title (null without an album), track
+  artists in tag order, the album artist when its stored key is not among
+  theirs (name = display artist if any; empty otherwise), and the folder as a `FolderRef` (`sourceId`, `sourceUid`,
+  `folderKey`, `name`, direct file count; the music folder itself is named
+  after its source). Null for a gone or hidden track.
+- `foldersOf(db, scope)`: the distinct folders holding the scope's tracks with
+  how many sit directly in each, most first.
+- `songInfo(db, id)`: format (codec, else the file extension), bitrate, sample
+  rate, bit depth, `size_bytes` (null when unknown), absolute path (mount root
+  + locator without a CUE `#n` suffix; null without a local root), play count.
+- `selectionDuration(db, ids)`: one chunked (500) read of `id, duration_ms`;
+  returns the total and the ids that are not visible.
+
+## Selection state
+
+`lib/src/library/state/browse/selection_providers.dart`.
+
+- `SelectionState`: ordered `ids`, a `Set` index (O(1) `contains`), `anchor`
+  (last track toggled on), `expanded`. Never mutated.
+- `librarySelectionProvider` (app lifetime): `toggle`, `addRange`,
+  `selectRangeTo(order, to)` (Shift-range from the anchor), `selectAll` (20k
+  ids in one change, no row loads), `remove`, `removeAll`, `reorder(from, to)`
+  (`to` = index after removal), `clear`, `setExpanded` (opens only with a
+  selection; removing the last track resets everything).
+- `isSelectedProvider(id)` selects `set.contains(id)`, so a tile rebuilds only
+  when its own answer flips; `hasSelectionProvider`.
+- `activeTrackListProvider`: the ordered ids of the list on screen for "select
+  all"; `clear(ids)` only clears when `ids` is still the registered list.
+- `selectionSummaryProvider`: duration of the selection, computed 60 ms after
+  the last change; ids that are no longer visible are removed from the
+  selection.
 
 ## Selection bar slot
 
