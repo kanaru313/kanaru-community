@@ -42,8 +42,11 @@ main.dart
   Ctrl+F / Ctrl+K. Both shells render the library selection bar slot.
 - **Flush and exit**: `KanaruApp` owns one `AppLifecycleListener`. On hidden or
   paused it flushes the settings store, then the registry's flush hooks. On an
-  exit request it does the same, capped at 2 s. Linux with a custom title bar
-  must later move exit handling to `window_manager`'s close callbacks.
+  exit request it first runs the registry's before-exit hooks (pause), then does
+  the same, capped at 2 s in total. On Linux the window close goes
+  through `WindowCloseGuard` (`window_manager` close callbacks), installed by
+  `KanaruApp` after the first frame, because the plugin disconnects the
+  engine's exit request.
 - **Settings**: per-device JSON file `configDir/settings.json`, one
   `Setting<T>` per key (`<module>.<name>`). Sync reads from memory, writes are
   coalesced and atomic, and a file that is unusable is moved aside to

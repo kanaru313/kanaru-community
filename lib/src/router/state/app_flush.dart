@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
 import '../../extension/state/extension_providers.dart';
+import '../../extension/state/registry_entries.dart';
 import '../../platform/state/settings_providers.dart';
 
 final _log = Logger('app.flush');
@@ -88,6 +89,7 @@ class FlushCoordinator {
   Future<void> flushForExit(ProviderContainer container) async {
     try {
       await (() async {
+        await _runBeforeExit(container);
         final run = _join(container);
         final joinedOld = run.old;
         await run.future;
@@ -97,6 +99,32 @@ class FlushCoordinator {
       _log.warning('flush on exit hit the ${cap.inMilliseconds} ms cap');
     } on Object catch (error, stack) {
       _log.warning('flush on exit failed', error, stack);
+    }
+  }
+
+  /// Runs the registry's before-exit hooks in order, each failure logged. The
+  /// phase gets at most half of [cap], so a hung hook cannot starve the flush.
+  Future<void> _runBeforeExit(ProviderContainer container) async {
+    final List<FlushHook> hooks;
+    try {
+      hooks = container.read(extensionRegistryProvider).beforeExitHooks;
+    } catch (error, stack) {
+      _log.warning('before-exit hooks unavailable', error, stack);
+      return;
+    }
+    if (hooks.isEmpty) return;
+    try {
+      await (() async {
+        for (final hook in hooks) {
+          try {
+            await hook(container);
+          } catch (error, stack) {
+            _log.warning('before-exit hook failed', error, stack);
+          }
+        }
+      })().timeout(cap ~/ 2);
+    } on TimeoutException {
+      _log.warning('before-exit hooks hit their cap');
     }
   }
 

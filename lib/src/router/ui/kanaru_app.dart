@@ -8,6 +8,7 @@ import 'package:logging/logging.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../extension/state/extension_providers.dart';
+import '../../platform/state/window_close_provider.dart';
 import '../../screens/settings/state/appearance_settings.dart';
 import '../state/app_flush.dart';
 import '../state/router_provider.dart';
@@ -34,6 +35,20 @@ class _KanaruAppState extends ConsumerState<KanaruApp> {
       onStateChange: _onState,
       onExitRequested: _onExitRequested,
     );
+    // After the first frame, so a crash before it cannot leave a prevented
+    // close that nothing answers.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final container = ProviderScope.containerOf(context, listen: false);
+      unawaited(
+        ref
+            .read(windowCloseGuardProvider)
+            .install(() => _flusher.flushForExit(container))
+            .catchError((Object error, StackTrace stack) {
+              _log.warning('window close guard failed', error, stack);
+            }),
+      );
+    });
   }
 
   @override
