@@ -1,6 +1,7 @@
 # Library scan
 
-> **Contract stub.** Owner: lane A (scanner and first run). The foundation
+> **Contract stub.** Owner: lane A (scanner and first run). Tag reading, covers and
+> colours (Rust and its Dart API) are described below. The foundation
 > declares the database helpers, the cover layout, the Rust plumbing and the
 > scan contracts below; they are frozen. Lane A replaces this text with its
 > own design (walk, passes, first-run flow, Home scan card) when it lands. The
@@ -113,6 +114,52 @@ to an `Io` error of kind `Other`.
 | Temp files | prefix `.kanaru-tmp-` (`coverTempPrefix`), renamed when complete |
 | Layout marker | `cacheDir/covers/.layout-v1` (`coverLayoutMarker`) |
 
+Rust writes these files (`kanaru_media::covers`, called by `extract_covers_batch`):
+
+- Sources, first usable wins: embedded pictures (front cover first, then the
+  others, primary tag first), then `<stem>.jpg|jpeg|png`, then
+  `cover|folder|front` with the same extensions. Names match in any case. A
+  source that fails a check (not JPEG/PNG/WebP, over `MAX_COVER_BYTES`, header over
+  `MAX_COVER_PIXELS`, over the decode memory cap, damaged) falls through to the
+  next. `sidecars: false` (no images permission) skips the image files.
+- Key: the first 16 bytes of blake3 over the original bytes, as 32 hex digits;
+  the shard is its first two digits. Files already on disk (both sizes, not
+  empty) are not made again: `made: false`, no colours.
+- One decode gives both sizes: the picture is fitted to 1024, then 256 is cut
+  from that buffer. Never enlarged; alpha is blended on black; JPEG and WebP
+  EXIF orientation is applied; JPEG q85, 4:4:4. A large JPEG (over 1024 px) is
+  decoded at 1/2, 1/4 or 1/8 scale. An original JPEG is its own `full` only when
+  it is an upright baseline 3-component file, at most 1024 px and 200 KiB, whose
+  single scan ends at the final EOI (metadata segments are stripped); otherwise
+  it is re-encoded. Only bytes Rust decoded and encoded leave Rust, except that
+  validated passthrough.
+- PNG and WebP covers over about 16 MP (RGBA; about 22 MP RGB) are "no cover": the
+  64 MiB decode cap rejects them before any allocation, as in the old app. JPEG is
+  decoded scaled, up to `MAX_COVER_PIXELS`.
+- A decode of an image over 8 MP waits for a process-wide gate (one at a time).
+- Writes go to `.kanaru-tmp-<hex>` in the destination folder and are renamed.
+  The shard folders are created on demand. `full` is written before `thumb`.
+  `.layout-v1` is Dart's.
+- Files are opened through the bridge's `open_source` (regular files only, no
+  blocking on a FIFO named `cover.jpg`).
+
+`extract_covers_batch(cacheDir, items, sidecars)` returns one `CoverResultDto` per
+item in order. `status` is `found` (`key`, `thumbRel`, `fullRel`, `made`, `colors`
+when this call made the files), `noCover` (every source checked) or `failed`
+(`error`). Failure rules: an error writing under `cacheDir` is transient whatever
+its kind, and the batch stops: items not started come back `failed` and transient.
+The audio file itself unreadable (corrupt, unsupported) is permanent, but the
+sidecars are still tried first. A transient read error on the audio file or a
+sidecar is transient. A sidecar that opens but cannot be read, or a folder
+that cannot be listed (EIO on a dropped mount; anything but missing, refused or
+not-a-folder), is a transient failure of that item (`CoverError::Retry`), never a
+stored "no cover": a sidecar has no change trigger of its own. A parser panic
+on the audio file falls through to the sidecars like any damaged file. A panic
+in one item is that item's permanent `panic` error.
+Items are grouped by folder and cut into chunks of at most 8 tracks; a chunk is one task
+with one folder memo (listing, sidecar result), so an album shares one decode of
+its `cover.jpg` without any lock between workers.
+
 - Missing marker (the cache was cleared by Android or a cleaner app): reset
   `cover_scan_version` to 0 for every row, then rewrite the covers and the marker.
 - Evicted file: `TrackCover` reports the key to `coverMissesProvider`. Listen
@@ -121,7 +168,21 @@ to an `Io` error of kind `Other`.
 
 ### Cover colours (write side)
 
-- Computed in the cover pass with the `material-colors` crate (0.4.2), in Rust.
+- Computed in the cover pass with the `material-colors` crate (0.4.2), in Rust,
+  from the encoded `thumb` (decoded again, shrunk to 112 px): Wu quantizer, 128
+  clusters scored like Flutter's `ColorScheme.fromImageProvider` for the seed,
+  5 clusters for the palette, most common first (1 to 5 entries; a flat
+  image has one). When no cluster scores the seed is the first palette colour.
+  If the seed's HCT chroma is below 5 (gray, black and white covers) the cover
+  has no colours: `colors` is null (no `cover_colors` row), and consumers use
+  the app theme.
+- `CoverColorsDto { seed: i64, palette: List<i64> }` carries ARGB as `i64`
+  (frb maps `u64` to `BigInt`; no `u32`/`u64` in DTOs).
+- `extract_covers_batch` returns colours for covers it made. `cover_colors_for(cacheDir,
+  keys)` decodes the cached `thumb` of keys whose colours are missing (a malformed
+  key is rejected before any path is built; a missing or damaged file is an
+  `error` on that entry; a gray cover has both null). `cacheDir` must be absolute,
+  else every entry fails (`Unsupported`, permanent). Both give the same colours for the same thumb.
 - Stored with `upsertCoverColors`: `seed` (ARGB) and `colors` (JSON array of ARGB
   ints, most dominant first), `version` = `coverColorsVersion` (1).
 - A write with an older `version` than the stored row is ignored.
@@ -131,6 +192,15 @@ to an `Io` error of kind `Other`.
 
 `tracks.language_detected` is a boolean, set when the scanner detected the
 language from the title (`whatlang`, in Rust).
+
+Rust sets `TagFieldsDto.detectedLanguage` only when the file has no language tag
+and `whatlang` calls the detection reliable (short titles usually are not: null,
+shown as unknown). The tag, when present, is `languageTag` as written. The code is
+ISO 639-3. whatlang's individual-language codes are mapped to the macrolanguage
+code `languageKey` gives the same 639-1 tag (`cmn` to `zho`, `pes` to `fas`; the
+others are identical; an `arb` to `ara` entry is a guard whatlang 0.18 never emits). `rust/crates/kanaru_media/tests/tags_fixtures/whatlang_codes.json`
+lists every whatlang code with its mapped value, generated by a Rust test (a stale
+file fails it; `UPDATE_FIXTURES=1 cargo test` rewrites it); a Dart test compares it with `languageCodeTable`.
 
 ## Scan status as produced
 
@@ -260,7 +330,8 @@ bodies lane A's). The seed emits `ScanIdle` and logs `rescan` calls.
 | `error` | `MediaError` (above) |
 | `cancel` | `Cancel::new()`, `with_timeout(Duration)`, `cancel()`, `check() -> Result<(), MediaError>` |
 | `limits` | `MAX_FILE_BYTES_UNSEEKABLE` 256 MiB, `MAX_COVER_BYTES` 32 MiB, `MAX_COVER_PIXELS` 40 000 000, `MAX_TAG_FILE_SECONDS` 30 |
-| `tags/`, `covers/` | Empty until lane A |
+| `tags/` | `read_tags(path, open, cancel) -> Result<TrackTags, MediaError>`; `mapping`, `language`, `errors` |
+| `covers/` | `make_cover(audio, open, sidecars, cache_dir, memo, cancel)`; `sources`, `decode_limits`, `thumbnail`, `gate`, `jpeg_header`, `webp_exif`, `key`, `colors`, `cache` |
 
 `rust/crates/kanaru_bridge`:
 
@@ -271,10 +342,40 @@ bodies lane A's). The seed emits `ScanIdle` and logs `rescan` calls.
 | `source` | `Source::Path(String)`, `open_source(&Source)` |
 | `os` | `lower_current_thread_priority()`: the only `unsafe` in the workspace |
 | `api/error.rs` | `NativeError` DTO |
-| `api/tags.rs`, `api/covers.rs` | Dart API, lane A. Empty until then |
+| `api/tags.rs` | `read_tags_batch(paths) -> List<TagReadDto>` |
+| `api/covers.rs` | `extract_covers_batch(cacheDir, items, sidecars)`, `cover_colors_for(cacheDir, keys)` |
 
 Every file is parsed under `guarded`, on a pool, so one bad file cannot take the
 scan down.
+
+### Rust: tags
+
+`read_tags_batch(paths)` returns one `TagReadDto { path, fields?, error? }` per
+path, in order, on the background pool, each file under `guarded`. `kanaru_media`
+never opens a file itself: `read_tags` takes an `open` callback and the bridge
+passes `open_source`, so the regular-file rule holds. The extension is a hint;
+lofty sniffs the content (`ParsingMode::BestAttempt`, no pictures, a 30 s
+deadline checked before open and before parsing; a parse that finished is kept).
+The deadline does not bound a blocked read: that bound is the Dart-side call timeout
+that marks a root stuck (a hung read keeps its pool thread until it returns). `.dsf`/`.dff` give an empty result without an
+error (filename-only), `.wma` is `Unsupported`.
+
+`TagFieldsDto` (numbers are `i32`/`i64`; zero audio properties and a zero duration
+are null): `title`, `artists` (every `TrackArtists`/`TrackArtist` value: repeated
+Vorbis `ARTIST`, ID3v2.4 NUL lists; else the plain artist), `album`, `albumArtists`,
+`genres`, `composer`, `year` (first four digits of RecordingDate, Year,
+ReleaseDate, OriginalReleaseDate: the first one that parses), `trackNo`,
+`trackTotal`, `discNo`, `discTotal`, `titleSort`, `artistSort`, `albumSort`,
+`languageTag`, `detectedLanguage`, `comment`, `durationMs`, `bitrate`, `sampleRate`,
+`bitDepth`, `channels`, `codec` (`FLAC`, `MP3`, `MP4`, `WAV`, `Opus`, `Vorbis`, ...:
+the container lofty recognised).
+
+Caps (on character boundaries): 1 KiB per text value, 4 KiB comment, 32 values per
+multi-value field, a raw date over 64 bytes is skipped.
+
+Errors: a lofty failure is `Corrupt` or `Unsupported` (an unknown format), never an
+`Io` of kind `Other`; I/O errors keep their kind (so `TimedOut` is transient). A
+truncated or inconsistent file is `Corrupt`, a permanent result.
 
 ## Old app references
 

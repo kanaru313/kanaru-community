@@ -3,7 +3,10 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/covers.dart';
+import 'api/error.dart';
 import 'api/native_info.dart';
+import 'api/tags.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -69,7 +72,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -2106943239;
+  int get rustContentHash => 1567292250;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -81,9 +84,24 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  Future<List<CoverColorsResultDto>> crateApiCoversCoverColorsFor({
+    required String cacheDir,
+    required List<String> keys,
+  });
+
+  Future<List<CoverResultDto>> crateApiCoversExtractCoversBatch({
+    required String cacheDir,
+    required List<CoverRequestDto> items,
+    required bool sidecars,
+  });
+
   Future<void> crateApiNativeInfoInitApp();
 
   String crateApiNativeInfoNativeVersions();
+
+  Future<List<TagReadDto>> crateApiTagsReadTagsBatch({
+    required List<String> paths,
+  });
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -95,6 +113,78 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
+  Future<List<CoverColorsResultDto>> crateApiCoversCoverColorsFor({
+    required String cacheDir,
+    required List<String> keys,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(cacheDir, serializer);
+          sse_encode_list_String(keys, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 1,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_cover_colors_result_dto,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiCoversCoverColorsForConstMeta,
+        argValues: [cacheDir, keys],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCoversCoverColorsForConstMeta =>
+      const TaskConstMeta(
+        debugName: "cover_colors_for",
+        argNames: ["cacheDir", "keys"],
+      );
+
+  @override
+  Future<List<CoverResultDto>> crateApiCoversExtractCoversBatch({
+    required String cacheDir,
+    required List<CoverRequestDto> items,
+    required bool sidecars,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(cacheDir, serializer);
+          sse_encode_list_cover_request_dto(items, serializer);
+          sse_encode_bool(sidecars, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 2,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_cover_result_dto,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiCoversExtractCoversBatchConstMeta,
+        argValues: [cacheDir, items, sidecars],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCoversExtractCoversBatchConstMeta =>
+      const TaskConstMeta(
+        debugName: "extract_covers_batch",
+        argNames: ["cacheDir", "items", "sidecars"],
+      );
+
+  @override
   Future<void> crateApiNativeInfoInitApp() {
     return handler.executeNormal(
       NormalTask(
@@ -103,7 +193,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 1,
+            funcId: 3,
             port: port_,
           );
         },
@@ -127,7 +217,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -143,6 +233,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiNativeInfoNativeVersionsConstMeta =>
       const TaskConstMeta(debugName: "native_versions", argNames: []);
 
+  @override
+  Future<List<TagReadDto>> crateApiTagsReadTagsBatch({
+    required List<String> paths,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_list_String(paths, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 5,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_tag_read_dto,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiTagsReadTagsBatchConstMeta,
+        argValues: [paths],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiTagsReadTagsBatchConstMeta =>
+      const TaskConstMeta(debugName: "read_tags_batch", argNames: ["paths"]);
+
   @protected
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -150,9 +270,259 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
+  CoverColorsDto dco_decode_box_autoadd_cover_colors_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_cover_colors_dto(raw);
+  }
+
+  @protected
+  int dco_decode_box_autoadd_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_i_64(raw);
+  }
+
+  @protected
+  NativeError dco_decode_box_autoadd_native_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_native_error(raw);
+  }
+
+  @protected
+  TagFieldsDto dco_decode_box_autoadd_tag_fields_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_tag_fields_dto(raw);
+  }
+
+  @protected
+  CoverColorsDto dco_decode_cover_colors_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return CoverColorsDto(
+      seed: dco_decode_i_64(arr[0]),
+      palette: dco_decode_list_prim_i_64_strict(arr[1]),
+    );
+  }
+
+  @protected
+  CoverColorsResultDto dco_decode_cover_colors_result_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return CoverColorsResultDto(
+      key: dco_decode_String(arr[0]),
+      colors: dco_decode_opt_box_autoadd_cover_colors_dto(arr[1]),
+      error: dco_decode_opt_box_autoadd_native_error(arr[2]),
+    );
+  }
+
+  @protected
+  CoverRequestDto dco_decode_cover_request_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return CoverRequestDto(
+      trackId: dco_decode_i_64(arr[0]),
+      path: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  CoverResultDto dco_decode_cover_result_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return CoverResultDto(
+      trackId: dco_decode_i_64(arr[0]),
+      status: dco_decode_cover_status_dto(arr[1]),
+      key: dco_decode_opt_String(arr[2]),
+      made: dco_decode_bool(arr[3]),
+      thumbRel: dco_decode_opt_String(arr[4]),
+      fullRel: dco_decode_opt_String(arr[5]),
+      colors: dco_decode_opt_box_autoadd_cover_colors_dto(arr[6]),
+      error: dco_decode_opt_box_autoadd_native_error(arr[7]),
+    );
+  }
+
+  @protected
+  CoverStatusDto dco_decode_cover_status_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return CoverStatusDto.values[raw as int];
+  }
+
+  @protected
+  int dco_decode_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeI64(raw);
+  }
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_String).toList();
+  }
+
+  @protected
+  List<CoverColorsResultDto> dco_decode_list_cover_colors_result_dto(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_cover_colors_result_dto)
+        .toList();
+  }
+
+  @protected
+  List<CoverRequestDto> dco_decode_list_cover_request_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_cover_request_dto).toList();
+  }
+
+  @protected
+  List<CoverResultDto> dco_decode_list_cover_result_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_cover_result_dto).toList();
+  }
+
+  @protected
+  Int64List dco_decode_list_prim_i_64_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeInt64List(raw);
+  }
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  List<TagReadDto> dco_decode_list_tag_read_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_tag_read_dto).toList();
+  }
+
+  @protected
+  NativeError dco_decode_native_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return NativeError(
+      kind: dco_decode_native_error_kind(arr[0]),
+      detail: dco_decode_String(arr[1]),
+      transient: dco_decode_bool(arr[2]),
+    );
+  }
+
+  @protected
+  NativeErrorKind dco_decode_native_error_kind(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return NativeErrorKind.values[raw as int];
+  }
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_String(raw);
+  }
+
+  @protected
+  CoverColorsDto? dco_decode_opt_box_autoadd_cover_colors_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_cover_colors_dto(raw);
+  }
+
+  @protected
+  int? dco_decode_opt_box_autoadd_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_i_32(raw);
+  }
+
+  @protected
+  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_i_64(raw);
+  }
+
+  @protected
+  NativeError? dco_decode_opt_box_autoadd_native_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_native_error(raw);
+  }
+
+  @protected
+  TagFieldsDto? dco_decode_opt_box_autoadd_tag_fields_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_tag_fields_dto(raw);
+  }
+
+  @protected
+  TagFieldsDto dco_decode_tag_fields_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 23)
+      throw Exception('unexpected arr length: expect 23 but see ${arr.length}');
+    return TagFieldsDto(
+      title: dco_decode_opt_String(arr[0]),
+      artists: dco_decode_list_String(arr[1]),
+      album: dco_decode_opt_String(arr[2]),
+      albumArtists: dco_decode_list_String(arr[3]),
+      genres: dco_decode_list_String(arr[4]),
+      composer: dco_decode_opt_String(arr[5]),
+      year: dco_decode_opt_box_autoadd_i_32(arr[6]),
+      trackNo: dco_decode_opt_box_autoadd_i_32(arr[7]),
+      trackTotal: dco_decode_opt_box_autoadd_i_32(arr[8]),
+      discNo: dco_decode_opt_box_autoadd_i_32(arr[9]),
+      discTotal: dco_decode_opt_box_autoadd_i_32(arr[10]),
+      titleSort: dco_decode_opt_String(arr[11]),
+      artistSort: dco_decode_opt_String(arr[12]),
+      albumSort: dco_decode_opt_String(arr[13]),
+      languageTag: dco_decode_opt_String(arr[14]),
+      detectedLanguage: dco_decode_opt_String(arr[15]),
+      comment: dco_decode_opt_String(arr[16]),
+      durationMs: dco_decode_opt_box_autoadd_i_64(arr[17]),
+      bitrate: dco_decode_opt_box_autoadd_i_32(arr[18]),
+      sampleRate: dco_decode_opt_box_autoadd_i_32(arr[19]),
+      bitDepth: dco_decode_opt_box_autoadd_i_32(arr[20]),
+      channels: dco_decode_opt_box_autoadd_i_32(arr[21]),
+      codec: dco_decode_opt_String(arr[22]),
+    );
+  }
+
+  @protected
+  TagReadDto dco_decode_tag_read_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return TagReadDto(
+      path: dco_decode_String(arr[0]),
+      fields: dco_decode_opt_box_autoadd_tag_fields_dto(arr[1]),
+      error: dco_decode_opt_box_autoadd_native_error(arr[2]),
+    );
   }
 
   @protected
@@ -175,10 +545,352 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
+  CoverColorsDto sse_decode_box_autoadd_cover_colors_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_cover_colors_dto(deserializer));
+  }
+
+  @protected
+  int sse_decode_box_autoadd_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_i_64(deserializer));
+  }
+
+  @protected
+  NativeError sse_decode_box_autoadd_native_error(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_native_error(deserializer));
+  }
+
+  @protected
+  TagFieldsDto sse_decode_box_autoadd_tag_fields_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_tag_fields_dto(deserializer));
+  }
+
+  @protected
+  CoverColorsDto sse_decode_cover_colors_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_seed = sse_decode_i_64(deserializer);
+    var var_palette = sse_decode_list_prim_i_64_strict(deserializer);
+    return CoverColorsDto(seed: var_seed, palette: var_palette);
+  }
+
+  @protected
+  CoverColorsResultDto sse_decode_cover_colors_result_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_key = sse_decode_String(deserializer);
+    var var_colors = sse_decode_opt_box_autoadd_cover_colors_dto(deserializer);
+    var var_error = sse_decode_opt_box_autoadd_native_error(deserializer);
+    return CoverColorsResultDto(
+      key: var_key,
+      colors: var_colors,
+      error: var_error,
+    );
+  }
+
+  @protected
+  CoverRequestDto sse_decode_cover_request_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_trackId = sse_decode_i_64(deserializer);
+    var var_path = sse_decode_String(deserializer);
+    return CoverRequestDto(trackId: var_trackId, path: var_path);
+  }
+
+  @protected
+  CoverResultDto sse_decode_cover_result_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_trackId = sse_decode_i_64(deserializer);
+    var var_status = sse_decode_cover_status_dto(deserializer);
+    var var_key = sse_decode_opt_String(deserializer);
+    var var_made = sse_decode_bool(deserializer);
+    var var_thumbRel = sse_decode_opt_String(deserializer);
+    var var_fullRel = sse_decode_opt_String(deserializer);
+    var var_colors = sse_decode_opt_box_autoadd_cover_colors_dto(deserializer);
+    var var_error = sse_decode_opt_box_autoadd_native_error(deserializer);
+    return CoverResultDto(
+      trackId: var_trackId,
+      status: var_status,
+      key: var_key,
+      made: var_made,
+      thumbRel: var_thumbRel,
+      fullRel: var_fullRel,
+      colors: var_colors,
+      error: var_error,
+    );
+  }
+
+  @protected
+  CoverStatusDto sse_decode_cover_status_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return CoverStatusDto.values[inner];
+  }
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getInt32();
+  }
+
+  @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getPlatformInt64();
+  }
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <String>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<CoverColorsResultDto> sse_decode_list_cover_colors_result_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <CoverColorsResultDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_cover_colors_result_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<CoverRequestDto> sse_decode_list_cover_request_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <CoverRequestDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_cover_request_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<CoverResultDto> sse_decode_list_cover_result_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <CoverResultDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_cover_result_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getInt64List(len_);
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<TagReadDto> sse_decode_list_tag_read_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <TagReadDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_tag_read_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  NativeError sse_decode_native_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_kind = sse_decode_native_error_kind(deserializer);
+    var var_detail = sse_decode_String(deserializer);
+    var var_transient = sse_decode_bool(deserializer);
+    return NativeError(
+      kind: var_kind,
+      detail: var_detail,
+      transient: var_transient,
+    );
+  }
+
+  @protected
+  NativeErrorKind sse_decode_native_error_kind(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return NativeErrorKind.values[inner];
+  }
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  CoverColorsDto? sse_decode_opt_box_autoadd_cover_colors_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_cover_colors_dto(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_i_32(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_i_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  NativeError? sse_decode_opt_box_autoadd_native_error(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_native_error(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  TagFieldsDto? sse_decode_opt_box_autoadd_tag_fields_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_tag_fields_dto(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  TagFieldsDto sse_decode_tag_fields_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_title = sse_decode_opt_String(deserializer);
+    var var_artists = sse_decode_list_String(deserializer);
+    var var_album = sse_decode_opt_String(deserializer);
+    var var_albumArtists = sse_decode_list_String(deserializer);
+    var var_genres = sse_decode_list_String(deserializer);
+    var var_composer = sse_decode_opt_String(deserializer);
+    var var_year = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_trackNo = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_trackTotal = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_discNo = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_discTotal = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_titleSort = sse_decode_opt_String(deserializer);
+    var var_artistSort = sse_decode_opt_String(deserializer);
+    var var_albumSort = sse_decode_opt_String(deserializer);
+    var var_languageTag = sse_decode_opt_String(deserializer);
+    var var_detectedLanguage = sse_decode_opt_String(deserializer);
+    var var_comment = sse_decode_opt_String(deserializer);
+    var var_durationMs = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_bitrate = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_sampleRate = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_bitDepth = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_channels = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_codec = sse_decode_opt_String(deserializer);
+    return TagFieldsDto(
+      title: var_title,
+      artists: var_artists,
+      album: var_album,
+      albumArtists: var_albumArtists,
+      genres: var_genres,
+      composer: var_composer,
+      year: var_year,
+      trackNo: var_trackNo,
+      trackTotal: var_trackTotal,
+      discNo: var_discNo,
+      discTotal: var_discTotal,
+      titleSort: var_titleSort,
+      artistSort: var_artistSort,
+      albumSort: var_albumSort,
+      languageTag: var_languageTag,
+      detectedLanguage: var_detectedLanguage,
+      comment: var_comment,
+      durationMs: var_durationMs,
+      bitrate: var_bitrate,
+      sampleRate: var_sampleRate,
+      bitDepth: var_bitDepth,
+      channels: var_channels,
+      codec: var_codec,
+    );
+  }
+
+  @protected
+  TagReadDto sse_decode_tag_read_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_path = sse_decode_String(deserializer);
+    var var_fields = sse_decode_opt_box_autoadd_tag_fields_dto(deserializer);
+    var var_error = sse_decode_opt_box_autoadd_native_error(deserializer);
+    return TagReadDto(path: var_path, fields: var_fields, error: var_error);
   }
 
   @protected
@@ -193,21 +905,180 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getInt32();
-  }
-
-  @protected
-  bool sse_decode_bool(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint8() != 0;
-  }
-
-  @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_cover_colors_dto(
+    CoverColorsDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_cover_colors_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_i_64(
+    PlatformInt64 self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_native_error(
+    NativeError self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_native_error(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_tag_fields_dto(
+    TagFieldsDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_tag_fields_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_cover_colors_dto(
+    CoverColorsDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.seed, serializer);
+    sse_encode_list_prim_i_64_strict(self.palette, serializer);
+  }
+
+  @protected
+  void sse_encode_cover_colors_result_dto(
+    CoverColorsResultDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.key, serializer);
+    sse_encode_opt_box_autoadd_cover_colors_dto(self.colors, serializer);
+    sse_encode_opt_box_autoadd_native_error(self.error, serializer);
+  }
+
+  @protected
+  void sse_encode_cover_request_dto(
+    CoverRequestDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.trackId, serializer);
+    sse_encode_String(self.path, serializer);
+  }
+
+  @protected
+  void sse_encode_cover_result_dto(
+    CoverResultDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.trackId, serializer);
+    sse_encode_cover_status_dto(self.status, serializer);
+    sse_encode_opt_String(self.key, serializer);
+    sse_encode_bool(self.made, serializer);
+    sse_encode_opt_String(self.thumbRel, serializer);
+    sse_encode_opt_String(self.fullRel, serializer);
+    sse_encode_opt_box_autoadd_cover_colors_dto(self.colors, serializer);
+    sse_encode_opt_box_autoadd_native_error(self.error, serializer);
+  }
+
+  @protected
+  void sse_encode_cover_status_dto(
+    CoverStatusDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putInt32(self);
+  }
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putPlatformInt64(self);
+  }
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_String(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_cover_colors_result_dto(
+    List<CoverColorsResultDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_cover_colors_result_dto(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_cover_request_dto(
+    List<CoverRequestDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_cover_request_dto(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_cover_result_dto(
+    List<CoverResultDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_cover_result_dto(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_prim_i_64_strict(
+    Int64List self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putInt64List(self);
   }
 
   @protected
@@ -221,6 +1092,143 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_tag_read_dto(
+    List<TagReadDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_tag_read_dto(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_native_error(NativeError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_native_error_kind(self.kind, serializer);
+    sse_encode_String(self.detail, serializer);
+    sse_encode_bool(self.transient, serializer);
+  }
+
+  @protected
+  void sse_encode_native_error_kind(
+    NativeErrorKind self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_String(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_cover_colors_dto(
+    CoverColorsDto? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_cover_colors_dto(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_i_32(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_i_64(
+    PlatformInt64? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_i_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_native_error(
+    NativeError? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_native_error(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_tag_fields_dto(
+    TagFieldsDto? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_tag_fields_dto(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_tag_fields_dto(TagFieldsDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.title, serializer);
+    sse_encode_list_String(self.artists, serializer);
+    sse_encode_opt_String(self.album, serializer);
+    sse_encode_list_String(self.albumArtists, serializer);
+    sse_encode_list_String(self.genres, serializer);
+    sse_encode_opt_String(self.composer, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.year, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.trackNo, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.trackTotal, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.discNo, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.discTotal, serializer);
+    sse_encode_opt_String(self.titleSort, serializer);
+    sse_encode_opt_String(self.artistSort, serializer);
+    sse_encode_opt_String(self.albumSort, serializer);
+    sse_encode_opt_String(self.languageTag, serializer);
+    sse_encode_opt_String(self.detectedLanguage, serializer);
+    sse_encode_opt_String(self.comment, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.durationMs, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.bitrate, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.sampleRate, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.bitDepth, serializer);
+    sse_encode_opt_box_autoadd_i_32(self.channels, serializer);
+    sse_encode_opt_String(self.codec, serializer);
+  }
+
+  @protected
+  void sse_encode_tag_read_dto(TagReadDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.path, serializer);
+    sse_encode_opt_box_autoadd_tag_fields_dto(self.fields, serializer);
+    sse_encode_opt_box_autoadd_native_error(self.error, serializer);
+  }
+
+  @protected
   void sse_encode_u_8(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self);
@@ -229,17 +1237,5 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_unit(void self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-  }
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putInt32(self);
-  }
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint8(self ? 1 : 0);
   }
 }
