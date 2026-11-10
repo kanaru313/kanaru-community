@@ -48,26 +48,40 @@ impl ImageHeader {
 /// MIME type in a tag is often wrong, so only the content counts. A header the
 /// parser panics on counts as invalid.
 pub fn validate_header(bytes: &[u8]) -> Option<ImageHeader> {
+    check_header(bytes).ok()
+}
+
+/// [`validate_header`] with the reason: `TooLarge` over the byte or pixel cap,
+/// `Unsupported` for another format, `Corrupt` for a header that does not
+/// parse (or declares a zero side).
+pub fn check_header(bytes: &[u8]) -> Result<ImageHeader, MediaError> {
     if bytes.len() as u64 > MAX_COVER_BYTES {
-        return None;
+        return Err(MediaError::TooLarge);
     }
     let format = match bytes {
         [0xFF, 0xD8, 0xFF, ..] => ImageFormat::Jpeg,
         [0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A, ..] => ImageFormat::Png,
         [b'R', b'I', b'F', b'F', _, _, _, _, b'W', b'E', b'B', b'P', ..] => ImageFormat::WebP,
-        _ => return None,
+        _ => return Err(MediaError::Unsupported),
     };
+    let corrupt = || MediaError::Corrupt("image header does not parse".into());
     let (width, height) = catch_unwind(AssertUnwindSafe(|| {
         ImageReader::with_format(Cursor::new(bytes), format).into_dimensions()
     }))
-    .ok()?
-    .ok()?;
+    .map_err(|_| corrupt())?
+    .map_err(|_| corrupt())?;
+    if width == 0 || height == 0 {
+        return Err(corrupt());
+    }
     let header = ImageHeader {
         format,
         width,
         height,
     };
-    (width > 0 && height > 0 && header.pixels() <= MAX_COVER_PIXELS).then_some(header)
+    if header.pixels() > MAX_COVER_PIXELS {
+        return Err(MediaError::TooLarge);
+    }
+    Ok(header)
 }
 
 /// The embedded pictures of `path`, best first. Empty for a format that
@@ -180,8 +194,35 @@ pub fn read_sidecar(
     Ok((bytes.len() as u64 <= MAX_COVER_BYTES).then_some(bytes))
 }
 
-fn retry(path: &Path, e: &dyn std::fmt::Display) -> CoverError {
+pub(super) fn retry(path: &Path, e: &dyn std::fmt::Display) -> CoverError {
     CoverError::Retry(format!("{}: {e}", path.display()))
+}
+
+/// Reads the whole image file at `path` through `open`. The size is checked
+/// from the open handle before anything is read: `TooLarge` over
+/// `MAX_COVER_BYTES`, `Unsupported` for a file that is not a regular one.
+/// A read failure after open is a `Retry`.
+pub fn read_image_file(
+    path: &Path,
+    open: &dyn Fn(&Path) -> Result<File, MediaError>,
+) -> Result<Vec<u8>, CoverError> {
+    let file = open(path)?;
+    let meta = file.metadata().map_err(|e| retry(path, &e))?;
+    if !meta.is_file() {
+        return Err(MediaError::Unsupported.into());
+    }
+    if meta.len() > MAX_COVER_BYTES {
+        return Err(MediaError::TooLarge.into());
+    }
+    // The cap still holds for a file that grows while it is read.
+    let mut bytes = Vec::new();
+    file.take(MAX_COVER_BYTES + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|e| retry(path, &e))?;
+    if bytes.len() as u64 > MAX_COVER_BYTES {
+        return Err(MediaError::TooLarge.into());
+    }
+    Ok(bytes)
 }
 
 /// What one worker chunk has learned, so tracks of one album share the folder

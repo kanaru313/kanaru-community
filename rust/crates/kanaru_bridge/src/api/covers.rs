@@ -10,7 +10,9 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use kanaru_media::covers::key::{is_cover_key, relative_path, CoverSize};
-use kanaru_media::covers::{colors, make_cover, CoverColors, CoverError, CoverOutcome, FolderMemo};
+use kanaru_media::covers::{
+    colors, import_cover, make_cover, CoverColors, CoverError, CoverOutcome, FolderMemo,
+};
 use kanaru_media::Cancel;
 use rayon::prelude::*;
 
@@ -191,6 +193,62 @@ fn relative_cache_error() -> NativeError {
 /// (`coverCacheErrorPrefix` in `native_cover_maker.dart`) to end the cover
 /// pass early, so changing it needs the Dart constant changed too.
 const CACHE_DETAIL_PREFIX: &str = "cover cache";
+
+/// Result of [`import_cover_file`]: `key` (and `colors`, null for a near-gray
+/// image) on success, `error` otherwise (never both).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CoverImportDto {
+    pub key: Option<String>,
+    pub colors: Option<CoverColorsDto>,
+    pub error: Option<NativeError>,
+}
+
+/// Makes a cover from one user-chosen image, exactly like the song-cover pass:
+/// `<out_dir>/covers/{thumb,full}/<key>.jpg`, 256 px and 1024 px JPEG q85, the
+/// key from the image bytes. `path` may have any name (or none): the format is
+/// sniffed from the content (JPEG, PNG, WebP). `out_dir` is the folder that
+/// holds `covers/` (an absolute path; not necessarily the app cache folder).
+/// Both files are always written again, so importing the same image repairs a
+/// damaged one. Runs on the background pool under `guarded`.
+///
+/// Errors: transient for I/O and for failing to write under `out_dir`;
+/// permanent for an undecodable (`Corrupt`), unsupported (`Unsupported`, also a
+/// FIFO or other special file) or oversized (`TooLarge`) image, and for a
+/// relative `out_dir` (`Unsupported`).
+pub fn import_cover_file(path: String, out_dir: String) -> CoverImportDto {
+    if !Path::new(&out_dir).is_absolute() {
+        return import_failed(relative_cache_error());
+    }
+    let out_dir = PathBuf::from(out_dir);
+    let result = pools::background().install(|| {
+        guarded(|| {
+            let parked = RefCell::new(None);
+            let open = opener(&parked);
+            let result = import_cover(Path::new(&path), &open, &out_dir, &Cancel::new());
+            result.map_err(|e| match e {
+                CoverError::Source(e) => native_error(&parked, Path::new(&path), e),
+                CoverError::Cache(e) => cache_error(&e),
+                CoverError::Retry(m) => NativeError::new(NativeErrorKind::Io, m, true),
+            })
+        })
+    });
+    match result {
+        Ok(done) => CoverImportDto {
+            key: Some(done.key),
+            colors: done.colors.map(Into::into),
+            error: None,
+        },
+        Err(error) => import_failed(error),
+    }
+}
+
+fn import_failed(error: NativeError) -> CoverImportDto {
+    CoverImportDto {
+        key: None,
+        colors: None,
+        error: Some(error),
+    }
+}
 
 /// Any error writing under the cache folder is transient, whatever its kind:
 /// the cover is fine, the folder is not.
@@ -622,6 +680,80 @@ mod tests {
         });
         assert!(out[0].error.as_ref().is_some_and(|e| e.transient));
         assert_eq!(out[1].status, CoverStatusDto::NoCover);
+    }
+
+    #[test]
+    fn import_makes_the_files_under_the_given_dir_whatever_the_name() {
+        let dir = temp_dir("import");
+        let out = dir.join("data");
+        for name in ["pic", "pic.bin", "pic.JPG"] {
+            write(&dir.join(name), &PNG_1X1);
+            let r = import_cover_file(
+                dir.join(name).to_string_lossy().into_owned(),
+                out.to_string_lossy().into_owned(),
+            );
+            assert!(r.error.is_none(), "{name}: {r:?}");
+            let key = r.key.expect("key");
+            assert!(out.join(format!("covers/thumb/{key}.jpg")).is_file());
+            assert!(out.join(format!("covers/full/{key}.jpg")).is_file());
+        }
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn import_errors_are_typed() {
+        let dir = temp_dir("import-err");
+        let out = dir.to_string_lossy().into_owned();
+        let kind = |path: &Path, out: &str| {
+            import_cover_file(path.to_string_lossy().into_owned(), out.to_owned())
+                .error
+                .map(|e| (e.kind, e.transient))
+        };
+        assert_eq!(
+            kind(&dir.join("gone.png"), &out),
+            Some((NativeErrorKind::NotFound, false))
+        );
+        write(&dir.join("text.png"), b"not an image at all");
+        assert_eq!(
+            kind(&dir.join("text.png"), &out),
+            Some((NativeErrorKind::Unsupported, false))
+        );
+        assert_eq!(
+            kind(&dir.join("text.png"), "relative/dir"),
+            Some((NativeErrorKind::Unsupported, false))
+        );
+        // A directory is not a regular file.
+        assert_eq!(
+            kind(&dir, &out),
+            Some((NativeErrorKind::Unsupported, false))
+        );
+        // A cache folder that is a file: transient.
+        write(&dir.join("blocker"), b"file");
+        write(&dir.join("ok.png"), &PNG_1X1);
+        assert_eq!(
+            kind(&dir.join("ok.png"), &dir.join("blocker").to_string_lossy()),
+            Some((NativeErrorKind::Io, true))
+        );
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn import_refuses_a_fifo_without_blocking() {
+        let dir = temp_dir("import-fifo");
+        let fifo = dir.join("pic.png");
+        let made = std::process::Command::new("mkfifo")
+            .arg(&fifo)
+            .status()
+            .is_ok_and(|s| s.success());
+        if !made {
+            return;
+        }
+        let r = import_cover_file(
+            fifo.to_string_lossy().into_owned(),
+            dir.to_string_lossy().into_owned(),
+        );
+        assert_eq!(r.error.map(|e| e.kind), Some(NativeErrorKind::Unsupported));
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

@@ -172,8 +172,19 @@ fn store(bytes: &[u8], cache_dir: &Path) -> Result<Option<CoverOutcome>, CoverEr
     let Some(header) = sources::validate_header(bytes) else {
         return Ok(None);
     };
+    store_valid(bytes, header, cache_dir, false)
+}
+
+/// [`store`] for bytes whose header passed. `force` makes the files even when
+/// both exist. `None` when the image does not decode.
+fn store_valid(
+    bytes: &[u8],
+    header: sources::ImageHeader,
+    cache_dir: &Path,
+    force: bool,
+) -> Result<Option<CoverOutcome>, CoverError> {
     let key = key::cover_key(bytes);
-    if cache::both_exist(cache_dir, &key) {
+    if !force && cache::both_exist(cache_dir, &key) {
         return Ok(Some(CoverOutcome::Found {
             key,
             made: false,
@@ -194,4 +205,42 @@ fn store(bytes: &[u8], cache_dir: &Path) -> Result<Option<CoverOutcome>, CoverEr
         made: true,
         colors,
     }))
+}
+
+/// A cover made from one user-chosen image.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ImportedCover {
+    pub key: String,
+    /// `None` for a near-gray image (see `colors::MIN_SEED_CHROMA`).
+    pub colors: Option<CoverColors>,
+}
+
+/// Turns the image at `path` (any JPEG, PNG or WebP, sniffed from the content,
+/// whatever the name) into the same cache files as the song-cover pass, under
+/// `cache_dir` (the folder that holds `covers/`; not necessarily the app cache
+/// folder). Both files are always written again. The size is checked before reading.
+///
+/// Errors: `Source` for the file (`TooLarge`, `Unsupported` for another format
+/// or a special file, `Corrupt` for an image that does not decode: permanent;
+/// open failures as `open` reports them), `Retry` for a read failure after
+/// open, `Cache` for a write failure.
+pub fn import_cover(
+    path: &Path,
+    open: &dyn Fn(&Path) -> Result<File, MediaError>,
+    cache_dir: &Path,
+    cancel: &Cancel,
+) -> Result<ImportedCover, CoverError> {
+    cancel.check()?;
+    let bytes = sources::read_image_file(path, open)?;
+    cancel.check()?;
+    let header = sources::check_header(&bytes)?;
+    // Always written again: the import is one user action, and a damaged file
+    // under the output folder (which nothing clears) is repaired by choosing
+    // the same image again.
+    let Some(CoverOutcome::Found { key, colors, .. }) =
+        store_valid(&bytes, header, cache_dir, true)?
+    else {
+        return Err(MediaError::Corrupt("image does not decode".into()).into());
+    };
+    Ok(ImportedCover { key, colors })
 }

@@ -72,7 +72,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1567292250;
+  int get rustContentHash => -337931670;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -93,6 +93,11 @@ abstract class RustLibApi extends BaseApi {
     required String cacheDir,
     required List<CoverRequestDto> items,
     required bool sidecars,
+  });
+
+  Future<CoverImportDto> crateApiCoversImportCoverFile({
+    required String path,
+    required String outDir,
   });
 
   Future<void> crateApiNativeInfoInitApp();
@@ -185,6 +190,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<CoverImportDto> crateApiCoversImportCoverFile({
+    required String path,
+    required String outDir,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(path, serializer);
+          sse_encode_String(outDir, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 3,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_cover_import_dto,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiCoversImportCoverFileConstMeta,
+        argValues: [path, outDir],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCoversImportCoverFileConstMeta =>
+      const TaskConstMeta(
+        debugName: "import_cover_file",
+        argNames: ["path", "outDir"],
+      );
+
+  @override
   Future<void> crateApiNativeInfoInitApp() {
     return handler.executeNormal(
       NormalTask(
@@ -193,7 +233,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 4,
             port: port_,
           );
         },
@@ -217,7 +257,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -245,7 +285,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 6,
             port: port_,
           );
         },
@@ -325,6 +365,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return CoverColorsResultDto(
       key: dco_decode_String(arr[0]),
+      colors: dco_decode_opt_box_autoadd_cover_colors_dto(arr[1]),
+      error: dco_decode_opt_box_autoadd_native_error(arr[2]),
+    );
+  }
+
+  @protected
+  CoverImportDto dco_decode_cover_import_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return CoverImportDto(
+      key: dco_decode_opt_String(arr[0]),
       colors: dco_decode_opt_box_autoadd_cover_colors_dto(arr[1]),
       error: dco_decode_opt_box_autoadd_native_error(arr[2]),
     );
@@ -607,6 +660,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       colors: var_colors,
       error: var_error,
     );
+  }
+
+  @protected
+  CoverImportDto sse_decode_cover_import_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_key = sse_decode_opt_String(deserializer);
+    var var_colors = sse_decode_opt_box_autoadd_cover_colors_dto(deserializer);
+    var var_error = sse_decode_opt_box_autoadd_native_error(deserializer);
+    return CoverImportDto(key: var_key, colors: var_colors, error: var_error);
   }
 
   @protected
@@ -975,6 +1037,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.key, serializer);
+    sse_encode_opt_box_autoadd_cover_colors_dto(self.colors, serializer);
+    sse_encode_opt_box_autoadd_native_error(self.error, serializer);
+  }
+
+  @protected
+  void sse_encode_cover_import_dto(
+    CoverImportDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.key, serializer);
     sse_encode_opt_box_autoadd_cover_colors_dto(self.colors, serializer);
     sse_encode_opt_box_autoadd_native_error(self.error, serializer);
   }

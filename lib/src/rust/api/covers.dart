@@ -8,9 +8,9 @@ import 'error.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `cache_error`, `failed`, `found_or_none`, `relative_cache_error`, `run_batch`, `run_item`
+// These functions are ignored because they are not marked as `pub`: `cache_error`, `failed`, `found_or_none`, `import_failed`, `relative_cache_error`, `run_batch`, `run_item`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Failure`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 // These functions are ignored (category: IgnoreBecauseExplicitAttribute): `from`
 
 /// Finds and caches the cover of every item, one result per item in the same
@@ -40,6 +40,26 @@ Future<List<CoverColorsResultDto>> coverColorsFor({
 }) => RustLib.instance.api.crateApiCoversCoverColorsFor(
   cacheDir: cacheDir,
   keys: keys,
+);
+
+/// Makes a cover from one user-chosen image, exactly like the song-cover pass:
+/// `<out_dir>/covers/{thumb,full}/<key>.jpg`, 256 px and 1024 px JPEG q85, the
+/// key from the image bytes. `path` may have any name (or none): the format is
+/// sniffed from the content (JPEG, PNG, WebP). `out_dir` is the folder that
+/// holds `covers/` (an absolute path; not necessarily the app cache folder).
+/// Both files are always written again, so importing the same image repairs a
+/// damaged one. Runs on the background pool under `guarded`.
+///
+/// Errors: transient for I/O and for failing to write under `out_dir`;
+/// permanent for an undecodable (`Corrupt`), unsupported (`Unsupported`, also a
+/// FIFO or other special file) or oversized (`TooLarge`) image, and for a
+/// relative `out_dir` (`Unsupported`).
+Future<CoverImportDto> importCoverFile({
+  required String path,
+  required String outDir,
+}) => RustLib.instance.api.crateApiCoversImportCoverFile(
+  path: path,
+  outDir: outDir,
 );
 
 /// Seed and palette of a cover, opaque ARGB as `i64`; the palette is the most
@@ -78,6 +98,28 @@ class CoverColorsResultDto {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is CoverColorsResultDto &&
+          runtimeType == other.runtimeType &&
+          key == other.key &&
+          colors == other.colors &&
+          error == other.error;
+}
+
+/// Result of [`import_cover_file`]: `key` (and `colors`, null for a near-gray
+/// image) on success, `error` otherwise (never both).
+class CoverImportDto {
+  final String? key;
+  final CoverColorsDto? colors;
+  final NativeError? error;
+
+  const CoverImportDto({this.key, this.colors, this.error});
+
+  @override
+  int get hashCode => key.hashCode ^ colors.hashCode ^ error.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CoverImportDto &&
           runtimeType == other.runtimeType &&
           key == other.key &&
           colors == other.colors &&

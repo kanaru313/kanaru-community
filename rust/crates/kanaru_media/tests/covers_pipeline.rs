@@ -8,7 +8,9 @@ mod tags_fixtures;
 use std::path::{Path, PathBuf};
 
 use kanaru_media::covers::key::{cover_key, is_cover_key};
-use kanaru_media::covers::{colors, make_cover, CoverError, CoverOutcome, FolderMemo};
+use kanaru_media::covers::{
+    colors, import_cover, make_cover, CoverError, CoverOutcome, FolderMemo,
+};
 use kanaru_media::{Cancel, MediaError};
 use lofty::picture::{MimeType, Picture, PictureType};
 use lofty::tag::{ItemKey, Tag, TagType};
@@ -478,4 +480,119 @@ fn a_sidecar_that_cannot_be_read_does_not_hide_the_next_one_and_is_not_remembere
     for _ in 0..2 {
         assert!(matches!(run(&mut memo), Err(CoverError::Retry(_))));
     }
+}
+
+fn import(
+    scene: &Scene,
+    name: &str,
+    bytes: &[u8],
+) -> Result<kanaru_media::covers::ImportedCover, CoverError> {
+    let path = scene.root.write(name, bytes);
+    import_cover(&path, &open_plain, &scene.cache(), &Cancel::new())
+}
+
+#[test]
+fn import_handles_jpeg_png_webp_and_names_without_extension() {
+    let scene = Scene::new();
+    let jpeg = two_color_jpeg(1500, 1000);
+    let png = png(300, 200, |x, _| {
+        if x < 150 {
+            [220, 30, 30]
+        } else {
+            [30, 30, 220]
+        }
+    });
+    let webp = webp_with_orientation(40, 20, 6);
+    for (name, bytes, full) in [
+        ("photo", &jpeg, (1024, 683)),
+        ("picture.dat", &png, (300, 200)),
+        ("cover.webp", &webp, (20, 40)),
+    ] {
+        let done = import(&scene, name, bytes).expect(name);
+        assert_eq!(done.key, cover_key(bytes), "{name}");
+        assert_eq!(jpeg_size(&scene.read("full", &done.key)), full, "{name}");
+        assert!(jpeg_size(&scene.read("thumb", &done.key)).0 <= 256);
+    }
+}
+
+#[test]
+fn import_gives_colours_and_none_for_near_gray() {
+    let scene = Scene::new();
+    let colourful = import(&scene, "a", &two_color_jpeg(200, 200)).expect("import");
+    assert!(colourful.colors.is_some_and(|c| c.palette.len() >= 2));
+    let gray = import(&scene, "b", &jpeg(200, 200, false, |_, _| [128, 128, 130])).expect("import");
+    assert_eq!(gray.colors, None);
+}
+
+#[test]
+fn import_rewrites_both_files_with_the_same_key_and_colours() {
+    let scene = Scene::new();
+    let bytes = two_color_jpeg(400, 400);
+    let first = import(&scene, "a", &bytes).expect("first");
+    let thumb = scene
+        .cache()
+        .join(format!("covers/thumb/{}.jpg", first.key));
+    let full = scene.cache().join(format!("covers/full/{}.jpg", first.key));
+    let good_full = std::fs::read(&full).expect("full");
+    std::fs::write(&thumb, b"damaged").expect("damage");
+    std::fs::write(&full, b"damaged too").expect("damage");
+    let second = import(&scene, "b", &bytes).expect("second");
+    assert_eq!(second, first);
+    assert_eq!(jpeg_size(&scene.read("thumb", &first.key)), (256, 256));
+    assert_eq!(std::fs::read(&full).expect("full"), good_full);
+}
+
+#[test]
+fn import_rejects_bad_input_permanently() {
+    let scene = Scene::new();
+    let permanent = |r: Result<kanaru_media::covers::ImportedCover, CoverError>| match r {
+        Err(CoverError::Source(e)) => {
+            assert!(!e.is_transient(), "{e:?}");
+            e
+        }
+        other => panic!("expected a source error, got {other:?}"),
+    };
+    assert_eq!(
+        permanent(import(&scene, "t.txt", b"hello")),
+        MediaError::Unsupported
+    );
+    assert_eq!(
+        permanent(import(&scene, "e.png", b"")),
+        MediaError::Unsupported
+    );
+    assert_eq!(
+        permanent(import(&scene, "huge.png", &png_header_only(7000, 7000))),
+        MediaError::TooLarge
+    );
+    // A valid header with no pixel data behind it.
+    assert!(matches!(
+        permanent(import(&scene, "cut.png", &png_header_only(300, 300))),
+        MediaError::Corrupt(_)
+    ));
+    // Over the byte cap: refused from the size, a sparse file is enough.
+    let big = scene.root.path("big.jpg");
+    let file = std::fs::File::create(&big).expect("create");
+    file.set_len(kanaru_media::limits::MAX_COVER_BYTES + 1)
+        .expect("sparse");
+    drop(file);
+    let result = import_cover(&big, &open_plain, &scene.cache(), &Cancel::new());
+    assert_eq!(permanent(result), MediaError::TooLarge);
+    assert!(!scene.cache().exists(), "nothing written");
+}
+
+#[test]
+fn import_reports_a_cache_failure_and_a_missing_file() {
+    let scene = Scene::new();
+    scene.root.write("cache", b"i am a file");
+    assert!(matches!(
+        import(&scene, "a.jpg", &two_color_jpeg(100, 100)),
+        Err(CoverError::Cache(_))
+    ));
+    let gone = scene.root.path("gone.jpg");
+    assert!(matches!(
+        import_cover(&gone, &open_plain, &scene.cache(), &Cancel::new()),
+        Err(CoverError::Source(MediaError::Io(
+            std::io::ErrorKind::NotFound
+        )))
+    ));
 }

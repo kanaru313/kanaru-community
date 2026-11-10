@@ -57,7 +57,7 @@ class RustCoverMaker implements CoverMaker {
           made: d.made,
           thumbRel: d.thumbRel,
           fullRel: d.fullRel,
-          colors: _colors(d.colors),
+          colors: coverColorsOfDto(d.colors),
           error: d.error == null ? null : failureOf(d.error!),
           cacheFailure:
               d.error?.detail.startsWith(coverCacheErrorPrefix) ?? false,
@@ -75,22 +75,21 @@ class RustCoverMaker implements CoverMaker {
       for (final d in dtos)
         CoverColorsRead(
           key: d.key,
-          colors: _colors(d.colors),
+          colors: coverColorsOfDto(d.colors),
           error: d.error == null ? null : failureOf(d.error!),
         ),
     ];
   }
-
-  // The generated `Int64List` is a `List<BigInt>` to the analyzer (the web
-  // variant) and a `List<int>` at run time on the native targets, hence the
-  // `Object` loop.
-  static CoverColors? _colors(CoverColorsDto? c) => c == null
-      ? null
-      : CoverColors(
-          seed: c.seed,
-          palette: [
-            for (final Object v in c.palette)
-              v is BigInt ? v.toInt() : v as int,
-          ],
-        );
 }
+
+// The generated `Int64List` is a `List<BigInt>` to the analyzer (the web
+// variant) and a `List<int>` at run time on the native targets, hence the
+// `Object` loop.
+CoverColors? coverColorsOfDto(CoverColorsDto? c) => c == null
+    ? null
+    : CoverColors(
+        seed: c.seed,
+        palette: [
+          for (final Object v in c.palette) v is BigInt ? v.toInt() : v as int,
+        ],
+      );

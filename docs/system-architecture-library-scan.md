@@ -649,6 +649,39 @@ after each completed scan.
 Every file is parsed under `guarded`, on a pool, so one bad file cannot take the
 scan down.
 
+### Custom cover import
+
+One call makes a cover from a user-chosen image (playlist, album or artist
+covers), exactly like the song-cover pass, under a caller-given folder:
+
+```dart
+// lib/src/rust/api/covers.dart (generated)
+Future<CoverImportDto> importCoverFile({required String path, required String outDir});
+// CoverImportDto { String? key, CoverColorsDto? colors, NativeError? error }
+```
+
+Dart wrapper: `lib/src/library/data/scan/native_cover_import.dart`
+(`CoverImporter.import(path:, outDir:) -> CoverImportResult`, `RustCoverImporter`).
+
+- `path`: any JPEG, PNG or WebP; the format is sniffed from the content, so the
+  name may have any extension or none. Opened through `open_source` (regular files
+  only; a FIFO is `unsupported`). The size is checked from the open handle before
+  reading (`MAX_COVER_BYTES`), then the header (`MAX_COVER_PIXELS`, 64 MiB decode
+  cap, the decode gate, `guarded`, background pool): the same limits as the pass.
+- `outDir`: an absolute folder that holds `covers/` (the app data folder for custom
+  covers; the cache folder is not assumed). Relative: `unsupported`, permanent.
+- Output: `outDir/covers/{thumb,full}/<key>.jpg` as in Cover files, the key from the
+  image bytes (the same key an embedded picture with those bytes gets). Both files
+  are always written again, so importing the same image repairs a damaged file.
+  The intended `outDir` for custom covers is `<data>/custom_covers`: never the data
+  root and never the cache folder.
+- `colors`: seed and palette as in Cover colours; null (with `key` set) for a
+  near-gray image (chroma below 5).
+- Errors: transient for I/O (`io`) and for failing to write under `outDir`
+  (detail starts with `cover cache`); permanent for `corrupt` (does not decode),
+  `unsupported` (another format, a special file, a relative `outDir`), `tooLarge`
+  and `notFound`.
+
 ### Rust: tags
 
 `read_tags_batch(paths)` returns one `TagReadDto { path, fields?, error? }` per

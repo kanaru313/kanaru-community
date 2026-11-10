@@ -52,6 +52,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CoverColorsResultDto dco_decode_cover_colors_result_dto(dynamic raw);
 
   @protected
+  CoverImportDto dco_decode_cover_import_dto(dynamic raw);
+
+  @protected
   CoverRequestDto dco_decode_cover_request_dto(dynamic raw);
 
   @protected
@@ -157,6 +160,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CoverColorsResultDto sse_decode_cover_colors_result_dto(
     SseDeserializer deserializer,
   );
+
+  @protected
+  CoverImportDto sse_decode_cover_import_dto(SseDeserializer deserializer);
 
   @protected
   CoverRequestDto sse_decode_cover_request_dto(SseDeserializer deserializer);
@@ -284,6 +290,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_cover_colors_result_dto(
     CoverColorsResultDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_cover_import_dto(
+    CoverImportDto self,
     SseSerializer serializer,
   );
 
