@@ -149,10 +149,7 @@ void main() {
       tester,
     ) async {
       await _pump(tester, 360, builtIns: true);
-      // Home still has its own mobile settings button (lane A's home_page.dart)
-      // beside the header one. It goes after lanes A and B merge; the finder
-      // then goes back to findsOneWidget.
-      await tester.tap(_byTooltip('Settings').first);
+      await tester.tap(_byTooltip('Settings'));
       await tester.pumpAndSettle();
       expect(find.text('Native libraries'), findsOneWidget);
       expect(find.text('bridge test'), findsOneWidget);
@@ -166,10 +163,7 @@ void main() {
       tester,
     ) async {
       await _pump(tester, 360, builtIns: true);
-      // Home still has its own mobile settings button (lane A's home_page.dart)
-      // beside the header one. It goes after lanes A and B merge; the finder
-      // then goes back to findsOneWidget.
-      await tester.tap(_byTooltip('Settings').first);
+      await tester.tap(_byTooltip('Settings'));
       await tester.pumpAndSettle();
       expect(find.text('Native libraries'), findsOneWidget);
 
@@ -178,8 +172,7 @@ void main() {
       expect(handled, isTrue);
       expect(find.text('Native libraries'), findsNothing);
       expect(find.byType(NavigationBar), findsOneWidget);
-      // Two until lane A's home_page.dart loses its own button (see above).
-      expect(_byTooltip('Settings'), findsWidgets);
+      expect(_byTooltip('Settings'), findsOneWidget);
     });
 
     testWidgets('desktop Settings opens from the sidebar and Back returns', (

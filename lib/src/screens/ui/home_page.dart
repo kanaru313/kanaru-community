@@ -1,6 +1,5 @@
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -37,18 +36,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final l10n = AppLocalizations.of(context);
     return KPage(
       children: [
-        PageHeader(
-          title: l10n.navHome,
-          actions: [
-            // Desktop has Settings in the sidebar; mobile reaches it from here.
-            if (FormFactor.of(context) == FormFactor.mobile)
-              IconButton(
-                icon: const Icon(KIcons.settings),
-                tooltip: l10n.navSettings,
-                onPressed: () => context.push('/settings'),
-              ),
-          ],
-        ),
+        PageHeader(title: l10n.navHome),
         const ScanProgressCard(),
         SizedBox(
           height: _emptyHeight,
