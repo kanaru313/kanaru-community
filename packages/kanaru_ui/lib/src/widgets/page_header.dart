@@ -6,7 +6,8 @@ import '../tokens/k_space.dart';
 import 'page_header_scope.dart';
 
 /// Header of every page: `[<]` (child pages only), title, spacer, actions.
-/// Root pages pass no [onBack], so the back button is hidden.
+/// Root pages pass no [onBack], so the back button is hidden and the
+/// enclosing [PageHeaderScope]'s `leading` and `rootTrailing` show instead.
 class PageHeader extends StatelessWidget {
   const PageHeader({
     super.key,
@@ -25,12 +26,15 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scope = PageHeaderScope.of(context);
+    final isRoot = onBack == null;
     return SizedBox(
       height: KLayout.minTarget + KSpace.x2,
       child: Row(
         spacing: KSpace.x2,
         children: [
-          if (onBack != null)
+          if (isRoot && scope?.leading != null) scope!.leading!,
+          if (!isRoot)
             IconButton(
               icon: const Icon(KIcons.back),
               tooltip: backTooltip ?? MaterialLocalizations.of(context).backButtonTooltip,
@@ -45,7 +49,8 @@ class PageHeader extends StatelessWidget {
             ),
           ),
           ...actions,
-          ...?PageHeaderScope.of(context)?.trailing,
+          ...?scope?.trailing,
+          if (isRoot) ...?scope?.rootTrailing,
         ],
       ),
     );
