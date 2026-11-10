@@ -29,6 +29,12 @@ class _AppearanceSectionState extends ConsumerState<AppearanceSection> {
     AppLanguage.en => l10n.scanSetupLanguageEnglish,
   };
 
+  IconData _themeIcon(ThemeChoice c) => switch (c) {
+    ThemeChoice.system => KIcons.themeSystem,
+    ThemeChoice.dark => KIcons.themeDark,
+    ThemeChoice.light => KIcons.themeLight,
+  };
+
   Future<void> _pickTheme(AppLocalizations l10n, ThemeChoice current) async {
     final chosen = await showSelectionPicker<ThemeChoice>(
       context,
@@ -37,7 +43,11 @@ class _AppearanceSectionState extends ConsumerState<AppearanceSection> {
       selected: current,
       options: [
         for (final c in ThemeChoice.values)
-          SelectionOption(value: c, title: Text(_themeName(l10n, c))),
+          SelectionOption(
+            value: c,
+            leading: Icon(_themeIcon(c)),
+            title: Text(_themeName(l10n, c)),
+          ),
       ],
     );
     if (chosen != null) {

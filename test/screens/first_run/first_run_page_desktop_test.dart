@@ -114,6 +114,13 @@ void main() {
     await tester.pumpAndSettle();
     // Desktop: an anchored panel, not a sheet.
     expect(find.byType(BottomSheet), findsNothing);
+    for (final icon in [
+      KIcons.themeSystem,
+      KIcons.themeDark,
+      KIcons.themeLight,
+    ]) {
+      expect(find.byIcon(icon), findsOneWidget);
+    }
     await tester.tap(find.text('Dark').last);
     await tester.pumpAndSettle();
     expect(tester.themeMode, ThemeMode.dark);
