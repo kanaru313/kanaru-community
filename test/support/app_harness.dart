@@ -9,11 +9,14 @@ import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/extension/state/extension_providers.dart';
 import 'package:kanaru/src/library/domain/scan_status.dart';
 import 'package:kanaru/src/library/state/scan_providers.dart';
+import 'package:kanaru/src/platform/data/noop_window_close_guard.dart';
 import 'package:kanaru/src/platform/domain/app_paths.dart';
 import 'package:kanaru/src/platform/domain/settings_store.dart';
+import 'package:kanaru/src/platform/domain/window_close.dart';
 import 'package:kanaru/src/platform/state/device_id_provider.dart';
 import 'package:kanaru/src/platform/state/platform_providers.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
+import 'package:kanaru/src/platform/state/window_close_provider.dart';
 import 'package:kanaru/src/playback/domain/now_playing.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
 import 'package:kanaru/src/router/ui/kanaru_app.dart';
@@ -54,6 +57,7 @@ class NoopScanCommands implements LibraryScanCommands {
 ///   [builtInExtensions]. Mechanics tests pass a synthetic set.
 /// - [width] / [height]: logical window size (device pixel ratio 1).
 /// - [settings], [scanner], [scan], [playback]: replace the matching default.
+/// - [windowCloseGuard]: replaces the no-op guard (default), e.g. a recorder.
 /// - [firstRunRequired]: replaces the `firstRunRequiredProvider` override
 ///   (default: false), e.g. one driven by a test notifier.
 /// - [overrides]: added to the defaults. A container refuses two overrides of
@@ -71,6 +75,7 @@ Future<ProviderContainer> pumpKanaruApp(
   NoopScanCommands? scanner,
   ScanStatus scan = const ScanIdle(),
   FakePlaybackCommands? playback,
+  WindowCloseGuard? windowCloseGuard,
   Override? firstRunRequired,
   bool settle = true,
 }) async {
@@ -94,6 +99,9 @@ Future<ProviderContainer> pumpKanaruApp(
         settings ?? MemorySettingsStore(),
       ),
       deviceIdProvider.overrideWithValue('test-device'),
+      windowCloseGuardProvider.overrideWithValue(
+        windowCloseGuard ?? const NoopWindowCloseGuard(),
+      ),
       appPathsProvider.overrideWithValue(_TempPaths(root)),
       appDatabaseProvider.overrideWithValue(db),
       scanStatusProvider.overrideWith((ref) => Stream.value(scan)),

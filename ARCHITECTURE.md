@@ -219,8 +219,18 @@ never 1000 or more, which belongs to the Settings footer.
 - `flushApp` (`router/state/app_flush.dart`) runs the settings store's
   `flush()` first, then every flush hook in registration order. A failing step
   is logged and the others still run.
+- `registry.addBeforeExitHook(FlushHook)` registers exit-only work (for example
+  pausing playback). `flushForExit` runs these first, in order, before the
+  normal flush, sharing the 2 s cap (the phase gets at most half of it). A hook
+  that throws or hangs is logged and does not block the flush.
 - `KanaruApp` owns the only `AppLifecycleListener`. Hidden or paused: flush.
   Exit request: flush, capped at 2 s in total (`exitFlushCap`).
+- On Linux the `window_manager` plugin disconnects the engine's close handler,
+  so `onExitRequested` never fires. `WindowCloseGuard` (`platform/domain/window_close.dart`;
+  `LinuxWindowCloseGuard`, noop elsewhere, `windowCloseGuardProvider`) prevents
+  the close; `KanaruApp` installs it after the first frame with the same capped
+  flush. Close: hide, flush, destroy (1 s timeout), `exit(0)`; a second close
+  during the flush exits at once; the close event caused by destroy is ignored.
 - `FlushCoordinator` shares one running flush between callers. A run older than
   2 s is no longer joined. A joined run older than 250 ms is followed by one
   more flush on exit.

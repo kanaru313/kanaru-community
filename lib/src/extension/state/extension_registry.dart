@@ -17,6 +17,7 @@ class ExtensionRegistry {
   final _topBarActions = <TopBarAction>[];
   final _startupHooks = <StartupHook>[];
   final _flushHooks = <FlushHook>[];
+  final _beforeExitHooks = <FlushHook>[];
   final _l10nDelegates = <LocalizationsDelegate<Object?>>[];
   LicenseService _licenseService = const FreeLicenseService();
   bool _licenseServiceSet = false;
@@ -41,6 +42,7 @@ class ExtensionRegistry {
 
   List<StartupHook> get startupHooks => List.unmodifiable(_startupHooks);
   List<FlushHook> get flushHooks => List.unmodifiable(_flushHooks);
+  List<FlushHook> get beforeExitHooks => List.unmodifiable(_beforeExitHooks);
   List<LocalizationsDelegate<Object?>> get l10nDelegates =>
       List.unmodifiable(_l10nDelegates);
 
@@ -126,6 +128,13 @@ class ExtensionRegistry {
   /// settings store is flushed). Hooks run in registration order; one that
   /// throws does not stop the others.
   void addFlushHook(FlushHook hook) => _flushHooks.add(hook);
+
+  /// Adds work that runs only on exit, before the normal flush (for example
+  /// pausing playback so nothing advances during the flush). Same shape as a
+  /// flush hook; one that throws or hangs is logged and does not block. All
+  /// before-exit hooks share half of the exit cap; a hook cut by that limit
+  /// keeps running in the background, so it must be safe to leave running.
+  void addBeforeExitHook(FlushHook hook) => _beforeExitHooks.add(hook);
   void addL10nDelegate(LocalizationsDelegate<Object?> delegate) =>
       _l10nDelegates.add(delegate);
   void setLicenseService(LicenseService service) {
