@@ -54,4 +54,22 @@ void main() {
       'mpv error [file] no x.mp3',
     );
   });
+
+  test('directories with spaces, Vietnamese names and %20 do not leak', () {
+    expect(
+      scrubPaths('Cannot open /storage/emulated/0/My Music/x.flac'),
+      'Cannot open x.flac',
+    );
+    expect(
+      scrubPaths(
+        "failed '/storage/emulated/0/Nhạc Việt/Mang Tiền Về Cho Mẹ.flac'",
+      ),
+      "failed 'Mang Tiền Về Cho Mẹ.flac'",
+    );
+    expect(
+      scrubPaths('loadfile file:///home/hieu/My%20Music/Bài%20Hát.flac'),
+      'loadfile Bài%20Hát.flac',
+    );
+    expect(scrubPaths('a / b and 3/4'), 'a / b and 3/4');
+  });
 }

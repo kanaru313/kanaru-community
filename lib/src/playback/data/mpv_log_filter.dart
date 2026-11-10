@@ -1,11 +1,14 @@
-/// Replaces every absolute path or `file://` URI in [text] with its last
-/// segment, so a log line never carries a directory layout or a user name.
-String scrubPaths(String text) => text.replaceAllMapped(
-  _path,
-  (m) => m[0]!.split('/').where((s) => s.isNotEmpty).lastOrNull ?? '',
-);
+/// Removes the directory part of every absolute path or `file://` URI in
+/// [text], keeping the file name, so a log line never carries a directory
+/// layout or a user name.
+///
+/// A path may contain spaces, so it is not cut at whitespace: from its first
+/// `/` the match runs to the last `/` before a quote or the end of the line.
+/// Text after a path on the same line that comes before a later `/` is dropped
+/// too; losing a few words is better than leaking a directory name.
+String scrubPaths(String text) => text.replaceAll(_dirPart, '');
 
-final _path = RegExp('(?:file://)?(?<![\\w.])/[^\\s\'"]+');
+final _dirPart = RegExp('(?:file://)?(?<![\\w.])/(?=\\S)[^\'"\\n]*/');
 
 /// Which mpv log messages reach the app log: every `error`/`fatal`, and
 /// `warn` only from the prefixes that explain a rejected command or a file
