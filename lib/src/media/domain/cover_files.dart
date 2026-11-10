@@ -10,7 +10,9 @@ bool isCoverKey(String key) => _coverKeyPattern.hasMatch(key);
 /// Now Playing and the Android media session art, `thumb` for tiles.
 enum CoverSize { thumb, full }
 
-/// Relative path under the app cache dir: `covers/<size>/<key>.jpg`.
+/// Relative path under a covers root (the app cache dir for song covers, the
+/// `custom_covers` folder of the data dir for custom covers):
+/// `covers/<size>/<key>.jpg`.
 /// Throws [ArgumentError] on a malformed key.
 String coverRelativePath(String coverKey, CoverSize size) {
   if (!isCoverKey(coverKey)) {

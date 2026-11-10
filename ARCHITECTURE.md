@@ -366,7 +366,7 @@ in one locale, or an unknown part file.
 | A setting | Top-level `Setting<T>` in the owning module (`<module>.<name>`), read through a top-level provider built with `settingNotifierProvider`; the file is `settings.json` in `AppPaths.configDir` |
 | Device id | `deviceIdProvider` (`platform/state/`); the file `dataDir/device_id`; never in a table |
 | Cover image | `cacheDir/covers/{thumb,full}/<key>.jpg`, written by the scanner (Rust computes the key); the database stores only `coverKey`. Layout marker `cacheDir/covers/.layout-v1` |
-| Custom cover (playlist, album, artist) | `custom_covers` table; image copied to `dataDir/custom_covers/<sha256>.<ext>` by `CustomCoverStore` (`library/data/custom_cover_store.dart`); read through `customCoverFileProvider` (`library/state/custom_cover_providers.dart`), combined with the automatic cover by the caller; shown through `KCover` |
+| Custom cover (playlist, album, artist) | `custom_covers` table; image made by the Rust import into `dataDir/custom_covers/covers/{thumb,full}/<key>.jpg` (same key form as a song cover; colours go to `cover_colors`) by `CustomCoverStore` (`library/data/custom_cover_store.dart`); read through `customCoverFileProvider` / `customCoverThumbProvider` / `customCoverKeyProvider` (`library/state/custom_cover_providers.dart`), combined with the automatic cover by the caller; shown through `KCover` |
 | Cover colours | `cover_colors` table, read through `coverColorsProvider`; never drives `MaterialApp.theme` |
 | A user-visible string | The owning lane's part `lib/l10n/parts/<part>_<locale>.arb` (add to `en` and `vi`), never `app_*.arb` |
 | Database table | `database/tables/<module>_<group>_tables.dart`; SQL-only entities (FTS5, triggers) in a sibling `.drift` file |

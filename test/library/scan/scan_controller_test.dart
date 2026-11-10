@@ -168,6 +168,32 @@ void main() {
     expect(garbageRuns, 0);
   });
 
+  test(
+    'a custom cover cleanup that never ends does not stop the loop',
+    () async {
+      var passesRun = 0;
+      final stuck = ScanController(
+        runPass: (_, _, {required full}) async {
+          passesRun++;
+          return _done();
+        },
+        runCoverMisses: (_, _, _) async => ScanOutcome(),
+        isSetupDone: () => true,
+        collectGarbage: () async {},
+        collectCoverFiles: () => Completer<void>().future,
+        coverGcTimeout: const Duration(milliseconds: 50),
+        timer: timers.create,
+      );
+      addTearDown(stuck.dispose);
+      await stuck.rescan();
+      await timers.settle();
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      await stuck.rescan();
+      await timers.settle();
+      expect(passesRun, 2);
+    },
+  );
+
   test('a throwing setup flag does not throw either', () async {
     final broken = ScanController(
       runPass: (_, _, {required full}) async => _done(),

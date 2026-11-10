@@ -16,26 +16,30 @@ enum CustomCoverKind {
 
 /// Covers the user chose for playlists, albums and artists.
 abstract interface class CustomCoverController {
-  /// Copies [source] into the app data folder and makes it the cover of the
-  /// item. The source path is not kept. [source] must be a readable regular
-  /// local file: on Android copy a `content://` picker result to a temp file
-  /// first.
+  /// Turns [source] into a cover (a 256 px thumb and a 1024 px full JPEG plus
+  /// colours, like a song cover) in the app data folder and makes it the cover
+  /// of the item. The source path is not kept. [source] must be a readable
+  /// regular local file (JPEG, PNG or WebP, sniffed from the content): on
+  /// Android copy a `content://` picker result to a temp file first.
   ///
-  /// Failed futures: [FormatException] when the file is not a supported image
-  /// (JPEG, PNG, WebP, GIF, BMP), is not a regular file, is empty or larger
-  /// than 8 MiB; `TimeoutException` when reading stalls; [ArgumentError] for an
-  /// empty or malformed [itemKey] (album and artist keys must decode) or for
-  /// the Favorites playlist (a missing source is also a [FormatException]);
-  /// [FileSystemException] when the source exists but cannot be read
-  /// (permissions). Database failures (for example a playlist that was deleted
-  /// meanwhile) arrive as `SqliteException`, wrapped in `DriftRemoteException`
-  /// on the file database. Nothing is left behind on failure.
+  /// Failed futures: [FormatException] when the image cannot be used for good
+  /// (undecodable, another format, too large for the native limits, a missing
+  /// or special file, a native panic); [FileSystemException] when it may work
+  /// later or the file cannot be read (I/O error, permission denied, failing
+  /// to write under the data folder, the import taking longer than 60 s);
+  /// [ArgumentError] for an empty or malformed [itemKey] (album and artist
+  /// keys must decode) or for the Favorites playlist. Database failures (for
+  /// example a playlist that was deleted meanwhile) arrive as `SqliteException`,
+  /// wrapped in `DriftRemoteException` on the file database. Any other error
+  /// means the native library is unavailable. The old cover stays on every
+  /// failure, and cover files nothing references are removed (a colours row
+  /// written before a failed row write is harmless and may stay).
   Future<void> importCover(CustomCoverKind kind, String itemKey, File source);
 
   /// Back to the automatic cover. No-op when the item has no custom cover.
   Future<void> removeCover(CustomCoverKind kind, String itemKey);
 
-  /// Deletes image files that no row references and leftover temp files, when
-  /// they are older than one hour. Returns the number of files deleted.
+  /// Deletes cover files (thumb and full) that no row references, and temp
+  /// files of the native writer, when older than one hour. Returns the number of files deleted.
   Future<int> collectUnreferencedFiles();
 }

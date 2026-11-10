@@ -192,8 +192,8 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
 | `ScanRunning(phase, done, total)` | `phase` is `ScanPhase.listing`, `tags` or `covers`; `total` 0 means not known yet |
 | `ScanFinished(tracks, albums, artists, added, at)` | Totals; `added` is the tracks new since the previous scan |
 | `ScanFailed(kind)` | `kind` such as `permission` or `io`; the UI maps it to a message |
-| `scanStatusProvider` | `StreamProvider<ScanStatus>`; seed: `ScanIdle` |
-| `libraryScanCommandsProvider` | `Provider<LibraryScanCommands>`; seed logs and returns |
+| `scanStatusProvider` | `StreamProvider<ScanStatus>`; the status stream of the `ScanController` (starts at `ScanIdle`) |
+| `libraryScanCommandsProvider` | `Provider<LibraryScanCommands>`; the `ScanController` |
 | `LibraryScanCommands.rescan({bool full = false})` | Completes when the request is accepted or queued. Never waits for the scan. Failures come through `ScanFailed`. |
 
 ## Selection bar slot

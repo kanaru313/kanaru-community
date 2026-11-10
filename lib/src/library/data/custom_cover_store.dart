@@ -1,78 +1,57 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
 import 'package:logging/logging.dart';
 
 import '../../database/database.dart';
+import '../../media/domain/cover_colors.dart' as media;
+import '../../media/domain/cover_files.dart';
 import '../../media/domain/library_keys.dart';
 import '../domain/custom_cover_controller.dart';
+import 'scan/native_cover_import.dart';
 
 final _log = Logger('kanaru.library.custom_cover');
 
-/// Largest image accepted (bytes). Images are stored as chosen (not resized),
-/// so the cap keeps the data folder small.
-const int maxCustomCoverBytes = 8 * 1024 * 1024;
-
-/// Folder under the data dir (not the cache dir: the OS may clear that).
+/// Folder under the data dir (not the cache dir: the OS may clear that). It
+/// holds the `covers/{thumb,full}/<key>.jpg` layout the Rust import writes.
 const String customCoversDirName = 'custom_covers';
 
-const String _tmpPrefix = '.tmp-';
-final RegExp _keyPattern = RegExp(r'^[0-9a-f]{64}$');
-const List<String> _extensions = ['jpg', 'png', 'webp', 'gif', 'bmp'];
+/// True when [key] is a well-formed custom cover key (`ab/<32 hex>`, the same
+/// form as a song cover key).
+bool isCustomCoverKey(String key) => isCoverKey(key);
 
-/// True when [key] is a well-formed custom cover key (SHA-256, lower-case hex).
-bool isCustomCoverKey(String key) => _keyPattern.hasMatch(key);
-
-/// Image extension from the first bytes, or null when not a supported image.
-String? sniffImageExtension(List<int> head) {
-  bool starts(List<int> sig, [int at = 0]) {
-    if (head.length < at + sig.length) return false;
-    for (var i = 0; i < sig.length; i++) {
-      if (head[at + i] != sig[i]) return false;
-    }
-    return true;
-  }
-
-  if (starts([0xFF, 0xD8, 0xFF])) return 'jpg';
-  if (starts([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) return 'png';
-  if (starts([0x52, 0x49, 0x46, 0x46]) && starts([0x57, 0x45, 0x42, 0x50], 8)) {
-    return 'webp';
-  }
-  if (starts([0x47, 0x49, 0x46, 0x38])) return 'gif';
-  if (starts([0x42, 0x4D])) return 'bmp';
-  return null;
-}
-
-/// Copies user-chosen cover images into `<dataDir>/custom_covers/<key>.<ext>`
-/// and keeps the `custom_covers` rows in step. Operations of one store run one
-/// after the other; other processes are covered by the GC age limit. The
-/// folder is created on first import.
+/// Makes covers from user-chosen images (through the Rust import, so they get
+/// the same thumb/full JPEGs and colours as song covers) under
+/// `<dataDir>/custom_covers/covers/` and keeps the `custom_covers` rows in
+/// step. Import (Rust call and row write) and GC run one after the other in
+/// one serial queue, so the GC never sees a file whose row is not written yet.
+/// The folder is created by the first import.
 class CustomCoverStore implements CustomCoverController {
   CustomCoverStore(
     this._db,
     Directory dataDir, {
-    this.maxBytes = maxCustomCoverBytes,
+    this._importer = const RustCoverImporter(),
     this.gcMinAge = const Duration(hours: 1),
-    this.readTimeout = const Duration(seconds: 10),
+    this.importTimeout = const Duration(seconds: 60),
+    this._clock = DateTime.now,
   }) : _dir = Directory('${dataDir.path}/$customCoversDirName');
 
   final AppDatabase _db;
   final Directory _dir;
+  final CoverImporter _importer;
+  final DateTime Function() _clock;
 
-  /// Largest accepted image.
-  final int maxBytes;
-
-  /// The GC leaves younger files alone (an in-flight import, a second
-  /// process).
+  /// The GC leaves files younger than this alone: an import of a second
+  /// process on the same data folder may have written them and not yet its
+  /// row (nothing locks the data folder to one instance).
   final Duration gcMinAge;
 
-  /// Longest wait for the next chunk of the source.
-  final Duration readTimeout;
+  /// Longest wait for the native import. The Rust thread stays busy until a
+  /// stalled read returns; its late files get no row and the GC removes them.
+  final Duration importTimeout;
   Future<void> _tail = Future.value();
-  int _tmpCounter = 0;
 
-  /// The folder holding the images.
+  /// The folder passed to the importer as `outDir`.
   Directory get directory => _dir;
 
   Future<T> _serial<T>(Future<T> Function() op) {
@@ -81,15 +60,16 @@ class CustomCoverStore implements CustomCoverController {
     return result;
   }
 
-  /// The stored file of [coverKey], or null when the key is malformed or the
-  /// file is gone.
-  Future<File?> fileFor(String coverKey) async {
+  /// The stored image of [coverKey] in [size], or null when the key is
+  /// malformed or the file is gone.
+  Future<File?> fileFor(
+    String coverKey, {
+    CoverSize size = CoverSize.full,
+  }) async {
     if (!isCustomCoverKey(coverKey)) return null;
-    for (final ext in _extensions) {
-      final file = File('${_dir.path}/$coverKey.$ext');
-      if (await file.exists()) return file;
-    }
-    return null;
+    final file = File('${_dir.path}/${coverRelativePath(coverKey, size)}');
+    // An empty file is a write that did not survive a crash.
+    return await file.exists() && await file.length() > 0 ? file : null;
   }
 
   void _checkItem(CustomCoverKind kind, String itemKey) {
@@ -116,8 +96,40 @@ class CustomCoverStore implements CustomCoverController {
   ) async {
     _checkItem(kind, itemKey);
     await _serial(() async {
-      final key = await _copyAndHash(source);
+      final pending = _importer.import(path: source.path, outDir: _dir.path);
+      final CoverImportResult result;
       try {
+        result = await pending.timeout(importTimeout);
+      } on TimeoutException {
+        // A late success has no row: drop its files once it returns (in the
+        // queue, so no other import is cut short); else the GC gets them.
+        unawaited(
+          pending.then<void>((late) {
+            final k = late.key;
+            if (k != null) return _serial(() => _deleteIfUnreferenced(k));
+          }, onError: (Object _) {}),
+        );
+        throw FileSystemException(
+          'cover import timed out after $importTimeout',
+          source.path,
+        );
+      }
+      final key = result.key;
+      if (key == null || !isCustomCoverKey(key)) {
+        throw _failureOf(result, source);
+      }
+      try {
+        final colors = result.colors;
+        if (colors != null && colors.palette.isNotEmpty) {
+          await upsertCoverColors(
+            _db,
+            coverKey: key,
+            seed: colors.seed,
+            colors: colors.palette,
+            version: media.coverColorsVersion,
+            now: _clock().millisecondsSinceEpoch,
+          );
+        }
         final previous = await setCustomCover(_db, kind.name, itemKey, key);
         if (previous != null && previous != key) {
           await _deleteIfUnreferenced(previous);
@@ -129,6 +141,19 @@ class CustomCoverStore implements CustomCoverController {
     });
   }
 
+  /// Permanent failures (undecodable, unsupported, too large, missing file,
+  /// a native panic) are a [FormatException]; transient ones (I/O, failing to
+  /// write under the data folder) and `permissionDenied` are a
+  /// [FileSystemException].
+  Exception _failureOf(CoverImportResult r, File source) {
+    final f = r.failure;
+    final what = f == null ? 'no key' : f.kind;
+    if (f != null && (f.transient || f.kind == 'permissionDenied')) {
+      return FileSystemException('cover import failed ($what)', source.path);
+    }
+    return FormatException('cannot use as a cover ($what): ${source.path}');
+  }
+
   @override
   Future<void> removeCover(CustomCoverKind kind, String itemKey) =>
       _serial(() async {
@@ -138,71 +163,47 @@ class CustomCoverStore implements CustomCoverController {
 
   @override
   Future<int> collectUnreferencedFiles() => _serial(() async {
-    if (!await _dir.exists()) return 0;
     final keep = await referencedCustomCoverKeys(_db);
-    final cutoff = DateTime.now().subtract(gcMinAge);
+    final cutoff = _clock().subtract(gcMinAge);
     var deleted = 0;
-    await for (final entity in _dir.list(followLinks: false)) {
-      if (entity is! File) continue;
-      final name = entity.uri.pathSegments.last;
-      final key = name.split('.').first;
-      final stale =
-          name.startsWith(_tmpPrefix) ||
-          (isCustomCoverKey(key) && !keep.contains(key));
-      if (!stale) continue;
-      if ((await entity.lastModified()).isAfter(cutoff)) continue;
-      if (await _tryDelete(entity)) deleted++;
+    for (final size in CoverSize.values) {
+      final sizeDir = Directory('${_dir.path}/covers/${size.name}');
+      if (!await sizeDir.exists()) continue;
+      await for (final shard in sizeDir.list(followLinks: false)) {
+        if (shard is! Directory) continue;
+        final shardName = shard.uri.pathSegments
+            .where((s) => s.isNotEmpty)
+            .last;
+        await for (final file in shard.list(followLinks: false)) {
+          if (file is! File) continue;
+          final name = file.uri.pathSegments.last;
+          final bool stale;
+          if (name.startsWith(coverTempPrefix)) {
+            stale = !(await file.lastModified()).isAfter(cutoff);
+          } else if (name.endsWith('.jpg')) {
+            final key = '$shardName/${name.substring(0, name.length - 4)}';
+            // Age window too: inside this process an import and this GC share
+            // one queue, but a second process on the same folder may have
+            // written the file and not yet its row.
+            stale =
+                isCustomCoverKey(key) &&
+                !keep.contains(key) &&
+                !(await file.lastModified()).isAfter(cutoff);
+          } else {
+            stale = false; // unknown files are not ours
+          }
+          if (stale && await _tryDelete(file)) deleted++;
+        }
+      }
     }
     return deleted;
   });
 
-  /// Copies [source] to a temp file (fsync), names it after the SHA-256 of its
-  /// bytes and renames it over the target, so a damaged earlier copy is
-  /// repaired. Returns the key.
-  Future<String> _copyAndHash(File source) async {
-    // Async, so a stalled network or FUSE path cannot freeze the UI isolate.
-    if (await FileSystemEntity.type(source.path) != FileSystemEntityType.file) {
-      throw FormatException('not a regular file: ${source.path}');
-    }
-    await _dir.create(recursive: true);
-    final tmp = File('${_dir.path}/$_tmpPrefix${pid}_${_tmpCounter++}');
-    final digest = _DigestSink();
-    final hasher = sha256.startChunkedConversion(digest);
-    final out = await tmp.open(mode: FileMode.write);
-    String? ext;
-    var size = 0;
-    try {
-      await for (final chunk in source.openRead().timeout(readTimeout)) {
-        ext ??= sniffImageExtension(chunk);
-        if (ext == null) {
-          throw FormatException('not a supported image: ${source.path}');
-        }
-        size += chunk.length;
-        if (size > maxBytes) {
-          throw FormatException('image is larger than $maxBytes bytes');
-        }
-        hasher.add(chunk);
-        await out.writeFrom(chunk);
-      }
-      if (ext == null) throw const FormatException('empty file');
-      hasher.close();
-      await out.flush(); // fsync before the rename makes it visible
-      await out.close();
-    } catch (_) {
-      await out.close().catchError((Object _) {});
-      await _tryDelete(tmp);
-      rethrow;
-    }
-    final key = digest.value.toString();
-    await tmp.rename('${_dir.path}/$key.$ext');
-    return key;
-  }
-
   Future<void> _deleteIfUnreferenced(String coverKey) async {
     if (!isCustomCoverKey(coverKey)) return;
     if (await isCustomCoverKeyReferenced(_db, coverKey)) return;
-    for (final ext in _extensions) {
-      final file = File('${_dir.path}/$coverKey.$ext');
+    for (final size in CoverSize.values) {
+      final file = File('${_dir.path}/${coverRelativePath(coverKey, size)}');
       if (await file.exists()) await _tryDelete(file);
     }
   }
@@ -216,14 +217,4 @@ class CustomCoverStore implements CustomCoverController {
       return false;
     }
   }
-}
-
-class _DigestSink implements Sink<Digest> {
-  late Digest value;
-
-  @override
-  void add(Digest data) => value = data;
-
-  @override
-  void close() {}
 }

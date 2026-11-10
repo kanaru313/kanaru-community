@@ -40,6 +40,7 @@ class ScanController
     required this.isSetupDone,
     required this.collectGarbage,
     required this.collectCoverFiles,
+    this.coverGcTimeout = const Duration(seconds: 30),
     Stream<String>? coverMisses,
     DateTime Function()? clock,
     TimerFactory? timer,
@@ -79,6 +80,10 @@ class ScanController
   /// Removes custom cover files no row refers to; runs right after
   /// [collectGarbage], on the same schedule. A failure is logged only.
   final Future<void> Function() collectCoverFiles;
+
+  /// Longest wait for [collectCoverFiles]: it shares a queue with custom cover
+  /// imports, so a stalled import must not hold the scan loop (`_looping`).
+  final Duration coverGcTimeout;
   final Duration startupDelay, garbageDelay, missDebounce;
   final DateTime Function() _clock;
   final TimerFactory _timer;
@@ -271,7 +276,12 @@ class ScanController
       _log.severe('garbage collection failed', e, st);
     }
     try {
-      await collectCoverFiles();
+      await collectCoverFiles().timeout(coverGcTimeout);
+    } on TimeoutException {
+      _log.warning(
+        'custom cover cleanup still running after $coverGcTimeout; '
+        'the scan loop goes on',
+      );
     } on Object catch (e, st) {
       _log.severe('custom cover cleanup failed', e, st);
     }

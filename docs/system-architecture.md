@@ -28,7 +28,7 @@ main.dart
 - [system-architecture-database.md](./system-architecture-database.md): tables, keys and helpers of schema v1.
 - [system-architecture-playback.md](./system-architecture-playback.md): playback commands, now playing, queue, media controls (contract stub until lane B lands).
 - [system-architecture-library.md](./system-architecture-library.md): library keys, track info, lists, favorites, tabs, folders, exclusions (contract stub until lane C lands).
-- [system-architecture-library-scan.md](./system-architecture-library-scan.md): scanner, pass versions, covers, first run, Rust pools (contract stub until lane A lands).
+- [system-architecture-library-scan.md](./system-architecture-library-scan.md): scanner, pass versions, covers, first run, Rust pools, custom cover import (lane A, merged).
 
 ## Runtime pieces
 
@@ -94,9 +94,11 @@ never rebuilds a list:
   (`app.language`). Theme and language apply at once; nothing else in the app
   theme changes at runtime.
 - Seeds stand in until the real part exists: `UnavailablePlaybackCommands`
-  (throws `StateError`), `NoLibraryScanner` (logs and returns), the idle scan
-  status, and the first-run gate (`false`). A seed fails loudly or is a no-op
-  by design, and its owner lane deletes it.
+  (throws `StateError`; the playback lane replaces it). The scanner is real:
+  `scanStatusProvider` and `libraryScanCommandsProvider` read the
+  `ScanController` (`scanControllerProvider`), and the first-run gate reads the
+  `library.setup_done` setting. A seed fails loudly or is a no-op by design,
+  and its owner lane deletes it.
 
 ## Layout
 
