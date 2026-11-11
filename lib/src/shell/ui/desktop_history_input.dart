@@ -20,6 +20,7 @@ class DesktopHistoryInput extends StatefulWidget {
     required this.focusNode,
     required this.child,
     this.interceptBack,
+    this.onKey,
   });
 
   final NavHistory history;
@@ -33,6 +34,11 @@ class DesktopHistoryInput extends StatefulWidget {
   /// means something else took it (the Now Playing overlay closed).
   final bool Function()? interceptBack;
 
+  /// Offered every key event that bubbled up here and is not a history key
+  /// (a focused widget below had its chance first, so a slider keeps its
+  /// arrows). True = taken. Not called while a popup route owns the focus.
+  final bool Function(KeyEvent event)? onKey;
+
   /// Whether keys reach the shell's focus tree, or nobody inside it is
   /// focused: nothing has focus, the root scope has it, or an ancestor scope
   /// (the shell's own route) has it. A dialog, sheet or menu has its own
@@ -45,11 +51,13 @@ class DesktopHistoryInput extends StatefulWidget {
         shellNode.ancestors.contains(focus);
   }
 
-  /// A dialog, sheet or popup menu route can sit on a navigator inside the
+  /// A dialog, sheet, popup menu route or open [MenuAnchor] can sit inside the
   /// shell's tree, so focus in one counts as outside.
   static bool _inPopupRoute(FocusNode? focus) {
     final context = focus?.context;
-    return context != null && ModalRoute.of(context) is PopupRoute;
+    if (context == null) return false;
+    return ModalRoute.of(context) is PopupRoute ||
+        (MenuController.maybeIsOpenOf(context) ?? false);
   }
 
   /// Whether focus is in the shell's tree or [shellOwnsFocus]. Alt+arrows are
@@ -65,6 +73,14 @@ class DesktopHistoryInput extends StatefulWidget {
       if (n == shellNode) return true;
     }
     return false;
+  }
+
+  /// Whether a text input has focus, so plain keys and arrows belong to it.
+  static bool textFieldFocused() {
+    final ctx = FocusManager.instance.primaryFocus?.context;
+    if (ctx == null) return false;
+    return ctx.widget is EditableText ||
+        ctx.findAncestorWidgetOfExactType<EditableText>() != null;
   }
 
   /// Whether [event] is Alt+Left, Alt+Right or Esc.
@@ -99,20 +115,19 @@ class _DesktopHistoryInputState extends State<DesktopHistoryInput> {
     super.dispose();
   }
 
-  bool _textFieldFocused() {
-    final ctx = FocusManager.instance.primaryFocus?.context;
-    if (ctx == null) return false;
-    if (ctx.widget is EditableText) return true;
-    return ctx.findAncestorWidgetOfExactType<EditableText>() != null;
-  }
-
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
-    if (!DesktopHistoryInput.isHistoryKey(event)) return KeyEventResult.ignored;
+    if (!DesktopHistoryInput.isHistoryKey(event)) {
+      final onKey = widget.onKey;
+      if (onKey == null || !DesktopHistoryInput.shellHasFocus(_node)) {
+        return KeyEventResult.ignored;
+      }
+      return onKey(event) ? KeyEventResult.handled : KeyEventResult.ignored;
+    }
     // Alt+arrows are taken earlier, by the shell's global key handler.
     if (event.logicalKey != LogicalKeyboardKey.escape) {
       return KeyEventResult.ignored;
     }
-    if (_textFieldFocused()) return KeyEventResult.ignored;
+    if (DesktopHistoryInput.textFieldFocused()) return KeyEventResult.ignored;
     if (widget.interceptBack?.call() ?? false) return KeyEventResult.handled;
     if (!widget.history.canGoBack) return KeyEventResult.ignored;
     widget.history.back();

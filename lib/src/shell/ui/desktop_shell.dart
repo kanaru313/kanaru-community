@@ -12,6 +12,7 @@ import '../state/nav_history.dart';
 import '../state/right_panel.dart';
 import '../../playback/state/now_playing_panel.dart';
 import 'desktop_history_input.dart';
+import 'desktop_playback_keys.dart';
 import 'desktop_now_playing_overlay.dart';
 import 'desktop_sidebar.dart';
 import 'nav_groups.dart';
@@ -94,20 +95,37 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   /// modals on the root navigator (`showDialog` default, `showKSheet`); a modal
   /// pushed on a branch navigator must use the root navigator too.
   bool _onKey(KeyEvent event) {
-    if (event is! KeyDownEvent) return false;
+    if (event is! KeyDownEvent) {
+      return event is KeyRepeatEvent && _onPlaybackKey(event);
+    }
     if (_onHistoryKey(event)) return true;
     final key = event.logicalKey;
-    if (!HardwareKeyboard.instance.isControlPressed) return false;
+    if (!HardwareKeyboard.instance.isControlPressed) {
+      return _onPlaybackKey(event);
+    }
     if (ModalRoute.of(context)?.isCurrent == false) return false;
     if (_onPanelKey(key)) return true;
     if (key != LogicalKeyboardKey.keyF && key != LogicalKeyboardKey.keyK) {
-      return false;
+      return _onPlaybackKey(event);
     }
     // The page under Now Playing is hidden: no search from there.
     if (ref.read(nowPlayingPanelProvider).covered) return false;
     _openSearch();
     return true;
   }
+
+  /// Transport keys (Space, arrows, Ctrl+S) while nobody inside the shell is
+  /// focused. With focus inside, the widget below gets them first and the
+  /// shell's focus handler takes what is left (a slider keeps its arrows); a
+  /// dialog, sheet or menu owns its keys.
+  bool _onPlaybackKey(KeyEvent event) {
+    if (ModalRoute.of(context)?.isCurrent == false) return false;
+    if (!DesktopHistoryInput.shellOwnsFocus(_historyNode)) return false;
+    return _onFocusedKey(event);
+  }
+
+  bool _onFocusedKey(KeyEvent event) =>
+      handleDesktopPlaybackKey(event, ref.read(playerControllerProvider));
 
   /// Ctrl+Shift+Q toggles the queue panel, Ctrl+J the chat (when this build
   /// has one). Both work while Now Playing is open: the panel stays usable.
@@ -258,6 +276,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         history: widget.history,
         focusNode: _historyNode,
         interceptBack: _closeNowPlaying,
+        onKey: _onFocusedKey,
         child: LayoutBuilder(
           builder: (context, box) => Column(
             children: [
