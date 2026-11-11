@@ -15,6 +15,7 @@ class _ScriptedMpv implements MpvConsole {
   bool dropAppends = false;
   bool unreadableAppendId = false;
   bool goIdleOnAppend = false;
+  bool advanceOnAppend = false;
 
   int _nextId = 10;
 
@@ -38,6 +39,10 @@ class _ScriptedMpv implements MpvConsole {
         }
         if (dropAppends) return;
         ids.add(_nextId++);
+        if (advanceOnAppend && playingPos >= 0) {
+          playingPos++;
+          eofReached = false;
+        }
       case ['playlist-remove', final idxStr]:
         final idx = int.parse(idxStr);
         ids.removeAt(idx);
@@ -253,6 +258,50 @@ void main() {
       expect(
         events.whereType<EngineLoaded>().last.duration,
         const Duration(seconds: 210),
+      );
+    },
+  );
+
+  test(
+    'advancing to next during append in setNext promotes it cleanly and registers the new next',
+    () async {
+      await engine.load(
+        _media(1, 'a.flac'),
+        next: _media(2, 'b.flac', handoff: 2),
+        play: true,
+      );
+      expect(mpv.ids, [10, 11]);
+
+      // While appending c.flac, mpv moves from a.flac (pos 0) to b.flac (pos 1).
+      mpv.advanceOnAppend = true;
+      await engine.setNext(_media(3, 'c.flac', handoff: 3));
+      await pumpEventQueue();
+
+      // b.flac must be promoted to current, emitting EngineAdvanced.
+      expect(
+        events.whereType<EngineAdvanced>().single.token.entryId,
+        2,
+      );
+      // c.flac was appended (id 12) and not removed as stale.
+      expect(mpv.ids, [10, 11, 12]);
+      expect(
+        mpv.commands.where((c) => c.first == 'playlist-remove'),
+        isEmpty,
+      );
+
+      // Next poll trims finished a.flac (pos 0).
+      await engine.poll();
+      await pumpEventQueue();
+      expect(mpv.ids, [11, 12]);
+
+      // Later, b.flac finishes and mpv advances to c.flac (id 12).
+      mpv.playingPos = 1;
+      await engine.poll();
+      await pumpEventQueue();
+
+      expect(
+        events.whereType<EngineAdvanced>().map((e) => e.token.entryId),
+        [2, 3],
       );
     },
   );

@@ -279,12 +279,17 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
         Uri.file(next.path).toString(),
         currentId: _tracker.currentMpvId,
       );
+
+      // mpv may have advanced to the old next while the append was in flight:
+      // feed the fresh snapshot to the tracker so it promotes before any
+      // next-state decision below.
       s = await _snapshot();
+      _emit(_tracker.onSnapshot(s));
+
       if (s.idle) {
         // mpv went idle while the append was in flight: drop it.
         if (s.count > 0) await command(['playlist-clear']);
         _tracker.clearNext();
-        _emit(_tracker.onSnapshot(s));
         return;
       }
       if (appended == null) {
@@ -297,10 +302,14 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
         _tracker.clearNext();
         return;
       }
+
       final count = appended.count;
+      // Re-evaluated after promotion: false if mpv already moved onto the old
+      // next (it is then the playing entry, not a stale one to remove).
+      final staleNextRemains = _tracker.nextMpvId != null;
       // Remove the previous next only after the new one is in (a playlist
       // never goes empty behind the playing entry).
-      if (hadNext && s.playingPos + 1 < count - 1) {
+      if (staleNextRemains && s.playingPos + 1 < count - 1) {
         await command(['playlist-remove', '${s.playingPos + 1}']);
       }
       _tracker.registerNext(next.token, appended.id);
