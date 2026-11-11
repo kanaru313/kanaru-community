@@ -16,4 +16,5 @@ export 'k_sub_tab_bar.dart';
 export 'k_detail_hero.dart';
 export 'k_detail_layout.dart';
 export 'k_layered_menu.dart';
+export 'k_scroll_ink_surface.dart';
 export 'k_selection_panel.dart';

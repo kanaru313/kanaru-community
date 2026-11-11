@@ -144,7 +144,7 @@ class _LibraryListFrameState extends ConsumerState<LibraryListFrame> {
                 onClose: _closeFilter,
               ),
             ),
-          Expanded(child: content.body),
+          Expanded(child: KScrollInkSurface(child: content.body)),
         ],
       ),
     );
