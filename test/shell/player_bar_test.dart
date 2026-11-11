@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
@@ -231,6 +232,66 @@ void main() {
       expect(volume(), 0);
       await scroll(-20);
       expect(volume(), 40, reason: 'continues from 35, not from 0');
+    });
+
+    testWidgets('a drag that outlives its track does not seek the next one', (
+      tester,
+    ) async {
+      final host = await _pump(tester, 1280);
+      await host.run(
+        tester,
+        () async => host.h.engine.emit(
+          EngineLoaded(host.h.loadedToken, const Duration(seconds: 100)),
+        ),
+      );
+
+      final strip = tester.getRect(find.byType(KSeekBar));
+      final drag = await tester.startGesture(
+        Offset(strip.left + strip.width / 4, strip.center.dy),
+        kind: PointerDeviceKind.mouse,
+      );
+      await drag.moveBy(const Offset(40, 0));
+      await tester.pump();
+
+      // The engine moves on mid-drag; the new duration is not known yet.
+      final nextToken = host.h.engine.nexts.last!.token;
+      await host.run(
+        tester,
+        () async => host.h.engine.emit(EngineAdvanced(nextToken)),
+      );
+      await drag.moveBy(const Offset(40, 0));
+      await tester.runAsync(() async {
+        await drag.up();
+        await host.h.settle();
+      });
+      await tester.pump();
+
+      expect(
+        host.h.engine.commands.where((c) => c.startsWith('seek:')),
+        isEmpty,
+      );
+
+      // The strip is not stuck: the next drag on the new track seeks.
+      await host.run(
+        tester,
+        () async => host.h.engine.emit(
+          EngineLoaded(nextToken, const Duration(seconds: 200)),
+        ),
+      );
+      final again = await tester.startGesture(
+        Offset(strip.left + strip.width / 4, strip.center.dy),
+        kind: PointerDeviceKind.mouse,
+      );
+      await again.moveBy(const Offset(40, 0));
+      await tester.runAsync(() async {
+        await again.up();
+        await host.h.settle();
+      });
+      await tester.pump();
+      expect(
+        host.h.engine.commands.where((c) => c.startsWith('seek:')),
+        hasLength(1),
+      );
     });
   });
 }

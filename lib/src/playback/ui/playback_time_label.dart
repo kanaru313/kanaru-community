@@ -58,6 +58,7 @@ class PlaybackSeekBar extends ConsumerWidget {
     final position = pos?.position ?? Duration.zero;
     final duration = pos?.duration;
     return KSeekBar(
+      track: pos?.entryId,
       position: position,
       duration: duration,
       semanticLabel: l10n.playbackSeek,

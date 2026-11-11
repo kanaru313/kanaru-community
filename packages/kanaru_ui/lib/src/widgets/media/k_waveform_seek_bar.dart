@@ -30,6 +30,7 @@ class KWaveformSeekBar extends StatefulWidget {
     required this.position,
     required this.duration,
     required this.onSeek,
+    this.track,
     this.levels,
     this.levelsDuration,
     this.instant = false,
@@ -42,6 +43,10 @@ class KWaveformSeekBar extends StatefulWidget {
 
   final Duration position;
   final Duration? duration;
+
+  /// Identity of the playing item: a drag that outlives it is dropped instead
+  /// of seeking the next one.
+  final Object? track;
   final ValueChanged<Duration> onSeek;
   final VoidCallback? onSeekStart;
   final VoidCallback? onSeekEnd;
@@ -87,6 +92,7 @@ class _KWaveformSeekBarState extends State<KWaveformSeekBar> {
     return KSeekGestureArea(
       position: widget.position,
       duration: widget.duration,
+      track: widget.track,
       onSeek: widget.onSeek,
       onSeekStart: widget.onSeekStart,
       onSeekEnd: widget.onSeekEnd,

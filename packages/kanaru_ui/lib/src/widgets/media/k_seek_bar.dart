@@ -12,6 +12,7 @@ class KSeekBar extends StatelessWidget {
     required this.position,
     required this.duration,
     required this.onSeek,
+    this.track,
     this.onSeekStart,
     this.onSeekEnd,
     this.semanticLabel,
@@ -29,6 +30,10 @@ class KSeekBar extends StatelessWidget {
 
   /// Null or zero: nothing to seek in; the bar shows empty and ignores input.
   final Duration? duration;
+
+  /// Identity of the playing item: a drag that outlives it is dropped instead
+  /// of seeking the next one.
+  final Object? track;
   final ValueChanged<Duration> onSeek;
   final VoidCallback? onSeekStart;
   final VoidCallback? onSeekEnd;
@@ -43,6 +48,7 @@ class KSeekBar extends StatelessWidget {
     return KSeekGestureArea(
       position: position,
       duration: duration,
+      track: track,
       onSeek: onSeek,
       onSeekStart: onSeekStart,
       onSeekEnd: onSeekEnd,

@@ -25,6 +25,7 @@ class PlaybackWaveformSeekBar extends ConsumerWidget {
     // A view of another entry is the previous track's: draw it flat.
     final mine = view != null && entry != null && view.entryId == entry;
     return KWaveformSeekBar(
+      track: entry ?? pos?.entryId,
       position: position,
       duration: duration,
       levels: mine ? view.levels : null,

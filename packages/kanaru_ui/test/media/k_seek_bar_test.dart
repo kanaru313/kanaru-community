@@ -11,6 +11,7 @@ const _total = Duration(seconds: 100);
 Widget _bar({
   Duration position = const Duration(seconds: 20),
   Duration? duration = _total,
+  Object? track,
   required List<Duration> seeks,
   List<String>? events,
 }) => SizedBox(
@@ -18,6 +19,7 @@ Widget _bar({
   child: KSeekBar(
     position: position,
     duration: duration,
+    track: track,
     onSeek: seeks.add,
     onSeekStart: () => events?.add('start'),
     onSeekEnd: () => events?.add('end'),
@@ -82,6 +84,54 @@ void main() {
     expect(seeks, hasLength(1));
     expect(seeks.single.inSeconds, inInclusiveRange(48, 52));
     expect(events, ['start', 'end']);
+  });
+
+  testWidgets('a drag that outlives its track does not seek the next one', (
+    tester,
+  ) async {
+    final seeks = <Duration>[];
+    final events = <String>[];
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: _bar(track: 1, seeks: seeks, events: events),
+        ),
+      ),
+    );
+    final box = tester.getRect(find.byType(KSeekBar));
+    final drag = await tester.startGesture(
+      Offset(box.left + 40, box.center.dy),
+    );
+    await drag.moveBy(const Offset(60, 0));
+    await tester.pump();
+    // Track changes mid-drag (even with a known duration on the new track).
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: _bar(
+            track: 2,
+            position: Duration.zero,
+            duration: const Duration(seconds: 200),
+            seeks: seeks,
+            events: events,
+          ),
+        ),
+      ),
+    );
+    await drag.moveBy(const Offset(40, 0));
+    await drag.up();
+    await tester.pump();
+    expect(seeks, isEmpty);
+    expect(events, ['start', 'end']);
+
+    // The bar is not stuck: the next drag on the new track seeks.
+    final again = await tester.startGesture(
+      Offset(box.left + 50, box.center.dy),
+    );
+    await again.moveBy(const Offset(50, 0));
+    await again.up();
+    await tester.pump();
+    expect(seeks, [const Duration(seconds: 100)]);
   });
 
   testWidgets('arrow keys step 5 s and clamp at both ends', (tester) async {

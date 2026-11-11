@@ -38,6 +38,7 @@ class KSeekGestureArea extends StatefulWidget {
     required this.onSeek,
     required this.height,
     required this.builder,
+    this.track,
     this.onSeekStart,
     this.onSeekEnd,
     this.semanticLabel,
@@ -49,6 +50,10 @@ class KSeekGestureArea extends StatefulWidget {
 
   /// Null or zero: nothing to seek in; the bar ignores input.
   final Duration? duration;
+
+  /// Identity of the playing item: a drag that outlives it is dropped instead
+  /// of seeking the next one.
+  final Object? track;
   final ValueChanged<Duration> onSeek;
   final VoidCallback? onSeekStart;
   final VoidCallback? onSeekEnd;
@@ -73,7 +78,20 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
   /// 0..1 while dragging; null otherwise.
   double? _drag;
 
+  /// [KSeekGestureArea.track] when the drag began.
+  Object? _draggedTrack;
+  bool _seeking = false;
+
   bool get _seekable => (widget.duration?.inMilliseconds ?? 0) > 0;
+
+  @override
+  void didUpdateWidget(KSeekGestureArea oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_drag != null && (widget.track != _draggedTrack || !_seekable)) {
+      _drag = null;
+      _draggedTrack = null;
+    }
+  }
 
   double _fractionOf(double dx, double width) =>
       width <= 0 ? 0 : (dx / width).clamp(0.0, 1.0);
@@ -104,12 +122,24 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
     return KeyEventResult.ignored;
   }
 
-  void _finishDrag() {
+  void _endDrag({required bool commit}) {
     final fraction = _drag;
-    if (fraction == null) return;
-    setState(() => _drag = null);
-    widget.onSeek(_at(fraction));
-    widget.onSeekEnd?.call();
+    final valid =
+        commit &&
+        fraction != null &&
+        _seekable &&
+        widget.track == _draggedTrack;
+    if (_drag != null || _draggedTrack != null) {
+      setState(() {
+        _drag = null;
+        _draggedTrack = null;
+      });
+    }
+    if (valid) widget.onSeek(_at(fraction));
+    if (_seeking) {
+      _seeking = false;
+      widget.onSeekEnd?.call();
+    }
   }
 
   @override
@@ -156,21 +186,27 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
                         widget.onSeekEnd?.call();
                       }
                     : null,
-                onHorizontalDragStart: _seekable
-                    ? (d) {
-                        widget.onSeekStart?.call();
-                        setState(
-                          () => _drag = _fractionOf(d.localPosition.dx, width),
-                        );
-                      }
-                    : null,
-                onHorizontalDragUpdate: _seekable
-                    ? (d) => setState(
-                        () => _drag = _fractionOf(d.localPosition.dx, width),
-                      )
-                    : null,
-                onHorizontalDragEnd: _seekable ? (_) => _finishDrag() : null,
-                onHorizontalDragCancel: _seekable ? _finishDrag : null,
+                // Always attached, checking [_seekable] inside: a recognizer
+                // dropped mid-drag (the track changed and the duration went
+                // to zero) would never report the end of the drag.
+                onHorizontalDragStart: (d) {
+                  if (!_seekable) return;
+                  _draggedTrack = widget.track;
+                  _seeking = true;
+                  widget.onSeekStart?.call();
+                  setState(
+                    () => _drag = _fractionOf(d.localPosition.dx, width),
+                  );
+                },
+                onHorizontalDragUpdate: (d) {
+                  if (_drag != null) {
+                    setState(
+                      () => _drag = _fractionOf(d.localPosition.dx, width),
+                    );
+                  }
+                },
+                onHorizontalDragEnd: (_) => _endDrag(commit: true),
+                onHorizontalDragCancel: () => _endDrag(commit: false),
                 child: SizedBox(
                   height: widget.height,
                   child: widget.builder(

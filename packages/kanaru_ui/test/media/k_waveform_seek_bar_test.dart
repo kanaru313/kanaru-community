@@ -16,12 +16,14 @@ Widget _bar({
   bool instant = false,
   Duration position = const Duration(seconds: 20),
   Duration? duration = _total,
+  Object? track,
   List<Duration>? seeks,
 }) => SizedBox(
   width: 200,
   child: KWaveformSeekBar(
     position: position,
     duration: duration,
+    track: track,
     levels: levels,
     instant: instant,
     onSeek: (d) => seeks?.add(d),
@@ -160,6 +162,50 @@ void main() {
     expect(seeks, isEmpty);
     await g.up();
     expect(seeks, [const Duration(seconds: 50)]);
+  });
+
+  testWidgets('a drag that outlives its track does not seek the next one', (
+    tester,
+  ) async {
+    final seeks = <Duration>[];
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: _bar(track: 1, levels: _levels, seeks: seeks),
+        ),
+      ),
+    );
+    final box = tester.getRect(find.byType(KWaveformSeekBar));
+    final drag = await tester.startGesture(
+      Offset(box.left + 20, box.center.dy),
+    );
+    await drag.moveTo(Offset(box.left + 100, box.center.dy));
+    await tester.pump();
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: _bar(
+            track: 2,
+            position: Duration.zero,
+            duration: const Duration(seconds: 200),
+            levels: _levels,
+            seeks: seeks,
+          ),
+        ),
+      ),
+    );
+    await drag.moveTo(Offset(box.left + 140, box.center.dy));
+    await drag.up();
+    await tester.pump();
+    expect(seeks, isEmpty);
+
+    final again = await tester.startGesture(
+      Offset(box.left + 20, box.center.dy),
+    );
+    await again.moveTo(Offset(box.left + 100, box.center.dy));
+    await again.up();
+    await tester.pump();
+    expect(seeks, [const Duration(seconds: 100)]);
   });
 
   testWidgets('left and right seek 5 s while focused', (tester) async {
