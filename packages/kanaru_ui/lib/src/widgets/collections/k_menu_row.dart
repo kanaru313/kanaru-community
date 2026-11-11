@@ -163,9 +163,7 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
         ? () => widget.onActivate(() {})
         : foldable
         ? () => setState(() => _expanded = !_expanded)
-        : row.onTap == null
-        ? null
-        : () => widget.onActivate(row.onTap!);
+        : () => widget.onActivate(row.onTap ?? () {});
     final trailing = row.trailing;
     return Opacity(
       opacity: row.active ? 1 : 0.5,

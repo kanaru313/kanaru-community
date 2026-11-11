@@ -91,12 +91,16 @@ KMenuPage _page({List<String>? log, int filler = 0, bool footer = true}) {
   );
 }
 
-Widget _opener(KMenuPage page) => Builder(
+Widget _opener(KMenuPage page, {bool viaKeyboard = false}) => Builder(
   builder: (context) => Align(
     alignment: Alignment.topLeft,
     child: TextButton(
-      onPressed: () =>
-          showKLayeredMenu(context, root: page, backTooltip: 'Back'),
+      onPressed: () => showKLayeredMenu(
+        context,
+        root: page,
+        backTooltip: 'Back',
+        viaKeyboard: viaKeyboard,
+      ),
       child: const Text('open'),
     ),
   ),
@@ -321,12 +325,12 @@ void main() {
     expect(find.byType(BottomSheet), findsNothing);
   });
 
-  testWidgets('desktop focuses the first row; arrows move; Enter runs', (
+  testWidgets('opened from the keyboard: first row focused; arrows move', (
     tester,
   ) async {
     useWindow(tester, const Size(1300, 900));
     final log = <String>[];
-    await tester.pumpWidget(host(_opener(_page(log: log))));
+    await tester.pumpWidget(host(_opener(_page(log: log), viaKeyboard: true)));
     await _open(tester);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
@@ -445,5 +449,209 @@ void main() {
     await _open(tester);
     expect(find.byKey(const ValueKey('cover')), findsOneWidget);
     expect(find.byIcon(KIcons.album), findsNothing);
+  });
+
+  testWidgets('opened with a pointer: no row focused until an arrow key', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(1300, 900));
+    final log = <String>[];
+    await tester.pumpWidget(host(_opener(_page(log: log))));
+    await _open(tester);
+    bool rowFocused() =>
+        FocusManager.instance.primaryFocus?.context
+            ?.findAncestorWidgetOfExactType<InkWell>() !=
+        null;
+
+    expect(rowFocused(), isFalse);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    expect(rowFocused(), isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(log, ['play']);
+  });
+
+  for (final (shell, size) in [
+    ('mobile', const Size(400, 800)),
+    ('desktop', const Size(1300, 900)),
+  ]) {
+    testWidgets('a sub-page of 500 rows builds only the visible ones '
+        '($shell)', (tester) async {
+      useWindow(tester, size);
+      final page = KMenuPage(
+        title: 'Big',
+        groups: [
+          [for (var i = 0; i < 500; i++) KMenuRow(title: 'Row $i')],
+        ],
+      );
+      final root = KMenuPage(
+        groups: [
+          [KMenuRow(title: 'Many', opens: page)],
+        ],
+      );
+      await tester.pumpWidget(host(_opener(root)));
+      await _open(tester);
+      await tester.tap(find.text('Many'));
+      await tester.pumpAndSettle();
+      expect(find.text('Row 0'), findsOneWidget);
+      expect(find.byType(InkWell).evaluate().length, lessThan(40));
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('Back restores the scroll position of the parent page', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    final root = KMenuPage(
+      groups: [
+        [
+          for (var i = 0; i < 60; i++)
+            KMenuRow(
+              title: 'Row $i',
+              opens: i == 30
+                  ? KMenuPage(
+                      title: 'Sub',
+                      groups: [
+                        [KMenuRow(title: 'Deep')],
+                      ],
+                    )
+                  : null,
+            ),
+        ],
+      ],
+    );
+    await tester.pumpWidget(host(_opener(root)));
+    await _open(tester);
+    await tester.drag(find.byType(ListView), const Offset(0, -1000));
+    await tester.pumpAndSettle();
+    final before = tester
+        .state<ScrollableState>(find.byType(Scrollable))
+        .position
+        .pixels;
+    expect(before, greaterThan(500));
+    await tester.tap(find.text('Row 30'));
+    await tester.pumpAndSettle();
+    expect(find.text('Deep'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    final after = tester
+        .state<ScrollableState>(find.byType(Scrollable))
+        .position
+        .pixels;
+    expect(after, before);
+  });
+
+  testWidgets('keyboard: Enter on a row with a sub-page focuses the sub-page', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(1300, 900));
+    final root = KMenuPage(
+      groups: [
+        [
+          KMenuRow(
+            title: 'Open',
+            opens: KMenuPage(
+              title: 'Sub',
+              groups: [
+                [KMenuRow(title: 'Deep'), KMenuRow(title: 'Deeper')],
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+    await tester.pumpWidget(host(_opener(root, viaKeyboard: true)));
+    await _open(tester);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(find.text('Deep'), findsOneWidget);
+    final focused = FocusManager.instance.primaryFocus?.context
+        ?.findAncestorWidgetOfExactType<InkWell>();
+    expect(
+      focused,
+      tester.widget<InkWell>(find.widgetWithText(InkWell, 'Deep')),
+    );
+    // And Back (Esc) lands on the row that opened the page.
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(
+      FocusManager.instance.primaryFocus?.context
+          ?.findAncestorWidgetOfExactType<InkWell>(),
+      tester.widget<InkWell>(find.widgetWithText(InkWell, 'Open')),
+    );
+  });
+
+  testWidgets('keyboard Back onto a scrolled long page focuses the row that '
+      'opened the sub-page', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    final root = KMenuPage(
+      groups: [
+        [
+          for (var i = 0; i < 60; i++)
+            KMenuRow(
+              title: 'Row $i',
+              opens: i == 30
+                  ? KMenuPage(
+                      title: 'Sub',
+                      groups: [
+                        [KMenuRow(title: 'Deep')],
+                      ],
+                    )
+                  : null,
+            ),
+        ],
+      ],
+    );
+    await tester.pumpWidget(host(_opener(root, viaKeyboard: true)));
+    await _open(tester);
+    await tester.drag(find.byType(ListView), const Offset(0, -1000));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Row 30'));
+    await tester.pumpAndSettle();
+    expect(find.text('Deep'), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(
+      FocusManager.instance.primaryFocus?.context
+          ?.findAncestorWidgetOfExactType<InkWell>(),
+      tester.widget<InkWell>(find.widgetWithText(InkWell, 'Row 30')),
+    );
+  });
+
+  testWidgets('pointer open: Tab then ArrowDown moves from the focused row', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(1300, 900));
+    await tester.pumpWidget(host(_opener(_page())));
+    await _open(tester);
+    InkWell focusedRow() => FocusManager.instance.primaryFocus!.context!
+        .findAncestorWidgetOfExactType<InkWell>()!;
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    final first = focusedRow();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    final second = focusedRow();
+    expect(identical(first, second), isFalse);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+    await tester.pump();
+    expect(focusedRow(), first);
+  });
+
+  testWidgets('pointer open: ArrowUp with nothing focused lands on a row', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(1300, 900));
+    await tester.pumpWidget(host(_opener(_page())));
+    await _open(tester);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+    await tester.pump();
+    expect(
+      FocusManager.instance.primaryFocus?.context
+          ?.findAncestorWidgetOfExactType<InkWell>(),
+      isNotNull,
+    );
   });
 }

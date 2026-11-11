@@ -181,12 +181,14 @@ void main() {
     expect(find.text('Go to album'), findsNothing);
     await tester.tap(find.byTooltip('Back'));
     await pumpMenu(tester);
-    expect(find.text('Go to album'), findsOneWidget);
+    // Back lands where the page was left: Advanced is still in view.
+    expect(find.text('Advanced'), findsOneWidget);
     await _tapAdvanced(tester);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await pumpMenu(tester);
     expect(_dialog(), findsOneWidget);
-    expect(find.text('Go to album'), findsOneWidget);
+    expect(find.text('Advanced'), findsOneWidget);
+    expect(find.text('Find lyrics online…'), findsNothing);
     await unmountApp(tester);
   });
 
