@@ -451,5 +451,456 @@
   "libraryTabFolders": "Folders",
   "libraryNavFavorites": "Favorites",
   "libraryNavHistory": "History",
-  "libraryNavMostPlayed": "Most played"
+  "libraryNavMostPlayed": "Most played",
+  "librarySongCount": "{count, plural, =1{1 song} other{{count} songs}}",
+  "@librarySongCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryAlbumCount": "{count, plural, =1{1 album} other{{count} albums}}",
+  "@libraryAlbumCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryArtistCount": "{count, plural, =1{1 artist} other{{count} artists}}",
+  "@libraryArtistCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryGenreCount": "{count, plural, =1{1 genre} other{{count} genres}}",
+  "@libraryGenreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryLanguageCount": "{count, plural, =1{1 language} other{{count} languages}}",
+  "@libraryLanguageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryFolderCount": "{count, plural, =1{1 folder} other{{count} folders}}",
+  "@libraryFolderCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryCountOf": "{shown} / {total} {unit}",
+  "@libraryCountOf": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryUnitSongs": "songs",
+  "libraryUnitAlbums": "albums",
+  "libraryUnitArtists": "artists",
+  "libraryUnitGenres": "genres",
+  "libraryUnitLanguages": "languages",
+  "libraryUnitFolders": "folders",
+  "libraryPlayAll": "Play all",
+  "libraryShuffle": "Shuffle",
+  "libraryPlayAlbum": "Play album",
+  "libraryPlayArtist": "Play all songs",
+  "libraryFilter": "Filter",
+  "libraryFilterClose": "Close filter",
+  "libraryFilterSongsHint": "Filter songs",
+  "libraryFilterAlbumsHint": "Filter albums",
+  "libraryFilterArtistsHint": "Filter artists",
+  "libraryFilterGenresHint": "Filter genres",
+  "libraryFilterLanguagesHint": "Filter languages",
+  "libraryFilterFoldersHint": "Filter in this folder",
+  "libraryOrderTooltip": "Sort",
+  "libraryOrderAscText": "A → Z",
+  "libraryOrderDescText": "Z → A",
+  "libraryOrderAscNumber": "Ascending",
+  "libraryOrderDescNumber": "Descending",
+  "librarySortTitle": "Name",
+  "librarySortArtist": "Artist",
+  "librarySortAlbum": "Album",
+  "librarySortYear": "Year",
+  "librarySortDateAdded": "Date added",
+  "librarySortPlayCount": "Play count",
+  "librarySortDuration": "Duration",
+  "librarySortTrackCount": "Songs",
+  "librarySortAlbumCount": "Albums",
+  "librarySortTrackNumber": "Track number",
+  "libraryViewGrid": "Grid",
+  "libraryViewList": "List",
+  "libraryViewTree": "Folder tree",
+  "libraryViewFlat": "Flat list",
+  "libraryScanning": "Scanning…",
+  "libraryScanningTags": "Scanning · {done} / {total} songs",
+  "@libraryScanningTags": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryScanningTagsCount": "Scanning · {done} songs",
+  "@libraryScanningTagsCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryScanningCovers": "Fetching covers · {done} / {total}",
+  "@libraryScanningCovers": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryScanningCoversStart": "Fetching covers…",
+  "libraryEmptyTitle": "Library is empty",
+  "libraryEmptyMessage": "No songs in the chosen folders.",
+  "libraryChooseFolders": "Choose music folders",
+  "libraryPlayFailed": "Could not start playback",
+  "libraryLoadFailed": "Could not load the list",
+  "libraryNowPlaying": "Now playing",
+  "libraryFavoriteAdd": "Add to favorites",
+  "libraryFavoriteRemove": "Remove from favorites",
+  "libraryFavoriteFailed": "Could not change favorites",
+  "libraryDurationMinutes": "{minutes} min",
+  "@libraryDurationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryDurationHours": "{hours} h",
+  "@libraryDurationHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "librarySelectionGone": "The selected songs are no longer in the library",
+  "libraryDurationHoursMinutes": "{hours} h {minutes} min",
+  "@libraryDurationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryAlbumStats": "{songs, plural, =1{1 song} other{{songs} songs}} • {minutes} min",
+  "@libraryAlbumStats": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryLanguageUnknown": "Unknown",
+  "libraryLanguageStatsDetected": "{songs, plural, =1{1 song} other{{songs} songs}} · {detected} auto-detected",
+  "@libraryLanguageStatsDetected": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "detected": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryLanguagesNote": "From the language tag of each song; songs without a tag are detected by Kanaru. Change this in Settings › Library.",
+  "libraryFoldersAll": "All folders",
+  "libraryFoldersHidden": "Hidden levels",
+  "libraryGoToFolder": "Go to folder",
+  "libraryVolumeInternal": "Internal storage",
+  "libraryVolumeSdCard": "SD card",
+  "libraryVolumeUsb": "USB drive",
+  "libraryFolderCounts": "{songs, plural, =1{1 song} other{{songs} songs}} · {folders, plural, =1{1 folder} other{{folders} folders}}",
+  "@libraryFolderCounts": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryFolderSongsHeader": "Songs in this folder · {count}",
+  "@libraryFolderSongsHeader": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryFlatSongsHeader": "{count} songs in this folder (not including subfolders)",
+  "@libraryFlatSongsHeader": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryRetry": "Retry",
+  "libraryPermissionMissing": "Missing permission to read music",
+  "libraryGrantPermission": "Grant",
+  "libraryNotFoundTitle": "Not found",
+  "libraryNotFoundMessage": "This is no longer in your library.",
+  "libraryPlay": "Play",
+  "libraryAppearsIn": "Appears on",
+  "libraryAlbumsOf": "Albums · {name}",
+  "@libraryAlbumsOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryArtistsOf": "Artists · {name}",
+  "@libraryArtistsOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryAppearsInOf": "Appears on · {name}",
+  "@libraryAppearsInOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryDetectedCount": "{count} auto-detected",
+  "@libraryDetectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryAutoDetectedTag": "auto-detected",
+  "libraryLanguageDetectedNote": "Songs labelled “auto-detected” have no language tag; Kanaru guesses it from the title and lyrics.",
+  "libraryLanguageUnknownNote": "These songs have no language tag and Kanaru could not detect one (often instrumentals). Add a language tag in Edit info, or change how languages are detected in Settings › Library.",
+  "libraryMenuGoAlbum": "Go to album",
+  "libraryMenuGoArtist": "Go to artist",
+  "libraryMenuGoAlbumArtist": "Go to album artist",
+  "libraryMenuGoGenre": "Go to genre",
+  "libraryMenuGoLanguage": "Go to language",
+  "libraryMenuGoFolder": "Go to folder",
+  "libraryMenuReveal": "Show in file manager",
+  "libraryMenuNoAlbum": "No album",
+  "libraryMenuNoArtist": "No artist",
+  "libraryMenuAppearsCount": "appears on {count}",
+  "@libraryMenuAppearsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuSongsInFolders": "{songs, plural, =1{1 song} other{{songs} songs}} in {folders, plural, =1{1 folder} other{{folders} folders}}",
+  "@libraryMenuSongsInFolders": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "folders": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuFoldersOf": "Folders · {name}",
+  "@libraryMenuFoldersOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryMenuFoldersIntroAlbum": "This album's songs are stored in {count} folders. Pick one to open it in Folders.",
+  "@libraryMenuFoldersIntroAlbum": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuFoldersIntroArtist": "This artist's songs are stored in {count} folders. Pick one to open it in Folders.",
+  "@libraryMenuFoldersIntroArtist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuFoldersIntroGenre": "The songs of this genre are stored in {count} folders. Pick one to open it in Folders.",
+  "@libraryMenuFoldersIntroGenre": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuFoldersIntroLanguage": "The songs of this language are stored in {count} folders. Pick one to open it in Folders.",
+  "@libraryMenuFoldersIntroLanguage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuAddToPlaylist": "Add to playlist…",
+  "libraryMenuFavoriteAll": "Add all to favorites",
+  "libraryMenuEditSong": "Edit song info",
+  "libraryMenuEditAlbum": "Edit album info",
+  "libraryMenuSelect": "Select",
+  "libraryMenuDeselect": "Deselect",
+  "libraryMenuAskAiSong": "Ask AI about this song",
+  "libraryMenuAskAiAlbum": "Ask AI about this album",
+  "libraryMenuAskAiArtist": "Ask AI about this artist",
+  "libraryMenuAskAiSongs": "Ask AI about these songs",
+  "libraryMenuAdvanced": "Advanced",
+  "libraryMenuFindLyrics": "Find lyrics online…",
+  "libraryMenuHide": "Remove from library",
+  "libraryMenuHideNote": "Keeps the files; undo in Settings › Library",
+  "libraryMenuDeleteFiles": "Delete files from device",
+  "libraryMenuMoveToTrash": "Move files to Trash",
+  "libraryMenuFileCount": "{count, plural, =1{1 file} other{{count} files}}",
+  "@libraryMenuFileCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuSplitArtists": "Split or merge artists",
+  "libraryMenuSplitArtistsNote": "Treat one name as two artists, or merge spellings",
+  "libraryMenuSplitGenres": "Split or merge genres",
+  "libraryMenuSplitGenresNote": "Split a combined genre tag, or merge spellings",
+  "libraryMenuLanguageDetection": "How languages are detected",
+  "libraryMenuLanguageDetectionNote": "Settings › Library",
+  "libraryMenuCopyPath": "Copy path",
+  "libraryMenuExclude": "Exclude from library",
+  "libraryMenuExcludeNote": "Keeps the files; undo in Settings › Library › Folders",
+  "libraryMenuIncludesSubfolders": "Includes subfolders",
+  "libraryMenuPlayDirect": "Play only songs in this folder",
+  "libraryMenuPlayDirectNote": "{count, plural, =1{1 song} other{{count} songs}}, without subfolders",
+  "@libraryMenuPlayDirectNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuSelectionTitle": "{count, plural, =1{1 song selected} other{{count} songs selected}}",
+  "@libraryMenuSelectionTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryMenuMore": "More options",
+  "libraryMenuBack": "Back",
+  "libraryMenuPlayNext": "Play next",
+  "libraryMenuAddToQueue": "Add to queue",
+  "libraryMenuPlayingNext": "Playing next",
+  "libraryMenuQueued": "Added to queue",
+  "libraryMenuQueueFailed": "Could not change the queue",
+  "libraryMenuExcluded": "Excluded “{name}” from the library",
+  "@libraryMenuExcluded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryMenuUndo": "Undo",
+  "libraryMenuExcludeFailed": "Could not exclude the folder",
+  "libraryMenuUndoFailed": "Could not undo",
+  "libraryMenuPathCopied": "Path copied",
+  "libraryMenuRevealFailed": "Could not open the file manager",
+  "libraryMenuLoadFailed": "Could not open the menu",
+  "libraryMenuSongInfo": "Song info",
+  "libraryInfoFormat": "Format",
+  "libraryInfoBitrate": "Bitrate",
+  "libraryInfoBitrateValue": "{kbps} kbps",
+  "@libraryInfoBitrateValue": {
+    "placeholders": {
+      "kbps": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoSampleRate": "Sample rate",
+  "libraryInfoSampleRateValue": "{khz} kHz",
+  "@libraryInfoSampleRateValue": {
+    "placeholders": {
+      "khz": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoBitDepth": "Bit depth",
+  "libraryInfoBitDepthValue": "{bits}-bit",
+  "@libraryInfoBitDepthValue": {
+    "placeholders": {
+      "bits": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoSize": "Size",
+  "libraryInfoPath": "File",
+  "libraryInfoPlayCount": "Plays",
+  "libraryInfoUnknown": "Unknown",
+  "libraryPanelLabel": "Selected songs",
+  "libraryPanelClear": "Clear selection",
+  "libraryPanelPlayAll": "Play all selected",
+  "libraryPanelEdit": "Edit info",
+  "libraryPanelAddToPlaylist": "Add to playlist…",
+  "libraryPanelMore": "Options for the selection",
+  "libraryPanelSelectAll": "Select all songs on this screen",
+  "libraryPanelExpand": "Show the selected songs",
+  "libraryPanelCollapse": "Collapse",
+  "libraryPanelReorder": "Drag to change the play order",
+  "libraryMenuCopyFailed": "Could not copy"
 }

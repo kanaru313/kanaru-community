@@ -8,15 +8,22 @@ import '../../database/state/database_providers.dart';
 import '../../media/domain/cover_files.dart' show CoverSize;
 import '../../platform/state/platform_providers.dart';
 import '../data/custom_cover_store.dart';
+import '../data/scan/native_cover_import.dart';
 import '../domain/custom_cover_controller.dart';
 
 export '../domain/custom_cover_controller.dart'
     show CustomCoverController, CustomCoverKind;
 
+/// Overridden in tests so they do not need the native library.
+final coverImporterProvider = Provider<CoverImporter>(
+  (ref) => const RustCoverImporter(),
+);
+
 final _storeProvider = Provider<CustomCoverStore>(
   (ref) => CustomCoverStore(
     ref.watch(appDatabaseProvider),
     ref.watch(appPathsProvider).dataDir,
+    importer: ref.watch(coverImporterProvider),
   ),
 );
 

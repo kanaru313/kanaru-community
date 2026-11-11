@@ -766,4 +766,690 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryNavMostPlayed => 'Most played';
+
+  @override
+  String librarySongCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryAlbumCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count albums',
+      one: '1 album',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryArtistCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count artists',
+      one: '1 artist',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryGenreCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count genres',
+      one: '1 genre',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryLanguageCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count languages',
+      one: '1 language',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryFolderCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count folders',
+      one: '1 folder',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryCountOf(int shown, int total, String unit) {
+    return '$shown / $total $unit';
+  }
+
+  @override
+  String get libraryUnitSongs => 'songs';
+
+  @override
+  String get libraryUnitAlbums => 'albums';
+
+  @override
+  String get libraryUnitArtists => 'artists';
+
+  @override
+  String get libraryUnitGenres => 'genres';
+
+  @override
+  String get libraryUnitLanguages => 'languages';
+
+  @override
+  String get libraryUnitFolders => 'folders';
+
+  @override
+  String get libraryPlayAll => 'Play all';
+
+  @override
+  String get libraryShuffle => 'Shuffle';
+
+  @override
+  String get libraryPlayAlbum => 'Play album';
+
+  @override
+  String get libraryPlayArtist => 'Play all songs';
+
+  @override
+  String get libraryFilter => 'Filter';
+
+  @override
+  String get libraryFilterClose => 'Close filter';
+
+  @override
+  String get libraryFilterSongsHint => 'Filter songs';
+
+  @override
+  String get libraryFilterAlbumsHint => 'Filter albums';
+
+  @override
+  String get libraryFilterArtistsHint => 'Filter artists';
+
+  @override
+  String get libraryFilterGenresHint => 'Filter genres';
+
+  @override
+  String get libraryFilterLanguagesHint => 'Filter languages';
+
+  @override
+  String get libraryFilterFoldersHint => 'Filter in this folder';
+
+  @override
+  String get libraryOrderTooltip => 'Sort';
+
+  @override
+  String get libraryOrderAscText => 'A → Z';
+
+  @override
+  String get libraryOrderDescText => 'Z → A';
+
+  @override
+  String get libraryOrderAscNumber => 'Ascending';
+
+  @override
+  String get libraryOrderDescNumber => 'Descending';
+
+  @override
+  String get librarySortTitle => 'Name';
+
+  @override
+  String get librarySortArtist => 'Artist';
+
+  @override
+  String get librarySortAlbum => 'Album';
+
+  @override
+  String get librarySortYear => 'Year';
+
+  @override
+  String get librarySortDateAdded => 'Date added';
+
+  @override
+  String get librarySortPlayCount => 'Play count';
+
+  @override
+  String get librarySortDuration => 'Duration';
+
+  @override
+  String get librarySortTrackCount => 'Songs';
+
+  @override
+  String get librarySortAlbumCount => 'Albums';
+
+  @override
+  String get librarySortTrackNumber => 'Track number';
+
+  @override
+  String get libraryViewGrid => 'Grid';
+
+  @override
+  String get libraryViewList => 'List';
+
+  @override
+  String get libraryViewTree => 'Folder tree';
+
+  @override
+  String get libraryViewFlat => 'Flat list';
+
+  @override
+  String get libraryScanning => 'Scanning…';
+
+  @override
+  String libraryScanningTags(int done, int total) {
+    return 'Scanning · $done / $total songs';
+  }
+
+  @override
+  String libraryScanningTagsCount(int done) {
+    return 'Scanning · $done songs';
+  }
+
+  @override
+  String libraryScanningCovers(int done, int total) {
+    return 'Fetching covers · $done / $total';
+  }
+
+  @override
+  String get libraryScanningCoversStart => 'Fetching covers…';
+
+  @override
+  String get libraryEmptyTitle => 'Library is empty';
+
+  @override
+  String get libraryEmptyMessage => 'No songs in the chosen folders.';
+
+  @override
+  String get libraryChooseFolders => 'Choose music folders';
+
+  @override
+  String get libraryPlayFailed => 'Could not start playback';
+
+  @override
+  String get libraryLoadFailed => 'Could not load the list';
+
+  @override
+  String get libraryNowPlaying => 'Now playing';
+
+  @override
+  String get libraryFavoriteAdd => 'Add to favorites';
+
+  @override
+  String get libraryFavoriteRemove => 'Remove from favorites';
+
+  @override
+  String get libraryFavoriteFailed => 'Could not change favorites';
+
+  @override
+  String libraryDurationMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String libraryDurationHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String get librarySelectionGone =>
+      'The selected songs are no longer in the library';
+
+  @override
+  String libraryDurationHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String libraryAlbumStats(int songs, int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      songs,
+      locale: localeName,
+      other: '$songs songs',
+      one: '1 song',
+    );
+    return '$_temp0 • $minutes min';
+  }
+
+  @override
+  String get libraryLanguageUnknown => 'Unknown';
+
+  @override
+  String libraryLanguageStatsDetected(int songs, int detected) {
+    String _temp0 = intl.Intl.pluralLogic(
+      songs,
+      locale: localeName,
+      other: '$songs songs',
+      one: '1 song',
+    );
+    return '$_temp0 · $detected auto-detected';
+  }
+
+  @override
+  String get libraryLanguagesNote =>
+      'From the language tag of each song; songs without a tag are detected by Kanaru. Change this in Settings › Library.';
+
+  @override
+  String get libraryFoldersAll => 'All folders';
+
+  @override
+  String get libraryFoldersHidden => 'Hidden levels';
+
+  @override
+  String get libraryGoToFolder => 'Go to folder';
+
+  @override
+  String get libraryVolumeInternal => 'Internal storage';
+
+  @override
+  String get libraryVolumeSdCard => 'SD card';
+
+  @override
+  String get libraryVolumeUsb => 'USB drive';
+
+  @override
+  String libraryFolderCounts(int songs, int folders) {
+    String _temp0 = intl.Intl.pluralLogic(
+      songs,
+      locale: localeName,
+      other: '$songs songs',
+      one: '1 song',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      folders,
+      locale: localeName,
+      other: '$folders folders',
+      one: '1 folder',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String libraryFolderSongsHeader(int count) {
+    return 'Songs in this folder · $count';
+  }
+
+  @override
+  String libraryFlatSongsHeader(int count) {
+    return '$count songs in this folder (not including subfolders)';
+  }
+
+  @override
+  String get libraryRetry => 'Retry';
+
+  @override
+  String get libraryPermissionMissing => 'Missing permission to read music';
+
+  @override
+  String get libraryGrantPermission => 'Grant';
+
+  @override
+  String get libraryNotFoundTitle => 'Not found';
+
+  @override
+  String get libraryNotFoundMessage => 'This is no longer in your library.';
+
+  @override
+  String get libraryPlay => 'Play';
+
+  @override
+  String get libraryAppearsIn => 'Appears on';
+
+  @override
+  String libraryAlbumsOf(String name) {
+    return 'Albums · $name';
+  }
+
+  @override
+  String libraryArtistsOf(String name) {
+    return 'Artists · $name';
+  }
+
+  @override
+  String libraryAppearsInOf(String name) {
+    return 'Appears on · $name';
+  }
+
+  @override
+  String libraryDetectedCount(int count) {
+    return '$count auto-detected';
+  }
+
+  @override
+  String get libraryAutoDetectedTag => 'auto-detected';
+
+  @override
+  String get libraryLanguageDetectedNote =>
+      'Songs labelled “auto-detected” have no language tag; Kanaru guesses it from the title and lyrics.';
+
+  @override
+  String get libraryLanguageUnknownNote =>
+      'These songs have no language tag and Kanaru could not detect one (often instrumentals). Add a language tag in Edit info, or change how languages are detected in Settings › Library.';
+
+  @override
+  String get libraryMenuGoAlbum => 'Go to album';
+
+  @override
+  String get libraryMenuGoArtist => 'Go to artist';
+
+  @override
+  String get libraryMenuGoAlbumArtist => 'Go to album artist';
+
+  @override
+  String get libraryMenuGoGenre => 'Go to genre';
+
+  @override
+  String get libraryMenuGoLanguage => 'Go to language';
+
+  @override
+  String get libraryMenuGoFolder => 'Go to folder';
+
+  @override
+  String get libraryMenuReveal => 'Show in file manager';
+
+  @override
+  String get libraryMenuNoAlbum => 'No album';
+
+  @override
+  String get libraryMenuNoArtist => 'No artist';
+
+  @override
+  String libraryMenuAppearsCount(int count) {
+    return 'appears on $count';
+  }
+
+  @override
+  String libraryMenuSongsInFolders(int songs, int folders) {
+    String _temp0 = intl.Intl.pluralLogic(
+      songs,
+      locale: localeName,
+      other: '$songs songs',
+      one: '1 song',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      folders,
+      locale: localeName,
+      other: '$folders folders',
+      one: '1 folder',
+    );
+    return '$_temp0 in $_temp1';
+  }
+
+  @override
+  String libraryMenuFoldersOf(String name) {
+    return 'Folders · $name';
+  }
+
+  @override
+  String libraryMenuFoldersIntroAlbum(int count) {
+    return 'This album\'s songs are stored in $count folders. Pick one to open it in Folders.';
+  }
+
+  @override
+  String libraryMenuFoldersIntroArtist(int count) {
+    return 'This artist\'s songs are stored in $count folders. Pick one to open it in Folders.';
+  }
+
+  @override
+  String libraryMenuFoldersIntroGenre(int count) {
+    return 'The songs of this genre are stored in $count folders. Pick one to open it in Folders.';
+  }
+
+  @override
+  String libraryMenuFoldersIntroLanguage(int count) {
+    return 'The songs of this language are stored in $count folders. Pick one to open it in Folders.';
+  }
+
+  @override
+  String get libraryMenuAddToPlaylist => 'Add to playlist…';
+
+  @override
+  String get libraryMenuFavoriteAll => 'Add all to favorites';
+
+  @override
+  String get libraryMenuEditSong => 'Edit song info';
+
+  @override
+  String get libraryMenuEditAlbum => 'Edit album info';
+
+  @override
+  String get libraryMenuSelect => 'Select';
+
+  @override
+  String get libraryMenuDeselect => 'Deselect';
+
+  @override
+  String get libraryMenuAskAiSong => 'Ask AI about this song';
+
+  @override
+  String get libraryMenuAskAiAlbum => 'Ask AI about this album';
+
+  @override
+  String get libraryMenuAskAiArtist => 'Ask AI about this artist';
+
+  @override
+  String get libraryMenuAskAiSongs => 'Ask AI about these songs';
+
+  @override
+  String get libraryMenuAdvanced => 'Advanced';
+
+  @override
+  String get libraryMenuFindLyrics => 'Find lyrics online…';
+
+  @override
+  String get libraryMenuHide => 'Remove from library';
+
+  @override
+  String get libraryMenuHideNote =>
+      'Keeps the files; undo in Settings › Library';
+
+  @override
+  String get libraryMenuDeleteFiles => 'Delete files from device';
+
+  @override
+  String get libraryMenuMoveToTrash => 'Move files to Trash';
+
+  @override
+  String libraryMenuFileCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get libraryMenuSplitArtists => 'Split or merge artists';
+
+  @override
+  String get libraryMenuSplitArtistsNote =>
+      'Treat one name as two artists, or merge spellings';
+
+  @override
+  String get libraryMenuSplitGenres => 'Split or merge genres';
+
+  @override
+  String get libraryMenuSplitGenresNote =>
+      'Split a combined genre tag, or merge spellings';
+
+  @override
+  String get libraryMenuLanguageDetection => 'How languages are detected';
+
+  @override
+  String get libraryMenuLanguageDetectionNote => 'Settings › Library';
+
+  @override
+  String get libraryMenuCopyPath => 'Copy path';
+
+  @override
+  String get libraryMenuExclude => 'Exclude from library';
+
+  @override
+  String get libraryMenuExcludeNote =>
+      'Keeps the files; undo in Settings › Library › Folders';
+
+  @override
+  String get libraryMenuIncludesSubfolders => 'Includes subfolders';
+
+  @override
+  String get libraryMenuPlayDirect => 'Play only songs in this folder';
+
+  @override
+  String libraryMenuPlayDirectNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0, without subfolders';
+  }
+
+  @override
+  String libraryMenuSelectionTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs selected',
+      one: '1 song selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get libraryMenuMore => 'More options';
+
+  @override
+  String get libraryMenuBack => 'Back';
+
+  @override
+  String get libraryMenuPlayNext => 'Play next';
+
+  @override
+  String get libraryMenuAddToQueue => 'Add to queue';
+
+  @override
+  String get libraryMenuPlayingNext => 'Playing next';
+
+  @override
+  String get libraryMenuQueued => 'Added to queue';
+
+  @override
+  String get libraryMenuQueueFailed => 'Could not change the queue';
+
+  @override
+  String libraryMenuExcluded(String name) {
+    return 'Excluded “$name” from the library';
+  }
+
+  @override
+  String get libraryMenuUndo => 'Undo';
+
+  @override
+  String get libraryMenuExcludeFailed => 'Could not exclude the folder';
+
+  @override
+  String get libraryMenuUndoFailed => 'Could not undo';
+
+  @override
+  String get libraryMenuPathCopied => 'Path copied';
+
+  @override
+  String get libraryMenuRevealFailed => 'Could not open the file manager';
+
+  @override
+  String get libraryMenuLoadFailed => 'Could not open the menu';
+
+  @override
+  String get libraryMenuSongInfo => 'Song info';
+
+  @override
+  String get libraryInfoFormat => 'Format';
+
+  @override
+  String get libraryInfoBitrate => 'Bitrate';
+
+  @override
+  String libraryInfoBitrateValue(int kbps) {
+    return '$kbps kbps';
+  }
+
+  @override
+  String get libraryInfoSampleRate => 'Sample rate';
+
+  @override
+  String libraryInfoSampleRateValue(String khz) {
+    return '$khz kHz';
+  }
+
+  @override
+  String get libraryInfoBitDepth => 'Bit depth';
+
+  @override
+  String libraryInfoBitDepthValue(int bits) {
+    return '$bits-bit';
+  }
+
+  @override
+  String get libraryInfoSize => 'Size';
+
+  @override
+  String get libraryInfoPath => 'File';
+
+  @override
+  String get libraryInfoPlayCount => 'Plays';
+
+  @override
+  String get libraryInfoUnknown => 'Unknown';
+
+  @override
+  String get libraryPanelLabel => 'Selected songs';
+
+  @override
+  String get libraryPanelClear => 'Clear selection';
+
+  @override
+  String get libraryPanelPlayAll => 'Play all selected';
+
+  @override
+  String get libraryPanelEdit => 'Edit info';
+
+  @override
+  String get libraryPanelAddToPlaylist => 'Add to playlist…';
+
+  @override
+  String get libraryPanelMore => 'Options for the selection';
+
+  @override
+  String get libraryPanelSelectAll => 'Select all songs on this screen';
+
+  @override
+  String get libraryPanelExpand => 'Show the selected songs';
+
+  @override
+  String get libraryPanelCollapse => 'Collapse';
+
+  @override
+  String get libraryPanelReorder => 'Drag to change the play order';
+
+  @override
+  String get libraryMenuCopyFailed => 'Could not copy';
 }
