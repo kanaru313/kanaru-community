@@ -40,8 +40,8 @@ class QueueCounts extends ConsumerWidget {
         (v) => (v.value?.repeat ?? RepeatMode.off) != RepeatMode.off,
       ),
     );
-    final remaining = endless ? null : ref.watch(queueRemainingProvider).value;
     if (total == null || total == 0) return const SizedBox.shrink();
+    final remaining = endless ? null : ref.watch(queueRemainingProvider).value;
     final position = (current ?? -1) + 1;
     final left = remaining == null ? null : formatRemaining(l10n, remaining);
     final text = mobile

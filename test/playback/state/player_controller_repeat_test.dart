@@ -417,4 +417,120 @@ void main() {
       expect(h.c.queueState.current, 1);
     });
   });
+
+  group('repeat with an empty queue', () {
+    test(
+      'setting a repeat mode on an empty queue saves it without touching the '
+      'engine and applies to the next queue opened',
+      () async {
+        await h.settle();
+        expect(h.c.queueState.items, isEmpty);
+        expect((await h.c.queueView.first).stopped, isTrue);
+
+        for (final mode in [
+          RepeatMode.one,
+          RepeatMode.all,
+          RepeatMode.allShuffled,
+          RepeatMode.off,
+          RepeatMode.one,
+        ]) {
+          await h.c.setRepeat(mode);
+          await h.settle();
+          final view = await h.c.queueView.first;
+          expect(view.repeat, mode);
+          expect(view.repeatTimes, 0);
+          expect(view.stopped, isTrue);
+        }
+        expect(saved('playback.repeat'), 'one');
+        expect(h.engineCreations, 0);
+
+        await h.play();
+        await h.settle();
+        expect(h.c.queueState.repeat, RepeatMode.one);
+        expect(handed().entryId, entryAt(0), reason: 'repeat one is active');
+      },
+    );
+
+    test(
+      'setRepeatTimes on an empty queue is a no-op and keeps repeat one',
+      () async {
+        await h.settle();
+        await h.c.setRepeat(RepeatMode.one);
+        await h.c.setRepeatTimes(4);
+        await h.settle();
+        expect(await times(), 0);
+        expect(h.c.queueState.repeat, RepeatMode.one);
+        expect(saved('playback.repeat'), 'one');
+        expect(h.engineCreations, 0);
+      },
+    );
+
+    test(
+      'next and previous on an empty queue are safe in every repeat mode',
+      () async {
+        await h.settle();
+        for (final mode in RepeatMode.values) {
+          await h.c.setRepeat(mode);
+          await h.c.next();
+          await h.c.previous();
+          await h.settle();
+          expect(h.c.queueState.items, isEmpty);
+          expect(h.notices, isEmpty);
+          expect(h.engineCreations, 0);
+        }
+      },
+    );
+
+    test(
+      'removing the only entry drops a counted repeat, keeps the base mode '
+      'and marks the view stopped',
+      () async {
+        final one = await Harness.create(tracks: 1);
+        addTearDown(one.close);
+        await one.c.setRepeat(RepeatMode.all);
+        await one.play();
+        await one.settle();
+        await one.c.setRepeatTimes(3);
+        await one.settle();
+        expect((await one.c.queueView.first).repeatTimes, 3);
+
+        final token = await one.c.remove({
+          one.c.queueState.items.single.entryId,
+        });
+        await one.settle();
+        final emptied = await one.c.queueView.first;
+        expect(emptied.length, 0);
+        expect(emptied.repeat, RepeatMode.all);
+        expect(emptied.repeatTimes, 0);
+        expect(emptied.stopped, isTrue);
+        expect(one.settings.read('playback.repeat_count'), 0);
+
+        await one.c.undo(token!);
+        await one.settle();
+        final restored = await one.c.queueView.first;
+        expect(restored.length, 1);
+        expect(restored.repeat, RepeatMode.all);
+        expect(restored.repeatTimes, 0);
+      },
+    );
+
+    test(
+      'restoring an empty queue clears a leftover repeat count in settings',
+      () async {
+        final empty = await Harness.create(
+          prepare: (h) async {
+            await h.settings.write('playback.repeat', 'allShuffled');
+            await h.settings.write('playback.repeat_count', 5);
+          },
+        );
+        addTearDown(empty.close);
+        await empty.settle();
+        final view = await empty.c.queueView.first;
+        expect(view.repeat, RepeatMode.allShuffled);
+        expect(view.repeatTimes, 0);
+        expect(view.stopped, isTrue);
+        expect(empty.settings.read('playback.repeat_count'), 0);
+      },
+    );
+  });
 }

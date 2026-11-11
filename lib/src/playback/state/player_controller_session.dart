@@ -16,6 +16,9 @@ extension _Session on PlayerController {
     if (session == null) {
       // Nothing to put back, but shuffle and repeat are the user's modes.
       _queue = emptyQueueWithModes(_settings);
+      if (readSetting(_settings, repeatCountSetting) != 0) {
+        _write(repeatCountSetting.key, 0);
+      }
       restoring = false;
       _publish();
       return;

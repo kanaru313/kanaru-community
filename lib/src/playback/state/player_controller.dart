@@ -574,7 +574,7 @@ class PlayerController implements PlaybackCommands {
   /// the base becomes off: looping forever would make the count meaningless.
   /// Does nothing without a queue, or while stopped or after the queue ran out.
   Future<void> setRepeatTimes(int times) => _cmd(() async {
-    if (_queue.items.isEmpty || _stoppedOrEnded) return;
+    if (_stoppedOrEnded) return;
     final count = times.clamp(0, maxRepeatTimes);
     if (count == _repeatTimes) return;
     if (count == 0) {
@@ -589,8 +589,9 @@ class PlayerController implements PlaybackCommands {
     _write(repeatCountSetting.key, count);
   });
 
-  /// Playback is stopped, or the queue ran out and waits for Play.
-  bool get _stoppedOrEnded => _intent == PlayIntent.stopped || _atEnd;
+  /// Playback is stopped, or the queue is empty or ran out and waits for Play.
+  bool get _stoppedOrEnded =>
+      _queue.items.isEmpty || _intent == PlayIntent.stopped || _atEnd;
 
   /// Ends a counted repeat. Nothing happens when none runs.
   void _dropRepeatTimes() {

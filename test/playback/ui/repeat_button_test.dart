@@ -52,9 +52,29 @@ void main() {
   });
 
   testWidgets('disabled while the queue is empty', (tester) async {
-    await _pump(tester, play: false);
+    final host = await _pump(tester, play: false);
     final button = tester.widget<IconButton>(find.byType(IconButton));
     expect(button.onPressed, isNull);
+
+    await host.run(tester, () => host.h.c.setRepeat(RepeatMode.one));
+    expect(find.byIcon(KIcons.repeatOne), findsOneWidget);
+    expect(find.byKey(KToggleIconButton.dotKey), findsOneWidget);
+    expect(tester.widget<IconButton>(find.byType(IconButton)).onPressed, isNull);
+  });
+
+  testWidgets('closes an open menu when the queue becomes empty', (
+    tester,
+  ) async {
+    final host = await _pump(tester);
+    await _open(host, tester);
+    expect(find.byType(SelectionRow), findsNWidgets(5));
+
+    final allIds = {for (final i in host.h.c.queueState.items) i.entryId};
+    await host.run(tester, () => host.h.c.remove(allIds));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SelectionRow), findsNothing);
+    expect(tester.widget<IconButton>(find.byType(IconButton)).onPressed, isNull);
   });
 
   for (final (name, size) in [

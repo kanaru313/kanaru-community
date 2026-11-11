@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart' hide RepeatMode;
 import '../../../l10n/gen/app_localizations.dart';
 import '../domain/repeat_mode.dart';
 import '../state/playback_providers.dart';
+import '../state/playback_settings_providers.dart';
 import '../state/queue_view_provider.dart';
 import 'repeat_menu.dart';
 
@@ -30,19 +31,25 @@ class _RepeatButtonState extends ConsumerState<RepeatButton> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final (empty, mode, times, stopped) = ref.watch(
+    final storedMode = ref.watch(repeatSettingProvider);
+    final (empty, viewMode, times, stopped) = ref.watch(
       queueViewProvider.select((v) {
         final q = v.value;
         return (
           q == null || q.length == 0,
-          q?.repeat ?? RepeatMode.off,
+          q?.repeat,
           q?.repeatTimes ?? 0,
-          q?.stopped ?? false,
+          q?.stopped ?? true,
         );
       }),
     );
-    final counting = times > 0;
-    final player = ref.read(playerControllerProvider);
+    final mode = viewMode ?? storedMode;
+    final counting = !empty && times > 0;
+    if (empty && _menu.isOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _menu.isOpen) _menu.close();
+      });
+    }
 
     return MenuAnchor(
       controller: _menu,
@@ -53,20 +60,22 @@ class _RepeatButtonState extends ConsumerState<RepeatButton> {
       menuChildren: [
         RepeatMenuRows(
           mode: mode,
-          times: times,
-          stopped: stopped,
+          times: counting ? times : 0,
+          stopped: stopped || empty,
           draft: _draft,
           onMode: (m) {
             _menu.close();
-            player.setRepeat(m);
+            ref.read(playerControllerProvider).setRepeat(m);
           },
           onCount: (n) {
+            if (empty) return;
             _menu.close();
-            player.setRepeatTimes(n);
+            ref.read(playerControllerProvider).setRepeatTimes(n);
           },
           onStep: (n) {
+            if (empty) return;
             if (counting) {
-              player.setRepeatTimes(n);
+              ref.read(playerControllerProvider).setRepeatTimes(n);
             } else {
               setState(() => _draft = n);
             }
@@ -76,10 +85,10 @@ class _RepeatButtonState extends ConsumerState<RepeatButton> {
       builder: (context, controller, _) => KToggleIconButton(
         iconWidget: KRepeatIcon(
           glyph: counting ? KRepeatGlyph.counted : repeatGlyph(mode),
-          count: times,
+          count: counting ? times : 0,
         ),
         active: counting || mode != RepeatMode.off,
-        tooltip: repeatLabel(l10n, mode, times),
+        tooltip: repeatLabel(l10n, mode, counting ? times : 0),
         onPressed: empty
             ? null
             : () => controller.isOpen ? controller.close() : controller.open(),
