@@ -9,6 +9,7 @@ import '../../extension/state/extension_providers.dart';
 import '../../library/domain/scan_status.dart';
 import '../../library/state/scan_providers.dart';
 import '../state/nav_history.dart';
+import '../state/right_panel.dart';
 
 /// 40 dp bar above everything: navigation on the left, app name in the middle,
 /// extension actions on the right.
@@ -21,7 +22,9 @@ class DesktopTopBar extends ConsumerWidget {
   });
 
   final NavHistory history;
-  final VoidCallback onToggleSidebar;
+
+  /// Null while the sidebar is forced to the rail: the toggle is dimmed.
+  final VoidCallback? onToggleSidebar;
   final VoidCallback onHome;
 
   @override
@@ -31,6 +34,10 @@ class DesktopTopBar extends ConsumerWidget {
     final actions = ref.watch(extensionRegistryProvider).topBarActions;
     final scanning = ref.watch(scanStatusProvider).value is ScanRunning;
     final soon = l10n.appComingSoon;
+    final panel = ref.watch(rightPanelProvider);
+    final hasChat = ref.watch(chatPanelSurfaceProvider) != null;
+    void toggle(RightPanelKind kind) =>
+        ref.read(rightPanelProvider.notifier).toggle(kind);
     return ColoredBox(
       color: scheme.surfaceContainerLow,
       child: SizedBox(
@@ -92,12 +99,21 @@ class DesktopTopBar extends ConsumerWidget {
                   ],
                 ),
               ),
-              // A registered action (Pro chat) replaces the placeholder.
+              _BarButton(
+                icon: KIcons.queueMusic,
+                tooltip: '${l10n.playbackNavQueue} (Ctrl+Shift+Q)',
+                selected: panel == RightPanelKind.queue,
+                onPressed: () => toggle(RightPanelKind.queue),
+              ),
+              // A registered action (Pro chat) replaces the button below.
               if (actions.isEmpty)
                 _BarButton(
                   icon: KIcons.ai,
-                  tooltip: '${l10n.appAiChat} · $soon',
-                  onPressed: null,
+                  tooltip: hasChat
+                      ? '${l10n.appAiChat} (Ctrl+J)'
+                      : '${l10n.appAiChat} · $soon',
+                  selected: panel == RightPanelKind.chat,
+                  onPressed: hasChat ? () => toggle(RightPanelKind.chat) : null,
                 ),
               for (final action in actions) action.builder(context),
               const SizedBox(width: KSpace.x2),
@@ -114,11 +130,15 @@ class _BarButton extends StatelessWidget {
     required this.icon,
     required this.tooltip,
     required this.onPressed,
+    this.selected = false,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback? onPressed;
+
+  /// The panel this button toggles is open: tonal background.
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +147,15 @@ class _BarButton extends StatelessWidget {
       iconSize: KSpace.x5,
       tooltip: tooltip,
       padding: EdgeInsets.zero,
+      isSelected: selected,
+      style: selected
+          ? IconButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+              foregroundColor: Theme.of(context)
+                  .colorScheme
+                  .onSecondaryContainer,
+            )
+          : null,
       constraints: const BoxConstraints.tightFor(
         width: KLayout.minTargetDesktop,
         height: KLayout.minTargetDesktop,

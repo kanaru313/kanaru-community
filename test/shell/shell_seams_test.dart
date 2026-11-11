@@ -1,10 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/kanaru.dart';
+import 'package:kanaru/src/extension/state/extension_providers.dart';
 import 'package:kanaru/src/library/domain/scan_status.dart';
+import 'package:kanaru/src/playback/domain/now_playing.dart';
+import 'package:kanaru/src/playback/state/playback_providers.dart';
+import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/platform/domain/settings_store.dart';
 import 'package:kanaru/src/shell/ui/mobile_shell.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -500,7 +505,20 @@ void main() {
         ],
       );
       addTearDown(router.dispose);
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            extensionRegistryProvider.overrideWithValue(ExtensionRegistry()),
+            nowPlayingProvider.overrideWith(
+              (ref) => Stream.value(NowPlaying.none),
+            ),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+          ),
+        ),
+      );
       router.go('/detail');
       await tester.pumpAndSettle();
       expect(find.text('detail page'), findsOneWidget);

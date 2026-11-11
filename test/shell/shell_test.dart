@@ -172,7 +172,7 @@ void main() {
       expect(handled, isTrue);
       expect(find.text('Native libraries'), findsNothing);
       expect(find.byType(NavigationBar), findsOneWidget);
-      expect(_byTooltip('Settings'), findsOneWidget); // Home header icon
+      expect(_byTooltip('Settings'), findsOneWidget);
     });
 
     testWidgets('desktop Settings opens from the sidebar and Back returns', (

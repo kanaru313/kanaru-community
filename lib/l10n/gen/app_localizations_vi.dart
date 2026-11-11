@@ -381,6 +381,303 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playbackNavQueue => 'Hàng đợi';
 
   @override
+  String get playbackPlay => 'Phát';
+
+  @override
+  String get playbackPause => 'Tạm dừng';
+
+  @override
+  String get playbackNext => 'Bài tiếp';
+
+  @override
+  String get playbackPrevious => 'Bài trước';
+
+  @override
+  String get playbackShuffle => 'Trộn bài';
+
+  @override
+  String get playbackRepeatOff => 'Dừng ở cuối';
+
+  @override
+  String get playbackRepeatOne => 'Lặp bài này';
+
+  @override
+  String playbackRepeatTimes(int count) {
+    return 'Lặp bài này thêm $count lần';
+  }
+
+  @override
+  String get playbackRepeatAll => 'Lặp cả hàng đợi';
+
+  @override
+  String get playbackRepeatAllShuffled => 'Lặp cả hàng đợi, trộn lại mỗi lượt';
+
+  @override
+  String get playbackRepeatFewer => 'Bớt một lần';
+
+  @override
+  String get playbackRepeatMore => 'Thêm một lần';
+
+  @override
+  String get playbackFavoriteAdd => 'Thêm vào yêu thích';
+
+  @override
+  String get playbackFavoriteRemove => 'Bỏ khỏi yêu thích';
+
+  @override
+  String get playbackSleepTimer => 'Hẹn giờ ngủ';
+
+  @override
+  String get playbackLyrics => 'Lời bài';
+
+  @override
+  String get playbackVolume => 'Âm lượng';
+
+  @override
+  String get playbackMute => 'Tắt tiếng';
+
+  @override
+  String get playbackUnmute => 'Bật tiếng';
+
+  @override
+  String get playbackExpand => 'Mở Now Playing';
+
+  @override
+  String get playbackOpenNowPlaying => 'Mở Now Playing';
+
+  @override
+  String get playbackPlayer => 'Trình phát';
+
+  @override
+  String get playbackSeek => 'Vị trí phát';
+
+  @override
+  String playbackPositionValue(String position, String duration) {
+    return '$position trên $duration';
+  }
+
+  @override
+  String playbackNoticeSkipped(String title) {
+    return 'Bỏ qua “$title”: tệp không còn';
+  }
+
+  @override
+  String playbackNoticeSkippedMany(String title, String others) {
+    return 'Bỏ qua “$title” và $others bài nữa: tệp không còn';
+  }
+
+  @override
+  String playbackNoticeFailed(String title) {
+    return 'Không phát được “$title”';
+  }
+
+  @override
+  String get playbackNoticeFirstTrack => 'Đây là bài đầu';
+
+  @override
+  String get playbackNoticeQueueEnd => 'Hết hàng đợi';
+
+  @override
+  String get playbackNoticeQueueEmpty => 'Hàng đợi trống';
+
+  @override
+  String get playbackNoticeFocusDenied =>
+      'Không phát được: ứng dụng khác đang dùng âm thanh';
+
+  @override
+  String get playbackSidebarOpen => 'Menu';
+
+  @override
+  String get playbackSidebarClose => 'Đóng menu';
+
+  @override
+  String playbackQueueMobileCounts(int position, int total, String remaining) {
+    return '$position/$total · còn $remaining';
+  }
+
+  @override
+  String playbackRemainingHoursMinutes(int hours, int minutes) {
+    return '$hours giờ $minutes phút';
+  }
+
+  @override
+  String playbackRemainingMinutes(int minutes) {
+    return '$minutes phút';
+  }
+
+  @override
+  String get playbackRemainingUnderMinute => 'dưới 1 phút';
+
+  @override
+  String get playbackMore => 'Thêm';
+
+  @override
+  String get playbackMinimize => 'Thu nhỏ';
+
+  @override
+  String get playbackQueueSelectMany => 'Chọn nhiều';
+
+  @override
+  String get playbackQueueAddTracks => 'Thêm bài';
+
+  @override
+  String get playbackQueueCleanup => 'Dọn dẹp';
+
+  @override
+  String get playbackQueueSavePlaylist => 'Lưu thành playlist';
+
+  @override
+  String get playbackQueueCleanupTitle => 'Bỏ khỏi hàng đợi';
+
+  @override
+  String get playbackCleanupDuplicates => 'Bài hát trùng lặp';
+
+  @override
+  String get playbackCleanupBefore => 'Bài trước đó';
+
+  @override
+  String get playbackCleanupAfter => 'Bài sau đó';
+
+  @override
+  String get playbackCleanupAll => 'Tất cả (trừ bài đang phát)';
+
+  @override
+  String get playbackQueueLocate => 'Về bài đang phát';
+
+  @override
+  String get playbackQueueReorder => 'Kéo để đổi thứ tự';
+
+  @override
+  String playbackQueueRemovedOne(String title) {
+    return 'Đã bỏ “$title”';
+  }
+
+  @override
+  String playbackQueueRemovedMany(int count) {
+    return 'Đã bỏ $count bài';
+  }
+
+  @override
+  String get playbackUndo => 'Hoàn tác';
+
+  @override
+  String get playbackRowPlay => 'Phát bài này';
+
+  @override
+  String get playbackRowPlayNext => 'Phát tiếp theo';
+
+  @override
+  String get playbackGoAlbum => 'Đến album';
+
+  @override
+  String get playbackGoArtist => 'Đến nghệ sĩ';
+
+  @override
+  String get playbackAskAi => 'Hỏi AI';
+
+  @override
+  String get playbackRemoveFromQueue => 'Bỏ khỏi hàng đợi';
+
+  @override
+  String get playbackQueueStale => 'Bài này không còn trong hàng đợi';
+
+  @override
+  String get playbackPickArtist => 'Chọn nghệ sĩ';
+
+  @override
+  String get playbackSourceSongs => 'Bài hát';
+
+  @override
+  String get playbackSourceAlbum => 'Album';
+
+  @override
+  String get playbackSourceArtist => 'Nghệ sĩ';
+
+  @override
+  String get playbackSourceGenre => 'Thể loại';
+
+  @override
+  String get playbackSourceLanguage => 'Ngôn ngữ';
+
+  @override
+  String get playbackSourceFolder => 'Thư mục';
+
+  @override
+  String get playbackSourceFavorites => 'Yêu thích';
+
+  @override
+  String get playbackSourceSelection => 'Đã chọn';
+
+  @override
+  String get playbackSourceQueue => 'Hàng đợi';
+
+  @override
+  String get playbackLyricsCard => 'Lời bài hát';
+
+  @override
+  String get playbackAddToPlaylist => 'Thêm vào playlist';
+
+  @override
+  String get playbackLyricsSource => 'Nguồn lời bài';
+
+  @override
+  String get playbackTranslateLyrics => 'Dịch lời…';
+
+  @override
+  String get playbackVisualEffects => 'Hiệu ứng hình ảnh';
+
+  @override
+  String get playbackTrackInfo => 'Thông tin bài';
+
+  @override
+  String playbackInfoPlays(int count) {
+    return '$count lượt nghe';
+  }
+
+  @override
+  String playbackInfoSampleRate(String khz) {
+    return '$khz kHz';
+  }
+
+  @override
+  String playbackInfoBitrate(int kbps) {
+    return '$kbps kbps';
+  }
+
+  @override
+  String get playbackToggleCoverColumn => 'Ẩn/hiện cột bìa';
+
+  @override
+  String get playbackTranslate => 'Dịch';
+
+  @override
+  String get playbackTabLyrics => 'Lời bài';
+
+  @override
+  String get playbackLyricsTabSoon => 'Lời bài: sắp có';
+
+  @override
+  String get playbackPanelClose => 'Đóng khung';
+
+  @override
+  String playbackQueuePanelCounts(int total, String remaining) {
+    return '$total bài · còn $remaining';
+  }
+
+  @override
+  String playbackQueuePanelShort(int total) {
+    return '$total bài';
+  }
+
+  @override
+  String playbackQueuePlayingAt(int position) {
+    return 'Đang phát bài $position';
+  }
+
+  @override
+  String get playbackQueueEmpty => 'Hàng đợi trống';
+
+  @override
   String get libraryTabSongs => 'Bài hát';
 
   @override

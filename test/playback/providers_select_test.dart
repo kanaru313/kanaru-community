@@ -118,27 +118,6 @@ void main() {
   });
 
   group('seeds', () {
-    test('playback commands fail loudly until playback is built', () {
-      final c = ProviderContainer();
-      addTearDown(c.dispose);
-      expect(
-        c.read(playbackCommandsProvider).playTracks([
-          TrackId(1),
-        ], context: const PlayContext(PlayContextKind.songs)),
-        throwsA(
-          isA<StateError>().having(
-            (e) => e.message,
-            'message',
-            'playback not built yet',
-          ),
-        ),
-      );
-      expect(
-        c.read(playbackCommandsProvider).enqueue([TrackId(1)]),
-        throwsStateError,
-      );
-    });
-
     test('fake records calls and validates like the player', () async {
       final fake = FakePlaybackCommands();
       const ctx = PlayContext(PlayContextKind.songs);

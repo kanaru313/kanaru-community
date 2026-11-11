@@ -3,6 +3,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../extension/state/registry_entries.dart';
+import 'nav_groups.dart';
 
 /// Sidebar: 240 dp with labels, 72 dp rail with icons only. Footer items
 /// (Settings) are pinned at the bottom. A divider separates neighbouring items
@@ -29,14 +30,7 @@ class DesktopSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final main = [
-      for (final i in items)
-        if (!i.footer) i,
-    ];
-    final footer = [
-      for (final i in items)
-        if (i.footer) i,
-    ];
+    final (:main, :footer) = splitNavItems(items);
     return AnimatedContainer(
       key: const ValueKey('sidebar'),
       duration: KMotion.fast,
@@ -52,8 +46,7 @@ class DesktopSidebar extends StatelessWidget {
             child: ListView(
               children: [
                 for (var i = 0; i < main.length; i++) ...[
-                  if (i > 0 && main[i].order ~/ 100 != main[i - 1].order ~/ 100)
-                    const _BandDivider(),
+                  if (startsNavGroup(main, i)) const _BandDivider(),
                   _row(context, main[i]),
                 ],
               ],

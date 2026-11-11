@@ -225,6 +225,224 @@
   "scanHomeNoTracks": "No songs found",
   "playbackCover": "Cover art",
   "playbackNavQueue": "Queue",
+  "playbackPlay": "Play",
+  "playbackPause": "Pause",
+  "playbackNext": "Next",
+  "playbackPrevious": "Previous",
+  "playbackShuffle": "Shuffle",
+  "playbackRepeatOff": "Stop at the end",
+  "playbackRepeatOne": "Repeat this song",
+  "playbackRepeatTimes": "{count, plural, =1{Repeat this song 1 more time} other{Repeat this song {count} more times}}",
+  "@playbackRepeatTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackRepeatAll": "Repeat the whole queue",
+  "playbackRepeatAllShuffled": "Repeat the whole queue, reshuffled every pass",
+  "playbackRepeatFewer": "One time fewer",
+  "playbackRepeatMore": "One time more",
+  "playbackFavoriteAdd": "Add to favorites",
+  "playbackFavoriteRemove": "Remove from favorites",
+  "playbackSleepTimer": "Sleep timer",
+  "playbackLyrics": "Lyrics",
+  "playbackVolume": "Volume",
+  "playbackMute": "Mute",
+  "playbackUnmute": "Unmute",
+  "playbackExpand": "Open Now Playing",
+  "playbackOpenNowPlaying": "Open Now Playing",
+  "playbackPlayer": "Player",
+  "playbackSeek": "Playback position",
+  "playbackPositionValue": "{position} of {duration}",
+  "@playbackPositionValue": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkipped": "Skipped “{title}”: file is gone",
+  "@playbackNoticeSkipped": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkippedMany": "Skipped “{title}” and {others} more: files are gone",
+  "@playbackNoticeSkippedMany": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "others": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeFailed": "Could not play “{title}”",
+  "@playbackNoticeFailed": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeFirstTrack": "This is the first track",
+  "playbackNoticeQueueEnd": "End of the queue",
+  "playbackNoticeQueueEmpty": "The queue is empty",
+  "playbackNoticeFocusDenied": "Could not play: another app is using the audio",
+  "playbackSidebarOpen": "Menu",
+  "playbackSidebarClose": "Close menu",
+  "playbackQueueMobileCounts": "{position}/{total} · {remaining} left",
+  "@playbackQueueMobileCounts": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackRemainingHoursMinutes": "{hours} h {minutes} min",
+  "@playbackRemainingHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackRemainingMinutes": "{minutes} min",
+  "@playbackRemainingMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackRemainingUnderMinute": "under 1 min",
+  "playbackMore": "More",
+  "playbackMinimize": "Minimise",
+  "playbackQueueSelectMany": "Select several",
+  "playbackQueueAddTracks": "Add tracks",
+  "playbackQueueCleanup": "Clean up",
+  "playbackQueueSavePlaylist": "Save as playlist",
+  "playbackQueueCleanupTitle": "Remove from queue",
+  "playbackCleanupDuplicates": "Duplicate tracks",
+  "playbackCleanupBefore": "Earlier tracks",
+  "playbackCleanupAfter": "Later tracks",
+  "playbackCleanupAll": "All except the current track",
+  "playbackQueueLocate": "Go to current track",
+  "playbackQueueReorder": "Drag to reorder",
+  "playbackQueueRemovedOne": "Removed “{title}”",
+  "@playbackQueueRemovedOne": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackQueueRemovedMany": "{count, plural, one{Removed 1 track} other{Removed {count} tracks}}",
+  "@playbackQueueRemovedMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackUndo": "Undo",
+  "playbackRowPlay": "Play this track",
+  "playbackRowPlayNext": "Play next",
+  "playbackGoAlbum": "Go to album",
+  "playbackGoArtist": "Go to artist",
+  "playbackAskAi": "Ask AI",
+  "playbackRemoveFromQueue": "Remove from queue",
+  "playbackQueueStale": "That track is no longer in the queue",
+  "playbackPickArtist": "Choose an artist",
+  "playbackSourceSongs": "Songs",
+  "playbackSourceAlbum": "Album",
+  "playbackSourceArtist": "Artist",
+  "playbackSourceGenre": "Genre",
+  "playbackSourceLanguage": "Language",
+  "playbackSourceFolder": "Folder",
+  "playbackSourceFavorites": "Favorites",
+  "playbackSourceSelection": "Selection",
+  "playbackSourceQueue": "Queue",
+  "playbackLyricsCard": "Lyrics",
+  "playbackAddToPlaylist": "Add to playlist",
+  "playbackLyricsSource": "Lyrics source",
+  "playbackTranslateLyrics": "Translate lyrics…",
+  "playbackVisualEffects": "Visual effects",
+  "playbackTrackInfo": "Track info",
+  "playbackInfoPlays": "{count, plural, one{1 play} other{{count} plays}}",
+  "@playbackInfoPlays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackInfoSampleRate": "{khz} kHz",
+  "@playbackInfoSampleRate": {
+    "placeholders": {
+      "khz": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackInfoBitrate": "{kbps} kbps",
+  "@playbackInfoBitrate": {
+    "placeholders": {
+      "kbps": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackToggleCoverColumn": "Show or hide the cover column",
+  "playbackTranslate": "Translate",
+  "playbackTabLyrics": "Lyrics",
+  "playbackLyricsTabSoon": "Lyrics: coming soon",
+  "playbackPanelClose": "Close panel",
+  "playbackQueuePanelCounts": "{total, plural, one{1 track} other{{total} tracks}} · {remaining} left",
+  "@playbackQueuePanelCounts": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackQueuePanelShort": "{total, plural, one{1 track} other{{total} tracks}}",
+  "@playbackQueuePanelShort": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackQueuePlayingAt": "Playing track {position}",
+  "@playbackQueuePlayingAt": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackQueueEmpty": "The queue is empty",
   "libraryTabSongs": "Songs",
   "libraryTabAlbums": "Albums",
   "libraryTabArtists": "Artists",

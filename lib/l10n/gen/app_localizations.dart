@@ -710,6 +710,534 @@ abstract class AppLocalizations {
   /// **'Queue'**
   String get playbackNavQueue;
 
+  /// No description provided for @playbackPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get playbackPlay;
+
+  /// No description provided for @playbackPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get playbackPause;
+
+  /// No description provided for @playbackNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get playbackNext;
+
+  /// No description provided for @playbackPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get playbackPrevious;
+
+  /// No description provided for @playbackShuffle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle'**
+  String get playbackShuffle;
+
+  /// No description provided for @playbackRepeatOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop at the end'**
+  String get playbackRepeatOff;
+
+  /// No description provided for @playbackRepeatOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat this song'**
+  String get playbackRepeatOne;
+
+  /// No description provided for @playbackRepeatTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Repeat this song 1 more time} other{Repeat this song {count} more times}}'**
+  String playbackRepeatTimes(int count);
+
+  /// No description provided for @playbackRepeatAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat the whole queue'**
+  String get playbackRepeatAll;
+
+  /// No description provided for @playbackRepeatAllShuffled.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat the whole queue, reshuffled every pass'**
+  String get playbackRepeatAllShuffled;
+
+  /// No description provided for @playbackRepeatFewer.
+  ///
+  /// In en, this message translates to:
+  /// **'One time fewer'**
+  String get playbackRepeatFewer;
+
+  /// No description provided for @playbackRepeatMore.
+  ///
+  /// In en, this message translates to:
+  /// **'One time more'**
+  String get playbackRepeatMore;
+
+  /// No description provided for @playbackFavoriteAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get playbackFavoriteAdd;
+
+  /// No description provided for @playbackFavoriteRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get playbackFavoriteRemove;
+
+  /// No description provided for @playbackSleepTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer'**
+  String get playbackSleepTimer;
+
+  /// No description provided for @playbackLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get playbackLyrics;
+
+  /// No description provided for @playbackVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get playbackVolume;
+
+  /// No description provided for @playbackMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get playbackMute;
+
+  /// No description provided for @playbackUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get playbackUnmute;
+
+  /// No description provided for @playbackExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Now Playing'**
+  String get playbackExpand;
+
+  /// No description provided for @playbackOpenNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Now Playing'**
+  String get playbackOpenNowPlaying;
+
+  /// No description provided for @playbackPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Player'**
+  String get playbackPlayer;
+
+  /// No description provided for @playbackSeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback position'**
+  String get playbackSeek;
+
+  /// No description provided for @playbackPositionValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{position} of {duration}'**
+  String playbackPositionValue(String position, String duration);
+
+  /// No description provided for @playbackNoticeSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped “{title}”: file is gone'**
+  String playbackNoticeSkipped(String title);
+
+  /// No description provided for @playbackNoticeSkippedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped “{title}” and {others} more: files are gone'**
+  String playbackNoticeSkippedMany(String title, String others);
+
+  /// No description provided for @playbackNoticeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not play “{title}”'**
+  String playbackNoticeFailed(String title);
+
+  /// No description provided for @playbackNoticeFirstTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the first track'**
+  String get playbackNoticeFirstTrack;
+
+  /// No description provided for @playbackNoticeQueueEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End of the queue'**
+  String get playbackNoticeQueueEnd;
+
+  /// No description provided for @playbackNoticeQueueEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The queue is empty'**
+  String get playbackNoticeQueueEmpty;
+
+  /// No description provided for @playbackNoticeFocusDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not play: another app is using the audio'**
+  String get playbackNoticeFocusDenied;
+
+  /// No description provided for @playbackSidebarOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get playbackSidebarOpen;
+
+  /// No description provided for @playbackSidebarClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close menu'**
+  String get playbackSidebarClose;
+
+  /// No description provided for @playbackQueueMobileCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{position}/{total} · {remaining} left'**
+  String playbackQueueMobileCounts(int position, int total, String remaining);
+
+  /// No description provided for @playbackRemainingHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String playbackRemainingHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @playbackRemainingMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String playbackRemainingMinutes(int minutes);
+
+  /// No description provided for @playbackRemainingUnderMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'under 1 min'**
+  String get playbackRemainingUnderMinute;
+
+  /// No description provided for @playbackMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get playbackMore;
+
+  /// No description provided for @playbackMinimize.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimise'**
+  String get playbackMinimize;
+
+  /// No description provided for @playbackQueueSelectMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Select several'**
+  String get playbackQueueSelectMany;
+
+  /// No description provided for @playbackQueueAddTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tracks'**
+  String get playbackQueueAddTracks;
+
+  /// No description provided for @playbackQueueCleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean up'**
+  String get playbackQueueCleanup;
+
+  /// No description provided for @playbackQueueSavePlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as playlist'**
+  String get playbackQueueSavePlaylist;
+
+  /// No description provided for @playbackQueueCleanupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from queue'**
+  String get playbackQueueCleanupTitle;
+
+  /// No description provided for @playbackCleanupDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate tracks'**
+  String get playbackCleanupDuplicates;
+
+  /// No description provided for @playbackCleanupBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier tracks'**
+  String get playbackCleanupBefore;
+
+  /// No description provided for @playbackCleanupAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Later tracks'**
+  String get playbackCleanupAfter;
+
+  /// No description provided for @playbackCleanupAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All except the current track'**
+  String get playbackCleanupAll;
+
+  /// No description provided for @playbackQueueLocate.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to current track'**
+  String get playbackQueueLocate;
+
+  /// No description provided for @playbackQueueReorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get playbackQueueReorder;
+
+  /// No description provided for @playbackQueueRemovedOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed “{title}”'**
+  String playbackQueueRemovedOne(String title);
+
+  /// No description provided for @playbackQueueRemovedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Removed 1 track} other{Removed {count} tracks}}'**
+  String playbackQueueRemovedMany(int count);
+
+  /// No description provided for @playbackUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get playbackUndo;
+
+  /// No description provided for @playbackRowPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play this track'**
+  String get playbackRowPlay;
+
+  /// No description provided for @playbackRowPlayNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Play next'**
+  String get playbackRowPlayNext;
+
+  /// No description provided for @playbackGoAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to album'**
+  String get playbackGoAlbum;
+
+  /// No description provided for @playbackGoArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to artist'**
+  String get playbackGoArtist;
+
+  /// No description provided for @playbackAskAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI'**
+  String get playbackAskAi;
+
+  /// No description provided for @playbackRemoveFromQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from queue'**
+  String get playbackRemoveFromQueue;
+
+  /// No description provided for @playbackQueueStale.
+  ///
+  /// In en, this message translates to:
+  /// **'That track is no longer in the queue'**
+  String get playbackQueueStale;
+
+  /// No description provided for @playbackPickArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an artist'**
+  String get playbackPickArtist;
+
+  /// No description provided for @playbackSourceSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs'**
+  String get playbackSourceSongs;
+
+  /// No description provided for @playbackSourceAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get playbackSourceAlbum;
+
+  /// No description provided for @playbackSourceArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get playbackSourceArtist;
+
+  /// No description provided for @playbackSourceGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre'**
+  String get playbackSourceGenre;
+
+  /// No description provided for @playbackSourceLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get playbackSourceLanguage;
+
+  /// No description provided for @playbackSourceFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get playbackSourceFolder;
+
+  /// No description provided for @playbackSourceFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get playbackSourceFavorites;
+
+  /// No description provided for @playbackSourceSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Selection'**
+  String get playbackSourceSelection;
+
+  /// No description provided for @playbackSourceQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get playbackSourceQueue;
+
+  /// No description provided for @playbackLyricsCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get playbackLyricsCard;
+
+  /// No description provided for @playbackAddToPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to playlist'**
+  String get playbackAddToPlaylist;
+
+  /// No description provided for @playbackLyricsSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics source'**
+  String get playbackLyricsSource;
+
+  /// No description provided for @playbackTranslateLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate lyrics…'**
+  String get playbackTranslateLyrics;
+
+  /// No description provided for @playbackVisualEffects.
+  ///
+  /// In en, this message translates to:
+  /// **'Visual effects'**
+  String get playbackVisualEffects;
+
+  /// No description provided for @playbackTrackInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Track info'**
+  String get playbackTrackInfo;
+
+  /// No description provided for @playbackInfoPlays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 play} other{{count} plays}}'**
+  String playbackInfoPlays(int count);
+
+  /// No description provided for @playbackInfoSampleRate.
+  ///
+  /// In en, this message translates to:
+  /// **'{khz} kHz'**
+  String playbackInfoSampleRate(String khz);
+
+  /// No description provided for @playbackInfoBitrate.
+  ///
+  /// In en, this message translates to:
+  /// **'{kbps} kbps'**
+  String playbackInfoBitrate(int kbps);
+
+  /// No description provided for @playbackToggleCoverColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Show or hide the cover column'**
+  String get playbackToggleCoverColumn;
+
+  /// No description provided for @playbackTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate'**
+  String get playbackTranslate;
+
+  /// No description provided for @playbackTabLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get playbackTabLyrics;
+
+  /// No description provided for @playbackLyricsTabSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics: coming soon'**
+  String get playbackLyricsTabSoon;
+
+  /// No description provided for @playbackPanelClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close panel'**
+  String get playbackPanelClose;
+
+  /// No description provided for @playbackQueuePanelCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, one{1 track} other{{total} tracks}} · {remaining} left'**
+  String playbackQueuePanelCounts(int total, String remaining);
+
+  /// No description provided for @playbackQueuePanelShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, one{1 track} other{{total} tracks}}'**
+  String playbackQueuePanelShort(int total);
+
+  /// No description provided for @playbackQueuePlayingAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing track {position}'**
+  String playbackQueuePlayingAt(int position);
+
+  /// No description provided for @playbackQueueEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The queue is empty'**
+  String get playbackQueueEmpty;
+
   /// No description provided for @libraryTabSongs.
   ///
   /// In en, this message translates to:
