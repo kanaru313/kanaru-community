@@ -364,12 +364,14 @@ The UI only reads them. (`shell.right_panel` is the shell's own key, see UI: wid
 | Key | Setting | Holds |
 |---|---|---|
 | `playback.queue.current_entry` | `currentEntrySetting` | `entryId` of the loaded entry (null = none) |
+| `playback.queue.play_next_run` | `playNextRunSetting` | `List<int>` entry ids of the play-next run waiting right after current entry |
 | `playback.position_ms` | `positionMsSetting` | Last saved position, ms (default 0) |
 | `playback.shuffle` | `shuffleSetting` | Shuffle on or off |
 | `playback.repeat` | `repeatSetting` | `'off'`, `'all'`, `'one'` or `'allShuffled'` (the first three are the original values) |
 | `playback.repeat_count` | `repeatCountSetting` | Plays of the loaded entry still to come under a counted repeat, 0-99 (default 0; clamped; ignored on restore while the mode is `one`) |
 | `playback.context` | `contextSetting` | `{kind, ref, label}` of the `PlayContext`; an unknown kind reads as `queue` |
 | `playback.volume` | `volumeSetting` | 0-100 (default 100; out of range is clamped) |
+| `playback.volume_before_mute` | `volumeBeforeMuteSetting` | Level 1-100 to restore on unmute when muted (null otherwise) |
 
 ## Restore
 
@@ -475,8 +477,8 @@ signalled.
   `org.mpris.MediaPlayer2.kanaru_community`, then `.instance<pid>`, then `.instance<pid>_1` to `_5`,
   always with `doNotQueue` (without it the bus queues and never refuses). None free: idle and one
   log line.
-- Root: `Identity` Kanaru, `DesktopEntry` `io.github.kanaru313.kanaru_community`, `CanRaise`,
-  `CanQuit`, `HasTrackList` false, empty scheme and MIME lists.
+- Root: `Identity` Kanaru, `DesktopEntry` `io.github.kanaru313.kanaru_community`, `CanRaise` false,
+  `CanQuit` false, `HasTrackList` false, empty scheme and MIME lists.
 - Player: `PlaybackStatus` (Stopped comes from the app state), `LoopStatus` (see Repeat mapping), `Shuffle`, `Volume`,
   `Rate`/`MinimumRate`/`MaximumRate` 1, `Position` (microseconds, live), `Can*`, `CanControl`.
   Metadata keys: `mpris:trackid` (object path of the entry), `mpris:length` (only when > 0),
