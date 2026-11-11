@@ -23,9 +23,6 @@ class KCountStepper extends StatelessWidget {
   static const decreaseKey = ValueKey('k-count-stepper-decrease');
   static const increaseKey = ValueKey('k-count-stepper-increase');
 
-  // The icon set has no minus yet; the same Material glyph as its others.
-  static const IconData _minus = Icons.remove;
-
   final int value;
   final ValueChanged<int> onChanged;
   final String decreaseTooltip;
@@ -59,7 +56,7 @@ class KCountStepper extends StatelessWidget {
       children: [
         button(
           decreaseKey,
-          _minus,
+          KIcons.remove,
           decreaseTooltip,
           (value - 1).clamp(min, max),
           value <= min,
