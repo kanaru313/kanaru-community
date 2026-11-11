@@ -13,6 +13,21 @@ import 'mpv_resume.dart';
 
 final _log = Logger('MediaKitEngine');
 
+class _PlayerMpvConsole implements MpvConsole {
+  const _PlayerMpvConsole(this._native);
+  final NativePlayer _native;
+
+  @override
+  Future<void> set(String name, String value) =>
+      _native.setProperty(name, value);
+
+  @override
+  Future<String> get(String name) => _native.getProperty(name);
+
+  @override
+  Future<void> command(List<String> args) => _native.command(args);
+}
+
 /// [AudioEngine] on media_kit (libmpv).
 ///
 /// mpv's playlist is `[current, next]`. media_kit keeps `keep-open=yes`: at
@@ -28,18 +43,27 @@ final _log = Logger('MediaKitEngine');
 /// swallowed there, which is harmless because only `open` (which resets
 /// media_kit's list) ever reloads an entry.
 class MediaKitEngine implements AudioEngine, MpvConsole {
-  MediaKitEngine({Player? player})
-    : _player =
-          player ??
-          Player(
-            configuration: const PlayerConfiguration(
-              logLevel: MPVLogLevel.warn,
-            ),
-          ) {
-    _native = _player.platform as NativePlayer;
-    // A rejected mpv command does not throw: it only shows in mpv's log.
-    // `stream.error` repeats part of this stream, so it is not listened to.
-    _subs.add(_player.stream.log.listen(_logMpv));
+  MediaKitEngine({Player? player, MpvConsole? mpv})
+    : _player = mpv != null
+          ? null
+          : (player ??
+                Player(
+                  configuration: const PlayerConfiguration(
+                    logLevel: MPVLogLevel.warn,
+                  ),
+                )) {
+    final p = _player;
+    if (p != null) {
+      final native = p.platform as NativePlayer;
+      _native = native;
+      _mpv = _PlayerMpvConsole(native);
+      // A rejected mpv command does not throw: it only shows in mpv's log.
+      // `stream.error` repeats part of this stream, so it is not listened to.
+      _subs.add(p.stream.log.listen(_logMpv));
+    } else {
+      _native = null;
+      _mpv = mpv!;
+    }
   }
 
   final _logFilter = MpvLogFilter();
@@ -56,8 +80,9 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
     }
   }
 
-  final Player _player;
-  late final NativePlayer _native;
+  final Player? _player;
+  late final NativePlayer? _native;
+  late final MpvConsole _mpv;
   final _tracker = MpvPlaylistTracker();
   final _events = StreamController<EngineEvent>.broadcast();
   final _playing = StreamController<bool>.broadcast();
@@ -101,27 +126,36 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
 
   Future<void> _start() => _started ??= () async {
     await applyMpvOptions(this);
-    for (final p in _observed) {
-      await _native.observeProperty(p, (_) async => _poke());
+    final native = _native;
+    if (native != null) {
+      for (final p in _observed) {
+        await native.observeProperty(p, (_) async => _poke());
+      }
     }
-    _subs.add(
-      _player.stream.playing.listen((p) {
-        if (!_disposed && !_eof) _playing.add(p);
-      }),
-    );
+    final player = _player;
+    if (player != null) {
+      _subs.add(
+        player.stream.playing.listen((p) {
+          if (!_disposed && !_eof) _playing.add(p);
+        }),
+      );
+    }
   }();
 
   bool _eof = false;
 
   @override
-  Future<void> set(String name, String value) =>
-      _native.setProperty(name, value);
+  Future<void> set(String name, String value) => _mpv.set(name, value);
 
   @override
-  Future<String> get(String name) => _native.getProperty(name);
+  Future<String> get(String name) => _mpv.get(name);
 
   @override
-  Future<void> command(List<String> args) => _native.command(args);
+  Future<void> command(List<String> args) => _mpv.command(args);
+
+  /// Reads one mpv snapshot and processes any resulting transitions on the
+  /// command chain. Used by property observers and direct engine tests.
+  Future<void> poll() => _run(_pollLoop);
 
   /// A property changed: read a snapshot and act, once at a time. Bursts
   /// collapse into one more read.
@@ -144,7 +178,7 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
 
   Future<String?> _try(String property) async {
     try {
-      return await _native.getProperty(property);
+      return await get(property);
     } on Object {
       return null; // unavailable while nothing is loaded
     }
@@ -176,11 +210,11 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
     final s = await _snapshot();
     final events = _tracker.onSnapshot(s);
     if (_tracker.needsPlaylistNext(s)) {
-      await _native.command(['playlist-next']);
+      await command(['playlist-next']);
       if (_wantPlay) await _unpause();
     }
     for (var i = _tracker.entriesToTrim(s); i > 0; i--) {
-      await _native.command(['playlist-remove', '0']);
+      await command(['playlist-remove', '0']);
     }
     for (final e in events) {
       if (e is EngineEnded) _afterEnd = true;
@@ -207,16 +241,25 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
         _tracker.reset();
         _afterEnd = false;
         _wantPlay = play;
-        await _player.open(
-          Media(Uri.file(current.path).toString()),
-          play: false,
-        );
+        final uri = Uri.file(current.path).toString();
+        if (_player case final p?) {
+          await p.open(Media(uri), play: false);
+        } else {
+          await set('pause', 'yes');
+          await command(['loadfile', uri, 'replace']);
+        }
         final id = await _idOfIndex(0);
         if (id == null) throw StateError('mpv has no entry after open');
         _tracker.startLoad(current.token, id);
         await seekToResume(this, start, disposed: () => _disposed);
         await _setNext(next);
-        if (play) await _player.play();
+        if (play) {
+          if (_player case final p?) {
+            await p.play();
+          } else {
+            await _unpause();
+          }
+        }
         await _poll();
       },
     ),
@@ -239,7 +282,7 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
       s = await _snapshot();
       if (s.idle) {
         // mpv went idle while the append was in flight: drop it.
-        if (s.count > 0) await _native.command(['playlist-clear']);
+        if (s.count > 0) await command(['playlist-clear']);
         _tracker.clearNext();
         _emit(_tracker.onSnapshot(s));
         return;
@@ -258,18 +301,18 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
       // Remove the previous next only after the new one is in (a playlist
       // never goes empty behind the playing entry).
       if (hadNext && s.playingPos + 1 < count - 1) {
-        await _native.command(['playlist-remove', '${s.playingPos + 1}']);
+        await command(['playlist-remove', '${s.playingPos + 1}']);
       }
       _tracker.registerNext(next.token, appended.id);
       s = await _snapshot();
       if (_tracker.needsPlaylistNext(s)) {
         // The file ended before the append: step on, and unpause if asked.
-        await _native.command(['playlist-next']);
+        await command(['playlist-next']);
         if (_wantPlay) await _unpause();
       }
     } else if (hadNext) {
       if (s.count > s.playingPos + 1) {
-        await _native.command(['playlist-remove', '${s.playingPos + 1}']);
+        await command(['playlist-remove', '${s.playingPos + 1}']);
       }
       _tracker.clearNext();
     }
@@ -278,7 +321,7 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
   /// Unpauses mpv directly. After `playlist-next` at the end of a file,
   /// media_kit's `play()` would seek to the first playlist entry while its
   /// `completed` flag is still set, so it is not used here.
-  Future<void> _unpause() => _native.setProperty('pause', 'no');
+  Future<void> _unpause() => set('pause', 'no');
 
   void _emit(List<EngineEvent> events) {
     for (final e in events) {
@@ -289,42 +332,63 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
   @override
   Future<void> play() => _run(() async {
     _wantPlay = true;
-    if (_afterEnd) {
+    final p = _player;
+    if (_afterEnd || p == null) {
       await _unpause();
     } else {
-      await _player.play();
+      await p.play();
     }
   });
 
   @override
   Future<void> pause() => _run(() async {
     _wantPlay = false;
-    await _player.pause();
+    if (_player case final p?) {
+      await p.pause();
+    } else {
+      await set('pause', 'yes');
+    }
   });
 
   @override
   Future<void> stop() => _run(() async {
     _wantPlay = false;
     _tracker.reset();
-    await _player.stop();
+    if (_player case final p?) {
+      await p.stop();
+    } else {
+      await command(['stop']);
+    }
   });
 
   @override
   Future<void> seek(Duration position) => _run(() async {
-    await _player.seek(position);
+    if (_player case final p?) {
+      await p.seek(position);
+    } else {
+      final s = (position.inMicroseconds / 1e6).toStringAsFixed(3);
+      await command(['seek', s, 'absolute']);
+    }
     _eof = false;
     if (!_events.isClosed) _events.add(EngineSeeked(position));
   });
 
   @override
-  Future<void> setVolume(double volume0to100) =>
-      _run(() => _player.setVolume(volume0to100.clamp(0, 100).toDouble()));
+  Future<void> setVolume(double volume0to100) => _run(() async {
+    final v = volume0to100.clamp(0, 100).toDouble();
+    if (_player case final p?) {
+      await p.setVolume(v);
+    } else {
+      await set('volume', '$v');
+    }
+  });
 
   @override
   Stream<EngineEvent> get events => _events.stream;
 
   @override
-  Stream<Duration> get position => _player.stream.position;
+  Stream<Duration> get position =>
+      _player?.stream.position ?? const Stream.empty();
 
   @override
   Stream<bool> get playing => _playing.stream;
@@ -333,18 +397,21 @@ class MediaKitEngine implements AudioEngine, MpvConsole {
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
-    for (final p in _observed) {
-      try {
-        await _native.unobserveProperty(p);
-      } on Object {
-        // already gone
+    final native = _native;
+    if (native != null) {
+      for (final p in _observed) {
+        try {
+          await native.unobserveProperty(p);
+        } on Object {
+          // already gone
+        }
       }
     }
     for (final s in _subs) {
       await s.cancel();
     }
     await _chain;
-    await _player.dispose();
+    await _player?.dispose();
     await _events.close();
     await _playing.close();
   }

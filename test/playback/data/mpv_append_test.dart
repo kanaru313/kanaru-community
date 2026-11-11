@@ -2,11 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/data/mpv_append.dart';
 import 'package:kanaru/src/playback/data/mpv_options.dart';
 
-/// A scripted mpv. The 4th `loadfile` argument is the index from 0.38 (it
-/// must be an integer, so `append -1 start=0` is accepted and `append
-/// start=0` is rejected) and the options string before (so `append start=0`
-/// is accepted and the five-argument `append -1 start=0` is rejected). A rejected command
-/// does not throw, as with libmpv: it changes nothing.
+/// A scripted mpv. From mpv 0.38 the 4th `loadfile` argument is the insertion
+/// index (an integer, so `append -1 start=0` is accepted and `append start=0`
+/// is rejected); before 0.38 it was the options string (so `append start=0` is
+/// accepted and the five-argument `append -1 start=0` is rejected). A rejected
+/// command does not throw, as with libmpv: it changes nothing.
 class FakeMpv implements MpvConsole {
   FakeMpv({this.legacy = false, this.dropAppends = false, this.unreadableId});
 

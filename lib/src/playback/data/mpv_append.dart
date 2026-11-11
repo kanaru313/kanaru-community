@@ -57,7 +57,11 @@ Future<int?> _readInt(MpvProperties mpv, String name) async {
 /// nothing untracked stays behind the playing entry.
 Future<void> removeEntriesAfter(MpvConsole mpv, int playingPos) async {
   if (playingPos < 0) return;
-  final count = await _readInt(mpv, 'playlist-count') ?? 0;
+  final count = await _readInt(mpv, 'playlist-count');
+  if (count == null) {
+    _log.warning('could not read playlist-count to trim after $playingPos');
+    return;
+  }
   for (var i = count - 1; i > playingPos; i--) {
     await mpv.command(['playlist-remove', '$i']);
   }
