@@ -104,17 +104,20 @@ class _SongsBarLeading extends ConsumerWidget {
             icon: const Icon(KIcons.play),
           ),
         ],
-        const KGap(KSpace.x3),
-        Flexible(
-          child: Text(
-            count,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+        if (count.isNotEmpty)
+          Flexible(
+            child: Padding(
+              padding: const EdgeInsets.only(left: KSpace.x3),
+              child: Text(
+                count,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
           ),
-        ),
       ],
     );
   }

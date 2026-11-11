@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
@@ -61,59 +63,82 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
         : IconButton.new;
     return ConstrainedBox(
       constraints: BoxConstraints(minHeight: height),
-      child: Row(
-        children: [
-          Expanded(child: widget.leading),
-          const KGap(KSpace.x3),
-          Semantics(
-            button: true,
-            label: widget.sortTooltip == null
-                ? widget.criterionLabel
-                : '${widget.sortTooltip}: ${widget.criterionLabel}',
-            excludeSemantics: true,
-            child: Tooltip(
-              message: widget.sortTooltip ?? '',
-              child: InkWell(
-                key: _chipKey,
-                borderRadius: KRadius.full,
-                onTap: () => widget.onSortPressed(_chipKey),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: mobile ? 48 : 40),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: KSpace.x3),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            widget.criterionLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(color: scheme.onSurface),
+      child: LayoutBuilder(
+        // The chip is at most half of the bar (and leaves room for leading actions
+        // such as the mobile play/shuffle buttons): a long label is ellipsized.
+        builder: (context, bar) {
+          final leadingMin = mobile ? 96.0 : 0.0;
+          final filterWidth = mobile ? 48.0 : 40.0;
+          final gaps = KSpace.x3 + KSpace.x2;
+          final maxChipWidth = math.max(
+            48.0,
+            math.min(
+              bar.maxWidth / 2,
+              bar.maxWidth - leadingMin - filterWidth - gaps,
+            ),
+          );
+          return Row(
+            children: [
+              Expanded(child: widget.leading),
+              const KGap(KSpace.x3),
+              Semantics(
+                button: true,
+                label: widget.sortTooltip == null
+                    ? widget.criterionLabel
+                    : '${widget.sortTooltip}: ${widget.criterionLabel}',
+                excludeSemantics: true,
+                child: Tooltip(
+                  message: widget.sortTooltip ?? '',
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxChipWidth),
+                    child: InkWell(
+                      key: _chipKey,
+                      borderRadius: KRadius.full,
+                      onTap: () => widget.onSortPressed(_chipKey),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: mobile ? 48 : 40),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: KSpace.x3,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  widget.criterionLabel,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.labelLarge
+                                      ?.copyWith(color: scheme.onSurface),
+                                ),
+                              ),
+                              const KGap(KSpace.x1),
+                              Icon(
+                                widget.ascending
+                                    ? KIcons.sortAsc
+                                    : KIcons.sortDesc,
+                                size: 14,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ],
                           ),
                         ),
-                        const KGap(KSpace.x1),
-                        Icon(
-                          widget.ascending ? KIcons.sortAsc : KIcons.sortDesc,
-                          size: 14,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
-          const KGap(KSpace.x2),
-          filterButton(
-            tooltip: widget.filterTooltip,
-            isSelected: widget.filterOpen,
-            onPressed: widget.onFilterToggle,
-            icon: const Icon(KIcons.filter),
-          ),
-        ],
+              const KGap(KSpace.x2),
+              filterButton(
+                tooltip: widget.filterTooltip,
+                isSelected: widget.filterOpen,
+                onPressed: widget.onFilterToggle,
+                icon: const Icon(KIcons.filter),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
