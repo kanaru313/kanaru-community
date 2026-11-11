@@ -38,13 +38,11 @@ MenuSpec buildAlbumMenu(AlbumMenuData data, MenuOrigin origin, MenuEnv env) {
   final pages = <String, MenuPageSpec>{};
 
   // An album has one album-artist key (`tracks.album_artist_key`), so the
-  // artist row has no target or one; the artist's own page is not a link.
+  // artist row has no target or one. It stays on that artist's page too (old
+  // app: "always show all artists").
   final artistName = album.artist;
   final artistKey = data.key.artistKey;
-  final fromArtist = origin is ArtistOrigin ? origin.key.key : null;
-  final MenuItemSpec? artistRow = artistKey == fromArtist
-      ? null
-      : artistKey.isEmpty
+  final MenuItemSpec artistRow = artistKey.isEmpty
       ? MenuItemSpec(
           MenuItemId.goArtist,
           icon: KIcons.artists,
@@ -101,7 +99,7 @@ MenuSpec buildAlbumMenu(AlbumMenuData data, MenuOrigin origin, MenuEnv env) {
               subtitle: album.title,
               action: MenuAction.go(LibraryLocations.album(data.key)),
             ),
-          ?artistRow,
+          artistRow,
           ?folderLink?.item,
         ],
         [

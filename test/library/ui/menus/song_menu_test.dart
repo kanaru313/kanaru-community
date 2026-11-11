@@ -193,34 +193,29 @@ void main() {
       expect(rowOf(spec, MenuItemId.reveal).soon, isTrue);
     });
 
-    test('artist page: its artist is not a chip; the row goes when alone', () {
+    test('artist page: its artist stays a link, alone or among others', () {
       final page = MenuOrigin.artist(ArtistKey(groupKey('Miles')));
       final alone = _menu(origin: page);
-      expect(hasRow(alone, MenuItemId.goArtist), isFalse);
+      final solo = _menu(origin: page, artists: ['Miles']);
+      expect(rowOf(solo, MenuItemId.goArtist).subtitle, 'Miles');
+      expect(hasRow(alone, MenuItemId.goArtist), isTrue);
       final duo = _menu(origin: page, artists: ['Miles', 'Coltrane']);
-      final row = rowOf(duo, MenuItemId.goArtist);
-      // One target left: a plain row, not chips.
-      expect(row.subtitle, 'Coltrane');
-      expect(row.chips, isEmpty);
-      final trio = _menu(origin: page, artists: ['Miles', 'A', 'B']);
-      expect(rowOf(trio, MenuItemId.goArtist).chips.map((c) => c.label), [
-        'A',
-        'B',
+      expect(rowOf(duo, MenuItemId.goArtist).chips.map((c) => c.label), [
+        'Miles',
+        'Coltrane',
       ]);
     });
 
-    test('artist page also leaves its artist out of the album artists', () {
+    test('artist page keeps its artist among the album artists', () {
       final page = MenuOrigin.artist(ArtistKey(groupKey('Various')));
       final spec = _menu(origin: page, albumArtists: ['Various']);
-      expect(hasRow(spec, MenuItemId.goAlbumArtist), isFalse);
+      expect(hasRow(spec, MenuItemId.goAlbumArtist), isTrue);
     });
 
     test('a menu never links to the page it was opened from', () {
-      final miles = ArtistKey(groupKey('Miles'));
       final blue = albumKeyOf('Blue', 'Miles');
       final cases = <MenuOrigin, String>{
         MenuOrigin.album(blue): LibraryLocations.album(blue),
-        MenuOrigin.artist(miles): LibraryLocations.artist(miles),
       };
       cases.forEach((origin, self) {
         final spec = _menu(

@@ -43,30 +43,26 @@ MenuSpec buildSongMenu(
   final id = info.id;
   final pages = <String, MenuPageSpec>{};
 
-  final hideArtist = origin is ArtistOrigin ? origin.key : null;
+  // Every artist is a link, the page's own artist included (old app: "always
+  // show all artists in Go to artist"); only the album and the folder have a
+  // self-link rule.
   List<LinkTarget> artistTargets(List<ArtistRef> refs) => [
-    for (final a in refs)
-      if (a.key != hideArtist)
-        LinkTarget(a.name, LibraryLocations.artist(a.key)),
+    for (final a in refs) LinkTarget(a.name, LibraryLocations.artist(a.key)),
   ];
 
   final goAlbum = _goAlbum(data, origin, env);
   final artists = artistTargets(links.artists);
-  // The page's own artist is not a link; when it was the only one the row
-  // goes (a song with no artist at all keeps its dimmed row).
-  final artistRow = links.artists.isNotEmpty && artists.isEmpty
-      ? null
-      : linkRow(
-          id: MenuItemId.goArtist,
-          icon: KIcons.artists,
-          manyIcon: KIcons.artistsMany,
-          title: l10n.libraryMenuGoArtist,
-          targets: artists,
-          manyText: l10n.libraryArtistCount(artists.length),
-          noneText: l10n.libraryMenuNoArtist,
-          pageKey: 'artists',
-          chipsOnly: true,
-        ).item;
+  final artistRow = linkRow(
+    id: MenuItemId.goArtist,
+    icon: KIcons.artists,
+    manyIcon: KIcons.artistsMany,
+    title: l10n.libraryMenuGoArtist,
+    targets: artists,
+    manyText: l10n.libraryArtistCount(artists.length),
+    noneText: l10n.libraryMenuNoArtist,
+    pageKey: 'artists',
+    chipsOnly: true,
+  ).item;
   final albumArtists = artistTargets(links.albumArtists);
   final albumArtistRow = albumArtists.isEmpty
       ? null
@@ -122,7 +118,7 @@ MenuSpec buildSongMenu(
     ),
     groups: withAdvanced(
       [
-        [?goAlbum, ?artistRow, ?albumArtistRow, folderRow],
+        [?goAlbum, artistRow, ?albumArtistRow, folderRow],
         [
           soonRow(
             MenuItemId.playlist,

@@ -270,4 +270,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('home'), findsOneWidget);
   });
+
+  testWidgets('Go to the page that is already open pushes nothing', (
+    tester,
+  ) async {
+    final rig = await _pump(tester);
+    unawaited(rig.router.push('/library/albums/x'));
+    await tester.pumpAndSettle();
+    await rig.runner.run(const MenuAction.go('/library/albums/x'));
+    await tester.pumpAndSettle();
+    rig.router.pop();
+    await tester.pumpAndSettle();
+    // One pop returns to home: no duplicate of the page was pushed.
+    expect(find.text('home'), findsOneWidget);
+  });
 }

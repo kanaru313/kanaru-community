@@ -27,8 +27,7 @@ Future<void> playFrom(
 ) => _run(
   ref,
   context,
-  (commands) =>
-      commands.playTracks(ids, startIndex: index, context: playContext),
+  (commands) => playIds(commands, ids, playContext, startIndex: index),
   isEmpty: ids.isEmpty,
 );
 
@@ -49,29 +48,61 @@ Future<void> shuffleAll(
 ) => _run(
   ref,
   context,
-  (commands) => commands.playTracks(
-    ids,
-    startIndex: Random().nextInt(ids.length),
-    shuffle: true,
-    context: playContext,
-  ),
+  (commands) => playIds(commands, ids, playContext, shuffle: true),
   isEmpty: ids.isEmpty,
+);
+
+/// Reads the ids of a scope in the order of a list's default sort; tests
+/// replace it to hold a read back.
+typedef ScopeIdsReader = Future<List<TrackId>> Function(
+  SongScope scope,
+  SortSpec sort,
+);
+
+final scopeIdsReaderProvider = Provider<ScopeIdsReader>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return (scope, sort) => songIds(db, scope, sort, '');
+});
+
+/// Number of the newest library play request. Every way to start playback
+/// from the library (a tap, ▶, a menu's Play, the selection panel) takes a
+/// number first; a scope read that finishes after a newer request started is
+/// dropped, so a slow ▶ cannot replace the queue the user started afterwards.
+int _newestPlay = 0;
+
+/// Starts a library play request; the returned number is its identity.
+int beginPlayRequest() => ++_newestPlay;
+
+/// Whether [request] is still the newest one.
+bool isNewestPlay(int request) => request == _newestPlay;
+
+/// The one place that turns ids into a `playTracks` call: [shuffle] starts at
+/// a random id, otherwise at [startIndex].
+Future<void> playIds(
+  PlaybackCommands commands,
+  List<TrackId> ids,
+  PlayContext context, {
+  bool shuffle = false,
+  int startIndex = 0,
+}) => commands.playTracks(
+  ids,
+  startIndex: shuffle ? Random().nextInt(ids.length) : startIndex,
+  shuffle: shuffle,
+  context: context,
 );
 
 /// Reads the tracks of [scope] in the default order of [list] at the moment
 /// of the call (a ▶ button on a tile that does not hold the ids), then plays
-/// them. Calls [songIds] directly: no provider is read for a one-shot answer.
+/// them. The tile may leave the tree during the read (a scan refresh, a
+/// scroll): everything needed is taken before the read, so the play still
+/// happens.
 Future<void> playScope(
   WidgetRef ref,
   BuildContext context,
   SongScope scope,
   BrowseList list,
   PlayContext playContext,
-) async {
-  final ids = await _readIds(ref, context, scope, list);
-  if (ids == null || !context.mounted) return;
-  await playAll(ref, context, ids, playContext);
-}
+) => _playScoped(ref, context, scope, list, playContext, shuffle: false);
 
 /// Like [playScope], shuffled.
 Future<void> shuffleScope(
@@ -80,27 +111,33 @@ Future<void> shuffleScope(
   SongScope scope,
   BrowseList list,
   PlayContext playContext,
-) async {
-  final ids = await _readIds(ref, context, scope, list);
-  if (ids == null || !context.mounted) return;
-  await shuffleAll(ref, context, ids, playContext);
-}
+) => _playScoped(ref, context, scope, list, playContext, shuffle: true);
 
-/// The ids of [scope], or null after telling the user the read failed.
-Future<List<TrackId>?> _readIds(
+Future<void> _playScoped(
   WidgetRef ref,
   BuildContext context,
   SongScope scope,
   BrowseList list,
-) async {
-  final db = ref.read(appDatabaseProvider);
+  PlayContext playContext, {
+  required bool shuffle,
+}) async {
+  final request = beginPlayRequest();
+  final read = ref.read(scopeIdsReaderProvider);
+  final commands = ref.read(playbackCommandsProvider);
   final message = AppLocalizations.of(context).libraryPlayFailed;
+  // The root navigator outlives the tile, so the failure can still be shown.
+  final root = Navigator.of(context, rootNavigator: true).context;
   try {
-    return await songIds(db, scope, defaultSortOf(list), '');
+    final ids = await read(scope, defaultSortOf(list));
+    if (!isNewestPlay(request)) {
+      _log.fine('play request $request dropped: a newer one started');
+      return;
+    }
+    if (ids.isEmpty) return;
+    await playIds(commands, ids, playContext, shuffle: shuffle);
   } on Object catch (e, s) {
-    _log.warning('reading the tracks to play failed', e, s);
-    if (context.mounted) showAppSnackBar(context, message);
-    return null;
+    _log.warning('playing a scope failed', e, s);
+    if (root.mounted) showAppSnackBar(root, message);
   }
 }
 
@@ -111,6 +148,7 @@ Future<void> _run(
   required bool isEmpty,
 }) async {
   if (isEmpty) return;
+  beginPlayRequest();
   final commands = ref.read(playbackCommandsProvider);
   final message = AppLocalizations.of(context).libraryPlayFailed;
   try {

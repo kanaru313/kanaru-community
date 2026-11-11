@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:logging/logging.dart';
 
@@ -15,6 +15,7 @@ import '../../state/browse/selection_providers.dart';
 import '../../state/favorites_providers.dart';
 import '../../state/folder_exclusion_providers.dart';
 import '../browse/library_navigation.dart';
+import '../browse/play_actions.dart';
 import 'menu_model.dart';
 
 final _log = Logger('library.menu');
@@ -33,11 +34,25 @@ class MenuActionRunner {
   final ProviderContainer _container;
   final BuildContext _context;
 
+  /// The location on top of the router, an imperatively pushed page
+  /// included; null without a router.
+  Uri? _openLocation() {
+    final config = GoRouter.maybeOf(_context)
+        ?.routerDelegate
+        .currentConfiguration;
+    if (config == null || config.isEmpty) return null;
+    final top = config.last;
+    return top is ImperativeRouteMatch ? top.matches.uri : config.uri;
+  }
+
   AppLocalizations get _l10n => AppLocalizations.of(_context);
 
   Future<void> run(MenuAction action) async {
     switch (action) {
       case GoAction(:final location):
+        // The page is already open (an artist's own page lists that artist
+        // in "Go to artist"): the menu has closed, nothing more to do.
+        if (_openLocation() == Uri.parse(location)) return;
         // A push: Back returns to the page the menu was opened from. Not
         // awaited, the future completes when that page is popped.
         try {
@@ -103,15 +118,15 @@ class MenuActionRunner {
         }
       case PlayAction(:final ids, :final shuffle, :final context):
         if (ids.isEmpty) return;
+        // A newer request than any slow ▶ read still pending.
+        beginPlayRequest();
         await _guard('starting playback', _l10n.libraryPlayFailed, () {
-          return _container
-              .read(playbackCommandsProvider)
-              .playTracks(
-                ids,
-                startIndex: shuffle ? Random().nextInt(ids.length) : 0,
-                shuffle: shuffle,
-                context: context,
-              );
+          return playIds(
+            _container.read(playbackCommandsProvider),
+            ids,
+            context,
+            shuffle: shuffle,
+          );
         });
     }
   }
