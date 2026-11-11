@@ -219,7 +219,10 @@ List<T> _ordered<T>(
   required String Function(T) name,
   required int Function(T) songs,
 }) {
-  final byName = [...rows]..sort((a, b) => naturalCompare(name(a), name(b)));
+  // Each name is folded and split once, not on every comparison.
+  final keyed = [for (final r in rows) (naturalKeyOf(name(r)), r)]
+    ..sort((a, b) => a.$1.compareTo(b.$1));
+  final byName = [for (final e in keyed) e.$2];
   if (sort.criterion == SortCriterion.trackCount) {
     final indexed = [for (var i = 0; i < byName.length; i++) (i, byName[i])];
     indexed.sort((a, b) {
@@ -231,3 +234,16 @@ List<T> _ordered<T>(
   }
   return sort.descending ? byName.reversed.toList() : byName;
 }
+
+/// Key of [flatRowsProvider].
+typedef FlatRowsKey = ({FolderPlaceKey place, SortSpec sort, String filter});
+
+/// The rows of the flat folder list, filtered and ordered once per place,
+/// sort and filter, and shared by the list and the bar's count. Null when the
+/// place is not the flat list.
+final flatRowsProvider = Provider.autoDispose
+    .family<List<FlatFolder>?, FlatRowsKey>((ref, key) {
+      final place = ref.watch(folderPlaceProvider(key.place)).value;
+      if (place is! FlatListPlace) return null;
+      return flatRows(place.folders, sort: key.sort, filter: key.filter);
+    });

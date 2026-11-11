@@ -89,7 +89,7 @@ class _FoldersBody extends ConsumerWidget {
           entry: entry,
           current: placeKey.location,
           filterOpen: input.filterOpen,
-          child: _content(context, place),
+          child: _content(context, ref, place),
         );
       },
     );
@@ -104,7 +104,7 @@ class _FoldersBody extends ConsumerWidget {
     return SliverToBoxAdapter(child: FolderPlayRow(target: target));
   }
 
-  Widget _content(BuildContext context, FolderPlace place) {
+  Widget _content(BuildContext context, WidgetRef ref, FolderPlace place) {
     final l10n = AppLocalizations.of(context);
     switch (place) {
       case NoFoldersPlace():
@@ -117,14 +117,17 @@ class _FoldersBody extends ConsumerWidget {
         return CustomScrollView(
           slivers: [rootsSliver(context, shown, open), _bottom],
         );
-      case FlatListPlace(:final folders):
+      case FlatListPlace():
+        final rows = ref.watch(
+          flatRowsProvider((
+            place: placeKey,
+            sort: input.sort,
+            filter: input.filter,
+          )),
+        );
         return CustomScrollView(
           slivers: [
-            flatFoldersSliver(
-              context,
-              flatRows(folders, sort: input.sort, filter: input.filter),
-              open,
-            ),
+            flatFoldersSliver(context, rows ?? const [], open),
             _bottom,
           ],
         );

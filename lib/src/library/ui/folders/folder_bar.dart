@@ -76,14 +76,17 @@ class FolderPlayButtons extends ConsumerWidget {
     void play() =>
         playScope(ref, context, target.scope, BrowseList.songs, target.context);
     if (labelled) {
-      return Row(
+      // Wraps onto a second line when large text leaves no room side by side.
+      return Wrap(
+        spacing: KSpace.x2,
+        runSpacing: KSpace.x2,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           FilledButton.tonalIcon(
             onPressed: play,
             icon: const Icon(KIcons.play),
             label: Text(l10n.libraryPlayAll),
           ),
-          const KGap(KSpace.x2),
           OutlinedButton.icon(
             onPressed: shuffle,
             icon: const Icon(KIcons.shuffle),
@@ -154,11 +157,17 @@ class FoldersBarLeading extends ConsumerWidget {
 
     final Widget first;
     if (place is FlatListPlace) {
-      final shown = flatRows(
-        place.folders,
-        sort: input.sort,
-        filter: input.filter,
-      ).length;
+      final shown =
+          ref
+              .watch(
+                flatRowsProvider((
+                  place: placeKey,
+                  sort: input.sort,
+                  filter: input.filter,
+                )),
+              )
+              ?.length ??
+          0;
       first = Text(
         collectionCountText(
           shown: shown,
