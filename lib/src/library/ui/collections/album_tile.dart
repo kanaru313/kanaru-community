@@ -36,13 +36,18 @@ void _open(BuildContext context, AlbumSummary album) {
   openLibraryPage(context, LibraryLocations.album(key));
 }
 
-void _menu(BuildContext context, AlbumSummary album, MenuOrigin origin) {
+void _menu(
+  BuildContext context,
+  AlbumSummary album,
+  MenuOrigin origin, {
+  bool viaKeyboard = false,
+}) {
   final key = AlbumKey.decode(album.key);
   if (key == null) {
     _log.warning('undecodable album key: ${album.key}');
     return;
   }
-  openAlbumMenu(context, key, origin: origin);
+  openAlbumMenu(context, key, origin: origin, viaKeyboard: viaKeyboard);
 }
 
 /// Album row: cover, title / `artist • year` / `N songs • M min`, ▶ plays the
@@ -63,7 +68,7 @@ class AlbumTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     return KContextRegion(
-      onOpen: (_) => _menu(context, album, origin),
+      onOpen: (at) => _menu(context, album, origin, viaKeyboard: at == null),
       child: KMediaCard(
         title: album.title,
         line2: albumByLine(album),
@@ -80,7 +85,8 @@ class AlbumTile extends ConsumerWidget {
         onAction: () => _play(ref, context),
         actionLabel: l10n.libraryPlayAlbum,
         trailing: LibraryMoreButton(
-          onPressed: () => _menu(context, album, origin),
+          onPressed: ({required viaKeyboard}) =>
+              _menu(context, album, origin, viaKeyboard: viaKeyboard),
         ),
         revealTrailingOnHover: true,
         onTap: () => _open(context, album),
@@ -120,12 +126,15 @@ class AlbumCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return KContextRegion(
-      onOpen: (_) => _menu(context, album, origin),
+      onOpen: (at) => _menu(context, album, origin, viaKeyboard: at == null),
       child: KGridCard(
         title: album.title,
         subtitle: albumByLine(album, separator: ' · '),
         onTap: () => _open(context, album),
-        more: LibraryMoreButton(onPressed: () => _menu(context, album, origin)),
+        more: LibraryMoreButton(
+          onPressed: ({required viaKeyboard}) =>
+              _menu(context, album, origin, viaKeyboard: viaKeyboard),
+        ),
         coverBuilder: (context, side) => AlbumCover(
           itemKey: album.key,
           coverKey: album.coverKey,

@@ -50,7 +50,10 @@ class SelectedSongRow extends StatelessWidget {
               ),
             ),
           ),
-          LibraryMoreButton(onPressed: () => openSongMenu(context, info)),
+          LibraryMoreButton(
+            onPressed: ({required viaKeyboard}) =>
+                openSongMenu(context, info, viaKeyboard: viaKeyboard),
+          ),
         ],
       ),
     );

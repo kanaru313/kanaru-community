@@ -89,10 +89,14 @@ class _GenresBody extends ConsumerWidget {
             padding: EdgeInsets.symmetric(horizontal: gutter),
             itemBuilder: (context, i) {
               final genre = genres[i];
-              void menu() =>
-                  openGenreMenu(context, genreKey: genre.key, name: genre.name);
+              void menu({bool viaKeyboard = false}) => openGenreMenu(
+                context,
+                genreKey: genre.key,
+                name: genre.name,
+                viaKeyboard: viaKeyboard,
+              );
               return KContextRegion(
-                onOpen: (_) => menu(),
+                onOpen: (at) => menu(viaKeyboard: at == null),
                 child: KColorTile(
                   seed: genre.name,
                   title: genre.name,

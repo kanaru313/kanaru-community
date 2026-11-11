@@ -20,9 +20,11 @@ Future<void> openSongMenu(
   BuildContext context,
   TrackInfo info, {
   MenuOrigin origin = const MenuOrigin.list(),
+  bool viaKeyboard = false,
 }) => _open(
   context,
   (container, env) => songMenuSpec(container, env, info, origin),
+  viaKeyboard: viaKeyboard,
 );
 
 /// Opens the menu of an album. On its own page pass [MenuOrigin.own].
@@ -30,18 +32,22 @@ Future<void> openAlbumMenu(
   BuildContext context,
   AlbumKey key, {
   MenuOrigin origin = const MenuOrigin.list(),
+  bool viaKeyboard = false,
 }) => _open(
   context,
   (container, env) => albumMenuSpec(container, env, key, origin),
+  viaKeyboard: viaKeyboard,
 );
 
 Future<void> openArtistMenu(
   BuildContext context,
   ArtistKey key, {
   MenuOrigin origin = const MenuOrigin.list(),
+  bool viaKeyboard = false,
 }) => _open(
   context,
   (container, env) => artistMenuSpec(container, env, key, origin),
+  viaKeyboard: viaKeyboard,
 );
 
 /// [genreKey] is the stored `genre_key`, [name] the genre as written.
@@ -50,9 +56,11 @@ Future<void> openGenreMenu(
   required String genreKey,
   required String name,
   MenuOrigin origin = const MenuOrigin.list(),
+  bool viaKeyboard = false,
 }) => _open(
   context,
   (container, env) => genreMenuSpec(container, env, genreKey, name, origin),
+  viaKeyboard: viaKeyboard,
 );
 
 /// A null [code] is the group of songs without a language.
@@ -60,9 +68,11 @@ Future<void> openLanguageMenu(
   BuildContext context,
   String? code, {
   MenuOrigin origin = const MenuOrigin.list(),
+  bool viaKeyboard = false,
 }) => _open(
   context,
   (container, env) => languageMenuSpec(container, env, code, origin),
+  viaKeyboard: viaKeyboard,
 );
 
 /// [key] is the folder's path inside [folder] (`''` = the music folder);
@@ -75,6 +85,7 @@ Future<void> openFolderMenu(
   required int subfolders,
   bool flat = false,
   MenuOrigin origin = const MenuOrigin.list(),
+  bool viaKeyboard = false,
 }) => _open(
   context,
   (container, env) => folderMenuSpec(
@@ -87,11 +98,14 @@ Future<void> openFolderMenu(
     flat: flat,
     origin: origin,
   ),
+  viaKeyboard: viaKeyboard,
 );
 
 /// Opens the menu of the selection panel.
-Future<void> openSelectionMenu(BuildContext context) =>
-    _open(context, selectionMenuSpec);
+Future<void> openSelectionMenu(
+  BuildContext context, {
+  bool viaKeyboard = false,
+}) => _open(context, selectionMenuSpec, viaKeyboard: viaKeyboard);
 
 /// A load that takes longer than this is given up, so one stuck read cannot
 /// leave every menu of the app dead.
@@ -106,8 +120,9 @@ bool _loading = false;
 /// changes nothing.
 Future<void> _open(
   BuildContext context,
-  Future<MenuSpec> Function(ProviderContainer container, MenuEnv env) build,
-) async {
+  Future<MenuSpec> Function(ProviderContainer container, MenuEnv env) build, {
+  bool viaKeyboard = false,
+}) async {
   if (_loading) return;
   _loading = true;
   final root = Navigator.of(context, rootNavigator: true).context;
@@ -132,5 +147,10 @@ Future<void> _open(
   } finally {
     _loading = false;
   }
-  await showKLayeredMenu(root, root: page, backTooltip: l10n.libraryMenuBack);
+  await showKLayeredMenu(
+    root,
+    root: page,
+    backTooltip: l10n.libraryMenuBack,
+    viaKeyboard: viaKeyboard,
+  );
 }

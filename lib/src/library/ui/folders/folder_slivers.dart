@@ -59,12 +59,13 @@ Widget levelFoldersSliver(
         countLine: folderCounts(l10n, target),
         coverKey: row.chain.first.coverKey,
         seed: target.key,
-        onMenu: () => openFolderMenu(
+        onMenu: ({bool viaKeyboard = false}) => openFolderMenu(
           context,
           folder: place.root.folder,
           key: target.key,
           name: row.label,
           subfolders: target.subfolders,
+          viaKeyboard: viaKeyboard,
         ),
         onTap: () =>
             open(FolderLocation(sourceUid: place.sourceUid, key: target.key)),
@@ -91,12 +92,13 @@ Widget rootsSliver(
         dimLine: folderLocationLabel(l10n, root.folder, mobile: mobile),
         countLine: folderCounts(l10n, root.node),
         leading: RootIcon(volume: root.folder.volume),
-        onMenu: () => openFolderMenu(
+        onMenu: ({bool viaKeyboard = false}) => openFolderMenu(
           context,
           folder: root.folder,
           key: '',
           name: root.node.name,
           subfolders: root.node.subfolders,
+          viaKeyboard: viaKeyboard,
         ),
         onTap: () => open(FolderLocation(sourceUid: root.folder.sourceUid)),
       );
@@ -124,13 +126,14 @@ Widget flatFoldersSliver(
         countLine: l10n.librarySongCount(folder.songCount),
         coverKey: folder.node.directCoverKey,
         seed: folder.node.key,
-        onMenu: () => openFolderMenu(
+        onMenu: ({bool viaKeyboard = false}) => openFolderMenu(
           context,
           folder: folder.root.folder,
           key: folder.node.key,
           name: folder.node.key.isEmpty ? folder.root.node.name : folder.name,
           subfolders: 0,
           flat: true,
+          viaKeyboard: viaKeyboard,
         ),
         onTap: () => open(
           FolderLocation(

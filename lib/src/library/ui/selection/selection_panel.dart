@@ -14,6 +14,7 @@ import '../../state/browse/song_list_providers.dart';
 import '../../state/browse/track_window.dart';
 import '../browse/library_labels.dart';
 import '../browse/play_actions.dart';
+import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
 import '../songs/song_row_placeholder.dart';
 import 'selection_back.dart';
@@ -116,10 +117,13 @@ class _PanelHeader extends ConsumerWidget {
             tooltip:
                 '${l10n.libraryPanelAddToPlaylist} · ${l10n.appComingSoon}',
           ),
-          _Button(
-            icon: KIcons.moreVert,
-            tooltip: l10n.libraryPanelMore,
-            onPressed: () => openSelectionMenu(context),
+          ViaKeyboardTracker(
+            builder: (context, viaKeyboard) => _Button(
+              icon: KIcons.moreVert,
+              tooltip: l10n.libraryPanelMore,
+              onPressed: () =>
+                  openSelectionMenu(context, viaKeyboard: viaKeyboard()),
+            ),
           ),
           _Button(
             icon: KIcons.selectAll,

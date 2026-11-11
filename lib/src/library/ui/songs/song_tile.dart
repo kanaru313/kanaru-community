@@ -79,17 +79,18 @@ class SongTile extends ConsumerWidget {
     final current = ref.watch(isCurrentTrackProvider(info.id));
     final selected = ref.watch(isSelectedProvider(info.id));
     final duration = info.durationMs;
-    void menu() => openSongMenu(context, info, origin: origin);
+    void menu({bool viaKeyboard = false}) =>
+        openSongMenu(context, info, origin: origin, viaKeyboard: viaKeyboard);
     // Long press on a song selects it (the menu has ⋮, right click, Menu).
     return KContextRegion(
       longPressOpens: false,
       // Right click on one of several selected songs is about the selection.
-      onOpen: (_) {
+      onOpen: (at) {
         final selection = ref.read(librarySelectionProvider);
         if (selection.set.contains(info.id) && selection.ids.length > 1) {
-          openSelectionMenu(context);
+          openSelectionMenu(context, viaKeyboard: at == null);
         } else {
-          menu();
+          menu(viaKeyboard: at == null);
         }
       },
       child: KMediaCard(

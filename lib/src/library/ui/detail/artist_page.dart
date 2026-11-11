@@ -83,8 +83,12 @@ class ArtistPage extends ConsumerWidget {
             list: BrowseList.detailSongs,
             item: artistId,
             playContext: playContext,
-            onMenu: (c) =>
-                openArtistMenu(c, key, origin: const MenuOrigin.own()),
+            onMenu: (c, {required viaKeyboard}) => openArtistMenu(
+              c,
+              key,
+              origin: const MenuOrigin.own(),
+              viaKeyboard: viaKeyboard,
+            ),
           ),
         ),
         slivers: [

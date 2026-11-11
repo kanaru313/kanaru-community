@@ -30,13 +30,18 @@ void _open(BuildContext context, ArtistSummary artist) {
   openLibraryPage(context, LibraryLocations.artist(key));
 }
 
-void _menu(BuildContext context, ArtistSummary artist, MenuOrigin origin) {
+void _menu(
+  BuildContext context,
+  ArtistSummary artist,
+  MenuOrigin origin, {
+  bool viaKeyboard = false,
+}) {
   final key = ArtistKey.decode(artist.key);
   if (key == null) {
     _log.warning('undecodable artist key: ${artist.key}');
     return;
   }
-  openArtistMenu(context, key, origin: origin);
+  openArtistMenu(context, key, origin: origin, viaKeyboard: viaKeyboard);
 }
 
 /// Artist row: round photo, name / `N albums` / `M songs • length`, ▶ plays
@@ -58,7 +63,7 @@ class ArtistTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     return KContextRegion(
-      onOpen: (_) => _menu(context, artist, origin),
+      onOpen: (at) => _menu(context, artist, origin, viaKeyboard: at == null),
       child: KMediaCard(
         title: artist.name,
         line2: l10n.libraryAlbumCount(artist.albumCount),
@@ -75,7 +80,8 @@ class ArtistTile extends ConsumerWidget {
         onAction: () => _play(ref, context),
         actionLabel: l10n.libraryPlayArtist,
         trailing: LibraryMoreButton(
-          onPressed: () => _menu(context, artist, origin),
+          onPressed: ({required viaKeyboard}) =>
+              _menu(context, artist, origin, viaKeyboard: viaKeyboard),
         ),
         revealTrailingOnHover: true,
         onTap: () => _open(context, artist),
@@ -115,7 +121,7 @@ class ArtistCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return KContextRegion(
-      onOpen: (_) => _menu(context, artist, origin),
+      onOpen: (at) => _menu(context, artist, origin, viaKeyboard: at == null),
       child: KGridCard(
         circle: true,
         title: artist.name,
@@ -123,7 +129,8 @@ class ArtistCard extends StatelessWidget {
             .librarySongCount(artist.trackCount),
         onTap: () => _open(context, artist),
         more: LibraryMoreButton(
-          onPressed: () => _menu(context, artist, origin),
+          onPressed: ({required viaKeyboard}) =>
+              _menu(context, artist, origin, viaKeyboard: viaKeyboard),
         ),
         coverBuilder: (context, side) => ArtistCover(
           itemKey: artist.key,

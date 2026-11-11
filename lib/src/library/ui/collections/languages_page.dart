@@ -114,9 +114,10 @@ class _LanguageRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final detected = language.detectedCount;
-    void menu() => openLanguageMenu(context, language.code);
+    void menu({bool viaKeyboard = false}) =>
+        openLanguageMenu(context, language.code, viaKeyboard: viaKeyboard);
     return KContextRegion(
-      onOpen: (_) => menu(),
+      onOpen: (at) => menu(viaKeyboard: at == null),
       child: KListRow(
         leading: Icon(language.code == null ? KIcons.help : KIcons.languages),
         title: Text(languageDisplayName(l10n, language.code)),

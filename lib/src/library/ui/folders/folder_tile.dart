@@ -41,7 +41,7 @@ class FolderTile extends StatelessWidget {
   final VoidCallback onTap;
 
   /// Opens the folder's menu (⋮ and right click); null = no menu.
-  final VoidCallback? onMenu;
+  final void Function({bool viaKeyboard})? onMenu;
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +70,10 @@ class FolderTile extends StatelessWidget {
     );
     return menu == null
         ? card
-        : KContextRegion(onOpen: (_) => menu(), child: card);
+        : KContextRegion(
+            onOpen: (at) => menu(viaKeyboard: at == null),
+            child: card,
+          );
   }
 }
 

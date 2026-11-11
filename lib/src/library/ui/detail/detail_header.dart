@@ -40,7 +40,7 @@ class DetailFrame extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
           child: PageHeader(title: title, onBack: () => _back(context)),
         ),
-        Expanded(child: child),
+        Expanded(child: KScrollInkSurface(child: child)),
       ],
     );
   }
@@ -117,7 +117,7 @@ class DetailActions extends ConsumerWidget {
 
   /// Opens the page's own menu (a centred dialog on desktop, a sheet on the
   /// mobile shell).
-  final void Function(BuildContext context) onMenu;
+  final void Function(BuildContext context, {required bool viaKeyboard}) onMenu;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -146,7 +146,10 @@ class DetailActions extends ConsumerWidget {
               : null,
           icon: const Icon(KIcons.shuffle),
         ),
-        LibraryMoreButton(onPressed: () => onMenu(context)),
+        LibraryMoreButton(
+          onPressed: ({required viaKeyboard}) =>
+              onMenu(context, viaKeyboard: viaKeyboard),
+        ),
       ],
     );
   }

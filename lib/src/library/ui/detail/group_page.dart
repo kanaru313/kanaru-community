@@ -141,17 +141,19 @@ class GroupPage extends ConsumerWidget {
                     list: BrowseList.detailSongs,
                     item: '${kind.name}:$id',
                     playContext: playContext,
-                    onMenu: (c) => language
+                    onMenu: (c, {required viaKeyboard}) => language
                         ? openLanguageMenu(
                             c,
                             target.code,
                             origin: const MenuOrigin.own(),
+                            viaKeyboard: viaKeyboard,
                           )
                         : openGenreMenu(
                             c,
                             genreKey: target.genreKey!,
                             name: title,
                             origin: const MenuOrigin.own(),
+                            viaKeyboard: viaKeyboard,
                           ),
                   ),
                 ),

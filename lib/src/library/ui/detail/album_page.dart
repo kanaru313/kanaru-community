@@ -91,8 +91,12 @@ class AlbumPage extends ConsumerWidget {
               list: BrowseList.albumTracks,
               item: albumId,
               playContext: playContext,
-              onMenu: (c) =>
-                  openAlbumMenu(c, key, origin: const MenuOrigin.own()),
+              onMenu: (c, {required viaKeyboard}) => openAlbumMenu(
+                c,
+                key,
+                origin: const MenuOrigin.own(),
+                viaKeyboard: viaKeyboard,
+              ),
             ),
           ),
           slivers: songs,
