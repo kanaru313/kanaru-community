@@ -11,12 +11,14 @@ import 'package:kanaru/src/library/state/custom_cover_providers.dart';
 import 'package:kanaru/src/library/ui/browse/item_covers.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
+import 'package:kanaru/src/media/domain/cover_files.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/playback/state/cover_providers.dart';
 import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru/src/platform/state/platform_providers.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
+import '../../support/fake_cover_importer.dart';
 import 'support/detail_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
@@ -34,7 +36,14 @@ Future<LibraryHarness> _pump(
   String initial = '/library/albums',
   List<Override> overrides = const [],
 }) async {
-  final h = await pumpLibrary(tester, initial: initial, overrides: overrides);
+  final h = await pumpLibrary(
+    tester,
+    initial: initial,
+    overrides: [
+      coverImporterProvider.overrideWithValue(FakeCoverImporter()),
+      ...overrides,
+    ],
+  );
   await addAlbum(h, 'Blue', 'Zed', year: 2001, coverKey: 'aaaaaaaaaaaaaaaa');
   await addAlbum(h, 'Amber', 'Yan', year: 2010, coverKey: 'bbbbbbbbbbbbbbbb');
   await addAlbum(h, 'Coral', 'Xi', year: 1999);
@@ -51,11 +60,15 @@ Future<void> _choose(
 ) async {
   final dir = h.container.read(appPathsProvider).dataDir;
   final src = File('${dir.path}/pick.png')..writeAsBytesSync(_png);
-  await tester.runAsync(
-    () => h.container
-        .read(customCoverControllerProvider)
-        .importCover(kind, itemKey, src),
-  );
+  final done = h.container
+      .read(customCoverControllerProvider)
+      .importCover(kind, itemKey, src);
+  var finished = false;
+  unawaited(done.whenComplete(() => finished = true));
+  for (var i = 0; i < 20 && !finished; i++) {
+    await h.settle(tester, rounds: 1);
+  }
+  await done;
   await h.settle(tester, rounds: 4);
 }
 
@@ -231,7 +244,7 @@ void main() {
   ) async {
     final h = await _pump(tester);
     // A restored backup: the row is there, the image is not.
-    await setCustomCover(h.db, 'album', albumId('Blue', 'Zed'), 'c' * 64);
+    await setCustomCover(h.db, 'album', albumId('Blue', 'Zed'), 'ab/${'c' * 32}');
     await h.settle(tester, rounds: 4);
     expect(_images<AlbumCover>(tester).where(_isCustom), isEmpty);
     expect(find.byType(AlbumCover), findsNWidgets(3));
@@ -242,11 +255,13 @@ void main() {
     tester,
   ) async {
     final h = await _pump(tester);
-    final hash = 'd' * 64;
+    final hash = 'ab/${'d' * 32}';
     final dir = h.container.read(appPathsProvider).dataDir;
-    final folder = Directory('${dir.path}/custom_covers')
-      ..createSync(recursive: true);
-    File('${folder.path}/$hash.png').writeAsBytesSync([1, 2, 3, 4]);
+    for (final size in CoverSize.values) {
+      File('${dir.path}/custom_covers/${coverRelativePath(hash, size)}')
+        ..createSync(recursive: true)
+        ..writeAsBytesSync([1, 2, 3, 4]);
+    }
     final blueKey = albumId('Blue', 'Zed');
     await setCustomCover(h.db, 'album', blueKey, hash);
     await h.settle(tester, rounds: 4);
