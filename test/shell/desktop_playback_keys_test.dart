@@ -5,6 +5,7 @@ import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:kanaru/src/playback/state/playback_position_provider.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
+import 'package:kanaru/src/shell/ui/desktop_playback_keys.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -20,7 +21,10 @@ Future<void> _key(
   await tester.runAsync(() async {
     if (modifier != null) await tester.sendKeyDownEvent(modifier);
     await tester.sendKeyDownEvent(key);
-    if (repeat) await tester.sendKeyRepeatEvent(key);
+    if (repeat) {
+      await Future<void>.delayed(desktopSeekRepeatInterval);
+      await tester.sendKeyRepeatEvent(key);
+    }
     await tester.sendKeyUpEvent(key);
     if (modifier != null) await tester.sendKeyUpEvent(modifier);
     await host.h.settle();
@@ -80,6 +84,31 @@ void main() {
 
         await _key(tester, host, LogicalKeyboardKey.arrowLeft, repeat: true);
         expect(_position(host), Duration.zero);
+      });
+
+      testWidgets('rapid arrow repeat events within throttle interval are dropped', (
+        tester,
+      ) async {
+        final host = await pumpDesktopShell(tester);
+        host.h.engine.emit(
+          EngineLoaded(host.h.loadedToken, const Duration(minutes: 3)),
+        );
+        await host.letStreamsArrive(tester);
+        if (focused) await _focusShell(tester);
+
+        // First key down seeks by 5s.
+        await tester.runAsync(() async {
+          await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowRight);
+          // Rapid repeats without delay (< 80ms) are dropped.
+          await tester.sendKeyRepeatEvent(LogicalKeyboardKey.arrowRight);
+          await tester.sendKeyRepeatEvent(LogicalKeyboardKey.arrowRight);
+          await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowRight);
+          await host.h.settle();
+        });
+        await tester.pump();
+
+        // Only the key down seek took effect.
+        expect(_position(host), const Duration(seconds: 5));
       });
 
       testWidgets('Ctrl+S toggles shuffle once per press', (tester) async {
