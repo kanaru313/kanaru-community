@@ -7,6 +7,7 @@ import '../../data/browse/album_artist_queries.dart';
 import '../../data/browse/genre_language_queries.dart';
 import '../../data/browse/throttled_query.dart';
 import '../../domain/browse/browse_items.dart';
+import '../../domain/browse/code_point_compare.dart';
 import '../../domain/browse/language_names.dart';
 import '../../domain/browse/list_sort.dart';
 import 'song_list_providers.dart';
@@ -233,9 +234,10 @@ int _cmpNullable<V extends Comparable<Object>>(V? a, V? b, bool desc) {
   return desc ? -c : c;
 }
 
+/// Code point order, as the SQL-ordered lists (albums, genres) have it.
 int _byName(String a, String b, String tieA, String tieB) {
-  final c = a.compareTo(b);
-  return c != 0 ? c : tieA.compareTo(tieB);
+  final c = compareCodePoints(a, b);
+  return c != 0 ? c : compareCodePoints(tieA, tieB);
 }
 
 final Map<String, String> _sortKeys = {};

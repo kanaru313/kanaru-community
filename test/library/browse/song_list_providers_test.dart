@@ -270,6 +270,26 @@ void main() {
       },
     );
 
+    test('artists are in code point order, as the SQL lists are', () async {
+      // U+1F600 (a surrogate pair) sorts after U+E000 by code point and
+      // before it by UTF-16 unit.
+      for (final (i, name) in ['x\u{1F600}', 'x\uE000'].indexed) {
+        await addLibraryTrack(
+          db,
+          source: src,
+          locator: '$i.flac',
+          artists: [name],
+        );
+      }
+      final artists = collect(artistSummariesProvider);
+      await until(() => artists.isNotEmpty && artists.last.length == 2);
+      const byName = (sort: SortSpec(SortCriterion.title), filter: '');
+      expect(
+        c.read(artistListProvider(byName)).requireValue.map((a) => a.name),
+        ['x\uE000', 'x\u{1F600}'],
+      );
+    });
+
     test('artists and genres', () async {
       await addLibraryTrack(
         db,
