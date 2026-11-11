@@ -205,8 +205,12 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
   non-map throws `FormatException`. Albums default to a grid, the rest to rows.
 - `AlbumSummary`, `ArtistSummary`, `GenreSummary`, `LanguageSummary` (code
   null = unknown): value types the list queries return.
-- `naturalCompare`: digit runs by value (any length), then folded text, then
-  the raw strings, so names sort "2" before "10".
+- `NaturalKey` / `naturalCompare`: digit runs by value (any length), then
+  folded text, then the raw strings, so names sort "2" before "10". A key
+  folds and splits a name once; lists sort ready keys, not names.
+- `compareCodePoints`: code point order, as SQLite's BINARY collation. Lists
+  ordered in Dart (artists, languages) use it so they agree with the SQL-ordered
+  ones (albums, genres) for characters above U+FFFF.
 - `languageNameOf(code)`: native, English and Vietnamese names for about 40
   ISO 639-3 codes (also `cmn`, the detector's Mandarin); null for others (the UI shows the code).
 - `throttledQuery(db, tables, load, {interval})`: lists are reloaded through
@@ -399,12 +403,12 @@ song's. The folder row: none -> no row; one -> the folder's path and a trailing
 with an intro and one row per folder. An artist's albums list its own albums
 first, then the ones it appears on, under two headings on the page.
 
-**Origins**: a menu never links to the page it was opened from. A song on its
+**Origins**: a menu does not link back to the item's own page. A song on its
 album page has no "Go to album"; on its folder's page "Show in file manager"
-replaces "Go to folder"; on an artist's page that artist is left out of the
-artist chips (the row goes when none is left). An album card on an artist's
-page leaves that artist out of its artist link. On an item's own page (`own`,
-the page's ⋮) the self link, Play and Shuffle are left out.
+replaces "Go to folder". Artists are the exception (decision C45, old app
+`93af918d`): "Go to artist" on a song or album shown on an artist's page keeps
+every artist, that page's included. On an item's own page (`own`, the page's ⋮)
+the self link, Play and Shuffle are left out.
 
 **Items per kind** follow mockup 04c. Rows not built yet are dimmed and inert
 (see "Coming soon"). "Exclude from library" of a folder (not on a music
@@ -420,7 +424,10 @@ what the menu showed.
   Each loads its data once (`menu_loaders.dart`: direct one-shot reads), builds
   the spec, and shows it with `showKLayeredMenu` on the root navigator (sheet
   on the mobile shell, centred dialog on desktop). A second tap while one is
-  loading opens nothing; a failed load is a toast.
+  loading opens nothing; a failed load is a toast. `viaKeyboard` (a tile's
+  Menu key or Shift+F10, `KContextRegion.onOpen(null)`) focuses the first row at
+  once; a pointer-opened menu shows no focus ring until an arrow key (Linux
+  always reports the traditional highlight mode, so autofocus would draw one).
 - `menu_renderer.dart` maps a `MenuSpec` to `KMenuPage`s (`menu_header.dart`
   draws the picture and names). `KMenuPage` got `groupTitles` (headings) and
   `headerOpens` (the song header opens the song info page).
@@ -539,7 +546,11 @@ the mobile shell Back closes the field first.
 
 `play_actions.dart`: `playFrom`, `playAll`, `shuffleAll` (shuffle with a random
 start) and `playScope` / `shuffleScope` (read the ids of a scope with a direct
-`songIds` call, then play; for a ▶ on a tile that does not hold its ids).
+`songIds` call through `scopeIdsReaderProvider`, then play; for a ▶ on a tile
+that does not hold its ids). A newer library play request wins: a read that
+finishes after one started later is dropped. The container, commands and root
+context are taken before the read, so the play still happens, or the failure
+toast shows, when the tile left the tree meanwhile.
 Every call is awaited; a failure is logged and shows a snack bar.
 
 ## Songs list
@@ -697,7 +708,9 @@ routes in `ui/browse/library_routes.dart`.
 - Tree level: sub-folder rows first (`FolderTile`: `FolderArt`, name, counts;
   a merged chain is one row of up to two lines and opens its last folder; a
   chevron on mobile), then "Songs in this folder · N" and a `SongList` of the
-  direct songs by title. The sort chip orders the folders (name in natural
+  direct songs by title. The flat list's rows (filtered, ordered by precomputed
+  natural keys) are computed once per place, sort and filter by
+  `flatRowsProvider`; the list and the bar's count read the same result. The sort chip orders the folders (name in natural
   order, or number of songs below); the filter narrows folders by name (chain
   included) and the songs. Several music folders: a first level of rows with
   their location. Mobile names the location ("Internal storage", "SD card",
@@ -746,6 +759,9 @@ Dimmed and inert, with the tooltip or subtitle "Coming soon" (`appComingSoon`,
 | Library empty state | "Choose music folders" | the Settings folders screen |
 | Scan banner (failed scan) | "Grant permission" | the Android permission flow |
 | Sidebar (`comingSoon: true`) | Favorites, History, Most played | their mockups |
+
+The empty state scrolls (centred when there is room), so a short window or
+large text never overflows.
 
 The app l10n key `emptyLibrary` is unused (the empty state uses `libraryEmptyMessage`).
 
@@ -816,9 +832,19 @@ Sizes that the mockups give and the tokens lack (card radius 14, panel radius
 | `KMenuPage` extras | `groupTitles` (a heading above each group; an empty group loses its heading) and `headerOpens` (the header becomes a button with a `›` that shows that page) |
 | `KSelectionPanel` | Frame of the multi-select panel: `header`, optional expanded `body` clamped to 460 dp (`bodyHeight`), no state. Mobile: full width minus 8, radius 20. Desktop: 440 wide, centred, radius 22, shadow. The frame is only as high as its content, so a full-width slot does not take taps beside it |
 
+A menu page of more than 24 rows is a lazy list in the height the sheet or
+dialog gives it (a sub-page of hundreds of rows builds only the visible ones);
+a shorter page shrinks to its content. Back from a sub-page restores the
+parent page's scroll offset. `KScrollInkSurface` (own transparent `Material`
+inside a `ClipRect`) wraps the scrolling body of list and detail pages, so the
+hover and splash of a card half under the header stay inside the body. The
+sort chip of `KListSortFilterBar` is at most half of the bar (and dynamically
+leaves room for leading actions on mobile); a long label is ellipsized.
+
 `showKLayeredMenu` on the mobile shell is a bottom sheet (at most 85 % of the
 height, grip, sticky footer); on desktop a centred dialog 400 wide and at most
-640 tall on a 45 % barrier, first row focused, arrow keys move. Both open on
+640 tall on a 45 % barrier, arrow keys move (first row focused when opened
+from the keyboard). Both open on
 the root navigator, so the shortcut guard and the selection Back handling see
 a modal route. It builds its own sheet instead of `showKSheet` (which can target the
 root navigator since `useRootNavigator`): `showKSheet` turns into a 640 wide
