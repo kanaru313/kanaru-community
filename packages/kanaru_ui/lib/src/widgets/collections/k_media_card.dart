@@ -142,6 +142,9 @@ class KMediaCard extends StatefulWidget {
   static const double _padV = 10;
   static const BorderRadius _radius = BorderRadius.all(Radius.circular(14));
 
+  /// Corner radius of a song or album cover inside a card.
+  static const BorderRadius coverRadius = BorderRadius.all(Radius.circular(10));
+
   /// Laid-out height of a card plus [gap], for a fixed list extent.
   /// Assumes a 56 dp leading (the cover); pass
   /// `hasLeading: false` for cards without one.
@@ -198,7 +201,7 @@ class _KMediaCardState extends State<KMediaCard> {
         (widget.loading
             ? KCover.loading(
                 size: KMediaCard.coverSize,
-                radius: BorderRadius.circular(10),
+                radius: KMediaCard.coverRadius,
                 circle: widget.circleLeading,
               )
             : null);
@@ -302,7 +305,10 @@ class _KMediaCardState extends State<KMediaCard> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: KMediaCard.gap),
-      child: Semantics(
+      // A skeleton row carries no information: no semantics node at all.
+      child: ExcludeSemantics(
+        excluding: widget.loading,
+        child: Semantics(
         selected: widget.selected,
         value: widget.current ? widget.currentLabel : null,
         child: Opacity(
@@ -348,6 +354,7 @@ class _KMediaCardState extends State<KMediaCard> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

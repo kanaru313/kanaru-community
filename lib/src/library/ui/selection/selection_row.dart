@@ -33,7 +33,7 @@ class SelectedSongRow extends StatelessWidget {
           seed: info.albumKey?.encode() ?? info.title,
           size: CoverSize.thumb,
           dimension: KMediaCard.coverSize,
-          radius: BorderRadius.circular(10),
+          radius: KMediaCard.coverRadius,
         ),
       ),
       top: duration == null ? null : Text(formatClock(duration)),

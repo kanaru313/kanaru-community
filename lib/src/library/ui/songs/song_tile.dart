@@ -127,7 +127,7 @@ class _SongCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(10);
+    const radius = KMediaCard.coverRadius;
     return Stack(
       children: [
         TrackCover(

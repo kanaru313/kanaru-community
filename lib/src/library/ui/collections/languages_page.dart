@@ -71,21 +71,21 @@ class _LanguagesBody extends ConsumerWidget {
     final scaler = MediaQuery.textScalerOf(context);
     final scheme = Theme.of(context).colorScheme;
     final gutter = libraryGutter(context);
+    final note = Padding(
+      padding: EdgeInsets.fromLTRB(gutter, KSpace.x1, gutter, KSpace.x3),
+      child: Text(
+        l10n.libraryLanguagesNote,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+      ),
+    );
     return collectionBody(
       context,
       ref.watch(languageListProvider(_key(input))),
       (languages) => CustomScrollView(
         slivers: [
-          SliverPadding(
-            padding: EdgeInsets.fromLTRB(gutter, KSpace.x1, gutter, KSpace.x3),
-            sliver: SliverToBoxAdapter(
-              child: Text(
-                l10n.libraryLanguagesNote,
-                style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(color: scheme.onSurfaceVariant),
-              ),
-            ),
-          ),
+          SliverToBoxAdapter(child: note),
           SliverPadding(
             padding: EdgeInsets.symmetric(
               horizontal: libraryRowGutter(context),
@@ -103,6 +103,7 @@ class _LanguagesBody extends ConsumerWidget {
         ],
       ),
       skeletonRows: true,
+      skeletonHeader: note,
     );
   }
 }

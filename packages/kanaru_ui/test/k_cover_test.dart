@@ -23,6 +23,22 @@ class _BadImage extends ImageProvider<_BadImage> {
       OneFrameImageStreamCompleter(Future.error(const FormatException('bad')));
 }
 
+/// An image that stays undecoded until [future] completes.
+class _PendingImage extends ImageProvider<_PendingImage> {
+  _PendingImage(this.future);
+  final Future<ui.Image> future;
+  @override
+  Future<_PendingImage> obtainKey(ImageConfiguration c) =>
+      Future.value(this);
+  @override
+  ImageStreamCompleter loadImage(
+    _PendingImage key,
+    ImageDecoderCallback decode,
+  ) => OneFrameImageStreamCompleter(
+    future.then((image) => ImageInfo(image: image)),
+  );
+}
+
 Color _fill(WidgetTester tester) =>
     (tester
                 .widget<DecoratedBox>(
@@ -148,6 +164,43 @@ void main() {
     );
     await tester.pump();
     await tester.pump();
+    expect(find.byIcon(KIcons.songs), findsOneWidget);
+  });
+
+  testWidgets('an image still decoding shows the loading box, no icon', (
+    tester,
+  ) async {
+    // Never completes: the frame stays null.
+    final pending = Completer<ui.Image>().future;
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: KCover(
+            image: _PendingImage(pending),
+            size: 50,
+            placeholderSeed: 's',
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byIcon(KIcons.songs), findsNothing);
+    expect(
+      _fill(tester),
+      buildKanaruTheme(brightness: Brightness.light)
+          .colorScheme
+          .surfaceContainerHigh,
+    );
+  });
+
+  testWidgets('a null image shows the placeholder icon', (tester) async {
+    await tester.pumpWidget(
+      host(
+        const Center(
+          child: KCover(image: null, size: 50, placeholderSeed: 's'),
+        ),
+      ),
+    );
     expect(find.byIcon(KIcons.songs), findsOneWidget);
   });
 

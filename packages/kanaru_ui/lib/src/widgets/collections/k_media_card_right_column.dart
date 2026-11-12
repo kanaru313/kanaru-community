@@ -92,6 +92,28 @@ class RenderKMediaCardRightColumn extends RenderBox
 
   static const _loose = BoxConstraints();
 
+  // Width is the wider child; height is fixed. Children are measured with
+  // their own intrinsics so the column works inside IntrinsicWidth / Height.
+  double _childWidth(double Function(RenderBox c) of) =>
+      math.max(
+        _top == null ? 0.0 : of(_top!),
+        _bottom == null ? 0.0 : of(_bottom!),
+      );
+
+  @override
+  double computeMinIntrinsicWidth(double height) =>
+      _childWidth((c) => c.getMinIntrinsicWidth(double.infinity));
+
+  @override
+  double computeMaxIntrinsicWidth(double height) =>
+      _childWidth((c) => c.getMaxIntrinsicWidth(double.infinity));
+
+  @override
+  double computeMinIntrinsicHeight(double width) => _height;
+
+  @override
+  double computeMaxIntrinsicHeight(double width) => _height;
+
   @override
   Size computeDryLayout(BoxConstraints constraints) {
     final tw = _top?.getDryLayout(_loose).width ?? 0;

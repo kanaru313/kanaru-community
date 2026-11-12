@@ -71,16 +71,19 @@ class CollectionBarLeading extends ConsumerWidget {
 /// The body of a list fed by a provider: the data while there is some (also
 /// while a newer answer loads), before the first answer skeleton rows when
 /// [skeletonRows] (list view; [roundCover] for artists) or nothing, a short
-/// message when the query failed and there is nothing to show.
+/// message when the query failed and there is nothing to show. With no value
+/// (first load) a reload keeps the rows, an error replaces them with a message; [skeletonHeader] is
+/// what the loaded list draws above its rows, repeated above the skeleton.
 Widget collectionBody<T>(
   BuildContext context,
   AsyncValue<List<T>> async,
   Widget Function(List<T> items) data, {
   bool skeletonRows = false,
   bool roundCover = false,
+  Widget? skeletonHeader,
 }) {
   final items = async.value;
-  if (items != null) return data(items);
+  if (items != null && !async.hasError) return data(items);
   if (async.hasError) {
     return Center(
       child: Text(
@@ -93,6 +96,7 @@ Widget collectionBody<T>(
     return KMediaCardSkeletonList(
       horizontalPadding: libraryRowGutter(context),
       roundCover: roundCover,
+      header: skeletonHeader,
     );
   }
   return const SizedBox.shrink();

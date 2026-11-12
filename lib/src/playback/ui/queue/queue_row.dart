@@ -218,7 +218,7 @@ class _Cover extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final radius = BorderRadius.circular(10);
+    const radius = KMediaCard.coverRadius;
     final cover = TrackCover(
       coverKey: info?.coverKey,
       seed: info?.albumKey?.encode() ?? info?.title ?? '',

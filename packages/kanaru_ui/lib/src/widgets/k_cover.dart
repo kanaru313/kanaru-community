@@ -41,9 +41,10 @@ class KCoverPlaceholderColors {
   final Color ink;
 }
 
-/// Square (or round) cover art. Decodes at `size x devicePixelRatio`, fades in
-/// and falls back to a placeholder (colour picked from [placeholderSeed]) when
-/// [image] is null or fails to load. [errorFallback], when given, replaces the
+/// Square (or round) cover art. Decodes at `size x devicePixelRatio`, shows
+/// the loading box while decoding, fades the image in and falls back to a
+/// placeholder (colour picked from [placeholderSeed]) when [image] is null or
+/// fails to load. [errorFallback], when given, replaces the
 /// placeholder only for a load failure (for example a custom cover that no
 /// longer decodes falls back to the automatic cover).
 class KCover extends StatelessWidget {
@@ -89,12 +90,7 @@ class KCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      final box = DecoratedBox(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        ),
-        child: SizedBox.square(dimension: size),
-      );
+      final box = _LoadingBox(size: size);
       return circle
           ? ClipOval(child: box)
           : ClipRRect(borderRadius: radius ?? KRadius.sm, child: box);
@@ -126,7 +122,9 @@ class KCover extends StatelessWidget {
               return Stack(
                 fit: StackFit.passthrough,
                 children: [
-                  placeholder,
+                  // While the image decodes: the loading box, not the seed
+                  // placeholder (that one means "no cover" / "failed").
+                  _LoadingBox(size: size),
                   AnimatedOpacity(
                     opacity: frame == null ? 0 : 1,
                     duration: KMotion.normal,
@@ -140,6 +138,21 @@ class KCover extends StatelessWidget {
         ? ClipOval(child: content)
         : ClipRRect(borderRadius: radius ?? KRadius.sm, child: content);
   }
+}
+
+/// Plain `surfaceContainerHigh` box: "not yet known / still decoding".
+class _LoadingBox extends StatelessWidget {
+  const _LoadingBox({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+    ),
+    child: SizedBox.square(dimension: size),
+  );
 }
 
 class _Placeholder extends StatelessWidget {

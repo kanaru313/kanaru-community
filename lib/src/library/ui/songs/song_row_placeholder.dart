@@ -3,8 +3,10 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 
-/// A song row whose page is still being read: same size, no content. Shared by
-/// the song lists and the selection panel.
+/// Skeleton of a song row whose page is still being read: a loading
+/// `KMediaCard` (grey cover box and placeholder bars), the same size as a real
+/// row and hidden from semantics. Shared by the song lists and the selection
+/// panel.
 class SongRowPlaceholder extends StatelessWidget {
   const SongRowPlaceholder({super.key, this.showNumber = false});
 

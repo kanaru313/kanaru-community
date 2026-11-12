@@ -83,7 +83,7 @@ final albumListProvider = Provider.autoDispose
       final d = key.sort.descending;
       return ref
           .watch(albumSummariesProvider)
-          .whenData(
+          .mapKeepingValue(
             (all) => _arrange(
               [
                 for (final a in all)
@@ -120,7 +120,7 @@ final artistListProvider = Provider.autoDispose
       final d = key.sort.descending;
       return ref
           .watch(artistSummariesProvider)
-          .whenData(
+          .mapKeepingValue(
             (all) => _arrange(
               [
                 for (final a in all)
@@ -150,7 +150,7 @@ final genreListProvider = Provider.autoDispose
       final match = foldedMatcher(key.filter);
       return ref
           .watch(genreSummariesProvider)
-          .whenData(
+          .mapKeepingValue(
             (all) => _arrange(
               [
                 for (final g in all)
@@ -173,7 +173,7 @@ final genreListProvider = Provider.autoDispose
 final languageListProvider = Provider.autoDispose
     .family<AsyncValue<List<LanguageSummary>>, CollectionViewKey>((ref, key) {
       final match = foldedMatcher(key.filter);
-      return ref.watch(languageSummariesProvider).whenData((all) {
+      return ref.watch(languageSummariesProvider).mapKeepingValue((all) {
         final known = [
           for (final l in all)
             if (l.code != null && match(_languageHaystack(l.code!))) l,
@@ -210,6 +210,15 @@ List<LanguageSummary> _languagesByName(List<LanguageSummary> all) {
 /// order; any other criterion sorts by [compare] (which already applies the
 /// direction and puts missing values last) and falls back to name order, so
 /// ties never flip with the direction.
+/// Like `whenData`, but a source that has a value keeps it as plain data
+/// while it reloads (Riverpod 3 `AsyncLoading(value: previous)`): `whenData`
+/// would answer a bare loading, and the page would drop its rows for a
+/// skeleton. An error still surfaces as an error.
+extension _KeepValue<T> on AsyncValue<T> {
+  AsyncValue<R> mapKeepingValue<R>(R Function(T value) cb) =>
+      hasValue && !hasError ? AsyncData(cb(requireValue)) : whenData(cb);
+}
+
 List<T> _arrange<T>(
   List<T> byName,
   SortSpec sort,

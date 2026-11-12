@@ -1,9 +1,12 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
+
+import 'package:kanaru_ui/src/widgets/collections/k_media_card_right_column.dart';
 
 import '../support/host.dart';
 
@@ -680,14 +683,17 @@ void main() {
       expect(heart.right, lessThanOrEqualTo(more.left));
     });
 
-    testWidgets('play to more is exactly the 48 dp of heart to more', (
+    testWidgets('with play, play is 48 dp from more and the heart is left', (
       tester,
     ) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(host(song(onHeart: () {}, onAction: () {})));
       final more = tester.getCenter(find.byKey(const Key('more'))).dx;
       final play = tester.getRect(find.byIcon(KIcons.play));
+      final heartX = tester.getCenter(find.byKey(const Key('heart'))).dx;
       expect(more - play.center.dx, 48);
+      // Play centre to heart centre, pinned to the laid-out value.
+      expect(play.center.dx - heartX, 56);
       final heart = tester.getCenter(find.byKey(const Key('heart'))).dx;
       // Play and the heart (no play) each sit exactly 48 dp from more.
       expect(more - heart, greaterThan(48));
@@ -888,21 +894,137 @@ void main() {
     });
   });
 
+  group('right column intrinsics', () {
+    testWidgets('a card inside IntrinsicWidth does not overflow', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          Align(
+            alignment: Alignment.topLeft,
+            child: IntrinsicWidth(
+              child: KMediaCard(
+                title: 'Title',
+                line2: 'Artist',
+                top: const Text('5:53'),
+                bottom: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(KIcons.heart),
+                ),
+                trailing: const Icon(KIcons.moreVert),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the column reports the wider child and its fixed height', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          const Align(
+            alignment: Alignment.topLeft,
+            child: IntrinsicWidth(
+              child: KMediaCardRightColumn(
+                height: 56,
+                topLine: 16,
+                top: SizedBox(width: 30, height: 16),
+                bottom: SizedBox(width: 48, height: 48),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(
+        tester.getSize(find.byType(KMediaCardRightColumn)),
+        const Size(48, 56),
+      );
+      final box = tester.renderObject<RenderBox>(
+        find.byType(KMediaCardRightColumn),
+      );
+      expect(box.getMinIntrinsicWidth(double.infinity), 48);
+      expect(box.getMaxIntrinsicWidth(double.infinity), 48);
+      expect(box.getMinIntrinsicHeight(48), 56);
+      expect(box.getMaxIntrinsicHeight(48), 56);
+    });
+  });
+
   group('skeleton list', () {
-    testWidgets('fills the height with loading rows of extentOf', (
+    testWidgets('draws exactly ceil(height / extentOf) loading rows', (
       tester,
     ) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(host(const KMediaCardSkeletonList()));
       final extent = KMediaCard.extentOf(TextScaler.noScaling);
+      final body = tester.getSize(find.byType(KMediaCardSkeletonList)).height;
       final cards = tester.widgetList<KMediaCard>(find.byType(KMediaCard));
       expect(cards.every((c) => c.loading), isTrue);
-      final body = tester.getSize(find.byType(KMediaCardSkeletonList)).height;
-      expect(cards.length * extent, greaterThanOrEqualTo(body - extent));
+      expect(cards.length, (body / extent).ceil());
       expect(
         tester.getSize(find.byType(KMediaCard).first).height,
         closeTo(extent, 0.5),
       );
+    });
+
+    testWidgets('a short viewport draws exactly its ceil count', (
+      tester,
+    ) async {
+      final extent = KMediaCard.extentOf(TextScaler.noScaling);
+      await tester.pumpWidget(
+        host(
+          SizedBox(
+            height: extent * 2.5,
+            child: const KMediaCardSkeletonList(),
+          ),
+        ),
+      );
+      expect(find.byType(KMediaCard), findsNWidgets(3));
+    });
+
+    testWidgets('an unbounded parent draws unboundedCount rows, no error', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          const SingleChildScrollView(child: KMediaCardSkeletonList()),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(
+        find.byType(KMediaCard, skipOffstage: false),
+        findsNWidgets(KMediaCardSkeletonList.unboundedCount),
+      );
+    });
+
+    testWidgets('skeleton rows add no semantics nodes', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      final handle = tester.ensureSemantics();
+      int nodes() {
+        var n = 0;
+        void walk(SemanticsNode node) {
+          n++;
+          node.visitChildren((c) {
+            walk(c);
+            return true;
+          });
+        }
+
+        final root = tester.binding.rootPipelineOwner.semanticsOwner?.rootSemanticsNode;
+        if (root != null) walk(root);
+        return n;
+      }
+
+      await tester.pumpWidget(host(const SizedBox.shrink()));
+      final empty = nodes();
+      await tester.pumpWidget(host(const KMediaCardSkeletonList()));
+      expect(nodes(), empty);
+      handle.dispose();
     });
 
     testWidgets('roundCover draws circles', (tester) async {
@@ -914,3 +1036,4 @@ void main() {
     });
   });
 }
+
