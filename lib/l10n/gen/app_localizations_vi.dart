@@ -512,6 +512,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playbackMore => 'Thêm';
 
   @override
+  String get playbackNowPlaying => 'Đang phát';
+
+  @override
   String get playbackMinimize => 'Thu nhỏ';
 
   @override

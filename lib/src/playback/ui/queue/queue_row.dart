@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -6,18 +7,23 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/cover_files.dart';
 import '../../../media/domain/track_info.dart';
+import '../../../media/domain/track_lines.dart';
 import '../../domain/queue_state.dart';
 import '../../state/playback_providers.dart';
 import '../../state/queue_row_infos.dart';
+import '../playback_time_label.dart';
 import '../track_cover.dart';
 import 'queue_row_hooks.dart';
 
-/// One queue row: cover (with the equalizer on the current one), title and
-/// artist, the drag handle, and on desktop the host's trailing widget and ⋮.
+/// One queue row, a flat [KMediaCard] like a library song row: cover (with
+/// the equalizer on the current one), title / artists / `album • year`,
+/// duration, the drag handle and the ⋮ menu button.
 ///
+/// The handle sits left of the cover on desktop and right of the text on
+/// mobile, where a long press on the row (not on the handle) opens the menu.
 /// Rows watch only their own info and, for the current row, play/pause; a
 /// position tick rebuilds nothing here.
-class QueueRow extends ConsumerWidget {
+class QueueRow extends ConsumerStatefulWidget {
   const QueueRow({
     super.key,
     required this.item,
@@ -37,105 +43,145 @@ class QueueRow extends ConsumerWidget {
   final QueueRowTrailing? trailing;
   final QueueRowMenu? menu;
 
-  bool get _desktop => size == QueueRowSize.desktop;
+  @override
+  ConsumerState<QueueRow> createState() => _QueueRowState();
+}
+
+class _QueueRowState extends ConsumerState<QueueRow> {
+  /// The drag handle, so a long press that starts on it is not the row's.
+  final _handleKey = GlobalKey();
+
+  bool get _desktop => widget.size == QueueRowSize.desktop;
+
+  void _openMenu(TrackInfo? info, Offset? at, {bool viaKeyboard = false}) =>
+      widget.menu?.call(
+        context,
+        widget.item,
+        info,
+        at,
+        viaKeyboard: viaKeyboard,
+      );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final item = widget.item;
+    final role = widget.role;
     final info = ref.watch(
       queueRowInfosProvider.select((m) => m[item.trackId]),
     );
-    void openMenu(Offset? at) => menu?.call(context, item, info, at);
-    Widget row = Row(
-      children: [
-        const SizedBox(width: KSpace.x2),
-        if (_desktop) _Handle(index: index, size: size),
-        Expanded(
-          child: Opacity(
-            opacity: role == QueueRowRole.played ? 0.5 : 1,
-            child: Row(
-              spacing: KSpace.x3,
-              children: [
-                _Cover(info: info, role: role, size: size),
-                Expanded(
-                  child: _Titles(info: info, desktop: _desktop),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (_desktop && trailing != null) trailing!(context, item, info),
-        if (_desktop && menu != null)
-          Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(KIcons.moreVert),
-              tooltip: AppLocalizations.of(context).playbackMore,
-              onPressed: () {
-                final box = context.findRenderObject()! as RenderBox;
-                openMenu(box.localToGlobal(box.size.center(Offset.zero)));
-              },
-            ),
-          ),
-        if (!_desktop) _Handle(index: index, size: size),
-        const SizedBox(width: KSpace.x2),
-      ],
+    final duration = info?.durationMs;
+    final trailing = _desktop ? widget.trailing : null;
+    final handle = _Handle(
+      key: _handleKey,
+      index: widget.index,
+      dimension: _desktop ? KMediaCard.prefixWidth : KLayout.minTarget,
     );
-    row = DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: KRadius.md,
-        color: role == QueueRowRole.current ? scheme.secondaryContainer : null,
-      ),
-      child: KPressable(
-        radius: KRadius.md,
-        onTap: () => role == QueueRowRole.current
-            ? null
-            : ref.read(playerControllerProvider).playEntry(item.entryId),
+
+    Widget row = KMediaCard(
+      style: KMediaCardStyle.flat,
+      title: info?.title ?? '',
+      loading: info == null,
+      line2: info == null ? null : trackArtistLine(info),
+      line3: info == null ? null : trackAlbumLine(info),
+      prefix: _desktop ? handle : null,
+      leading: _Cover(info: info, current: role == QueueRowRole.current),
+      top: duration == null
+          ? null
+          : Text(formatClock(Duration(milliseconds: duration))),
+      bottom: trailing?.call(context, item, info),
+      accessory: _desktop ? null : handle,
+      trailing: widget.menu == null
+          ? null
+          : Builder(
+              builder: (button) => KMoreButton(
+                tooltip: l10n.playbackMore,
+                onPressed: ({required viaKeyboard}) {
+                  final box = button.findRenderObject()! as RenderBox;
+                  _openMenu(
+                    info,
+                    box.localToGlobal(box.size.center(Offset.zero)),
+                    viaKeyboard: viaKeyboard,
+                  );
+                },
+              ),
+            ),
+      current: role == QueueRowRole.current,
+      currentLabel: l10n.playbackNowPlaying,
+      dimmed: role == QueueRowRole.played,
+      onTap: role == QueueRowRole.current
+          ? () {}
+          : () => ref.read(playerControllerProvider).playEntry(item.entryId),
+    );
+    if (!_desktop) {
+      row = RawGestureDetector(
+        behavior: HitTestBehavior.translucent,
+        gestures: {
+          _RowLongPress: GestureRecognizerFactoryWithHandlers<_RowLongPress>(
+            () => _RowLongPress(_handleKey),
+            (r) => r
+              ..excluded = _handleKey
+              ..onLongPressStart = (d) => _openMenu(info, d.globalPosition),
+          ),
+        },
         child: row,
-      ),
-    );
-    if (_desktop) {
+      );
+    } else {
       row = CallbackShortcuts(
-        bindings: {const SingleActivator(LogicalKeyboardKey.delete): onRemove},
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.delete): widget.onRemove,
+        },
         child: row,
       );
     }
     return KContextRegion(
-      longPressOpens: !_desktop,
-      onOpen: openMenu,
-      child: SizedBox(
-        height: size.extent,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: KSpace.x1 / 2),
-          child: row,
-        ),
-      ),
+      longPressOpens: false,
+      onOpen: (at) => _openMenu(info, at, viaKeyboard: at == null),
+      child: row,
     );
   }
 }
 
+/// Long press of a mobile row that ignores presses starting on the drag
+/// handle, so holding the handle then moving drags instead of opening the
+/// menu.
+class _RowLongPress extends LongPressGestureRecognizer {
+  _RowLongPress(this.excluded);
+
+  GlobalKey excluded;
+
+  @override
+  bool isPointerAllowed(PointerDownEvent event) {
+    final box = excluded.currentContext?.findRenderObject();
+    if (box is RenderBox && box.attached && box.hasSize) {
+      if (box.size.contains(box.globalToLocal(event.position))) return false;
+    }
+    return super.isPointerAllowed(event);
+  }
+}
+
+/// Drag handle: starts a reorder on drag; a tap is swallowed so it does not
+/// play the row. Takes the colour of the card's icons.
 class _Handle extends StatelessWidget {
-  const _Handle({required this.index, required this.size});
+  const _Handle({super.key, required this.index, required this.dimension});
 
   final int index;
-  final QueueRowSize size;
+  final double dimension;
 
   @override
   Widget build(BuildContext context) {
     return ReorderableDragStartListener(
       index: index,
-      child: Semantics(
-        label: AppLocalizations.of(context).playbackQueueReorder,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.grab,
-          // Hit area at least KLayout.minTarget on mobile; the icon stays
-          // centred.
-          child: SizedBox.square(
-            dimension: size == QueueRowSize.mobile
-                ? KLayout.minTarget
-                : size.handle,
-            child: Icon(
-              KIcons.dragHandle,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {},
+        child: Semantics(
+          label: AppLocalizations.of(context).playbackQueueReorder,
+          child: MouseRegion(
+            cursor: SystemMouseCursors.grab,
+            child: SizedBox.square(
+              dimension: dimension,
+              child: const Icon(KIcons.dragHandle),
             ),
           ),
         ),
@@ -145,98 +191,39 @@ class _Handle extends StatelessWidget {
 }
 
 class _Cover extends ConsumerWidget {
-  const _Cover({required this.info, required this.role, required this.size});
+  const _Cover({required this.info, required this.current});
 
   final TrackInfo? info;
-  final QueueRowRole role;
-  final QueueRowSize size;
+  final bool current;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final radius = BorderRadius.circular(10);
     final cover = TrackCover(
       coverKey: info?.coverKey,
-      seed: info?.albumKey?.toString() ?? info?.title ?? '',
+      seed: info?.albumKey?.encode() ?? info?.title ?? '',
       size: CoverSize.thumb,
-      dimension: size.cover,
-      radius: KRadius.xs,
+      dimension: KMediaCard.coverSize,
+      radius: radius,
     );
-    if (role != QueueRowRole.current) return cover;
-    final playing = ref.watch(isPlayingProvider);
+    if (!current) return cover;
+    final scheme = Theme.of(context).colorScheme;
     return Stack(
       alignment: Alignment.center,
       children: [
         cover,
-        DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: KRadius.xs,
-            color: Colors.black.withValues(alpha: 0.45),
-          ),
-          child: SizedBox.square(dimension: size.cover),
-        ),
-        KEqualizerIcon(playing: playing, color: Colors.white),
-      ],
-    );
-  }
-}
-
-class _Titles extends StatelessWidget {
-  const _Titles({required this.info, required this.desktop});
-
-  final TrackInfo? info;
-  final bool desktop;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
-    final sub = text.bodySmall?.copyWith(color: scheme.onSurfaceVariant);
-    final i = info;
-    if (i == null) {
-      // Same height as the loaded lines, so rows do not jump.
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final w in [140.0, 90.0])
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              child: SizedBox(
-                width: w,
-                height: 10,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest,
-                    borderRadius: KRadius.xs,
-                  ),
-                ),
-              ),
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: scheme.scrim.withValues(alpha: 0.45),
+              borderRadius: radius,
             ),
-        ],
-      );
-    }
-    final album = [
-      if (i.album != null) i.album!,
-      if (i.year != null) '${i.year}',
-    ].join(' • ');
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          i.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        if (i.artist != null)
-          Text(
-            i.artist!,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: sub,
           ),
-        if (desktop && album.isNotEmpty)
-          Text(album, maxLines: 1, overflow: TextOverflow.ellipsis, style: sub),
+        ),
+        KEqualizerIcon(
+          playing: ref.watch(isPlayingProvider),
+          color: scheme.onPrimary,
+        ),
       ],
     );
   }

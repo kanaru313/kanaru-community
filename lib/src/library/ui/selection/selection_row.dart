@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/cover_files.dart';
 import '../../../media/domain/track_info.dart';
+import '../../../media/domain/track_lines.dart';
 import '../../../playback/ui/track_cover.dart';
 import '../browse/library_labels.dart';
 import '../menus/more_button.dart';
@@ -24,8 +25,8 @@ class SelectedSongRow extends StatelessWidget {
     final duration = info.durationMs;
     return KMediaCard(
       title: info.title,
-      line2: songArtistLine(info),
-      line3: songAlbumLine(info),
+      line2: trackArtistLine(info),
+      line3: trackAlbumLine(info),
       leading: ExcludeSemantics(
         child: TrackCover(
           coverKey: info.coverKey,

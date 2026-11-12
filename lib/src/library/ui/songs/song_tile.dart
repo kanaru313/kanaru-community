@@ -9,6 +9,7 @@ import '../../../media/domain/cover_files.dart';
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
 import '../../../media/domain/track_info.dart';
+import '../../../media/domain/track_lines.dart';
 import '../../../playback/state/playback_providers.dart';
 import '../../../playback/ui/track_cover.dart';
 import '../../state/browse/selection_providers.dart';
@@ -21,23 +22,6 @@ import '../menus/open_menu.dart';
 import '../selection/selection_shortcuts.dart';
 
 final _log = Logger('library.song_tile');
-
-/// The artist line of a track: every artist of the tag in order, else the
-/// single artist field.
-String songArtistLine(TrackInfo info) {
-  if (info.artists.isNotEmpty) return info.artists.join(', ');
-  return info.artist ?? '';
-}
-
-/// `album • year`, whichever parts exist.
-String songAlbumLine(TrackInfo info) {
-  final album = info.album;
-  final year = info.year;
-  return [
-    if (album != null && album.isNotEmpty) album,
-    if (year != null) '$year',
-  ].join(' • ');
-}
 
 /// One song row of every song list: cover, title / artists / `album • year`,
 /// duration over the heart. Tap plays `ids[index]` with the list as the
@@ -98,8 +82,8 @@ class SongTile extends ConsumerWidget {
         titleLabel: showDetected && info.languageDetected
             ? l10n.libraryAutoDetectedTag
             : null,
-        line2: songArtistLine(info),
-        line3: songAlbumLine(info),
+        line2: trackArtistLine(info),
+        line3: trackAlbumLine(info),
         leading: showNumber
             ? _NumberColumn(number: info.trackNo, current: current)
             : _SongCover(info: info, current: current),

@@ -938,6 +938,12 @@ abstract class AppLocalizations {
   /// **'More'**
   String get playbackMore;
 
+  /// No description provided for @playbackNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing'**
+  String get playbackNowPlaying;
+
   /// No description provided for @playbackMinimize.
   ///
   /// In en, this message translates to:

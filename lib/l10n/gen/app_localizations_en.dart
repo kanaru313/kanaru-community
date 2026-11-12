@@ -551,6 +551,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackMore => 'More';
 
   @override
+  String get playbackNowPlaying => 'Now playing';
+
+  @override
   String get playbackMinimize => 'Minimise';
 
   @override

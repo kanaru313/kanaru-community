@@ -46,7 +46,7 @@ class QueuePanel extends StatelessWidget {
       size: sheet ? QueueRowSize.mobile : QueueRowSize.desktop,
       trailing: sheet ? null : queueRowTrailing,
       onEmptied: onEmptied,
-      menu: (ctx, item, info, at) => openQueueRowMenu(
+      menu: (ctx, item, info, at, {viaKeyboard = false}) => openQueueRowMenu(
         ctx,
         item,
         info,

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/playback/ui/queue/queue_header.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_row.dart';
 import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_host.dart';
@@ -7,6 +8,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../playback/support/ui_host.dart';
+import '../../playback/ui/queue/queue_test_support.dart' show rowExtent;
 
 void main() {
   group('sheet host', () {
@@ -27,7 +29,14 @@ void main() {
         ),
       );
       expect(save.onPressed, isNull);
-      expect(find.byTooltip('More'), findsOneWidget);
+      // Rows carry a ⋮ with the same tooltip: look inside the head menu only.
+      expect(
+        find.descendant(
+          of: find.byType(QueueMoreMenu),
+          matching: find.byTooltip('More'),
+        ),
+        findsOneWidget,
+      );
       await tester.tap(find.byIcon(KIcons.collapse));
       expect(closed, 1);
     });
@@ -48,7 +57,7 @@ void main() {
 
     testWidgets('rows are mobile rows without ♥ or trailing', (tester) async {
       await pumpWithPlayer(tester, const QueuePanel(host: QueueHost.sheet));
-      expect(tester.getSize(find.byType(QueueRow).first).height, 60);
+      expect(tester.getSize(find.byType(QueueRow).first).height, rowExtent());
       expect(find.byType(FavoriteButton), findsNothing);
     });
   });
@@ -84,7 +93,7 @@ void main() {
       tester,
     ) async {
       await pump(tester);
-      expect(tester.getSize(find.byType(QueueRow).first).height, 72);
+      expect(tester.getSize(find.byType(QueueRow).first).height, rowExtent());
       expect(find.byType(FavoriteButton), findsWidgets);
       final row = find.byType(QueueRow).first;
       expect(

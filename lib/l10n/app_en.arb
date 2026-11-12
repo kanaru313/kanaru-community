@@ -334,6 +334,7 @@
   },
   "playbackRemainingUnderMinute": "under 1 min",
   "playbackMore": "More",
+  "playbackNowPlaying": "Now playing",
   "playbackMinimize": "Minimise",
   "playbackQueueSelectMany": "Select several",
   "playbackQueueAddTracks": "Add tracks",

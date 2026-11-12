@@ -110,6 +110,7 @@
   },
   "playbackRemainingUnderMinute": "dưới 1 phút",
   "playbackMore": "Thêm",
+  "playbackNowPlaying": "Đang phát",
   "playbackMinimize": "Thu nhỏ",
   "playbackQueueSelectMany": "Chọn nhiều",
   "playbackQueueAddTracks": "Thêm bài",
