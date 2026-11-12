@@ -14,6 +14,7 @@ class _Counter extends Notifier<int> {
 }
 
 void main() {
+  _keepValueTests();
   test('a list keeps its rows while its summaries reload', () async {
     final dep = NotifierProvider<_Counter, int>(_Counter.new);
     var pending = Completer<List<LanguageSummary>>();
@@ -75,5 +76,15 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 20));
     expect(container.read(languageSummariesProvider).hasError, isTrue);
     expect(sub.read().hasError, isTrue);
+  });
+}
+
+void _keepValueTests() {
+  test('mapKeepingValue turns a throwing callback into AsyncError', () {
+    final r = const AsyncData<int>(1)
+        .mapKeepingValue<int>((_) => throw StateError('boom'));
+    expect(r, isA<AsyncError<int>>());
+    expect((r as AsyncError<int>).error, isA<StateError>());
+    expect(r.stackTrace, isNotNull);
   });
 }

@@ -28,8 +28,7 @@ class _PendingImage extends ImageProvider<_PendingImage> {
   _PendingImage(this.future);
   final Future<ui.Image> future;
   @override
-  Future<_PendingImage> obtainKey(ImageConfiguration c) =>
-      Future.value(this);
+  Future<_PendingImage> obtainKey(ImageConfiguration c) => Future.value(this);
   @override
   ImageStreamCompleter loadImage(
     _PendingImage key,

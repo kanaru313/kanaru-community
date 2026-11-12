@@ -68,12 +68,15 @@ class CollectionBarLeading extends ConsumerWidget {
   }
 }
 
-/// The body of a list fed by a provider: the data while there is some (also
-/// while a newer answer loads), before the first answer skeleton rows when
-/// [skeletonRows] (list view; [roundCover] for artists) or nothing, a short
-/// message when the query failed and there is nothing to show. With no value
-/// (first load) a reload keeps the rows, an error replaces them with a message; [skeletonHeader] is
-/// what the loaded list draws above its rows, repeated above the skeleton.
+/// Builds the body of a list fed by a provider's [async] value.
+///
+/// - Value present (also while a newer answer reloads): `data(items)`.
+/// - Error: a short "load failed" message replaces the rows.
+/// - No value yet (first load): skeleton rows when [skeletonRows] (round
+///   covers when [roundCover], for artists), otherwise nothing.
+///
+/// [skeletonHeader] is what the loaded list draws above its rows; it is
+/// repeated above the skeleton rows.
 Widget collectionBody<T>(
   BuildContext context,
   AsyncValue<List<T>> async,

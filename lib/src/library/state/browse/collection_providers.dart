@@ -206,19 +206,26 @@ List<LanguageSummary> _languagesByName(List<LanguageSummary> all) {
   return [...known, ...all.where((l) => l.code == null)];
 }
 
-/// [byName] is in ascending name order. Title keeps (or reverses) that
-/// order; any other criterion sorts by [compare] (which already applies the
-/// direction and puts missing values last) and falls back to name order, so
-/// ties never flip with the direction.
 /// Like `whenData`, but a source that has a value keeps it as plain data
 /// while it reloads (Riverpod 3 `AsyncLoading(value: previous)`): `whenData`
 /// would answer a bare loading, and the page would drop its rows for a
 /// skeleton. An error still surfaces as an error.
-extension _KeepValue<T> on AsyncValue<T> {
-  AsyncValue<R> mapKeepingValue<R>(R Function(T value) cb) =>
-      hasValue && !hasError ? AsyncData(cb(requireValue)) : whenData(cb);
+extension AsyncKeepValue<T> on AsyncValue<T> {
+  AsyncValue<R> mapKeepingValue<R>(R Function(T value) cb) {
+    if (!hasValue || hasError) return whenData(cb);
+    // A throwing callback becomes an error, as `whenData` does.
+    try {
+      return AsyncData(cb(requireValue));
+    } catch (e, st) {
+      return AsyncError(e, st);
+    }
+  }
 }
 
+/// [byName] is in ascending name order. Title keeps (or reverses) that
+/// order; any other criterion sorts by [compare] (which already applies the
+/// direction and puts missing values last) and falls back to name order, so
+/// ties never flip with the direction.
 List<T> _arrange<T>(
   List<T> byName,
   SortSpec sort,

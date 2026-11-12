@@ -94,11 +94,10 @@ class RenderKMediaCardRightColumn extends RenderBox
 
   // Width is the wider child; height is fixed. Children are measured with
   // their own intrinsics so the column works inside IntrinsicWidth / Height.
-  double _childWidth(double Function(RenderBox c) of) =>
-      math.max(
-        _top == null ? 0.0 : of(_top!),
-        _bottom == null ? 0.0 : of(_bottom!),
-      );
+  double _childWidth(double Function(RenderBox c) of) => math.max(
+    _top == null ? 0.0 : of(_top!),
+    _bottom == null ? 0.0 : of(_bottom!),
+  );
 
   @override
   double computeMinIntrinsicWidth(double height) =>

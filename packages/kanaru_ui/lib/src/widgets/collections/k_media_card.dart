@@ -309,43 +309,44 @@ class _KMediaCardState extends State<KMediaCard> {
       child: ExcludeSemantics(
         excluding: widget.loading,
         child: Semantics(
-        selected: widget.selected,
-        value: widget.current ? widget.currentLabel : null,
-        child: Opacity(
-          opacity: widget.dimmed ? 0.5 : 1,
-          child: MouseRegion(
-            onEnter: (_) => setState(() => _hovered = true),
-            onExit: (_) => setState(() => _hovered = false),
-            child: Focus(
-              canRequestFocus: false,
-              skipTraversal: true,
-              onFocusChange: (v) => setState(() => _focused = v),
-              child: Material(
-                color: background,
-                shape: RoundedRectangleBorder(
-                  borderRadius: flat ? BorderRadius.zero : KMediaCard._radius,
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: DefaultTextStyle.merge(
-                  style: TextStyle(color: ink),
-                  child: IconTheme.merge(
-                    data: IconThemeData(color: soft),
-                    // M3 IconButton ignores IconTheme: colour it here so icons
-                    // contrast with the tint.
-                    child: _withButtons(
-                      tinted,
-                      IconButtonThemeData(
-                        // ButtonStyle.merge keeps the receiver's values: the card
-                        // colour wins over an inherited foreground and the other
-                        // inherited properties stay.
-                        style: IconButton.styleFrom(foregroundColor: soft)
-                            .copyWith(iconColor: WidgetStatePropertyAll(soft))
-                            .merge(ambientButtons.style),
-                      ),
-                      InkWell(
-                        onTap: widget.onTap,
-                        onLongPress: widget.onLongPress,
-                        child: content,
+          selected: widget.selected,
+          value: widget.current ? widget.currentLabel : null,
+          child: Opacity(
+            opacity: widget.dimmed ? 0.5 : 1,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _hovered = true),
+              onExit: (_) => setState(() => _hovered = false),
+              child: Focus(
+                canRequestFocus: false,
+                skipTraversal: true,
+                onFocusChange: (v) => setState(() => _focused = v),
+                child: Material(
+                  color: background,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: flat ? BorderRadius.zero : KMediaCard._radius,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: DefaultTextStyle.merge(
+                    style: TextStyle(color: ink),
+                    child: IconTheme.merge(
+                      data: IconThemeData(color: soft),
+                      // M3 IconButton ignores IconTheme: colour it here so icons
+                      // contrast with the tint.
+                      child: _withButtons(
+                        tinted,
+                        IconButtonThemeData(
+                          // ButtonStyle.merge keeps the receiver's values: the card
+                          // colour wins over an inherited foreground and the other
+                          // inherited properties stay.
+                          style: IconButton.styleFrom(foregroundColor: soft)
+                              .copyWith(iconColor: WidgetStatePropertyAll(soft))
+                              .merge(ambientButtons.style),
+                        ),
+                        InkWell(
+                          onTap: widget.onTap,
+                          onLongPress: widget.onLongPress,
+                          child: content,
+                        ),
                       ),
                     ),
                   ),
@@ -354,7 +355,6 @@ class _KMediaCardState extends State<KMediaCard> {
             ),
           ),
         ),
-      ),
       ),
     );
   }

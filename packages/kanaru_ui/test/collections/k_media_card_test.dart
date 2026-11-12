@@ -977,10 +977,7 @@ void main() {
       final extent = KMediaCard.extentOf(TextScaler.noScaling);
       await tester.pumpWidget(
         host(
-          SizedBox(
-            height: extent * 2.5,
-            child: const KMediaCardSkeletonList(),
-          ),
+          SizedBox(height: extent * 2.5, child: const KMediaCardSkeletonList()),
         ),
       );
       expect(find.byType(KMediaCard), findsNWidgets(3));
@@ -991,9 +988,7 @@ void main() {
     ) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(
-        host(
-          const SingleChildScrollView(child: KMediaCardSkeletonList()),
-        ),
+        host(const SingleChildScrollView(child: KMediaCardSkeletonList())),
       );
       expect(tester.takeException(), isNull);
       expect(
@@ -1015,7 +1010,8 @@ void main() {
           });
         }
 
-        final root = tester.binding.rootPipelineOwner.semanticsOwner?.rootSemanticsNode;
+        final root =
+            tester.binding.rootPipelineOwner.semanticsOwner?.rootSemanticsNode;
         if (root != null) walk(root);
         return n;
       }
@@ -1036,4 +1032,3 @@ void main() {
     });
   });
 }
-

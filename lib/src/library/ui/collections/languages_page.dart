@@ -75,9 +75,8 @@ class _LanguagesBody extends ConsumerWidget {
       padding: EdgeInsets.fromLTRB(gutter, KSpace.x1, gutter, KSpace.x3),
       child: Text(
         l10n.libraryLanguagesNote,
-        style: Theme.of(
-          context,
-        ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: scheme.onSurfaceVariant),
       ),
     );
     return collectionBody(
