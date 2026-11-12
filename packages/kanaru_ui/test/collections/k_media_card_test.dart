@@ -20,6 +20,7 @@ Widget _card({
   VoidCallback? onLongPress,
   VoidCallback? onAction,
   Widget? prefix,
+  double prefixWidth = KMediaCard.defaultPrefixWidth,
   Widget? accessory,
   bool loading = false,
   KMediaCardStyle style = KMediaCardStyle.auto,
@@ -34,6 +35,7 @@ Widget _card({
       line2: full ? 'Artist' : null,
       line3: full ? 'Album • 2020' : null,
       prefix: prefix,
+      prefixWidth: prefixWidth,
       accessory: accessory,
       loading: loading,
       style: style,
@@ -262,6 +264,22 @@ void main() {
       final prefixBox = tester.getRect(find.byIcon(KIcons.dragHandle));
       final cover = tester.getRect(find.byKey(const Key('cover')));
       expect(prefixBox.right, lessThan(cover.left));
+    });
+
+    testWidgets('prefixWidth sets the prefix box, default 40', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      Future<double> coverLeft(double width) async {
+        await tester.pumpWidget(
+          host(
+            _card(prefix: const Icon(KIcons.dragHandle), prefixWidth: width),
+          ),
+        );
+        return tester.getRect(find.byKey(const Key('cover'))).left;
+      }
+
+      final wide = await coverLeft(KMediaCard.defaultPrefixWidth);
+      final narrow = await coverLeft(12);
+      expect(wide - narrow, closeTo(KMediaCard.defaultPrefixWidth - 12, 0.5));
     });
 
     testWidgets('without a prefix the leading is at the padding edge', (

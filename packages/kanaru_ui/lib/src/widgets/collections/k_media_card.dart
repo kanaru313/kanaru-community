@@ -51,6 +51,7 @@ class KMediaCard extends StatefulWidget {
     this.line2,
     this.line3,
     this.prefix,
+    this.prefixWidth = defaultPrefixWidth,
     this.leading,
     this.circleLeading = false,
     this.top,
@@ -85,6 +86,9 @@ class KMediaCard extends StatefulWidget {
   /// Before the [leading], in a [prefixWidth] box, centred and scaled down to
   /// fit (a track number, a desktop drag handle). Null takes no room.
   final Widget? prefix;
+
+  /// Width of the [prefix] box (default [defaultPrefixWidth]).
+  final double prefixWidth;
 
   /// The cover only (56 dp).
   final Widget? leading;
@@ -138,7 +142,9 @@ class KMediaCard extends StatefulWidget {
   /// Space below a card.
   static const double gap = KSpace.x1;
   static const double coverSize = 56;
-  static const double prefixWidth = 40;
+
+  /// Default [prefixWidth] (the desktop queue handle).
+  static const double defaultPrefixWidth = 40;
   static const double _padV = 10;
   static const BorderRadius _radius = BorderRadius.all(Radius.circular(14));
 
@@ -215,7 +221,7 @@ class _KMediaCardState extends State<KMediaCard> {
         children: [
           if (prefix != null) ...[
             SizedBox(
-              width: KMediaCard.prefixWidth,
+              width: widget.prefixWidth,
               // Bounded height, or the Center would fill the card's max.
               height: KMediaCard.coverSize,
               child: Center(

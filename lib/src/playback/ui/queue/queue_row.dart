@@ -74,7 +74,7 @@ class _QueueRowState extends ConsumerState<QueueRow> {
     final handle = _Handle(
       key: _handleKey,
       index: widget.index,
-      dimension: _desktop ? KMediaCard.prefixWidth : KLayout.minTarget,
+      dimension: _desktop ? KMediaCard.defaultPrefixWidth : KLayout.minTarget,
     );
 
     Widget row = KMediaCard(

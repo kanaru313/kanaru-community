@@ -15,6 +15,7 @@ import '../selection/selection_inset.dart';
 import '../selection/selection_shortcuts.dart';
 import 'song_row_placeholder.dart';
 import 'song_tile.dart';
+import 'track_number.dart';
 
 /// Windowed list of the songs of a scope, in a sort, narrowed by a filter.
 ///
@@ -177,6 +178,10 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
     final extent = KMediaCard.extentOf(MediaQuery.textScalerOf(context));
     final gutter = libraryRowGutter(context);
     final origin = MenuOrigin.ofScope(widget.scope);
+    // One slot width for the whole list, from the digits of its length.
+    final numberWidth = widget.showNumber
+        ? trackNumberWidth(context, digitsOfLength(ids.length))
+        : KMediaCard.defaultPrefixWidth;
     return SliverMainAxisGroup(
       slivers: [
         SliverPadding(
@@ -194,7 +199,10 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
                           extent: extent,
                           onRetry: _window.invalidate,
                         )
-                      : SongRowPlaceholder(showNumber: widget.showNumber);
+                      : SongRowPlaceholder(
+                          showNumber: widget.showNumber,
+                          numberWidth: numberWidth,
+                        );
                 }
                 return SongTile(
                   info: info,
@@ -202,6 +210,7 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
                   ids: ids,
                   playContext: widget.playContext,
                   showNumber: widget.showNumber,
+                  numberWidth: numberWidth,
                   showDetected: widget.showDetected,
                   origin: origin,
                 );

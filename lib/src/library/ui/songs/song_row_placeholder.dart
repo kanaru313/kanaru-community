@@ -8,17 +8,26 @@ import '../../../../l10n/gen/app_localizations.dart';
 /// row and hidden from semantics. Shared by the song lists and the selection
 /// panel.
 class SongRowPlaceholder extends StatelessWidget {
-  const SongRowPlaceholder({super.key, this.showNumber = false});
+  const SongRowPlaceholder({
+    super.key,
+    this.showNumber = false,
+    this.numberWidth = KMediaCard.defaultPrefixWidth,
+  });
 
   /// The loaded rows carry a track-number prefix (album pages): reserve the
   /// same empty prefix so the bars line up with their titles.
   final bool showNumber;
+
+  /// Width of the number slot; the list's measured width, so skeleton rows
+  /// keep the loaded rows' inset.
+  final double numberWidth;
 
   @override
   Widget build(BuildContext context) => KMediaCard(
     title: '',
     loading: true,
     prefix: showNumber ? const SizedBox.shrink() : null,
+    prefixWidth: numberWidth,
   );
 }
 

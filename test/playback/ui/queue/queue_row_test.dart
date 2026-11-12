@@ -78,6 +78,15 @@ void main() {
       final cover = rectIn(tester, row, find.byType(TrackCover));
       final more = rectIn(tester, row, find.byIcon(KIcons.moreVert));
       expect(handle.right, lessThanOrEqualTo(cover.left));
+      // The handle slot keeps the default prefix width.
+      final slot = find.ancestor(
+        of: find.byIcon(KIcons.dragHandle).first,
+        matching: find.byWidgetPredicate(
+          (w) => w is SizedBox && w.height == KMediaCard.coverSize,
+        ),
+      );
+      expect(tester.getSize(slot.first).width, KMediaCard.defaultPrefixWidth);
+      expect(KMediaCard.defaultPrefixWidth, 40);
       expect(more.left, greaterThan(cover.right));
       // Visible without hover: not wrapped in a transparent AnimatedOpacity
       // and a pointer at its centre reaches it.

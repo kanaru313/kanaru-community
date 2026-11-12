@@ -1,12 +1,17 @@
+import 'dart:async';
 import 'dart:ui' show SemanticsAction, SemanticsFlag;
 
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/ui/browse/item_covers.dart';
 import 'package:kanaru/src/library/ui/detail/detail_header.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
+import 'package:kanaru/src/library/state/browse/song_list_providers.dart';
 import 'package:kanaru/src/library/ui/songs/song_tile.dart';
+import 'package:kanaru/src/library/ui/songs/track_number.dart';
+import 'package:kanaru/src/media/domain/track_info.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/playback/domain/now_playing.dart';
@@ -24,6 +29,8 @@ import 'support/ui_harness.dart';
 Future<LibraryHarness> _pump(
   WidgetTester tester, {
   double width = 390,
+  double? height,
+  List<Override> overrides = const [],
   FakePlaybackCommands? playback,
   Widget Function(Widget)? header,
   Future<void> Function(LibraryHarness h)? extra,
@@ -32,9 +39,10 @@ Future<LibraryHarness> _pump(
     tester,
     initial: '/library/songs',
     width: width,
-    height: width > 1000 ? 800 : 844,
+    height: height ?? (width > 1000 ? 800 : 844),
     playback: playback,
     header: header,
+    overrides: overrides,
   );
   await addAlbum(h, 'Blue', 'Zed', year: 2001);
   await extra?.call(h);
@@ -298,7 +306,10 @@ void main() {
         find.ancestor(
           of: number,
           matching: find.byWidgetPredicate(
-            (w) => w is SizedBox && w.width == KMediaCard.prefixWidth,
+            (w) =>
+                w is SizedBox &&
+                w.width != null &&
+                w.height == KMediaCard.coverSize,
           ),
         ),
       );
@@ -309,6 +320,193 @@ void main() {
         greaterThanOrEqualTo(KSpace.x2),
       );
     }
+    await unmountApp(tester);
+  });
+
+  testWidgets('a 1-digit album puts the cover near the row inset', (
+    tester,
+  ) async {
+    await _pump(tester);
+    final card = find.byType(KMediaCard).first;
+    final cover = find.descendant(of: card, matching: find.byType(TrackCover));
+    final slot = tester.getRect(
+      find.ancestor(
+        of: find.descendant(of: card, matching: find.text('1')),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is SizedBox &&
+              w.width != null &&
+              w.height == KMediaCard.coverSize,
+        ),
+      ),
+    );
+    final inset = tester.getTopLeft(card).dx + KLayout.gutterMobile;
+    // Slot is one digit wide (well under the old 40 dp), then the 8 dp gap.
+    expect(slot.width, lessThan(20));
+    expect(slot.left, closeTo(inset, 0.5));
+    expect(
+      tester.getTopLeft(cover).dx,
+      closeTo(inset + slot.width + KSpace.x2, 0.5),
+    );
+    expect(tester.getTopLeft(cover).dx, lessThan(48));
+    await unmountApp(tester);
+  });
+
+  testWidgets('in a 12-track album 1 and 12 right-align', (tester) async {
+    await _pump(
+      tester,
+      height: 1400,
+      extra: (h) async {
+        for (var n = 4; n <= 12; n++) {
+          await addLibraryTrack(
+            h.db,
+            source: h.sourceId,
+            locator: 'Blue/x$n.flac',
+            title: 'Blue x$n',
+            artists: ['Zed'],
+            album: 'Blue',
+            albumArtist: 'Zed',
+            year: 2001,
+            trackNo: n,
+            durationMs: 60000,
+          );
+        }
+      },
+    );
+    final one = find.text('1');
+    final twelve = find.text('12');
+    expect(one, findsOneWidget);
+    expect(twelve, findsOneWidget);
+    expect(
+      tester.getTopRight(one).dx,
+      closeTo(tester.getTopRight(twelve).dx, 0.5),
+    );
+    final card = find.ancestor(of: one, matching: find.byType(KMediaCard));
+    final cover = find.descendant(of: card, matching: find.byType(TrackCover));
+    expect(
+      tester.getTopLeft(cover).dx - tester.getTopRight(one).dx,
+      closeTo(KSpace.x2, 0.5),
+    );
+    expect(tester.takeException(), isNull);
+    await unmountApp(tester);
+  });
+
+  testWidgets('at text scale 2 the number is not shrunk and not clipped', (
+    tester,
+  ) async {
+    await _pump(tester, header: (page) => _scaled(2, page));
+    final context = tester.element(find.byType(SongTile).first);
+    final measured = trackNumberWidth(context, 1);
+    for (final n in ['1', '2', '3']) {
+      final number = find.text(n);
+      final cover = find.descendant(
+        of: find.ancestor(of: number, matching: find.byType(KMediaCard)),
+        matching: find.byType(TrackCover),
+      );
+      expect(_slot(tester, number).width, closeTo(measured, 0.01));
+      // Rendered (transformed) width equals the measured one: no FittedBox
+      // shrink.
+      expect(
+        tester.getTopRight(number).dx - tester.getTopLeft(number).dx,
+        closeTo(measured, 0.5),
+      );
+      expect(
+        tester.getTopLeft(cover).dx - tester.getTopRight(number).dx,
+        closeTo(KSpace.x2, 0.5),
+      );
+    }
+    expect(measured, greaterThan(trackNumberWidth(context, 1) - 0.01));
+    expect(tester.takeException(), isNull);
+    await unmountApp(tester);
+  });
+
+  testWidgets(
+    'bold text setting widens the measured slot like the drawn text',
+    (tester) async {
+      await _pump(
+        tester,
+        header: (page) => Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(boldText: true),
+            child: page,
+          ),
+        ),
+      );
+      final context = tester.element(find.byType(SongTile).first);
+      expect(trackNumberStyle(context)?.fontWeight, FontWeight.bold);
+      final measured = trackNumberWidth(context, 1);
+      final number = find.text('1');
+      expect(_slot(tester, number).width, closeTo(measured, 0.01));
+      expect(
+        tester.getTopRight(number).dx - tester.getTopLeft(number).dx,
+        closeTo(measured, 0.5),
+      );
+      await unmountApp(tester);
+    },
+  );
+
+  testWidgets('a 10-row album uses a 2-digit slot', (tester) async {
+    await _pump(tester, height: 1400, extra: (h) => _addTracks(h, 4, 10));
+    final context = tester.element(find.byType(SongTile).first);
+    final slot = _slot(tester, find.text('1'));
+    expect(slot.width, closeTo(trackNumberWidth(context, 2), 0.01));
+    expect(slot.width, greaterThan(trackNumberWidth(context, 1)));
+    expect(
+      tester.getTopRight(find.text('1')).dx,
+      closeTo(tester.getTopRight(find.text('10')).dx, 0.5),
+    );
+    await unmountApp(tester);
+  });
+
+  testWidgets('a text scale change on a live list updates the slot', (
+    tester,
+  ) async {
+    final scale = ValueNotifier<double>(1);
+    addTearDown(scale.dispose);
+    await _pump(
+      tester,
+      header: (page) => ValueListenableBuilder<double>(
+        valueListenable: scale,
+        builder: (_, value, _) => _scaled(value, page),
+      ),
+    );
+    final before = _slot(tester, find.text('1')).width;
+    scale.value = 2;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    final context = tester.element(find.byType(SongTile).first);
+    final after = _slot(tester, find.text('1')).width;
+    expect(after, greaterThan(before));
+    expect(after, closeTo(trackNumberWidth(context, 1), 0.01));
+    await unmountApp(tester);
+  });
+
+  testWidgets('a loading row of the list has the loaded rows cover x', (
+    tester,
+  ) async {
+    // Loader that never answers: every row stays a skeleton.
+    await _pump(
+      tester,
+      overrides: [
+        trackRowLoaderProvider.overrideWithValue(
+          (ids) => Completer<List<TrackInfo>>().future,
+        ),
+      ],
+    );
+    final skeleton = find.descendant(
+      of: find.byType(KMediaCard),
+      matching: find.byType(KCover),
+    );
+    expect(skeleton, findsWidgets);
+    final loadingX = tester.getTopLeft(skeleton.first).dx;
+    await unmountApp(tester);
+
+    await _pump(tester);
+    final loaded = find.descendant(
+      of: find.byType(KMediaCard).first,
+      matching: find.byType(TrackCover),
+    );
+    expect(tester.getTopLeft(loaded).dx, closeTo(loadingX, 0.5));
     await unmountApp(tester);
   });
 
@@ -336,10 +534,10 @@ void main() {
     expect(card, findsOneWidget);
     final cover = find.descendant(of: card, matching: find.byType(TrackCover));
     expect(cover, findsOneWidget);
-    // The prefix keeps its room: the cover starts after it.
+    // The prefix keeps its room: the cover starts after the 1-digit slot.
     expect(
       tester.getTopLeft(cover).dx - tester.getTopLeft(card).dx,
-      greaterThanOrEqualTo(KMediaCard.prefixWidth),
+      greaterThanOrEqualTo(8 + KSpace.x2),
     );
     expect(tester.takeException(), isNull);
     await unmountApp(tester);
@@ -382,7 +580,18 @@ void main() {
     // card's prefix scales it down to fit its box.
     expect(tester.getSize(number).height, lessThan(60));
     final shown = tester.getBottomRight(number) - tester.getTopLeft(number);
-    expect(shown.dx, lessThanOrEqualTo(KMediaCard.prefixWidth + 0.5));
+    final box = tester.getRect(
+      find.ancestor(
+        of: number,
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is SizedBox &&
+              w.width != null &&
+              w.height == KMediaCard.coverSize,
+        ),
+      ),
+    );
+    expect(shown.dx, lessThanOrEqualTo(box.width + 0.5));
     expect(
       tester.getTopRight(number).dx,
       lessThanOrEqualTo(tester.getTopLeft(cover).dx),
@@ -410,4 +619,43 @@ void main() {
     expect(find.byType(KEqualizerIcon), findsOneWidget);
     await unmountApp(tester);
   });
+}
+
+Widget _scaled(double scale, Widget page) => Builder(
+  builder: (context) => MediaQuery(
+    data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
+    child: page,
+  ),
+);
+
+/// The prefix box (fixed width, cover height) around [number].
+Rect _slot(WidgetTester tester, Finder number) => tester.getRect(
+  find
+      .ancestor(
+        of: number,
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is SizedBox &&
+              w.width != null &&
+              w.height == KMediaCard.coverSize,
+        ),
+      )
+      .first,
+);
+
+Future<void> _addTracks(LibraryHarness h, int from, int to) async {
+  for (var n = from; n <= to; n++) {
+    await addLibraryTrack(
+      h.db,
+      source: h.sourceId,
+      locator: 'Blue/x$n.flac',
+      title: 'Blue x$n',
+      artists: ['Zed'],
+      album: 'Blue',
+      albumArtist: 'Zed',
+      year: 2001,
+      trackNo: n,
+      durationMs: 60000,
+    );
+  }
 }

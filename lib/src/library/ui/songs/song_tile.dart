@@ -20,6 +20,7 @@ import '../menus/menu_origin.dart';
 import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
 import '../selection/selection_shortcuts.dart';
+import 'track_number.dart';
 
 final _log = Logger('library.song_tile');
 
@@ -40,6 +41,7 @@ class SongTile extends ConsumerWidget {
     required this.ids,
     required this.playContext,
     this.showNumber = false,
+    this.numberWidth = KMediaCard.defaultPrefixWidth,
     this.showDetected = false,
     this.origin = const MenuOrigin.list(),
   });
@@ -49,6 +51,9 @@ class SongTile extends ConsumerWidget {
   final List<TrackId> ids;
   final PlayContext playContext;
   final bool showNumber;
+
+  /// Width of the number slot, measured once per list ([trackNumberWidth]).
+  final double numberWidth;
 
   /// Tags a song whose language was detected, not read from a tag (language
   /// pages).
@@ -84,7 +89,10 @@ class SongTile extends ConsumerWidget {
             : null,
         line2: trackArtistLine(info),
         line3: trackAlbumLine(info),
-        prefix: showNumber ? _TrackNumber(number: info.trackNo) : null,
+        prefix: showNumber
+            ? TrackNumber(number: info.trackNo, width: numberWidth)
+            : null,
+        prefixWidth: numberWidth,
         leading: _SongCover(info: info, current: current),
         top: duration == null ? null : Text(formatClock(duration)),
         bottom: SongFavoriteButton(trackId: info.id),
@@ -155,32 +163,6 @@ class _SongCover extends StatelessWidget {
       ],
     );
   }
-}
-
-/// Track number before the cover (album pages), empty when the file has no
-/// track number. Right-aligned in at least the prefix width on one line; the
-/// card's prefix FittedBox scales it down when a long number or a large text
-/// size makes it wider, so it never wraps or overflows.
-class _TrackNumber extends StatelessWidget {
-  const _TrackNumber({required this.number});
-
-  final int? number;
-
-  @override
-  Widget build(BuildContext context) => ConstrainedBox(
-    constraints: const BoxConstraints(minWidth: KMediaCard.prefixWidth),
-    child: Text(
-      number == null ? '' : '$number',
-      textAlign: TextAlign.right,
-      maxLines: 1,
-      softWrap: false,
-      // The card sets its soft colour (the tint-aware one) on IconTheme, not
-      // on the text style; this reads it from there. Depends on KMediaCard
-      // keeping that IconTheme around its content.
-      style: Theme.of(context).textTheme.titleSmall
-          ?.copyWith(color: IconTheme.of(context).color),
-    ),
-  );
 }
 
 /// Equalizer bars; the only part of a tile that watches play / pause.
