@@ -4,18 +4,38 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
+import '../../tokens/k_layout.dart';
 import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
 import 'k_media_card_text.dart';
 
+/// Look of a [KMediaCard].
+enum KMediaCardStyle {
+  /// [flat] on the mobile shell, [card] on desktop.
+  auto,
+
+  /// Rounded tonal card; the list supplies the outer side space.
+  card,
+
+  /// Full-width row: no radius, no fill unless current or selected, own
+  /// 16 dp side padding so content lines up with page headers.
+  flat,
+}
+
 /// Row card of every media list: song, album, artist, folder.
+///
+/// Slot order, left to right: [prefix] · [leading] (with the selection mark) ·
+/// text · [top] / [bottom] · [onAction] (play) · [accessory] · [trailing].
+/// The [trailing] button (the "more" menu) is always visible; only the play
+/// button appears on hover or focus on desktop.
 ///
 /// Three text lines are always reserved (an empty line keeps its room) so all
 /// cards of a list are the same height; [extentOf] gives that height without
-/// laying anything out. Music-type-free: the caller passes the cover (or a
-/// number column) as [leading] and every string.
+/// laying anything out, in every [KMediaCardStyle]. Music-type-free: the
+/// caller passes the cover (or a number column) as [leading] and every string.
+/// With [loading] the lines show placeholder bars at the same height.
 class KMediaCard extends StatefulWidget {
   const KMediaCard({
     super.key,
@@ -24,21 +44,24 @@ class KMediaCard extends StatefulWidget {
     this.titleLines = 1,
     this.line2,
     this.line3,
+    this.prefix,
     this.leading,
     this.circleLeading = false,
     this.top,
     this.bottom,
+    this.accessory,
     this.trailing,
     this.onAction,
     this.actionIcon = KIcons.play,
     this.actionLabel,
-    this.revealTrailingOnHover = false,
     this.current = false,
     this.currentLabel,
     this.selected = false,
     this.dimmed = false,
     this.onTap,
     this.onLongPress,
+    this.loading = false,
+    this.style = KMediaCardStyle.auto,
   });
 
   final String title;
@@ -53,7 +76,11 @@ class KMediaCard extends StatefulWidget {
   final String? line2;
   final String? line3;
 
-  /// Cover (56 dp) or number column.
+  /// Before the [leading], in a [prefixWidth] box, centred and scaled down to
+  /// fit (a drag handle, a selection box). Null takes no room.
+  final Widget? prefix;
+
+  /// Cover only (56 dp) or a number column.
   final Widget? leading;
 
   /// The leading is round (artists): the selection check is clipped to match.
@@ -65,7 +92,11 @@ class KMediaCard extends StatefulWidget {
   /// Right column, lower slot (favourite button, up to 48 dp tall; it overlaps the upper slot's row, which holds a short label).
   final Widget? bottom;
 
-  /// Last slot (the "more" button).
+  /// After the play button, before [trailing] (for example a favourite
+  /// toggle).
+  final Widget? accessory;
+
+  /// Last slot (the "more" button); always visible.
   final Widget? trailing;
 
   /// Round tonal play button: always on the mobile shell, on hover or focus
@@ -73,9 +104,6 @@ class KMediaCard extends StatefulWidget {
   final VoidCallback? onAction;
   final IconData actionIcon;
   final String? actionLabel;
-
-  /// Desktop: show [trailing] only on hover, focus or while [selected].
-  final bool revealTrailingOnHover;
 
   /// The row of the track that is playing: tinted `primaryContainer`.
   final bool current;
@@ -92,9 +120,16 @@ class KMediaCard extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
+  /// Show placeholder bars in place of the text; [title] may be empty.
+  final bool loading;
+
+  /// See [KMediaCardStyle].
+  final KMediaCardStyle style;
+
   /// Space below a card.
   static const double gap = KSpace.x1;
   static const double coverSize = 56;
+  static const double prefixWidth = 40;
   static const double _padV = 10;
   static const BorderRadius _radius = BorderRadius.all(Radius.circular(14));
 
@@ -124,10 +159,16 @@ class _KMediaCardState extends State<KMediaCard> {
     final textTheme = Theme.of(context).textTheme;
     final scaler = MediaQuery.textScalerOf(context);
     final mobile = FormFactor.of(context) == FormFactor.mobile;
+    final flat =
+        widget.style == KMediaCardStyle.flat ||
+        (widget.style == KMediaCardStyle.auto && mobile);
+    final tinted = widget.current || widget.selected;
     final background = widget.current
         ? scheme.primaryContainer
         : widget.selected
         ? scheme.secondaryContainer
+        : flat
+        ? Colors.transparent
         : scheme.surfaceContainerLow;
     final ink = widget.current
         ? scheme.onPrimaryContainer
@@ -138,16 +179,25 @@ class _KMediaCardState extends State<KMediaCard> {
         ? ink.withValues(alpha: 0.8)
         : scheme.onSurfaceVariant;
 
-    final reveal = mobile || _engaged || widget.selected;
+    final prefix = widget.prefix;
     final leading = widget.leading;
 
     final content = Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: KSpace.x3,
+      padding: EdgeInsets.symmetric(
+        horizontal: flat ? KLayout.gutterMobile : KSpace.x3,
         vertical: KMediaCard._padV,
       ),
       child: Row(
         children: [
+          if (prefix != null) ...[
+            SizedBox(
+              width: KMediaCard.prefixWidth,
+              child: Center(
+                child: FittedBox(fit: BoxFit.scaleDown, child: prefix),
+              ),
+            ),
+            const KGap(KSpace.x2),
+          ],
           if (leading != null) ...[
             Stack(
               children: [
@@ -173,6 +223,8 @@ class _KMediaCardState extends State<KMediaCard> {
               line3: widget.line3,
               ink: ink,
               soft: soft,
+              loading: widget.loading,
+              barColor: scheme.surfaceContainerHighest,
             ),
           ),
           if (widget.top != null || widget.bottom != null) ...[
@@ -207,18 +259,24 @@ class _KMediaCardState extends State<KMediaCard> {
             const KGap(KSpace.x2),
             _Revealed(
               visible: mobile || _engaged,
-              child: IconButton.filledTonal(
-                tooltip: widget.actionLabel,
-                onPressed: widget.onAction,
-                icon: Icon(widget.actionIcon),
+              // Keeps its own colours inside a tinted card.
+              child: IconButtonTheme(
+                data: const IconButtonThemeData(),
+                child: IconButton.filledTonal(
+                  tooltip: widget.actionLabel,
+                  onPressed: widget.onAction,
+                  icon: Icon(widget.actionIcon),
+                ),
               ),
             ),
           ],
+          if (widget.accessory != null) ...[
+            const KGap(KSpace.x1),
+            widget.accessory!,
+          ],
           if (widget.trailing != null) ...[
             const KGap(KSpace.x1),
-            widget.revealTrailingOnHover
-                ? _Revealed(visible: reveal, child: widget.trailing!)
-                : widget.trailing!,
+            widget.trailing!,
           ],
         ],
       ),
@@ -240,18 +298,29 @@ class _KMediaCardState extends State<KMediaCard> {
               onFocusChange: (v) => setState(() => _focused = v),
               child: Material(
                 color: background,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: KMediaCard._radius,
+                shape: RoundedRectangleBorder(
+                  borderRadius: flat ? BorderRadius.zero : KMediaCard._radius,
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: DefaultTextStyle.merge(
                   style: TextStyle(color: ink),
                   child: IconTheme.merge(
                     data: IconThemeData(color: soft),
-                    child: InkWell(
-                      onTap: widget.onTap,
-                      onLongPress: widget.onLongPress,
-                      child: content,
+                    // M3 IconButton ignores IconTheme: colour it here so icons
+                    // contrast with the tint.
+                    child: IconButtonTheme(
+                      data: tinted
+                          ? IconButtonThemeData(
+                              style: IconButton.styleFrom(
+                                foregroundColor: soft,
+                              ),
+                            )
+                          : const IconButtonThemeData(),
+                      child: InkWell(
+                        onTap: widget.onTap,
+                        onLongPress: widget.onLongPress,
+                        child: content,
+                      ),
                     ),
                   ),
                 ),

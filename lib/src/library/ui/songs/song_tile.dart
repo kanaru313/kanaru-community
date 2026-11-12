@@ -106,7 +106,6 @@ class SongTile extends ConsumerWidget {
         top: duration == null ? null : Text(formatClock(duration)),
         bottom: SongFavoriteButton(info: info),
         trailing: LibraryMoreButton(onPressed: menu),
-        revealTrailingOnHover: true,
         current: current,
         currentLabel: l10n.libraryNowPlaying,
         selected: selected,

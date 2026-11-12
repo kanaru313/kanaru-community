@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
 
@@ -31,6 +32,8 @@ class KMediaCardText extends StatelessWidget {
     this.titleLines = 1,
     this.line2,
     this.line3,
+    this.loading = false,
+    this.barColor,
   });
 
   final String title;
@@ -38,6 +41,12 @@ class KMediaCardText extends StatelessWidget {
   final int titleLines;
   final String? line2;
   final String? line3;
+
+  /// Draw placeholder bars instead of text (same line heights).
+  final bool loading;
+
+  /// Colour of the placeholder bars.
+  final Color? barColor;
 
   /// Colour of the title.
   final Color ink;
@@ -70,6 +79,39 @@ class KMediaCardText extends StatelessWidget {
       );
     }
 
+    Widget bar(double size, double fraction) {
+      return SizedBox(
+        height: KMediaCardMetrics.line(scaler, size),
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: FractionallySizedBox(
+            widthFactor: fraction,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: barColor ?? ink.withValues(alpha: 0.12),
+                borderRadius: KRadius.sm,
+              ),
+              child: SizedBox(height: scaler.scale(size) * 0.8),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (loading) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          bar(KMediaCardMetrics.titleSize, 0.6),
+          bar(KMediaCardMetrics.lineSize, 0.4),
+          SizedBox(
+            height: KMediaCardMetrics.line(scaler, KMediaCardMetrics.lineSize),
+          ),
+        ],
+      );
+    }
+
     final titleStyle = textTheme.bodyLarge?.copyWith(
       fontWeight: FontWeight.w600,
     );
@@ -99,8 +141,7 @@ class KMediaCardText extends StatelessWidget {
                             color: ink,
                             height:
                                 twoLineHeight /
-                                (2 *
-                                    scaler.scale(KMediaCardMetrics.titleSize)),
+                                (2 * scaler.scale(KMediaCardMetrics.titleSize)),
                           ),
                         ),
                       ),

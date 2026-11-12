@@ -280,7 +280,14 @@ class _SelectedListState extends ConsumerState<_SelectedList> {
       scrollController: _scroll,
       buildDefaultDragHandles: false,
       itemExtent: extent,
-      padding: const EdgeInsets.fromLTRB(KSpace.x2, 0, KSpace.x2, KSpace.x2),
+      // Flat rows (mobile) pad themselves; desktop cards sit inside a small
+      // inset.
+      padding: EdgeInsets.fromLTRB(
+        FormFactor.of(context) == FormFactor.desktop ? KSpace.x2 : 0,
+        0,
+        FormFactor.of(context) == FormFactor.desktop ? KSpace.x2 : 0,
+        KSpace.x2,
+      ),
       itemCount: ids.length,
       // `to` is already the index after the moved row left its place.
       onReorderItem: (from, to) =>

@@ -175,7 +175,7 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
 
     final ids = _window.ids;
     final extent = KMediaCard.extentOf(MediaQuery.textScalerOf(context));
-    final gutter = libraryGutter(context);
+    final gutter = libraryRowGutter(context);
     final origin = MenuOrigin.ofScope(widget.scope);
     return SliverMainAxisGroup(
       slivers: [

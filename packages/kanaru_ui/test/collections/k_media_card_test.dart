@@ -14,7 +14,10 @@ Widget _card({
   VoidCallback? onTap,
   VoidCallback? onLongPress,
   VoidCallback? onAction,
-  bool hoverTrailing = false,
+  Widget? prefix,
+  Widget? accessory,
+  bool loading = false,
+  KMediaCardStyle style = KMediaCardStyle.auto,
   bool leading = true,
   String? currentLabel,
 }) {
@@ -25,13 +28,18 @@ Widget _card({
       titleLabel: full ? 'tag' : null,
       line2: full ? 'Artist' : null,
       line3: full ? 'Album • 2020' : null,
-      leading: leading ? const ColoredBox(color: Color(0xFF888888)) : null,
+      prefix: prefix,
+      accessory: accessory,
+      loading: loading,
+      style: style,
+      leading: leading
+          ? const ColoredBox(key: Key('cover'), color: Color(0xFF888888))
+          : null,
       circleLeading: circle,
       top: full ? const Text('3:45') : null,
       bottom: full ? const Icon(KIcons.heart) : null,
       trailing: const Icon(KIcons.moreVert),
       onAction: onAction,
-      revealTrailingOnHover: hoverTrailing,
       current: current,
       currentLabel: currentLabel,
       selected: selected,
@@ -145,7 +153,7 @@ void main() {
     expect(fill(), scheme.primaryContainer);
     await tester.pumpWidget(host(_card(selected: true)));
     expect(fill(), scheme.secondaryContainer);
-    await tester.pumpWidget(host(_card()));
+    await tester.pumpWidget(host(_card(style: KMediaCardStyle.card)));
     expect(fill(), scheme.surfaceContainerLow);
   });
 
@@ -205,12 +213,18 @@ void main() {
     expect(played, 1);
   });
 
-  testWidgets('desktop shows the play action and trailing on hover only', (
-    tester,
-  ) async {
+  testWidgets('desktop shows the play action on hover only', (tester) async {
     useWindow(tester, const Size(1300, 800));
-    await tester.pumpWidget(host(_card(onAction: () {}, hoverTrailing: true)));
+    await tester.pumpWidget(host(_card(onAction: () {})));
     expect(actionOpacity(tester), 0);
+    // The trailing button never hides.
+    expect(
+      find.ancestor(
+        of: find.byIcon(KIcons.moreVert),
+        matching: find.byType(AnimatedOpacity),
+      ),
+      findsNothing,
+    );
 
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     addTearDown(mouse.removePointer);
@@ -232,5 +246,167 @@ void main() {
     );
     expect(find.semantics.byValue('Now playing'), findsOneWidget);
     handle.dispose();
+  });
+
+  group('slots', () {
+    testWidgets('prefix sits left of the leading', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(_card(prefix: const Icon(KIcons.dragHandle))),
+      );
+      final prefixBox = tester.getRect(find.byIcon(KIcons.dragHandle));
+      final cover = tester.getRect(find.byKey(const Key('cover')));
+      expect(prefixBox.right, lessThan(cover.left));
+    });
+
+    testWidgets('without a prefix the leading is at the padding edge', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(_card()));
+      final card = tester.getRect(find.byType(KMediaCard));
+      final cover = tester.getRect(find.byKey(const Key('cover')));
+      // The cover is centred in its 56 dp box, which starts at the padding.
+      expect(
+        cover.center.dx - card.left,
+        KLayout.gutterMobile + KMediaCard.coverSize / 2,
+      );
+    });
+
+    testWidgets('accessory sits left of the trailing', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(_card(accessory: const Icon(KIcons.heart, key: Key('acc')))),
+      );
+      expect(
+        tester.getRect(find.byKey(const Key('acc'))).right,
+        lessThan(tester.getRect(find.byIcon(KIcons.moreVert)).left),
+      );
+    });
+
+    testWidgets('a tinted card colours icon buttons with its own ink', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
+      await tester.pumpWidget(
+        host(
+          Align(
+            alignment: Alignment.topCenter,
+            child: KMediaCard(
+              title: 'T',
+              current: true,
+              trailing: IconButton(
+                onPressed: () {},
+                icon: const Icon(KIcons.moreVert),
+              ),
+              accessory: const Icon(KIcons.heart),
+            ),
+          ),
+        ),
+      );
+      final soft = scheme.onPrimaryContainer.withValues(alpha: 0.8);
+      final button = tester.widget<IconButton>(find.byType(IconButton));
+      final theme = IconButtonTheme.of(tester.element(find.byWidget(button)));
+      expect(theme.style?.foregroundColor?.resolve({}), soft);
+      expect(
+        IconTheme.of(tester.element(find.byIcon(KIcons.heart))).color,
+        soft,
+      );
+    });
+  });
+
+  group('loading', () {
+    for (final scale in [1.0, 2.0]) {
+      testWidgets('shows bars, no text, same height at $scale x', (
+        tester,
+      ) async {
+        useWindow(tester, const Size(400, 800));
+        await tester.pumpWidget(host(_card(loading: true), textScale: scale));
+        expect(find.text('Title'), findsNothing);
+        expect(find.text('Artist'), findsNothing);
+        expect(find.byType(FractionallySizedBox), findsNWidgets(2));
+        expect(
+          tester.getSize(find.byType(KMediaCard)).height,
+          closeTo(KMediaCard.extentOf(TextScaler.linear(scale)), 0.5),
+        );
+      });
+    }
+  });
+
+  group('style', () {
+    ShapeBorder? shape(WidgetTester tester) => tester
+        .widget<Material>(
+          find
+              .descendant(
+                of: find.byType(KMediaCard),
+                matching: find.byType(Material),
+              )
+              .first,
+        )
+        .shape;
+
+    Color? fill(WidgetTester tester) => tester
+        .widget<Material>(
+          find
+              .descendant(
+                of: find.byType(KMediaCard),
+                matching: find.byType(Material),
+              )
+              .first,
+        )
+        .color;
+
+    double radius(WidgetTester tester) =>
+        ((shape(tester) as RoundedRectangleBorder).borderRadius as BorderRadius)
+            .topLeft
+            .x;
+
+    testWidgets('mobile auto is flat and transparent when idle', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(_card()));
+      expect(radius(tester), 0);
+      expect(fill(tester), Colors.transparent);
+    });
+
+    testWidgets('mobile auto tints the full width when current', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(_card(current: true)));
+      expect(radius(tester), 0);
+      expect(fill(tester), isNot(Colors.transparent));
+      expect(tester.getSize(find.byType(KMediaCard)).width, 400);
+    });
+
+    testWidgets('desktop auto is a rounded card', (tester) async {
+      useWindow(tester, const Size(1300, 800));
+      await tester.pumpWidget(host(_card()));
+      expect(radius(tester), 14);
+    });
+
+    testWidgets('explicit flat on desktop is flat', (tester) async {
+      useWindow(tester, const Size(1300, 800));
+      await tester.pumpWidget(host(_card(style: KMediaCardStyle.flat)));
+      expect(radius(tester), 0);
+    });
+
+    for (final style in KMediaCardStyle.values) {
+      for (final scale in [1.0, 2.0]) {
+        testWidgets('height equals extentOf minus gap ($style, $scale x)', (
+          tester,
+        ) async {
+          useWindow(tester, const Size(400, 800));
+          await tester.pumpWidget(host(_card(style: style), textScale: scale));
+          final scaler = TextScaler.linear(scale);
+          expect(
+            tester.getSize(find.byType(KMediaCard)).height,
+            closeTo(KMediaCard.extentOf(scaler), 0.5),
+          );
+        });
+      }
+    }
   });
 }

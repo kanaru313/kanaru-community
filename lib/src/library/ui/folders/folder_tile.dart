@@ -65,7 +65,6 @@ class FolderTile extends StatelessWidget {
               ],
             )
           : LibraryMoreButton(onPressed: menu),
-      revealTrailingOnHover: menu != null,
       onTap: onTap,
     );
     return menu == null

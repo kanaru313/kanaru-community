@@ -21,13 +21,13 @@ typedef FolderNavigator = void Function(FolderLocation to);
 const folderSongSort = SortSpec(SortCriterion.title);
 
 /// Rows of folders (and music folders) as a fixed-extent sliver with the
-/// page gutter.
+/// row gutter.
 Widget folderRowsSliver(
   BuildContext context, {
   required int count,
   required IndexedWidgetBuilder builder,
 }) => SliverPadding(
-  padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
+  padding: EdgeInsets.symmetric(horizontal: libraryRowGutter(context)),
   sliver: SliverFixedExtentList(
     itemExtent: KMediaCard.extentOf(MediaQuery.textScalerOf(context)),
     delegate: SliverChildBuilderDelegate(

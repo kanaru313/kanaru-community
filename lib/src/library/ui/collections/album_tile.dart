@@ -88,7 +88,6 @@ class AlbumTile extends ConsumerWidget {
           onPressed: ({required viaKeyboard}) =>
               _menu(context, album, origin, viaKeyboard: viaKeyboard),
         ),
-        revealTrailingOnHover: true,
         onTap: () => _open(context, album),
       ),
     );

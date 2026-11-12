@@ -89,7 +89,9 @@ class _AlbumsBody extends ConsumerWidget {
             )
           else
             SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: gutter),
+              padding: EdgeInsets.symmetric(
+                horizontal: libraryRowGutter(context),
+              ),
               sliver: SliverFixedExtentList(
                 itemExtent: KMediaCard.extentOf(scaler),
                 delegate: SliverChildBuilderDelegate(
