@@ -101,7 +101,11 @@ void main() {
         tester,
         size: QueueRowSize.desktop,
         window: _desktopWindow,
-        favorite: (context, item) => const Icon(KIcons.heart),
+        favorite: (context, item) => IconButton(
+          iconSize: 20,
+          onPressed: () {},
+          icon: const Icon(KIcons.heart),
+        ),
       );
       final row = find.byType(QueueRow).first;
       final heart = rectIn(tester, row, find.byIcon(KIcons.heart));

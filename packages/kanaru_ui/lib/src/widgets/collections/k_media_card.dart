@@ -236,29 +236,18 @@ class _KMediaCardState extends State<KMediaCard> {
           if (widget.top != null || widget.bottom != null) ...[
             const KGap(KSpace.x2),
             // As high as the cover, so a 48 dp button in [bottom] fits.
-            SizedBox(
+            _RightColumn(
               height: leading != null
                   ? math.max(
                       KMediaCard.coverSize,
                       KMediaCardMetrics.textBlock(scaler),
                     )
                   : KMediaCardMetrics.textBlock(scaler),
-              child: Stack(
-                alignment: Alignment.topRight,
-                children: [
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: DefaultTextStyle.merge(
-                      style: textTheme.labelSmall?.copyWith(color: soft),
-                      child: widget.top ?? const SizedBox.shrink(),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: widget.bottom ?? const SizedBox.shrink(),
-                  ),
-                ],
-              ),
+              topLine:
+                  scaler.scale(textTheme.labelSmall?.fontSize ?? 11) * 1.45,
+              topStyle: textTheme.labelSmall?.copyWith(color: soft),
+              top: widget.top,
+              bottom: widget.bottom,
             ),
           ],
           if (widget.onAction != null) ...[
@@ -277,12 +266,11 @@ class _KMediaCardState extends State<KMediaCard> {
               ),
             ),
           ],
-          if (widget.accessory != null) ...[
-            const KGap(KSpace.x1),
-            widget.accessory!,
-          ],
+          // The right column and play button butt against the next 48 dp
+          // box; handle to ⋮ keeps its 4 dp.
+          if (widget.accessory != null) widget.accessory!,
           if (widget.trailing != null) ...[
-            const KGap(KSpace.x1),
+            if (widget.accessory != null) const KGap(KSpace.x1),
             widget.trailing!,
           ],
         ],
@@ -337,6 +325,86 @@ class _KMediaCardState extends State<KMediaCard> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Duration over heart, sharing one horizontal centre. The [bottom] button
+/// keeps its full 48 dp box (hit area); the [top] text is painted into that
+/// box's empty upper padding and ignores the pointer, so the two read as one
+/// tight pair while the tap target stays whole. The pair is centred in
+/// [height] as far as the 48 dp box allows (it must stay inside the column,
+/// or taps on its edge would miss).
+class _RightColumn extends StatelessWidget {
+  const _RightColumn({
+    required this.height,
+    required this.topLine,
+    required this.topStyle,
+    required this.top,
+    required this.bottom,
+  });
+
+  /// Heart icon size the pair is laid out for (`SongFavoriteButton`: 20).
+  static const double iconSize = 20;
+  static const double buttonSize = 48;
+
+  /// Space between the text bottom and the icon top.
+  static const double pairGap = 2;
+
+  final double height;
+
+  /// Height of one [top] line, to centre the pair.
+  final double topLine;
+  final TextStyle? topStyle;
+  final Widget? top;
+  final Widget? bottom;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasBoth = top != null && bottom != null;
+    // Where the text ends: centred pair, kept inside the 48 dp box.
+    final pair = topLine + pairGap + iconSize;
+    final double buttonTop = hasBoth
+        ? math.min(
+            math.max(
+              (height - pair) / 2 +
+                  topLine +
+                  pairGap -
+                  (buttonSize - iconSize) / 2,
+              0,
+            ),
+            height - buttonSize,
+          )
+        : 0;
+    final textBottom = buttonTop + (buttonSize - iconSize) / 2 - pairGap;
+    return SizedBox(
+      height: height,
+      child: Stack(
+        alignment: Alignment.topCenter,
+        clipBehavior: Clip.none,
+        children: [
+          if (bottom != null)
+            Align(
+              alignment: hasBoth ? Alignment.topCenter : Alignment.bottomCenter,
+              child: Padding(
+                padding: EdgeInsets.only(top: hasBoth ? buttonTop : 0),
+                child: bottom,
+              ),
+            ),
+          if (top != null)
+            Align(
+              alignment: hasBoth ? Alignment.bottomCenter : Alignment.topCenter,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: hasBoth ? height - textBottom : 0,
+                ),
+                child: IgnorePointer(
+                  child: DefaultTextStyle.merge(style: topStyle, child: top!),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

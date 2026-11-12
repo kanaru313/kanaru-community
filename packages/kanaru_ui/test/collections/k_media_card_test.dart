@@ -280,7 +280,13 @@ void main() {
       );
       expect(
         tester.getRect(find.byKey(const Key('acc'))).right,
-        lessThan(tester.getRect(find.byIcon(KIcons.moreVert)).left),
+        lessThanOrEqualTo(tester.getRect(find.byIcon(KIcons.moreVert)).left),
+      );
+      // 24 dp icons: right edge to left edge is the 4 dp gap.
+      expect(
+        tester.getRect(find.byIcon(KIcons.moreVert)).left -
+            tester.getRect(find.byKey(const Key('acc'))).right,
+        4,
       );
     });
 
@@ -551,5 +557,110 @@ void main() {
         );
       }
     }
+  });
+
+  group('right column', () {
+    // Song-row shape: duration over a 20 dp heart in a default IconButton,
+    // then the 48 dp more button.
+
+    Widget song({required VoidCallback onHeart, VoidCallback? onAction}) =>
+        Align(
+          alignment: Alignment.topCenter,
+          child: KMediaCard(
+            title: 'T',
+            line2: 'a',
+            line3: 'b',
+            leading: const ColoredBox(color: Color(0xFF888888)),
+            top: const Text('5:53', key: Key('dur')),
+            bottom: IconButton(
+              key: const Key('heart'),
+              iconSize: 20,
+              onPressed: onHeart,
+              icon: const Icon(KIcons.heart),
+            ),
+            onAction: onAction,
+            trailing: IconButton(
+              key: const Key('more'),
+              onPressed: () {},
+              icon: const Icon(KIcons.moreVert),
+            ),
+          ),
+        );
+
+    testWidgets('duration and heart share a centre and sit tight', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(song(onHeart: () {})));
+      final text = tester.getRect(find.byKey(const Key('dur')));
+      final icon = tester.getRect(find.byIcon(KIcons.heart));
+      expect((text.center.dx - icon.center.dx).abs(), lessThan(1));
+      expect(icon.top - text.bottom, lessThanOrEqualTo(4));
+      expect(icon.top - text.bottom, greaterThanOrEqualTo(0));
+    });
+
+    testWidgets('the heart keeps a 48 dp hit area, edges included', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      var taps = 0;
+      await tester.pumpWidget(host(song(onHeart: () => taps++)));
+      final box = tester.getRect(find.byKey(const Key('heart')));
+      expect(box.width, greaterThanOrEqualTo(48));
+      expect(box.height, greaterThanOrEqualTo(48));
+      for (final p in [
+        box.topLeft + const Offset(1, 1),
+        box.bottomRight - const Offset(1, 1),
+        box.center,
+      ]) {
+        await tester.tapAt(p);
+      }
+      expect(taps, 3);
+    });
+
+    testWidgets('heart to more is 48 dp apart and boxes keep the icons free', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(song(onHeart: () {})));
+      final heart = tester.getRect(find.byKey(const Key('heart')));
+      final more = tester.getRect(find.byKey(const Key('more')));
+      final gap =
+          tester.getCenter(find.byKey(const Key('more'))).dx -
+          tester.getCenter(find.byKey(const Key('heart'))).dx;
+      expect(gap, 48);
+      expect(heart.right, lessThanOrEqualTo(more.left));
+    });
+
+    testWidgets('play to more spacing equals heart to more', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(song(onHeart: () {}, onAction: () {})));
+      final more = tester.getCenter(find.byKey(const Key('more'))).dx;
+      final play = tester.getRect(find.byIcon(KIcons.play));
+      expect(more - play.center.dx, 48);
+      final heart = tester.getCenter(find.byKey(const Key('heart'))).dx;
+      expect(more - heart, greaterThanOrEqualTo(48));
+    });
+
+    for (final scale in [1.0, 2.0]) {
+      testWidgets('height equals extentOf at $scale x', (tester) async {
+        useWindow(tester, const Size(400, 800));
+        await tester.pumpWidget(host(song(onHeart: () {}), textScale: scale));
+        expect(
+          tester.getSize(find.byType(KMediaCard)).height,
+          KMediaCard.extentOf(TextScaler.linear(scale)),
+        );
+        final text = tester.getRect(find.byKey(const Key('dur')));
+        final icon = tester.getRect(find.byIcon(KIcons.heart));
+        expect((text.center.dx - icon.center.dx).abs(), lessThan(1));
+        expect(icon.top - text.bottom, lessThanOrEqualTo(4));
+      });
+    }
+
+    testWidgets('play stays hidden until hover on desktop', (tester) async {
+      useWindow(tester, const Size(1300, 800));
+      await tester.pumpWidget(host(song(onHeart: () {}, onAction: () {})));
+      expect(actionOpacity(tester), 0);
+    });
   });
 }
