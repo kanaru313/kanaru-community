@@ -91,7 +91,8 @@ Future<void> playIds(
   context: context,
 );
 
-/// Reads the tracks of [scope] in the default order of [list] at the moment
+/// Reads the tracks of [scope] in [sort] (default: the default order of
+/// [list]) at the moment
 /// of the call (a ▶ button on a tile that does not hold the ids), then plays
 /// them. The tile may leave the tree during the read (a scan refresh, a
 /// scroll): everything needed is taken before the read, so the play still
@@ -101,8 +102,17 @@ Future<void> playScope(
   BuildContext context,
   SongScope scope,
   BrowseList list,
-  PlayContext playContext,
-) => _playScoped(ref, context, scope, list, playContext, shuffle: false);
+  PlayContext playContext, {
+  SortSpec? sort,
+}) => _playScoped(
+  ref,
+  context,
+  scope,
+  list,
+  playContext,
+  shuffle: false,
+  sort: sort,
+);
 
 /// Like [playScope], shuffled.
 Future<void> shuffleScope(
@@ -110,8 +120,17 @@ Future<void> shuffleScope(
   BuildContext context,
   SongScope scope,
   BrowseList list,
-  PlayContext playContext,
-) => _playScoped(ref, context, scope, list, playContext, shuffle: true);
+  PlayContext playContext, {
+  SortSpec? sort,
+}) => _playScoped(
+  ref,
+  context,
+  scope,
+  list,
+  playContext,
+  shuffle: true,
+  sort: sort,
+);
 
 Future<void> _playScoped(
   WidgetRef ref,
@@ -120,6 +139,7 @@ Future<void> _playScoped(
   BrowseList list,
   PlayContext playContext, {
   required bool shuffle,
+  SortSpec? sort,
 }) async {
   final request = beginPlayRequest();
   final read = ref.read(scopeIdsReaderProvider);
@@ -128,7 +148,7 @@ Future<void> _playScoped(
   // The root navigator outlives the tile, so the failure can still be shown.
   final root = Navigator.of(context, rootNavigator: true).context;
   try {
-    final ids = await read(scope, defaultSortOf(list));
+    final ids = await read(scope, sort ?? defaultSortOf(list));
     if (!isNewestPlay(request)) {
       _log.fine('play request $request dropped: a newer one started');
       return;

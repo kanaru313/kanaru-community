@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/song_scope.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/ui/browse/group_play.dart';
 import 'package:kanaru/src/library/ui/menus/more_button.dart';
@@ -126,7 +128,8 @@ void main() {
     await _pump(tester, playback: playback);
     final rows = tester.widgetList<KMediaCard>(find.byType(KMediaCard));
     final titles = [for (final r in rows) r.title];
-    final vie = titles.indexWhere((t) => t.contains('Vi'));
+    final vie = titles.indexOf('Tiếng Việt · Vietnamese');
+    expect(vie, isNonNegative);
     final unknown = titles.length - 1; // "unknown" stays last
     await tester.tap(find.byTooltip('Play all').at(vie));
     await tester.runAsync(
@@ -145,6 +148,38 @@ void main() {
     expect(call.tracks.length, 2);
     expect(call.context.kind, PlayContextKind.language);
     expect(call.context.ref, '_unknown');
+    await unmountApp(tester);
+  });
+
+  testWidgets('play on a row follows the sort chosen on the language page', (
+    tester,
+  ) async {
+    final playback = FakePlaybackCommands();
+    final h = await _pump(tester, playback: playback);
+    await h.container.read(detailSortOverridesProvider.notifier).set((
+      list: BrowseList.detailSongs,
+      item: languageDetailItem('vie'),
+    ), const SortSpec(SortCriterion.title, descending: true));
+    await tester.pump();
+    final titles = [
+      for (final r in tester.widgetList<KMediaCard>(find.byType(KMediaCard)))
+        r.title,
+    ];
+    await tester.tap(
+      find.byTooltip('Play all').at(titles.indexOf('Tiếng Việt · Vietnamese')),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pump();
+    final call = playback.calls.single as PlayTracksCall;
+    final ascending = await songIds(
+      h.db,
+      const SongScope.language('vie'),
+      const SortSpec(SortCriterion.title),
+      '',
+    );
+    expect(call.tracks, ascending.reversed.toList());
     await unmountApp(tester);
   });
 

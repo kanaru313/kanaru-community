@@ -66,7 +66,9 @@ Widget levelFoldersSliver(
           context,
           folder: place.root.folder,
           key: target.key,
-          name: row.label,
+          // The folder's own name, as its page's Play sends (a merged chain
+          // shows "A › B" but plays as B).
+          name: target.name,
         ),
         onMenu: ({bool viaKeyboard = false}) => openFolderMenu(
           context,

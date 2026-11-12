@@ -139,6 +139,36 @@ void main() {
     await unmountApp(tester);
   });
 
+  testWidgets('play on a row follows the sort chosen on the genre page', (
+    tester,
+  ) async {
+    final playback = FakePlaybackCommands();
+    final h = await _pump(tester, playback: playback);
+    await h.container
+        .read(libraryListViewsProvider.notifier)
+        .setView(BrowseList.genres, CollectionView.list);
+    await h.container.read(detailSortOverridesProvider.notifier).set((
+      list: BrowseList.detailSongs,
+      item: genreDetailItem(groupKey('Jazz')),
+    ), const SortSpec(SortCriterion.title, descending: true));
+    await tester.pump();
+    await tester.tap(find.byTooltip('Play all').at(1)); // Jazz
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pump();
+    final call = playback.calls.single as PlayTracksCall;
+    final scope = SongScope.genre(groupKey('Jazz'));
+    final ascending = await songIds(
+      h.db,
+      scope,
+      const SortSpec(SortCriterion.title),
+      '',
+    );
+    expect(call.tracks, ascending.reversed.toList());
+    await unmountApp(tester);
+  });
+
   testWidgets('list rows: shared extent, zero gutter, menu is the genre menu', (
     tester,
   ) async {

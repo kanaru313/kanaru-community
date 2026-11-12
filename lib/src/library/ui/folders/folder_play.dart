@@ -17,8 +17,9 @@ PlayContext folderPlayContext(String sourceUid, String key, String label) =>
 SongScope folderPlayScope(int sourceId, String key, {bool flat = false}) =>
     SongScope.folder(sourceId, key, direct: flat);
 
-/// Plays a folder from its row's ▶, the same songs, order and context as its
-/// page's Play.
+/// Plays a folder from its row's ▶: the songs, order (title, the sort every
+/// folder page lists in) and context of its page's Play, given the folder's
+/// own [name].
 Future<void> playFolder(
   WidgetRef ref,
   BuildContext context, {

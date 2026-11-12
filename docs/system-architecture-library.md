@@ -611,10 +611,14 @@ Every call is awaited; a failure is logged and shows a snack bar.
 - Genre, language and folder rows have the same ▶. One helper per kind is
   shared by the detail page's Play, the menu's Play and the row:
   `genrePlayContext` / `languagePlayContext` / `playGenre` / `playLanguage`
-  (`ui/browse/group_play.dart`; `detailSongs` default order; the "unknown"
-  language is ref `_unknown` everywhere) and `folderPlayContext` /
+  (`ui/browse/group_play.dart`; the songs come in the sort of the group's
+  page, `detailSortProvider` of `genreDetailItem` / `languageDetailItem`, for
+  the row ▶ and the menu Play alike; the "unknown" language is ref `_unknown`
+  everywhere) and `folderPlayContext` /
   `folderPlayScope` / `playFolder` (`ui/folders/folder_play.dart`; tree rows
-  take the subfolders too, flat rows their own songs). A music-folder row
+  take the subfolders too, flat rows their own songs; always in title order,
+  the one sort of every folder page; a merged chain plays under the name of
+  its last folder, like the page's Play). A music-folder row
   with no songs keeps its ▶ but dimmed (`KMediaCard.actionEnabled`).
 - Artist photo: the `coverKey` of `ArtistSummary` (the cover of the newest own
   album that has one), a round `TrackCover`, else a letter placeholder seeded

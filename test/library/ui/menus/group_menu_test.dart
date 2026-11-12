@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/ui/browse/group_play.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
+import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/library/ui/menus/group_menu.dart';
 import 'package:kanaru/src/library/ui/menus/menu_model.dart';
 import 'package:kanaru/src/library/ui/menus/menu_origin.dart';
@@ -97,5 +99,22 @@ void main() {
       rowOf(spec, MenuItemId.goLanguage).action,
       MenuAction.go(LibraryLocations.language(null)),
     );
+  });
+
+  test('Play carries the play context of the page, `_unknown` for no code', () {
+    final unknown = _menu(GroupMenuKind.language, key: null);
+    expect(
+      rowOf(unknown, MenuItemId.play).action,
+      MenuAction.play(
+        trackIds(5),
+        shuffle: false,
+        context: languagePlayContext(null, 'Vietnamese'),
+      ),
+    );
+    final play = rowOf(unknown, MenuItemId.play).action as PlayAction;
+    expect(play.context.ref, '_unknown');
+    expect(play.context.kind, PlayContextKind.language);
+    final genre = rowOf(_menu(GroupMenuKind.genre), MenuItemId.play).action;
+    expect((genre as PlayAction).context, genrePlayContext('indie', 'Indie'));
   });
 }

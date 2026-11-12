@@ -1,10 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/domain/music_folder.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/ui/folders/folder_locations.dart';
 import 'package:kanaru/src/library/ui/folders/folder_play.dart';
+import 'package:kanaru/src/library/ui/folders/folder_slivers.dart';
 import 'package:kanaru/src/library/ui/folders/folder_tile.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/platform/domain/storage_volumes.dart';
@@ -389,7 +391,7 @@ void main() {
     tester,
   ) async {
     final playback = FakePlaybackCommands();
-    final (_, folder) = await _single(tester, playback: playback);
+    final (h, folder) = await _single(tester, playback: playback);
     final rows = tester.widgetList<FolderTile>(find.byType(FolderTile));
     final vpop = rows.toList().indexWhere((r) => r.title.contains('V-Pop'));
     await tester.tap(find.byTooltip('Play all').at(vpop));
@@ -399,11 +401,21 @@ void main() {
     await tester.pump();
     final call = playback.calls.single as PlayTracksCall;
     expect(call.tracks.length, 2);
+    // The merged chain "V-Pop › Singles › Deep" plays as its page's Play does:
+    // the end folder's own name.
     expect(
-      call.context.ref,
-      folderPlayContext(folder.sourceUid, 'V-Pop/Singles/Deep', '').ref,
+      call.context,
+      folderPlayContext(folder.sourceUid, 'V-Pop/Singles/Deep', 'Deep'),
     );
-    expect(call.context.kind, PlayContextKind.folder);
+    expect(
+      call.tracks,
+      await songIds(
+        h.db,
+        folderPlayScope(folder.sourceId, 'V-Pop/Singles/Deep'),
+        folderSongSort,
+        '',
+      ),
+    );
     await unmountApp(tester);
   });
 
@@ -424,6 +436,15 @@ void main() {
     final call = playback.calls.single as PlayTracksCall;
     // Only loose.flac sits directly in Music; the tree view would send 5.
     expect(call.tracks.length, 1);
+    expect(
+      call.tracks,
+      await songIds(
+        h.db,
+        folderPlayScope(folder.sourceId, '', flat: true),
+        folderSongSort,
+        '',
+      ),
+    );
     expect(call.context, folderPlayContext(folder.sourceUid, '', 'Music'));
     await unmountApp(tester);
   });

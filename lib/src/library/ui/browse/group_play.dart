@@ -5,6 +5,7 @@ import '../../../media/domain/library_keys.dart';
 import '../../../media/domain/play_context.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/song_scope.dart';
+import '../../state/browse/list_prefs_providers.dart';
 import 'play_actions.dart';
 
 /// Play context of a genre: the same one the detail page's Play button, the
@@ -20,7 +21,15 @@ PlayContext languagePlayContext(String? code, String label) => PlayContext(
   label: label,
 );
 
-/// Plays a whole genre in the order of its page (▶ on a row).
+/// Key of a genre's detail page in the sort preferences (`genre:<id>`).
+String genreDetailItem(String genreKey) => 'genre:${encodeKey(genreKey)}';
+
+/// Key of a language's detail page in the sort preferences.
+String languageDetailItem(String? code) =>
+    'language:${code == null ? '_unknown' : encodeKey(code)}';
+
+/// Plays a whole genre in the sort of its page: its own choice, else the remembered default
+/// of the detail lists (▶ on a row).
 Future<void> playGenre(
   WidgetRef ref,
   BuildContext context,
@@ -32,9 +41,15 @@ Future<void> playGenre(
   SongScope.genre(genreKey),
   BrowseList.detailSongs,
   genrePlayContext(genreKey, label),
+  sort: ref.read(
+    detailSortProvider((
+      list: BrowseList.detailSongs,
+      item: genreDetailItem(genreKey),
+    )),
+  ),
 );
 
-/// Plays a whole language in the order of its page (▶ on a row).
+/// Plays a whole language in the sort of its page (▶ on a row).
 Future<void> playLanguage(
   WidgetRef ref,
   BuildContext context,
@@ -46,4 +61,10 @@ Future<void> playLanguage(
   SongScope.language(code),
   BrowseList.detailSongs,
   languagePlayContext(code, label),
+  sort: ref.read(
+    detailSortProvider((
+      list: BrowseList.detailSongs,
+      item: languageDetailItem(code),
+    )),
+  ),
 );
