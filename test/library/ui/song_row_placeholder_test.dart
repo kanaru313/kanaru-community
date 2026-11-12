@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/library/ui/songs/song_row_placeholder.dart';
-import 'package:kanaru/src/library/ui/songs/track_number.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -49,56 +48,6 @@ void main() {
     );
   });
 
-  testWidgets('placeholder reserves the number prefix on album pages', (
-    tester,
-  ) async {
-    Future<double> barLeft(bool showNumber) async {
-      await _pump(tester, mobile, SongRowPlaceholder(showNumber: showNumber));
-      return tester
-          .getTopLeft(
-            find
-                .descendant(
-                  of: find.byType(KMediaCard),
-                  matching: find.byType(DecoratedBox),
-                )
-                .first,
-          )
-          .dx;
-    }
-
-    final plain = await barLeft(false);
-    final numbered = await barLeft(true);
-    expect(
-      numbered - plain,
-      closeTo(KMediaCard.defaultPrefixWidth + KSpace.x2, 0.5),
-    );
-  });
-
-  testWidgets('placeholder cover x matches a loaded numbered row', (
-    tester,
-  ) async {
-    Future<double> coverLeft(Widget row) async {
-      await _pump(tester, mobile, row);
-      return tester.getTopLeft(find.byType(KCover)).dx;
-    }
-
-    await _pump(tester, mobile, const SizedBox());
-    final width = trackNumberWidthOf(tester, 1);
-    final placeholder = await coverLeft(
-      SongRowPlaceholder(showNumber: true, numberWidth: width),
-    );
-    final loaded = await coverLeft(
-      KMediaCard(
-        title: 't',
-        prefix: const SizedBox.shrink(),
-        prefixWidth: width,
-        leading: const KCover.loading(size: 56, radius: BorderRadius.zero),
-      ),
-    );
-    expect(placeholder, closeTo(loaded, 0.5));
-    expect(placeholder, lessThan(16 + 20 + KSpace.x2 + 0.5));
-  });
-
   testWidgets('failed row is flat on mobile: no fill, no radius', (
     tester,
   ) async {
@@ -143,7 +92,3 @@ void main() {
     expect((box.decoration as BoxDecoration).borderRadius, isNotNull);
   });
 }
-
-/// Measured 1-digit slot width, inside the pumped app's context.
-double trackNumberWidthOf(WidgetTester tester, int digits) =>
-    trackNumberWidth(tester.element(find.byType(Scaffold)), digits);

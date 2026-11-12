@@ -85,8 +85,8 @@ void main() {
           (w) => w is SizedBox && w.height == KMediaCard.coverSize,
         ),
       );
-      expect(tester.getSize(slot.first).width, KMediaCard.defaultPrefixWidth);
-      expect(KMediaCard.defaultPrefixWidth, 40);
+      expect(tester.getSize(slot.first).width, KMediaCard.prefixWidth);
+      expect(KMediaCard.prefixWidth, 40);
       expect(more.left, greaterThan(cover.right));
       // Visible without hover: not wrapped in a transparent AnimatedOpacity
       // and a pointer at its centre reaches it.

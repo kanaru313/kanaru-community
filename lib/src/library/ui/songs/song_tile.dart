@@ -20,7 +20,6 @@ import '../menus/menu_origin.dart';
 import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
 import '../selection/selection_shortcuts.dart';
-import 'track_number.dart';
 
 final _log = Logger('library.song_tile');
 
@@ -31,7 +30,7 @@ final _log = Logger('library.song_tile');
 ///
 /// [ids] is the list the row belongs to, as the list currently holds it, and
 /// [index] the row's place in it. With [showNumber] the track number
-/// comes before the cover (album pages); with [showDetected] a song with a
+/// is a badge in the cover's corner (album pages); with [showDetected] a song with a
 /// detected language carries a small "auto-detected" tag after its title.
 class SongTile extends ConsumerWidget {
   const SongTile({
@@ -41,7 +40,6 @@ class SongTile extends ConsumerWidget {
     required this.ids,
     required this.playContext,
     this.showNumber = false,
-    this.numberWidth = KMediaCard.defaultPrefixWidth,
     this.showDetected = false,
     this.origin = const MenuOrigin.list(),
   });
@@ -51,9 +49,6 @@ class SongTile extends ConsumerWidget {
   final List<TrackId> ids;
   final PlayContext playContext;
   final bool showNumber;
-
-  /// Width of the number slot, measured once per list ([trackNumberWidth]).
-  final double numberWidth;
 
   /// Tags a song whose language was detected, not read from a tag (language
   /// pages).
@@ -89,11 +84,11 @@ class SongTile extends ConsumerWidget {
             : null,
         line2: trackArtistLine(info),
         line3: trackAlbumLine(info),
-        prefix: showNumber
-            ? TrackNumber(number: info.trackNo, width: numberWidth)
-            : null,
-        prefixWidth: numberWidth,
-        leading: _SongCover(info: info, current: current),
+        leading: _SongCover(
+          info: info,
+          current: current,
+          number: showNumber && !selected ? info.trackNo : null,
+        ),
         top: duration == null ? null : Text(formatClock(duration)),
         bottom: SongFavoriteButton(trackId: info.id),
         trailing: LibraryMoreButton(onPressed: menu),
@@ -128,10 +123,13 @@ class SongTile extends ConsumerWidget {
 }
 
 class _SongCover extends StatelessWidget {
-  const _SongCover({required this.info, required this.current});
+  const _SongCover({required this.info, required this.current, this.number});
 
   final TrackInfo info;
   final bool current;
+
+  /// Track number badge in the bottom-right corner; null shows none.
+  final int? number;
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +158,60 @@ class _SongCover extends StatelessWidget {
               ),
             ),
           ),
+        if (number != null)
+          Positioned(
+            right: _badgeInset,
+            bottom: _badgeInset,
+            child: _NumberBadge(number: number!),
+          ),
       ],
+    );
+  }
+}
+
+const double _badgeInset = 4;
+
+/// Track number pill on a cover: round for one digit, wider for more.
+/// Text scale is clamped so the badge stays inside the 56 dp cover.
+class _NumberBadge extends StatelessWidget {
+  const _NumberBadge({required this.number});
+
+  final int number;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scaler = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
+    final style = theme.textTheme.labelSmall!.copyWith(
+      color: Colors.white,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final height = scaler.scale(style.fontSize ?? 11) * (style.height ?? 1.3);
+    return ExcludeSemantics(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.scrim.withValues(alpha: 0.55),
+          borderRadius: BorderRadius.circular(height),
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minWidth: height, minHeight: height),
+          child: Padding(
+            // Round for one digit; more digits get side room.
+            padding: EdgeInsets.symmetric(horizontal: number > 9 ? 3 : 0),
+            child: Center(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: Text(
+                '$number',
+                maxLines: 1,
+                softWrap: false,
+                textScaler: scaler,
+                style: style,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -10,7 +10,6 @@ import 'package:kanaru/src/library/ui/detail/detail_header.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/library/state/browse/song_list_providers.dart';
 import 'package:kanaru/src/library/ui/songs/song_tile.dart';
-import 'package:kanaru/src/library/ui/songs/track_number.dart';
 import 'package:kanaru/src/media/domain/track_info.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
@@ -287,197 +286,153 @@ void main() {
     });
   }
 
-  testWidgets('each row has the number left of the cover', (tester) async {
+  /// The badge: the [Positioned] around the number text of [card].
+  Finder badgeOf(Finder card, String n) => find
+      .ancestor(
+        of: find.descendant(of: card, matching: find.text(n)),
+        matching: find.byType(Positioned),
+      )
+      .first;
+
+  Finder coverOf(Finder card) =>
+      find.descendant(of: card, matching: find.byType(TrackCover));
+
+  testWidgets('each row shows its number as a badge in the cover corner', (
+    tester,
+  ) async {
     await _pump(tester);
     final cards = find.byType(KMediaCard);
     expect(cards, findsNWidgets(3));
     for (var n = 1; n <= 3; n++) {
       final card = cards.at(n - 1);
-      final number = find.descendant(of: card, matching: find.text('$n'));
-      final cover = find.descendant(
-        of: card,
-        matching: find.byType(TrackCover),
-      );
-      expect(number, findsOneWidget);
-      expect(cover, findsOneWidget);
-      // The number sits inside the card's prefix box, before the cover with
-      // the gap between them.
-      final box = tester.getRect(
-        find.ancestor(
-          of: number,
-          matching: find.byWidgetPredicate(
-            (w) =>
-                w is SizedBox &&
-                w.width != null &&
-                w.height == KMediaCard.coverSize,
-          ),
-        ),
-      );
-      expect(tester.getTopRight(number).dx, lessThanOrEqualTo(box.right));
-      expect(tester.getTopLeft(number).dx, greaterThanOrEqualTo(box.left));
-      expect(
-        tester.getTopLeft(cover).dx - tester.getTopRight(number).dx,
-        greaterThanOrEqualTo(KSpace.x2),
-      );
+      expect(find.descendant(of: card, matching: find.text('$n')), findsOne);
+      final cover = tester.getRect(coverOf(card));
+      final badge = tester.getRect(badgeOf(card, '$n'));
+      expect(cover.contains(badge.topLeft), isTrue);
+      expect(badge.right, closeTo(cover.right - 4, 0.01));
+      expect(badge.bottom, closeTo(cover.bottom - 4, 0.01));
+      // Round for one digit.
+      expect(badge.width, closeTo(badge.height, 0.5));
+      // No prefix: the cover sits at the row inset like every list (a 40 dp
+      // prefix would push it past 56).
+      expect(cover.left - tester.getTopLeft(card).dx, lessThan(20));
     }
     await unmountApp(tester);
   });
 
-  testWidgets('a 1-digit album puts the cover near the row inset', (
-    tester,
-  ) async {
+  testWidgets('the badge is hidden while the row is selected', (tester) async {
     await _pump(tester);
     final card = find.byType(KMediaCard).first;
-    final cover = find.descendant(of: card, matching: find.byType(TrackCover));
-    final slot = tester.getRect(
-      find.ancestor(
-        of: find.descendant(of: card, matching: find.text('1')),
-        matching: find.byWidgetPredicate(
-          (w) =>
-              w is SizedBox &&
-              w.width != null &&
-              w.height == KMediaCard.coverSize,
-        ),
-      ),
-    );
-    final inset = tester.getTopLeft(card).dx + KLayout.gutterMobile;
-    // Slot is one digit wide (well under the old 40 dp), then the 8 dp gap.
-    expect(slot.width, lessThan(20));
-    expect(slot.left, closeTo(inset, 0.5));
-    expect(
-      tester.getTopLeft(cover).dx,
-      closeTo(inset + slot.width + KSpace.x2, 0.5),
-    );
-    expect(tester.getTopLeft(cover).dx, lessThan(48));
+    expect(find.descendant(of: card, matching: find.text('1')), findsOne);
+    await tester.longPress(card);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.widget<KMediaCard>(card).selected, isTrue);
+    expect(find.descendant(of: card, matching: find.text('1')), findsNothing);
     await unmountApp(tester);
   });
 
-  testWidgets('in a 12-track album 1 and 12 right-align', (tester) async {
-    await _pump(
-      tester,
-      height: 1400,
-      extra: (h) async {
-        for (var n = 4; n <= 12; n++) {
-          await addLibraryTrack(
-            h.db,
-            source: h.sourceId,
-            locator: 'Blue/x$n.flac',
-            title: 'Blue x$n',
-            artists: ['Zed'],
-            album: 'Blue',
-            albumArtist: 'Zed',
-            year: 2001,
-            trackNo: n,
-            durationMs: 60000,
-          );
-        }
-      },
+  testWidgets('the badge is above the playing overlay, equalizer centred', (
+    tester,
+  ) async {
+    final h = await _pump(tester);
+    final id = tester.widget<SongTile>(find.byType(SongTile).first).info.id;
+    h.setNowPlaying(NowPlaying(entryId: 1, trackId: id, playing: true));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    final card = find.byType(KMediaCard).first;
+    final stack = find
+        .ancestor(of: coverOf(card), matching: find.byType(Stack))
+        .first;
+    final children = tester.widget<Stack>(stack).children;
+    final overlay = children.indexWhere(
+      (w) => w is Positioned && w.left == 0 && w.right == 0,
     );
-    final one = find.text('1');
-    final twelve = find.text('12');
-    expect(one, findsOneWidget);
-    expect(twelve, findsOneWidget);
+    final badge = children.indexWhere((w) => w is Positioned && w.right == 4);
+    expect(overlay, greaterThanOrEqualTo(0));
+    expect(badge, greaterThan(overlay));
+    expect(find.descendant(of: card, matching: find.text('1')), findsOne);
+    final cover = tester.getRect(coverOf(card));
     expect(
-      tester.getTopRight(one).dx,
-      closeTo(tester.getTopRight(twelve).dx, 0.5),
+      tester.getCenter(find.byType(KEqualizerIcon)),
+      offsetMoreOrLessEquals(cover.center, epsilon: 0.5),
     );
-    final card = find.ancestor(of: one, matching: find.byType(KMediaCard));
-    final cover = find.descendant(of: card, matching: find.byType(TrackCover));
-    expect(
-      tester.getTopLeft(cover).dx - tester.getTopRight(one).dx,
-      closeTo(KSpace.x2, 0.5),
-    );
-    expect(tester.takeException(), isNull);
     await unmountApp(tester);
   });
 
-  testWidgets('at text scale 2 the number is not shrunk and not clipped', (
+  testWidgets('text scale 2 clamps the badge font to 1.3, no overflow', (
     tester,
   ) async {
     await _pump(tester, header: (page) => _scaled(2, page));
-    final context = tester.element(find.byType(SongTile).first);
-    final measured = trackNumberWidth(context, 1);
-    for (final n in ['1', '2', '3']) {
-      final number = find.text(n);
-      final cover = find.descendant(
-        of: find.ancestor(of: number, matching: find.byType(KMediaCard)),
-        matching: find.byType(TrackCover),
-      );
-      expect(_slot(tester, number).width, closeTo(measured, 0.01));
-      // Rendered (transformed) width equals the measured one: no FittedBox
-      // shrink.
-      expect(
-        tester.getTopRight(number).dx - tester.getTopLeft(number).dx,
-        closeTo(measured, 0.5),
-      );
-      expect(
-        tester.getTopLeft(cover).dx - tester.getTopRight(number).dx,
-        closeTo(KSpace.x2, 0.5),
-      );
-    }
-    expect(measured, greaterThan(trackNumberWidth(context, 1) - 0.01));
+    final text = tester.widget<Text>(find.text('1'));
+    expect(text.textScaler!.scale(10), closeTo(13, 0.001));
+    final card = find.byType(KMediaCard).first;
+    final cover = tester.getRect(coverOf(card));
+    expect(cover.contains(tester.getRect(badgeOf(card, '1')).topLeft), isTrue);
     expect(tester.takeException(), isNull);
     await unmountApp(tester);
   });
 
-  testWidgets(
-    'bold text setting widens the measured slot like the drawn text',
-    (tester) async {
-      await _pump(
-        tester,
-        header: (page) => Builder(
-          builder: (context) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(boldText: true),
-            child: page,
-          ),
-        ),
-      );
-      final context = tester.element(find.byType(SongTile).first);
-      expect(trackNumberStyle(context)?.fontWeight, FontWeight.bold);
-      final measured = trackNumberWidth(context, 1);
-      final number = find.text('1');
-      expect(_slot(tester, number).width, closeTo(measured, 0.01));
-      expect(
-        tester.getTopRight(number).dx - tester.getTopLeft(number).dx,
-        closeTo(measured, 0.5),
-      );
-      await unmountApp(tester);
-    },
-  );
-
-  testWidgets('a 10-row album uses a 2-digit slot', (tester) async {
-    await _pump(tester, height: 1400, extra: (h) => _addTracks(h, 4, 10));
-    final context = tester.element(find.byType(SongTile).first);
-    final slot = _slot(tester, find.text('1'));
-    expect(slot.width, closeTo(trackNumberWidth(context, 2), 0.01));
-    expect(slot.width, greaterThan(trackNumberWidth(context, 1)));
-    expect(
-      tester.getTopRight(find.text('1')).dx,
-      closeTo(tester.getTopRight(find.text('10')).dx, 0.5),
+  testWidgets('a 3-digit number grows the badge but stays inside the cover', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      header: (page) => _scaled(2, page),
+      extra: (h) => addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 'Blue/123.flac',
+        title: 'Blue big',
+        artists: ['Zed'],
+        album: 'Blue',
+        albumArtist: 'Zed',
+        year: 2001,
+        trackNo: 123,
+        durationMs: 60000,
+      ),
     );
+    final card = find.ancestor(
+      of: find.text('Blue big'),
+      matching: find.byType(KMediaCard),
+    );
+    final cover = tester.getRect(coverOf(card));
+    final badge = tester.getRect(badgeOf(card, '123'));
+    expect(badge.width, greaterThan(badge.height));
+    expect(badge.left, greaterThanOrEqualTo(cover.left));
+    expect(badge.right, lessThanOrEqualTo(cover.right));
+    expect(badge.top, greaterThanOrEqualTo(cover.top));
+    expect(tester.takeException(), isNull);
     await unmountApp(tester);
   });
 
-  testWidgets('a text scale change on a live list updates the slot', (
-    tester,
-  ) async {
-    final scale = ValueNotifier<double>(1);
-    addTearDown(scale.dispose);
+  testWidgets('a song without a track number has no badge', (tester) async {
     await _pump(
       tester,
-      header: (page) => ValueListenableBuilder<double>(
-        valueListenable: scale,
-        builder: (_, value, _) => _scaled(value, page),
+      extra: (h) => addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 'Blue/none.flac',
+        title: 'Blue none',
+        artists: ['Zed'],
+        album: 'Blue',
+        albumArtist: 'Zed',
+        year: 2001,
+        durationMs: 60000,
       ),
     );
-    final before = _slot(tester, find.text('1')).width;
-    scale.value = 2;
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    final context = tester.element(find.byType(SongTile).first);
-    final after = _slot(tester, find.text('1')).width;
-    expect(after, greaterThan(before));
-    expect(after, closeTo(trackNumberWidth(context, 1), 0.01));
+    final card = find.ancestor(
+      of: find.text('Blue none'),
+      matching: find.byType(KMediaCard),
+    );
+    expect(card, findsOneWidget);
+    final stack = find
+        .ancestor(of: coverOf(card), matching: find.byType(Stack))
+        .first;
+    expect(
+      tester.widget<Stack>(stack).children.whereType<Positioned>(),
+      isEmpty,
+    );
+    expect(tester.takeException(), isNull);
     await unmountApp(tester);
   });
 
@@ -509,116 +464,6 @@ void main() {
     expect(tester.getTopLeft(loaded).dx, closeTo(loadingX, 0.5));
     await unmountApp(tester);
   });
-
-  testWidgets('a song without a track number leaves the prefix empty', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      extra: (h) => addLibraryTrack(
-        h.db,
-        source: h.sourceId,
-        locator: 'Blue/none.flac',
-        title: 'Blue none',
-        artists: ['Zed'],
-        album: 'Blue',
-        albumArtist: 'Zed',
-        year: 2001,
-        durationMs: 60000,
-      ),
-    );
-    final card = find.ancestor(
-      of: find.text('Blue none'),
-      matching: find.byType(KMediaCard),
-    );
-    expect(card, findsOneWidget);
-    final cover = find.descendant(of: card, matching: find.byType(TrackCover));
-    expect(cover, findsOneWidget);
-    // The prefix keeps its room: the cover starts after the 1-digit slot.
-    expect(
-      tester.getTopLeft(cover).dx - tester.getTopLeft(card).dx,
-      greaterThanOrEqualTo(8 + KSpace.x2),
-    );
-    expect(tester.takeException(), isNull);
-    await unmountApp(tester);
-  });
-
-  testWidgets('a 3-digit track number at text scale 2 stays on one line', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      width: 360,
-      header: (page) => Builder(
-        builder: (context) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: const TextScaler.linear(2)),
-          child: page,
-        ),
-      ),
-      extra: (h) => addLibraryTrack(
-        h.db,
-        source: h.sourceId,
-        locator: 'Blue/123.flac',
-        title: 'Blue big',
-        artists: ['Zed'],
-        album: 'Blue',
-        albumArtist: 'Zed',
-        year: 2001,
-        trackNo: 123,
-        durationMs: 60000,
-      ),
-    );
-    final card = find.ancestor(
-      of: find.text('Blue big'),
-      matching: find.byType(KMediaCard),
-    );
-    final number = find.descendant(of: card, matching: find.text('123'));
-    expect(number, findsOneWidget);
-    final cover = find.descendant(of: card, matching: find.byType(TrackCover));
-    // One line: a scaled line is under 60 dp (two would be over 70), and the
-    // card's prefix scales it down to fit its box.
-    expect(tester.getSize(number).height, lessThan(60));
-    final shown = tester.getBottomRight(number) - tester.getTopLeft(number);
-    final box = tester.getRect(
-      find.ancestor(
-        of: number,
-        matching: find.byWidgetPredicate(
-          (w) =>
-              w is SizedBox &&
-              w.width != null &&
-              w.height == KMediaCard.coverSize,
-        ),
-      ),
-    );
-    expect(shown.dx, lessThanOrEqualTo(box.width + 0.5));
-    expect(
-      tester.getTopRight(number).dx,
-      lessThanOrEqualTo(tester.getTopLeft(cover).dx),
-    );
-    expect(tester.takeException(), isNull);
-    await unmountApp(tester);
-  });
-
-  testWidgets('the playing album track keeps its number, equalizer on cover', (
-    tester,
-  ) async {
-    final h = await _pump(tester);
-    final id = tester.widget<SongTile>(find.byType(SongTile).first).info.id;
-    h.setNowPlaying(NowPlaying(entryId: 1, trackId: id, playing: true));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    final card = find.byType(KMediaCard).first;
-    expect(find.descendant(of: card, matching: find.text('1')), findsOneWidget);
-    final cover = find.descendant(of: card, matching: find.byType(TrackCover));
-    final stack = find.ancestor(of: cover, matching: find.byType(Stack));
-    expect(
-      find.descendant(of: stack.first, matching: find.byType(KEqualizerIcon)),
-      findsOneWidget,
-    );
-    expect(find.byType(KEqualizerIcon), findsOneWidget);
-    await unmountApp(tester);
-  });
 }
 
 Widget _scaled(double scale, Widget page) => Builder(
@@ -627,35 +472,3 @@ Widget _scaled(double scale, Widget page) => Builder(
     child: page,
   ),
 );
-
-/// The prefix box (fixed width, cover height) around [number].
-Rect _slot(WidgetTester tester, Finder number) => tester.getRect(
-  find
-      .ancestor(
-        of: number,
-        matching: find.byWidgetPredicate(
-          (w) =>
-              w is SizedBox &&
-              w.width != null &&
-              w.height == KMediaCard.coverSize,
-        ),
-      )
-      .first,
-);
-
-Future<void> _addTracks(LibraryHarness h, int from, int to) async {
-  for (var n = from; n <= to; n++) {
-    await addLibraryTrack(
-      h.db,
-      source: h.sourceId,
-      locator: 'Blue/x$n.flac',
-      title: 'Blue x$n',
-      artists: ['Zed'],
-      album: 'Blue',
-      albumArtist: 'Zed',
-      year: 2001,
-      trackNo: n,
-      durationMs: 60000,
-    );
-  }
-}
