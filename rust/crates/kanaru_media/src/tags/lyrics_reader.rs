@@ -8,7 +8,7 @@ use std::io::{BufReader, Seek};
 use lofty::config::{ParseOptions, ParsingMode};
 use lofty::error::FileParseError;
 use lofty::file::{AudioFile, FileType, TaggedFile, TaggedFileExt};
-use lofty::id3::v2::Id3v2Tag;
+use lofty::id3::v2::{Frame, Id3v2Tag};
 use lofty::iff::aiff::AiffFile;
 use lofty::iff::wav::WavFile;
 use lofty::mpeg::MpegFile;
@@ -47,11 +47,13 @@ pub struct SyncedLine {
 /// - no lyrics, blank or oversized lyrics, no tag at all: `Ok(None)`;
 /// - an ID3v2-capable file (MP3, WAV, AIFF) that fails the concrete read for
 ///   a reason other than a transient I/O error: `Ok(None)` for the whole file,
-///   as plain text next to a broken tag is dropped too;
+///   as plain text next to a broken tag is dropped too. This includes an empty
+///   or truncated file (old-app rule: a broken ID3 gives no lyrics);
 /// - a transient I/O error anywhere, a failure to sniff the content, or a
 ///   failed rewind before the concrete read: `Err` (mapped by `tags::errors`),
 ///   so the caller may retry when it is transient;
-/// - any other format whose parse fails (unknown format, corrupt): `Err`.
+/// - any other format whose parse fails (unknown format, corrupt, empty or
+///   truncated, where lofty reports `UnexpectedEof`): `Err`.
 pub fn read_lyrics(
     file: File,
     ext_hint: Option<&str>,
@@ -115,10 +117,20 @@ struct Id3v2Lyrics {
 
 impl Id3v2Lyrics {
     fn of(tag: &Id3v2Tag) -> Self {
+        // lofty's `get_user_text` matches the description exactly; taggers
+        // write `Lyrics` and `unsyncedlyrics` too, so match ignoring ASCII case.
         let user_text = ["LYRICS", "UNSYNCEDLYRICS"]
             .into_iter()
-            .filter_map(|description| tag.get_user_text(description))
-            .find(|text| usable_text(text))
+            .find_map(|wanted| {
+                tag.into_iter()
+                    .filter_map(|frame| match frame {
+                        Frame::UserText(text) if text.description.eq_ignore_ascii_case(wanted) => {
+                            Some(text.content.as_ref())
+                        }
+                        _ => None,
+                    })
+                    .find(|text| usable_text(text))
+            })
             .map(str::to_owned);
         Self {
             synced: synced_lines(tag),

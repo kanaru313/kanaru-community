@@ -277,6 +277,38 @@ fn a_broken_id3_tag_means_no_lyrics_for_the_whole_file() {
 }
 
 #[test]
+fn an_empty_mp3_means_no_lyrics() {
+    let dir = TempDir::new();
+    let empty = dir.write("empty.mp3", b"");
+    assert_eq!(read(&empty), Ok(None));
+}
+
+#[test]
+fn txxx_description_is_matched_ignoring_case() {
+    let dir = TempDir::new();
+    let path = sample(&dir, "sample.mp3");
+    write_id3v2(&path, vec![txxx("Lyrics", "Mixed case")]);
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Mixed case"));
+
+    write_id3v2(&path, vec![txxx("unsyncedlyrics", "Lower case")]);
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Lower case"));
+}
+
+#[test]
+fn txxx_lyrics_wins_over_unsyncedlyrics() {
+    let dir = TempDir::new();
+    let path = sample(&dir, "sample.mp3");
+    write_id3v2(
+        &path,
+        vec![txxx("unsyncedlyrics", "Second"), txxx("Lyrics", "First")],
+    );
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("First"));
+}
+
+#[test]
 fn unreadable_content_outside_id3_formats_is_a_permanent_error() {
     let dir = TempDir::new();
     let empty = dir.write("empty.flac", b"");
@@ -307,4 +339,14 @@ fn the_content_wins_over_a_wrong_extension() {
     write_generic(&path, ItemKey::Lyrics, "Still found");
     let lyrics = read_lyrics(File::open(&path).unwrap(), Some("mp3")).unwrap();
     assert_eq!(lyrics.unwrap().text.as_deref(), Some("Still found"));
+}
+
+#[test]
+fn an_mp3_cut_inside_its_id3_tag_means_no_lyrics() {
+    let dir = TempDir::new();
+    let path = sample(&dir, "sample.mp3");
+    write_id3v2(&path, vec![uslt("Plain words")]);
+    let bytes = std::fs::read(&path).unwrap();
+    let cut = dir.write("cut.mp3", &bytes[..30]);
+    assert_eq!(read(&cut), Ok(None));
 }
