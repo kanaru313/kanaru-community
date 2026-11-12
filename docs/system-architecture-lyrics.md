@@ -59,7 +59,7 @@ WavPack, and the non-ID3 tags of MP3/WAV/AIFF.
 | Case | Result |
 |---|---|
 | No lyrics, blank or oversized lyrics, no tag | `Ok(None)` |
-| MP3/WAV/AIFF whose concrete read fails (broken ID3 tag or file), not transient | `Ok(None)`: the whole file has no lyrics, even if plain text exists elsewhere |
+| MP3/WAV/AIFF whose concrete read fails (broken ID3 tag or file, including an empty or truncated file), not transient | `Ok(None)`: the whole file has no lyrics, even if plain text exists elsewhere |
 | Concrete read fails with a transient I/O error, or rewind fails | `Err(MediaError::Io)` |
 | Sniffing the content fails | `Err`, via `errors::from_sniff_error` |
 | Other formats: parse fails (unknown format, corrupt, truncated, I/O) | `Err`, via `errors::from_parse_error` |
