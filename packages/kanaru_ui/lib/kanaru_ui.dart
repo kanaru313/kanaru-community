@@ -19,6 +19,7 @@ export 'src/widgets/k_empty_page.dart';
 export 'src/widgets/k_equalizer_icon.dart';
 export 'src/widgets/k_gap.dart';
 export 'src/widgets/k_list_row.dart';
+export 'src/widgets/k_more_button.dart';
 export 'src/widgets/k_page.dart';
 export 'src/widgets/k_pressable.dart';
 export 'src/widgets/k_sheet.dart';
