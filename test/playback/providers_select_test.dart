@@ -14,6 +14,7 @@ import 'package:kanaru/src/playback/state/track_info_providers.dart';
 
 import '../database/support/test_db.dart';
 import '../support/fake_playback_commands.dart';
+import '../support/player_phase_override.dart';
 
 NowPlaying _np(int track, {bool playing = true}) => NowPlaying(
   entryId: track * 10,
@@ -30,7 +31,10 @@ void main() {
     setUp(() {
       feed = StreamController<NowPlaying>.broadcast();
       c = ProviderContainer(
-        overrides: [nowPlayingProvider.overrideWith((ref) => feed.stream)],
+        overrides: [
+          playerPhaseOverride(),
+          nowPlayingProvider.overrideWith((ref) => feed.stream),
+        ],
       );
       addTearDown(c.dispose);
       addTearDown(feed.close);

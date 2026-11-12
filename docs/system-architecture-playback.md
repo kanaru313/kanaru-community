@@ -90,8 +90,41 @@ contracts; their description is in
   scanner computed the colours.
 - `CoverColors` (`media/domain/cover_colors.dart`): `seed` (ARGB) and `palette`
   (ARGB ints, most dominant first). `coverColorsVersion` is the algorithm version.
-- Used for the Now Playing gradient and the queue strip. Never drives
-  `MaterialApp.theme`: the appearance providers are the only app-theme inputs.
+- Used for the Now Playing gradient, the queue strip and, through the seed of
+  the playing cover, the app theme (next section).
+
+## Playing cover and app theme
+
+- `player_ready.dart`: `playerPhaseProvider` (`notCreated` -> `restoring` ->
+  `ready`), with `playerCreatedProvider` and `playerReadyProvider` derived from
+  it. It never creates the player: `AppShell`'s post-frame callback creates it
+  and calls `attach(player)`, which waits for `settled()` (the restore is the
+  first task of the player's chain). Anything that would read the player in a
+  widget build goes through these first. `hasCurrentTrackProvider` is false
+  until the player is created, so the shells no longer create it while
+  building; the restored track shows as soon as the player publishes it.
+- `playing_cover_colors.dart`: `playingCoverColorsProvider` is a
+  `PlayingCoverColors`: `Pending` (player not ready, or a step still loading),
+  `Found(CoverColors)` or `None` (settled, no colours: nothing playing, no
+  cover, gray cover, colours not computed). It is one declarative `ref.watch`
+  chain: playing track id, `trackInfoProvider(id)`, `coverColorsProvider(key)`.
+  A track change drops the old track's subscriptions, and a track info answer
+  about another track is ignored, so a late result of a skipped track cannot
+  show. Consumers ignore `Pending` (keep the previous colours).
+- `app_cover_seed.dart`: `appCoverSeedProvider`, a stored `Setting<int?>`
+  (`app.coverSeed`, internal, no UI), read synchronously, so the first frame of
+  a launch has the last seed. `KanaruApp` reads colours only from it, through
+  `appThemeProvider` (`router/ui/app_theme_provider.dart`, both `ThemeData`
+  from the seed, default `kanaruSeed` when null). `AppShell` starts
+  `ref.listenManual(playingCoverColorsProvider, ..., fireImmediately: true)`
+  right after creating the player and closes it in `dispose`; `syncAppCoverSeed`
+  stores `Found`'s seed, clears the seed on `None`, does nothing on `Pending`,
+  and never writes an equal value. This is also where a later user-chosen seed
+  would be decided.
+- `MaterialApp.themeAnimationDuration` is zero: the theme switches at once.
+- `buildKanaruTheme` replaces the dark `error` colour (tone 65, chroma 84, same
+  hue) when it is within CAM16 distance 7 of `primary`; this also applies to the
+  default seed.
 
 ## Cover misses (write side)
 
@@ -460,7 +493,7 @@ signalled.
 - `start()` runs on Linux as soon as the restored session has a current entry (media keys and
   `playerctl` work after launch), and on any platform at the first play. `AppShell` creates the
   controller after its first frame (an explicit `ref.read(playerControllerProvider)` in a post-frame
-  callback, for both shells), so the restore and MPRIS start at launch without a tap on the mini player.
+  callback, for both shells; no widget build reads it before: the shells' has-track read waits for `playerCreatedProvider`, and the desktop shell mounts a right panel saved on the queue only once the player exists, with an empty box of the panel's size until then), so the restore and MPRIS start at launch without a tap on the mini player.
   Android keeps
   `processingState: idle` (no notification) until something played.
 - Commands go through the controller's chain (`Seek` is `seekRelative`; `SetPosition` is ignored for
@@ -621,7 +654,7 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
   `playback/state/now_playing_panel.dart` so `screens/` can reach it.
 - `MobileNowPlaying` (`ui/mobile/`): header (56) with a drag-to-close title area (release past 120 dp closes, less
   springs back), cover, title row, `NowPlayingSeekSlot` (48 dp; flat bar for now), controls, button row, dimmed lyrics
-  card, info card. It sits on `CoverTintBackground` fed by `coverColorsProvider`; the colours never reach the app theme.
+  card, info card. It sits on `CoverTintBackground` fed by `coverColorsProvider`; the seed of the playing cover also themes the app (see "Playing cover and app theme").
   It owns a `FlightSource` (cover, text, play, next pieces) for the queue flights.
 - The cover box is `kanaru_ui` `NowPlayingCoverBox` (`min(420, width - 64)`, radius 20); the page gives it the full
   width and pads the other rows.

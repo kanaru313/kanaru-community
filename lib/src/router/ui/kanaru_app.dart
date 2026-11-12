@@ -3,7 +3,6 @@ import 'dart:ui' show AppExitResponse;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:logging/logging.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
@@ -11,6 +10,7 @@ import '../../extension/state/extension_providers.dart';
 import '../../platform/state/window_close_provider.dart';
 import '../../screens/settings/state/appearance_settings.dart';
 import '../state/app_flush.dart';
+import 'app_theme_provider.dart';
 import '../state/router_provider.dart';
 
 final _log = Logger('app.flush');
@@ -79,10 +79,14 @@ class _KanaruAppState extends ConsumerState<KanaruApp> {
   @override
   Widget build(BuildContext context) {
     final registry = ref.watch(extensionRegistryProvider);
+    final themes = ref.watch(appThemeProvider);
     return MaterialApp.router(
       title: 'Kanaru',
-      theme: buildKanaruTheme(brightness: Brightness.light),
-      darkTheme: buildKanaruTheme(brightness: Brightness.dark),
+      theme: themes.light,
+      darkTheme: themes.dark,
+      // A cover change re-themes at once; tweening the whole app's colours
+      // on every skip is costly and not wanted.
+      themeAnimationDuration: Duration.zero,
       themeMode: ref.watch(themeChoiceProvider).mode,
       locale: Locale(ref.watch(appLanguageProvider).name),
       routerConfig: ref.watch(routerProvider),

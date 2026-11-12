@@ -86,14 +86,16 @@ never rebuilds a list:
   single-item screens use `trackInfoProvider`.
 - Covers: `TrackCover` reports a missing file to `coverMissesProvider`, and
   the scanner re-extracts it. Cover colours come from
-  `coverColorsProvider` and tint pages and the Now Playing background only.
+  `coverColorsProvider` and tint pages and the Now Playing background. The
+  seed of the playing cover also drives the app theme, through a stored seed
+  (`appCoverSeedProvider`) that the shell keeps in step once the player exists.
 - Scan: `scanStatusProvider` and `libraryScanCommandsProvider`. The scan
   request completes when it is accepted; failures arrive as `ScanFailed`.
   Details: [system-architecture-library-scan.md](./system-architecture-library-scan.md).
 - Settings are read through one top-level provider per key: `libraryTabsProvider`
   (`library.tabs`), `themeChoiceProvider` (`app.theme`), `appLanguageProvider`
-  (`app.language`). Theme and language apply at once; nothing else in the app
-  theme changes at runtime.
+  (`app.language`). Theme and language apply at once; the theme colours follow the
+  playing cover (`appCoverSeedProvider`).
 - Seeds stand in until the real part exists: `UnavailablePlaybackCommands`
   (throws `StateError`; the playback lane replaces it). The scanner is real:
   `scanStatusProvider` and `libraryScanCommandsProvider` read the

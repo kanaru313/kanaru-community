@@ -8,6 +8,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../extension/state/registry_entries.dart';
 import '../../library/ui/selection/selection_bar.dart';
 import '../../playback/state/playback_providers.dart';
+import '../../playback/state/player_ready.dart';
 import '../state/nav_history.dart';
 import '../state/right_panel.dart';
 import '../../playback/state/now_playing_panel.dart';
@@ -315,7 +316,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                         ],
                       ),
                     ),
-                    const RightPanelHost(),
+                    const _RightPanelGate(),
                   ],
                 ),
               ),
@@ -323,6 +324,30 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The right panel, held back while it would read the player before the shell
+/// created it: a panel saved open on the queue builds a body that watches the
+/// queue, and that would create the player during the first build. Until the
+/// player exists an empty box of the panel's size stands in (no layout jump).
+class _RightPanelGate extends ConsumerWidget {
+  const _RightPanelGate();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final waiting =
+        ref.watch(rightPanelProvider) == RightPanelKind.queue &&
+        !ref.watch(playerCreatedProvider);
+    if (!waiting) return const RightPanelHost();
+    final scheme = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        border: Border(left: BorderSide(color: scheme.outlineVariant)),
+      ),
+      child: const SizedBox(width: rightPanelWidth),
     );
   }
 }
