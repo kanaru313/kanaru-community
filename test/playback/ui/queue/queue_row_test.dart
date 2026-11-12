@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/semantics.dart' show SemanticsAction;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -89,10 +90,16 @@ void main() {
         find.byType(ReorderableDragStartListener),
       );
       final cover = rectIn(tester, row, find.byType(TrackCover));
-      final heart = rectIn(tester, row, find.byIcon(KIcons.heart));
+      // The whole ♥ button box, not just its icon.
+      final heart = rectIn(
+        tester,
+        row,
+        find.widgetWithIcon(IconButton, KIcons.heart),
+      );
       final more = rectIn(tester, row, find.byIcon(KIcons.moreVert));
       expect(handle.size, const Size.square(KLayout.minTargetDesktop));
       expect(heart.right, lessThanOrEqualTo(handle.left));
+      expect(heart.overlaps(handle), isFalse);
       expect(handle.right, lessThanOrEqualTo(more.left));
       // The cover sits at the flat-row inset, like a songs-list row.
       expect(cover.left - tester.getTopLeft(row).dx, KLayout.gutterMobile);
@@ -330,6 +337,42 @@ void main() {
         ]);
       });
     }
+
+    testWidgets(
+      'desktop: a sideways mouse drag on the handle removes nothing',
+      (tester) async {
+        final host = await pumpWithPlayer(
+          tester,
+          list(QueueRowSize.desktop),
+          size: _desktopWindow,
+        );
+        final before = [for (final i in host.h.c.queueState.items) i.entryId];
+        final handle = find.descendant(
+          of: find.byType(QueueRow).at(3),
+          matching: find.byType(ReorderableDragStartListener),
+        );
+        await tester.runAsync(() async {
+          final g = await tester.startGesture(
+            tester.getCenter(handle),
+            kind: PointerDeviceKind.mouse,
+          );
+          for (var i = 0; i < 10; i++) {
+            await g.moveBy(const Offset(-60, 0));
+            await tester.pump(const Duration(milliseconds: 16));
+          }
+          await g.up();
+          for (var i = 0; i < 8; i++) {
+            await tester.pump(const Duration(milliseconds: 100));
+          }
+          await host.h.settle();
+        });
+        await tester.pump();
+        await host.letStreamsArrive(tester);
+        final after = [for (final i in host.h.c.queueState.items) i.entryId];
+        expect(after, before);
+        expect(menuCalls, isEmpty);
+      },
+    );
 
     testWidgets('the mobile row exposes a long-press semantics action', (
       tester,
