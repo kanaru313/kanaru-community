@@ -16,6 +16,12 @@ pub(super) const MAX_SYNCED_LINES: usize = 10_000;
 /// Most text bytes kept from one frame, over all its lines.
 pub(super) const MAX_SYNCED_TEXT_BYTES: usize = 1024 * 1024;
 
+/// Largest `SYLT` frame body parsed, in bytes. Real frames are tens of KiB.
+/// Without a cap we copy the body (`with_valid_language`) and lofty parses it
+/// into entries, up to its 16 MiB allocation limit and millions of entries,
+/// before the line caps apply. Larger frames are skipped.
+pub(super) const MAX_SYLT_FRAME_BYTES: usize = 4 * 1024 * 1024;
+
 /// The timed lines of the best `SYLT` frame in `tag`, sorted by time; empty
 /// when there is none. A frame typed as lyrics wins over one typed as
 /// "other" (some taggers write that); every other content type (chords,
@@ -28,6 +34,9 @@ pub(super) fn synced_lines(tag: &Id3v2Tag) -> Vec<SyncedLine> {
             continue;
         };
         if frame.id_str() != "SYLT" {
+            continue;
+        }
+        if binary.data.len() > MAX_SYLT_FRAME_BYTES {
             continue;
         }
         let Ok(parsed) =
@@ -101,6 +110,8 @@ pub(super) fn lines_of(content: Vec<(u32, String)>) -> Vec<SyncedLine> {
 
 #[cfg(test)]
 mod tests {
+    use lofty::id3::v2::{BinaryFrame, FrameId};
+
     use super::*;
 
     fn line(time_ms: u32, text: &str) -> SyncedLine {
@@ -169,6 +180,33 @@ mod tests {
             .map(|i| (i, "x".to_owned()))
             .collect();
         assert_eq!(lines_of(content).len(), MAX_SYNCED_LINES);
+    }
+
+    fn sylt_frame(body: Vec<u8>) -> Frame<'static> {
+        Frame::Binary(BinaryFrame::new(
+            FrameId::Valid(std::borrow::Cow::Borrowed("SYLT")),
+            body,
+        ))
+    }
+
+    /// A millisecond-timed lyrics `SYLT` body with one entry.
+    fn sylt_body(time_ms: u32, text: &str) -> Vec<u8> {
+        let mut body = b"\x03eng\x02\x01\0".to_vec();
+        body.extend_from_slice(text.as_bytes());
+        body.push(0);
+        body.extend_from_slice(&time_ms.to_be_bytes());
+        body
+    }
+
+    #[test]
+    fn an_oversized_frame_is_skipped_and_a_small_one_still_used() {
+        let mut huge = sylt_body(0, "big");
+        huge.resize(MAX_SYLT_FRAME_BYTES + 1, 0);
+        let mut tag = Id3v2Tag::new();
+        tag.insert(sylt_frame(huge));
+        assert!(synced_lines(&tag).is_empty());
+        tag.insert(sylt_frame(sylt_body(1500, "small")));
+        assert_eq!(synced_lines(&tag), vec![line(1500, "small")]);
     }
 
     #[test]
