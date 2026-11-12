@@ -239,6 +239,24 @@ void main() {
     });
   }
 
+  testWidgets('the Menu key on a focused row opens the menu on its first row', (
+    tester,
+  ) async {
+    await _pump(tester);
+    final more = find.descendant(
+      of: find.byType(QueueRow).at(1),
+      matching: find.byIcon(KIcons.moreVert),
+    );
+    Focus.of(tester.element(more)).requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.contextMenu);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Play this track'), findsOneWidget);
+    expect(FocusManager.instance.primaryFocus, isNot(isA<FocusScopeNode>()));
+  });
+
   testWidgets('a pointer press on ⋮ leaves focus off the menu rows', (
     tester,
   ) async {

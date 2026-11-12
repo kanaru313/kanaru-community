@@ -6,9 +6,7 @@ import '../../../../l10n/gen/app_localizations.dart';
 /// A song row whose page is still being read: same size, no content. Shared by
 /// the song lists and the selection panel.
 class SongRowPlaceholder extends StatelessWidget {
-  const SongRowPlaceholder({super.key, required this.extent});
-
-  final double extent;
+  const SongRowPlaceholder({super.key});
 
   @override
   Widget build(BuildContext context) => const KMediaCard(
@@ -47,6 +45,9 @@ class SongRowFailed extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.only(
               left: flat ? KLayout.gutterMobile : KSpace.x4,
+              // The Retry TextButton has its own padding, so the right inset
+              // is the gutter minus that padding (KSpace.x2) to line up with
+              // the ⋮ of a loaded row.
               right: flat ? KLayout.gutterMobile - KSpace.x2 : 0,
             ),
             child: Row(

@@ -360,6 +360,45 @@ void main() {
       expect(theme.style?.foregroundColor?.resolve({}), Colors.red);
     });
 
+    testWidgets('the card tint wins over an inherited foreground', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
+      await tester.pumpWidget(
+        host(
+          IconButtonTheme(
+            data: IconButtonThemeData(
+              style: IconButton.styleFrom(
+                foregroundColor: Colors.red,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: KMediaCard(
+                title: 'T',
+                current: true,
+                trailing: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(KIcons.moreVert),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      final theme = IconButtonTheme.of(
+        tester.element(find.byIcon(KIcons.moreVert)),
+      );
+      expect(theme.style?.foregroundColor?.resolve({}), isNot(Colors.red));
+      expect(
+        theme.style?.foregroundColor?.resolve({}),
+        scheme.onPrimaryContainer.withValues(alpha: 0.8),
+      );
+      expect(theme.style?.visualDensity, VisualDensity.compact);
+    });
+
     testWidgets('a tinted card keeps the inherited icon button style', (
       tester,
     ) async {

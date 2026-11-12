@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/semantics.dart' show SemanticsAction;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
@@ -78,10 +79,17 @@ void main() {
       final more = rectIn(tester, row, find.byIcon(KIcons.moreVert));
       expect(handle.right, lessThanOrEqualTo(cover.left));
       expect(more.left, greaterThan(cover.right));
-      // Visible without hover: not wrapped in a transparent AnimatedOpacity.
+      // Visible without hover: not wrapped in a transparent AnimatedOpacity
+      // and a pointer at its centre reaches it.
       expect(
         find.descendant(of: row, matching: find.byType(AnimatedOpacity)),
         findsNothing,
+      );
+      expect(
+        find
+            .descendant(of: row, matching: find.byIcon(KIcons.moreVert))
+            .hitTestable(),
+        findsOneWidget,
       );
       expect(find.text('3:20'), findsWidgets);
     });
@@ -257,31 +265,54 @@ void main() {
       expect(menuCalls, isEmpty);
     });
 
-    testWidgets('hold the handle, then move: the row drags, no menu opens', (
+    testWidgets('hold the handle, then move: the row drags and reorders', (
       tester,
     ) async {
-      await pump(tester);
-      final row = find.byType(QueueRow).at(3);
-      // While dragged the row is drawn by the list's overlay proxy.
-      final title = find.text('Song 3');
-      final y0 = tester.getTopLeft(title).dy;
-      final g = await tester.startGesture(
-        tester.getCenter(
-          find.descendant(
-            of: row,
-            matching: find.byType(ReorderableDragStartListener),
-          ),
-        ),
+      final host = await pumpWithPlayer(tester, list(QueueRowSize.mobile));
+      final before = [for (final i in host.h.c.queueState.items) i.entryId];
+      final handle = find.descendant(
+        of: find.byType(QueueRow).at(3),
+        matching: find.byType(ReorderableDragStartListener),
       );
-      await tester.pump(const Duration(milliseconds: 600));
-      for (var i = 0; i < 6; i++) {
-        await g.moveBy(const Offset(0, 20));
-        await tester.pump(const Duration(milliseconds: 16));
-      }
+      // The drop starts controller work: run it in the real zone.
+      await tester.runAsync(() async {
+        final g = await tester.startGesture(tester.getCenter(handle));
+        await tester.pump(const Duration(milliseconds: 600));
+        for (var i = 0; i < 10; i++) {
+          await g.moveBy(Offset(0, -rowExtent() / 5));
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+        await g.up();
+        for (var i = 0; i < 8; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+        await host.h.settle();
+      });
+      await tester.pump();
+      await host.letStreamsArrive(tester);
       expect(menuCalls, isEmpty);
-      expect(tester.getTopLeft(title).dy - y0, greaterThan(60));
-      await g.cancel();
-      await tester.pump(const Duration(milliseconds: 400));
+      final after = [for (final i in host.h.c.queueState.items) i.entryId];
+      expect(after, [
+        before[0],
+        before[3],
+        before[1],
+        before[2],
+        before[4],
+        before[5],
+      ]);
+    });
+
+    testWidgets('the mobile row exposes a long-press semantics action', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await pump(tester);
+      final node = tester.getSemantics(find.text('Song 3'));
+      expect(
+        node.getSemanticsData().hasAction(SemanticsAction.longPress),
+        isTrue,
+      );
+      handle.dispose();
     });
 
     testWidgets('a long press on the row (mobile) opens the menu', (
@@ -381,6 +412,20 @@ void main() {
           (e.widget as QueueRow).item.entryId,
       ];
       expect(ids, contains(101));
+
+      // The locate button targets the right row at the new scale.
+      controller().jumpTo(0);
+      await tester.pump(const Duration(milliseconds: 500));
+      final locate = find.descendant(
+        of: find.byType(QueueLocateButton),
+        matching: find.byType(IconButton),
+      );
+      expect(locate, findsOneWidget);
+      await tester.tap(locate);
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(controller().offset, queueOffsetFor(100, rowExtent(2)));
     });
   });
 

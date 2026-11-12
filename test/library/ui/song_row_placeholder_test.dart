@@ -28,7 +28,7 @@ void main() {
     tester,
   ) async {
     final extent = KMediaCard.extentOf(TextScaler.noScaling);
-    await _pump(tester, mobile, SongRowPlaceholder(extent: extent));
+    await _pump(tester, mobile, const SongRowPlaceholder());
     expect(tester.widget<KMediaCard>(find.byType(KMediaCard)).loading, isTrue);
     expect(
       tester.getSize(find.byType(KMediaCard)).height,

@@ -296,7 +296,7 @@ class _SelectedListState extends ConsumerState<_SelectedList> {
         return KeyedSubtree(
           key: ValueKey(ids[i]),
           child: info == null
-              ? SongRowPlaceholder(extent: extent)
+              ? const SongRowPlaceholder()
               : SelectedSongRow(info: info, index: i),
         );
       },

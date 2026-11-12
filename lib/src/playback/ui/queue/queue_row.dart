@@ -118,11 +118,17 @@ class _QueueRowState extends ConsumerState<QueueRow> {
         gestures: {
           _RowLongPress: GestureRecognizerFactoryWithHandlers<_RowLongPress>(
             () => _RowLongPress(_handleKey),
-            (r) => r
-              ..excluded = _handleKey
-              ..onLongPressStart = (d) => _openMenu(info, d.globalPosition),
+            (r) =>
+                r.onLongPressStart = (d) => _openMenu(info, d.globalPosition),
           ),
         },
+        // The default delegate looks the long press up by its exact type, so
+        // the subclass needs its own screen-reader action.
+        semantics: _LongPressSemantics(() {
+          final box = context.findRenderObject();
+          if (box is! RenderBox || !box.attached) return;
+          _openMenu(info, box.localToGlobal(box.size.center(Offset.zero)));
+        }),
         child: row,
       );
     } else {
@@ -147,7 +153,7 @@ class _QueueRowState extends ConsumerState<QueueRow> {
 class _RowLongPress extends LongPressGestureRecognizer {
   _RowLongPress(this.excluded);
 
-  GlobalKey excluded;
+  final GlobalKey excluded;
 
   @override
   bool isPointerAllowed(PointerDownEvent event) {
@@ -156,6 +162,19 @@ class _RowLongPress extends LongPressGestureRecognizer {
       if (box.size.contains(box.globalToLocal(event.position))) return false;
     }
     return super.isPointerAllowed(event);
+  }
+}
+
+/// Adds the long-press semantics action that [RawGestureDetector] would only
+/// add for a plain `LongPressGestureRecognizer`.
+class _LongPressSemantics extends SemanticsGestureDelegate {
+  const _LongPressSemantics(this.onLongPress);
+
+  final VoidCallback onLongPress;
+
+  @override
+  void assignSemantics(RenderSemanticsGestureHandler renderObject) {
+    renderObject.onLongPress = onLongPress;
   }
 }
 
@@ -173,6 +192,8 @@ class _Handle extends StatelessWidget {
       index: index,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
+        // Swallows the tap without a do-nothing semantics action.
+        excludeFromSemantics: true,
         onTap: () {},
         child: Semantics(
           label: AppLocalizations.of(context).playbackQueueReorder,

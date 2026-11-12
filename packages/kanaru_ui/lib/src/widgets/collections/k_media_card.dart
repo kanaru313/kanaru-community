@@ -317,6 +317,9 @@ class _KMediaCardState extends State<KMediaCard> {
                     child: _withButtons(
                       tinted,
                       IconButtonThemeData(
+                        // ButtonStyle.merge keeps the receiver's values: the card
+                        // colour wins over an inherited foreground and the other
+                        // inherited properties stay.
                         style: IconButton.styleFrom(foregroundColor: soft)
                             .merge(ambientButtons.style),
                       ),

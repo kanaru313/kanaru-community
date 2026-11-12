@@ -63,6 +63,8 @@ Future<ProviderContainer> pumpFakeQueue(
   tester.view.physicalSize = size;
   addTearDown(tester.view.reset);
   final counting = loader ?? CountingLoader();
+  final scale = textScale ?? ValueNotifier<double>(1);
+  if (textScale == null) addTearDown(scale.dispose);
   final container = ProviderContainer(
     overrides: [
       queueViewProvider.overrideWith((ref) async* {
@@ -82,7 +84,7 @@ Future<ProviderContainer> pumpFakeQueue(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, app) => ValueListenableBuilder<double>(
-          valueListenable: textScale ?? ValueNotifier(1),
+          valueListenable: scale,
           builder: (context, scale, _) => MediaQuery(
             data: MediaQuery.of(context)
                 .copyWith(textScaler: TextScaler.linear(scale)),

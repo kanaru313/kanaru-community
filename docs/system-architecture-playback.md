@@ -584,8 +584,8 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`). `QueuePanel(host: she
   visible). The handle is the card's `prefix` on desktop and its `accessory` on mobile; it is a
   `ReorderableDragStartListener` that swallows taps and has no long-press of its own. Current = `primaryContainer` fill
   (icons take the card ink) plus `KEqualizerIcon` over the cover under a scrim (pause glyph when paused), announced as
-  "Now playing"; played rows are dimmed to 50 %; tap plays (the current row ignores it); Delete on a focused desktop row
-  removes. Mobile: a long press on the row opens the menu, except one that starts on the handle (a custom long-press
+  "Now playing"; played rows are dimmed to 50 %; tap plays (the current row ignores it); Enter plays and Delete removes a focused desktop row.
+  Mobile: a long press on the row opens the menu, except one that starts on the handle (a custom long-press
   recognizer skips it), so hold-then-move drags. The ⋮ passes `viaKeyboard`, and a menu opened that way focuses its
   first row. A row whose info has not loaded is the card's `loading` skeleton of the same height.
 - **Row infos** (`state/queue_row_infos.dart`): `TrackInfo`s are loaded for the viewport ± 50 rows into a 1 000-entry

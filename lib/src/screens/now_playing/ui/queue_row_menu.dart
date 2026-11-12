@@ -119,19 +119,25 @@ void openQueueRowMenu(
   } else {
     _showPopup(context, at, groups);
   }
-  if (viaKeyboard) _focusFirstRowOnceOpen();
+  if (viaKeyboard) _focusFirstRowOnceOpen(ModalRoute.of(context));
 }
 
 /// Opened with the keyboard: puts focus on the first row as soon as the menu
-/// route has taken focus (its own scope becomes the primary focus then). A
-/// pointer-opened menu shows no focus ring until an arrow key is pressed.
-void _focusFirstRowOnceOpen([int frames = 0]) {
+/// route has taken focus (its own scope becomes the primary focus then). Acts
+/// only on a scope of a route other than [opener], so a menu closed early
+/// never moves focus on the page behind it. A pointer-opened menu shows no
+/// focus ring until an arrow key is pressed.
+void _focusFirstRowOnceOpen(ModalRoute<Object?>? opener, [int frames = 0]) {
   WidgetsBinding.instance.addPostFrameCallback((_) {
     final focus = FocusManager.instance.primaryFocus;
-    if (focus is FocusScopeNode) {
+    final inMenu =
+        focus is FocusScopeNode &&
+        focus.context != null &&
+        ModalRoute.of(focus.context!) != opener;
+    if (inMenu) {
       focus.nextFocus();
     } else if (frames < 10) {
-      _focusFirstRowOnceOpen(frames + 1);
+      _focusFirstRowOnceOpen(opener, frames + 1);
     }
   });
   WidgetsBinding.instance.ensureVisualUpdate();
