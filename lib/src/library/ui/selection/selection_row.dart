@@ -38,24 +38,19 @@ class SelectedSongRow extends StatelessWidget {
       ),
       top: duration == null ? null : Text(formatClock(duration)),
       bottom: SongFavoriteButton(trackId: info.id),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ReorderableDragStartListener(
-            index: index,
-            child: Tooltip(
-              message: AppLocalizations.of(context).libraryPanelReorder,
-              child: const Padding(
-                padding: EdgeInsets.all(KSpace.x2),
-                child: Icon(KIcons.dragHandle),
-              ),
-            ),
+      accessory: ReorderableDragStartListener(
+        index: index,
+        child: Tooltip(
+          message: AppLocalizations.of(context).libraryPanelReorder,
+          child: const Padding(
+            padding: EdgeInsets.all(KSpace.x2),
+            child: Icon(KIcons.dragHandle),
           ),
-          LibraryMoreButton(
-            onPressed: ({required viaKeyboard}) =>
-                openSongMenu(context, info, viaKeyboard: viaKeyboard),
-          ),
-        ],
+        ),
+      ),
+      trailing: LibraryMoreButton(
+        onPressed: ({required viaKeyboard}) =>
+            openSongMenu(context, info, viaKeyboard: viaKeyboard),
       ),
     );
   }

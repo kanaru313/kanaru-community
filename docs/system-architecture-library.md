@@ -562,8 +562,11 @@ Every call is awaited; a failure is logged and shows a snack bar.
   cover (`TrackCover`, seed album key else title), title, artists joined with
   ", " (else the artist tag), `album • year`, duration `m:ss` over the heart.
   Tap = `playTracks(ids, startIndex: index)`. The playing row is
-  `primaryContainer` with the equalizer over the cover (over the number with
-  `showNumber`, which replaces the cover with the track number). The tile
+  `primaryContainer` with the equalizer over the cover. With `showNumber`
+  (album pages) the track number is the card's `prefix` (40 dp, `titleSmall`,
+  soft colour, right-aligned, empty without a track number) and the cover
+  stays. The selection panel's `SelectedSongRow` puts the drag handle in
+  `accessory` and ⋮ in `trailing`. The tile
   watches only `isCurrentTrackProvider(id)`, `isSelectedProvider(id)` and
   `isFavoriteProvider(id)` (all `select`); the
   equalizer widget alone watches play / pause. No per-row stream provider.
@@ -596,8 +599,8 @@ Every call is awaited; a failure is logged and shows a snack bar.
   160 px minimum, artists 100 / 160) or rows (`AlbumTile`, `ArtistTile` on
   `KMediaCard`, ▶ always on mobile and on hover or focus on desktop). The view
   switch (`LibraryViewToggle`: one icon on mobile, a double button on desktop)
-  is stored per list. Albums and genres open as a grid, every other list as rows, on both
-  shells. Tiles get their summary by value and watch nothing.
+  is stored per list. Albums and genres open as a grid, every other list as
+  rows, on both shells. Tiles get their summary by value and watch nothing.
 - Album ▶ plays the album in track order (`playScope` with the `albumTracks`
   default sort), artist ▶ plays every song of the artist (`detailSongs`
   default); both with the album / artist `PlayContext`.
@@ -608,8 +611,8 @@ Every call is awaited; a failure is logged and shows a snack bar.
   scale) or rows (`GenreTile` on `KMediaCard`: coloured icon block, name,
   song count, ⋮, no ▶). Opens as a grid; the view switch is stored per list.
 - Languages: `LanguageTile` (`KMediaCard`, no ▶) per language with `languages`
-  (`help` for "unknown", always last), `N songs · M auto-detected` (the second part only when
-  nonzero), and the note above the list. `languageDisplayName`: the native
+  (`help` for "unknown", always last), `N songs · M auto-detected` (the
+  second part only when nonzero), and the note above the list. `languageDisplayName`: the native
   name, plus the name in the app language when it differs; an unknown code
   shows as the code.
 - A tap on an item is `openLibraryPage` to the album, artist, genre or
@@ -709,8 +712,8 @@ routes in `ui/browse/library_routes.dart`.
   it. Entering from another page is `openLibraryPage`.
 - Tree level: sub-folder rows first (`FolderTile`: `FolderArt`, name, counts;
   a merged chain is one row of up to two lines and opens its last folder; a
-  ⋮ button only, no chevron), then "Songs in this folder · N" and a `SongList` of the
-  direct songs by title. The flat list's rows (filtered, ordered by precomputed
+  ⋮ button only, no chevron), then "Songs in this folder · N" and a
+  `SongList` of the direct songs by title. The flat list's rows (filtered, ordered by precomputed
   natural keys) are computed once per place, sort and filter by
   `flatRowsProvider`; the list and the bar's count read the same result. The sort chip orders the folders (name in natural
   order, or number of songs below); the filter narrows folders by name (chain

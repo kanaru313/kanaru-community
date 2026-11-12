@@ -9,6 +9,8 @@ import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/library/ui/songs/song_tile.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
+import 'package:kanaru/src/playback/domain/now_playing.dart';
+import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -271,4 +273,45 @@ void main() {
       await unmountApp(tester);
     });
   }
+
+  testWidgets('each row has the number left of the cover', (tester) async {
+    await _pump(tester);
+    final cards = find.byType(KMediaCard);
+    expect(cards, findsNWidgets(3));
+    for (var n = 1; n <= 3; n++) {
+      final card = cards.at(n - 1);
+      final number = find.descendant(of: card, matching: find.text('$n'));
+      final cover = find.descendant(
+        of: card,
+        matching: find.byType(TrackCover),
+      );
+      expect(number, findsOneWidget);
+      expect(cover, findsOneWidget);
+      expect(
+        tester.getTopRight(number).dx,
+        lessThanOrEqualTo(tester.getTopLeft(cover).dx),
+      );
+    }
+    await unmountApp(tester);
+  });
+
+  testWidgets('the playing album track keeps its number, equalizer on cover', (
+    tester,
+  ) async {
+    final h = await _pump(tester);
+    final id = tester.widget<SongTile>(find.byType(SongTile).first).info.id;
+    h.setNowPlaying(NowPlaying(entryId: 1, trackId: id, playing: true));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    final card = find.byType(KMediaCard).first;
+    expect(find.descendant(of: card, matching: find.text('1')), findsOneWidget);
+    final cover = find.descendant(of: card, matching: find.byType(TrackCover));
+    final stack = find.ancestor(of: cover, matching: find.byType(Stack));
+    expect(
+      find.descendant(of: stack.first, matching: find.byType(KEqualizerIcon)),
+      findsOneWidget,
+    );
+    expect(find.byType(KEqualizerIcon), findsOneWidget);
+    await unmountApp(tester);
+  });
 }

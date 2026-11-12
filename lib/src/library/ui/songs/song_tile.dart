@@ -29,8 +29,8 @@ final _log = Logger('library.song_tile');
 /// favourite), so a change elsewhere rebuilds nothing else.
 ///
 /// [ids] is the list the row belongs to, as the list currently holds it, and
-/// [index] the row's place in it. With [showNumber] the cover gives way to
-/// the track number (album pages); with [showDetected] a song with a
+/// [index] the row's place in it. With [showNumber] the track number
+/// comes before the cover (album pages); with [showDetected] a song with a
 /// detected language carries a small "auto-detected" tag after its title.
 class SongTile extends ConsumerWidget {
   const SongTile({
@@ -84,9 +84,8 @@ class SongTile extends ConsumerWidget {
             : null,
         line2: trackArtistLine(info),
         line3: trackAlbumLine(info),
-        leading: showNumber
-            ? _NumberColumn(number: info.trackNo, current: current)
-            : _SongCover(info: info, current: current),
+        prefix: showNumber ? _TrackNumber(number: info.trackNo) : null,
+        leading: _SongCover(info: info, current: current),
         top: duration == null ? null : Text(formatClock(duration)),
         bottom: SongFavoriteButton(trackId: info.id),
         trailing: LibraryMoreButton(onPressed: menu),
@@ -158,20 +157,23 @@ class _SongCover extends StatelessWidget {
   }
 }
 
-class _NumberColumn extends StatelessWidget {
-  const _NumberColumn({required this.number, required this.current});
+/// Track number before the cover (album pages): soft colour from the card,
+/// right-aligned, empty when the file has no track number.
+class _TrackNumber extends StatelessWidget {
+  const _TrackNumber({required this.number});
 
   final int? number;
-  final bool current;
 
   @override
-  Widget build(BuildContext context) {
-    if (current) return const _PlayingMark();
-    return Text(
+  Widget build(BuildContext context) => SizedBox(
+    width: KMediaCard.prefixWidth,
+    child: Text(
       number == null ? '' : '$number',
-      style: Theme.of(context).textTheme.titleSmall,
-    );
-  }
+      textAlign: TextAlign.right,
+      style: Theme.of(context).textTheme.titleSmall
+          ?.copyWith(color: IconTheme.of(context).color),
+    ),
+  );
 }
 
 /// Equalizer bars; the only part of a tile that watches play / pause.

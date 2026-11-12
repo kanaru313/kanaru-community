@@ -166,6 +166,36 @@ void main() {
     await unmountApp(tester);
   });
 
+  testWidgets('a panel row: handle left of the always-visible menu button', (
+    tester,
+  ) async {
+    final h = await pumpSelection(tester);
+    final ids = await allIds(h);
+    h.selection.addRange(ids.take(2));
+    h.selection.setExpanded(true);
+    await h.settle(tester, rounds: 3);
+    final row = find.byType(SelectedSongRow).first;
+    final handle = find.descendant(
+      of: row,
+      matching: find.byIcon(KIcons.dragHandle),
+    );
+    final more = find.descendant(
+      of: row,
+      matching: find.byIcon(KIcons.moreVert),
+    );
+    expect(tester.getCenter(handle).dx, lessThan(tester.getCenter(more).dx));
+    final card = tester.widget<KMediaCard>(
+      find.descendant(of: row, matching: find.byType(KMediaCard)),
+    );
+    expect(card.accessory, isNotNull);
+    expect(card.trailing, isNotNull);
+    // No hover: the button opens the menu all the same.
+    await tester.tap(more);
+    await pumpMenu(tester);
+    expect(find.text('Deselect'), findsOneWidget);
+    await unmountApp(tester);
+  });
+
   testWidgets('a song menu from a panel row can deselect the song', (
     tester,
   ) async {

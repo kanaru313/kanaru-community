@@ -1,6 +1,8 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
+import 'package:kanaru/src/library/ui/menus/more_button.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -96,6 +98,33 @@ void main() {
     await tester.tap(find.text('Jazz'));
     await tester.pump();
     expect(h.location, '/library/genres/${encodeKey(groupKey('Jazz'))}');
+    await unmountApp(tester);
+  });
+
+  testWidgets('list rows: shared extent, zero gutter, menu is the genre menu', (
+    tester,
+  ) async {
+    final h = await _pump(tester);
+    await h.container
+        .read(libraryListViewsProvider.notifier)
+        .setView(BrowseList.genres, CollectionView.list);
+    await tester.pump();
+    final list = tester.widget<SliverFixedExtentList>(
+      find.byType(SliverFixedExtentList),
+    );
+    expect(list.itemExtent, KMediaCard.extentOf(TextScaler.noScaling));
+    final pad = tester.widget<SliverPadding>(
+      find.ancestor(
+        of: find.byType(SliverFixedExtentList),
+        matching: find.byType(SliverPadding),
+      ),
+    );
+    expect(pad.padding, EdgeInsets.zero);
+    await tester.tap(find.byType(LibraryMoreButton).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Go to genre'), findsOneWidget);
+    expect(find.text('Go to language'), findsNothing);
+    expect(tester.takeException(), isNull);
     await unmountApp(tester);
   });
 }

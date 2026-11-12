@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
@@ -102,7 +103,40 @@ void main() {
     await tester.tap(find.byType(LibraryMoreButton).first);
     await tester.pumpAndSettle();
     expect(find.text('Play'), findsWidgets);
+    expect(find.text('Go to language'), findsOneWidget);
+    expect(find.text('Go to genre'), findsNothing);
     expect(tester.takeException(), isNull);
+    await unmountApp(tester);
+  });
+
+  testWidgets('rows keep the shared extent and a zero list gutter on mobile', (
+    tester,
+  ) async {
+    await _pump(tester);
+    final list = tester.widget<SliverFixedExtentList>(
+      find.byType(SliverFixedExtentList),
+    );
+    expect(list.itemExtent, KMediaCard.extentOf(TextScaler.noScaling));
+    final pad = tester.widget<SliverPadding>(
+      find.ancestor(
+        of: find.byType(SliverFixedExtentList),
+        matching: find.byType(SliverPadding),
+      ),
+    );
+    expect(pad.padding, EdgeInsets.zero);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a language with detected songs counts them on line two', (
+    tester,
+  ) async {
+    await _pump(tester);
+    final cards = tester.widgetList<KMediaCard>(find.byType(KMediaCard));
+    expect(
+      cards.firstWhere((c) => c.title.startsWith('Tiếng')).line2,
+      '3 songs · 1 auto-detected',
+    );
+    expect(cards.firstWhere((c) => c.title == 'Unknown').line2, '2 songs');
     await unmountApp(tester);
   });
 }
