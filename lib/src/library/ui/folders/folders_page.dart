@@ -115,7 +115,7 @@ class _FoldersBody extends ConsumerWidget {
             if (foldedContains(r.node.name, input.filter)) r,
         ];
         return CustomScrollView(
-          slivers: [rootsSliver(context, shown, open), _bottom],
+          slivers: [rootsSliver(context, ref, shown, open), _bottom],
         );
       case FlatListPlace():
         final rows = ref.watch(
@@ -127,7 +127,7 @@ class _FoldersBody extends ConsumerWidget {
         );
         return CustomScrollView(
           slivers: [
-            flatFoldersSliver(context, rows ?? const [], open),
+            flatFoldersSliver(context, ref, rows ?? const [], open),
             _bottom,
           ],
         );
@@ -152,7 +152,7 @@ class _FoldersBody extends ConsumerWidget {
           playContext: levelPlayContext(place),
           leadingSlivers: [
             ?_playRow(context, place),
-            levelFoldersSliver(context, place, rows, open),
+            levelFoldersSliver(context, ref, place, rows, open),
             if (place.node.directSongs > 0)
               SliverToBoxAdapter(
                 child: FolderSongsHeader(

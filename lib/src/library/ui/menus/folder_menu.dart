@@ -1,9 +1,9 @@
 import 'package:kanaru_ui/kanaru_ui.dart';
 
-import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
 import '../../domain/music_folder.dart';
 import '../folders/folder_locations.dart';
+import '../folders/folder_play.dart';
 import 'link_rows.dart';
 import 'menu_items.dart';
 import 'menu_model.dart';
@@ -54,11 +54,7 @@ MenuSpec buildFolderMenu(FolderMenuData data, MenuOrigin origin, MenuEnv env) {
   final l10n = env.l10n;
   final own = origin is OwnOrigin;
   final withSub = !data.flat && data.subfolders > 0;
-  final context = PlayContext(
-    PlayContextKind.folder,
-    ref: '${data.folder.sourceUid}:${data.key}',
-    label: data.name,
-  );
+  final context = folderPlayContext(data.folder.sourceUid, data.key, data.name);
   final advanced = [
     [
       MenuItemSpec(

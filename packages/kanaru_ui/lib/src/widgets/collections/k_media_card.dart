@@ -59,6 +59,7 @@ class KMediaCard extends StatefulWidget {
     this.accessory,
     this.trailing,
     this.onAction,
+    this.actionEnabled = true,
     this.actionIcon = KIcons.play,
     this.actionLabel,
     this.current = false,
@@ -115,6 +116,9 @@ class KMediaCard extends StatefulWidget {
   /// Round tonal play button: always on the mobile shell, on hover or focus
   /// on desktop.
   final VoidCallback? onAction;
+
+  /// False keeps the play button visible but disabled (nothing to play).
+  final bool actionEnabled;
   final IconData actionIcon;
   final String? actionLabel;
 
@@ -292,7 +296,7 @@ class _KMediaCardState extends State<KMediaCard> {
                 ambientButtons,
                 IconButton.filledTonal(
                   tooltip: widget.actionLabel,
-                  onPressed: widget.onAction,
+                  onPressed: widget.actionEnabled ? widget.onAction : null,
                   icon: Icon(widget.actionIcon),
                 ),
               ),

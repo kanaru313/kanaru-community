@@ -9,7 +9,7 @@ import '../menus/more_button.dart';
 import 'folder_art.dart';
 
 /// Row of a folder: [FolderArt], name (two lines for a chain), a dim line
-/// and the counts. The row ends with the ⋮ button when it has a menu.
+/// and the counts. The row ends with ▶ and the ⋮ button when it has them.
 class FolderTile extends StatelessWidget {
   const FolderTile({
     super.key,
@@ -22,6 +22,8 @@ class FolderTile extends StatelessWidget {
     this.chain = false,
     this.leading,
     this.onMenu,
+    this.onPlay,
+    this.playEnabled = true,
   });
 
   /// Folder name, or a chain's names joined with ` › `.
@@ -43,6 +45,12 @@ class FolderTile extends StatelessWidget {
   /// Opens the folder's menu (⋮ and right click); null = no menu.
   final void Function({bool viaKeyboard})? onMenu;
 
+  /// Plays the folder (the round ▶); null = no play button.
+  final VoidCallback? onPlay;
+
+  /// False dims the ▶ (a music folder with no songs yet).
+  final bool playEnabled;
+
   @override
   Widget build(BuildContext context) {
     final menu = onMenu;
@@ -53,6 +61,9 @@ class FolderTile extends StatelessWidget {
       line3: countLine,
       leading: leading ?? FolderArt(coverKey: coverKey, seed: seed),
       trailing: menu == null ? null : LibraryMoreButton(onPressed: menu),
+      onAction: onPlay,
+      actionEnabled: playEnabled,
+      actionLabel: AppLocalizations.of(context).libraryPlayAll,
       onTap: onTap,
     );
     return menu == null

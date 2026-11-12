@@ -608,13 +608,21 @@ Every call is awaited; a failure is logged and shows a snack bar.
 - Album ▶ plays the album in track order (`playScope` with the `albumTracks`
   default sort), artist ▶ plays every song of the artist (`detailSongs`
   default); both with the album / artist `PlayContext`.
+- Genre, language and folder rows have the same ▶. One helper per kind is
+  shared by the detail page's Play, the menu's Play and the row:
+  `genrePlayContext` / `languagePlayContext` / `playGenre` / `playLanguage`
+  (`ui/browse/group_play.dart`; `detailSongs` default order; the "unknown"
+  language is ref `_unknown` everywhere) and `folderPlayContext` /
+  `folderPlayScope` / `playFolder` (`ui/folders/folder_play.dart`; tree rows
+  take the subfolders too, flat rows their own songs). A music-folder row
+  with no songs keeps its ▶ but dimmed (`KMediaCard.actionEnabled`).
 - Artist photo: the `coverKey` of `ArtistSummary` (the cover of the newest own
   album that has one), a round `TrackCover`, else a letter placeholder seeded
   by the name.
 - Genres: grid of `KColorTile` (150 / 200 px minimum; height 88 times the text
   scale) or rows (`GenreTile` on `KMediaCard`: coloured icon block, name,
-  song count, ⋮, no ▶). Opens as a grid; the view switch is stored per list.
-- Languages: `LanguageTile` (`KMediaCard`, no ▶) per language with `languages`
+  song count, ▶, ⋮). Opens as a grid; the view switch is stored per list.
+- Languages: `LanguageTile` (`KMediaCard`, ▶) per language with `languages`
   (`help` for "unknown", always last), `N songs · M auto-detected` (the
   second part only when nonzero), and the note above the list. `languageDisplayName`: the native
   name, plus the name in the app language when it differs; an unknown code
@@ -724,8 +732,8 @@ routes in `ui/browse/library_routes.dart`.
   page, so a Folders page that was pushed from elsewhere keeps the page below
   it. Entering from another page is `openLibraryPage`.
 - Tree level: sub-folder rows first (`FolderTile`: `FolderArt`, name, counts;
-  a merged chain is one row of up to two lines and opens its last folder; a
-  ⋮ button only, no chevron), then "Songs in this folder · N" and a
+  a merged chain is one row of up to two lines and opens its last folder; ▶
+  and ⋮, no chevron), then "Songs in this folder · N" and a
   `SongList` of the direct songs by title. The flat list's rows (filtered, ordered by precomputed
   natural keys) are computed once per place, sort and filter by
   `flatRowsProvider`; the list and the bar's count read the same result. The sort chip orders the folders (name in natural

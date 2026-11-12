@@ -10,6 +10,7 @@ import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../domain/library_tabs.dart';
 import '../../state/browse/detail_providers.dart';
+import '../browse/group_play.dart';
 import '../browse/library_labels.dart';
 import '../browse/library_list_scaffold.dart';
 import '../browse/library_navigation.dart';
@@ -109,8 +110,10 @@ class GroupPage extends ConsumerWidget {
     }
     if (stats.tracks == 0) return DetailNotFound(fallback: fallback);
     final shelves = ref.watch(groupShelvesProvider(target.scope)).value;
-    final playContext = PlayContext(target.playKind, ref: id, label: title);
     final language = kind == GroupKind.language;
+    final playContext = language
+        ? languagePlayContext(target.code, title)
+        : genrePlayContext(target.genreKey!, title);
     return DetailFrame(
       title: title,
       fallback: fallback,

@@ -1,19 +1,29 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
+import 'package:kanaru/src/library/domain/browse/song_scope.dart';
+import 'package:kanaru/src/library/ui/browse/group_play.dart';
+import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/ui/menus/more_button.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
+import '../../support/fake_playback_commands.dart';
 import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
 
-Future<LibraryHarness> _pump(WidgetTester tester, {double width = 390}) async {
+Future<LibraryHarness> _pump(
+  WidgetTester tester, {
+  double width = 390,
+  FakePlaybackCommands? playback,
+}) async {
   final h = await pumpLibrary(
     tester,
+    playback: playback,
     initial: '/library/genres',
     width: width,
     height: width > 1000 ? 800 : 844,
@@ -85,7 +95,7 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('the list view shows rows without a play button', (tester) async {
+  testWidgets('the list view shows rows with a play button', (tester) async {
     final h = await _pump(tester);
     await h.container
         .read(libraryListViewsProvider.notifier)
@@ -94,10 +104,38 @@ void main() {
     expect(find.byType(KColorTile), findsNothing);
     final rows = tester.widgetList<KMediaCard>(find.byType(KMediaCard));
     expect([for (final r in rows) r.title], ['Indie', 'Jazz', 'Rock']);
-    expect(rows.every((r) => r.onAction == null), isTrue);
+    expect(rows.every((r) => r.onAction != null), isTrue);
     await tester.tap(find.text('Jazz'));
     await tester.pump();
     expect(h.location, '/library/genres/${encodeKey(groupKey('Jazz'))}');
+    await unmountApp(tester);
+  });
+
+  testWidgets('play on a row sends the genre like its page does', (
+    tester,
+  ) async {
+    final playback = FakePlaybackCommands();
+    final h = await _pump(tester, playback: playback);
+    await h.container
+        .read(libraryListViewsProvider.notifier)
+        .setView(BrowseList.genres, CollectionView.list);
+    await tester.pump();
+    await tester.tap(find.byTooltip('Play all').at(1)); // Jazz
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pump();
+    final call = playback.calls.single as PlayTracksCall;
+    expect(call.context, genrePlayContext(groupKey('Jazz'), 'Jazz'));
+    expect(call.context.kind, PlayContextKind.genre);
+    // Same ids, same order as the genre page's Play reads.
+    final expected = await songIds(
+      h.db,
+      SongScope.genre(groupKey('Jazz')),
+      defaultSortOf(BrowseList.detailSongs),
+      '',
+    );
+    expect(call.tracks, expected);
     await unmountApp(tester);
   });
 

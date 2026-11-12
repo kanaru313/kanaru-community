@@ -2,15 +2,25 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
+import 'package:kanaru/src/library/ui/browse/group_play.dart';
 import 'package:kanaru/src/library/ui/menus/more_button.dart';
+import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
+import '../../support/fake_playback_commands.dart';
 import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
 
-Future<LibraryHarness> _pump(WidgetTester tester) async {
-  final h = await pumpLibrary(tester, initial: '/library/languages');
+Future<LibraryHarness> _pump(
+  WidgetTester tester, {
+  FakePlaybackCommands? playback,
+}) async {
+  final h = await pumpLibrary(
+    tester,
+    initial: '/library/languages',
+    playback: playback,
+  );
   var n = 0;
   Future<void> add(String? language, {bool detected = false}) =>
       addLibraryTrack(
@@ -92,12 +102,12 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('rows have no play button; the menu button opens the menu', (
+  testWidgets('rows have a play button; the menu button opens the menu', (
     tester,
   ) async {
     await _pump(tester);
     for (final r in tester.widgetList<KMediaCard>(find.byType(KMediaCard))) {
-      expect(r.onAction, isNull);
+      expect(r.onAction, isNotNull);
       expect(r.trailing, isNotNull);
     }
     await tester.tap(find.byType(LibraryMoreButton).first);
@@ -106,6 +116,35 @@ void main() {
     expect(find.text('Go to language'), findsOneWidget);
     expect(find.text('Go to genre'), findsNothing);
     expect(tester.takeException(), isNull);
+    await unmountApp(tester);
+  });
+
+  testWidgets('play on a row sends the language like its page does', (
+    tester,
+  ) async {
+    final playback = FakePlaybackCommands();
+    await _pump(tester, playback: playback);
+    final rows = tester.widgetList<KMediaCard>(find.byType(KMediaCard));
+    final titles = [for (final r in rows) r.title];
+    final vie = titles.indexWhere((t) => t.contains('Vi'));
+    final unknown = titles.length - 1; // "unknown" stays last
+    await tester.tap(find.byTooltip('Play all').at(vie));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pump();
+    var call = playback.calls.single as PlayTracksCall;
+    expect(call.tracks.length, 3);
+    expect(call.context, languagePlayContext('vie', titles[vie]));
+    await tester.tap(find.byTooltip('Play all').at(unknown));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pump();
+    call = playback.calls.last as PlayTracksCall;
+    expect(call.tracks.length, 2);
+    expect(call.context.kind, PlayContextKind.language);
+    expect(call.context.ref, '_unknown');
     await unmountApp(tester);
   });
 

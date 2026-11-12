@@ -19,6 +19,7 @@ import '../../state/browse/selection_providers.dart';
 import '../../state/favorites_providers.dart';
 import '../../state/music_folders_providers.dart';
 import '../browse/library_labels.dart';
+import '../folders/folder_play.dart';
 import 'album_menu.dart';
 import 'artist_menu.dart';
 import 'folder_menu.dart';
@@ -253,13 +254,13 @@ Future<MenuSpec> folderMenuSpec(
   const sort = SortSpec(SortCriterion.title);
   final direct = await songIds(
     db,
-    SongScope.folder(folder.sourceId, key, direct: true),
+    folderPlayScope(folder.sourceId, key, flat: true),
     sort,
     '',
   );
   final all = flat
       ? direct
-      : await songIds(db, SongScope.folder(folder.sourceId, key), sort, '');
+      : await songIds(db, folderPlayScope(folder.sourceId, key), sort, '');
   return buildFolderMenu(
     FolderMenuData(
       folder: folder,
