@@ -29,9 +29,9 @@ enum KMediaCardStyle {
 /// Row card of every media list: song, album track, queue, selection panel,
 /// album, artist, folder, genre and language.
 ///
-/// Slot order, left to right: [prefix] (track number or desktop drag handle) ·
-/// [leading] (cover, with the selection mark) · text · [top] / [bottom] ·
-/// [onAction] (play) · [accessory] (mobile drag handle) · [trailing] (the ⋮).
+/// Slot order, left to right: [leading] (cover, with the selection mark) ·
+/// text · [top] / [bottom] · [onAction] (play) · [accessory] (drag handle) ·
+/// [trailing] (the ⋮).
 /// The [trailing] button is always visible; only the play button appears on
 /// hover or focus on desktop.
 ///
@@ -50,7 +50,6 @@ class KMediaCard extends StatefulWidget {
     this.titleLines = 1,
     this.line2,
     this.line3,
-    this.prefix,
     this.leading,
     this.circleLeading = false,
     this.top,
@@ -83,10 +82,6 @@ class KMediaCard extends StatefulWidget {
   final String? line2;
   final String? line3;
 
-  /// Before the [leading], in a [prefixWidth] box, centred and scaled down to
-  /// fit (a track number, a desktop drag handle). Null takes no room.
-  final Widget? prefix;
-
   /// The cover only (56 dp).
   final Widget? leading;
 
@@ -102,8 +97,8 @@ class KMediaCard extends StatefulWidget {
   /// is drawn into the box's empty upper padding and ignores the pointer.
   final Widget? bottom;
 
-  /// After the play button, before [trailing] (for example the mobile drag
-  /// handle).
+  /// After the play button, before [trailing] (the drag handle of a reorderable
+  /// row).
   final Widget? accessory;
 
   /// Last slot (the "more" button); always visible.
@@ -142,7 +137,6 @@ class KMediaCard extends StatefulWidget {
   /// Space below a card.
   static const double gap = KSpace.x1;
   static const double coverSize = 56;
-  static const double prefixWidth = 40;
   static const double _padV = 10;
   static const BorderRadius _radius = BorderRadius.all(Radius.circular(14));
 
@@ -198,7 +192,6 @@ class _KMediaCardState extends State<KMediaCard> {
     // Inherited icon-button theme, restored for the play button and merged
     // into the tinted style so a caller's density or size still applies.
     final ambientButtons = IconButtonTheme.of(context);
-    final prefix = widget.prefix;
     // A loading card without a cover still draws a cover-sized block.
     final leading =
         widget.leading ??
@@ -217,17 +210,6 @@ class _KMediaCardState extends State<KMediaCard> {
       ),
       child: Row(
         children: [
-          if (prefix != null) ...[
-            SizedBox(
-              width: KMediaCard.prefixWidth,
-              // Bounded height, or the Center would fill the card's max.
-              height: KMediaCard.coverSize,
-              child: Center(
-                child: FittedBox(fit: BoxFit.scaleDown, child: prefix),
-              ),
-            ),
-            const KGap(KSpace.x2),
-          ],
           if (leading != null) ...[
             Stack(
               children: [

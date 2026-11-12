@@ -19,7 +19,7 @@ Widget _card({
   VoidCallback? onTap,
   VoidCallback? onLongPress,
   VoidCallback? onAction,
-  Widget? prefix,
+  bool actionEnabled = true,
   Widget? accessory,
   bool loading = false,
   KMediaCardStyle style = KMediaCardStyle.auto,
@@ -33,7 +33,7 @@ Widget _card({
       titleLabel: full ? 'tag' : null,
       line2: full ? 'Artist' : null,
       line3: full ? 'Album • 2020' : null,
-      prefix: prefix,
+      actionEnabled: actionEnabled,
       accessory: accessory,
       loading: loading,
       style: style,
@@ -218,6 +218,46 @@ void main() {
     expect(played, 1);
   });
 
+  testWidgets('actionEnabled false dims and disables the play action', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    var played = 0;
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      host(_card(onAction: () => played++, actionEnabled: false)),
+    );
+    final button = tester.widget<IconButton>(
+      find.ancestor(
+        of: find.byIcon(KIcons.play),
+        matching: find.byType(IconButton),
+      ),
+    );
+    expect(button.onPressed, isNull);
+    // Still shown, not hidden.
+    expect(actionOpacity(tester), 1);
+    await tester.tap(find.byIcon(KIcons.play), warnIfMissed: false);
+    expect(played, 0);
+    // A disabled button takes no focus.
+    final focus = tester.widget<Focus>(
+      find
+          .descendant(
+            of: find.ancestor(
+              of: find.byIcon(KIcons.play),
+              matching: find.byType(IconButton),
+            ),
+            matching: find.byType(Focus),
+          )
+          .first,
+    );
+    expect(focus.canRequestFocus, isFalse);
+    expect(
+      tester.getSemantics(find.byType(IconButton)),
+      isSemantics(isButton: true, isEnabled: false),
+    );
+    handle.dispose();
+  });
+
   testWidgets('desktop shows the play action on hover only', (tester) async {
     useWindow(tester, const Size(1300, 800));
     await tester.pumpWidget(host(_card(onAction: () {})));
@@ -254,19 +294,7 @@ void main() {
   });
 
   group('slots', () {
-    testWidgets('prefix sits left of the leading', (tester) async {
-      useWindow(tester, const Size(400, 800));
-      await tester.pumpWidget(
-        host(_card(prefix: const Icon(KIcons.dragHandle))),
-      );
-      final prefixBox = tester.getRect(find.byIcon(KIcons.dragHandle));
-      final cover = tester.getRect(find.byKey(const Key('cover')));
-      expect(prefixBox.right, lessThan(cover.left));
-    });
-
-    testWidgets('without a prefix the leading is at the padding edge', (
-      tester,
-    ) async {
+    testWidgets('the leading is at the padding edge', (tester) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(host(_card()));
       final card = tester.getRect(find.byType(KMediaCard));
@@ -584,28 +612,26 @@ void main() {
           );
         });
 
-        testWidgets(
-          'height holds with prefix, play and accessory ($style, $scale x)',
-          (tester) async {
-            useWindow(tester, const Size(700, 800));
-            await tester.pumpWidget(
-              host(
-                _card(
-                  style: style,
-                  prefix: const Icon(KIcons.heart),
-                  accessory: const Icon(KIcons.heart),
-                  onAction: () {},
-                ),
-                textScale: scale,
+        testWidgets('height holds with play and accessory ($style, $scale x)', (
+          tester,
+        ) async {
+          useWindow(tester, const Size(700, 800));
+          await tester.pumpWidget(
+            host(
+              _card(
+                style: style,
+                accessory: const Icon(KIcons.heart),
+                onAction: () {},
               ),
-            );
-            final scaler = TextScaler.linear(scale);
-            expect(
-              tester.getSize(find.byType(KMediaCard)).height,
-              closeTo(KMediaCard.extentOf(scaler), 0.5),
-            );
-          },
-        );
+              textScale: scale,
+            ),
+          );
+          final scaler = TextScaler.linear(scale);
+          expect(
+            tester.getSize(find.byType(KMediaCard)).height,
+            closeTo(KMediaCard.extentOf(scaler), 0.5),
+          );
+        });
       }
     }
   });

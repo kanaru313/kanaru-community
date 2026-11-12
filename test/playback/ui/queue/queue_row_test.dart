@@ -69,24 +69,33 @@ void main() {
       tester.getRect(find.descendant(of: row, matching: what).first);
 
   group('layout', () {
-    testWidgets('desktop: handle left of the cover, ⋮ visible, flat', (
+    testWidgets('desktop: handle right of the ♥ column, left of ⋮, flat', (
       tester,
     ) async {
-      await pump(tester, size: QueueRowSize.desktop, window: _desktopWindow);
-      final row = find.byType(QueueRow).first;
-      final handle = rectIn(tester, row, find.byIcon(KIcons.dragHandle));
-      final cover = rectIn(tester, row, find.byType(TrackCover));
-      final more = rectIn(tester, row, find.byIcon(KIcons.moreVert));
-      expect(handle.right, lessThanOrEqualTo(cover.left));
-      // The handle slot keeps the default prefix width.
-      final slot = find.ancestor(
-        of: find.byIcon(KIcons.dragHandle).first,
-        matching: find.byWidgetPredicate(
-          (w) => w is SizedBox && w.height == KMediaCard.coverSize,
+      await pump(
+        tester,
+        size: QueueRowSize.desktop,
+        window: _desktopWindow,
+        favorite: (context, item) => IconButton(
+          iconSize: 20,
+          onPressed: () {},
+          icon: const Icon(KIcons.heart),
         ),
       );
-      expect(tester.getSize(slot.first).width, KMediaCard.prefixWidth);
-      expect(KMediaCard.prefixWidth, 40);
+      final row = find.byType(QueueRow).first;
+      final handle = rectIn(
+        tester,
+        row,
+        find.byType(ReorderableDragStartListener),
+      );
+      final cover = rectIn(tester, row, find.byType(TrackCover));
+      final heart = rectIn(tester, row, find.byIcon(KIcons.heart));
+      final more = rectIn(tester, row, find.byIcon(KIcons.moreVert));
+      expect(handle.size, const Size.square(KLayout.minTargetDesktop));
+      expect(heart.right, lessThanOrEqualTo(handle.left));
+      expect(handle.right, lessThanOrEqualTo(more.left));
+      // The cover sits at the flat-row inset, like a songs-list row.
+      expect(cover.left - tester.getTopLeft(row).dx, KLayout.gutterMobile);
       expect(more.left, greaterThan(cover.right));
       // Visible without hover: not wrapped in a transparent AnimatedOpacity
       // and a pointer at its centre reaches it.
@@ -262,58 +271,65 @@ void main() {
   });
 
   group('handle and menu', () {
-    testWidgets('a tap on the handle does not play the row', (tester) async {
-      final host = await pumpWithPlayer(tester, list(QueueRowSize.mobile));
-      final entries = [for (final i in host.h.c.queueState.items) i.entryId];
-      final before = host.h.engine.loads.length;
-      await host.tap(
+    for (final (name, size, window) in [
+      ('mobile', QueueRowSize.mobile, const Size(400, 800)),
+      ('desktop', QueueRowSize.desktop, _desktopWindow),
+    ]) {
+      testWidgets('$name: a tap on the handle does not play the row', (
         tester,
-        find.descendant(
+      ) async {
+        final host = await pumpWithPlayer(tester, list(size), size: window);
+        final entries = [for (final i in host.h.c.queueState.items) i.entryId];
+        final before = host.h.engine.loads.length;
+        await host.tap(
+          tester,
+          find.descendant(
+            of: find.byType(QueueRow).at(3),
+            matching: find.byType(ReorderableDragStartListener),
+          ),
+        );
+        expect(host.h.c.queueState.currentItem!.entryId, entries[0]);
+        expect(host.h.engine.loads.length, before);
+        expect(menuCalls, isEmpty);
+      });
+
+      testWidgets('$name: hold the handle, then move: the row reorders', (
+        tester,
+      ) async {
+        final host = await pumpWithPlayer(tester, list(size), size: window);
+        final before = [for (final i in host.h.c.queueState.items) i.entryId];
+        final handle = find.descendant(
           of: find.byType(QueueRow).at(3),
           matching: find.byType(ReorderableDragStartListener),
-        ),
-      );
-      expect(host.h.c.queueState.currentItem!.entryId, entries[0]);
-      expect(host.h.engine.loads.length, before);
-      expect(menuCalls, isEmpty);
-    });
-
-    testWidgets('hold the handle, then move: the row drags and reorders', (
-      tester,
-    ) async {
-      final host = await pumpWithPlayer(tester, list(QueueRowSize.mobile));
-      final before = [for (final i in host.h.c.queueState.items) i.entryId];
-      final handle = find.descendant(
-        of: find.byType(QueueRow).at(3),
-        matching: find.byType(ReorderableDragStartListener),
-      );
-      // The drop starts controller work: run it in the real zone.
-      await tester.runAsync(() async {
-        final g = await tester.startGesture(tester.getCenter(handle));
-        await tester.pump(const Duration(milliseconds: 600));
-        for (var i = 0; i < 10; i++) {
-          await g.moveBy(Offset(0, -rowExtent() / 5));
-          await tester.pump(const Duration(milliseconds: 16));
-        }
-        await g.up();
-        for (var i = 0; i < 8; i++) {
-          await tester.pump(const Duration(milliseconds: 100));
-        }
-        await host.h.settle();
+        );
+        // The drop starts controller work: run it in the real zone.
+        await tester.runAsync(() async {
+          final g = await tester.startGesture(tester.getCenter(handle));
+          await tester.pump(const Duration(milliseconds: 600));
+          for (var i = 0; i < 10; i++) {
+            await g.moveBy(Offset(0, -rowExtent() / 5));
+            await tester.pump(const Duration(milliseconds: 16));
+          }
+          await g.up();
+          for (var i = 0; i < 8; i++) {
+            await tester.pump(const Duration(milliseconds: 100));
+          }
+          await host.h.settle();
+        });
+        await tester.pump();
+        await host.letStreamsArrive(tester);
+        expect(menuCalls, isEmpty);
+        final after = [for (final i in host.h.c.queueState.items) i.entryId];
+        expect(after, [
+          before[0],
+          before[3],
+          before[1],
+          before[2],
+          before[4],
+          before[5],
+        ]);
       });
-      await tester.pump();
-      await host.letStreamsArrive(tester);
-      expect(menuCalls, isEmpty);
-      final after = [for (final i in host.h.c.queueState.items) i.entryId];
-      expect(after, [
-        before[0],
-        before[3],
-        before[1],
-        before[2],
-        before[4],
-        before[5],
-      ]);
-    });
+    }
 
     testWidgets('the mobile row exposes a long-press semantics action', (
       tester,

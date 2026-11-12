@@ -22,13 +22,13 @@ typedef QueueRowMenu = void Function(
   bool viaKeyboard,
 });
 
-/// Which shell lays the row out; chosen by the host, not by the window width.
+/// Which shell the row is for (handle size, long press vs Delete); chosen by the host, not by the window width.
 /// The row height comes from `KMediaCard.extentOf`, not from this.
 enum QueueRowSize {
-  /// Drag handle in the accessory slot (right), long press opens the menu.
+  /// Handle 48 dp, long press on the row opens the menu.
   mobile,
 
-  /// Drag handle in the prefix slot (left), Delete removes the row.
+  /// Handle 40 dp, Delete removes the row.
   desktop,
 }
 

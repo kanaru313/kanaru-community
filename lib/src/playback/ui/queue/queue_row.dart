@@ -19,8 +19,9 @@ import 'queue_row_hooks.dart';
 /// the equalizer on the current one), title / artists / `album • year`,
 /// duration, the drag handle and the ⋮ menu button.
 ///
-/// The handle sits left of the cover on desktop and right of the text on
-/// mobile, where a long press on the row (not on the handle) opens the menu.
+/// The handle sits in the accessory slot, right before ⋮, on both shells. On
+/// mobile a long press on the row (not on the handle) opens the menu; on
+/// desktop Delete removes the row.
 /// Rows watch only their own info and, for the current row, play/pause; a
 /// position tick rebuilds nothing here.
 class QueueRow extends ConsumerStatefulWidget {
@@ -74,7 +75,7 @@ class _QueueRowState extends ConsumerState<QueueRow> {
     final handle = _Handle(
       key: _handleKey,
       index: widget.index,
-      dimension: _desktop ? KMediaCard.prefixWidth : KLayout.minTarget,
+      dimension: _desktop ? KLayout.minTargetDesktop : KLayout.minTarget,
     );
 
     Widget row = KMediaCard(
@@ -83,13 +84,12 @@ class _QueueRowState extends ConsumerState<QueueRow> {
       loading: info == null,
       line2: info == null ? null : trackArtistLine(info),
       line3: info == null ? null : trackAlbumLine(info),
-      prefix: _desktop ? handle : null,
       leading: _Cover(info: info, current: role == QueueRowRole.current),
       top: duration == null
           ? null
           : Text(formatClock(Duration(milliseconds: duration))),
       bottom: widget.favorite?.call(context, item),
-      accessory: _desktop ? null : handle,
+      accessory: handle,
       trailing: widget.menu == null
           ? null
           : Builder(
