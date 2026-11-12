@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io::{BufReader, Seek};
 
 use lofty::config::{ParseOptions, ParsingMode};
+use lofty::error::FileParseError;
 use lofty::file::{AudioFile, FileType, TaggedFile, TaggedFileExt};
 use lofty::id3::v2::Id3v2Tag;
 use lofty::iff::aiff::AiffFile;
@@ -47,8 +48,9 @@ pub struct SyncedLine {
 /// - an ID3v2-capable file (MP3, WAV, AIFF) that fails the concrete read for
 ///   a reason other than a transient I/O error: `Ok(None)` for the whole file,
 ///   as plain text next to a broken tag is dropped too;
-/// - a transient I/O error anywhere, or a failure to sniff the content:
-///   `Err` (mapped by `tags::errors`), so the caller may retry;
+/// - a transient I/O error anywhere, a failure to sniff the content, or a
+///   failed rewind before the concrete read: `Err` (mapped by `tags::errors`),
+///   so the caller may retry when it is transient;
 /// - any other format whose parse fails (unknown format, corrupt): `Err`.
 pub fn read_lyrics(
     file: File,
@@ -60,7 +62,7 @@ pub fn read_lyrics(
         .parsing_mode(ParsingMode::BestAttempt);
     // Content first, as the tag reader does; the extension is the fallback.
     let reader = BufReader::new(file);
-    let hinted = ext_hint.and_then(|ext| FileType::from_ext(ext.to_ascii_lowercase()));
+    let hinted = ext_hint.and_then(FileType::from_ext);
     let probe = match hinted {
         Some(file_type) => Probe::with_file_type(reader, file_type),
         None => Probe::new(reader),
@@ -138,17 +140,21 @@ where
     let mut reader = probe.into_inner();
     reader
         .rewind()
-        .map_err(|e| Concrete::Fatal(MediaError::from(e)))?;
-    let file = F::read_from(&mut reader, options).map_err(|e| {
-        let mapped = from_parse_error(&e);
-        if mapped.is_transient() {
-            Concrete::Fatal(mapped)
-        } else {
-            Concrete::Unreadable
-        }
-    })?;
+        .map_err(|e| Concrete::Fatal(from_sniff_error(&e)))?;
+    let file = F::read_from(&mut reader, options).map_err(|e| concrete_failure(&e))?;
     let lyrics = id3v2(&file).map(Id3v2Lyrics::of).unwrap_or_default();
     Ok((file.into(), lyrics))
+}
+
+/// Splits a failed concrete read: a transient error is worth retrying, any
+/// other failure means the file has no usable lyrics.
+fn concrete_failure(error: &FileParseError) -> Concrete {
+    let mapped = from_parse_error(error);
+    if mapped.is_transient() {
+        Concrete::Fatal(mapped)
+    } else {
+        Concrete::Unreadable
+    }
 }
 
 /// Text worth showing: not blank and within [`MAX_LYRICS_TEXT_BYTES`].
@@ -174,4 +180,34 @@ fn lyrics_text(tagged: &TaggedFile) -> Option<String> {
         }
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::ErrorKind;
+
+    use lofty::error::SizeMismatchError;
+
+    use super::*;
+
+    #[test]
+    fn a_transient_io_error_is_fatal() {
+        let e: FileParseError = std::io::Error::from(ErrorKind::TimedOut).into();
+        assert!(matches!(
+            concrete_failure(&e),
+            Concrete::Fatal(MediaError::Io(ErrorKind::TimedOut))
+        ));
+    }
+
+    #[test]
+    fn a_non_transient_io_error_means_no_lyrics() {
+        let e: FileParseError = std::io::Error::from(ErrorKind::UnexpectedEof).into();
+        assert!(matches!(concrete_failure(&e), Concrete::Unreadable));
+    }
+
+    #[test]
+    fn a_parse_failure_means_no_lyrics() {
+        let e: FileParseError = SizeMismatchError.into();
+        assert!(matches!(concrete_failure(&e), Concrete::Unreadable));
+    }
 }

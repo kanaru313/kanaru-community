@@ -280,11 +280,16 @@ fn a_broken_id3_tag_means_no_lyrics_for_the_whole_file() {
 fn unreadable_content_outside_id3_formats_is_a_permanent_error() {
     let dir = TempDir::new();
     let empty = dir.write("empty.flac", b"");
-    let error = read(&empty).expect_err("empty file");
-    assert!(!error.is_transient(), "{error:?}");
+    assert_eq!(
+        read(&empty),
+        Err(MediaError::Io(std::io::ErrorKind::UnexpectedEof))
+    );
     let junk = dir.write("junk.bin", &[7u8; 64]);
-    let error = read_lyrics(File::open(&junk).unwrap(), None).expect_err("junk");
-    assert!(!error.is_transient(), "{error:?}");
+    let result = read_lyrics(File::open(&junk).unwrap(), None);
+    assert_eq!(result, Err(MediaError::Unsupported));
+    let hinted = dir.write("junk.ogg", &[7u8; 64]);
+    let result = read(&hinted);
+    assert!(matches!(result, Err(MediaError::Corrupt(_))), "{result:?}");
 }
 
 #[test]
