@@ -4,6 +4,8 @@
 
 pub mod errors;
 pub mod language;
+pub mod lyrics_reader;
+mod lyrics_sylt;
 pub mod mapping;
 
 use std::fs::File;
