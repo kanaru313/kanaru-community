@@ -37,7 +37,7 @@ class SelectedSongRow extends StatelessWidget {
         ),
       ),
       top: duration == null ? null : Text(formatClock(duration)),
-      bottom: SongFavoriteButton(info: info),
+      bottom: SongFavoriteButton(trackId: info.id),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

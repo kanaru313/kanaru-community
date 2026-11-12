@@ -29,13 +29,13 @@ class QueueList extends ConsumerWidget {
   const QueueList({
     super.key,
     required this.size,
-    this.trailing,
+    this.favorite,
     this.menu,
     this.onEmptied,
   });
 
   final QueueRowSize size;
-  final QueueRowTrailing? trailing;
+  final QueueRowFavorite? favorite;
   final QueueRowMenu? menu;
   final VoidCallback? onEmptied;
 
@@ -47,7 +47,7 @@ class QueueList extends ConsumerWidget {
       view: view,
       extent: KMediaCard.extentOf(MediaQuery.textScalerOf(context)),
       size: size,
-      trailing: trailing,
+      favorite: favorite,
       menu: menu,
       onEmptied: onEmptied,
     );
@@ -59,7 +59,7 @@ class _QueueListBody extends ConsumerStatefulWidget {
     required this.view,
     required this.extent,
     required this.size,
-    required this.trailing,
+    required this.favorite,
     required this.menu,
     required this.onEmptied,
   });
@@ -69,7 +69,7 @@ class _QueueListBody extends ConsumerStatefulWidget {
   /// Row height (`KMediaCard.extentOf` for the text scale in effect).
   final double extent;
   final QueueRowSize size;
-  final QueueRowTrailing? trailing;
+  final QueueRowFavorite? favorite;
   final QueueRowMenu? menu;
   final VoidCallback? onEmptied;
 
@@ -205,7 +205,7 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
                       : i == cur
                       ? QueueRowRole.current
                       : QueueRowRole.played,
-                  trailing: widget.trailing,
+                  favorite: widget.favorite,
                   menu: widget.menu,
                   onRemove: remove,
                 ),

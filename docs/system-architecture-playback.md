@@ -571,16 +571,23 @@ Rules:
 
 The queue content is shared by the mobile sheet and the desktop right panel. Widgets live in
 `playback/ui/queue/` (no library imports); the row menu, the ♥ and navigation to the library live in
-`screens/now_playing/ui/` (`queue_row_menu.dart`, `queue_row_trailing.dart`, `track_navigation.dart`) and are handed
-to the list as hooks (`QueueRowMenu`, `QueueRowTrailing`). `QueuePanel(host: sheet | panel)` composes them. On the panel the shell draws the header ("Queue" and ✕); `QueuePanel` adds the line under it: counts left (`N tracks · time left`; the tooltip has the playing position, and the whole line first when the panel cut it short; 40 dp action buttons with 8 dp between them, about 164 dp for the line), Shuffle, Add tracks (soon), Clean up, Save as playlist (soon) | ⋮ right, no footer.
+`screens/now_playing/ui/` (`queue_row_menu.dart`, `track_navigation.dart`; the ♥ is the library's `SongFavoriteButton`) and are handed
+to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`). `QueuePanel(host: sheet | panel)` composes them. On the panel the shell draws the header ("Queue" and ✕); `QueuePanel` adds the line under it: counts left (`N tracks · time left`; the tooltip has the playing position, and the whole line first when the panel cut it short; 40 dp action buttons with 8 dp between them, about 164 dp for the line), Shuffle, Add tracks (soon), Clean up, Save as playlist (soon) | ⋮ right, no footer.
 
-- **List** (`queue_list.dart`): one `ReorderableListView.builder`, fixed row extent (mobile 60, desktop 72), keys by
+- **List** (`queue_list.dart`): one `ReorderableListView.builder`, fixed row extent (`KMediaCard.extentOf` for the text scale in effect, the same height as a library song row; `QueueRowSize` only picks the handle side), keys by
   entry id, `buildDefaultDragHandles: false`, bottom padding 72. A drop is resolved by the dragged entry's id, not by
   the index the list reports, so an edit during the drag cannot move another entry. `QueueScrollController` keeps the
-  start offset inside the content (a short queue starts at the top). On open the current row is the second visible.
-- **Rows** (`queue_row.dart`): current = `secondaryContainer` fill plus `KEqualizerIcon` over the cover (pause glyph
-  when paused); played rows have text and cover at 50 %; tap plays (the current row ignores it); Enter and Delete on a
-  focused desktop row play and remove. A row whose info has not loaded draws a placeholder of the same height.
+  start offset inside the content (a short queue starts at the top). On open the current row is the second visible. When the text scale changes the extent changes and the list re-anchors to the current row.
+- **Rows** (`queue_row.dart`): a flat `KMediaCard` on both shells (full width, no radius): 56 dp cover (radius 10),
+  title / artists (`trackArtistLine`) / `album • year` (`trackAlbumLine`, both in `media/domain/track_lines.dart`),
+  duration over the host's ♥ (`QueueRowFavorite`, null = none), then the drag handle and a ⋮ (`KMoreButton`, always
+  visible). The handle is the card's `prefix` on desktop and its `accessory` on mobile; it is a
+  `ReorderableDragStartListener` that swallows taps and has no long-press of its own. Current = `primaryContainer` fill
+  (icons take the card ink) plus `KEqualizerIcon` over the cover under a scrim (pause glyph when paused), announced as
+  "Now playing"; played rows are dimmed to 50 %; tap plays (the current row ignores it); Delete on a focused desktop row
+  removes. Mobile: a long press on the row opens the menu, except one that starts on the handle (a custom long-press
+  recognizer skips it), so hold-then-move drags. The ⋮ passes `viaKeyboard`, and a menu opened that way focuses its
+  first row. A row whose info has not loaded is the card's `loading` skeleton of the same height.
 - **Row infos** (`state/queue_row_infos.dart`): `TrackInfo`s are loaded for the viewport ± 50 rows into a 1 000-entry
   LRU; the window is O(1) from the scroll offset. A `tracks` change reloads only the last window, 1 s after the last
   change. Rows read their own entry with a `select`. The header time ("còn …") is `queueRemainingProvider`.

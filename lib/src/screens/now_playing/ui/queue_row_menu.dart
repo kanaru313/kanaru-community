@@ -46,6 +46,7 @@ void openQueueRowMenu(
   required QueueHost host,
   VoidCallback? beforeNavigate,
   VoidCallback? onEmptied,
+  bool viaKeyboard = false,
 }) {
   final l10n = AppLocalizations.of(context);
   final container = ProviderScope.containerOf(context);
@@ -118,6 +119,22 @@ void openQueueRowMenu(
   } else {
     _showPopup(context, at, groups);
   }
+  if (viaKeyboard) _focusFirstRowOnceOpen();
+}
+
+/// Opened with the keyboard: puts focus on the first row as soon as the menu
+/// route has taken focus (its own scope becomes the primary focus then). A
+/// pointer-opened menu shows no focus ring until an arrow key is pressed.
+void _focusFirstRowOnceOpen([int frames = 0]) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final focus = FocusManager.instance.primaryFocus;
+    if (focus is FocusScopeNode) {
+      focus.nextFocus();
+    } else if (frames < 10) {
+      _focusFirstRowOnceOpen(frames + 1);
+    }
+  });
+  WidgetsBinding.instance.ensureVisualUpdate();
 }
 
 void _showPopup(BuildContext context, Offset? at, List<List<_Entry>> groups) {

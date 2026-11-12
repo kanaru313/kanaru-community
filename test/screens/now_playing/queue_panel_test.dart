@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_header.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_row.dart';
-import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
+import 'package:kanaru/src/library/state/favorites_providers.dart';
+import 'package:kanaru/src/library/ui/songs/song_tile.dart';
+import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_host.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_panel.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -9,6 +11,41 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../playback/support/ui_host.dart';
 import '../../playback/ui/queue/queue_test_support.dart' show rowExtent;
+
+class _FailingFavorites implements FavoritesController {
+  @override
+  Future<void> setFavorite(List<TrackId> tracks, bool favorite) async =>
+      throw StateError('write failed');
+
+  @override
+  Future<void> toggle(TrackId track) async => throw StateError('write failed');
+}
+
+Future<void> _toggleHeart(WidgetTester tester, UiHost host) async {
+  expect(find.byTooltip('Remove from favorites'), findsNothing);
+  await host.tap(tester, find.byTooltip('Add to favorites').first);
+  expect(find.byTooltip('Remove from favorites'), findsOneWidget);
+  await host.tap(tester, find.byTooltip('Remove from favorites'));
+  expect(find.byTooltip('Remove from favorites'), findsNothing);
+}
+
+Future<void> _failingToggle(
+  WidgetTester tester,
+  QueueHost hostKind,
+  Size size,
+) async {
+  final host = await pumpWithPlayer(
+    tester,
+    QueuePanel(host: hostKind),
+    size: size,
+    overrides: [
+      favoritesControllerProvider.overrideWithValue(_FailingFavorites()),
+    ],
+  );
+  await host.tap(tester, find.byTooltip('Add to favorites').first);
+  await tester.pump(const Duration(milliseconds: 500));
+  expect(find.text('Could not change favorites'), findsOneWidget);
+}
 
 void main() {
   group('sheet host', () {
@@ -55,19 +92,43 @@ void main() {
       expect(shuffle, greaterThan(firstRow));
     });
 
-    testWidgets('rows are mobile rows without ♥ or trailing', (tester) async {
+    testWidgets('rows are mobile rows with the library ♥', (tester) async {
       await pumpWithPlayer(tester, const QueuePanel(host: QueueHost.sheet));
       expect(tester.getSize(find.byType(QueueRow).first).height, rowExtent());
-      expect(find.byType(FavoriteButton), findsNothing);
+      expect(find.byType(SongFavoriteButton), findsWidgets);
+    });
+
+    testWidgets('the ♥ toggles the favorite', (tester) async {
+      final host = await pumpWithPlayer(
+        tester,
+        const QueuePanel(host: QueueHost.sheet),
+      );
+      await _toggleHeart(tester, host);
+    });
+
+    testWidgets('a failing toggle shows the toast', (tester) async {
+      await _failingToggle(tester, QueueHost.sheet, const Size(400, 800));
     });
   });
 
   group('panel host', () {
-    Future<void> pump(WidgetTester tester) => pumpWithPlayer(
-      tester,
-      const QueuePanel(host: QueueHost.panel),
-      size: const Size(900, 800),
-    );
+    Future<UiHost> pump(WidgetTester tester) async {
+      final host = await pumpWithPlayer(
+        tester,
+        const QueuePanel(host: QueueHost.panel),
+        size: const Size(900, 800),
+        play: false,
+      );
+      // Durations first, so the rows load them with their infos.
+      await host.run(tester, () async {
+        await host.h.db.customStatement(
+          'UPDATE tracks SET duration_ms = 200000',
+        );
+        await host.h.play();
+      });
+      await host.letStreamsArrive(tester);
+      return host;
+    }
 
     testWidgets('head: counts left, four actions and more on the right', (
       tester,
@@ -94,8 +155,20 @@ void main() {
     ) async {
       await pump(tester);
       expect(tester.getSize(find.byType(QueueRow).first).height, rowExtent());
-      expect(find.byType(FavoriteButton), findsWidgets);
+      expect(find.byType(SongFavoriteButton), findsWidgets);
       final row = find.byType(QueueRow).first;
+      final time = tester.getRect(
+        find.descendant(
+          of: row,
+          matching: find.byWidgetPredicate(
+            (w) => w is Text && RegExp(r'^\d+:\d\d$').hasMatch(w.data ?? ''),
+          ),
+        ),
+      );
+      final heart = tester.getRect(
+        find.descendant(of: row, matching: find.byIcon(KIcons.heart)),
+      );
+      expect(time.bottom, lessThanOrEqualTo(heart.top + 1));
       expect(
         find.descendant(of: row, matching: find.byIcon(KIcons.moreVert)),
         findsOneWidget,
@@ -104,6 +177,14 @@ void main() {
         find.descendant(of: row, matching: find.byIcon(KIcons.dragHandle)),
         findsOneWidget,
       );
+    });
+
+    testWidgets('the ♥ toggles the favorite', (tester) async {
+      await _toggleHeart(tester, await pump(tester));
+    });
+
+    testWidgets('a failing toggle shows the toast', (tester) async {
+      await _failingToggle(tester, QueueHost.panel, const Size(900, 800));
     });
 
     testWidgets('the cleanup dropdown opens downward', (tester) async {

@@ -31,7 +31,7 @@ class QueueRow extends ConsumerStatefulWidget {
     required this.role,
     required this.size,
     required this.onRemove,
-    this.trailing,
+    this.favorite,
     this.menu,
   });
 
@@ -40,7 +40,7 @@ class QueueRow extends ConsumerStatefulWidget {
   final QueueRowRole role;
   final QueueRowSize size;
   final VoidCallback onRemove;
-  final QueueRowTrailing? trailing;
+  final QueueRowFavorite? favorite;
   final QueueRowMenu? menu;
 
   @override
@@ -71,7 +71,6 @@ class _QueueRowState extends ConsumerState<QueueRow> {
       queueRowInfosProvider.select((m) => m[item.trackId]),
     );
     final duration = info?.durationMs;
-    final trailing = _desktop ? widget.trailing : null;
     final handle = _Handle(
       key: _handleKey,
       index: widget.index,
@@ -89,7 +88,7 @@ class _QueueRowState extends ConsumerState<QueueRow> {
       top: duration == null
           ? null
           : Text(formatClock(Duration(milliseconds: duration))),
-      bottom: trailing?.call(context, item, info),
+      bottom: widget.favorite?.call(context, item),
       accessory: _desktop ? null : handle,
       trailing: widget.menu == null
           ? null

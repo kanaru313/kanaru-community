@@ -3,12 +3,11 @@ import 'package:material_ui/material_ui.dart';
 import '../../../media/domain/track_info.dart';
 import '../../domain/queue_state.dart';
 
-/// Widget under the duration of a desktop row (the host puts the ♥ there).
-/// [info] is null until the row's info has loaded.
-typedef QueueRowTrailing = Widget Function(
+/// The ♥ under a row's duration. The playback module cannot import the
+/// library, so the host supplies the button (it toggles library favourites).
+typedef QueueRowFavorite = Widget Function(
   BuildContext context,
   QueueItem item,
-  TrackInfo? info,
 );
 
 /// Opens the row menu. [at] is the global pointer or button position, or null

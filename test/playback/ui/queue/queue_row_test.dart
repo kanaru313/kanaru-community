@@ -37,9 +37,9 @@ void main() {
   final menuCalls = <_MenuCall>[];
   setUp(menuCalls.clear);
 
-  QueueList list(QueueRowSize size, {QueueRowTrailing? trailing}) => QueueList(
+  QueueList list(QueueRowSize size, {QueueRowFavorite? favorite}) => QueueList(
     size: size,
-    trailing: trailing,
+    favorite: favorite,
     menu: (context, item, info, at, {viaKeyboard = false}) =>
         menuCalls.add((at: at, viaKeyboard: viaKeyboard)),
   );
@@ -49,14 +49,14 @@ void main() {
     bool playing = true,
     QueueRowSize size = QueueRowSize.mobile,
     Size? window,
-    QueueRowTrailing? trailing,
+    QueueRowFavorite? favorite,
     ValueNotifier<double>? textScale,
     CountingLoader? loader,
     int rows = 6,
     int current = 2,
   }) => pumpFakeQueue(
     tester,
-    list(size, trailing: trailing),
+    list(size, favorite: favorite),
     view: fakeView(rows, current: current),
     playing: playing,
     size: window ?? const Size(400, 800),
@@ -86,14 +86,14 @@ void main() {
       expect(find.text('3:20'), findsWidgets);
     });
 
-    testWidgets('desktop: the host trailing widget sits under the duration', (
+    testWidgets('desktop: the host favourite widget sits under the duration', (
       tester,
     ) async {
       await pump(
         tester,
         size: QueueRowSize.desktop,
         window: _desktopWindow,
-        trailing: (context, item, info) => const Icon(KIcons.heart),
+        favorite: (context, item) => const Icon(KIcons.heart),
       );
       final row = find.byType(QueueRow).first;
       final heart = rectIn(tester, row, find.byIcon(KIcons.heart));

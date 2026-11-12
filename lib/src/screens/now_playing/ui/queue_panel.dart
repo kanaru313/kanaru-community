@@ -2,13 +2,13 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../library/ui/songs/song_tile.dart';
 import '../../../playback/ui/queue/queue_actions.dart';
 import '../../../playback/ui/queue/queue_header.dart';
 import '../../../playback/ui/queue/queue_list.dart';
 import '../../../playback/ui/queue/queue_row_hooks.dart';
 import 'queue_host.dart';
 import 'queue_row_menu.dart';
-import 'queue_row_trailing.dart';
 
 /// The queue content for one host: head with counts, the list, and the
 /// actions (footer on the mobile sheet, head row on the desktop panel).
@@ -44,7 +44,7 @@ class QueuePanel extends StatelessWidget {
     final sheet = host == QueueHost.sheet;
     final list = QueueList(
       size: sheet ? QueueRowSize.mobile : QueueRowSize.desktop,
-      trailing: sheet ? null : queueRowTrailing,
+      favorite: (context, item) => SongFavoriteButton(trackId: item.trackId),
       onEmptied: onEmptied,
       menu: (ctx, item, info, at, {viaKeyboard = false}) => openQueueRowMenu(
         ctx,
@@ -54,6 +54,7 @@ class QueuePanel extends StatelessWidget {
         host: host,
         beforeNavigate: beforeNavigate,
         onEmptied: onEmptied,
+        viaKeyboard: viaKeyboard,
       ),
     );
     // Its own Scaffold: toasts raised here show inside the panel, above the

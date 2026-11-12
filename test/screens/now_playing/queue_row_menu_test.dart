@@ -1,9 +1,12 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
+import 'package:kanaru/src/playback/ui/queue/queue_row.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_host.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_panel.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -208,5 +211,47 @@ void main() {
     expect(find.text('Play this track'), findsOneWidget);
     expect(find.text('Go to artist'), findsOneWidget);
     expect(find.byType(PopupMenuItem<void>), findsNothing);
+  });
+
+  for (final host in QueueHost.values) {
+    testWidgets('Enter on ⋮ focuses the first row (${host.name})', (
+      tester,
+    ) async {
+      await _pump(tester, host: host);
+      final more = find.descendant(
+        of: find.byType(QueueRow).at(1),
+        matching: find.byIcon(KIcons.moreVert),
+      );
+      Focus.of(tester.element(more)).requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(FocusManager.instance.primaryFocus, isNot(isA<FocusScopeNode>()));
+      final focused = FocusManager.instance.primaryFocus!.context!;
+      var onFirstRow = false;
+      tester.element(find.text('Play this track')).visitAncestorElements((e) {
+        if (identical(e, focused)) onFirstRow = true;
+        return !onFirstRow;
+      });
+      expect(onFirstRow, isTrue);
+    });
+  }
+
+  testWidgets('a pointer press on ⋮ leaves focus off the menu rows', (
+    tester,
+  ) async {
+    await _pump(tester);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(QueueRow).at(1),
+        matching: find.byTooltip('More'),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    // Only the menu route's own scope has focus: no row shows a ring.
+    expect(FocusManager.instance.primaryFocus, isA<FocusScopeNode>());
   });
 }

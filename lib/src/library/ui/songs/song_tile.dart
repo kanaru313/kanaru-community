@@ -88,7 +88,7 @@ class SongTile extends ConsumerWidget {
             ? _NumberColumn(number: info.trackNo, current: current)
             : _SongCover(info: info, current: current),
         top: duration == null ? null : Text(formatClock(duration)),
-        bottom: SongFavoriteButton(info: info),
+        bottom: SongFavoriteButton(trackId: info.id),
         trailing: LibraryMoreButton(onPressed: menu),
         current: current,
         currentLabel: l10n.libraryNowPlaying,
@@ -188,14 +188,14 @@ class _PlayingMark extends ConsumerWidget {
 /// The ♥ of a song row: filled for a favourite, toggles on press. Watches
 /// only its own answer.
 class SongFavoriteButton extends ConsumerWidget {
-  const SongFavoriteButton({super.key, required this.info});
+  const SongFavoriteButton({super.key, required this.trackId});
 
-  final TrackInfo info;
+  final TrackId trackId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final favorite = ref.watch(isFavoriteProvider(info.id));
+    final favorite = ref.watch(isFavoriteProvider(trackId));
     final scheme = Theme.of(context).colorScheme;
     return IconButton(
       tooltip: favorite ? l10n.libraryFavoriteRemove : l10n.libraryFavoriteAdd,
@@ -211,9 +211,9 @@ class SongFavoriteButton extends ConsumerWidget {
   Future<void> _toggle(WidgetRef ref, BuildContext context) async {
     final message = AppLocalizations.of(context).libraryFavoriteFailed;
     try {
-      await ref.read(favoritesControllerProvider).toggle(info.id);
+      await ref.read(favoritesControllerProvider).toggle(trackId);
     } on Object catch (e, s) {
-      _log.warning('toggling favorite of ${info.id} failed', e, s);
+      _log.warning('toggling favorite of $trackId failed', e, s);
       if (context.mounted) showAppSnackBar(context, message);
     }
   }
