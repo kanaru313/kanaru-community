@@ -42,8 +42,9 @@ class SelectedSongRow extends StatelessWidget {
         index: index,
         child: Tooltip(
           message: AppLocalizations.of(context).libraryPanelReorder,
-          child: const Padding(
-            padding: EdgeInsets.all(KSpace.x2),
+          // Same touch target as the queue's mobile handle.
+          child: const SizedBox.square(
+            dimension: KLayout.minTarget,
             child: Icon(KIcons.dragHandle),
           ),
         ),

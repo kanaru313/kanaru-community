@@ -194,7 +194,7 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
                           extent: extent,
                           onRetry: _window.invalidate,
                         )
-                      : const SongRowPlaceholder();
+                      : SongRowPlaceholder(showNumber: widget.showNumber);
                 }
                 return SongTile(
                   info: info,

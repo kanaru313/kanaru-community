@@ -6,15 +6,20 @@ import '../../../../l10n/gen/app_localizations.dart';
 /// A song row whose page is still being read: same size, no content. Shared by
 /// the song lists and the selection panel.
 class SongRowPlaceholder extends StatelessWidget {
-  const SongRowPlaceholder({super.key});
+  const SongRowPlaceholder({super.key, this.showNumber = false});
+
+  /// The loaded rows carry a track-number prefix (album pages): reserve the
+  /// same empty prefix so the bars line up with their titles.
+  final bool showNumber;
 
   @override
-  Widget build(BuildContext context) => const KMediaCard(
+  Widget build(BuildContext context) => KMediaCard(
     title: '',
     loading: true,
+    prefix: showNumber ? const SizedBox.shrink() : null,
     // An empty cover slot: same height as a song row (extentOf) and the bars
     // start where a title would.
-    leading: SizedBox.shrink(),
+    leading: const SizedBox.shrink(),
   );
 }
 

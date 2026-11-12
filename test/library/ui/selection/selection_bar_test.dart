@@ -166,6 +166,27 @@ void main() {
     await unmountApp(tester);
   });
 
+  testWidgets('a panel row drag handle is at least the minimum target', (
+    tester,
+  ) async {
+    final h = await pumpSelection(tester);
+    final ids = await allIds(h);
+    h.selection.addRange(ids.take(2));
+    h.selection.setExpanded(true);
+    await h.settle(tester, rounds: 3);
+    final size = tester.getSize(
+      find
+          .ancestor(
+            of: find.byIcon(KIcons.dragHandle).first,
+            matching: find.byType(ReorderableDragStartListener),
+          )
+          .first,
+    );
+    expect(size.width, greaterThanOrEqualTo(KLayout.minTarget));
+    expect(size.height, greaterThanOrEqualTo(KLayout.minTarget));
+    await unmountApp(tester);
+  });
+
   testWidgets('a panel row: handle left of the always-visible menu button', (
     tester,
   ) async {

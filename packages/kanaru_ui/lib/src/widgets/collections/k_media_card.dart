@@ -26,15 +26,16 @@ enum KMediaCardStyle {
 
 /// Row card of every media list: song, album, artist, folder.
 ///
-/// Slot order, left to right: [prefix] · [leading] (with the selection mark) ·
-/// text · [top] / [bottom] · [onAction] (play) · [accessory] · [trailing].
-/// The [trailing] button (the "more" menu) is always visible; only the play
-/// button appears on hover or focus on desktop.
+/// Slot order, left to right: [prefix] (track number or desktop drag handle) ·
+/// [leading] (cover, with the selection mark) · text · [top] / [bottom] ·
+/// [onAction] (play) · [accessory] (mobile drag handle) · [trailing] (the ⋮).
+/// The [trailing] button is always visible; only the play button appears on
+/// hover or focus on desktop.
 ///
 /// Three text lines are always reserved (an empty line keeps its room) so all
 /// cards of a list are the same height; [extentOf] gives that height without
 /// laying anything out, in every [KMediaCardStyle]. Music-type-free: the
-/// caller passes the cover (or a number column) as [leading] and every string.
+/// caller passes the cover as [leading] and every string.
 /// With [loading] the lines show placeholder bars at the same height.
 class KMediaCard extends StatefulWidget {
   const KMediaCard({
@@ -77,10 +78,10 @@ class KMediaCard extends StatefulWidget {
   final String? line3;
 
   /// Before the [leading], in a [prefixWidth] box, centred and scaled down to
-  /// fit (a drag handle, a selection box). Null takes no room.
+  /// fit (a track number, a desktop drag handle). Null takes no room.
   final Widget? prefix;
 
-  /// Cover only (56 dp) or a number column.
+  /// The cover only (56 dp).
   final Widget? leading;
 
   /// The leading is round (artists): the selection check is clipped to match.
@@ -92,8 +93,8 @@ class KMediaCard extends StatefulWidget {
   /// Right column, lower slot (favourite button, up to 48 dp tall; it overlaps the upper slot's row, which holds a short label).
   final Widget? bottom;
 
-  /// After the play button, before [trailing] (for example a favourite
-  /// toggle).
+  /// After the play button, before [trailing] (for example the mobile drag
+  /// handle).
   final Widget? accessory;
 
   /// Last slot (the "more" button); always visible.
@@ -134,7 +135,7 @@ class KMediaCard extends StatefulWidget {
   static const BorderRadius _radius = BorderRadius.all(Radius.circular(14));
 
   /// Laid-out height of a card plus [gap], for a fixed list extent.
-  /// Assumes a 56 dp leading (cover or number column); pass
+  /// Assumes a 56 dp leading (the cover); pass
   /// `hasLeading: false` for cards without one.
   static double extentOf(TextScaler scaler, {bool hasLeading = true}) =>
       (hasLeading && coverSize > KMediaCardMetrics.textBlock(scaler)

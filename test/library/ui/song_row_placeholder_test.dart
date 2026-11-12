@@ -36,6 +36,28 @@ void main() {
     );
   });
 
+  testWidgets('placeholder reserves the number prefix on album pages', (
+    tester,
+  ) async {
+    Future<double> barLeft(bool showNumber) async {
+      await _pump(tester, mobile, SongRowPlaceholder(showNumber: showNumber));
+      return tester
+          .getTopLeft(
+            find
+                .descendant(
+                  of: find.byType(KMediaCard),
+                  matching: find.byType(DecoratedBox),
+                )
+                .first,
+          )
+          .dx;
+    }
+
+    final plain = await barLeft(false);
+    final numbered = await barLeft(true);
+    expect(numbered - plain, closeTo(KMediaCard.prefixWidth + KSpace.x2, 0.5));
+  });
+
   testWidgets('failed row is flat on mobile: no fill, no radius', (
     tester,
   ) async {
