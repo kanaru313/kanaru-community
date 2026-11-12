@@ -33,7 +33,7 @@ tags of the file (for example an APE tag on an MP3). The first value that is
 not blank and at most 1 MiB (`MAX_LYRICS_TEXT_BYTES`) wins; blank or oversized
 values are skipped and the search goes on.
 
-`TXXX` fallback (ID3v2 only): `TXXX:LYRICS` or `TXXX:UNSYNCEDLYRICS`, used
+`TXXX` fallback (ID3v2 only): `TXXX:LYRICS` or `TXXX:UNSYNCEDLYRICS` (description matched ignoring ASCII case, LYRICS first), used
 only when the generic search found no text.
 
 Formats read through the generic tag: FLAC, Ogg Vorbis, Opus, MP4/M4A, APE,
@@ -62,7 +62,7 @@ WavPack, and the non-ID3 tags of MP3/WAV/AIFF.
 | MP3/WAV/AIFF whose concrete read fails (broken ID3 tag or file, including an empty or truncated file), not transient | `Ok(None)`: the whole file has no lyrics, even if plain text exists elsewhere |
 | Concrete read fails with a transient I/O error, or rewind fails | `Err(MediaError::Io)` |
 | Sniffing the content fails | `Err`, via `errors::from_sniff_error` |
-| Other formats: parse fails (unknown format, corrupt, truncated, I/O) | `Err`, via `errors::from_parse_error` |
+| Other formats: parse fails (unknown format, corrupt, empty or truncated: `Io` `UnexpectedEof`, I/O) | `Err`, via `errors::from_parse_error` |
 
 ### Known gaps
 
@@ -70,7 +70,7 @@ WavPack, and the non-ID3 tags of MP3/WAV/AIFF.
   not found.
 - `SYLT` is read only from ID3v2 in MP3, WAV and AIFF; none in FLAC, MP4 or APE.
 - A broken ID3 tag drops plain text stored elsewhere in the same file.
-- lofty parses a whole `SYLT` frame before the caps apply.
+- A `SYLT` frame body over 4 MiB (`MAX_SYLT_FRAME_BYTES`) is skipped; below that lofty parses the whole frame before the line caps apply.
 
 ## Bridge API
 
@@ -93,12 +93,19 @@ The path is opened with `open_source` (regular files only), the extension
 | `NotFound`, `PermissionDenied` | no | open failed |
 | `Unsupported` | no | not a regular file (directory, FIFO, device) or unknown format |
 | `Corrupt` | no | the content is corrupt (parse failed, or the sniff/rewind reported invalid data) |
-| `Io` | by cause | read failed; a truncated or empty file gives `UnexpectedEof` (permanent, not `Corrupt`); also: thread could not start, or ended without a result (both transient) |
+| `Io` | by cause | read failed; for formats other than MP3/WAV/AIFF a truncated or empty file gives `UnexpectedEof` (permanent, not `Corrupt`; on MP3/WAV/AIFF it is `Ok(None)`); also: thread could not start, or ended without a result (both transient) |
 | `Panic` | no | the parser panicked (caught by `guarded`) |
-| `Timeout` | yes | no answer within 10 s |
+| `Timeout` | yes | no answer within 10 s, or refused at once while two earlier reads are still stuck |
 
 Threading: each call spawns its own thread (`kanaru-lyrics`, 8 MiB stack) and
-waits at most 10 s (`READ_TIMEOUT`). No pool and no in-flight cap. A read
-blocked in the kernel (dead network mount) cannot be cancelled; the caller gets
-`Timeout` and the stuck thread is left behind. This leak is accepted: a pool
-would let one dead mount block every later read.
+waits at most 10 s (`READ_TIMEOUT`). No pool. A read blocked in the kernel
+(dead network mount) cannot be cancelled; the caller gets `Timeout` and the
+stuck thread is left behind, because a pool would let one dead mount block
+every later read. The leak is bounded: at most `MAX_STUCK_THREADS` (2) threads
+may be abandoned past their timeout at once. While that many are still
+blocked, a new read returns a transient `Timeout` without spawning (retry
+later). A thread that finally ends frees its slot, so a recovered mount
+recovers the reader. The cap is checked when a read starts and only abandoned
+threads count, so reads still within their timeout are never refused; reads
+started at the same time can push the stuck count past the cap, up to the cap
+plus the reads in flight. Callers should run one read at a time.

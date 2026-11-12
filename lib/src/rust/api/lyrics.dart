@@ -8,15 +8,19 @@ import 'error.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `read_with`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `new`, `read_with`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `EndGuard`, `StuckThreads`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `drop`, `eq`, `eq`, `fmt`, `fmt`
 // These functions are ignored (category: IgnoreBecauseExplicitAttribute): `from`, `from`
 
 /// Reads the lyrics embedded in the audio file at `path`: `Ok(None)` when the
-/// file holds none. Errors: `NotFound`, `PermissionDenied`, `Unsupported`
+/// file holds none. For MP3, WAV and AIFF any non-transient read failure,
+/// including an empty or truncated file, also gives `Ok(None)` (a broken ID3
+/// tag means no lyrics); an empty or truncated file of any other format is
+/// `Io` (`UnexpectedEof`, permanent). Errors: `NotFound`, `PermissionDenied`, `Unsupported`
 /// (not a regular file; a FIFO is never waited on), `Corrupt`, `Io`,
 /// `Panic` (parser panic, permanent) and `Timeout` (no answer in 10 s,
-/// transient).
+/// transient; also returned at once while two earlier reads are still stuck).
 Future<EmbeddedLyricsDto?> readEmbeddedLyrics({required String path}) =>
     RustLib.instance.api.crateApiLyricsReadEmbeddedLyrics(path: path);
 
