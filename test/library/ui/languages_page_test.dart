@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
+import 'package:kanaru/src/library/ui/menus/more_button.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../browse/support/library_fixture.dart';
@@ -29,8 +30,8 @@ Future<LibraryHarness> _pump(WidgetTester tester) async {
 }
 
 List<String> _rows(WidgetTester tester) => [
-  for (final r in tester.widgetList<KListRow>(find.byType(KListRow)))
-    (r.title as dynamic).data as String,
+  for (final r in tester.widgetList<KMediaCard>(find.byType(KMediaCard)))
+    r.title,
 ];
 
 void main() {
@@ -87,6 +88,21 @@ void main() {
     await tester.pump();
     expect(h.location, startsWith('/library/languages/'));
     expect(h.location, isNot('/library/languages/_unknown'));
+    await unmountApp(tester);
+  });
+
+  testWidgets('rows have no play button; the menu button opens the menu', (
+    tester,
+  ) async {
+    await _pump(tester);
+    for (final r in tester.widgetList<KMediaCard>(find.byType(KMediaCard))) {
+      expect(r.onAction, isNull);
+      expect(r.trailing, isNotNull);
+    }
+    await tester.tap(find.byType(LibraryMoreButton).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Play'), findsWidgets);
+    expect(tester.takeException(), isNull);
     await unmountApp(tester);
   });
 }

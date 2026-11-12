@@ -596,7 +596,7 @@ Every call is awaited; a failure is logged and shows a snack bar.
   160 px minimum, artists 100 / 160) or rows (`AlbumTile`, `ArtistTile` on
   `KMediaCard`, ▶ always on mobile and on hover or focus on desktop). The view
   switch (`LibraryViewToggle`: one icon on mobile, a double button on desktop)
-  is stored per list. Albums open as a grid, every other list as rows, on both
+  is stored per list. Albums and genres open as a grid, every other list as rows, on both
   shells. Tiles get their summary by value and watch nothing.
 - Album ▶ plays the album in track order (`playScope` with the `albumTracks`
   default sort), artist ▶ plays every song of the artist (`detailSongs`
@@ -604,10 +604,11 @@ Every call is awaited; a failure is logged and shows a snack bar.
 - Artist photo: the `coverKey` of `ArtistSummary` (the cover of the newest own
   album that has one), a round `TrackCover`, else a letter placeholder seeded
   by the name.
-- Genres: `KColorTile` in a grid (150 / 200 px minimum); the tile height is
-  88 times the text scale.
-- Languages: `KListRow` per language with `languages` (`help` for "unknown",
-  always last), `N songs · M auto-detected` (the second part only when
+- Genres: grid of `KColorTile` (150 / 200 px minimum; height 88 times the text
+  scale) or rows (`GenreTile` on `KMediaCard`: coloured icon block, name,
+  song count, ⋮, no ▶). Opens as a grid; the view switch is stored per list.
+- Languages: `LanguageTile` (`KMediaCard`, no ▶) per language with `languages`
+  (`help` for "unknown", always last), `N songs · M auto-detected` (the second part only when
   nonzero), and the note above the list. `languageDisplayName`: the native
   name, plus the name in the app language when it differs; an unknown code
   shows as the code.

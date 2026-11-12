@@ -3,19 +3,14 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
-import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/library_tabs.dart';
 import '../../state/browse/collection_providers.dart';
-import '../browse/library_labels.dart';
 import '../browse/library_list_frame.dart';
 import '../browse/library_list_scaffold.dart';
-import '../browse/library_navigation.dart';
-import '../library_locations.dart';
-import '../menus/more_button.dart';
-import '../menus/open_menu.dart';
 import '../selection/selection_inset.dart';
 import 'collection_parts.dart';
+import 'language_tile.dart';
 
 /// The Languages list: one row per language, "unknown" last, with a note on
 /// where the language comes from.
@@ -73,6 +68,7 @@ class _LanguagesBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final scaler = MediaQuery.textScalerOf(context);
     final scheme = Theme.of(context).colorScheme;
     final gutter = libraryGutter(context);
     return collectionBody(
@@ -91,44 +87,20 @@ class _LanguagesBody extends ConsumerWidget {
             ),
           ),
           SliverPadding(
-            padding: EdgeInsets.fromLTRB(gutter, 0, gutter, KSpace.x4),
-            sliver: SliverList.separated(
-              itemCount: languages.length,
-              separatorBuilder: (_, _) => const KGap(KSpace.x1),
-              itemBuilder: (context, i) => _LanguageRow(language: languages[i]),
+            padding: EdgeInsets.symmetric(
+              horizontal: libraryRowGutter(context),
+            ),
+            sliver: SliverFixedExtentList(
+              itemExtent: KMediaCard.extentOf(scaler),
+              delegate: SliverChildBuilderDelegate(
+                (context, i) => LanguageTile(language: languages[i]),
+                childCount: languages.length,
+                addAutomaticKeepAlives: false,
+              ),
             ),
           ),
           const SelectionInsetSliver(),
         ],
-      ),
-    );
-  }
-}
-
-class _LanguageRow extends StatelessWidget {
-  const _LanguageRow({required this.language});
-
-  final LanguageSummary language;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final detected = language.detectedCount;
-    void menu({bool viaKeyboard = false}) =>
-        openLanguageMenu(context, language.code, viaKeyboard: viaKeyboard);
-    return KContextRegion(
-      onOpen: (at) => menu(viaKeyboard: at == null),
-      child: KListRow(
-        leading: Icon(language.code == null ? KIcons.help : KIcons.languages),
-        title: Text(languageDisplayName(l10n, language.code)),
-        subtitle: Text(
-          detected > 0
-              ? l10n.libraryLanguageStatsDetected(language.trackCount, detected)
-              : l10n.librarySongCount(language.trackCount),
-        ),
-        trailing: LibraryMoreButton(onPressed: menu),
-        onTap: () =>
-            openLibraryPage(context, LibraryLocations.language(language.code)),
       ),
     );
   }

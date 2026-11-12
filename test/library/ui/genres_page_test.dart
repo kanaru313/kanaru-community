@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -44,6 +45,7 @@ void main() {
     expect(names, ['Indie', 'Jazz', 'Rock']);
     expect(find.text('3 songs'), findsOneWidget);
     expect(find.text('1 song'), findsOneWidget);
+    expect(find.byType(KMediaCard), findsNothing);
     expect(tester.takeException(), isNull);
     await unmountApp(tester);
   });
@@ -78,6 +80,22 @@ void main() {
     final tiles = find.byType(KColorTile);
     final top = tester.getTopLeft(tiles.first).dy;
     expect(tester.getTopLeft(tiles.at(2)).dy, top);
+    await unmountApp(tester);
+  });
+
+  testWidgets('the list view shows rows without a play button', (tester) async {
+    final h = await _pump(tester);
+    await h.container
+        .read(libraryListViewsProvider.notifier)
+        .setView(BrowseList.genres, CollectionView.list);
+    await tester.pump();
+    expect(find.byType(KColorTile), findsNothing);
+    final rows = tester.widgetList<KMediaCard>(find.byType(KMediaCard));
+    expect([for (final r in rows) r.title], ['Indie', 'Jazz', 'Rock']);
+    expect(rows.every((r) => r.onAction == null), isTrue);
+    await tester.tap(find.text('Jazz'));
+    await tester.pump();
+    expect(h.location, '/library/genres/${encodeKey(groupKey('Jazz'))}');
     await unmountApp(tester);
   });
 }

@@ -103,3 +103,39 @@ String collectionCountText({
   }
   return plain(shown);
 }
+
+/// Icon block of a genre or language row: a [KMediaCard.coverSize] square with
+/// rounded corners and a centred icon.
+class CategoryIcon extends StatelessWidget {
+  /// Genre block: colours seeded by [genre], the same as its grid tile.
+  const CategoryIcon.genre({super.key, required String this.genre})
+    : icon = KIcons.genres;
+
+  /// Language block; [known] false (the "unknown" row) shows the help icon.
+  const CategoryIcon.language({super.key, required bool known})
+    : genre = null,
+      icon = known ? KIcons.languages : KIcons.help;
+
+  /// Seed of the genre colours; null = the language look.
+  final String? genre;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final seed = genre;
+    final colors = seed == null
+        ? null
+        : KCoverPlaceholderColors.of(seed, Theme.of(context).brightness);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors?.fill ?? scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: SizedBox.square(
+        dimension: KMediaCard.coverSize,
+        child: Icon(icon, color: colors?.ink ?? scheme.onSecondaryContainer),
+      ),
+    );
+  }
+}
