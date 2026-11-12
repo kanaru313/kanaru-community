@@ -321,6 +321,7 @@ class _KMediaCardState extends State<KMediaCard> {
                         // colour wins over an inherited foreground and the other
                         // inherited properties stay.
                         style: IconButton.styleFrom(foregroundColor: soft)
+                            .copyWith(iconColor: WidgetStatePropertyAll(soft))
                             .merge(ambientButtons.style),
                       ),
                       InkWell(

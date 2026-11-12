@@ -157,19 +157,26 @@ class _SongCover extends StatelessWidget {
   }
 }
 
-/// Track number before the cover (album pages): soft colour from the card,
-/// right-aligned, empty when the file has no track number.
+/// Track number before the cover (album pages), empty when the file has no
+/// track number. Right-aligned in at least the prefix width on one line; the
+/// card's prefix FittedBox scales it down when a long number or a large text
+/// size makes it wider, so it never wraps or overflows.
 class _TrackNumber extends StatelessWidget {
   const _TrackNumber({required this.number});
 
   final int? number;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: KMediaCard.prefixWidth,
+  Widget build(BuildContext context) => ConstrainedBox(
+    constraints: const BoxConstraints(minWidth: KMediaCard.prefixWidth),
     child: Text(
       number == null ? '' : '$number',
       textAlign: TextAlign.right,
+      maxLines: 1,
+      softWrap: false,
+      // The card sets its soft colour (the tint-aware one) on IconTheme, not
+      // on the text style; this reads it from there. Depends on KMediaCard
+      // keeping that IconTheme around its content.
       style: Theme.of(context).textTheme.titleSmall
           ?.copyWith(color: IconTheme.of(context).color),
     ),

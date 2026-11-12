@@ -70,6 +70,18 @@ Future<void> _openMenu(WidgetTester tester, String title) async {
 String _location(UiHost host) =>
     host.router!.routerDelegate.currentConfiguration.uri.path;
 
+/// Whether the primary focus sits on the first menu row ("Play this track").
+bool _focusOnFirstRow(WidgetTester tester) {
+  final focused = FocusManager.instance.primaryFocus;
+  if (focused == null || focused is FocusScopeNode) return false;
+  var onFirstRow = false;
+  tester.element(find.text('Play this track')).visitAncestorElements((e) {
+    if (identical(e, focused.context)) onFirstRow = true;
+    return !onFirstRow;
+  });
+  return onFirstRow;
+}
+
 void main() {
   testWidgets('right click opens the menu with every entry', (tester) async {
     await _pump(tester);
@@ -228,14 +240,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pump(const Duration(milliseconds: 100));
-      expect(FocusManager.instance.primaryFocus, isNot(isA<FocusScopeNode>()));
-      final focused = FocusManager.instance.primaryFocus!.context!;
-      var onFirstRow = false;
-      tester.element(find.text('Play this track')).visitAncestorElements((e) {
-        if (identical(e, focused)) onFirstRow = true;
-        return !onFirstRow;
-      });
-      expect(onFirstRow, isTrue);
+      expect(_focusOnFirstRow(tester), isTrue);
     });
   }
 
@@ -254,7 +259,28 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Play this track'), findsOneWidget);
-    expect(FocusManager.instance.primaryFocus, isNot(isA<FocusScopeNode>()));
+    expect(_focusOnFirstRow(tester), isTrue);
+  });
+
+  testWidgets('a menu closed before it takes focus moves no focus behind it', (
+    tester,
+  ) async {
+    await _pump(tester);
+    final more = find.descendant(
+      of: find.byType(QueueRow).at(1),
+      matching: find.byIcon(KIcons.moreVert),
+    );
+    final node = Focus.of(tester.element(more));
+    node.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.contextMenu);
+    // Closed in the same frame, as Esc right after opening would.
+    Navigator.of(tester.element(more)).pop();
+    for (var i = 0; i < 15; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.text('Play this track'), findsNothing);
+    expect(FocusManager.instance.primaryFocus, same(node));
   });
 
   testWidgets('a pointer press on ⋮ leaves focus off the menu rows', (

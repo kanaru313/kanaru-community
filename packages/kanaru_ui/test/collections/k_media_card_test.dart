@@ -372,7 +372,7 @@ void main() {
               style: IconButton.styleFrom(
                 foregroundColor: Colors.red,
                 visualDensity: VisualDensity.compact,
-              ),
+              ).copyWith(iconColor: const WidgetStatePropertyAll(Colors.red)),
             ),
             child: Align(
               alignment: Alignment.topCenter,
@@ -394,6 +394,11 @@ void main() {
       expect(theme.style?.foregroundColor?.resolve({}), isNot(Colors.red));
       expect(
         theme.style?.foregroundColor?.resolve({}),
+        scheme.onPrimaryContainer.withValues(alpha: 0.8),
+      );
+      expect(theme.style?.iconColor?.resolve({}), isNot(Colors.red));
+      expect(
+        theme.style?.iconColor?.resolve({}),
         scheme.onPrimaryContainer.withValues(alpha: 0.8),
       );
       expect(theme.style?.visualDensity, VisualDensity.compact);

@@ -312,6 +312,12 @@ void main() {
         node.getSemanticsData().hasAction(SemanticsAction.longPress),
         isTrue,
       );
+      tester.semantics.performAction(
+        find.semantics.byPredicate((n) => n.id == node.id),
+        SemanticsAction.longPress,
+      );
+      await tester.pump();
+      expect(menuCalls, hasLength(1));
       handle.dispose();
     });
 

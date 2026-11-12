@@ -15,6 +15,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../support/fake_playback_commands.dart';
+import '../browse/support/library_fixture.dart';
 import 'menus/menu_pump.dart';
 import 'support/detail_fixture.dart';
 import 'support/library_harness.dart';
@@ -24,6 +25,8 @@ Future<LibraryHarness> _pump(
   WidgetTester tester, {
   double width = 390,
   FakePlaybackCommands? playback,
+  Widget Function(Widget)? header,
+  Future<void> Function(LibraryHarness h)? extra,
 }) async {
   final h = await pumpLibrary(
     tester,
@@ -31,8 +34,10 @@ Future<LibraryHarness> _pump(
     width: width,
     height: width > 1000 ? 800 : 844,
     playback: playback,
+    header: header,
   );
   await addAlbum(h, 'Blue', 'Zed', year: 2001);
+  await extra?.call(h);
   await addAlbum(h, 'Amber', 'Yan', year: 2010);
   await h.settle(tester);
   h.router.push(
@@ -287,11 +292,102 @@ void main() {
       );
       expect(number, findsOneWidget);
       expect(cover, findsOneWidget);
+      // The number sits inside the card's prefix box, before the cover with
+      // the gap between them.
+      final box = tester.getRect(
+        find.ancestor(
+          of: number,
+          matching: find.byWidgetPredicate(
+            (w) => w is SizedBox && w.width == KMediaCard.prefixWidth,
+          ),
+        ),
+      );
+      expect(tester.getTopRight(number).dx, lessThanOrEqualTo(box.right));
+      expect(tester.getTopLeft(number).dx, greaterThanOrEqualTo(box.left));
       expect(
-        tester.getTopRight(number).dx,
-        lessThanOrEqualTo(tester.getTopLeft(cover).dx),
+        tester.getTopLeft(cover).dx - tester.getTopRight(number).dx,
+        greaterThanOrEqualTo(KSpace.x2),
       );
     }
+    await unmountApp(tester);
+  });
+
+  testWidgets('a song without a track number leaves the prefix empty', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      extra: (h) => addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 'Blue/none.flac',
+        title: 'Blue none',
+        artists: ['Zed'],
+        album: 'Blue',
+        albumArtist: 'Zed',
+        year: 2001,
+        durationMs: 60000,
+      ),
+    );
+    final card = find.ancestor(
+      of: find.text('Blue none'),
+      matching: find.byType(KMediaCard),
+    );
+    expect(card, findsOneWidget);
+    final cover = find.descendant(of: card, matching: find.byType(TrackCover));
+    expect(cover, findsOneWidget);
+    // The prefix keeps its room: the cover starts after it.
+    expect(
+      tester.getTopLeft(cover).dx - tester.getTopLeft(card).dx,
+      greaterThanOrEqualTo(KMediaCard.prefixWidth),
+    );
+    expect(tester.takeException(), isNull);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a 3-digit track number at text scale 2 stays on one line', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      width: 360,
+      header: (page) => Builder(
+        builder: (context) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: const TextScaler.linear(2)),
+          child: page,
+        ),
+      ),
+      extra: (h) => addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 'Blue/123.flac',
+        title: 'Blue big',
+        artists: ['Zed'],
+        album: 'Blue',
+        albumArtist: 'Zed',
+        year: 2001,
+        trackNo: 123,
+        durationMs: 60000,
+      ),
+    );
+    final card = find.ancestor(
+      of: find.text('Blue big'),
+      matching: find.byType(KMediaCard),
+    );
+    final number = find.descendant(of: card, matching: find.text('123'));
+    expect(number, findsOneWidget);
+    final cover = find.descendant(of: card, matching: find.byType(TrackCover));
+    // One line: a scaled line is under 60 dp (two would be over 70), and the
+    // card's prefix scales it down to fit its box.
+    expect(tester.getSize(number).height, lessThan(60));
+    final shown = tester.getBottomRight(number) - tester.getTopLeft(number);
+    expect(shown.dx, lessThanOrEqualTo(KMediaCard.prefixWidth + 0.5));
+    expect(
+      tester.getTopRight(number).dx,
+      lessThanOrEqualTo(tester.getTopLeft(cover).dx),
+    );
+    expect(tester.takeException(), isNull);
     await unmountApp(tester);
   });
 
