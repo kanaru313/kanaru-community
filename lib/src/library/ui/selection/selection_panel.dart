@@ -275,18 +275,16 @@ class _SelectedListState extends ConsumerState<_SelectedList> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _last >= 0) _window.viewport(_first, _last);
     });
+    final sideInset = FormFactor.of(context) == FormFactor.desktop
+        ? KSpace.x2
+        : 0.0;
     return ReorderableListView.builder(
       scrollController: _scroll,
       buildDefaultDragHandles: false,
       itemExtent: extent,
       // Flat rows (mobile) pad themselves; desktop cards sit inside a small
       // inset.
-      padding: EdgeInsets.fromLTRB(
-        FormFactor.of(context) == FormFactor.desktop ? KSpace.x2 : 0,
-        0,
-        FormFactor.of(context) == FormFactor.desktop ? KSpace.x2 : 0,
-        KSpace.x2,
-      ),
+      padding: EdgeInsets.fromLTRB(sideInset, 0, sideInset, KSpace.x2),
       itemCount: ids.length,
       // `to` is already the index after the moved row left its place.
       onReorderItem: (from, to) =>

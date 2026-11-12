@@ -431,8 +431,9 @@ what the menu showed.
 - `menu_renderer.dart` maps a `MenuSpec` to `KMenuPage`s (`menu_header.dart`
   draws the picture and names). `KMenuPage` got `groupTitles` (headings) and
   `headerOpens` (the song header opens the song info page).
-- Triggers: a ⋮ on every tile, card and page (`LibraryMoreButton`, on desktop
-  shown on hover or focus), right click / Menu / Shift+F10 (`KContextRegion`),
+- Triggers: a ⋮ on every tile, card and page (`LibraryMoreButton`, a thin
+  wrapper of `KMoreButton`; always visible on rows, on hover or focus on grid
+  cards through `KCardCorner`), right click / Menu / Shift+F10 (`KContextRegion`),
   and a long press on an album, artist, genre, language or folder card on the
   mobile shell. A long press on a song selects it instead. The page ⋮ opens
   the same centred dialog on desktop.
@@ -805,6 +806,7 @@ callbacks come from the caller. Width-based layout lives here.
 | Widget | Notes |
 |---|---|
 | `KMediaCard` | Row card of song, album, artist and folder lists. Three text lines always reserved (`titleLines: 2` lets a long name wrap over the title and second line, which is then not shown, in the same height); slots in order `prefix` (40 dp box), `leading` (cover only), text, right column (`top` duration, `bottom` heart), optional round `onAction` (always on mobile, hover or focus on desktop), `accessory`, `trailing` (the ⋮, always visible); `style` (`KMediaCardStyle.auto` is flat full-width on mobile and a rounded card on desktop; lists use `libraryRowGutter`, 0 on mobile), `loading` placeholder bars at the same height; icon buttons take the card's ink on tinted rows; states `current`, `selected` (check over the leading), `dimmed`. `KMediaCard.extentOf(TextScaler)` is the exact height with its bottom gap, for fixed list extents (it assumes a 56 dp leading; `hasLeading: false` for cards without one); `currentLabel` gives the playing state a screen-reader value; a test pins it to the laid-out height at 1.0, 1.3 and 1.5 |
+| `KMoreButton`, `ViaKeyboardTracker` | The ⋮ button (`packages/kanaru_ui/.../widgets/k_more_button.dart`): `onOpen(viaKeyboard)` tells a menu opened by Enter or Space from a pointer or assistive tap; the tracker holds that flag and resets it on a pointer press. `LibraryMoreButton` wraps it with the library's tooltip |
 | `KListSortFilterBar` | `leading` group, criterion chip (label and direction arrow) and filter toggle. The chip is announced as `<tooltip>: <criterion>`; it passes an anchor key to `onSortPressed`; 52 tall on mobile, 48 on desktop |
 | `showKSortPopover<T>` | Anchored under the chip on both shells. Order buttons keep it open (`onAscendingChanged`); a criterion (`KSortCriterion`, shown as a `SelectionRow`) closes it and is the result. Criteria scroll, the order row stays. Root navigator; Esc closes. Its anchored layout copies the private one of `selection_picker.dart` (follow-up: export one helper) |
 | `KFilterField` | Outlined, 48 tall, autofocus; the cross and Esc clear the controller and call `onClose` |

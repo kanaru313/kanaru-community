@@ -314,6 +314,82 @@ void main() {
         soft,
       );
     });
+
+    testWidgets('the play button keeps its own colours in a tinted card', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          Align(
+            alignment: Alignment.topCenter,
+            child: KMediaCard(title: 'T', current: true, onAction: () {}),
+          ),
+        ),
+      );
+      final theme = IconButtonTheme.of(
+        tester.element(find.byIcon(KIcons.play)),
+      );
+      expect(theme.style?.foregroundColor, isNull);
+    });
+
+    testWidgets('an untinted card leaves icon buttons alone', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          IconButtonTheme(
+            data: IconButtonThemeData(
+              style: IconButton.styleFrom(foregroundColor: Colors.red),
+            ),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: KMediaCard(
+                title: 'T',
+                trailing: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(KIcons.moreVert),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      final theme = IconButtonTheme.of(
+        tester.element(find.byIcon(KIcons.moreVert)),
+      );
+      expect(theme.style?.foregroundColor?.resolve({}), Colors.red);
+    });
+
+    testWidgets('a tinted card keeps the inherited icon button style', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          IconButtonTheme(
+            data: IconButtonThemeData(
+              style: IconButton.styleFrom(visualDensity: VisualDensity.compact),
+            ),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: KMediaCard(
+                title: 'T',
+                selected: true,
+                trailing: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(KIcons.moreVert),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      final theme = IconButtonTheme.of(
+        tester.element(find.byIcon(KIcons.moreVert)),
+      );
+      expect(theme.style?.visualDensity, VisualDensity.compact);
+      expect(theme.style?.foregroundColor, isNotNull);
+    });
   });
 
   group('loading', () {
@@ -395,7 +471,7 @@ void main() {
 
     for (final style in KMediaCardStyle.values) {
       for (final scale in [1.0, 2.0]) {
-        testWidgets('height equals extentOf minus gap ($style, $scale x)', (
+        testWidgets('card height with gap equals extentOf ($style, $scale x)', (
           tester,
         ) async {
           useWindow(tester, const Size(400, 800));
@@ -406,6 +482,29 @@ void main() {
             closeTo(KMediaCard.extentOf(scaler), 0.5),
           );
         });
+
+        testWidgets(
+          'height holds with prefix, play and accessory ($style, $scale x)',
+          (tester) async {
+            useWindow(tester, const Size(700, 800));
+            await tester.pumpWidget(
+              host(
+                _card(
+                  style: style,
+                  prefix: const Icon(KIcons.heart),
+                  accessory: const Icon(KIcons.heart),
+                  onAction: () {},
+                ),
+                textScale: scale,
+              ),
+            );
+            final scaler = TextScaler.linear(scale);
+            expect(
+              tester.getSize(find.byType(KMediaCard)).height,
+              closeTo(KMediaCard.extentOf(scaler), 0.5),
+            );
+          },
+        );
       }
     }
   });

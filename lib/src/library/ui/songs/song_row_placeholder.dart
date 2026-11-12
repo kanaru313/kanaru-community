@@ -11,17 +11,12 @@ class SongRowPlaceholder extends StatelessWidget {
   final double extent;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: KMediaCard.gap),
-    child: SizedBox(
-      height: extent - KMediaCard.gap,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(14),
-        ),
-      ),
-    ),
+  Widget build(BuildContext context) => const KMediaCard(
+    title: '',
+    loading: true,
+    // An empty cover slot: same height as a song row (extentOf) and the bars
+    // start where a title would.
+    leading: SizedBox.shrink(),
   );
 }
 
@@ -37,17 +32,23 @@ class SongRowFailed extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    // Same look as KMediaCard: flat (no fill, 16 dp inset) on mobile, card on
+    // desktop.
+    final flat = FormFactor.of(context) == FormFactor.mobile;
     return Padding(
       padding: const EdgeInsets.only(bottom: KMediaCard.gap),
       child: SizedBox(
         height: extent - KMediaCard.gap,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: scheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(14),
+            color: flat ? null : scheme.surfaceContainerLow,
+            borderRadius: flat ? null : BorderRadius.circular(14),
           ),
           child: Padding(
-            padding: const EdgeInsets.only(left: KSpace.x4),
+            padding: EdgeInsets.only(
+              left: flat ? KLayout.gutterMobile : KSpace.x4,
+              right: flat ? KLayout.gutterMobile - KSpace.x2 : 0,
+            ),
             child: Row(
               children: [
                 Expanded(
