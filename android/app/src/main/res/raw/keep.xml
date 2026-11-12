@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- audio_service looks these drawables up by name at run time
+     (Resources.getIdentifier), so the resource shrinker sees no use and would
+     drop them from release builds: no small icon crashes the notification,
+     missing button icons leave blank buttons on Android 12 and older. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_kanaru,@drawable/audio_service_*" />
