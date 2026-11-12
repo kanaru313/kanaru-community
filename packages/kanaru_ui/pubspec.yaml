@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   material_ui: ^1.10.0
+  fluentui_system_icons: ^1.1.273
   gap: ^3.1.0
 
 dev_dependencies:
