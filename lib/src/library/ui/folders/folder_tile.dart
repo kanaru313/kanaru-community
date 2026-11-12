@@ -9,7 +9,7 @@ import '../menus/more_button.dart';
 import 'folder_art.dart';
 
 /// Row of a folder: [FolderArt], name (two lines for a chain), a dim line
-/// and the counts. Mobile ends the row with a chevron.
+/// and the counts. The row ends with the ⋮ button when it has a menu.
 class FolderTile extends StatelessWidget {
   const FolderTile({
     super.key,
@@ -45,7 +45,6 @@ class FolderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mobile = FormFactor.of(context) == FormFactor.mobile;
     final menu = onMenu;
     final card = KMediaCard(
       title: title,
@@ -53,18 +52,7 @@ class FolderTile extends StatelessWidget {
       line2: dimLine,
       line3: countLine,
       leading: leading ?? FolderArt(coverKey: coverKey, seed: seed),
-      trailing: menu == null
-          ? (mobile ? const Icon(KIcons.chevronRight) : null)
-          : mobile
-          // 04a: ⋮ and, on the mobile shell, a › as well.
-          ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                LibraryMoreButton(onPressed: menu),
-                const Icon(KIcons.chevronRight),
-              ],
-            )
-          : LibraryMoreButton(onPressed: menu),
+      trailing: menu == null ? null : LibraryMoreButton(onPressed: menu),
       onTap: onTap,
     );
     return menu == null

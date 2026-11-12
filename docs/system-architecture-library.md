@@ -708,7 +708,7 @@ routes in `ui/browse/library_routes.dart`.
   it. Entering from another page is `openLibraryPage`.
 - Tree level: sub-folder rows first (`FolderTile`: `FolderArt`, name, counts;
   a merged chain is one row of up to two lines and opens its last folder; a
-  chevron on mobile), then "Songs in this folder · N" and a `SongList` of the
+  ⋮ button only, no chevron), then "Songs in this folder · N" and a `SongList` of the
   direct songs by title. The flat list's rows (filtered, ordered by precomputed
   natural keys) are computed once per place, sort and filter by
   `flatRowsProvider`; the list and the bar's count read the same result. The sort chip orders the folders (name in natural

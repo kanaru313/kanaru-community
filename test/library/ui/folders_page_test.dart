@@ -367,7 +367,7 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('a folder row has its menu button and, on mobile, the arrow', (
+  testWidgets('a mobile folder row has its menu button and no chevron', (
     tester,
   ) async {
     await _single(tester);
@@ -378,7 +378,7 @@ void main() {
     );
     expect(
       find.descendant(of: tile, matching: find.byIcon(KIcons.chevronRight)),
-      findsOneWidget,
+      findsNothing,
     );
     await unmountApp(tester);
   });
