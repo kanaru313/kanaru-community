@@ -36,6 +36,18 @@ void main() {
     );
   });
 
+  testWidgets('placeholder draws a 56 dp loading cover, radius 10', (
+    tester,
+  ) async {
+    await _pump(tester, mobile, const SongRowPlaceholder());
+    expect(tester.widget<KCover>(find.byType(KCover)).loading, isTrue);
+    expect(tester.getSize(find.byType(KCover)), const Size(56, 56));
+    expect(
+      tester.widget<ClipRRect>(find.byType(ClipRRect)).borderRadius,
+      BorderRadius.circular(10),
+    );
+  });
+
   testWidgets('placeholder reserves the number prefix on album pages', (
     tester,
   ) async {

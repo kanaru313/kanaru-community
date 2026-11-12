@@ -8,7 +8,9 @@ import '../../tokens/k_layout.dart';
 import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
+import '../k_cover.dart';
 import '../k_gap.dart';
+import 'k_media_card_right_column.dart';
 import 'k_media_card_text.dart';
 
 /// Look of a [KMediaCard].
@@ -24,7 +26,8 @@ enum KMediaCardStyle {
   flat,
 }
 
-/// Row card of every media list: song, album, artist, folder.
+/// Row card of every media list: song, album track, queue, selection panel,
+/// album, artist, folder, genre and language.
 ///
 /// Slot order, left to right: [prefix] (track number or desktop drag handle) ·
 /// [leading] (cover, with the selection mark) · text · [top] / [bottom] ·
@@ -36,7 +39,9 @@ enum KMediaCardStyle {
 /// cards of a list are the same height; [extentOf] gives that height without
 /// laying anything out, in every [KMediaCardStyle]. Music-type-free: the
 /// caller passes the cover as [leading] and every string.
-/// With [loading] the lines show placeholder bars at the same height.
+/// With [loading] the lines show placeholder bars at the same height and a
+/// null [leading] becomes a cover-sized placeholder block (round with
+/// [circleLeading]).
 class KMediaCard extends StatefulWidget {
   const KMediaCard({
     super.key,
@@ -90,7 +95,10 @@ class KMediaCard extends StatefulWidget {
   /// Right column, upper slot (duration).
   final Widget? top;
 
-  /// Right column, lower slot (favourite button, up to 48 dp tall; it overlaps the upper slot's row, which holds a short label).
+  /// Right column, lower slot: an icon button (about a 20 dp icon). The pair is
+  /// laid out from its measured size, so a 48 dp mobile box, a 40 dp desktop
+  /// box and a bare icon all put the [top] text 2 dp above the icon; the text
+  /// is drawn into the box's empty upper padding and ignores the pointer.
   final Widget? bottom;
 
   /// After the play button, before [trailing] (for example the mobile drag
@@ -184,7 +192,16 @@ class _KMediaCardState extends State<KMediaCard> {
     // into the tinted style so a caller's density or size still applies.
     final ambientButtons = IconButtonTheme.of(context);
     final prefix = widget.prefix;
-    final leading = widget.leading;
+    // A loading card without a cover still draws a cover-sized block.
+    final leading =
+        widget.leading ??
+        (widget.loading
+            ? KCover.loading(
+                size: KMediaCard.coverSize,
+                radius: BorderRadius.circular(10),
+                circle: widget.circleLeading,
+              )
+            : null);
 
     final content = Padding(
       padding: EdgeInsets.symmetric(
@@ -236,7 +253,7 @@ class _KMediaCardState extends State<KMediaCard> {
           if (widget.top != null || widget.bottom != null) ...[
             const KGap(KSpace.x2),
             // As high as the cover, so a 48 dp button in [bottom] fits.
-            _RightColumn(
+            KMediaCardRightColumn(
               height: leading != null
                   ? math.max(
                       KMediaCard.coverSize,
@@ -245,8 +262,14 @@ class _KMediaCardState extends State<KMediaCard> {
                   : KMediaCardMetrics.textBlock(scaler),
               topLine:
                   scaler.scale(textTheme.labelSmall?.fontSize ?? 11) * 1.45,
-              topStyle: textTheme.labelSmall?.copyWith(color: soft),
-              top: widget.top,
+              top: widget.top == null
+                  ? null
+                  : IgnorePointer(
+                      child: DefaultTextStyle.merge(
+                        style: textTheme.labelSmall?.copyWith(color: soft),
+                        child: widget.top!,
+                      ),
+                    ),
               bottom: widget.bottom,
             ),
           ],
@@ -325,86 +348,6 @@ class _KMediaCardState extends State<KMediaCard> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Duration over heart, sharing one horizontal centre. The [bottom] button
-/// keeps its full 48 dp box (hit area); the [top] text is painted into that
-/// box's empty upper padding and ignores the pointer, so the two read as one
-/// tight pair while the tap target stays whole. The pair is centred in
-/// [height] as far as the 48 dp box allows (it must stay inside the column,
-/// or taps on its edge would miss).
-class _RightColumn extends StatelessWidget {
-  const _RightColumn({
-    required this.height,
-    required this.topLine,
-    required this.topStyle,
-    required this.top,
-    required this.bottom,
-  });
-
-  /// Heart icon size the pair is laid out for (`SongFavoriteButton`: 20).
-  static const double iconSize = 20;
-  static const double buttonSize = 48;
-
-  /// Space between the text bottom and the icon top.
-  static const double pairGap = 2;
-
-  final double height;
-
-  /// Height of one [top] line, to centre the pair.
-  final double topLine;
-  final TextStyle? topStyle;
-  final Widget? top;
-  final Widget? bottom;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasBoth = top != null && bottom != null;
-    // Where the text ends: centred pair, kept inside the 48 dp box.
-    final pair = topLine + pairGap + iconSize;
-    final double buttonTop = hasBoth
-        ? math.min(
-            math.max(
-              (height - pair) / 2 +
-                  topLine +
-                  pairGap -
-                  (buttonSize - iconSize) / 2,
-              0,
-            ),
-            height - buttonSize,
-          )
-        : 0;
-    final textBottom = buttonTop + (buttonSize - iconSize) / 2 - pairGap;
-    return SizedBox(
-      height: height,
-      child: Stack(
-        alignment: Alignment.topCenter,
-        clipBehavior: Clip.none,
-        children: [
-          if (bottom != null)
-            Align(
-              alignment: hasBoth ? Alignment.topCenter : Alignment.bottomCenter,
-              child: Padding(
-                padding: EdgeInsets.only(top: hasBoth ? buttonTop : 0),
-                child: bottom,
-              ),
-            ),
-          if (top != null)
-            Align(
-              alignment: hasBoth ? Alignment.bottomCenter : Alignment.topCenter,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: hasBoth ? height - textBottom : 0,
-                ),
-                child: IgnorePointer(
-                  child: DefaultTextStyle.merge(style: topStyle, child: top!),
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }

@@ -102,6 +102,7 @@ class _LanguagesBody extends ConsumerWidget {
           const SelectionInsetSliver(),
         ],
       ),
+      skeletonRows: true,
     );
   }
 }

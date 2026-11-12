@@ -81,39 +81,43 @@ class _GenresBody extends ConsumerWidget {
     final gutter = libraryGutter(context);
     final scaler = MediaQuery.textScalerOf(context);
     final scale = math.max(1.0, scaler.scale(1));
-    return collectionBody(context, ref.watch(genreListProvider(_key(input))), (
-      genres,
-    ) {
-      return CustomScrollView(
-        slivers: [
-          if (input.view == CollectionView.grid)
-            KCollectionGrid(
-              itemCount: genres.length,
-              mobileMinTileWidth: 150,
-              desktopMinTileWidth: 200,
-              tileAspect: 0,
-              footerExtent: KColorTile.minHeight * scale,
-              padding: EdgeInsets.symmetric(horizontal: gutter),
-              itemBuilder: (context, i) => _GenreCard(genre: genres[i]),
-            )
-          else
-            SliverPadding(
-              padding: EdgeInsets.symmetric(
-                horizontal: libraryRowGutter(context),
-              ),
-              sliver: SliverFixedExtentList(
-                itemExtent: KMediaCard.extentOf(scaler),
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) => GenreTile(genre: genres[i]),
-                  childCount: genres.length,
-                  addAutomaticKeepAlives: false,
+    return collectionBody(
+      context,
+      ref.watch(genreListProvider(_key(input))),
+      (genres) {
+        return CustomScrollView(
+          slivers: [
+            if (input.view == CollectionView.grid)
+              KCollectionGrid(
+                itemCount: genres.length,
+                mobileMinTileWidth: 150,
+                desktopMinTileWidth: 200,
+                tileAspect: 0,
+                footerExtent: KColorTile.minHeight * scale,
+                padding: EdgeInsets.symmetric(horizontal: gutter),
+                itemBuilder: (context, i) => _GenreCard(genre: genres[i]),
+              )
+            else
+              SliverPadding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: libraryRowGutter(context),
+                ),
+                sliver: SliverFixedExtentList(
+                  itemExtent: KMediaCard.extentOf(scaler),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => GenreTile(genre: genres[i]),
+                    childCount: genres.length,
+                    addAutomaticKeepAlives: false,
+                  ),
                 ),
               ),
-            ),
-          const SelectionInsetSliver(),
-        ],
-      );
-    });
+            const SelectionInsetSliver(),
+          ],
+        );
+      },
+      skeletonRows: input.view == CollectionView.list,
+      roundCover: false,
+    );
   }
 }
 

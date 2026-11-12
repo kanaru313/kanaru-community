@@ -10,6 +10,7 @@ export 'k_filter_field.dart';
 export 'k_grid_card.dart';
 export 'k_list_sort_filter_bar.dart';
 export 'k_media_card.dart';
+export 'k_media_card_skeleton_list.dart';
 export 'k_shelf.dart';
 export 'k_sort_popover.dart';
 export 'k_sub_tab_bar.dart';

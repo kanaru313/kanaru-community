@@ -1,4 +1,6 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart'
+    show debugDefaultTargetPlatformOverride;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -460,6 +462,52 @@ void main() {
     }
   });
 
+  group('loading cover', () {
+    testWidgets('no leading: 56 dp KCover.loading, radius 10, same height', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          const Align(
+            alignment: Alignment.topCenter,
+            child: KMediaCard(title: '', loading: true),
+          ),
+        ),
+      );
+      final cover = tester.widget<KCover>(find.byType(KCover));
+      expect(cover.loading, isTrue);
+      expect(cover.size, 56);
+      expect(tester.getSize(find.byType(KCover)), const Size(56, 56));
+      final clip = tester.widget<ClipRRect>(find.byType(ClipRRect));
+      expect(clip.borderRadius, BorderRadius.circular(10));
+      expect(
+        tester.getSize(find.byType(KMediaCard)).height,
+        closeTo(KMediaCard.extentOf(TextScaler.noScaling), 0.5),
+      );
+    });
+
+    testWidgets('circleLeading makes the skeleton round', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          const Align(
+            alignment: Alignment.topCenter,
+            child: KMediaCard(title: '', loading: true, circleLeading: true),
+          ),
+        ),
+      );
+      expect(find.byType(ClipOval), findsOneWidget);
+    });
+
+    testWidgets('a given leading wins over the skeleton', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(_card(loading: true)));
+      expect(find.byType(KCover), findsNothing);
+      expect(find.byKey(const Key('cover')), findsOneWidget);
+    });
+  });
+
   group('style', () {
     ShapeBorder? shape(WidgetTester tester) => tester
         .widget<Material>(
@@ -632,14 +680,17 @@ void main() {
       expect(heart.right, lessThanOrEqualTo(more.left));
     });
 
-    testWidgets('play to more spacing equals heart to more', (tester) async {
+    testWidgets('play to more is exactly the 48 dp of heart to more', (
+      tester,
+    ) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(host(song(onHeart: () {}, onAction: () {})));
       final more = tester.getCenter(find.byKey(const Key('more'))).dx;
       final play = tester.getRect(find.byIcon(KIcons.play));
       expect(more - play.center.dx, 48);
       final heart = tester.getCenter(find.byKey(const Key('heart'))).dx;
-      expect(more - heart, greaterThanOrEqualTo(48));
+      // Play and the heart (no play) each sit exactly 48 dp from more.
+      expect(more - heart, greaterThan(48));
     });
 
     for (final scale in [1.0, 2.0]) {
@@ -661,6 +712,205 @@ void main() {
       useWindow(tester, const Size(1300, 800));
       await tester.pumpWidget(host(song(onHeart: () {}, onAction: () {})));
       expect(actionOpacity(tester), 0);
+    });
+
+    Future<void> onPlatform(
+      WidgetTester tester,
+      TargetPlatform platform,
+      Future<void> Function() body,
+    ) async {
+      debugDefaultTargetPlatformOverride = platform;
+      try {
+        await body();
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    }
+
+    for (final platform in [TargetPlatform.android, TargetPlatform.linux]) {
+      for (final scale in [0.85, 1.0, 2.0]) {
+        testWidgets('pair sits 2 dp apart on $platform at $scale x', (
+          tester,
+        ) async {
+          await onPlatform(tester, platform, () async {
+            useWindow(tester, const Size(1300, 800));
+            await tester.pumpWidget(
+              host(song(onHeart: () {}), textScale: scale),
+            );
+            final text = tester.getRect(find.byKey(const Key('dur')));
+            final icon = tester.getRect(find.byIcon(KIcons.heart));
+            expect((text.center.dx - icon.center.dx).abs(), lessThan(1));
+            expect(icon.top - text.bottom, closeTo(2, 0.5));
+            final heart = tester.getRect(find.byKey(const Key('heart')));
+            expect(
+              heart.height,
+              platform == TargetPlatform.linux ? 40 : greaterThanOrEqualTo(48),
+            );
+          });
+        });
+      }
+    }
+
+    testWidgets('a bare Icon in bottom does not overlap the duration', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          const Align(
+            alignment: Alignment.topCenter,
+            child: KMediaCard(
+              title: 'T',
+              leading: ColoredBox(color: Color(0xFF888888)),
+              top: Text('5:53', key: Key('dur')),
+              bottom: Icon(KIcons.heart),
+            ),
+          ),
+        ),
+      );
+      final text = tester.getRect(find.byKey(const Key('dur')));
+      final icon = tester.getRect(find.byIcon(KIcons.heart));
+      expect(icon.top, greaterThanOrEqualTo(text.bottom));
+    });
+
+    testWidgets('top and bottom without a leading at 0.85 x lay out cleanly', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          Align(
+            alignment: Alignment.topCenter,
+            child: KMediaCard(
+              title: 'T',
+              top: const Text('5:53'),
+              bottom: IconButton(
+                onPressed: () {},
+                icon: const Icon(KIcons.heart),
+              ),
+            ),
+          ),
+          textScale: 0.85,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getSize(find.byType(KMediaCard)).height,
+        closeTo(
+          KMediaCard.extentOf(const TextScaler.linear(0.85), hasLeading: false),
+          0.5,
+        ),
+      );
+    });
+
+    testWidgets('the heart is at the same height with or without a duration', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      Future<double> heartTop(Widget? top) async {
+        await tester.pumpWidget(
+          host(
+            Align(
+              alignment: Alignment.topCenter,
+              child: KMediaCard(
+                title: 'T',
+                leading: const ColoredBox(color: Color(0xFF888888)),
+                top: top,
+                bottom: IconButton(
+                  key: const Key('heart'),
+                  iconSize: 20,
+                  onPressed: () {},
+                  icon: const Icon(KIcons.heart),
+                ),
+              ),
+            ),
+            textScale: 2.0,
+          ),
+        );
+        return tester.getTopLeft(find.byKey(const Key('heart'))).dy;
+      }
+
+      final with_ = await heartTop(const Text('5:53'));
+      final without = await heartTop(null);
+      expect(with_, closeTo(without, 0.5));
+    });
+
+    testWidgets('only a duration, only a heart: no overflow, inside the row', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      for (final only in ['top', 'bottom']) {
+        await tester.pumpWidget(
+          host(
+            Align(
+              alignment: Alignment.topCenter,
+              child: KMediaCard(
+                title: 'T',
+                leading: const ColoredBox(color: Color(0xFF888888)),
+                top: only == 'top' ? const Text('5:53') : null,
+                bottom: only == 'bottom'
+                    ? IconButton(
+                        onPressed: () {},
+                        icon: const Icon(KIcons.heart),
+                      )
+                    : null,
+              ),
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull);
+        final card = tester.getRect(find.byType(KMediaCard));
+        final item = only == 'top'
+            ? tester.getRect(find.text('5:53'))
+            : tester.getRect(find.byIcon(KIcons.heart));
+        expect(card.contains(item.center), isTrue);
+      }
+    });
+
+    testWidgets('a tap on the duration reaches the heart', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      var taps = 0;
+      await tester.pumpWidget(host(song(onHeart: () => taps++)));
+      await tester.tapAt(tester.getCenter(find.byKey(const Key('dur'))));
+      expect(taps, 1);
+    });
+
+    testWidgets('play shows on hover on desktop', (tester) async {
+      useWindow(tester, const Size(1300, 800));
+      await tester.pumpWidget(host(song(onHeart: () {}, onAction: () {})));
+      expect(actionOpacity(tester), 0);
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      addTearDown(mouse.removePointer);
+      await mouse.addPointer(location: Offset.zero);
+      await mouse.moveTo(tester.getCenter(find.byType(KMediaCard)));
+      await tester.pumpAndSettle();
+      expect(actionOpacity(tester), 1);
+    });
+  });
+
+  group('skeleton list', () {
+    testWidgets('fills the height with loading rows of extentOf', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(const KMediaCardSkeletonList()));
+      final extent = KMediaCard.extentOf(TextScaler.noScaling);
+      final cards = tester.widgetList<KMediaCard>(find.byType(KMediaCard));
+      expect(cards.every((c) => c.loading), isTrue);
+      final body = tester.getSize(find.byType(KMediaCardSkeletonList)).height;
+      expect(cards.length * extent, greaterThanOrEqualTo(body - extent));
+      expect(
+        tester.getSize(find.byType(KMediaCard).first).height,
+        closeTo(extent, 0.5),
+      );
+    });
+
+    testWidgets('roundCover draws circles', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(const KMediaCardSkeletonList(roundCover: true)),
+      );
+      expect(find.byType(ClipOval), findsWidgets);
     });
   });
 }

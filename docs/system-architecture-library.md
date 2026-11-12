@@ -576,7 +576,7 @@ Every call is awaited; a failure is logged and shows a snack bar.
   range it has **built** (`didFinishLayout`, cache extent included), calls
   `setIds` on every ids emission and `invalidate` on every
   `songRowsRevisionProvider` tick (a cover or title changed, the order did
-  not). A page not read yet is a same-size placeholder row (`SongRowPlaceholder`, shared
+  not). A page not read yet is a same-size placeholder row with a cover block (`SongRowPlaceholder`, shared
   with the selection panel); a page that failed shows "Could not load" with
   Retry in the place of its rows (`SongRowFailed`), and Retry reads again at
   once. The tap handler
@@ -615,6 +615,12 @@ Every call is awaited; a failure is logged and shows a snack bar.
   second part only when nonzero), and the note above the list. `languageDisplayName`: the native
   name, plus the name in the app language when it differs; an unknown code
   shows as the code.
+- Loading: in list view `collectionBody` shows skeleton rows
+  (`KMediaCardSkeletonList` in kanaru_ui: `KMediaCard(loading: true)`, as many as fill the
+  height, `ceil(height / extentOf)`; round cover for artists) until the first
+  answer. When the provider already has a value (cached, or a newer answer
+  loading) the rows draw at once, no skeleton frame. The grid shows nothing
+  until data arrives. Errors keep the "Could not load the list" message.
 - A tap on an item is `openLibraryPage` to the album, artist, genre or
   language location. A long press (mobile shell) opens the item's menu (see
   "Context menus"), not multi-select.
@@ -809,7 +815,7 @@ callbacks come from the caller. Width-based layout lives here.
 
 | Widget | Notes |
 |---|---|
-| `KMediaCard` | Row card of the song, album track, queue, selection panel, folder, genre, language, album and artist rows. Three text lines always reserved (`titleLines: 2` lets a long name wrap over the title and second line, which is then not shown, in the same height); slots in order `prefix` (40 dp box), `leading` (cover only), text, right column (`top` duration over `bottom` heart: same horizontal centre, text 2 dp above the 20 dp icon, the 48 dp heart box stays whole and the text ignores the pointer), no gap after the right column or play button (heart, play and ⋮ boxes sit 48 dp apart); `accessory` to `trailing` keeps 4 dp, optional round `onAction` (always on mobile, hover or focus on desktop), `accessory`, `trailing` (the ⋮, always visible); `style` (`KMediaCardStyle.auto` is flat full-width on mobile and a rounded card on desktop; lists use `libraryRowGutter`, 0 on mobile), `loading` placeholder bars at the same height; icon buttons take the card's ink on tinted rows; states `current`, `selected` (check over the leading), `dimmed`. `KMediaCard.extentOf(TextScaler)` is the exact height with its bottom gap, for fixed list extents (it assumes a 56 dp leading; `hasLeading: false` for cards without one); `currentLabel` gives the playing state a screen-reader value; a test pins it to the laid-out height at 1.0, 1.3 and 1.5 |
+| `KMediaCard` | Row card of the song, album track, queue, selection panel, folder, genre, language, album and artist rows. Three text lines always reserved (`titleLines: 2` lets a long name wrap over the title and second line, which is then not shown, in the same height); slots in order `prefix` (40 dp box), `leading` (cover only), text, right column (`KMediaCardRightColumn`: `top` duration over `bottom` heart, same horizontal centre, laid out from the measured `bottom` box so the text sits 2 dp above the visible icon with a 48 dp mobile button, a 40 dp desktop one or a bare icon; the heart box stays whole, the text ignores the pointer, and the heart has the same height with or without a duration), no gap after the right column or play button (heart, play and ⋮ boxes sit 48 dp apart); `accessory` to `trailing` keeps 4 dp, optional round `onAction` (always on mobile, hover or focus on desktop), `accessory`, `trailing` (the ⋮, always visible); `style` (`KMediaCardStyle.auto` is flat full-width on mobile and a rounded card on desktop; lists use `libraryRowGutter`, 0 on mobile), `loading` placeholder bars at the same height, and for a null `leading` a `KCover.loading` block (56 dp, radius 10, round with `circleLeading`; `KCover.loading` is the neutral `surfaceContainerHigh` box for "image not yet known", no icon, no shimmer; the seed placeholder stays for "no cover" or a failed image); icon buttons take the card's ink on tinted rows; states `current`, `selected` (check over the leading), `dimmed`. `KMediaCard.extentOf(TextScaler)` is the exact height with its bottom gap, for fixed list extents (it assumes a 56 dp leading; `hasLeading: false` for cards without one); `currentLabel` gives the playing state a screen-reader value; a test pins it to the laid-out height at 1.0, 1.3 and 1.5 |
 | `KMoreButton`, `ViaKeyboardTracker` | The ⋮ button (`packages/kanaru_ui/.../widgets/k_more_button.dart`): `onPressed({required bool viaKeyboard})` tells a menu opened by Enter or Space from a pointer or assistive tap; the tracker holds that flag and resets it on a pointer press. `LibraryMoreButton` wraps it with the library's tooltip |
 | `KListSortFilterBar` | `leading` group, criterion chip (label and direction arrow) and filter toggle. The chip is announced as `<tooltip>: <criterion>`; it passes an anchor key to `onSortPressed`; 52 tall on mobile, 48 on desktop |
 | `showKSortPopover<T>` | Anchored under the chip on both shells. Order buttons keep it open (`onAscendingChanged`); a criterion (`KSortCriterion`, shown as a `SelectionRow`) closes it and is the result. Criteria scroll, the order row stays. Root navigator; Esc closes. Its anchored layout copies the private one of `selection_picker.dart` (follow-up: export one helper) |

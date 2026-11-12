@@ -6,6 +6,7 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/list_view_prefs.dart';
 import '../../state/browse/list_prefs_providers.dart';
+import '../browse/library_list_scaffold.dart';
 import '../browse/library_view_toggle.dart';
 
 /// Left group of the bar of Albums, Artists, Genres and Languages: the count
@@ -68,13 +69,16 @@ class CollectionBarLeading extends ConsumerWidget {
 }
 
 /// The body of a list fed by a provider: the data while there is some (also
-/// while a newer answer loads), nothing before the first one, a short message
-/// when the query failed and there is nothing to show.
+/// while a newer answer loads), before the first answer skeleton rows when
+/// [skeletonRows] (list view; [roundCover] for artists) or nothing, a short
+/// message when the query failed and there is nothing to show.
 Widget collectionBody<T>(
   BuildContext context,
   AsyncValue<List<T>> async,
-  Widget Function(List<T> items) data,
-) {
+  Widget Function(List<T> items) data, {
+  bool skeletonRows = false,
+  bool roundCover = false,
+}) {
   final items = async.value;
   if (items != null) return data(items);
   if (async.hasError) {
@@ -83,6 +87,12 @@ Widget collectionBody<T>(
         AppLocalizations.of(context).libraryLoadFailed,
         style: TextStyle(color: Theme.of(context).colorScheme.error),
       ),
+    );
+  }
+  if (skeletonRows) {
+    return KMediaCardSkeletonList(
+      horizontalPadding: libraryRowGutter(context),
+      roundCover: roundCover,
     );
   }
   return const SizedBox.shrink();

@@ -72,38 +72,42 @@ class _ArtistsBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final gutter = libraryGutter(context);
     final scaler = MediaQuery.textScalerOf(context);
-    return collectionBody(context, ref.watch(artistListProvider(_key(input))), (
-      artists,
-    ) {
-      final grid = input.view == CollectionView.grid;
-      return CustomScrollView(
-        slivers: [
-          if (grid)
-            KCollectionGrid(
-              itemCount: artists.length,
-              mobileMinTileWidth: 100,
-              desktopMinTileWidth: 160,
-              footerExtent: KGridCard.footerExtent(scaler),
-              padding: EdgeInsets.symmetric(horizontal: gutter),
-              itemBuilder: (context, i) => ArtistCard(artist: artists[i]),
-            )
-          else
-            SliverPadding(
-              padding: EdgeInsets.symmetric(
-                horizontal: libraryRowGutter(context),
-              ),
-              sliver: SliverFixedExtentList(
-                itemExtent: KMediaCard.extentOf(scaler),
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) => ArtistTile(artist: artists[i]),
-                  childCount: artists.length,
-                  addAutomaticKeepAlives: false,
+    return collectionBody(
+      context,
+      ref.watch(artistListProvider(_key(input))),
+      (artists) {
+        final grid = input.view == CollectionView.grid;
+        return CustomScrollView(
+          slivers: [
+            if (grid)
+              KCollectionGrid(
+                itemCount: artists.length,
+                mobileMinTileWidth: 100,
+                desktopMinTileWidth: 160,
+                footerExtent: KGridCard.footerExtent(scaler),
+                padding: EdgeInsets.symmetric(horizontal: gutter),
+                itemBuilder: (context, i) => ArtistCard(artist: artists[i]),
+              )
+            else
+              SliverPadding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: libraryRowGutter(context),
+                ),
+                sliver: SliverFixedExtentList(
+                  itemExtent: KMediaCard.extentOf(scaler),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => ArtistTile(artist: artists[i]),
+                    childCount: artists.length,
+                    addAutomaticKeepAlives: false,
+                  ),
                 ),
               ),
-            ),
-          const SelectionInsetSliver(),
-        ],
-      );
-    });
+            const SelectionInsetSliver(),
+          ],
+        );
+      },
+      skeletonRows: input.view == CollectionView.list,
+      roundCover: true,
+    );
   }
 }

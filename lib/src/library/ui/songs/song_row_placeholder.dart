@@ -17,9 +17,6 @@ class SongRowPlaceholder extends StatelessWidget {
     title: '',
     loading: true,
     prefix: showNumber ? const SizedBox.shrink() : null,
-    // An empty cover slot: same height as a song row (extentOf) and the bars
-    // start where a title would.
-    leading: const SizedBox.shrink(),
   );
 }
 
