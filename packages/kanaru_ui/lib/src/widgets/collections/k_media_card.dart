@@ -8,6 +8,7 @@ import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
+import 'k_media_card_text.dart';
 
 /// Row card of every media list: song, album, artist, folder.
 ///
@@ -95,23 +96,15 @@ class KMediaCard extends StatefulWidget {
   static const double gap = KSpace.x1;
   static const double coverSize = 56;
   static const double _padV = 10;
-  static const double _titleSize = 15;
-  static const double _lineSize = 13;
-  static const double _lineHeight = 1.35;
   static const BorderRadius _radius = BorderRadius.all(Radius.circular(14));
-
-  static double _line(TextScaler s, double size) => s.scale(size) * _lineHeight;
-
-  static double _textBlock(TextScaler s) =>
-      _line(s, _titleSize) + 2 * _line(s, _lineSize);
 
   /// Laid-out height of a card plus [gap], for a fixed list extent.
   /// Assumes a 56 dp leading (cover or number column); pass
   /// `hasLeading: false` for cards without one.
   static double extentOf(TextScaler scaler, {bool hasLeading = true}) =>
-      (hasLeading && coverSize > _textBlock(scaler)
+      (hasLeading && coverSize > KMediaCardMetrics.textBlock(scaler)
           ? coverSize
-          : _textBlock(scaler)) +
+          : KMediaCardMetrics.textBlock(scaler)) +
       2 * _padV +
       gap;
 
@@ -145,29 +138,6 @@ class _KMediaCardState extends State<KMediaCard> {
         ? ink.withValues(alpha: 0.8)
         : scheme.onSurfaceVariant;
 
-    Widget line(String? text, double size, TextStyle? base, Color color) {
-      return SizedBox(
-        height: KMediaCard._line(scaler, size),
-        child: Align(
-          alignment: AlignmentDirectional.centerStart,
-          widthFactor: 1,
-          child: Text(
-            text ?? '',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: base?.copyWith(
-              fontSize: size,
-              height: KMediaCard._lineHeight,
-              color: color,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final titleStyle = textTheme.bodyLarge?.copyWith(
-      fontWeight: FontWeight.w600,
-    );
     final reveal = mobile || _engaged || widget.selected;
     final leading = widget.leading;
 
@@ -195,83 +165,14 @@ class _KMediaCardState extends State<KMediaCard> {
             const KGap(KSpace.x3),
           ],
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: widget.titleLines == 2
-                          ? SizedBox(
-                              height:
-                                  KMediaCard._line(
-                                    scaler,
-                                    KMediaCard._titleSize,
-                                  ) +
-                                  KMediaCard._line(
-                                    scaler,
-                                    KMediaCard._lineSize,
-                                  ),
-                              child: Align(
-                                alignment: AlignmentDirectional.centerStart,
-                                child: Text(
-                                  widget.title,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: titleStyle?.copyWith(
-                                    fontSize: KMediaCard._titleSize,
-                                    color: ink,
-                                    // Two lines in the room of a title and a
-                                    // second line.
-                                    height:
-                                        (KMediaCard._line(
-                                              scaler,
-                                              KMediaCard._titleSize,
-                                            ) +
-                                            KMediaCard._line(
-                                              scaler,
-                                              KMediaCard._lineSize,
-                                            )) /
-                                        (2 *
-                                            scaler.scale(
-                                              KMediaCard._titleSize,
-                                            )),
-                                  ),
-                                ),
-                              ),
-                            )
-                          : line(
-                              widget.title,
-                              KMediaCard._titleSize,
-                              titleStyle,
-                              ink,
-                            ),
-                    ),
-                    if (widget.titleLabel != null) ...[
-                      const KGap(KSpace.x2),
-                      Text(
-                        widget.titleLabel!,
-                        maxLines: 1,
-                        style: textTheme.labelSmall?.copyWith(color: soft),
-                      ),
-                    ],
-                  ],
-                ),
-                if (widget.titleLines != 2)
-                  line(
-                    widget.line2,
-                    KMediaCard._lineSize,
-                    textTheme.bodySmall,
-                    soft,
-                  ),
-                line(
-                  widget.line3,
-                  KMediaCard._lineSize,
-                  textTheme.bodySmall,
-                  soft,
-                ),
-              ],
+            child: KMediaCardText(
+              title: widget.title,
+              titleLabel: widget.titleLabel,
+              titleLines: widget.titleLines,
+              line2: widget.line2,
+              line3: widget.line3,
+              ink: ink,
+              soft: soft,
             ),
           ),
           if (widget.top != null || widget.bottom != null) ...[
@@ -281,9 +182,9 @@ class _KMediaCardState extends State<KMediaCard> {
               height: leading != null
                   ? math.max(
                       KMediaCard.coverSize,
-                      KMediaCard._textBlock(scaler),
+                      KMediaCardMetrics.textBlock(scaler),
                     )
-                  : KMediaCard._textBlock(scaler),
+                  : KMediaCardMetrics.textBlock(scaler),
               child: Stack(
                 alignment: Alignment.topRight,
                 children: [
