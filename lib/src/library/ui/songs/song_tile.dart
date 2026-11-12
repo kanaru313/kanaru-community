@@ -29,9 +29,10 @@ final _log = Logger('library.song_tile');
 /// favourite), so a change elsewhere rebuilds nothing else.
 ///
 /// [ids] is the list the row belongs to, as the list currently holds it, and
-/// [index] the row's place in it. With [showNumber] the track number
-/// is a badge in the cover's corner (album pages); with [showDetected] a song with a
-/// detected language carries a small "auto-detected" tag after its title.
+/// [index] the row's place in it. With [showNumber] the track number is a
+/// badge in the cover's end-bottom corner (album pages); with [showDetected] a
+/// song with a detected language carries a small "auto-detected" tag after its
+/// title.
 class SongTile extends ConsumerWidget {
   const SongTile({
     super.key,
@@ -87,7 +88,9 @@ class SongTile extends ConsumerWidget {
         leading: _SongCover(
           info: info,
           current: current,
-          number: showNumber && !selected ? info.trackNo : null,
+          number: showNumber && !selected && (info.trackNo ?? 0) > 0
+              ? info.trackNo
+              : null,
         ),
         top: duration == null ? null : Text(formatClock(duration)),
         bottom: SongFavoriteButton(trackId: info.id),
@@ -128,7 +131,7 @@ class _SongCover extends StatelessWidget {
   final TrackInfo info;
   final bool current;
 
-  /// Track number badge in the bottom-right corner; null shows none.
+  /// Track number badge in the bottom end corner; null shows none.
   final int? number;
 
   @override
@@ -159,8 +162,9 @@ class _SongCover extends StatelessWidget {
             ),
           ),
         if (number != null)
-          Positioned(
-            right: _badgeInset,
+          PositionedDirectional(
+            key: songTileBadgeKey,
+            end: _badgeInset,
             bottom: _badgeInset,
             child: _NumberBadge(number: number!),
           ),
@@ -170,6 +174,9 @@ class _SongCover extends StatelessWidget {
 }
 
 const double _badgeInset = 4;
+
+/// Key of the track number badge (tests find it by this).
+const Key songTileBadgeKey = ValueKey('song-tile-number-badge');
 
 /// Track number pill on a cover: round for one digit, wider for more.
 /// Text scale is clamped so the badge stays inside the 56 dp cover.
@@ -187,27 +194,26 @@ class _NumberBadge extends StatelessWidget {
       fontFeatures: const [FontFeature.tabularFigures()],
     );
     final height = scaler.scale(style.fontSize ?? 11) * (style.height ?? 1.3);
-    return ExcludeSemantics(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.scrim.withValues(alpha: 0.55),
-          borderRadius: BorderRadius.circular(height),
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minWidth: height, minHeight: height),
-          child: Padding(
-            // Round for one digit; more digits get side room.
-            padding: EdgeInsets.symmetric(horizontal: number > 9 ? 3 : 0),
-            child: Center(
-              widthFactor: 1,
-              heightFactor: 1,
-              child: Text(
-                '$number',
-                maxLines: 1,
-                softWrap: false,
-                textScaler: scaler,
-                style: style,
-              ),
+    // Not excluded: the number is read once, as text of the merged row.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.scrim.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(height),
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minWidth: height, minHeight: height),
+        child: Padding(
+          // Round for one digit; more digits get side room.
+          padding: EdgeInsets.symmetric(horizontal: number > 9 ? 3 : 0),
+          child: Center(
+            widthFactor: 1,
+            heightFactor: 1,
+            child: Text(
+              '$number',
+              maxLines: 1,
+              softWrap: false,
+              textScaler: scaler,
+              style: style,
             ),
           ),
         ),

@@ -286,13 +286,14 @@ void main() {
     });
   }
 
-  /// The badge: the [Positioned] around the number text of [card].
-  Finder badgeOf(Finder card, String n) => find
-      .ancestor(
-        of: find.descendant(of: card, matching: find.text(n)),
-        matching: find.byType(Positioned),
-      )
-      .first;
+  /// The badge of [card] (found by its key; [n] is checked as its text).
+  Finder badgeOf(Finder card, String n) => find.descendant(
+    of: card,
+    matching: find.byWidgetPredicate(
+      (w) => w.key == songTileBadgeKey,
+      description: 'badge $n',
+    ),
+  );
 
   Finder coverOf(Finder card) =>
       find.descendant(of: card, matching: find.byType(TrackCover));
@@ -313,8 +314,7 @@ void main() {
       expect(badge.bottom, closeTo(cover.bottom - 4, 0.01));
       // Round for one digit.
       expect(badge.width, closeTo(badge.height, 0.5));
-      // No prefix: the cover sits at the row inset like every list (a 40 dp
-      // prefix would push it past 56).
+      // The cover sits at the row inset like every list.
       expect(cover.left - tester.getTopLeft(card).dx, lessThan(20));
     }
     await unmountApp(tester);
@@ -340,6 +340,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     final card = find.byType(KMediaCard).first;
+    // Paint order: the badge comes after the overlay in the same Stack.
     final stack = find
         .ancestor(of: coverOf(card), matching: find.byType(Stack))
         .first;
@@ -347,7 +348,7 @@ void main() {
     final overlay = children.indexWhere(
       (w) => w is Positioned && w.left == 0 && w.right == 0,
     );
-    final badge = children.indexWhere((w) => w is Positioned && w.right == 4);
+    final badge = children.indexWhere((w) => w.key == songTileBadgeKey);
     expect(overlay, greaterThanOrEqualTo(0));
     expect(badge, greaterThan(overlay));
     expect(find.descendant(of: card, matching: find.text('1')), findsOne);
@@ -425,14 +426,58 @@ void main() {
       matching: find.byType(KMediaCard),
     );
     expect(card, findsOneWidget);
-    final stack = find
-        .ancestor(of: coverOf(card), matching: find.byType(Stack))
-        .first;
-    expect(
-      tester.widget<Stack>(stack).children.whereType<Positioned>(),
-      isEmpty,
-    );
+    expect(badgeOf(card, ''), findsNothing);
     expect(tester.takeException(), isNull);
+    await unmountApp(tester);
+  });
+
+  testWidgets('track number 0 or below has no badge', (tester) async {
+    await _pump(
+      tester,
+      extra: (h) => addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 'Blue/zero.flac',
+        title: 'Blue zero',
+        artists: ['Zed'],
+        album: 'Blue',
+        albumArtist: 'Zed',
+        year: 2001,
+        trackNo: 0,
+        durationMs: 60000,
+      ),
+    );
+    final card = find.ancestor(
+      of: find.text('Blue zero'),
+      matching: find.byType(KMediaCard),
+    );
+    expect(card, findsOneWidget);
+    expect(badgeOf(card, '0'), findsNothing);
+    await unmountApp(tester);
+  });
+
+  testWidgets('the badge sits at the left-bottom in RTL', (tester) async {
+    await _pump(
+      tester,
+      header: (page) =>
+          Directionality(textDirection: TextDirection.rtl, child: page),
+    );
+    final card = find.byType(KMediaCard).first;
+    final cover = tester.getRect(coverOf(card));
+    final badge = tester.getRect(badgeOf(card, '1'));
+    expect(badge.left, closeTo(cover.left + 4, 0.01));
+    expect(badge.bottom, closeTo(cover.bottom - 4, 0.01));
+    await unmountApp(tester);
+  });
+
+  testWidgets('the track number is read once by screen readers', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await _pump(tester);
+    // Exactly one semantics node of the page reads the first row's number.
+    expect(find.semantics.byLabel(RegExp(r'(^|\n)1($|\n)')), findsOne);
+    handle.dispose();
     await unmountApp(tester);
   });
 
