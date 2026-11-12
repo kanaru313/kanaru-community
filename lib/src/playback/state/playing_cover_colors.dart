@@ -1,3 +1,4 @@
+import 'package:flutter/painting.dart' show Color;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../media/domain/cover_colors.dart';
@@ -10,6 +11,17 @@ import 'track_info_providers.dart';
 /// known yet" and "known to be none".
 sealed class PlayingCoverColors {
   const PlayingCoverColors();
+
+  /// The tint palette: the cover's colours when known, else null.
+  List<Color>? get palette => switch (this) {
+    PlayingCoverColorsFound(:final colors) => [
+      for (final c in colors.palette) Color(c),
+    ],
+    _ => null,
+  };
+
+  /// Not settled yet: a tint keeps what it showed.
+  bool get isPending => this is PlayingCoverColorsPending;
 }
 
 /// Not settled: the player is not ready, the session restore is not done, or a

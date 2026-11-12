@@ -5,7 +5,7 @@ import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
 import '../../../../media/domain/cover_files.dart';
 import '../../../../media/domain/track_id.dart';
-import '../../../../playback/state/cover_providers.dart';
+import '../../../../playback/state/playing_cover_colors.dart';
 import '../../../../playback/state/playback_settings_providers.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/ui/flight_source.dart';
@@ -83,15 +83,10 @@ class _MobileNowPlayingState extends ConsumerState<MobileNowPlaying>
     final info = trackId == null
         ? null
         : ref.watch(trackInfoProvider(trackId)).value;
-    final colors = info?.coverKey == null
-        ? null
-        : ref.watch(coverColorsProvider(info!.coverKey!)).value;
-    Color? tint(int i) => colors == null || colors.palette.length <= i
-        ? null
-        : Color(colors.palette[i]);
+    final cover = ref.watch(playingCoverColorsProvider);
     return CoverTintBackground(
-      first: tint(0),
-      second: tint(1) ?? tint(0),
+      palette: cover.palette,
+      loading: cover.isPending,
       child: AnimatedBuilder(
         animation: _pull,
         builder: (context, child) =>

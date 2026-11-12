@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../playback/state/cover_providers.dart';
+import '../../../../playback/state/playing_cover_colors.dart';
 import '../../../../playback/state/now_playing_panel.dart';
-import '../../../../playback/state/playback_providers.dart';
-import '../../../../playback/state/track_info_providers.dart';
 import '../../state/desktop_view.dart';
 import 'desktop_now_playing_body.dart';
 import 'now_playing_auto_hide.dart';
@@ -91,28 +89,15 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
 
   @override
   Widget build(BuildContext context) {
-    final trackId = ref.watch(
-      nowPlayingProvider.select((n) => n.value?.trackId),
-    );
-    final coverKey = trackId == null
-        ? null
-        : ref.watch(
-            trackInfoProvider(trackId).select((i) => i.value?.coverKey),
-          );
-    final colors = coverKey == null
-        ? null
-        : ref.watch(coverColorsProvider(coverKey)).value;
-    Color? tint(int i) => colors == null || colors.palette.length <= i
-        ? null
-        : Color(colors.palette[i]);
+    final cover = ref.watch(playingCoverColorsProvider);
     final columnShown = ref.watch(coverColumnShownProvider);
     return FocusScope(
       child: Focus(
         focusNode: _focus,
         onKeyEvent: _onKey,
         child: CoverTintBackground(
-          first: tint(0),
-          second: tint(1) ?? tint(0),
+          palette: cover.palette,
+          loading: cover.isPending,
           child: Scaffold(
             backgroundColor: Colors.transparent,
             body: DesktopNowPlayingBody(
