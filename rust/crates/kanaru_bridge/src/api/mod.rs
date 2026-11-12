@@ -2,6 +2,7 @@
 
 pub mod covers;
 pub mod error;
+pub mod lyrics;
 pub mod native_info;
 pub mod tags;
 pub mod waveform;

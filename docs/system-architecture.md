@@ -29,6 +29,7 @@ main.dart
 - [system-architecture-playback.md](./system-architecture-playback.md): playback commands, now playing, queue, media controls (contract stub until lane B lands).
 - [system-architecture-library.md](./system-architecture-library.md): library keys, track info, lists, favorites, tabs, folders, exclusions (contract stub until lane C lands).
 - [system-architecture-library-scan.md](./system-architecture-library-scan.md): scanner, pass versions, covers, first run, Rust pools, custom cover import (lane A, merged).
+- [system-architecture-lyrics.md](./system-architecture-lyrics.md): embedded lyrics reader and its bridge API.
 
 ## Runtime pieces
 

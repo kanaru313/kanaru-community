@@ -5,6 +5,7 @@
 
 import 'api/covers.dart';
 import 'api/error.dart';
+import 'api/lyrics.dart';
 import 'api/native_info.dart';
 import 'api/tags.dart';
 import 'api/waveform.dart';
@@ -57,6 +58,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CoverColorsDto dco_decode_box_autoadd_cover_colors_dto(dynamic raw);
 
   @protected
+  EmbeddedLyricsDto dco_decode_box_autoadd_embedded_lyrics_dto(dynamic raw);
+
+  @protected
   int dco_decode_box_autoadd_i_32(dynamic raw);
 
   @protected
@@ -87,6 +91,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CoverStatusDto dco_decode_cover_status_dto(dynamic raw);
 
   @protected
+  EmbeddedLyricsDto dco_decode_embedded_lyrics_dto(dynamic raw);
+
+  @protected
   int dco_decode_i_32(dynamic raw);
 
   @protected
@@ -113,6 +120,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<SyncedLyricLineDto> dco_decode_list_synced_lyric_line_dto(dynamic raw);
+
+  @protected
   List<TagReadDto> dco_decode_list_tag_read_dto(dynamic raw);
 
   @protected
@@ -128,6 +138,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CoverColorsDto? dco_decode_opt_box_autoadd_cover_colors_dto(dynamic raw);
 
   @protected
+  EmbeddedLyricsDto? dco_decode_opt_box_autoadd_embedded_lyrics_dto(
+    dynamic raw,
+  );
+
+  @protected
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
 
   @protected
@@ -138,6 +153,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   TagFieldsDto? dco_decode_opt_box_autoadd_tag_fields_dto(dynamic raw);
+
+  @protected
+  SyncedLyricLineDto dco_decode_synced_lyric_line_dto(dynamic raw);
 
   @protected
   TagFieldsDto dco_decode_tag_fields_dto(dynamic raw);
@@ -190,6 +208,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  EmbeddedLyricsDto sse_decode_box_autoadd_embedded_lyrics_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
 
   @protected
@@ -224,6 +247,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CoverStatusDto sse_decode_cover_status_dto(SseDeserializer deserializer);
 
   @protected
+  EmbeddedLyricsDto sse_decode_embedded_lyrics_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
@@ -254,6 +282,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  List<SyncedLyricLineDto> sse_decode_list_synced_lyric_line_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<TagReadDto> sse_decode_list_tag_read_dto(SseDeserializer deserializer);
 
   @protected
@@ -271,6 +304,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  EmbeddedLyricsDto? sse_decode_opt_box_autoadd_embedded_lyrics_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
 
   @protected
@@ -283,6 +321,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   TagFieldsDto? sse_decode_opt_box_autoadd_tag_fields_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SyncedLyricLineDto sse_decode_synced_lyric_line_dto(
     SseDeserializer deserializer,
   );
 
@@ -337,6 +380,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_cover_colors_dto(
     CoverColorsDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_embedded_lyrics_dto(
+    EmbeddedLyricsDto self,
     SseSerializer serializer,
   );
 
@@ -398,6 +447,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_embedded_lyrics_dto(
+    EmbeddedLyricsDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
@@ -437,6 +492,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_synced_lyric_line_dto(
+    List<SyncedLyricLineDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_tag_read_dto(
     List<TagReadDto> self,
     SseSerializer serializer,
@@ -461,6 +522,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_embedded_lyrics_dto(
+    EmbeddedLyricsDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
 
   @protected
@@ -478,6 +545,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_tag_fields_dto(
     TagFieldsDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_synced_lyric_line_dto(
+    SyncedLyricLineDto self,
     SseSerializer serializer,
   );
 

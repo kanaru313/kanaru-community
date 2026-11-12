@@ -71,3 +71,34 @@ WavPack, and the non-ID3 tags of MP3/WAV/AIFF.
 - `SYLT` is read only from ID3v2 in MP3, WAV and AIFF; none in FLAC, MP4 or APE.
 - A broken ID3 tag drops plain text stored elsewhere in the same file.
 - lofty parses a whole `SYLT` frame before the caps apply.
+
+## Bridge API
+
+Code: `rust/crates/kanaru_bridge/src/api/lyrics.rs`; Dart binding
+`lib/src/rust/api/lyrics.dart` (generated).
+
+```rust
+pub fn read_embedded_lyrics(path: String) -> Result<Option<EmbeddedLyricsDto>, NativeError>
+```
+
+Plain (async on the Dart side), not `#[frb(sync)]`. DTOs:
+`EmbeddedLyricsDto { text: Option<String>, synced: Vec<SyncedLyricLineDto> }`,
+`SyncedLyricLineDto { time_ms: i64, text: String }`.
+
+The path is opened with `open_source` (regular files only), the extension
+(lowercased) is the format hint. `Ok(None)` means the file has no lyrics.
+
+| Error kind | Transient | When |
+|---|---|---|
+| `NotFound`, `PermissionDenied` | no | open failed |
+| `Unsupported` | no | not a regular file (directory, FIFO, device) or unknown format |
+| `Corrupt` | no | the content is corrupt (parse failed, or the sniff/rewind reported invalid data) |
+| `Io` | by cause | read failed; a truncated or empty file gives `UnexpectedEof` (permanent, not `Corrupt`); also: thread could not start, or ended without a result (both transient) |
+| `Panic` | no | the parser panicked (caught by `guarded`) |
+| `Timeout` | yes | no answer within 10 s |
+
+Threading: each call spawns its own thread (`kanaru-lyrics`, 8 MiB stack) and
+waits at most 10 s (`READ_TIMEOUT`). No pool and no in-flight cap. A read
+blocked in the kernel (dead network mount) cannot be cancelled; the caller gets
+`Timeout` and the stuck thread is left behind. This leak is accepted: a pool
+would let one dead mount block every later read.
