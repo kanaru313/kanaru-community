@@ -84,7 +84,7 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
   against a fake host (local only, skips without the variable; dev-dependencies
   `ureq` and `zip`); the feature `test-hooks` adds the `__testLog` and `__testPanic`
   script globals.
-- `kanaru_bridge`: `guard.rs` (`guarded`, panic to `NativeError`), `pools.rs`
+- `kanaru_bridge`: `guard.rs` (`guarded`, panic to `NativeError`; `install_hook`: one log line per guarded panic), `pools.rs`
   (`background`, `interactive`, `waveform`; 8 MiB stacks), `os.rs` (thread
   priority, the only `unsafe`), `source.rs` (`Source`, `open_source`: regular
   files only), `api/{native_info,error,tags,covers,waveform}.rs` (`native_versions`,
@@ -92,7 +92,7 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
   `api/lyrics.rs` (`read_embedded_lyrics`, own thread per call, 10 s timeout,
   at most 2 stuck threads; reader in `kanaru_media` `tags/lyrics_reader.rs` and `tags/lyrics_sylt.rs`).
   Plugin runtime: `runtime_holder.rs` (`runtime()`, the one `PluginRuntime` in a
-  `OnceLock`, sized from `pools::config::PLUGIN_*`, installs the quiet panic hook;
+  `OnceLock`, sized from `pools::config::PLUGIN_*`, installs the quiet panic hook (idempotent; `init_app` does it first);
   `existing()` lets `reset`/`cancel` skip a never-built runtime),
   `host_dart.rs` (`DartHost`: `PluginHost` over the Dart fetch and stream callbacks),
   `plugin_dto.rs` (conversions DTO and runtime types; an unknown variant of a

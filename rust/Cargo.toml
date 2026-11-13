@@ -61,6 +61,10 @@ whatlang = "=0.18.0"
 rayon = "=1.12.0"
 # Thread priority (setpriority) in the bridge's os.rs. Exact pin: matches the lockfile, bumped on purpose.
 libc = "=0.2.191"
+
+# The bridge's panic hook and Android logger level. Same version as the lock
+# (flutter_rust_bridge already pulls it in): no new package.
+log = "=0.4.35"
 # QuickJS binding for plugin scripts. `std` only: no `bindgen` here (the
 # runtime crate turns it on for Android, where rquickjs-sys ships no
 # bindings), no `loader`/`parallel`/`futures`. Exact pin: its sys crate bundles

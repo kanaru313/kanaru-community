@@ -18,6 +18,7 @@ kanaru_media.workspace = true
 kanaru_plugin_runtime.workspace = true
 rayon.workspace = true
 libc.workspace = true
+log.workspace = true
 
 # Not the workspace lints: generated FFI code needs `unsafe`. `unsafe` written
 # by hand belongs only in src/os.rs.

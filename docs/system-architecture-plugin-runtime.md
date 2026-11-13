@@ -10,7 +10,8 @@ Code: `rust/crates/kanaru_plugin_runtime/` (plain Rust, no FFI, no dependency on
 `PluginRuntime::new(RuntimeConfig)` owns everything: the JS worker pool, the
 streaming worker pool, the job registry and the late-answers drain. The crate has
 no process globals; the only global is the opt-in panic hook of
-`install_quiet_panic_hook`. The bridge keeps the one instance of the app in a
+`install_quiet_panic_hook`; the bridge's `init_app` installs it above its own
+guarded-panic hook (one log line per panic caught by `guarded`). The bridge keeps the one instance of the app in a
 `OnceLock` (`runtime_holder.rs`), sized from `pools::config::PLUGIN_*`; tests make
 their own.
 

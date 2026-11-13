@@ -883,6 +883,7 @@ dependencies = [
  "kanaru_media",
  "kanaru_plugin_runtime",
  "libc",
+ "log",
  "rayon",
 ]
 

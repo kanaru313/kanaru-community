@@ -175,7 +175,11 @@ rebase conflict, take either side and run the two commands again.
   and the late-answers drain belong to a `PluginRuntime` instance (`reset`
   cancels every job, `shutdown` and `Drop` join the threads). The bridge holds
   the one instance of the app; tests make their own. The only global is the
-  opt-in panic hook of `install_quiet_panic_hook`.
+  opt-in panic hook of `install_quiet_panic_hook`. The bridge's `init_app` (once
+  per process, a hot restart does not re-run it) chains two hooks: the quiet one
+  above, and `guard::install_hook` below it, which writes one line (message and
+  location, no backtrace) for a panic inside `guarded` and skips frb's capture and
+  std's print. The Android logger is set to Warn, not frb's Trace.
 - Second thread-per-call exception, next to the lyrics one: the compile-only
   check of a plugin script (`check_script`) runs on its own 8 MiB thread
   (`plugin-js-check`), because it is not a job of the worker pool and must
