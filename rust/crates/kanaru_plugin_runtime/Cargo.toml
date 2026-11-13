@@ -14,6 +14,11 @@ test-hooks = []
 [dependencies]
 rquickjs.workspace = true
 encoding_rs.workspace = true
+scraper.workspace = true
+html5ever.workspace = true
+ego-tree.workspace = true
+selectors.workspace = true
+cssparser.workspace = true
 
 # rquickjs-sys ships no Android bindings: generate them with bindgen there.
 [target.'cfg(target_os = "android")'.dependencies]
@@ -26,6 +31,8 @@ kanaru_plugin_runtime = { path = ".", features = ["test-hooks"] }
 ureq.workspace = true
 zip.workspace = true
 flate2.workspace = true
+# Bounded fuzz of Html (tests/html_fuzz.rs).
+proptest.workspace = true
 
 # Own lints instead of `workspace = true`: the workspace forbids `unsafe_code`,
 # this crate denies it and allows it in two files (the allocator and the raw

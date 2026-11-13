@@ -73,13 +73,13 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
   job on a fresh `Runtime` and `Context` and maps every ending to a `ScriptResult`;
   `globals/` has `Response`, `execute` and `load`; `host/` has the budget,
   `callback` (park and wake while waiting for the host), `console`, `sleep`,
-  `storage` (`localConfig`, `localStorage`) and `quiet` (panic hook); `js/` holds
+  `storage` (`localConfig`, `localStorage`), `html/` (`Html.parse`: bounded tree sink, selector matcher, `text()`, capped `outerHtml`) and `quiet` (panic hook); `js/` holds
   `host_prelude.js` and CryptoJS 4.2.0; `memory.rs` is the limited allocator and
   `compile_check.rs` the compile-only check (the two files with `unsafe`);
-  `limits.rs` has every cap; `types.rs` the runtime types. Not ported yet: `Html`. Integration tests are in
+  `limits.rs` has every cap; `types.rs` the runtime types. Integration tests are in
   `crates/kanaru_plugin_runtime/tests/` (`common/mod.rs` shares one runtime per test
   binary behind a lock; `contract`, `crypto`, `failure_data`, `limits`, `storage`,
-  `hostile`, `lifecycle`, `prelude_drift`, `fetch`, `stream_fetch`, `streaming_run`);
+  `hostile`, `lifecycle`, `prelude_drift`, `fetch`, `stream_fetch`, `streaming_run`, `html`, `html_memory`, `html_fuzz`);
   `compat_repo.rs` runs every plugin of a repository named by `KANARU_PLUGIN_REPO`
   against a fake host (local only, skips without the variable; dev-dependencies
   `ureq` and `zip`); the feature `test-hooks` adds the `__testLog` and `__testPanic`

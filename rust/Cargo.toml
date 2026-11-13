@@ -70,6 +70,22 @@ rquickjs = { version = "=0.14.0", default-features = false, features = ["std"] }
 # fetch natives). Exact pin: matches the version the old app shipped.
 encoding_rs = "=0.8.42"
 
+# `Html.parse` with CSS selectors (html5ever + selectors). `main` (a CLI
+# helper, getopts) and `errors` (parse error list) stay off. Pinned exact: the
+# tree and selector rules scripts see come from it.
+scraper = { version = "=0.29.0", default-features = false }
+# The same html5ever and ego-tree that scraper uses (no extra crate): the parse
+# is fed in chunks to stop a document that passes the node cap early, through
+# html5ever internals (`parser.tokenizer.sink.sink`) that only this exact
+# version has, and the text walk uses the tree's edge iterator. Keep both equal
+# to scraper's.
+html5ever = "=0.40.1"
+ego-tree = "=0.11.1"
+# Also the versions scraper 0.29 uses: `Html.parse` runs selector matching
+# itself (scraper's `select` cannot be interrupted) on a wrapper of `ElementRef`.
+selectors = "=0.41.0"
+cssparser = "=0.38.0"
+
 # Dev-only (the compat test of the runtime crate, which reads a plugin
 # repository over plain HTTP from localhost). Never linked into the bridge.
 # ureq: no TLS (plain HTTP only); zip: deflate only. Exact pins.
@@ -79,6 +95,10 @@ zip = { version = "=9.5.1", default-features = false, features = ["deflate-flate
 # Dev-only: makes `-p kanaru_plugin_runtime` compile alone (zip needs a flate2
 # backend; the workspace build gets it from other crates). Same version as the lock.
 flate2 = { version = "=1.1.11", default-features = false, features = ["rust_backend"] }
+
+# Dev-only: bounded fuzz of `Html` (tests/html_fuzz.rs). `std` only: no fork,
+# no timeout, no persisted failure files.
+proptest = { version = "=1.12.0", default-features = false, features = ["std"] }
 
 kanaru_media = { path = "crates/kanaru_media" }
 kanaru_plugin_runtime = { path = "crates/kanaru_plugin_runtime" }

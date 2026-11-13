@@ -1,19 +1,20 @@
 //! The host API a script sees besides `Response` and `load`: `sleep`,
-//! `localConfig`, `localStorage` and `console` / `Log` (and, as their natives
-//! arrive, `fetch`, `emit` and `Html`).
+//! `localConfig`, `localStorage`, `console` / `Log`, `fetch`, `emit` (streaming
+//! runs only) and `Html`.
 //!
 //! Rust provides small natives (`console.rs`, `sleep.rs`, `storage.rs`, ...);
 //! `js/host_prelude.js` wraps them into the script-facing objects and errors.
 //! The natives are handed to the prelude as an argument and never become
 //! globals, so a script cannot reach them directly. A native the prelude
-//! expects but the runtime does not install yet is simply absent: the script
-//! gets the prelude's own error when it calls the function.
+//! expects but a run does not install (`emit` outside streaming runs) is simply
+//! absent: the script gets the prelude's own error when it calls the function.
 
 pub mod budget;
 pub mod callback;
 pub mod console;
 pub mod emit;
 pub mod fetch;
+pub mod html;
 pub mod late;
 pub mod quiet;
 pub mod sleep;
@@ -188,9 +189,7 @@ impl HostEnv {
 /// Installs the host API in the context.
 ///
 /// Install order: storage, console, `fetch` (and with it the stream natives of
-/// a streaming run), sleep, `emit` (streaming runs only), `Html` (not ported yet).
-/// A later native takes its place at the marked seam, so the order stays that
-/// of the list.
+/// a streaming run), sleep, `emit` (streaming runs only), `Html`.
 pub fn install<'js>(ctx: &Ctx<'js>, env: HostEnv) -> rquickjs::Result<()> {
     let env = Rc::new(env);
     let natives = Object::new(ctx.clone())?;
@@ -201,7 +200,7 @@ pub fn install<'js>(ctx: &Ctx<'js>, env: HostEnv) -> rquickjs::Result<()> {
     if env.streaming.is_some() {
         emit::register(ctx, &natives, &env)?;
     }
-    // Seam: Html.
+    html::register(ctx, &natives, &env)?;
     let init: Function = eval_classic(ctx, HOST_PRELUDE, "<runtime>")?
         .into_function()
         .ok_or_else(|| Exception::throw_message(ctx, "host prelude did not return a function"))?;
