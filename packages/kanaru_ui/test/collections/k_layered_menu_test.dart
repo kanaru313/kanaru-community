@@ -91,13 +91,18 @@ KMenuPage _page({List<String>? log, int filler = 0, bool footer = true}) {
   );
 }
 
-Widget _opener(KMenuPage page, {bool viaKeyboard = false}) => Builder(
+Widget _opener(
+  KMenuPage page, {
+  bool viaKeyboard = false,
+  KMenuPage? initialPage,
+}) => Builder(
   builder: (context) => Align(
     alignment: Alignment.topLeft,
     child: TextButton(
       onPressed: () => showKLayeredMenu(
         context,
         root: page,
+        initialPage: initialPage,
         backTooltip: 'Back',
         viaKeyboard: viaKeyboard,
       ),
@@ -287,6 +292,28 @@ void main() {
     await tester.pumpAndSettle();
     expect(log, ['deep']);
     expect(find.byType(Dialog), findsNothing);
+  });
+
+  testWidgets('an initial page opens first; Back goes to the root', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    final info = KMenuPage(
+      title: 'Info page',
+      groups: [
+        [KMenuRow(title: 'Detail row', onTap: () {})],
+      ],
+    );
+    await tester.pumpWidget(host(_opener(_page(), initialPage: info)));
+    await _open(tester);
+    expect(find.text('Detail row'), findsOneWidget);
+    expect(find.text('Header'), findsNothing);
+    await tester.tap(find.byIcon(KIcons.back));
+    await tester.pumpAndSettle();
+    expect(find.text('Header'), findsOneWidget);
+    expect(find.text('Detail row'), findsNothing);
+    // Back on the root closes nothing by itself; Esc-free check: still open.
+    expect(find.byType(BottomSheet), findsOneWidget);
   });
 
   testWidgets('Esc on a sub-page goes back, on the root closes', (

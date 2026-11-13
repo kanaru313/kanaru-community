@@ -82,9 +82,11 @@ class _MobilePushLayoutState extends ConsumerState<MobilePushLayout>
             color: Theme.of(context).colorScheme.surfaceContainerLow,
             child: Stack(
               children: [
-                Offstage(
-                  offstage: t == 0 && !open,
-                  child: Align(
+                // Mounted only while open or moving: a closed sidebar costs
+                // nothing on a re-theme. It holds no state worth keeping (the
+                // nav list's scroll offset restarts at the top).
+                if (open || t > 0)
+                  Align(
                     alignment: Alignment.centerLeft,
                     child: Transform.translate(
                       offset: Offset(
@@ -94,7 +96,6 @@ class _MobilePushLayoutState extends ConsumerState<MobilePushLayout>
                       child: widget.sidebar,
                     ),
                   ),
-                ),
                 Transform.translate(
                   offset: Offset(MobileSidebar.width * t, 0),
                   child: ClipRRect(

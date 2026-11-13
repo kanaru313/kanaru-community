@@ -55,7 +55,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          components: clippy
+          components: clippy, rustfmt
 
       - uses: actions/cache@v4
         with:
@@ -66,8 +66,19 @@ jobs:
           key: cargo-${{ runner.os }}-${{ hashFiles('rust/Cargo.lock') }}
           restore-keys: cargo-${{ runner.os }}-
 
-      - name: Test
-        run: cargo test --manifest-path rust/Cargo.toml
+      # cargo-audit is built once (pinned to the flake version) and cached; the step is skipped when present.
+      - name: Cache cargo-audit
+        id: cargo-audit-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-audit
+          key: cargo-audit-${{ runner.os }}-0.22.2
 
-      - name: Clippy
-        run: cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
+      - name: Install cargo-audit
+        if: steps.cargo-audit-cache.outputs.cache-hit != 'true'
+        run: cargo install cargo-audit --locked --version 0.22.2
+
+      # fmt, unsafe grep, cargo audit, tests, clippy (no KANARU_PLUGIN_REPO: the
+      # plugin compat test skips itself).
+      - name: Rust gate
+        run: tool/check_rust

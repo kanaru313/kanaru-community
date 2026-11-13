@@ -1,6 +1,9 @@
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/media/domain/cover_colors.dart';
 import 'package:kanaru/src/media/domain/track_info.dart';
+import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
 import 'package:kanaru/src/playback/state/track_info_providers.dart';
 import 'package:kanaru/src/playback/ui/flight_source.dart';
 import 'package:kanaru/src/playback/ui/mini_player.dart';
@@ -34,6 +37,7 @@ Future<UiHost> _openFromNowPlaying(
   Size size = const Size(390, 844),
   double textScale = 1,
   bool withArtist = false,
+  List<Override> overrides = const [],
 }) async {
   final host = await pumpWithPlayer(
     tester,
@@ -42,6 +46,7 @@ Future<UiHost> _openFromNowPlaying(
     size: size,
     textScale: textScale,
     overrides: [
+      ...overrides,
       if (withArtist)
         trackInfoProvider.overrideWith(
           (ref, id) => Stream.value(
@@ -70,6 +75,42 @@ Future<UiHost> _openFromNowPlaying(
 Finder get _sheet => find.byType(QueueSheetPage);
 
 void main() {
+  testWidgets('the tint takes the playing cover palette', (tester) async {
+    await _openFromNowPlaying(
+      tester,
+      overrides: [
+        playingCoverColorsProvider.overrideWithValue(
+          const PlayingCoverColorsFound(
+            CoverColors(seed: 1, palette: [0xFFFF0000, 0xFF0000FF]),
+          ),
+        ),
+      ],
+    );
+    final tint = tester.widget<CoverTintBackground>(
+      find.descendant(of: _sheet, matching: find.byType(CoverTintBackground)),
+    );
+    expect(tint.palette, const [Color(0xFFFF0000), Color(0xFF0000FF)]);
+    expect(tint.loading, isFalse);
+  });
+
+  testWidgets('a pending cover leaves the tint loading, not faded out', (
+    tester,
+  ) async {
+    await _openFromNowPlaying(
+      tester,
+      overrides: [
+        playingCoverColorsProvider.overrideWithValue(
+          const PlayingCoverColorsPending(),
+        ),
+      ],
+    );
+    final tint = tester.widget<CoverTintBackground>(
+      find.descendant(of: _sheet, matching: find.byType(CoverTintBackground)),
+    );
+    expect(tint.palette, isNull);
+    expect(tint.loading, isTrue);
+  });
+
   for (final (size, scale) in [
     (const Size(390, 844), 1.0),
     (const Size(360, 640), 1.0),

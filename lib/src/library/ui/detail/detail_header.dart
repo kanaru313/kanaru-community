@@ -17,6 +17,7 @@ import '../collections/album_tile.dart';
 import '../collections/artist_tile.dart';
 import '../menus/menu_origin.dart';
 import '../menus/more_button.dart';
+import 'detail_tint.dart';
 
 /// Frame of a detail page: the page [title] in a header with a back button
 /// (no root slots, no ⋮), and the page below it. Back pops one page; a page
@@ -25,33 +26,52 @@ import '../menus/more_button.dart';
 /// The frame has its own solid ground: the detail layouts paint over a
 /// translucent tint, and the page under would show through while this one
 /// slides in.
+///
+/// A non-null [tint] washes the whole page, header band included, with the
+/// colours of the cover the page shows (see [watchDetailTint]); null leaves
+/// the page untinted.
 class DetailFrame extends StatelessWidget {
   const DetailFrame({
     super.key,
     required this.title,
     required this.fallback,
     required this.child,
+    this.tint,
   });
 
   final String title;
   final String fallback;
   final Widget child;
+  final DetailTint? tint;
 
   @override
   Widget build(BuildContext context) {
+    final page = Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
+          child: PageHeader(title: title, onBack: () => _back(context)),
+        ),
+        Expanded(child: KScrollInkSurface(child: child)),
+      ],
+    );
+    final t = tint;
     return ColoredBox(
       color: Theme.of(context).colorScheme.surface,
-      child: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
-            child: PageHeader(title: title, onBack: () => _back(context)),
-          ),
-          Expanded(child: KScrollInkSurface(child: child)),
-        ],
-      ),
+      child: t == null
+          ? page
+          : CoverTintBackground(
+              palette: t.palette,
+              loading: t.loading,
+              strength: _tintStrength,
+              fadeIn: true,
+              child: page,
+            ),
     );
   }
+
+  /// Half the tint of the player surfaces: a page is read for a long time.
+  static const double _tintStrength = 0.5;
 
   void _back(BuildContext context) {
     if (context.canPop()) {

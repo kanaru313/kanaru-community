@@ -33,14 +33,22 @@ export 'k_menu_row.dart'
 /// Otherwise no row shows a focus ring until an arrow key is pressed: Linux
 /// always reports the traditional highlight mode, so autofocus would draw a
 /// ring on a menu opened with the mouse.
+///
+/// [initialPage] opens the menu already on that sub-page (normally one that
+/// [root] reaches); Back from it returns to [root].
 Future<void> showKLayeredMenu(
   BuildContext context, {
   required KMenuPage root,
+  KMenuPage? initialPage,
   String? backTooltip,
   bool viaKeyboard = false,
 }) {
-  Widget body(BuildContext _) =>
-      _MenuBody(root: root, backTooltip: backTooltip, viaKeyboard: viaKeyboard);
+  Widget body(BuildContext _) => _MenuBody(
+    root: root,
+    initialPage: initialPage,
+    backTooltip: backTooltip,
+    viaKeyboard: viaKeyboard,
+  );
   if (FormFactor.of(context) == FormFactor.mobile) {
     final height = MediaQuery.sizeOf(context).height * 0.85;
     return showModalBottomSheet<void>(
@@ -84,11 +92,13 @@ abstract final class KLayeredMenu {
 class _MenuBody extends StatefulWidget {
   const _MenuBody({
     required this.root,
+    this.initialPage,
     this.backTooltip,
     this.viaKeyboard = false,
   });
 
   final KMenuPage root;
+  final KMenuPage? initialPage;
   final String? backTooltip;
   final bool viaKeyboard;
 
@@ -97,7 +107,7 @@ class _MenuBody extends StatefulWidget {
 }
 
 class _MenuBodyState extends State<_MenuBody> {
-  late final List<KMenuPage> _stack = [widget.root];
+  late final List<KMenuPage> _stack = [widget.root, ?widget.initialPage];
 
   /// Set when opened from the keyboard or once an arrow key was pressed; a
   /// pointer never sets it. Only then does a page focus its first row.
@@ -105,11 +115,11 @@ class _MenuBodyState extends State<_MenuBody> {
 
   /// Scroll offsets of the pages below the top one, so Back lands where the
   /// user left the parent page.
-  final List<double> _savedOffsets = [];
+  late final List<double> _savedOffsets = [if (widget.initialPage != null) 0];
 
   /// The row that opened each page of the stack above the root (null for the
   /// header), so Back in keyboard mode focuses it again.
-  final List<KMenuRow?> _openedBy = [];
+  late final List<KMenuRow?> _openedBy = [if (widget.initialPage != null) null];
   KMenuRow? _focusRow;
   final FocusNode _wrapper = FocusNode(debugLabel: 'KLayeredMenu');
   ScrollController _scroll = ScrollController();

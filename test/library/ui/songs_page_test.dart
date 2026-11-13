@@ -1,5 +1,11 @@
+import 'dart:ui' show GestureSettings, SemanticsAction;
+
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:drift/drift.dart' show Variable;
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/database/database.dart' show TrackStatus;
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/playback/data/track_info_rows.dart';
@@ -43,6 +49,7 @@ Finder _placeholders() => find.byWidgetPredicate(
 );
 
 void main() {
+  swipeTests();
   testWidgets('lists the songs by title with their count and plays a tap', (
     tester,
   ) async {
@@ -402,5 +409,248 @@ void main() {
     expect(find.text('Could not load the list'), findsNothing);
     expect(find.text('Song 0259'), findsOneWidget);
     await unmountApp(tester);
+  });
+}
+
+/// Songs page on the mobile shell with [titles], for the swipe tests.
+Future<(LibraryHarness, FakePlaybackCommands, List<int>)> _pumpSwipe(
+  WidgetTester tester,
+  List<String> titles, {
+  double width = 390,
+}) async {
+  final playback = FakePlaybackCommands();
+  final h = await pumpLibrary(
+    tester,
+    width: width,
+    initial: '/library/songs',
+    playback: playback,
+  );
+  final ids = await _addSongs(h, titles);
+  await h.settle(tester);
+  return (h, playback, ids);
+}
+
+Future<void> _dragRow(
+  WidgetTester tester,
+  String title,
+  double dx, {
+  PointerDeviceKind kind = PointerDeviceKind.touch,
+}) async {
+  final from = tester.getCenter(find.text(title));
+  final g = await tester.startGesture(from, kind: kind);
+  for (var i = 1; i <= 10; i++) {
+    await g.moveBy(Offset(dx / 10, 0));
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+  await g.up();
+  await tester.pump(const Duration(milliseconds: 100));
+}
+
+void swipeTests() {
+  group('song row swipes', () {
+    testWidgets('left past the trigger plays the song next, once', (
+      tester,
+    ) async {
+      final (h, playback, ids) = await _pumpSwipe(tester, ['Alpha', 'Bravo']);
+      await _dragRow(tester, 'Bravo', -200);
+      final call = playback.calls.single as PlayNextCall;
+      expect(call.tracks, [TrackId(ids[1])]);
+      await tester.pump();
+      expect(find.text('Playing next'), findsOneWidget);
+      expect(h.location, '/library/songs');
+      await tester.pump(const Duration(seconds: 5));
+      await unmountApp(tester);
+    });
+
+    testWidgets('right past the trigger opens the info page of the song', (
+      tester,
+    ) async {
+      final (h, playback, _) = await _pumpSwipe(tester, ['Alpha', 'Bravo']);
+      await _dragRow(tester, 'Alpha', 200);
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsOneWidget);
+      // On the info page: the back arrow is there, the footer is not.
+      expect(find.byIcon(KIcons.back), findsOneWidget);
+      expect(find.text('Play next'), findsNothing);
+      expect(playback.calls, isEmpty);
+      await tester.tap(find.byIcon(KIcons.back));
+      await tester.pumpAndSettle();
+      expect(find.text('Play next'), findsOneWidget);
+      expect(h.location, '/library/songs');
+      await unmountApp(tester);
+    });
+
+    testWidgets('below the trigger nothing happens', (tester) async {
+      final (_, playback, _) = await _pumpSwipe(tester, ['Alpha']);
+      await _dragRow(tester, 'Alpha', -30);
+      await _dragRow(tester, 'Alpha', 30);
+      expect(playback.calls, isEmpty);
+      expect(find.byType(BottomSheet), findsNothing);
+      await unmountApp(tester);
+    });
+
+    testWidgets('a swipe still works while a selection is active', (
+      tester,
+    ) async {
+      final (h, playback, ids) = await _pumpSwipe(tester, ['Alpha', 'Bravo']);
+      h.container
+          .read(librarySelectionProvider.notifier)
+          .toggle(TrackId(ids[0]));
+      await tester.pump();
+      await _dragRow(tester, 'Bravo', -200);
+      expect((playback.calls.single as PlayNextCall).tracks, [TrackId(ids[1])]);
+      expect(h.container.read(librarySelectionProvider).ids, [TrackId(ids[0])]);
+      await tester.pump(const Duration(seconds: 5));
+      await unmountApp(tester);
+    });
+
+    testWidgets('a song leaving above the dragged row runs no action', (
+      tester,
+    ) async {
+      final (h, playback, ids) = await _pumpSwipe(tester, [
+        'Alpha',
+        'Bravo',
+        'Charlie',
+      ]);
+      final g = await tester.startGesture(tester.getCenter(find.text('Bravo')));
+      for (var i = 0; i < 10; i++) {
+        await g.moveBy(const Offset(-20, 0));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      // Alpha goes missing: Bravo moves up and the already loaded Charlie
+      // takes the index the drag began on.
+      await h.db.customUpdate(
+        'UPDATE tracks SET status = ?, missing_since = ? WHERE id = ?',
+        variables: [
+          Variable.withString(TrackStatus.missing),
+          Variable.withInt(1),
+          Variable.withInt(ids[0]),
+        ],
+        updates: {h.db.tracks},
+      );
+      await h.settle(tester);
+      expect(h.songTitles(tester).first, 'Bravo');
+      await g.up();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(playback.calls, isEmpty);
+      await tester.pump(const Duration(seconds: 5));
+      await unmountApp(tester);
+    });
+
+    for (final slop in [null, 8.0]) {
+      testWidgets('a drag on a row keeps the sub-tab; off the row changes it '
+          '(touch slop ${slop ?? 'default'})', (tester) async {
+        final (h, _, _) = await _pumpSwipe(tester, ['Alpha']);
+        if (slop != null) {
+          tester.view.gestureSettings = GestureSettings(
+            physicalTouchSlop: slop,
+          );
+          addTearDown(tester.view.resetGestureSettings);
+        }
+        await _dragRow(tester, 'Alpha', -150);
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pumpAndSettle();
+        expect(h.location, '/library/songs');
+        // The empty area under the only row is not a song row.
+        await tester.dragFrom(const Offset(300, 700), const Offset(-200, 0));
+        await tester.pumpAndSettle();
+        expect(h.location, '/library/albums');
+        await unmountApp(tester);
+      });
+    }
+
+    testWidgets(
+      'a mouse drag left past the trigger plays next once (desktop)',
+      (tester) async {
+        final (_, playback, ids) = await _pumpSwipe(tester, [
+          'Alpha',
+          'Bravo',
+        ], width: 1280);
+        await _dragRow(tester, 'Bravo', -300, kind: PointerDeviceKind.mouse);
+        expect((playback.calls.single as PlayNextCall).tracks, [
+          TrackId(ids[1]),
+        ]);
+        await tester.pump(const Duration(seconds: 5));
+        await unmountApp(tester);
+      },
+    );
+
+    testWidgets('the labelled row node carries both swipe actions', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final (_, playback, ids) = await _pumpSwipe(tester, ['Alpha', 'Bravo']);
+      final node = tester.getSemantics(find.text('Alpha'));
+      expect(node.label, contains('Alpha'));
+      final labels = {
+        for (final id
+            in node.getSemanticsData().customSemanticsActionIds ?? <int>[])
+          CustomSemanticsAction.getAction(id)!.label,
+      };
+      expect(labels, containsAll(['Play next', 'Song info']));
+      tester.semantics.performAction(
+        find.semantics.byPredicate((n) => n.id == node.id),
+        SemanticsAction.customAction,
+        args: CustomSemanticsAction.getIdentifier(
+          const CustomSemanticsAction(label: 'Play next'),
+        ),
+      );
+      await tester.pump();
+      expect((playback.calls.single as PlayNextCall).tracks, [TrackId(ids[0])]);
+      await tester.pump(const Duration(seconds: 5));
+      handle.dispose();
+      await unmountApp(tester);
+    });
+
+    testWidgets('holding still selects the row', (tester) async {
+      final (h, _, ids) = await _pumpSwipe(tester, ['Alpha', 'Bravo']);
+      await tester.longPress(find.text('Bravo'));
+      await tester.pump();
+      expect(h.container.read(librarySelectionProvider).ids, [TrackId(ids[1])]);
+      await unmountApp(tester);
+    });
+
+    testWidgets(
+      'a mouse click with 2 px of jitter still plays the song (desktop)',
+      (tester) async {
+        final (_, playback, _) = await _pumpSwipe(tester, [
+          'Alpha',
+          'Bravo',
+        ], width: 1280);
+        final g = await tester.startGesture(
+          tester.getCenter(find.text('Alpha')),
+          kind: PointerDeviceKind.mouse,
+        );
+        await g.moveBy(const Offset(2, 0));
+        await g.up();
+        await tester.pump();
+        expect(playback.calls.single, isA<PlayTracksCall>());
+        await unmountApp(tester);
+      },
+    );
+
+    testWidgets('a mouse Shift-click with 2 px of jitter still selects', (
+      tester,
+    ) async {
+      final (h, playback, ids) = await _pumpSwipe(tester, [
+        'Alpha',
+        'Bravo',
+      ], width: 1280);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      addTearDown(() => tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft));
+      final g = await tester.startGesture(
+        tester.getCenter(find.text('Bravo')),
+        kind: PointerDeviceKind.mouse,
+      );
+      await g.moveBy(const Offset(2, 0));
+      await g.up();
+      await tester.pump();
+      expect(playback.calls, isEmpty);
+      expect(h.container.read(librarySelectionProvider).set, {TrackId(ids[1])});
+      await unmountApp(tester);
+    });
   });
 }

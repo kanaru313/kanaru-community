@@ -1,13 +1,11 @@
-import 'dart:io';
-
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../media/domain/cover_files.dart';
 import '../../../playback/ui/track_cover.dart';
-import '../../state/browse/custom_cover_index_providers.dart';
 import '../../state/custom_cover_providers.dart';
+import '../../state/shown_cover_provider.dart';
 
 /// Cover of an album (decorative: the title next to it names the item), in every place the app draws one (tile, grid card,
 /// page header). The one place that decides which picture an album shows:
@@ -32,6 +30,7 @@ class AlbumCover extends StatelessWidget {
     child: _ItemCover(
       item: (kind: CustomCoverKind.album, itemKey: itemKey),
       seed: itemKey,
+      automaticCoverKey: coverKey,
       dimension: dimension,
       radius: radius,
       automatic: TrackCover(
@@ -68,6 +67,7 @@ class ArtistCover extends StatelessWidget {
     child: _ItemCover(
       item: (kind: CustomCoverKind.artist, itemKey: itemKey),
       seed: name,
+      automaticCoverKey: coverKey,
       dimension: dimension,
       circle: true,
       automatic: TrackCover(
@@ -81,17 +81,20 @@ class ArtistCover extends StatelessWidget {
   );
 }
 
-/// Shows the user's picture of [item] when it has one, else [automatic].
+/// Shows the picture [shownCoverProvider] picks for [item]: the user's, else
+/// [automatic].
 ///
-/// A list holds thousands of these, so the check is the per-kind index (one
-/// stream, `select`ed to this item's answer). Only an item that has a custom
-/// cover opens the per-item file stream. The file goes through [KCover], which
-/// decodes at display size. While the file resolves, when it is gone and when
-/// it cannot be decoded, [automatic] is on screen.
+/// A list holds thousands of these, so the provider selects from one index
+/// stream per kind; only an item with a custom cover opens its file streams.
+/// While the answer is unknown the cover skeleton is drawn (never the source
+/// cover first). The file goes through [KCover], which decodes at display
+/// size. A file that exists but cannot be decoded falls back to [automatic] at
+/// paint time (the provider only knows whether the file exists).
 class _ItemCover extends ConsumerWidget {
   const _ItemCover({
     required this.item,
     required this.seed,
+    required this.automaticCoverKey,
     required this.dimension,
     required this.automatic,
     this.radius,
@@ -100,6 +103,7 @@ class _ItemCover extends ConsumerWidget {
 
   final CustomCoverItem item;
   final String seed;
+  final String? automaticCoverKey;
   final double dimension;
   final BorderRadius? radius;
   final bool circle;
@@ -107,17 +111,24 @@ class _ItemCover extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!ref.watch(hasCustomCoverProvider(item))) return automatic;
-    final File? file = ref.watch(customCoverFileProvider(item)).value;
-    if (file == null) return automatic;
-    return KCover(
-      image: FileImage(file),
-      size: dimension,
-      placeholderSeed: seed,
-      radius: radius,
-      circle: circle,
-      // A file that exists but cannot be decoded shows the source cover.
-      errorFallback: automatic,
+    final shown = ref.watch(
+      shownCoverProvider((item: item, automaticCoverKey: automaticCoverKey)),
     );
+    return switch (shown) {
+      ShownCoverLoading() => KCover.loading(
+        size: dimension,
+        radius: radius,
+        circle: circle,
+      ),
+      ShownAutomaticCover() => automatic,
+      ShownCustomCover(:final file) => KCover(
+        image: FileImage(file),
+        size: dimension,
+        placeholderSeed: seed,
+        radius: radius,
+        circle: circle,
+        errorFallback: automatic,
+      ),
+    };
   }
 }

@@ -3,6 +3,8 @@
 library;
 
 export 'cover_tint_background.dart';
+export 'readable_gradient_stops.dart'
+    show maxGradientStops, readableGradientStops;
 export 'k_count_stepper.dart';
 export 'k_menu_width.dart';
 export 'k_overflow_tooltip.dart';

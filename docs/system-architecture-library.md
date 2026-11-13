@@ -420,7 +420,13 @@ what the menu showed.
 ### Opening and acting
 
 - `open_menu.dart`: `openSongMenu`, `openAlbumMenu`, `openArtistMenu`,
-  `openGenreMenu`, `openLanguageMenu`, `openFolderMenu`, `openSelectionMenu`.
+  `openGenreMenu`, `openLanguageMenu`, `openFolderMenu`, `openSelectionMenu`,
+  and `openSongInfo` (the song menu opened straight on its info page, the page
+  its header opens, through the same load guard and limit; Back goes to the
+  song menu). A song that left the library (`TrackGoneException` from
+  `songMenuSpec`) is the toast `libraryNotFoundMessage`, not a failed load;
+  this holds for every song menu (⋮, right click, Menu key, selection panel
+  ⋮), not only `openSongInfo`.
   Each loads its data once (`menu_loaders.dart`: direct one-shot reads), builds
   the spec, and shows it with `showKLayeredMenu` on the root navigator (sheet
   on the mobile shell, centred dialog on desktop). A second tap while one is
@@ -474,6 +480,12 @@ between screens.
   scroll position (fixed row height, two spare rows each side) as well as from
   the first build, since a scroll does not rebuild the state. The length is the chunked read of
   `selectionSummaryProvider`, also what drops tracks that vanished.
+  Rows of the open panel are wrapped in `KSwipeActions.remove` (label
+  "Deselect"): letting go after 70 % of the width plays the slide-out
+  (`KMotion.fast`), then calls `LibrarySelection.remove(id)`. There is no toast
+  and no undo, the drag reveals no icon (an icon halfway would read as already
+  removed), the row fades like the queue's (1.0 to 0.3 at 70 %, then to 0 as it slides out), and a drag on the
+  handle still wins over the swipe.
 - Back and Esc (`SelectionBackScope`): they collapse the panel and never clear
   the selection (only the panel's ✕ does). Back is a `BackButtonListener`: the
   root dispatcher asks listeners before the router pops a sheet or dialog, so
@@ -561,7 +573,16 @@ Every call is awaited; a failure is logged and shows a snack bar.
 - `SongTile(info, index, ids, playContext, {showNumber})` on `KMediaCard`:
   cover (`TrackCover`, seed album key else title), title, artists joined with
   ", " (else the artist tag), `album • year`, duration `m:ss` over the heart.
-  Tap = `playTracks(ids, startIndex: index)`. The playing row is
+  Tap = `playTracks(ids, startIndex: index)`. The whole row (inside its
+  `KContextRegion`) is a `KSwipeActions.capped`: swipe left = "Play next"
+  (`MenuActionRunner.playNext([id])`, same call and toast as the menu footer),
+  swipe right = `openSongInfo`; both stay on while a selection is active. The moving row fades from 1.0 to 0.5 at
+  the trigger (flat beyond) and is exactly 1.0 again at rest. The
+  song list keys every row by track id, so a row that now holds another song
+  starts over and a swipe begun on the old song never acts on the new one. A
+  drag that starts on a song row belongs to the row (the sub-tab swipe of
+  `LibraryListScaffold` is a plain horizontal drag behind it); a drag anywhere
+  else (list bar, empty area) still changes the sub-tab. The playing row is
   `primaryContainer` with the equalizer over the cover. With `showNumber`
   (album pages) the track number is a badge in the cover's bottom-right corner
   (4 dp inset, `scrim` at 55 % with white `labelSmall` tabular text, text scale
@@ -682,9 +703,9 @@ routes in `ui/browse/library_routes.dart`.
 - Album: `KDetailLayout` (wide from 840 px of page width) with `KDetailHero`:
   cover and, bottom aligned or under it, the album artist (primary colour, opens
   the artist page; plain text for the unknown artist), the year and the
-  buttons. The page tint is `coverColorsProvider(coverKey).seed`; an album with a custom cover has no tint (its palette is not extracted yet). Rows are
+  buttons. The page is tinted (see "Detail page tint"). Rows are
   `SongTile(showNumber: true)`; no disc headers and no "other albums".
-- Artist: round photo (not faded), `N albums` (own; the line is left out when
+- Artist: round photo (not faded; the page is tinted like an album), `N albums` (own; the line is left out when
   the artist owns none), shelves Albums (newest
   first) and Appears on, then the songs. A shelf with no item and the songs
   part of an artist with no `track_artists` row are left out. Play and shuffle
@@ -712,16 +733,39 @@ routes in `ui/browse/library_routes.dart`.
   tracks (`coverKey`), else a placeholder. `itemKey` is the encoded `AlbumKey` /
   `ArtistKey`. A list holds thousands of covers, so they never watch the
   per-item `customCoverFileProvider` (`state/custom_cover_providers.dart`)
-  directly: `hasCustomCoverProvider` selects
+  directly: `shownCoverProvider` (`state/shown_cover_provider.dart`) selects
   the item's answer from ONE stream per kind (`customCoverIndexProvider`, in
   `state/browse/custom_cover_index_providers.dart`, a watch of the item keys in
-  `custom_covers`), and only an item in that set watches its file. While the
-  file resolves, or when it is gone (a restored backup), the automatic cover
-  stays. `customCoverFileProvider` stays loaded 5 s after its last listener
+  `custom_covers`), and only an item in that set watches its file. The answer
+  is `ShownCoverLoading` (index or file not read yet: the cover is the
+  `KCover.loading` skeleton, never the automatic cover first),
+  `ShownCustomCover(coverKey, file)` (the key is read from the file's path, so
+  picture and colours come from one stream), or `ShownAutomaticCover(coverKey?)`
+  (no custom cover, its file is gone, or the index failed: logged once). When
+  the answer becomes unknown after it was known (a cover just chosen on an open
+  page) the last answer stays until the new one is ready: no skeleton flash. `customCoverFileProvider` stays loaded 5 s after its last listener
   (`customCoverKeepAliveProvider`, 5 s; tests shorten it), so a tile scrolled back in within that time
   shows its custom cover at once instead of flashing the automatic one. A file
   that exists but cannot be decoded shows the automatic cover too (passed to
-  `KCover` as `errorFallback`).
+  `KCover` as `errorFallback`: only the picture falls back at paint time, the
+  provider knows whether the file exists, not whether it decodes).
+
+### Detail page tint
+
+`ui/detail/detail_tint.dart`: `watchDetailTint(ref, item, automaticCoverKey)`
+resolves `shownCoverProvider` (the same rule as the cover widget) and returns
+the colours of the shown image from `coverColorsProvider`: the custom cover's
+(written at import), else the automatic cover's (album: track cover; artist:
+`coverKey`, else the cover of its first own album). While the image or its
+colours are unknown it is `loading` with no palette; a cover with no colours
+(near-gray) or no cover gives no tint. `DetailFrame(tint:)` wraps the whole
+page, header band included, in `CoverTintBackground(strength: 0.5, fadeIn:
+true)`: nothing is drawn until the colours are known, then a 300 ms fade-in;
+choosing or removing the custom cover on an open page tweens (the old colours
+stay while `loading`). Sticky bars keep `KBlurredBar`. Group pages pass no
+tint. `KDetailLayout` draws no background. The album artist link uses
+`primary` (follows the playing cover), so on a tinted page it can fall just
+under 4.5:1; the tint is not changed for it.
 
 ## Folders tab
 
@@ -802,7 +846,9 @@ The app l10n key `emptyLibrary` is unused (the empty state uses `libraryEmptyMes
 `SelectionRow`, `showSelectionPicker` (`options`, `selected`, `title`, `header`,
 `confirm`, `anchor`), `showKSheet`, `showAppSnackBar`, `showKDialog`,
 `confirmAction`, `KPressable`, `KCover`, `KEqualizerIcon`, `KContextRegion`,
-`KListRow`, `KChip`, `PageHeaderScope`, `KIcons`. A width-based layout (for
+`KListRow`, `KChip`, `PageHeaderScope`, `KIcons`, `KSwipeActions`
+(`.capped` for song rows, `.remove` for the queue and the selection panel; with
+`KSwipeAction` and `kSwipeDevices`). A width-based layout (for
 example the album page at 840 px and up) goes into a `collections` widget of
 `kanaru_ui`, not into `library/ui`.
 
@@ -857,10 +903,10 @@ Sizes that the mockups give and the tokens lack (card radius 14, panel radius
 
 | Widget | Notes |
 |---|---|
-| `KDetailLayout` | `header` plus list `slivers`. Under 840 px of page width (measured on the page, not the window) the header sits above the list; from 840 the header is a fixed 320 column, bottom aligned and scrolling on its own when the window is short. `tint` washes the background (alpha at most 0.18 light, 0.24 dark) |
+| `KDetailLayout` | `header` plus list `slivers`. Under 840 px of page width (measured on the page, not the window) the header sits above the list; from 840 the header is a fixed 320 column, bottom aligned and scrolling on its own when the window is short. Draws no background: a page tints itself by wrapping the layout in `CoverTintBackground` (see "Detail page tint") |
 | `KDetailHero` | Top of an album or artist page for the `header` slot: narrow = 132 cover on the left, text and buttons aligned to its bottom; wide (asked of `KDetailLayout.isWide`) = cover as wide as the column, faded at the bottom and right edges (a round photo is not), text below |
 | `KBlurredBar`, `KStickyBarSliver` | Translucent blurred background and a pinned sliver bar over it, so the tint is not cut by a flat bar. Blur only on these bars |
-| `showKLayeredMenu` | `KMenuPage` (header, groups of `KMenuRow`, footer of two `KMenuButton`s, note). A row either runs `onTap`, opens a sub-page (`opens`), or folds chips (`chips`); `soonLabel` or `enabled: false` dims it and makes it inert; `danger`, `proLabel`, `trailing` icon button. A chosen row closes the menu first and then runs its callback. Back, the arrow and Esc on a sub-page return one page; on the root they close |
+| `showKLayeredMenu` | `KMenuPage` (optional `initialPage`: opens on that sub-page, Back goes to the root; header, groups of `KMenuRow`, footer of two `KMenuButton`s, note). A row either runs `onTap`, opens a sub-page (`opens`), or folds chips (`chips`); `soonLabel` or `enabled: false` dims it and makes it inert; `danger`, `proLabel`, `trailing` icon button. A chosen row closes the menu first and then runs its callback. Back, the arrow and Esc on a sub-page return one page; on the root they close |
 | `KMenuRow.leading` | A picture (an album cover) in place of the row's icon |
 | `KMenuPage` extras | `groupTitles` (a heading above each group; an empty group loses its heading) and `headerOpens` (the header becomes a button with a `›` that shows that page) |
 | `KSelectionPanel` | Frame of the multi-select panel: `header`, optional expanded `body` clamped to 460 dp (`bodyHeight`), no state. Mobile: full width minus 8, radius 20. Desktop: 440 wide, centred, radius 22, shadow. The frame is only as high as its content, so a full-width slot does not take taps beside it |

@@ -7,6 +7,7 @@ import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:kanaru/src/playback/domain/now_playing.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
 import 'package:kanaru/src/playback/state/player_controller.dart';
+import 'package:kanaru/src/playback/state/player_ready.dart';
 
 import '../../database/support/test_db.dart';
 import '../../support/memory_settings_store.dart';
@@ -54,6 +55,9 @@ void main() {
     'the commands work through the provider (silent engine under flutter test)',
     () async {
       c.listen(nowPlayingProvider, (_, _) {});
+      await c
+          .read(playerPhaseProvider.notifier)
+          .attach(c.read(playerControllerProvider));
       await c
           .read(playbackCommandsProvider)
           .playTracks(tracks, startIndex: 1, context: ctx);

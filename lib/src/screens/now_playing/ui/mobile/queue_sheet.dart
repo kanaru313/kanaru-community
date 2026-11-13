@@ -5,9 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../playback/ui/spring_to_rest.dart';
 
-import '../../../../playback/state/cover_providers.dart';
-import '../../../../playback/state/playback_providers.dart';
-import '../../../../playback/state/track_info_providers.dart';
+import '../../../../playback/state/playing_cover_colors.dart';
 import '../../../../playback/ui/flight_source.dart';
 import '../queue_host.dart';
 import '../queue_panel.dart';
@@ -127,16 +125,7 @@ class _QueueSheetPageState extends ConsumerState<QueueSheetPage>
 
   @override
   Widget build(BuildContext context) {
-    final id = ref.watch(nowPlayingProvider.select((n) => n.value?.trackId));
-    final coverKey = id == null
-        ? null
-        : ref.watch(trackInfoProvider(id).select((i) => i.value?.coverKey));
-    final colors = coverKey == null
-        ? null
-        : ref.watch(coverColorsProvider(coverKey)).value;
-    Color? tint(int i) => colors == null || colors.palette.length <= i
-        ? null
-        : Color(colors.palette[i]);
+    final cover = ref.watch(playingCoverColorsProvider);
     final scheme = Theme.of(context).colorScheme;
     final reduced = MediaQuery.disableAnimationsOf(context);
     return KFlightStage(
@@ -156,8 +145,8 @@ class _QueueSheetPageState extends ConsumerState<QueueSheetPage>
                   behavior: HitTestBehavior.opaque,
                   onTap: _close,
                   child: CoverTintBackground(
-                    first: tint(0),
-                    second: tint(1) ?? tint(0),
+                    palette: cover.palette,
+                    loading: cover.isPending,
                     child: const SizedBox.expand(),
                   ),
                 ),

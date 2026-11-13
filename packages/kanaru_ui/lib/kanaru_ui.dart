@@ -24,6 +24,7 @@ export 'src/widgets/k_more_button.dart';
 export 'src/widgets/k_page.dart';
 export 'src/widgets/k_pressable.dart';
 export 'src/widgets/k_sheet.dart';
+export 'src/widgets/k_swipe_actions.dart';
 export 'src/widgets/media/media_widgets.dart';
 export 'src/widgets/page_header.dart';
 export 'src/widgets/page_header_scope.dart';

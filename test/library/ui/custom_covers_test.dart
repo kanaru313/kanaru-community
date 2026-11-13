@@ -3,11 +3,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    show ProviderContainer, ProviderSubscription;
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/custom_covers_store.dart';
+import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/library/state/browse/custom_cover_index_providers.dart';
 import 'package:kanaru/src/library/state/custom_cover_providers.dart';
+import 'package:kanaru/src/library/state/shown_cover_provider.dart';
 import 'package:kanaru/src/library/ui/browse/item_covers.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
@@ -105,6 +109,42 @@ List<ImageProvider?> _images<T extends Widget>(WidgetTester tester) => [
 bool _isCustom(ImageProvider? image) =>
     image is FileImage && image.file.path.contains('custom_covers');
 
+/// Colours that differ per cover: the tracks' cover (`aaaa…`) is red, a
+/// custom cover (`ab/…`) is blue.
+const _trackTint = Color(0xFFCC3322);
+const _customTint = Color(0xFF2233CC);
+
+final _distinctColors = coverColorsProvider.overrideWith(
+  (ref, key) => Stream.value(
+    key.startsWith('ab/')
+        ? const CoverColors(seed: 0xFF2233CC, palette: [0xFF2233CC])
+        : const CoverColors(seed: 0xFFCC3322, palette: [0xFFCC3322]),
+  ),
+);
+
+/// Palette handed to the page tint, null while none (or still loading).
+List<Color>? _tintPalette(WidgetTester tester) => tester
+    .widget<CoverTintBackground>(find.byType(CoverTintBackground))
+    .palette;
+
+/// Every answer [shownCoverProvider] gives for an album, in order.
+class _Shown {
+  _Shown(ProviderContainer container, String itemKey, String? auto) {
+    _sub = container.listen(
+      shownCoverProvider((
+        item: (kind: CustomCoverKind.album, itemKey: itemKey),
+        automaticCoverKey: auto,
+      )),
+      (_, next) => seen.add(next),
+    );
+  }
+
+  late final ProviderSubscription<ShownCover> _sub;
+  final seen = <ShownCover>[];
+
+  void close() => _sub.close();
+}
+
 void main() {
   testWidgets('a custom cover replaces the source cover on an album card', (
     tester,
@@ -173,31 +213,102 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('the album page is tinted by the track cover, not by a custom '
-      'one', (tester) async {
+  testWidgets('the album page tint follows the cover it shows, never the '
+      'other one', (tester) async {
     final h = await _pump(
       tester,
       initial: '/library/songs',
-      overrides: [
-        coverColorsProvider.overrideWith(
-          (ref, key) => Stream.value(
-            const CoverColors(seed: 0xFFCC3322, palette: [0xFFCC3322]),
-          ),
-        ),
-      ],
+      overrides: [_distinctColors],
     );
     final id = albumId('Blue', 'Zed');
     h.router.push(LibraryLocations.album(AlbumKey.decode(id)!));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     await h.settle(tester);
-    Color? tint() =>
-        tester.widget<KDetailLayout>(find.byType(KDetailLayout)).tint;
-    expect(tint(), const Color(0xFFCC3322));
+    final shown = _Shown(h.container, id, 'aaaaaaaaaaaaaaaa');
+    expect(_tintPalette(tester), [_trackTint]);
     await _choose(tester, h, CustomCoverKind.album, id);
-    expect(tint(), isNull);
+    expect(_tintPalette(tester), [_customTint]);
+    final storedKey = await customCoverKey(h.db, 'album', id);
     await _remove(tester, h, CustomCoverKind.album, id);
-    expect(tint(), const Color(0xFFCC3322));
+    expect(_tintPalette(tester), [_trackTint]);
+    shown.close();
+    // The picture (and so the tint key) never went through a skeleton, and
+    // the custom answer carries the key stored in the database.
+    expect(shown.seen.whereType<ShownCoverLoading>(), isEmpty);
+    final custom = shown.seen.whereType<ShownCustomCover>().single;
+    expect(custom.coverKey, storedKey);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a cover scrolled back within the keep-alive shows at once', (
+    tester,
+  ) async {
+    // No tile is mounted: the providers alone, as a list that scrolled away.
+    final h = await _pump(tester, initial: '/library/songs');
+    final id = albumId('Blue', 'Zed');
+    await _choose(tester, h, CustomCoverKind.album, id);
+    // Other tiles keep the per-kind index loaded, as in a list.
+    h.container.listen(
+      customCoverIndexProvider(CustomCoverKind.album),
+      (_, _) {},
+    );
+    final query = (
+      item: (kind: CustomCoverKind.album, itemKey: id),
+      automaticCoverKey: 'aaaaaaaaaaaaaaaa',
+    );
+    final first = _Shown(h.container, id, 'aaaaaaaaaaaaaaaa');
+    // File reads run in real time.
+    for (
+      var i = 0;
+      i < 20 &&
+          h.container.read(shownCoverProvider(query)) is! ShownCustomCover;
+      i++
+    ) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await h.settle(tester, rounds: 1);
+    }
+    expect(
+      h.container.read(shownCoverProvider(query)),
+      isA<ShownCustomCover>(),
+    );
+    first.close();
+    // Within the keep-alive (5 s): the file answer is still loaded.
+    await tester.pump(const Duration(seconds: 1));
+    final again = _Shown(h.container, id, 'aaaaaaaaaaaaaaaa');
+    expect(
+      h.container.read(shownCoverProvider(query)),
+      isA<ShownCustomCover>(),
+    );
+    expect(again.seen, isEmpty);
+    again.close();
+    await unmountApp(tester);
+  });
+
+  testWidgets('a custom cover whose file is gone tints with the track cover', (
+    tester,
+  ) async {
+    final h = await _pump(
+      tester,
+      initial: '/library/songs',
+      overrides: [_distinctColors],
+    );
+    final id = albumId('Blue', 'Zed');
+    // A row whose image was never written (a restored backup).
+    await setCustomCover(
+      h.container.read(appDatabaseProvider),
+      'album',
+      id,
+      'ab/${'0' * 31}9',
+    );
+    h.router.push(LibraryLocations.album(AlbumKey.decode(id)!));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await h.settle(tester);
+    expect(_images<AlbumCover>(tester).where(_isCustom), isEmpty);
+    expect(_tintPalette(tester), [_trackTint]);
     await unmountApp(tester);
   });
 

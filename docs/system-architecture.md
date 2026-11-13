@@ -30,6 +30,8 @@ main.dart
 - [system-architecture-library.md](./system-architecture-library.md): library keys, track info, lists, favorites, tabs, folders, exclusions (contract stub until lane C lands).
 - [system-architecture-library-scan.md](./system-architecture-library-scan.md): scanner, pass versions, covers, first run, Rust pools, custom cover import (lane A, merged).
 - [system-architecture-lyrics.md](./system-architecture-lyrics.md): embedded lyrics reader and its bridge API.
+- [system-architecture-plugin-runtime.md](./system-architecture-plugin-runtime.md): plugin runtime instance, threads and thread budget, `PluginHost`, park and waker, cancel, late drain, bindgen on Android.
+- [plugin-host-api.md](./plugin-host-api.md): what a plugin script sees (globals, errors, limits, streaming runs, what is absent).
 
 ## Runtime pieces
 
@@ -64,9 +66,10 @@ main.dart
   `$XDG_CACHE_HOME/kanaru`), one size per file (`thumb` for tiles, `full` for
   Now Playing and the media session). The database keeps only the cover key.
 - **Native**: Rust crates behind one FFI crate, built by cargokit for the
-  Linux host and the Android ABIs. The bridge owns the worker pools
+  Linux host and the Android ABIs. The bridge owns the media worker pools
   (background, interactive, waveform), the panic guard and the error DTO
-  (`NativeError`); `kanaru_media` stays plain Rust.
+  (`NativeError`), and holds the plugin runtime, which owns its JS threads;
+  `kanaru_media` and `kanaru_plugin_runtime` stay plain Rust.
 - **Extensions**: contribute through `ExtensionRegistry`; downstream builds
   can supply more through `packages/kanaru_extensions`.
 
@@ -86,14 +89,16 @@ never rebuilds a list:
   single-item screens use `trackInfoProvider`.
 - Covers: `TrackCover` reports a missing file to `coverMissesProvider`, and
   the scanner re-extracts it. Cover colours come from
-  `coverColorsProvider` and tint pages and the Now Playing background only.
+  `coverColorsProvider` and tint pages and the Now Playing background. The
+  seed of the playing cover also drives the app theme, through a stored seed
+  (`appCoverSeedProvider`) that the shell keeps in step once the player exists.
 - Scan: `scanStatusProvider` and `libraryScanCommandsProvider`. The scan
   request completes when it is accepted; failures arrive as `ScanFailed`.
   Details: [system-architecture-library-scan.md](./system-architecture-library-scan.md).
 - Settings are read through one top-level provider per key: `libraryTabsProvider`
   (`library.tabs`), `themeChoiceProvider` (`app.theme`), `appLanguageProvider`
-  (`app.language`). Theme and language apply at once; nothing else in the app
-  theme changes at runtime.
+  (`app.language`). Theme and language apply at once; the theme colours follow the
+  playing cover (`appCoverSeedProvider`).
 - Seeds stand in until the real part exists: `UnavailablePlaybackCommands`
   (throws `StateError`; the playback lane replaces it). The scanner is real:
   `scanStatusProvider` and `libraryScanCommandsProvider` read the

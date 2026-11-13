@@ -19,6 +19,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../playback/support/controller_harness.dart';
 import '../../playback/support/ui_host.dart';
 import '../../support/app_harness.dart';
+import '../../support/player_phase_override.dart';
 
 /// A [DesktopShell] on a real controller (in-memory database, fake engine),
 /// with a list page at `/` and a second page at `/other`.
@@ -102,6 +103,7 @@ Future<DesktopHost> pumpDesktopShell(
   }
   final container = ProviderContainer(
     overrides: [
+      playerPhaseOverride(),
       extensionRegistryProvider.overrideWithValue(registry),
       playerControllerProvider.overrideWithValue(h.c),
       appDatabaseProvider.overrideWithValue(h.db),
