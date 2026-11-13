@@ -118,10 +118,23 @@ void main() {
       expect(more.left, greaterThan(cover.right));
       // Visible without hover: not wrapped in a transparent AnimatedOpacity
       // and a pointer at its centre reaches it.
-      expect(
-        find.descendant(of: row, matching: find.byType(AnimatedOpacity)),
-        findsNothing,
-      );
+      // Checked on an upcoming row (the first one is played, so dimmed): no
+      // layer above ⋮ is below full opacity.
+      final upcoming = find.byType(QueueRow).at(3);
+      final fades = find
+          .ancestor(
+            of: find.descendant(
+              of: upcoming,
+              matching: find.byIcon(KIcons.moreVert),
+            ),
+            matching: find.byType(AnimatedOpacity),
+          )
+          .evaluate();
+      // The card's own dim fade is always there, so the loop never runs empty.
+      expect(fades, isNotEmpty);
+      for (final e in fades) {
+        expect((e.widget as AnimatedOpacity).opacity, 1);
+      }
       expect(
         find
             .descendant(of: row, matching: find.byIcon(KIcons.moreVert))
@@ -261,9 +274,9 @@ void main() {
       double opacityOf(int i) {
         final o = find.descendant(
           of: find.byType(QueueRow).at(i),
-          matching: find.byType(Opacity),
+          matching: find.byType(AnimatedOpacity),
         );
-        return tester.widget<Opacity>(o.first).opacity;
+        return tester.widget<AnimatedOpacity>(o.first).opacity;
       }
 
       expect(opacityOf(0), 0.5);
