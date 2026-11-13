@@ -234,6 +234,62 @@ void main() {
     expect(find.text('Nothing to play'), findsOneWidget);
   });
 
+  testWidgets('play all and shuffle with no songs say nothing to play', (
+    tester,
+  ) async {
+    final playback = FakePlaybackCommands();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [playbackCommandsProvider.overrideWithValue(playback)],
+        child: MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Consumer(
+              builder: (context, ref, _) => Column(
+                children: [
+                  TextButton(
+                    onPressed: () => playAll(ref, context, const [], _ctx),
+                    child: const Text('all'),
+                  ),
+                  TextButton(
+                    onPressed: () => shuffleAll(ref, context, const [], _ctx),
+                    child: const Text('shuffle'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    for (final label in ['all', 'shuffle']) {
+      await tester.tap(find.text(label));
+      await tester.pump();
+      expect(find.text('Nothing to play'), findsOneWidget, reason: label);
+      ScaffoldMessenger.of(tester.element(find.text(label)))
+          .removeCurrentSnackBar();
+      await tester.pump(const Duration(seconds: 1));
+    }
+    expect(playback.calls, isEmpty);
+  });
+
+  testWidgets('a menu Play with no songs says nothing to play', (tester) async {
+    final (playback, _) = await _pump(tester);
+    final context = tester.element(find.text('B'));
+    final runner = MenuActionRunner(
+      ProviderScope.containerOf(context),
+      Navigator.of(context, rootNavigator: true).context,
+    );
+    await runner.run(const MenuAction.play([], shuffle: true, context: _ctx));
+    await tester.pump();
+    expect(find.text('Nothing to play'), findsOneWidget);
+    expect(playback.calls, isEmpty);
+  });
+
   testWidgets('a menu Play started after a slow ▶ keeps its queue', (
     tester,
   ) async {

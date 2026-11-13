@@ -17,6 +17,7 @@ class KListRow extends StatelessWidget {
     this.onTap,
     this.enabled = true,
     this.selected = false,
+    this.autofocus = false,
   });
 
   final Widget? leading;
@@ -26,6 +27,9 @@ class KListRow extends StatelessWidget {
   final VoidCallback? onTap;
   final bool enabled;
   final bool selected;
+
+  /// Takes focus as soon as its scope does (a menu opened with the keyboard).
+  final bool autofocus;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +48,7 @@ class KListRow extends StatelessWidget {
           shape: KShape.of(KRadius.md),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
+            autofocus: autofocus && enabled,
             onTap: enabled ? onTap : null,
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: KLayout.minTarget),

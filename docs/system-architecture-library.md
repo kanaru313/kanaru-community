@@ -633,8 +633,9 @@ Every call is awaited; a failure is logged and shows a snack bar.
   name, plus the name in the app language when it differs; an unknown code
   shows as the code.
 - Loading: in list view `collectionBody` shows skeleton rows
-  (`KMediaCardSkeletonList` in kanaru_ui: `KMediaCard(loading: true)`, as many as fill the
-  height left below the optional header (measured), `ceil(height / extentOf)`; round cover for artists) until the first
+  (`KMediaCardSkeletonList` in kanaru_ui: `KMediaCard(loading: true)`, as
+  many as fill the height left below the optional header (measured),
+  `ceil(height / extentOf)`; round cover for artists) until the first
   answer. When the provider already has a value (cached, or a newer answer
   loading: refresh or reload, kept by `mapKeepingValue` in the derived list
   providers) the rows draw at once, no skeleton

@@ -4,10 +4,11 @@ import 'k_media_card.dart';
 
 /// Loading look of a list of [KMediaCard] rows: skeleton cards, as many as
 /// fill the height the list gets below its [header] (`ceil(height left /
-/// extentOf)`, the header measured by layout), not scrollable. Needs a bounded height (a list body always has one). In an unbounded
-/// parent it draws [unboundedCount] rows. Hidden from semantics.
-/// [horizontalPadding] is the side space the real list uses; [roundCover]
-/// draws circles for round photos (artists).
+/// extentOf)`, the header measured by layout), not scrollable. Needs a
+/// bounded height (a list body always has one). In an unbounded parent it
+/// draws [unboundedCount] rows. Hidden from semantics. [horizontalPadding] is
+/// the side space the real list uses; [roundCover] draws circles for round
+/// photos (artists).
 class KMediaCardSkeletonList extends StatelessWidget {
   const KMediaCardSkeletonList({
     super.key,

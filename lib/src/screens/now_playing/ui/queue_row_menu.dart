@@ -125,10 +125,19 @@ void openQueueRowMenu(
   }
 }
 
-/// Marks the first row of a menu opened with the keyboard: its [Focus]
-/// autofocuses as the menu route takes focus, so the first row shows its ring
-/// and arrow keys move on from it. A pointer-opened menu shows no ring until
-/// an arrow key is pressed, and a menu closed early moves no focus behind it.
+/// The entry a keyboard-opened menu focuses: the first enabled one (a
+/// pointer-opened menu shows no ring until an arrow key is pressed).
+_Entry? _firstEnabled(List<List<_Entry>> groups, bool viaKeyboard) {
+  if (!viaKeyboard) return null;
+  for (final g in groups) {
+    for (final e in g) {
+      if (e.enabled) return e;
+    }
+  }
+  return null;
+}
+
+/// Wraps a popup item's content so it autofocuses (see [_firstEnabled]).
 Widget _autofocus(bool on, Widget child) =>
     on ? Focus(autofocus: true, skipTraversal: true, child: child) : child;
 
@@ -142,6 +151,7 @@ void _showPopup(
   final point = at ?? box.localToGlobal(box.size.center(Offset.zero));
   final scheme = Theme.of(context).colorScheme;
   final soon = AppLocalizations.of(context).appComingSoon;
+  final focused = _firstEnabled(groups, viaKeyboard);
   final items = <PopupMenuEntry<void>>[];
   for (var g = 0; g < groups.length; g++) {
     if (g > 0) items.add(const PopupMenuDivider());
@@ -153,8 +163,10 @@ void _showPopup(
           // picker pushed from here lands on the page, not on the menu.
           onTap: e.onTap,
           enabled: e.enabled,
+          // The Focus sits inside the item's InkWell, so Enter still reaches
+          // the item's activate action from it.
           child: _autofocus(
-            viaKeyboard && g == 0 && e == groups[0][0],
+            identical(e, focused),
             Row(
               spacing: KSpace.x3,
               children: [
@@ -199,6 +211,7 @@ class _SheetMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final soon = AppLocalizations.of(context).appComingSoon;
+    final focused = _firstEnabled(groups, viaKeyboard);
     return ListView(
       shrinkWrap: true,
       padding: const EdgeInsets.all(KSpace.x4),
@@ -217,23 +230,22 @@ class _SheetMenu extends StatelessWidget {
           for (final e in g)
             Padding(
               padding: const EdgeInsets.only(bottom: KSpace.x1),
-              child: _autofocus(
-                viaKeyboard && g == groups.first && e == g.first,
-                KListRow(
-                  enabled: e.enabled,
-                  leading: Icon(e.icon, color: e.danger ? scheme.error : null),
-                  title: Text(
-                    e.label,
-                    style: TextStyle(color: e.danger ? scheme.error : null),
-                  ),
-                  trailing: e.soon ? Text(soon) : null,
-                  onTap: e.enabled
-                      ? () {
-                          Navigator.of(context).pop();
-                          e.onTap!();
-                        }
-                      : null,
+              child: KListRow(
+                // The row's own InkWell takes the focus, so Enter activates.
+                autofocus: identical(e, focused),
+                enabled: e.enabled,
+                leading: Icon(e.icon, color: e.danger ? scheme.error : null),
+                title: Text(
+                  e.label,
+                  style: TextStyle(color: e.danger ? scheme.error : null),
                 ),
+                trailing: e.soon ? Text(soon) : null,
+                onTap: e.enabled
+                    ? () {
+                        Navigator.of(context).pop();
+                        e.onTap!();
+                      }
+                    : null,
               ),
             ),
       ],

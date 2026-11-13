@@ -184,12 +184,16 @@ Future<void> _run(
   Future<void> Function(PlaybackCommands commands) action, {
   required bool isEmpty,
 }) async {
-  if (isEmpty) return;
-  ref.read(playRequestsProvider.notifier).begin();
-  final commands = ref.read(playbackCommandsProvider);
-  final message = AppLocalizations.of(context).libraryPlayFailed;
+  final l10n = AppLocalizations.of(context);
   // The root navigator outlives the tile, so the failure can still be shown.
   final root = Navigator.of(context, rootNavigator: true).context;
+  if (isEmpty) {
+    showAppSnackBar(root, l10n.libraryNothingToPlay);
+    return;
+  }
+  ref.read(playRequestsProvider.notifier).begin();
+  final commands = ref.read(playbackCommandsProvider);
+  final message = l10n.libraryPlayFailed;
   try {
     await action(commands);
   } on Object catch (e, s) {

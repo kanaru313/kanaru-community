@@ -12,7 +12,7 @@ import '../tokens/k_layout.dart';
 /// [KLayout.minTarget] on mobile; a caller that knows its shell better than
 /// the window width (a row that is told its size) passes [dimension].
 /// [semanticLabel] names the handle for screen readers; [tooltip] adds a
-/// long-press / hover tooltip (which also names it). Pass one of them.
+/// long-press / hover tooltip (which also names it). One of them is required.
 class KDragHandle extends StatelessWidget {
   const KDragHandle({
     super.key,
@@ -20,7 +20,10 @@ class KDragHandle extends StatelessWidget {
     this.dimension,
     this.semanticLabel,
     this.tooltip,
-  });
+  }) : assert(
+         semanticLabel != null || tooltip != null,
+         'a drag handle needs a semanticLabel or a tooltip',
+       );
 
   /// Index of the row in its [ReorderableList].
   final int index;

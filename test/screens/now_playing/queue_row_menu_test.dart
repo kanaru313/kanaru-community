@@ -70,16 +70,16 @@ Future<void> _openMenu(WidgetTester tester, String title) async {
 String _location(UiHost host) =>
     host.router!.routerDelegate.currentConfiguration.uri.path;
 
-/// Whether the primary focus sits on the first menu row ("Play this track").
+/// Whether the primary focus sits on the actionable node of the first menu
+/// row ("Play this track"): inside the same [InkWell] that handles its tap, so
+/// Enter reaches the row's activate action.
 bool _focusOnFirstRow(WidgetTester tester) {
   final focused = FocusManager.instance.primaryFocus;
   if (focused == null || focused is FocusScopeNode) return false;
-  var onFirstRow = false;
-  tester.element(find.text('Play this track')).visitAncestorElements((e) {
-    if (identical(e, focused.context)) onFirstRow = true;
-    return !onFirstRow;
-  });
-  return onFirstRow;
+  final label = tester.element(find.text('Play this track'));
+  final rowInk = label.findAncestorWidgetOfExactType<InkWell>();
+  final focusInk = focused.context?.findAncestorWidgetOfExactType<InkWell>();
+  return rowInk != null && identical(rowInk, focusInk);
 }
 
 void main() {
@@ -229,7 +229,7 @@ void main() {
     testWidgets('Enter on ⋮ focuses the first row (${host.name})', (
       tester,
     ) async {
-      await _pump(tester, host: host);
+      final ui = await _pump(tester, host: host);
       final more = find.descendant(
         of: find.byType(QueueRow).at(1),
         matching: find.byIcon(KIcons.moreVert),
@@ -241,6 +241,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pump(const Duration(milliseconds: 100));
       expect(_focusOnFirstRow(tester), isTrue);
+      // Enter on the focused row runs it: the menu closes, the entry plays.
+      final target = ui.h.c.queueState.items[1].entryId;
+      // In the real zone: the action starts controller work.
+      await ui.run(tester, () => tester.sendKeyEvent(LogicalKeyboardKey.enter));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Play this track'), findsNothing);
+      expect(ui.h.c.queueState.currentItem!.entryId, target);
     });
   }
 
