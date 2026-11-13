@@ -47,7 +47,8 @@ library UI bodies (their seeds are in the table above).
 
 ## Gate (`tool/`)
 
-- `check`: bash script running the full gate (`--rust` adds fmt, the `unsafe` grep, cargo test and clippy).
+- `check`: bash script running the full gate (`--rust` adds `check_rust`).
+- `check_rust`: the Rust gate (cargokit patch marker, `unsafe` grep, fmt, `cargo audit`, test, clippy); the CI Rust job runs it.
 - `merge_arb.dart`: merges the l10n parts (`--check` for the gate).
 - `check_architecture.dart`: wrapper that runs the CLI of the lint package.
 - `architecture_lint/`: pure Dart package, analyzer plugin (`lib/main.dart`)
@@ -75,12 +76,14 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
   `storage` (`localConfig`, `localStorage`) and `quiet` (panic hook); `js/` holds
   `host_prelude.js` and CryptoJS 4.2.0; `memory.rs` is the limited allocator and
   `compile_check.rs` the compile-only check (the two files with `unsafe`);
-  `limits.rs` has every cap; `types.rs` the runtime types. Not ported yet: the
-  fetch, stream and `emit` natives and `Html`. Integration tests are in
+  `limits.rs` has every cap; `types.rs` the runtime types. Not ported yet: `Html`. Integration tests are in
   `crates/kanaru_plugin_runtime/tests/` (`common/mod.rs` shares one runtime per test
   binary behind a lock; `contract`, `crypto`, `failure_data`, `limits`, `storage`,
-  `hostile`, `lifecycle`, `prelude_drift`); the feature `test-hooks` adds the
-  `__testLog` and `__testPanic` script globals.
+  `hostile`, `lifecycle`, `prelude_drift`, `fetch`, `stream_fetch`, `streaming_run`);
+  `compat_repo.rs` runs every plugin of a repository named by `KANARU_PLUGIN_REPO`
+  against a fake host (local only, skips without the variable; dev-dependencies
+  `ureq` and `zip`); the feature `test-hooks` adds the `__testLog` and `__testPanic`
+  script globals.
 - `kanaru_bridge`: `guard.rs` (`guarded`, panic to `NativeError`), `pools.rs`
   (`background`, `interactive`, `waveform`; 8 MiB stacks), `os.rs` (thread
   priority, the only `unsafe`), `source.rs` (`Source`, `open_source`: regular
@@ -103,7 +106,8 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
   `frb_generated.rs` is generated.
 - Third-party versions are in `rust/Cargo.toml`, with the reason beside each.
 - `rust_builder/` is the cargokit glue that builds `kanaru_bridge` for the
-  host and the Android ABIs. Generated bindings: `rust/crates/kanaru_bridge/src/frb_generated.rs`
+  host and the Android ABIs; its `android_environment.dart` carries a local
+  bindgen patch (see code-standards.md). Generated bindings: `rust/crates/kanaru_bridge/src/frb_generated.rs`
   and `lib/src/rust/`.
 
 ## Platform runners

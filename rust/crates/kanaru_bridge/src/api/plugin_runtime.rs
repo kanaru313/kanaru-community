@@ -36,7 +36,8 @@ pub struct PluginScriptRequest {
     /// Id from [`begin_plugin_job`].
     pub job: u32,
     /// Identity of the installed plugin; copied into every fetch and stream
-    /// call of the run so Dart can keep per-plugin state (cookies).
+    /// call of the run so Dart can keep per-plugin state (cookies). Must not
+    /// be empty: an empty id ends the run `Internal` without running the script.
     pub install_id: String,
     /// All files of the package's `src/` folder; `load()` reaches only these.
     pub files: Vec<PluginSourceFile>,
@@ -239,6 +240,10 @@ pub fn reset_plugin_runtime() {
 /// Only [`cancel_plugin_job`] cancels the job; the returned Future cannot be
 /// dropped to cancel it. The wall-time limit does not count the queue wait, so
 /// keep an outer deadline of your own. An all-busy runtime answers `Busy`.
+///
+/// A script that throws (or returns something that is not a `Response`) ends
+/// `ScriptError` with kind `InvalidResponse`; an empty `install_id` ends
+/// `Internal`.
 pub async fn run_plugin_script(
     request: PluginScriptRequest,
     fetch: impl Fn(PluginFetchRequest) -> DartFnFuture<PluginFetchResponse> + Send + Sync + 'static,

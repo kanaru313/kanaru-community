@@ -150,9 +150,13 @@ rebase conflict, take either side and run the two commands again.
   crate sets `unsafe_code = "deny"` and `clippy::undocumented_unsafe_blocks`
   and allows `unsafe` with `#![allow(unsafe_code)]` in those two files only;
   every `unsafe` block carries a `// SAFETY:` comment. The Rust gate
-  (`tool/check_rust`, also run by `tool/check --rust`) greps for `unsafe`
-  outside these three files, and also runs `cargo fmt --check`, `cargo audit`,
-  `cargo test` and `cargo clippy -D warnings`.
+  (`tool/check_rust`, also run by `tool/check --rust` and by the CI Rust job)
+  first checks the cargokit patch marker (below), then greps for `unsafe`
+  outside these three files (the whitelist patterns are anchored to the start of
+  the path, so a line that merely mentions a whitelisted path is still
+  reported), then runs `cargo fmt --check`, `cargo audit`, `cargo test` and
+  `cargo clippy -D warnings`. The plugin compat test needs `KANARU_PLUGIN_REPO`
+  and skips itself without it; the gate and CI never set it.
 - `kanaru_media` and `kanaru_plugin_runtime` have no FFI and do not depend on
   each other; only `kanaru_bridge` knows flutter_rust_bridge. Explicit DTOs,
   no `#[frb(mirror)]`.
@@ -178,6 +182,24 @@ rebase conflict, take either side and run the two commands again.
   not wait for or take a worker.
 - Third-party versions are pinned in `rust/Cargo.toml` with the reason beside
   each. Pin exactly, unless the comment there says why not.
+- Vendored cargokit local patch (`rust_builder/cargokit/`, otherwise upstream
+  code). `build_tool/lib/src/android_environment.dart` `buildEnvironment()` sets
+  `CLANG_PATH` (the NDK `clang`) only. `--sysroot`/`--target` via
+  `BINDGEN_EXTRA_CLANG_ARGS_<target>` were tested unnecessary: the generated
+  bindings are byte-identical on arm64-v8a, armeabi-v7a and x86_64 without them,
+  because the NDK clang finds its sysroot and bindgen passes the target. Why:
+  `rquickjs-sys` ships no Android bindings, so
+  `bindgen` runs when building for Android, and the Nix dev shell's clang
+  wrapper injects host glibc include dirs into it (`gnu/stubs-32.h` errors); the
+  NDK clang with its sysroot avoids that. The lines sit between the marker
+  comments `// kanaru-local-patch: android bindgen env (see docs/code-standards.md)`
+  and `// kanaru-local-patch end`; the Rust gate `tool/check_rust` fails when
+  `android_environment.dart` lacks the first marker comment or the `'CLANG_PATH'`
+  entry. A re-vendor of cargokit must re-apply the patch. Android builds outside
+  the Nix dev shell (Android Studio, the Pro build) also need libclang for
+  bindgen: set `LIBCLANG_PATH` (the NDK ships `libclang.so` under
+  `$ANDROID_HOME/ndk/<version>/toolchains/llvm/prebuilt/<host>/lib`, e.g.
+  `~/Android/Sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/lib`).
 - Library code does not `unwrap` (lint); tests may.
 - `cargo clippy --all-targets -- -D warnings` must pass.
 
