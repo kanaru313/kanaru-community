@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
@@ -11,6 +12,8 @@ import '../../../playback/ui/queue/queue_remove_action.dart';
 import '../state/queue_selection.dart';
 import 'queue_host.dart';
 import 'track_navigation.dart';
+
+final _log = Logger('QueueRowMenu');
 
 /// One entry of the row menu.
 class _Entry {
@@ -75,7 +78,18 @@ void openQueueRowMenu(
       _Entry(
         l10n.playbackRowPlayNext,
         KIcons.playlistPlay,
-        onTap: () => controller.playNext([item.trackId]),
+        onTap: () async {
+          try {
+            await controller.playNext([item.trackId]);
+          } on Object catch (e, st) {
+            _log.warning('could not queue next: $e', e, st);
+            if (root.mounted) {
+              showAppSnackBar(root, l10n.libraryMenuQueueFailed);
+            }
+            return;
+          }
+          if (root.mounted) showAppSnackBar(root, l10n.libraryMenuPlayingNext);
+        },
       ),
     ],
     [
