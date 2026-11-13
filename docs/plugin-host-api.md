@@ -84,7 +84,8 @@ cancelling an unknown or finished id does nothing. `reset()` cancels every job.
 | Thrown-error text | message 1000 characters, stack 16 KiB (cut, not rejected) | cut |
 | `fetch` request body | 256 KiB (`MAX_FETCH_REQUEST_BODY_BYTES`) | `InvalidRequestError` |
 | HTTP sends per call (retries included) | 10 (`MAX_FETCH_SENDS`) | `TooManyRequestsError` |
-| Unread `fetch` bodies in Rust memory | 16 MiB per call (`RUST_BYTE_BUDGET`) | `RangeError`, call ends `Memory` |
+| Unread `fetch` bodies and parsed `Html` documents in Rust memory | 16 MiB per call, shared (`RUST_BYTE_BUDGET`) | `RangeError`, call ends `Memory` |
+| `Html.parse` text | 4 MiB (UTF-8 bytes) | `RangeError` |
 | `localStorage` | 64 KiB of keys plus values | `QuotaExceededError` |
 | Console | 500 characters per line, 50 lines per call | cut, `... N lines dropped` |
 | Worker threads | 4 (`WORKER_THREADS`) | extra jobs wait |
@@ -197,6 +198,75 @@ A line is cut at 500 characters; a call keeps 50 lines, after that the first 49
 and a last entry `... N lines dropped`. Do not log secrets or song tags: only
 config values are never logged by the runtime, song text is the author's duty.
 
+### `Html.parse(text)`
+
+Parses `text` as an HTML document (the browser parsing rules, via the `scraper`
+crate; a fragment gets `<html><head></head><body>` around it) and returns its
+`<html>` `Element`. The parse and every query run in Rust on the script thread.
+The objects hold a private handle into a per-call arena that is dropped with the
+call; a script cannot read or make up a handle, and `new` on the classes throws.
+
+`Element`:
+
+| Method | Returns |
+|---|---|
+| `select(css)` | `Elements`: the descendants (not the element itself) that match, in document order |
+| `selectFirst(css)` | the first match or `null` |
+| `text()` | text content, see below |
+| `html()` / `outerHtml()` | inner / outer HTML; at most 4 MiB, more throws `RangeError` and the call ends `Memory` (html5ever's repair of misnested markup can clone one big attribute value thousands of times, and the output repeats each clone) |
+| `attr(name)` | the attribute value, `""` when absent; the exact name is tried first (SVG keeps `viewBox`), then the lower-case name (HTML names are stored lower case). Names are local names without a namespace prefix: for `xlink:href` ask for `href` |
+| `tagName()` | the tag name as the parser gives it: lower case for HTML elements, camel case for SVG ones (`foreignObject`) |
+
+`Elements`: `size()`, `get(i)` (`null` when out of range), `first()` and
+`last()` (`null` when empty), `text()` (the `text()` of each element joined with
+`\n`), `attr(name)` (of the first element, `""` when empty), `map(fn)` (an array
+of `fn(element, index)`), `forEach(fn)`, `toArray()` (an array of `Element`).
+`get`, `first`, `last` and `toArray` make new `Element` objects on each call
+(compare by content, not identity).
+
+`text()` collapses HTML whitespace runs to one space, turns `<br>` into a line
+break, starts and ends a line at `<p>`, `<div>`, `<pre>`, `<li>`, `<h1>` to
+`<h6>`, `<tr>`, `<table>`, `<section>`, `<article>`, `<blockquote>`, `<header>`
+and `<footer>`, separates table cells (`<td>`, `<th>`) with one space, keeps the
+text of `<pre>` as written (spaces and every line break), keeps at most one
+blank line in a row outside `<pre>`, and trims line breaks at both ends.
+Non-breaking spaces are kept; comments, `<script>`, `<style>`, `<template>` and
+`<noscript>` add nothing.
+
+Selectors use the CSS selector syntax of the `selectors` crate (type, class, id,
+attribute, combinators, `:not`, `:is`, `:has`, `:nth-child`, ...). Pseudo-classes
+that depend on state (`:hover`, `:focus`, `:checked`, ...) are not in the grammar
+and throw `SyntaxError`; the matcher never matches one in any case.
+A selector the parser rejects (including a nested `:has`), or longer than 1024
+bytes, throws `SyntaxError` with the selector text (cut to 80 bytes) and a short
+reason. Strings passed in must be well-formed Unicode: a lone surrogate throws
+`TypeError`.
+
+Errors and limits:
+
+| Limit | Value | When hit |
+|---|---|---|
+| Text | 4 MiB | `RangeError` |
+| Documents per call | 8 (a refused parse uses no slot) | `RangeError` |
+| Nodes per document | 200 000 | `RangeError`, and the call ends `Memory` even if the script catches it |
+| Nesting depth | 512 levels (`<html>` is 1) | `RangeError` (page depth is not memory: the call goes on) |
+| Byte budget | 160 bytes per node plus the input size, and the attribute text of every created element (clones included), against the shared 16 MiB | `RangeError`, call ends `Memory` |
+| Selector | 1024 bytes | `SyntaxError` |
+| Serialized HTML | 4 MiB | `RangeError`, call ends `Memory` |
+
+The depth limit keeps `:has` far from the thread stack limit and bounds the cost
+of one match; real pages are well under 100 levels. The parser gets the text
+1 KiB at a time and looks at the cancel flag and the deadline after each piece;
+its tree sink stops creating nodes at the node cap, so elements html5ever clones
+while repairing markup cannot pass it, and the parse stops early once nesting
+passes the limit by more than 64 levels. `select` runs the matching itself and
+counts its work in steps (one per node looked at, one per KiB of attribute or
+class text scanned, more for a case-insensitive substring search). The cancel
+flag and the deadline are looked at every 65 536 steps, so a cancel or timeout
+ends even a selector that needs minutes (many alternatives, `:has(x span)`, long
+class lists on a large page); the call ends `Cancelled` / `Timeout`. A panic in
+an `Html` native ends the call `Internal` even if the script catches the error.
+
 ## Streaming runs
 
 An opt-in mode (`run_streaming`) used by AI-style plugins; lyrics and translate
@@ -238,9 +308,6 @@ in an error message or log.
 
 `XMLHttpRequest`, `WebSocket`, `require`, `import`, `setTimeout` and
 `setInterval`, modules, file and process APIs, WebView, and `cacheStorage`.
-`Html` (HTML parsing and CSS selectors) is not available yet: it arrives in a
-later change. The `Html` global exists, but `Html.parse` throws a `TypeError`
-(its native is not installed), so a plugin that calls it ends `ScriptError`.
 
 ## Compatibility check
 

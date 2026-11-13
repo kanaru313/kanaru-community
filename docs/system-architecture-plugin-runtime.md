@@ -133,9 +133,36 @@ therefore carries a local patch that points `bindgen` at the NDK clang and the N
 sysroot; see [code-standards.md](./code-standards.md) ("Vendored cargokit local
 patch"). `tool/check_rust` fails if the patch is lost.
 
+## Html
+
+`src/host/html/`: `mod.rs` (arena of parsed documents, handles, the six natives
+`htmlParse`, `htmlSelect`, `htmlText`, `htmlHtml`, `htmlAttr`, `htmlTag`, each
+run under a `catch_unwind` that marks the run `Internal`), `sink.rs` (the bounded
+html5ever tree sink and chunked parse), `select.rs` (own selector matcher with a
+step gate), `text.rs` (`text()` rules), `serialize.rs` (capped `html()`).
+Documents live in Rust (`scraper`); scripts only hold numbers checked on every
+call. Limits are in `limits.rs` (input 4 MiB, 8 documents, 200 000 nodes, depth
+512, 160 bytes per node against the 16 MiB budget, selector 1024 bytes) and in
+the modules (parse chunk 1 KiB, early depth margin 64, matcher check every
+65 536 steps, serialized output 4 MiB).
+
+Two failures shaped it: a deep `:has` overflowed the thread stack (abort), and a
+deep `<div>` parse was quadratic. So depth is capped at parse (with an early
+stop), and the matcher is ours: scraper's `select` cannot be interrupted, and
+QuickJS' interrupt does not run inside Rust. The sink reaches html5ever
+internals (`parser.tokenizer.sink.sink`), so `html5ever`, `scraper`, `ego-tree`,
+`selectors` and `cssparser` are pinned exactly in the workspace. `unsafe` is not
+used.
+
 ## Tests
 
 `crates/kanaru_plugin_runtime/tests/` share one runtime per test binary behind a
 lock (`common/mod.rs`) and a `FakeHost` that records every request and checks the
 `install_id`. `compat_repo.rs` runs a real plugin repository against such a host,
 locally only (see [plugin-host-api.md](./plugin-host-api.md#compatibility-check)).
+
+`html.rs`, `html_memory.rs` and `html_fuzz.rs` prove the Html limits and are
+run in release mode by `tool/check_rust` (the profile the app ships, debug
+assertions off), as are the two wall-clock tests of `html/sink_tests.rs`. `html_fuzz.rs` is a bounded `proptest` (fixed seed, 64
+cases per generator, no persisted failures) that must give a result or a limit /
+syntax error, never `Internal`; it is ignored in debug builds.

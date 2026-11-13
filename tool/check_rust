@@ -44,4 +44,9 @@ fi
 cargo audit --file rust/Cargo.lock
 
 cargo test --manifest-path rust/Cargo.toml
+# Html limits, wall-clock bounds and fuzz run in release mode: it is the profile the app ships and has
+# debug assertions off. The fuzz and two timing tests are ignored in debug.
+# The lib run uses one thread: the timing-bound sink tests keep their 20 s bound and one thread avoids CPU contention between them.
+cargo test --manifest-path rust/Cargo.toml --release -p kanaru_plugin_runtime --test html --test html_memory --test html_fuzz
+cargo test --manifest-path rust/Cargo.toml --release -p kanaru_plugin_runtime --lib host::html -- --test-threads=1
 cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings

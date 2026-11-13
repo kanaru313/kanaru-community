@@ -42,7 +42,6 @@ impl ByteBudget {
     /// Marks the budget as overrun without charging, for a holder that
     /// refuses on its own limit (an oversized document) and wants the same
     /// outcome as a budget overrun: the call ends `memory`.
-    #[cfg_attr(not(test), expect(dead_code, reason = "used by the HTML natives"))]
     pub fn mark_hit(&self) {
         self.hit.store(true, Ordering::SeqCst);
     }
