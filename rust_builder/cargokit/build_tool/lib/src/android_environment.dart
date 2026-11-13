@@ -145,6 +145,15 @@ class AndroidEnvironment {
       runRustTool,
     ));
 
+    // kanaru-local-patch: android bindgen env (see docs/code-standards.md)
+    // Local patch of vendored cargokit, not upstream code. rquickjs-sys ships
+    // no Android bindings, so bindgen runs while building for Android. It must
+    // use the NDK clang: a wrapped host clang (the Nix dev shell) adds host
+    // glibc include dirs and fails with gnu/stubs-32.h. The NDK clang finds its
+    // own sysroot and bindgen passes the target, so nothing else is needed.
+    final clangPathValue = path.join(toolchainPath, 'clang$exe');
+    // kanaru-local-patch end
+
     // Make sure that run_build_tool is working properly even initially launched directly
     // through dart run.
     final toolTempDir =
@@ -159,6 +168,9 @@ class AndroidEnvironment {
       ranlibKey: ranlibValue,
       rustFlagsKey: rustFlagsValue,
       linkerKey: selfPath,
+      // kanaru-local-patch: android bindgen env (see docs/code-standards.md)
+      'CLANG_PATH': clangPathValue,
+      // kanaru-local-patch end
       // Recognized by main() so we know when we're acting as a wrapper
       '_CARGOKIT_NDK_LINK_TARGET': targetArg,
       '_CARGOKIT_NDK_LINK_CLANG': ccValue,
