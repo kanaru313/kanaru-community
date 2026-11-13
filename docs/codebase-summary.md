@@ -88,6 +88,18 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
   `NativeError` DTO; `tags`, `covers` and `waveform` are empty until their lanes).
   `api/lyrics.rs` (`read_embedded_lyrics`, own thread per call, 10 s timeout,
   at most 2 stuck threads; reader in `kanaru_media` `tags/lyrics_reader.rs` and `tags/lyrics_sylt.rs`).
+  Plugin runtime: `runtime_holder.rs` (`runtime()`, the one `PluginRuntime` in a
+  `OnceLock`, sized from `pools::config::PLUGIN_*`, installs the quiet panic hook;
+  `existing()` lets `reset`/`cancel` skip a never-built runtime),
+  `host_dart.rs` (`DartHost`: `PluginHost` over the Dart fetch and stream callbacks),
+  `plugin_dto.rs` (conversions DTO and runtime types; an unknown variant of a
+  `#[non_exhaustive]` runtime enum maps to `Internal` / `Network` / `Server`,
+  but an unknown stream op is answered `InvalidRequest` without calling Dart;
+  round-trip tests iterate the runtime enums' `ALL` lists),
+  `api/plugin_runtime.rs` (script DTOs; `begin_plugin_job`, `cancel_plugin_job`,
+  `reset_plugin_runtime`, `run_plugin_script`, `check_plugin_script`) and
+  `api/plugin_stream.rs` (stream DTOs; `plugin_job_events`, `run_plugin_stream_script`).
+  Tests: `tests/plugin_api.rs` (shared runtime behind a `serial()` lock).
   `frb_generated.rs` is generated.
 - Third-party versions are in `rust/Cargo.toml`, with the reason beside each.
 - `rust_builder/` is the cargokit glue that builds `kanaru_bridge` for the

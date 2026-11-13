@@ -54,8 +54,10 @@ pub trait PluginHost: Send + Sync {
     ///
     /// Host contract (the old app's Dart `closeAll()`): keep one stream table
     /// per run; close every stream still open when the run ends or is
-    /// cancelled (Rust never sends `Close` for them, and a cancel can stop a
-    /// `Close` before it is sent); close at once an `Open` answered after the
+    /// cancelled (during a run Rust sends `Close` on script `close()`, after a
+    /// stream failed and for an `Open` answered too late, but none for streams
+    /// still open at the end or on cancel, and a cancel can stop a `Close`
+    /// before it is sent); close at once an `Open` answered after the
     /// run ended; expect a `Close` while that stream's `Open` is pending.
     fn stream(&self, call: StreamCall) -> Pending<StreamReply>;
 }

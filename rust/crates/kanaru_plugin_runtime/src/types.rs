@@ -88,6 +88,37 @@ pub enum FetchOutcome {
     RateLimited,
 }
 
+impl FetchOutcome {
+    /// Every variant, for the bridge's coverage tests: a new variant must be
+    /// added here, which makes those tests demand its mapping.
+    #[doc(hidden)]
+    pub const ALL: &[Self] = &[
+        Self::Ok,
+        Self::Network,
+        Self::BlockedHost,
+        Self::NotConsented,
+        Self::Abandoned,
+        Self::InvalidRequest,
+        Self::InvalidResponse,
+        Self::RateLimited,
+    ];
+
+    /// Exhaustive on purpose (no wildcard): adding a variant: add it here and to ALL.
+    #[cfg(test)]
+    const fn _exhaustive(self) {
+        match self {
+            Self::Ok
+            | Self::Network
+            | Self::BlockedHost
+            | Self::NotConsented
+            | Self::Abandoned
+            | Self::InvalidRequest
+            | Self::InvalidResponse
+            | Self::RateLimited => {}
+        }
+    }
+}
+
 /// The host's answer to a [`FetchRequest`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FetchResponse {
@@ -131,6 +162,39 @@ pub enum ScriptStatus {
     Busy,
 }
 
+impl ScriptStatus {
+    /// Every variant, for the bridge's coverage tests: a new variant must be
+    /// added here, which makes those tests demand its mapping.
+    #[doc(hidden)]
+    pub const ALL: &[Self] = &[
+        Self::Ok,
+        Self::ScriptError,
+        Self::Timeout,
+        Self::Memory,
+        Self::Stack,
+        Self::Cancelled,
+        Self::OutputTooLarge,
+        Self::Internal,
+        Self::Busy,
+    ];
+
+    /// Exhaustive on purpose (no wildcard): adding a variant: add it here and to ALL.
+    #[cfg(test)]
+    const fn _exhaustive(self) {
+        match self {
+            Self::Ok
+            | Self::ScriptError
+            | Self::Timeout
+            | Self::Memory
+            | Self::Stack
+            | Self::Cancelled
+            | Self::OutputTooLarge
+            | Self::Internal
+            | Self::Busy => {}
+        }
+    }
+}
+
 /// Kind of a script-reported failure.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
@@ -148,6 +212,33 @@ pub enum ErrorKind {
     Auth,
     /// The account's quota is used up; see `retry_after_sec`.
     Quota,
+}
+
+impl ErrorKind {
+    /// Every variant, for the bridge's coverage tests: a new variant must be
+    /// added here, which makes those tests demand its mapping.
+    #[doc(hidden)]
+    pub const ALL: &[Self] = &[
+        Self::None,
+        Self::RateLimited,
+        Self::InvalidResponse,
+        Self::Server,
+        Self::Auth,
+        Self::Quota,
+    ];
+
+    /// Exhaustive on purpose (no wildcard): adding a variant: add it here and to ALL.
+    #[cfg(test)]
+    const fn _exhaustive(self) {
+        match self {
+            Self::None
+            | Self::RateLimited
+            | Self::InvalidResponse
+            | Self::Server
+            | Self::Auth
+            | Self::Quota => {}
+        }
+    }
 }
 
 /// A JavaScript exception: its message and stack (file names and line numbers kept).
@@ -170,6 +261,35 @@ pub enum FetchFailureKind {
     InvalidRequest,
     InvalidResponse,
     RateLimited,
+}
+
+impl FetchFailureKind {
+    /// Every variant, for the bridge's coverage tests: a new variant must be
+    /// added here, which makes those tests demand its mapping.
+    #[doc(hidden)]
+    pub const ALL: &[Self] = &[
+        Self::Network,
+        Self::BlockedHost,
+        Self::NotConsented,
+        Self::Abandoned,
+        Self::InvalidRequest,
+        Self::InvalidResponse,
+        Self::RateLimited,
+    ];
+
+    /// Exhaustive on purpose (no wildcard): adding a variant: add it here and to ALL.
+    #[cfg(test)]
+    const fn _exhaustive(self) {
+        match self {
+            Self::Network
+            | Self::BlockedHost
+            | Self::NotConsented
+            | Self::Abandoned
+            | Self::InvalidRequest
+            | Self::InvalidResponse
+            | Self::RateLimited => {}
+        }
+    }
 }
 
 /// The first failing `fetch` of a call, kept even when the script caught the error.
@@ -228,6 +348,21 @@ pub enum StreamOp {
     Close,
 }
 
+impl StreamOp {
+    /// Every variant, for the bridge's coverage tests: a new variant must be
+    /// added here, which makes those tests demand its mapping.
+    #[doc(hidden)]
+    pub const ALL: &[Self] = &[Self::Open, Self::Read, Self::Close];
+
+    /// Exhaustive on purpose (no wildcard): adding a variant: add it here and to ALL.
+    #[cfg(test)]
+    const fn _exhaustive(self) {
+        match self {
+            Self::Open | Self::Read | Self::Close => {}
+        }
+    }
+}
+
 /// One call from the runtime to the host about a stream.
 ///
 /// The host owns cleanup: it keeps one stream table per run and closes every
@@ -282,4 +417,25 @@ pub struct StreamOptions {
     pub idle_timeout_ms: u32,
     /// True: the run sends `emit` events to the receiver attached to the job.
     pub events: bool,
+}
+
+#[cfg(test)]
+mod all_tests {
+    use super::*;
+
+    fn assert_unique<T: PartialEq + std::fmt::Debug>(all: &[T], count: usize) {
+        assert_eq!(all.len(), count);
+        for (i, a) in all.iter().enumerate() {
+            assert!(!all[..i].contains(a), "duplicate {a:?}");
+        }
+    }
+
+    #[test]
+    fn all_lists_hold_each_variant_once() {
+        assert_unique(FetchOutcome::ALL, 8);
+        assert_unique(ScriptStatus::ALL, 9);
+        assert_unique(ErrorKind::ALL, 6);
+        assert_unique(FetchFailureKind::ALL, 7);
+        assert_unique(StreamOp::ALL, 3);
+    }
 }

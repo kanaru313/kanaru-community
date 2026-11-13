@@ -17,6 +17,10 @@ pub mod config {
     pub const STACK_BYTES: usize = 8 * 1024 * 1024;
     pub const INTERACTIVE_THREADS: usize = 2;
     pub const WAVEFORM_THREADS: usize = 1;
+    /// Plugin runtime: JS workers, jobs that may queue, streaming workers.
+    pub const PLUGIN_WORKERS: usize = 4;
+    pub const PLUGIN_QUEUE: usize = 16;
+    pub const PLUGIN_STREAM_WORKERS: usize = 1;
     /// Android keeps the background pool between 1 and 4 threads.
     pub const ANDROID_MAX_BACKGROUND: usize = 4;
 
@@ -106,6 +110,13 @@ mod tests {
         assert_eq!(config::background_threads(16, true), 4);
         assert_eq!(config::background_threads(4, true), 2);
         assert_eq!(config::background_threads(1, true), 1);
+    }
+
+    #[test]
+    fn plugin_runtime_has_its_sizes() {
+        assert_eq!(config::PLUGIN_WORKERS, 4);
+        assert_eq!(config::PLUGIN_QUEUE, 16);
+        assert_eq!(config::PLUGIN_STREAM_WORKERS, 1);
     }
 
     #[test]

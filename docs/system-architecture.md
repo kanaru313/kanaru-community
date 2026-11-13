@@ -64,9 +64,10 @@ main.dart
   `$XDG_CACHE_HOME/kanaru`), one size per file (`thumb` for tiles, `full` for
   Now Playing and the media session). The database keeps only the cover key.
 - **Native**: Rust crates behind one FFI crate, built by cargokit for the
-  Linux host and the Android ABIs. The bridge owns the worker pools
+  Linux host and the Android ABIs. The bridge owns the media worker pools
   (background, interactive, waveform), the panic guard and the error DTO
-  (`NativeError`); `kanaru_media` stays plain Rust.
+  (`NativeError`), and holds the plugin runtime, which owns its JS threads;
+  `kanaru_media` and `kanaru_plugin_runtime` stay plain Rust.
 - **Extensions**: contribute through `ExtensionRegistry`; downstream builds
   can supply more through `packages/kanaru_extensions`.
 
