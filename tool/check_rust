@@ -43,7 +43,17 @@ if ! command -v cargo-audit >/dev/null 2>&1; then
 fi
 cargo audit --file rust/Cargo.lock
 
-cargo test --manifest-path rust/Cargo.toml
+if ! command -v cargo-deny >/dev/null 2>&1; then
+  echo "cargo-deny is not installed: run inside 'nix develop' (flake.nix has it) or 'cargo install cargo-deny --locked --version 0.20.2'" >&2
+  exit 1
+fi
+# Licenses, duplicate versions and sources (rust/deny.toml); advisories stay with cargo audit.
+cargo deny --manifest-path rust/Cargo.toml check licenses bans sources
+
+# The plugin runtime runs on one test thread: its wall-clock bounds (`tests/limits.rs`) must not
+# compete for the CPU with other tests of the same binary. Every test runs exactly once.
+cargo test --manifest-path rust/Cargo.toml --workspace --exclude kanaru_plugin_runtime
+cargo test --manifest-path rust/Cargo.toml -p kanaru_plugin_runtime -- --test-threads=1
 # Html limits, wall-clock bounds and fuzz run in release mode: it is the profile the app ships and has
 # debug assertions off. The fuzz and two timing tests are ignored in debug.
 # The lib run uses one thread: the timing-bound sink tests keep their 20 s bound and one thread avoids CPU contention between them.

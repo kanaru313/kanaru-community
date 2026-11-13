@@ -1,5 +1,20 @@
 //! Hard limits of the plugin runtime: wall time, heap, stack, output size,
 //! threads, queue. Tests that fill the shared worker pool run one at a time.
+//!
+//! Every latency bound is `guarantee of the stop path + SCHED`, and each lower
+//! bound stays. None rests on the `CANCEL_POLL` constant test below.
+//!
+//! | Test | Stop path | Guarantee of the path |
+//! |---|---|---|
+//! | deadline, try/catch, regex, load | QuickJS interrupt handler (`engine/mod.rs`) reads `deadline`; QuickJS calls it every few thousand ops, in the regex matcher too | sub-ms after the deadline |
+//! | busy | `Pool::try_submit` (`pool.rs`) refuses under one lock | microseconds |
+//! | cancel of a running busy loop | the same handler reads the cancel flag | sub-ms |
+//! | cancel of queued jobs | `cancel_job` takes them out of the queue under the lock and completes them | no JS runs; the test's `block_on` polls every 5 ms |
+//! | busy, before its check | none: the 600 ms sleep stays, the runtime has no running-count API to wait on | the sleep only lets the 4 workers start |
+//! | parallelism | 4 worker threads | concurrency, checked by overlap, not by latency |
+//!
+//! Host waits (`host/emit.rs`, `callback.rs`, `sleep.rs`) poll the cancel flag
+//! every `CANCEL_POLL` (50 ms); no test here cancels one, so none needs that term.
 
 // Helpers outside `#[test]` functions may unwrap too.
 #![allow(clippy::unwrap_used)]
@@ -14,6 +29,10 @@ use std::time::{Duration, Instant};
 use common::rt;
 use common::{block_on, file, request_with, run_script};
 use kanaru_plugin_runtime::{engine, limits, ScriptResult, ScriptStatus as S};
+
+/// Allowance on top of a stop path's own guarantee for thread wake-up and
+/// scheduling on a loaded machine. Tune this one constant if a bound flakes.
+const SCHED: Duration = Duration::from_millis(150);
 
 const OK: &str = "function execute() { return Response.success('fine'); }";
 
@@ -84,10 +103,7 @@ fn infinite_loop_times_out_on_the_deadline() {
         assert_eq!(r.status, S::Timeout, "{r:?}");
         let limit = Duration::from_millis(deadline_ms);
         assert!(took >= limit, "{took:?}");
-        assert!(
-            took < limit + Duration::from_millis(100),
-            "stopped late: {took:?}"
-        );
+        assert!(took < limit + SCHED, "stopped late: {took:?}");
     }
     assert_pool_still_works();
 }
@@ -99,7 +115,7 @@ fn a_loop_inside_try_catch_cannot_swallow_the_timeout() {
         "function execute() { for (;;) { try { while (true) {} } catch (e) {} finally {} } }";
     let (r, took) = run_on_worker_thread(code, 200);
     assert_eq!(r.status, S::Timeout, "{r:?}");
-    assert!(took < Duration::from_millis(300), "{took:?}");
+    assert!(took < Duration::from_millis(200) + SCHED, "{took:?}");
 }
 
 #[test]
@@ -109,7 +125,7 @@ fn catastrophic_regex_times_out() {
         "function execute() { return Response.success(/(a+)+$/.test('a'.repeat(40) + 'b')); }";
     let (r, took) = run_on_worker_thread(code, 300);
     assert_eq!(r.status, S::Timeout, "{r:?}");
-    assert!(took < Duration::from_millis(400), "{took:?}");
+    assert!(took < Duration::from_millis(300) + SCHED, "{took:?}");
     assert_pool_still_works();
 }
 
@@ -128,7 +144,7 @@ fn a_timeout_is_also_found_while_loading_a_file() {
         200,
     )));
     assert_eq!(r.status, S::Timeout, "{r:?}");
-    assert!(started.elapsed() < Duration::from_millis(200 + 350));
+    assert!(started.elapsed() < Duration::from_millis(200) + SCHED);
 }
 
 #[test]
@@ -238,28 +254,34 @@ fn unserializable_data_is_a_script_error() {
 #[test]
 fn five_jobs_run_in_parallel_on_four_threads() {
     let _t = common::test();
-    let started = Instant::now();
     let handles: Vec<_> = (0..5)
         .map(|n| {
             thread::spawn(move || {
+                // Each script reports its own [start, end] in script time.
                 run_script(
-                    &format!("function execute() {{ var end = Date.now() + 300; while (Date.now() < end) {{}} return Response.success({n}); }}"),
+                    &format!("function execute() {{ var s = Date.now(); var end = s + 300; while (Date.now() < end) {{}} return Response.success({n} + ':' + s + ':' + Date.now()); }}"),
                     0,
                 )
             })
         })
         .collect();
     let results: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
-    let took = started.elapsed();
+    let mut spans = Vec::new();
     for (n, r) in results.iter().enumerate() {
         assert_eq!(r.status, S::Ok, "{r:?}");
-        assert_eq!(r.output_json, n.to_string());
+        let text = r.output_json.trim_matches('"');
+        let parts: Vec<u64> = text.split(':').map(|p| p.parse().unwrap()).collect();
+        assert_eq!(parts[0], n as u64, "{text}");
+        spans.push((parts[1], parts[2]));
     }
-    // Serial would take 1500 ms; four at once plus one more takes about 600 ms.
-    assert!(
-        took < Duration::from_millis(1300),
-        "no parallelism: {took:?}"
-    );
+    // Four workers: at some instant (a start) at least four runs are inside
+    // their [start, end). Serial or two-at-a-time runs never reach four.
+    let most_at_once = spans
+        .iter()
+        .map(|&(at, _)| spans.iter().filter(|&&(s, e)| s <= at && at < e).count())
+        .max()
+        .unwrap();
+    assert!(most_at_once >= 4, "no parallelism: {spans:?}");
 }
 
 #[test]
@@ -286,10 +308,7 @@ fn seventeenth_queued_job_is_busy_and_cancelling_frees_the_workers() {
     let started = Instant::now();
     let busy = run_script(OK, 0);
     assert_eq!(busy.status, S::Busy, "{busy:?}");
-    assert!(
-        started.elapsed() < Duration::from_millis(250),
-        "busy must answer at once"
-    );
+    assert!(started.elapsed() < SCHED, "busy must answer at once");
     assert_eq!(busy.js_error, None);
     assert!(!busy.error_message.is_empty());
 
@@ -349,7 +368,7 @@ fn cancel_of_a_running_job_is_seen_promptly() {
     rt::cancel_job(id);
     let finished_at = rx.recv_timeout(Duration::from_secs(5)).expect("job ended");
     assert_eq!(runner.join().unwrap().status, S::Cancelled);
-    assert!(finished_at.duration_since(cancelled_at) < Duration::from_millis(350));
+    assert!(finished_at.duration_since(cancelled_at) < SCHED);
 }
 
 #[test]
@@ -417,7 +436,7 @@ fn cancelling_queued_jobs_ends_them_at_once_and_frees_their_slots() {
             .expect("queued job ended");
         assert!(n >= limits::WORKER_THREADS, "a running job ended: {n}");
         assert!(
-            at.duration_since(cancelled_at) < Duration::from_millis(350),
+            at.duration_since(cancelled_at) < SCHED,
             "slow: {:?}",
             at.duration_since(cancelled_at)
         );

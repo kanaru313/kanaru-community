@@ -1,0 +1,56 @@
+# cargo-deny policy: licenses, duplicate versions and sources. Advisories stay
+# with `cargo audit` (tool/check_rust runs both). Run it with
+# `cargo deny --manifest-path rust/Cargo.toml check licenses bans sources`.
+
+[graph]
+# The flake's rustTargets: every platform the app builds for.
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "aarch64-linux-android",
+  "armv7-linux-androideabi",
+  "x86_64-linux-android",
+  "i686-linux-android",
+]
+
+[licenses]
+# Only what the dependency tree needs; every other license in the lock is an
+# `OR` alternative to one of these. No GPL/LGPL/AGPL: the private Pro build
+# must stay possible.
+allow = [
+  "MIT",
+  "Apache-2.0",
+  "BSD-3-Clause", # bindgen, encoding_rs
+  "ISC",          # scraper, ego-tree, libloading
+  "Zlib",         # foldhash, zlib-rs
+  "MPL-2.0",      # symphonia, cssparser, selectors
+  "Unicode-3.0",  # unicode-ident
+  "IJG",          # jpeg-encoder
+]
+# A license that no crate uses any more must leave the list.
+unused-allowed-license = "deny"
+private = { ignore = true } # the workspace crates
+
+# allo-isolate (flutter_rust_bridge) names no SPDX expression, only a license file.
+[[licenses.clarify]]
+crate = "allo-isolate"
+expression = "Apache-2.0"
+license-files = [{ path = "LICENSE", hash = 0x0a6d4ed6 }]
+
+[bans]
+multiple-versions = "deny"
+wildcards = "deny"
+allow-wildcard-paths = true
+# Today's duplicates (the older version of each). A new one fails the gate.
+skip = [
+  { crate = "foldhash@0.1.5", reason = "hashbrown 0.15 (whatlang); the rest use foldhash 0.2" },
+  { crate = "hashbrown@0.15.5", reason = "whatlang; indexmap and rquickjs-core use 0.17" },
+  { crate = "miniz_oxide@0.8.9", reason = "png; flate2, lofty and backtrace use 0.9" },
+  { crate = "shlex@1.3.0", reason = "bindgen (rquickjs-sys build script); cc uses 2.0" },
+  { crate = "syn@2.0.119", reason = "bindgen and derive crates; others use syn 3" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

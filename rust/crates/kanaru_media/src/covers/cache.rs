@@ -42,8 +42,9 @@ pub fn write_both(cache_dir: &Path, key: &str, thumb: &[u8], full: &[u8]) -> io:
 }
 
 /// Writes through a temp file in the destination's own folder, then renames,
-/// so a reader never sees a half-written file. The temp file is removed on
-/// error.
+/// so a reader never sees a half-written file. The data is synced before the
+/// rename: a crash leaves no file or a complete one, never a zero-length one.
+/// The temp file is removed on error.
 fn write_atomic(dest: &Path, data: &[u8]) -> io::Result<()> {
     let shard = dest
         .parent()
@@ -56,7 +57,7 @@ fn write_atomic(dest: &Path, data: &[u8]) -> io::Result<()> {
             .create_new(true)
             .open(&temp)?;
         file.write_all(data)?;
-        file.flush()?;
+        file.sync_data()?;
         drop(file);
         fs::rename(&temp, dest)
     })();

@@ -248,7 +248,7 @@ file fails it; `UPDATE_FIXTURES=1 cargo test` rewrites it); a Dart test compares
 | Key | `<2 hex>/<32 hex>`: blake3 of the original image bytes, computed in Rust only (`isCoverKey`) |
 | Path | `cacheDir/covers/{thumb,full}/<key>.jpg` (`coverRelativePath(key, size)`; throws `ArgumentError` for a bad key) |
 | Sizes | `thumb` 256 px, `full` 1024 px on the longest side, both JPEG |
-| Temp files | prefix `.kanaru-tmp-` (`coverTempPrefix`), renamed when complete |
+| Temp files | prefix `.kanaru-tmp-` (`coverTempPrefix`), synced to disk, then renamed when complete |
 | Layout marker | `cacheDir/covers/.layout-v1` (`coverLayoutMarker`) |
 
 Rust writes these files (`kanaru_media::covers`, called by `extract_covers_batch`):
@@ -274,7 +274,7 @@ Rust writes these files (`kanaru_media::covers`, called by `extract_covers_batch
   64 MiB decode cap rejects them before any allocation, as in the old app. JPEG is
   decoded scaled, up to `MAX_COVER_PIXELS`.
 - A decode of an image over 8 MP waits for a process-wide gate (one at a time).
-- Writes go to `.kanaru-tmp-<hex>` in the destination folder and are renamed.
+- Writes go to `.kanaru-tmp-<hex>` in the destination folder, are synced (`sync_data`) and then renamed.
   The shard folders are created on demand. `full` is written before `thumb`.
   `.layout-v1` is Dart's.
 - Files are opened through the bridge's `open_source` (regular files only, no
