@@ -4,6 +4,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../browse/play_shuffle_buttons.dart';
 import '../../../media/domain/play_context.dart';
 import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/list_sort.dart';
@@ -127,25 +128,14 @@ class DetailActions extends ConsumerWidget {
         .watch(songIdsProvider((scope: scope, sort: sort, filter: '')))
         .value;
     final enabled = ids != null && ids.isNotEmpty;
-    return Wrap(
-      spacing: KSpace.x2,
-      runSpacing: KSpace.x2,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        FilledButton.icon(
-          onPressed: enabled
-              ? () => playAll(ref, context, ids, playContext)
-              : null,
-          icon: const Icon(KIcons.play),
-          label: Text(l10n.libraryPlay),
-        ),
-        IconButton.filledTonal(
-          tooltip: l10n.libraryShuffle,
-          onPressed: enabled
-              ? () => shuffleAll(ref, context, ids, playContext)
-              : null,
-          icon: const Icon(KIcons.shuffle),
-        ),
+    return PlayShuffleButtons(
+      labelled: true,
+      playLabel: l10n.libraryPlay,
+      onPlay: enabled ? () => playAll(ref, context, ids, playContext) : null,
+      onShuffle: enabled
+          ? () => shuffleAll(ref, context, ids, playContext)
+          : null,
+      trailing: [
         LibraryMoreButton(
           onPressed: ({required viaKeyboard}) =>
               onMenu(context, viaKeyboard: viaKeyboard),

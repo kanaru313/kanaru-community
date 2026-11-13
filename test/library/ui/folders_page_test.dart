@@ -4,6 +4,7 @@ import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/domain/music_folder.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
+import 'package:kanaru/src/library/ui/folders/folder_bar.dart';
 import 'package:kanaru/src/library/ui/folders/folder_locations.dart';
 import 'package:kanaru/src/library/ui/folders/folder_play.dart';
 import 'package:kanaru/src/library/ui/folders/folder_slivers.dart';
@@ -130,7 +131,12 @@ void main() {
   ) async {
     final playback = FakePlaybackCommands();
     final (h, _) = await _single(tester, playback: playback);
-    await tester.tap(find.text('Play all'));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(FolderPlayRow),
+        matching: find.byTooltip('Play all'),
+      ),
+    );
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );
@@ -394,7 +400,14 @@ void main() {
     final (h, folder) = await _single(tester, playback: playback);
     final rows = tester.widgetList<FolderTile>(find.byType(FolderTile));
     final vpop = rows.toList().indexWhere((r) => r.title.contains('V-Pop'));
-    await tester.tap(find.byTooltip('Play all').at(vpop));
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(FolderTile),
+            matching: find.byTooltip('Play all'),
+          )
+          .at(vpop),
+    );
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );

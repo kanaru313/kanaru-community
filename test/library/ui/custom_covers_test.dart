@@ -244,7 +244,12 @@ void main() {
   ) async {
     final h = await _pump(tester);
     // A restored backup: the row is there, the image is not.
-    await setCustomCover(h.db, 'album', albumId('Blue', 'Zed'), 'ab/${'c' * 32}');
+    await setCustomCover(
+      h.db,
+      'album',
+      albumId('Blue', 'Zed'),
+      'ab/${'c' * 32}',
+    );
     await h.settle(tester, rounds: 4);
     expect(_images<AlbumCover>(tester).where(_isCustom), isEmpty);
     expect(find.byType(AlbumCover), findsNWidgets(3));
