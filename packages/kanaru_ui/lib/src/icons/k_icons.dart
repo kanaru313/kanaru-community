@@ -64,11 +64,10 @@ abstract final class KIcons {
       FluentIcons.re_order_dots_vertical_24_regular;
   static const IconData delete = FluentIcons.delete_24_regular;
   static const IconData cleaning = FluentIcons.delete_dismiss_24_regular;
-  static const IconData libraryAdd = FluentIcons.folder_add_24_regular;
+  static const IconData libraryAdd = FluentIcons.add_square_multiple_24_regular;
   static const IconData playlistAdd =
       FluentIcons.text_bullet_list_add_24_regular;
-  static const IconData playlistPlay =
-      FluentIcons.music_note_2_play_20_regular;
+  static const IconData playlistPlay = FluentIcons.music_note_2_play_20_regular;
   static const IconData queueMusic =
       FluentIcons.text_bullet_list_square_24_regular;
   static const IconData lyrics = FluentIcons.subtitles_24_regular;
@@ -80,8 +79,7 @@ abstract final class KIcons {
   static const IconData heartFilled = FluentIcons.heart_24_filled;
   static const IconData arrowUp = FluentIcons.arrow_up_24_regular;
   static const IconData arrowDown = FluentIcons.arrow_down_24_regular;
-  static const IconData sidebarCover =
-      FluentIcons.layout_column_two_24_regular;
+  static const IconData sidebarCover = FluentIcons.layout_column_two_24_regular;
 
   // Library.
   static const IconData grid = FluentIcons.grid_24_regular;
@@ -119,7 +117,6 @@ abstract final class KIcons {
   static const IconData arrowForward = FluentIcons.arrow_right_24_regular;
   static const IconData permission = FluentIcons.shield_keyhole_24_regular;
   static const IconData permissionMissing = FluentIcons.warning_24_regular;
-  static const IconData settingsApp = FluentIcons.settings_24_regular;
   static const IconData image = FluentIcons.image_24_regular;
   static const IconData musicFile = FluentIcons.document_24_regular;
   static const IconData circleOutline = FluentIcons.circle_24_regular;
@@ -130,16 +127,16 @@ abstract final class KIcons {
   static const IconData themeLight = FluentIcons.weather_sunny_24_regular;
 
   // Library sort criteria and menus.
-  static const IconData duration = FluentIcons.timer_24_regular;
+  static const IconData duration = FluentIcons.hourglass_half_24_regular;
   static const IconData playCount = FluentIcons.headphones_24_regular;
   static const IconData dateAdded = FluentIcons.calendar_ltr_24_regular;
   static const IconData year = FluentIcons.calendar_24_regular;
   static const IconData count = FluentIcons.number_symbol_24_regular;
   static const IconData trackNumber =
-      FluentIcons.text_bullet_list_square_24_regular;
+      FluentIcons.text_number_list_ltr_24_regular;
   static const IconData albumArtist = FluentIcons.person_star_24_regular;
   static const IconData artistsMany = FluentIcons.people_24_regular;
   static const IconData deselect = FluentIcons.select_all_off_24_regular;
-  static const IconData advanced = FluentIcons.code_24_regular;
+  static const IconData advanced = FluentIcons.wrench_24_regular;
   static const IconData hideFromLibrary = FluentIcons.eye_off_24_regular;
 }
