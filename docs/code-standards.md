@@ -144,8 +144,19 @@ rebase conflict, take either side and run the two commands again.
 
 ## Rust
 
-- `unsafe` only in `kanaru_bridge/src/os.rs` (thread priority). `tool/check --rust`
-  greps for it.
+- `unsafe` only in `kanaru_bridge/src/os.rs` (thread priority) and, in
+  `kanaru_plugin_runtime`, in `src/memory.rs` (the QuickJS allocator) and
+  `src/compile_check.rs` (the compile-only check on the raw engine). The runtime
+  crate sets `unsafe_code = "deny"` and `clippy::undocumented_unsafe_blocks`
+  and allows `unsafe` with `#![allow(unsafe_code)]` in those two files only;
+  every `unsafe` block carries a `// SAFETY:` comment. The Rust gate
+  (`tool/check_rust`, also run by `tool/check --rust` and by the CI Rust job)
+  first checks the cargokit patch marker (below), then greps for `unsafe`
+  outside these three files (the whitelist patterns are anchored to the start of
+  the path, so a line that merely mentions a whitelisted path is still
+  reported), then runs `cargo fmt --check`, `cargo audit`, `cargo test` and
+  `cargo clippy -D warnings`. The plugin compat test needs `KANARU_PLUGIN_REPO`
+  and skips itself without it; the gate and CI never set it.
 - `kanaru_media` and `kanaru_plugin_runtime` have no FFI and do not depend on
   each other; only `kanaru_bridge` knows flutter_rust_bridge. Explicit DTOs,
   no `#[frb(mirror)]`.
@@ -160,8 +171,35 @@ rebase conflict, take either side and run the two commands again.
   Record a pass result only on success or a permanent error kind; for a
   transient one (`NativeError.transient`: busy or dropped mounts, `Timeout`,
   `Cancelled`) leave the pass version alone. `Panic` is permanent.
+- `kanaru_plugin_runtime` has no process globals: threads, the job registry
+  and the late-answers drain belong to a `PluginRuntime` instance (`reset`
+  cancels every job, `shutdown` and `Drop` join the threads). The bridge holds
+  the one instance of the app; tests make their own. The only global is the
+  opt-in panic hook of `install_quiet_panic_hook`.
+- Second thread-per-call exception, next to the lyrics one: the compile-only
+  check of a plugin script (`check_script`) runs on its own 8 MiB thread
+  (`plugin-js-check`), because it is not a job of the worker pool and must
+  not wait for or take a worker.
 - Third-party versions are pinned in `rust/Cargo.toml` with the reason beside
   each. Pin exactly, unless the comment there says why not.
+- Vendored cargokit local patch (`rust_builder/cargokit/`, otherwise upstream
+  code). `build_tool/lib/src/android_environment.dart` `buildEnvironment()` sets
+  `CLANG_PATH` (the NDK `clang`), and `LIBCLANG_PATH` to the NDK's libclang
+  (`<prebuilt>/lib`, `<prebuilt>/bin` on Windows) when the environment does not
+  set it already, so Android builds outside the Nix dev shell (Android Studio,
+  a contributor's machine, the Pro build) need no setup; the Nix shell's own
+  `LIBCLANG_PATH` wins when present. `--sysroot`/`--target` via
+  `BINDGEN_EXTRA_CLANG_ARGS_<target>` were tested unnecessary: the generated
+  bindings are byte-identical on arm64-v8a, armeabi-v7a and x86_64 without them,
+  because the NDK clang finds its sysroot and bindgen passes the target. Why:
+  `rquickjs-sys` ships no Android bindings, so
+  `bindgen` runs when building for Android, and the Nix dev shell's clang
+  wrapper injects host glibc include dirs into it (`gnu/stubs-32.h` errors); the
+  NDK clang with its sysroot avoids that. The lines sit between the marker
+  comments `// kanaru-local-patch: android bindgen env (see docs/code-standards.md)`
+  and `// kanaru-local-patch end`; the Rust gate `tool/check_rust` fails when
+  `android_environment.dart` lacks the first marker comment, the `'CLANG_PATH'`
+  or the `'LIBCLANG_PATH'` entry. A re-vendor of cargokit must re-apply the patch.
 - Library code does not `unwrap` (lint); tests may.
 - `cargo clippy --all-targets -- -D warnings` must pass.
 

@@ -84,6 +84,7 @@
             # flutter_rust_bridge_codegen shells out to `cargo expand`
             # (run it with RUSTC_BOOTSTRAP=1 on the stable toolchain).
             cargo-expand
+            cargo-audit
             # Cargokit (flutter_rust_bridge's build glue) always calls rustup.
             # Nix has one stable toolchain and no rustup, so answer exactly the
             # three calls cargokit makes and reject everything else. The

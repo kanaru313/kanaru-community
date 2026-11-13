@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Rust gate: cargokit patch marker, format, the unsafe grep, cargo audit,
+# tests, clippy. The cheap checks come first.
+# Run from anywhere inside the nix shell (`tool/check --rust` calls it; CI runs
+# it too). The plugin compat test needs KANARU_PLUGIN_REPO and skips itself
+# without it, so this gate never sets it.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+# The local patch of vendored cargokit (bindgen env for Android) must survive a
+# re-vendor of cargokit.
+ANDROID_ENV=rust_builder/cargokit/build_tool/lib/src/android_environment.dart
+if ! grep -qF '// kanaru-local-patch: android bindgen env (see docs/code-standards.md)' "$ANDROID_ENV"; then
+  echo "cargokit Android bindgen patch missing in $ANDROID_ENV; re-apply it (see docs/code-standards.md)" >&2
+  exit 1
+fi
+if ! grep -qF "'CLANG_PATH'" "$ANDROID_ENV" || ! grep -qF "'LIBCLANG_PATH'" "$ANDROID_ENV"; then
+  echo "cargokit Android bindgen patch missing in $ANDROID_ENV; re-apply it (see docs/code-standards.md)" >&2
+  exit 1
+fi
+
+# `unsafe` lives only in these files of hand-written Rust (generated
+# `frb_generated.rs` is skipped). `-w` matches the keyword, not lint names such
+# as `unsafe_code` or `undocumented_unsafe_blocks`; those and comment lines are
+# filtered out so only code and `unsafe` blocks/fns/impls trip the gate. The
+# patterns are anchored to the path start, so a line whose text merely names
+# one of these paths is still reported.
+if grep -rnw --include='*.rs' unsafe rust/crates \
+    | grep -v -e '^rust/crates/kanaru_bridge/src/os\.rs:' \
+              -e '^rust/crates/kanaru_plugin_runtime/src/memory\.rs:' \
+              -e '^rust/crates/kanaru_plugin_runtime/src/compile_check\.rs:' \
+              -e '^rust/crates/kanaru_bridge/src/frb_generated\.rs:' \
+    | grep -v -E '^[^:]+:[0-9]+:[[:space:]]*//'; then
+  echo "unsafe outside kanaru_bridge/src/os.rs, kanaru_plugin_runtime/src/{memory,compile_check}.rs" >&2
+  exit 1
+fi
+
+cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+
+if ! command -v cargo-audit >/dev/null 2>&1; then
+  echo "cargo-audit is not installed: run inside 'nix develop' (flake.nix has it) or 'cargo install cargo-audit --locked'" >&2
+  exit 1
+fi
+cargo audit --file rust/Cargo.lock
+
+cargo test --manifest-path rust/Cargo.toml
+cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings

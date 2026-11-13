@@ -6,7 +6,34 @@ rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
-[dependencies]
+[features]
+# Test-only script globals (`__testLog`, `__testPanic`). Enabled only through
+# the dev-dependency on this crate below; no other crate turns it on.
+test-hooks = []
 
-[lints]
-workspace = true
+[dependencies]
+rquickjs.workspace = true
+encoding_rs.workspace = true
+
+# rquickjs-sys ships no Android bindings: generate them with bindgen there.
+[target.'cfg(target_os = "android")'.dependencies]
+rquickjs = { workspace = true, features = ["bindgen"] }
+
+[dev-dependencies]
+# Integration tests and the crate's own unit tests see the test-only globals.
+kanaru_plugin_runtime = { path = ".", features = ["test-hooks"] }
+# Compat test only (tests/compat_repo.rs).
+ureq.workspace = true
+zip.workspace = true
+flate2.workspace = true
+
+# Own lints instead of `workspace = true`: the workspace forbids `unsafe_code`,
+# this crate denies it and allows it in two files (the allocator and the raw
+# compile-only check), each with a `// SAFETY:` note on every block.
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+unwrap_used = "deny"
+undocumented_unsafe_blocks = "deny"

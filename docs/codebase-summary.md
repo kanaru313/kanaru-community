@@ -47,7 +47,8 @@ library UI bodies (their seeds are in the table above).
 
 ## Gate (`tool/`)
 
-- `check`: bash script running the full gate (`--rust` adds fmt, the `unsafe` grep, cargo test and clippy).
+- `check`: bash script running the full gate (`--rust` adds `check_rust`).
+- `check_rust`: the Rust gate (cargokit patch marker, `unsafe` grep, fmt, `cargo audit`, test, clippy); the CI Rust job runs it.
 - `merge_arb.dart`: merges the l10n parts (`--check` for the gate).
 - `check_architecture.dart`: wrapper that runs the CLI of the lint package.
 - `architecture_lint/`: pure Dart package, analyzer plugin (`lib/main.dart`)
@@ -63,7 +64,26 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
 - `kanaru_media`: `error.rs` (`MediaError`, `is_transient`), `cancel.rs` (`Cancel`),
   `limits.rs` (size, pixel and duration caps), `lib.rs` (`CRATE_VERSION`). Empty
   modules that lanes fill: `tags/`, `covers/`, `waveform/`.
-- `kanaru_plugin_runtime`: placeholder for the plugin JavaScript runtime. No FFI and no dependency on `kanaru_media`.
+- `kanaru_plugin_runtime`: runs plugin JavaScript (QuickJS via `rquickjs`). No FFI
+  and no dependency on `kanaru_media`. `PluginRuntime` / `RuntimeConfig` (`runtime.rs`;
+  `run`, `begin_job`, `cancel_job`, `reset`, `shutdown`, `check_script`) owns the
+  worker pool (`pool.rs`), the job registry (`jobs.rs`) and the late-answers drain
+  (`host/late.rs`). `PluginHost` (`host/mod.rs`) is what answers `fetch` and stream
+  calls; the bridge implements it, `NoNetwork` is the default. `engine/` runs one
+  job on a fresh `Runtime` and `Context` and maps every ending to a `ScriptResult`;
+  `globals/` has `Response`, `execute` and `load`; `host/` has the budget,
+  `callback` (park and wake while waiting for the host), `console`, `sleep`,
+  `storage` (`localConfig`, `localStorage`) and `quiet` (panic hook); `js/` holds
+  `host_prelude.js` and CryptoJS 4.2.0; `memory.rs` is the limited allocator and
+  `compile_check.rs` the compile-only check (the two files with `unsafe`);
+  `limits.rs` has every cap; `types.rs` the runtime types. Not ported yet: `Html`. Integration tests are in
+  `crates/kanaru_plugin_runtime/tests/` (`common/mod.rs` shares one runtime per test
+  binary behind a lock; `contract`, `crypto`, `failure_data`, `limits`, `storage`,
+  `hostile`, `lifecycle`, `prelude_drift`, `fetch`, `stream_fetch`, `streaming_run`);
+  `compat_repo.rs` runs every plugin of a repository named by `KANARU_PLUGIN_REPO`
+  against a fake host (local only, skips without the variable; dev-dependencies
+  `ureq` and `zip`); the feature `test-hooks` adds the `__testLog` and `__testPanic`
+  script globals.
 - `kanaru_bridge`: `guard.rs` (`guarded`, panic to `NativeError`), `pools.rs`
   (`background`, `interactive`, `waveform`; 8 MiB stacks), `os.rs` (thread
   priority, the only `unsafe`), `source.rs` (`Source`, `open_source`: regular
@@ -71,10 +91,23 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
   `NativeError` DTO; `tags`, `covers` and `waveform` are empty until their lanes).
   `api/lyrics.rs` (`read_embedded_lyrics`, own thread per call, 10 s timeout,
   at most 2 stuck threads; reader in `kanaru_media` `tags/lyrics_reader.rs` and `tags/lyrics_sylt.rs`).
+  Plugin runtime: `runtime_holder.rs` (`runtime()`, the one `PluginRuntime` in a
+  `OnceLock`, sized from `pools::config::PLUGIN_*`, installs the quiet panic hook;
+  `existing()` lets `reset`/`cancel` skip a never-built runtime),
+  `host_dart.rs` (`DartHost`: `PluginHost` over the Dart fetch and stream callbacks),
+  `plugin_dto.rs` (conversions DTO and runtime types; an unknown variant of a
+  `#[non_exhaustive]` runtime enum maps to `Internal` / `Network` / `Server`,
+  but an unknown stream op is answered `InvalidRequest` without calling Dart;
+  round-trip tests iterate the runtime enums' `ALL` lists),
+  `api/plugin_runtime.rs` (script DTOs; `begin_plugin_job`, `cancel_plugin_job`,
+  `reset_plugin_runtime`, `run_plugin_script`, `check_plugin_script`) and
+  `api/plugin_stream.rs` (stream DTOs; `plugin_job_events`, `run_plugin_stream_script`).
+  Tests: `tests/plugin_api.rs` (shared runtime behind a `serial()` lock).
   `frb_generated.rs` is generated.
 - Third-party versions are in `rust/Cargo.toml`, with the reason beside each.
 - `rust_builder/` is the cargokit glue that builds `kanaru_bridge` for the
-  host and the Android ABIs. Generated bindings: `rust/crates/kanaru_bridge/src/frb_generated.rs`
+  host and the Android ABIs; its `android_environment.dart` carries a local
+  bindgen patch (see code-standards.md). Generated bindings: `rust/crates/kanaru_bridge/src/frb_generated.rs`
   and `lib/src/rust/`.
 
 ## Platform runners
