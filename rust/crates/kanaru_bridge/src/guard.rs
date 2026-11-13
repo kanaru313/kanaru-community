@@ -26,9 +26,14 @@ pub(crate) fn install_hook() {
             if GUARDED.with(Cell::get) {
                 let line = panic_line(&payload_text(info.payload()), info.location());
                 log::warn!("{line}");
-                // No logger off Android: logcat is the only sink there.
+                // No logger off Android: logcat is the only sink there. Not
+                // `eprintln!`: it panics when stderr is closed, and a panic
+                // inside a panic hook aborts the process.
                 #[cfg(not(target_os = "android"))]
-                eprintln!("{line}");
+                {
+                    use std::io::Write;
+                    let _ = writeln!(std::io::stderr(), "{line}");
+                }
             } else {
                 previous(info);
             }

@@ -10,6 +10,7 @@
 //! | busy | `Pool::try_submit` (`pool.rs`) refuses under one lock | microseconds |
 //! | cancel of a running busy loop | the same handler reads the cancel flag | sub-ms |
 //! | cancel of queued jobs | `cancel_job` takes them out of the queue under the lock and completes them | no JS runs; the test's `block_on` polls every 5 ms |
+//! | busy, before its check | none: the 600 ms sleep stays, the runtime has no running-count API to wait on | the sleep only lets the 4 workers start |
 //! | parallelism | 4 worker threads | concurrency, checked by overlap, not by latency |
 //!
 //! Host waits (`host/emit.rs`, `callback.rs`, `sleep.rs`) poll the cancel flag
@@ -274,10 +275,10 @@ fn five_jobs_run_in_parallel_on_four_threads() {
         spans.push((parts[1], parts[2]));
     }
     // Four workers: at some instant (a start) at least four runs are inside
-    // their [start, end]. Serial or two-at-a-time runs never reach four.
+    // their [start, end). Serial or two-at-a-time runs never reach four.
     let most_at_once = spans
         .iter()
-        .map(|&(at, _)| spans.iter().filter(|&&(s, e)| s <= at && at <= e).count())
+        .map(|&(at, _)| spans.iter().filter(|&&(s, e)| s <= at && at < e).count())
         .max()
         .unwrap();
     assert!(most_at_once >= 4, "no parallelism: {spans:?}");

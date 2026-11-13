@@ -18,9 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: 3.47.4
           channel: stable
@@ -28,7 +28,7 @@ jobs:
           pub-cache-key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
 
       # The analyzer plugin snapshot lives here; cache it between runs.
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.dartServer
           key: dartserver-${{ runner.os }}-${{ hashFiles('pubspec.lock', 'tool/architecture_lint/pubspec.lock') }}
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       # SHA pinned; toolchain equal to the flake's rust-overlay stable
       # (`nix develop -c rustc --version`): bump both together.
@@ -60,7 +60,7 @@ jobs:
           toolchain: 1.99.1
           components: clippy, rustfmt
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             ~/.cargo/registry
@@ -72,7 +72,7 @@ jobs:
       # cargo-audit is built once (pinned to the flake version) and cached; the step is skipped when present.
       - name: Cache cargo-audit
         id: cargo-audit-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cargo/bin/cargo-audit
           key: cargo-audit-${{ runner.os }}-0.22.2
@@ -84,7 +84,7 @@ jobs:
       # cargo-deny: same scheme (version = the flake's).
       - name: Cache cargo-deny
         id: cargo-deny-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cargo/bin/cargo-deny
           key: cargo-deny-${{ runner.os }}-0.20.2
