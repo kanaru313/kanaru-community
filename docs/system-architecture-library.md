@@ -484,7 +484,8 @@ between screens.
   "Deselect"): letting go after 70 % of the width plays the slide-out
   (`KMotion.fast`), then calls `LibrarySelection.remove(id)`. There is no toast
   and no undo, the drag reveals no icon (an icon halfway would read as already
-  removed), and a drag on the handle still wins over the swipe.
+  removed), the row fades like the queue's (1.0 to 0.3 at 70 %, then to 0 as it slides out), and a drag on the
+  handle still wins over the swipe.
 - Back and Esc (`SelectionBackScope`): they collapse the panel and never clear
   the selection (only the panel's ✕ does). Back is a `BackButtonListener`: the
   root dispatcher asks listeners before the router pops a sheet or dialog, so
@@ -575,7 +576,8 @@ Every call is awaited; a failure is logged and shows a snack bar.
   Tap = `playTracks(ids, startIndex: index)`. The whole row (inside its
   `KContextRegion`) is a `KSwipeActions.capped`: swipe left = "Play next"
   (`MenuActionRunner.playNext([id])`, same call and toast as the menu footer),
-  swipe right = `openSongInfo`; both stay on while a selection is active. The
+  swipe right = `openSongInfo`; both stay on while a selection is active. The moving row fades from 1.0 to 0.5 at
+  the trigger (flat beyond) and is exactly 1.0 again at rest. The
   song list keys every row by track id, so a row that now holds another song
   starts over and a swipe begun on the old song never acts on the new one. A
   drag that starts on a song row belongs to the row (the sub-tab swipe of

@@ -595,8 +595,10 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`). `QueuePanel(host: she
   the row width (counted from the pointer-down point, either way; a fling alone removes nothing) slides the row out and
   removes it. The side is locked when the drag starts and the offset never crosses zero, so the row never flips side;
   below 70 % the row springs back. The drag reveals no icon and no strip (an icon halfway would read as already
-  removed). The removal starts at release, together with the slide-out; the list hides the row (it fades) through its
-  `_leaving` set, and if the removal fails the row springs back and shows again. The swipe is also a semantics action
+  removed). The moving row fades with its offset: opacity 1.0 at rest down to 0.3 at 70 %, flat at 0.3 beyond, then on
+  to 0 during the slide-out after release (`KSwipeGeometry.opacityFor`, derived from the same offset, so a snap-back
+  returns to exactly 1.0). The removal starts at release, together with the slide-out; the list hides the row through its
+  `_leaving` set with its own `AnimatedOpacity`, which multiplies on top of the row's fade; and if the removal fails the row springs back and shows again. The swipe is also a semantics action
   ("Remove from queue"). A row being removed is kept hidden by the list (`_leaving` entry ids) even if it is remounted
   by an undo above it. Trackpad pans are ignored. It is not a `Dismissible` because that one wants the row gone in the
   same frame while the removal is persisted first. The toast ("Removed …" / "Removed N tracks", Undo, 4 s) is shown from

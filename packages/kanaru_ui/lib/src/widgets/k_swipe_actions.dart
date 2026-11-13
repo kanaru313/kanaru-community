@@ -85,6 +85,9 @@ class _KSwipeActionsState extends State<KSwipeActions>
   bool _leaving = false;
   bool _past = false;
 
+  /// Offset at which a remove release started the slide-out; null otherwise.
+  double? _slideFrom;
+
   bool get _isRemove => widget.onRemove != null;
   KSwipeAction? get _action => _side > 0 ? widget.start : widget.end;
   KSwipeGeometry get _geo => KSwipeGeometry(width: _width, isRemove: _isRemove);
@@ -107,12 +110,18 @@ class _KSwipeActionsState extends State<KSwipeActions>
 
   void _springBack() {
     _past = false;
-    KSpring.animateTo(context, _dx, 0, KSpring.gentle);
+    KSpring.animateTo(context, _dx, 0, KSpring.gentle).whenComplete(() {
+      // At rest nothing is left of a release.
+      if (mounted && _dx.value == 0) _slideFrom = null;
+    });
   }
 
   void _onStart(DragStartDetails _) {
     if (_leaving) return;
     _dx.stop();
+    // A row regrabbed while still beyond its release point keeps fading from
+    // there, so the grab never steps its opacity up.
+    if (_dx.value.abs() <= (_slideFrom ?? 0)) _slideFrom = null;
     _width = context.size?.width ?? 1;
     _side = _dx.value.sign;
     _travel = _geo.travelFor(
@@ -158,6 +167,8 @@ class _KSwipeActionsState extends State<KSwipeActions>
   /// (the list drops it); otherwise it comes back.
   Future<void> _slideOut() async {
     _leaving = true;
+    // A semantics removal starts from rest: fade as if released at 70 %.
+    _slideFrom = math.max(_dx.value.abs(), _geo.removeTravel);
     final removal = _remove();
     unawaited(
       _dx.animateTo(
@@ -251,7 +262,14 @@ class _KSwipeActionsState extends State<KSwipeActions>
             // Painted after the row: it only covers the area the row left.
             return Stack(
               children: [
-                Transform.translate(offset: Offset(dx, 0), child: child),
+                Transform.translate(
+                  offset: Offset(dx, 0),
+                  // Always present: at 1.0 it adds no layer.
+                  child: Opacity(
+                    opacity: _geo.opacityFor(dx.abs(), releasedAt: _slideFrom),
+                    child: child,
+                  ),
+                ),
                 // The remove kind reveals nothing: it must be dragged to 70 %
                 // and an icon halfway would read as already removed.
                 if (dx != 0 && !_isRemove)

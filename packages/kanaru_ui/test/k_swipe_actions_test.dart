@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show GestureSettings, PointerDeviceKind;
 
 import 'package:flutter/semantics.dart';
@@ -573,6 +574,178 @@ void main() {
         -70,
         label: true,
       );
+    });
+  });
+
+  group('the moving row fades', () {
+    double opacity(WidgetTester tester) => tester
+        .widget<Opacity>(
+          find
+              .ancestor(of: find.byKey(_rowKey), matching: find.byType(Opacity))
+              .first,
+        )
+        .opacity;
+
+    Future<TestGesture> hold(WidgetTester tester, double dx) async {
+      final g = await tester.startGesture(const Offset(100, 30));
+      await g.moveBy(Offset(dx / 2, 0));
+      await g.moveBy(Offset(dx / 2, 0));
+      await tester.pump();
+      return g;
+    }
+
+    Widget capped(Widget r) =>
+        KSwipeActions.capped(start: _action('a', []), child: r);
+
+    testWidgets('capped: 1 at rest, 0.75 halfway, 0.5 from the trigger', (
+      tester,
+    ) async {
+      await _pumpRow(tester, capped);
+      expect(opacity(tester), 1.0);
+      var g = await hold(tester, 40);
+      expect(opacity(tester), closeTo(0.75, 0.01));
+      await g.cancel();
+      await tester.pumpAndSettle();
+      g = await hold(tester, 80);
+      expect(opacity(tester), closeTo(0.5, 0.01));
+      await g.cancel();
+      await tester.pumpAndSettle();
+      g = await hold(tester, 320);
+      expect(opacity(tester), closeTo(0.5, 0.001));
+      await g.cancel();
+    });
+
+    testWidgets('capped: exactly 1 again after a snap-back', (tester) async {
+      await _pumpRow(tester, capped);
+      final g = await hold(tester, 60);
+      await g.up();
+      await tester.pumpAndSettle();
+      expect(opacity(tester), 1.0);
+    });
+
+    testWidgets('remove: 0.3 at 70 % and beyond, 1 after a short release', (
+      tester,
+    ) async {
+      await _pumpRow(tester, (r) => _remove(() async => false, row: r));
+      var g = await hold(tester, _width * 0.7);
+      expect(opacity(tester), closeTo(0.3, 0.001));
+      await g.cancel();
+      await tester.pumpAndSettle();
+      g = await hold(tester, _width * 0.85);
+      expect(opacity(tester), closeTo(0.3, 0.001));
+      await g.cancel();
+      await tester.pumpAndSettle();
+      g = await hold(tester, _width * 0.5);
+      await g.up();
+      await tester.pumpAndSettle();
+      expect(opacity(tester), 1.0);
+    });
+
+    testWidgets('remove: the slide-out only fades further, down to 0', (
+      tester,
+    ) async {
+      await _pumpRow(tester, (r) => _remove(() async => true, row: r));
+      final g = await hold(tester, _width * 0.8);
+      var last = opacity(tester);
+      await g.up();
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        final now = opacity(tester);
+        expect(now, lessThanOrEqualTo(last + 1e-9));
+        last = now;
+      }
+      expect(last, 0);
+    });
+
+    testWidgets('a failed removal fades back in without a step, to exactly 1', (
+      tester,
+    ) async {
+      await _pumpRow(tester, (r) => _remove(() async => false, row: r));
+      final g = await hold(tester, _width * 0.8);
+      await g.up();
+      var last = opacity(tester);
+      for (var i = 0; i < 120; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        final now = opacity(tester);
+        // The gentle spring peaks near 0.08 per 16 ms frame; a step would be
+        // 0.3 or more.
+        expect(now - last, lessThan(0.12));
+        last = now;
+      }
+      await tester.pumpAndSettle();
+      expect(opacity(tester), 1.0);
+    });
+
+    testWidgets('the slide-out after a 72 % release starts near 0.3', (
+      tester,
+    ) async {
+      await _pumpRow(tester, (r) => _remove(() async => true, row: r));
+      final g = await hold(tester, _width * 0.72);
+      await g.up();
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(opacity(tester), inInclusiveRange(0.25, 0.3 + 1e-9));
+    });
+
+    testWidgets('a semantics removal fades down from the first frame', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await _pumpRow(tester, (r) => _remove(() async => true, row: r));
+      tester.semantics.performAction(
+        find.semantics.byAction(SemanticsAction.customAction),
+        SemanticsAction.customAction,
+        args: CustomSemanticsAction.getIdentifier(
+          const CustomSemanticsAction(label: 'Remove'),
+        ),
+      );
+      await tester.pump();
+      var last = opacity(tester);
+      expect(last, lessThanOrEqualTo(1.0));
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        final now = opacity(tester);
+        expect(now, lessThanOrEqualTo(last + 1e-9));
+        last = now;
+      }
+      handle.dispose();
+    });
+
+    testWidgets('a regrab beyond the release point does not step opacity up', (
+      tester,
+    ) async {
+      final answer = Completer<bool>();
+      await _pumpRow(tester, (r) => _remove(() => answer.future, row: r));
+      final g = await hold(tester, _width * 0.75);
+      await g.up();
+      // The removal is pending: the row slides all the way out and fades to 0.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(opacity(tester), closeTo(0, 0.001));
+      answer.complete(false);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 16));
+      // Springing back but still beyond the 75 % release point.
+      expect(_dx(tester), greaterThan(_width * 0.75));
+      final before = opacity(tester);
+      final g2 = await tester.startGesture(const Offset(100, 30));
+      await g2.moveBy(const Offset(19, 0));
+      await tester.pump();
+      expect(opacity(tester), lessThanOrEqualTo(before + 0.05));
+      await g2.cancel();
+    });
+
+    testWidgets('the child state survives a drag and a snap-back', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(_width, 800));
+      await tester.pumpWidget(host(capped(const _Counter())));
+      await tester.tap(find.byType(_Counter));
+      await tester.pump();
+      final g = await tester.startGesture(const Offset(100, 30));
+      await g.moveBy(const Offset(60, 0));
+      await g.up();
+      await tester.pumpAndSettle();
+      expect(find.text('1'), findsOneWidget);
     });
   });
 

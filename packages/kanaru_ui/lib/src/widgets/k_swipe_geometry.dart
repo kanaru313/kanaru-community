@@ -20,6 +20,11 @@ class KSwipeGeometry {
   /// to remove the row.
   static const double _removeShare = 0.7;
 
+  /// Opacity of a moving row at the trigger (capped) and at the remove
+  /// distance (remove).
+  static const double _cappedFade = 0.5;
+  static const double _removeFade = 0.3;
+
   double get cap => (width * _cappedShare).clamp(0.0, _cappedMax);
   double get trigger => cap * _triggerOfCap;
 
@@ -50,5 +55,27 @@ class KSwipeGeometry {
     if (room <= 0) return offset;
     final share = ((offset - trigger) / room).clamp(0.0, 0.999);
     return trigger - room * math.log(1 - share);
+  }
+
+  /// Row opacity at an unsigned [offset]; the row fades with its own
+  /// movement, so it is exactly 1 at rest and follows a snap-back for free.
+  ///
+  /// Capped: 1 at 0 down to [_cappedFade] at the trigger, flat beyond.
+  /// Remove: 1 down to [_removeFade] at the remove distance, flat beyond. A
+  /// row released past it ([releasedAt], its offset then) fades on to 0 as
+  /// it slides to the full width, starting from [_removeFade] so nothing
+  /// steps at release.
+  double opacityFor(double offset, {double? releasedAt}) {
+    if (offset <= 0) return 1;
+    if (!isRemove) {
+      final t = trigger;
+      return t <= 0 ? 1 : 1 - (1 - _cappedFade) * math.min(1, offset / t);
+    }
+    final r = removeTravel;
+    final out = width - (releasedAt ?? width);
+    if (releasedAt != null && offset > releasedAt && out > 0) {
+      return _removeFade * ((width - offset) / out).clamp(0.0, 1.0);
+    }
+    return r <= 0 ? 1 : 1 - (1 - _removeFade) * math.min(1, offset / r);
   }
 }
