@@ -1,7 +1,8 @@
-import 'dart:ui' show GestureSettings;
+import 'dart:ui' show GestureSettings, SemanticsAction;
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:drift/drift.dart' show Variable;
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart' show TrackStatus;
@@ -571,6 +572,33 @@ void swipeTests() {
         await unmountApp(tester);
       },
     );
+
+    testWidgets('the labelled row node carries both swipe actions', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final (_, playback, ids) = await _pumpSwipe(tester, ['Alpha', 'Bravo']);
+      final node = tester.getSemantics(find.text('Alpha'));
+      expect(node.label, contains('Alpha'));
+      final labels = {
+        for (final id
+            in node.getSemanticsData().customSemanticsActionIds ?? <int>[])
+          CustomSemanticsAction.getAction(id)!.label,
+      };
+      expect(labels, containsAll(['Play next', 'Song info']));
+      tester.semantics.performAction(
+        find.semantics.byPredicate((n) => n.id == node.id),
+        SemanticsAction.customAction,
+        args: CustomSemanticsAction.getIdentifier(
+          const CustomSemanticsAction(label: 'Play next'),
+        ),
+      );
+      await tester.pump();
+      expect((playback.calls.single as PlayNextCall).tracks, [TrackId(ids[0])]);
+      await tester.pump(const Duration(seconds: 5));
+      handle.dispose();
+      await unmountApp(tester);
+    });
 
     testWidgets('holding still selects the row', (tester) async {
       final (h, _, ids) = await _pumpSwipe(tester, ['Alpha', 'Bravo']);

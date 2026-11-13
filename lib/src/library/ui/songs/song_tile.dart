@@ -73,19 +73,7 @@ class SongTile extends ConsumerWidget {
     // Swipe left queues it next, right opens its info; both stay on while a
     // selection is active. The row is keyed by track (see the song list), so
     // a swipe cannot outlive the song it began on.
-    return KSwipeActions.capped(
-      end: KSwipeAction(
-        icon: KIcons.playlistPlay,
-        label: l10n.libraryMenuPlayNext,
-        onTrigger: () => _playNext(context),
-      ),
-      start: KSwipeAction(
-        icon: KIcons.info,
-        label: l10n.libraryMenuSongInfo,
-        onTrigger: () => unawaited(openSongInfo(context, info, origin: origin)),
-      ),
-      child: _row(context, ref, l10n, current, selected, duration, menu),
-    );
+    return _row(context, ref, l10n, current, selected, duration, menu);
   }
 
   /// Same call and toast as the menu's "Play next" button.
@@ -115,28 +103,43 @@ class SongTile extends ConsumerWidget {
           menu(viaKeyboard: at == null);
         }
       },
-      child: KMediaCard(
-        title: info.title,
-        titleLabel: showDetected && info.languageDetected
-            ? l10n.libraryAutoDetectedTag
-            : null,
-        line2: trackArtistLine(info),
-        line3: trackAlbumLine(info),
-        leading: _SongCover(
-          info: info,
-          current: current,
-          number: showNumber && !selected && (info.trackNo ?? 0) > 0
-              ? info.trackNo
-              : null,
+      // Inside the region, around the card only: the swipe actions then sit
+      // on the card's labelled node, the one a screen reader focuses.
+      child: KSwipeActions.capped(
+        end: KSwipeAction(
+          icon: KIcons.playlistPlay,
+          label: l10n.libraryMenuPlayNext,
+          onTrigger: () => _playNext(context),
         ),
-        top: duration == null ? null : Text(formatClock(duration)),
-        bottom: SongFavoriteButton(trackId: info.id),
-        trailing: LibraryMoreButton(onPressed: menu),
-        current: current,
-        currentLabel: l10n.libraryNowPlaying,
-        selected: selected,
-        onLongPress: selected ? null : () => _select(ref),
-        onTap: () => _tap(ref, context),
+        start: KSwipeAction(
+          icon: KIcons.info,
+          label: l10n.libraryMenuSongInfo,
+          onTrigger: () =>
+              unawaited(openSongInfo(context, info, origin: origin)),
+        ),
+        child: KMediaCard(
+          title: info.title,
+          titleLabel: showDetected && info.languageDetected
+              ? l10n.libraryAutoDetectedTag
+              : null,
+          line2: trackArtistLine(info),
+          line3: trackAlbumLine(info),
+          leading: _SongCover(
+            info: info,
+            current: current,
+            number: showNumber && !selected && (info.trackNo ?? 0) > 0
+                ? info.trackNo
+                : null,
+          ),
+          top: duration == null ? null : Text(formatClock(duration)),
+          bottom: SongFavoriteButton(trackId: info.id),
+          trailing: LibraryMoreButton(onPressed: menu),
+          current: current,
+          currentLabel: l10n.libraryNowPlaying,
+          selected: selected,
+          onLongPress: selected ? null : () => _select(ref),
+          onTap: () => _tap(ref, context),
+        ),
       ),
     );
   }

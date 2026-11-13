@@ -820,7 +820,9 @@ The app l10n key `emptyLibrary` is unused (the empty state uses `libraryEmptyMes
 `SelectionRow`, `showSelectionPicker` (`options`, `selected`, `title`, `header`,
 `confirm`, `anchor`), `showKSheet`, `showAppSnackBar`, `showKDialog`,
 `confirmAction`, `KPressable`, `KCover`, `KEqualizerIcon`, `KContextRegion`,
-`KListRow`, `KChip`, `PageHeaderScope`, `KIcons`. A width-based layout (for
+`KListRow`, `KChip`, `PageHeaderScope`, `KIcons`, `KSwipeActions`
+(`.capped` for song rows, `.remove` for the queue and the selection panel; with
+`KSwipeAction` and `kSwipeDevices`). A width-based layout (for
 example the album page at 840 px and up) goes into a `collections` widget of
 `kanaru_ui`, not into `library/ui`.
 
