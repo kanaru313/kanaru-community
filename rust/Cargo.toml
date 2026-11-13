@@ -70,6 +70,16 @@ rquickjs = { version = "=0.14.0", default-features = false, features = ["std"] }
 # fetch natives). Exact pin: matches the version the old app shipped.
 encoding_rs = "=0.8.42"
 
+# Dev-only (the compat test of the runtime crate, which reads a plugin
+# repository over plain HTTP from localhost). Never linked into the bridge.
+# ureq: no TLS (plain HTTP only); zip: deflate only. Exact pins.
+ureq = { version = "=3.1.4", default-features = false }
+zip = { version = "=9.5.1", default-features = false, features = ["deflate-flate2"] }
+
+# Dev-only: makes `-p kanaru_plugin_runtime` compile alone (zip needs a flate2
+# backend; the workspace build gets it from other crates). Same version as the lock.
+flate2 = { version = "=1.1.11", default-features = false, features = ["rust_backend"] }
+
 kanaru_media = { path = "crates/kanaru_media" }
 kanaru_plugin_runtime = { path = "crates/kanaru_plugin_runtime" }
 
