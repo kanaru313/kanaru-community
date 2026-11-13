@@ -550,6 +550,10 @@ Rules:
   first frame, and buttons read it on tap.
 - `MiniPlayer` appears when `hasCurrentTrackProvider` is true; with no track there is no mini player and
   no player bar.
+- Mobile dock: the selection bar and the mini player float over the page (`MobileFloatingDock`, mini player at
+  the bottom, selection bar above it), not in the scaffold's bottom bar. Their measured height is added to the
+  page's bottom `MediaQuery` padding, so lists and `KPage` end above them. While the keyboard is open the dock is
+  hidden (kept offstage) and adds no padding.
 - Desktop layout: `DesktopHistoryInput > Column[top bar, Row[Expanded(Stack[Offstage(left region),
   Now Playing overlay]), RightPanelHost]]`. Now Playing covers only the left region; the right panel is a
   sibling of that Stack and stays visible and tappable while the left region is covered. The left part
@@ -632,7 +636,7 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
 - `NowPlayingMoreSheet` (⋮): the head and `nowPlayingMoreItems`, shared with the desktop dropdown. Only Go to album and Go
   to artist work; the rest is dimmed "Coming soon", Visual effects carries the Pro badge. `track_navigation.dart` goes
   through `LibraryLocations` with `context.go`, and asks which artist first through `showSelectionPicker`.
-- The source line is `playContextText`: kind prefix plus the label captured when playback started. It opens nothing.
+- The header line under the position is the current track's album (empty when it has none). It opens nothing.
 
 ## Queue sheet and flights (mobile)
 

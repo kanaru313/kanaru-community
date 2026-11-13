@@ -151,6 +151,7 @@ class MobileShell extends ConsumerWidget {
             // (selection bar above the mini player); only the bar below is
             // the scaffold's. A branch that is not a tab has no bar entry.
             body: MobileFloatingDock(
+              hidden: MediaQuery.viewInsetsOf(context).bottom > 0,
               body: SafeArea(bottom: false, child: navigationShell),
               dock: Column(
                 mainAxisSize: MainAxisSize.min,

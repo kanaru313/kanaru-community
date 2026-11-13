@@ -8,10 +8,20 @@ import 'package:material_ui/material_ui.dart';
 /// padding of the page, so a list that takes its padding from the media
 /// query (a `ListView` or `GridView` with no `padding`) ends above the dock
 /// instead of under it.
+///
+/// While [hidden] (the keyboard is open: the scaffold has shrunk the body,
+/// so a dock pinned to its bottom would ride on top of the keyboard) the dock
+/// is kept but not shown, and the page gets no room for it.
 class MobileFloatingDock extends StatefulWidget {
-  const MobileFloatingDock({super.key, required this.body, required this.dock});
+  const MobileFloatingDock({
+    super.key,
+    required this.body,
+    required this.dock,
+    this.hidden = false,
+  });
 
   final Widget body;
+  final bool hidden;
 
   /// Pieces stacked bottom-up; each paints its own surface, the gaps between
   /// and around them stay see-through.
@@ -43,13 +53,14 @@ class _MobileFloatingDockState extends State<MobileFloatingDock> {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
+    final inset = widget.hidden ? 0.0 : _height;
     return Stack(
       children: [
         Positioned.fill(
           child: MediaQuery(
             data: media.copyWith(
               padding: media.padding.copyWith(
-                bottom: media.padding.bottom + _height,
+                bottom: media.padding.bottom + inset,
               ),
             ),
             child: widget.body,
@@ -64,8 +75,11 @@ class _MobileFloatingDockState extends State<MobileFloatingDock> {
               _scheduleMeasure();
               return false;
             },
-            child: SizeChangedLayoutNotifier(
-              child: KeyedSubtree(key: _dockKey, child: widget.dock),
+            child: Offstage(
+              offstage: widget.hidden,
+              child: SizeChangedLayoutNotifier(
+                child: KeyedSubtree(key: _dockKey, child: widget.dock),
+              ),
             ),
           ),
         ),
