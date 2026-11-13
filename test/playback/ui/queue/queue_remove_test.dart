@@ -1,10 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
+import 'package:kanaru/src/playback/domain/playback_views.dart';
+import 'package:kanaru/src/playback/domain/queue_state.dart';
+import 'package:kanaru/src/playback/domain/undo_token.dart';
+import 'package:kanaru/src/playback/state/player_controller.dart';
+import 'package:kanaru/src/playback/state/playback_providers.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_list.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_row.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_row_hooks.dart';
-import 'package:kanaru/src/playback/ui/queue/queue_swipe_remove.dart';
 import 'package:kanaru/src/shell/ui/playback_notice_listener.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -20,7 +29,7 @@ Future<void> _swipe(
   double fraction, {
   PointerDeviceKind kind = PointerDeviceKind.touch,
 }) async {
-  final width = tester.getSize(find.byType(QueueSwipeRemove).first).width;
+  final width = tester.getSize(find.byType(KSwipeActions).first).width;
   final g = await tester.startGesture(tester.getCenter(finder), kind: kind);
   await g.moveBy(Offset(width * fraction / 2, 0));
   await g.moveBy(Offset(width * fraction / 2, 0));
@@ -35,7 +44,8 @@ Widget _swipeRow(
   List<String> events, {
   bool removes = true,
   bool throws = false,
-}) => QueueSwipeRemove(
+}) => KSwipeActions.remove(
+  label: 'Remove',
   onRemove: () async {
     events.add('removed');
     if (throws) throw StateError('the chain failed');
@@ -53,15 +63,27 @@ Future<void> _removeRow(WidgetTester tester, UiHost host, String title) async {
   await host.letStreamsArrive(tester);
 }
 
+/// A controller whose `remove` waits on [gate], so a test can hold a swipe's
+/// removal in flight.
+class _HeldRemoval implements PlayerController {
+  final gate = Completer<UndoToken?>();
+
+  @override
+  Future<UndoToken?> remove(Set<int> entryIds) => gate.future;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
   group('swipe', () {
-    testWidgets('39 % bounces back, 41 % removes', (tester) async {
+    testWidgets('69 % bounces back, 72 % removes', (tester) async {
       final events = <String>[];
       await pumpFakeQueue(tester, _swipeRow(events), view: fakeView(1));
-      await _swipe(tester, find.text('row'), 0.39);
+      await _swipe(tester, find.text('row'), 0.69);
       expect(events, isEmpty);
       expect(tester.getTopLeft(find.text('row')).dx, closeTo(180, 40));
-      await _swipe(tester, find.text('row'), 0.41);
+      await _swipe(tester, find.text('row'), 0.72);
       expect(events, ['removed']);
     });
 
@@ -77,28 +99,22 @@ void main() {
     testWidgets('both directions remove', (tester) async {
       final events = <String>[];
       await pumpFakeQueue(tester, _swipeRow(events), view: fakeView(1));
-      await _swipe(tester, find.text('row'), -0.6);
+      await _swipe(tester, find.text('row'), -0.8);
       expect(events, ['removed']);
     });
 
-    testWidgets('the row fades and a red delete icon shows, no red fill', (
-      tester,
-    ) async {
+    testWidgets('a red delete icon shows, no red fill', (tester) async {
       await pumpFakeQueue(tester, _swipeRow([]), view: fakeView(1));
       final g = await tester.startGesture(tester.getCenter(find.text('row')));
       await g.moveBy(const Offset(120, 0));
       await tester.pump();
-      final fade = tester.widget<Opacity>(
-        find.ancestor(of: find.text('row'), matching: find.byType(Opacity)),
-      );
-      expect(fade.opacity, lessThan(1));
       final icon = tester.widget<Icon>(find.byIcon(KIcons.delete));
       expect(
         icon.color,
         Theme.of(tester.element(find.text('row'))).colorScheme.error,
       );
       final filled = find.descendant(
-        of: find.byType(QueueSwipeRemove),
+        of: find.byType(KSwipeActions),
         matching: find.byWidgetPredicate(
           (w) => w is ColoredBox && w.color.a > 0,
         ),
@@ -107,10 +123,10 @@ void main() {
       await g.cancel();
     });
 
-    testWidgets('the icon grows past the threshold', (tester) async {
+    testWidgets('the icon grows once 70 % is reached', (tester) async {
       await pumpFakeQueue(tester, _swipeRow([]), view: fakeView(1));
       final g = await tester.startGesture(tester.getCenter(find.text('row')));
-      await g.moveBy(const Offset(100, 0));
+      await g.moveBy(const Offset(200, 0));
       await tester.pump(const Duration(milliseconds: 300));
       double scale() =>
           tester.widget<AnimatedScale>(find.byType(AnimatedScale)).scale;
@@ -128,7 +144,7 @@ void main() {
         _swipeRow(events, removes: false),
         view: fakeView(1),
       );
-      await _swipe(tester, find.text('row'), 0.6);
+      await _swipe(tester, find.text('row'), 0.8);
       await tester.pump(const Duration(seconds: 1));
       expect(events, ['removed']);
       expect(tester.getTopLeft(find.text('row')).dx, closeTo(180, 40));
@@ -143,14 +159,14 @@ void main() {
         _swipeRow(events, throws: true),
         view: fakeView(1),
       );
-      await _swipe(tester, find.text('row'), 0.6);
+      await _swipe(tester, find.text('row'), 0.8);
       await tester.pump(const Duration(seconds: 1));
       // The failure is reported, not thrown into the zone.
       expect(tester.takeException(), isA<StateError>());
       expect(events, ['removed']);
       expect(tester.getTopLeft(find.text('row')).dx, closeTo(180, 40));
       // Not stuck: a second swipe reaches the callback again.
-      await _swipe(tester, find.text('row'), 0.6);
+      await _swipe(tester, find.text('row'), 0.8);
       await tester.pump(const Duration(seconds: 1));
       expect(tester.takeException(), isA<StateError>());
       expect(events, ['removed', 'removed']);
@@ -174,7 +190,7 @@ void main() {
       await _swipe(
         tester,
         find.text('row'),
-        0.6,
+        0.8,
         kind: PointerDeviceKind.mouse,
       );
       expect(events, ['removed']);
@@ -194,6 +210,91 @@ void main() {
       await host.tap(tester, find.text('Undo'));
       final after = [for (final i in host.h.c.queueState.items) i.entryId];
       expect(after, before);
+    });
+
+    testWidgets('undo above a row that is sliding out keeps that row hidden', (
+      tester,
+    ) async {
+      final views = StreamController<QueueView>();
+      addTearDown(views.close);
+      final held = _HeldRemoval();
+      await pumpFakeQueue(
+        tester,
+        ProviderScope(
+          overrides: [playerControllerProvider.overrideWithValue(held)],
+          child: list,
+        ),
+        view: fakeView(6, current: 0),
+        views: views.stream,
+      );
+      // 'Song 2' is entry 3 (entry ids count from 1, track ids from 0). The
+      // removal is held, so the row stays slid out and waiting.
+      await _swipe(tester, find.text('Song 2'), 0.8);
+      double fade() => tester
+          .widget<FadeTransition>(
+            find
+                .descendant(
+                  of: find.byKey(const ValueKey(3)),
+                  matching: find.byType(FadeTransition),
+                )
+                .first,
+          )
+          .opacity
+          .value;
+      // Fading out together with the slide.
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(fade(), 0);
+      // An entry comes back above it: every row below shifts an index and
+      // the list remounts them.
+      final restored = QueueItem(
+        entryId: 99,
+        trackId: const TrackId(0),
+        sortKey: 'a',
+      );
+      views.add(QueueView(items: [restored, ...fakeView(6).items], current: 1));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(QueueRow).evaluate().length, 7);
+      expect(fade(), 0);
+      expect(
+        tester.widget<IgnorePointer>(find.byKey(const ValueKey(3))).ignoring,
+        isTrue,
+      );
+      // Nothing was removed: the row comes back.
+      held.gate.complete(null);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(fade(), 1);
+      expect(tester.getTopLeft(find.text('Song 2')).dx, lessThan(200));
+    });
+
+    testWidgets('the Remove from queue semantics action removes the row', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final host = await pumpWithPlayer(tester, list);
+      final node = tester.getSemantics(find.byType(QueueRow).at(2));
+      final labels = {
+        for (final id
+            in node.getSemanticsData().customSemanticsActionIds ?? <int>[])
+          CustomSemanticsAction.getAction(id)!.label,
+      };
+      expect(labels, contains('Remove from queue'));
+      final id = CustomSemanticsAction.getIdentifier(
+        const CustomSemanticsAction(label: 'Remove from queue'),
+      );
+      await tester.runAsync(() async {
+        tester.semantics.performAction(
+          find.semantics.byPredicate((n) => n.id == node.id),
+          SemanticsAction.customAction,
+          args: id,
+        );
+        await host.h.settle();
+      });
+      await tester.pump(const Duration(milliseconds: 300));
+      await host.letStreamsArrive(tester);
+      expect(host.h.c.queueState.length, 5);
+      handle.dispose();
     });
 
     testWidgets('a mouse swipe starting on the ♥ removes a desktop row', (
@@ -216,7 +317,7 @@ void main() {
             of: find.byType(QueueRow).at(2),
             matching: find.byIcon(KIcons.heart),
           ),
-          0.6,
+          0.8,
           kind: PointerDeviceKind.mouse,
         );
         await host.h.settle();
@@ -242,7 +343,7 @@ void main() {
         // The swipe starts controller work: run it in the real zone.
         Future<void> swipe(Finder f) async {
           await tester.runAsync(() async {
-            await _swipe(tester, f, 0.6);
+            await _swipe(tester, f, 0.8);
             await host.h.settle();
           });
           await tester.pump();
