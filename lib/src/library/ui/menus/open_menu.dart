@@ -27,6 +27,19 @@ Future<void> openSongMenu(
   viaKeyboard: viaKeyboard,
 );
 
+/// Opens the menu of a song directly on its info page (the page its header
+/// opens); Back goes to the song's menu. A song that left the library says so
+/// instead of reporting a failed load.
+Future<void> openSongInfo(
+  BuildContext context,
+  TrackInfo info, {
+  MenuOrigin origin = const MenuOrigin.list(),
+}) => _open(
+  context,
+  (container, env) => songMenuSpec(container, env, info, origin),
+  onInfoPage: true,
+);
+
 /// Opens the menu of an album. On its own page pass [MenuOrigin.own].
 Future<void> openAlbumMenu(
   BuildContext context,
@@ -122,6 +135,7 @@ Future<void> _open(
   BuildContext context,
   Future<MenuSpec> Function(ProviderContainer container, MenuEnv env) build, {
   bool viaKeyboard = false,
+  bool onInfoPage = false,
 }) async {
   if (_loading) return;
   _loading = true;
@@ -140,6 +154,10 @@ Future<void> _open(
     spec = await build(container, env).timeout(_loadLimit);
     if (!root.mounted) return;
     page = renderMenu(spec, l10n, MenuActionRunner(container, root));
+  } on TrackGoneException catch (e) {
+    _log.info('menu of a song that is gone: $e');
+    if (root.mounted) showAppSnackBar(root, l10n.libraryNotFoundMessage);
+    return;
   } on Object catch (e, s) {
     _log.warning('opening a menu failed', e, s);
     if (root.mounted) showAppSnackBar(root, l10n.libraryMenuLoadFailed);
@@ -150,6 +168,7 @@ Future<void> _open(
   await showKLayeredMenu(
     root,
     root: page,
+    initialPage: onInfoPage ? page.headerOpens : null,
     backTooltip: l10n.libraryMenuBack,
     viaKeyboard: viaKeyboard,
   );
