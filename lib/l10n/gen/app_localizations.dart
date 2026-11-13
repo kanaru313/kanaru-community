@@ -1082,60 +1082,6 @@ abstract class AppLocalizations {
   /// **'Choose an artist'**
   String get playbackPickArtist;
 
-  /// No description provided for @playbackSourceSongs.
-  ///
-  /// In en, this message translates to:
-  /// **'Songs'**
-  String get playbackSourceSongs;
-
-  /// No description provided for @playbackSourceAlbum.
-  ///
-  /// In en, this message translates to:
-  /// **'Album'**
-  String get playbackSourceAlbum;
-
-  /// No description provided for @playbackSourceArtist.
-  ///
-  /// In en, this message translates to:
-  /// **'Artist'**
-  String get playbackSourceArtist;
-
-  /// No description provided for @playbackSourceGenre.
-  ///
-  /// In en, this message translates to:
-  /// **'Genre'**
-  String get playbackSourceGenre;
-
-  /// No description provided for @playbackSourceLanguage.
-  ///
-  /// In en, this message translates to:
-  /// **'Language'**
-  String get playbackSourceLanguage;
-
-  /// No description provided for @playbackSourceFolder.
-  ///
-  /// In en, this message translates to:
-  /// **'Folder'**
-  String get playbackSourceFolder;
-
-  /// No description provided for @playbackSourceFavorites.
-  ///
-  /// In en, this message translates to:
-  /// **'Favorites'**
-  String get playbackSourceFavorites;
-
-  /// No description provided for @playbackSourceSelection.
-  ///
-  /// In en, this message translates to:
-  /// **'Selection'**
-  String get playbackSourceSelection;
-
-  /// No description provided for @playbackSourceQueue.
-  ///
-  /// In en, this message translates to:
-  /// **'Queue'**
-  String get playbackSourceQueue;
-
   /// No description provided for @playbackLyricsCard.
   ///
   /// In en, this message translates to:
