@@ -7,6 +7,8 @@ import '../tokens/k_shape.dart';
 /// Default brand seed colour.
 const Color kanaruSeed = Color(0xFFFFB4A2);
 
+final _noAnimation = ButtonStyle(animationDuration: Duration.zero);
+
 /// Soft Material 3 theme. The Nunito font asset is declared by the app; the
 /// theme only names the family.
 ThemeData buildKanaruTheme({
@@ -49,6 +51,15 @@ ThemeData buildKanaruTheme({
       behavior: SnackBarBehavior.floating,
       shape: KShape.of(KRadius.lg),
     ),
+    // A theme change would otherwise make every button lerp its own style
+    // for 200 ms (one animated theme per button, on the frame that re-themes
+    // the app). Colours switch at once instead.
+    iconButtonTheme: IconButtonThemeData(style: _noAnimation),
+    filledButtonTheme: FilledButtonThemeData(style: _noAnimation),
+    textButtonTheme: TextButtonThemeData(style: _noAnimation),
+    outlinedButtonTheme: OutlinedButtonThemeData(style: _noAnimation),
+    elevatedButtonTheme: ElevatedButtonThemeData(style: _noAnimation),
+    segmentedButtonTheme: SegmentedButtonThemeData(style: _noAnimation),
     // Groups are separated by space, not by lines.
     dividerTheme: const DividerThemeData(space: 0, thickness: 0),
   );

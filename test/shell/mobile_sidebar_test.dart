@@ -83,7 +83,34 @@ void main() {
   testWidgets('closed: the sidebar is not shown', (tester) async {
     final h = await _pump(tester);
     expect(h.open, isFalse);
-    expect(find.byType(MobileSidebar), findsNothing);
+    expect(find.byType(MobileSidebar, skipOffstage: false), findsNothing);
+  });
+
+  testWidgets('mounted from the first frame of opening, gone after closing', (
+    tester,
+  ) async {
+    final h = await _pump(tester);
+    await tester.tap(find.byTooltip('Menu').first);
+    await tester.pump();
+    expect(find.byType(MobileSidebar, skipOffstage: false), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.byType(MobileSidebar, skipOffstage: false), findsOneWidget);
+    final mid = tester.getTopLeft(find.byType(NavigationBar)).dx;
+    expect(mid, inExclusiveRange(0, 256));
+    await tester.pumpAndSettle();
+    expect(find.byType(MobileSidebar), findsOneWidget);
+
+    h.container.read(mobileSidebarOpenProvider.notifier).close();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.byType(MobileSidebar, skipOffstage: false), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byType(MobileSidebar, skipOffstage: false), findsNothing);
+
+    // Reopens as before.
+    await _open(tester);
+    expect(find.byType(MobileSidebar), findsOneWidget);
+    expect(tester.getTopLeft(find.byType(NavigationBar)).dx, closeTo(256, 1));
   });
 
   testWidgets('the header menu button opens it: head, items, footer', (

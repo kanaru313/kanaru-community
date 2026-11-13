@@ -24,13 +24,18 @@ class KanaruApp extends ConsumerStatefulWidget {
   ConsumerState<KanaruApp> createState() => _KanaruAppState();
 }
 
-class _KanaruAppState extends ConsumerState<KanaruApp> {
+class _KanaruAppState extends ConsumerState<KanaruApp>
+    with WidgetsBindingObserver {
   late final AppLifecycleListener _lifecycle;
   final _flusher = FlushCoordinator();
+  late Brightness _platformBrightness;
 
   @override
   void initState() {
     super.initState();
+    _platformBrightness =
+        WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    WidgetsBinding.instance.addObserver(this);
     _lifecycle = AppLifecycleListener(
       onStateChange: _onState,
       onExitRequested: _onExitRequested,
@@ -53,9 +58,16 @@ class _KanaruAppState extends ConsumerState<KanaruApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _lifecycle.dispose();
     _flusher.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    final next = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    if (next != _platformBrightness) setState(() => _platformBrightness = next);
   }
 
   void _onState(AppLifecycleState state) {
@@ -79,15 +91,26 @@ class _KanaruAppState extends ConsumerState<KanaruApp> {
   @override
   Widget build(BuildContext context) {
     final registry = ref.watch(extensionRegistryProvider);
-    final themes = ref.watch(appThemeProvider);
+    final mode = ref.watch(themeChoiceProvider).mode;
+    // The brightness in use is resolved here (setting, else the platform) so
+    // only that theme is built. The same data goes to both slots, and
+    // `themeMode` names the matching one.
+    final brightness = switch (mode) {
+      ThemeMode.light => Brightness.light,
+      ThemeMode.dark => Brightness.dark,
+      ThemeMode.system => _platformBrightness,
+    };
+    final theme = ref.watch(appThemeProvider(brightness));
     return MaterialApp.router(
       title: 'Kanaru',
-      theme: themes.light,
-      darkTheme: themes.dark,
+      theme: theme,
+      darkTheme: theme,
       // A cover change re-themes at once; tweening the whole app's colours
       // on every skip is costly and not wanted.
       themeAnimationDuration: Duration.zero,
-      themeMode: ref.watch(themeChoiceProvider).mode,
+      themeMode: brightness == Brightness.dark
+          ? ThemeMode.dark
+          : ThemeMode.light,
       locale: Locale(ref.watch(appLanguageProvider).name),
       routerConfig: ref.watch(routerProvider),
       localizationsDelegates: [

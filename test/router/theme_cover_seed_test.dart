@@ -19,7 +19,9 @@ import 'package:kanaru/src/platform/state/window_close_provider.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
 import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
+import 'package:kanaru/src/router/ui/app_theme_provider.dart';
 import 'package:kanaru/src/router/ui/kanaru_app.dart';
+import 'package:kanaru/src/screens/settings/state/appearance_settings.dart';
 import 'package:kanaru/src/screens/first_run/state/first_run_gate.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -71,6 +73,7 @@ Future<ProviderContainer> _pump(
   required MemorySettingsStore settings,
   required bool firstRun,
   _CreationRecorder? recorder,
+  ProviderObserver? observer,
   List<Override> overrides = const [],
   Size size = const Size(400, 800),
 
@@ -87,7 +90,7 @@ Future<ProviderContainer> _pump(
   final registry = ExtensionRegistry()
     ..install([const NavFixture(), const _Welcome()]);
   final container = ProviderContainer(
-    observers: [?recorder],
+    observers: [?recorder, ?observer],
     overrides: [
       extensionRegistryProvider.overrideWithValue(registry),
       nativeVersionsProvider.overrideWithValue('bridge test'),
@@ -110,10 +113,46 @@ Future<ProviderContainer> _pump(
   return container;
 }
 
-ColorScheme _scheme(WidgetTester tester, {bool dark = false}) {
+/// Scheme of the theme in use (the app builds only the active brightness).
+ColorScheme _scheme(WidgetTester tester) {
   final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
-  return (dark ? app.darkTheme! : app.theme!).colorScheme;
+  return (app.themeMode == ThemeMode.dark ? app.darkTheme! : app.theme!)
+      .colorScheme;
 }
+
+/// Counts how often the app theme provider (re)builds, per brightness.
+base class _ThemeBuilds extends ProviderObserver {
+  final built = <Brightness>[];
+
+  void _count(ProviderObserverContext context) {
+    if (context.provider.from == appThemeProvider) {
+      built.add(context.provider.argument! as Brightness);
+    }
+  }
+
+  @override
+  void didAddProvider(ProviderObserverContext context, Object? value) =>
+      _count(context);
+
+  @override
+  void didUpdateProvider(
+    ProviderObserverContext context,
+    Object? previousValue,
+    Object? newValue,
+  ) => _count(context);
+}
+
+class _CoverNotifier extends Notifier<PlayingCoverColors> {
+  @override
+  PlayingCoverColors build() => const PlayingCoverColorsPending();
+
+  @override
+  set state(PlayingCoverColors v) => super.state = v;
+}
+
+final _cover = NotifierProvider<_CoverNotifier, PlayingCoverColors>(
+  _CoverNotifier.new,
+);
 
 void main() {
   const stored = 0xFF1E88E5;
@@ -121,9 +160,10 @@ void main() {
   testWidgets('a stored seed themes the first frame, light and dark', (
     tester,
   ) async {
-    await _pump(
+    final settings = MemorySettingsStore()..write('app.coverSeed', stored);
+    final c = await _pump(
       tester,
-      settings: MemorySettingsStore()..write('app.coverSeed', stored),
+      settings: settings,
       firstRun: false,
       extraFrame: false,
     );
@@ -134,8 +174,80 @@ void main() {
         seed: const Color(stored),
       ).colorScheme.primary,
     );
+    await c.read(themeChoiceProvider.notifier).set(ThemeChoice.dark);
+    await tester.pump();
+    expect(_scheme(tester).brightness, Brightness.dark);
     expect(
-      _scheme(tester, dark: true).primary,
+      _scheme(tester).primary,
+      buildKanaruTheme(
+        brightness: Brightness.dark,
+        seed: const Color(stored),
+      ).colorScheme.primary,
+    );
+  });
+
+  testWidgets('system mode follows the platform brightness; a fixed mode '
+      'ignores it', (tester) async {
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+    final c = await _pump(
+      tester,
+      settings: MemorySettingsStore(),
+      firstRun: false,
+    );
+    expect(_scheme(tester).brightness, Brightness.dark);
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+    await tester.pump();
+    expect(_scheme(tester).brightness, Brightness.light);
+    await c.read(themeChoiceProvider.notifier).set(ThemeChoice.dark);
+    await tester.pump();
+    expect(_scheme(tester).brightness, Brightness.dark);
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    await c.read(themeChoiceProvider.notifier).set(ThemeChoice.light);
+    await tester.pump();
+    expect(_scheme(tester).brightness, Brightness.light);
+  });
+
+  testWidgets('a cover change builds one theme, for the brightness in use', (
+    tester,
+  ) async {
+    final observer = _ThemeBuilds();
+    final c = await _pump(
+      tester,
+      settings: MemorySettingsStore(),
+      firstRun: false,
+      observer: observer,
+      overrides: [
+        playingCoverColorsProvider.overrideWith((ref) => ref.watch(_cover)),
+      ],
+    );
+    // Make the dark member exist, then come back to light.
+    await c.read(themeChoiceProvider.notifier).set(ThemeChoice.dark);
+    await tester.pump();
+    await c.read(themeChoiceProvider.notifier).set(ThemeChoice.light);
+    await tester.pump();
+    expect(observer.built, contains(Brightness.dark));
+    observer.built.clear();
+
+    c.read(_cover.notifier).state = const PlayingCoverColorsFound(
+      CoverColors(seed: stored, palette: [stored]),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(observer.built, [Brightness.light]);
+    expect(
+      _scheme(tester).primary,
+      buildKanaruTheme(
+        brightness: Brightness.light,
+        seed: const Color(stored),
+      ).colorScheme.primary,
+    );
+
+    // The dark theme, built only now, comes from the new seed.
+    await c.read(themeChoiceProvider.notifier).set(ThemeChoice.dark);
+    await tester.pump();
+    expect(
+      _scheme(tester).primary,
       buildKanaruTheme(
         brightness: Brightness.dark,
         seed: const Color(stored),

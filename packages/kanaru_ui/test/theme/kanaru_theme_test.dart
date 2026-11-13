@@ -23,6 +23,23 @@ ColorScheme _plain(Color seed, Brightness b) => ColorScheme.fromSeed(
 );
 
 void main() {
+  test('buttons do not animate a theme change, light and dark', () {
+    for (final b in Brightness.values) {
+      final t = buildKanaruTheme(brightness: b);
+      final styles = {
+        'icon': t.iconButtonTheme.style,
+        'filled': t.filledButtonTheme.style,
+        'text': t.textButtonTheme.style,
+        'outlined': t.outlinedButtonTheme.style,
+        'elevated': t.elevatedButtonTheme.style,
+        'segmented': t.segmentedButtonTheme.style,
+      };
+      styles.forEach((name, style) {
+        expect(style?.animationDuration, Duration.zero, reason: '$name $b');
+      });
+    }
+  });
+
   const red = Color(0xFFC62828);
   const blue = Color(0xFF1E88E5);
 

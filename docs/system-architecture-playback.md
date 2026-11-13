@@ -122,6 +122,12 @@ contracts; their description is in
   and never writes an equal value. This is also where a later user-chosen seed
   would be decided.
 - `MaterialApp.themeAnimationDuration` is zero: the theme switches at once.
+  Buttons (icon, filled, text, outlined, elevated, segmented) have `animationDuration` zero in `buildKanaruTheme` (no per-button
+  theme lerp), the closed mobile sidebar is not mounted (`MobilePushLayout`),
+  and `appThemeProvider` is a family keyed by brightness: `KanaruApp` resolves
+  the brightness (theme setting, else platform) and builds only that theme, so a
+  cover change makes one `ColorScheme`. One slower frame per cover change
+  remains (accepted).
 - `buildKanaruTheme` replaces the dark `error` colour (tone 65, chroma 84, same
   hue) when it is within CAM16 distance 7 of `primary`; this also applies to the
   default seed.
