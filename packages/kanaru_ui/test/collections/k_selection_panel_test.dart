@@ -50,7 +50,7 @@ void main() {
     });
   }
 
-  testWidgets('mobile: full width minus 8, radius 20', (tester) async {
+  testWidgets('mobile: 8 dp side margins like the mini player, radius 20', (tester) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_panel()));
     expect(
@@ -64,7 +64,7 @@ void main() {
                 .first,
           )
           .width,
-      392,
+      384,
     );
     expect(_radius(_frame(tester)), 20);
   });

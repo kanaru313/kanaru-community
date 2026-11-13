@@ -51,7 +51,9 @@ class KSelectionPanel extends StatelessWidget {
     required bool expanded,
     required double bodyHeight,
   }) => headerHeight + (expanded ? bodyHeightFor(context, bodyHeight) : 0);
-  static const double _margin = KSpace.x1;
+
+  /// Side margin on mobile: the same as the mini player's, so the two line up.
+  static const double _margin = KSpace.x2;
 
   @override
   Widget build(BuildContext context) {
