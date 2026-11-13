@@ -856,3 +856,6 @@ transparent stops; at most `maxGradientStops` (4). The palette is not softened.
 - Callers (Now Playing mobile and desktop, queue sheet) read `playingCoverColorsProvider`: `Found` gives `palette`,
   `None` gives null (fade out), `Pending` gives null with `loading: true` (keep the last palette, no fade). A cover
   without stored colours (gray, not scanned yet) has no tint.
+- Desktop player bar: `PlayerBar` wraps its content in `CoverTintBackground` (inside a `RepaintBoundary`, base `surfaceContainerLow`)
+  with `strength: playerBarTintStrength` = 0.5 (constant in `shell/ui/player_bar.dart`), fed by the same provider as Now Playing, so a
+  later drag-to-expand can animate the strength. No colours: the flat surface. The mobile mini player is not tinted.

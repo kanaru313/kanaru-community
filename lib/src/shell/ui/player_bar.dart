@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../media/domain/cover_files.dart';
 import '../../playback/state/playback_providers.dart';
+import '../../playback/state/playing_cover_colors.dart';
 import '../../playback/state/track_info_providers.dart';
 import '../../playback/ui/play_pause_button.dart';
 import '../../playback/ui/playback_time_label.dart';
@@ -20,6 +21,12 @@ import '../state/right_panel.dart';
 const double playerBarWide = 1000;
 const double playerBarNarrow = 760;
 
+/// How much of the playing cover's colour tints the bar: 0.5, the chosen
+/// strength, lighter than Now Playing at full strength (1). It multiplies the
+/// alpha of the gradient stops, which are already lowered until the text keeps
+/// its contrast, so any value in (0, 1] stays readable.
+const double playerBarTintStrength = 0.5;
+
 /// Desktop player bar under the page: 88 dp, shown only while a track is
 /// current. Lyrics, the cover and expand open Now Playing (the bar is offstage
 /// while it is open); Queue toggles the shell's right panel.
@@ -31,41 +38,51 @@ class PlayerBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final cover = ref.watch(playingCoverColorsProvider);
+    // Same provider and widget as Now Playing, so a later drag-to-expand
+    // shows one continuous tint. No colours: the flat surface, as before.
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
         border: Border(top: BorderSide(color: scheme.outlineVariant)),
       ),
-      child: SizedBox(
-        height: height,
-        child: LayoutBuilder(
-          builder: (context, box) {
-            final full = box.maxWidth >= playerBarWide;
-            final transport = box.maxWidth >= playerBarNarrow;
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: KSpace.x4),
-              child: Row(
-                spacing: KSpace.x4,
-                children: [
-                  Expanded(child: _TrackPart(showFavorite: full)),
-                  Flexible(
-                    flex: 2,
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          minWidth: 240,
-                          maxWidth: 520,
+      child: RepaintBoundary(
+        child: CoverTintBackground(
+          palette: cover.palette,
+          loading: cover.isPending,
+          strength: playerBarTintStrength,
+          base: scheme.surfaceContainerLow,
+          child: SizedBox(
+            height: height,
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final full = box.maxWidth >= playerBarWide;
+                final transport = box.maxWidth >= playerBarNarrow;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: KSpace.x4),
+                  child: Row(
+                    spacing: KSpace.x4,
+                    children: [
+                      Expanded(child: _TrackPart(showFavorite: full)),
+                      Flexible(
+                        flex: 2,
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              minWidth: 240,
+                              maxWidth: 520,
+                            ),
+                            child: _CenterPart(showShuffleRepeat: transport),
+                          ),
                         ),
-                        child: _CenterPart(showShuffleRepeat: transport),
                       ),
-                    ),
+                      // Natural width: the buttons never shrink, the title does.
+                      _ToolsPart(full: full),
+                    ],
                   ),
-                  // Natural width: the buttons never shrink, the title does.
-                  _ToolsPart(full: full),
-                ],
-              ),
-            );
-          },
+                );
+              },
+            ),
+          ),
         ),
       ),
     );

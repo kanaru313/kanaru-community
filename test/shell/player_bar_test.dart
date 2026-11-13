@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
+import 'package:kanaru/src/media/domain/cover_colors.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
+import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/playback/ui/volume_control.dart';
 import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
@@ -11,6 +13,7 @@ import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru/src/shell/state/right_panel.dart';
 import 'package:kanaru/src/shell/ui/player_bar.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
 import '../playback/support/ui_host.dart';
@@ -294,4 +297,158 @@ void main() {
       );
     });
   });
+
+  group('cover tint', () {
+    const colors = CoverColors(
+      seed: 0xFFE63946,
+      palette: [0xFFE63946, 0xFFFF7F11, 0xFFD90368],
+    );
+    final palette = [for (final c in colors.palette) Color(c)];
+
+    Override cover(PlayingCoverColors value) =>
+        playingCoverColorsProvider.overrideWithValue(value);
+
+    /// The gradient the bar paints, after its colour tween has finished.
+    Future<List<Color>> stopsOf(WidgetTester tester) async {
+      await tester.pump(const Duration(milliseconds: 500));
+      final gradients = tester
+          .widgetList<DecoratedBox>(
+            find.descendant(
+              of: find.byType(CoverTintBackground),
+              matching: find.byType(DecoratedBox),
+            ),
+          )
+          .map((d) => d.decoration)
+          .whereType<BoxDecoration>()
+          .map((d) => d.gradient)
+          .whereType<LinearGradient>();
+      return gradients.single.colors;
+    }
+
+    ColorScheme schemeOf(WidgetTester tester) =>
+        Theme.of(tester.element(find.byType(PlayerBar))).colorScheme;
+
+    /// Expected painted stops: the readable stops (padded by repeating the
+    /// last one) with alpha multiplied by [strength].
+    List<Color> expected(ColorScheme s, double strength) {
+      final stops = readableGradientStops(
+        palette,
+        base: s.surfaceContainerLow,
+        onSurface: s.onSurface,
+        onSurfaceVariant: s.onSurfaceVariant,
+        brightness: s.brightness,
+      );
+      return [
+        for (var i = 0; i < maxGradientStops; i++)
+          stops[i < stops.length ? i : stops.length - 1].withValues(
+            alpha: stops[i < stops.length ? i : stops.length - 1].a * strength,
+          ),
+      ];
+    }
+
+    testWidgets('colours tint the bar by the strength constant', (
+      tester,
+    ) async {
+      await pumpWithPlayer(
+        tester,
+        _bar,
+        size: const Size(1280, 700),
+        overrides: [cover(const PlayingCoverColorsFound(colors))],
+      );
+      final painted = await stopsOf(tester);
+      final want = expected(schemeOf(tester), playerBarTintStrength);
+      expect(painted, hasLength(want.length));
+      for (var i = 0; i < want.length; i++) {
+        expect(painted[i].a, closeTo(want[i].a, 0.005));
+        expect(painted[i].toARGB32() & 0xFFFFFF, want[i].toARGB32() & 0xFFFFFF);
+      }
+      expect(painted.any((c) => c.a > 0), isTrue);
+    });
+
+    testWidgets('no colours: the flat surfaceContainerLow, no tint', (
+      tester,
+    ) async {
+      await pumpWithPlayer(
+        tester,
+        _bar,
+        size: const Size(1280, 700),
+        overrides: [cover(const PlayingCoverColorsNone())],
+      );
+      final painted = await stopsOf(tester);
+      expect(painted.every((c) => c.a == 0), isTrue);
+      final base = tester
+          .widgetList<ColoredBox>(
+            find.descendant(
+              of: find.byType(CoverTintBackground),
+              matching: find.byType(ColoredBox),
+            ),
+          )
+          .first;
+      expect(base.color, schemeOf(tester).surfaceContainerLow);
+    });
+
+    testWidgets('pending colours pass the loading flag', (tester) async {
+      await pumpWithPlayer(
+        tester,
+        _bar,
+        size: const Size(1280, 700),
+        overrides: [cover(const PlayingCoverColorsPending())],
+      );
+      final tint = tester.widget<CoverTintBackground>(
+        find.byType(CoverTintBackground),
+      );
+      expect(tint.loading, isTrue);
+      expect(tint.palette, isNull);
+      expect(tint.strength, playerBarTintStrength);
+    });
+
+    test('the tint strength is a fraction the contrast test can divide by', () {
+      expect(playerBarTintStrength, greaterThan(0));
+      expect(playerBarTintStrength, lessThanOrEqualTo(1));
+    });
+
+    // The painted stops are scaled by the strength constant; undoing that
+    // gives the full-strength tint, the worst case for any value up to 1.
+    for (final brightness in Brightness.values) {
+      for (final p in const {
+        'saturated': [0xFFE63946, 0xFFFF7F11, 0xFFD90368],
+        'dark': [0xFF0D1B2A, 0xFF1B263B, 0xFF415A77],
+      }.entries) {
+        testWidgets('title and artist keep 4.5:1 at full tint '
+            '(${p.key}, ${brightness.name})', (tester) async {
+          await pumpWithPlayer(
+            tester,
+            _bar,
+            size: const Size(1280, 700),
+            brightness: brightness,
+            overrides: [
+              cover(
+                PlayingCoverColorsFound(
+                  CoverColors(seed: p.value.first, palette: p.value),
+                ),
+              ),
+            ],
+          );
+          final painted = await stopsOf(tester);
+          final s = schemeOf(tester);
+          expect(painted.any((c) => c.a > 0), isTrue);
+          for (final c in painted) {
+            final full = c.withValues(
+              alpha: (c.a / playerBarTintStrength).clamp(0.0, 1.0),
+            );
+            final blend = Color.alphaBlend(full, s.surfaceContainerLow);
+            for (final text in [s.onSurface, s.onSurfaceVariant]) {
+              expect(_contrast(text, blend), greaterThanOrEqualTo(4.5));
+            }
+          }
+        });
+      }
+    }
+  });
+}
+
+double _contrast(Color a, Color b) {
+  final la = a.computeLuminance(), lb = b.computeLuminance();
+  final hi = la > lb ? la : lb, lo = la > lb ? lb : la;
+  return (hi + 0.05) / (lo + 0.05);
 }
