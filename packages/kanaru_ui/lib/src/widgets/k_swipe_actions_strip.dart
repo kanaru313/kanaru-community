@@ -39,9 +39,14 @@ class KSwipeStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final fromLeft = offset > 0;
     Widget content = OverflowBox(
-      alignment: fromLeft ? Alignment.centerLeft : Alignment.centerRight,
+      // Centred in the revealed area. Both minimums are loosened: the strip
+      // gives this box tight constraints and OverflowBox passes unchanged
+      // limits on to its child, which would stretch the Column to the full
+      // height and leave its content at the top.
+      alignment: Alignment.center,
       minWidth: 0,
       maxWidth: double.infinity,
+      minHeight: 0,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: KSpace.x6),
         child: Opacity(

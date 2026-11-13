@@ -535,6 +535,69 @@ void main() {
     });
   });
 
+  group('strip content is centred', () {
+    const tall = SizedBox(
+      key: _rowKey,
+      width: double.infinity,
+      height: 88,
+      child: Text('row'),
+    );
+
+    /// Union of the icon (and label) rects. Drags stay below the trigger: past
+    /// it the icon scales up around its centre.
+    Rect content(WidgetTester tester, {required bool label}) {
+      var r = tester.getRect(find.byType(Icon).last);
+      if (label) r = r.expandToInclude(tester.getRect(find.byType(Text).last));
+      return r;
+    }
+
+    Future<void> check(
+      WidgetTester tester,
+      Widget Function(Widget row) wrap,
+      double drag, {
+      required bool label,
+    }) async {
+      await _pumpRow(tester, wrap);
+      final g = await tester.startGesture(Offset(drag > 0 ? 100 : 300, 30));
+      await g.moveBy(Offset(drag, 0));
+      await tester.pump();
+      final strip = tester.getRect(find.byType(KSwipeStrip));
+      final c = content(tester, label: label);
+      expect(c.center.dy, closeTo(strip.center.dy, 0.5));
+      expect(c.center.dx, closeTo(strip.center.dx, 0.5));
+      expect(c.left, greaterThanOrEqualTo(strip.left));
+      expect(c.right, lessThanOrEqualTo(strip.right));
+      await g.cancel();
+    }
+
+    testWidgets('capped, swipe right', (tester) async {
+      await check(
+        tester,
+        (_) => KSwipeActions.capped(start: _action('Info', []), child: tall),
+        70,
+        label: true,
+      );
+    });
+
+    testWidgets('capped, swipe left', (tester) async {
+      await check(
+        tester,
+        (_) => KSwipeActions.capped(end: _action('Info', []), child: tall),
+        -70,
+        label: true,
+      );
+    });
+
+    testWidgets('remove strip', (tester) async {
+      await check(
+        tester,
+        (_) => _remove(() async => true, row: tall),
+        150,
+        label: false,
+      );
+    });
+  });
+
   group('enabled', () {
     testWidgets('toggling keeps the child state', (tester) async {
       useWindow(tester, const Size(_width, 800));
