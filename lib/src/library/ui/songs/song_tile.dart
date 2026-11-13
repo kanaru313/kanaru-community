@@ -22,7 +22,6 @@ import '../menus/menu_action_runner.dart';
 import '../menus/menu_origin.dart';
 import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
-import '../selection/selection_shortcuts.dart';
 
 final _log = Logger('library.song_tile');
 

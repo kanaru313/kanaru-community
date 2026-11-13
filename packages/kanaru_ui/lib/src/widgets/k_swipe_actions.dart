@@ -13,7 +13,8 @@ import 'k_swipe_actions_gesture.dart';
 import 'k_swipe_actions_strip.dart';
 import 'k_swipe_geometry.dart';
 
-export 'k_swipe_actions_gesture.dart' show KSwipeAction, kSwipeDevices;
+export 'k_swipe_actions_gesture.dart'
+    show KSwipeAction, KSwipeDragRecognizer, kSwipeDevices;
 
 /// A row that moves sideways under the finger and shows what a release does.
 ///
