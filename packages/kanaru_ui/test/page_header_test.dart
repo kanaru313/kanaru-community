@@ -7,14 +7,14 @@ Widget _host(Widget child) => MaterialApp(home: Scaffold(body: child));
 void main() {
   testWidgets('root page hides the back button', (tester) async {
     await tester.pumpWidget(_host(const PageHeader(title: 'Library')));
-    expect(find.byIcon(Icons.arrow_back), findsNothing);
+    expect(find.byIcon(KIcons.back), findsNothing);
     expect(find.text('Library'), findsOneWidget);
   });
 
   testWidgets('child page shows back and calls onBack', (tester) async {
     var backs = 0;
     await tester.pumpWidget(_host(PageHeader(title: 'Album', onBack: () => backs++)));
-    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.tap(find.byIcon(KIcons.back));
     expect(backs, 1);
   });
 
@@ -46,7 +46,7 @@ void main() {
     expect(find.byIcon(Icons.menu), findsNothing);
     expect(find.byIcon(Icons.settings), findsNothing);
     expect(find.byIcon(Icons.search), findsOneWidget);
-    expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+    expect(find.byIcon(KIcons.back), findsOneWidget);
   });
 
   testWidgets('KEmpty shows message and action', (tester) async {

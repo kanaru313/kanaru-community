@@ -3,6 +3,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../browse/play_shuffle_buttons.dart';
 import '../../../media/domain/play_context.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/list_view_prefs.dart';
@@ -49,17 +50,12 @@ PlayContext flatPlayContext(FlatOpenPlace place) => folderPlayContext(
       _ => null,
     };
 
-/// Shuffle and play of a folder page: icon buttons in the list bar (desktop),
-/// labelled buttons in [FolderPlayRow] (mobile).
+/// Play and shuffle of a folder page, icons only like the other tabs: in the
+/// list bar (desktop) or in [FolderPlayRow] (mobile).
 class FolderPlayButtons extends ConsumerWidget {
-  const FolderPlayButtons({
-    super.key,
-    required this.target,
-    this.labelled = false,
-  });
+  const FolderPlayButtons({super.key, required this.target});
 
   final ({SongScope scope, PlayContext context}) target;
-  final bool labelled;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -73,40 +69,10 @@ class FolderPlayButtons extends ConsumerWidget {
     );
     void play() =>
         playScope(ref, context, target.scope, BrowseList.songs, target.context);
-    if (labelled) {
-      // Wraps onto a second line when large text leaves no room side by side.
-      return Wrap(
-        spacing: KSpace.x2,
-        runSpacing: KSpace.x2,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          FilledButton.tonalIcon(
-            onPressed: play,
-            icon: const Icon(KIcons.play),
-            label: Text(l10n.libraryPlayAll),
-          ),
-          OutlinedButton.icon(
-            onPressed: shuffle,
-            icon: const Icon(KIcons.shuffle),
-            label: Text(l10n.libraryShuffle),
-          ),
-        ],
-      );
-    }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          tooltip: l10n.libraryShuffle,
-          onPressed: shuffle,
-          icon: const Icon(KIcons.shuffle),
-        ),
-        IconButton.filledTonal(
-          tooltip: l10n.libraryPlayAll,
-          onPressed: play,
-          icon: const Icon(KIcons.play),
-        ),
-      ],
+    return PlayShuffleButtons(
+      playLabel: l10n.libraryPlayAll,
+      onPlay: play,
+      onShuffle: shuffle,
     );
   }
 }
@@ -126,7 +92,7 @@ class FolderPlayRow extends StatelessWidget {
       libraryGutter(context),
       KSpace.x2,
     ),
-    child: FolderPlayButtons(target: target, labelled: true),
+    child: FolderPlayButtons(target: target),
   );
 }
 

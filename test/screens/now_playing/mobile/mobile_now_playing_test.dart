@@ -115,11 +115,27 @@ void main() {
     expect(find.byType(MobileNowPlaying), findsOneWidget);
   });
 
-  testWidgets('the header shows position over the source line', (tester) async {
-    await _open(tester);
+  testWidgets('the header shows position over the album, empty without one', (
+    tester,
+  ) async {
+    final host = await _open(tester);
     expect(find.text('1/6'), findsOneWidget);
-    // The harness plays "songs" without a label.
-    expect(find.text('Songs'), findsOneWidget);
+    // The harness tracks have no album: no source text either.
+    expect(find.text('Songs'), findsNothing);
+    await host.run(tester, () async {
+      await host.h.db.customUpdate(
+        "UPDATE tracks SET album = 'HeaderAlb' WHERE title = 'T0'",
+        updates: {host.h.db.tracks},
+      );
+    });
+    await host.letStreamsArrive(tester);
+    expect(
+      find.descendant(
+        of: find.byType(NowPlayingHeader),
+        matching: find.text('HeaderAlb'),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('the chevron closes the page', (tester) async {

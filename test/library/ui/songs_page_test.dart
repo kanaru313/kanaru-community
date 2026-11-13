@@ -168,7 +168,9 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('desktop labels the play buttons', (tester) async {
+  testWidgets('desktop labels play all, shuffle stays an icon on its right', (
+    tester,
+  ) async {
     final h = await pumpLibrary(
       tester,
       initial: '/library/songs',
@@ -178,7 +180,10 @@ void main() {
     await _addSongs(h, ['Alpha']);
     await h.settle(tester);
     expect(find.text('Play all'), findsOneWidget);
-    expect(find.text('Shuffle'), findsOneWidget);
+    expect(find.text('Shuffle'), findsNothing);
+    final play = tester.getCenter(find.text('Play all'));
+    final shuffle = tester.getCenter(find.byTooltip('Shuffle'));
+    expect(shuffle.dx, greaterThan(play.dx));
     await unmountApp(tester);
   });
 

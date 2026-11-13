@@ -27,15 +27,20 @@ double selectionPanelInset(
 /// The last sliver of a library page: empty room as high as the floating
 /// panel (desktop), so the last row can be scrolled clear of it. The page
 /// keeps its full height and rows beside the panel stay reachable. On the
-/// mobile shell the panel sits in the bottom bar and pushes the page up, so
-/// this is the plain end gap.
+/// mobile shell the panel and the mini player float over the page; the shell
+/// adds their height to the bottom media padding, so the end gap is that plus
+/// the usual one.
 class SelectionInsetSliver extends ConsumerWidget {
   const SelectionInsetSliver({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (FormFactor.of(context) == FormFactor.mobile) {
-      return const SliverToBoxAdapter(child: SizedBox(height: KSpace.x4));
+      return SliverToBoxAdapter(
+        child: SizedBox(
+          height: KSpace.x4 + MediaQuery.paddingOf(context).bottom,
+        ),
+      );
     }
     final scaler = MediaQuery.textScalerOf(context);
     final inset = ref.watch(

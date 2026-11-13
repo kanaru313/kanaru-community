@@ -633,33 +633,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackPickArtist => 'Choose an artist';
 
   @override
-  String get playbackSourceSongs => 'Songs';
-
-  @override
-  String get playbackSourceAlbum => 'Album';
-
-  @override
-  String get playbackSourceArtist => 'Artist';
-
-  @override
-  String get playbackSourceGenre => 'Genre';
-
-  @override
-  String get playbackSourceLanguage => 'Language';
-
-  @override
-  String get playbackSourceFolder => 'Folder';
-
-  @override
-  String get playbackSourceFavorites => 'Favorites';
-
-  @override
-  String get playbackSourceSelection => 'Selection';
-
-  @override
-  String get playbackSourceQueue => 'Queue';
-
-  @override
   String get playbackLyricsCard => 'Lyrics';
 
   @override

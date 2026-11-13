@@ -121,7 +121,7 @@ class _PermissionsSectionState extends ConsumerState<PermissionsSection> {
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(KLayout.minTarget),
         ),
-        icon: Icon(blocked ? KIcons.settingsApp : KIcons.permission),
+        icon: Icon(blocked ? KIcons.settings : KIcons.permission),
         label: Text(label),
       ),
       note: Text(

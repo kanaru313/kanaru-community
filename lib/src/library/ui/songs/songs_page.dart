@@ -3,6 +3,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../browse/play_shuffle_buttons.dart';
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
 import '../../domain/browse/list_sort.dart';
@@ -72,38 +73,16 @@ class _SongsBarLeading extends ConsumerWidget {
         : l10n.librarySongCount(shown);
     return Row(
       children: [
-        if (desktop) ...[
-          OutlinedButton.icon(
-            onPressed: enabled
-                ? () => shuffleAll(ref, context, list, playContext)
-                : null,
-            icon: const Icon(KIcons.shuffle),
-            label: Text(l10n.libraryShuffle),
-          ),
-          const KGap(KSpace.x2),
-          FilledButton.tonalIcon(
-            onPressed: enabled
-                ? () => playAll(ref, context, list, playContext)
-                : null,
-            icon: const Icon(KIcons.play),
-            label: Text(l10n.libraryPlayAll),
-          ),
-        ] else ...[
-          IconButton(
-            tooltip: l10n.libraryShuffle,
-            onPressed: enabled
-                ? () => shuffleAll(ref, context, list, playContext)
-                : null,
-            icon: const Icon(KIcons.shuffle),
-          ),
-          IconButton.filledTonal(
-            tooltip: l10n.libraryPlayAll,
-            onPressed: enabled
-                ? () => playAll(ref, context, list, playContext)
-                : null,
-            icon: const Icon(KIcons.play),
-          ),
-        ],
+        PlayShuffleButtons(
+          labelled: desktop,
+          playLabel: l10n.libraryPlayAll,
+          onPlay: enabled
+              ? () => playAll(ref, context, list, playContext)
+              : null,
+          onShuffle: enabled
+              ? () => shuffleAll(ref, context, list, playContext)
+              : null,
+        ),
         if (count.isNotEmpty)
           Flexible(
             child: Padding(

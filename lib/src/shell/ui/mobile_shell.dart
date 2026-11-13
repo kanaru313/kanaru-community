@@ -13,6 +13,7 @@ import '../../playback/ui/mini_player.dart';
 import '../../screens/now_playing/now_playing_path.dart';
 import '../../screens/now_playing/ui/mobile/queue_sheet.dart';
 import '../state/mobile_sidebar_state.dart';
+import 'mobile_floating_dock.dart';
 import 'mobile_push_layout.dart';
 import 'mobile_sidebar.dart';
 import 'nav_groups.dart';
@@ -146,24 +147,32 @@ class MobileShell extends ConsumerWidget {
             onSelect: (item) => _select(context, ref, item, current),
           ),
           content: Scaffold(
-            body: SafeArea(bottom: false, child: navigationShell),
-            // The selection bar slot sits above the mini player and the bar.
-            // A branch that is not a tab has no bar entry, hence no bar.
-            bottomNavigationBar: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                selectionBar,
-                if (hasTrack)
-                  MiniPlayer(
-                    flight: flight,
-                    onOpen:
-                        onOpenNowPlaying ?? () => context.push(nowPlayingPath),
-                    onOpenQueue:
-                        onOpenQueue ??
-                        () => showQueueSheet(context, from: flight),
-                  ),
-                if (selected >= 0)
-                  NavigationBar(
+            // The selection bar slot and the mini player float over the page
+            // (selection bar above the mini player); only the bar below is
+            // the scaffold's. A branch that is not a tab has no bar entry.
+            body: MobileFloatingDock(
+              hidden: MediaQuery.viewInsetsOf(context).bottom > 0,
+              body: SafeArea(bottom: false, child: navigationShell),
+              dock: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  selectionBar,
+                  if (hasTrack)
+                    MiniPlayer(
+                      flight: flight,
+                      onOpen:
+                          onOpenNowPlaying ??
+                          () => context.push(nowPlayingPath),
+                      onOpenQueue:
+                          onOpenQueue ??
+                          () => showQueueSheet(context, from: flight),
+                    ),
+                ],
+              ),
+            ),
+            bottomNavigationBar: selected < 0
+                ? null
+                : NavigationBar(
                     selectedIndex: selected,
                     labelBehavior:
                         NavigationDestinationLabelBehavior.alwaysHide,
@@ -181,8 +190,6 @@ class MobileShell extends ConsumerWidget {
                         ),
                     ],
                   ),
-              ],
-            ),
           ),
         ),
       ),

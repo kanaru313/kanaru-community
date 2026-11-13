@@ -3,9 +3,14 @@ import 'package:material_ui/material_ui.dart';
 import '../layout/form_factor.dart';
 import '../tokens/k_layout.dart';
 
-/// Page body: side gutter, centred max width, vertical scroll.
+/// Page body: side gutter, centred max width, vertical scroll. The list ends
+/// above the bottom media padding (system bar, a floating dock).
 class KPage extends StatelessWidget {
-  const KPage({super.key, required this.children, this.maxWidth = KLayout.readable});
+  const KPage({
+    super.key,
+    required this.children,
+    this.maxWidth = KLayout.readable,
+  });
 
   final List<Widget> children;
   final double maxWidth;
@@ -20,7 +25,11 @@ class KPage extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: ListView(
-          padding: EdgeInsets.symmetric(horizontal: gutter),
+          padding: EdgeInsets.only(
+            left: gutter,
+            right: gutter,
+            bottom: MediaQuery.paddingOf(context).bottom,
+          ),
           children: children,
         ),
       ),

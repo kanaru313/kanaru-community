@@ -75,61 +75,70 @@ class _MobilePushLayoutState extends ConsumerState<MobilePushLayout>
         animation: _controller,
         builder: (context, _) {
           final t = _controller.value.clamp(0.0, 1.0);
-          return Stack(
-            children: [
-              // Mounted only while open or moving: a closed sidebar costs
-              // nothing on a re-theme. It holds no state worth keeping (the
-              // nav list's scroll offset restarts at the top).
-              if (open || t > 0)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Transform.translate(
-                    offset: Offset(-MobilePushLayout.sidebarShift * (1 - t), 0),
-                    child: widget.sidebar,
+          // The sidebar's colour fills the whole ground: the content's rounded
+          // corners sit past the sidebar's right edge, where nothing else is
+          // drawn and the window's black would show.
+          return ColoredBox(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            child: Stack(
+              children: [
+                // Mounted only while open or moving: a closed sidebar costs
+                // nothing on a re-theme. It holds no state worth keeping (the
+                // nav list's scroll offset restarts at the top).
+                if (open || t > 0)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Transform.translate(
+                      offset: Offset(
+                        -MobilePushLayout.sidebarShift * (1 - t),
+                        0,
+                      ),
+                      child: widget.sidebar,
+                    ),
                   ),
-                ),
-              Transform.translate(
-                offset: Offset(MobileSidebar.width * t, 0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                    MobilePushLayout.contentRadius * t,
-                  ),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      ExcludeFocus(excluding: open, child: widget.content),
-                      if (open || t > 0)
-                        Positioned.fill(
-                          child: Semantics(
-                            button: true,
-                            label: l10n.playbackSidebarClose,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              dragStartBehavior: DragStartBehavior.down,
-                              onTap: open ? _close : null,
-                              onHorizontalDragStart: (_) => _dragged = 0,
-                              onHorizontalDragUpdate: (d) =>
-                                  _dragged += d.delta.dx,
-                              onHorizontalDragEnd: (_) {
-                                if (open &&
-                                    _dragged <
-                                        -MobilePushLayout.closeDistance) {
-                                  _close();
-                                }
-                              },
-                              child: ColoredBox(
-                                color: Colors.black.withValues(
-                                  alpha: MobilePushLayout.scrimAlpha * t,
+                Transform.translate(
+                  offset: Offset(MobileSidebar.width * t, 0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      MobilePushLayout.contentRadius * t,
+                    ),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ExcludeFocus(excluding: open, child: widget.content),
+                        if (open || t > 0)
+                          Positioned.fill(
+                            child: Semantics(
+                              button: true,
+                              label: l10n.playbackSidebarClose,
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                dragStartBehavior: DragStartBehavior.down,
+                                onTap: open ? _close : null,
+                                onHorizontalDragStart: (_) => _dragged = 0,
+                                onHorizontalDragUpdate: (d) =>
+                                    _dragged += d.delta.dx,
+                                onHorizontalDragEnd: (_) {
+                                  if (open &&
+                                      _dragged <
+                                          -MobilePushLayout.closeDistance) {
+                                    _close();
+                                  }
+                                },
+                                child: ColoredBox(
+                                  color: Colors.black.withValues(
+                                    alpha: MobilePushLayout.scrimAlpha * t,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),

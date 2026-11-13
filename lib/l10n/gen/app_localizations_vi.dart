@@ -588,33 +588,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playbackPickArtist => 'Chọn nghệ sĩ';
 
   @override
-  String get playbackSourceSongs => 'Bài hát';
-
-  @override
-  String get playbackSourceAlbum => 'Album';
-
-  @override
-  String get playbackSourceArtist => 'Nghệ sĩ';
-
-  @override
-  String get playbackSourceGenre => 'Thể loại';
-
-  @override
-  String get playbackSourceLanguage => 'Ngôn ngữ';
-
-  @override
-  String get playbackSourceFolder => 'Thư mục';
-
-  @override
-  String get playbackSourceFavorites => 'Yêu thích';
-
-  @override
-  String get playbackSourceSelection => 'Đã chọn';
-
-  @override
-  String get playbackSourceQueue => 'Hàng đợi';
-
-  @override
   String get playbackLyricsCard => 'Lời bài hát';
 
   @override

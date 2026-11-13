@@ -4,12 +4,13 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../playback/state/playback_providers.dart';
-import '../play_context_text.dart';
+import '../../../../playback/state/track_info_providers.dart';
 
 /// Height of the mobile page header.
 const double nowPlayingHeaderHeight = 56;
 
-/// `[⌄] · position over source · [⋮]`. The part between the buttons is the
+/// `[⌄] · position over album · [⋮]` (the album line is empty when the track
+/// has none). The part between the buttons is the
 /// drag handle the page owner attaches a gesture to ([dragHandle]).
 class NowPlayingHeader extends ConsumerWidget {
   const NowPlayingHeader({
@@ -33,9 +34,10 @@ class NowPlayingHeader extends ConsumerWidget {
     final place = ref.watch(
       nowPlayingProvider.select((n) => (n.value?.index, n.value?.length)),
     );
-    final source = ref.watch(
-      nowPlayingProvider.select((n) => n.value?.context),
-    );
+    final id = ref.watch(nowPlayingProvider.select((n) => n.value?.trackId));
+    final album = id == null
+        ? null
+        : ref.watch(trackInfoProvider(id).select((i) => i.value?.album));
     final (index, length) = place;
     return SizedBox(
       height: nowPlayingHeaderHeight,
@@ -60,7 +62,7 @@ class NowPlayingHeader extends ConsumerWidget {
                         ),
                       ),
                     Text(
-                      playContextText(l10n, source),
+                      album ?? '',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: text.bodySmall,

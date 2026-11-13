@@ -4,6 +4,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../browse/play_shuffle_buttons.dart';
 import '../../../media/domain/play_context.dart';
 import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/list_sort.dart';
@@ -21,6 +22,10 @@ import 'detail_tint.dart';
 /// Frame of a detail page: the page [title] in a header with a back button
 /// (no root slots, no ⋮), and the page below it. Back pops one page; a page
 /// opened as the first one (a link from outside) goes to [fallback] instead.
+///
+/// The frame has its own solid ground: the detail layouts paint over a
+/// translucent tint, and the page under would show through while this one
+/// slides in.
 ///
 /// A non-null [tint] washes the whole page, header band included, with the
 /// colours of the cover the page shows (see [watchDetailTint]); null leaves
@@ -51,13 +56,17 @@ class DetailFrame extends StatelessWidget {
       ],
     );
     final t = tint;
-    if (t == null) return page;
-    return CoverTintBackground(
-      palette: t.palette,
-      loading: t.loading,
-      strength: _tintStrength,
-      fadeIn: true,
-      child: page,
+    return ColoredBox(
+      color: Theme.of(context).colorScheme.surface,
+      child: t == null
+          ? page
+          : CoverTintBackground(
+              palette: t.palette,
+              loading: t.loading,
+              strength: _tintStrength,
+              fadeIn: true,
+              child: page,
+            ),
     );
   }
 
@@ -146,25 +155,14 @@ class DetailActions extends ConsumerWidget {
         .watch(songIdsProvider((scope: scope, sort: sort, filter: '')))
         .value;
     final enabled = ids != null && ids.isNotEmpty;
-    return Wrap(
-      spacing: KSpace.x2,
-      runSpacing: KSpace.x2,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        FilledButton.icon(
-          onPressed: enabled
-              ? () => playAll(ref, context, ids, playContext)
-              : null,
-          icon: const Icon(KIcons.play),
-          label: Text(l10n.libraryPlay),
-        ),
-        IconButton.filledTonal(
-          tooltip: l10n.libraryShuffle,
-          onPressed: enabled
-              ? () => shuffleAll(ref, context, ids, playContext)
-              : null,
-          icon: const Icon(KIcons.shuffle),
-        ),
+    return PlayShuffleButtons(
+      labelled: true,
+      playLabel: l10n.libraryPlay,
+      onPlay: enabled ? () => playAll(ref, context, ids, playContext) : null,
+      onShuffle: enabled
+          ? () => shuffleAll(ref, context, ids, playContext)
+          : null,
+      trailing: [
         LibraryMoreButton(
           onPressed: ({required viaKeyboard}) =>
               onMenu(context, viaKeyboard: viaKeyboard),

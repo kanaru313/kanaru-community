@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru_ui/kanaru_ui.dart' show FormFactor;
 
 import '../../domain/library_tabs.dart';
 import '../../state/library_tabs_providers.dart';
@@ -54,41 +55,89 @@ GoRoute libraryRoute() => GoRoute(
 List<GoRoute> _detailRoutes() => [
   GoRoute(
     path: 'albums/:album',
-    builder: (context, state) =>
-        AlbumPage(albumId: state.pathParameters['album']!),
+    pageBuilder: (context, state) =>
+        _detailPage(state, AlbumPage(albumId: state.pathParameters['album']!)),
   ),
   GoRoute(
     path: 'artists/:artist',
-    builder: (context, state) =>
-        ArtistPage(artistId: state.pathParameters['artist']!),
+    pageBuilder: (context, state) => _detailPage(
+      state,
+      ArtistPage(artistId: state.pathParameters['artist']!),
+    ),
   ),
   for (final appears in [false, true])
     GoRoute(
       path: 'artists/:artist/${appears ? 'appears' : 'albums'}',
-      builder: (context, state) => ArtistAlbumsPage(
-        artistId: state.pathParameters['artist']!,
-        appears: appears,
+      pageBuilder: (context, state) => _detailPage(
+        state,
+        ArtistAlbumsPage(
+          artistId: state.pathParameters['artist']!,
+          appears: appears,
+        ),
       ),
     ),
   for (final kind in GroupKind.values) ...[
     GoRoute(
       path: '${kind.name == 'genre' ? 'genres' : 'languages'}/:${kind.name}',
-      builder: (context, state) =>
-          GroupPage(kind: kind, id: state.pathParameters[kind.name]!),
+      pageBuilder: (context, state) => _detailPage(
+        state,
+        GroupPage(kind: kind, id: state.pathParameters[kind.name]!),
+      ),
     ),
     for (final artists in [true, false])
       GoRoute(
         path:
             '${kind.name == 'genre' ? 'genres' : 'languages'}/:${kind.name}/'
             '${artists ? 'artists' : 'albums'}',
-        builder: (context, state) => GroupSeeAllPage(
-          kind: kind,
-          id: state.pathParameters[kind.name]!,
-          artists: artists,
+        pageBuilder: (context, state) => _detailPage(
+          state,
+          GroupSeeAllPage(
+            kind: kind,
+            id: state.pathParameters[kind.name]!,
+            artists: artists,
+          ),
         ),
       ),
   ],
 ];
+
+/// A detail page slides in from the right and out again on one smooth curve
+/// on mobile. The platform default (Cupertino) eases fast-to-slow, so the
+/// last part of the slide crawls and the page below stays on screen as a
+/// trailing image. Each detail page paints its own ground (`DetailFrame`).
+///
+/// On desktop the page replaces the content area between the sidebar and the
+/// right panel: a slide across that width feels heavy, so it fades in quickly
+/// (the first ~150 ms of the route) and out in ~120 ms instead.
+Page<void> _detailPage(GoRouterState state, Widget child) =>
+    CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 280),
+      reverseTransitionDuration: const Duration(milliseconds: 240),
+      transitionsBuilder: (context, animation, secondary, child) {
+        if (FormFactor.of(context) == FormFactor.desktop) {
+          return FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: const Interval(0, 0.55, curve: Curves.easeOut),
+              reverseCurve: const Interval(0.5, 1, curve: Curves.easeIn),
+            ),
+            child: child,
+          );
+        }
+        return SlideTransition(
+          position: Tween(begin: const Offset(1, 0), end: Offset.zero).animate(
+            CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+              reverseCurve: Curves.easeInCubic,
+            ),
+          ),
+          child: child,
+        );
+      },
+    );
 
 Widget _pageOf(LibraryTab tab, GoRouterState state) => switch (tab) {
   LibraryTab.songs => const SongsPage(),
