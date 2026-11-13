@@ -20,8 +20,10 @@ import 'queue_row_hooks.dart';
 /// duration, the drag handle and the ⋮ menu button.
 ///
 /// The handle sits in the accessory slot, right before ⋮, on both shells. On
-/// mobile a long press on the row (not on the handle) opens the menu; on
-/// desktop Delete removes the row.
+/// mobile a long press on the row (not on the handle) selects it when the host
+/// gives a [selection] (without one it opens the menu); on desktop Delete
+/// removes the row. With a [selection], every row of a selected track shows
+/// selected, and a tap toggles while something is selected.
 /// Rows watch only their own info and, for the current row, play/pause; a
 /// position tick rebuilds nothing here.
 class QueueRow extends ConsumerStatefulWidget {
@@ -34,6 +36,7 @@ class QueueRow extends ConsumerStatefulWidget {
     required this.onRemove,
     this.favorite,
     this.menu,
+    this.selection,
   });
 
   final QueueItem item;
@@ -43,6 +46,7 @@ class QueueRow extends ConsumerStatefulWidget {
   final VoidCallback onRemove;
   final QueueRowFavorite? favorite;
   final QueueRowMenu? menu;
+  final QueueRowSelection? selection;
 
   @override
   ConsumerState<QueueRow> createState() => _QueueRowState();
@@ -63,10 +67,37 @@ class _QueueRowState extends ConsumerState<QueueRow> {
         viaKeyboard: viaKeyboard,
       );
 
+  /// A tap or click: Shift selects a range, Ctrl / ⌘ or an existing selection
+  /// toggles the row, else it plays (the current row does nothing).
+  void _tap() {
+    final sel = widget.selection;
+    final item = widget.item;
+    final click = sel == null
+        ? SongClick.play
+        : songClick(selecting: ref.read(sel.selecting));
+    switch (click) {
+      case SongClick.range:
+        sel!.onSelect(item, range: true);
+      case SongClick.toggle:
+        sel!.onSelect(item);
+      case SongClick.play:
+        if (widget.role == QueueRowRole.current) return;
+        ref.read(playerControllerProvider).playEntry(item.entryId);
+    }
+  }
+
+  /// A long press that starts on the row: selects it, with a light tick.
+  void _select() {
+    HapticFeedback.selectionClick();
+    widget.selection?.onSelect(widget.item);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final item = widget.item;
+    final sel = widget.selection;
+    final selected = sel != null && ref.watch(sel.isSelected(item.trackId));
     final role = widget.role;
     final info = ref.watch(
       queueRowInfosProvider.select((m) => m[item.trackId]),
@@ -85,7 +116,10 @@ class _QueueRowState extends ConsumerState<QueueRow> {
       loading: info == null,
       line2: info == null ? null : trackArtistLine(info),
       line3: info == null ? null : trackAlbumLine(info),
-      leading: _Cover(info: info, current: role == QueueRowRole.current),
+      leading: _Cover(
+        info: info,
+        current: role == QueueRowRole.current && !selected,
+      ),
       top: duration == null
           ? null
           : Text(formatClock(Duration(milliseconds: duration))),
@@ -109,9 +143,8 @@ class _QueueRowState extends ConsumerState<QueueRow> {
       current: role == QueueRowRole.current,
       currentLabel: l10n.playbackNowPlaying,
       dimmed: role == QueueRowRole.played,
-      onTap: role == QueueRowRole.current
-          ? () {}
-          : () => ref.read(playerControllerProvider).playEntry(item.entryId),
+      selected: selected,
+      onTap: _tap,
     );
     if (!_desktop) {
       row = RawGestureDetector(
@@ -119,19 +152,35 @@ class _QueueRowState extends ConsumerState<QueueRow> {
         gestures: {
           _RowLongPress: GestureRecognizerFactoryWithHandlers<_RowLongPress>(
             () => _RowLongPress(_handleKey),
-            (r) =>
-                r.onLongPressStart = (d) => _openMenu(info, d.globalPosition),
+            (r) => r.onLongPressStart = sel == null
+                ? (d) => _openMenu(info, d.globalPosition)
+                : (_) => _select(),
           ),
         },
         // The default delegate looks the long press up by its exact type, so
-        // the subclass needs its own screen-reader action.
-        semantics: _LongPressSemantics(() {
-          final box = context.findRenderObject();
-          if (box is! RenderBox || !box.attached) return;
-          _openMenu(info, box.localToGlobal(box.size.center(Offset.zero)));
-        }),
+        // the subclass needs its own screen-reader action (with a selection,
+        // the `Semantics` below carries it instead, to name it).
+        semantics: sel == null
+            ? _LongPressSemantics(() {
+                final box = context.findRenderObject();
+                if (box is! RenderBox || !box.attached) return;
+                _openMenu(
+                  info,
+                  box.localToGlobal(box.size.center(Offset.zero)),
+                );
+              })
+            : null,
         child: row,
       );
+      if (sel != null) {
+        row = Semantics(
+          onLongPress: _select,
+          onLongPressHint: selected
+              ? l10n.libraryMenuDeselect
+              : l10n.libraryMenuSelect,
+          child: row,
+        );
+      }
     } else {
       row = CallbackShortcuts(
         bindings: {
@@ -149,8 +198,7 @@ class _QueueRowState extends ConsumerState<QueueRow> {
 }
 
 /// Long press of a mobile row that ignores presses starting on the drag
-/// handle, so holding the handle then moving drags instead of opening the
-/// menu.
+/// handle, so holding the handle then moving drags instead of selecting.
 class _RowLongPress extends LongPressGestureRecognizer {
   _RowLongPress(this.excluded);
 

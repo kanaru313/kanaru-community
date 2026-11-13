@@ -1,12 +1,16 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../library/state/browse/selection_providers.dart';
+import '../../../library/ui/selection/selection_bar.dart';
 import '../../../library/ui/songs/song_tile.dart';
 import '../../../playback/ui/queue/queue_actions.dart';
 import '../../../playback/ui/queue/queue_header.dart';
 import '../../../playback/ui/queue/queue_list.dart';
 import '../../../playback/ui/queue/queue_row_hooks.dart';
+import '../state/queue_selection.dart';
 import 'queue_host.dart';
 import 'queue_row_menu.dart';
 
@@ -14,8 +18,11 @@ import 'queue_row_menu.dart';
 /// actions (footer on the mobile sheet, head row on the desktop panel).
 ///
 /// The row menu and the ♥ come from here, not from `playback/`, because they
-/// reach into the library.
-class QueuePanel extends StatelessWidget {
+/// reach into the library. Rows join the app-wide selection through
+/// [QueueRowSelection]. On the sheet host the selection panel floats over the
+/// list's end, above the footer, while anything is selected; on the desktop
+/// panel it does not (the shell hides its own panel under Now Playing).
+class QueuePanel extends ConsumerWidget {
   const QueuePanel({
     super.key,
     required this.host,
@@ -40,9 +47,18 @@ class QueuePanel extends StatelessWidget {
   final Widget Function(Widget head)? headWrapper;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final sheet = host == QueueHost.sheet;
+    final selecting = sheet && ref.watch(hasSelectionProvider);
+    final queueSelection = ref.read(queueSelectionProvider.notifier);
     final list = QueueList(
+      bottomInset: selecting ? _sheetPanelInset(context) : 0,
+      selection: QueueRowSelection(
+        isSelected: (id) => isSelectedProvider(id),
+        selecting: hasSelectionProvider,
+        onSelect: (item, {range = false}) =>
+            range ? queueSelection.rangeTo(item) : queueSelection.toggle(item),
+      ),
       size: sheet ? QueueRowSize.mobile : QueueRowSize.desktop,
       favorite: (context, item) => SongFavoriteButton(trackId: item.trackId),
       onEmptied: onEmptied,
@@ -64,11 +80,23 @@ class QueuePanel extends StatelessWidget {
       body: Column(
         children: [
           if (sheet)
-            headWrapper?.call(_SheetHead(onClose: onClose)) ??
-                _SheetHead(onClose: onClose)
+            headWrapper?.call(
+                  _SheetHead(
+                    onClose: onClose,
+                    onSelectMany: queueSelection.selectCurrent,
+                  ),
+                ) ??
+                _SheetHead(
+                  onClose: onClose,
+                  onSelectMany: queueSelection.selectCurrent,
+                )
           else
-            const _PanelHead(),
-          Expanded(child: list),
+            _PanelHead(onSelectMany: queueSelection.selectCurrent),
+          Expanded(
+            child: selecting
+                ? Stack(children: [list, const _FloatingBar()])
+                : list,
+          ),
         ],
       ),
       bottomNavigationBar: sheet
@@ -83,10 +111,37 @@ class QueuePanel extends StatelessWidget {
   }
 }
 
+/// The bar's own padding under the panel (see `LibrarySelectionBar`) and the
+/// gap between it and the footer.
+const double _barPadding = KSpace.x1;
+const double _barGap = KSpace.x2;
+
+/// Room the list leaves at its end for the collapsed selection panel and its
+/// gaps. An expanded panel may cover the last rows: they cannot scroll above
+/// it (accepted; the panel collapses with one tap).
+double _sheetPanelInset(BuildContext context) =>
+    KSelectionPanel.heightFor(context, expanded: false, bodyHeight: 0) +
+    _barGap +
+    _barPadding;
+
+/// The selection panel floating at the bottom of the list area.
+class _FloatingBar extends StatelessWidget {
+  const _FloatingBar();
+
+  @override
+  Widget build(BuildContext context) => const Positioned(
+    left: 0,
+    right: 0,
+    bottom: _barGap,
+    child: LibrarySelectionBar(),
+  );
+}
+
 class _SheetHead extends StatelessWidget {
-  const _SheetHead({required this.onClose});
+  const _SheetHead({required this.onClose, required this.onSelectMany});
 
   final VoidCallback? onClose;
+  final VoidCallback onSelectMany;
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +163,7 @@ class _SheetHead extends StatelessWidget {
             ),
           ),
           const QueueSoonButton.save(),
-          const QueueMoreMenu(),
+          QueueMoreMenu(onSelectMany: onSelectMany),
           IconButton(
             icon: const Icon(KIcons.collapse),
             tooltip: l10n.playbackMinimize,
@@ -122,7 +177,9 @@ class _SheetHead extends StatelessWidget {
 
 /// Counts on the left, actions on the right, under the panel's own header.
 class _PanelHead extends StatelessWidget {
-  const _PanelHead();
+  const _PanelHead({required this.onSelectMany});
+
+  final VoidCallback onSelectMany;
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +204,7 @@ class _PanelHead extends StatelessWidget {
                 indent: 12,
                 endIndent: 12,
               ),
-              const QueueMoreMenu(),
+              QueueMoreMenu(onSelectMany: onSelectMany),
             ],
           ),
         ),

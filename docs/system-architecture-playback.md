@@ -615,10 +615,10 @@ Rules:
 The queue content is shared by the mobile sheet and the desktop right panel. Widgets live in
 `playback/ui/queue/` (no library imports); the row menu, the ♥ and navigation to the library live in
 `screens/now_playing/ui/` (`queue_row_menu.dart`, `track_navigation.dart`; the ♥ is the library's `SongFavoriteButton`) and are handed
-to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`). `QueuePanel(host: sheet | panel)` composes them. On the panel the shell draws the header ("Queue" and ✕); `QueuePanel` adds the line under it: counts left (`N tracks · time left`; the tooltip has the playing position, and the whole line first when the panel cut it short; 40 dp action buttons with 8 dp between them, about 164 dp for the line), Shuffle, Add tracks (soon), Clean up, Save as playlist (soon) | ⋮ right, no footer.
+to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). `QueuePanel(host: sheet | panel)` composes them. On the panel the shell draws the header ("Queue" and ✕); `QueuePanel` adds the line under it: counts left (`N tracks · time left`; the tooltip has the playing position, and the whole line first when the panel cut it short; 40 dp action buttons with 8 dp between them, about 164 dp for the line), Shuffle, Add tracks (soon), Clean up, Save as playlist (soon) | ⋮ right, no footer.
 
 - **List** (`queue_list.dart`): one `ReorderableListView.builder`, fixed row extent (`KMediaCard.extentOf` for the text scale in effect, the same height as a library song row; `QueueRowSize` picks the handle size, 48 dp mobile and 40 dp desktop, and mobile long press vs desktop Delete), keys by
-  entry id, `buildDefaultDragHandles: false`, bottom padding 72. A drop is resolved by the dragged entry's id, not by
+  entry id, `buildDefaultDragHandles: false`, bottom padding 72 (plus `bottomInset` while the sheet floats the selection panel). A drop is resolved by the dragged entry's id, not by
   the index the list reports, so an edit during the drag cannot move another entry. `QueueScrollController` keeps the
   start offset inside the content (a short queue starts at the top). On open the current row is the second visible. When the text scale changes the extent changes and the list re-anchors to the current row.
 - **Rows** (`queue_row.dart`): a flat `KMediaCard` on both shells (full width, no radius): 56 dp cover (radius 10),
@@ -628,9 +628,27 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`). `QueuePanel(host: she
   `ReorderableDragStartListener` that swallows taps and has no long-press of its own. Current = `primaryContainer` fill
   (icons take the card ink) plus `KEqualizerIcon` over the cover under a scrim (pause glyph when paused), announced as
   "Now playing"; played rows are dimmed to 50 %; tap plays (the current row ignores it); Enter plays and Delete removes a focused desktop row.
-  Mobile: a long press on the row opens the menu, except one that starts on the handle (a custom long-press
-  recognizer skips it), so hold-then-move drags. The ⋮ passes `viaKeyboard`, and a menu opened that way focuses its
+  Mobile: a long press on the row selects it (light tick; while selecting it toggles, so it also deselects; the
+  screen-reader action reads "Select" / "Deselect"), except one that starts on the handle (a custom long-press
+  recognizer skips it), so hold-then-move drags. Without a `QueueRowSelection` the long press opens the menu. The menu
+  is on ⋮ (and right click / Menu key on desktop). The ⋮ passes `viaKeyboard`, and a menu opened that way focuses its
   first row. A row whose info has not loaded is the card's `loading` skeleton of the same height.
+- **Selection** (`QueueRowSelection` in `queue_row_hooks.dart`, optional on `QueueList` / `QueueRow`; null = no
+  selection): the host supplies `isSelected(trackId)` (a `ProviderListenable<bool>` per track, so a row rebuilds only
+  when its own track flips), `selecting` and `onSelect(item, {range})`. Every occurrence of a selected track shows
+  selected (`KMediaCard.selected`: tint and ✓ over the cover; the ✓ replaces the equalizer and stays fully opaque on a
+  dimmed played row). A tap goes through `songClick` (`kanaru_ui`): Shift = range, Ctrl / ⌘ or an existing selection =
+  toggle (also on the current row), else play. Swipe-remove and handle reorder work while selecting. The host
+  (`screens/now_playing`) wires it to the app-wide selection: `QueueSelection` (`state/queue_selection.dart`) keeps the
+  Shift anchor as an **entry id** (a track can be queued twice), selects the tracks of the entries between the anchor's
+  and the clicked entry's current positions (read from `queueViewProvider` at click time), and ignores the anchor
+  (Shift is a plain select) when the selection is empty, the anchor's track is no longer selected or its entry left the queue. Entry points: long press on
+  mobile, Ctrl / Shift click, row menu "Select" / "Deselect" (placed like the library song menu), and the head ⋮ "Select
+  several" (`QueueMoreMenu.onSelectMany`: selects the current song; dimmed with no current entry).
+  On the sheet host `QueuePanel` floats `LibrarySelectionBar` over the end of the list, above the footer (which stays),
+  while the selection is not empty; the list takes `bottomInset` so its last row and the locate button clear the
+  collapsed panel (`KSelectionPanel.heightFor` plus the gaps); an open panel may cover the last rows. Known gap: in a
+  very short sheet (landscape) the open panel's header can be clipped (Back still collapses it). The desktop panel host shows no selection panel (the shell hides its own under Now Playing).
 - **Row infos** (`state/queue_row_infos.dart`): `TrackInfo`s are loaded for the viewport ± 50 rows into a 1 000-entry
   LRU; the window is O(1) from the scroll offset. A `tracks` change reloads only the last window, 1 s after the last
   change. Rows read their own entry with a `select`. The header time ("còn …") is `queueRemainingProvider`.
@@ -651,10 +669,10 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`). `QueuePanel(host: she
   direction; rebuilds only when the side changes.
 - **Actions** (`queue_actions.dart`, `queue_header.dart`): Shuffle (reshuffles the upcoming and turns shuffle on), Add
   tracks and Save as playlist (dimmed "Coming soon"), Clean up (`MenuAnchor`, four choices with counts worked out when
-  it opens; 0 = dimmed; opens up on the sheet, down on the panel; the toast counts what the controller removed when the choice ran, not what the menu promised), ⋮ (only a dimmed "Select several").
+  it opens; 0 = dimmed; opens up on the sheet, down on the panel; the toast counts what the controller removed when the choice ran, not what the menu promised), ⋮ (only "Select several": selects the current song).
 - **Row menu** (`screens/now_playing/ui/queue_row_menu.dart`): Play this | Play next (queues a **copy**) | Go to album,
-  Go to artist (a `showSelectionPicker` when the track has several artists), Ask AI (dimmed) | Remove. A popup at the
-  pointer on the panel, a sheet on mobile (long press). Every action first checks the entry is still queued ("That track is
+  Go to artist (a `showSelectionPicker` when the track has several artists), Select / Deselect, Ask AI (dimmed) | Remove. A popup at the
+  pointer on the panel, a sheet on mobile (⋮). Every action first checks the entry is still queued ("That track is
   no longer in the queue"). Keep its item set in line with lane C's song menu.
 - **Undo** restores the entry that was current at removal time only if that removal took it out; if the player moved on
   meanwhile, the live current entry stays.
@@ -690,7 +708,9 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
 on the root navigator, so Back pops the sheet before Now Playing, and Now Playing before the shell. The route covers the
 screen: the cover tint, a strip at the top (cover 72, title and artist, play/pause 56, next 48), and the sheet below it
 (radius 28, grip, `QueuePanel(host: sheet)`), fixed height from under the strip to the bottom. Opened by the Queue button
-of Now Playing and by a long press on the mini player (any screen; Now Playing is not opened). The Queue nav item is a dimmed "Coming soon" on both shells (saved queues).
+of Now Playing and by a long press on the mini player (any screen; Now Playing is not opened). While the selection is not
+empty the sheet shows its own `LibrarySelectionBar` above the footer (the shell's sits under the sheet); Back collapses an
+expanded panel first (`SelectionBackScope`, its route is the current one), the next Back closes the sheet, selection kept. The Queue nav item is a dimmed "Coming soon" on both shells (saved queues).
 
 - **Flight** (`KSharedFlight`, `kanaru_ui`): four layers (cover, text, play, next) go from the source's rects to the strip
   rects as the progress goes 0 to 1. Progress = route animation (420 ms) x (1 - pull); a pull on the grip or head is

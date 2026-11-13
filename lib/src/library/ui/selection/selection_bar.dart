@@ -7,6 +7,9 @@ import 'selection_panel.dart';
 
 /// Slot for the multi-select panel. Both shells render it above the player
 /// (mobile: above the mini player; desktop: floating above the player bar).
+/// The mobile queue sheet mounts one more, floating over the end of its list
+/// above the sheet's footer (the shell's is under the sheet there). On the
+/// desktop the shell's one is hidden while Now Playing covers the page.
 /// Empty while nothing is selected; the selection lives as long as the app,
 /// so the panel follows the user from one screen to the next.
 ///
