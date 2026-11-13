@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Rust gate: format, the unsafe grep, cargo audit, tests, clippy.
+# Run from anywhere inside the nix shell (`tool/check --rust` calls it).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+
+# `unsafe` lives only in these files of hand-written Rust (generated
+# `frb_generated.rs` is skipped). `-w` matches the keyword, not lint names such
+# as `unsafe_code` or `undocumented_unsafe_blocks`; those and comment lines are
+# filtered out so only code and `unsafe` blocks/fns/impls trip the gate.
+if grep -rnw --include='*.rs' unsafe rust/crates \
+    | grep -v -e 'kanaru_bridge/src/os\.rs:' \
+              -e 'kanaru_plugin_runtime/src/memory\.rs:' \
+              -e 'kanaru_plugin_runtime/src/compile_check\.rs:' \
+              -e 'frb_generated\.rs:' \
+    | grep -v -E '^[^:]+:[0-9]+:[[:space:]]*//'; then
+  echo "unsafe outside kanaru_bridge/src/os.rs, kanaru_plugin_runtime/src/{memory,compile_check}.rs" >&2
+  exit 1
+fi
+
+if ! command -v cargo-audit >/dev/null 2>&1; then
+  echo "cargo-audit is not installed: run inside 'nix develop' (flake.nix has it)" >&2
+  exit 1
+fi
+cargo audit --file rust/Cargo.lock
+
+cargo test --manifest-path rust/Cargo.toml
+cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings

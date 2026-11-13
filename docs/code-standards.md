@@ -144,8 +144,15 @@ rebase conflict, take either side and run the two commands again.
 
 ## Rust
 
-- `unsafe` only in `kanaru_bridge/src/os.rs` (thread priority). `tool/check --rust`
-  greps for it.
+- `unsafe` only in `kanaru_bridge/src/os.rs` (thread priority) and, in
+  `kanaru_plugin_runtime`, in `src/memory.rs` (the QuickJS allocator) and
+  `src/compile_check.rs` (the compile-only check on the raw engine). The runtime
+  crate sets `unsafe_code = "deny"` and `clippy::undocumented_unsafe_blocks`
+  and allows `unsafe` with `#![allow(unsafe_code)]` in those two files only;
+  every `unsafe` block carries a `// SAFETY:` comment. The Rust gate
+  (`tool/check_rust`, also run by `tool/check --rust`) greps for `unsafe`
+  outside these three files, and also runs `cargo fmt --check`, `cargo audit`,
+  `cargo test` and `cargo clippy -D warnings`.
 - `kanaru_media` and `kanaru_plugin_runtime` have no FFI and do not depend on
   each other; only `kanaru_bridge` knows flutter_rust_bridge. Explicit DTOs,
   no `#[frb(mirror)]`.
@@ -160,6 +167,15 @@ rebase conflict, take either side and run the two commands again.
   Record a pass result only on success or a permanent error kind; for a
   transient one (`NativeError.transient`: busy or dropped mounts, `Timeout`,
   `Cancelled`) leave the pass version alone. `Panic` is permanent.
+- `kanaru_plugin_runtime` has no process globals: threads, the job registry
+  and the late-answers drain belong to a `PluginRuntime` instance (`reset`
+  cancels every job, `shutdown` and `Drop` join the threads). The bridge holds
+  the one instance of the app; tests make their own. The only global is the
+  opt-in panic hook of `install_quiet_panic_hook`.
+- Second thread-per-call exception, next to the lyrics one: the compile-only
+  check of a plugin script (`check_script`) runs on its own 8 MiB thread
+  (`plugin-js-check`), because it is not a job of the worker pool and must
+  not wait for or take a worker.
 - Third-party versions are pinned in `rust/Cargo.toml` with the reason beside
   each. Pin exactly, unless the comment there says why not.
 - Library code does not `unwrap` (lint); tests may.

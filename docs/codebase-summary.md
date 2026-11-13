@@ -63,7 +63,24 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
 - `kanaru_media`: `error.rs` (`MediaError`, `is_transient`), `cancel.rs` (`Cancel`),
   `limits.rs` (size, pixel and duration caps), `lib.rs` (`CRATE_VERSION`). Empty
   modules that lanes fill: `tags/`, `covers/`, `waveform/`.
-- `kanaru_plugin_runtime`: placeholder for the plugin JavaScript runtime. No FFI and no dependency on `kanaru_media`.
+- `kanaru_plugin_runtime`: runs plugin JavaScript (QuickJS via `rquickjs`). No FFI
+  and no dependency on `kanaru_media`. `PluginRuntime` / `RuntimeConfig` (`runtime.rs`;
+  `run`, `begin_job`, `cancel_job`, `reset`, `shutdown`, `check_script`) owns the
+  worker pool (`pool.rs`), the job registry (`jobs.rs`) and the late-answers drain
+  (`host/late.rs`). `PluginHost` (`host/mod.rs`) is what answers `fetch` and stream
+  calls; the bridge implements it, `NoNetwork` is the default. `engine/` runs one
+  job on a fresh `Runtime` and `Context` and maps every ending to a `ScriptResult`;
+  `globals/` has `Response`, `execute` and `load`; `host/` has the budget,
+  `callback` (park and wake while waiting for the host), `console`, `sleep`,
+  `storage` (`localConfig`, `localStorage`) and `quiet` (panic hook); `js/` holds
+  `host_prelude.js` and CryptoJS 4.2.0; `memory.rs` is the limited allocator and
+  `compile_check.rs` the compile-only check (the two files with `unsafe`);
+  `limits.rs` has every cap; `types.rs` the runtime types. Not ported yet: the
+  fetch, stream and `emit` natives and `Html`. Integration tests are in
+  `crates/kanaru_plugin_runtime/tests/` (`common/mod.rs` shares one runtime per test
+  binary behind a lock; `contract`, `crypto`, `failure_data`, `limits`, `storage`,
+  `hostile`, `lifecycle`, `prelude_drift`); the feature `test-hooks` adds the
+  `__testLog` and `__testPanic` script globals.
 - `kanaru_bridge`: `guard.rs` (`guarded`, panic to `NativeError`), `pools.rs`
   (`background`, `interactive`, `waveform`; 8 MiB stacks), `os.rs` (thread
   priority, the only `unsafe`), `source.rs` (`Source`, `open_source`: regular

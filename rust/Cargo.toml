@@ -61,6 +61,14 @@ whatlang = "=0.18.0"
 rayon = "=1.12.0"
 # Thread priority (setpriority) in the bridge's os.rs. Exact pin: matches the lockfile, bumped on purpose.
 libc = "=0.2.191"
+# QuickJS binding for plugin scripts. `std` only: no `bindgen` here (the
+# runtime crate turns it on for Android, where rquickjs-sys ships no
+# bindings), no `loader`/`parallel`/`futures`. Exact pin: its sys crate bundles
+# the engine and the API changes between minors.
+rquickjs = { version = "=0.14.0", default-features = false, features = ["std"] }
+# Charset decoding for `Response.text(charset)` in plugin scripts (phase of the
+# fetch natives). Exact pin: matches the version the old app shipped.
+encoding_rs = "=0.8.42"
 
 kanaru_media = { path = "crates/kanaru_media" }
 kanaru_plugin_runtime = { path = "crates/kanaru_plugin_runtime" }
