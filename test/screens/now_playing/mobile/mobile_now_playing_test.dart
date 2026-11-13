@@ -239,7 +239,10 @@ void main() {
   ) async {
     final host = await _open(tester);
     final row = find.byType(NowPlayingButtonRow);
-    await host.tap(tester, find.descendant(of: row, matching: find.byType(RepeatButton)));
+    await host.tap(
+      tester,
+      find.descendant(of: row, matching: find.byType(RepeatButton)),
+    );
     await tester.pumpAndSettle();
     expect(find.byType(SelectionRow), findsNWidgets(5));
     expect(find.text('Repeat the whole queue'), findsOneWidget);

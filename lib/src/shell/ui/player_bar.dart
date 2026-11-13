@@ -41,7 +41,10 @@ class PlayerBar extends ConsumerWidget {
     final cover = ref.watch(playingCoverColorsProvider);
     // Same provider and widget as Now Playing, so a later drag-to-expand
     // shows one continuous tint. No colours: the flat surface, as before.
+    // The divider is a foreground decoration: the tint's opaque base would
+    // paint over a background one.
     return DecoratedBox(
+      position: DecorationPosition.foreground,
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: scheme.outlineVariant)),
       ),

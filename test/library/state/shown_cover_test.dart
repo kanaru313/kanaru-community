@@ -140,12 +140,17 @@ void main() {
     for (final e in [StateError('a'), StateError('a'), StateError('b')]) {
       await _read(_overrides(indexStream: Stream<Set<String>>.error(e)));
     }
-    expect(records.where((r) => r.loggerName == 'library.covers'), hasLength(2));
+    expect(
+      records.where((r) => r.loggerName == 'library.covers'),
+      hasLength(2),
+    );
   });
 
   test('the key of a custom file round-trips for every size', () {
     for (final size in CoverSize.values) {
-      final file = File('/data/custom_covers/${coverRelativePath(_customKey, size)}');
+      final file = File(
+        '/data/custom_covers/${coverRelativePath(_customKey, size)}',
+      );
       expect(customCoverKeyOfFile(file), _customKey);
     }
   });

@@ -1,4 +1,5 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
@@ -344,6 +345,44 @@ void main() {
             alpha: stops[i < stops.length ? i : stops.length - 1].a * strength,
           ),
       ];
+    }
+
+    for (final withColours in [true, false]) {
+      testWidgets('the top divider stays visible '
+          '(${withColours ? 'with' : 'without'} colours)', (tester) async {
+        final key = GlobalKey();
+        await pumpWithPlayer(
+          tester,
+          Align(
+            alignment: Alignment.topLeft,
+            child: RepaintBoundary(key: key, child: const PlayerBar()),
+          ),
+          size: const Size(1280, 700),
+          overrides: [
+            cover(
+              withColours
+                  ? const PlayingCoverColorsFound(colors)
+                  : const PlayingCoverColorsNone(),
+            ),
+          ],
+        );
+        await tester.pump(const Duration(milliseconds: 500));
+        final boundary =
+            key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+        final bytes = await tester.runAsync(() async {
+          final image = await boundary.toImage();
+          return (await image.toByteData())!;
+        });
+        // Pixel (640, 0) is the top row of the bar's own paint area.
+        final offset = (0 * boundary.size.width.toInt() + 640) * 4;
+        final top = Color.fromARGB(
+          bytes!.getUint8(offset + 3),
+          bytes.getUint8(offset),
+          bytes.getUint8(offset + 1),
+          bytes.getUint8(offset + 2),
+        );
+        expect(top.toARGB32(), schemeOf(tester).outlineVariant.toARGB32());
+      });
     }
 
     testWidgets('colours tint the bar by the strength constant', (

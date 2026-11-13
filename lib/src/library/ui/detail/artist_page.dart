@@ -46,7 +46,8 @@ class ArtistPage extends ConsumerWidget {
     }
     final detail = ref.watch(artistDetailProvider(key)).value;
     final albums =
-        ref.watch(artistAlbumsProvider(key)).value ?? const ArtistAlbums(own: [], appears: []);
+        ref.watch(artistAlbumsProvider(key)).value ??
+        const ArtistAlbums(own: [], appears: []);
     final photo =
         detail?.coverKey ??
         albums.own.map((a) => a.coverKey).whereType<String>().firstOrNull;

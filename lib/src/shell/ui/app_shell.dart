@@ -42,8 +42,10 @@ class _AppShellState extends ConsumerState<AppShell> {
     // Create the player once the shell is up (both shells), so the saved
     // session and the system media controls start at launch, not on the first
     // tap on a mini player. After the first frame: building a provider with
-    // side effects is not allowed while widgets build, so nothing reads the
-    // player before this callback (the shells ask `playerCreatedProvider`).
+    // side effects is not allowed while widgets build, so the shells and the
+    // cover colour sync wait for the player phase and `playerCreatedProvider`
+    // before this callback. The current-track and playing providers are not
+    // gated that way yet.
     // The notice listener starts in the same callback, so no notice is lost
     // in between.
     WidgetsBinding.instance.addPostFrameCallback((_) {
