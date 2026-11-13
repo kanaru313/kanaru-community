@@ -16,25 +16,32 @@ import '../collections/album_tile.dart';
 import '../collections/artist_tile.dart';
 import '../menus/menu_origin.dart';
 import '../menus/more_button.dart';
+import 'detail_tint.dart';
 
 /// Frame of a detail page: the page [title] in a header with a back button
 /// (no root slots, no ⋮), and the page below it. Back pops one page; a page
 /// opened as the first one (a link from outside) goes to [fallback] instead.
+///
+/// A non-null [tint] washes the whole page, header band included, with the
+/// colours of the cover the page shows (see [watchDetailTint]); null leaves
+/// the page untinted.
 class DetailFrame extends StatelessWidget {
   const DetailFrame({
     super.key,
     required this.title,
     required this.fallback,
     required this.child,
+    this.tint,
   });
 
   final String title;
   final String fallback;
   final Widget child;
+  final DetailTint? tint;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final page = Column(
       children: [
         Padding(
           padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
@@ -43,7 +50,19 @@ class DetailFrame extends StatelessWidget {
         Expanded(child: KScrollInkSurface(child: child)),
       ],
     );
+    final t = tint;
+    if (t == null) return page;
+    return CoverTintBackground(
+      palette: t.palette,
+      loading: t.loading,
+      strength: _tintStrength,
+      fadeIn: true,
+      child: page,
+    );
   }
+
+  /// Half the tint of the player surfaces: a page is read for a long time.
+  static const double _tintStrength = 0.5;
 
   void _back(BuildContext context) {
     if (context.canPop()) {

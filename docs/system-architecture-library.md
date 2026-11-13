@@ -682,9 +682,9 @@ routes in `ui/browse/library_routes.dart`.
 - Album: `KDetailLayout` (wide from 840 px of page width) with `KDetailHero`:
   cover and, bottom aligned or under it, the album artist (primary colour, opens
   the artist page; plain text for the unknown artist), the year and the
-  buttons. The page tint is `coverColorsProvider(coverKey).seed`; an album with a custom cover has no tint (its palette is not extracted yet). Rows are
+  buttons. The page is tinted (see "Detail page tint"). Rows are
   `SongTile(showNumber: true)`; no disc headers and no "other albums".
-- Artist: round photo (not faded), `N albums` (own; the line is left out when
+- Artist: round photo (not faded; the page is tinted like an album), `N albums` (own; the line is left out when
   the artist owns none), shelves Albums (newest
   first) and Appears on, then the songs. A shelf with no item and the songs
   part of an artist with no `track_artists` row are left out. Play and shuffle
@@ -712,16 +712,39 @@ routes in `ui/browse/library_routes.dart`.
   tracks (`coverKey`), else a placeholder. `itemKey` is the encoded `AlbumKey` /
   `ArtistKey`. A list holds thousands of covers, so they never watch the
   per-item `customCoverFileProvider` (`state/custom_cover_providers.dart`)
-  directly: `hasCustomCoverProvider` selects
+  directly: `shownCoverProvider` (`state/shown_cover_provider.dart`) selects
   the item's answer from ONE stream per kind (`customCoverIndexProvider`, in
   `state/browse/custom_cover_index_providers.dart`, a watch of the item keys in
-  `custom_covers`), and only an item in that set watches its file. While the
-  file resolves, or when it is gone (a restored backup), the automatic cover
-  stays. `customCoverFileProvider` stays loaded 5 s after its last listener
+  `custom_covers`), and only an item in that set watches its file. The answer
+  is `ShownCoverLoading` (index or file not read yet: the cover is the
+  `KCover.loading` skeleton, never the automatic cover first),
+  `ShownCustomCover(coverKey, file)` (the key is read from the file's path, so
+  picture and colours come from one stream), or `ShownAutomaticCover(coverKey?)`
+  (no custom cover, its file is gone, or the index failed: logged once). When
+  the answer becomes unknown after it was known (a cover just chosen on an open
+  page) the last answer stays until the new one is ready: no skeleton flash. `customCoverFileProvider` stays loaded 5 s after its last listener
   (`customCoverKeepAliveProvider`, 5 s; tests shorten it), so a tile scrolled back in within that time
   shows its custom cover at once instead of flashing the automatic one. A file
   that exists but cannot be decoded shows the automatic cover too (passed to
-  `KCover` as `errorFallback`).
+  `KCover` as `errorFallback`: only the picture falls back at paint time, the
+  provider knows whether the file exists, not whether it decodes).
+
+### Detail page tint
+
+`ui/detail/detail_tint.dart`: `watchDetailTint(ref, item, automaticCoverKey)`
+resolves `shownCoverProvider` (the same rule as the cover widget) and returns
+the colours of the shown image from `coverColorsProvider`: the custom cover's
+(written at import), else the automatic cover's (album: track cover; artist:
+`coverKey`, else the cover of its first own album). While the image or its
+colours are unknown it is `loading` with no palette; a cover with no colours
+(near-gray) or no cover gives no tint. `DetailFrame(tint:)` wraps the whole
+page, header band included, in `CoverTintBackground(strength: 0.5, fadeIn:
+true)`: nothing is drawn until the colours are known, then a 300 ms fade-in;
+choosing or removing the custom cover on an open page tweens (the old colours
+stay while `loading`). Sticky bars keep `KBlurredBar`. Group pages pass no
+tint. `KDetailLayout` draws no background. The album artist link uses
+`primary` (follows the playing cover), so on a tinted page it can fall just
+under 4.5:1; the tint is not changed for it.
 
 ## Folders tab
 

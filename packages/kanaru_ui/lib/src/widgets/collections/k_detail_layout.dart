@@ -12,19 +12,13 @@ import '../../tokens/k_space.dart';
 /// [columnWidth] holds the header, aligned to the column bottom and scrolling
 /// on its own when the window is short; the slivers scroll on the right.
 ///
-/// [tint] washes the page background with a soft gradient (at most 18 % in
-/// light, 24 % in dark), so the page takes the colour of a cover.
+/// It draws no background: a page tints itself by putting the layout (and its
+/// header) inside a `CoverTintBackground`.
 class KDetailLayout extends StatelessWidget {
-  const KDetailLayout({
-    super.key,
-    required this.header,
-    required this.slivers,
-    this.tint,
-  });
+  const KDetailLayout({super.key, required this.header, required this.slivers});
 
   final Widget header;
   final List<Widget> slivers;
-  final Color? tint;
 
   /// Page width at which the two-column layout starts.
   static const double wideBreakpoint = 840;
@@ -37,11 +31,10 @@ class KDetailLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= wideBreakpoint;
-        Widget content = wide
+        final Widget content = wide
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -70,29 +63,14 @@ class KDetailLayout extends StatelessWidget {
                   ...slivers,
                 ],
               );
-        content = _DetailMode(wide: wide, child: content);
-        final color = tint;
-        if (color == null) return content;
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                color.withValues(alpha: dark ? 0.24 : 0.18),
-                color.withValues(alpha: 0),
-              ],
-            ),
-          ),
-          child: content,
-        );
+        return _DetailMode(wide: wide, child: content);
       },
     );
   }
 }
 
 /// Translucent, blurred background for bars that stay on top while the page
-/// scrolls under them, so a [KDetailLayout] tint is not cut by a flat bar.
+/// scrolls under them, so a page tint is not cut by a flat bar.
 /// Blur costs GPU: use it on those bars only.
 class KBlurredBar extends StatelessWidget {
   const KBlurredBar({super.key, required this.child});

@@ -4,12 +4,10 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../media/domain/library_keys.dart';
 import '../../../media/domain/play_context.dart';
-import '../../../playback/state/cover_providers.dart';
 import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../domain/library_tabs.dart';
-import '../../state/browse/custom_cover_index_providers.dart';
 import '../../state/browse/detail_providers.dart';
 import '../../state/custom_cover_providers.dart';
 import '../browse/item_covers.dart';
@@ -18,11 +16,12 @@ import '../library_locations.dart';
 import '../menus/menu_origin.dart';
 import '../menus/open_menu.dart';
 import 'detail_header.dart';
+import 'detail_tint.dart';
 import 'detail_songs.dart';
 
 /// Album page: cover, artist link, year and buttons (a left column on a wide
 /// page), then the album's songs in track order with their numbers. The page
-/// takes a soft tint from the cover.
+/// takes a soft tint from the cover it shows.
 class AlbumPage extends ConsumerWidget {
   const AlbumPage({super.key, required this.albumId});
 
@@ -43,14 +42,10 @@ class AlbumPage extends ConsumerWidget {
           : DetailPending(fallback: _fallback, failed: detail.hasError);
     }
     final coverKey = album.coverKey;
-    // A custom cover wins over the tracks' cover and its colours are not
-    // extracted yet: no tint rather than the tint of a picture not shown.
-    final custom = ref.watch(
-      hasCustomCoverProvider((kind: CustomCoverKind.album, itemKey: albumId)),
-    );
-    final seed = coverKey == null || custom
-        ? null
-        : ref.watch(coverColorsProvider(coverKey)).value?.seed;
+    final tint = watchDetailTint(ref, (
+      kind: CustomCoverKind.album,
+      itemKey: albumId,
+    ), coverKey);
     final playContext = PlayContext(
       PlayContextKind.album,
       ref: albumId,
@@ -60,6 +55,7 @@ class AlbumPage extends ConsumerWidget {
     return DetailFrame(
       title: album.title,
       fallback: _fallback,
+      tint: tint,
       child: DetailSongsHost(
         list: BrowseList.albumTracks,
         item: albumId,
@@ -68,7 +64,6 @@ class AlbumPage extends ConsumerWidget {
         durationMs: album.durationMs,
         showNumber: true,
         builder: (context, songs) => KDetailLayout(
-          tint: seed == null ? null : Color(seed),
           header: KDetailHero(
             coverBuilder: (context, side) => AlbumCover(
               itemKey: albumId,
