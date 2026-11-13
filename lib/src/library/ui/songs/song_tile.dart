@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -16,6 +18,7 @@ import '../../state/browse/selection_providers.dart';
 import '../../state/favorites_providers.dart';
 import '../browse/library_labels.dart';
 import '../browse/play_actions.dart';
+import '../menus/menu_action_runner.dart';
 import '../menus/menu_origin.dart';
 import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
@@ -67,6 +70,28 @@ class SongTile extends ConsumerWidget {
     void menu({bool viaKeyboard = false}) =>
         openSongMenu(context, info, origin: origin, viaKeyboard: viaKeyboard);
     // Long press on a song selects it (the menu has ⋮, right click, Menu).
+    // Swipe left queues it next, right opens its info; both stay on while a
+    // selection is active. The row is keyed by track (see the song list), so
+    // a swipe cannot outlive the song it began on.
+    return _row(context, ref, l10n, current, selected, duration, menu);
+  }
+
+  /// Same call and toast as the menu's "Play next" button.
+  void _playNext(BuildContext context) {
+    final container = ProviderScope.containerOf(context, listen: false);
+    final root = Navigator.of(context, rootNavigator: true).context;
+    unawaited(MenuActionRunner(container, root).playNext([info.id]));
+  }
+
+  Widget _row(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    bool current,
+    bool selected,
+    int? duration,
+    void Function({bool viaKeyboard}) menu,
+  ) {
     return KContextRegion(
       longPressOpens: false,
       // Right click on one of several selected songs is about the selection.
@@ -78,28 +103,43 @@ class SongTile extends ConsumerWidget {
           menu(viaKeyboard: at == null);
         }
       },
-      child: KMediaCard(
-        title: info.title,
-        titleLabel: showDetected && info.languageDetected
-            ? l10n.libraryAutoDetectedTag
-            : null,
-        line2: trackArtistLine(info),
-        line3: trackAlbumLine(info),
-        leading: _SongCover(
-          info: info,
-          current: current,
-          number: showNumber && !selected && (info.trackNo ?? 0) > 0
-              ? info.trackNo
-              : null,
+      // Inside the region, around the card only: the swipe actions then sit
+      // on the card's labelled node, the one a screen reader focuses.
+      child: KSwipeActions.capped(
+        end: KSwipeAction(
+          icon: KIcons.playlistPlay,
+          label: l10n.libraryMenuPlayNext,
+          onTrigger: () => _playNext(context),
         ),
-        top: duration == null ? null : Text(formatClock(duration)),
-        bottom: SongFavoriteButton(trackId: info.id),
-        trailing: LibraryMoreButton(onPressed: menu),
-        current: current,
-        currentLabel: l10n.libraryNowPlaying,
-        selected: selected,
-        onLongPress: selected ? null : () => _select(ref),
-        onTap: () => _tap(ref, context),
+        start: KSwipeAction(
+          icon: KIcons.info,
+          label: l10n.libraryMenuSongInfo,
+          onTrigger: () =>
+              unawaited(openSongInfo(context, info, origin: origin)),
+        ),
+        child: KMediaCard(
+          title: info.title,
+          titleLabel: showDetected && info.languageDetected
+              ? l10n.libraryAutoDetectedTag
+              : null,
+          line2: trackArtistLine(info),
+          line3: trackAlbumLine(info),
+          leading: _SongCover(
+            info: info,
+            current: current,
+            number: showNumber && !selected && (info.trackNo ?? 0) > 0
+                ? info.trackNo
+                : null,
+          ),
+          top: duration == null ? null : Text(formatClock(duration)),
+          bottom: SongFavoriteButton(trackId: info.id),
+          trailing: LibraryMoreButton(onPressed: menu),
+          current: current,
+          currentLabel: l10n.libraryNowPlaying,
+          selected: selected,
+          onLongPress: selected ? null : () => _select(ref),
+          onTap: () => _tap(ref, context),
+        ),
       ),
     );
   }

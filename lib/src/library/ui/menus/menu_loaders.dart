@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../database/state/database_providers.dart';
 import '../../../media/domain/library_keys.dart';
+import '../../../media/domain/track_id.dart';
 import '../../../media/domain/track_info.dart';
 import '../../../platform/state/file_manager_provider.dart';
 import '../../data/browse/detail_queries.dart';
@@ -87,6 +88,16 @@ Future<MenuEnv> loadMenuEnv(
   );
 }
 
+/// The song of a menu left the library before its data was read.
+class TrackGoneException implements Exception {
+  const TrackGoneException(this.id);
+
+  final TrackId id;
+
+  @override
+  String toString() => 'track $id is gone';
+}
+
 Future<MenuSpec> songMenuSpec(
   ProviderContainer container,
   MenuEnv env,
@@ -95,7 +106,7 @@ Future<MenuSpec> songMenuSpec(
 ) async {
   final db = container.read(appDatabaseProvider);
   final links = await trackLinks(db, info.id);
-  if (links == null) throw StateError('track ${info.id} is gone');
+  if (links == null) throw TrackGoneException(info.id);
   final file = await songInfo(db, info.id);
   final favorites = await _first(container, favoriteTrackIdsProvider);
   return buildSongMenu(

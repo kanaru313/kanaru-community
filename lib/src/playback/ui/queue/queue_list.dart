@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/playback_views.dart';
 import '../../state/playback_providers.dart';
 import '../../state/queue_row_infos.dart';
@@ -11,7 +12,6 @@ import 'queue_remove_action.dart';
 import 'queue_scroll_controller.dart';
 import 'queue_row.dart';
 import 'queue_row_hooks.dart';
-import 'queue_swipe_remove.dart';
 
 /// Rows of room kept below the last row, so the locate button never covers it.
 const double queueListBottomPadding = 72;
@@ -86,6 +86,12 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
   final _locate = GlobalKey<QueueLocateButtonState>();
   int? _dragged;
 
+  /// Entry ids of rows swiped out whose removal is still in flight. A row
+  /// whose index shifts meanwhile (an undo above it) is remounted by the
+  /// reorderable list, so the slide-out cannot live in the row's own state:
+  /// these rows are built hidden instead of reappearing for a frame.
+  final Set<int> _leaving = {};
+
   @override
   void initState() {
     super.initState();
@@ -95,6 +101,12 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
   @override
   void didUpdateWidget(_QueueListBody oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.view != widget.view) {
+      // An entry that left the list is no longer leaving: undo restores the
+      // same entry id, and that row must show.
+      final ids = {for (final i in widget.view.items) i.entryId};
+      _leaving.retainWhere(ids.contains);
+    }
     if (oldWidget.extent != widget.extent) {
       // The rows changed height (text scale): the old offset points at other
       // rows, so keep the current one in view.
@@ -158,6 +170,21 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
     ref.read(playerControllerProvider).move(id, newIndex);
   }
 
+  /// Runs [remove] for a swiped-out row, keeping the row hidden meanwhile.
+  /// The entry is marked before the first await, so a row remounted while it
+  /// slides out stays hidden.
+  Future<bool> _swipeRemove(int entryId, Future<bool> Function() remove) async {
+    setState(() => _leaving.add(entryId));
+    var removed = false;
+    try {
+      removed = await remove();
+    } finally {
+      // Not removed (declined or failed): the row comes back.
+      if (!removed && mounted) setState(() => _leaving.remove(entryId));
+    }
+    return removed;
+  }
+
   @override
   Widget build(BuildContext context) {
     final view = widget.view;
@@ -193,21 +220,34 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
                 title: ref.read(queueRowInfosProvider)[item.trackId]?.title,
                 onEmptied: widget.onEmptied,
               );
-              return QueueSwipeRemove(
+              final hidden = _leaving.contains(item.entryId);
+              return IgnorePointer(
                 key: ValueKey(item.entryId),
-                onRemove: remove,
-                child: QueueRow(
-                  item: item,
-                  index: i,
-                  size: size,
-                  role: cur == null || i > cur
-                      ? QueueRowRole.upcoming
-                      : i == cur
-                      ? QueueRowRole.current
-                      : QueueRowRole.played,
-                  favorite: widget.favorite,
-                  menu: widget.menu,
-                  onRemove: remove,
+                ignoring: hidden,
+                // Fades while the row slides out; a row remounted meanwhile
+                // starts hidden.
+                child: AnimatedOpacity(
+                  opacity: hidden ? 0 : 1,
+                  duration: MediaQuery.disableAnimationsOf(context)
+                      ? Duration.zero
+                      : KMotion.fast,
+                  child: KSwipeActions.remove(
+                    label: AppLocalizations.of(context).playbackRemoveFromQueue,
+                    onRemove: () => _swipeRemove(item.entryId, remove),
+                    child: QueueRow(
+                      item: item,
+                      index: i,
+                      size: size,
+                      role: cur == null || i > cur
+                          ? QueueRowRole.upcoming
+                          : i == cur
+                          ? QueueRowRole.current
+                          : QueueRowRole.played,
+                      favorite: widget.favorite,
+                      menu: widget.menu,
+                      onRemove: remove,
+                    ),
+                  ),
                 ),
               );
             },

@@ -196,7 +196,11 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
                         )
                       : const SongRowPlaceholder();
                 }
+                // Keyed by track: a row whose index now holds another song
+                // starts over, so a swipe begun on the old one never acts on
+                // the new one.
                 return SongTile(
+                  key: ValueKey(info.id),
                   info: info,
                   index: i,
                   ids: ids,

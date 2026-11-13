@@ -260,6 +260,17 @@ class _SelectedListState extends ConsumerState<_SelectedList> {
     _window.viewport(math.max(first, 0), last);
   }
 
+  /// Drops [id] from the selection once the slide-out has played, so the row
+  /// does not vanish mid-slide, even if the panel closes meanwhile (the
+  /// notifier outlives the panel). A song already deselected meanwhile stays
+  /// deselected (`remove`, never a toggle).
+  Future<bool> _deselect(TrackId id) async {
+    final selection = ref.read(librarySelectionProvider.notifier);
+    await Future<void>.delayed(KMotion.fast);
+    selection.remove(id);
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final ids = ref.watch(librarySelectionProvider.select((s) => s.ids));
@@ -297,7 +308,11 @@ class _SelectedListState extends ConsumerState<_SelectedList> {
           key: ValueKey(ids[i]),
           child: info == null
               ? const SongRowPlaceholder()
-              : SelectedSongRow(info: info, index: i),
+              : KSwipeActions.remove(
+                  label: AppLocalizations.of(context).libraryMenuDeselect,
+                  onRemove: () => _deselect(ids[i]),
+                  child: SelectedSongRow(info: info, index: i),
+                ),
         );
       },
     );
