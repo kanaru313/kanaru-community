@@ -151,10 +151,15 @@ rebase conflict, take either side and run the two commands again.
   no `#[frb(mirror)]`.
 - Every file is parsed under `guarded` (panic becomes `NativeError`), so
   never set `panic = "abort"`. Work runs on the pools in `pools.rs`, not on
-  ad-hoc threads. Record a pass result only on success or a permanent
-  error kind; for a transient one (`NativeError.transient`: busy or dropped
-  mounts, `Timeout`, `Cancelled`) leave the pass version alone. `Panic` is
-  permanent.
+  ad-hoc threads, except lyrics reads: each runs on its own thread per call,
+  because a kernel-blocked read cannot be cancelled and a pool would let one
+  dead mount block every later read (the caller times out and the stuck
+  thread is left behind; once 2 such threads are stuck, a read starting then
+  returns a transient `Timeout` until one ends; the cap is checked at start,
+  so concurrent reads can exceed it, and callers should read one at a time).
+  Record a pass result only on success or a permanent error kind; for a
+  transient one (`NativeError.transient`: busy or dropped mounts, `Timeout`,
+  `Cancelled`) leave the pass version alone. `Panic` is permanent.
 - Third-party versions are pinned in `rust/Cargo.toml` with the reason beside
   each. Pin exactly, unless the comment there says why not.
 - Library code does not `unwrap` (lint); tests may.

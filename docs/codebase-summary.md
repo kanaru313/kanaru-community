@@ -69,6 +69,8 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
   priority, the only `unsafe`), `source.rs` (`Source`, `open_source`: regular
   files only), `api/{native_info,error,tags,covers,waveform}.rs` (`native_versions`,
   `NativeError` DTO; `tags`, `covers` and `waveform` are empty until their lanes).
+  `api/lyrics.rs` (`read_embedded_lyrics`, own thread per call, 10 s timeout,
+  at most 2 stuck threads; reader in `kanaru_media` `tags/lyrics_reader.rs` and `tags/lyrics_sylt.rs`).
   `frb_generated.rs` is generated.
 - Third-party versions are in `rust/Cargo.toml`, with the reason beside each.
 - `rust_builder/` is the cargokit glue that builds `kanaru_bridge` for the
