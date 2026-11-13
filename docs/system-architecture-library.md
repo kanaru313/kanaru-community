@@ -483,7 +483,8 @@ between screens.
   Rows of the open panel are wrapped in `KSwipeActions.remove` (label
   "Deselect"): letting go after 70 % of the width plays the slide-out
   (`KMotion.fast`), then calls `LibrarySelection.remove(id)`. There is no toast
-  and no undo, and a drag on the handle still wins over the swipe.
+  and no undo, the drag reveals no icon (an icon halfway would read as already
+  removed), and a drag on the handle still wins over the swipe.
 - Back and Esc (`SelectionBackScope`): they collapse the panel and never clear
   the selection (only the panel's ✕ does). Back is a `BackButtonListener`: the
   root dispatcher asks listeners before the router pops a sheet or dialog, so

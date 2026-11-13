@@ -87,13 +87,13 @@ void main() {
       expect(events, ['removed']);
     });
 
-    testWidgets('a short swipe leaves no delete icon behind', (tester) async {
+    testWidgets('a short swipe shows no icon', (tester) async {
       final events = <String>[];
       await pumpFakeQueue(tester, _swipeRow(events), view: fakeView(1));
       await _swipe(tester, find.text('row'), 0.2);
       await tester.pumpAndSettle();
       expect(events, isEmpty);
-      expect(find.byIcon(KIcons.delete), findsNothing);
+      expect(find.byType(Icon), findsNothing);
     });
 
     testWidgets('both directions remove', (tester) async {
@@ -103,37 +103,17 @@ void main() {
       expect(events, ['removed']);
     });
 
-    testWidgets('a red delete icon shows, no red fill', (tester) async {
-      await pumpFakeQueue(tester, _swipeRow([]), view: fakeView(1));
-      final g = await tester.startGesture(tester.getCenter(find.text('row')));
-      await g.moveBy(const Offset(120, 0));
-      await tester.pump();
-      final icon = tester.widget<Icon>(find.byIcon(KIcons.delete));
-      expect(
-        icon.color,
-        Theme.of(tester.element(find.text('row'))).colorScheme.error,
-      );
-      final filled = find.descendant(
-        of: find.byType(KSwipeActions),
-        matching: find.byWidgetPredicate(
-          (w) => w is ColoredBox && w.color.a > 0,
-        ),
-      );
-      expect(filled, findsNothing);
-      await g.cancel();
-    });
-
-    testWidgets('the icon grows once 70 % is reached', (tester) async {
+    testWidgets('the swipe reveals no icon, below or past 70 %', (
+      tester,
+    ) async {
       await pumpFakeQueue(tester, _swipeRow([]), view: fakeView(1));
       final g = await tester.startGesture(tester.getCenter(find.text('row')));
       await g.moveBy(const Offset(200, 0));
-      await tester.pump(const Duration(milliseconds: 300));
-      double scale() =>
-          tester.widget<AnimatedScale>(find.byType(AnimatedScale)).scale;
-      expect(scale(), 1);
+      await tester.pump();
+      expect(find.byType(Icon), findsNothing);
       await g.moveBy(const Offset(100, 0));
       await tester.pump(const Duration(milliseconds: 300));
-      expect(scale(), greaterThan(1));
+      expect(find.byType(Icon), findsNothing);
       await g.cancel();
     });
 

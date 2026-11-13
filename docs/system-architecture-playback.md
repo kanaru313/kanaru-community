@@ -593,14 +593,15 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`). `QueuePanel(host: she
   change. Rows read their own entry with a `select`. The header time ("còn …") is `queueRemainingProvider`.
 - **Remove** (`KSwipeActions.remove` from `kanaru_ui`, `queue_remove_action.dart`): a horizontal drag covering 70 % of
   the row width (counted from the pointer-down point, either way; a fling alone removes nothing) slides the row out and
-  removes it. The side is locked when the drag starts and the offset never crosses zero, so the red `delete` strip never
-  flips side; below 70 % the row springs back. The removal starts at release, together with the slide-out; the list
-  hides the row (it fades) through its `_leaving` set, and if the removal fails the row springs back and shows again. The swipe is also a semantics action ("Remove from queue"). A row being
-  removed is kept hidden by the list (`_leaving` entry ids) even if it is remounted by an undo above it. Trackpad pans
-  are ignored. It is not a `Dismissible` because that one wants the row gone in the same frame while the removal is
-  persisted first. The toast ("Removed …" / "Removed N tracks", Undo, 4 s) is shown from the root navigator's context,
-  so it survives the host closing; undo never reopens a closed host. The player emits no notice for a removal, so there is
-  one toast. Removing the last entry calls `onEmptied`.
+  removes it. The side is locked when the drag starts and the offset never crosses zero, so the row never flips side;
+  below 70 % the row springs back. The drag reveals no icon and no strip (an icon halfway would read as already
+  removed). The removal starts at release, together with the slide-out; the list hides the row (it fades) through its
+  `_leaving` set, and if the removal fails the row springs back and shows again. The swipe is also a semantics action
+  ("Remove from queue"). A row being removed is kept hidden by the list (`_leaving` entry ids) even if it is remounted
+  by an undo above it. Trackpad pans are ignored. It is not a `Dismissible` because that one wants the row gone in the
+  same frame while the removal is persisted first. The toast ("Removed …" / "Removed N tracks", Undo, 4 s) is shown from
+  the root navigator's context, so it survives the host closing; undo never reopens a closed host. The player emits no
+  notice for a removal, so there is one toast. Removing the last entry calls `onEmptied`.
 - **Locate button** (`queue_locate_button.dart`): 48 dp, bottom right, only while the current row is out of view; arrow by
   direction; rebuilds only when the side changes.
 - **Actions** (`queue_actions.dart`, `queue_header.dart`): Shuffle (reshuffles the upcoming and turns shuffle on), Add

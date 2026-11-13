@@ -8,7 +8,6 @@ import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:material_ui/material_ui.dart';
 
-import '../icons/k_icons.dart';
 import '../tokens/k_motion.dart';
 import 'k_swipe_actions_gesture.dart';
 import 'k_swipe_actions_strip.dart';
@@ -26,7 +25,8 @@ export 'k_swipe_actions_gesture.dart' show KSwipeAction, kSwipeDevices;
 ///
 /// [KSwipeActions.remove]: both directions; letting go after covering 70 % of
 /// the width slides the row out and awaits `onRemove`; false or a throw
-/// brings the row back. A fling alone removes nothing.
+/// brings the row back. A fling alone removes nothing. Its drag reveals no
+/// strip and no icon.
 /// `onRemove` starts at release, at the same time as the slide-out, so a
 /// caller that drops the row synchronously cuts the slide short and should
 /// wait for the slide first if the animation matters.
@@ -252,7 +252,10 @@ class _KSwipeActionsState extends State<KSwipeActions>
             return Stack(
               children: [
                 Transform.translate(offset: Offset(dx, 0), child: child),
-                if (dx != 0) _strip(scheme, Theme.of(context), dx, side),
+                // The remove kind reveals nothing: it must be dragged to 70 %
+                // and an icon halfway would read as already removed.
+                if (dx != 0 && !_isRemove)
+                  _strip(scheme, Theme.of(context), dx, side),
               ],
             );
           },
@@ -262,15 +265,6 @@ class _KSwipeActionsState extends State<KSwipeActions>
   }
 
   Widget _strip(ColorScheme scheme, ThemeData theme, double dx, double side) {
-    if (_isRemove) {
-      return KSwipeStrip(
-        offset: dx,
-        icon: KIcons.delete,
-        iconColor: scheme.error,
-        progress: _travel / _geo.removeTravel,
-        scaled: _past,
-      );
-    }
     final action = side > 0 ? widget.start : widget.end;
     if (action == null) return const SizedBox.shrink();
     return KSwipeStrip(

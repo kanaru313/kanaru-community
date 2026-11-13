@@ -75,7 +75,7 @@ void main() {
       await _swipe(tester, _width * 0.5);
       expect(calls, isEmpty);
       expect(_dx(tester), 0);
-      expect(find.byIcon(KIcons.delete), findsNothing);
+      expect(find.byType(Icon), findsNothing);
       await _swipe(tester, _width * 0.72);
       expect(calls, ['removed']);
       // Removed: the row stays out until its list drops it.
@@ -125,28 +125,6 @@ void main() {
       expect(_dx(tester), -_width);
     });
 
-    testWidgets('the strip shows a red delete icon and no fill', (
-      tester,
-    ) async {
-      await _pumpRow(tester, (r) => _remove(() async => true, row: r));
-      final g = await tester.startGesture(const Offset(200, 30));
-      await g.moveBy(const Offset(120, 0));
-      await tester.pump();
-      final icon = tester.widget<Icon>(find.byIcon(KIcons.delete));
-      expect(
-        icon.color,
-        Theme.of(tester.element(find.byKey(_rowKey))).colorScheme.error,
-      );
-      expect(
-        find.descendant(
-          of: find.byType(KSwipeStrip),
-          matching: find.byType(ColoredBox),
-        ),
-        findsNothing,
-      );
-      await g.cancel();
-    });
-
     for (final (name, removes, throws) in [
       ('false', false, false),
       ('a throw', false, true),
@@ -191,14 +169,23 @@ void main() {
       return haptics;
     }
 
-    testWidgets('ticks once on reaching 70 % on mobile', (tester) async {
+    testWidgets('shows no icon and ticks once on reaching 70 % on mobile', (
+      tester,
+    ) async {
       final haptics = recordHaptics(tester);
       await _pumpRow(tester, (r) => _remove(() async => false, row: r));
       final g = await tester.startGesture(const Offset(100, 30));
       await g.moveBy(const Offset(200, 0));
       expect(haptics, isEmpty);
+      await tester.pump();
+      // Below 70 %: the row moved but reveals nothing.
+      expect(_dx(tester), greaterThan(0));
+      expect(find.byType(Icon), findsNothing);
+      expect(find.byType(KSwipeStrip), findsNothing);
       await g.moveBy(const Offset(100, 0));
       await g.moveBy(const Offset(20, 0));
+      await tester.pump();
+      expect(find.byType(Icon), findsNothing);
       expect(haptics, ['HapticFeedbackType.selectionClick']);
       await g.cancel();
     });
@@ -585,15 +572,6 @@ void main() {
         (_) => KSwipeActions.capped(end: _action('Info', []), child: tall),
         -70,
         label: true,
-      );
-    });
-
-    testWidgets('remove strip', (tester) async {
-      await check(
-        tester,
-        (_) => _remove(() async => true, row: tall),
-        150,
-        label: false,
       );
     });
   });

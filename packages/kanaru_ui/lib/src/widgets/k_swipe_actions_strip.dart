@@ -4,10 +4,10 @@ import '../tokens/k_motion.dart';
 import '../tokens/k_space.dart';
 import 'collections/k_media_card.dart';
 
-/// The strip a swipe uncovers. It is drawn only in the area the row has left
-/// (width `|offset|`, on the side it moved away from) and stops above the
-/// 4 dp gap a [KMediaCard] pads below itself, so it matches the card.
-/// Must be a child of a [Stack].
+/// The strip a capped swipe uncovers (the remove kind shows none). It is drawn
+/// only in the area the row has left (width `|offset|`, on the side it moved
+/// away from) and stops above the 4 dp gap a [KMediaCard] pads below itself, so
+/// it matches the card. Must be a child of a [Stack].
 class KSwipeStrip extends StatelessWidget {
   const KSwipeStrip({
     super.key,
@@ -16,9 +16,9 @@ class KSwipeStrip extends StatelessWidget {
     required this.iconColor,
     required this.progress,
     required this.scaled,
-    this.fill,
-    this.label,
-    this.labelStyle,
+    required this.fill,
+    required this.label,
+    required this.labelStyle,
   });
 
   /// Signed row offset: positive uncovers the left side.
@@ -31,8 +31,8 @@ class KSwipeStrip extends StatelessWidget {
 
   /// The icon is enlarged once the trigger is reached.
   final bool scaled;
-  final Color? fill;
-  final String? label;
+  final Color fill;
+  final String label;
   final TextStyle? labelStyle;
 
   @override
@@ -59,20 +59,19 @@ class KSwipeStrip extends StatelessWidget {
                 duration: KMotion.fast,
                 child: Icon(icon, color: iconColor),
               ),
-              if (label != null)
-                Text(
-                  label!,
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.clip,
-                  style: labelStyle,
-                ),
+              Text(
+                label,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.clip,
+                style: labelStyle,
+              ),
             ],
           ),
         ),
       ),
     );
-    if (fill != null) content = ColoredBox(color: fill!, child: content);
+    content = ColoredBox(color: fill, child: content);
     return Positioned(
       left: fromLeft ? 0 : null,
       right: fromLeft ? null : 0,
