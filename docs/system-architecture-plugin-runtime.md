@@ -161,6 +161,10 @@ used.
 lock (`common/mod.rs`) and a `FakeHost` that records every request and checks the
 `install_id`. `compat_repo.rs` runs a real plugin repository against such a host,
 locally only (see [plugin-host-api.md](./plugin-host-api.md#compatibility-check)).
+`tool/check_rust` runs the `kanaru_plugin_runtime` tests on one test thread
+(`-- --test-threads=1`) so the wall-clock bounds of `tests/limits.rs` do not compete
+for the CPU; each bound is its stop path's guarantee plus one scheduling
+allowance (`SCHED`).
 
 `html.rs`, `html_memory.rs` and `html_fuzz.rs` prove the Html limits and are
 run in release mode by `tool/check_rust` (the profile the app ships, debug
