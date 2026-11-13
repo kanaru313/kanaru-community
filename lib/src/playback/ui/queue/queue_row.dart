@@ -20,9 +20,9 @@ import 'queue_row_hooks.dart';
 /// duration, the drag handle and the ⋮ menu button.
 ///
 /// The handle sits in the accessory slot, right before ⋮, on both shells. On
-/// mobile a long press on the row (not on the handle) selects it when the host
-/// gives a [selection] (without one it opens the menu); on desktop Delete
-/// removes the row. With a [selection], every row of a selected track shows
+/// both shells a long press on the row (not on the handle) selects it when the
+/// host gives a [selection]; without one, mobile opens the menu and desktop
+/// does nothing. On desktop Delete also removes the row. With a [selection], every row of a selected track shows
 /// selected, and a tap toggles while something is selected.
 /// Rows watch only their own info and, for the current row, play/pause; a
 /// position tick rebuilds nothing here.
@@ -86,9 +86,10 @@ class _QueueRowState extends ConsumerState<QueueRow> {
     }
   }
 
-  /// A long press that starts on the row: selects it, with a light tick.
+  /// A long press that starts on the row: selects it (toggles while
+  /// selecting), with a light tick on mobile.
   void _select() {
-    HapticFeedback.selectionClick();
+    if (!_desktop) HapticFeedback.selectionClick();
     widget.selection?.onSelect(widget.item);
   }
 
@@ -146,7 +147,9 @@ class _QueueRowState extends ConsumerState<QueueRow> {
       selected: selected,
       onTap: _tap,
     );
-    if (!_desktop) {
+    // Mobile always has a long press (select, or the menu without a selection
+    // hook); desktop has one only to select.
+    if (!_desktop || sel != null) {
       row = RawGestureDetector(
         behavior: HitTestBehavior.translucent,
         gestures: {
@@ -181,7 +184,8 @@ class _QueueRowState extends ConsumerState<QueueRow> {
           child: row,
         );
       }
-    } else {
+    }
+    if (_desktop) {
       row = CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.delete): widget.onRemove,
@@ -197,7 +201,7 @@ class _QueueRowState extends ConsumerState<QueueRow> {
   }
 }
 
-/// Long press of a mobile row that ignores presses starting on the drag
+/// Long press of a row that ignores presses starting on the drag
 /// handle, so holding the handle then moving drags instead of selecting.
 class _RowLongPress extends LongPressGestureRecognizer {
   _RowLongPress(this.excluded);

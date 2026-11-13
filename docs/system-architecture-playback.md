@@ -617,7 +617,7 @@ The queue content is shared by the mobile sheet and the desktop right panel. Wid
 `screens/now_playing/ui/` (`queue_row_menu.dart`, `track_navigation.dart`; the ♥ is the library's `SongFavoriteButton`) and are handed
 to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). `QueuePanel(host: sheet | panel)` composes them. On the panel the shell draws the header ("Queue" and ✕); `QueuePanel` adds the line under it: counts left (`N tracks · time left`; the tooltip has the playing position, and the whole line first when the panel cut it short; 40 dp action buttons with 8 dp between them, about 164 dp for the line), Shuffle, Add tracks (soon), Clean up, Save as playlist (soon) | ⋮ right, no footer.
 
-- **List** (`queue_list.dart`): one `ReorderableListView.builder`, fixed row extent (`KMediaCard.extentOf` for the text scale in effect, the same height as a library song row; `QueueRowSize` picks the handle size, 48 dp mobile and 40 dp desktop, and mobile long press vs desktop Delete), keys by
+- **List** (`queue_list.dart`): one `ReorderableListView.builder`, fixed row extent (`KMediaCard.extentOf` for the text scale in effect, the same height as a library song row; `QueueRowSize` picks the handle size, 48 dp mobile and 40 dp desktop, long press selects on both shells when the host gives a selection hook (without one: menu on mobile, nothing on desktop), and Delete on desktop), keys by
   entry id, `buildDefaultDragHandles: false`, bottom padding 72 (plus `bottomInset` while the sheet floats the selection panel). A drop is resolved by the dragged entry's id, not by
   the index the list reports, so an edit during the drag cannot move another entry. `QueueScrollController` keeps the
   start offset inside the content (a short queue starts at the top). On open the current row is the second visible. When the text scale changes the extent changes and the list re-anchors to the current row.
@@ -628,9 +628,9 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). 
   `ReorderableDragStartListener` that swallows taps and has no long-press of its own. Current = `primaryContainer` fill
   (icons take the card ink) plus `KEqualizerIcon` over the cover under a scrim (pause glyph when paused), announced as
   "Now playing"; played rows are dimmed to 50 %; tap plays (the current row ignores it); Enter plays and Delete removes a focused desktop row.
-  Mobile: a long press on the row selects it (light tick; while selecting it toggles, so it also deselects; the
+  Both shells: a long press on the row selects it (light tick on mobile; while selecting it toggles, so it also deselects; the
   screen-reader action reads "Select" / "Deselect"), except one that starts on the handle (a custom long-press
-  recognizer skips it), so hold-then-move drags. Without a `QueueRowSelection` the long press opens the menu. The menu
+  recognizer skips it), so hold-then-move drags. Without a `QueueRowSelection` the long press opens the menu on mobile and does nothing on desktop. The menu
   is on ⋮ (and right click / Menu key on desktop). The ⋮ passes `viaKeyboard`, and a menu opened that way focuses its
   first row. A row whose info has not loaded is the card's `loading` skeleton of the same height.
 - **Selection** (`QueueRowSelection` in `queue_row_hooks.dart`, optional on `QueueList` / `QueueRow`; null = no
@@ -643,7 +643,7 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). 
   Shift anchor as an **entry id** (a track can be queued twice), selects the tracks of the entries between the anchor's
   and the clicked entry's current positions (read from `queueViewProvider` at click time), and ignores the anchor
   (Shift is a plain select) when the selection is empty, the anchor's track is no longer selected or its entry left the queue. Entry points: long press on
-  mobile, Ctrl / Shift click, row menu "Select" / "Deselect" (placed like the library song menu), and the head ⋮ "Select
+  a row (both shells), Ctrl / Shift click, row menu "Select" / "Deselect" (placed like the library song menu), and the head ⋮ "Select
   several" (`QueueMoreMenu.onSelectMany`: selects the current song; dimmed with no current entry).
   On the sheet host `QueuePanel` floats `LibrarySelectionBar` over the end of the list, above the footer (which stays),
   while the selection is not empty; the list takes `bottomInset` so its last row and the locate button clear the

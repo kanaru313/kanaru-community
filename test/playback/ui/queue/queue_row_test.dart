@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/semantics.dart' show SemanticsAction;
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/media/domain/track_info.dart';
@@ -34,6 +35,17 @@ Color? _background(WidgetTester tester, Finder row) {
 
 Color _iconColor(WidgetTester tester, Finder icon) =>
     IconTheme.of(tester.element(icon.first)).color!;
+
+/// A stand-in for the app's selection: the tracks picked so far.
+class _Picked extends Notifier<Set<TrackId>> {
+  @override
+  Set<TrackId> build() => {};
+
+  void toggle(TrackId id) =>
+      state = state.contains(id) ? ({...state}..remove(id)) : {...state, id};
+}
+
+final _picked = NotifierProvider<_Picked, Set<TrackId>>(_Picked.new);
 
 void main() {
   final menuCalls = <_MenuCall>[];
@@ -414,6 +426,89 @@ void main() {
         ),
       );
       expect(menuCalls, isEmpty);
+    });
+
+    group('desktop long press', () {
+      Future<ProviderContainer> pumpDesktop(
+        WidgetTester tester, {
+        required bool withSelection,
+      }) async {
+        late ProviderContainer container;
+        container = await pumpFakeQueue(
+          tester,
+          QueueList(
+            size: QueueRowSize.desktop,
+            menu: (context, item, info, at, {viaKeyboard = false}) =>
+                menuCalls.add((at: at, viaKeyboard: viaKeyboard)),
+            selection: withSelection
+                ? QueueRowSelection(
+                    isSelected: (id) => Provider<bool>(
+                      (ref) => ref.watch(_picked.select((s) => s.contains(id))),
+                    ),
+                    selecting: Provider<bool>(
+                      (ref) => ref.watch(_picked.select((s) => s.isNotEmpty)),
+                    ),
+                    onSelect: (item, {range = false}) =>
+                        container.read(_picked.notifier).toggle(item.trackId),
+                  )
+                : null,
+          ),
+          view: fakeView(6, current: 2),
+          size: _desktopWindow,
+        );
+        return container;
+      }
+
+      Future<void> mouseLongPress(WidgetTester tester, Finder at) async {
+        final g = await tester.startGesture(
+          tester.getCenter(at),
+          kind: PointerDeviceKind.mouse,
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+        await g.up();
+        await tester.pump();
+      }
+
+      testWidgets('selects, then toggles off, and opens no menu', (
+        tester,
+      ) async {
+        final c = await pumpDesktop(tester, withSelection: true);
+        await mouseLongPress(tester, find.text('Song 3'));
+        expect(c.read(_picked), {TrackId(3)});
+        await mouseLongPress(tester, find.text('Song 3'));
+        expect(c.read(_picked), isEmpty);
+        expect(menuCalls, isEmpty);
+      });
+
+      testWidgets('on the handle selects nothing', (tester) async {
+        final c = await pumpDesktop(tester, withSelection: true);
+        await mouseLongPress(
+          tester,
+          find.descendant(
+            of: find.byType(QueueRow).at(3),
+            matching: find.byType(ReorderableDragStartListener),
+          ),
+        );
+        expect(c.read(_picked), isEmpty);
+        expect(menuCalls, isEmpty);
+      });
+
+      testWidgets('without a selection hook does nothing', (tester) async {
+        final c = await pumpDesktop(tester, withSelection: false);
+        // Releasing in place would be a tap (it plays, and no player is
+        // wired here): drag away after the hold so only the hold is tested.
+        final g = await tester.startGesture(
+          tester.getCenter(find.text('Song 3')),
+          kind: PointerDeviceKind.mouse,
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+        await g.moveBy(const Offset(0, 300));
+        await g.up();
+        await tester.pump();
+        expect(c.read(_picked), isEmpty);
+        expect(menuCalls, isEmpty);
+        expect(tester.takeException(), isNull);
+      });
     });
 
     testWidgets('⋮ opens the menu at the button', (tester) async {

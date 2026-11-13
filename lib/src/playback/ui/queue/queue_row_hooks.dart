@@ -46,14 +46,16 @@ class QueueRowSelection {
   final void Function(QueueItem item, {bool range}) onSelect;
 }
 
-/// Which shell the row is for (handle size, long press vs Delete); chosen by
-/// the host, not by the window width.
-/// The row height comes from `KMediaCard.extentOf`, not from this.
+/// Which shell the row is for (handle size, haptics, Delete, what a long press
+/// does without a selection hook); chosen by the host, not by the window
+/// width. The row height comes from `KMediaCard.extentOf`, not from this.
 enum QueueRowSize {
-  /// Handle 48 dp, long press on the row selects it (the menu is on ⋮).
+  /// Handle 48 dp, haptic tick on long press; without a selection hook a long
+  /// press opens the menu.
   mobile,
 
-  /// Handle 40 dp, Delete removes the row.
+  /// Handle 40 dp, Delete removes the row; without a selection hook a long
+  /// press does nothing.
   desktop,
 }
 
