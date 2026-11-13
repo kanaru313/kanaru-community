@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru_ui/kanaru_ui.dart' show FormFactor;
 
 import '../../domain/library_tabs.dart';
 import '../../state/library_tabs_providers.dart';
@@ -100,28 +101,42 @@ List<GoRoute> _detailRoutes() => [
   ],
 ];
 
-/// A detail page slides in from the right and out again on one smooth curve.
-/// The platform default (Cupertino) eases fast-to-slow, so the last part of
-/// the slide crawls and the page below stays on screen as a trailing image.
-/// Each detail page paints its own ground (`DetailFrame`).
+/// A detail page slides in from the right and out again on one smooth curve
+/// on mobile. The platform default (Cupertino) eases fast-to-slow, so the
+/// last part of the slide crawls and the page below stays on screen as a
+/// trailing image. Each detail page paints its own ground (`DetailFrame`).
+///
+/// On desktop the page replaces the content area between the sidebar and the
+/// right panel: a slide across that width feels heavy, so it fades in quickly
+/// (the first ~150 ms of the route) and out in ~120 ms instead.
 Page<void> _detailPage(GoRouterState state, Widget child) =>
     CustomTransitionPage<void>(
       key: state.pageKey,
       child: child,
       transitionDuration: const Duration(milliseconds: 280),
       reverseTransitionDuration: const Duration(milliseconds: 240),
-      transitionsBuilder: (context, animation, secondary, child) =>
-          SlideTransition(
-            position: Tween(begin: const Offset(1, 0), end: Offset.zero)
-                .animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutCubic,
-                    reverseCurve: Curves.easeInCubic,
-                  ),
-                ),
+      transitionsBuilder: (context, animation, secondary, child) {
+        if (FormFactor.of(context) == FormFactor.desktop) {
+          return FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: const Interval(0, 0.55, curve: Curves.easeOut),
+              reverseCurve: const Interval(0.5, 1, curve: Curves.easeIn),
+            ),
             child: child,
+          );
+        }
+        return SlideTransition(
+          position: Tween(begin: const Offset(1, 0), end: Offset.zero).animate(
+            CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+              reverseCurve: Curves.easeInCubic,
+            ),
           ),
+          child: child,
+        );
+      },
     );
 
 Widget _pageOf(LibraryTab tab, GoRouterState state) => switch (tab) {

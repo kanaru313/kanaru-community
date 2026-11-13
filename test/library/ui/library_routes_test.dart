@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/library_tabs.dart';
 import 'package:kanaru/src/library/state/library_tabs_providers.dart';
 import 'package:kanaru/src/library/ui/browse/library_navigation.dart';
+import 'package:kanaru/src/library/ui/detail/detail_header.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -151,4 +152,49 @@ void main() {
     expect(h.location, '/library/albums');
     await unmountApp(tester);
   });
+
+  for (final desktop in [false, true]) {
+    testWidgets(
+      desktop
+          ? 'desktop: a detail page fades in where it lands'
+          : 'mobile: a detail page slides in from the right',
+      (tester) async {
+        final h = await pumpLibrary(
+          tester,
+          initial: '/library/songs',
+          width: desktop ? 1280 : 400,
+          height: 800,
+        );
+        h.router.push('/library/albums/abc');
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 60));
+        final frame = find.byType(DetailFrame);
+        final mid = tester.getTopLeft(frame).dx;
+        double opacity() => desktop
+            ? tester
+                  .widget<FadeTransition>(
+                    find
+                        .ancestor(
+                          of: frame,
+                          matching: find.byType(FadeTransition),
+                        )
+                        .first,
+                  )
+                  .opacity
+                  .value
+            : 1;
+        final midOpacity = opacity();
+        await tester.pumpAndSettle();
+        final end = tester.getTopLeft(frame).dx;
+        if (desktop) {
+          expect(mid, end);
+          expect(midOpacity, lessThan(1));
+          expect(opacity(), 1);
+        } else {
+          expect(mid, greaterThan(end + 50));
+        }
+        await unmountApp(tester);
+      },
+    );
+  }
 }
