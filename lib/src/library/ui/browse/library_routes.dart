@@ -54,41 +54,74 @@ GoRoute libraryRoute() => GoRoute(
 List<GoRoute> _detailRoutes() => [
   GoRoute(
     path: 'albums/:album',
-    builder: (context, state) =>
-        AlbumPage(albumId: state.pathParameters['album']!),
+    pageBuilder: (context, state) =>
+        _detailPage(state, AlbumPage(albumId: state.pathParameters['album']!)),
   ),
   GoRoute(
     path: 'artists/:artist',
-    builder: (context, state) =>
-        ArtistPage(artistId: state.pathParameters['artist']!),
+    pageBuilder: (context, state) => _detailPage(
+      state,
+      ArtistPage(artistId: state.pathParameters['artist']!),
+    ),
   ),
   for (final appears in [false, true])
     GoRoute(
       path: 'artists/:artist/${appears ? 'appears' : 'albums'}',
-      builder: (context, state) => ArtistAlbumsPage(
-        artistId: state.pathParameters['artist']!,
-        appears: appears,
+      pageBuilder: (context, state) => _detailPage(
+        state,
+        ArtistAlbumsPage(
+          artistId: state.pathParameters['artist']!,
+          appears: appears,
+        ),
       ),
     ),
   for (final kind in GroupKind.values) ...[
     GoRoute(
       path: '${kind.name == 'genre' ? 'genres' : 'languages'}/:${kind.name}',
-      builder: (context, state) =>
-          GroupPage(kind: kind, id: state.pathParameters[kind.name]!),
+      pageBuilder: (context, state) => _detailPage(
+        state,
+        GroupPage(kind: kind, id: state.pathParameters[kind.name]!),
+      ),
     ),
     for (final artists in [true, false])
       GoRoute(
         path:
             '${kind.name == 'genre' ? 'genres' : 'languages'}/:${kind.name}/'
             '${artists ? 'artists' : 'albums'}',
-        builder: (context, state) => GroupSeeAllPage(
-          kind: kind,
-          id: state.pathParameters[kind.name]!,
-          artists: artists,
+        pageBuilder: (context, state) => _detailPage(
+          state,
+          GroupSeeAllPage(
+            kind: kind,
+            id: state.pathParameters[kind.name]!,
+            artists: artists,
+          ),
         ),
       ),
   ],
 ];
+
+/// A detail page slides in from the right and out again on one smooth curve.
+/// The platform default (Cupertino) eases fast-to-slow, so the last part of
+/// the slide crawls and the page below stays on screen as a trailing image.
+Page<void> _detailPage(GoRouterState state, Widget child) =>
+    CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 280),
+      reverseTransitionDuration: const Duration(milliseconds: 240),
+      transitionsBuilder: (context, animation, secondary, child) =>
+          SlideTransition(
+            position: Tween(begin: const Offset(1, 0), end: Offset.zero)
+                .animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                    reverseCurve: Curves.easeInCubic,
+                  ),
+                ),
+            child: child,
+          ),
+    );
 
 Widget _pageOf(LibraryTab tab, GoRouterState state) => switch (tab) {
   LibraryTab.songs => const SongsPage(),
