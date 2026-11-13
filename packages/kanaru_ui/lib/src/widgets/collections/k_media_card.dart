@@ -5,12 +5,10 @@ import 'package:material_ui/material_ui.dart';
 import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
 import '../../tokens/k_layout.dart';
-import '../../tokens/k_motion.dart';
-import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_cover.dart';
 import '../k_gap.dart';
-import '../k_row_icon_action.dart';
+import 'k_media_card_frame.dart';
 import 'k_media_card_right_column.dart';
 import 'k_media_card_text.dart';
 
@@ -159,11 +157,6 @@ class KMediaCard extends StatefulWidget {
 }
 
 class _KMediaCardState extends State<KMediaCard> {
-  bool _hovered = false;
-  bool _focused = false;
-
-  bool get _engaged => _hovered || _focused;
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -199,7 +192,7 @@ class _KMediaCardState extends State<KMediaCard> {
               )
             : null);
 
-    final content = Padding(
+    Widget content(bool engaged) => Padding(
       padding: EdgeInsets.symmetric(
         horizontal: flat ? KLayout.gutterMobile : KSpace.x3,
         vertical: KMediaCard._padV,
@@ -217,7 +210,7 @@ class _KMediaCardState extends State<KMediaCard> {
                 // A dimmed card draws its mark outside the dim, below.
                 if (widget.selected && !widget.dimmed)
                   Positioned.fill(
-                    child: _SelectedMark(circle: widget.circleLeading),
+                    child: KMediaCardSelectedMark(circle: widget.circleLeading),
                   ),
               ],
             ),
@@ -261,8 +254,8 @@ class _KMediaCardState extends State<KMediaCard> {
           ],
           if (widget.onAction != null) ...[
             const KGap(KSpace.x2),
-            _Revealed(
-              visible: mobile || _engaged,
+            KMediaCardRevealed(
+              visible: mobile || engaged,
               child: IconButton.filledTonal(
                 tooltip: widget.actionLabel,
                 onPressed: widget.actionEnabled ? widget.onAction : null,
@@ -303,7 +296,7 @@ class _KMediaCardState extends State<KMediaCard> {
                 width: KMediaCard.coverSize,
                 height: KMediaCard.coverSize,
                 child: IgnorePointer(
-                  child: _SelectedMark(circle: widget.circleLeading),
+                  child: KMediaCardSelectedMark(circle: widget.circleLeading),
                 ),
               ),
             ],
@@ -319,85 +312,19 @@ class _KMediaCardState extends State<KMediaCard> {
           selected: widget.selected,
           value: widget.current ? widget.currentLabel : null,
           child: card(
-            Opacity(
-              opacity: widget.dimmed ? 0.5 : 1,
-              child: MouseRegion(
-                onEnter: (_) => setState(() => _hovered = true),
-                onExit: (_) => setState(() => _hovered = false),
-                child: Focus(
-                  canRequestFocus: false,
-                  skipTraversal: true,
-                  onFocusChange: (v) => setState(() => _focused = v),
-                  child: Material(
-                    color: background,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: flat
-                          ? BorderRadius.zero
-                          : KMediaCard._radius,
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: DefaultTextStyle.merge(
-                      style: TextStyle(color: ink),
-                      child: IconTheme.merge(
-                        data: IconThemeData(color: soft),
-                        // Row actions (KRowIconAction) take their colour from
-                        // this marker, not from the IconTheme, so one outside
-                        // a row keeps its own.
-                        child: KRowIconColor(
-                          color: soft,
-                          child: InkWell(
-                            onTap: widget.onTap,
-                            onLongPress: widget.onLongPress,
-                            child: content,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            KMediaCardFrame(
+              background: background,
+              ink: ink,
+              soft: soft,
+              radius: flat ? BorderRadius.zero : KMediaCard._radius,
+              dimmed: widget.dimmed,
+              onTap: widget.onTap,
+              onLongPress: widget.onLongPress,
+              builder: (context, engaged) => content(engaged),
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Keeps its room when hidden so the card does not shift; hidden children
-/// stay focusable (Tab reveals them) but ignore the pointer.
-class _Revealed extends StatelessWidget {
-  const _Revealed({required this.visible, required this.child});
-
-  final bool visible;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      opacity: visible ? 1 : 0,
-      duration: KMotion.fast,
-      child: IgnorePointer(ignoring: !visible, child: child),
-    );
-  }
-}
-
-/// Primary tint with a white check over a cover.
-class _SelectedMark extends StatelessWidget {
-  const _SelectedMark({required this.circle});
-
-  final bool circle;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.55),
-        shape: circle ? BoxShape.circle : BoxShape.rectangle,
-        borderRadius: circle ? null : KRadius.sm,
-      ),
-      child: Icon(KIcons.check, color: scheme.onPrimary),
     );
   }
 }
