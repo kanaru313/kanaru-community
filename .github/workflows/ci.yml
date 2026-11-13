@@ -53,8 +53,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
+      # SHA pinned; toolchain equal to the flake's rust-overlay stable
+      # (`nix develop -c rustc --version`): bump both together.
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
         with:
+          toolchain: 1.99.1
           components: clippy, rustfmt
 
       - uses: actions/cache@v4
@@ -63,8 +66,8 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             rust/target
-          key: cargo-${{ runner.os }}-${{ hashFiles('rust/Cargo.lock') }}
-          restore-keys: cargo-${{ runner.os }}-
+          key: cargo-${{ runner.os }}-1.99.1-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-1.99.1-
 
       # cargo-audit is built once (pinned to the flake version) and cached; the step is skipped when present.
       - name: Cache cargo-audit
@@ -78,7 +81,19 @@ jobs:
         if: steps.cargo-audit-cache.outputs.cache-hit != 'true'
         run: cargo install cargo-audit --locked --version 0.22.2
 
-      # fmt, unsafe grep, cargo audit, tests, clippy (no KANARU_PLUGIN_REPO: the
+      # cargo-deny: same scheme (version = the flake's).
+      - name: Cache cargo-deny
+        id: cargo-deny-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-deny
+          key: cargo-deny-${{ runner.os }}-0.20.2
+
+      - name: Install cargo-deny
+        if: steps.cargo-deny-cache.outputs.cache-hit != 'true'
+        run: cargo install cargo-deny --locked --version 0.20.2
+
+      # fmt, unsafe grep, cargo audit, cargo deny, tests, clippy (no KANARU_PLUGIN_REPO: the
       # plugin compat test skips itself).
       - name: Rust gate
         run: tool/check_rust

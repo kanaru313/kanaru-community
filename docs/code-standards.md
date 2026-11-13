@@ -154,9 +154,14 @@ rebase conflict, take either side and run the two commands again.
   first checks the cargokit patch marker (below), then greps for `unsafe`
   outside these three files (the whitelist patterns are anchored to the start of
   the path, so a line that merely mentions a whitelisted path is still
-  reported), then runs `cargo fmt --check`, `cargo audit`, `cargo test` (the
+  reported), then runs `cargo fmt --check`, `cargo audit`, `cargo deny check licenses bans sources`
+  (`rust/deny.toml`: eight allowed licenses and no copyleft, no new duplicate crate
+  version beyond the explicit `skip` list, crates.io only), `cargo test` (the
   `kanaru_plugin_runtime` tests on one test thread, so its wall-clock bounds do
-  not compete for the CPU) and `cargo clippy -D warnings`. The plugin compat test needs `KANARU_PLUGIN_REPO`
+  not compete for the CPU) and `cargo clippy -D warnings`. CI installs the Rust
+  toolchain with `dtolnay/rust-toolchain` pinned by commit SHA at the version of the
+  flake's Rust (`nix develop -c rustc --version`): bump both together, and the
+  cargo cache key carries that version. The plugin compat test needs `KANARU_PLUGIN_REPO`
   and skips itself without it; the gate and CI never set it.
 - `kanaru_media` and `kanaru_plugin_runtime` have no FFI and do not depend on
   each other; only `kanaru_bridge` knows flutter_rust_bridge. Explicit DTOs,
