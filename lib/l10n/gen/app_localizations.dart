@@ -1616,6 +1616,12 @@ abstract class AppLocalizations {
   /// **'Could not start playback'**
   String get libraryPlayFailed;
 
+  /// No description provided for @libraryNothingToPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to play'**
+  String get libraryNothingToPlay;
+
   /// No description provided for @libraryLoadFailed.
   ///
   /// In en, this message translates to:

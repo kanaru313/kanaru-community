@@ -72,10 +72,11 @@ class _QueueRowState extends ConsumerState<QueueRow> {
       queueRowInfosProvider.select((m) => m[item.trackId]),
     );
     final duration = info?.durationMs;
-    final handle = _Handle(
+    final handle = KDragHandle(
       key: _handleKey,
       index: widget.index,
       dimension: _desktop ? KLayout.minTargetDesktop : KLayout.minTarget,
+      semanticLabel: l10n.playbackQueueReorder,
     );
 
     Widget row = KMediaCard(
@@ -175,38 +176,6 @@ class _LongPressSemantics extends SemanticsGestureDelegate {
   @override
   void assignSemantics(RenderSemanticsGestureHandler renderObject) {
     renderObject.onLongPress = onLongPress;
-  }
-}
-
-/// Drag handle: starts a reorder on drag; a tap is swallowed so it does not
-/// play the row. Takes the colour of the card's icons.
-class _Handle extends StatelessWidget {
-  const _Handle({super.key, required this.index, required this.dimension});
-
-  final int index;
-  final double dimension;
-
-  @override
-  Widget build(BuildContext context) {
-    return ReorderableDragStartListener(
-      index: index,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        // Swallows the tap without a do-nothing semantics action.
-        excludeFromSemantics: true,
-        onTap: () {},
-        child: Semantics(
-          label: AppLocalizations.of(context).playbackQueueReorder,
-          child: MouseRegion(
-            cursor: SystemMouseCursors.grab,
-            child: SizedBox.square(
-              dimension: dimension,
-              child: const Icon(KIcons.dragHandle),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 

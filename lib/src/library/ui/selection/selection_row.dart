@@ -38,16 +38,10 @@ class SelectedSongRow extends StatelessWidget {
       ),
       top: duration == null ? null : Text(formatClock(duration)),
       bottom: SongFavoriteButton(trackId: info.id),
-      accessory: ReorderableDragStartListener(
+      // The queue's handle: 40 dp on desktop, 48 dp on mobile.
+      accessory: KDragHandle(
         index: index,
-        child: Tooltip(
-          message: AppLocalizations.of(context).libraryPanelReorder,
-          // Same touch target as the queue's mobile handle.
-          child: const SizedBox.square(
-            dimension: KLayout.minTarget,
-            child: Icon(KIcons.dragHandle),
-          ),
-        ),
+        tooltip: AppLocalizations.of(context).libraryPanelReorder,
       ),
       trailing: LibraryMoreButton(
         onPressed: ({required viaKeyboard}) =>

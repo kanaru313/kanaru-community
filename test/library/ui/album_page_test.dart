@@ -286,17 +286,25 @@ void main() {
     });
   }
 
-  /// The badge of [card] (found by its key; [n] is checked as its text).
-  Finder badgeOf(Finder card, String n) => find.descendant(
-    of: card,
-    matching: find.byWidgetPredicate(
-      (w) => w.key == songTileBadgeKey,
-      description: 'badge $n',
-    ),
+  /// The badge of [card] (found by its key) that shows the text [n]; matches
+  /// nothing when the card has no badge or the badge shows another number.
+  Finder badgeOf(Finder card, String n) => find.ancestor(
+    of: find.descendant(of: card, matching: find.text(n)),
+    matching: find.byKey(songTileBadgeKey),
   );
 
   Finder coverOf(Finder card) =>
       find.descendant(of: card, matching: find.byType(TrackCover));
+
+  testWidgets('badgeOf matches only the badge with the asked number', (
+    tester,
+  ) async {
+    await _pump(tester);
+    final card = find.byType(KMediaCard).first;
+    expect(badgeOf(card, '1'), findsOneWidget);
+    expect(badgeOf(card, '2'), findsNothing);
+    await unmountApp(tester);
+  });
 
   testWidgets('each row shows its number as a badge in the cover corner', (
     tester,

@@ -273,6 +273,8 @@ void main() {
     final node = Focus.of(tester.element(more));
     node.requestFocus();
     await tester.pump();
+    // Tickers of the page itself (not the menu) are the baseline.
+    final baseline = tester.binding.transientCallbackCount;
     await tester.sendKeyEvent(LogicalKeyboardKey.contextMenu);
     // Closed in the same frame, as Esc right after opening would.
     Navigator.of(tester.element(more)).pop();
@@ -281,6 +283,8 @@ void main() {
     }
     expect(find.text('Play this track'), findsNothing);
     expect(FocusManager.instance.primaryFocus, same(node));
+    // No polling left behind: nothing waits for another frame.
+    expect(tester.binding.transientCallbackCount, baseline);
   });
 
   testWidgets('a pointer press on ⋮ leaves focus off the menu rows', (

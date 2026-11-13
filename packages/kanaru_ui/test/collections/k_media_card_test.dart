@@ -1009,6 +1009,24 @@ void main() {
       expect(find.byType(KMediaCard), findsNWidgets(3));
     });
 
+    testWidgets('a header takes its measured height off the row count', (
+      tester,
+    ) async {
+      final extent = KMediaCard.extentOf(TextScaler.noScaling);
+      await tester.pumpWidget(
+        host(
+          SizedBox(
+            height: extent * 5,
+            child: KMediaCardSkeletonList(
+              header: SizedBox(height: extent * 1.5),
+            ),
+          ),
+        ),
+      );
+      // 5 - 1.5 = 3.5 rows of room: 4 rows, not the 5 of a headerless list.
+      expect(find.byType(KMediaCard), findsNWidgets(4));
+    });
+
     testWidgets('an unbounded parent draws unboundedCount rows, no error', (
       tester,
     ) async {

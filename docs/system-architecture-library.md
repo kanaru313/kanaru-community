@@ -570,7 +570,8 @@ Every call is awaited; a failure is logged and shows a snack bar.
   list (placeholder rows too). The badge is drawn above the playing scrim and
   equalizer (which stays centred) and is hidden while the row is selected. The
   selection panel's `SelectedSongRow` puts the drag handle in
-  `accessory` and ⋮ in `trailing`. The tile
+  `accessory` (the same `KDragHandle` as the queue row: 40 dp with a grab
+  cursor on desktop, 48 dp on mobile, a tap swallowed) and ⋮ in `trailing`. The tile
   watches only `isCurrentTrackProvider(id)`, `isSelectedProvider(id)` and
   `isFavoriteProvider(id)` (all `select`); the
   equalizer widget alone watches play / pause. No per-row stream provider.
@@ -633,7 +634,7 @@ Every call is awaited; a failure is logged and shows a snack bar.
   shows as the code.
 - Loading: in list view `collectionBody` shows skeleton rows
   (`KMediaCardSkeletonList` in kanaru_ui: `KMediaCard(loading: true)`, as many as fill the
-  height, `ceil(height / extentOf)`; round cover for artists) until the first
+  height left below the optional header (measured), `ceil(height / extentOf)`; round cover for artists) until the first
   answer. When the provider already has a value (cached, or a newer answer
   loading: refresh or reload, kept by `mapKeepingValue` in the derived list
   providers) the rows draw at once, no skeleton

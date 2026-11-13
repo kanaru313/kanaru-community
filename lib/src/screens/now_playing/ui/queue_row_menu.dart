@@ -114,38 +114,30 @@ void openQueueRowMenu(
     showKSheet<void>(
       context,
       useRootNavigator: true,
-      builder: (sheet) => _SheetMenu(groups: groups, title: info?.title),
+      builder: (sheet) => _SheetMenu(
+        groups: groups,
+        title: info?.title,
+        viaKeyboard: viaKeyboard,
+      ),
     );
   } else {
-    _showPopup(context, at, groups);
+    _showPopup(context, at, groups, viaKeyboard: viaKeyboard);
   }
-  if (viaKeyboard) _focusFirstRowOnceOpen(ModalRoute.of(context));
 }
 
-/// Opened with the keyboard: puts focus on the first row as soon as the menu
-/// route has taken focus (its own scope becomes the primary focus then). Acts
-/// only when that scope belongs to a popup route other than [opener] (the
-/// menu's own), so a menu closed early (Esc) never moves focus on the page or
-/// sheet behind it. A pointer-opened menu shows no focus ring until an arrow
-/// key is pressed.
-void _focusFirstRowOnceOpen(ModalRoute<Object?>? opener, [int frames = 0]) {
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final focus = FocusManager.instance.primaryFocus;
-    final context = focus is FocusScopeNode ? focus.context : null;
-    final inMenu =
-        context != null &&
-        ModalRoute.of(context) is PopupRoute<Object?> &&
-        ModalRoute.of(context) != opener;
-    if (inMenu) {
-      focus!.nextFocus();
-    } else if (frames < 10) {
-      _focusFirstRowOnceOpen(opener, frames + 1);
-    }
-  });
-  WidgetsBinding.instance.ensureVisualUpdate();
-}
+/// Marks the first row of a menu opened with the keyboard: its [Focus]
+/// autofocuses as the menu route takes focus, so the first row shows its ring
+/// and arrow keys move on from it. A pointer-opened menu shows no ring until
+/// an arrow key is pressed, and a menu closed early moves no focus behind it.
+Widget _autofocus(bool on, Widget child) =>
+    on ? Focus(autofocus: true, skipTraversal: true, child: child) : child;
 
-void _showPopup(BuildContext context, Offset? at, List<List<_Entry>> groups) {
+void _showPopup(
+  BuildContext context,
+  Offset? at,
+  List<List<_Entry>> groups, {
+  required bool viaKeyboard,
+}) {
   final box = context.findRenderObject()! as RenderBox;
   final point = at ?? box.localToGlobal(box.size.center(Offset.zero));
   final scheme = Theme.of(context).colorScheme;
@@ -161,16 +153,19 @@ void _showPopup(BuildContext context, Offset? at, List<List<_Entry>> groups) {
           // picker pushed from here lands on the page, not on the menu.
           onTap: e.onTap,
           enabled: e.enabled,
-          child: Row(
-            spacing: KSpace.x3,
-            children: [
-              Icon(e.icon, size: 20, color: color),
-              Expanded(
-                child: Text(e.label, style: TextStyle(color: color)),
-              ),
-              if (e.soon) Text(soon),
-              if (e.hint != null) Text(e.hint!),
-            ],
+          child: _autofocus(
+            viaKeyboard && g == 0 && e == groups[0][0],
+            Row(
+              spacing: KSpace.x3,
+              children: [
+                Icon(e.icon, size: 20, color: color),
+                Expanded(
+                  child: Text(e.label, style: TextStyle(color: color)),
+                ),
+                if (e.soon) Text(soon),
+                if (e.hint != null) Text(e.hint!),
+              ],
+            ),
           ),
         ),
       );
@@ -190,10 +185,15 @@ void _showPopup(BuildContext context, Offset? at, List<List<_Entry>> groups) {
 }
 
 class _SheetMenu extends StatelessWidget {
-  const _SheetMenu({required this.groups, required this.title});
+  const _SheetMenu({
+    required this.groups,
+    required this.title,
+    required this.viaKeyboard,
+  });
 
   final List<List<_Entry>> groups;
   final String? title;
+  final bool viaKeyboard;
 
   @override
   Widget build(BuildContext context) {
@@ -217,20 +217,23 @@ class _SheetMenu extends StatelessWidget {
           for (final e in g)
             Padding(
               padding: const EdgeInsets.only(bottom: KSpace.x1),
-              child: KListRow(
-                enabled: e.enabled,
-                leading: Icon(e.icon, color: e.danger ? scheme.error : null),
-                title: Text(
-                  e.label,
-                  style: TextStyle(color: e.danger ? scheme.error : null),
+              child: _autofocus(
+                viaKeyboard && g == groups.first && e == g.first,
+                KListRow(
+                  enabled: e.enabled,
+                  leading: Icon(e.icon, color: e.danger ? scheme.error : null),
+                  title: Text(
+                    e.label,
+                    style: TextStyle(color: e.danger ? scheme.error : null),
+                  ),
+                  trailing: e.soon ? Text(soon) : null,
+                  onTap: e.enabled
+                      ? () {
+                          Navigator.of(context).pop();
+                          e.onTap!();
+                        }
+                      : null,
                 ),
-                trailing: e.soon ? Text(soon) : null,
-                onTap: e.enabled
-                    ? () {
-                        Navigator.of(context).pop();
-                        e.onTap!();
-                      }
-                    : null,
               ),
             ),
       ],

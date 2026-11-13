@@ -52,4 +52,32 @@ void main() {
     await tester.tap(find.byType(IconButton));
     expect(calls, [true, false]);
   });
+
+  for (final (name, key) in [
+    ('Space', LogicalKeyboardKey.space),
+    ('Select', LogicalKeyboardKey.select),
+    ('numpad Enter', LogicalKeyboardKey.numpadEnter),
+  ]) {
+    testWidgets('$name on the focused button reports viaKeyboard true', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      final calls = <bool>[];
+      await tester.pumpWidget(
+        host(
+          KMoreButton(
+            tooltip: 'More',
+            onPressed: ({required viaKeyboard}) {
+              calls.add(viaKeyboard);
+            },
+          ),
+        ),
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      await tester.sendKeyEvent(key);
+      await tester.pump();
+      expect(calls, [true]);
+    });
+  }
 }

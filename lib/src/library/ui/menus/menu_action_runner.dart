@@ -119,7 +119,7 @@ class MenuActionRunner {
       case PlayAction(:final ids, :final shuffle, :final context):
         if (ids.isEmpty) return;
         // A newer request than any slow ▶ read still pending.
-        beginPlayRequest();
+        _container.read(playRequestsProvider.notifier).begin();
         await _guard('starting playback', _l10n.libraryPlayFailed, () {
           return playIds(
             _container.read(playbackCommandsProvider),

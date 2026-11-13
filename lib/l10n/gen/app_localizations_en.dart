@@ -986,6 +986,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryPlayFailed => 'Could not start playback';
 
   @override
+  String get libraryNothingToPlay => 'Nothing to play';
+
+  @override
   String get libraryLoadFailed => 'Could not load the list';
 
   @override

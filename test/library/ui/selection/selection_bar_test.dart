@@ -408,4 +408,37 @@ void main() {
     );
     await unmountApp(tester);
   });
+
+  for (final (name, width, side) in [
+    ('mobile', 390.0, KLayout.minTarget),
+    ('desktop', 1280.0, KLayout.minTargetDesktop),
+  ]) {
+    testWidgets('$name: panel row handle is the queue handle', (tester) async {
+      final h = await pumpSelection(tester, width: width);
+      final ids = await allIds(h);
+      h.selection.addRange(ids.take(2));
+      h.selection.setExpanded(true);
+      await h.settle(tester, rounds: 3);
+      final handle = find
+          .ancestor(
+            of: find.byIcon(KIcons.dragHandle).first,
+            matching: find.byType(KDragHandle),
+          )
+          .first;
+      expect(tester.getSize(handle), Size.square(side));
+      final cursors = tester
+          .widgetList<MouseRegion>(
+            find.descendant(of: handle, matching: find.byType(MouseRegion)),
+          )
+          .map((m) => m.cursor);
+      expect(cursors, contains(SystemMouseCursors.grab));
+      // A tap on the handle triggers nothing (no menu, no selection change).
+      final before = h.selected.ids.length;
+      await tester.tap(find.byIcon(KIcons.dragHandle).first);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(h.selected.ids.length, before);
+      expect(find.byType(SelectedSongRow), findsNWidgets(2));
+      await unmountApp(tester);
+    });
+  }
 }

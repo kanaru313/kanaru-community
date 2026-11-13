@@ -12,6 +12,7 @@ export 'src/widgets/app_snack_bar.dart';
 export 'src/widgets/collections/collection_widgets.dart';
 export 'src/widgets/k_chip.dart';
 export 'src/widgets/k_context_region.dart';
+export 'src/widgets/k_drag_handle.dart';
 export 'src/widgets/k_cover.dart' show KCover, KCoverPlaceholderColors;
 export 'src/widgets/k_dialog.dart';
 export 'src/widgets/k_empty.dart';

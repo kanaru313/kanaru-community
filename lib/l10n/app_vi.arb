@@ -588,6 +588,7 @@
   "libraryEmptyMessage": "Không có bài nào trong các thư mục đã chọn.",
   "libraryChooseFolders": "Chọn thư mục nhạc",
   "libraryPlayFailed": "Không phát được",
+  "libraryNothingToPlay": "Không có bài để phát",
   "libraryLoadFailed": "Không tải được danh sách",
   "libraryNowPlaying": "Đang phát",
   "libraryFavoriteAdd": "Thêm vào Yêu thích",
