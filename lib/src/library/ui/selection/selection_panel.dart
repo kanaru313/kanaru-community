@@ -14,7 +14,6 @@ import '../../state/browse/song_list_providers.dart';
 import '../../state/browse/track_window.dart';
 import '../browse/library_labels.dart';
 import '../browse/play_actions.dart';
-import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
 import '../songs/song_row_placeholder.dart';
 import 'selection_back.dart';
@@ -276,11 +275,16 @@ class _SelectedListState extends ConsumerState<_SelectedList> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _last >= 0) _window.viewport(_first, _last);
     });
+    final sideInset = FormFactor.of(context) == FormFactor.desktop
+        ? KSpace.x2
+        : 0.0;
     return ReorderableListView.builder(
       scrollController: _scroll,
       buildDefaultDragHandles: false,
       itemExtent: extent,
-      padding: const EdgeInsets.fromLTRB(KSpace.x2, 0, KSpace.x2, KSpace.x2),
+      // Flat rows (mobile) pad themselves; desktop cards sit inside a small
+      // inset.
+      padding: EdgeInsets.fromLTRB(sideInset, 0, sideInset, KSpace.x2),
       itemCount: ids.length,
       // `to` is already the index after the moved row left its place.
       onReorderItem: (from, to) =>
@@ -292,7 +296,7 @@ class _SelectedListState extends ConsumerState<_SelectedList> {
         return KeyedSubtree(
           key: ValueKey(ids[i]),
           child: info == null
-              ? SongRowPlaceholder(extent: extent)
+              ? const SongRowPlaceholder()
               : SelectedSongRow(info: info, index: i),
         );
       },

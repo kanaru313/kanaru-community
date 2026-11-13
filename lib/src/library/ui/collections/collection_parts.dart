@@ -6,6 +6,7 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/list_view_prefs.dart';
 import '../../state/browse/list_prefs_providers.dart';
+import '../browse/library_list_scaffold.dart';
 import '../browse/library_view_toggle.dart';
 
 /// Left group of the bar of Albums, Artists, Genres and Languages: the count
@@ -67,22 +68,38 @@ class CollectionBarLeading extends ConsumerWidget {
   }
 }
 
-/// The body of a list fed by a provider: the data while there is some (also
-/// while a newer answer loads), nothing before the first one, a short message
-/// when the query failed and there is nothing to show.
+/// Builds the body of a list fed by a provider's [async] value.
+///
+/// - Value present (also while a newer answer reloads): `data(items)`.
+/// - Error: a short "load failed" message replaces the rows.
+/// - No value yet (first load): skeleton rows when [skeletonRows] (round
+///   covers when [roundCover], for artists), otherwise nothing.
+///
+/// [skeletonHeader] is what the loaded list draws above its rows; it is
+/// repeated above the skeleton rows.
 Widget collectionBody<T>(
   BuildContext context,
   AsyncValue<List<T>> async,
-  Widget Function(List<T> items) data,
-) {
+  Widget Function(List<T> items) data, {
+  bool skeletonRows = false,
+  bool roundCover = false,
+  Widget? skeletonHeader,
+}) {
   final items = async.value;
-  if (items != null) return data(items);
+  if (items != null && !async.hasError) return data(items);
   if (async.hasError) {
     return Center(
       child: Text(
         AppLocalizations.of(context).libraryLoadFailed,
         style: TextStyle(color: Theme.of(context).colorScheme.error),
       ),
+    );
+  }
+  if (skeletonRows) {
+    return KMediaCardSkeletonList(
+      horizontalPadding: libraryRowGutter(context),
+      roundCover: roundCover,
+      header: skeletonHeader,
     );
   }
   return const SizedBox.shrink();
@@ -102,4 +119,40 @@ String collectionCountText({
     return l10n.libraryCountOf(shown, total, unit);
   }
   return plain(shown);
+}
+
+/// Icon block of a genre or language row: a [KMediaCard.coverSize] square with
+/// rounded corners and a centred icon.
+class CategoryIcon extends StatelessWidget {
+  /// Genre block: colours seeded by [genre], the same as its grid tile.
+  const CategoryIcon.genre({super.key, required String this.genre})
+    : icon = KIcons.genres;
+
+  /// Language block; [known] false (the "unknown" row) shows the help icon.
+  const CategoryIcon.language({super.key, required bool known})
+    : genre = null,
+      icon = known ? KIcons.languages : KIcons.help;
+
+  /// Seed of the genre colours; null = the language look.
+  final String? genre;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final seed = genre;
+    final colors = seed == null
+        ? null
+        : KCoverPlaceholderColors.of(seed, Theme.of(context).brightness);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors?.fill ?? scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: SizedBox.square(
+        dimension: KMediaCard.coverSize,
+        child: Icon(icon, color: colors?.ink ?? scheme.onSecondaryContainer),
+      ),
+    );
+  }
 }

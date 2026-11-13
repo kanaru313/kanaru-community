@@ -4,17 +4,44 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
+import '../../tokens/k_layout.dart';
 import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
+import '../k_cover.dart';
 import '../k_gap.dart';
+import 'k_media_card_right_column.dart';
+import 'k_media_card_text.dart';
 
-/// Row card of every media list: song, album, artist, folder.
+/// Look of a [KMediaCard].
+enum KMediaCardStyle {
+  /// [flat] on the mobile shell, [card] on desktop.
+  auto,
+
+  /// Rounded tonal card; the list supplies the outer side space.
+  card,
+
+  /// Full-width row: no radius, no fill unless current or selected, own
+  /// 16 dp side padding so content lines up with page headers.
+  flat,
+}
+
+/// Row card of every media list: song, album track, queue, selection panel,
+/// album, artist, folder, genre and language.
+///
+/// Slot order, left to right: [leading] (cover, with the selection mark) ·
+/// text · [top] / [bottom] · [onAction] (play) · [accessory] (drag handle) ·
+/// [trailing] (the ⋮).
+/// The [trailing] button is always visible; only the play button appears on
+/// hover or focus on desktop.
 ///
 /// Three text lines are always reserved (an empty line keeps its room) so all
 /// cards of a list are the same height; [extentOf] gives that height without
-/// laying anything out. Music-type-free: the caller passes the cover (or a
-/// number column) as [leading] and every string.
+/// laying anything out, in every [KMediaCardStyle]. Music-type-free: the
+/// caller passes the cover as [leading] and every string.
+/// With [loading] the lines show placeholder bars at the same height and a
+/// null [leading] becomes a cover-sized placeholder block (round with
+/// [circleLeading]).
 class KMediaCard extends StatefulWidget {
   const KMediaCard({
     super.key,
@@ -27,17 +54,20 @@ class KMediaCard extends StatefulWidget {
     this.circleLeading = false,
     this.top,
     this.bottom,
+    this.accessory,
     this.trailing,
     this.onAction,
+    this.actionEnabled = true,
     this.actionIcon = KIcons.play,
     this.actionLabel,
-    this.revealTrailingOnHover = false,
     this.current = false,
     this.currentLabel,
     this.selected = false,
     this.dimmed = false,
     this.onTap,
     this.onLongPress,
+    this.loading = false,
+    this.style = KMediaCardStyle.auto,
   });
 
   final String title;
@@ -52,7 +82,7 @@ class KMediaCard extends StatefulWidget {
   final String? line2;
   final String? line3;
 
-  /// Cover (56 dp) or number column.
+  /// The cover only (56 dp).
   final Widget? leading;
 
   /// The leading is round (artists): the selection check is clipped to match.
@@ -61,20 +91,27 @@ class KMediaCard extends StatefulWidget {
   /// Right column, upper slot (duration).
   final Widget? top;
 
-  /// Right column, lower slot (favourite button, up to 48 dp tall; it overlaps the upper slot's row, which holds a short label).
+  /// Right column, lower slot: an icon button (about a 20 dp icon). The pair is
+  /// laid out from its measured size, so a 48 dp mobile box, a 40 dp desktop
+  /// box and a bare icon all put the [top] text 2 dp above the icon; the text
+  /// is drawn into the box's empty upper padding and ignores the pointer.
   final Widget? bottom;
 
-  /// Last slot (the "more" button).
+  /// After the play button, before [trailing] (the drag handle of a reorderable
+  /// row).
+  final Widget? accessory;
+
+  /// Last slot (the "more" button); always visible.
   final Widget? trailing;
 
   /// Round tonal play button: always on the mobile shell, on hover or focus
   /// on desktop.
   final VoidCallback? onAction;
+
+  /// False keeps the play button visible but disabled (nothing to play).
+  final bool actionEnabled;
   final IconData actionIcon;
   final String? actionLabel;
-
-  /// Desktop: show [trailing] only on hover, focus or while [selected].
-  final bool revealTrailingOnHover;
 
   /// The row of the track that is playing: tinted `primaryContainer`.
   final bool current;
@@ -91,27 +128,28 @@ class KMediaCard extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
+  /// Show placeholder bars in place of the text; [title] may be empty.
+  final bool loading;
+
+  /// See [KMediaCardStyle].
+  final KMediaCardStyle style;
+
   /// Space below a card.
   static const double gap = KSpace.x1;
   static const double coverSize = 56;
   static const double _padV = 10;
-  static const double _titleSize = 15;
-  static const double _lineSize = 13;
-  static const double _lineHeight = 1.35;
   static const BorderRadius _radius = BorderRadius.all(Radius.circular(14));
 
-  static double _line(TextScaler s, double size) => s.scale(size) * _lineHeight;
-
-  static double _textBlock(TextScaler s) =>
-      _line(s, _titleSize) + 2 * _line(s, _lineSize);
+  /// Corner radius of a song or album cover inside a card.
+  static const BorderRadius coverRadius = BorderRadius.all(Radius.circular(10));
 
   /// Laid-out height of a card plus [gap], for a fixed list extent.
-  /// Assumes a 56 dp leading (cover or number column); pass
+  /// Assumes a 56 dp leading (the cover); pass
   /// `hasLeading: false` for cards without one.
   static double extentOf(TextScaler scaler, {bool hasLeading = true}) =>
-      (hasLeading && coverSize > _textBlock(scaler)
+      (hasLeading && coverSize > KMediaCardMetrics.textBlock(scaler)
           ? coverSize
-          : _textBlock(scaler)) +
+          : KMediaCardMetrics.textBlock(scaler)) +
       2 * _padV +
       gap;
 
@@ -131,10 +169,16 @@ class _KMediaCardState extends State<KMediaCard> {
     final textTheme = Theme.of(context).textTheme;
     final scaler = MediaQuery.textScalerOf(context);
     final mobile = FormFactor.of(context) == FormFactor.mobile;
+    final flat =
+        widget.style == KMediaCardStyle.flat ||
+        (widget.style == KMediaCardStyle.auto && mobile);
+    final tinted = widget.current || widget.selected;
     final background = widget.current
         ? scheme.primaryContainer
         : widget.selected
         ? scheme.secondaryContainer
+        : flat
+        ? Colors.transparent
         : scheme.surfaceContainerLow;
     final ink = widget.current
         ? scheme.onPrimaryContainer
@@ -145,35 +189,23 @@ class _KMediaCardState extends State<KMediaCard> {
         ? ink.withValues(alpha: 0.8)
         : scheme.onSurfaceVariant;
 
-    Widget line(String? text, double size, TextStyle? base, Color color) {
-      return SizedBox(
-        height: KMediaCard._line(scaler, size),
-        child: Align(
-          alignment: AlignmentDirectional.centerStart,
-          widthFactor: 1,
-          child: Text(
-            text ?? '',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: base?.copyWith(
-              fontSize: size,
-              height: KMediaCard._lineHeight,
-              color: color,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final titleStyle = textTheme.bodyLarge?.copyWith(
-      fontWeight: FontWeight.w600,
-    );
-    final reveal = mobile || _engaged || widget.selected;
-    final leading = widget.leading;
+    // Inherited icon-button theme, restored for the play button and merged
+    // into the tinted style so a caller's density or size still applies.
+    final ambientButtons = IconButtonTheme.of(context);
+    // A loading card without a cover still draws a cover-sized block.
+    final leading =
+        widget.leading ??
+        (widget.loading
+            ? KCover.loading(
+                size: KMediaCard.coverSize,
+                radius: KMediaCard.coverRadius,
+                circle: widget.circleLeading,
+              )
+            : null);
 
     final content = Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: KSpace.x3,
+      padding: EdgeInsets.symmetric(
+        horizontal: flat ? KLayout.gutterMobile : KSpace.x3,
         vertical: KMediaCard._padV,
       ),
       child: Row(
@@ -195,129 +227,63 @@ class _KMediaCardState extends State<KMediaCard> {
             const KGap(KSpace.x3),
           ],
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: widget.titleLines == 2
-                          ? SizedBox(
-                              height:
-                                  KMediaCard._line(
-                                    scaler,
-                                    KMediaCard._titleSize,
-                                  ) +
-                                  KMediaCard._line(
-                                    scaler,
-                                    KMediaCard._lineSize,
-                                  ),
-                              child: Align(
-                                alignment: AlignmentDirectional.centerStart,
-                                child: Text(
-                                  widget.title,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: titleStyle?.copyWith(
-                                    fontSize: KMediaCard._titleSize,
-                                    color: ink,
-                                    // Two lines in the room of a title and a
-                                    // second line.
-                                    height:
-                                        (KMediaCard._line(
-                                              scaler,
-                                              KMediaCard._titleSize,
-                                            ) +
-                                            KMediaCard._line(
-                                              scaler,
-                                              KMediaCard._lineSize,
-                                            )) /
-                                        (2 *
-                                            scaler.scale(
-                                              KMediaCard._titleSize,
-                                            )),
-                                  ),
-                                ),
-                              ),
-                            )
-                          : line(
-                              widget.title,
-                              KMediaCard._titleSize,
-                              titleStyle,
-                              ink,
-                            ),
-                    ),
-                    if (widget.titleLabel != null) ...[
-                      const KGap(KSpace.x2),
-                      Text(
-                        widget.titleLabel!,
-                        maxLines: 1,
-                        style: textTheme.labelSmall?.copyWith(color: soft),
-                      ),
-                    ],
-                  ],
-                ),
-                if (widget.titleLines != 2)
-                  line(
-                    widget.line2,
-                    KMediaCard._lineSize,
-                    textTheme.bodySmall,
-                    soft,
-                  ),
-                line(
-                  widget.line3,
-                  KMediaCard._lineSize,
-                  textTheme.bodySmall,
-                  soft,
-                ),
-              ],
+            child: KMediaCardText(
+              title: widget.title,
+              titleLabel: widget.titleLabel,
+              titleLines: widget.titleLines,
+              line2: widget.line2,
+              line3: widget.line3,
+              ink: ink,
+              soft: soft,
+              loading: widget.loading,
+              barColor: scheme.surfaceContainerHighest,
             ),
           ),
           if (widget.top != null || widget.bottom != null) ...[
             const KGap(KSpace.x2),
             // As high as the cover, so a 48 dp button in [bottom] fits.
-            SizedBox(
+            KMediaCardRightColumn(
               height: leading != null
                   ? math.max(
                       KMediaCard.coverSize,
-                      KMediaCard._textBlock(scaler),
+                      KMediaCardMetrics.textBlock(scaler),
                     )
-                  : KMediaCard._textBlock(scaler),
-              child: Stack(
-                alignment: Alignment.topRight,
-                children: [
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: DefaultTextStyle.merge(
-                      style: textTheme.labelSmall?.copyWith(color: soft),
-                      child: widget.top ?? const SizedBox.shrink(),
+                  : KMediaCardMetrics.textBlock(scaler),
+              topLine:
+                  scaler.scale(textTheme.labelSmall?.fontSize ?? 11) * 1.45,
+              top: widget.top == null
+                  ? null
+                  : IgnorePointer(
+                      child: DefaultTextStyle.merge(
+                        style: textTheme.labelSmall?.copyWith(color: soft),
+                        child: widget.top!,
+                      ),
                     ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: widget.bottom ?? const SizedBox.shrink(),
-                  ),
-                ],
-              ),
+              bottom: widget.bottom,
             ),
           ],
           if (widget.onAction != null) ...[
             const KGap(KSpace.x2),
             _Revealed(
               visible: mobile || _engaged,
-              child: IconButton.filledTonal(
-                tooltip: widget.actionLabel,
-                onPressed: widget.onAction,
-                icon: Icon(widget.actionIcon),
+              // Keeps its own colours inside a tinted card.
+              child: _withButtons(
+                tinted,
+                ambientButtons,
+                IconButton.filledTonal(
+                  tooltip: widget.actionLabel,
+                  onPressed: widget.actionEnabled ? widget.onAction : null,
+                  icon: Icon(widget.actionIcon),
+                ),
               ),
             ),
           ],
+          // The right column and play button butt against the next 48 dp
+          // box; handle to ⋮ keeps its 4 dp.
+          if (widget.accessory != null) widget.accessory!,
           if (widget.trailing != null) ...[
-            const KGap(KSpace.x1),
-            widget.revealTrailingOnHover
-                ? _Revealed(visible: reveal, child: widget.trailing!)
-                : widget.trailing!,
+            if (widget.accessory != null) const KGap(KSpace.x1),
+            widget.trailing!,
           ],
         ],
       ),
@@ -325,32 +291,49 @@ class _KMediaCardState extends State<KMediaCard> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: KMediaCard.gap),
-      child: Semantics(
-        selected: widget.selected,
-        value: widget.current ? widget.currentLabel : null,
-        child: Opacity(
-          opacity: widget.dimmed ? 0.5 : 1,
-          child: MouseRegion(
-            onEnter: (_) => setState(() => _hovered = true),
-            onExit: (_) => setState(() => _hovered = false),
-            child: Focus(
-              canRequestFocus: false,
-              skipTraversal: true,
-              onFocusChange: (v) => setState(() => _focused = v),
-              child: Material(
-                color: background,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: KMediaCard._radius,
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: DefaultTextStyle.merge(
-                  style: TextStyle(color: ink),
-                  child: IconTheme.merge(
-                    data: IconThemeData(color: soft),
-                    child: InkWell(
-                      onTap: widget.onTap,
-                      onLongPress: widget.onLongPress,
-                      child: content,
+      // A skeleton row carries no information: no semantics node at all.
+      child: ExcludeSemantics(
+        excluding: widget.loading,
+        child: Semantics(
+          selected: widget.selected,
+          value: widget.current ? widget.currentLabel : null,
+          child: Opacity(
+            opacity: widget.dimmed ? 0.5 : 1,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _hovered = true),
+              onExit: (_) => setState(() => _hovered = false),
+              child: Focus(
+                canRequestFocus: false,
+                skipTraversal: true,
+                onFocusChange: (v) => setState(() => _focused = v),
+                child: Material(
+                  color: background,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: flat ? BorderRadius.zero : KMediaCard._radius,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: DefaultTextStyle.merge(
+                    style: TextStyle(color: ink),
+                    child: IconTheme.merge(
+                      data: IconThemeData(color: soft),
+                      // M3 IconButton ignores IconTheme: colour it here so icons
+                      // contrast with the tint.
+                      child: _withButtons(
+                        tinted,
+                        IconButtonThemeData(
+                          // ButtonStyle.merge keeps the receiver's values: the card
+                          // colour wins over an inherited foreground and the other
+                          // inherited properties stay.
+                          style: IconButton.styleFrom(foregroundColor: soft)
+                              .copyWith(iconColor: WidgetStatePropertyAll(soft))
+                              .merge(ambientButtons.style),
+                        ),
+                        InkWell(
+                          onTap: widget.onTap,
+                          onLongPress: widget.onLongPress,
+                          child: content,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -362,6 +345,11 @@ class _KMediaCardState extends State<KMediaCard> {
     );
   }
 }
+
+/// Wraps [child] in [data] only when [apply]; otherwise the inherited
+/// `IconButtonTheme` stays untouched.
+Widget _withButtons(bool apply, IconButtonThemeData data, Widget child) =>
+    apply ? IconButtonTheme(data: data, child: child) : child;
 
 /// Keeps its room when hidden so the card does not shift; hidden children
 /// stay focusable (Tab reveals them) but ignore the pointer.

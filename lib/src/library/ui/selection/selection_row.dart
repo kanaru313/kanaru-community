@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/cover_files.dart';
 import '../../../media/domain/track_info.dart';
+import '../../../media/domain/track_lines.dart';
 import '../../../playback/ui/track_cover.dart';
 import '../browse/library_labels.dart';
 import '../menus/more_button.dart';
@@ -24,37 +25,27 @@ class SelectedSongRow extends StatelessWidget {
     final duration = info.durationMs;
     return KMediaCard(
       title: info.title,
-      line2: songArtistLine(info),
-      line3: songAlbumLine(info),
+      line2: trackArtistLine(info),
+      line3: trackAlbumLine(info),
       leading: ExcludeSemantics(
         child: TrackCover(
           coverKey: info.coverKey,
           seed: info.albumKey?.encode() ?? info.title,
           size: CoverSize.thumb,
           dimension: KMediaCard.coverSize,
-          radius: BorderRadius.circular(10),
+          radius: KMediaCard.coverRadius,
         ),
       ),
       top: duration == null ? null : Text(formatClock(duration)),
-      bottom: SongFavoriteButton(info: info),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ReorderableDragStartListener(
-            index: index,
-            child: Tooltip(
-              message: AppLocalizations.of(context).libraryPanelReorder,
-              child: const Padding(
-                padding: EdgeInsets.all(KSpace.x2),
-                child: Icon(KIcons.dragHandle),
-              ),
-            ),
-          ),
-          LibraryMoreButton(
-            onPressed: ({required viaKeyboard}) =>
-                openSongMenu(context, info, viaKeyboard: viaKeyboard),
-          ),
-        ],
+      bottom: SongFavoriteButton(trackId: info.id),
+      // The queue's handle: 40 dp on desktop, 48 dp on mobile.
+      accessory: KDragHandle(
+        index: index,
+        tooltip: AppLocalizations.of(context).libraryPanelReorder,
+      ),
+      trailing: LibraryMoreButton(
+        onPressed: ({required viaKeyboard}) =>
+            openSongMenu(context, info, viaKeyboard: viaKeyboard),
       ),
     );
   }

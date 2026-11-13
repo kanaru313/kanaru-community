@@ -22,6 +22,11 @@ double libraryGutter(BuildContext context) =>
     ? KLayout.gutterDesktop
     : KLayout.gutterMobile;
 
+/// Side gutter of a sliver of [KMediaCard] rows: none on mobile (the flat row
+/// pads itself to line up with the headers), the desktop gutter around cards.
+double libraryRowGutter(BuildContext context) =>
+    FormFactor.of(context) == FormFactor.desktop ? KLayout.gutterDesktop : 0;
+
 /// Frame of one of the six list pages.
 ///
 /// A root page: [PageHeader] without a back button, so the shell's header

@@ -1,8 +1,12 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/domain/music_folder.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/ui/folders/folder_locations.dart';
+import 'package:kanaru/src/library/ui/folders/folder_play.dart';
+import 'package:kanaru/src/library/ui/folders/folder_slivers.dart';
 import 'package:kanaru/src/library/ui/folders/folder_tile.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/platform/domain/storage_volumes.dart';
@@ -367,7 +371,7 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('a folder row has its menu button and, on mobile, the arrow', (
+  testWidgets('a mobile folder row has its menu button and no chevron', (
     tester,
   ) async {
     await _single(tester);
@@ -378,8 +382,106 @@ void main() {
     );
     expect(
       find.descendant(of: tile, matching: find.byIcon(KIcons.chevronRight)),
-      findsOneWidget,
+      findsNothing,
     );
+    await unmountApp(tester);
+  });
+
+  testWidgets('play on a tree folder row sends the folder with subfolders', (
+    tester,
+  ) async {
+    final playback = FakePlaybackCommands();
+    final (h, folder) = await _single(tester, playback: playback);
+    final rows = tester.widgetList<FolderTile>(find.byType(FolderTile));
+    final vpop = rows.toList().indexWhere((r) => r.title.contains('V-Pop'));
+    await tester.tap(find.byTooltip('Play all').at(vpop));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pump();
+    final call = playback.calls.single as PlayTracksCall;
+    expect(call.tracks.length, 2);
+    // The merged chain "V-Pop › Singles › Deep" plays as its page's Play does:
+    // the end folder's own name.
+    expect(
+      call.context,
+      folderPlayContext(folder.sourceUid, 'V-Pop/Singles/Deep', 'Deep'),
+    );
+    expect(
+      call.tracks,
+      await songIds(
+        h.db,
+        folderPlayScope(folder.sourceId, 'V-Pop/Singles/Deep'),
+        folderSongSort,
+        '',
+      ),
+    );
+    await unmountApp(tester);
+  });
+
+  testWidgets('play on a flat row sends the folder\'s own songs only', (
+    tester,
+  ) async {
+    final playback = FakePlaybackCommands();
+    final (h, folder) = await _single(tester, playback: playback);
+    await tester.tap(find.byTooltip('Flat list'));
+    await h.settle(tester, rounds: 2);
+    final rows = tester.widgetList<FolderTile>(find.byType(FolderTile));
+    final root = rows.toList().indexWhere((r) => r.title == 'Music');
+    await tester.tap(find.byTooltip('Play all').at(root));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pump();
+    final call = playback.calls.single as PlayTracksCall;
+    // Only loose.flac sits directly in Music; the tree view would send 5.
+    expect(call.tracks.length, 1);
+    expect(
+      call.tracks,
+      await songIds(
+        h.db,
+        folderPlayScope(folder.sourceId, '', flat: true),
+        folderSongSort,
+        '',
+      ),
+    );
+    expect(call.context, folderPlayContext(folder.sourceUid, '', 'Music'));
+    await unmountApp(tester);
+  });
+
+  testWidgets('a music folder with no songs has a disabled play button', (
+    tester,
+  ) async {
+    final h = await pumpLibrary(tester, initial: '/library/folders');
+    final full = await h.addFolder('Full', volume: _home, root: '/home/u/Full');
+    await h.addFolder('Empty', volume: _home, root: '/home/u/Empty');
+    await addLibraryTrack(h.db, source: full.sourceId, locator: 'a.flac');
+    await h.settle(tester, rounds: 3);
+    final cards = {
+      for (final c in tester.widgetList<KMediaCard>(find.byType(KMediaCard)))
+        c.title: c.actionEnabled,
+    };
+    expect(cards, {'Full': true, 'Empty': false});
+    await unmountApp(tester);
+  });
+
+  testWidgets('desktop: the folder play button shows on hover only', (
+    tester,
+  ) async {
+    await _single(tester, width: 1400);
+    final tile = find.byType(FolderTile).first;
+    final button = find.descendant(
+      of: tile,
+      matching: find.byIcon(KIcons.play),
+    );
+    expect(button, findsOneWidget);
+    expect(button.hitTestable(), findsNothing);
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    addTearDown(mouse.removePointer);
+    await mouse.moveTo(tester.getCenter(tile));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(button.hitTestable(), findsOneWidget);
     await unmountApp(tester);
   });
 }

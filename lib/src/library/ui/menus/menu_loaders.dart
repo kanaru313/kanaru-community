@@ -15,10 +15,13 @@ import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../domain/music_folder.dart';
+import '../../state/browse/list_prefs_providers.dart';
 import '../../state/browse/selection_providers.dart';
 import '../../state/favorites_providers.dart';
 import '../../state/music_folders_providers.dart';
+import '../browse/group_play.dart';
 import '../browse/library_labels.dart';
+import '../folders/folder_play.dart';
 import 'album_menu.dart';
 import 'artist_menu.dart';
 import 'folder_menu.dart';
@@ -188,16 +191,21 @@ Future<MenuSpec> _groupMenuSpec(
   String? key,
   String name,
   SongScope scope,
+  String detailItem,
   MenuOrigin origin,
 ) async {
   final db = container.read(appDatabaseProvider);
   final totals = await groupTotals(db, scope);
+  // Play takes the songs in the sort of the group's page.
+  final sort = container.read(
+    detailSortProvider((list: BrowseList.detailSongs, item: detailItem)),
+  );
   return buildGroupMenu(
     GroupMenuData(
       kind: kind,
       key: key,
       name: name,
-      ids: await songIds(db, scope, defaultSortOf(BrowseList.detailSongs), ''),
+      ids: await songIds(db, scope, sort, ''),
       albums: await albumSummaries(db, scope: scope, newestFirst: true),
       folders: await foldersOf(db, scope),
       durationMs: totals.durationMs,
@@ -221,6 +229,7 @@ Future<MenuSpec> genreMenuSpec(
   genreKey,
   name,
   SongScope.genre(genreKey),
+  genreDetailItem(genreKey),
   origin,
 );
 
@@ -236,6 +245,7 @@ Future<MenuSpec> languageMenuSpec(
   code,
   languageDisplayName(env.l10n, code),
   SongScope.language(code),
+  languageDetailItem(code),
   origin,
 );
 
@@ -253,13 +263,13 @@ Future<MenuSpec> folderMenuSpec(
   const sort = SortSpec(SortCriterion.title);
   final direct = await songIds(
     db,
-    SongScope.folder(folder.sourceId, key, direct: true),
+    folderPlayScope(folder.sourceId, key, flat: true),
     sort,
     '',
   );
   final all = flat
       ? direct
-      : await songIds(db, SongScope.folder(folder.sourceId, key), sort, '');
+      : await songIds(db, folderPlayScope(folder.sourceId, key), sort, '');
   return buildFolderMenu(
     FolderMenuData(
       folder: folder,

@@ -1,9 +1,12 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
+import 'package:kanaru/src/playback/ui/queue/queue_row.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_host.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_panel.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -66,6 +69,18 @@ Future<void> _openMenu(WidgetTester tester, String title) async {
 
 String _location(UiHost host) =>
     host.router!.routerDelegate.currentConfiguration.uri.path;
+
+/// Whether the primary focus sits on the actionable node of the first menu
+/// row ("Play this track"): inside the same [InkWell] that handles its tap, so
+/// Enter reaches the row's activate action.
+bool _focusOnFirstRow(WidgetTester tester) {
+  final focused = FocusManager.instance.primaryFocus;
+  if (focused == null || focused is FocusScopeNode) return false;
+  final label = tester.element(find.text('Play this track'));
+  final rowInk = label.findAncestorWidgetOfExactType<InkWell>();
+  final focusInk = focused.context?.findAncestorWidgetOfExactType<InkWell>();
+  return rowInk != null && identical(rowInk, focusInk);
+}
 
 void main() {
   testWidgets('right click opens the menu with every entry', (tester) async {
@@ -208,5 +223,90 @@ void main() {
     expect(find.text('Play this track'), findsOneWidget);
     expect(find.text('Go to artist'), findsOneWidget);
     expect(find.byType(PopupMenuItem<void>), findsNothing);
+  });
+
+  for (final host in QueueHost.values) {
+    testWidgets('Enter on ⋮ focuses the first row (${host.name})', (
+      tester,
+    ) async {
+      final ui = await _pump(tester, host: host);
+      final more = find.descendant(
+        of: find.byType(QueueRow).at(1),
+        matching: find.byIcon(KIcons.moreVert),
+      );
+      Focus.of(tester.element(more)).requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(_focusOnFirstRow(tester), isTrue);
+      // Enter on the focused row runs it: the menu closes, the entry plays.
+      final target = ui.h.c.queueState.items[1].entryId;
+      // In the real zone: the action starts controller work.
+      await ui.run(tester, () => tester.sendKeyEvent(LogicalKeyboardKey.enter));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Play this track'), findsNothing);
+      expect(ui.h.c.queueState.currentItem!.entryId, target);
+    });
+  }
+
+  testWidgets('the Menu key on a focused row opens the menu on its first row', (
+    tester,
+  ) async {
+    await _pump(tester);
+    final more = find.descendant(
+      of: find.byType(QueueRow).at(1),
+      matching: find.byIcon(KIcons.moreVert),
+    );
+    Focus.of(tester.element(more)).requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.contextMenu);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Play this track'), findsOneWidget);
+    expect(_focusOnFirstRow(tester), isTrue);
+  });
+
+  testWidgets('a menu closed before it takes focus moves no focus behind it', (
+    tester,
+  ) async {
+    await _pump(tester);
+    final more = find.descendant(
+      of: find.byType(QueueRow).at(1),
+      matching: find.byIcon(KIcons.moreVert),
+    );
+    final node = Focus.of(tester.element(more));
+    node.requestFocus();
+    await tester.pump();
+    // Tickers of the page itself (not the menu) are the baseline.
+    final baseline = tester.binding.transientCallbackCount;
+    await tester.sendKeyEvent(LogicalKeyboardKey.contextMenu);
+    // Closed in the same frame, as Esc right after opening would.
+    Navigator.of(tester.element(more)).pop();
+    for (var i = 0; i < 15; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.text('Play this track'), findsNothing);
+    expect(FocusManager.instance.primaryFocus, same(node));
+    // No polling left behind: nothing waits for another frame.
+    expect(tester.binding.transientCallbackCount, baseline);
+  });
+
+  testWidgets('a pointer press on ⋮ leaves focus off the menu rows', (
+    tester,
+  ) async {
+    await _pump(tester);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(QueueRow).at(1),
+        matching: find.byTooltip('More'),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    // Only the menu route's own scope has focus: no row shows a ring.
+    expect(FocusManager.instance.primaryFocus, isA<FocusScopeNode>());
   });
 }

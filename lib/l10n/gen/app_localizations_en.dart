@@ -551,6 +551,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackMore => 'More';
 
   @override
+  String get playbackNowPlaying => 'Now playing';
+
+  @override
   String get playbackMinimize => 'Minimise';
 
   @override
@@ -981,6 +984,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryPlayFailed => 'Could not start playback';
+
+  @override
+  String get libraryNothingToPlay => 'Nothing to play';
 
   @override
   String get libraryLoadFailed => 'Could not load the list';

@@ -80,7 +80,7 @@ class AlbumTile extends ConsumerWidget {
           itemKey: album.key,
           coverKey: album.coverKey,
           dimension: KMediaCard.coverSize,
-          radius: BorderRadius.circular(10),
+          radius: KMediaCard.coverRadius,
         ),
         onAction: () => _play(ref, context),
         actionLabel: l10n.libraryPlayAlbum,
@@ -88,7 +88,6 @@ class AlbumTile extends ConsumerWidget {
           onPressed: ({required viaKeyboard}) =>
               _menu(context, album, origin, viaKeyboard: viaKeyboard),
         ),
-        revealTrailingOnHover: true,
         onTap: () => _open(context, album),
       ),
     );

@@ -1,10 +1,10 @@
 import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../media/domain/library_keys.dart';
-import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
 import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/menu_targets.dart';
+import '../browse/group_play.dart';
 import '../browse/library_labels.dart';
 import '../library_locations.dart';
 import 'link_rows.dart';
@@ -90,11 +90,9 @@ MenuSpec buildGroupMenu(GroupMenuData data, MenuOrigin origin, MenuEnv env) {
   );
   if (folderLink?.page != null) pages['folders'] = folderLink!.page!;
 
-  final context = PlayContext(
-    genre ? PlayContextKind.genre : PlayContextKind.language,
-    ref: data.key == null ? null : encodeKey(data.key!),
-    label: data.name,
-  );
+  final context = genre
+      ? genrePlayContext(data.key!, data.name)
+      : languagePlayContext(data.key, data.name);
   final goOwn = MenuItemSpec(
     genre ? MenuItemId.goGenre : MenuItemId.goLanguage,
     icon: genre ? KIcons.genres : KIcons.languages,

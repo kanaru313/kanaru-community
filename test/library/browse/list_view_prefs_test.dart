@@ -9,6 +9,8 @@ void main() {
       expect(v.of(l).sort, defaultSortOf(l));
     }
     expect(v.of(BrowseList.albums).view, CollectionView.grid);
+    expect(v.of(BrowseList.genres).view, CollectionView.grid);
+    expect(v.of(BrowseList.languages).view, CollectionView.list);
     expect(v.of(BrowseList.artists).view, CollectionView.list);
     expect(v.of(BrowseList.songs).view, CollectionView.list);
     expect(v.folderView, FolderView.tree);

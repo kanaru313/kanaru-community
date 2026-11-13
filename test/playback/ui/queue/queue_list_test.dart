@@ -38,7 +38,7 @@ void main() {
     final ids = _ids(tester);
     // Entry id = index + 1: the first built row is the played one above.
     expect(ids.first, 40);
-    expect(tester.getTopLeft(find.byType(QueueRow).at(1)).dy, 60);
+    expect(tester.getTopLeft(find.byType(QueueRow).at(1)).dy, rowExtent());
   });
 
   testWidgets('a short queue starts at the top', (tester) async {

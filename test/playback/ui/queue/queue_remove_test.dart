@@ -196,6 +196,79 @@ void main() {
       expect(after, before);
     });
 
+    testWidgets('a mouse swipe starting on the ♥ removes a desktop row', (
+      tester,
+    ) async {
+      final host = await pumpWithPlayer(
+        tester,
+        QueueList(
+          size: QueueRowSize.desktop,
+          menu: (context, item, info, at, {viaKeyboard = false}) {},
+          favorite: (context, item) =>
+              IconButton(onPressed: () {}, icon: const Icon(KIcons.heart)),
+        ),
+        size: const Size(1280, 800),
+      );
+      await tester.runAsync(() async {
+        await _swipe(
+          tester,
+          find.descendant(
+            of: find.byType(QueueRow).at(2),
+            matching: find.byIcon(KIcons.heart),
+          ),
+          0.6,
+          kind: PointerDeviceKind.mouse,
+        );
+        await host.h.settle();
+      });
+      await tester.pump();
+      await host.letStreamsArrive(tester);
+      expect(host.h.c.queueState.length, 5);
+      expect(find.text('Removed “T2”'), findsOneWidget);
+    });
+
+    testWidgets(
+      'swiping a real row removes it, from the title, the ⋮ or the ♥',
+      (tester) async {
+        final host = await pumpWithPlayer(
+          tester,
+          QueueList(
+            size: QueueRowSize.mobile,
+            menu: (context, item, info, at, {viaKeyboard = false}) {},
+            favorite: (context, item) =>
+                IconButton(onPressed: () {}, icon: const Icon(KIcons.heart)),
+          ),
+        );
+        // The swipe starts controller work: run it in the real zone.
+        Future<void> swipe(Finder f) async {
+          await tester.runAsync(() async {
+            await _swipe(tester, f, 0.6);
+            await host.h.settle();
+          });
+          await tester.pump();
+          await host.letStreamsArrive(tester);
+        }
+
+        await swipe(find.text('T2'));
+        expect(host.h.c.queueState.length, 5);
+        expect(find.text('Removed “T2”'), findsOneWidget);
+        final more = find.descendant(
+          of: find.byType(QueueRow).at(2),
+          matching: find.byIcon(KIcons.moreVert),
+        );
+        await swipe(more);
+        expect(host.h.c.queueState.length, 4);
+        // A swipe that starts on the ♥ removes as well.
+        await swipe(
+          find.descendant(
+            of: find.byType(QueueRow).at(2),
+            matching: find.byIcon(KIcons.heart),
+          ),
+        );
+        expect(host.h.c.queueState.length, 3);
+      },
+    );
+
     testWidgets('Undo inside the 4 s window brings the row back', (
       tester,
     ) async {

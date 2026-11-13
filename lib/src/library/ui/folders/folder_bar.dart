@@ -16,20 +16,18 @@ import '../collections/collection_parts.dart';
 import 'folder_breadcrumb.dart';
 import 'folder_locations.dart';
 import 'folder_place.dart';
+import 'folder_play.dart';
 import 'folder_slivers.dart';
 
 /// Play context of a level of the tree view.
-PlayContext levelPlayContext(LevelPlace place) => PlayContext(
-  PlayContextKind.folder,
-  ref: '${place.sourceUid}:${place.node.key}',
-  label: place.node.name,
-);
+PlayContext levelPlayContext(LevelPlace place) =>
+    folderPlayContext(place.sourceUid, place.node.key, place.node.name);
 
 /// Play context of a folder opened from the flat list.
-PlayContext flatPlayContext(FlatOpenPlace place) => PlayContext(
-  PlayContextKind.folder,
-  ref: '${place.root.folder.sourceUid}:${place.node.key}',
-  label: place.node.key.isEmpty ? place.root.node.name : place.node.name,
+PlayContext flatPlayContext(FlatOpenPlace place) => folderPlayContext(
+  place.root.folder.sourceUid,
+  place.node.key,
+  place.node.key.isEmpty ? place.root.node.name : place.node.name,
 );
 
 /// What the play buttons of a folder page play: the songs below a tree level,
@@ -37,14 +35,14 @@ PlayContext flatPlayContext(FlatOpenPlace place) => PlayContext(
 ({SongScope scope, PlayContext context})? folderPlayTarget(FolderPlace place) =>
     switch (place) {
       LevelPlace() => (
-        scope: SongScope.folder(place.root.folder.sourceId, place.node.key),
+        scope: folderPlayScope(place.root.folder.sourceId, place.node.key),
         context: levelPlayContext(place),
       ),
       FlatOpenPlace() => (
-        scope: SongScope.folder(
+        scope: folderPlayScope(
           place.root.folder.sourceId,
           place.node.key,
-          direct: true,
+          flat: true,
         ),
         context: flatPlayContext(place),
       ),

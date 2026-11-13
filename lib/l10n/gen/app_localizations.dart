@@ -938,6 +938,12 @@ abstract class AppLocalizations {
   /// **'More'**
   String get playbackMore;
 
+  /// No description provided for @playbackNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing'**
+  String get playbackNowPlaying;
+
   /// No description provided for @playbackMinimize.
   ///
   /// In en, this message translates to:
@@ -1609,6 +1615,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not start playback'**
   String get libraryPlayFailed;
+
+  /// No description provided for @libraryNothingToPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to play'**
+  String get libraryNothingToPlay;
 
   /// No description provided for @libraryLoadFailed.
   ///

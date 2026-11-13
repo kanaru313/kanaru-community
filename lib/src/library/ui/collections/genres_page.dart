@@ -6,7 +6,9 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/list_view_prefs.dart';
 import '../../domain/library_tabs.dart';
 import '../../state/browse/collection_providers.dart';
 import '../browse/library_list_frame.dart';
@@ -17,8 +19,10 @@ import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
 import '../selection/selection_inset.dart';
 import 'collection_parts.dart';
+import 'genre_tile.dart';
 
-/// The Genres list: coloured tiles with the genre name and its song count.
+/// The Genres list: coloured tiles (grid) or rows with the genre name and its
+/// song count.
 class GenresPage extends StatelessWidget {
   const GenresPage({super.key});
 
@@ -61,6 +65,8 @@ class _GenresLeading extends ConsumerWidget {
         unit: l10n.libraryUnitGenres,
         l10n: l10n,
       ),
+      switchFor: BrowseList.genres,
+      view: input.view,
     );
   }
 }
@@ -72,48 +78,75 @@ class _GenresBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final gutter = libraryGutter(context);
-    final scale = math.max(1.0, MediaQuery.textScalerOf(context).scale(1));
-    return collectionBody(context, ref.watch(genreListProvider(_key(input))), (
-      genres,
-    ) {
-      return CustomScrollView(
-        slivers: [
-          KCollectionGrid(
-            itemCount: genres.length,
-            mobileMinTileWidth: 150,
-            desktopMinTileWidth: 200,
-            tileAspect: 0,
-            footerExtent: KColorTile.minHeight * scale,
-            padding: EdgeInsets.symmetric(horizontal: gutter),
-            itemBuilder: (context, i) {
-              final genre = genres[i];
-              void menu({bool viaKeyboard = false}) => openGenreMenu(
-                context,
-                genreKey: genre.key,
-                name: genre.name,
-                viaKeyboard: viaKeyboard,
-              );
-              return KContextRegion(
-                onOpen: (at) => menu(viaKeyboard: at == null),
-                child: KColorTile(
-                  seed: genre.name,
-                  title: genre.name,
-                  subtitle: l10n.librarySongCount(genre.trackCount),
-                  icon: KIcons.genres,
-                  onTap: () => openLibraryPage(
-                    context,
-                    LibraryLocations.genre(genre.key),
-                  ),
-                  more: LibraryMoreButton(onPressed: menu),
+    final scaler = MediaQuery.textScalerOf(context);
+    final scale = math.max(1.0, scaler.scale(1));
+    return collectionBody(
+      context,
+      ref.watch(genreListProvider(_key(input))),
+      (genres) {
+        return CustomScrollView(
+          slivers: [
+            if (input.view == CollectionView.grid)
+              KCollectionGrid(
+                itemCount: genres.length,
+                mobileMinTileWidth: 150,
+                desktopMinTileWidth: 200,
+                tileAspect: 0,
+                footerExtent: KColorTile.minHeight * scale,
+                padding: EdgeInsets.symmetric(horizontal: gutter),
+                itemBuilder: (context, i) => _GenreCard(genre: genres[i]),
+              )
+            else
+              SliverPadding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: libraryRowGutter(context),
                 ),
-              );
-            },
-          ),
-          const SelectionInsetSliver(),
-        ],
-      );
-    });
+                sliver: SliverFixedExtentList(
+                  itemExtent: KMediaCard.extentOf(scaler),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => GenreTile(genre: genres[i]),
+                    childCount: genres.length,
+                    addAutomaticKeepAlives: false,
+                  ),
+                ),
+              ),
+            const SelectionInsetSliver(),
+          ],
+        );
+      },
+      skeletonRows: input.view == CollectionView.list,
+      roundCover: false,
+    );
+  }
+}
+
+/// Genre tile of the grid.
+class _GenreCard extends StatelessWidget {
+  const _GenreCard({required this.genre});
+
+  final GenreSummary genre;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    void menu({bool viaKeyboard = false}) => openGenreMenu(
+      context,
+      genreKey: genre.key,
+      name: genre.name,
+      viaKeyboard: viaKeyboard,
+    );
+    return KContextRegion(
+      onOpen: (at) => menu(viaKeyboard: at == null),
+      child: KColorTile(
+        seed: genre.name,
+        title: genre.name,
+        subtitle: l10n.librarySongCount(genre.trackCount),
+        icon: KIcons.genres,
+        onTap: () =>
+            openLibraryPage(context, LibraryLocations.genre(genre.key)),
+        more: LibraryMoreButton(onPressed: menu),
+      ),
+    );
   }
 }

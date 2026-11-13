@@ -512,6 +512,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playbackMore => 'Thêm';
 
   @override
+  String get playbackNowPlaying => 'Đang phát';
+
+  @override
   String get playbackMinimize => 'Thu nhỏ';
 
   @override
@@ -913,6 +916,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get libraryPlayFailed => 'Không phát được';
+
+  @override
+  String get libraryNothingToPlay => 'Không có bài để phát';
 
   @override
   String get libraryLoadFailed => 'Không tải được danh sách';

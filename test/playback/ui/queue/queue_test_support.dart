@@ -53,6 +53,9 @@ Future<ProviderContainer> pumpFakeQueue(
   bool playing = true,
   Size size = const Size(400, 800),
 
+  /// System font scale; change its value to rescale while the list is open.
+  ValueNotifier<double>? textScale,
+
   /// Later views (an advance, an edit); [view] is the first one.
   Stream<QueueView>? views,
 }) async {
@@ -60,6 +63,8 @@ Future<ProviderContainer> pumpFakeQueue(
   tester.view.physicalSize = size;
   addTearDown(tester.view.reset);
   final counting = loader ?? CountingLoader();
+  final scale = textScale ?? ValueNotifier<double>(1);
+  if (textScale == null) addTearDown(scale.dispose);
   final container = ProviderContainer(
     overrides: [
       queueViewProvider.overrideWith((ref) async* {
@@ -78,6 +83,14 @@ Future<ProviderContainer> pumpFakeQueue(
         theme: buildKanaruTheme(brightness: Brightness.light),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, app) => ValueListenableBuilder<double>(
+          valueListenable: scale,
+          builder: (context, scale, _) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(scale)),
+            child: app!,
+          ),
+        ),
         home: Scaffold(body: child),
       ),
     ),
@@ -86,3 +99,7 @@ Future<ProviderContainer> pumpFakeQueue(
   await tester.pump();
   return container;
 }
+
+/// Row height at the given font scale, as the list computes it.
+double rowExtent([double scale = 1]) =>
+    KMediaCard.extentOf(TextScaler.linear(scale));

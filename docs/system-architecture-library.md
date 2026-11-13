@@ -431,8 +431,9 @@ what the menu showed.
 - `menu_renderer.dart` maps a `MenuSpec` to `KMenuPage`s (`menu_header.dart`
   draws the picture and names). `KMenuPage` got `groupTitles` (headings) and
   `headerOpens` (the song header opens the song info page).
-- Triggers: a ⋮ on every tile, card and page (`LibraryMoreButton`, on desktop
-  shown on hover or focus), right click / Menu / Shift+F10 (`KContextRegion`),
+- Triggers: a ⋮ on every tile, card and page (`LibraryMoreButton`, a thin
+  wrapper of `KMoreButton`; always visible on rows, on hover or focus on grid
+  cards through `KCardCorner`), right click / Menu / Shift+F10 (`KContextRegion`),
   and a long press on an album, artist, genre, language or folder card on the
   mobile shell. A long press on a song selects it instead. The page ⋮ opens
   the same centred dialog on desktop.
@@ -561,8 +562,16 @@ Every call is awaited; a failure is logged and shows a snack bar.
   cover (`TrackCover`, seed album key else title), title, artists joined with
   ", " (else the artist tag), `album • year`, duration `m:ss` over the heart.
   Tap = `playTracks(ids, startIndex: index)`. The playing row is
-  `primaryContainer` with the equalizer over the cover (over the number with
-  `showNumber`, which replaces the cover with the track number). The tile
+  `primaryContainer` with the equalizer over the cover. With `showNumber`
+  (album pages) the track number is a badge in the cover's bottom-right corner
+  (4 dp inset, `scrim` at 55 % with white `labelSmall` tabular text, text scale
+  clamped to 1.3, round for one digit and wider for 2-3, none without a track
+  number): the card has no leading slot before the cover, so it sits where it does in every
+  list (placeholder rows too). The badge is drawn above the playing scrim and
+  equalizer (which stays centred) and is hidden while the row is selected. The
+  selection panel's `SelectedSongRow` puts the drag handle in
+  `accessory` (the same `KDragHandle` as the queue row: 40 dp with a grab
+  cursor on desktop, 48 dp on mobile, a tap swallowed) and ⋮ in `trailing`. The tile
   watches only `isCurrentTrackProvider(id)`, `isSelectedProvider(id)` and
   `isFavoriteProvider(id)` (all `select`); the
   equalizer widget alone watches play / pause. No per-row stream provider.
@@ -572,7 +581,7 @@ Every call is awaited; a failure is logged and shows a snack bar.
   range it has **built** (`didFinishLayout`, cache extent included), calls
   `setIds` on every ids emission and `invalidate` on every
   `songRowsRevisionProvider` tick (a cover or title changed, the order did
-  not). A page not read yet is a same-size placeholder row (`SongRowPlaceholder`, shared
+  not). A page not read yet is a same-size placeholder row with a cover block (`SongRowPlaceholder`, shared
   with the selection panel); a page that failed shows "Could not load" with
   Retry in the place of its rows (`SongRowFailed`), and Retry reads again at
   once. The tap handler
@@ -595,21 +604,44 @@ Every call is awaited; a failure is logged and shows a snack bar.
   160 px minimum, artists 100 / 160) or rows (`AlbumTile`, `ArtistTile` on
   `KMediaCard`, ▶ always on mobile and on hover or focus on desktop). The view
   switch (`LibraryViewToggle`: one icon on mobile, a double button on desktop)
-  is stored per list. Albums open as a grid, every other list as rows, on both
-  shells. Tiles get their summary by value and watch nothing.
+  is stored per list. Albums and genres open as a grid, every other list as
+  rows, on both shells. Tiles get their summary by value and watch nothing.
 - Album ▶ plays the album in track order (`playScope` with the `albumTracks`
   default sort), artist ▶ plays every song of the artist (`detailSongs`
   default); both with the album / artist `PlayContext`.
+- Genre, language and folder rows have the same ▶. One helper per kind is
+  shared by the detail page's Play, the menu's Play and the row:
+  `genrePlayContext` / `languagePlayContext` / `playGenre` / `playLanguage`
+  (`ui/browse/group_play.dart`; the songs come in the sort of the group's
+  page, `detailSortProvider` of `genreDetailItem` / `languageDetailItem`, for
+  the row ▶ and the menu Play alike; the "unknown" language is ref `_unknown`
+  everywhere) and `folderPlayContext` /
+  `folderPlayScope` / `playFolder` (`ui/folders/folder_play.dart`; tree rows
+  take the subfolders too, flat rows their own songs; always in title order,
+  the one sort of every folder page; a merged chain plays under the name of
+  its last folder, like the page's Play). A music-folder row
+  with no songs keeps its ▶ but dimmed (`KMediaCard.actionEnabled`).
 - Artist photo: the `coverKey` of `ArtistSummary` (the cover of the newest own
   album that has one), a round `TrackCover`, else a letter placeholder seeded
   by the name.
-- Genres: `KColorTile` in a grid (150 / 200 px minimum); the tile height is
-  88 times the text scale.
-- Languages: `KListRow` per language with `languages` (`help` for "unknown",
-  always last), `N songs · M auto-detected` (the second part only when
-  nonzero), and the note above the list. `languageDisplayName`: the native
+- Genres: grid of `KColorTile` (150 / 200 px minimum; height 88 times the text
+  scale) or rows (`GenreTile` on `KMediaCard`: coloured icon block, name,
+  song count, ▶, ⋮). Opens as a grid; the view switch is stored per list.
+- Languages: `LanguageTile` (`KMediaCard`, ▶) per language with `languages`
+  (`help` for "unknown", always last), `N songs · M auto-detected` (the
+  second part only when nonzero), and the note above the list. `languageDisplayName`: the native
   name, plus the name in the app language when it differs; an unknown code
   shows as the code.
+- Loading: in list view `collectionBody` shows skeleton rows
+  (`KMediaCardSkeletonList` in kanaru_ui: `KMediaCard(loading: true)`, as
+  many as fill the height left below the optional header (measured),
+  `ceil(height / extentOf)`; round cover for artists) until the first
+  answer. When the provider already has a value (cached, or a newer answer
+  loading: refresh or reload, kept by `mapKeepingValue` in the derived list
+  providers) the rows draw at once, no skeleton
+  frame. The Languages note is drawn above the skeleton rows too, so rows do
+  not jump. The grid shows nothing
+  until data arrives. Errors, also after data, show the "Could not load the list" message.
 - A tap on an item is `openLibraryPage` to the album, artist, genre or
   language location. A long press (mobile shell) opens the item's menu (see
   "Context menus"), not multi-select.
@@ -706,9 +738,9 @@ routes in `ui/browse/library_routes.dart`.
   page, so a Folders page that was pushed from elsewhere keeps the page below
   it. Entering from another page is `openLibraryPage`.
 - Tree level: sub-folder rows first (`FolderTile`: `FolderArt`, name, counts;
-  a merged chain is one row of up to two lines and opens its last folder; a
-  chevron on mobile), then "Songs in this folder · N" and a `SongList` of the
-  direct songs by title. The flat list's rows (filtered, ordered by precomputed
+  a merged chain is one row of up to two lines and opens its last folder; ▶
+  and ⋮, no chevron), then "Songs in this folder · N" and a
+  `SongList` of the direct songs by title. The flat list's rows (filtered, ordered by precomputed
   natural keys) are computed once per place, sort and filter by
   `flatRowsProvider`; the list and the bar's count read the same result. The sort chip orders the folders (name in natural
   order, or number of songs below); the filter narrows folders by name (chain
@@ -804,7 +836,8 @@ callbacks come from the caller. Width-based layout lives here.
 
 | Widget | Notes |
 |---|---|
-| `KMediaCard` | Row card of song, album, artist and folder lists. Three text lines always reserved (`titleLines: 2` lets a long name wrap over the title and second line, which is then not shown, in the same height); `leading`, right column (`top` duration, `bottom` heart), `trailing`, optional round `onAction` (always on mobile, hover or focus on desktop), `revealTrailingOnHover`; states `current`, `selected` (check over the leading), `dimmed`. `KMediaCard.extentOf(TextScaler)` is the exact height with its bottom gap, for fixed list extents (it assumes a 56 dp leading; `hasLeading: false` for cards without one); `currentLabel` gives the playing state a screen-reader value; a test pins it to the laid-out height at 1.0, 1.3 and 1.5 |
+| `KMediaCard` | Row card of the song, album track, queue, selection panel, folder, genre, language, album and artist rows. Three text lines always reserved (`titleLines: 2` lets a long name wrap over the title and second line, which is then not shown, in the same height); slots in order `leading` (cover only), text, right column (internal to `kanaru_ui`, not exported: `top` duration over `bottom` heart, same horizontal centre, laid out from the measured `bottom` box so the text sits 2 dp above the visible icon with a 48 dp mobile button, a 40 dp desktop one or a bare icon; the heart box stays whole, the text ignores the pointer, and the heart has the same height with or without a duration), no gap after the right column or play button (heart, play and ⋮ boxes sit 48 dp apart); `accessory` to `trailing` keeps 4 dp, optional round `onAction` (always on mobile, hover or focus on desktop), `accessory` (the queue and selection-panel drag handle, both shells), `trailing` (the ⋮, always visible); `style` (`KMediaCardStyle.auto` is flat full-width on mobile and a rounded card on desktop; lists use `libraryRowGutter`, 0 on mobile), `loading` placeholder bars at the same height, and for a null `leading` a `KCover.loading` block (56 dp, radius 10, round with `circleLeading`; `KCover.loading` is the neutral `surfaceContainerHigh` box for "image not yet known", no icon, no shimmer; the seed placeholder stays for "no cover" or a failed image); icon buttons take the card's ink on tinted rows; states `current`, `selected` (check over the leading), `dimmed`. `KMediaCard.extentOf(TextScaler)` is the exact height with its bottom gap, for fixed list extents (it assumes a 56 dp leading; `hasLeading: false` for cards without one); `currentLabel` gives the playing state a screen-reader value; a test pins it to the laid-out height at 1.0, 1.3 and 1.5 |
+| `KMoreButton`, `ViaKeyboardTracker` | The ⋮ button (`packages/kanaru_ui/.../widgets/k_more_button.dart`): `onPressed({required bool viaKeyboard})` tells a menu opened by Enter or Space from a pointer or assistive tap; the tracker holds that flag and resets it on a pointer press. `LibraryMoreButton` wraps it with the library's tooltip |
 | `KListSortFilterBar` | `leading` group, criterion chip (label and direction arrow) and filter toggle. The chip is announced as `<tooltip>: <criterion>`; it passes an anchor key to `onSortPressed`; 52 tall on mobile, 48 on desktop |
 | `showKSortPopover<T>` | Anchored under the chip on both shells. Order buttons keep it open (`onAscendingChanged`); a criterion (`KSortCriterion`, shown as a `SelectionRow`) closes it and is the result. Criteria scroll, the order row stays. Root navigator; Esc closes. Its anchored layout copies the private one of `selection_picker.dart` (follow-up: export one helper) |
 | `KFilterField` | Outlined, 48 tall, autofocus; the cross and Esc clear the controller and call `onClose` |

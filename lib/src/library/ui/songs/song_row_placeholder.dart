@@ -3,26 +3,16 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 
-/// A song row whose page is still being read: same size, no content. Shared by
-/// the song lists and the selection panel.
+/// Skeleton of a song row whose page is still being read: a loading
+/// `KMediaCard` (grey cover box and placeholder bars), the same size as a real
+/// row and hidden from semantics. Shared by the song lists and the selection
+/// panel.
 class SongRowPlaceholder extends StatelessWidget {
-  const SongRowPlaceholder({super.key, required this.extent});
-
-  final double extent;
+  const SongRowPlaceholder({super.key});
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: KMediaCard.gap),
-    child: SizedBox(
-      height: extent - KMediaCard.gap,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(14),
-        ),
-      ),
-    ),
-  );
+  Widget build(BuildContext context) =>
+      const KMediaCard(title: '', loading: true);
 }
 
 /// A song row whose page could not be read: "Could not load" and a Retry, in
@@ -37,17 +27,26 @@ class SongRowFailed extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    // Same look as KMediaCard: flat (no fill, 16 dp inset) on mobile, card on
+    // desktop.
+    final flat = FormFactor.of(context) == FormFactor.mobile;
     return Padding(
       padding: const EdgeInsets.only(bottom: KMediaCard.gap),
       child: SizedBox(
         height: extent - KMediaCard.gap,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: scheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(14),
+            color: flat ? null : scheme.surfaceContainerLow,
+            borderRadius: flat ? null : BorderRadius.circular(14),
           ),
           child: Padding(
-            padding: const EdgeInsets.only(left: KSpace.x4),
+            padding: EdgeInsets.only(
+              left: flat ? KLayout.gutterMobile : KSpace.x4,
+              // The Retry TextButton has its own padding, so the right inset
+              // is the gutter minus that padding (KSpace.x2) to line up with
+              // the ⋮ of a loaded row.
+              right: flat ? KLayout.gutterMobile - KSpace.x2 : 0,
+            ),
             child: Row(
               children: [
                 Expanded(

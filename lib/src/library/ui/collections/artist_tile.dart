@@ -83,7 +83,6 @@ class ArtistTile extends ConsumerWidget {
           onPressed: ({required viaKeyboard}) =>
               _menu(context, artist, origin, viaKeyboard: viaKeyboard),
         ),
-        revealTrailingOnHover: true,
         onTap: () => _open(context, artist),
       ),
     );

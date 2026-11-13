@@ -9,6 +9,7 @@ import '../../../media/domain/cover_files.dart';
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
 import '../../../media/domain/track_info.dart';
+import '../../../media/domain/track_lines.dart';
 import '../../../playback/state/playback_providers.dart';
 import '../../../playback/ui/track_cover.dart';
 import '../../state/browse/selection_providers.dart';
@@ -22,32 +23,16 @@ import '../selection/selection_shortcuts.dart';
 
 final _log = Logger('library.song_tile');
 
-/// The artist line of a track: every artist of the tag in order, else the
-/// single artist field.
-String songArtistLine(TrackInfo info) {
-  if (info.artists.isNotEmpty) return info.artists.join(', ');
-  return info.artist ?? '';
-}
-
-/// `album • year`, whichever parts exist.
-String songAlbumLine(TrackInfo info) {
-  final album = info.album;
-  final year = info.year;
-  return [
-    if (album != null && album.isNotEmpty) album,
-    if (year != null) '$year',
-  ].join(' • ');
-}
-
 /// One song row of every song list: cover, title / artists / `album • year`,
 /// duration over the heart. Tap plays `ids[index]` with the list as the
 /// queue. The tile watches only its own answers (is it playing, is it a
 /// favourite), so a change elsewhere rebuilds nothing else.
 ///
 /// [ids] is the list the row belongs to, as the list currently holds it, and
-/// [index] the row's place in it. With [showNumber] the cover gives way to
-/// the track number (album pages); with [showDetected] a song with a
-/// detected language carries a small "auto-detected" tag after its title.
+/// [index] the row's place in it. With [showNumber] the track number is a
+/// badge in the cover's end-bottom corner (album pages); with [showDetected] a
+/// song with a detected language carries a small "auto-detected" tag after its
+/// title.
 class SongTile extends ConsumerWidget {
   const SongTile({
     super.key,
@@ -98,15 +83,18 @@ class SongTile extends ConsumerWidget {
         titleLabel: showDetected && info.languageDetected
             ? l10n.libraryAutoDetectedTag
             : null,
-        line2: songArtistLine(info),
-        line3: songAlbumLine(info),
-        leading: showNumber
-            ? _NumberColumn(number: info.trackNo, current: current)
-            : _SongCover(info: info, current: current),
+        line2: trackArtistLine(info),
+        line3: trackAlbumLine(info),
+        leading: _SongCover(
+          info: info,
+          current: current,
+          number: showNumber && !selected && (info.trackNo ?? 0) > 0
+              ? info.trackNo
+              : null,
+        ),
         top: duration == null ? null : Text(formatClock(duration)),
-        bottom: SongFavoriteButton(info: info),
+        bottom: SongFavoriteButton(trackId: info.id),
         trailing: LibraryMoreButton(onPressed: menu),
-        revealTrailingOnHover: true,
         current: current,
         currentLabel: l10n.libraryNowPlaying,
         selected: selected,
@@ -138,14 +126,17 @@ class SongTile extends ConsumerWidget {
 }
 
 class _SongCover extends StatelessWidget {
-  const _SongCover({required this.info, required this.current});
+  const _SongCover({required this.info, required this.current, this.number});
 
   final TrackInfo info;
   final bool current;
 
+  /// Track number badge in the bottom end corner; null shows none.
+  final int? number;
+
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(10);
+    const radius = KMediaCard.coverRadius;
     return Stack(
       children: [
         TrackCover(
@@ -170,23 +161,63 @@ class _SongCover extends StatelessWidget {
               ),
             ),
           ),
+        if (number != null)
+          PositionedDirectional(
+            key: songTileBadgeKey,
+            end: _badgeInset,
+            bottom: _badgeInset,
+            child: _NumberBadge(number: number!),
+          ),
       ],
     );
   }
 }
 
-class _NumberColumn extends StatelessWidget {
-  const _NumberColumn({required this.number, required this.current});
+const double _badgeInset = 4;
 
-  final int? number;
-  final bool current;
+/// Key of the track number badge (tests find it by this).
+const Key songTileBadgeKey = ValueKey('song-tile-number-badge');
+
+/// Track number pill on a cover: round for one digit, wider for more.
+/// Text scale is clamped so the badge stays inside the 56 dp cover.
+class _NumberBadge extends StatelessWidget {
+  const _NumberBadge({required this.number});
+
+  final int number;
 
   @override
   Widget build(BuildContext context) {
-    if (current) return const _PlayingMark();
-    return Text(
-      number == null ? '' : '$number',
-      style: Theme.of(context).textTheme.titleSmall,
+    final theme = Theme.of(context);
+    final scaler = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
+    final style = theme.textTheme.labelSmall!.copyWith(
+      color: Colors.white,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final height = scaler.scale(style.fontSize ?? 11) * (style.height ?? 1.3);
+    // Not excluded: the number is read once, as text of the merged row.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.scrim.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(height),
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minWidth: height, minHeight: height),
+        child: Padding(
+          // Round for one digit; more digits get side room.
+          padding: EdgeInsets.symmetric(horizontal: number > 9 ? 3 : 0),
+          child: Center(
+            widthFactor: 1,
+            heightFactor: 1,
+            child: Text(
+              '$number',
+              maxLines: 1,
+              softWrap: false,
+              textScaler: scaler,
+              style: style,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -205,14 +236,14 @@ class _PlayingMark extends ConsumerWidget {
 /// The ♥ of a song row: filled for a favourite, toggles on press. Watches
 /// only its own answer.
 class SongFavoriteButton extends ConsumerWidget {
-  const SongFavoriteButton({super.key, required this.info});
+  const SongFavoriteButton({super.key, required this.trackId});
 
-  final TrackInfo info;
+  final TrackId trackId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final favorite = ref.watch(isFavoriteProvider(info.id));
+    final favorite = ref.watch(isFavoriteProvider(trackId));
     final scheme = Theme.of(context).colorScheme;
     return IconButton(
       tooltip: favorite ? l10n.libraryFavoriteRemove : l10n.libraryFavoriteAdd,
@@ -228,9 +259,9 @@ class SongFavoriteButton extends ConsumerWidget {
   Future<void> _toggle(WidgetRef ref, BuildContext context) async {
     final message = AppLocalizations.of(context).libraryFavoriteFailed;
     try {
-      await ref.read(favoritesControllerProvider).toggle(info.id);
+      await ref.read(favoritesControllerProvider).toggle(trackId);
     } on Object catch (e, s) {
-      _log.warning('toggling favorite of ${info.id} failed', e, s);
+      _log.warning('toggling favorite of $trackId failed', e, s);
       if (context.mounted) showAppSnackBar(context, message);
     }
   }

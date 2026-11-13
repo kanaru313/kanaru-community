@@ -1,18 +1,25 @@
+import 'dart:async';
 import 'dart:ui' show SemanticsAction, SemanticsFlag;
 
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/ui/browse/item_covers.dart';
 import 'package:kanaru/src/library/ui/detail/detail_header.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
+import 'package:kanaru/src/library/state/browse/song_list_providers.dart';
 import 'package:kanaru/src/library/ui/songs/song_tile.dart';
+import 'package:kanaru/src/media/domain/track_info.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
+import 'package:kanaru/src/playback/domain/now_playing.dart';
+import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../support/fake_playback_commands.dart';
+import '../browse/support/library_fixture.dart';
 import 'menus/menu_pump.dart';
 import 'support/detail_fixture.dart';
 import 'support/library_harness.dart';
@@ -21,16 +28,23 @@ import 'support/ui_harness.dart';
 Future<LibraryHarness> _pump(
   WidgetTester tester, {
   double width = 390,
+  double? height,
+  List<Override> overrides = const [],
   FakePlaybackCommands? playback,
+  Widget Function(Widget)? header,
+  Future<void> Function(LibraryHarness h)? extra,
 }) async {
   final h = await pumpLibrary(
     tester,
     initial: '/library/songs',
     width: width,
-    height: width > 1000 ? 800 : 844,
+    height: height ?? (width > 1000 ? 800 : 844),
     playback: playback,
+    header: header,
+    overrides: overrides,
   );
   await addAlbum(h, 'Blue', 'Zed', year: 2001);
+  await extra?.call(h);
   await addAlbum(h, 'Amber', 'Yan', year: 2010);
   await h.settle(tester);
   h.router.push(
@@ -271,4 +285,243 @@ void main() {
       await unmountApp(tester);
     });
   }
+
+  /// The badge of [card] (found by its key) that shows the text [n]; matches
+  /// nothing when the card has no badge or the badge shows another number.
+  Finder badgeOf(Finder card, String n) => find.ancestor(
+    of: find.descendant(of: card, matching: find.text(n)),
+    matching: find.byKey(songTileBadgeKey),
+  );
+
+  Finder coverOf(Finder card) =>
+      find.descendant(of: card, matching: find.byType(TrackCover));
+
+  testWidgets('badgeOf matches only the badge with the asked number', (
+    tester,
+  ) async {
+    await _pump(tester);
+    final card = find.byType(KMediaCard).first;
+    expect(badgeOf(card, '1'), findsOneWidget);
+    expect(badgeOf(card, '2'), findsNothing);
+    await unmountApp(tester);
+  });
+
+  testWidgets('each row shows its number as a badge in the cover corner', (
+    tester,
+  ) async {
+    await _pump(tester);
+    final cards = find.byType(KMediaCard);
+    expect(cards, findsNWidgets(3));
+    for (var n = 1; n <= 3; n++) {
+      final card = cards.at(n - 1);
+      expect(find.descendant(of: card, matching: find.text('$n')), findsOne);
+      final cover = tester.getRect(coverOf(card));
+      final badge = tester.getRect(badgeOf(card, '$n'));
+      expect(cover.contains(badge.topLeft), isTrue);
+      expect(badge.right, closeTo(cover.right - 4, 0.01));
+      expect(badge.bottom, closeTo(cover.bottom - 4, 0.01));
+      // Round for one digit.
+      expect(badge.width, closeTo(badge.height, 0.5));
+      // The cover sits at the row inset like every list.
+      expect(cover.left - tester.getTopLeft(card).dx, lessThan(20));
+    }
+    await unmountApp(tester);
+  });
+
+  testWidgets('the badge is hidden while the row is selected', (tester) async {
+    await _pump(tester);
+    final card = find.byType(KMediaCard).first;
+    expect(find.descendant(of: card, matching: find.text('1')), findsOne);
+    await tester.longPress(card);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.widget<KMediaCard>(card).selected, isTrue);
+    expect(find.descendant(of: card, matching: find.text('1')), findsNothing);
+    await unmountApp(tester);
+  });
+
+  testWidgets('the badge is above the playing overlay, equalizer centred', (
+    tester,
+  ) async {
+    final h = await _pump(tester);
+    final id = tester.widget<SongTile>(find.byType(SongTile).first).info.id;
+    h.setNowPlaying(NowPlaying(entryId: 1, trackId: id, playing: true));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    final card = find.byType(KMediaCard).first;
+    // Paint order: the badge comes after the overlay in the same Stack.
+    final stack = find
+        .ancestor(of: coverOf(card), matching: find.byType(Stack))
+        .first;
+    final children = tester.widget<Stack>(stack).children;
+    final overlay = children.indexWhere(
+      (w) => w is Positioned && w.left == 0 && w.right == 0,
+    );
+    final badge = children.indexWhere((w) => w.key == songTileBadgeKey);
+    expect(overlay, greaterThanOrEqualTo(0));
+    expect(badge, greaterThan(overlay));
+    expect(find.descendant(of: card, matching: find.text('1')), findsOne);
+    final cover = tester.getRect(coverOf(card));
+    expect(
+      tester.getCenter(find.byType(KEqualizerIcon)),
+      offsetMoreOrLessEquals(cover.center, epsilon: 0.5),
+    );
+    await unmountApp(tester);
+  });
+
+  testWidgets('text scale 2 clamps the badge font to 1.3, no overflow', (
+    tester,
+  ) async {
+    await _pump(tester, header: (page) => _scaled(2, page));
+    final text = tester.widget<Text>(find.text('1'));
+    expect(text.textScaler!.scale(10), closeTo(13, 0.001));
+    final card = find.byType(KMediaCard).first;
+    final cover = tester.getRect(coverOf(card));
+    expect(cover.contains(tester.getRect(badgeOf(card, '1')).topLeft), isTrue);
+    expect(tester.takeException(), isNull);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a 3-digit number grows the badge but stays inside the cover', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      header: (page) => _scaled(2, page),
+      extra: (h) => addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 'Blue/123.flac',
+        title: 'Blue big',
+        artists: ['Zed'],
+        album: 'Blue',
+        albumArtist: 'Zed',
+        year: 2001,
+        trackNo: 123,
+        durationMs: 60000,
+      ),
+    );
+    final card = find.ancestor(
+      of: find.text('Blue big'),
+      matching: find.byType(KMediaCard),
+    );
+    final cover = tester.getRect(coverOf(card));
+    final badge = tester.getRect(badgeOf(card, '123'));
+    expect(badge.width, greaterThan(badge.height));
+    expect(badge.left, greaterThanOrEqualTo(cover.left));
+    expect(badge.right, lessThanOrEqualTo(cover.right));
+    expect(badge.top, greaterThanOrEqualTo(cover.top));
+    expect(tester.takeException(), isNull);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a song without a track number has no badge', (tester) async {
+    await _pump(
+      tester,
+      extra: (h) => addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 'Blue/none.flac',
+        title: 'Blue none',
+        artists: ['Zed'],
+        album: 'Blue',
+        albumArtist: 'Zed',
+        year: 2001,
+        durationMs: 60000,
+      ),
+    );
+    final card = find.ancestor(
+      of: find.text('Blue none'),
+      matching: find.byType(KMediaCard),
+    );
+    expect(card, findsOneWidget);
+    expect(badgeOf(card, ''), findsNothing);
+    expect(tester.takeException(), isNull);
+    await unmountApp(tester);
+  });
+
+  testWidgets('track number 0 or below has no badge', (tester) async {
+    await _pump(
+      tester,
+      extra: (h) => addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 'Blue/zero.flac',
+        title: 'Blue zero',
+        artists: ['Zed'],
+        album: 'Blue',
+        albumArtist: 'Zed',
+        year: 2001,
+        trackNo: 0,
+        durationMs: 60000,
+      ),
+    );
+    final card = find.ancestor(
+      of: find.text('Blue zero'),
+      matching: find.byType(KMediaCard),
+    );
+    expect(card, findsOneWidget);
+    expect(badgeOf(card, '0'), findsNothing);
+    await unmountApp(tester);
+  });
+
+  testWidgets('the badge sits at the left-bottom in RTL', (tester) async {
+    await _pump(
+      tester,
+      header: (page) =>
+          Directionality(textDirection: TextDirection.rtl, child: page),
+    );
+    final card = find.byType(KMediaCard).first;
+    final cover = tester.getRect(coverOf(card));
+    final badge = tester.getRect(badgeOf(card, '1'));
+    expect(badge.left, closeTo(cover.left + 4, 0.01));
+    expect(badge.bottom, closeTo(cover.bottom - 4, 0.01));
+    await unmountApp(tester);
+  });
+
+  testWidgets('the track number is read once by screen readers', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await _pump(tester);
+    // Exactly one semantics node of the page reads the first row's number.
+    expect(find.semantics.byLabel(RegExp(r'(^|\n)1($|\n)')), findsOne);
+    handle.dispose();
+    await unmountApp(tester);
+  });
+
+  testWidgets('a loading row of the list has the loaded rows cover x', (
+    tester,
+  ) async {
+    // Loader that never answers: every row stays a skeleton.
+    await _pump(
+      tester,
+      overrides: [
+        trackRowLoaderProvider.overrideWithValue(
+          (ids) => Completer<List<TrackInfo>>().future,
+        ),
+      ],
+    );
+    final skeleton = find.descendant(
+      of: find.byType(KMediaCard),
+      matching: find.byType(KCover),
+    );
+    expect(skeleton, findsWidgets);
+    final loadingX = tester.getTopLeft(skeleton.first).dx;
+    await unmountApp(tester);
+
+    await _pump(tester);
+    final loaded = find.descendant(
+      of: find.byType(KMediaCard).first,
+      matching: find.byType(TrackCover),
+    );
+    expect(tester.getTopLeft(loaded).dx, closeTo(loadingX, 0.5));
+    await unmountApp(tester);
+  });
 }
+
+Widget _scaled(double scale, Widget page) => Builder(
+  builder: (context) => MediaQuery(
+    data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
+    child: page,
+  ),
+);

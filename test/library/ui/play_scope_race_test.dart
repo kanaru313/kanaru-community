@@ -91,7 +91,87 @@ Future<(FakePlaybackCommands, Map<String, Completer<List<TrackId>>>)> _pump(
   return (playback, reads);
 }
 
+/// Plays slowly then fails, so a test can remove the tile in between.
+class _FailingLater extends FakePlaybackCommands {
+  final Completer<void> release = Completer();
+
+  @override
+  Future<void> playTracks(
+    List<TrackId> tracks, {
+    int startIndex = 0,
+    bool shuffle = false,
+    required PlayContext context,
+  }) async {
+    await release.future;
+    throw StateError('boom');
+  }
+}
+
+class _OneTile extends ConsumerStatefulWidget {
+  const _OneTile();
+
+  @override
+  ConsumerState<_OneTile> createState() => _OneTileState();
+}
+
+class _OneTileState extends ConsumerState<_OneTile> {
+  bool shown = true;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      if (shown)
+        Builder(
+          builder: (context) => TextButton(
+            onPressed: () => playAll(ref, context, const [TrackId(1)], _ctx),
+            child: const Text('play'),
+          ),
+        ),
+      TextButton(
+        onPressed: () => setState(() => shown = false),
+        child: const Text('remove'),
+      ),
+    ],
+  );
+}
+
 void main() {
+  test('playIds with no ids plays nothing, shuffled or not', () async {
+    final playback = FakePlaybackCommands();
+    await playIds(playback, const [], _ctx, shuffle: true);
+    await playIds(playback, const [], _ctx);
+    expect(playback.calls, isEmpty);
+  });
+
+  testWidgets('a play that fails after its tile left still shows the toast', (
+    tester,
+  ) async {
+    final playback = _FailingLater();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [playbackCommandsProvider.overrideWithValue(playback)],
+        child: MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: _OneTile()),
+        ),
+      ),
+    );
+    await tester.tap(find.text('play'));
+    await tester.pump();
+    await tester.tap(find.text('remove'));
+    await tester.pump();
+    expect(find.text('play'), findsNothing);
+    playback.release.complete();
+    await tester.pump();
+    await tester.pump();
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a slow read for an older tile does not replace the newer play', (
     tester,
   ) async {
@@ -139,6 +219,75 @@ void main() {
     await tester.pump();
     expect(playback.calls, isEmpty);
     expect(find.byType(SnackBar), findsOneWidget);
+  });
+
+  testWidgets('a scope with no songs says there is nothing to play', (
+    tester,
+  ) async {
+    final (playback, reads) = await _pump(tester);
+    await tester.tap(find.text('A'));
+    await tester.pump();
+    reads['a']!.complete(const []);
+    await tester.pump();
+    await tester.pump();
+    expect(playback.calls, isEmpty);
+    expect(find.text('Nothing to play'), findsOneWidget);
+  });
+
+  testWidgets('play all and shuffle with no songs say nothing to play', (
+    tester,
+  ) async {
+    final playback = FakePlaybackCommands();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [playbackCommandsProvider.overrideWithValue(playback)],
+        child: MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Consumer(
+              builder: (context, ref, _) => Column(
+                children: [
+                  TextButton(
+                    onPressed: () => playAll(ref, context, const [], _ctx),
+                    child: const Text('all'),
+                  ),
+                  TextButton(
+                    onPressed: () => shuffleAll(ref, context, const [], _ctx),
+                    child: const Text('shuffle'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    for (final label in ['all', 'shuffle']) {
+      await tester.tap(find.text(label));
+      await tester.pump();
+      expect(find.text('Nothing to play'), findsOneWidget, reason: label);
+      ScaffoldMessenger.of(tester.element(find.text(label)))
+          .removeCurrentSnackBar();
+      await tester.pump(const Duration(seconds: 1));
+    }
+    expect(playback.calls, isEmpty);
+  });
+
+  testWidgets('a menu Play with no songs says nothing to play', (tester) async {
+    final (playback, _) = await _pump(tester);
+    final context = tester.element(find.text('B'));
+    final runner = MenuActionRunner(
+      ProviderScope.containerOf(context),
+      Navigator.of(context, rootNavigator: true).context,
+    );
+    await runner.run(const MenuAction.play([], shuffle: true, context: _ctx));
+    await tester.pump();
+    expect(find.text('Nothing to play'), findsOneWidget);
+    expect(playback.calls, isEmpty);
   });
 
   testWidgets('a menu Play started after a slow ▶ keeps its queue', (

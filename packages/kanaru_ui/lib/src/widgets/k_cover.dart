@@ -41,9 +41,10 @@ class KCoverPlaceholderColors {
   final Color ink;
 }
 
-/// Square (or round) cover art. Decodes at `size x devicePixelRatio`, fades in
-/// and falls back to a placeholder (colour picked from [placeholderSeed]) when
-/// [image] is null or fails to load. [errorFallback], when given, replaces the
+/// Square (or round) cover art. Decodes at `size x devicePixelRatio`, shows
+/// the loading box while decoding, fades the image in and falls back to a
+/// placeholder (colour picked from [placeholderSeed]) when [image] is null or
+/// fails to load. [errorFallback], when given, replaces the
 /// placeholder only for a load failure (for example a custom cover that no
 /// longer decodes falls back to the automatic cover).
 class KCover extends StatelessWidget {
@@ -56,7 +57,22 @@ class KCover extends StatelessWidget {
     this.circle = false,
     this.placeholderIcon,
     this.errorFallback,
-  });
+  }) : loading = false;
+
+  /// Skeleton for "not yet known which image this is": a plain
+  /// `surfaceContainerHigh` box of the same size and shape as the cover, no
+  /// icon, no shimmer. The seed placeholder (colour and icon) stays for "no
+  /// cover" or a failed image.
+  const KCover.loading({
+    super.key,
+    required this.size,
+    this.radius,
+    this.circle = false,
+  }) : image = null,
+       placeholderSeed = '',
+       placeholderIcon = null,
+       errorFallback = null,
+       loading = true;
 
   final ImageProvider? image;
   final double size;
@@ -68,8 +84,17 @@ class KCover extends StatelessWidget {
   /// Shown instead of the placeholder when [image] fails to load.
   final Widget? errorFallback;
 
+  /// Drawing the skeleton of [KCover.loading].
+  final bool loading;
+
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      final box = _LoadingBox(size: size);
+      return circle
+          ? ClipOval(child: box)
+          : ClipRRect(borderRadius: radius ?? KRadius.sm, child: box);
+    }
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final px = (size * dpr).ceil();
     final provider = image;
@@ -97,7 +122,9 @@ class KCover extends StatelessWidget {
               return Stack(
                 fit: StackFit.passthrough,
                 children: [
-                  placeholder,
+                  // While the image decodes: the loading box, not the seed
+                  // placeholder (that one means "no cover" / "failed").
+                  _LoadingBox(size: size),
                   AnimatedOpacity(
                     opacity: frame == null ? 0 : 1,
                     duration: KMotion.normal,
@@ -113,8 +140,27 @@ class KCover extends StatelessWidget {
   }
 }
 
+/// Plain `surfaceContainerHigh` box: "not yet known / still decoding".
+class _LoadingBox extends StatelessWidget {
+  const _LoadingBox({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+    ),
+    child: SizedBox.square(dimension: size),
+  );
+}
+
 class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.seed, required this.size, required this.icon});
+  const _Placeholder({
+    required this.seed,
+    required this.size,
+    required this.icon,
+  });
 
   final String seed;
   final double size;
@@ -122,14 +168,19 @@ class _Placeholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = KCoverPlaceholderColors.of(seed, Theme.of(context).brightness);
+    final colors = KCoverPlaceholderColors.of(
+      seed,
+      Theme.of(context).brightness,
+    );
     final fill = colors.fill;
     final ink = colors.ink;
     return DecoratedBox(
       decoration: BoxDecoration(color: fill),
       child: SizedBox.square(
         dimension: size,
-        child: Center(child: Icon(icon, size: size * 0.45, color: ink)),
+        child: Center(
+          child: Icon(icon, size: size * 0.45, color: ink),
+        ),
       ),
     );
   }

@@ -11,6 +11,7 @@ import '../browse/library_list_scaffold.dart';
 import '../menus/open_menu.dart';
 import 'folder_locations.dart';
 import 'folder_place.dart';
+import 'folder_play.dart';
 import 'folder_tile.dart';
 
 /// Moves the page to another level (a replace that keeps the entry level).
@@ -21,13 +22,13 @@ typedef FolderNavigator = void Function(FolderLocation to);
 const folderSongSort = SortSpec(SortCriterion.title);
 
 /// Rows of folders (and music folders) as a fixed-extent sliver with the
-/// page gutter.
+/// row gutter.
 Widget folderRowsSliver(
   BuildContext context, {
   required int count,
   required IndexedWidgetBuilder builder,
 }) => SliverPadding(
-  padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
+  padding: EdgeInsets.symmetric(horizontal: libraryRowGutter(context)),
   sliver: SliverFixedExtentList(
     itemExtent: KMediaCard.extentOf(MediaQuery.textScalerOf(context)),
     delegate: SliverChildBuilderDelegate(
@@ -42,6 +43,7 @@ Widget folderRowsSliver(
 /// merged chain) in place of this level.
 Widget levelFoldersSliver(
   BuildContext context,
+  WidgetRef ref,
   LevelPlace place,
   List<FolderRowItem> rows,
   FolderNavigator open,
@@ -59,6 +61,15 @@ Widget levelFoldersSliver(
         countLine: folderCounts(l10n, target),
         coverKey: row.chain.first.coverKey,
         seed: target.key,
+        onPlay: () => playFolder(
+          ref,
+          context,
+          folder: place.root.folder,
+          key: target.key,
+          // The folder's own name, as its page's Play sends (a merged chain
+          // shows "A › B" but plays as B).
+          name: target.name,
+        ),
         onMenu: ({bool viaKeyboard = false}) => openFolderMenu(
           context,
           folder: place.root.folder,
@@ -77,6 +88,7 @@ Widget levelFoldersSliver(
 /// One row per music folder (the top when there are several).
 Widget rootsSliver(
   BuildContext context,
+  WidgetRef ref,
   List<FolderRoot> roots,
   FolderNavigator open,
 ) {
@@ -92,6 +104,14 @@ Widget rootsSliver(
         dimLine: folderLocationLabel(l10n, root.folder, mobile: mobile),
         countLine: folderCounts(l10n, root.node),
         leading: RootIcon(volume: root.folder.volume),
+        onPlay: () => playFolder(
+          ref,
+          context,
+          folder: root.folder,
+          key: '',
+          name: root.node.name,
+        ),
+        playEnabled: root.node.deepSongs > 0,
         onMenu: ({bool viaKeyboard = false}) => openFolderMenu(
           context,
           folder: root.folder,
@@ -110,6 +130,7 @@ Widget rootsSliver(
 /// folders above it, its song count.
 Widget flatFoldersSliver(
   BuildContext context,
+  WidgetRef ref,
   List<FlatFolder> folders,
   FolderNavigator open,
 ) {
@@ -126,6 +147,14 @@ Widget flatFoldersSliver(
         countLine: l10n.librarySongCount(folder.songCount),
         coverKey: folder.node.directCoverKey,
         seed: folder.node.key,
+        onPlay: () => playFolder(
+          ref,
+          context,
+          folder: folder.root.folder,
+          key: folder.node.key,
+          name: folder.node.key.isEmpty ? folder.root.node.name : folder.name,
+          flat: true,
+        ),
         onMenu: ({bool viaKeyboard = false}) => openFolderMenu(
           context,
           folder: folder.root.folder,

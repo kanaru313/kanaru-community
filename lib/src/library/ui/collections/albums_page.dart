@@ -72,36 +72,42 @@ class _AlbumsBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final gutter = libraryGutter(context);
     final scaler = MediaQuery.textScalerOf(context);
-    return collectionBody(context, ref.watch(albumListProvider(_key(input))), (
-      albums,
-    ) {
-      final grid = input.view == CollectionView.grid;
-      return CustomScrollView(
-        slivers: [
-          if (grid)
-            KCollectionGrid(
-              itemCount: albums.length,
-              mobileMinTileWidth: 150,
-              desktopMinTileWidth: 160,
-              footerExtent: KGridCard.footerExtent(scaler),
-              padding: EdgeInsets.symmetric(horizontal: gutter),
-              itemBuilder: (context, i) => AlbumCard(album: albums[i]),
-            )
-          else
-            SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: gutter),
-              sliver: SliverFixedExtentList(
-                itemExtent: KMediaCard.extentOf(scaler),
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) => AlbumTile(album: albums[i]),
-                  childCount: albums.length,
-                  addAutomaticKeepAlives: false,
+    return collectionBody(
+      context,
+      ref.watch(albumListProvider(_key(input))),
+      (albums) {
+        final grid = input.view == CollectionView.grid;
+        return CustomScrollView(
+          slivers: [
+            if (grid)
+              KCollectionGrid(
+                itemCount: albums.length,
+                mobileMinTileWidth: 150,
+                desktopMinTileWidth: 160,
+                footerExtent: KGridCard.footerExtent(scaler),
+                padding: EdgeInsets.symmetric(horizontal: gutter),
+                itemBuilder: (context, i) => AlbumCard(album: albums[i]),
+              )
+            else
+              SliverPadding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: libraryRowGutter(context),
+                ),
+                sliver: SliverFixedExtentList(
+                  itemExtent: KMediaCard.extentOf(scaler),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => AlbumTile(album: albums[i]),
+                    childCount: albums.length,
+                    addAutomaticKeepAlives: false,
+                  ),
                 ),
               ),
-            ),
-          const SelectionInsetSliver(),
-        ],
-      );
-    });
+            const SelectionInsetSliver(),
+          ],
+        );
+      },
+      skeletonRows: input.view == CollectionView.list,
+      roundCover: false,
+    );
   }
 }

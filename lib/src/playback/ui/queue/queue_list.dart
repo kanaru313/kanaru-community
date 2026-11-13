@@ -29,13 +29,13 @@ class QueueList extends ConsumerWidget {
   const QueueList({
     super.key,
     required this.size,
-    this.trailing,
+    this.favorite,
     this.menu,
     this.onEmptied,
   });
 
   final QueueRowSize size;
-  final QueueRowTrailing? trailing;
+  final QueueRowFavorite? favorite;
   final QueueRowMenu? menu;
   final VoidCallback? onEmptied;
 
@@ -45,8 +45,9 @@ class QueueList extends ConsumerWidget {
     if (view == null) return const SizedBox.shrink();
     return _QueueListBody(
       view: view,
+      extent: KMediaCard.extentOf(MediaQuery.textScalerOf(context)),
       size: size,
-      trailing: trailing,
+      favorite: favorite,
       menu: menu,
       onEmptied: onEmptied,
     );
@@ -56,15 +57,19 @@ class QueueList extends ConsumerWidget {
 class _QueueListBody extends ConsumerStatefulWidget {
   const _QueueListBody({
     required this.view,
+    required this.extent,
     required this.size,
-    required this.trailing,
+    required this.favorite,
     required this.menu,
     required this.onEmptied,
   });
 
   final QueueView view;
+
+  /// Row height (`KMediaCard.extentOf` for the text scale in effect).
+  final double extent;
   final QueueRowSize size;
-  final QueueRowTrailing? trailing;
+  final QueueRowFavorite? favorite;
   final QueueRowMenu? menu;
   final VoidCallback? onEmptied;
 
@@ -76,7 +81,7 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
   late final ScrollController _scroll = QueueScrollController(
     initialScrollOffset: widget.view.current == null
         ? 0
-        : queueOffsetFor(widget.view.current!, widget.size.extent),
+        : queueOffsetFor(widget.view.current!, widget.extent),
   )..addListener(_loadWindow);
   final _locate = GlobalKey<QueueLocateButtonState>();
   int? _dragged;
@@ -90,7 +95,11 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
   @override
   void didUpdateWidget(_QueueListBody oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.view != widget.view) {
+    if (oldWidget.extent != widget.extent) {
+      // The rows changed height (text scale): the old offset points at other
+      // rows, so keep the current one in view.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _reanchor());
+    } else if (oldWidget.view != widget.view) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _loadWindow());
     }
   }
@@ -101,13 +110,26 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
     super.dispose();
   }
 
+  /// Scrolls to the current row (or the top) after the row height changed.
+  void _reanchor() {
+    if (!mounted) return;
+    if (_scroll.hasClients) {
+      final cur = widget.view.current;
+      final max = _scroll.position.maxScrollExtent;
+      _scroll.jumpTo(
+        cur == null ? 0 : queueOffsetFor(cur, widget.extent).clamp(0, max),
+      );
+    }
+    _loadWindow();
+  }
+
   /// Asks for the infos of the rows in view plus a margin: O(1) from the
   /// scroll offset because every row has the same height.
   void _loadWindow() {
     if (!mounted) return;
     final items = widget.view.items;
     if (items.isEmpty) return;
-    final extent = widget.size.extent;
+    final extent = widget.extent;
     final pos = _scroll.hasClients ? _scroll.position : null;
     final offset = pos?.pixels ?? _scroll.initialScrollOffset;
     final viewport = pos?.viewportDimension ?? 800;
@@ -154,7 +176,7 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
         children: [
           ReorderableListView.builder(
             scrollController: _scroll,
-            itemExtent: size.extent,
+            itemExtent: widget.extent,
             buildDefaultDragHandles: false,
             padding: const EdgeInsets.only(bottom: queueListBottomPadding),
             itemCount: view.items.length,
@@ -183,7 +205,7 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
                       : i == cur
                       ? QueueRowRole.current
                       : QueueRowRole.played,
-                  trailing: widget.trailing,
+                  favorite: widget.favorite,
                   menu: widget.menu,
                   onRemove: remove,
                 ),
@@ -197,7 +219,7 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
               key: _locate,
               controller: _scroll,
               currentIndex: view.current,
-              extent: size.extent,
+              extent: widget.extent,
             ),
           ),
         ],

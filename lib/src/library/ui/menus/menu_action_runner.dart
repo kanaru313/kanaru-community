@@ -117,9 +117,14 @@ class MenuActionRunner {
           selection.remove(id);
         }
       case PlayAction(:final ids, :final shuffle, :final context):
-        if (ids.isEmpty) return;
+        if (ids.isEmpty) {
+          if (_context.mounted) {
+            showAppSnackBar(_context, _l10n.libraryNothingToPlay);
+          }
+          return;
+        }
         // A newer request than any slow ▶ read still pending.
-        beginPlayRequest();
+        _container.read(playRequestsProvider.notifier).begin();
         await _guard('starting playback', _l10n.libraryPlayFailed, () {
           return playIds(
             _container.read(playbackCommandsProvider),

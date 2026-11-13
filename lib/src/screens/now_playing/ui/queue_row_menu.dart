@@ -46,6 +46,7 @@ void openQueueRowMenu(
   required QueueHost host,
   VoidCallback? beforeNavigate,
   VoidCallback? onEmptied,
+  bool viaKeyboard = false,
 }) {
   final l10n = AppLocalizations.of(context);
   final container = ProviderScope.containerOf(context);
@@ -113,18 +114,44 @@ void openQueueRowMenu(
     showKSheet<void>(
       context,
       useRootNavigator: true,
-      builder: (sheet) => _SheetMenu(groups: groups, title: info?.title),
+      builder: (sheet) => _SheetMenu(
+        groups: groups,
+        title: info?.title,
+        viaKeyboard: viaKeyboard,
+      ),
     );
   } else {
-    _showPopup(context, at, groups);
+    _showPopup(context, at, groups, viaKeyboard: viaKeyboard);
   }
 }
 
-void _showPopup(BuildContext context, Offset? at, List<List<_Entry>> groups) {
+/// The entry a keyboard-opened menu focuses: the first enabled one (a
+/// pointer-opened menu shows no ring until an arrow key is pressed).
+_Entry? _firstEnabled(List<List<_Entry>> groups, bool viaKeyboard) {
+  if (!viaKeyboard) return null;
+  for (final g in groups) {
+    for (final e in g) {
+      if (e.enabled) return e;
+    }
+  }
+  return null;
+}
+
+/// Wraps a popup item's content so it autofocuses (see [_firstEnabled]).
+Widget _autofocus(bool on, Widget child) =>
+    on ? Focus(autofocus: true, skipTraversal: true, child: child) : child;
+
+void _showPopup(
+  BuildContext context,
+  Offset? at,
+  List<List<_Entry>> groups, {
+  required bool viaKeyboard,
+}) {
   final box = context.findRenderObject()! as RenderBox;
   final point = at ?? box.localToGlobal(box.size.center(Offset.zero));
   final scheme = Theme.of(context).colorScheme;
   final soon = AppLocalizations.of(context).appComingSoon;
+  final focused = _firstEnabled(groups, viaKeyboard);
   final items = <PopupMenuEntry<void>>[];
   for (var g = 0; g < groups.length; g++) {
     if (g > 0) items.add(const PopupMenuDivider());
@@ -136,16 +163,21 @@ void _showPopup(BuildContext context, Offset? at, List<List<_Entry>> groups) {
           // picker pushed from here lands on the page, not on the menu.
           onTap: e.onTap,
           enabled: e.enabled,
-          child: Row(
-            spacing: KSpace.x3,
-            children: [
-              Icon(e.icon, size: 20, color: color),
-              Expanded(
-                child: Text(e.label, style: TextStyle(color: color)),
-              ),
-              if (e.soon) Text(soon),
-              if (e.hint != null) Text(e.hint!),
-            ],
+          // The Focus sits inside the item's InkWell, so Enter still reaches
+          // the item's activate action from it.
+          child: _autofocus(
+            identical(e, focused),
+            Row(
+              spacing: KSpace.x3,
+              children: [
+                Icon(e.icon, size: 20, color: color),
+                Expanded(
+                  child: Text(e.label, style: TextStyle(color: color)),
+                ),
+                if (e.soon) Text(soon),
+                if (e.hint != null) Text(e.hint!),
+              ],
+            ),
           ),
         ),
       );
@@ -165,15 +197,21 @@ void _showPopup(BuildContext context, Offset? at, List<List<_Entry>> groups) {
 }
 
 class _SheetMenu extends StatelessWidget {
-  const _SheetMenu({required this.groups, required this.title});
+  const _SheetMenu({
+    required this.groups,
+    required this.title,
+    required this.viaKeyboard,
+  });
 
   final List<List<_Entry>> groups;
   final String? title;
+  final bool viaKeyboard;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final soon = AppLocalizations.of(context).appComingSoon;
+    final focused = _firstEnabled(groups, viaKeyboard);
     return ListView(
       shrinkWrap: true,
       padding: const EdgeInsets.all(KSpace.x4),
@@ -193,6 +231,8 @@ class _SheetMenu extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: KSpace.x1),
               child: KListRow(
+                // The row's own InkWell takes the focus, so Enter activates.
+                autofocus: identical(e, focused),
                 enabled: e.enabled,
                 leading: Icon(e.icon, color: e.danger ? scheme.error : null),
                 title: Text(
