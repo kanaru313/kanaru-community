@@ -54,6 +54,8 @@ class UiHost {
       await h.settle();
     });
     await tester.pump();
+    // A provider stream delivers after the first frame; its rebuild needs one more.
+    await tester.pump();
   }
 }
 
