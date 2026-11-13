@@ -184,7 +184,11 @@ rebase conflict, take either side and run the two commands again.
   each. Pin exactly, unless the comment there says why not.
 - Vendored cargokit local patch (`rust_builder/cargokit/`, otherwise upstream
   code). `build_tool/lib/src/android_environment.dart` `buildEnvironment()` sets
-  `CLANG_PATH` (the NDK `clang`) only. `--sysroot`/`--target` via
+  `CLANG_PATH` (the NDK `clang`), and `LIBCLANG_PATH` to the NDK's libclang
+  (`<prebuilt>/lib`, `<prebuilt>/bin` on Windows) when the environment does not
+  set it already, so Android builds outside the Nix dev shell (Android Studio,
+  a contributor's machine, the Pro build) need no setup; the Nix shell's own
+  `LIBCLANG_PATH` wins when present. `--sysroot`/`--target` via
   `BINDGEN_EXTRA_CLANG_ARGS_<target>` were tested unnecessary: the generated
   bindings are byte-identical on arm64-v8a, armeabi-v7a and x86_64 without them,
   because the NDK clang finds its sysroot and bindgen passes the target. Why:
@@ -194,12 +198,8 @@ rebase conflict, take either side and run the two commands again.
   NDK clang with its sysroot avoids that. The lines sit between the marker
   comments `// kanaru-local-patch: android bindgen env (see docs/code-standards.md)`
   and `// kanaru-local-patch end`; the Rust gate `tool/check_rust` fails when
-  `android_environment.dart` lacks the first marker comment or the `'CLANG_PATH'`
-  entry. A re-vendor of cargokit must re-apply the patch. Android builds outside
-  the Nix dev shell (Android Studio, the Pro build) also need libclang for
-  bindgen: set `LIBCLANG_PATH` (the NDK ships `libclang.so` under
-  `$ANDROID_HOME/ndk/<version>/toolchains/llvm/prebuilt/<host>/lib`, e.g.
-  `~/Android/Sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/lib`).
+  `android_environment.dart` lacks the first marker comment, the `'CLANG_PATH'`
+  or the `'LIBCLANG_PATH'` entry. A re-vendor of cargokit must re-apply the patch.
 - Library code does not `unwrap` (lint); tests may.
 - `cargo clippy --all-targets -- -D warnings` must pass.
 

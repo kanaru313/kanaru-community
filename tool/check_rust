@@ -14,7 +14,7 @@ if ! grep -qF '// kanaru-local-patch: android bindgen env (see docs/code-standar
   echo "cargokit Android bindgen patch missing in $ANDROID_ENV; re-apply it (see docs/code-standards.md)" >&2
   exit 1
 fi
-if ! grep -qF "'CLANG_PATH'" "$ANDROID_ENV"; then
+if ! grep -qF "'CLANG_PATH'" "$ANDROID_ENV" || ! grep -qF "'LIBCLANG_PATH'" "$ANDROID_ENV"; then
   echo "cargokit Android bindgen patch missing in $ANDROID_ENV; re-apply it (see docs/code-standards.md)" >&2
   exit 1
 fi

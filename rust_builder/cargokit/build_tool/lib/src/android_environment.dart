@@ -152,6 +152,22 @@ class AndroidEnvironment {
     // glibc include dirs and fails with gnu/stubs-32.h. The NDK clang finds its
     // own sysroot and bindgen passes the target, so nothing else is needed.
     final clangPathValue = path.join(toolchainPath, 'clang$exe');
+    // bindgen also loads libclang. Builds outside the Nix dev shell (Android
+    // Studio, a contributor's machine) often have none, so point it at the one
+    // the NDK ships, unless the environment already sets LIBCLANG_PATH.
+    final libClangEnv = <String, String>{};
+    final presetLibClang = Platform.environment['LIBCLANG_PATH'] ?? '';
+    if (presetLibClang.isEmpty) {
+      final libClangDir = Platform.isWindows
+          ? toolchainPath
+          : path.join(path.dirname(toolchainPath), 'lib');
+      final libClangName = Platform.isWindows
+          ? 'libclang.dll'
+          : (Platform.isMacOS ? 'libclang.dylib' : 'libclang.so');
+      if (File(path.join(libClangDir, libClangName)).existsSync()) {
+        libClangEnv['LIBCLANG_PATH'] = libClangDir;
+      }
+    }
     // kanaru-local-patch end
 
     // Make sure that run_build_tool is working properly even initially launched directly
@@ -170,6 +186,7 @@ class AndroidEnvironment {
       linkerKey: selfPath,
       // kanaru-local-patch: android bindgen env (see docs/code-standards.md)
       'CLANG_PATH': clangPathValue,
+      ...libClangEnv,
       // kanaru-local-patch end
       // Recognized by main() so we know when we're acting as a wrapper
       '_CARGOKIT_NDK_LINK_TARGET': targetArg,
