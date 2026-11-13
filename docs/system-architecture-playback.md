@@ -614,7 +614,7 @@ Rules:
 
 The queue content is shared by the mobile sheet and the desktop right panel. Widgets live in
 `playback/ui/queue/` (no library imports); the row menu, the ♥ and navigation to the library live in
-`screens/now_playing/ui/` (`queue_row_menu.dart`, `track_navigation.dart`; the ♥ is the library's `SongFavoriteButton`) and are handed
+`screens/now_playing/ui/` (`queue_row_menu.dart`, `track_navigation.dart`; the ♥ is the library's `SongFavoriteButton`, a `KRowIconAction`) and are handed
 to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). `QueuePanel(host: sheet | panel)` composes them. On the panel the shell draws the header ("Queue" and ✕); `QueuePanel` adds the line under it: counts left (`N tracks · time left`; the tooltip has the playing position, and the whole line first when the panel cut it short; 40 dp action buttons with 8 dp between them, about 164 dp for the line), Shuffle, Add tracks (soon), Clean up, Save as playlist (soon) | ⋮ right, no footer.
 
 - **List** (`queue_list.dart`): one `ReorderableListView.builder`, fixed row extent (`KMediaCard.extentOf` for the text scale in effect, the same height as a library song row; `QueueRowSize` picks the handle size, 48 dp mobile and 40 dp desktop, long press selects on both shells when the host gives a selection hook (without one: menu on mobile, nothing on desktop), and Delete on desktop), keys by
@@ -623,7 +623,7 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). 
   start offset inside the content (a short queue starts at the top). On open the current row is the second visible. When the text scale changes the extent changes and the list re-anchors to the current row.
 - **Rows** (`queue_row.dart`): a flat `KMediaCard` on both shells (full width, no radius): 56 dp cover (radius 10),
   title / artists (`trackArtistLine`) / `album • year` (`trackAlbumLine`, both in `media/domain/track_lines.dart`),
-  duration over the host's ♥ (`QueueRowFavorite`, null = none), then the drag handle and a ⋮ (`KMoreButton`, always
+  duration over the host's ♥ (`QueueRowFavorite`, null = none), then the drag handle and a ⋮ (`KMoreButton` on the light `KRowIconAction`, always
   visible). The handle is the card's `accessory`, right before ⋮, on both shells (cursor grab on desktop); it is a
   `ReorderableDragStartListener` that swallows taps and has no long-press of its own. Current = `primaryContainer` fill
   (icons take the card ink) plus `KEqualizerIcon` over the cover under a scrim (pause glyph when paused), announced as

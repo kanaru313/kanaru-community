@@ -1598,6 +1598,12 @@ abstract class AppLocalizations {
   /// **'Could not change favorites'**
   String get libraryFavoriteFailed;
 
+  /// No description provided for @libraryFavoriteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get libraryFavoriteLabel;
+
   /// No description provided for @libraryDurationMinutes.
   ///
   /// In en, this message translates to:

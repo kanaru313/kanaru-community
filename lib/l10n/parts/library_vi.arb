@@ -149,6 +149,7 @@
   "libraryFavoriteAdd": "Thêm vào Yêu thích",
   "libraryFavoriteRemove": "Bỏ khỏi Yêu thích",
   "libraryFavoriteFailed": "Không đổi được Yêu thích",
+  "libraryFavoriteLabel": "Yêu thích",
   "libraryDurationMinutes": "{minutes} phút",
   "@libraryDurationMinutes": {
     "placeholders": {

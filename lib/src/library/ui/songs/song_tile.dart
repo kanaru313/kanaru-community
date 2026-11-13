@@ -273,35 +273,64 @@ class _PlayingMark extends ConsumerWidget {
 }
 
 /// The ♥ of a song row: filled for a favourite, toggles on press. Watches
-/// only its own answer.
-class SongFavoriteButton extends ConsumerWidget {
+/// only its own answer. A press while a write runs is ignored.
+class SongFavoriteButton extends ConsumerStatefulWidget {
   const SongFavoriteButton({super.key, required this.trackId});
 
   final TrackId trackId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SongFavoriteButton> createState() => _SongFavoriteButtonState();
+}
+
+class _SongFavoriteButtonState extends ConsumerState<SongFavoriteButton> {
+  bool _writing = false;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final favorite = ref.watch(isFavoriteProvider(trackId));
-    final scheme = Theme.of(context).colorScheme;
-    return IconButton(
+    final favorite = ref.watch(isFavoriteProvider(widget.trackId));
+    return KRowIconAction(
       tooltip: favorite ? l10n.libraryFavoriteRemove : l10n.libraryFavoriteAdd,
-      isSelected: favorite,
-      onPressed: () => _toggle(ref, context),
-      iconSize: 20,
-      // Default 48 dp tap target; the card lets this slot reach into the row.
-      icon: const Icon(KIcons.heart),
-      selectedIcon: Icon(KIcons.heartFilled, color: scheme.primary),
+      semanticLabel: l10n.libraryFavoriteLabel,
+      selected: favorite,
+      onPressed: _toggle,
+      icon: KIcons.heart,
+      selectedIcon: KIcons.heartFilled,
+      // Stays primary on a playing or selected row too.
+      selectedColor: Theme.of(context).colorScheme.primary,
     );
   }
 
-  Future<void> _toggle(WidgetRef ref, BuildContext context) async {
+  Future<void> _toggle() async {
+    if (_writing) return;
+    // Taken before the await: the failure is shown even if the row was
+    // rebuilt or removed while the write ran.
+    final messenger = ScaffoldMessenger.maybeOf(context);
     final message = AppLocalizations.of(context).libraryFavoriteFailed;
+    final controller = ref.read(favoritesControllerProvider);
+    final id = widget.trackId;
+    _writing = true;
     try {
-      await ref.read(favoritesControllerProvider).toggle(trackId);
+      await controller.toggle(id);
     } on Object catch (e, s) {
-      _log.warning('toggling favorite of $trackId failed', e, s);
-      if (context.mounted) showAppSnackBar(context, message);
+      _log.warning('toggling favorite of $id failed', e, s);
+      // Same snack bar as showAppSnackBar, through the captured messenger
+      // (that helper needs a live context).
+      // A messenger whose page was popped during the write is gone: skip.
+      if (messenger != null && messenger.mounted) {
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(message),
+              persist: false,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+      }
+    } finally {
+      _writing = false;
     }
   }
 }

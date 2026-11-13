@@ -909,6 +909,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get libraryFavoriteFailed => 'Không đổi được Yêu thích';
 
   @override
+  String get libraryFavoriteLabel => 'Yêu thích';
+
+  @override
   String libraryDurationMinutes(int minutes) {
     return '$minutes phút';
   }

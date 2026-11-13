@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../icons/k_icons.dart';
+import 'k_row_icon_action.dart';
 
 /// Tells a button's `onPressed` whether the button was activated with the
 /// keyboard (Enter, Space): [builder] gets a function that answers it, to call
@@ -62,10 +63,11 @@ class KMoreButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ViaKeyboardTracker(
-    builder: (context, viaKeyboard) => IconButton(
+    builder: (context, viaKeyboard) => KRowIconAction(
       tooltip: tooltip,
       onPressed: () => onPressed(viaKeyboard: viaKeyboard()),
-      icon: const Icon(KIcons.moreVert),
+      icon: KIcons.moreVert,
+      iconSize: 24,
     ),
   );
 }

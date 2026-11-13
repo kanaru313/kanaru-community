@@ -383,53 +383,108 @@ void main() {
       );
     });
 
-    testWidgets('a tinted card colours icon buttons with its own ink', (
+    Color? actionIconColor(WidgetTester tester) => tester
+        .widget<Icon>(
+          find.descendant(
+            of: find.byType(KRowIconAction),
+            matching: find.byType(Icon),
+          ),
+        )
+        .color;
+
+    Widget actionCard({
+      bool current = false,
+      bool selected = false,
+      bool inRow = true,
+    }) {
+      final action = KRowIconAction(
+        icon: KIcons.moreVert,
+        tooltip: 'More',
+        onPressed: () {},
+      );
+      return Align(
+        alignment: Alignment.topCenter,
+        child: inRow
+            ? KMediaCard(
+                title: 'T',
+                current: current,
+                selected: selected,
+                trailing: action,
+                accessory: const Icon(KIcons.heart),
+              )
+            : action,
+      );
+    }
+
+    testWidgets('a tinted card colours its row actions with its own ink', (
       tester,
     ) async {
       useWindow(tester, const Size(400, 800));
       final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
-      await tester.pumpWidget(
-        host(
-          Align(
-            alignment: Alignment.topCenter,
-            child: KMediaCard(
-              title: 'T',
-              current: true,
-              trailing: IconButton(
-                onPressed: () {},
-                icon: const Icon(KIcons.moreVert),
-              ),
-              accessory: const Icon(KIcons.heart),
-            ),
-          ),
-        ),
-      );
+      await tester.pumpWidget(host(actionCard(current: true)));
       final soft = scheme.onPrimaryContainer.withValues(alpha: 0.8);
-      final button = tester.widget<IconButton>(find.byType(IconButton));
-      final theme = IconButtonTheme.of(tester.element(find.byWidget(button)));
-      expect(theme.style?.foregroundColor?.resolve({}), soft);
+      expect(actionIconColor(tester), soft);
       expect(
         IconTheme.of(tester.element(find.byIcon(KIcons.heart))).color,
         soft,
       );
     });
 
-    testWidgets('the play button keeps its own colours in a tinted card', (
+    testWidgets('an untinted row gives its actions onSurfaceVariant', (
       tester,
     ) async {
       useWindow(tester, const Size(400, 800));
+      final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
+      await tester.pumpWidget(host(actionCard()));
+      expect(actionIconColor(tester), scheme.onSurfaceVariant);
+    });
+
+    testWidgets('an action outside a row ignores a plain IconTheme', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
       await tester.pumpWidget(
         host(
-          Align(
-            alignment: Alignment.topCenter,
-            child: KMediaCard(title: 'T', current: true, onAction: () {}),
+          IconTheme(
+            data: const IconThemeData(color: Colors.red),
+            child: actionCard(inRow: false),
           ),
         ),
       );
-      final theme = IconButtonTheme.of(
-        tester.element(find.byIcon(KIcons.play)),
+      expect(actionIconColor(tester), scheme.onSurfaceVariant);
+    });
+
+    testWidgets('the play button keeps the ambient style in a tinted card', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      final ambient = IconButtonThemeData(
+        style: IconButton.styleFrom(foregroundColor: Colors.red),
       );
-      expect(theme.style?.foregroundColor, isNull);
+      Future<IconButtonThemeData> playTheme(bool current) async {
+        await tester.pumpWidget(
+          host(
+            IconButtonTheme(
+              data: ambient,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: KMediaCard(
+                  title: 'T',
+                  current: current,
+                  onAction: () {},
+                ),
+              ),
+            ),
+          ),
+        );
+        return IconButtonTheme.of(tester.element(find.byIcon(KIcons.play)));
+      }
+
+      final plain = await playTheme(false);
+      final tinted = await playTheme(true);
+      expect(tinted, same(plain));
+      expect(tinted, same(ambient));
     });
 
     testWidgets('an untinted card leaves icon buttons alone', (tester) async {
@@ -457,81 +512,6 @@ void main() {
         tester.element(find.byIcon(KIcons.moreVert)),
       );
       expect(theme.style?.foregroundColor?.resolve({}), Colors.red);
-    });
-
-    testWidgets('the card tint wins over an inherited foreground', (
-      tester,
-    ) async {
-      useWindow(tester, const Size(400, 800));
-      final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
-      await tester.pumpWidget(
-        host(
-          IconButtonTheme(
-            data: IconButtonThemeData(
-              style: IconButton.styleFrom(
-                foregroundColor: Colors.red,
-                visualDensity: VisualDensity.compact,
-              ).copyWith(iconColor: const WidgetStatePropertyAll(Colors.red)),
-            ),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: KMediaCard(
-                title: 'T',
-                current: true,
-                trailing: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(KIcons.moreVert),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-      final theme = IconButtonTheme.of(
-        tester.element(find.byIcon(KIcons.moreVert)),
-      );
-      expect(theme.style?.foregroundColor?.resolve({}), isNot(Colors.red));
-      expect(
-        theme.style?.foregroundColor?.resolve({}),
-        scheme.onPrimaryContainer.withValues(alpha: 0.8),
-      );
-      expect(theme.style?.iconColor?.resolve({}), isNot(Colors.red));
-      expect(
-        theme.style?.iconColor?.resolve({}),
-        scheme.onPrimaryContainer.withValues(alpha: 0.8),
-      );
-      expect(theme.style?.visualDensity, VisualDensity.compact);
-    });
-
-    testWidgets('a tinted card keeps the inherited icon button style', (
-      tester,
-    ) async {
-      useWindow(tester, const Size(400, 800));
-      await tester.pumpWidget(
-        host(
-          IconButtonTheme(
-            data: IconButtonThemeData(
-              style: IconButton.styleFrom(visualDensity: VisualDensity.compact),
-            ),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: KMediaCard(
-                title: 'T',
-                selected: true,
-                trailing: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(KIcons.moreVert),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-      final theme = IconButtonTheme.of(
-        tester.element(find.byIcon(KIcons.moreVert)),
-      );
-      expect(theme.style?.visualDensity, VisualDensity.compact);
-      expect(theme.style?.foregroundColor, isNotNull);
     });
   });
 

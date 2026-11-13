@@ -234,14 +234,10 @@ void main() {
         matching: find.byIcon(KIcons.moreVert),
       );
       expect(_iconColor(tester, handle), soft);
-      final button = tester.widget<IconButton>(
-        find.ancestor(of: more, matching: find.byType(IconButton)).first,
+      final button = tester.widget<KRowIconAction>(
+        find.ancestor(of: more, matching: find.byType(KRowIconAction)).first,
       );
-      expect(
-        IconButtonTheme.of(tester.element(more)).style?.foregroundColor
-            ?.resolve({}),
-        soft,
-      );
+      expect(tester.widget<Icon>(more).color, soft);
       expect(button.onPressed, isNotNull);
     });
 

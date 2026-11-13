@@ -48,6 +48,12 @@ Finder _placeholders() => find.byWidgetPredicate(
   (w) => w.runtimeType.toString() == 'SongRowPlaceholder',
 );
 
+/// The row ♥ by its tooltip text: it names itself to screen readers with its
+/// own label, so `find.byTooltip` (which reads the semantic tooltip) misses it.
+Finder _heart(String tooltip) => find.byWidgetPredicate(
+  (w) => w is KRowIconAction && w.tooltip == tooltip,
+);
+
 void main() {
   swipeTests();
   testWidgets('lists the songs by title with their count and plays a tap', (
@@ -191,13 +197,13 @@ void main() {
     final h = await pumpLibrary(tester, initial: '/library/songs');
     final ids = await _addSongs(h, ['Alpha', 'Bravo']);
     await h.settle(tester);
-    expect(find.byTooltip('Remove from favorites'), findsNothing);
-    await tester.tap(find.byTooltip('Add to favorites').first);
+    expect(_heart('Remove from favorites'), findsNothing);
+    await tester.tap(_heart('Add to favorites').first);
     await h.settle(tester, rounds: 1);
-    expect(find.byTooltip('Remove from favorites'), findsOneWidget);
+    expect(_heart('Remove from favorites'), findsOneWidget);
     final favorites = h.container.read(favoriteTrackIdsProvider).value;
     expect(favorites, {TrackId(ids[0])});
-    await tester.tap(find.byTooltip('Remove from favorites'));
+    await tester.tap(_heart('Remove from favorites'));
     await h.settle(tester, rounds: 1);
     expect(h.container.read(favoriteTrackIdsProvider).value, isEmpty);
     await unmountApp(tester);

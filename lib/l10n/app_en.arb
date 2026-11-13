@@ -585,6 +585,7 @@
   "libraryFavoriteAdd": "Add to favorites",
   "libraryFavoriteRemove": "Remove from favorites",
   "libraryFavoriteFailed": "Could not change favorites",
+  "libraryFavoriteLabel": "Favorite",
   "libraryDurationMinutes": "{minutes} min",
   "@libraryDurationMinutes": {
     "placeholders": {

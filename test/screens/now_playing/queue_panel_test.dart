@@ -21,12 +21,18 @@ class _FailingFavorites implements FavoritesController {
   Future<void> toggle(TrackId track) async => throw StateError('write failed');
 }
 
+/// The row ♥ by its tooltip text: it names itself to screen readers with its
+/// own label, so `find.byTooltip` (which reads the semantic tooltip) misses it.
+Finder _heart(String tooltip) => find.byWidgetPredicate(
+  (w) => w is KRowIconAction && w.tooltip == tooltip,
+);
+
 Future<void> _toggleHeart(WidgetTester tester, UiHost host) async {
-  expect(find.byTooltip('Remove from favorites'), findsNothing);
-  await host.tap(tester, find.byTooltip('Add to favorites').first);
-  expect(find.byTooltip('Remove from favorites'), findsOneWidget);
-  await host.tap(tester, find.byTooltip('Remove from favorites'));
-  expect(find.byTooltip('Remove from favorites'), findsNothing);
+  expect(_heart('Remove from favorites'), findsNothing);
+  await host.tap(tester, _heart('Add to favorites').first);
+  expect(_heart('Remove from favorites'), findsOneWidget);
+  await host.tap(tester, _heart('Remove from favorites'));
+  expect(_heart('Remove from favorites'), findsNothing);
 }
 
 Future<void> _failingToggle(
@@ -42,7 +48,7 @@ Future<void> _failingToggle(
       favoritesControllerProvider.overrideWithValue(_FailingFavorites()),
     ],
   );
-  await host.tap(tester, find.byTooltip('Add to favorites').first);
+  await host.tap(tester, _heart('Add to favorites').first);
   await tester.pump(const Duration(milliseconds: 500));
   expect(find.text('Could not change favorites'), findsOneWidget);
 }

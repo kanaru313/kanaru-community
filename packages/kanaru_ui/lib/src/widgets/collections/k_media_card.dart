@@ -10,6 +10,7 @@ import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_cover.dart';
 import '../k_gap.dart';
+import '../k_row_icon_action.dart';
 import 'k_media_card_right_column.dart';
 import 'k_media_card_text.dart';
 
@@ -172,7 +173,6 @@ class _KMediaCardState extends State<KMediaCard> {
     final flat =
         widget.style == KMediaCardStyle.flat ||
         (widget.style == KMediaCardStyle.auto && mobile);
-    final tinted = widget.current || widget.selected;
     final background = widget.current
         ? scheme.primaryContainer
         : widget.selected
@@ -188,10 +188,6 @@ class _KMediaCardState extends State<KMediaCard> {
     final soft = widget.current || widget.selected
         ? ink.withValues(alpha: 0.8)
         : scheme.onSurfaceVariant;
-
-    // Inherited icon-button theme, restored for the play button and merged
-    // into the tinted style so a caller's density or size still applies.
-    final ambientButtons = IconButtonTheme.of(context);
     // A loading card without a cover still draws a cover-sized block.
     final leading =
         widget.leading ??
@@ -267,15 +263,10 @@ class _KMediaCardState extends State<KMediaCard> {
             const KGap(KSpace.x2),
             _Revealed(
               visible: mobile || _engaged,
-              // Keeps its own colours inside a tinted card.
-              child: _withButtons(
-                tinted,
-                ambientButtons,
-                IconButton.filledTonal(
-                  tooltip: widget.actionLabel,
-                  onPressed: widget.actionEnabled ? widget.onAction : null,
-                  icon: Icon(widget.actionIcon),
-                ),
+              child: IconButton.filledTonal(
+                tooltip: widget.actionLabel,
+                onPressed: widget.actionEnabled ? widget.onAction : null,
+                icon: Icon(widget.actionIcon),
               ),
             ),
           ],
@@ -349,21 +340,12 @@ class _KMediaCardState extends State<KMediaCard> {
                       style: TextStyle(color: ink),
                       child: IconTheme.merge(
                         data: IconThemeData(color: soft),
-                        // M3 IconButton ignores IconTheme: colour it here so icons
-                        // contrast with the tint.
-                        child: _withButtons(
-                          tinted,
-                          IconButtonThemeData(
-                            // ButtonStyle.merge keeps the receiver's values: the card
-                            // colour wins over an inherited foreground and the other
-                            // inherited properties stay.
-                            style: IconButton.styleFrom(foregroundColor: soft)
-                                .copyWith(
-                                  iconColor: WidgetStatePropertyAll(soft),
-                                )
-                                .merge(ambientButtons.style),
-                          ),
-                          InkWell(
+                        // Row actions (KRowIconAction) take their colour from
+                        // this marker, not from the IconTheme, so one outside
+                        // a row keeps its own.
+                        child: KRowIconColor(
+                          color: soft,
+                          child: InkWell(
                             onTap: widget.onTap,
                             onLongPress: widget.onLongPress,
                             child: content,
@@ -381,11 +363,6 @@ class _KMediaCardState extends State<KMediaCard> {
     );
   }
 }
-
-/// Wraps [child] in [data] only when [apply]; otherwise the inherited
-/// `IconButtonTheme` stays untouched.
-Widget _withButtons(bool apply, IconButtonThemeData data, Widget child) =>
-    apply ? IconButtonTheme(data: data, child: child) : child;
 
 /// Keeps its room when hidden so the card does not shift; hidden children
 /// stay focusable (Tab reveals them) but ignore the pointer.

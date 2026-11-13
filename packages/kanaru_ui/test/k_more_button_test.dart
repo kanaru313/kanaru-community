@@ -21,9 +21,9 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byType(IconButton));
+    await tester.tap(find.byType(KRowIconAction));
     expect(calls, [false]);
-    await tester.longPress(find.byType(IconButton));
+    await tester.longPress(find.byType(KRowIconAction));
     await tester.pumpAndSettle();
     expect(find.text('More'), findsOneWidget);
   });
@@ -49,7 +49,7 @@ void main() {
     await tester.pump();
     expect(calls, [true]);
     // A later pointer press resets the answer.
-    await tester.tap(find.byType(IconButton));
+    await tester.tap(find.byType(KRowIconAction));
     expect(calls, [true, false]);
   });
 
@@ -80,4 +80,44 @@ void main() {
       expect(calls, [true]);
     });
   }
+
+  testWidgets('draws a 24 dp ⋮ in onSurfaceVariant outside a row', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        IconTheme(
+          data: const IconThemeData(color: Colors.red),
+          child: KMoreButton(tooltip: 'More', onPressed: ({required viaKeyboard}) {}),
+        ),
+      ),
+    );
+    final icon = tester.widget<Icon>(find.byIcon(KIcons.moreVert));
+    expect(icon.size, 24);
+    expect(
+      icon.color,
+      buildKanaruTheme(brightness: Brightness.light).colorScheme
+          .onSurfaceVariant,
+    );
+  });
+
+  testWidgets('a tap that follows a key press reports viaKeyboard false', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    final calls = <bool>[];
+    await tester.pumpWidget(
+      host(
+        KMoreButton(
+          tooltip: 'More',
+          onPressed: ({required viaKeyboard}) => calls.add(viaKeyboard),
+        ),
+      ),
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyEvent(LogicalKeyboardKey.space);
+    await tester.tap(find.byType(KRowIconAction));
+    expect(calls, [true, false]);
+  });
 }
