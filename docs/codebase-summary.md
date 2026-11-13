@@ -40,7 +40,7 @@ library UI bodies (their seeds are in the table above).
   - Icons: `KIcons` (the only file that names `Icons`).
   - Pages and headers: `KPage`, `PageHeader`, `PageHeaderScope`, `KEmpty`, `KEmptyPage`, `ProBadge`.
   - Choice and feedback: `SelectionRow`, `SelectionOption`, `showSelectionPicker` (with `confirm`, `header`, `anchor`), `showKSheet`, `showKDialog`, `confirmAction`, `showAppSnackBar`.
-  - Rows and tiles: `KListRow`, `KChip`, `KPressable`, `KContextRegion`, `KCover`, `KEqualizerIcon`, `KGap` (typedef of `Gap`).
+  - Rows and tiles: `KListRow`, `KSwipeActions` (row swipe, per-pointer drag slop), `songClick` + `SongClick` (play / toggle / range click classifier), `KChip`, `KPressable`, `KContextRegion`, `KCover`, `KEqualizerIcon`, `KGap` (typedef of `Gap`).
   - Group folders, exported from their barrels and owned by the lanes: `widgets/setup/` (scanner lane), `widgets/media/` (playback lane), `widgets/collections/` (library lane). Empty in the foundation.
   - Tests in `packages/kanaru_ui/test/`, with a shared host helper in `test/support/`.
 - `packages/kanaru_extensions`: `bundledExtensions`, empty by default in this repo.

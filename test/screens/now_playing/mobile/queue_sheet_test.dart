@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/library/state/browse/selection_providers.dart';
+import 'package:kanaru/src/library/ui/selection/selection_panel.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
 import 'package:kanaru/src/media/domain/track_info.dart';
 import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
@@ -244,6 +246,35 @@ void main() {
       host.router!.routerDelegate.currentConfiguration.last.matchedLocation,
       '/',
     );
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('Back collapses the open selection panel, then closes the sheet, '
+      'the selection kept', (tester) async {
+    final host = await _openFromNowPlaying(tester);
+    final selection = host.container.read(librarySelectionProvider.notifier);
+    selection.toggle(host.h.tracks[1]);
+    await tester.pump();
+    selection.setExpanded(true);
+    await tester.pump();
+    await _frames(tester);
+    expect(host.container.read(librarySelectionProvider).expanded, isTrue);
+    expect(find.byType(SelectionPanel), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    await _frames(tester);
+    expect(_sheet, findsOneWidget);
+    expect(host.container.read(librarySelectionProvider).expanded, isFalse);
+
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    await _frames(tester);
+    expect(_sheet, findsNothing);
+    expect(find.byType(MobileNowPlaying), findsOneWidget);
+    expect(host.container.read(librarySelectionProvider).ids, [
+      host.h.tracks[1],
+    ]);
     await tester.pump(const Duration(seconds: 1));
   });
 

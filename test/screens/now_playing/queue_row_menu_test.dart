@@ -91,6 +91,7 @@ void main() {
       'Play next',
       'Go to album',
       'Go to artist',
+      'Select',
       'Ask AI',
       'Remove from queue',
     ]) {
@@ -214,11 +215,17 @@ void main() {
     );
   });
 
-  testWidgets('on the mobile sheet a long press opens the menu as a sheet', (
+  testWidgets('on the mobile sheet ⋮ opens the menu as a sheet', (
     tester,
   ) async {
     await _pump(tester, host: QueueHost.sheet);
-    await tester.longPress(find.text('T1'));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(QueueRow).at(1),
+        matching: find.byIcon(KIcons.moreVert),
+      ),
+    );
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Play this track'), findsOneWidget);
     expect(find.text('Go to artist'), findsOneWidget);

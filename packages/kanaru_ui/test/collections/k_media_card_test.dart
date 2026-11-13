@@ -170,6 +170,66 @@ void main() {
     expect(find.byIcon(KIcons.check), findsOneWidget);
   });
 
+  double minOpacityAbove(WidgetTester tester, Finder target) {
+    var lowest = 1.0;
+    for (final e
+        in find
+            .ancestor(of: target, matching: find.byType(Opacity))
+            .evaluate()) {
+      final value = (e.widget as Opacity).opacity;
+      if (value < lowest) lowest = value;
+    }
+    return lowest;
+  }
+
+  testWidgets('a dimmed selected card keeps its check fully opaque', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_card(dimmed: true, selected: true)));
+    expect(find.byIcon(KIcons.check), findsOneWidget);
+    expect(minOpacityAbove(tester, find.byIcon(KIcons.check)), 1);
+    expect(minOpacityAbove(tester, find.byKey(const Key('cover'))), 0.5);
+    expect(minOpacityAbove(tester, find.text('Title')), 0.5);
+  });
+
+  for (final rtl in [false, true]) {
+    testWidgets('a dimmed selected check covers the cover at 2x text'
+        '${rtl ? ' in RTL' : ''}', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          Directionality(
+            textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+            child: _card(dimmed: true, selected: true),
+          ),
+          textScale: 2,
+        ),
+      );
+      expect(
+        tester.getCenter(find.byIcon(KIcons.check)),
+        tester.getCenter(find.byKey(const Key('cover'))),
+      );
+    });
+  }
+
+  testWidgets('a dimmed card that is not selected has no check', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_card(dimmed: true)));
+    expect(find.byIcon(KIcons.check), findsNothing);
+    expect(minOpacityAbove(tester, find.byKey(const Key('cover'))), 0.5);
+  });
+
+  testWidgets('a selected card that is not dimmed has no opacity layer', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_card(selected: true)));
+    expect(minOpacityAbove(tester, find.byIcon(KIcons.check)), 1);
+  });
+
   testWidgets('dimmed halves the opacity', (tester) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_card(dimmed: true)));

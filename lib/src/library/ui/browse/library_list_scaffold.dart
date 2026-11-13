@@ -148,12 +148,23 @@ class _LibraryListScaffoldState extends ConsumerState<LibraryListScaffold>
       body = widget.child;
     }
     if (mobile) {
-      body = GestureDetector(
+      // A mouse needs a real drag distance before the swipe wins, so the
+      // jitter of a click does not eat the tap on a row; touch keeps the
+      // device's own slop, set here because RawGestureDetector does not.
+      body = RawGestureDetector(
         behavior: HitTestBehavior.translucent,
-        onHorizontalDragStart: (_) => _drag = 0,
-        onHorizontalDragUpdate: (d) => _drag += d.delta.dx,
-        onHorizontalDragEnd: (_) => _swipeEnd(),
-        onHorizontalDragCancel: () => _drag = 0,
+        gestures: {
+          KSwipeDragRecognizer:
+              GestureRecognizerFactoryWithHandlers<KSwipeDragRecognizer>(
+                KSwipeDragRecognizer.new,
+                (r) => r
+                  ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context)
+                  ..onStart = ((_) => _drag = 0)
+                  ..onUpdate = ((d) => _drag += d.delta.dx)
+                  ..onEnd = ((_) => _swipeEnd())
+                  ..onCancel = (() => _drag = 0),
+              ),
+        },
         child: body,
       );
     }

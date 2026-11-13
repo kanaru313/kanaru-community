@@ -24,7 +24,10 @@ const int queueInfoMargin = 50;
 /// Rows have a fixed extent and are keyed by entry id; a drop is resolved by
 /// that id, so an auto-advance or an edit during the drag cannot move the
 /// wrong entry. The list opens scrolled to the current row. [onEmptied] runs
-/// when the last entry is removed.
+/// when the last entry is removed. [selection] makes rows selectable;
+/// [bottomInset] is room the host floats something over the list's end (the
+/// selection panel): the last row scrolls clear of it and the locate button
+/// sits above it.
 class QueueList extends ConsumerWidget {
   const QueueList({
     super.key,
@@ -32,12 +35,16 @@ class QueueList extends ConsumerWidget {
     this.favorite,
     this.menu,
     this.onEmptied,
+    this.selection,
+    this.bottomInset = 0,
   });
 
   final QueueRowSize size;
   final QueueRowFavorite? favorite;
   final QueueRowMenu? menu;
   final VoidCallback? onEmptied;
+  final QueueRowSelection? selection;
+  final double bottomInset;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -50,6 +57,8 @@ class QueueList extends ConsumerWidget {
       favorite: favorite,
       menu: menu,
       onEmptied: onEmptied,
+      selection: selection,
+      bottomInset: bottomInset,
     );
   }
 }
@@ -62,6 +71,8 @@ class _QueueListBody extends ConsumerStatefulWidget {
     required this.favorite,
     required this.menu,
     required this.onEmptied,
+    required this.selection,
+    required this.bottomInset,
   });
 
   final QueueView view;
@@ -72,6 +83,8 @@ class _QueueListBody extends ConsumerStatefulWidget {
   final QueueRowFavorite? favorite;
   final QueueRowMenu? menu;
   final VoidCallback? onEmptied;
+  final QueueRowSelection? selection;
+  final double bottomInset;
 
   @override
   ConsumerState<_QueueListBody> createState() => _QueueListBodyState();
@@ -205,7 +218,9 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
             scrollController: _scroll,
             itemExtent: widget.extent,
             buildDefaultDragHandles: false,
-            padding: const EdgeInsets.only(bottom: queueListBottomPadding),
+            padding: EdgeInsets.only(
+              bottom: queueListBottomPadding + widget.bottomInset,
+            ),
             itemCount: view.items.length,
             onReorderStart: (i) => _dragged = view.items[i].entryId,
 
@@ -245,6 +260,7 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
                           : QueueRowRole.played,
                       favorite: widget.favorite,
                       menu: widget.menu,
+                      selection: widget.selection,
                       onRemove: remove,
                     ),
                   ),
@@ -254,7 +270,7 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
           ),
           Positioned(
             right: KSpace.x4,
-            bottom: KSpace.x4,
+            bottom: KSpace.x4 + widget.bottomInset,
             child: QueueLocateButton(
               key: _locate,
               controller: _scroll,

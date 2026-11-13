@@ -1,5 +1,7 @@
+import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
 import 'package:material_ui/material_ui.dart';
 
+import '../../../media/domain/track_id.dart';
 import '../../../media/domain/track_info.dart';
 import '../../domain/queue_state.dart';
 
@@ -22,14 +24,38 @@ typedef QueueRowMenu = void Function(
   bool viaKeyboard,
 });
 
-/// Which shell the row is for (handle size, long press vs Delete); chosen by
-/// the host, not by the window width.
-/// The row height comes from `KMediaCard.extentOf`, not from this.
+/// How queue rows take part in the app-wide song selection. The playback
+/// module cannot import the library, so the host supplies the state and the
+/// actions; a list or row without it has no selection.
+class QueueRowSelection {
+  const QueueRowSelection({
+    required this.isSelected,
+    required this.selecting,
+    required this.onSelect,
+  });
+
+  /// Whether a track is selected. A row watches only its own track, so a
+  /// selection change rebuilds just the rows it touches.
+  final ProviderListenable<bool> Function(TrackId id) isSelected;
+
+  /// Whether the selection is not empty (a plain tap then toggles).
+  final ProviderListenable<bool> selecting;
+
+  /// Toggles the track of [item], or with [range] selects the entries between
+  /// the last one picked here and [item].
+  final void Function(QueueItem item, {bool range}) onSelect;
+}
+
+/// Which shell the row is for (handle size, haptics, Delete, what a long press
+/// does without a selection hook); chosen by the host, not by the window
+/// width. The row height comes from `KMediaCard.extentOf`, not from this.
 enum QueueRowSize {
-  /// Handle 48 dp, long press on the row opens the menu.
+  /// Handle 48 dp, haptic tick on long press; without a selection hook a long
+  /// press opens the menu.
   mobile,
 
-  /// Handle 40 dp, Delete removes the row.
+  /// Handle 40 dp, Delete removes the row; without a selection hook a long
+  /// press does nothing.
   desktop,
 }
 

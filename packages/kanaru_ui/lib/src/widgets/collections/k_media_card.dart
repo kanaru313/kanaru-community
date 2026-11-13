@@ -218,7 +218,8 @@ class _KMediaCardState extends State<KMediaCard> {
                   height: KMediaCard.coverSize,
                   child: Center(child: leading),
                 ),
-                if (widget.selected)
+                // A dimmed card draws its mark outside the dim, below.
+                if (widget.selected && !widget.dimmed)
                   Positioned.fill(
                     child: _SelectedMark(circle: widget.circleLeading),
                   ),
@@ -289,6 +290,35 @@ class _KMediaCardState extends State<KMediaCard> {
       ),
     );
 
+    // The check of a dimmed, selected card stays fully opaque: it is drawn
+    // over the dimmed card, on the cover's spot.
+    final markOutsideDim = widget.dimmed && widget.selected && leading != null;
+    Widget card(Widget dimmedCard) => markOutsideDim
+        ? Stack(
+            children: [
+              dimmedCard,
+              PositionedDirectional(
+                start: flat ? KLayout.gutterMobile : KSpace.x3,
+                // The cover is centred in the row, which is as high as the
+                // taller of the cover and the text block.
+                top:
+                    KMediaCard._padV +
+                    (math.max(
+                              KMediaCard.coverSize,
+                              KMediaCardMetrics.textBlock(scaler),
+                            ) -
+                            KMediaCard.coverSize) /
+                        2,
+                width: KMediaCard.coverSize,
+                height: KMediaCard.coverSize,
+                child: IgnorePointer(
+                  child: _SelectedMark(circle: widget.circleLeading),
+                ),
+              ),
+            ],
+          )
+        : dimmedCard;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: KMediaCard.gap),
       // A skeleton row carries no information: no semantics node at all.
@@ -297,41 +327,47 @@ class _KMediaCardState extends State<KMediaCard> {
         child: Semantics(
           selected: widget.selected,
           value: widget.current ? widget.currentLabel : null,
-          child: Opacity(
-            opacity: widget.dimmed ? 0.5 : 1,
-            child: MouseRegion(
-              onEnter: (_) => setState(() => _hovered = true),
-              onExit: (_) => setState(() => _hovered = false),
-              child: Focus(
-                canRequestFocus: false,
-                skipTraversal: true,
-                onFocusChange: (v) => setState(() => _focused = v),
-                child: Material(
-                  color: background,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: flat ? BorderRadius.zero : KMediaCard._radius,
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: DefaultTextStyle.merge(
-                    style: TextStyle(color: ink),
-                    child: IconTheme.merge(
-                      data: IconThemeData(color: soft),
-                      // M3 IconButton ignores IconTheme: colour it here so icons
-                      // contrast with the tint.
-                      child: _withButtons(
-                        tinted,
-                        IconButtonThemeData(
-                          // ButtonStyle.merge keeps the receiver's values: the card
-                          // colour wins over an inherited foreground and the other
-                          // inherited properties stay.
-                          style: IconButton.styleFrom(foregroundColor: soft)
-                              .copyWith(iconColor: WidgetStatePropertyAll(soft))
-                              .merge(ambientButtons.style),
-                        ),
-                        InkWell(
-                          onTap: widget.onTap,
-                          onLongPress: widget.onLongPress,
-                          child: content,
+          child: card(
+            Opacity(
+              opacity: widget.dimmed ? 0.5 : 1,
+              child: MouseRegion(
+                onEnter: (_) => setState(() => _hovered = true),
+                onExit: (_) => setState(() => _hovered = false),
+                child: Focus(
+                  canRequestFocus: false,
+                  skipTraversal: true,
+                  onFocusChange: (v) => setState(() => _focused = v),
+                  child: Material(
+                    color: background,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: flat
+                          ? BorderRadius.zero
+                          : KMediaCard._radius,
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: DefaultTextStyle.merge(
+                      style: TextStyle(color: ink),
+                      child: IconTheme.merge(
+                        data: IconThemeData(color: soft),
+                        // M3 IconButton ignores IconTheme: colour it here so icons
+                        // contrast with the tint.
+                        child: _withButtons(
+                          tinted,
+                          IconButtonThemeData(
+                            // ButtonStyle.merge keeps the receiver's values: the card
+                            // colour wins over an inherited foreground and the other
+                            // inherited properties stay.
+                            style: IconButton.styleFrom(foregroundColor: soft)
+                                .copyWith(
+                                  iconColor: WidgetStatePropertyAll(soft),
+                                )
+                                .merge(ambientButtons.style),
+                          ),
+                          InkWell(
+                            onTap: widget.onTap,
+                            onLongPress: widget.onLongPress,
+                            child: content,
+                          ),
                         ),
                       ),
                     ),

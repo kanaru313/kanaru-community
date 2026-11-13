@@ -3,10 +3,12 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../library/state/browse/selection_providers.dart';
 import '../../../media/domain/track_info.dart';
 import '../../../playback/domain/queue_state.dart';
 import '../../../playback/state/playback_providers.dart';
 import '../../../playback/ui/queue/queue_remove_action.dart';
+import '../state/queue_selection.dart';
 import 'queue_host.dart';
 import 'track_navigation.dart';
 
@@ -36,8 +38,8 @@ class _Entry {
 /// Opens the menu of one queue row: a popup at the pointer on the desktop tab,
 /// a bottom sheet on the mobile sheet. Matches `QueueRowMenu`.
 ///
-/// Entries: play this, play next (a copy) | go to album, go to artist, ask AI
-/// (soon) | remove. Every action checks the entry is still queued.
+/// Entries: play this, play next (a copy) | go to album, go to artist, select
+/// / deselect, ask AI (soon) | remove. Every action checks the entry is still queued.
 void openQueueRowMenu(
   BuildContext context,
   QueueItem item,
@@ -62,6 +64,7 @@ void openQueueRowMenu(
     act();
   };
 
+  final selected = container.read(isSelectedProvider(item.trackId));
   final groups = <List<_Entry>>[
     [
       _Entry(
@@ -89,6 +92,12 @@ void openQueueRowMenu(
         onTap: canGoToArtist(info)
             ? () => goToArtist(context, info!, beforeNavigate: beforeNavigate)
             : null,
+      ),
+      _Entry(
+        selected ? l10n.libraryMenuDeselect : l10n.libraryMenuSelect,
+        selected ? KIcons.deselect : KIcons.select,
+        onTap: () =>
+            container.read(queueSelectionProvider.notifier).toggle(item),
       ),
       _Entry(l10n.playbackAskAi, KIcons.ai, soon: true),
     ],

@@ -5,6 +5,7 @@ import 'package:kanaru/src/playback/state/queue_totals_provider.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_header.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_host.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_panel.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../support/ui_host.dart';
@@ -92,6 +93,38 @@ void main() {
     // Harness tracks have no duration: five upcoming entries add up to zero.
     expect(find.textContaining('left'), findsOneWidget);
     expect(find.textContaining('under 1 min'), findsOneWidget);
+  });
+
+  testWidgets('the head menu without a host callback stays "Coming soon"', (
+    tester,
+  ) async {
+    await pumpWithPlayer(tester, const Center(child: QueueMoreMenu()));
+    await tester.tap(find.byIcon(KIcons.moreVert));
+    await tester.pump();
+    expect(find.text('Coming soon'), findsOneWidget);
+    final item = tester.widget<MenuItemButton>(
+      find.ancestor(
+        of: find.text('Select several'),
+        matching: find.byType(MenuItemButton),
+      ),
+    );
+    expect(item.onPressed, isNull);
+  });
+
+  testWidgets('the head menu runs its callback, once a song is current', (
+    tester,
+  ) async {
+    var picked = 0;
+    await pumpWithPlayer(
+      tester,
+      Center(child: QueueMoreMenu(onSelectMany: () => picked++)),
+    );
+    await tester.tap(find.byIcon(KIcons.moreVert));
+    await tester.pump();
+    expect(find.text('Coming soon'), findsNothing);
+    await tester.tap(find.text('Select several'));
+    await tester.pump();
+    expect(picked, 1);
   });
 
   testWidgets('nothing shows for an empty queue', (tester) async {

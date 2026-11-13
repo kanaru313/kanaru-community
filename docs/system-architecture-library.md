@@ -456,7 +456,12 @@ what the menu showed.
 
 `lib/src/library/ui/selection/`. The selection lives in
 `librarySelectionProvider` (see Selection state), so it follows the user
-between screens.
+between screens. The queue's rows join it too (`QueueRowSelection`, see the
+playback doc's Queue UI): selecting a queue row adds its track, every queued
+occurrence of a selected track shows selected, and the same panel acts on it.
+A Shift range in the queue runs over queue positions: the anchor is the queue
+entry last picked there (`QueueSelection`, `screens/now_playing/state/`), not
+the `TrackId` anchor of this provider, because a track can be queued twice.
 
 - Enter: a long press on a song (mobile, with a light tick), Ctrl / ⌘ click or
   Shift click (desktop; Shift extends from the last clicked row in the order on
@@ -494,6 +499,11 @@ between screens.
   with the same two conditions that also yields to a focused text field.
   Because the listener sits at the root, an open panel collapses before a page
   filter field or a folder level takes Back.
+- Mounts of the bar: both shells' slot, and the mobile queue sheet (floating
+  over the end of its list above the footer, so the panel is reachable there; Back
+  collapses it first). On the desktop the shell's panel sits in the region that
+  Now Playing covers, so it is hidden while Now Playing is open and the queue pane has none;
+  it returns when Now Playing closes.
 - Desktop slot: the shell puts the bar in a `Center` over the page, so the
   empty slot and the space beside the 440 wide panel pass clicks to the page.
   `SelectionInsetSliver` ends every library scroll view (lists, folders,

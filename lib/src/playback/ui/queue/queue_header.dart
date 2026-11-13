@@ -69,13 +69,20 @@ class QueueCounts extends ConsumerWidget {
   }
 }
 
-/// The ⋮ dropdown of the queue head. For now it only holds "Select several",
-/// dimmed.
-class QueueMoreMenu extends StatelessWidget {
-  const QueueMoreMenu({super.key});
+/// The ⋮ dropdown of the queue head. It only holds "Select several": it runs
+/// [onSelectMany] (the host selects the current song), and is enabled only
+/// while a song is current. Without a callback it stays dimmed ("Coming soon").
+class QueueMoreMenu extends ConsumerWidget {
+  const QueueMoreMenu({super.key, this.onSelectMany});
+
+  final VoidCallback? onSelectMany;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasCurrent = ref.watch(
+      queueViewProvider.select((v) => v.value?.current != null),
+    );
+    final onPressed = hasCurrent ? onSelectMany : null;
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return MenuAnchor(
@@ -87,7 +94,8 @@ class QueueMoreMenu extends StatelessWidget {
           style: const ButtonStyle(
             minimumSize: WidgetStatePropertyAll(Size(0, 48)),
           ),
-          trailingIcon: Text(l10n.appComingSoon),
+          onPressed: onPressed,
+          trailingIcon: onSelectMany == null ? Text(l10n.appComingSoon) : null,
           child: Text(l10n.playbackQueueSelectMany),
         ),
       ],

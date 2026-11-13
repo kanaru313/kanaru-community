@@ -1,3 +1,6 @@
+import 'dart:ui' show GestureSettings;
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -18,8 +21,15 @@ import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart' show testRefresh;
 import 'support/ui_harness.dart';
 
+int taps = 0;
+
 /// The list scaffold on mobile with a horizontal scroller as its body.
-Future<GoRouter> _pump(WidgetTester tester, ScrollController scroll) async {
+Future<GoRouter> _pump(
+  WidgetTester tester,
+  ScrollController scroll, {
+  bool verticalList = false,
+}) async {
+  taps = 0;
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = const Size(390, 844);
   addTearDown(tester.view.reset);
@@ -49,7 +59,21 @@ Future<GoRouter> _pump(WidgetTester tester, ScrollController scroll) async {
                     ],
                   ),
                 ),
-                const Expanded(child: SizedBox.expand()),
+                Expanded(
+                  child: verticalList
+                      ? ListView(
+                          children: [
+                            for (var i = 0; i < 40; i++)
+                              const SizedBox(height: 60, child: Text('row')),
+                          ],
+                        )
+                      : GestureDetector(
+                          key: const Key('row'),
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => taps++,
+                          child: const SizedBox.expand(),
+                        ),
+                ),
               ],
             ),
           );
@@ -115,6 +139,68 @@ void main() {
     await tester.pumpAndSettle();
     expect(_tab(router), '/library/songs');
     await tester.dragFrom(area, const Offset(-120, 0));
+    await tester.pumpAndSettle();
+    expect(_tab(router), '/library/albums');
+    await unmountApp(tester);
+  });
+
+  testWidgets('a mouse click with 2 px of jitter taps the row, tab stays', (
+    tester,
+  ) async {
+    final scroll = ScrollController();
+    addTearDown(scroll.dispose);
+    final router = await _pump(tester, scroll);
+    final mouse = await tester.startGesture(
+      const Offset(195, 500),
+      kind: PointerDeviceKind.mouse,
+    );
+    await mouse.moveBy(const Offset(2, 0));
+    await mouse.up();
+    await tester.pumpAndSettle();
+    expect(taps, 1);
+    expect(_tab(router), '/library/songs');
+    await unmountApp(tester);
+  });
+
+  testWidgets('a mouse drag well past the slop still changes tab', (
+    tester,
+  ) async {
+    final scroll = ScrollController();
+    addTearDown(scroll.dispose);
+    final router = await _pump(tester, scroll);
+    final mouse = await tester.startGesture(
+      const Offset(195, 500),
+      kind: PointerDeviceKind.mouse,
+    );
+    for (var i = 0; i < 12; i++) {
+      await mouse.moveBy(const Offset(-10, 0));
+    }
+    await mouse.up();
+    await tester.pumpAndSettle();
+    expect(taps, 0);
+    expect(_tab(router), '/library/albums');
+    await unmountApp(tester);
+  });
+
+  testWidgets('a touch swipe uses the device slop, not the mouse slop', (
+    tester,
+  ) async {
+    final scroll = ScrollController();
+    addTearDown(scroll.dispose);
+    // A vertical list competes for the pointer, as on the real screens; a
+    // lone recogniser would win at once and hide its slop.
+    final router = await _pump(tester, scroll, verticalList: true);
+    tester.view.gestureSettings = const GestureSettings(physicalTouchSlop: 8);
+    addTearDown(tester.view.resetGestureSettings);
+    await tester.pump();
+    // 5 dp steps: the swipe is accepted after 2 steps with the 8 dp device
+    // slop but only after 4 with the 18 dp mouse slop, and the tab changes
+    // only when the counted distance exceeds 60 dp.
+    final touch = await tester.startGesture(const Offset(300, 500));
+    for (var i = 0; i < 15; i++) {
+      await touch.moveBy(const Offset(-5, 0));
+    }
+    await touch.up();
     await tester.pumpAndSettle();
     expect(_tab(router), '/library/albums');
     await unmountApp(tester);
