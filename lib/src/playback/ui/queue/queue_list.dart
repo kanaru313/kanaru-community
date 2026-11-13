@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/playback_views.dart';
+import '../../domain/queue_view_move.dart';
 import '../../state/playback_providers.dart';
 import '../../state/queue_row_infos.dart';
 import '../../state/queue_view_provider.dart';
@@ -12,6 +14,8 @@ import 'queue_remove_action.dart';
 import 'queue_scroll_controller.dart';
 import 'queue_row.dart';
 import 'queue_row_hooks.dart';
+
+final _log = Logger('QueueList');
 
 /// Rows of room kept below the last row, so the locate button never covers it.
 const double queueListBottomPadding = 72;
@@ -105,6 +109,20 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
   /// these rows are built hidden instead of reappearing for a frame.
   final Set<int> _leaving = {};
 
+  /// Drops whose move the controller has not finished. The list shows them
+  /// applied (see [_shown]), because the reorderable list expects the new
+  /// order in the very frame after the drop.
+  final List<({int entryId, int toIndex})> _pendingMoves = [];
+
+  /// The controller's view with the pending moves applied in order.
+  QueueView get _shown {
+    var v = widget.view;
+    for (final m in _pendingMoves) {
+      v = moveInView(v, m.entryId, m.toIndex);
+    }
+    return v;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -139,7 +157,7 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
   void _reanchor() {
     if (!mounted) return;
     if (_scroll.hasClients) {
-      final cur = widget.view.current;
+      final cur = _shown.current;
       final max = _scroll.position.maxScrollExtent;
       _scroll.jumpTo(
         cur == null ? 0 : queueOffsetFor(cur, widget.extent).clamp(0, max),
@@ -152,7 +170,7 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
   /// scroll offset because every row has the same height.
   void _loadWindow() {
     if (!mounted) return;
-    final items = widget.view.items;
+    final items = _shown.items;
     if (items.isEmpty) return;
     final extent = widget.extent;
     final pos = _scroll.hasClients ? _scroll.position : null;
@@ -173,14 +191,29 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
     final id = _dragged;
     _dragged = null;
     if (id == null) return;
-    final items = widget.view.items;
+    final items = _shown.items;
     // The list may have changed while dragging: find the entry by its id.
     final from = oldIndex < items.length && items[oldIndex].entryId == id
         ? oldIndex
         : items.indexWhere((i) => i.entryId == id);
     if (from < 0) return;
     if (newIndex == from) return;
-    ref.read(playerControllerProvider).move(id, newIndex);
+    final pending = (entryId: id, toIndex: newIndex);
+    setState(() => _pendingMoves.add(pending));
+    // The view the controller publishes and the removal of the pending move
+    // reach the list in the same frame, so the order never flips back.
+    final root = Navigator.of(context, rootNavigator: true).context;
+    final failed = AppLocalizations.of(context).libraryMenuQueueFailed;
+    ref
+        .read(playerControllerProvider)
+        .move(id, newIndex)
+        .catchError((Object e, StackTrace st) {
+          _log.warning('could not move queue entry $id: $e', e, st);
+          if (root.mounted) showAppSnackBar(root, failed);
+        })
+        .whenComplete(() {
+          if (mounted) setState(() => _pendingMoves.remove(pending));
+        });
   }
 
   /// Runs [remove] for a swiped-out row, keeping the row hidden meanwhile.
@@ -200,7 +233,7 @@ class _QueueListBodyState extends ConsumerState<_QueueListBody> {
 
   @override
   Widget build(BuildContext context) {
-    final view = widget.view;
+    final view = _shown;
     final size = widget.size;
     return _buildList(view, size);
   }
