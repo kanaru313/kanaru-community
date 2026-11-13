@@ -66,7 +66,8 @@ final coverMissesProvider = Provider<CoverMissSink>((ref) {
 });
 
 /// Cover colours of one cover (`cover_colors` table); null until the scanner
-/// computed them. They tint pages; they never drive the app theme.
+/// computed them. They tint pages, and the seed of the playing cover's colours
+/// drives the app theme (see `playingCoverColorsProvider`).
 final coverColorsProvider = StreamProvider.family<CoverColors?, String>(
   (ref, coverKey) => watchCoverColors(ref.watch(appDatabaseProvider), coverKey),
   isAutoDispose: true,

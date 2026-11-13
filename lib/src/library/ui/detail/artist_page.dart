@@ -10,12 +10,14 @@ import '../../domain/browse/menu_targets.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../domain/library_tabs.dart';
 import '../../state/browse/detail_providers.dart';
+import '../../state/custom_cover_providers.dart';
 import '../browse/item_covers.dart';
 import '../browse/library_navigation.dart';
 import '../library_locations.dart';
 import '../menus/menu_origin.dart';
 import '../menus/open_menu.dart';
 import 'detail_header.dart';
+import 'detail_tint.dart';
 import 'detail_songs.dart';
 import 'see_all_page.dart';
 
@@ -49,6 +51,10 @@ class ArtistPage extends ConsumerWidget {
     final photo =
         detail?.coverKey ??
         albums.own.map((a) => a.coverKey).whereType<String>().firstOrNull;
+    final tint = watchDetailTint(ref, (
+      kind: CustomCoverKind.artist,
+      itemKey: artistId,
+    ), photo);
     final scope = SongScope.artist(key);
     final playContext = PlayContext(
       PlayContextKind.artist,
@@ -122,6 +128,7 @@ class ArtistPage extends ConsumerWidget {
     return DetailFrame(
       title: title,
       fallback: _fallback,
+      tint: tint,
       child: DetailSongsHost(
         list: BrowseList.detailSongs,
         item: artistId,

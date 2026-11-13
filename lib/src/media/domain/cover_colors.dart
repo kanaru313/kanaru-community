@@ -3,7 +3,8 @@
 const int coverColorsVersion = 1;
 
 /// Colours extracted from a cover, ARGB ints. Used for the Now Playing
-/// gradient, the queue strip and album page tint; never drives the app theme.
+/// gradient, the queue strip and album page tint; the seed of the playing
+/// cover's colours also drives the app theme.
 class CoverColors {
   const CoverColors({required this.seed, required this.palette});
 

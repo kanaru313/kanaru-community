@@ -4,24 +4,20 @@ import 'package:material_ui/material_ui.dart';
 
 import '../support/host.dart';
 
-Widget _layout({Color? tint, double headerHeight = 200, int rows = 30}) =>
-    KDetailLayout(
-      tint: tint,
-      header: SizedBox(
-        key: const ValueKey('header'),
-        height: headerHeight,
-        child: const Center(child: Text('header')),
-      ),
-      slivers: [
-        SliverList.builder(
-          itemCount: rows,
-          itemBuilder: (context, i) => SizedBox(
-            height: 48,
-            child: Text('row $i', key: ValueKey('row$i')),
-          ),
-        ),
-      ],
-    );
+Widget _layout({double headerHeight = 200, int rows = 30}) => KDetailLayout(
+  header: SizedBox(
+    key: const ValueKey('header'),
+    height: headerHeight,
+    child: const Center(child: Text('header')),
+  ),
+  slivers: [
+    SliverList.builder(
+      itemCount: rows,
+      itemBuilder: (context, i) =>
+          SizedBox(height: 48, child: Text('row $i', key: ValueKey('row$i'))),
+    ),
+  ],
+);
 
 bool _hasGradient(WidgetTester tester) => tester
     .widgetList<DecoratedBox>(find.byType(DecoratedBox))
@@ -98,31 +94,27 @@ void main() {
     expect(tester.getTopLeft(find.byKey(const ValueKey('row0'))).dy, 0);
   });
 
-  testWidgets('the tint adds a soft gradient, capped by theme brightness', (
-    tester,
-  ) async {
+  testWidgets('the layout draws no background of its own', (tester) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_layout()));
     expect(_hasGradient(tester), isFalse);
+  });
 
-    for (final (brightness, cap) in [
-      (Brightness.light, 0.18),
-      (Brightness.dark, 0.24),
-    ]) {
-      await tester.pumpWidget(
-        host(_layout(tint: const Color(0xFFFF0000)), brightness: brightness),
-      );
-      expect(_hasGradient(tester), isTrue);
-      final gradient = tester
-          .widgetList<DecoratedBox>(find.byType(DecoratedBox))
-          .map((d) => d.decoration)
-          .whereType<BoxDecoration>()
-          .map((d) => d.gradient)
-          .whereType<LinearGradient>()
-          .first;
-      expect(gradient.colors.first.a, lessThanOrEqualTo(cap + 0.005));
-      expect(gradient.colors.last.a, 0);
-    }
+  testWidgets('a page tint behind the layout shows under the header', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        CoverTintBackground(
+          palette: const [Color(0xFFFF0000)],
+          child: _layout(),
+        ),
+      ),
+    );
+    await tester.pump(coverTintTransition);
+    expect(_hasGradient(tester), isTrue);
+    expect(find.byKey(const ValueKey('header')), findsOneWidget);
   });
 
   testWidgets('a sticky bar stays pinned and blurs what is under it', (

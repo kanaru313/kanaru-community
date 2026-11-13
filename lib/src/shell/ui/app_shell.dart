@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,7 +7,10 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../extension/state/extension_providers.dart';
 import '../../playback/state/now_playing_panel.dart';
+import '../../playback/state/app_cover_seed.dart';
 import '../../playback/state/playback_providers.dart';
+import '../../playback/state/player_ready.dart';
+import '../../playback/state/playing_cover_colors.dart';
 import '../../screens/now_playing/now_playing_path.dart';
 import '../state/nav_history.dart';
 import 'desktop_shell.dart';
@@ -24,6 +29,7 @@ class AppShell extends ConsumerStatefulWidget {
 
 class _AppShellState extends ConsumerState<AppShell> {
   NavHistory? _history;
+  ProviderSubscription<PlayingCoverColors>? _coverColors;
   final _notices = GlobalKey<PlaybackNoticeListenerState>();
 
   /// A hand-over of Now Playing from the desktop panel to the mobile page is
@@ -36,11 +42,23 @@ class _AppShellState extends ConsumerState<AppShell> {
     // Create the player once the shell is up (both shells), so the saved
     // session and the system media controls start at launch, not on the first
     // tap on a mini player. After the first frame: building a provider with
-    // side effects is not allowed while widgets build. The notice listener
-    // starts in the same callback, so no notice is lost in between.
+    // side effects is not allowed while widgets build, so the shells and the
+    // cover colour sync wait for the player phase and `playerCreatedProvider`
+    // before this callback. The current-track and playing providers are not
+    // gated that way yet.
+    // The notice listener starts in the same callback, so no notice is lost
+    // in between.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(playerControllerProvider);
+      final player = ref.read(playerControllerProvider);
+      unawaited(ref.read(playerPhaseProvider.notifier).attach(player));
+      // Keeps the stored theme seed in step with the playing cover. Started
+      // here, not in build: it reads the player.
+      _coverColors = ref.listenManual(
+        playingCoverColorsProvider,
+        (_, colors) => syncAppCoverSeed(ref, colors),
+        fireImmediately: true,
+      );
       _notices.currentState?.start();
     });
   }
@@ -53,6 +71,7 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   void dispose() {
+    _coverColors?.close();
     _history?.dispose();
     super.dispose();
   }

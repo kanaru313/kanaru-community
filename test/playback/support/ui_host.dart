@@ -9,6 +9,7 @@ import 'package:kanaru/src/playback/state/playback_providers.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../support/player_phase_override.dart';
 import 'controller_harness.dart';
 
 /// A widget under test wired to a real [PlayerController] on an in-memory
@@ -53,6 +54,8 @@ class UiHost {
       await h.settle();
     });
     await tester.pump();
+    // A provider stream delivers after the first frame; its rebuild needs one more.
+    await tester.pump();
   }
 }
 
@@ -78,6 +81,7 @@ Future<UiHost> pumpWithPlayer(
   final container = ProviderContainer(
     overrides: [
       playerControllerProvider.overrideWithValue(h.c),
+      playerPhaseOverride(),
       appDatabaseProvider.overrideWithValue(h.db),
       settingsStoreProvider.overrideWithValue(h.settings),
       ...overrides,

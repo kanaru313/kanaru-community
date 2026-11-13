@@ -1,6 +1,9 @@
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/media/domain/cover_colors.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
+import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
@@ -30,10 +33,12 @@ Future<UiHost> _open(
   WidgetTester tester, {
   Size? size,
   double textScale = 1,
+  List<Override> overrides = const [],
 }) async {
   final host = await pumpWithPlayer(
     tester,
     const Center(child: Text('home page')),
+    overrides: overrides,
     routes: _routes,
     size: size ?? const Size(390, 844),
     textScale: textScale,
@@ -49,6 +54,42 @@ String _location(UiHost host) =>
     host.router!.routerDelegate.currentConfiguration.last.matchedLocation;
 
 void main() {
+  testWidgets('the tint takes the playing cover palette', (tester) async {
+    await _open(
+      tester,
+      overrides: [
+        playingCoverColorsProvider.overrideWithValue(
+          const PlayingCoverColorsFound(
+            CoverColors(seed: 1, palette: [0xFFFF0000, 0xFF0000FF]),
+          ),
+        ),
+      ],
+    );
+    final tint = tester.widget<CoverTintBackground>(
+      find.byType(CoverTintBackground),
+    );
+    expect(tint.palette, const [Color(0xFFFF0000), Color(0xFF0000FF)]);
+    expect(tint.loading, isFalse);
+  });
+
+  testWidgets('a pending cover leaves the tint loading, not faded out', (
+    tester,
+  ) async {
+    await _open(
+      tester,
+      overrides: [
+        playingCoverColorsProvider.overrideWithValue(
+          const PlayingCoverColorsPending(),
+        ),
+      ],
+    );
+    final tint = tester.widget<CoverTintBackground>(
+      find.byType(CoverTintBackground),
+    );
+    expect(tint.palette, isNull);
+    expect(tint.loading, isTrue);
+  });
+
   for (final (size, scale) in [
     (const Size(360, 640), 1.0),
     (const Size(360, 640), 1.3),
@@ -198,7 +239,10 @@ void main() {
   ) async {
     final host = await _open(tester);
     final row = find.byType(NowPlayingButtonRow);
-    await host.tap(tester, find.descendant(of: row, matching: find.byType(RepeatButton)));
+    await host.tap(
+      tester,
+      find.descendant(of: row, matching: find.byType(RepeatButton)),
+    );
     await tester.pumpAndSettle();
     expect(find.byType(SelectionRow), findsNWidgets(5));
     expect(find.text('Repeat the whole queue'), findsOneWidget);

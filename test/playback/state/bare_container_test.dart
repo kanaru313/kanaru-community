@@ -29,4 +29,12 @@ void main() {
       expect(engines, 0);
     },
   );
+
+  test('has-track is false and creates nothing before the player exists', () {
+    final c = ProviderContainer();
+    addTearDown(c.dispose);
+    expect(c.read(hasCurrentTrackProvider), isFalse);
+    expect(c.read(playerControllerProvider.exists), isFalse);
+    expect(c.read(nowPlayingProvider.exists), isFalse);
+  });
 }

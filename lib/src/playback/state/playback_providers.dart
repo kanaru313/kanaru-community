@@ -9,6 +9,7 @@ import '../domain/playback_focus.dart';
 import 'audio_engine_provider.dart';
 import 'listen_recorder.dart';
 import 'player_controller.dart';
+import 'player_ready.dart';
 import 'playback_data_providers.dart';
 
 /// The player. Created by [nowPlayingProvider] and by commands, never while a
@@ -74,10 +75,16 @@ final isCurrentTrackProvider = Provider.family<bool, TrackId>(
   isAutoDispose: true,
 );
 
-final hasCurrentTrackProvider = Provider<bool>(
-  (ref) =>
-      ref.watch(nowPlayingProvider.select((n) => n.value?.hasTrack ?? false)),
-);
+/// Whether a track is loaded. False until the player exists
+/// ([playerCreatedProvider]): reading [nowPlayingProvider] earlier would
+/// create the player while a widget builds. The restored session shows as soon
+/// as the player publishes it.
+final hasCurrentTrackProvider = Provider<bool>((ref) {
+  if (!ref.watch(playerCreatedProvider)) return false;
+  return ref.watch(
+    nowPlayingProvider.select((n) => n.value?.hasTrack ?? false),
+  );
+});
 
 final isPlayingProvider = Provider<bool>(
   (ref) =>

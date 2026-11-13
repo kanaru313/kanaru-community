@@ -1,7 +1,10 @@
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/media/domain/cover_colors.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
+import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_now_playing.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_side_pane.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_track_column.dart';
@@ -12,8 +15,11 @@ import 'package:material_ui/material_ui.dart';
 import '../../../shell/support/desktop_now_playing_host.dart';
 import '../../../support/app_harness.dart';
 
-Future<DesktopHost> _open(WidgetTester tester) async {
-  final host = await pumpDesktopShell(tester);
+Future<DesktopHost> _open(
+  WidgetTester tester, {
+  List<Override> overrides = const [],
+}) async {
+  final host = await pumpDesktopShell(tester, overrides: overrides);
   host.container.read(nowPlayingPanelProvider.notifier).open();
   await tester.pump();
   await settleSlide(tester);
@@ -26,6 +32,42 @@ Future<void> _key(WidgetTester tester, LogicalKeyboardKey key) async {
 }
 
 void main() {
+  testWidgets('the tint takes the playing cover palette', (tester) async {
+    await _open(
+      tester,
+      overrides: [
+        playingCoverColorsProvider.overrideWithValue(
+          const PlayingCoverColorsFound(
+            CoverColors(seed: 1, palette: [0xFFFF0000, 0xFF0000FF]),
+          ),
+        ),
+      ],
+    );
+    final tint = tester.widget<CoverTintBackground>(
+      find.byType(CoverTintBackground),
+    );
+    expect(tint.palette, const [Color(0xFFFF0000), Color(0xFF0000FF)]);
+    expect(tint.loading, isFalse);
+  });
+
+  testWidgets('a pending cover leaves the tint loading, not faded out', (
+    tester,
+  ) async {
+    await _open(
+      tester,
+      overrides: [
+        playingCoverColorsProvider.overrideWithValue(
+          const PlayingCoverColorsPending(),
+        ),
+      ],
+    );
+    final tint = tester.widget<CoverTintBackground>(
+      find.byType(CoverTintBackground),
+    );
+    expect(tint.palette, isNull);
+    expect(tint.loading, isTrue);
+  });
+
   testWidgets('split: the track column and the side pane side by side', (
     tester,
   ) async {

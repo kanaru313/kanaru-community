@@ -90,8 +90,47 @@ contracts; their description is in
   scanner computed the colours.
 - `CoverColors` (`media/domain/cover_colors.dart`): `seed` (ARGB) and `palette`
   (ARGB ints, most dominant first). `coverColorsVersion` is the algorithm version.
-- Used for the Now Playing gradient and the queue strip. Never drives
-  `MaterialApp.theme`: the appearance providers are the only app-theme inputs.
+- Used for the Now Playing gradient, the queue strip and, through the seed of
+  the playing cover, the app theme (next section).
+
+## Playing cover and app theme
+
+- `player_ready.dart`: `playerPhaseProvider` (`notCreated` -> `restoring` ->
+  `ready`), with `playerCreatedProvider` and `playerReadyProvider` derived from
+  it. It never creates the player: `AppShell`'s post-frame callback creates it
+  and calls `attach(player)`, which waits for `settled()` (the restore is the
+  first task of the player's chain). Anything that would read the player in a
+  widget build goes through these first. `hasCurrentTrackProvider` is false
+  until the player is created, so the shells no longer create it while
+  building; the restored track shows as soon as the player publishes it.
+- `playing_cover_colors.dart`: `playingCoverColorsProvider` is a
+  `PlayingCoverColors`: `Pending` (player not ready, or a step still loading),
+  `Found(CoverColors)` or `None` (settled, no colours: nothing playing, no
+  cover, gray cover, colours not computed). It is one declarative `ref.watch`
+  chain: playing track id, `trackInfoProvider(id)`, `coverColorsProvider(key)`.
+  A track change drops the old track's subscriptions, and a track info answer
+  about another track is ignored, so a late result of a skipped track cannot
+  show. Consumers ignore `Pending` (keep the previous colours).
+- `app_cover_seed.dart`: `appCoverSeedProvider`, a stored `Setting<int?>`
+  (`app.coverSeed`, internal, no UI), read synchronously, so the first frame of
+  a launch has the last seed. `KanaruApp` reads colours only from it, through
+  `appThemeProvider` (`router/ui/app_theme_provider.dart`, both `ThemeData`
+  from the seed, default `kanaruSeed` when null). `AppShell` starts
+  `ref.listenManual(playingCoverColorsProvider, ..., fireImmediately: true)`
+  right after creating the player and closes it in `dispose`; `syncAppCoverSeed`
+  stores `Found`'s seed, clears the seed on `None`, does nothing on `Pending`,
+  and never writes an equal value. This is also where a later user-chosen seed
+  would be decided.
+- `MaterialApp.themeAnimationDuration` is zero: the theme switches at once.
+  Buttons (icon, filled, text, outlined, elevated, segmented) have `animationDuration` zero in `buildKanaruTheme` (no per-button
+  theme lerp), the closed mobile sidebar is not mounted (`MobilePushLayout`),
+  and `appThemeProvider` is a family keyed by brightness: `KanaruApp` resolves
+  the brightness (theme setting, else platform) and builds only that theme, so a
+  cover change makes one `ColorScheme`. One slower frame per cover change
+  remains (accepted).
+- `buildKanaruTheme` replaces the dark `error` colour (tone 65, chroma 84, same
+  hue) when it is within CAM16 distance 7 of `primary`; this also applies to the
+  default seed.
 
 ## Cover misses (write side)
 
@@ -460,7 +499,7 @@ signalled.
 - `start()` runs on Linux as soon as the restored session has a current entry (media keys and
   `playerctl` work after launch), and on any platform at the first play. `AppShell` creates the
   controller after its first frame (an explicit `ref.read(playerControllerProvider)` in a post-frame
-  callback, for both shells), so the restore and MPRIS start at launch without a tap on the mini player.
+  callback, for both shells; no widget build reads it before: the shells' has-track read waits for `playerCreatedProvider`, and the desktop shell mounts a right panel saved on the queue only once the player exists, with an empty box of the panel's size until then), so the restore and MPRIS start at launch without a tap on the mini player.
   Android keeps
   `processingState: idle` (no notification) until something played.
 - Commands go through the controller's chain (`Seek` is `seekRelative`; `SetPosition` is ignored for
@@ -531,7 +570,7 @@ Playback widgets and where each lives (UI layers import `state/`, never `data/`;
 
 | Widget | Where | Notes |
 |---|---|---|
-| `KProgressLine`, `KSeekBar`, `KToggleIconButton`, `KRepeatIcon`, `KCountStepper`, `CoverTintBackground` | `packages/kanaru_ui/.../widgets/media/` | Flat 2 dp line; flat 4 dp seek bar (tap, drag, Left/Right 5 s, `onSeek` once per drag); toggle with a dot when on; cover gradient (alpha-only fade when the colours go). No app imports. |
+| `KProgressLine`, `KSeekBar`, `KToggleIconButton`, `KRepeatIcon`, `KCountStepper`, `CoverTintBackground` | `packages/kanaru_ui/.../widgets/media/` | Flat 2 dp line; flat 4 dp seek bar (tap, drag, Left/Right 5 s, `onSeek` once per drag); toggle with a dot when on; cover tint (see "Cover tint"). No app imports. |
 | `MiniPlayer({onOpen, onOpenQueue})` | `playback/ui/mini_player.dart` | Mobile, 64 dp. Tap/Enter/Space or swipe up > 30 dp open; long press 500 ms (cancelled by a 10 dp move) gives a haptic and opens the queue. Only `_Progress` listens to the position. |
 | `PlayPauseButton`, `NextButton`, `PreviousButton`, `ShuffleButton` | `playback/ui/` | Watch narrow providers; call the controller with `ref.read` on tap. |
 | `RepeatButton` (`repeat_button.dart`), `RepeatMenuRows` (`repeat_menu.dart`) | `playback/ui/` | One button for the player bar, both Now Playing shells (the mini player and the queue head have no repeat control). A `MenuAnchor` opens five `SelectionRow`s: Stop at the end, Repeat this song, Repeat this song N more times (the row carries the count; a `KCountStepper` minus/plus inside it, 1-99, dimmed while stopped), Repeat the whole queue, Repeat the whole queue reshuffled every pass. Selected row = tonal fill + primary check; a counted repeat selects the counted row, not the base row. The number the row arms with while no count runs (`draft`) lives in the button state. Icon: `KRepeatIcon` (plain arrows, repeat-one, arrows with a shuffle badge, the remaining count in a circle) inside `KToggleIconButton(iconWidget:)`; lit (primary + dot) unless the mode is stop-at-the-end; disabled with an empty queue. Tooltip = the mode label. |
@@ -628,7 +667,7 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
   `playback/state/now_playing_panel.dart` so `screens/` can reach it.
 - `MobileNowPlaying` (`ui/mobile/`): header (56) with a drag-to-close title area (release past 120 dp closes, less
   springs back), cover, title row, `NowPlayingSeekSlot` (48 dp; flat bar for now), controls, button row, dimmed lyrics
-  card, info card. It sits on `CoverTintBackground` fed by `coverColorsProvider`; the colours never reach the app theme.
+  card, info card. It sits on `CoverTintBackground` fed by `playingCoverColorsProvider`; the seed of the playing cover also themes the app (see "Playing cover and app theme").
   It owns a `FlightSource` (cover, text, play, next pieces) for the queue flights.
 - The cover box is `kanaru_ui` `NowPlayingCoverBox` (`min(420, width - 64)`, radius 20); the page gives it the full
   width and pads the other rows.
@@ -804,3 +843,26 @@ Pitfalls the old app hit, and where the design answers them:
 - The bus name clashed between debug and release builds and hot restarts.
   Answer: `org.mpris.MediaPlayer2.kanaru_community`, with the `.instance<pid>`
   fallback (see [ARCHITECTURE.md](../ARCHITECTURE.md#platform-identifiers)).
+
+## Cover tint
+
+`CoverTintBackground` (`kanaru_ui`, `widgets/media/`) is the one tint widget of the app. It paints a full-bleed
+diagonal gradient (top left to bottom right) of up to 4 stops, translucent over `base` (default: the theme
+surface), with no fade at the bottom. `readableGradientStops` makes the stops: alpha starts at 0.45 (dark) or 0.35
+(light) and drops in 0.05 steps until `onSurface` and `onSurfaceVariant` both keep 4.5:1 against the stop blended
+over `base`; one colour gives itself and a shade (lightness 12 points toward the surface); empty gives two
+transparent stops; at most `maxGradientStops` (4). The palette is not softened.
+
+- Input: `palette` (null = none), `loading`, `strength` (multiplies the alpha every frame, outside the colour tween),
+  `fadeIn`, `base`. No Riverpod in the package.
+- Motion: colour changes tween over `coverTintTransition` (300 ms, `easeInOut`, zero with reduced motion). Losing the
+  colours fades the alpha only (a transparent stop takes the other stop's hue). The tween is keyed by brightness, so
+  a light/dark switch starts at the new stops. The gradient sits in a `RepaintBoundary`; the child is outside the tween.
+- `loading` true with a null `palette` keeps the last palette; only a settled null fades out. `fadeIn` draws nothing
+  until the first palette, then fades it in once.
+- Callers (Now Playing mobile and desktop, queue sheet) read `playingCoverColorsProvider`: `Found` gives `palette`,
+  `None` gives null (fade out), `Pending` gives null with `loading: true` (keep the last palette, no fade). A cover
+  without stored colours (gray, not scanned yet) has no tint.
+- Desktop player bar: `PlayerBar` wraps its content in `CoverTintBackground` (inside a `RepaintBoundary`, base `surfaceContainerLow`)
+  with `strength: playerBarTintStrength` = 0.5 (constant in `shell/ui/player_bar.dart`), fed by the same provider as Now Playing, so a
+  later drag-to-expand can animate the strength. No colours: the flat surface. The mobile mini player is not tinted.
