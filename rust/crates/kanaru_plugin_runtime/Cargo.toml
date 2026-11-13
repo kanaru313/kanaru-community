@@ -13,6 +13,7 @@ test-hooks = []
 
 [dependencies]
 rquickjs.workspace = true
+encoding_rs.workspace = true
 
 # rquickjs-sys ships no Android bindings: generate them with bindgen there.
 [target.'cfg(target_os = "android")'.dependencies]

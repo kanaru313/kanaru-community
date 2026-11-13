@@ -5,6 +5,10 @@
 //! - `cancel` before the run was claimed removes the entry, so the later
 //!   `claim` finds nothing and the run is `Cancelled` at once (nothing leaks
 //!   even if the caller never runs the cancelled job).
+//! - `attach_events` (streaming runs) hangs the event emitter on a not yet
+//!   started id; a later `claim` moves it into the guard. An id that is
+//!   unknown, claimed or cancelled refuses it and the emitter is dropped (so
+//!   the receiving stream closes).
 //! - `claim` marks it started and hands out a guard with the flag; `cancel`
 //!   now only sets the flag. Dropping the guard removes the entry, so a late
 //!   cancel of a finished id does nothing.
@@ -14,9 +18,13 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 
+use crate::host::emit::Emitter;
+
 struct Entry {
     cancel: Arc<AtomicBool>,
     started: bool,
+    /// Where `emit` of a streaming run sends its events, until claimed.
+    events: Option<Emitter>,
 }
 
 pub struct JobRegistry {
@@ -29,6 +37,7 @@ pub struct JobGuard {
     registry: Arc<JobRegistry>,
     id: u32,
     cancel: Arc<AtomicBool>,
+    events: Option<Emitter>,
 }
 
 impl JobRegistry {
@@ -51,6 +60,7 @@ impl JobRegistry {
             Entry {
                 cancel: Arc::new(AtomicBool::new(false)),
                 started: false,
+                events: None,
             },
         );
         id
@@ -65,6 +75,20 @@ impl JobRegistry {
             entry.cancel.store(true, Ordering::SeqCst);
         } else {
             entries.remove(&id);
+        }
+    }
+
+    /// Hangs `events` on a begun, not yet claimed `id`. False (and `events`
+    /// dropped, which closes its stream) for an unknown, claimed or cancelled
+    /// id, or one that already has an emitter.
+    pub fn attach_events(&self, id: u32, events: Emitter) -> bool {
+        let mut entries = self.lock();
+        match entries.get_mut(&id) {
+            Some(entry) if !entry.started && entry.events.is_none() => {
+                entry.events = Some(events);
+                true
+            }
+            _ => false,
         }
     }
 
@@ -91,6 +115,7 @@ impl JobRegistry {
             registry: self.clone(),
             id,
             cancel: entry.cancel.clone(),
+            events: entry.events.take(),
         })
     }
 
@@ -103,6 +128,11 @@ impl JobRegistry {
 impl JobGuard {
     pub fn cancel_flag(&self) -> Arc<AtomicBool> {
         self.cancel.clone()
+    }
+
+    /// The emitter attached before the claim, once.
+    pub fn take_events(&mut self) -> Option<Emitter> {
+        self.events.take()
     }
 }
 
@@ -179,5 +209,103 @@ mod tests {
         drop(guard);
         assert_eq!(r.len(), 0);
         assert!(r.begin() > running, "ids keep rising after a reset");
+    }
+
+    /// An emitter that counts how many of its clones are alive.
+    fn counted_emitter() -> (Emitter, std::sync::Weak<()>) {
+        let token = Arc::new(());
+        let weak = Arc::downgrade(&token);
+        let emitter: Emitter = Arc::new(move |_| {
+            let _keep = &token;
+            true
+        });
+        (emitter, weak)
+    }
+
+    #[test]
+    fn events_attached_before_the_claim_move_into_the_guard() {
+        let r = registry();
+        let id = r.begin();
+        let (emitter, alive) = counted_emitter();
+        assert!(r.attach_events(id, emitter));
+        let mut guard = r.claim(id).expect("claim");
+        let taken = guard.take_events().expect("emitter");
+        assert!(taken("x".into()));
+        assert!(guard.take_events().is_none(), "taken once");
+        drop(taken);
+        drop(guard);
+        assert!(alive.upgrade().is_none());
+        assert_eq!(r.len(), 0);
+    }
+
+    #[test]
+    fn events_attached_after_the_claim_are_refused_and_dropped() {
+        let r = registry();
+        let id = r.begin();
+        let mut guard = r.claim(id).expect("claim");
+        let (emitter, alive) = counted_emitter();
+        assert!(!r.attach_events(id, emitter));
+        assert!(alive.upgrade().is_none(), "the sink is dropped at once");
+        assert!(guard.take_events().is_none());
+    }
+
+    #[test]
+    fn events_for_an_unknown_id_are_refused_and_dropped() {
+        let r = registry();
+        let (emitter, alive) = counted_emitter();
+        assert!(!r.attach_events(777, emitter));
+        assert!(alive.upgrade().is_none());
+    }
+
+    #[test]
+    fn a_second_attach_is_refused_and_keeps_the_first() {
+        let r = registry();
+        let id = r.begin();
+        let (first, first_alive) = counted_emitter();
+        let (second, second_alive) = counted_emitter();
+        assert!(r.attach_events(id, first));
+        assert!(!r.attach_events(id, second));
+        assert!(second_alive.upgrade().is_none());
+        assert!(first_alive.upgrade().is_some());
+    }
+
+    #[test]
+    fn cancelling_an_unstarted_job_drops_its_events() {
+        let r = registry();
+        let id = r.begin();
+        let (emitter, alive) = counted_emitter();
+        assert!(r.attach_events(id, emitter));
+        r.cancel(id);
+        assert!(alive.upgrade().is_none());
+        assert_eq!(r.len(), 0);
+        let (late, late_alive) = counted_emitter();
+        assert!(!r.attach_events(id, late));
+        assert!(late_alive.upgrade().is_none());
+    }
+
+    #[test]
+    fn a_run_that_ends_without_starting_leaves_no_entry_and_no_sink() {
+        // What a Busy streaming run does: claim, take the emitter, then drop
+        // the guard and the emitter together.
+        let r = registry();
+        let id = r.begin();
+        let (emitter, alive) = counted_emitter();
+        assert!(r.attach_events(id, emitter));
+        let mut guard = r.claim(id).expect("claim");
+        let taken = guard.take_events();
+        drop(guard);
+        drop(taken);
+        assert_eq!(r.len(), 0);
+        assert!(alive.upgrade().is_none());
+    }
+
+    #[test]
+    fn reset_drops_the_events_of_an_unstarted_job() {
+        let r = registry();
+        let id = r.begin();
+        let (emitter, alive) = counted_emitter();
+        assert!(r.attach_events(id, emitter));
+        r.reset();
+        assert!(alive.upgrade().is_none());
     }
 }

@@ -1,12 +1,6 @@
 //! The per-job cap on bytes the host keeps in Rust memory for the script
 //! (unread fetch bodies, HTML arenas). QuickJS' heap cap does not see Rust
 //! allocations, so every such holder charges this budget.
-// The holders (fetch bodies, HTML arenas) are added with their natives; until
-// then only the engine reads the overrun flag.
-#![cfg_attr(
-    not(test),
-    expect(dead_code, reason = "charged by the fetch and HTML natives")
-)]
 
 use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -48,6 +42,7 @@ impl ByteBudget {
     /// Marks the budget as overrun without charging, for a holder that
     /// refuses on its own limit (an oversized document) and wants the same
     /// outcome as a budget overrun: the call ends `memory`.
+    #[cfg_attr(not(test), expect(dead_code, reason = "used by the HTML natives"))]
     pub fn mark_hit(&self) {
         self.hit.store(true, Ordering::SeqCst);
     }

@@ -20,7 +20,9 @@ use crate::collector::Collector;
 use crate::globals::{self, JsFailure, Sources};
 use crate::host::budget::ByteBudget;
 use crate::host::late::LateDrain;
-use crate::host::{HostEnv, NoNetwork, PluginHost, STOP_CANCELLED, STOP_NONE, STOP_TIMEOUT};
+use crate::host::{
+    HostEnv, NoNetwork, PluginHost, StreamingEnv, STOP_CANCELLED, STOP_NONE, STOP_TIMEOUT,
+};
 use crate::limits::{MEMORY_LIMIT_BYTES, RUST_BYTE_BUDGET, SCRIPT_STACK_BYTES};
 use crate::memory::LimitedAllocator;
 use crate::types::{ScriptResult, ScriptStatus};
@@ -46,6 +48,8 @@ pub struct JobSpec {
     pub host: Arc<dyn PluginHost>,
     /// Takes the futures of host calls the script stopped waiting for.
     pub(crate) late: Arc<LateDrain>,
+    /// Set for a streaming run: `emit`, streamed `fetch` responses.
+    pub streaming: Option<StreamingEnv>,
 }
 
 impl JobSpec {
@@ -76,6 +80,7 @@ impl JobSpec {
             storage_json: String::new(),
             host: Arc::new(NoNetwork),
             late: Arc::new(LateDrain::new(None)),
+            streaming: None,
         })
     }
 }
@@ -151,6 +156,7 @@ fn run_guarded(spec: &JobSpec, collector: &Collector) -> ScriptResult {
         late: spec.late.clone(),
         config: spec.config.iter().cloned().collect(),
         storage_json: spec.storage_json.clone(),
+        streaming: spec.streaming.clone(),
     };
     let result =
         context.with(|ctx| run_in_context(&ctx, spec, host, &stop, &memory_hit, &budget_hit));

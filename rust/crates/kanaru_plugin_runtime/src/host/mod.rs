@@ -12,10 +12,13 @@
 pub mod budget;
 pub mod callback;
 pub mod console;
+pub mod emit;
+pub mod fetch;
 pub mod late;
 pub mod quiet;
 pub mod sleep;
 pub mod storage;
+pub mod stream;
 
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -48,6 +51,12 @@ pub trait PluginHost: Send + Sync {
     /// Answers one `fetch` of a script.
     fn fetch(&self, request: FetchRequest) -> Pending<FetchResponse>;
     /// Answers one open, read or close call of a streamed response.
+    ///
+    /// Host contract (the old app's Dart `closeAll()`): keep one stream table
+    /// per run; close every stream still open when the run ends or is
+    /// cancelled (Rust never sends `Close` for them, and a cancel can stop a
+    /// `Close` before it is sent); close at once an `Open` answered after the
+    /// run ended; expect a `Close` while that stream's `Open` is pending.
     fn stream(&self, call: StreamCall) -> Pending<StreamReply>;
 }
 
@@ -92,11 +101,16 @@ pub fn failed_stream_reply(outcome: FetchOutcome) -> StreamReply {
     }
 }
 
+/// What a streaming run adds to its host environment.
+#[derive(Clone)]
+pub struct StreamingEnv {
+    /// Receives `emit` events; `None` counts and drops them.
+    pub emitter: Option<emit::Emitter>,
+    /// How long a stream read waits for data.
+    pub idle: Duration,
+}
+
 /// What the host functions of one job share.
-// `budget`, `host`, `install_id` and `late` are read by the natives that call
-// out to the host (fetch, streams), which are installed in `install` below
-// once they are ported.
-#[expect(dead_code, reason = "read by the fetch and stream natives")]
 pub struct HostEnv {
     pub deadline: Instant,
     /// The job's cancel flag.
@@ -116,6 +130,8 @@ pub struct HostEnv {
     pub config: HashMap<String, String>,
     /// The plugin's stored map as JSON (empty text: nothing stored).
     pub storage_json: String,
+    /// Set for a streaming run only.
+    pub streaming: Option<StreamingEnv>,
 }
 
 impl HostEnv {
@@ -169,18 +185,21 @@ impl HostEnv {
 
 /// Installs the host API in the context.
 ///
-/// Install order: storage, console, `fetch` (not ported yet), sleep, `emit`
-/// (streaming runs only, not ported yet), `Html` (not ported yet). A later
-/// native takes its place at the marked seam, so the order stays that of the
-/// list.
+/// Install order: storage, console, `fetch` (and with it the stream natives of
+/// a streaming run), sleep, `emit` (streaming runs only), `Html` (not ported yet).
+/// A later native takes its place at the marked seam, so the order stays that
+/// of the list.
 pub fn install<'js>(ctx: &Ctx<'js>, env: HostEnv) -> rquickjs::Result<()> {
     let env = Rc::new(env);
     let natives = Object::new(ctx.clone())?;
     storage::register(ctx, &natives, &env)?;
     console::register(ctx, &natives, &env)?;
-    // Seam: fetch natives.
+    fetch::register(ctx, &natives, &env)?;
     sleep::register(ctx, &natives, &env)?;
-    // Seam: emit (streaming runs), Html.
+    if env.streaming.is_some() {
+        emit::register(ctx, &natives, &env)?;
+    }
+    // Seam: Html.
     let init: Function = eval_classic(ctx, HOST_PRELUDE, "<runtime>")?
         .into_function()
         .ok_or_else(|| Exception::throw_message(ctx, "host prelude did not return a function"))?;

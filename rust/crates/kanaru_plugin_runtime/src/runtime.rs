@@ -18,12 +18,15 @@ use std::time::{Duration, Instant};
 
 use crate::compile_check;
 use crate::engine::{self, failure, JobSpec};
+use crate::host::emit::Emitter;
 use crate::host::late::LateDrain;
-use crate::host::PluginHost;
+use crate::host::{PluginHost, StreamingEnv};
 use crate::jobs::JobRegistry;
 use crate::limits;
 use crate::pool::{completion, Completer, Pool, ThreadStartHook};
-use crate::types::{Pending, ScriptProblem, ScriptRequest, ScriptResult, ScriptStatus};
+use crate::types::{
+    Pending, ScriptProblem, ScriptRequest, ScriptResult, ScriptStatus, StreamOptions,
+};
 
 /// The longest `shutdown` (and so `Drop`) waits for threads to end. Workers
 /// stop within one cancel poll of `reset`; the bound covers a native call
@@ -45,6 +48,15 @@ pub struct RuntimeConfig {
     /// may use [`limits::SCRIPT_STACK_BYTES`], so a smaller thread stack would
     /// overflow for real (SIGSEGV) on deep recursion instead of ending `Stack`.
     pub stack_bytes: usize,
+    /// Longest wall time of a streaming run; a request may ask for less. The
+    /// default is [`limits::MAX_STREAM_WALL_TIME`] (300 s); tests lower it to
+    /// reach the cap quickly.
+    ///
+    /// Tests only: lowers the streaming wall cap; production keeps the
+    /// default. Zero is clamped to the default when the runtime is built (a
+    /// zero cap would end every streaming run at once, never a wanted value).
+    #[doc(hidden)]
+    pub stream_wall_cap: Duration,
     /// Called first on every thread the runtime starts, with its name
     /// (`plugin-js-N`, `plugin-js-stream-N`, `plugin-js-check`,
     /// `plugin-late-answers`), so the app can lower priorities there.
@@ -59,6 +71,7 @@ impl Default for RuntimeConfig {
             queue: limits::QUEUE_CAPACITY,
             stream_workers: limits::STREAM_WORKER_THREADS,
             stack_bytes: limits::THREAD_STACK_BYTES,
+            stream_wall_cap: limits::MAX_STREAM_WALL_TIME,
             on_thread_start: None,
         }
     }
@@ -109,6 +122,7 @@ struct Inner {
     on_thread_start: Option<ThreadStartHook>,
     /// The effective thread stack (see [`RuntimeConfig::stack_bytes`]).
     stack_bytes: usize,
+    stream_wall_cap: Duration,
     stopped: AtomicBool,
 }
 
@@ -163,12 +177,45 @@ impl Inner {
         }
     }
 
-    async fn run(&self, request: ScriptRequest, host: Arc<dyn PluginHost>) -> ScriptResult {
+    /// Runs one job on the normal pool, or, with `streaming`, on the
+    /// streaming worker (`emit`, streamed `fetch`, the 300 s cap).
+    async fn run(
+        &self,
+        request: ScriptRequest,
+        host: Arc<dyn PluginHost>,
+        streaming: Option<(StreamOptions, Option<Emitter>)>,
+    ) -> ScriptResult {
         if self.stopped.load(Ordering::SeqCst) {
             return failure(ScriptStatus::Internal, "the plugin runtime was shut down");
         }
-        let Some(guard) = self.jobs.claim(request.job) else {
+        let Some(mut guard) = self.jobs.claim(request.job) else {
             return failure(ScriptStatus::Cancelled, "unknown or cancelled job id");
+        };
+        // Taken even for a normal run, so a sink attached to a job that runs
+        // without events is dropped now, not held to the end of the run.
+        let attached = guard.take_events();
+        let streaming = match streaming {
+            None => None,
+            Some((options, passed)) => {
+                // `events` means the receiver is the one attached to the job
+                // (the argument is ignored); without a sink the run never
+                // goes on with a silent no-op emitter.
+                let emitter = if options.events {
+                    let Some(attached) = attached else {
+                        return failure(
+                            ScriptStatus::Internal,
+                            "the event stream was not attached",
+                        );
+                    };
+                    Some(attached)
+                } else {
+                    passed
+                };
+                Some(StreamingEnv {
+                    emitter,
+                    idle: limits::effective_stream_idle(options.idle_timeout_ms),
+                })
+            }
         };
         if request.install_id.is_empty() {
             return failure(ScriptStatus::Internal, "install_id is empty");
@@ -179,7 +226,11 @@ impl Inner {
             files,
             request.entry,
             request.input_json,
-            limits::effective_wall_time(request.timeout_ms),
+            if streaming.is_some() {
+                limits::effective_stream_wall_time(request.timeout_ms).min(self.stream_wall_cap)
+            } else {
+                limits::effective_wall_time(request.timeout_ms)
+            },
             cancel.clone(),
         ) else {
             return failure(ScriptStatus::Internal, "two files share a name");
@@ -191,9 +242,15 @@ impl Inner {
             storage_json: request.storage_json,
             host,
             late: self.late.clone(),
+            streaming,
             ..spec
         };
-        let Some(pool) = &self.pool else {
+        let pool = if spec.streaming.is_some() {
+            &self.stream_pool
+        } else {
+            &self.pool
+        };
+        let Some(pool) = pool else {
             return failure(ScriptStatus::Internal, "no JS worker thread could start");
         };
         let (done, waiter) = completion();
@@ -266,6 +323,11 @@ impl PluginRuntime {
                 late: Arc::new(LateDrain::new(config.on_thread_start.clone())),
                 on_thread_start: config.on_thread_start,
                 stack_bytes,
+                stream_wall_cap: if config.stream_wall_cap.is_zero() {
+                    limits::MAX_STREAM_WALL_TIME
+                } else {
+                    config.stream_wall_cap
+                },
                 stopped: AtomicBool::new(false),
             }),
         }
@@ -293,7 +355,37 @@ impl PluginRuntime {
     /// full queue is `Busy`.
     pub fn run(&self, request: ScriptRequest, host: Arc<dyn PluginHost>) -> Pending<ScriptResult> {
         let inner = self.inner.clone();
-        Box::pin(async move { inner.run(request, host).await })
+        Box::pin(async move { inner.run(request, host, None).await })
+    }
+
+    /// Hangs the event receiver of a streaming run on job `id`, which must be
+    /// begun and not yet running. False, with `events` dropped (which closes
+    /// its stream), for an unknown, running, cancelled or already attached id.
+    /// Attach before [`Self::run_streaming`] starts (the bridge's sync
+    /// `plugin_job_events` call), then start the run with `events: true`.
+    pub fn attach_job_events(&self, id: u32, events: Emitter) -> bool {
+        self.inner.jobs.attach_events(id, events)
+    }
+
+    /// Like [`Self::run`] for a streaming run: `emit`, streamed `fetch`
+    /// responses (`host.stream`), a wall cap of 300 s (request value capped,
+    /// 0 means the cap) and a worker of its own, so while another streaming
+    /// run holds it the result is `Busy` (id and emitter released).
+    ///
+    /// Events go to the emitter attached with [`Self::attach_job_events`]
+    /// when `options.events` is true (`emitter` is then ignored; none
+    /// attached ends the run `Internal`), else to `emitter`; `None` counts and
+    /// drops them. An emitter returning false drops that event and the run
+    /// goes on; one that panics ends the run `Internal`.
+    pub fn run_streaming(
+        &self,
+        request: ScriptRequest,
+        options: StreamOptions,
+        host: Arc<dyn PluginHost>,
+        emitter: Option<Emitter>,
+    ) -> Pending<ScriptResult> {
+        let inner = self.inner.clone();
+        Box::pin(async move { inner.run(request, host, Some((options, emitter))).await })
     }
 
     /// Compile-only syntax check on a thread of its own (`plugin-js-check`,

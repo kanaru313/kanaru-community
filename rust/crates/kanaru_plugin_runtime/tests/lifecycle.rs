@@ -14,7 +14,7 @@ use std::task::{Context, Poll, Waker};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use common::{block_on, file, request_with};
+use common::{block_on, file, request_with, FakeHost};
 use kanaru_plugin_runtime::limits::{CANCEL_POLL, QUEUE_CAPACITY, WORKER_THREADS};
 use kanaru_plugin_runtime::{
     NoNetwork, PluginRuntime, RuntimeConfig, ScriptResult, ScriptStatus as S,
@@ -36,6 +36,22 @@ fn start(rt: &Arc<PluginRuntime>, code: &str) -> thread::JoinHandle<ScriptResult
     let job = rt.begin_job();
     let request = request_with(job, vec![file("search.js", code)], "{}", 0);
     let mut fut = rt.run(request, Arc::new(NoNetwork));
+    let first = fut.as_mut().poll(&mut Context::from_waker(Waker::noop()));
+    thread::spawn(move || match first {
+        Poll::Ready(result) => result,
+        Poll::Pending => block_on(fut),
+    })
+}
+
+/// Like [`start`], for a job whose fetches go to `host`.
+fn start_with_host(
+    rt: &Arc<PluginRuntime>,
+    code: &str,
+    host: Arc<FakeHost>,
+) -> thread::JoinHandle<ScriptResult> {
+    let job = rt.begin_job();
+    let request = request_with(job, vec![file("search.js", code)], "{}", 0);
+    let mut fut = rt.run(request, host);
     let first = fut.as_mut().poll(&mut Context::from_waker(Waker::noop()));
     thread::spawn(move || match first {
         Poll::Ready(result) => result,
@@ -107,6 +123,43 @@ fn reset_frees_every_worker_and_queued_job_within_two_cancel_polls() {
         Arc::new(NoNetwork),
     ));
     assert_eq!(after.status, S::Ok, "{after:?}");
+}
+
+#[test]
+fn reset_ends_jobs_waiting_for_a_host_that_never_answers() {
+    let _s = serial();
+    let rt = Arc::new(PluginRuntime::new(RuntimeConfig::default()));
+    let host = FakeHost::never_answering();
+    let code = "function execute() { console.log('asked'); fetch('https://t.test/'); return Response.success(1); }";
+    let jobs: Vec<_> = (0..WORKER_THREADS)
+        .map(|_| start_with_host(&rt, code, host.clone()))
+        .collect();
+    // Wait (bounded) until every worker has sent its request and waits.
+    let end = Instant::now() + Duration::from_secs(5);
+    while host.requests().len() < WORKER_THREADS && Instant::now() < end {
+        thread::sleep(Duration::from_millis(5));
+    }
+    assert_eq!(host.requests().len(), WORKER_THREADS, "all are waiting");
+
+    let started = Instant::now();
+    rt.reset();
+    for h in jobs {
+        let r = h.join().unwrap();
+        assert_eq!(r.status, S::Cancelled, "{r:?}");
+        assert_eq!(r.logs, vec!["asked".to_owned()]);
+    }
+    assert!(
+        started.elapsed() < CANCEL_POLL * 2 + Duration::from_millis(100),
+        "workers freed after {:?}",
+        started.elapsed()
+    );
+    // The runtime is usable again.
+    let after = block_on(rt.run(
+        request_with(rt.begin_job(), vec![file("search.js", OK)], "{}", 0),
+        Arc::new(NoNetwork),
+    ));
+    assert_eq!(after.status, S::Ok, "{after:?}");
+    common::assert_no_missing_install_id();
 }
 
 #[test]

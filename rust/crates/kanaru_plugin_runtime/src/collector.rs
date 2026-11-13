@@ -40,7 +40,6 @@ impl Collector {
     }
 
     /// Records a fetch failure; only the first one of a call is kept.
-    #[expect(dead_code, reason = "called by the fetch natives")]
     pub fn set_fetch_failure_once(&self, failure: FetchFailure) {
         self.lock().fetch_failure.get_or_insert(failure);
     }

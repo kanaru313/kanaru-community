@@ -229,6 +229,11 @@ pub enum StreamOp {
 }
 
 /// One call from the runtime to the host about a stream.
+///
+/// The host owns cleanup: it keeps one stream table per run and closes every
+/// stream still open when the run ends or is cancelled (Rust sends no `Close`
+/// for them). An `Open` answered after the run ended closes at once; a
+/// `Close` can arrive while that stream's `Open` is pending.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StreamCall {
     /// Identity of the plugin that asked (see [`ScriptRequest::install_id`]).

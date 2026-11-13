@@ -7,12 +7,6 @@
 //! parks between polls, so no async runtime is needed and no bridge worker
 //! blocks. The thread is woken by the future (via `Wake`) or after
 //! [`CANCEL_POLL`], whichever comes first.
-// The fetch and stream natives are the callers; until they are ported only
-// the tests call `ask`.
-#![cfg_attr(
-    not(test),
-    expect(dead_code, reason = "called by the fetch and stream natives")
-)]
 
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, Ordering};

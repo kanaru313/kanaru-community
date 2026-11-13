@@ -10,6 +10,7 @@
 //! fresh QuickJS `Runtime` + `Context` on its worker, runs, and drops both
 //! there.
 
+mod charset;
 mod collector;
 mod compile_check;
 // `engine` is public only with `test-hooks` so integration tests can reach it;
@@ -26,8 +27,10 @@ pub mod limits;
 mod memory;
 mod pool;
 mod runtime;
+mod stream_text;
 mod types;
 
+pub use host::emit::Emitter;
 pub use host::quiet::install_quiet_panic_hook;
 pub use host::{failed_response, failed_stream_reply, NoNetwork, PluginHost};
 pub use pool::ThreadStartHook;

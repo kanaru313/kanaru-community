@@ -445,7 +445,7 @@ fn dropping_the_runtime_shuts_it_down() {
     assert!(inner.stopped.load(Ordering::SeqCst));
     // `Drop` joins the workers itself (see the `/proc` test in
     // `tests/lifecycle.rs`); here: what a future that outlives it sees.
-    let r = block_on(inner.run(request(1, QUICK, 0), Arc::new(NoNetwork)));
+    let r = block_on(inner.run(request(1, QUICK, 0), Arc::new(NoNetwork), None));
     assert_eq!(r.status, S::Internal, "{r:?}");
 }
 
