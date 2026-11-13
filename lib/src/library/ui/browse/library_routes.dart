@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:material_ui/material_ui.dart' show Theme;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -104,30 +103,26 @@ List<GoRoute> _detailRoutes() => [
 /// A detail page slides in from the right and out again on one smooth curve.
 /// The platform default (Cupertino) eases fast-to-slow, so the last part of
 /// the slide crawls and the page below stays on screen as a trailing image.
-/// The page has its own solid ground: the detail layouts paint over a
-/// translucent tint, and the page under would show through while it slides.
-Page<void> _detailPage(
-  GoRouterState state,
-  Widget child,
-) => CustomTransitionPage<void>(
-  key: state.pageKey,
-  child: Builder(
-    builder: (context) =>
-        ColoredBox(color: Theme.of(context).colorScheme.surface, child: child),
-  ),
-  transitionDuration: const Duration(milliseconds: 280),
-  reverseTransitionDuration: const Duration(milliseconds: 240),
-  transitionsBuilder: (context, animation, secondary, child) => SlideTransition(
-    position: Tween(begin: const Offset(1, 0), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      ),
-    ),
-    child: child,
-  ),
-);
+/// Each detail page paints its own ground (`DetailFrame`).
+Page<void> _detailPage(GoRouterState state, Widget child) =>
+    CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 280),
+      reverseTransitionDuration: const Duration(milliseconds: 240),
+      transitionsBuilder: (context, animation, secondary, child) =>
+          SlideTransition(
+            position: Tween(begin: const Offset(1, 0), end: Offset.zero)
+                .animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                    reverseCurve: Curves.easeInCubic,
+                  ),
+                ),
+            child: child,
+          ),
+    );
 
 Widget _pageOf(LibraryTab tab, GoRouterState state) => switch (tab) {
   LibraryTab.songs => const SongsPage(),

@@ -21,6 +21,10 @@ import '../menus/more_button.dart';
 /// Frame of a detail page: the page [title] in a header with a back button
 /// (no root slots, no ⋮), and the page below it. Back pops one page; a page
 /// opened as the first one (a link from outside) goes to [fallback] instead.
+///
+/// The frame has its own solid ground: the detail layouts paint over a
+/// translucent tint, and the page under would show through while this one
+/// slides in.
 class DetailFrame extends StatelessWidget {
   const DetailFrame({
     super.key,
@@ -35,14 +39,17 @@ class DetailFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
-          child: PageHeader(title: title, onBack: () => _back(context)),
-        ),
-        Expanded(child: KScrollInkSurface(child: child)),
-      ],
+    return ColoredBox(
+      color: Theme.of(context).colorScheme.surface,
+      child: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
+            child: PageHeader(title: title, onBack: () => _back(context)),
+          ),
+          Expanded(child: KScrollInkSurface(child: child)),
+        ],
+      ),
     );
   }
 
