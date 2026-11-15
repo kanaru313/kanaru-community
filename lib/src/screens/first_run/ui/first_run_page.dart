@@ -170,7 +170,7 @@ class _Header extends StatelessWidget {
           ),
           child: SizedBox.square(
             dimension: KSpace.x10,
-            child: Icon(KIcons.appLogo, size: 36, color: scheme.onPrimary),
+            child: Icon(KIcons.appLogo, size: KIconSize.xl, color: scheme.onPrimary),
           ),
         ),
         const KGap(KSpace.x4),
