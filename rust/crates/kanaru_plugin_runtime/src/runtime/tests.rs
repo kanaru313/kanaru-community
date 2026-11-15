@@ -503,6 +503,10 @@ fn a_runtime_without_workers_ends_runs_internal_not_hung() {
     });
     let r = run_script(&rt, QUICK, 0);
     assert_eq!(r.status, S::Internal, "{r:?}");
+    assert!(
+        r.error_message.contains("no JS worker thread could start"),
+        "{r:?}"
+    );
 }
 
 #[test]

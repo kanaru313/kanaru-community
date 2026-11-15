@@ -154,8 +154,14 @@ rebase conflict, take either side and run the two commands again.
   first checks the cargokit patch marker (below), then greps for `unsafe`
   outside these three files (the whitelist patterns are anchored to the start of
   the path, so a line that merely mentions a whitelisted path is still
-  reported), then runs `cargo fmt --check`, `cargo audit`, `cargo test` and
-  `cargo clippy -D warnings`. The plugin compat test needs `KANARU_PLUGIN_REPO`
+  reported), then runs `cargo fmt --check`, `cargo audit`, `cargo deny check licenses bans sources`
+  (`rust/deny.toml`: eight allowed licenses and no copyleft, no new duplicate crate
+  version beyond the explicit `skip` list, crates.io only), `cargo test` (the
+  `kanaru_plugin_runtime` tests on one test thread, so its wall-clock bounds do
+  not compete for the CPU) and `cargo clippy -D warnings`. CI installs the Rust
+  toolchain with `dtolnay/rust-toolchain` pinned by commit SHA at the version of the
+  flake's Rust (`nix develop -c rustc --version`): bump both together, and the
+  cargo cache key carries that version. The plugin compat test needs `KANARU_PLUGIN_REPO`
   and skips itself without it; the gate and CI never set it.
 - `kanaru_media` and `kanaru_plugin_runtime` have no FFI and do not depend on
   each other; only `kanaru_bridge` knows flutter_rust_bridge. Explicit DTOs,
@@ -175,7 +181,11 @@ rebase conflict, take either side and run the two commands again.
   and the late-answers drain belong to a `PluginRuntime` instance (`reset`
   cancels every job, `shutdown` and `Drop` join the threads). The bridge holds
   the one instance of the app; tests make their own. The only global is the
-  opt-in panic hook of `install_quiet_panic_hook`.
+  opt-in panic hook of `install_quiet_panic_hook`. The bridge's `init_app` (once
+  per process, a hot restart does not re-run it) chains two hooks: the quiet one
+  above, and `guard::install_hook` below it, which writes one line (message and
+  location, no backtrace) for a panic inside `guarded` and skips frb's capture and
+  std's print. The Android logger is set to Warn, not frb's Trace.
 - Second thread-per-call exception, next to the lyrics one: the compile-only
   check of a plugin script (`check_script`) runs on its own 8 MiB thread
   (`plugin-js-check`), because it is not a job of the worker pool and must

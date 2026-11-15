@@ -85,6 +85,8 @@
             # (run it with RUSTC_BOOTSTRAP=1 on the stable toolchain).
             cargo-expand
             cargo-audit
+            # Licenses, duplicate versions and sources (rust/deny.toml); tool/check_rust runs it.
+            cargo-deny
             # Cargokit (flutter_rust_bridge's build glue) always calls rustup.
             # Nix has one stable toolchain and no rustup, so answer exactly the
             # three calls cargokit makes and reject everything else. The

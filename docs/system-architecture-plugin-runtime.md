@@ -10,7 +10,8 @@ Code: `rust/crates/kanaru_plugin_runtime/` (plain Rust, no FFI, no dependency on
 `PluginRuntime::new(RuntimeConfig)` owns everything: the JS worker pool, the
 streaming worker pool, the job registry and the late-answers drain. The crate has
 no process globals; the only global is the opt-in panic hook of
-`install_quiet_panic_hook`. The bridge keeps the one instance of the app in a
+`install_quiet_panic_hook`; the bridge's `init_app` installs it above its own
+guarded-panic hook (one log line per panic caught by `guarded`). The bridge keeps the one instance of the app in a
 `OnceLock` (`runtime_holder.rs`), sized from `pools::config::PLUGIN_*`; tests make
 their own.
 
@@ -160,6 +161,10 @@ used.
 lock (`common/mod.rs`) and a `FakeHost` that records every request and checks the
 `install_id`. `compat_repo.rs` runs a real plugin repository against such a host,
 locally only (see [plugin-host-api.md](./plugin-host-api.md#compatibility-check)).
+`tool/check_rust` runs the `kanaru_plugin_runtime` tests on one test thread
+(`-- --test-threads=1`) so the wall-clock bounds of `tests/limits.rs` do not compete
+for the CPU; each bound is its stop path's guarantee plus one scheduling
+allowance (`SCHED`).
 
 `html.rs`, `html_memory.rs` and `html_fuzz.rs` prove the Html limits and are
 run in release mode by `tool/check_rust` (the profile the app ships, debug

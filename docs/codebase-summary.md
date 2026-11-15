@@ -48,7 +48,7 @@ library UI bodies (their seeds are in the table above).
 ## Gate (`tool/`)
 
 - `check`: bash script running the full gate (`--rust` adds `check_rust`).
-- `check_rust`: the Rust gate (cargokit patch marker, `unsafe` grep, fmt, `cargo audit`, test, clippy); the CI Rust job runs it.
+- `check_rust`: the Rust gate (cargokit patch marker, `unsafe` grep, fmt, `cargo audit`, `cargo deny`, test, clippy); the CI Rust job runs it.
 - `merge_arb.dart`: merges the l10n parts (`--check` for the gate).
 - `check_architecture.dart`: wrapper that runs the CLI of the lint package.
 - `architecture_lint/`: pure Dart package, analyzer plugin (`lib/main.dart`)
@@ -84,7 +84,7 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
   against a fake host (local only, skips without the variable; dev-dependencies
   `ureq` and `zip`); the feature `test-hooks` adds the `__testLog` and `__testPanic`
   script globals.
-- `kanaru_bridge`: `guard.rs` (`guarded`, panic to `NativeError`), `pools.rs`
+- `kanaru_bridge`: `guard.rs` (`guarded`, panic to `NativeError`; `install_hook`: one log line per guarded panic), `pools.rs`
   (`background`, `interactive`, `waveform`; 8 MiB stacks), `os.rs` (thread
   priority, the only `unsafe`), `source.rs` (`Source`, `open_source`: regular
   files only), `api/{native_info,error,tags,covers,waveform}.rs` (`native_versions`,
@@ -92,7 +92,7 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
   `api/lyrics.rs` (`read_embedded_lyrics`, own thread per call, 10 s timeout,
   at most 2 stuck threads; reader in `kanaru_media` `tags/lyrics_reader.rs` and `tags/lyrics_sylt.rs`).
   Plugin runtime: `runtime_holder.rs` (`runtime()`, the one `PluginRuntime` in a
-  `OnceLock`, sized from `pools::config::PLUGIN_*`, installs the quiet panic hook;
+  `OnceLock`, sized from `pools::config::PLUGIN_*`, installs the quiet panic hook (idempotent; `init_app` does it first);
   `existing()` lets `reset`/`cancel` skip a never-built runtime),
   `host_dart.rs` (`DartHost`: `PluginHost` over the Dart fetch and stream callbacks),
   `plugin_dto.rs` (conversions DTO and runtime types; an unknown variant of a
@@ -104,7 +104,7 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
   `api/plugin_stream.rs` (stream DTOs; `plugin_job_events`, `run_plugin_stream_script`).
   Tests: `tests/plugin_api.rs` (shared runtime behind a `serial()` lock).
   `frb_generated.rs` is generated.
-- Third-party versions are in `rust/Cargo.toml`, with the reason beside each.
+- Third-party versions are in `rust/Cargo.toml`, with the reason beside each. The dependency policy (licenses, duplicate versions, sources) is `rust/deny.toml`, checked by `cargo deny` in the gate.
 - `rust_builder/` is the cargokit glue that builds `kanaru_bridge` for the
   host and the Android ABIs; its `android_environment.dart` carries a local
   bindgen patch (see code-standards.md). Generated bindings: `rust/crates/kanaru_bridge/src/frb_generated.rs`
