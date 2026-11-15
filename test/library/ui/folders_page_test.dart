@@ -4,7 +4,7 @@ import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/domain/music_folder.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
-import 'package:kanaru/src/library/ui/folders/folder_bar.dart';
+import 'package:kanaru/src/library/ui/browse/play_shuffle_buttons.dart';
 import 'package:kanaru/src/library/ui/folders/folder_locations.dart';
 import 'package:kanaru/src/library/ui/folders/folder_play.dart';
 import 'package:kanaru/src/library/ui/folders/folder_slivers.dart';
@@ -127,26 +127,19 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('play and shuffle in a level use the songs below it', (
-    tester,
-  ) async {
-    final playback = FakePlaybackCommands();
-    final (h, _) = await _single(tester, playback: playback);
-    await tester.tap(
-      find.descendant(
-        of: find.byType(FolderPlayRow),
-        matching: find.byTooltip('Play all'),
-      ),
-    );
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 50)),
-    );
-    await tester.pump();
-    // Deep: 5 songs under the music folder.
-    expect((playback.calls.single as PlayTracksCall).tracks.length, 5);
-    await unmountApp(tester);
-    expect(h.location, '/library/folders');
-  });
+  for (final (name, width) in [('mobile', 390.0), ('desktop', 1280.0)]) {
+    testWidgets('$name: a folder level has no play all or shuffle buttons', (
+      tester,
+    ) async {
+      final (h, _) = await _single(tester, width: width);
+      expect(find.byType(PlayShuffleButtons), findsNothing);
+      expect(find.byTooltip('Shuffle'), findsNothing);
+      // The rows of the level still show, each with its own play button.
+      expect(find.byType(FolderTile), findsWidgets);
+      await unmountApp(tester);
+      expect(h.location, '/library/folders');
+    });
+  }
 
   testWidgets('two music folders with one name: a list that tells them apart', (
     tester,
