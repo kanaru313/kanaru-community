@@ -309,7 +309,7 @@ class _SelectedListState extends ConsumerState<_SelectedList> {
         return KeyedSubtree(
           key: ValueKey(ids[i]),
           child: info == null
-              ? const SongRowPlaceholder()
+              ? const SongRowPlaceholder(filled: false)
               : KSwipeActions.remove(
                   label: AppLocalizations.of(context).libraryMenuDeselect,
                   onRemove: () => _deselect(ids[i]),

@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
+import '../../theme/k_row_colors.dart';
 import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_space.dart';
 import '../k_cover.dart';
@@ -22,8 +23,8 @@ enum KMediaCardStyle {
   /// Rounded tonal card; the list supplies the outer side space.
   card,
 
-  /// Full-width row: no radius, no fill unless current or selected, own
-  /// 8 dp side padding (the same as a card).
+  /// Full-width row: no radius, the neutral fill (or the playing / selected
+  /// colour), own 8 dp side padding (the same as a card).
   flat,
 }
 
@@ -74,6 +75,7 @@ class KMediaCard extends StatefulWidget {
     this.onLongPress,
     this.loading = false,
     this.style = KMediaCardStyle.auto,
+    this.filled = true,
   }) : assert(
          onAction == null || actionLabel != null,
          'the play button needs a label for its tooltip and screen reader',
@@ -122,7 +124,8 @@ class KMediaCard extends StatefulWidget {
   final IconData actionIcon;
   final String? actionLabel;
 
-  /// The row of the track that is playing: tinted `primaryContainer`.
+  /// The row of the track that is playing: gradient from `primaryContainer`
+  /// to `tertiaryContainer` (`KRowColors.playingGradient`).
   final bool current;
 
   /// Screen-reader text for [current] (for example "Now playing"), so the
@@ -145,6 +148,11 @@ class KMediaCard extends StatefulWidget {
 
   /// See [KMediaCardStyle].
   final KMediaCardStyle style;
+
+  /// Draws the neutral row fill (`KRowColors.fill`) in both styles. False for
+  /// rows that sit on a surface of their own (the selection panel): flat
+  /// transparent, or `surfaceContainerLow` as a card.
+  final bool filled;
 
   /// Space below a card.
   static const double gap = KSpace.x1;
@@ -190,10 +198,14 @@ class _KMediaCardState extends State<KMediaCard> {
     final flat =
         widget.style == KMediaCardStyle.flat ||
         (widget.style == KMediaCardStyle.auto && mobile);
+    // The playing row (also when selected) draws a gradient over a
+    // transparent material; every other state is one colour.
     final background = widget.current
-        ? scheme.primaryContainer
+        ? Colors.transparent
         : widget.selected
         ? scheme.secondaryContainer
+        : widget.filled
+        ? KRowColors.fill(Theme.of(context).brightness)
         : flat
         ? Colors.transparent
         : scheme.surfaceContainerLow;
@@ -203,7 +215,7 @@ class _KMediaCardState extends State<KMediaCard> {
         ? scheme.onSecondaryContainer
         : scheme.onSurface;
     final soft = widget.current || widget.selected
-        ? ink.withValues(alpha: 0.8)
+        ? ink.withValues(alpha: KRowColors.containerSoftAlpha)
         : scheme.onSurfaceVariant;
 
     // Height of the row content: the right column and the tap absorbers fill it.
@@ -311,35 +323,37 @@ class _KMediaCardState extends State<KMediaCard> {
     // The check of a dimmed, selected card stays fully opaque: it is drawn
     // over the dimmed card, on the cover's spot.
     final markOutsideDim = widget.dimmed && widget.selected && leading != null;
-    Widget card(Widget dimmedCard) => markOutsideDim
-        ? Stack(
-            children: [
-              dimmedCard,
-              PositionedDirectional(
-                start: KMediaCard.sidePadding,
-                // The cover is centred in the row, which is as high as the
-                // taller of the cover and the text block.
-                top:
-                    KMediaCard._padV +
-                    (math.max(
-                              KMediaCard.coverSize,
-                              KMediaCardMetrics.textBlock(scaler),
-                            ) -
-                            KMediaCard.coverSize) /
-                        2,
-                width: KMediaCard.coverSize,
-                height: KMediaCard.coverSize,
-                child: IgnorePointer(
-                  child: KMediaCardCoverCheck(
-                    circle: widget.circleLeading,
-                    selected: true,
-                    selecting: true,
-                  ),
-                ),
+    Widget card(Widget dimmedCard) => Stack(
+      fit: StackFit.passthrough,
+      children: [
+        dimmedCard,
+        // Always a Stack, the mark its last child, so the card keeps its
+        // slot when the mark comes and goes.
+        if (markOutsideDim)
+          PositionedDirectional(
+            start: KMediaCard.sidePadding,
+            // The cover is centred in the row, which is as high as the
+            // taller of the cover and the text block.
+            top:
+                KMediaCard._padV +
+                (math.max(
+                          KMediaCard.coverSize,
+                          KMediaCardMetrics.textBlock(scaler),
+                        ) -
+                        KMediaCard.coverSize) /
+                    2,
+            width: KMediaCard.coverSize,
+            height: KMediaCard.coverSize,
+            child: IgnorePointer(
+              child: KMediaCardCoverCheck(
+                circle: widget.circleLeading,
+                selected: true,
+                selecting: true,
               ),
-            ],
-          )
-        : dimmedCard;
+            ),
+          ),
+      ],
+    );
 
     return Padding(
       padding: const EdgeInsets.only(bottom: KMediaCard.gap),
@@ -352,6 +366,9 @@ class _KMediaCardState extends State<KMediaCard> {
           child: card(
             KMediaCardFrame(
               background: background,
+              gradient: widget.current
+                  ? KRowColors.playingGradient(scheme)
+                  : null,
               ink: ink,
               soft: soft,
               radius: flat ? BorderRadius.zero : KMediaCard._radius,
