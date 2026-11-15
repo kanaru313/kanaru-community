@@ -38,9 +38,11 @@ class SelectedSongRow extends StatelessWidget {
       ),
       top: duration == null ? null : Text(formatClock(duration)),
       bottom: SongFavoriteButton(trackId: info.id),
-      // The queue's handle: 40 dp on desktop, 48 dp on mobile.
+      // Same box as the row's icon buttons, like the queue's handle.
       accessory: KDragHandle(
         index: index,
+        dimension: KIconSize.sm + 2 * KSpace.x2,
+        iconSize: KIconSize.sm,
         tooltip: AppLocalizations.of(context).libraryPanelReorder,
       ),
       trailing: LibraryMoreButton(

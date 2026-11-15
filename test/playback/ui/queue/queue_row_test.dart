@@ -111,7 +111,7 @@ void main() {
         find.widgetWithIcon(KIconButton, KIcons.heart),
       );
       final more = rectIn(tester, row, find.byIcon(KIcons.moreVert));
-      expect(handle.size, const Size.square(KLayout.minTargetDesktop));
+      expect(handle.size, const Size.square(KIconSize.sm + 2 * KSpace.x2));
       expect(heart.right, lessThanOrEqualTo(handle.left));
       expect(heart.overlaps(handle), isFalse);
       expect(handle.right, lessThanOrEqualTo(more.left));
@@ -184,7 +184,7 @@ void main() {
       expect(cover.right, lessThan(time.left));
       expect(time.right, lessThanOrEqualTo(handle.left));
       expect(handle.right, lessThanOrEqualTo(more.left));
-      expect(handle.size, const Size.square(KLayout.minTarget));
+      expect(handle.size, const Size.square(KIconSize.sm + 2 * KSpace.x2));
     });
 
     testWidgets('flat on both shells: no radius, the tint spans the row', (

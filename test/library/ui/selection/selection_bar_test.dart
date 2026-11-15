@@ -167,7 +167,7 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('a panel row drag handle is at least the minimum target', (
+  testWidgets('a panel row drag handle is the icon button box, 36 dp', (
     tester,
   ) async {
     final h = await pumpSelection(tester);
@@ -183,8 +183,7 @@ void main() {
           )
           .first,
     );
-    expect(size.width, greaterThanOrEqualTo(KLayout.minTarget));
-    expect(size.height, greaterThanOrEqualTo(KLayout.minTarget));
+    expect(size, const Size.square(KIconSize.sm + 16));
     await unmountApp(tester);
   });
 
@@ -410,10 +409,7 @@ void main() {
     await unmountApp(tester);
   });
 
-  for (final (name, width, side) in [
-    ('mobile', 390.0, KLayout.minTarget),
-    ('desktop', 1280.0, KLayout.minTargetDesktop),
-  ]) {
+  for (final (name, width) in [('mobile', 390.0), ('desktop', 1280.0)]) {
     testWidgets('$name: panel row handle is the queue handle', (tester) async {
       final h = await pumpSelection(tester, width: width);
       final ids = await allIds(h);
@@ -426,7 +422,12 @@ void main() {
             matching: find.byType(KDragHandle),
           )
           .first;
-      expect(tester.getSize(handle), Size.square(side));
+      // The same box as the row's icon buttons, on both shells.
+      expect(tester.getSize(handle), const Size.square(KIconSize.sm + 16));
+      expect(
+        tester.widget<Icon>(find.byIcon(KIcons.dragHandle).first).size,
+        KIconSize.sm,
+      );
       final cursors = tester
           .widgetList<MouseRegion>(
             find.descendant(of: handle, matching: find.byType(MouseRegion)),

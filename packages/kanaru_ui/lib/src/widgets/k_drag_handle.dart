@@ -18,6 +18,7 @@ class KDragHandle extends StatelessWidget {
     super.key,
     required this.index,
     this.dimension,
+    this.iconSize,
     this.semanticLabel,
     this.tooltip,
   }) : assert(
@@ -28,6 +29,11 @@ class KDragHandle extends StatelessWidget {
   /// Index of the row in its [ReorderableList].
   final int index;
   final double? dimension;
+
+  /// Glyph size; null keeps the ambient icon size. Rows that set their
+  /// action buttons to `KIconSize.sm` pass the same size so the handle sits
+  /// in the same cluster.
+  final double? iconSize;
   final String? semanticLabel;
   final String? tooltip;
 
@@ -42,7 +48,7 @@ class KDragHandle extends StatelessWidget {
       cursor: SystemMouseCursors.grab,
       child: SizedBox.square(
         dimension: size,
-        child: const Icon(KIcons.dragHandle),
+        child: Icon(KIcons.dragHandle, size: iconSize),
       ),
     );
     if (tooltip != null) handle = Tooltip(message: tooltip, child: handle);
