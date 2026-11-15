@@ -328,8 +328,11 @@ class _KMediaCardState extends State<KMediaCard> {
           selected: widget.selected,
           value: widget.current ? widget.currentLabel : null,
           child: card(
-            Opacity(
+            AnimatedOpacity(
               opacity: widget.dimmed ? 0.5 : 1,
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : KMotion.fast,
               child: MouseRegion(
                 onEnter: (_) => setState(() => _hovered = true),
                 onExit: (_) => setState(() => _hovered = false),

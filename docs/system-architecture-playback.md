@@ -619,7 +619,7 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). 
 
 - **List** (`queue_list.dart`): one `ReorderableListView.builder`, fixed row extent (`KMediaCard.extentOf` for the text scale in effect, the same height as a library song row; `QueueRowSize` picks the handle size, 48 dp mobile and 40 dp desktop, long press selects on both shells when the host gives a selection hook (without one: menu on mobile, nothing on desktop), and Delete on desktop), keys by
   entry id, `buildDefaultDragHandles: false`, bottom padding 72 (plus `bottomInset` while the sheet floats the selection panel). A drop is resolved by the dragged entry's id, not by
-  the index the list reports, so an edit during the drag cannot move another entry. `QueueScrollController` keeps the
+  the index the list reports, so an edit during the drag cannot move another entry. A drop is shown at once: the list keeps the pending moves and folds them over the controller's view with `moveInView` (`domain/queue_view_move.dart`, the position rule of `move`), because `ReorderableListView` needs the new order in the next frame while `move` is async; the pending move is dropped when `move` completes (success or failure), in the frame the new view arrives. `QueueScrollController` keeps the
   start offset inside the content (a short queue starts at the top). On open the current row is the second visible. When the text scale changes the extent changes and the list re-anchors to the current row.
 - **Rows** (`queue_row.dart`): a flat `KMediaCard` on both shells (full width, no radius): 56 dp cover (radius 10),
   title / artists (`trackArtistLine`) / `album • year` (`trackAlbumLine`, both in `media/domain/track_lines.dart`),

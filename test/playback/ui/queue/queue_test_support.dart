@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
@@ -58,6 +59,9 @@ Future<ProviderContainer> pumpFakeQueue(
 
   /// Later views (an advance, an edit); [view] is the first one.
   Stream<QueueView>? views,
+
+  /// More provider overrides (a fake player controller, for example).
+  List<Override> overrides = const [],
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -73,6 +77,7 @@ Future<ProviderContainer> pumpFakeQueue(
       }),
       isPlayingProvider.overrideWithValue(playing),
       queueRowInfoLoaderProvider.overrideWithValue(counting.call),
+      ...overrides,
     ],
   );
   addTearDown(container.dispose);

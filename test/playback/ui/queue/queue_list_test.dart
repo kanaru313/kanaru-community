@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/playback/domain/playback_views.dart';
+import 'package:kanaru/src/playback/state/player_controller.dart';
+import 'package:kanaru/src/playback/state/playback_providers.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_list.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_row.dart';
@@ -158,4 +163,162 @@ void main() {
       items[5].entryId,
     ]);
   });
+
+  testWidgets('with the real controller no frame shows the old order', (
+    tester,
+  ) async {
+    final host = await pumpWithPlayer(tester, _list);
+    final ids = [for (final i in host.h.c.queueState.items) i.entryId];
+    final expected = [ids[0], ids[2], ids[3], ids[1], ids[4], ids[5]];
+    final list = tester.widget<ReorderableListView>(
+      find.byType(ReorderableListView),
+    );
+    list.onReorderStart!(1);
+    // The drop runs in the real zone so the controller makes progress between
+    // frames; every frame from the drop until the controller is idle is read.
+    await tester.runAsync(() async => list.onReorderItem!(1, 3));
+    await tester.pump();
+    expect(_ids(tester), expected);
+    for (var i = 0; i < 20; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 5)),
+      );
+      await tester.pump();
+      expect(_ids(tester), expected, reason: 'frame $i');
+    }
+    await host.letStreamsArrive(tester);
+    expect(_ids(tester), expected);
+    expect([for (final i in host.h.c.queueState.items) i.entryId], expected);
+  });
+
+  group('optimistic reorder', () {
+    late _FakeController controller;
+    late StreamController<QueueView> views;
+
+    Future<void> pump(WidgetTester tester, {int? current}) async {
+      controller = _FakeController();
+      views = StreamController<QueueView>();
+      addTearDown(views.close);
+      await pumpFakeQueue(
+        tester,
+        _list,
+        view: fakeView(6, current: current),
+        views: views.stream,
+        overrides: [playerControllerProvider.overrideWithValue(controller)],
+      );
+    }
+
+    /// Drops the row at [from] at [to] through the list's own callbacks.
+    void drop(WidgetTester tester, int from, int to) {
+      final list = tester.widget<ReorderableListView>(
+        find.byType(ReorderableListView),
+      );
+      list.onReorderStart!(from);
+      list.onReorderItem!(from, to);
+    }
+
+    List<QueueRowRole> roles() => [
+      for (final e in find.byType(QueueRow).evaluate())
+        (e.widget as QueueRow).role,
+    ];
+
+    /// The controller's view after row 2 (entry id 2) moved to index 4.
+    QueueView moved({int? current, int extra = 0}) {
+      final v = fakeView(6 + extra, current: current);
+      final items = [...v.items]..removeAt(1);
+      items.insert(4, v.items[1]);
+      return QueueView(items: items, current: current);
+    }
+
+    testWidgets('the dropped row is in place in the next frame', (
+      tester,
+    ) async {
+      await pump(tester);
+      drop(tester, 1, 4);
+      await tester.pump();
+      expect(_ids(tester), [1, 3, 4, 5, 2, 6]);
+      expect(controller.moves, [(2, 4)]);
+      // The controller applies the move: no frame shows another order.
+      views.add(moved());
+      controller.pending.single.complete();
+      for (var i = 0; i < 3; i++) {
+        await tester.pump();
+        expect(_ids(tester), [1, 3, 4, 5, 2, 6]);
+      }
+      await tester.pumpAndSettle();
+      expect(_ids(tester), [1, 3, 4, 5, 2, 6]);
+    });
+
+    testWidgets('a failed move shows the controller order again', (
+      tester,
+    ) async {
+      await pump(tester);
+      drop(tester, 1, 4);
+      await tester.pump();
+      expect(_ids(tester), [1, 3, 4, 5, 2, 6]);
+      controller.pending.single.completeError(StateError('db'));
+      await tester.pumpAndSettle();
+      expect(_ids(tester), [1, 2, 3, 4, 5, 6]);
+      expect(find.text('Could not change the queue'), findsOneWidget);
+    });
+
+    testWidgets('a change published while the move is pending still shows', (
+      tester,
+    ) async {
+      await pump(tester);
+      drop(tester, 1, 4);
+      await tester.pump();
+      views.add(fakeView(7));
+      await tester.pump();
+      await tester.pump();
+      expect(_ids(tester), [1, 3, 4, 5, 2, 6, 7]);
+      views.add(moved(extra: 1));
+      controller.pending.single.complete();
+      await tester.pumpAndSettle();
+      expect(_ids(tester), [1, 3, 4, 5, 2, 6, 7]);
+    });
+
+    testWidgets('a dragged current row keeps the played rows dimmed', (
+      tester,
+    ) async {
+      await pump(tester, current: 1);
+      expect(roles().take(3), [
+        QueueRowRole.played,
+        QueueRowRole.current,
+        QueueRowRole.upcoming,
+      ]);
+      drop(tester, 1, 4);
+      await tester.pump();
+      expect(_ids(tester), [1, 3, 4, 5, 2, 6]);
+      expect(roles(), [
+        QueueRowRole.played,
+        QueueRowRole.played,
+        QueueRowRole.played,
+        QueueRowRole.played,
+        QueueRowRole.current,
+        QueueRowRole.upcoming,
+      ]);
+      // Completed with the new view: the roles stay (the playing row's
+      // indicator animates for ever, so no settle).
+      views.add(moved(current: 4));
+      controller.pending.single.complete();
+      await tester.pump();
+      expect(_ids(tester), [1, 3, 4, 5, 2, 6]);
+      expect(roles().indexOf(QueueRowRole.current), 4);
+    });
+  });
+}
+
+/// A player whose `move` finishes when the test completes [pending].
+class _FakeController extends Fake implements PlayerController {
+  final moves = <(int, int)>[];
+  final pending = <Completer<void>>[];
+
+  @override
+  Future<void> move(int entryId, int toIndex) {
+    moves.add((entryId, toIndex));
+    final c = Completer<void>();
+    pending.add(c);
+    return c.future;
+  }
 }

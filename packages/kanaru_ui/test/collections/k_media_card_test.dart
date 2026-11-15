@@ -174,9 +174,15 @@ void main() {
     var lowest = 1.0;
     for (final e
         in find
-            .ancestor(of: target, matching: find.byType(Opacity))
+            .ancestor(
+              of: target,
+              matching: find.byWidgetPredicate(
+                (w) => w is Opacity || w is AnimatedOpacity,
+              ),
+            )
             .evaluate()) {
-      final value = (e.widget as Opacity).opacity;
+      final w = e.widget;
+      final value = w is Opacity ? w.opacity : (w as AnimatedOpacity).opacity;
       if (value < lowest) lowest = value;
     }
     return lowest;
@@ -233,15 +239,46 @@ void main() {
   testWidgets('dimmed halves the opacity', (tester) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_card(dimmed: true)));
-    final opacity = tester.widget<Opacity>(
+    final opacity = tester.widget<AnimatedOpacity>(
       find
           .descendant(
             of: find.byType(KMediaCard),
-            matching: find.byType(Opacity),
+            matching: find.byType(AnimatedOpacity),
           )
           .first,
     );
     expect(opacity.opacity, 0.5);
+  });
+
+  testWidgets('dimming fades in over the fast motion duration', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_card()));
+    await tester.pumpWidget(host(_card(dimmed: true)));
+    final fade = find.descendant(
+      of: find.byType(KMediaCard),
+      matching: find.byType(FadeTransition),
+    );
+    double shown() => tester.widget<FadeTransition>(fade.first).opacity.value;
+    expect(shown(), 1);
+    await tester.pump(KMotion.fast ~/ 2);
+    expect(shown(), allOf(lessThan(1), greaterThan(0.5)));
+    await tester.pump(KMotion.fast);
+    expect(shown(), 0.5);
+  });
+
+  testWidgets('dimming is immediate when animations are disabled', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    Widget app(bool dimmed) => host(_card(dimmed: dimmed), reduceMotion: true);
+    await tester.pumpWidget(app(false));
+    await tester.pumpWidget(app(true));
+    await tester.pump();
+    final fade = find.descendant(
+      of: find.byType(KMediaCard),
+      matching: find.byType(FadeTransition),
+    );
+    expect(tester.widget<FadeTransition>(fade.first).opacity.value, 0.5);
   });
 
   testWidgets('tap and long press reach the callbacks', (tester) async {
@@ -323,13 +360,7 @@ void main() {
     await tester.pumpWidget(host(_card(onAction: () {})));
     expect(actionOpacity(tester), 0);
     // The trailing button never hides.
-    expect(
-      find.ancestor(
-        of: find.byIcon(KIcons.moreVert),
-        matching: find.byType(AnimatedOpacity),
-      ),
-      findsNothing,
-    );
+    expect(minOpacityAbove(tester, find.byIcon(KIcons.moreVert)), 1);
 
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     addTearDown(mouse.removePointer);

@@ -130,6 +130,22 @@ void main() {
     expect(q.indexOfEntry(ids[4]), greaterThan(0));
     expect(q.items[q.current! + 1].trackId, host.h.tracks[4]);
     expect(q.items[q.current! + 1].entryId, isNot(ids[4]));
+    // The same feedback as the library menu.
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Playing next'), findsOneWidget);
+  });
+
+  testWidgets('Play next that fails says the queue could not change', (
+    tester,
+  ) async {
+    final host = await _pump(tester);
+    await _openMenu(tester, 'T4');
+    // Every queue write now fails.
+    await host.run(tester, host.h.db.close);
+    await host.tap(tester, find.text('Play next'));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Could not change the queue'), findsOneWidget);
+    expect(find.text('Playing next'), findsNothing);
   });
 
   testWidgets('Remove takes the entry out with an Undo toast', (tester) async {

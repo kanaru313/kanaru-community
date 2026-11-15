@@ -90,9 +90,15 @@ void main() {
     var lowest = 1.0;
     for (final e
         in find
-            .ancestor(of: target, matching: find.byType(Opacity))
+            .ancestor(
+              of: target,
+              matching: find.byWidgetPredicate(
+                (w) => w is Opacity || w is AnimatedOpacity,
+              ),
+            )
             .evaluate()) {
-      final value = (e.widget as Opacity).opacity;
+      final w = e.widget;
+      final value = w is Opacity ? w.opacity : (w as AnimatedOpacity).opacity;
       if (value < lowest) lowest = value;
     }
     return lowest;
