@@ -1,13 +1,18 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
+import '../../theme/k_row_colors.dart';
 import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../k_row_icon_action.dart';
 
 /// Frame of a `KMediaCard`: dim, hover and focus tracking, background
-/// material, text and icon colours, and the tap ink. Package-private: not
-/// exported from the library.
+/// material, gradient, text and icon colours, the focus ring and the tap ink.
+/// Package-private: not exported from the library.
+///
+/// The widget tree is the same in every state (a flat or gradient fill is a
+/// property, never a different widget), so a state flip repaints the row and
+/// never remounts its content.
 ///
 /// [builder] gets whether the pointer hovers or focus is inside the card
 /// (the desktop play button reveals on it).
@@ -15,6 +20,7 @@ class KMediaCardFrame extends StatefulWidget {
   const KMediaCardFrame({
     super.key,
     required this.background,
+    required this.gradient,
     required this.ink,
     required this.soft,
     required this.radius,
@@ -24,7 +30,9 @@ class KMediaCardFrame extends StatefulWidget {
     required this.builder,
   });
 
+  /// `Material.color`; transparent under a [gradient].
   final Color background;
+  final Gradient? gradient;
   final Color ink;
   final Color soft;
   final BorderRadius radius;
@@ -33,6 +41,9 @@ class KMediaCardFrame extends StatefulWidget {
   final VoidCallback? onLongPress;
   final Widget Function(BuildContext context, bool engaged) builder;
 
+  /// Width of the keyboard focus ring.
+  static const double ringWidth = 2;
+
   @override
   State<KMediaCardFrame> createState() => _KMediaCardFrameState();
 }
@@ -40,11 +51,40 @@ class KMediaCardFrame extends StatefulWidget {
 class _KMediaCardFrameState extends State<KMediaCardFrame> {
   bool _hovered = false;
   bool _focused = false;
+  // The row's own focus node (the InkWell's): the ring shows when this node,
+  // not a button inside the row, has primary focus.
+  final FocusNode _node = FocusNode(debugLabel: 'KMediaCard');
 
   bool get _engaged => _hovered || _focused;
 
   @override
+  void initState() {
+    super.initState();
+    _node.addListener(_refresh);
+    FocusManager.instance.addHighlightModeListener(_onHighlightMode);
+  }
+
+  @override
+  void dispose() {
+    FocusManager.instance.removeHighlightModeListener(_onHighlightMode);
+    _node.removeListener(_refresh);
+    _node.dispose();
+    super.dispose();
+  }
+
+  void _refresh() => setState(() {});
+
+  // Only the row whose own node has primary focus can change its ring.
+  void _onHighlightMode(FocusHighlightMode _) {
+    if (_node.hasPrimaryFocus) _refresh();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final ring =
+        _node.hasPrimaryFocus &&
+        FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
     return Opacity(
       opacity: widget.dimmed ? 0.5 : 1,
       child: MouseRegion(
@@ -58,19 +98,61 @@ class _KMediaCardFrameState extends State<KMediaCardFrame> {
             color: widget.background,
             shape: RoundedRectangleBorder(borderRadius: widget.radius),
             clipBehavior: Clip.antiAlias,
-            child: DefaultTextStyle.merge(
-              style: TextStyle(color: widget.ink),
-              child: IconTheme.merge(
-                data: IconThemeData(color: widget.soft),
-                // Row actions (KRowIconAction) take their colour from this
-                // marker, not from the IconTheme, so one outside a row keeps
-                // its own.
-                child: KRowIconColor(
-                  color: widget.soft,
-                  child: InkWell(
-                    onTap: widget.onTap,
-                    onLongPress: widget.onLongPress,
-                    child: widget.builder(context, _engaged),
+            child: Ink(
+              decoration: widget.gradient == null
+                  ? null
+                  : BoxDecoration(gradient: widget.gradient),
+              child: DefaultTextStyle.merge(
+                style: TextStyle(color: widget.ink),
+                child: IconTheme.merge(
+                  data: IconThemeData(color: widget.soft),
+                  // Row actions (KRowIconAction) take their colour from this
+                  // marker, not from the IconTheme, so one outside a row keeps
+                  // its own.
+                  child: KRowIconColor(
+                    color: widget.soft,
+                    child: InkWell(
+                      focusNode: _node,
+                      onTap: widget.onTap,
+                      onLongPress: widget.onLongPress,
+                      // Hover and press are a state layer over the fill; the
+                      // focus ring below replaces the default focus overlay.
+                      overlayColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.pressed)) {
+                          return scheme.onSurface.withValues(
+                            alpha: KRowColors.pressAlpha,
+                          );
+                        }
+                        if (states.contains(WidgetState.hovered)) {
+                          return scheme.onSurface.withValues(
+                            alpha: KRowColors.hoverAlpha,
+                          );
+                        }
+                        return Colors.transparent;
+                      }),
+                      child: Stack(
+                        fit: StackFit.passthrough,
+                        children: [
+                          widget.builder(context, _engaged),
+                          // Always present, so the content keeps its slot.
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: widget.radius,
+                                  border: ring
+                                      ? Border.all(
+                                          color: scheme.primary,
+                                          width: KMediaCardFrame.ringWidth,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

@@ -6,13 +6,16 @@ import '../../../../l10n/gen/app_localizations.dart';
 /// Skeleton of a song row whose page is still being read: a loading
 /// `KMediaCard` (grey cover box and placeholder bars), the same size as a real
 /// row and hidden from semantics. Shared by the song lists and the selection
-/// panel.
+/// panel. [filled] false (the selection panel, which has a surface of its
+/// own) leaves out the neutral row fill.
 class SongRowPlaceholder extends StatelessWidget {
-  const SongRowPlaceholder({super.key});
+  const SongRowPlaceholder({super.key, this.filled = true});
+
+  final bool filled;
 
   @override
   Widget build(BuildContext context) =>
-      const KMediaCard(title: '', loading: true);
+      KMediaCard(title: '', loading: true, filled: filled);
 }
 
 /// A song row whose page could not be read: "Could not load" and a Retry, in
@@ -27,8 +30,8 @@ class SongRowFailed extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    // Same look as KMediaCard: flat (no fill, 16 dp inset) on mobile, card on
-    // desktop.
+    // Same look as KMediaCard: the row fill, flat with a 16 dp inset on
+    // mobile, a radius-14 card on desktop.
     final flat = FormFactor.of(context) == FormFactor.mobile;
     return Padding(
       padding: const EdgeInsets.only(bottom: KMediaCard.gap),
@@ -36,7 +39,7 @@ class SongRowFailed extends StatelessWidget {
         height: extent - KMediaCard.gap,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: flat ? null : scheme.surfaceContainerLow,
+            color: KRowColors.fill(Theme.of(context).brightness),
             borderRadius: flat ? null : BorderRadius.circular(14),
           ),
           child: Padding(

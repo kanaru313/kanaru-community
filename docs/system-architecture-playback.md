@@ -625,9 +625,9 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). 
   title / artists (`trackArtistLine`) / `album • year` (`trackAlbumLine`, both in `media/domain/track_lines.dart`),
   duration over the host's ♥ (`QueueRowFavorite`, null = none), then the drag handle and a ⋮ (`KMoreButton` on the light `KRowIconAction`, always
   visible). The handle is the card's `accessory`, right before ⋮, on both shells (cursor grab on desktop); it is a
-  `ReorderableDragStartListener` that swallows taps and has no long-press of its own. Current = `primaryContainer` fill
+  `ReorderableDragStartListener` that swallows taps and has no long-press of its own. Current = the `KRowColors.playingGradient` (`primaryContainer` to `tertiaryContainer`)
   (icons take the card ink) plus `KEqualizerIcon` over the cover under a scrim (pause glyph when paused), announced as
-  "Now playing"; played rows are dimmed to 50 %; tap plays (the current row ignores it); Enter plays and Delete removes a focused desktop row.
+  "Now playing"; other rows have the neutral `KRowColors.fill`; played rows are dimmed to 50 %; tap plays (the current row ignores it); Enter plays and Delete removes a focused desktop row.
   Both shells: a long press on the row selects it (light tick on mobile; while selecting it toggles, so it also deselects; the
   screen-reader action reads "Select" / "Deselect"), except one that starts on the handle (a custom long-press
   recognizer skips it), so hold-then-move drags. Without a `QueueRowSelection` the long press opens the menu on mobile and does nothing on desktop. The menu

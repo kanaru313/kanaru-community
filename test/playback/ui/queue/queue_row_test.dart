@@ -206,15 +206,27 @@ void main() {
   });
 
   group('state', () {
-    testWidgets('current row: primaryContainer, equalizer, card ink', (
+    testWidgets('current row: playing gradient, equalizer, card ink', (
       tester,
     ) async {
       await pump(tester);
       final scheme = Theme.of(tester.element(find.byType(QueueList)))
           .colorScheme;
       final rows = find.byType(QueueRow);
-      expect(_background(tester, rows.at(2)), scheme.primaryContainer);
-      expect(_background(tester, rows.at(3)), Colors.transparent);
+      // The playing row paints its gradient over a transparent material;
+      // the other rows carry the neutral fill.
+      expect(_background(tester, rows.at(2)), Colors.transparent);
+      final ink = tester.widget<Ink>(
+        find.descendant(of: rows.at(2), matching: find.byType(Ink)).first,
+      );
+      expect(
+        (ink.decoration! as BoxDecoration).gradient,
+        KRowColors.playingGradient(scheme),
+      );
+      expect(
+        _background(tester, rows.at(3)),
+        KRowColors.fill(scheme.brightness),
+      );
       expect(
         find.descendant(of: rows.at(2), matching: find.byType(KEqualizerIcon)),
         findsOneWidget,
@@ -224,7 +236,9 @@ void main() {
         tester.widget<KEqualizerIcon>(find.byType(KEqualizerIcon)).playing,
         isTrue,
       );
-      final soft = scheme.onPrimaryContainer.withValues(alpha: 0.8);
+      final soft = scheme.onPrimaryContainer.withValues(
+        alpha: KRowColors.containerSoftAlpha,
+      );
       final handle = find.descendant(
         of: rows.at(2),
         matching: find.byIcon(KIcons.dragHandle),

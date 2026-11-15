@@ -25,6 +25,7 @@ Widget _card({
   KMediaCardStyle style = KMediaCardStyle.auto,
   bool leading = true,
   String? currentLabel,
+  bool filled = true,
 }) {
   return Align(
     alignment: Alignment.topCenter,
@@ -37,6 +38,7 @@ Widget _card({
       accessory: accessory,
       loading: loading,
       style: style,
+      filled: filled,
       leading: leading
           ? const ColoredBox(key: Key('cover'), color: Color(0xFF888888))
           : null,
@@ -138,11 +140,10 @@ void main() {
     });
   }
 
-  testWidgets('current uses primaryContainer, selected secondaryContainer', (
-    tester,
-  ) async {
+  testWidgets('current is a gradient, selected secondaryContainer, plain the '
+      'fill; unfilled keeps the old colours', (tester) async {
     useWindow(tester, const Size(400, 800));
-    Color fill() => tester
+    Color? fill() => tester
         .widget<Material>(
           find
               .descendant(
@@ -151,14 +152,18 @@ void main() {
               )
               .first,
         )
-        .color!;
+        .color;
     final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
 
     await tester.pumpWidget(host(_card(current: true)));
-    expect(fill(), scheme.primaryContainer);
+    expect(fill(), Colors.transparent);
     await tester.pumpWidget(host(_card(selected: true)));
     expect(fill(), scheme.secondaryContainer);
     await tester.pumpWidget(host(_card(style: KMediaCardStyle.card)));
+    expect(fill(), KRowColors.fill(Brightness.light));
+    await tester.pumpWidget(
+      host(_card(style: KMediaCardStyle.card, filled: false)),
+    );
     expect(fill(), scheme.surfaceContainerLow);
   });
 
@@ -422,7 +427,9 @@ void main() {
       useWindow(tester, const Size(400, 800));
       final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
       await tester.pumpWidget(host(actionCard(current: true)));
-      final soft = scheme.onPrimaryContainer.withValues(alpha: 0.8);
+      final soft = scheme.onPrimaryContainer.withValues(
+        alpha: KRowColors.containerSoftAlpha,
+      );
       expect(actionIconColor(tester), soft);
       expect(
         IconTheme.of(tester.element(find.byIcon(KIcons.heart))).color,
@@ -607,22 +614,29 @@ void main() {
             .topLeft
             .x;
 
-    testWidgets('mobile auto is flat and transparent when idle', (
+    testWidgets('mobile auto is flat with the row fill when idle', (
       tester,
     ) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(host(_card()));
       expect(radius(tester), 0);
+      expect(fill(tester), KRowColors.fill(Brightness.light));
+      await tester.pumpWidget(host(_card(filled: false)));
       expect(fill(tester), Colors.transparent);
     });
 
-    testWidgets('mobile auto tints the full width when current', (
+    testWidgets('mobile auto paints the gradient full width when current', (
       tester,
     ) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(host(_card(current: true)));
       expect(radius(tester), 0);
-      expect(fill(tester), isNot(Colors.transparent));
+      final ink = tester.widget<Ink>(
+        find
+            .descendant(of: find.byType(KMediaCard), matching: find.byType(Ink))
+            .first,
+      );
+      expect((ink.decoration! as BoxDecoration).gradient, isNotNull);
       expect(tester.getSize(find.byType(KMediaCard)).width, 400);
     });
 
