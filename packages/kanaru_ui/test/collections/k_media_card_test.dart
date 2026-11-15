@@ -392,9 +392,31 @@ void main() {
       // The cover is centred in its 56 dp box, which starts at the padding.
       expect(
         cover.center.dx - card.left,
-        KLayout.gutterMobile + KMediaCard.coverSize / 2,
+        KMediaCard.sidePadding + KMediaCard.coverSize / 2,
+        reason: 'the row padding is 8 dp',
       );
     });
+
+    for (final (name, style) in [
+      ('flat', KMediaCardStyle.flat),
+      ('card', KMediaCardStyle.card),
+    ]) {
+      testWidgets('$name: 8 dp padding at the start and the end', (
+        tester,
+      ) async {
+        useWindow(tester, const Size(400, 800));
+        await tester.pumpWidget(host(_card(style: style)));
+        final card = tester.getRect(find.byType(KMediaCard));
+        final cover = tester.getRect(find.byKey(const Key('cover')));
+        final more = tester.getRect(find.byIcon(KIcons.moreVert));
+        // The cover is centred in its 56 dp box, which starts at the padding.
+        expect(
+          cover.center.dx - card.left,
+          KMediaCard.sidePadding + KMediaCard.coverSize / 2,
+        );
+        expect(card.right - more.right, KMediaCard.sidePadding);
+      });
+    }
 
     testWidgets('accessory sits left of the trailing', (tester) async {
       useWindow(tester, const Size(400, 800));
@@ -867,12 +889,12 @@ void main() {
       );
       final card = tester.getRect(find.byType(KMediaCard));
       final more = tester.getRect(find.byKey(const Key('more')));
-      // The padding stays: the button ends one gutter before the card edge.
-      expect(card.right - more.right, KLayout.gutterMobile);
+      // The padding stays: the button ends one row padding before the edge.
+      expect(card.right - more.right, KMediaCard.sidePadding);
       for (final dx in [
         1.0,
-        KLayout.gutterMobile / 2,
-        KLayout.gutterMobile - 1,
+        KMediaCard.sidePadding / 2,
+        KMediaCard.sidePadding - 1,
       ]) {
         await tester.tapAt(Offset(more.right + dx, more.center.dy));
         await settle(tester);

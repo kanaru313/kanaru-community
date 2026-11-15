@@ -115,8 +115,8 @@ void main() {
       expect(heart.right, lessThanOrEqualTo(handle.left));
       expect(heart.overlaps(handle), isFalse);
       expect(handle.right, lessThanOrEqualTo(more.left));
-      // The cover sits at the flat-row inset, like a songs-list row.
-      expect(cover.left - tester.getTopLeft(row).dx, KLayout.gutterMobile);
+      // The cover sits at the row padding, like a songs-list row.
+      expect(cover.left - tester.getTopLeft(row).dx, KMediaCard.sidePadding);
       expect(more.left, greaterThan(cover.right));
       // Visible without hover: not wrapped in a transparent AnimatedOpacity
       // and a pointer at its centre reaches it.

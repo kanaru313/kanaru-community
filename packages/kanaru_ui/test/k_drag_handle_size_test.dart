@@ -7,7 +7,7 @@ import 'support/host.dart';
 void main() {
   Widget handle({double? dimension, double? iconSize}) => host(
     ReorderableListView(
-      onReorder: (_, _) {},
+      onReorderItem: (_, _) {},
       buildDefaultDragHandles: false,
       children: [
         SizedBox(

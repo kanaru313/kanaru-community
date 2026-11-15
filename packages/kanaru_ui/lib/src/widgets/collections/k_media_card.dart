@@ -5,7 +5,6 @@ import 'package:material_ui/material_ui.dart';
 import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
 import '../../tokens/k_icon_size.dart';
-import '../../tokens/k_layout.dart';
 import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
@@ -26,7 +25,7 @@ enum KMediaCardStyle {
   card,
 
   /// Full-width row: no radius, no fill unless current or selected, own
-  /// 16 dp side padding so content lines up with page headers.
+  /// 8 dp side padding (the same as a card).
   flat,
 }
 
@@ -147,6 +146,10 @@ class KMediaCard extends StatefulWidget {
 
   /// Space below a card.
   static const double gap = KSpace.x1;
+
+  /// Horizontal padding of a row, flat or card, at both ends. The end part
+  /// belongs to the trailing button.
+  static const double sidePadding = KSpace.x2;
   static const double coverSize = 56;
   static const double _padV = 10;
   static const BorderRadius _radius = BorderRadius.all(Radius.circular(14));
@@ -214,7 +217,7 @@ class _KMediaCardState extends State<KMediaCard> {
               )
             : null);
 
-    final side = flat ? KLayout.gutterMobile : KSpace.x3;
+    final side = KMediaCard.sidePadding;
     final content = Padding(
       // With a trailing button the end padding belongs to that button (see
       // KEndHitExtension), so a tap right of it is not a tap on the row.
@@ -305,7 +308,7 @@ class _KMediaCardState extends State<KMediaCard> {
             children: [
               dimmedCard,
               PositionedDirectional(
-                start: flat ? KLayout.gutterMobile : KSpace.x3,
+                start: KMediaCard.sidePadding,
                 // The cover is centred in the row, which is as high as the
                 // taller of the cover and the text block.
                 top:

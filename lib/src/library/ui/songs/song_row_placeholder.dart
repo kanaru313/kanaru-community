@@ -27,7 +27,7 @@ class SongRowFailed extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    // Same look as KMediaCard: flat (no fill, 16 dp inset) on mobile, card on
+    // Same look as KMediaCard: flat (no fill) on mobile, card on
     // desktop.
     final flat = FormFactor.of(context) == FormFactor.mobile;
     return Padding(
@@ -40,13 +40,9 @@ class SongRowFailed extends StatelessWidget {
             borderRadius: flat ? null : BorderRadius.circular(14),
           ),
           child: Padding(
-            padding: EdgeInsets.only(
-              left: flat ? KLayout.gutterMobile : KSpace.x4,
-              // The Retry TextButton has its own padding, so the right inset
-              // is the gutter minus that padding (KSpace.x2) to line up with
-              // the ⋮ of a loaded row.
-              right: flat ? KLayout.gutterMobile - KSpace.x2 : 0,
-            ),
+            // The row padding of a loaded row; the Retry TextButton has its
+            // own 8 dp padding, which lines it up with the ⋮ of a loaded row.
+            padding: const EdgeInsets.only(left: KMediaCard.sidePadding),
             child: Row(
               children: [
                 Expanded(
