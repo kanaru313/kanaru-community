@@ -37,22 +37,28 @@ void main() {
       ),
     );
     await tester.pumpWidget(build(true));
-    final scheme = Theme.of(tester.element(find.byType(IconButton)))
+    // The glyph takes its colour from the IconTheme the button sets.
+    Color? glyph() => IconTheme.of(
+      tester.element(
+        find.descendant(
+          of: find.byType(KToggleIconButton),
+          matching: find.byType(Icon),
+        ),
+      ),
+    ).color;
+    final scheme = Theme.of(tester.element(find.byType(KIconButton)))
         .colorScheme;
-    expect(
-      tester.widget<IconButton>(find.byType(IconButton)).color,
-      scheme.primary,
-    );
+    expect(glyph(), scheme.primary);
     await tester.pumpWidget(build(false));
-    expect(
-      tester.widget<IconButton>(find.byType(IconButton)).color,
-      isNot(scheme.primary),
-    );
-    await tester.tap(find.byType(IconButton));
+    expect(glyph(), isNot(scheme.primary));
+    await tester.tap(find.byType(KToggleIconButton));
+    await tester.pump(const Duration(milliseconds: 300));
     expect(taps, 1);
   });
 
-  testWidgets('exposes tooltip and toggled state to semantics', (tester) async {
+  testWidgets('exposes tooltip label and toggled state to semantics', (
+    tester,
+  ) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(
       host(
@@ -64,11 +70,47 @@ void main() {
         ),
       ),
     );
-    final node = tester.getSemantics(find.byTooltip('Shuffle'));
+    final node = tester.getSemantics(find.byType(KToggleIconButton));
     final data = node.getSemanticsData();
-    expect(data.flagsCollection.isSelected.name == 'isTrue', isTrue);
+    expect(data.label, 'Shuffle');
+    expect(data.flagsCollection.isToggled.name, 'isTrue');
     expect(data.flagsCollection.isButton, isTrue);
+    expect(find.bySemanticsLabel('Shuffle'), findsOneWidget);
     handle.dispose();
+  });
+
+  // The dot hangs 2 dp under the glyph whatever box the button sits in.
+  final slots = <String, Widget Function(Widget)>{
+    'a bounded 52 dp box': (b) => Center(
+      child: SizedBox.square(dimension: 52, child: Center(child: b)),
+    ),
+    'a bar': (b) => SizedBox(height: 64, child: Row(children: [b])),
+    'an unbounded slot': (b) => Align(alignment: Alignment.topLeft, child: b),
+  };
+  slots.forEach((name, wrap) {
+    testWidgets('the dot sits 2 dp under the glyph in $name', (tester) async {
+      await tester.pumpWidget(
+        host(
+          wrap(
+            KToggleIconButton(
+              icon: Icons.shuffle,
+              active: true,
+              tooltip: 'Shuffle',
+              onPressed: () {},
+            ),
+          ),
+        ),
+      );
+      final glyph = tester.getRect(
+        find.descendant(
+          of: find.byType(KToggleIconButton),
+          matching: find.byType(Icon),
+        ),
+      );
+      final dot = tester.getRect(find.byKey(KToggleIconButton.dotKey));
+      expect(dot.top - glyph.bottom, 2);
+      expect(dot.center.dx, closeTo(glyph.center.dx, 0.01));
+    });
   });
 
   testWidgets('an icon widget replaces the icon and keeps the dot', (

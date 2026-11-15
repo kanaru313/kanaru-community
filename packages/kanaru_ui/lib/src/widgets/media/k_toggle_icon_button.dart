@@ -1,6 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Icon button for an on/off state (shuffle, repeat). On shows the icon in
+import '../../tokens/k_icon_size.dart';
+import '../../tokens/k_space.dart';
+import '../k_icon_button.dart';
+
+/// Icon button ([KIconButton]) for an on/off state (shuffle, repeat). On shows the icon in
 /// the primary colour with a small dot below it, so the state is not told by
 /// colour alone. Off shows the plain icon. Give [icon], or [iconWidget] for a
 /// drawing that changes with the state (the repeat glyphs).
@@ -28,38 +32,43 @@ class KToggleIconButton extends StatelessWidget {
   final String tooltip;
   final double? iconSize;
 
+  /// Diameter of the dot and its gap under the glyph.
+  static const double _dot = KSpace.x1;
+  static const double _gap = KSpace.x1 / 2;
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        IconButton(
-          icon: iconWidget ?? Icon(icon),
-          selectedIcon: iconWidget ?? Icon(icon),
-          isSelected: active,
-          iconSize: iconSize,
-          tooltip: tooltip,
-          color: active ? scheme.primary : scheme.onSurfaceVariant,
-          onPressed: onPressed,
-        ),
-        if (active)
-          Positioned(
-            bottom: 4,
-            child: IgnorePointer(
-              child: ExcludeSemantics(
-                child: DecoratedBox(
-                  key: dotKey,
-                  decoration: BoxDecoration(
-                    color: scheme.primary,
-                    shape: BoxShape.circle,
+    final primary = Theme.of(context).colorScheme.primary;
+    return KIconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      selected: active,
+      size: iconSize ?? KIconSize.md,
+      // The dot hangs below the glyph, so it does not depend on the height of
+      // the slot the button sits in.
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          iconWidget ?? Icon(icon),
+          if (active)
+            Positioned(
+              bottom: -(_gap + _dot),
+              child: IgnorePointer(
+                child: ExcludeSemantics(
+                  child: DecoratedBox(
+                    key: dotKey,
+                    decoration: BoxDecoration(
+                      color: primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const SizedBox.square(dimension: _dot),
                   ),
-                  child: const SizedBox.square(dimension: 4),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

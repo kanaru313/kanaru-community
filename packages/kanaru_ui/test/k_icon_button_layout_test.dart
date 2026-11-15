@@ -1,4 +1,3 @@
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -13,23 +12,25 @@ KIconButton button({
   bool? selected,
 }) {
   final onTap = onPressed ?? () {};
+  final icon = child == null ? Icons.add : null;
+  // Without [padding] the widget's own default applies.
   return padding == null
       ? KIconButton(
-          icon: child == null ? Icons.add : null,
-          child: child,
+          icon: icon,
           size: size,
           tooltip: 'Add',
           selected: selected,
           onPressed: onTap,
+          child: child,
         )
       : KIconButton(
-          icon: child == null ? Icons.add : null,
-          child: child,
+          icon: icon,
           size: size,
           padding: padding,
           tooltip: 'Add',
           selected: selected,
           onPressed: onTap,
+          child: child,
         );
 }
 

@@ -7,6 +7,7 @@ import 'package:kanaru/src/playback/ui/repeat_button.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
+import '../../support/icon_button_finders.dart';
 import '../support/ui_host.dart';
 
 const _off = 'Stop at the end';
@@ -46,20 +47,20 @@ void main() {
     tester,
   ) async {
     await _pump(tester);
-    expect(find.byTooltip(_off), findsOneWidget);
+    expect(byIconButton(_off), findsOneWidget);
     expect(find.byIcon(KIcons.repeat), findsOneWidget);
     expect(find.byKey(KToggleIconButton.dotKey), findsNothing);
   });
 
   testWidgets('disabled while the queue is empty', (tester) async {
     final host = await _pump(tester, play: false);
-    final button = tester.widget<IconButton>(find.byType(IconButton));
+    final button = tester.widget<KIconButton>(find.byType(KIconButton));
     expect(button.onPressed, isNull);
 
     await host.run(tester, () => host.h.c.setRepeat(RepeatMode.one));
     expect(find.byIcon(KIcons.repeatOne), findsOneWidget);
     expect(find.byKey(KToggleIconButton.dotKey), findsOneWidget);
-    expect(tester.widget<IconButton>(find.byType(IconButton)).onPressed, isNull);
+    expect(tester.widget<KIconButton>(find.byType(KIconButton)).onPressed, isNull);
   });
 
   testWidgets('closes an open menu when the queue becomes empty', (
@@ -74,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SelectionRow), findsNothing);
-    expect(tester.widget<IconButton>(find.byType(IconButton)).onPressed, isNull);
+    expect(tester.widget<KIconButton>(find.byType(KIconButton)).onPressed, isNull);
   });
 
   for (final (name, size) in [
@@ -177,7 +178,7 @@ void main() {
     Finder minus() => find.byKey(KCountStepper.decreaseKey);
     Finder plus() => find.byKey(KCountStepper.increaseKey);
     bool enabled(WidgetTester tester, Finder f) =>
-        tester.widget<IconButton>(f).onPressed != null;
+        tester.widget<KIconButton>(f).onPressed != null;
 
     testWidgets('stepping before arming changes the draft only', (
       tester,
@@ -207,7 +208,7 @@ void main() {
       await host.run(tester, () => host.h.c.setRepeatTimes(5));
       expect(find.text('5'), findsOneWidget, reason: 'circled count');
       expect(find.byKey(KToggleIconButton.dotKey), findsOneWidget);
-      expect(find.byTooltip('Repeat this song 5 more times'), findsOneWidget);
+      expect(byIconButton('Repeat this song 5 more times'), findsOneWidget);
       await _open(host, tester);
       expect(
         _rowWidget(tester, 'Repeat this song 5 more times').selected,

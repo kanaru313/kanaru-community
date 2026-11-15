@@ -1,10 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
-import '../../tokens/k_layout.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
+import '../k_icon_button.dart';
 import 'setup_row_frame.dart';
 
 /// A folder row: icon, name, path (and a count), an optional badge next to
@@ -34,7 +34,8 @@ class SetupPathRow extends StatelessWidget {
   /// Null hides the remove button.
   final VoidCallback? onRemove;
 
-  /// Tooltip and spoken label of the remove button.
+  /// Tooltip and spoken label of the remove button; the Material delete
+  /// tooltip when null.
   final String? removeTooltip;
 
   @override
@@ -78,14 +79,12 @@ class SetupPathRow extends StatelessWidget {
       ),
       trailing: onRemove == null
           ? null
-          : IconButton(
-              icon: const Icon(KIcons.close),
-              tooltip: removeTooltip,
+          : KIconButton(
+              icon: KIcons.close,
+              tooltip:
+                  removeTooltip ??
+                  MaterialLocalizations.of(context).deleteButtonTooltip,
               onPressed: onRemove,
-              constraints: const BoxConstraints.tightFor(
-                width: KLayout.minTarget,
-                height: KLayout.minTarget,
-              ),
             ),
     );
   }

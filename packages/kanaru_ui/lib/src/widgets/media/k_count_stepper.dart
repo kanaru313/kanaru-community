@@ -1,6 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
+import '../../tokens/k_icon_size.dart';
+import '../k_icon_button.dart';
 
 /// A minus and a plus button that move a whole number between [min] and
 /// [max]. Each button is dimmed at its bound, and both while [enabled] is
@@ -42,12 +44,11 @@ class KCountStepper extends StatelessWidget {
       String tooltip,
       int target,
       bool atBound,
-    ) => IconButton(
+    ) => KIconButton(
       key: key,
-      icon: Icon(icon),
-      iconSize: 18,
-      color: color,
-      constraints: const BoxConstraints(minWidth: 40, minHeight: 48),
+      icon: icon,
+      size: KIconSize.sm,
+      color: color ?? IconTheme.of(context).color,
       tooltip: tooltip,
       onPressed: enabled && !atBound ? () => onChanged(target) : null,
     );

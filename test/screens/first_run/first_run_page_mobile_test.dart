@@ -8,6 +8,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../support/icon_button_finders.dart';
 import 'support/first_run_host.dart';
 
 const _none = MediaPermissionStatus.denied;
@@ -365,7 +366,7 @@ void main() {
       );
       await h.editor.addFolder(_music, fromCatalog: true);
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Remove Music'));
+      await tester.tap(byIconButton('Remove Music'));
       await tester.pumpAndSettle();
       expect(await liveScanFolders(h.db), isEmpty);
 
