@@ -5,15 +5,12 @@ import 'package:material_ui/material_ui.dart';
 import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
 import '../../tokens/k_icon_size.dart';
-import '../../tokens/k_motion.dart';
-import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
-import '../k_check_mark.dart';
 import '../k_cover.dart';
 import '../k_gap.dart';
 import '../k_icon_button.dart';
-import '../k_icon_button_colors.dart';
 import 'k_end_hit_extension.dart';
+import 'k_media_card_frame.dart';
 import 'k_media_card_right_column.dart';
 import 'k_media_card_text.dart';
 
@@ -177,15 +174,10 @@ class KMediaCard extends StatefulWidget {
 }
 
 class _KMediaCardState extends State<KMediaCard> {
-  bool _hovered = false;
-  bool _focused = false;
-
   /// Set once the card is selected or a selection is active. Until then no
   /// cover overlay is mounted (most lists never select); afterwards it stays
   /// mounted so the off animation plays when the selection ends.
   bool _everActive = false;
-
-  bool get _engaged => _hovered || _focused;
 
   @override
   Widget build(BuildContext context) {
@@ -230,7 +222,7 @@ class _KMediaCardState extends State<KMediaCard> {
             : null);
 
     final side = KMediaCard.sidePadding;
-    final content = Padding(
+    Widget content(bool engaged) => Padding(
       // With a trailing button the end padding belongs to that button (see
       // KEndHitExtension), so a tap right of it is not a tap on the row.
       padding: EdgeInsetsDirectional.fromSTEB(
@@ -252,7 +244,7 @@ class _KMediaCardState extends State<KMediaCard> {
                 // A dimmed card draws its mark outside the dim, below.
                 if (_everActive && !(widget.dimmed && widget.selected))
                   Positioned.fill(
-                    child: _CoverCheck(
+                    child: KMediaCardCoverCheck(
                       circle: widget.circleLeading,
                       selected: widget.selected,
                       selecting: widget.selecting,
@@ -295,8 +287,8 @@ class _KMediaCardState extends State<KMediaCard> {
           ],
           if (widget.onAction != null) ...[
             _TapAbsorber(width: KSpace.x2, height: rowHeight),
-            _Revealed(
-              visible: mobile || _engaged,
+            KMediaCardRevealed(
+              visible: mobile || engaged,
               child: KIconButton(
                 tooltip: widget.actionLabel ?? '',
                 size: KIconSize.sm,
@@ -338,7 +330,7 @@ class _KMediaCardState extends State<KMediaCard> {
                 width: KMediaCard.coverSize,
                 height: KMediaCard.coverSize,
                 child: IgnorePointer(
-                  child: _CoverCheck(
+                  child: KMediaCardCoverCheck(
                     circle: widget.circleLeading,
                     selected: true,
                     selecting: true,
@@ -358,46 +350,15 @@ class _KMediaCardState extends State<KMediaCard> {
           selected: widget.selected,
           value: widget.current ? widget.currentLabel : null,
           child: card(
-            AnimatedOpacity(
-              opacity: widget.dimmed ? 0.5 : 1,
-              duration: MediaQuery.disableAnimationsOf(context)
-                  ? Duration.zero
-                  : KMotion.fast,
-              child: MouseRegion(
-                onEnter: (_) => setState(() => _hovered = true),
-                onExit: (_) => setState(() => _hovered = false),
-                child: Focus(
-                  canRequestFocus: false,
-                  skipTraversal: true,
-                  onFocusChange: (v) => setState(() => _focused = v),
-                  child: Material(
-                    color: background,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: flat
-                          ? BorderRadius.zero
-                          : KMediaCard._radius,
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: DefaultTextStyle.merge(
-                      style: TextStyle(color: ink),
-                      child: IconTheme.merge(
-                        data: IconThemeData(color: soft),
-                        // Light icon buttons read these: on a tinted row they
-                        // keep the row's ink instead of the theme colours.
-                        child: KIconButtonColors(
-                          rest: soft,
-                          hover: ink,
-                          child: InkWell(
-                            onTap: widget.onTap,
-                            onLongPress: widget.onLongPress,
-                            child: content,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            KMediaCardFrame(
+              background: background,
+              ink: ink,
+              soft: soft,
+              radius: flat ? BorderRadius.zero : KMediaCard._radius,
+              dimmed: widget.dimmed,
+              onTap: widget.onTap,
+              onLongPress: widget.onLongPress,
+              builder: (context, engaged) => content(engaged),
             ),
           ),
         ),
@@ -424,66 +385,4 @@ class _TapAbsorber extends StatelessWidget {
       child: SizedBox(width: width, height: height),
     ),
   );
-}
-
-/// Keeps its room when hidden so the card does not shift; hidden children
-/// stay focusable (Tab reveals them) but ignore the pointer.
-class _Revealed extends StatelessWidget {
-  const _Revealed({required this.visible, required this.child});
-
-  final bool visible;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      opacity: visible ? 1 : 0,
-      duration: KMotion.fast,
-      child: IgnorePointer(ignoring: !visible, child: child),
-    );
-  }
-}
-
-/// Selection overlay of a cover: a 35 % black scrim and an "on" [KCheckMark]
-/// when selected, the bare ring while a selection is active. Stays mounted
-/// across toggles so the mark animates.
-class _CoverCheck extends StatelessWidget {
-  const _CoverCheck({
-    required this.circle,
-    required this.selected,
-    required this.selecting,
-  });
-
-  final bool circle;
-  final bool selected;
-
-  /// A selection is active. Without it and without [selected] the overlay
-  /// stays mounted (so the off animation plays) but its ring fades out.
-  final bool selecting;
-
-  @override
-  Widget build(BuildContext context) {
-    final instant = MediaQuery.disableAnimationsOf(context);
-    return AnimatedContainer(
-      duration: instant ? Duration.zero : KMotion.fast,
-      decoration: BoxDecoration(
-        color: selected
-            ? Colors.black.withValues(alpha: 0.35)
-            : Colors.transparent,
-        shape: circle ? BoxShape.circle : BoxShape.rectangle,
-        borderRadius: circle ? null : KRadius.sm,
-      ),
-      child: Center(
-        child: AnimatedOpacity(
-          opacity: selecting || selected ? 1 : 0,
-          duration: instant ? Duration.zero : KMotion.fast,
-          child: KCheckMark(
-            size: 28,
-            style: KCheckMarkStyle.cover,
-            state: selected ? KCheckState.on : KCheckState.off,
-          ),
-        ),
-      ),
-    );
-  }
 }
