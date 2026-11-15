@@ -61,4 +61,33 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(seen, [6]);
   });
+
+  testWidgets('idle colour is onSurfaceVariant unless a colour is given', (
+    tester,
+  ) async {
+    await tester.pumpWidget(stepper(5, []));
+    Color glyph() => tester
+        .widget<Icon>(
+          find.descendant(
+            of: find.byKey(KCountStepper.increaseKey),
+            matching: find.byType(Icon),
+          ),
+        )
+        .color!;
+    final scheme = Theme.of(tester.element(find.byType(KCountStepper)))
+        .colorScheme;
+    expect(glyph(), scheme.onSurfaceVariant);
+    await tester.pumpWidget(
+      host(
+        KCountStepper(
+          value: 5,
+          color: const Color(0xFF123456),
+          onChanged: (_) {},
+          decreaseTooltip: 'fewer',
+          increaseTooltip: 'more',
+        ),
+      ),
+    );
+    expect(glyph(), const Color(0xFF123456));
+  });
 }

@@ -33,7 +33,7 @@ class KCountStepper extends StatelessWidget {
   final int max;
   final bool enabled;
 
-  /// Icon colour of the buttons; the surrounding icon colour when null.
+  /// Icon colour of the buttons; the [KIconButton] default when null.
   final Color? color;
 
   @override
@@ -48,7 +48,7 @@ class KCountStepper extends StatelessWidget {
       key: key,
       icon: icon,
       size: KIconSize.sm,
-      color: color ?? IconTheme.of(context).color,
+      color: color,
       tooltip: tooltip,
       onPressed: enabled && !atBound ? () => onChanged(target) : null,
     );
