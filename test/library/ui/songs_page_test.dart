@@ -248,6 +248,24 @@ void main() {
     await unmountApp(tester);
   });
 
+  testWidgets('a tap in the row padding right of the more button opens its '
+      'menu and does not play the row', (tester) async {
+    final playback = FakePlaybackCommands();
+    final h = await pumpLibrary(
+      tester,
+      initial: '/library/songs',
+      playback: playback,
+    );
+    await _addSongs(h, ['Alpha', 'Bravo']);
+    await h.settle(tester);
+    final more = tester.getRect(byIconButton('More options').first);
+    await tester.tapAt(Offset(more.right + 6, more.center.dy));
+    await h.settle(tester, rounds: 1);
+    expect(playback.calls, isEmpty);
+    expect(find.text('Go to album'), findsOneWidget);
+    await unmountApp(tester);
+  });
+
   testWidgets('the playing row is tinted and shows the equalizer', (
     tester,
   ) async {

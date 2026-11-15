@@ -13,6 +13,7 @@ import '../k_cover.dart';
 import '../k_gap.dart';
 import '../k_icon_button.dart';
 import '../k_icon_button_colors.dart';
+import 'k_end_hit_extension.dart';
 import 'k_media_card_right_column.dart';
 import 'k_media_card_text.dart';
 
@@ -212,10 +213,15 @@ class _KMediaCardState extends State<KMediaCard> {
               )
             : null);
 
+    final side = flat ? KLayout.gutterMobile : KSpace.x3;
     final content = Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: flat ? KLayout.gutterMobile : KSpace.x3,
-        vertical: KMediaCard._padV,
+      // With a trailing button the end padding belongs to that button (see
+      // KEndHitExtension), so a tap right of it is not a tap on the row.
+      padding: EdgeInsetsDirectional.fromSTEB(
+        side,
+        KMediaCard._padV,
+        widget.trailing != null ? 0 : side,
+        KMediaCard._padV,
       ),
       child: Row(
         children: [
@@ -284,7 +290,7 @@ class _KMediaCardState extends State<KMediaCard> {
           if (widget.trailing != null) ...[
             if (widget.accessory != null)
               _TapAbsorber(width: KSpace.x1, height: rowHeight),
-            widget.trailing!,
+            KEndHitExtension(extent: side, child: widget.trailing!),
           ],
         ],
       ),

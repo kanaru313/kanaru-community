@@ -855,6 +855,35 @@ void main() {
       }
     }
 
+    testWidgets('the row end padding right of the more button is the button', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      var mores = 0, rowTaps = 0;
+      await tester.pumpWidget(
+        host(
+          song(onHeart: () {}, onMore: () => mores++, onTap: () => rowTaps++),
+        ),
+      );
+      final card = tester.getRect(find.byType(KMediaCard));
+      final more = tester.getRect(find.byKey(const Key('more')));
+      // The padding stays: the button ends one gutter before the card edge.
+      expect(card.right - more.right, KLayout.gutterMobile);
+      for (final dx in [
+        1.0,
+        KLayout.gutterMobile / 2,
+        KLayout.gutterMobile - 1,
+      ]) {
+        await tester.tapAt(Offset(more.right + dx, more.center.dy));
+        await settle(tester);
+      }
+      expect((mores, rowTaps), (3, 0));
+      // Above the button's band the padding is still the row's.
+      await tester.tapAt(Offset(more.right + 4, more.top - 4));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect((mores, rowTaps), (3, 1));
+    });
+
     testWidgets('a tap on the duration behaves like a tap on the row', (
       tester,
     ) async {
