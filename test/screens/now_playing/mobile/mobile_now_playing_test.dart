@@ -96,6 +96,7 @@ void main() {
     (const Size(360, 640), 1.3),
     (const Size(320, 568), 1.3),
     (const Size(390, 844), 1.3),
+    (const Size(360, 640), 1.5),
   ]) {
     testWidgets('lays out without overflow at $size, text ×$scale', (
       tester,

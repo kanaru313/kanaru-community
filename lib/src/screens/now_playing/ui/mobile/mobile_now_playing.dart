@@ -23,6 +23,7 @@ import 'now_playing_header.dart';
 import 'queue_strip.dart'
     show nowPlayingArtistLineHeight, nowPlayingTitleLineHeight;
 import 'track_info_card.dart';
+import 'now_playing_text_styles.dart';
 
 /// Pull of the header, in dp, past which letting go closes the page.
 const double nowPlayingCloseDistance = 120;
@@ -235,19 +236,15 @@ class _TitleRow extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: text.headlineSmall?.copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  height: nowPlayingTitleLineHeight,
-                ),
+                style: coverTitleStyle(text)
+                    ?.copyWith(height: nowPlayingTitleLineHeight),
               ),
               if (artist != null)
                 Text(
                   artist!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: text.bodyMedium?.copyWith(
-                    fontSize: 15,
+                  style: coverArtistStyle(text)?.copyWith(
                     height: nowPlayingArtistLineHeight,
                     color: scheme.onSurfaceVariant,
                   ),

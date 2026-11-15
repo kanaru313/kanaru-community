@@ -10,6 +10,7 @@ import '../../../../playback/state/track_info_providers.dart';
 import '../../../../playback/ui/play_pause_button.dart';
 import '../../../../playback/ui/track_cover.dart';
 import '../../../../playback/ui/transport_buttons.dart';
+import 'now_playing_text_styles.dart';
 
 /// The cover of the strip (and of the flight): grows from the source's size
 /// to 72, its corners follow.
@@ -59,22 +60,27 @@ class StripText extends ConsumerWidget {
           info?.title ?? '',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: text.titleMedium?.copyWith(
-            fontSize: 16 + 6 * (1 - t),
-            fontWeight: FontWeight.w700,
-            height: nowPlayingTitleLineHeight,
-          ),
+          // t = 0 is the Now Playing title, t = 1 the strip title.
+          style: TextStyle.lerp(
+            stripTitleStyle(text),
+            coverTitleStyle(text),
+            1 - t,
+          )?.copyWith(height: nowPlayingTitleLineHeight),
         ),
         if (info?.artist != null)
           Text(
             info!.artist!,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: text.bodyMedium?.copyWith(
-              fontSize: 13 + 2 * (1 - t),
-              height: nowPlayingArtistLineHeight,
-              color: scheme.onSurfaceVariant,
-            ),
+            style:
+                TextStyle.lerp(
+                  stripArtistStyle(text),
+                  coverArtistStyle(text),
+                  1 - t,
+                )?.copyWith(
+                  height: nowPlayingArtistLineHeight,
+                  color: scheme.onSurfaceVariant,
+                ),
           ),
       ],
     );

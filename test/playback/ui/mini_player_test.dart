@@ -63,6 +63,19 @@ void main() {
     );
   });
 
+  for (final scale in [1.5, 2.0]) {
+    testWidgets('title uses the title role and fits at text scale $scale', (
+      tester,
+    ) async {
+      await pumpWithPlayer(tester, _player([]), textScale: scale);
+      final text = Theme.of(tester.element(find.text('T0'))).textTheme;
+      final title = tester.widget<Text>(find.text('T0'));
+      expect(title.style?.fontSize, text.titleSmall?.fontSize);
+      expect(title.style?.fontWeight, FontWeight.w600);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('tap opens Now Playing', (tester) async {
     final events = <String>[];
     await pumpWithPlayer(tester, _player(events));
