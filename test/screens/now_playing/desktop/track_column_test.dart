@@ -181,6 +181,20 @@ void main() {
     expect(box.contains(cover.center), isTrue);
   });
 
+  for (final scale in [1.5, 2.0]) {
+    testWidgets('title, artist and controls fit at text scale $scale', (
+      tester,
+    ) async {
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await _open(tester, tagged: true);
+      expect(tester.takeException(), isNull);
+      final box = tester.getRect(find.byType(DesktopTrackColumn));
+      expect(box.contains(tester.getCenter(find.text('T0'))), isTrue);
+      expect(box.contains(tester.getCenter(find.text('Art One'))), isTrue);
+    });
+  }
+
   testWidgets('the column keeps the header shown while the pointer is on it', (
     tester,
   ) async {

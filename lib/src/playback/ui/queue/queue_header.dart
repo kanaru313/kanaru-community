@@ -99,8 +99,8 @@ class QueueMoreMenu extends ConsumerWidget {
           child: Text(l10n.playbackQueueSelectMany),
         ),
       ],
-      builder: (context, controller, _) => IconButton(
-        icon: const Icon(KIcons.moreVert),
+      builder: (context, controller, _) => KIconButton(
+        icon: KIcons.moreVert,
         tooltip: l10n.playbackMore,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),

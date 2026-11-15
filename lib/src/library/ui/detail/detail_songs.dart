@@ -94,7 +94,7 @@ class _DetailSongsHostState extends ConsumerState<DetailSongsHost> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final gutter = libraryGutter(context);
+    final gutter = libraryBarGutter(context);
     final page = (list: widget.list, item: widget.item);
     final sort = ref.watch(detailSortProvider(page));
     final mobile = FormFactor.of(context) == FormFactor.mobile;

@@ -17,7 +17,7 @@ import 'now_playing_auto_hide.dart';
 /// Style of the title under the cover.
 TextStyle? desktopTitleStyle(BuildContext context) =>
     Theme.of(context).textTheme.headlineSmall
-        ?.copyWith(fontSize: 26, fontWeight: FontWeight.bold);
+        ?.copyWith(fontWeight: FontWeight.bold);
 
 /// Style of the artist and album lines.
 TextStyle? desktopLineStyle(BuildContext context) =>
@@ -213,9 +213,9 @@ class _TransportRow extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             spacing: 20,
             children: [
-              PreviousButton(iconSize: 28),
-              PlayPauseButton(iconSize: 36),
-              NextButton(iconSize: 28),
+              PreviousButton(iconSize: KIconSize.lg),
+              PlayPauseButton(iconSize: KIconSize.lg),
+              NextButton(iconSize: KIconSize.lg),
             ],
           ),
           Expanded(

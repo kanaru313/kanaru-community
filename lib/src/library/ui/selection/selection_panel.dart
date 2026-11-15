@@ -189,8 +189,8 @@ class _PanelHeader extends ConsumerWidget {
   }
 }
 
-/// An icon button of the top row: 40 wide so seven fit beside the count on a
-/// phone, 48 tall.
+/// An icon button of the top row: a small icon with side padding 8 so seven
+/// fit beside the count on a phone, 44 dp tall inside the 56 dp header.
 class _Button extends StatelessWidget {
   const _Button({required this.icon, required this.tooltip, this.onPressed});
 
@@ -199,13 +199,15 @@ class _Button extends StatelessWidget {
   final VoidCallback? onPressed;
 
   @override
-  Widget build(BuildContext context) => IconButton(
+  Widget build(BuildContext context) => KIconButton(
     tooltip: tooltip,
     onPressed: onPressed,
-    icon: Icon(icon),
-    iconSize: 22,
-    padding: EdgeInsets.zero,
-    constraints: const BoxConstraints(minWidth: 40, minHeight: 48),
+    icon: icon,
+    size: KIconSize.sm,
+    padding: const EdgeInsets.symmetric(
+      horizontal: KSpace.x2,
+      vertical: KSpace.x3,
+    ),
   );
 }
 

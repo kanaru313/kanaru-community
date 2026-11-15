@@ -34,6 +34,8 @@ class GenresPage extends StatelessWidget {
       child: LibraryListFrame(
         list: BrowseList.genres,
         filterHint: l10n.libraryFilterGenresHint,
+        viewBuilder: (context, input) =>
+            CollectionViewSwitch(list: BrowseList.genres, view: input.view),
         builder: (context, input) => (
           leading: _GenresLeading(input: input),
           body: _GenresBody(input: input),
@@ -65,8 +67,6 @@ class _GenresLeading extends ConsumerWidget {
         unit: l10n.libraryUnitGenres,
         l10n: l10n,
       ),
-      switchFor: BrowseList.genres,
-      view: input.view,
     );
   }
 }

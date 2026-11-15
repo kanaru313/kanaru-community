@@ -23,7 +23,7 @@ typedef LibraryListInput = ({
 });
 
 /// The two halves a page puts into [LibraryListFrame]: the left group of the
-/// bar (counts, play buttons, view switch, breadcrumb) and the list.
+/// bar (counts, play buttons, breadcrumb) and the list.
 typedef LibraryListContent = ({Widget leading, Widget body});
 
 /// Bar above a list (sort chip, filter toggle), the filter field under it and
@@ -38,6 +38,7 @@ class LibraryListFrame extends ConsumerStatefulWidget {
     required this.list,
     required this.filterHint,
     required this.builder,
+    this.viewBuilder,
   });
 
   final BrowseList list;
@@ -47,6 +48,11 @@ class LibraryListFrame extends ConsumerStatefulWidget {
     LibraryListInput input,
   )
   builder;
+
+  /// The grid / list switch for the bar, between the sort chip and the filter
+  /// toggle; null = the list has one layout.
+  final Widget? Function(BuildContext context, LibraryListInput input)?
+  viewBuilder;
 
   @override
   ConsumerState<LibraryListFrame> createState() => _LibraryListFrameState();
@@ -103,16 +109,17 @@ class _LibraryListFrameState extends ConsumerState<LibraryListFrame> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final gutter = libraryGutter(context);
+    final gutter = libraryBarGutter(context);
     final prefs = ref.watch(
       libraryListViewsProvider.select((v) => v.of(widget.list)),
     );
-    final content = widget.builder(context, (
+    final input = (
       sort: prefs.sort,
       view: prefs.view,
       filter: _filter,
       filterOpen: _filterOpen,
-    ));
+    );
+    final content = widget.builder(context, input);
     return PopScope(
       canPop: !_filterOpen,
       onPopInvokedWithResult: (didPop, _) {
@@ -124,6 +131,7 @@ class _LibraryListFrameState extends ConsumerState<LibraryListFrame> {
             padding: EdgeInsets.symmetric(horizontal: gutter),
             child: KListSortFilterBar(
               leading: content.leading,
+              view: widget.viewBuilder?.call(context, input),
               criterionLabel: sortCriterionLabel(l10n, prefs.sort.criterion),
               ascending: !prefs.sort.descending,
               onSortPressed: _openSort,

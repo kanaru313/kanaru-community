@@ -12,6 +12,7 @@ Widget _bar({
   bool filterOpen = false,
   void Function(GlobalKey)? onSort,
   VoidCallback? onFilter,
+  Widget? view,
 }) {
   return Align(
     alignment: Alignment.topCenter,
@@ -24,6 +25,7 @@ Widget _bar({
       onFilterToggle: onFilter ?? () {},
       sortTooltip: 'Sort',
       filterTooltip: 'Filter',
+      view: view,
     ),
   );
 }
@@ -42,6 +44,28 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('with the view switch the bar fits 360 dp at text scale 2', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(360, 800));
+    await tester.pumpWidget(
+      host(
+        _bar(
+          view: KIconButton(
+            tooltip: 'View',
+            icon: KIcons.grid,
+            size: KIconSize.sm,
+            onPressed: () {},
+          ),
+        ),
+        textScale: 2.0,
+      ),
+    );
+    expect(find.byIcon(KIcons.grid), findsOneWidget);
+    expect(find.byIcon(KIcons.filter), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('the arrow follows the direction', (tester) async {
     useWindow(tester, const Size(400, 800));
@@ -89,12 +113,12 @@ void main() {
     expect(button.isSelected, isTrue);
   });
 
-  for (final (name, size, platform, width) in [
-    ('mobile', const Size(400, 800), TargetPlatform.android, 48.0),
-    ('desktop', const Size(1280, 800), TargetPlatform.linux, 40.0),
+  for (final (name, size, platform) in [
+    ('mobile', const Size(400, 800), TargetPlatform.android),
+    ('desktop', const Size(1280, 800), TargetPlatform.linux),
   ]) {
-    testWidgets('the closed filter is a light button as wide as the open one '
-        '($name)', (tester) async {
+    testWidgets('the filter is a 36 dp small icon, light closed and tonal '
+        'open, the same on every shell ($name)', (tester) async {
       debugDefaultTargetPlatformOverride = platform;
       try {
         useWindow(tester, size);
@@ -102,14 +126,48 @@ void main() {
         final closed = tester.getSize(find.byType(KIconButton));
         await tester.pumpWidget(host(_bar(filterOpen: true)));
         final open = tester.getSize(find.byType(IconButton));
-        expect(closed.width, width);
-        expect(closed.width, open.width);
+        expect(closed, const Size.square(KListSortFilterBar.buttonSize));
+        expect(open, closed);
         expect(find.byType(KIconButton), findsNothing);
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
     });
   }
+
+  testWidgets('the view switch sits left of the sort chip, filter last', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        Align(
+          alignment: Alignment.topCenter,
+          child: KListSortFilterBar(
+            leading: const Text('36 songs'),
+            criterionLabel: 'Title',
+            ascending: true,
+            onSortPressed: (_) {},
+            filterOpen: false,
+            onFilterToggle: () {},
+            filterTooltip: 'Filter',
+            view: KIconButton(
+              tooltip: 'View',
+              icon: KIcons.grid,
+              size: KIconSize.sm,
+              onPressed: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    final chip = tester.getRect(find.text('Title')).center.dx;
+    final view = tester.getCenter(find.byIcon(KIcons.grid)).dx;
+    final filter = tester.getCenter(find.byIcon(KIcons.filter)).dx;
+    expect(view, lessThan(chip));
+    expect(chip, lessThan(filter));
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('keyboard focus stays on the filter button when it toggles', (
     tester,

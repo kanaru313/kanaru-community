@@ -74,6 +74,24 @@ void main() {
     expect(retried, isTrue);
   });
 
+  for (final (name, size) in [('mobile', mobile), ('desktop', desktop)]) {
+    testWidgets('failed row: Retry ends at the row padding ($name)', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        size,
+        SongRowFailed(
+          extent: KMediaCard.extentOf(TextScaler.noScaling),
+          onRetry: () {},
+        ),
+      );
+      final row = tester.getRect(find.byType(SongRowFailed));
+      final retry = tester.getRect(find.byType(TextButton));
+      expect(retry.right, closeTo(row.right - KMediaCard.sidePadding, 0.5));
+    });
+  }
+
   testWidgets('failed row is a rounded card on desktop', (tester) async {
     await _pump(
       tester,

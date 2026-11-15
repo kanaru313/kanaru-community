@@ -1,4 +1,7 @@
+import 'dart:ui' show lerpDouble;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../media/domain/cover_files.dart';
@@ -7,6 +10,7 @@ import '../../../../playback/state/track_info_providers.dart';
 import '../../../../playback/ui/play_pause_button.dart';
 import '../../../../playback/ui/track_cover.dart';
 import '../../../../playback/ui/transport_buttons.dart';
+import 'now_playing_text_styles.dart';
 
 /// The cover of the strip (and of the flight): grows from the source's size
 /// to 72, its corners follow.
@@ -56,22 +60,27 @@ class StripText extends ConsumerWidget {
           info?.title ?? '',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: text.titleMedium?.copyWith(
-            fontSize: 16 + 6 * (1 - t),
-            fontWeight: FontWeight.w700,
-            height: nowPlayingTitleLineHeight,
-          ),
+          // t = 0 is the Now Playing title, t = 1 the strip title.
+          style: TextStyle.lerp(
+            stripTitleStyle(text),
+            coverTitleStyle(text),
+            1 - t,
+          )?.copyWith(height: nowPlayingTitleLineHeight),
         ),
         if (info?.artist != null)
           Text(
             info!.artist!,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: text.bodyMedium?.copyWith(
-              fontSize: 13 + 2 * (1 - t),
-              height: nowPlayingArtistLineHeight,
-              color: scheme.onSurfaceVariant,
-            ),
+            style:
+                TextStyle.lerp(
+                  stripArtistStyle(text),
+                  coverArtistStyle(text),
+                  1 - t,
+                )?.copyWith(
+                  height: nowPlayingArtistLineHeight,
+                  color: scheme.onSurfaceVariant,
+                ),
           ),
       ],
     );
@@ -88,7 +97,7 @@ class StripPlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) => PlayPauseButton(
     filled: true,
-    iconSize: 28 + 8 * (1 - t),
+    iconSize: lerpDouble(KIconSize.lg, KIconSize.xl, 1 - t),
     size: rect.width,
   );
 }
@@ -99,5 +108,6 @@ class StripNext extends StatelessWidget {
   final double t;
 
   @override
-  Widget build(BuildContext context) => NextButton(iconSize: 28 + 4 * (1 - t));
+  Widget build(BuildContext context) =>
+      NextButton(iconSize: lerpDouble(KIconSize.md, KIconSize.lg, 1 - t));
 }

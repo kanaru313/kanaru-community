@@ -8,6 +8,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../playback/support/ui_host.dart';
+import '../../../support/icon_button_finders.dart';
 
 final _routes = <RouteBase>[
   GoRoute(
@@ -58,7 +59,7 @@ Future<UiHost> _openSheet(
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 400));
   await host.letStreamsArrive(tester);
-  await tester.tap(find.byTooltip('More'));
+  await tester.tap(byIconButton('More'));
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 400));
   return host;

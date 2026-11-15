@@ -26,6 +26,8 @@ class AlbumsPage extends StatelessWidget {
       child: LibraryListFrame(
         list: BrowseList.albums,
         filterHint: l10n.libraryFilterAlbumsHint,
+        viewBuilder: (context, input) =>
+            CollectionViewSwitch(list: BrowseList.albums, view: input.view),
         builder: (context, input) => (
           leading: _AlbumsLeading(input: input),
           body: _AlbumsBody(input: input),
@@ -57,8 +59,6 @@ class _AlbumsLeading extends ConsumerWidget {
         unit: l10n.libraryUnitAlbums,
         l10n: l10n,
       ),
-      switchFor: BrowseList.albums,
-      view: input.view,
     );
   }
 }

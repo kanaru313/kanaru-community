@@ -27,6 +27,12 @@ double libraryGutter(BuildContext context) =>
 double libraryRowGutter(BuildContext context) =>
     FormFactor.of(context) == FormFactor.desktop ? KLayout.gutterDesktop : 0;
 
+/// Side padding of the sort / filter bar (and the filter field) above a list
+/// of rows: the row gutter plus the row's own padding, so the bar's first text
+/// lines up with the covers and its last button with the rows' ⋮.
+double libraryBarGutter(BuildContext context) =>
+    libraryRowGutter(context) + KMediaCard.sidePadding;
+
 /// Frame of one of the six list pages.
 ///
 /// A root page: [PageHeader] without a back button, so the shell's header
@@ -194,6 +200,7 @@ class _LibraryListScaffoldState extends ConsumerState<LibraryListScaffold>
         if (mobile)
           KSubTabBar(
             labels: [for (final t in visible) libraryTabLabel(l10n, t)],
+            icons: [for (final t in visible) libraryTabIcon(t)],
             selectedIndex: visible.indexOf(widget.tab),
             onSelected: (i) => _goTo(visible[i]),
             initialOffset: ref.read(subTabOffsetProvider),

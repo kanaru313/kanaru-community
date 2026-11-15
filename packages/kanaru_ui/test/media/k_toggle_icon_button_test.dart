@@ -129,4 +129,35 @@ void main() {
     expect(find.text('7'), findsOneWidget);
     expect(find.byKey(KToggleIconButton.dotKey), findsOneWidget);
   });
+
+  testWidgets('in a tall tile the dot stays 2 dp under the glyph', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: SizedBox(
+            width: 85,
+            height: 52,
+            child: KToggleIconButton(
+              icon: Icons.shuffle,
+              active: true,
+              tooltip: 'Shuffle',
+              padding: const EdgeInsets.all(KSpace.x1),
+              onPressed: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    final tile = tester.getRect(find.byType(KIconButton));
+    expect(tile.size, const Size(85, 52));
+    final glyph = tester.getRect(find.byIcon(Icons.shuffle));
+    final dot = tester.getRect(find.byKey(KToggleIconButton.dotKey));
+    expect(dot.top - glyph.bottom, closeTo(2, 0.01));
+    expect(dot.center.dx, closeTo(glyph.center.dx, 0.01));
+    // The glyph is centred in the tile, not pushed up to make room.
+    expect(glyph.center.dx, closeTo(tile.center.dx, 0.5));
+    expect(glyph.center.dy, closeTo(tile.center.dy, 0.5));
+  });
 }

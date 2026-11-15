@@ -283,15 +283,15 @@ class SongFavoriteButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final favorite = ref.watch(isFavoriteProvider(trackId));
-    final scheme = Theme.of(context).colorScheme;
-    return IconButton(
+    return KIconButton(
       tooltip: favorite ? l10n.libraryFavoriteRemove : l10n.libraryFavoriteAdd,
-      isSelected: favorite,
+      selected: favorite,
       onPressed: () => _toggle(ref, context),
-      iconSize: 20,
-      // Default 48 dp tap target; the card lets this slot reach into the row.
-      icon: const Icon(KIcons.heart),
-      selectedIcon: Icon(KIcons.heartFilled, color: scheme.primary),
+      size: KIconSize.sm,
+      // The card's right column places this slot against the duration.
+      padding: const EdgeInsets.all(KSpace.x2),
+      icon: KIcons.heart,
+      selectedIcon: KIcons.heartFilled,
     );
   }
 

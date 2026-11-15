@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show GestureSettings, SemanticsAction;
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
@@ -14,6 +15,8 @@ import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/state/browse/selection_providers.dart';
 import 'package:kanaru/src/library/state/browse/song_list_providers.dart';
 import 'package:kanaru/src/library/state/favorites_providers.dart';
+import 'package:kanaru/src/library/ui/browse/play_shuffle_buttons.dart';
+import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru/src/library/ui/songs/song_tile.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
@@ -169,40 +172,131 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('desktop labels play all, shuffle stays an icon on its right', (
-    tester,
-  ) async {
-    final h = await pumpLibrary(
-      tester,
-      initial: '/library/songs',
-      width: 1280,
-      height: 800,
-    );
-    await _addSongs(h, ['Alpha']);
-    await h.settle(tester);
-    expect(find.text('Play all'), findsOneWidget);
-    expect(find.text('Shuffle'), findsNothing);
-    final play = tester.getCenter(find.text('Play all'));
-    final shuffle = tester.getCenter(find.byTooltip('Shuffle'));
-    expect(shuffle.dx, greaterThan(play.dx));
-    await unmountApp(tester);
-  });
+  for (final (name, width) in [('mobile', 400.0), ('desktop', 1280.0)]) {
+    testWidgets('$name: play all and shuffle are 36 dp icon discs, shuffle '
+        'on the right, no label', (tester) async {
+      final h = await pumpLibrary(
+        tester,
+        initial: '/library/songs',
+        width: width,
+        height: 800,
+      );
+      await _addSongs(h, ['Alpha']);
+      await h.settle(tester);
+      expect(find.text('Play all'), findsNothing);
+      expect(find.text('Shuffle'), findsNothing);
+      final play = find.byTooltip('Play all');
+      final shuffle = find.byTooltip('Shuffle');
+      expect(tester.getSize(play), const Size.square(36));
+      expect(tester.getSize(shuffle), const Size.square(36));
+      // 8 dp between the two discs.
+      expect(tester.getRect(shuffle).left - tester.getRect(play).right, 8);
+      expect(
+        tester.getCenter(shuffle).dx,
+        greaterThan(tester.getCenter(play).dx),
+      );
+      await unmountApp(tester);
+    });
+  }
 
   testWidgets('the heart toggles the favorite on the row', (tester) async {
     final h = await pumpLibrary(tester, initial: '/library/songs');
     final ids = await _addSongs(h, ['Alpha', 'Bravo']);
     await h.settle(tester);
-    expect(find.byTooltip('Remove from favorites'), findsNothing);
-    await tester.tap(find.byTooltip('Add to favorites').first);
+    expect(byIconButton('Remove from favorites'), findsNothing);
+    await tester.tap(byIconButton('Add to favorites').first);
     await h.settle(tester, rounds: 1);
-    expect(find.byTooltip('Remove from favorites'), findsOneWidget);
+    expect(byIconButton('Remove from favorites'), findsOneWidget);
     final favorites = h.container.read(favoriteTrackIdsProvider).value;
     expect(favorites, {TrackId(ids[0])});
-    await tester.tap(find.byTooltip('Remove from favorites'));
+    await tester.tap(byIconButton('Remove from favorites'));
     await h.settle(tester, rounds: 1);
     expect(h.container.read(favoriteTrackIdsProvider).value, isEmpty);
     await unmountApp(tester);
   });
+
+  testWidgets('a tap at the heart edge toggles it, the gap beside it does '
+      'nothing, neither plays the row', (tester) async {
+    final playback = FakePlaybackCommands();
+    final h = await pumpLibrary(
+      tester,
+      initial: '/library/songs',
+      playback: playback,
+    );
+    final ids = await _addSongs(h, ['Alpha', 'Bravo']);
+    await h.settle(tester);
+    final heart = tester.getRect(byIconButton('Add to favorites').first);
+    // The gap just left of the right column (the duration text or the heart
+    // box, whichever is wider): absorbed, not the row.
+    final duration = tester.getRect(find.text('3:05').first);
+    await tester.tapAt(
+      Offset(math.min(heart.left, duration.left) - 3, heart.center.dy),
+    );
+    await h.settle(tester, rounds: 1);
+    expect(playback.calls, isEmpty);
+    expect(h.container.read(favoriteTrackIdsProvider).value, isEmpty);
+    // The very edge of the heart box is the heart.
+    await tester.tapAt(heart.topLeft + const Offset(1, 1));
+    await h.settle(tester, rounds: 1);
+    expect(playback.calls, isEmpty);
+    expect(h.container.read(favoriteTrackIdsProvider).value, {TrackId(ids[0])});
+    // The ⋮ edge opens its own menu and plays nothing.
+    final more = tester.getRect(byIconButton('More options').first);
+    await tester.tapAt(more.topRight - const Offset(1, -1));
+    await h.settle(tester, rounds: 1);
+    expect(playback.calls, isEmpty);
+    // The menu of the row is open: the tap reached the ⋮, not an absorber.
+    expect(find.text('Go to album'), findsOneWidget);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a tap in the row padding right of the more button opens its '
+      'menu and does not play the row', (tester) async {
+    final playback = FakePlaybackCommands();
+    final h = await pumpLibrary(
+      tester,
+      initial: '/library/songs',
+      playback: playback,
+    );
+    await _addSongs(h, ['Alpha', 'Bravo']);
+    await h.settle(tester);
+    final more = tester.getRect(byIconButton('More options').first);
+    await tester.tapAt(Offset(more.right + 6, more.center.dy));
+    await h.settle(tester, rounds: 1);
+    expect(playback.calls, isEmpty);
+    expect(find.text('Go to album'), findsOneWidget);
+    await unmountApp(tester);
+  });
+
+  for (final (name, width) in [('mobile', 400.0), ('desktop', 1280.0)]) {
+    testWidgets('$name: the list bar lines up with the rows below it', (
+      tester,
+    ) async {
+      final h = await pumpLibrary(
+        tester,
+        initial: '/library/songs',
+        width: width,
+        height: 800,
+      );
+      await _addSongs(h, ['Alpha', 'Bravo']);
+      await h.settle(tester);
+      // The bar's first control is at the first cover's left edge, its last
+      // button (the filter) ends where the row's ⋮ ends.
+      final cluster = tester.getRect(find.byType(PlayShuffleButtons));
+      final cover = tester.getRect(find.byType(TrackCover).first);
+      final filter = tester.getRect(byIconButton('Filter'));
+      final more = tester.getRect(byIconButton('More options').first);
+      expect(cluster.left, closeTo(cover.left, 0.5));
+      expect(filter.right, closeTo(more.right, 0.5));
+      // The filter field that opens under the bar is on the same edges.
+      await tester.tap(byIconButton('Filter'));
+      await h.settle(tester, rounds: 1);
+      final field = tester.getRect(find.byType(KFilterField));
+      expect(field.left, closeTo(cover.left, 0.5));
+      expect(field.right, closeTo(more.right, 0.5));
+      await unmountApp(tester);
+    });
+  }
 
   testWidgets('the playing row is tinted and shows the equalizer', (
     tester,

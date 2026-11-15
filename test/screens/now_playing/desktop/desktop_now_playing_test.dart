@@ -14,6 +14,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../shell/support/desktop_now_playing_host.dart';
 import '../../../support/app_harness.dart';
+import '../../../support/icon_button_finders.dart';
 
 Future<DesktopHost> _open(
   WidgetTester tester, {
@@ -159,7 +160,7 @@ void main() {
 
   testWidgets('the chevron closes the screen', (tester) async {
     final host = await _open(tester);
-    await tester.tap(find.byTooltip('Minimise'));
+    await tester.tap(byIconButton('Minimise'));
     await tester.pump();
     expect(host.container.read(nowPlayingPanelProvider).open, isFalse);
     await settleSlide(tester);
@@ -189,7 +190,7 @@ void main() {
     AnimatedOpacity fade() => tester.widget<AnimatedOpacity>(
       find
           .ancestor(
-            of: find.byTooltip('Minimise'),
+            of: byIconButton('Minimise'),
             matching: find.byType(AnimatedOpacity),
           )
           .first,
@@ -207,7 +208,7 @@ void main() {
     AnimatedOpacity fade() => tester.widget<AnimatedOpacity>(
       find
           .ancestor(
-            of: find.byTooltip('Minimise'),
+            of: byIconButton('Minimise'),
             matching: find.byType(AnimatedOpacity),
           )
           .first,
@@ -226,8 +227,9 @@ void main() {
     tester,
   ) async {
     await _open(tester);
+    // The player bar button and the cover both carry this name.
+    expect(byAnyIconButton('Open Now Playing'), findsNothing);
     expect(find.byTooltip('Open Now Playing'), findsNothing);
-    expect(find.byTooltip('Expand'), findsNothing);
   });
 
   testWidgets('narrowing the window hands Now Playing to the mobile page', (

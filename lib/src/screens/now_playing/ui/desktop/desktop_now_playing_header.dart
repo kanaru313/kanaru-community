@@ -61,14 +61,14 @@ class _DesktopNowPlayingHeaderState
         padding: const EdgeInsets.symmetric(horizontal: KSpace.x3),
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(KIcons.collapse),
+            KIconButton(
+              icon: KIcons.collapse,
               tooltip: l10n.playbackMinimize,
               onPressed: widget.onClose,
             ),
-            IconButton(
-              icon: const Icon(KIcons.sidebarCover),
-              isSelected: widget.columnShown,
+            KIconButton(
+              icon: KIcons.sidebarCover,
+              selected: widget.columnShown,
               tooltip: l10n.playbackToggleCoverColumn,
               onPressed: widget.onToggleColumn,
             ),
@@ -77,8 +77,8 @@ class _DesktopNowPlayingHeaderState
               child: VerticalDivider(width: KSpace.x4),
             ),
             if (trackId != null) FavoriteButton(trackId: trackId),
-            IconButton(
-              icon: const Icon(KIcons.playlistAdd),
+            KIconButton(
+              icon: KIcons.playlistAdd,
               tooltip: '${l10n.playbackAddToPlaylist} · $soon',
               onPressed: null,
             ),
@@ -102,7 +102,7 @@ class _DesktopNowPlayingHeaderState
                         mainAxisSize: MainAxisSize.min,
                         spacing: KSpace.x1,
                         children: [
-                          const Icon(KIcons.language, size: 18),
+                          const Icon(KIcons.language, size: KIconSize.xs),
                           Text(l10n.playbackTranslate),
                         ],
                       ),
@@ -113,8 +113,8 @@ class _DesktopNowPlayingHeaderState
             ),
             const Spacer(),
             const RepeatButton(),
-            IconButton(
-              icon: const Icon(KIcons.sleepTimer),
+            KIconButton(
+              icon: KIcons.sleepTimer,
               tooltip: '${l10n.playbackSleepTimer} · $soon',
               onPressed: null,
             ),

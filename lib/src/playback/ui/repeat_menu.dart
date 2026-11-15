@@ -70,14 +70,22 @@ class RepeatMenuRows extends StatelessWidget {
     final shown = counting ? times : draft;
 
     Widget modeRow(RepeatMode m) => SelectionRow(
-      leading: KRepeatIcon(glyph: repeatGlyph(m), size: 24, menu: true),
+      leading: KRepeatIcon(
+        glyph: repeatGlyph(m),
+        size: KIconSize.md,
+        menu: true,
+      ),
       title: Text(repeatLabel(l10n, m, 0)),
       selected: !counting && mode == m,
       onTap: () => onMode(m),
     );
 
     final countedRow = SelectionRow(
-      leading: KRepeatIcon(glyph: KRepeatGlyph.counted, count: shown, size: 24),
+      leading: KRepeatIcon(
+        glyph: KRepeatGlyph.counted,
+        count: shown,
+        size: KIconSize.md,
+      ),
       title: Row(
         children: [
           Expanded(child: Text(repeatLabel(l10n, mode, shown))),

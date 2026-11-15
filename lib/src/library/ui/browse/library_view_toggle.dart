@@ -10,9 +10,9 @@ class ViewOption<T> {
   final String label;
 }
 
-/// Switch between two layouts (grid / list, tree / flat). Mobile: one icon
-/// button showing the layout it switches to. Desktop: a double button with
-/// both layouts, the current one filled.
+/// Switch between two layouts (grid / list, tree / flat): one small icon
+/// button showing the layout it switches to, on every shell. It sits in the
+/// list bar between the sort chip and the filter toggle.
 class LibraryViewToggle<T> extends StatelessWidget {
   const LibraryViewToggle({
     super.key,
@@ -27,23 +27,13 @@ class LibraryViewToggle<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (FormFactor.of(context) == FormFactor.mobile) {
-      final target = options.firstWhere((o) => o.value != value);
-      return IconButton(
-        tooltip: target.label,
-        onPressed: () => onChanged(target.value),
-        icon: Icon(target.icon),
-      );
-    }
-    return SegmentedButton<T>(
-      showSelectedIcon: false,
-      style: const ButtonStyle(visualDensity: VisualDensity.compact),
-      segments: [
-        for (final o in options)
-          ButtonSegment(value: o.value, icon: Icon(o.icon), tooltip: o.label),
-      ],
-      selected: {value},
-      onSelectionChanged: (s) => onChanged(s.first),
+    final target = options.firstWhere((o) => o.value != value);
+    return KIconButton(
+      tooltip: target.label,
+      size: KIconSize.sm,
+      padding: const EdgeInsets.all(KSpace.x2),
+      onPressed: () => onChanged(target.value),
+      icon: target.icon,
     );
   }
 }

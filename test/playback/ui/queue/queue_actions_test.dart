@@ -2,10 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_actions.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_header.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../support/controller_harness.dart' show ctx;
 import '../../support/ui_host.dart';
+import '../../../support/icon_button_finders.dart';
 
 Widget _actions({bool up = false}) => Align(
   alignment: up ? Alignment.bottomCenter : Alignment.topCenter,
@@ -17,7 +19,7 @@ MenuItemButton _item(WidgetTester tester, String label) => tester.widget(
 );
 
 Future<void> _openCleanup(WidgetTester tester) async {
-  await tester.tap(find.byTooltip('Clean up'));
+  await tester.tap(byIconButton('Clean up'));
   await tester.pump(const Duration(milliseconds: 300));
 }
 
@@ -136,7 +138,7 @@ void main() {
     tester,
   ) async {
     await pumpWithPlayer(tester, _actions(up: true));
-    final button = tester.getRect(find.byTooltip('Clean up'));
+    final button = tester.getRect(byIconButton('Clean up'));
     await _openCleanup(tester);
     final menu = tester.getRect(find.text('Remove from queue'));
     expect(menu.bottom, lessThanOrEqualTo(button.top + 1));
@@ -144,7 +146,7 @@ void main() {
 
   testWidgets('desktop dropdown opens downward', (tester) async {
     await pumpWithPlayer(tester, _actions());
-    final button = tester.getRect(find.byTooltip('Clean up'));
+    final button = tester.getRect(byIconButton('Clean up'));
     await _openCleanup(tester);
     final menu = tester.getRect(find.text('Remove from queue'));
     expect(menu.top, greaterThanOrEqualTo(button.bottom - 1));
@@ -158,14 +160,7 @@ void main() {
       'Add tracks · Coming soon',
       'Save as playlist · Coming soon',
     ]) {
-      final button = tester.widget<IconButton>(
-        find
-            .ancestor(
-              of: find.byTooltip(tip),
-              matching: find.byType(IconButton),
-            )
-            .first,
-      );
+      final button = tester.widget<KIconButton>(byIconButton(tip));
       expect(button.onPressed, isNull, reason: tip);
     }
   });
@@ -174,7 +169,7 @@ void main() {
     tester,
   ) async {
     final host = await pumpWithPlayer(tester, _actions());
-    await host.tap(tester, find.byTooltip('Shuffle'));
+    await host.tap(tester, byIconButton('Shuffle'));
     expect(host.h.c.queueState.shuffled, isTrue);
     expect(host.h.c.queueState.currentItem!.trackId, const TrackId(1));
   });
@@ -183,7 +178,7 @@ void main() {
     tester,
   ) async {
     await pumpWithPlayer(tester, const Align(child: QueueMoreMenu()));
-    await tester.tap(find.byTooltip('More'));
+    await tester.tap(byIconButton('More'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(_item(tester, 'Select several').onPressed, isNull);
     expect(find.text('Coming soon'), findsOneWidget);

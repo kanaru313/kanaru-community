@@ -39,7 +39,11 @@ class LibraryEmptyState extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(KIcons.library, size: KSpace.x9, color: scheme.onSurfaceVariant),
+        Icon(
+          KIcons.library,
+          size: KIconSize.hero,
+          color: scheme.onSurfaceVariant,
+        ),
         const KGap(KSpace.x3),
         Text(l10n.libraryEmptyTitle, style: textTheme.titleMedium),
         const KGap(KSpace.x1),

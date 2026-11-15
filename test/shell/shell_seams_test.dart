@@ -7,6 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:kanaru/kanaru.dart';
 import 'package:kanaru/src/extension/state/extension_providers.dart';
 import 'package:kanaru/src/library/domain/scan_status.dart';
+
+import '../support/icon_button_finders.dart';
+
 import 'package:kanaru/src/playback/domain/now_playing.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
@@ -289,19 +292,11 @@ void main() {
         'Keyboard shortcuts · Coming soon',
         'AI chat · Coming soon',
       ]) {
-        final button = find.ancestor(
+        final glyph = find.descendant(
           of: _byTooltip(tip),
-          matching: find.byType(IconButton),
+          matching: find.byType(Icon),
         );
-        final widget = button.evaluate().isEmpty
-            ? tester.widget<IconButton>(
-                find.descendant(
-                  of: _byTooltip(tip),
-                  matching: find.byType(IconButton),
-                ),
-              )
-            : tester.widget<IconButton>(button.first);
-        expect(widget.onPressed, isNull, reason: tip);
+        expect(iconButtonAround(tester, glyph).enabled, isFalse, reason: tip);
       }
     });
   });

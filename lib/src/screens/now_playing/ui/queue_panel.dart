@@ -164,8 +164,8 @@ class _SheetHead extends StatelessWidget {
           ),
           const QueueSoonButton.save(),
           QueueMoreMenu(onSelectMany: onSelectMany),
-          IconButton(
-            icon: const Icon(KIcons.collapse),
+          KIconButton(
+            icon: KIcons.collapse,
             tooltip: l10n.playbackMinimize,
             onPressed: onClose,
           ),
@@ -183,30 +183,19 @@ class _PanelHead extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 40 dp buttons (the desktop minimum) with 8 dp between them; the count
+    // Light buttons (icon + 8 dp each side) with 8 dp between them; the count
     // line takes the rest of the 420 dp and shows in full in its tooltip.
-    return Theme(
-      data: Theme.of(context).copyWith(
-        iconButtonTheme: IconButtonThemeData(
-          style: IconButton.styleFrom(visualDensity: VisualDensity.compact),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(left: KSpace.x4, right: KSpace.x2),
-        child: SizedBox(
-          height: KLayout.minTarget,
-          child: Row(
-            children: [
-              const Expanded(child: QueueCounts(mobile: false)),
-              const QueueActions(gap: KSpace.x2),
-              const VerticalDivider(
-                width: KSpace.x2,
-                indent: 12,
-                endIndent: 12,
-              ),
-              QueueMoreMenu(onSelectMany: onSelectMany),
-            ],
-          ),
+    return Padding(
+      padding: const EdgeInsets.only(left: KSpace.x4, right: KSpace.x2),
+      child: SizedBox(
+        height: KLayout.minTarget,
+        child: Row(
+          children: [
+            const Expanded(child: QueueCounts(mobile: false)),
+            const QueueActions(gap: KSpace.x2),
+            const VerticalDivider(width: KSpace.x2, indent: 12, endIndent: 12),
+            QueueMoreMenu(onSelectMany: onSelectMany),
+          ],
         ),
       ),
     );

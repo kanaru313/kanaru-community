@@ -5,7 +5,9 @@ import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:kanaru/src/playback/state/playback_position_provider.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
+import 'package:kanaru/src/shell/state/right_panel.dart';
 import 'package:kanaru/src/shell/ui/desktop_playback_keys.dart';
+import 'package:kanaru/src/shell/ui/player_bar.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -14,7 +16,7 @@ import 'support/desktop_now_playing_host.dart';
 
 Future<void> _key(
   WidgetTester tester,
-   DesktopHost host,
+  DesktopHost host,
   LogicalKeyboardKey key, {
   bool repeat = false,
   LogicalKeyboardKey? modifier,
@@ -51,18 +53,20 @@ void main() {
   for (final focused in [false, true]) {
     final mode = focused ? 'with focus in the shell' : 'with nothing focused';
     group('desktop playback keys $mode', () {
-      testWidgets('Space toggles play and pause once per press, even on repeat',
-          (tester) async {
-        final host = await pumpDesktopShell(tester);
-        if (focused) await _focusShell(tester);
-        expect(host.h.c.intent, PlayIntent.paused);
+      testWidgets(
+        'Space toggles play and pause once per press, even on repeat',
+        (tester) async {
+          final host = await pumpDesktopShell(tester);
+          if (focused) await _focusShell(tester);
+          expect(host.h.c.intent, PlayIntent.paused);
 
-        await _key(tester, host, LogicalKeyboardKey.space, repeat: true);
-        expect(host.h.c.intent, PlayIntent.playing);
+          await _key(tester, host, LogicalKeyboardKey.space, repeat: true);
+          expect(host.h.c.intent, PlayIntent.playing);
 
-        await _key(tester, host, LogicalKeyboardKey.space, repeat: true);
-        expect(host.h.c.intent, PlayIntent.paused);
-      });
+          await _key(tester, host, LogicalKeyboardKey.space, repeat: true);
+          expect(host.h.c.intent, PlayIntent.paused);
+        },
+      );
 
       testWidgets('Left and Right seek by 5 s and repeat while held', (
         tester,
@@ -87,30 +91,31 @@ void main() {
         expect(_position(host), Duration.zero);
       });
 
-      testWidgets('rapid arrow repeat events within throttle interval are dropped', (
-        tester,
-      ) async {
-        final host = await pumpDesktopShell(tester);
-        host.h.engine.emit(
-          EngineLoaded(host.h.loadedToken, const Duration(minutes: 3)),
-        );
-        await host.letStreamsArrive(tester);
-        if (focused) await _focusShell(tester);
+      testWidgets(
+        'rapid arrow repeat events within throttle interval are dropped',
+        (tester) async {
+          final host = await pumpDesktopShell(tester);
+          host.h.engine.emit(
+            EngineLoaded(host.h.loadedToken, const Duration(minutes: 3)),
+          );
+          await host.letStreamsArrive(tester);
+          if (focused) await _focusShell(tester);
 
-        // First key down seeks by 5s.
-        await tester.runAsync(() async {
-          await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowRight);
-          // Rapid repeats without delay (< 80ms) are dropped.
-          await tester.sendKeyRepeatEvent(LogicalKeyboardKey.arrowRight);
-          await tester.sendKeyRepeatEvent(LogicalKeyboardKey.arrowRight);
-          await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowRight);
-          await host.h.settle();
-        });
-        await tester.pump();
+          // First key down seeks by 5s.
+          await tester.runAsync(() async {
+            await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowRight);
+            // Rapid repeats without delay (< 80ms) are dropped.
+            await tester.sendKeyRepeatEvent(LogicalKeyboardKey.arrowRight);
+            await tester.sendKeyRepeatEvent(LogicalKeyboardKey.arrowRight);
+            await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowRight);
+            await host.h.settle();
+          });
+          await tester.pump();
 
-        // Only the key down seek took effect.
-        expect(_position(host), const Duration(seconds: 5));
-      });
+          // Only the key down seek took effect.
+          expect(_position(host), const Duration(seconds: 5));
+        },
+      );
 
       testWidgets('Ctrl+S toggles shuffle once per press', (tester) async {
         final host = await pumpDesktopShell(tester);
@@ -207,6 +212,151 @@ void main() {
     expect(presses, 1);
   });
 
+  testWidgets(
+    'Space on a focused icon button presses it and does not play or pause; '
+    'Space on a row-like focus still plays',
+    (tester) async {
+      var presses = 0;
+      final buttonFocus = FocusNode();
+      final rowFocus = FocusNode();
+      addTearDown(buttonFocus.dispose);
+      addTearDown(rowFocus.dispose);
+      final host = await pumpDesktopShell(
+        tester,
+        routes: [
+          GoRoute(
+            path: '/button',
+            builder: (_, _) => Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  KIconButton(
+                    focusNode: buttonFocus,
+                    icon: KIcons.heart,
+                    tooltip: 'Heart',
+                    onPressed: () => presses++,
+                  ),
+                  Focus(focusNode: rowFocus, child: const Text('row')),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+      host.routerRef.go('/button');
+      await tester.pumpAndSettle();
+      buttonFocus.requestFocus();
+      await tester.pump();
+      expect(KIconButton.ownsPrimaryFocus(), isTrue);
+      expect(host.h.c.intent, PlayIntent.paused);
+
+      await _key(tester, host, LogicalKeyboardKey.space);
+      expect(presses, 1);
+      expect(host.h.c.intent, PlayIntent.paused);
+
+      // Enter presses it as before.
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(presses, 2);
+
+      // Focus on something that is not an icon button: Space plays.
+      rowFocus.requestFocus();
+      await tester.pump();
+      expect(KIconButton.ownsPrimaryFocus(), isFalse);
+      await _key(tester, host, LogicalKeyboardKey.space);
+      expect(presses, 2);
+      expect(host.h.c.intent, PlayIntent.playing);
+    },
+  );
+
+  testWidgets(
+    'Space presses the player bar Queue toggle both ways and keeps its focus',
+    (tester) async {
+      final host = await pumpDesktopShell(tester);
+      final glyph = find.descendant(
+        of: find.byType(PlayerBar),
+        matching: find.byIcon(KIcons.queueMusic),
+      );
+      Focus.of(tester.element(glyph)).requestFocus();
+      await tester.pump();
+      final node = FocusManager.instance.primaryFocus;
+      expect(KIconButton.ownsPrimaryFocus(), isTrue);
+      RightPanelKind kind() => host.container.read(rightPanelProvider);
+
+      // Closed: the light button. Open: the Material tonal one. Space presses
+      // both and never plays or pauses.
+      for (final expected in [
+        RightPanelKind.queue,
+        RightPanelKind.closed,
+        RightPanelKind.queue,
+      ]) {
+        await _key(tester, host, LogicalKeyboardKey.space);
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(kind(), expected);
+        expect(host.h.c.intent, PlayIntent.paused);
+        expect(FocusManager.instance.primaryFocus, same(node));
+        expect(KIconButton.ownsPrimaryFocus(), isTrue);
+      }
+    },
+  );
+
+  testWidgets(
+    'Enter on the Queue toggle keeps the focus across open and close',
+    (tester) async {
+      final host = await pumpDesktopShell(tester);
+      final glyph = find.descendant(
+        of: find.byType(PlayerBar),
+        matching: find.byIcon(KIcons.queueMusic),
+      );
+      Focus.of(tester.element(glyph)).requestFocus();
+      await tester.pump();
+      final node = FocusManager.instance.primaryFocus;
+      for (final expected in [RightPanelKind.queue, RightPanelKind.closed]) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(host.container.read(rightPanelProvider), expected);
+        expect(FocusManager.instance.primaryFocus, same(node));
+      }
+    },
+  );
+
+  testWidgets(
+    'Space and Enter on a focused more button report a keyboard press and '
+    'do not play or pause',
+    (tester) async {
+      final calls = <bool>[];
+      final host = await pumpDesktopShell(
+        tester,
+        routes: [
+          GoRoute(
+            path: '/more',
+            builder: (_, _) => Center(
+              child: KMoreButton(
+                tooltip: 'More',
+                onPressed: ({required viaKeyboard}) => calls.add(viaKeyboard),
+              ),
+            ),
+          ),
+        ],
+      );
+      host.routerRef.go('/more');
+      await tester.pumpAndSettle();
+      Focus.of(tester.element(find.byIcon(KIcons.moreVert))).requestFocus();
+      await tester.pump();
+
+      await _key(tester, host, LogicalKeyboardKey.space);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(calls, [true, true]);
+      expect(host.h.c.intent, PlayIntent.paused);
+
+      // A pointer press resets the answer.
+      await tester.tap(find.byIcon(KIcons.moreVert));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(calls, [true, true, false]);
+    },
+  );
+
   testWidgets('focused EditableText keeps Space, arrows and Ctrl+S', (
     tester,
   ) async {
@@ -215,8 +365,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/field',
-          builder: (_, _) =>
-              const Scaffold(body: TextField(autofocus: true)),
+          builder: (_, _) => const Scaffold(body: TextField(autofocus: true)),
         ),
       ],
     );

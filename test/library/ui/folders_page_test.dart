@@ -4,13 +4,14 @@ import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/domain/music_folder.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
-import 'package:kanaru/src/library/ui/folders/folder_bar.dart';
+import 'package:kanaru/src/library/ui/browse/play_shuffle_buttons.dart';
 import 'package:kanaru/src/library/ui/folders/folder_locations.dart';
 import 'package:kanaru/src/library/ui/folders/folder_play.dart';
 import 'package:kanaru/src/library/ui/folders/folder_slivers.dart';
 import 'package:kanaru/src/library/ui/folders/folder_tile.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/platform/domain/storage_volumes.dart';
+import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -112,6 +113,20 @@ void main() {
     await unmountApp(tester);
   });
 
+  for (final (name, width) in [('mobile', 390.0), ('desktop', 1280.0)]) {
+    testWidgets('$name: the songs heading lines up with the song covers', (
+      tester,
+    ) async {
+      final (h, _) = await _single(tester, width: width);
+      await tester.tap(find.text('V-Pop › Singles › Deep'));
+      await _settle(tester, h);
+      final heading = tester.getRect(find.text('Songs in this folder · 2'));
+      final cover = tester.getRect(find.byType(TrackCover).first);
+      expect(heading.left, closeTo(cover.left, 0.5));
+      await unmountApp(tester);
+    });
+  }
+
   testWidgets('a tap on a song plays the level with a folder context', (
     tester,
   ) async {
@@ -127,26 +142,19 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('play and shuffle in a level use the songs below it', (
-    tester,
-  ) async {
-    final playback = FakePlaybackCommands();
-    final (h, _) = await _single(tester, playback: playback);
-    await tester.tap(
-      find.descendant(
-        of: find.byType(FolderPlayRow),
-        matching: find.byTooltip('Play all'),
-      ),
-    );
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 50)),
-    );
-    await tester.pump();
-    // Deep: 5 songs under the music folder.
-    expect((playback.calls.single as PlayTracksCall).tracks.length, 5);
-    await unmountApp(tester);
-    expect(h.location, '/library/folders');
-  });
+  for (final (name, width) in [('mobile', 390.0), ('desktop', 1280.0)]) {
+    testWidgets('$name: a folder level has no play all or shuffle buttons', (
+      tester,
+    ) async {
+      final (h, _) = await _single(tester, width: width);
+      expect(find.byType(PlayShuffleButtons), findsNothing);
+      expect(find.byTooltip('Shuffle'), findsNothing);
+      // The rows of the level still show, each with its own play button.
+      expect(find.byType(FolderTile), findsWidgets);
+      await unmountApp(tester);
+      expect(h.location, '/library/folders');
+    });
+  }
 
   testWidgets('two music folders with one name: a list that tells them apart', (
     tester,
@@ -261,7 +269,7 @@ void main() {
     tester,
   ) async {
     final (h, folder) = await _single(tester);
-    await tester.tap(find.byTooltip('Flat list'));
+    await tester.tap(byIconButton('Flat list'));
     await h.settle(tester, rounds: 2);
     expect(
       h.container.read(libraryListViewsProvider).folderView,
@@ -405,7 +413,7 @@ void main() {
       find
           .descendant(
             of: find.byType(FolderTile),
-            matching: find.byTooltip('Play all'),
+            matching: byIconButton('Play all'),
           )
           .at(vpop),
     );
@@ -438,11 +446,11 @@ void main() {
   ) async {
     final playback = FakePlaybackCommands();
     final (h, folder) = await _single(tester, playback: playback);
-    await tester.tap(find.byTooltip('Flat list'));
+    await tester.tap(byIconButton('Flat list'));
     await h.settle(tester, rounds: 2);
     final rows = tester.widgetList<FolderTile>(find.byType(FolderTile));
     final root = rows.toList().indexWhere((r) => r.title == 'Music');
-    await tester.tap(find.byTooltip('Play all').at(root));
+    await tester.tap(byIconButton('Play all').at(root));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );

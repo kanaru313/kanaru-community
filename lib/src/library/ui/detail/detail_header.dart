@@ -156,6 +156,7 @@ class DetailActions extends ConsumerWidget {
         .value;
     final enabled = ids != null && ids.isNotEmpty;
     return PlayShuffleButtons(
+      compact: false,
       labelled: true,
       playLabel: l10n.libraryPlay,
       onPlay: enabled ? () => playAll(ref, context, ids, playContext) : null,
@@ -164,6 +165,7 @@ class DetailActions extends ConsumerWidget {
           : null,
       trailing: [
         LibraryMoreButton(
+          large: true,
           onPressed: ({required viaKeyboard}) =>
               onMenu(context, viaKeyboard: viaKeyboard),
         ),

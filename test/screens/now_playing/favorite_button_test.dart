@@ -6,6 +6,7 @@ import 'package:kanaru/src/library/state/favorites_providers.dart';
 import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
 
 import '../../playback/support/ui_host.dart';
+import '../../support/icon_button_finders.dart';
 
 void main() {
   testWidgets('shows an empty heart, fills it after a tap, empties it again', (
@@ -28,17 +29,17 @@ void main() {
       ),
     );
     await host.letStreamsArrive(tester);
-    expect(find.byTooltip('Add to favorites'), findsOneWidget);
+    expect(byIconButton('Add to favorites'), findsOneWidget);
     expect(host.container.read(isFavoriteProvider(id)), isFalse);
 
     await tester.tap(find.byType(FavoriteButton));
     await host.letStreamsArrive(tester);
     expect(host.container.read(isFavoriteProvider(id)), isTrue);
-    expect(find.byTooltip('Remove from favorites'), findsOneWidget);
+    expect(byIconButton('Remove from favorites'), findsOneWidget);
 
     await tester.tap(find.byType(FavoriteButton));
     await host.letStreamsArrive(tester);
     expect(host.container.read(isFavoriteProvider(id)), isFalse);
-    expect(find.byTooltip('Add to favorites'), findsOneWidget);
+    expect(byIconButton('Add to favorites'), findsOneWidget);
   });
 }

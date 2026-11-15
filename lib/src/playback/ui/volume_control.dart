@@ -45,8 +45,8 @@ class _VolumeControlState extends ConsumerState<VolumeControl> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(
-            icon: Icon(muted ? KIcons.volumeOff : KIcons.volume),
+          KIconButton(
+            icon: muted ? KIcons.volumeOff : KIcons.volume,
             tooltip: muted ? l10n.playbackUnmute : l10n.playbackMute,
             onPressed: () => ref.read(playerControllerProvider).toggleMute(),
           ),

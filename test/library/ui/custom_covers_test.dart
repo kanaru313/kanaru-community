@@ -26,6 +26,7 @@ import '../../support/fake_cover_importer.dart';
 import 'support/detail_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
+import '../../support/icon_button_finders.dart';
 
 /// A 1x1 PNG.
 final _png = base64Decode(
@@ -174,7 +175,7 @@ void main() {
 
   testWidgets('a custom cover shows on an album row too', (tester) async {
     final h = await _pump(tester);
-    await tester.tap(find.byTooltip('List'));
+    await tester.tap(byIconButton('List'));
     await h.settle(tester, rounds: 1);
     await _choose(tester, h, CustomCoverKind.album, albumId('Coral', 'Xi'));
     expect(_images<AlbumCover>(tester).where(_isCustom), hasLength(1));

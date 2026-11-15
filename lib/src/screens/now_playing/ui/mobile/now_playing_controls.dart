@@ -29,20 +29,21 @@ class NowPlayingControls extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               spacing: KSpace.x3,
               children: [
-                const PreviousButton(iconSize: 32),
+                const PreviousButton(iconSize: KIconSize.lg),
                 FlightPieceHost(
                   source: flight,
                   piece: FlightPiece.play,
                   child: const PlayPauseButton(
                     filled: true,
-                    iconSize: 36,
+                    iconSize: KIconSize.xl,
+                    // The 72 dp filled disc is a size of its own, not an icon size.
                     size: 72,
                   ),
                 ),
                 FlightPieceHost(
                   source: flight,
                   piece: FlightPiece.next,
-                  child: const NextButton(iconSize: 32),
+                  child: const NextButton(iconSize: KIconSize.lg),
                 ),
               ],
             ),

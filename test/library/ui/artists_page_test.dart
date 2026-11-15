@@ -8,6 +8,7 @@ import '../../support/fake_playback_commands.dart';
 import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
+import '../../support/icon_button_finders.dart';
 
 const _coverOld = 'aaaaaaaaaaaaaaaa';
 const _coverNew = 'bbbbbbbbbbbbbbbb';
@@ -56,7 +57,7 @@ void main() {
     final h = await _pump(tester);
     // Artists open as rows; the switch makes them a grid.
     expect(find.byType(ArtistCard), findsNothing);
-    await tester.tap(find.byTooltip('Grid'));
+    await tester.tap(byIconButton('Grid'));
     await h.settle(tester, rounds: 1);
     expect(find.text('2 artists'), findsOneWidget);
     expect(find.byType(ArtistCard), findsNWidgets(2));
@@ -86,7 +87,7 @@ void main() {
   testWidgets('play on a row plays every song of the artist', (tester) async {
     final playback = FakePlaybackCommands();
     await _pump(tester, playback: playback);
-    await tester.tap(find.byTooltip('Play all songs').last);
+    await tester.tap(byIconButton('Play all songs').last);
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );

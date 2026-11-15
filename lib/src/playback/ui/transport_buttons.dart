@@ -15,9 +15,9 @@ class NextButton extends ConsumerWidget {
   final double? iconSize;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => IconButton(
-    icon: const Icon(KIcons.skipNext),
-    iconSize: iconSize,
+  Widget build(BuildContext context, WidgetRef ref) => KIconButton(
+    icon: KIcons.skipNext,
+    size: iconSize ?? KIconSize.md,
     tooltip: AppLocalizations.of(context).playbackNext,
     onPressed: () => ref.read(playerControllerProvider).next(),
   );
@@ -31,9 +31,9 @@ class PreviousButton extends ConsumerWidget {
   final double? iconSize;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => IconButton(
-    icon: const Icon(KIcons.skipPrevious),
-    iconSize: iconSize,
+  Widget build(BuildContext context, WidgetRef ref) => KIconButton(
+    icon: KIcons.skipPrevious,
+    size: iconSize ?? KIconSize.md,
     tooltip: AppLocalizations.of(context).playbackPrevious,
     onPressed: () => ref.read(playerControllerProvider).previous(),
   );
@@ -41,7 +41,10 @@ class PreviousButton extends ConsumerWidget {
 
 /// Shuffle on/off, shown with the dot cue when on.
 class ShuffleButton extends ConsumerWidget {
-  const ShuffleButton({super.key});
+  const ShuffleButton({super.key, this.padding});
+
+  /// Around the glyph; the default of `KToggleIconButton` when null.
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,6 +52,7 @@ class ShuffleButton extends ConsumerWidget {
     return KToggleIconButton(
       icon: KIcons.shuffle,
       active: on,
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: KSpace.x2),
       tooltip: AppLocalizations.of(context).playbackShuffle,
       onPressed: () => ref.read(playerControllerProvider).setShuffle(!on),
     );

@@ -154,8 +154,14 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                           ),
                         ),
                       ),
-                      _piece(FlightPiece.play, const PlayPauseButton()),
-                      _piece(FlightPiece.next, const NextButton()),
+                      _piece(
+                        FlightPiece.play,
+                        const PlayPauseButton(iconSize: KIconSize.lg),
+                      ),
+                      _piece(
+                        FlightPiece.next,
+                        const NextButton(iconSize: KIconSize.md),
+                      ),
                     ],
                   ),
                   const Positioned(
@@ -214,8 +220,7 @@ class _Body extends ConsumerWidget {
                     info?.title ?? '',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: text.bodyMedium?.copyWith(
-                      fontSize: 14,
+                    style: text.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -225,7 +230,6 @@ class _Body extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: text.bodySmall?.copyWith(
-                        fontSize: 12,
                         color: scheme.onSurfaceVariant,
                       ),
                     ),

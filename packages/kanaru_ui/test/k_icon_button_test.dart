@@ -469,4 +469,37 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(tester.takeException(), isNull);
   });
+
+  group('yieldSpace', () {
+    testWidgets('a focused Material icon button counts as an icon button', (
+      tester,
+    ) async {
+      final focus = FocusNode();
+      addTearDown(focus.dispose);
+      await tester.pumpWidget(
+        host(
+          Center(
+            child: Column(
+              children: [
+                KIconButton.yieldSpace(
+                  child: IconButton.filledTonal(
+                    focusNode: focus,
+                    onPressed: () {},
+                    icon: const Icon(Icons.add),
+                  ),
+                ),
+                const Focus(autofocus: false, child: Text('plain')),
+              ],
+            ),
+          ),
+        ),
+      );
+      focus.requestFocus();
+      await tester.pump();
+      expect(KIconButton.ownsPrimaryFocus(), isTrue);
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump();
+      expect(KIconButton.ownsPrimaryFocus(), isFalse);
+    });
+  });
 }

@@ -35,7 +35,7 @@ void main() {
     'Back: the menu from the panel first, then the panel, then the page',
     (tester) async {
       final h = await _open(tester);
-      await tester.tap(find.byTooltip('Options for the selection'));
+      await tester.tap(byIconButton('Options for the selection'));
       await pumpMenu(tester);
       expect(find.byType(BottomSheet), findsOneWidget);
 
@@ -113,7 +113,7 @@ void main() {
     tester,
   ) async {
     final h = await _open(tester, width: 1280);
-    await tester.tap(find.byTooltip('Options for the selection'));
+    await tester.tap(byIconButton('Options for the selection'));
     await pumpMenu(tester);
     expect(find.byType(Dialog), findsOneWidget);
 

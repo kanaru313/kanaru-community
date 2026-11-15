@@ -89,10 +89,12 @@ void main() {
         tester,
         size: QueueRowSize.desktop,
         window: _desktopWindow,
-        favorite: (context, item) => IconButton(
-          iconSize: 20,
+        favorite: (context, item) => KIconButton(
+          tooltip: 'Heart',
+          size: KIconSize.sm,
+          padding: const EdgeInsets.all(KSpace.x2),
           onPressed: () {},
-          icon: const Icon(KIcons.heart),
+          icon: KIcons.heart,
         ),
       );
       final row = find.byType(QueueRow).first;
@@ -106,15 +108,15 @@ void main() {
       final heart = rectIn(
         tester,
         row,
-        find.widgetWithIcon(IconButton, KIcons.heart),
+        find.widgetWithIcon(KIconButton, KIcons.heart),
       );
       final more = rectIn(tester, row, find.byIcon(KIcons.moreVert));
-      expect(handle.size, const Size.square(KLayout.minTargetDesktop));
+      expect(handle.size, const Size.square(KIconSize.sm + 2 * KSpace.x2));
       expect(heart.right, lessThanOrEqualTo(handle.left));
       expect(heart.overlaps(handle), isFalse);
       expect(handle.right, lessThanOrEqualTo(more.left));
-      // The cover sits at the flat-row inset, like a songs-list row.
-      expect(cover.left - tester.getTopLeft(row).dx, KLayout.gutterMobile);
+      // The cover sits at the row padding, like a songs-list row.
+      expect(cover.left - tester.getTopLeft(row).dx, KMediaCard.sidePadding);
       expect(more.left, greaterThan(cover.right));
       // Visible without hover: not wrapped in a transparent AnimatedOpacity
       // and a pointer at its centre reaches it.
@@ -151,10 +153,12 @@ void main() {
         tester,
         size: QueueRowSize.desktop,
         window: _desktopWindow,
-        favorite: (context, item) => IconButton(
-          iconSize: 20,
+        favorite: (context, item) => KIconButton(
+          tooltip: 'Heart',
+          size: KIconSize.sm,
+          padding: const EdgeInsets.all(KSpace.x2),
           onPressed: () {},
-          icon: const Icon(KIcons.heart),
+          icon: KIcons.heart,
         ),
       );
       final row = find.byType(QueueRow).first;
@@ -180,7 +184,7 @@ void main() {
       expect(cover.right, lessThan(time.left));
       expect(time.right, lessThanOrEqualTo(handle.left));
       expect(handle.right, lessThanOrEqualTo(more.left));
-      expect(handle.size, const Size.square(KLayout.minTarget));
+      expect(handle.size, const Size.square(KIconSize.sm + 2 * KSpace.x2));
     });
 
     testWidgets('flat on both shells: no radius, the tint spans the row', (
@@ -247,14 +251,13 @@ void main() {
         matching: find.byIcon(KIcons.moreVert),
       );
       expect(_iconColor(tester, handle), soft);
-      final button = tester.widget<IconButton>(
-        find.ancestor(of: more, matching: find.byType(IconButton)).first,
+      final button = tester.widget<KIconButton>(
+        find.ancestor(of: more, matching: find.byType(KIconButton)).first,
       );
-      expect(
-        IconButtonTheme.of(tester.element(more)).style?.foregroundColor
-            ?.resolve({}),
-        soft,
-      );
+      // The button reads the row's ink through KIconButtonColors, and its
+      // glyph is drawn with it.
+      expect(KIconButtonColors.maybeOf(tester.element(more))?.rest, soft);
+      expect(_iconColor(tester, more), soft);
       expect(button.onPressed, isNotNull);
     });
 

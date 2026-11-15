@@ -665,6 +665,7 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). 
   same frame while the removal is persisted first. The toast ("Removed …" / "Removed N tracks", Undo, 4 s) is shown from
   the root navigator's context, so it survives the host closing; undo never reopens a closed host. The player emits no
   notice for a removal, so there is one toast. Removing the last entry calls `onEmptied`.
+- **Buttons**: every queue, transport and Now Playing button is a `KIconButton` (icon plus padding, sizes from `KIconSize`); the filled play buttons, the locate button and an open panel toggle keep the Material disc. The mini player ends the flight at a large play (32) and a medium next (24) glyph; the strip glyphs follow `lerpDouble` of the Now Playing and mini player sizes. Title and artist use the M3 text roles (`titleLarge`/`bodyLarge` on Now Playing, `titleMedium`/`bodyMedium` in the strip, interpolated during the flight). On desktop Space presses a focused `KIconButton` instead of play/pause.
 - **Locate button** (`queue_locate_button.dart`): 48 dp, bottom right, only while the current row is out of view; arrow by
   direction; rebuilds only when the side changes.
 - **Actions** (`queue_actions.dart`, `queue_header.dart`): Shuffle (reshuffles the upcoming and turns shuffle on), Add

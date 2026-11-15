@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/rendering.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../tokens/k_icon_size.dart';
+
 /// The two slots of [KMediaCardRightColumn].
 enum KMediaCardRightSlot { top, bottom }
 
@@ -10,11 +12,12 @@ enum KMediaCardRightSlot { top, bottom }
 /// [bottom] icon button (favourite), drawn as one tight pair on a shared
 /// horizontal centre.
 ///
-/// The pair is laid out from the *measured* [bottom] box, so it works for a
-/// 48 dp mobile button, a 40 dp desktop one and a bare 24 dp icon alike: the
-/// visible icon (at most [iconSize] tall, centred in its box) sits [pairGap]
-/// under the text, and the pair is centred in [height] as far as the [bottom]
-/// box allows (it must stay inside the column or taps on its edge would miss).
+/// The pair is laid out from the *measured* [bottom] box (a [KIconButton] is
+/// its icon plus padding), so it works for a button with vertical padding and
+/// a bare icon alike: the visible icon (at most [iconSize] tall, centred in
+/// its box) sits [pairGap] under the text, and the pair is centred in
+/// [height] as far as the [bottom] box allows (it must stay inside the column
+/// or taps on its edge would miss).
 /// The [top] text is painted into the empty padding of the [bottom] box and
 /// must ignore the pointer, so the box keeps its whole hit area. The [bottom]
 /// is placed with the same maths whether or not [top] is set, so hearts line
@@ -30,8 +33,8 @@ class KMediaCardRightColumn
     this.bottom,
   });
 
-  /// Visible icon size the pair is laid out for (`SongFavoriteButton`: 20).
-  static const double iconSize = 20;
+  /// Visible icon size the pair is laid out for (the ♥ is a small icon).
+  static const double iconSize = KIconSize.sm;
 
   /// Space between the text bottom and the icon top.
   static const double pairGap = 2;
@@ -172,19 +175,41 @@ class RenderKMediaCardRightColumn extends RenderBox
     }
   }
 
+  /// The bottom button owns its whole row band across the column's width:
+  /// a tap beside it (the duration is wider than the box, or text scale grew
+  /// the column) or in the few dp where its box overlaps the duration's lower
+  /// edge goes to it, never to the row. The duration text above that band is
+  /// ignored by the pointer, so a tap on the text itself is a tap on the row.
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
-    for (final child in [_top, _bottom]) {
-      if (child == null) continue;
-      final offset = (child.parentData! as BoxParentData).offset;
-      final hit = result.addWithPaintOffset(
-        offset: offset,
-        position: position,
-        hitTest: (result, transformed) =>
-            child.hitTest(result, position: transformed),
-      );
-      if (hit) return true;
+    final bottom = _bottom;
+    if (bottom != null) {
+      final offset = (bottom.parentData! as BoxParentData).offset;
+      final inBand =
+          position.dy >= offset.dy &&
+          position.dy < offset.dy + bottom.size.height &&
+          position.dx >= 0 &&
+          position.dx < size.width;
+      if (inBand) {
+        final x = position.dx.clamp(
+          offset.dx,
+          math.max(offset.dx, offset.dx + bottom.size.width - 0.01),
+        );
+        return result.addWithPaintOffset(
+          offset: offset,
+          position: Offset(x.toDouble(), position.dy),
+          hitTest: (result, transformed) =>
+              bottom.hitTest(result, position: transformed),
+        );
+      }
     }
-    return false;
+    final top = _top;
+    if (top == null) return false;
+    return result.addWithPaintOffset(
+      offset: (top.parentData! as BoxParentData).offset,
+      position: position,
+      hitTest: (result, transformed) =>
+          top.hitTest(result, position: transformed),
+    );
   }
 }

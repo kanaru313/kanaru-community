@@ -6,6 +6,7 @@ import 'package:kanaru/src/shell/ui/player_bar.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../shell/support/desktop_now_playing_host.dart';
+import '../../../support/icon_button_finders.dart';
 
 NowPlayingPanelState _state(DesktopHost host) =>
     host.container.read(nowPlayingPanelProvider);
@@ -37,7 +38,7 @@ void main() {
   ) async {
     final host = await pumpDesktopShell(tester);
     expect(find.byType(PlayerBar), findsOneWidget);
-    await tester.tap(find.byTooltip('Lyrics'));
+    await tester.tap(byIconButton('Lyrics'));
     await _settle(tester, host);
     expect(_state(host).open, isTrue);
     expect(find.byType(LyricsTabPlaceholder), findsOneWidget);

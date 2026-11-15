@@ -91,7 +91,10 @@ void main() {
   ) async {
     final h = await pumpLibrary(tester);
     final rowBefore = tester.getTopLeft(find.byType(KSubTabBar));
-    await tester.tap(find.text('Albums'));
+    // Only the selected tab shows its label: the others are found by name.
+    await tester.tap(
+      find.byWidgetPredicate((w) => w is Tooltip && w.message == 'Albums'),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(h.location, '/library/albums');

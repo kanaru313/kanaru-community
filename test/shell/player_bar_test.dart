@@ -37,8 +37,8 @@ void main() {
     expect(find.byType(RepeatButton), findsOneWidget);
     expect(find.byType(VolumeControl), findsOneWidget);
     expect(find.byType(KSeekBar), findsOneWidget);
-    expect(find.byTooltip('Lyrics'), findsOneWidget);
-    expect(find.byTooltip('Queue'), findsOneWidget);
+    expect(byIconButton('Lyrics'), findsOneWidget);
+    expect(byAnyIconButton('Queue'), findsOneWidget);
     expect(find.byTooltip('Open Now Playing'), findsWidgets);
   });
 
@@ -46,13 +46,8 @@ void main() {
     tester,
   ) async {
     await _pump(tester, 1280);
-    final button = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(KIcons.sleepTimer),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(button.onPressed, isNull);
+    final button = iconButtonAround(tester, find.byIcon(KIcons.sleepTimer));
+    expect(button.enabled, isFalse);
     expect(button.tooltip, contains('Coming soon'));
   });
 
@@ -79,16 +74,16 @@ void main() {
     expect(find.byType(FavoriteButton), findsNothing);
     expect(find.byType(ShuffleButton), findsOneWidget);
     expect(find.byType(RepeatButton), findsOneWidget);
-    expect(find.byTooltip('Lyrics'), findsOneWidget);
+    expect(byIconButton('Lyrics'), findsOneWidget);
   });
 
   testWidgets('under 760 shuffle and repeat go too', (tester) async {
     await _pump(tester, 759);
     expect(find.byType(ShuffleButton), findsNothing);
     expect(find.byType(RepeatButton), findsNothing);
-    expect(find.byTooltip('Next'), findsOneWidget);
-    expect(find.byTooltip('Previous'), findsOneWidget);
-    expect(find.byTooltip('Queue'), findsOneWidget);
+    expect(byIconButton('Next'), findsOneWidget);
+    expect(byIconButton('Previous'), findsOneWidget);
+    expect(byAnyIconButton('Queue'), findsOneWidget);
   });
 
   testWidgets('a 200-character title ellipsizes at 760 without overflow', (
@@ -119,7 +114,7 @@ void main() {
     NowPlayingPanelState panel() =>
         host.container.read(nowPlayingPanelProvider);
 
-    await tester.tap(find.byTooltip('Lyrics'));
+    await tester.tap(byIconButton('Lyrics'));
     await tester.pump();
     expect(panel().open, isTrue);
 
@@ -139,35 +134,34 @@ void main() {
   ) async {
     final host = await _pump(tester, 1280);
     RightPanelKind kind() => host.container.read(rightPanelProvider);
-    IconButton button() => tester.widget<IconButton>(
-      find.widgetWithIcon(IconButton, KIcons.queueMusic),
-    );
+    IconButtonState button() =>
+        iconButtonAround(tester, find.byIcon(KIcons.queueMusic));
 
-    expect(button().isSelected, isFalse);
-    await tester.tap(find.byTooltip('Queue'));
+    expect(button().selected, isFalse);
+    await tester.tap(byAnyIconButton('Queue'));
     await tester.pump();
     expect(kind(), RightPanelKind.queue);
-    expect(button().isSelected, isTrue);
+    expect(button().selected, isTrue);
     expect(
       host.container.read(nowPlayingPanelProvider).open,
       isFalse,
       reason: 'the Queue button never opens Now Playing',
     );
 
-    await tester.tap(find.byTooltip('Queue'));
+    await tester.tap(byAnyIconButton('Queue'));
     await tester.pump();
     expect(kind(), RightPanelKind.closed);
-    expect(button().isSelected, isFalse);
+    expect(button().selected, isFalse);
   });
 
   group('controls drive the player', () {
     testWidgets('Play/Pause, Next and Previous', (tester) async {
       final host = await _pump(tester, 1280);
-      await host.tap(tester, find.byTooltip('Pause'));
+      await host.tap(tester, byAnyIconButton('Pause'));
       expect(host.h.c.intent, PlayIntent.paused);
-      await host.tap(tester, find.byTooltip('Next'));
+      await host.tap(tester, byIconButton('Next'));
       expect(host.h.c.queueState.currentItem?.trackId, host.h.tracks[1]);
-      await host.tap(tester, find.byTooltip('Previous'));
+      await host.tap(tester, byIconButton('Previous'));
       expect(host.h.c.queueState.currentItem?.trackId, host.h.tracks[0]);
     });
 
@@ -203,9 +197,9 @@ void main() {
       final host = await _pump(tester, 1280);
       await host.run(tester, () => host.h.c.setVolume(40));
       expect(host.container.read(volumeSettingProvider), 40);
-      await host.tap(tester, find.byTooltip('Mute'));
+      await host.tap(tester, byIconButton('Mute'));
       expect(host.container.read(volumeSettingProvider), 0);
-      await host.tap(tester, find.byTooltip('Unmute'));
+      await host.tap(tester, byIconButton('Unmute'));
       expect(host.container.read(volumeSettingProvider), 40);
     });
 
@@ -233,7 +227,7 @@ void main() {
       await scroll(20);
       expect(volume(), 35);
 
-      await host.tap(tester, find.byTooltip('Mute'));
+      await host.tap(tester, byIconButton('Mute'));
       expect(volume(), 0);
       await scroll(-20);
       expect(volume(), 40, reason: 'continues from 35, not from 0');

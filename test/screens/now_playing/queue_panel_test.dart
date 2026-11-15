@@ -11,6 +11,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../playback/support/ui_host.dart';
 import '../../playback/ui/queue/queue_test_support.dart' show rowExtent;
+import '../../support/icon_button_finders.dart';
 
 class _FailingFavorites implements FavoritesController {
   @override
@@ -22,11 +23,11 @@ class _FailingFavorites implements FavoritesController {
 }
 
 Future<void> _toggleHeart(WidgetTester tester, UiHost host) async {
-  expect(find.byTooltip('Remove from favorites'), findsNothing);
-  await host.tap(tester, find.byTooltip('Add to favorites').first);
-  expect(find.byTooltip('Remove from favorites'), findsOneWidget);
-  await host.tap(tester, find.byTooltip('Remove from favorites'));
-  expect(find.byTooltip('Remove from favorites'), findsNothing);
+  expect(byIconButton('Remove from favorites'), findsNothing);
+  await host.tap(tester, byIconButton('Add to favorites').first);
+  expect(byIconButton('Remove from favorites'), findsOneWidget);
+  await host.tap(tester, byIconButton('Remove from favorites'));
+  expect(byIconButton('Remove from favorites'), findsNothing);
 }
 
 Future<void> _failingToggle(
@@ -42,7 +43,7 @@ Future<void> _failingToggle(
       favoritesControllerProvider.overrideWithValue(_FailingFavorites()),
     ],
   );
-  await host.tap(tester, find.byTooltip('Add to favorites').first);
+  await host.tap(tester, byIconButton('Add to favorites').first);
   await tester.pump(const Duration(milliseconds: 500));
   expect(find.text('Could not change favorites'), findsOneWidget);
 }
@@ -59,18 +60,15 @@ void main() {
       );
       expect(find.text('Queue'), findsOneWidget);
       expect(find.textContaining('1/6'), findsOneWidget);
-      final save = tester.widget<IconButton>(
-        find.ancestor(
-          of: find.byTooltip('Save as playlist · Coming soon'),
-          matching: find.byType(IconButton),
-        ),
+      final save = tester.widget<KIconButton>(
+        byIconButton('Save as playlist · Coming soon'),
       );
       expect(save.onPressed, isNull);
       // Rows carry a ⋮ with the same tooltip: look inside the head menu only.
       expect(
         find.descendant(
           of: find.byType(QueueMoreMenu),
-          matching: find.byTooltip('More'),
+          matching: byIconButton('More'),
         ),
         findsOneWidget,
       );
@@ -189,8 +187,8 @@ void main() {
 
     testWidgets('the cleanup dropdown opens downward', (tester) async {
       await pump(tester);
-      final button = tester.getRect(find.byTooltip('Clean up'));
-      await tester.tap(find.byTooltip('Clean up'));
+      final button = tester.getRect(byIconButton('Clean up'));
+      await tester.tap(byIconButton('Clean up'));
       await tester.pump(const Duration(milliseconds: 400));
       expect(
         tester.getTopLeft(find.text('Remove from queue').first).dy,

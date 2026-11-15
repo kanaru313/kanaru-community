@@ -72,14 +72,14 @@ void main() {
     tester,
   ) async {
     await _pump(tester);
-    expect(find.byTooltip('Menu'), findsOneWidget);
+    expect(byIconButton('Menu'), findsOneWidget);
     expect(find.byIcon(KIcons.ai), findsOneWidget);
-    expect(find.byTooltip('Gear'), findsOneWidget); // Settings (footer item)
+    expect(byIconButton('Gear'), findsOneWidget); // Settings (footer item)
     expect(byIconButton('Back'), findsNothing);
     // Order: menu, title, AI, Settings.
-    final menu = tester.getCenter(find.byTooltip('Menu')).dx;
+    final menu = tester.getCenter(byIconButton('Menu')).dx;
     final ai = tester.getCenter(find.byIcon(KIcons.ai)).dx;
-    final gear = tester.getCenter(find.byTooltip('Gear')).dx;
+    final gear = tester.getCenter(byIconButton('Gear')).dx;
     expect(menu, lessThan(ai));
     expect(ai, lessThan(gear));
   });
@@ -91,21 +91,16 @@ void main() {
     expect(find.text('deep child'), findsOneWidget);
     expect(byIconButton('Back'), findsOneWidget);
     expect(find.byIcon(KIcons.ai), findsOneWidget);
-    expect(find.byTooltip('Menu'), findsNothing);
-    expect(find.byTooltip('Gear'), findsNothing);
+    expect(byIconButton('Menu'), findsNothing);
+    expect(byIconButton('Gear'), findsNothing);
   });
 
   testWidgets('the AI placeholder is dimmed with a coming-soon tooltip', (
     tester,
   ) async {
     await _pump(tester);
-    final button = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(KIcons.ai),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(button.onPressed, isNull);
+    final button = iconButtonAround(tester, find.byIcon(KIcons.ai));
+    expect(button.enabled, isFalse);
     expect(button.tooltip, contains('Coming soon'));
   });
 
@@ -121,25 +116,20 @@ void main() {
     tester,
   ) async {
     await _pump(tester);
-    await tester.tap(find.byTooltip('Gear'));
+    await tester.tap(byIconButton('Gear'));
     await tester.pumpAndSettle();
     expect(find.text('page /gear'), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
   });
 
-  testWidgets('the header keeps 48 dp targets', (tester) async {
+  testWidgets('each header action is its icon plus padding', (tester) async {
     await _pump(tester);
     for (final tip in ['Menu', 'Gear']) {
-      final size = tester.getSize(
-        find
-            .ancestor(
-              of: find.byTooltip(tip),
-              matching: find.byType(IconButton),
-            )
-            .first,
+      expect(
+        tester.getSize(byIconButton(tip)),
+        const Size(KIconSize.md + 16, KIconSize.md),
+        reason: tip,
       );
-      expect(size.width, greaterThanOrEqualTo(48), reason: tip);
-      expect(size.height, greaterThanOrEqualTo(48), reason: tip);
     }
   });
 }

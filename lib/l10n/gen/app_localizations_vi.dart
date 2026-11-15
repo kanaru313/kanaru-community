@@ -845,16 +845,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get librarySortTrackNumber => 'Số thứ tự';
 
   @override
-  String get libraryViewGrid => 'Lưới';
+  String get libraryViewGrid => 'Chế độ lưới';
 
   @override
-  String get libraryViewList => 'Danh sách';
+  String get libraryViewList => 'Chế độ danh sách';
 
   @override
-  String get libraryViewTree => 'Cây thư mục';
+  String get libraryViewTree => 'Chế độ cây thư mục';
 
   @override
-  String get libraryViewFlat => 'Liệt kê';
+  String get libraryViewFlat => 'Chế độ liệt kê';
 
   @override
   String get libraryScanning => 'Đang quét…';

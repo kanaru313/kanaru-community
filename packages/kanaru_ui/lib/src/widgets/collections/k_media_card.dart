@@ -4,12 +4,15 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
-import '../../tokens/k_layout.dart';
+import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_cover.dart';
 import '../k_gap.dart';
+import '../k_icon_button.dart';
+import '../k_icon_button_colors.dart';
+import 'k_end_hit_extension.dart';
 import 'k_media_card_right_column.dart';
 import 'k_media_card_text.dart';
 
@@ -22,7 +25,7 @@ enum KMediaCardStyle {
   card,
 
   /// Full-width row: no radius, no fill unless current or selected, own
-  /// 16 dp side padding so content lines up with page headers.
+  /// 8 dp side padding (the same as a card).
   flat,
 }
 
@@ -33,7 +36,11 @@ enum KMediaCardStyle {
 /// text · [top] / [bottom] · [onAction] (play) · [accessory] (drag handle) ·
 /// [trailing] (the ⋮).
 /// The [trailing] button is always visible; only the play button appears on
-/// hover or focus on desktop.
+/// hover or focus on desktop. Every button is a [KIconButton] that takes its
+/// colours from the card (own ink on a tinted card). The end padding right of
+/// the [trailing] button belongs to that button, and the few dp between the
+/// right column, play button, accessory and ⋮ take a tap without acting, so a
+/// near miss next to a button never plays the row.
 ///
 /// Three text lines are always reserved (an empty line keeps its room) so all
 /// cards of a list are the same height; [extentOf] gives that height without
@@ -68,7 +75,10 @@ class KMediaCard extends StatefulWidget {
     this.onLongPress,
     this.loading = false,
     this.style = KMediaCardStyle.auto,
-  });
+  }) : assert(
+         onAction == null || actionLabel != null,
+         'the play button needs a label for its tooltip and screen reader',
+       );
 
   final String title;
 
@@ -91,10 +101,10 @@ class KMediaCard extends StatefulWidget {
   /// Right column, upper slot (duration).
   final Widget? top;
 
-  /// Right column, lower slot: an icon button (about a 20 dp icon). The pair is
-  /// laid out from its measured size, so a 48 dp mobile box, a 40 dp desktop
-  /// box and a bare icon all put the [top] text 2 dp above the icon; the text
-  /// is drawn into the box's empty upper padding and ignores the pointer.
+  /// Right column, lower slot: an icon button (a `KIconSize.sm` icon). The
+  /// pair is laid out from its measured size, so a button with vertical
+  /// padding and a bare icon both put the [top] text 2 dp above the icon; the
+  /// text is drawn into the box's empty upper padding and ignores the pointer.
   final Widget? bottom;
 
   /// After the play button, before [trailing] (the drag handle of a reorderable
@@ -104,7 +114,7 @@ class KMediaCard extends StatefulWidget {
   /// Last slot (the "more" button); always visible.
   final Widget? trailing;
 
-  /// Round tonal play button: always on the mobile shell, on hover or focus
+  /// Plain play icon (no disc): always on the mobile shell, on hover or focus
   /// on desktop.
   final VoidCallback? onAction;
 
@@ -136,6 +146,10 @@ class KMediaCard extends StatefulWidget {
 
   /// Space below a card.
   static const double gap = KSpace.x1;
+
+  /// Horizontal padding of a row, flat or card, at both ends. The end part
+  /// belongs to the trailing button.
+  static const double sidePadding = KSpace.x2;
   static const double coverSize = 56;
   static const double _padV = 10;
   static const BorderRadius _radius = BorderRadius.all(Radius.circular(14));
@@ -172,7 +186,6 @@ class _KMediaCardState extends State<KMediaCard> {
     final flat =
         widget.style == KMediaCardStyle.flat ||
         (widget.style == KMediaCardStyle.auto && mobile);
-    final tinted = widget.current || widget.selected;
     final background = widget.current
         ? scheme.primaryContainer
         : widget.selected
@@ -189,9 +202,10 @@ class _KMediaCardState extends State<KMediaCard> {
         ? ink.withValues(alpha: 0.8)
         : scheme.onSurfaceVariant;
 
-    // Inherited icon-button theme, restored for the play button and merged
-    // into the tinted style so a caller's density or size still applies.
-    final ambientButtons = IconButtonTheme.of(context);
+    // Height of the row content: the right column and the tap absorbers fill it.
+    final rowHeight = widget.leading != null || widget.loading
+        ? math.max(KMediaCard.coverSize, KMediaCardMetrics.textBlock(scaler))
+        : KMediaCardMetrics.textBlock(scaler);
     // A loading card without a cover still draws a cover-sized block.
     final leading =
         widget.leading ??
@@ -203,10 +217,15 @@ class _KMediaCardState extends State<KMediaCard> {
               )
             : null);
 
+    final side = KMediaCard.sidePadding;
     final content = Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: flat ? KLayout.gutterMobile : KSpace.x3,
-        vertical: KMediaCard._padV,
+      // With a trailing button the end padding belongs to that button (see
+      // KEndHitExtension), so a tap right of it is not a tap on the row.
+      padding: EdgeInsetsDirectional.fromSTEB(
+        side,
+        KMediaCard._padV,
+        widget.trailing != null ? 0 : side,
+        KMediaCard._padV,
       ),
       child: Row(
         children: [
@@ -241,15 +260,10 @@ class _KMediaCardState extends State<KMediaCard> {
             ),
           ),
           if (widget.top != null || widget.bottom != null) ...[
-            const KGap(KSpace.x2),
-            // As high as the cover, so a 48 dp button in [bottom] fits.
+            _TapAbsorber(width: KSpace.x2, height: rowHeight),
+            // As high as the cover, so the button in [bottom] fits.
             KMediaCardRightColumn(
-              height: leading != null
-                  ? math.max(
-                      KMediaCard.coverSize,
-                      KMediaCardMetrics.textBlock(scaler),
-                    )
-                  : KMediaCardMetrics.textBlock(scaler),
+              height: rowHeight,
               topLine:
                   scaler.scale(textTheme.labelSmall?.fontSize ?? 11) * 1.45,
               top: widget.top == null
@@ -264,27 +278,23 @@ class _KMediaCardState extends State<KMediaCard> {
             ),
           ],
           if (widget.onAction != null) ...[
-            const KGap(KSpace.x2),
+            _TapAbsorber(width: KSpace.x2, height: rowHeight),
             _Revealed(
               visible: mobile || _engaged,
-              // Keeps its own colours inside a tinted card.
-              child: _withButtons(
-                tinted,
-                ambientButtons,
-                IconButton.filledTonal(
-                  tooltip: widget.actionLabel,
-                  onPressed: widget.actionEnabled ? widget.onAction : null,
-                  icon: Icon(widget.actionIcon),
-                ),
+              child: KIconButton(
+                tooltip: widget.actionLabel ?? '',
+                size: KIconSize.sm,
+                padding: const EdgeInsets.all(KSpace.x2),
+                onPressed: widget.actionEnabled ? widget.onAction : null,
+                icon: widget.actionIcon,
               ),
             ),
           ],
-          // The right column and play button butt against the next 48 dp
-          // box; handle to ⋮ keeps its 4 dp.
           if (widget.accessory != null) widget.accessory!,
           if (widget.trailing != null) ...[
-            if (widget.accessory != null) const KGap(KSpace.x1),
-            widget.trailing!,
+            if (widget.accessory != null)
+              _TapAbsorber(width: KSpace.x1, height: rowHeight),
+            KEndHitExtension(extent: side, child: widget.trailing!),
           ],
         ],
       ),
@@ -298,7 +308,7 @@ class _KMediaCardState extends State<KMediaCard> {
             children: [
               dimmedCard,
               PositionedDirectional(
-                start: flat ? KLayout.gutterMobile : KSpace.x3,
+                start: KMediaCard.sidePadding,
                 // The cover is centred in the row, which is as high as the
                 // taller of the cover and the text block.
                 top:
@@ -352,21 +362,12 @@ class _KMediaCardState extends State<KMediaCard> {
                       style: TextStyle(color: ink),
                       child: IconTheme.merge(
                         data: IconThemeData(color: soft),
-                        // M3 IconButton ignores IconTheme: colour it here so icons
-                        // contrast with the tint.
-                        child: _withButtons(
-                          tinted,
-                          IconButtonThemeData(
-                            // ButtonStyle.merge keeps the receiver's values: the card
-                            // colour wins over an inherited foreground and the other
-                            // inherited properties stay.
-                            style: IconButton.styleFrom(foregroundColor: soft)
-                                .copyWith(
-                                  iconColor: WidgetStatePropertyAll(soft),
-                                )
-                                .merge(ambientButtons.style),
-                          ),
-                          InkWell(
+                        // Light icon buttons read these: on a tinted row they
+                        // keep the row's ink instead of the theme colours.
+                        child: KIconButtonColors(
+                          rest: soft,
+                          hover: ink,
+                          child: InkWell(
                             onTap: widget.onTap,
                             onLongPress: widget.onLongPress,
                             child: content,
@@ -385,10 +386,25 @@ class _KMediaCardState extends State<KMediaCard> {
   }
 }
 
-/// Wraps [child] in [data] only when [apply]; otherwise the inherited
-/// `IconButtonTheme` stays untouched.
-Widget _withButtons(bool apply, IconButtonThemeData data, Widget child) =>
-    apply ? IconButtonTheme(data: data, child: child) : child;
+/// The gap between two row slots: takes a tap without doing anything, so a
+/// near miss beside a button does not reach the row's own tap. Not announced.
+class _TapAbsorber extends StatelessWidget {
+  const _TapAbsorber({required this.width, required this.height});
+
+  final double width;
+  final double height;
+
+  static void _ignore() {}
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _ignore,
+      child: SizedBox(width: width, height: height),
+    ),
+  );
+}
 
 /// Keeps its room when hidden so the card does not shift; hidden children
 /// stay focusable (Tab reveals them) but ignore the pointer.

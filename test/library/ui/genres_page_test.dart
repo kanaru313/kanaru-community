@@ -15,6 +15,7 @@ import '../../support/fake_playback_commands.dart';
 import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
+import '../../support/icon_button_finders.dart';
 
 Future<LibraryHarness> _pump(
   WidgetTester tester, {
@@ -120,7 +121,7 @@ void main() {
         .read(libraryListViewsProvider.notifier)
         .setView(BrowseList.genres, CollectionView.list);
     await tester.pump();
-    await tester.tap(find.byTooltip('Play all').at(1)); // Jazz
+    await tester.tap(byIconButton('Play all').at(1)); // Jazz
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );
@@ -152,7 +153,7 @@ void main() {
       item: genreDetailItem(groupKey('Jazz')),
     ), const SortSpec(SortCriterion.title, descending: true));
     await tester.pump();
-    await tester.tap(find.byTooltip('Play all').at(1)); // Jazz
+    await tester.tap(byIconButton('Play all').at(1)); // Jazz
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );

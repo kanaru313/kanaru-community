@@ -8,6 +8,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../support/ui_host.dart';
+import '../../support/icon_button_finders.dart';
 
 Widget _player(List<String> events) => Align(
   alignment: Alignment.bottomCenter,
@@ -40,7 +41,38 @@ void main() {
       expect(find.byType(PlayPauseButton), findsOneWidget);
       expect(find.byType(KProgressLine), findsOneWidget);
       expect(tester.getSize(find.byType(KProgressLine)).height, 2);
-      expect(find.byTooltip('Next'), findsOneWidget);
+      expect(byIconButton('Next'), findsOneWidget);
+    });
+  }
+
+  testWidgets('Play is a large glyph and Next a medium one, no 48 dp boxes', (
+    tester,
+  ) async {
+    await pumpWithPlayer(tester, _player([]));
+    final play = tester.widget<KIconButton>(byIconButton('Pause'));
+    final next = tester.widget<KIconButton>(byIconButton('Next'));
+    expect(play.size, KIconSize.lg);
+    expect(next.size, KIconSize.md);
+    expect(
+      tester.getSize(byIconButton('Pause')),
+      const Size(KIconSize.lg + 16, KIconSize.lg),
+    );
+    expect(
+      tester.getSize(byIconButton('Next')),
+      const Size(KIconSize.md + 16, KIconSize.md),
+    );
+  });
+
+  for (final scale in [1.5, 2.0]) {
+    testWidgets('title uses the title role and fits at text scale $scale', (
+      tester,
+    ) async {
+      await pumpWithPlayer(tester, _player([]), textScale: scale);
+      final text = Theme.of(tester.element(find.text('T0'))).textTheme;
+      final title = tester.widget<Text>(find.text('T0'));
+      expect(title.style?.fontSize, text.titleSmall?.fontSize);
+      expect(title.style?.fontWeight, FontWeight.w600);
+      expect(tester.takeException(), isNull);
     });
   }
 
@@ -124,17 +156,17 @@ void main() {
   testWidgets('Play/Pause toggles the player', (tester) async {
     final host = await pumpWithPlayer(tester, _player([]));
     expect(host.h.c.intent, PlayIntent.playing); // playTracks started it
-    await host.tap(tester, find.byTooltip('Pause'));
+    await host.tap(tester, byIconButton('Pause'));
     expect(host.h.c.intent, PlayIntent.paused);
-    expect(find.byTooltip('Play'), findsOneWidget);
-    await host.tap(tester, find.byTooltip('Play'));
+    expect(byIconButton('Play'), findsOneWidget);
+    await host.tap(tester, byIconButton('Play'));
     expect(host.h.c.intent, PlayIntent.playing);
-    expect(find.byTooltip('Pause'), findsOneWidget);
+    expect(byIconButton('Pause'), findsOneWidget);
   });
 
   testWidgets('Next moves to the second track', (tester) async {
     final host = await pumpWithPlayer(tester, _player([]));
-    await host.tap(tester, find.byTooltip('Next'));
+    await host.tap(tester, byIconButton('Next'));
     expect(host.h.c.queueState.currentItem?.trackId, host.h.tracks[1]);
     expect(find.text('T1'), findsOneWidget);
   });
@@ -143,7 +175,7 @@ void main() {
     final events = <String>[];
     await pumpWithPlayer(tester, _player(events));
     final gesture = await tester.startGesture(
-      tester.getCenter(find.byTooltip('Pause')),
+      tester.getCenter(byIconButton('Pause')),
     );
     await tester.pump(const Duration(milliseconds: 700));
     await gesture.up();

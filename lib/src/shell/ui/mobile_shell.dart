@@ -117,16 +117,16 @@ class MobileShell extends ConsumerWidget {
     return BackButtonListener(
       onBackButtonPressed: () => _onBack(context),
       child: PageHeaderScope(
-        leading: IconButton(
-          icon: const Icon(KIcons.sidebarToggle),
+        leading: KIconButton(
+          icon: KIcons.sidebarToggle,
           tooltip: l10n.playbackSidebarOpen,
           onPressed: ref.read(mobileSidebarOpenProvider.notifier).open,
         ),
         // A registered action (Pro chat) replaces the placeholder.
         trailing: [
           if (aiActions.isEmpty)
-            IconButton(
-              icon: const Icon(KIcons.ai),
+            KIconButton(
+              icon: KIcons.ai,
               tooltip: '${l10n.appAiChat} · ${l10n.appComingSoon}',
               onPressed: null,
             ),
@@ -134,8 +134,8 @@ class MobileShell extends ConsumerWidget {
         ],
         rootTrailing: [
           if (settings != null)
-            IconButton(
-              icon: const Icon(KIcons.settings),
+            KIconButton(
+              icon: KIcons.settings,
               tooltip: settings.label(context),
               onPressed: () => context.push(settings.path),
             ),

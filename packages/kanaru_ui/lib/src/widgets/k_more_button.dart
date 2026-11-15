@@ -2,6 +2,9 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../icons/k_icons.dart';
+import '../tokens/k_icon_size.dart';
+import '../tokens/k_space.dart';
+import 'k_icon_button.dart';
 
 /// Tells a button's `onPressed` whether the button was activated with the
 /// keyboard (Enter, Space): [builder] gets a function that answers it, to call
@@ -47,25 +50,33 @@ class _ViaKeyboardTrackerState extends State<ViaKeyboardTracker> {
   );
 }
 
-/// The ⋮ button of a row, card or page. [onPressed] is told whether the button
-/// was activated with the keyboard, so the menu it opens can focus its first
-/// row.
+/// The ⋮ button of a row, card or page: a [KIconButton] (small icon, padding
+/// 8 each way so the slot is easy to hit; [large] for a page hero: a medium
+/// icon with padding 12). [onPressed] is told whether the
+/// button was activated with the keyboard, so the menu it opens can focus its
+/// first row.
 class KMoreButton extends StatelessWidget {
   const KMoreButton({
     super.key,
     required this.tooltip,
     required this.onPressed,
+    this.large = false,
   });
 
   final String tooltip;
+
+  /// A medium icon in a 48 dp box, for a page's hero row.
+  final bool large;
   final void Function({required bool viaKeyboard}) onPressed;
 
   @override
   Widget build(BuildContext context) => ViaKeyboardTracker(
-    builder: (context, viaKeyboard) => IconButton(
+    builder: (context, viaKeyboard) => KIconButton(
       tooltip: tooltip,
+      size: large ? KIconSize.md : KIconSize.sm,
+      padding: EdgeInsets.all(large ? KSpace.x3 : KSpace.x2),
       onPressed: () => onPressed(viaKeyboard: viaKeyboard()),
-      icon: const Icon(KIcons.moreVert),
+      icon: KIcons.moreVert,
     ),
   );
 }

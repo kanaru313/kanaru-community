@@ -107,7 +107,10 @@ class _QueueRowState extends ConsumerState<QueueRow> {
     final handle = KDragHandle(
       key: _handleKey,
       index: widget.index,
-      dimension: _desktop ? KLayout.minTargetDesktop : KLayout.minTarget,
+      // Same box as the row's icon buttons (glyph + 8 dp on each side), so
+      // ♥, handle and ⋮ sit close together like the song rows.
+      dimension: KIconSize.sm + 2 * KSpace.x2,
+      iconSize: KIconSize.sm,
       semanticLabel: l10n.playbackQueueReorder,
     );
 

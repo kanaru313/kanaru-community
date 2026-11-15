@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
@@ -15,6 +14,7 @@ import '../collections/collection_parts.dart';
 import '../songs/song_list.dart';
 import 'folder_back.dart';
 import 'folder_bar.dart';
+import 'folders_view_switch.dart';
 import 'folder_locations.dart';
 import '../selection/selection_inset.dart';
 import 'folder_place.dart';
@@ -48,6 +48,8 @@ class FoldersPage extends ConsumerWidget {
       child: LibraryListFrame(
         list: BrowseList.folders,
         filterHint: l10n.libraryFilterFoldersHint,
+        viewBuilder: (context, input) =>
+            FoldersViewSwitch(placeKey: key, open: open),
         builder: (context, input) => (
           leading: FoldersBarLeading(placeKey: key, input: input, open: open),
           body: _FoldersBody(
@@ -93,15 +95,6 @@ class _FoldersBody extends ConsumerWidget {
         );
       },
     );
-  }
-
-  /// Play and shuffle as a row under the bar, on the mobile shell only.
-  Widget? _playRow(BuildContext context, FolderPlace place) {
-    final target = folderPlayTarget(place);
-    if (target == null || FormFactor.of(context) != FormFactor.mobile) {
-      return null;
-    }
-    return SliverToBoxAdapter(child: FolderPlayRow(target: target));
   }
 
   Widget _content(BuildContext context, WidgetRef ref, FolderPlace place) {
@@ -151,7 +144,6 @@ class _FoldersBody extends ConsumerWidget {
           filter: input.filter,
           playContext: levelPlayContext(place),
           leadingSlivers: [
-            ?_playRow(context, place),
             levelFoldersSliver(context, ref, place, rows, open),
             if (place.node.directSongs > 0)
               SliverToBoxAdapter(
@@ -177,7 +169,6 @@ class _FoldersBody extends ConsumerWidget {
           filter: input.filter,
           playContext: flatPlayContext(place),
           leadingSlivers: [
-            ?_playRow(context, place),
             SliverToBoxAdapter(
               child: FolderSongsHeader(
                 scope: scope,

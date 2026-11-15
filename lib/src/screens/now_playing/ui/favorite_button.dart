@@ -18,12 +18,11 @@ class FavoriteButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final favorite = ref.watch(isFavoriteProvider(trackId));
-    return IconButton(
-      icon: Icon(favorite ? KIcons.heartFilled : KIcons.heart),
-      iconSize: iconSize,
-      color: favorite ? Theme.of(context).colorScheme.primary : null,
-      isSelected: favorite,
-      selectedIcon: Icon(KIcons.heartFilled),
+    return KIconButton(
+      icon: KIcons.heart,
+      selectedIcon: KIcons.heartFilled,
+      size: iconSize ?? KIconSize.md,
+      selected: favorite,
       tooltip: favorite
           ? l10n.playbackFavoriteRemove
           : l10n.playbackFavoriteAdd,

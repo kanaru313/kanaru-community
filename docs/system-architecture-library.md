@@ -549,7 +549,10 @@ a disabled tab's route still works, with no tab selected) and a horizontal
 drag of more than 60 px moves to the next or previous visible tab. Only the
 body slides in (from the side the new tab lies on, by the index change from
 the last visited tab); the header and tab row do not move and the tab row
-keeps its offset. `ScanBanner` shows under the tabs while a scan runs:
+keeps its offset. Each tab has an icon (`libraryTabIcon`); only the selected
+tab shows its label, under one underline that slides to the new tab over
+`KMotion.normal` (instant with reduced motion); the other tabs keep their name
+as tooltip and semantics label (`KIconTabRow`). `ScanBanner` shows under the tabs while a scan runs:
 `listing` "Scanning…", `tags` "Scanning · done / total songs" with a
 determinate bar (count only when the total is 0), `covers` "Fetching covers ·
 done / total". A library with no visible track (and no scan running) shows
@@ -583,6 +586,14 @@ Every call is awaited; a failure is logged and shows a snack bar.
 - `SongTile(info, index, ids, playContext, {showNumber})` on `KMediaCard`:
   cover (`TrackCover`, seed album key else title), title, artists joined with
   ", " (else the artist tag), `album • year`, duration `m:ss` over the heart.
+  The ♥ and ⋮ are `KIconButton`s (small icon, padding 8, so 36 dp boxes, no
+  48 dp minimum); the duration sits 2 dp above the ♥ glyph and the pair is
+  centred in the row. The gaps beside the right column, ▶ and ⋮ take a tap
+  without acting (a near miss does not play the row). The ♥'s row band across
+  the whole right column, including the few dp where its box overlaps the
+  lower edge of the duration, belongs to the ♥; a tap on the duration text
+  above that band is a tap on the row. The row's end padding right of the ⋮ belongs to the ⋮
+  (`KEndHitExtension`), within the ⋮'s own band.
   Tap = `playTracks(ids, startIndex: index)`. The whole row (inside its
   `KContextRegion`) is a `KSwipeActions.capped`: swipe left = "Play next"
   (`MenuActionRunner.playNext([id])`, same call and toast as the menu footer),
@@ -623,8 +634,9 @@ Every call is awaited; a failure is logged and shows a snack bar.
   `activeTrackListProvider`; it clears them when the page goes under another
   one or is disposed. A notifier that is already disposed ignores `set` and
   `clear`.
-- Songs page: left group is shuffle and play all (icons on the mobile shell,
-  labelled buttons on desktop) and the count (`36 songs`, `6 / 34 songs` while
+- Songs page: left group is play all and shuffle (36 dp icon discs on both
+  shells; the list bar has the sort chip, the view switch where the list has
+  two layouts, and the filter toggle, all small icon buttons) and the count (`36 songs`, `6 / 34 songs` while
   filtering). The context is `PlayContext(songs, label)`.
 
 ## Collection lists
@@ -657,7 +669,10 @@ Every call is awaited; a failure is logged and shows a snack bar.
   by the name.
 - Genres: grid of `KColorTile` (150 / 200 px minimum; height 88 times the text
   scale) or rows (`GenreTile` on `KMediaCard`: coloured icon block, name,
-  song count, ▶, ⋮). Opens as a grid; the view switch is stored per list.
+  song count, ▶, ⋮). Opens as a grid; the view switch is stored per list: one
+  small icon button between the sort chip and the filter toggle (it shows the
+  layout it switches to), the same on both shells. The ▶ of a collection row is
+  a plain small icon, no disc.
 - Languages: `LanguageTile` (`KMediaCard`, ▶) per language with `languages`
   (`help` for "unknown", always last), `N songs · M auto-detected` (the
   second part only when nonzero), and the note above the list. `languageDisplayName`: the native

@@ -193,7 +193,7 @@ void _showPopup(
             Row(
               spacing: KSpace.x3,
               children: [
-                Icon(e.icon, size: 20, color: color),
+                Icon(e.icon, size: KIconSize.sm, color: color),
                 Expanded(
                   child: Text(e.label, style: TextStyle(color: color)),
                 ),
