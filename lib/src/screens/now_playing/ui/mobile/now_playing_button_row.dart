@@ -4,6 +4,9 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../playback/ui/transport_buttons.dart';
 
+/// Even space between a tile's edge and the focus ring of its button.
+const EdgeInsets tilePadding = EdgeInsets.all(KSpace.x1);
+
 /// Height of the button row.
 const double nowPlayingButtonRowHeight = 52;
 
@@ -35,11 +38,12 @@ class NowPlayingButtonRow extends StatelessWidget {
     return Row(
       spacing: KSpace.x2,
       children: [
-        cell(const ShuffleButton()),
-        cell(const RepeatButton()),
+        cell(const ShuffleButton(padding: tilePadding)),
+        cell(const RepeatButton(padding: tilePadding)),
         cell(
           KIconButton(
             icon: KIcons.ai,
+            padding: tilePadding,
             color: scheme.primary,
             tooltip: '${l10n.playbackAskAi} · ${l10n.appComingSoon}',
             onPressed: null,
@@ -48,6 +52,7 @@ class NowPlayingButtonRow extends StatelessWidget {
         cell(
           KIconButton(
             icon: KIcons.queueMusic,
+            padding: tilePadding,
             tooltip: l10n.playbackNavQueue,
             onPressed: onQueue,
           ),

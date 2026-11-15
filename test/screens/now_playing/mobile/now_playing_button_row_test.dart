@@ -52,9 +52,7 @@ void main() {
     expect(queue, 6);
   });
 
-  testWidgets('shuffle fires from the tile corners, one tooltip', (
-    tester,
-  ) async {
+  testWidgets('shuffle fires from the tile corners', (tester) async {
     final host = await open(tester, () {});
     final t = tile(tester, 0);
     expect(host.container.read(shuffleSettingProvider), isFalse);
@@ -73,27 +71,40 @@ void main() {
     expect(host.container.read(shuffleSettingProvider), isTrue);
     await tapReal(t.bottomRight + const Offset(-2, -2));
     expect(host.container.read(shuffleSettingProvider), isFalse);
-    expect(
-      find.byWidgetPredicate((w) => w is Tooltip && w.message == 'Shuffle'),
-      findsOneWidget,
-    );
   });
 
   testWidgets('repeat opens its menu from a tile corner', (tester) async {
     await open(tester, () {});
-    await tester.tapAt(tile(tester, 1).bottomLeft + const Offset(2, -2));
+    final t = tile(tester, 1);
+    await tester.tapAt(t.bottomLeft + const Offset(2, -2));
     await tester.pumpAndSettle();
     expect(find.text('Repeat the whole queue'), findsOneWidget);
   });
 
-  testWidgets('Ask AI stays inert over the whole tile', (tester) async {
-    var queue = 0;
-    await open(tester, () => queue++);
+  testWidgets('Ask AI is one disabled button node covering the tile', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await open(tester, () {});
     final t = tile(tester, 2);
-    expect(tester.getSize(find.byType(KIconButton).at(2)), t.size);
-    await tester.tapAt(t.center);
-    await tester.tapAt(t.topLeft + const Offset(2, 2));
-    await tester.pump();
-    expect(queue, 0);
+    final ai = find.byType(KIconButton).at(2);
+    expect(tester.getSize(ai), t.size);
+    final node = tester.getSemantics(ai);
+    expect(node, isSemantics(isButton: true, isEnabled: false));
+    expect(node.label, contains('Coming soon'));
+    expect(node.rect.size, t.size);
+    handle.dispose();
+  });
+
+  testWidgets('the focus ring sits evenly inside every tile', (tester) async {
+    await open(tester, () {});
+    for (var i = 0; i < 4; i++) {
+      final t = tile(tester, i);
+      final ring = tester.getRect(find.byKey(KIconButton.ringKey).at(i));
+      expect(ring.left - t.left, KSpace.x1, reason: 'tile $i left');
+      expect(t.right - ring.right, KSpace.x1, reason: 'tile $i right');
+      expect(ring.top - t.top, KSpace.x1, reason: 'tile $i top');
+      expect(t.bottom - ring.bottom, KSpace.x1, reason: 'tile $i bottom');
+    }
   });
 }

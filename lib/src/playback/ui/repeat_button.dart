@@ -15,7 +15,10 @@ import 'repeat_menu.dart';
 /// is empty. It watches the repeat fields only, so playback progress does not
 /// rebuild it.
 class RepeatButton extends ConsumerStatefulWidget {
-  const RepeatButton({super.key});
+  const RepeatButton({super.key, this.padding});
+
+  /// Around the glyph; the default of `KToggleIconButton` when null.
+  final EdgeInsetsGeometry? padding;
 
   @override
   ConsumerState<RepeatButton> createState() => _RepeatButtonState();
@@ -88,6 +91,8 @@ class _RepeatButtonState extends ConsumerState<RepeatButton> {
           count: counting ? times : 0,
         ),
         active: counting || mode != RepeatMode.off,
+        padding:
+            widget.padding ?? const EdgeInsets.symmetric(horizontal: KSpace.x2),
         tooltip: repeatLabel(l10n, mode, counting ? times : 0),
         onPressed: empty
             ? null

@@ -17,6 +17,7 @@ class KToggleIconButton extends StatelessWidget {
     required this.onPressed,
     required this.tooltip,
     this.iconSize,
+    this.padding = const EdgeInsets.symmetric(horizontal: KSpace.x2),
   }) : assert(
          (icon == null) != (iconWidget == null),
          'give exactly one of icon and iconWidget',
@@ -32,6 +33,9 @@ class KToggleIconButton extends StatelessWidget {
   final String tooltip;
   final double? iconSize;
 
+  /// Around the glyph; the button fills the space it is given (a tile).
+  final EdgeInsetsGeometry padding;
+
   /// Diameter of the dot and its gap under the glyph.
   static const double _dot = KSpace.x1;
   static const double _gap = KSpace.x1 / 2;
@@ -44,30 +48,36 @@ class KToggleIconButton extends StatelessWidget {
       onPressed: onPressed,
       selected: active,
       size: iconSize ?? KIconSize.md,
+      padding: padding,
       // The dot hangs below the glyph, so it does not depend on the height of
       // the slot the button sits in.
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: [
-          iconWidget ?? Icon(icon),
-          if (active)
-            Positioned(
-              bottom: -(_gap + _dot),
-              child: IgnorePointer(
-                child: ExcludeSemantics(
-                  child: DecoratedBox(
-                    key: dotKey,
-                    decoration: BoxDecoration(
-                      color: primary,
-                      shape: BoxShape.circle,
+      // Not stretched by a tall slot: the dot stays under the glyph.
+      child: Align(
+        widthFactor: 1,
+        heightFactor: 1,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            iconWidget ?? Icon(icon),
+            if (active)
+              Positioned(
+                bottom: -(_gap + _dot),
+                child: IgnorePointer(
+                  child: ExcludeSemantics(
+                    child: DecoratedBox(
+                      key: dotKey,
+                      decoration: BoxDecoration(
+                        color: primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const SizedBox.square(dimension: _dot),
                     ),
-                    child: const SizedBox.square(dimension: _dot),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
