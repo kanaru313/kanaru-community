@@ -12,6 +12,7 @@ Widget _bar({
   bool filterOpen = false,
   void Function(GlobalKey)? onSort,
   VoidCallback? onFilter,
+  Widget? view,
 }) {
   return Align(
     alignment: Alignment.topCenter,
@@ -24,6 +25,7 @@ Widget _bar({
       onFilterToggle: onFilter ?? () {},
       sortTooltip: 'Sort',
       filterTooltip: 'Filter',
+      view: view,
     ),
   );
 }
@@ -42,6 +44,28 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('with the view switch the bar fits 360 dp at text scale 2', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(360, 800));
+    await tester.pumpWidget(
+      host(
+        _bar(
+          view: KIconButton(
+            tooltip: 'View',
+            icon: KIcons.grid,
+            size: KIconSize.sm,
+            onPressed: () {},
+          ),
+        ),
+        textScale: 2.0,
+      ),
+    );
+    expect(find.byIcon(KIcons.grid), findsOneWidget);
+    expect(find.byIcon(KIcons.filter), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('the arrow follows the direction', (tester) async {
     useWindow(tester, const Size(400, 800));

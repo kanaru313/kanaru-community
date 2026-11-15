@@ -23,7 +23,6 @@ PlayContext flatPlayContext(FlatOpenPlace place) => folderPlayContext(
 );
 
 /// Left group of the Folders bar: the breadcrumb (the count in the flat list).
-
 class FoldersBarLeading extends ConsumerWidget {
   const FoldersBarLeading({
     super.key,
