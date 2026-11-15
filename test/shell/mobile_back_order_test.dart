@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../support/app_harness.dart';
 import '../support/nav_fixture.dart';
+import '../support/icon_button_finders.dart';
 
 class _Child implements KanaruExtension {
   const _Child();
@@ -93,7 +94,7 @@ void main() {
     );
     _go(tester, '/beta');
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Gear'));
+    await tester.tap(byIconButton('Gear'));
     await tester.pumpAndSettle();
     expect(find.text('page /gear'), findsOneWidget);
 

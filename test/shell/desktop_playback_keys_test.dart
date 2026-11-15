@@ -207,6 +207,63 @@ void main() {
     expect(presses, 1);
   });
 
+  testWidgets(
+    'Space on a focused icon button presses it and does not play or pause; '
+    'Space on a row-like focus still plays',
+    (tester) async {
+      var presses = 0;
+      final buttonFocus = FocusNode();
+      final rowFocus = FocusNode();
+      addTearDown(buttonFocus.dispose);
+      addTearDown(rowFocus.dispose);
+      final host = await pumpDesktopShell(
+        tester,
+        routes: [
+          GoRoute(
+            path: '/button',
+            builder: (_, _) => Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  KIconButton(
+                    focusNode: buttonFocus,
+                    icon: KIcons.heart,
+                    tooltip: 'Heart',
+                    onPressed: () => presses++,
+                  ),
+                  Focus(focusNode: rowFocus, child: const Text('row')),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+      host.routerRef.go('/button');
+      await tester.pumpAndSettle();
+      buttonFocus.requestFocus();
+      await tester.pump();
+      expect(KIconButton.ownsPrimaryFocus(), isTrue);
+      expect(host.h.c.intent, PlayIntent.paused);
+
+      await _key(tester, host, LogicalKeyboardKey.space);
+      expect(presses, 1);
+      expect(host.h.c.intent, PlayIntent.paused);
+
+      // Enter presses it as before.
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(presses, 2);
+
+      // Focus on something that is not an icon button: Space plays.
+      rowFocus.requestFocus();
+      await tester.pump();
+      expect(KIconButton.ownsPrimaryFocus(), isFalse);
+      await _key(tester, host, LogicalKeyboardKey.space);
+      expect(presses, 2);
+      expect(host.h.c.intent, PlayIntent.playing);
+    },
+  );
+
   testWidgets('focused EditableText keeps Space, arrows and Ctrl+S', (
     tester,
   ) async {

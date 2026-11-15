@@ -15,6 +15,7 @@ import '../../playback/ui/volume_control.dart';
 import '../../screens/now_playing/ui/favorite_button.dart';
 import '../../playback/state/now_playing_panel.dart';
 import '../state/right_panel.dart';
+import 'panel_toggle_button.dart';
 
 /// Left-part widths below which the bar drops controls: under [wide] no
 /// volume, sleep timer or favorite; under [narrow] no shuffle or repeat.
@@ -171,7 +172,7 @@ class _CenterPart extends StatelessWidget {
           children: [
             if (showShuffleRepeat) const ShuffleButton(),
             const PreviousButton(),
-            const PlayPauseButton(filled: true, iconSize: 28),
+            const PlayPauseButton(filled: true, iconSize: KIconSize.lg),
             const NextButton(),
             if (showShuffleRepeat) const RepeatButton(),
           ],
@@ -204,37 +205,27 @@ class _ToolsPart extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (full)
-          IconButton(
-            icon: const Icon(KIcons.sleepTimer),
+          KIconButton(
+            icon: KIcons.sleepTimer,
             tooltip: '${l10n.playbackSleepTimer} · $soon',
             onPressed: null,
           ),
-        IconButton(
-          icon: const Icon(KIcons.lyrics),
+        KIconButton(
+          icon: KIcons.lyrics,
           tooltip: l10n.playbackLyrics,
           onPressed: panel.open,
         ),
-        IconButton(
-          icon: const Icon(KIcons.queueMusic),
+        PanelToggleButton(
+          icon: KIcons.queueMusic,
           tooltip: l10n.playbackNavQueue,
-          isSelected: queueOpen,
-          style: queueOpen
-              ? IconButton.styleFrom(
-                  backgroundColor: Theme.of(context)
-                      .colorScheme
-                      .secondaryContainer,
-                  foregroundColor: Theme.of(context)
-                      .colorScheme
-                      .onSecondaryContainer,
-                )
-              : null,
+          selected: queueOpen,
           onPressed: () => ref
               .read(rightPanelProvider.notifier)
               .toggle(RightPanelKind.queue),
         ),
         if (full) const VolumeControl(),
-        IconButton(
-          icon: const Icon(KIcons.openFull),
+        KIconButton(
+          icon: KIcons.openFull,
           tooltip: l10n.playbackExpand,
           onPressed: panel.open,
         ),

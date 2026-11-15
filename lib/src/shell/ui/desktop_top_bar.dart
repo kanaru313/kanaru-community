@@ -10,6 +10,7 @@ import '../../library/domain/scan_status.dart';
 import '../../library/state/scan_providers.dart';
 import '../state/nav_history.dart';
 import '../state/right_panel.dart';
+import 'panel_toggle_button.dart';
 
 /// 40 dp bar above everything: navigation on the left, app name in the middle,
 /// extension actions on the right.
@@ -89,7 +90,7 @@ class DesktopTopBar extends ConsumerWidget {
                   children: [
                     Icon(
                       KIcons.appLogo,
-                      size: KSpace.x5,
+                      size: KIconSize.sm,
                       color: scheme.primary,
                     ),
                     Text(
@@ -142,24 +143,11 @@ class _BarButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(icon),
-      iconSize: KSpace.x5,
+    return PanelToggleButton(
+      icon: icon,
       tooltip: tooltip,
-      padding: EdgeInsets.zero,
-      isSelected: selected,
-      style: selected
-          ? IconButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-              foregroundColor: Theme.of(context)
-                  .colorScheme
-                  .onSecondaryContainer,
-            )
-          : null,
-      constraints: const BoxConstraints.tightFor(
-        width: KLayout.minTargetDesktop,
-        height: KLayout.minTargetDesktop,
-      ),
+      size: KIconSize.sm,
+      selected: selected,
       onPressed: onPressed,
     );
   }

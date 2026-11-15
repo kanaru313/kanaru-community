@@ -33,8 +33,8 @@ class RightPanelHeader extends StatelessWidget {
               ),
             ),
             ?menu,
-            IconButton(
-              icon: const Icon(KIcons.close),
+            KIconButton(
+              icon: KIcons.close,
               tooltip: AppLocalizations.of(context).playbackPanelClose,
               onPressed: onClose,
             ),

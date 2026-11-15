@@ -9,6 +9,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../support/app_harness.dart';
 import '../support/nav_fixture.dart';
+import '../support/icon_button_finders.dart';
 
 /// A tab with a child item, to check that sub-items navigate by path.
 class _Kid implements KanaruExtension {
@@ -66,7 +67,7 @@ String _location(WidgetTester tester) =>
         .path;
 
 Future<void> _open(WidgetTester tester) async {
-  await tester.tap(find.byTooltip('Menu').first);
+  await tester.tap(byIconButton('Menu').first);
   await tester.pumpAndSettle();
 }
 
@@ -90,7 +91,7 @@ void main() {
     tester,
   ) async {
     final h = await _pump(tester);
-    await tester.tap(find.byTooltip('Menu').first);
+    await tester.tap(byIconButton('Menu').first);
     await tester.pump();
     expect(find.byType(MobileSidebar, skipOffstage: false), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 50));
@@ -264,7 +265,7 @@ void main() {
         const FakeAccessibilityFeatures(disableAnimations: true);
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
     await tester.pump();
-    await tester.tap(find.byTooltip('Menu').first);
+    await tester.tap(byIconButton('Menu').first);
     await tester.pump();
     await tester.pump();
     expect(h.open, isTrue);

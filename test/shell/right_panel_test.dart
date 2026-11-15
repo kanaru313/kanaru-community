@@ -12,6 +12,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'support/desktop_now_playing_host.dart';
+import '../support/icon_button_finders.dart';
 
 const _queueTip = 'Queue (Ctrl+Shift+Q)';
 const _chatTip = 'AI chat (Ctrl+J)';
@@ -26,14 +27,18 @@ Future<void> _settle(WidgetTester tester, DesktopHost host) async {
 }
 
 /// Whether the top bar button is tonal (the player bar has its own Queue one).
-bool _tonal(WidgetTester tester, String tooltip) => tester
-    .widget<IconButton>(
-      find.descendant(
-        of: find.byType(DesktopTopBar),
-        matching: find.widgetWithIcon(IconButton, _iconOf(tooltip)),
-      ),
-    )
-    .isSelected!;
+bool _tonal(WidgetTester tester, String tooltip) {
+  final state = iconButtonAround(
+    tester,
+    find.descendant(
+      of: find.byType(DesktopTopBar),
+      matching: find.byIcon(_iconOf(tooltip)),
+    ),
+  );
+  // Open = the Material tonal button; closed = the light one.
+  expect(state.material, state.selected);
+  return state.selected;
+}
 
 IconData _iconOf(String tooltip) =>
     tooltip == _queueTip ? KIcons.queueMusic : KIcons.ai;
@@ -66,20 +71,20 @@ void main() {
     tester,
   ) async {
     final host = await pumpDesktopShell(tester);
-    await tester.tap(find.byTooltip(_queueTip));
+    await tester.tap(byAnyIconButton(_queueTip));
     await _settle(tester, host);
     expect(_kind(host), RightPanelKind.queue);
     expect(_tonal(tester, _queueTip), isTrue);
     expect(find.byType(QueueRow), findsWidgets);
     // Header: name and close; the queue has no menu button of its own there.
     expect(find.widgetWithText(Row, 'Queue'), findsWidgets);
-    expect(find.byTooltip('Close panel'), findsOneWidget);
+    expect(byIconButton('Close panel'), findsOneWidget);
     expect(
       tester.getSize(find.byType(RightPanelHost).first).width,
       rightPanelWidth,
     );
 
-    await tester.tap(find.byTooltip(_queueTip));
+    await tester.tap(byAnyIconButton(_queueTip));
     await _settle(tester, host);
     expect(_kind(host), RightPanelKind.closed);
     expect(find.byType(QueueRow), findsNothing);
@@ -91,17 +96,17 @@ void main() {
   ) async {
     final host = await pumpDesktopShell(tester);
     expect(find.byType(PlayerBar), findsOneWidget);
-    await tester.tap(find.byTooltip('Queue'));
+    await tester.tap(byAnyIconButton('Queue'));
     await _settle(tester, host);
     expect(_kind(host), RightPanelKind.queue);
     expect(host.container.read(nowPlayingPanelProvider).open, isFalse);
-    await tester.tap(find.byTooltip('Close panel'));
+    await tester.tap(byIconButton('Close panel'));
     await _settle(tester, host);
     expect(_kind(host), RightPanelKind.closed);
     // The player bar button toggles too.
-    await tester.tap(find.byTooltip('Queue'));
+    await tester.tap(byAnyIconButton('Queue'));
     await _settle(tester, host);
-    await tester.tap(find.byTooltip('Queue'));
+    await tester.tap(byAnyIconButton('Queue'));
     await _settle(tester, host);
     expect(_kind(host), RightPanelKind.closed);
   });
@@ -122,8 +127,11 @@ void main() {
     tester,
   ) async {
     final host = await pumpDesktopShell(tester);
-    final ai = find.widgetWithIcon(IconButton, KIcons.ai);
-    expect(tester.widget<IconButton>(ai).onPressed, isNull);
+    final ai = find.descendant(
+      of: find.byType(DesktopTopBar),
+      matching: find.byIcon(KIcons.ai),
+    );
+    expect(iconButtonAround(tester, ai).enabled, isFalse);
     await _ctrl(tester, LogicalKeyboardKey.keyJ);
     expect(_kind(host), RightPanelKind.closed);
   });
@@ -137,7 +145,7 @@ void main() {
     expect(_tonal(tester, _chatTip), isTrue);
     expect(find.text('AI chat'), findsWidgets);
     expect(find.byKey(const ValueKey('chat menu')), findsOneWidget);
-    await tester.tap(find.byTooltip(_chatTip));
+    await tester.tap(byAnyIconButton(_chatTip));
     await _settle(tester, host);
     expect(_kind(host), RightPanelKind.closed);
     await _ctrl(tester, LogicalKeyboardKey.keyJ);
@@ -153,7 +161,7 @@ void main() {
           .read(rightPanelProvider.notifier)
           .show(RightPanelKind.queue);
       await _settle(tester, host);
-      final queueRest = tester.getTopLeft(find.byTooltip('Close panel')).dx;
+      final queueRest = tester.getTopLeft(byIconButton('Close panel')).dx;
       expect(queueRest, greaterThan(1280 - rightPanelWidth));
 
       host.container
@@ -209,12 +217,12 @@ void main() {
         rightPanelWidth,
       );
       expect(
-        tester.getTopLeft(find.byTooltip('Close panel')).dx,
+        tester.getTopLeft(byIconButton('Close panel')).dx,
         greaterThan(1280 - rightPanelWidth),
       );
       host.container.read(rightPanelProvider.notifier).close();
       await tester.pump();
-      expect(find.byTooltip('Close panel'), findsNothing);
+      expect(byIconButton('Close panel'), findsNothing);
     });
   });
 
@@ -262,9 +270,9 @@ void main() {
       final rows = find.byType(QueueRow);
       expect(rows, findsWidgets);
       expect(rows.first.hitTestable(), findsOneWidget);
-      final screen = tester.getRect(find.byTooltip('Minimise').first);
+      final screen = tester.getRect(byIconButton('Minimise').first);
       expect(screen.right, lessThanOrEqualTo(1280 - rightPanelWidth));
-      await tester.tap(find.byTooltip(_queueTip));
+      await tester.tap(byAnyIconButton(_queueTip));
       await _settle(tester, host);
       expect(_kind(host), RightPanelKind.closed);
       expect(host.container.read(nowPlayingPanelProvider).open, isTrue);
@@ -329,10 +337,10 @@ void main() {
       required bool panel,
     }) async {
       await sidebarWidth(tester, window: window, panel: panel);
-      final button = tester.widget<IconButton>(
-        find.widgetWithIcon(IconButton, KIcons.sidebarToggle),
-      );
-      return button.onPressed != null;
+      return iconButtonAround(
+        tester,
+        find.byIcon(KIcons.sidebarToggle),
+      ).enabled;
     }
 
     testWidgets('the top bar toggle is dimmed while the rail is forced', (

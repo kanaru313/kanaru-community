@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../playback/state/player_controller.dart';
 import 'desktop_history_input.dart';
@@ -47,6 +48,10 @@ bool handleDesktopPlaybackKey(KeyEvent event, PlayerController player) {
       (plain && (key == LogicalKeyboardKey.space || isArrow)) ||
       (ctrlOnly && key == LogicalKeyboardKey.keyS);
   if (!wanted) return false;
+  // Space on a focused icon button activates it; elsewhere it plays or pauses.
+  if (key == LogicalKeyboardKey.space && KIconButton.ownsPrimaryFocus()) {
+    return false;
+  }
   if (DesktopHistoryInput.textFieldFocused()) return false;
   if (player.queueState.items.isEmpty) return false;
   if (isArrow) {

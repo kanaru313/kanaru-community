@@ -236,8 +236,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
               Expanded(
                 child: PageHeaderScope(
                   trailing: [
-                    IconButton(
-                      icon: const Icon(KIcons.search),
+                    KIconButton(
+                      icon: KIcons.search,
+                      size: KIconSize.sm,
                       tooltip: l10n.appSearch,
                       onPressed: _openSearch,
                     ),
