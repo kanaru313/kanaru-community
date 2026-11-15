@@ -8,6 +8,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:kanaru_ui/src/widgets/collections/k_media_card_right_column.dart';
 
+import '../support/finders.dart';
 import '../support/host.dart';
 
 Widget _card({
@@ -324,32 +325,29 @@ void main() {
     await tester.pumpWidget(
       host(_card(onAction: () => played++, actionEnabled: false)),
     );
-    final button = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(KIcons.play),
-        matching: find.byType(IconButton),
-      ),
+    final play = find.ancestor(
+      of: find.byIcon(KIcons.play),
+      matching: find.byType(KIconButton),
     );
-    expect(button.onPressed, isNull);
+    expect(tester.widget<KIconButton>(play).onPressed, isNull);
     // Still shown, not hidden.
     expect(actionOpacity(tester), 1);
     await tester.tap(find.byIcon(KIcons.play), warnIfMissed: false);
     expect(played, 0);
     // A disabled button takes no focus.
-    final focus = tester.widget<Focus>(
-      find
-          .descendant(
-            of: find.ancestor(
-              of: find.byIcon(KIcons.play),
-              matching: find.byType(IconButton),
-            ),
-            matching: find.byType(Focus),
-          )
-          .first,
-    );
-    expect(focus.canRequestFocus, isFalse);
     expect(
-      tester.getSemantics(find.byType(IconButton)),
+      tester
+          .widget<FocusableActionDetector>(
+            find.descendant(
+              of: play,
+              matching: find.byType(FocusableActionDetector),
+            ),
+          )
+          .enabled,
+      isFalse,
+    );
+    expect(
+      tester.getSemantics(play),
       isSemantics(isButton: true, isEnabled: false),
     );
     handle.dispose();
@@ -414,11 +412,97 @@ void main() {
       );
     });
 
-    testWidgets('a tinted card colours icon buttons with its own ink', (
+    Widget tintedCard({bool current = true, bool selected = false}) => Align(
+      alignment: Alignment.topCenter,
+      child: KMediaCard(
+        title: 'T',
+        current: current,
+        selected: selected,
+        trailing: KIconButton(
+          onPressed: () {},
+          tooltip: 'More',
+          icon: KIcons.moreVert,
+        ),
+        accessory: const Icon(KIcons.heart),
+        onAction: () {},
+        actionLabel: 'Play',
+      ),
+    );
+
+    Color glyphOf(WidgetTester tester, String tooltip) => tester
+        .widget<Icon>(
+          find.descendant(
+            of: find.byWidgetPredicate(
+              (w) => w is KIconButton && w.tooltip == tooltip,
+            ),
+            matching: find.byType(Icon),
+          ),
+        )
+        .color!;
+
+    testWidgets('a tinted card gives its light buttons its own ink', (
       tester,
     ) async {
       useWindow(tester, const Size(400, 800));
       final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
+      await tester.pumpWidget(host(tintedCard()));
+      final soft = scheme.onPrimaryContainer.withValues(alpha: 0.8);
+      final colors = KIconButtonColors.maybeOf(
+        tester.element(find.byIcon(KIcons.moreVert)),
+      )!;
+      expect(colors.rest, soft);
+      expect(colors.hover, scheme.onPrimaryContainer);
+      expect(glyphOf(tester, 'More'), soft);
+      // The play button follows the same colours, with no disc of its own.
+      expect(glyphOf(tester, 'Play'), soft);
+      expect(
+        IconTheme.of(tester.element(find.byIcon(KIcons.heart))).color,
+        soft,
+      );
+    });
+
+    testWidgets('a selected card colours its buttons with the selected ink', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
+      await tester.pumpWidget(host(tintedCard(current: false, selected: true)));
+      expect(
+        glyphOf(tester, 'More'),
+        scheme.onSecondaryContainer.withValues(alpha: 0.8),
+      );
+    });
+
+    testWidgets('hover shows the row ink at full strength', (tester) async {
+      useWindow(tester, const Size(1300, 800));
+      FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.alwaysTraditional;
+      addTearDown(
+        () => FocusManager.instance.highlightStrategy =
+            FocusHighlightStrategy.automatic,
+      );
+      final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
+      await tester.pumpWidget(host(tintedCard()));
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      addTearDown(mouse.removePointer);
+      await mouse.addPointer(location: Offset.zero);
+      await mouse.moveTo(tester.getCenter(find.byIcon(KIcons.moreVert)));
+      await tester.pump();
+      expect(glyphOf(tester, 'More'), scheme.onPrimaryContainer);
+    });
+
+    testWidgets('an untinted card leaves the theme colours', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
+      await tester.pumpWidget(host(tintedCard(current: false)));
+      expect(glyphOf(tester, 'More'), scheme.onSurfaceVariant);
+      expect(glyphOf(tester, 'Play'), scheme.onSurfaceVariant);
+    });
+
+    testWidgets('a button with its own colour keeps it in a tinted card', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(
         host(
           Align(
@@ -426,143 +510,17 @@ void main() {
             child: KMediaCard(
               title: 'T',
               current: true,
-              trailing: IconButton(
+              trailing: KIconButton(
                 onPressed: () {},
-                icon: const Icon(KIcons.moreVert),
-              ),
-              accessory: const Icon(KIcons.heart),
-            ),
-          ),
-        ),
-      );
-      final soft = scheme.onPrimaryContainer.withValues(alpha: 0.8);
-      final button = tester.widget<IconButton>(find.byType(IconButton));
-      final theme = IconButtonTheme.of(tester.element(find.byWidget(button)));
-      expect(theme.style?.foregroundColor?.resolve({}), soft);
-      expect(
-        IconTheme.of(tester.element(find.byIcon(KIcons.heart))).color,
-        soft,
-      );
-    });
-
-    testWidgets('the play button keeps its own colours in a tinted card', (
-      tester,
-    ) async {
-      useWindow(tester, const Size(400, 800));
-      await tester.pumpWidget(
-        host(
-          Align(
-            alignment: Alignment.topCenter,
-            child: KMediaCard(title: 'T', current: true, onAction: () {}),
-          ),
-        ),
-      );
-      final theme = IconButtonTheme.of(
-        tester.element(find.byIcon(KIcons.play)),
-      );
-      expect(theme.style?.foregroundColor, isNull);
-    });
-
-    testWidgets('an untinted card leaves icon buttons alone', (tester) async {
-      useWindow(tester, const Size(400, 800));
-      await tester.pumpWidget(
-        host(
-          IconButtonTheme(
-            data: IconButtonThemeData(
-              style: IconButton.styleFrom(foregroundColor: Colors.red),
-            ),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: KMediaCard(
-                title: 'T',
-                trailing: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(KIcons.moreVert),
-                ),
+                tooltip: 'More',
+                icon: KIcons.moreVert,
+                color: const Color(0xFFFF0000),
               ),
             ),
           ),
         ),
       );
-      final theme = IconButtonTheme.of(
-        tester.element(find.byIcon(KIcons.moreVert)),
-      );
-      expect(theme.style?.foregroundColor?.resolve({}), Colors.red);
-    });
-
-    testWidgets('the card tint wins over an inherited foreground', (
-      tester,
-    ) async {
-      useWindow(tester, const Size(400, 800));
-      final scheme = buildKanaruTheme(brightness: Brightness.light).colorScheme;
-      await tester.pumpWidget(
-        host(
-          IconButtonTheme(
-            data: IconButtonThemeData(
-              style: IconButton.styleFrom(
-                foregroundColor: Colors.red,
-                visualDensity: VisualDensity.compact,
-              ).copyWith(iconColor: const WidgetStatePropertyAll(Colors.red)),
-            ),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: KMediaCard(
-                title: 'T',
-                current: true,
-                trailing: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(KIcons.moreVert),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-      final theme = IconButtonTheme.of(
-        tester.element(find.byIcon(KIcons.moreVert)),
-      );
-      expect(theme.style?.foregroundColor?.resolve({}), isNot(Colors.red));
-      expect(
-        theme.style?.foregroundColor?.resolve({}),
-        scheme.onPrimaryContainer.withValues(alpha: 0.8),
-      );
-      expect(theme.style?.iconColor?.resolve({}), isNot(Colors.red));
-      expect(
-        theme.style?.iconColor?.resolve({}),
-        scheme.onPrimaryContainer.withValues(alpha: 0.8),
-      );
-      expect(theme.style?.visualDensity, VisualDensity.compact);
-    });
-
-    testWidgets('a tinted card keeps the inherited icon button style', (
-      tester,
-    ) async {
-      useWindow(tester, const Size(400, 800));
-      await tester.pumpWidget(
-        host(
-          IconButtonTheme(
-            data: IconButtonThemeData(
-              style: IconButton.styleFrom(visualDensity: VisualDensity.compact),
-            ),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: KMediaCard(
-                title: 'T',
-                selected: true,
-                trailing: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(KIcons.moreVert),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-      final theme = IconButtonTheme.of(
-        tester.element(find.byIcon(KIcons.moreVert)),
-      );
-      expect(theme.style?.visualDensity, VisualDensity.compact);
-      expect(theme.style?.foregroundColor, isNotNull);
+      expect(glyphOf(tester, 'More'), const Color(0xFFFF0000));
     });
   });
 
@@ -728,32 +686,48 @@ void main() {
   });
 
   group('right column', () {
-    // Song-row shape: duration over a 20 dp heart in a default IconButton,
-    // then the 48 dp more button.
+    // Song-row shape: duration over a small heart (icon + padding 8), then
+    // the ⋮ button.
 
-    Widget song({required VoidCallback onHeart, VoidCallback? onAction}) =>
-        Align(
-          alignment: Alignment.topCenter,
-          child: KMediaCard(
-            title: 'T',
-            line2: 'a',
-            line3: 'b',
-            leading: const ColoredBox(color: Color(0xFF888888)),
-            top: const Text('5:53', key: Key('dur')),
-            bottom: IconButton(
-              key: const Key('heart'),
-              iconSize: 20,
-              onPressed: onHeart,
-              icon: const Icon(KIcons.heart),
-            ),
-            onAction: onAction,
-            trailing: IconButton(
-              key: const Key('more'),
-              onPressed: () {},
-              icon: const Icon(KIcons.moreVert),
-            ),
-          ),
-        );
+    Widget heartButton(VoidCallback onHeart, {Key? key}) => KIconButton(
+      key: key ?? const Key('heart'),
+      tooltip: 'Heart',
+      size: KIconSize.sm,
+      padding: const EdgeInsets.all(KSpace.x2),
+      onPressed: onHeart,
+      icon: KIcons.heart,
+    );
+
+    Widget song({
+      required VoidCallback onHeart,
+      VoidCallback? onAction,
+      VoidCallback? onMore,
+      VoidCallback? onTap,
+    }) => Align(
+      alignment: Alignment.topCenter,
+      child: KMediaCard(
+        title: 'T',
+        line2: 'a',
+        line3: 'b',
+        leading: const ColoredBox(color: Color(0xFF888888)),
+        top: const Text('5:53', key: Key('dur')),
+        bottom: heartButton(onHeart),
+        onAction: onAction,
+        actionLabel: 'Play',
+        onTap: onTap,
+        trailing: KMoreButton(
+          key: const Key('more'),
+          tooltip: 'More',
+          onPressed: ({required viaKeyboard}) => onMore?.call(),
+        ),
+      ),
+    );
+
+    // The press hold of a light button keeps a timer alive for a moment.
+    Future<void> settle(WidgetTester tester) async {
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pump(KMotion.press);
+    }
 
     testWidgets('duration and heart share a centre and sit tight', (
       tester,
@@ -763,60 +737,157 @@ void main() {
       final text = tester.getRect(find.byKey(const Key('dur')));
       final icon = tester.getRect(find.byIcon(KIcons.heart));
       expect((text.center.dx - icon.center.dx).abs(), lessThan(1));
-      expect(icon.top - text.bottom, lessThanOrEqualTo(4));
-      expect(icon.top - text.bottom, greaterThanOrEqualTo(0));
+      expect(icon.top - text.bottom, closeTo(2, 0.5));
     });
 
-    testWidgets('the heart keeps a 48 dp hit area, edges included', (
+    testWidgets('the heart box is the icon plus its padding', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(song(onHeart: () {})));
+      expect(
+        tester.getSize(find.byKey(const Key('heart'))),
+        const Size(KIconSize.sm + 16, KIconSize.sm + 16),
+      );
+      expect(KMediaCardRightColumn.iconSize, KIconSize.sm);
+    });
+
+    testWidgets('the heart takes taps on its edges, not the row', (
       tester,
     ) async {
       useWindow(tester, const Size(400, 800));
-      var taps = 0;
-      await tester.pumpWidget(host(song(onHeart: () => taps++)));
+      var taps = 0, rowTaps = 0;
+      await tester.pumpWidget(
+        host(song(onHeart: () => taps++, onTap: () => rowTaps++)),
+      );
       final box = tester.getRect(find.byKey(const Key('heart')));
-      expect(box.width, greaterThanOrEqualTo(48));
-      expect(box.height, greaterThanOrEqualTo(48));
       for (final p in [
         box.topLeft + const Offset(1, 1),
         box.bottomRight - const Offset(1, 1),
         box.center,
       ]) {
         await tester.tapAt(p);
+        await settle(tester);
       }
-      expect(taps, 3);
+      expect((taps, rowTaps), (3, 0));
     });
 
-    testWidgets('heart to more is 48 dp apart and boxes keep the icons free', (
+    testWidgets('the gap before the right column absorbs a tap', (
       tester,
     ) async {
       useWindow(tester, const Size(400, 800));
-      await tester.pumpWidget(host(song(onHeart: () {})));
-      final heart = tester.getRect(find.byKey(const Key('heart')));
-      final more = tester.getRect(find.byKey(const Key('more')));
-      final gap =
-          tester.getCenter(find.byKey(const Key('more'))).dx -
-          tester.getCenter(find.byKey(const Key('heart'))).dx;
-      expect(gap, 48);
-      expect(heart.right, lessThanOrEqualTo(more.left));
+      var taps = 0, rowTaps = 0;
+      await tester.pumpWidget(
+        host(song(onHeart: () => taps++, onTap: () => rowTaps++)),
+      );
+      final box = tester.getRect(find.byKey(const Key('heart')));
+      final column = tester.getRect(find.byType(KMediaCardRightColumn));
+      // Just left of the column: the gap, not the heart and not the row.
+      await tester.tapAt(Offset(column.left - 3, box.center.dy));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect((taps, rowTaps), (0, 0));
+      // Past the gap, on the text block, the row takes it.
+      await tester.tapAt(Offset(column.left - KSpace.x2 - 3, box.center.dy));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect((taps, rowTaps), (0, 1));
     });
 
-    testWidgets('with play, play is 48 dp from more and the heart is left', (
+    testWidgets(
+      'heart and more edges fire themselves; nothing reaches the row',
+      (tester) async {
+        useWindow(tester, const Size(400, 800));
+        var hearts = 0, mores = 0, rowTaps = 0;
+        await tester.pumpWidget(
+          host(
+            song(
+              onHeart: () => hearts++,
+              onMore: () => mores++,
+              onTap: () => rowTaps++,
+            ),
+          ),
+        );
+        final heart = tester.getRect(find.byKey(const Key('heart')));
+        final more = tester.getRect(find.byKey(const Key('more')));
+        // The two boxes butt: heart right edge is more's left edge.
+        expect(heart.right, lessThanOrEqualTo(more.left));
+        await tester.tapAt(Offset(heart.right - 1, heart.center.dy));
+        await settle(tester);
+        await tester.tapAt(Offset(more.left + 1, more.center.dy));
+        await settle(tester);
+        expect((hearts, mores, rowTaps), (1, 1, 0));
+      },
+    );
+
+    testWidgets('a tap on the duration behaves like a tap on the row', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      var taps = 0, rowTaps = 0;
+      await tester.pumpWidget(
+        host(song(onHeart: () => taps++, onTap: () => rowTaps++)),
+      );
+      await tester.tapAt(tester.getCenter(find.byKey(const Key('dur'))));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect((taps, rowTaps), (0, 1));
+    });
+
+    testWidgets('with play: right column, gap, play, more in that order', (
       tester,
     ) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(host(song(onHeart: () {}, onAction: () {})));
-      final more = tester.getCenter(find.byKey(const Key('more'))).dx;
-      final play = tester.getRect(find.byIcon(KIcons.play));
-      final heartX = tester.getCenter(find.byKey(const Key('heart'))).dx;
-      expect(more - play.center.dx, 48);
-      // Play centre to heart centre, pinned to the laid-out value.
-      expect(play.center.dx - heartX, 56);
-      final heart = tester.getCenter(find.byKey(const Key('heart'))).dx;
-      // Play and the heart (no play) each sit exactly 48 dp from more.
-      expect(more - heart, greaterThan(48));
+      final column = tester.getRect(find.byType(KMediaCardRightColumn));
+      final play = tester.getRect(byIconButton('Play'));
+      final more = tester.getRect(find.byKey(const Key('more')));
+      expect(play.left - column.right, KSpace.x2);
+      expect(more.left - play.right, 0);
+      expect(play.size, const Size(KIconSize.sm + 16, KIconSize.sm + 16));
     });
 
-    for (final scale in [1.0, 2.0]) {
+    testWidgets('the gap before play absorbs a tap', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      var played = 0, rowTaps = 0;
+      await tester.pumpWidget(
+        host(
+          song(
+            onHeart: () {},
+            onAction: () => played++,
+            onTap: () => rowTaps++,
+          ),
+        ),
+      );
+      final column = tester.getRect(find.byType(KMediaCardRightColumn));
+      await tester.tapAt(Offset(column.right + 3, column.center.dy));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect((played, rowTaps), (0, 0));
+    });
+
+    for (final platform in [TargetPlatform.android, TargetPlatform.linux]) {
+      for (final scale in [0.8, 1.0, 1.3, 2.0]) {
+        testWidgets('the pair is centred in the row on $platform at $scale x', (
+          tester,
+        ) async {
+          debugDefaultTargetPlatformOverride = platform;
+          try {
+            useWindow(tester, const Size(1300, 800));
+            await tester.pumpWidget(
+              host(song(onHeart: () {}), textScale: scale),
+            );
+            final card = tester.getRect(find.byType(KMediaCard));
+            final text = tester.getRect(find.byKey(const Key('dur')));
+            final icon = tester.getRect(find.byIcon(KIcons.heart));
+            expect((text.center.dx - icon.center.dx).abs(), lessThan(1));
+            expect(icon.top - text.bottom, closeTo(2, 0.5));
+            // Centre of the pair (text top to icon bottom) = centre of the
+            // row content, which sits inside the card's 10 dp padding.
+            final rowCentre = card.top + 10 + (card.height - 10 - 4 - 10) / 2;
+            expect((text.top + icon.bottom) / 2, closeTo(rowCentre, 0.5));
+          } finally {
+            debugDefaultTargetPlatformOverride = null;
+          }
+        });
+      }
+    }
+
+    for (final scale in [0.8, 1.0, 1.3, 2.0]) {
       testWidgets('height equals extentOf at $scale x', (tester) async {
         useWindow(tester, const Size(400, 800));
         await tester.pumpWidget(host(song(onHeart: () {}), textScale: scale));
@@ -824,10 +895,7 @@ void main() {
           tester.getSize(find.byType(KMediaCard)).height,
           KMediaCard.extentOf(TextScaler.linear(scale)),
         );
-        final text = tester.getRect(find.byKey(const Key('dur')));
-        final icon = tester.getRect(find.byIcon(KIcons.heart));
-        expect((text.center.dx - icon.center.dx).abs(), lessThan(1));
-        expect(icon.top - text.bottom, lessThanOrEqualTo(4));
+        expect(tester.takeException(), isNull);
       });
     }
 
@@ -836,43 +904,6 @@ void main() {
       await tester.pumpWidget(host(song(onHeart: () {}, onAction: () {})));
       expect(actionOpacity(tester), 0);
     });
-
-    Future<void> onPlatform(
-      WidgetTester tester,
-      TargetPlatform platform,
-      Future<void> Function() body,
-    ) async {
-      debugDefaultTargetPlatformOverride = platform;
-      try {
-        await body();
-      } finally {
-        debugDefaultTargetPlatformOverride = null;
-      }
-    }
-
-    for (final platform in [TargetPlatform.android, TargetPlatform.linux]) {
-      for (final scale in [0.85, 1.0, 2.0]) {
-        testWidgets('pair sits 2 dp apart on $platform at $scale x', (
-          tester,
-        ) async {
-          await onPlatform(tester, platform, () async {
-            useWindow(tester, const Size(1300, 800));
-            await tester.pumpWidget(
-              host(song(onHeart: () {}), textScale: scale),
-            );
-            final text = tester.getRect(find.byKey(const Key('dur')));
-            final icon = tester.getRect(find.byIcon(KIcons.heart));
-            expect((text.center.dx - icon.center.dx).abs(), lessThan(1));
-            expect(icon.top - text.bottom, closeTo(2, 0.5));
-            final heart = tester.getRect(find.byKey(const Key('heart')));
-            expect(
-              heart.height,
-              platform == TargetPlatform.linux ? 40 : greaterThanOrEqualTo(48),
-            );
-          });
-        });
-      }
-    }
 
     testWidgets('a bare Icon in bottom does not overlap the duration', (
       tester,
@@ -907,10 +938,7 @@ void main() {
             child: KMediaCard(
               title: 'T',
               top: const Text('5:53'),
-              bottom: IconButton(
-                onPressed: () {},
-                icon: const Icon(KIcons.heart),
-              ),
+              bottom: heartButton(() {}),
             ),
           ),
           textScale: 0.85,
@@ -939,12 +967,7 @@ void main() {
                 title: 'T',
                 leading: const ColoredBox(color: Color(0xFF888888)),
                 top: top,
-                bottom: IconButton(
-                  key: const Key('heart'),
-                  iconSize: 20,
-                  onPressed: () {},
-                  icon: const Icon(KIcons.heart),
-                ),
+                bottom: heartButton(() {}),
               ),
             ),
             textScale: 2.0,
@@ -971,12 +994,7 @@ void main() {
                 title: 'T',
                 leading: const ColoredBox(color: Color(0xFF888888)),
                 top: only == 'top' ? const Text('5:53') : null,
-                bottom: only == 'bottom'
-                    ? IconButton(
-                        onPressed: () {},
-                        icon: const Icon(KIcons.heart),
-                      )
-                    : null,
+                bottom: only == 'bottom' ? heartButton(() {}) : null,
               ),
             ),
           ),
@@ -988,14 +1006,6 @@ void main() {
             : tester.getRect(find.byIcon(KIcons.heart));
         expect(card.contains(item.center), isTrue);
       }
-    });
-
-    testWidgets('a tap on the duration reaches the heart', (tester) async {
-      useWindow(tester, const Size(400, 800));
-      var taps = 0;
-      await tester.pumpWidget(host(song(onHeart: () => taps++)));
-      await tester.tapAt(tester.getCenter(find.byKey(const Key('dur'))));
-      expect(taps, 1);
     });
 
     testWidgets('play shows on hover on desktop', (tester) async {
@@ -1025,9 +1035,12 @@ void main() {
                 title: 'Title',
                 line2: 'Artist',
                 top: const Text('5:53'),
-                bottom: IconButton(
+                bottom: KIconButton(
                   onPressed: () {},
-                  icon: const Icon(KIcons.heart),
+                  tooltip: 'Heart',
+                  size: KIconSize.sm,
+                  padding: const EdgeInsets.all(KSpace.x2),
+                  icon: KIcons.heart,
                 ),
                 trailing: const Icon(KIcons.moreVert),
               ),

@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/rendering.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../tokens/k_icon_size.dart';
+
 /// The two slots of [KMediaCardRightColumn].
 enum KMediaCardRightSlot { top, bottom }
 
@@ -10,11 +12,12 @@ enum KMediaCardRightSlot { top, bottom }
 /// [bottom] icon button (favourite), drawn as one tight pair on a shared
 /// horizontal centre.
 ///
-/// The pair is laid out from the *measured* [bottom] box, so it works for a
-/// 48 dp mobile button, a 40 dp desktop one and a bare 24 dp icon alike: the
-/// visible icon (at most [iconSize] tall, centred in its box) sits [pairGap]
-/// under the text, and the pair is centred in [height] as far as the [bottom]
-/// box allows (it must stay inside the column or taps on its edge would miss).
+/// The pair is laid out from the *measured* [bottom] box (a [KIconButton] is
+/// its icon plus padding), so it works for a button with vertical padding and
+/// a bare icon alike: the visible icon (at most [iconSize] tall, centred in
+/// its box) sits [pairGap] under the text, and the pair is centred in
+/// [height] as far as the [bottom] box allows (it must stay inside the column
+/// or taps on its edge would miss).
 /// The [top] text is painted into the empty padding of the [bottom] box and
 /// must ignore the pointer, so the box keeps its whole hit area. The [bottom]
 /// is placed with the same maths whether or not [top] is set, so hearts line
@@ -30,8 +33,8 @@ class KMediaCardRightColumn
     this.bottom,
   });
 
-  /// Visible icon size the pair is laid out for (`SongFavoriteButton`: 20).
-  static const double iconSize = 20;
+  /// Visible icon size the pair is laid out for (the ♥ is a small icon).
+  static const double iconSize = KIconSize.sm;
 
   /// Space between the text bottom and the icon top.
   static const double pairGap = 2;

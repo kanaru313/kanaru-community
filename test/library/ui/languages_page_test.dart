@@ -13,6 +13,7 @@ import '../../support/fake_playback_commands.dart';
 import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
+import '../../support/icon_button_finders.dart';
 
 Future<LibraryHarness> _pump(
   WidgetTester tester, {
@@ -131,7 +132,7 @@ void main() {
     final vie = titles.indexOf('Tiếng Việt · Vietnamese');
     expect(vie, isNonNegative);
     final unknown = titles.length - 1; // "unknown" stays last
-    await tester.tap(find.byTooltip('Play all').at(vie));
+    await tester.tap(byIconButton('Play all').at(vie));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );
@@ -139,7 +140,7 @@ void main() {
     var call = playback.calls.single as PlayTracksCall;
     expect(call.tracks.length, 3);
     expect(call.context, languagePlayContext('vie', titles[vie]));
-    await tester.tap(find.byTooltip('Play all').at(unknown));
+    await tester.tap(byIconButton('Play all').at(unknown));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );
@@ -166,7 +167,7 @@ void main() {
         r.title,
     ];
     await tester.tap(
-      find.byTooltip('Play all').at(titles.indexOf('Tiếng Việt · Vietnamese')),
+      byIconButton('Play all').at(titles.indexOf('Tiếng Việt · Vietnamese')),
     );
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show GestureSettings, SemanticsAction;
 
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
@@ -192,15 +193,48 @@ void main() {
     final h = await pumpLibrary(tester, initial: '/library/songs');
     final ids = await _addSongs(h, ['Alpha', 'Bravo']);
     await h.settle(tester);
-    expect(find.byTooltip('Remove from favorites'), findsNothing);
-    await tester.tap(find.byTooltip('Add to favorites').first);
+    expect(byIconButton('Remove from favorites'), findsNothing);
+    await tester.tap(byIconButton('Add to favorites').first);
     await h.settle(tester, rounds: 1);
-    expect(find.byTooltip('Remove from favorites'), findsOneWidget);
+    expect(byIconButton('Remove from favorites'), findsOneWidget);
     final favorites = h.container.read(favoriteTrackIdsProvider).value;
     expect(favorites, {TrackId(ids[0])});
-    await tester.tap(find.byTooltip('Remove from favorites'));
+    await tester.tap(byIconButton('Remove from favorites'));
     await h.settle(tester, rounds: 1);
     expect(h.container.read(favoriteTrackIdsProvider).value, isEmpty);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a tap at the heart edge toggles it, the gap beside it does '
+      'nothing, neither plays the row', (tester) async {
+    final playback = FakePlaybackCommands();
+    final h = await pumpLibrary(
+      tester,
+      initial: '/library/songs',
+      playback: playback,
+    );
+    final ids = await _addSongs(h, ['Alpha', 'Bravo']);
+    await h.settle(tester);
+    final heart = tester.getRect(byIconButton('Add to favorites').first);
+    // The gap just left of the right column (the duration text or the heart
+    // box, whichever is wider): absorbed, not the row.
+    final duration = tester.getRect(find.text('3:05').first);
+    await tester.tapAt(
+      Offset(math.min(heart.left, duration.left) - 3, heart.center.dy),
+    );
+    await h.settle(tester, rounds: 1);
+    expect(playback.calls, isEmpty);
+    expect(h.container.read(favoriteTrackIdsProvider).value, isEmpty);
+    // The very edge of the heart box is the heart.
+    await tester.tapAt(heart.topLeft + const Offset(1, 1));
+    await h.settle(tester, rounds: 1);
+    expect(playback.calls, isEmpty);
+    expect(h.container.read(favoriteTrackIdsProvider).value, {TrackId(ids[0])});
+    // The ⋮ edge opens its own menu and plays nothing.
+    final more = tester.getRect(byIconButton('More options').first);
+    await tester.tapAt(more.topRight - const Offset(1, -1));
+    await h.settle(tester, rounds: 1);
+    expect(playback.calls, isEmpty);
     await unmountApp(tester);
   });
 

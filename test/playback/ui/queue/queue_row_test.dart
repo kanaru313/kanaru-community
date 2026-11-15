@@ -247,14 +247,13 @@ void main() {
         matching: find.byIcon(KIcons.moreVert),
       );
       expect(_iconColor(tester, handle), soft);
-      final button = tester.widget<IconButton>(
-        find.ancestor(of: more, matching: find.byType(IconButton)).first,
+      final button = tester.widget<KIconButton>(
+        find.ancestor(of: more, matching: find.byType(KIconButton)).first,
       );
-      expect(
-        IconButtonTheme.of(tester.element(more)).style?.foregroundColor
-            ?.resolve({}),
-        soft,
-      );
+      // The button reads the row's ink through KIconButtonColors, and its
+      // glyph is drawn with it.
+      expect(KIconButtonColors.maybeOf(tester.element(more))?.rest, soft);
+      expect(_iconColor(tester, more), soft);
       expect(button.onPressed, isNotNull);
     });
 

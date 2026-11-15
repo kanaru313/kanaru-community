@@ -116,7 +116,7 @@ void main() {
     final h = await _pump(tester, playback: playback);
     await tester.tap(find.byTooltip('List'));
     await h.settle(tester, rounds: 1);
-    await tester.tap(find.byTooltip('Play album').at(0)); // Amber (A-Z order)
+    await tester.tap(byIconButton('Play album').at(0)); // Amber (A-Z order)
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );

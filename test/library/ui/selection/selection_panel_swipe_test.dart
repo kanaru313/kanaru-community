@@ -11,6 +11,7 @@ import 'package:material_ui/material_ui.dart';
 import '../support/library_harness.dart';
 import '../support/ui_harness.dart';
 import 'selection_support.dart';
+import '../../../support/icon_button_finders.dart';
 
 Finder _row(int i) => find.byType(SelectedSongRow).at(i);
 
@@ -23,7 +24,7 @@ Future<(LibraryHarness, List<TrackId>)> _openPanel(
   final ids = (await allIds(h)).take(n).toList();
   h.selection.addRange(ids);
   await tester.pump();
-  await tester.tap(find.byTooltip('Show the selected songs'));
+  await tester.tap(byIconButton('Show the selected songs'));
   await h.settle(tester, rounds: 3);
   return (h, ids);
 }

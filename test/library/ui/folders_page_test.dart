@@ -405,7 +405,7 @@ void main() {
       find
           .descendant(
             of: find.byType(FolderTile),
-            matching: find.byTooltip('Play all'),
+            matching: byIconButton('Play all'),
           )
           .at(vpop),
     );
@@ -442,7 +442,7 @@ void main() {
     await h.settle(tester, rounds: 2);
     final rows = tester.widgetList<FolderTile>(find.byType(FolderTile));
     final root = rows.toList().indexWhere((r) => r.title == 'Music');
-    await tester.tap(find.byTooltip('Play all').at(root));
+    await tester.tap(byIconButton('Play all').at(root));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );

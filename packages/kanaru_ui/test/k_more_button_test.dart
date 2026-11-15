@@ -21,9 +21,9 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byType(IconButton));
+    await tester.tap(find.byType(KIconButton));
     expect(calls, [false]);
-    await tester.longPress(find.byType(IconButton));
+    await tester.longPress(find.byType(KIconButton));
     await tester.pumpAndSettle();
     expect(find.text('More'), findsOneWidget);
   });
@@ -49,7 +49,7 @@ void main() {
     await tester.pump();
     expect(calls, [true]);
     // A later pointer press resets the answer.
-    await tester.tap(find.byType(IconButton));
+    await tester.tap(find.byType(KIconButton));
     expect(calls, [true, false]);
   });
 
@@ -80,4 +80,28 @@ void main() {
       expect(calls, [true]);
     });
   }
+
+  testWidgets('the button is a small icon with padding 8, no 48 dp box', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: KMoreButton(
+            tooltip: 'More',
+            onPressed: ({required viaKeyboard}) {},
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.getSize(find.byType(KIconButton)),
+      const Size(KIconSize.sm + 16, KIconSize.sm + 16),
+    );
+    expect(
+      tester.widget<KIconButton>(find.byType(KIconButton)).tooltip,
+      'More',
+    );
+  });
 }

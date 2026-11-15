@@ -16,11 +16,12 @@ import '../menus/menu_pump.dart';
 import '../support/library_harness.dart';
 import '../support/ui_harness.dart';
 import 'selection_support.dart';
+import '../../../support/icon_button_finders.dart';
 
-Finder _button(String tooltip) => find.byTooltip(tooltip);
+Finder _button(String tooltip) => byIconButton(tooltip);
 
-IconButton _iconButton(WidgetTester tester, String tooltip) =>
-    tester.widget<IconButton>(find.widgetWithIcon(IconButton, _icon(tooltip)));
+KIconButton _iconButton(WidgetTester tester, String tooltip) => tester
+    .widget<KIconButton>(find.widgetWithIcon(KIconButton, _icon(tooltip)));
 
 // The panel icon behind a tooltip, for dimmed checks.
 IconData _icon(String tooltip) => switch (tooltip) {
@@ -265,8 +266,8 @@ void main() {
     h.router.go('/library/albums');
     await h.settle(tester);
     expect(h.container.read(activeTrackListProvider), isNull);
-    final button = tester.widget<IconButton>(
-      find.widgetWithIcon(IconButton, KIcons.selectAll),
+    final button = tester.widget<KIconButton>(
+      find.widgetWithIcon(KIconButton, KIcons.selectAll),
     );
     expect(button.onPressed, isNull);
     await unmountApp(tester);
