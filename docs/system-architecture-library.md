@@ -594,6 +594,9 @@ Every call is awaited; a failure is logged and shows a snack bar.
   lower edge of the duration, belongs to the ♥; a tap on the duration text
   above that band is a tap on the row. The row's end padding right of the ⋮ belongs to the ⋮
   (`KEndHitExtension`), within the ⋮'s own band.
+  `SongFavoriteButton` ignores a press while its favourite write runs, and
+  shows a failure through the `ScaffoldMessenger` captured before the write
+  (its screen-reader label is `libraryFavoriteLabel`).
   Tap = `playTracks(ids, startIndex: index)`. The whole row (inside its
   `KContextRegion`) is a `KSwipeActions.capped`: swipe left = "Play next"
   (`MenuActionRunner.playNext([id])`, same call and toast as the menu footer),
