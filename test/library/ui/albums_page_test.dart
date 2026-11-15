@@ -11,6 +11,7 @@ import '../../support/fake_playback_commands.dart';
 import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
+import '../../support/icon_button_finders.dart';
 
 Future<List<int>> _album(
   LibraryHarness h,
@@ -100,7 +101,7 @@ void main() {
         c.album.title,
     ];
     expect(titles, ['Amber', 'Blue', 'Coral']);
-    await tester.tap(find.byTooltip('Filter'));
+    await tester.tap(byIconButton('Filter'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'yan');
     await tester.pump();
@@ -170,7 +171,7 @@ void main() {
     tester,
   ) async {
     await _pump(tester);
-    await tester.tap(find.byTooltip('Filter'));
+    await tester.tap(byIconButton('Filter'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'ya');
     await tester.pump(const Duration(milliseconds: 100));

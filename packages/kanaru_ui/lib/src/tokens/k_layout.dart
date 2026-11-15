@@ -9,7 +9,9 @@ abstract final class KLayout {
   static const double dialog = 440;
   static const double sheet = 640;
 
-  /// Minimum touch target: 48 on touch, 40 with a mouse.
+  /// Minimum touch target of rows, text buttons, chips and headers: 48 on
+  /// touch, 40 with a mouse. Icon buttons are exempt: they are the icon plus
+  /// their own padding (`KIconButton`), and header heights stay on this value.
   static const double minTarget = 48;
   static const double minTargetDesktop = 40;
 }

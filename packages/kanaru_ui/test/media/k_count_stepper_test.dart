@@ -2,17 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../support/finders.dart';
 import '../support/host.dart';
 
 void main() {
   bool enabled(WidgetTester tester, Key key) =>
-      tester.widget<IconButton>(find.byKey(key)).onPressed != null;
+      tester.widget<KIconButton>(find.byKey(key)).onPressed != null;
 
-  Widget stepper(
-    int value,
-    List<int> seen, {
-    bool on = true,
-  }) => host(
+  Widget stepper(int value, List<int> seen, {bool on = true}) => host(
     KCountStepper(
       value: value,
       enabled: on,
@@ -25,8 +22,8 @@ void main() {
   testWidgets('steps by one in both directions', (tester) async {
     final seen = <int>[];
     await tester.pumpWidget(stepper(5, seen));
-    await tester.tap(find.byTooltip('more'));
-    await tester.tap(find.byTooltip('fewer'));
+    await tester.tap(byIconButton('more'));
+    await tester.tap(byIconButton('fewer'));
     expect(seen, [6, 4]);
   });
 
@@ -51,8 +48,46 @@ void main() {
     expect(enabled(tester, KCountStepper.increaseKey), isFalse);
   });
 
-  testWidgets('keeps 48 dp touch height', (tester) async {
+  testWidgets('each button is the small icon plus its padding', (tester) async {
+    final seen = <int>[];
+    await tester.pumpWidget(stepper(5, seen));
+    for (final key in [KCountStepper.decreaseKey, KCountStepper.increaseKey]) {
+      expect(
+        tester.getSize(find.byKey(key)),
+        const Size(KIconSize.sm + 2 * KSpace.x2, KIconSize.sm),
+      );
+    }
+    await tester.tap(find.byKey(KCountStepper.increaseKey));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(seen, [6]);
+  });
+
+  testWidgets('idle colour is onSurfaceVariant unless a colour is given', (
+    tester,
+  ) async {
     await tester.pumpWidget(stepper(5, []));
-    expect(tester.getSize(find.byKey(KCountStepper.increaseKey)).height, 48);
+    Color glyph() => tester
+        .widget<Icon>(
+          find.descendant(
+            of: find.byKey(KCountStepper.increaseKey),
+            matching: find.byType(Icon),
+          ),
+        )
+        .color!;
+    final scheme = Theme.of(tester.element(find.byType(KCountStepper)))
+        .colorScheme;
+    expect(glyph(), scheme.onSurfaceVariant);
+    await tester.pumpWidget(
+      host(
+        KCountStepper(
+          value: 5,
+          color: const Color(0xFF123456),
+          onChanged: (_) {},
+          decreaseTooltip: 'fewer',
+          increaseTooltip: 'more',
+        ),
+      ),
+    );
+    expect(glyph(), const Color(0xFF123456));
   });
 }

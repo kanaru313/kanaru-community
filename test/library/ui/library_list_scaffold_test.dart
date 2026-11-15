@@ -8,6 +8,7 @@ import 'package:material_ui/material_ui.dart';
 import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
+import '../../support/icon_button_finders.dart';
 
 Widget _scope(Widget child) => PageHeaderScope(
   leading: const Text('LEAD'),
@@ -195,7 +196,7 @@ void main() {
       }
       await h.settle(tester);
       expect(h.songTitles(tester).length, 2);
-      await tester.tap(find.byTooltip('Filter'));
+      await tester.tap(byIconButton('Filter'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'vu');
       await h.settle(tester);

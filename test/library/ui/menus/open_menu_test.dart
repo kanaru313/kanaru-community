@@ -21,6 +21,7 @@ import '../support/library_harness.dart';
 import '../support/ui_harness.dart';
 import 'menu_fakes.dart';
 import 'menu_pump.dart';
+import '../../../support/icon_button_finders.dart';
 
 Future<LibraryHarness> _pump(
   WidgetTester tester, {
@@ -182,7 +183,7 @@ void main() {
     await _tapAdvanced(tester);
     expect(find.text('Find lyrics online…'), findsOneWidget);
     expect(find.text('Go to album'), findsNothing);
-    await tester.tap(find.byTooltip('Back'));
+    await tester.tap(byIconButton('Back'));
     await pumpMenu(tester);
     // Back lands where the page was left: Advanced is still in view.
     expect(find.text('Advanced'), findsOneWidget);

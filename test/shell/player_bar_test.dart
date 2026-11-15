@@ -17,6 +17,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
+import '../support/icon_button_finders.dart';
 import '../playback/support/ui_host.dart';
 
 Widget get _bar =>
@@ -173,10 +174,10 @@ void main() {
     testWidgets('Shuffle toggles on and off', (tester) async {
       final host = await _pump(tester, 1280);
       expect(host.container.read(shuffleSettingProvider), isFalse);
-      await host.tap(tester, find.byTooltip('Shuffle'));
+      await host.tap(tester, byIconButton('Shuffle'));
       expect(host.container.read(shuffleSettingProvider), isTrue);
       expect(find.byKey(KToggleIconButton.dotKey), findsOneWidget);
-      await host.tap(tester, find.byTooltip('Shuffle'));
+      await host.tap(tester, byIconButton('Shuffle'));
       expect(host.container.read(shuffleSettingProvider), isFalse);
     });
 
@@ -184,7 +185,7 @@ void main() {
       final host = await _pump(tester, 1280);
       RepeatMode mode() => host.container.read(repeatSettingProvider);
       expect(mode(), RepeatMode.off);
-      await host.tap(tester, find.byTooltip('Stop at the end'));
+      await host.tap(tester, byIconButton('Stop at the end'));
       await tester.pumpAndSettle();
       expect(find.byType(SelectionRow), findsNWidgets(5));
       expect(mode(), RepeatMode.off, reason: 'the button only opens it');
@@ -192,7 +193,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(mode(), RepeatMode.one);
       expect(find.byIcon(KIcons.repeatOne), findsOneWidget);
-      expect(find.byTooltip('Repeat this song'), findsOneWidget);
+      expect(byIconButton('Repeat this song'), findsOneWidget);
       expect(find.byType(SelectionRow), findsNothing);
     });
 

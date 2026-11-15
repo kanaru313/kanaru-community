@@ -12,6 +12,7 @@ import '../menus/menu_pump.dart';
 import '../support/detail_fixture.dart';
 import '../support/ui_harness.dart';
 import 'selection_support.dart';
+import '../../../support/icon_button_finders.dart';
 
 Finder _tile(int i) => find.byType(SongTile).at(i);
 
@@ -151,7 +152,7 @@ void main() {
   ) async {
     final h = await pumpSelection(tester, width: 1280);
     // In the filter field Ctrl+A selects its text.
-    await tester.tap(find.byTooltip('Filter'));
+    await tester.tap(byIconButton('Filter'));
     await tester.pumpAndSettle();
     await tester.tap(find.byType(TextField));
     await tester.pump();
@@ -160,7 +161,7 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     await tester.pump();
     expect(h.selected.isEmpty, isTrue);
-    await tester.tap(find.byTooltip('Close filter'));
+    await tester.tap(byIconButton('Close filter'));
     await tester.pumpAndSettle();
 
     // Under a menu dialog the page is not the target either.

@@ -9,6 +9,7 @@ import 'package:kanaru/src/shell/ui/desktop_playback_keys.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../support/icon_button_finders.dart';
 import 'support/desktop_now_playing_host.dart';
 
 Future<void> _key(
@@ -286,7 +287,7 @@ void main() {
 
     testWidgets('MenuAnchor menu open', (tester) async {
       final host = await pumpDesktopShell(tester);
-      await tester.tap(find.byTooltip('Stop at the end'));
+      await tester.tap(byIconButton('Stop at the end'));
       await tester.pumpAndSettle();
       expect(find.text('Repeat this song'), findsOneWidget);
       await expectIgnored(tester, host);

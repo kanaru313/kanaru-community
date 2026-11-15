@@ -1,10 +1,16 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../tokens/k_icon_size.dart';
 import '../tokens/k_space.dart';
 
 /// Empty state: icon, one sentence and an optional action.
 class KEmpty extends StatelessWidget {
-  const KEmpty({super.key, required this.icon, required this.message, this.action});
+  const KEmpty({
+    super.key,
+    required this.icon,
+    required this.message,
+    this.action,
+  });
 
   final IconData icon;
   final String message;
@@ -20,11 +26,12 @@ class KEmpty extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           spacing: KSpace.x3,
           children: [
-            Icon(icon, size: KSpace.x9, color: scheme.onSurfaceVariant),
+            Icon(icon, size: KIconSize.hero, color: scheme.onSurfaceVariant),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodyLarge
+                  ?.copyWith(color: scheme.onSurfaceVariant),
             ),
             ?action,
           ],

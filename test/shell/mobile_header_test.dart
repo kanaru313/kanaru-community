@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../support/app_harness.dart';
 import '../support/nav_fixture.dart';
+import '../support/icon_button_finders.dart';
 
 /// A tab whose child page has a header with a back button, and an `ai`
 /// top-bar action.
@@ -74,7 +75,7 @@ void main() {
     expect(find.byTooltip('Menu'), findsOneWidget);
     expect(find.byIcon(KIcons.ai), findsOneWidget);
     expect(find.byTooltip('Gear'), findsOneWidget); // Settings (footer item)
-    expect(find.byTooltip('Back'), findsNothing);
+    expect(byIconButton('Back'), findsNothing);
     // Order: menu, title, AI, Settings.
     final menu = tester.getCenter(find.byTooltip('Menu')).dx;
     final ai = tester.getCenter(find.byIcon(KIcons.ai)).dx;
@@ -88,7 +89,7 @@ void main() {
     _go(tester, '/deep/child');
     await tester.pumpAndSettle();
     expect(find.text('deep child'), findsOneWidget);
-    expect(find.byTooltip('Back'), findsOneWidget);
+    expect(byIconButton('Back'), findsOneWidget);
     expect(find.byIcon(KIcons.ai), findsOneWidget);
     expect(find.byTooltip('Menu'), findsNothing);
     expect(find.byTooltip('Gear'), findsNothing);

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../support/finders.dart';
 import '../support/host.dart';
 
 KMenuPage _page({List<String>? log, int filler = 0, bool footer = true}) {
@@ -446,7 +447,7 @@ void main() {
     expect(find.text('Song info'), findsOneWidget);
     expect(find.text('Format'), findsOneWidget);
     expect(find.text('Play'), findsNothing);
-    await tester.tap(find.byTooltip('Back'));
+    await tester.tap(byIconButton('Back'));
     await tester.pumpAndSettle();
     expect(find.text('Play'), findsOneWidget);
   });

@@ -10,6 +10,7 @@ import '../menus/menu_pump.dart';
 import '../support/library_harness.dart';
 import '../support/ui_harness.dart';
 import 'selection_support.dart';
+import '../../../support/icon_button_finders.dart';
 
 /// Songs page with three songs selected and the panel open, one page pushed
 /// on top of it so there is a page for the last Back to pop.
@@ -139,7 +140,7 @@ void main() {
     h.selection.addRange((await allIds(h)).take(2));
     h.selection.setExpanded(true);
     await h.settle(tester, rounds: 3);
-    await tester.tap(find.byTooltip('Filter'));
+    await tester.tap(byIconButton('Filter'));
     await tester.pumpAndSettle();
     await tester.tap(find.byType(TextField));
     await tester.pump();
@@ -206,7 +207,7 @@ void main() {
     final h = await folders(tester);
     h.selection.addRange((await allIds(h)).take(2));
     h.selection.setExpanded(true);
-    await tester.tap(find.byTooltip('Filter'));
+    await tester.tap(byIconButton('Filter'));
     await h.settle(tester, rounds: 3);
     expect(find.byType(TextField), findsOneWidget);
 

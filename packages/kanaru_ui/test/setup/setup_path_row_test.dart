@@ -33,17 +33,20 @@ void main() {
     tester,
   ) async {
     useWindow(tester, const Size(400, 800));
-    var removed = 0;
+    var removed = 0, rowTaps = 0;
     await tester.pumpWidget(
       host(
-        SetupPathRow(
-          icon: KIcons.folderOff,
-          title: const Text('Ringtones'),
-          path: const Text('Internal storage › Music › Ringtones'),
-          count: const Text('14 songs'),
-          badge: const Text('Suggested'),
-          onRemove: () => removed++,
-          removeTooltip: 'Remove Ringtones',
+        GestureDetector(
+          onTap: () => rowTaps++,
+          child: SetupPathRow(
+            icon: KIcons.folderOff,
+            title: const Text('Ringtones'),
+            path: const Text('Internal storage › Music › Ringtones'),
+            count: const Text('14 songs'),
+            badge: const Text('Suggested'),
+            onRemove: () => removed++,
+            removeTooltip: 'Remove Ringtones',
+          ),
         ),
       ),
     );
@@ -51,11 +54,31 @@ void main() {
     expect(find.text('Suggested'), findsOneWidget);
     expect(find.byIcon(KIcons.folderOff), findsOneWidget);
     await tester.tap(find.byIcon(KIcons.close));
-    expect(removed, 1);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect([removed, rowTaps], [1, 0]);
+    // The cross is the icon plus its padding, not a 48 dp box.
     expect(
-      tester.getSize(find.byType(IconButton)).shortestSide,
-      greaterThanOrEqualTo(48),
+      tester.getSize(find.byType(KIconButton)),
+      const Size(KIconSize.md + 2 * KSpace.x2, KIconSize.md),
     );
+  });
+
+  testWidgets('the remove button falls back to the delete tooltip', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        SetupPathRow(
+          icon: KIcons.folders,
+          title: const Text('Music'),
+          path: const Text('~/Music'),
+          onRemove: () {},
+        ),
+      ),
+    );
+    final button = tester.widget<KIconButton>(find.byType(KIconButton));
+    expect(button.tooltip, 'Delete');
   });
 
   testWidgets('without onRemove there is no cross', (tester) async {
@@ -88,7 +111,7 @@ void main() {
         ),
       ),
     );
-    expect(find.byTooltip('Remove Music'), findsOneWidget);
+    expect(find.bySemanticsLabel('Remove Music'), findsOneWidget);
     handle.dispose();
   });
 }

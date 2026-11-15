@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
+import '../../tokens/k_icon_size.dart';
+
 /// Share of the body that the track column takes, and its limits.
 const double splitColumnShare = 0.42;
 const double splitColumnMinWidth = 300;
@@ -27,7 +29,7 @@ const double splitTransportGap = 8;
 const double splitLineGap = 8;
 
 /// A line of the artist or album: text, or the 20 dp icon beside it.
-const double splitLineIconSize = 20;
+const double splitLineIconSize = KIconSize.sm;
 
 /// Height of the transport row: the 36 dp play icon in 8 dp of padding.
 const double splitTransportHeight = 52;

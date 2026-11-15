@@ -8,6 +8,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'support/detail_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
+import '../../support/icon_button_finders.dart';
 
 void main() {
   testWidgets('every library location opens its page', (tester) async {
@@ -79,7 +80,7 @@ void main() {
     await settle();
     expect(h.location, genre);
     // The on-screen back button does the same.
-    await tester.tap(find.byTooltip('Back'));
+    await tester.tap(byIconButton('Back'));
     await settle();
     expect(h.location, '/library/genres');
     await unmountApp(tester);
@@ -96,7 +97,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await h.settle(tester, rounds: 3);
     expect(h.router.canPop(), isFalse);
-    await tester.tap(find.byTooltip('Back'));
+    await tester.tap(byIconButton('Back'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(h.location, LibraryLocations.list(LibraryTab.artists));

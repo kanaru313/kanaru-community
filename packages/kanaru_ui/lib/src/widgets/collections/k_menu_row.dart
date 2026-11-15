@@ -2,11 +2,13 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
+import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_layout.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_chip.dart';
 import '../k_gap.dart';
+import '../k_icon_button.dart';
 import '../pro_badge.dart';
 
 /// Icon button at the end of a [KMenuRow] (for example "open in file manager").
@@ -194,7 +196,7 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
                         row.leading!,
                         const KGap(KSpace.x4),
                       ] else if (row.icon != null) ...[
-                        Icon(row.icon, size: 22, color: soft),
+                        Icon(row.icon, size: KIconSize.sm, color: soft),
                         const KGap(KSpace.x4),
                       ],
                       Expanded(
@@ -231,16 +233,14 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
                       ],
                       if (trailing != null) ...[
                         const KGap(KSpace.x1),
-                        // Its own node, not merged into the row's.
-                        Semantics(
-                          container: true,
-                          child: IconButton(
-                            tooltip: trailing.tooltip,
-                            icon: Icon(trailing.icon),
-                            onPressed: row.active
-                                ? () => widget.onActivate(trailing.onPressed)
-                                : null,
-                          ),
+                        // The button is its own semantics node, not merged into
+                        // the row's.
+                        KIconButton(
+                          tooltip: trailing.tooltip,
+                          icon: trailing.icon,
+                          onPressed: row.active
+                              ? () => widget.onActivate(trailing.onPressed)
+                              : null,
                         ),
                       ],
                       if (row.opens != null)
@@ -259,7 +259,9 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
           if (foldable && _expanded)
             Padding(
               padding: EdgeInsets.fromLTRB(
-                row.icon == null ? KSpace.x4 : KSpace.x4 + 22 + KSpace.x4,
+                row.icon == null
+                    ? KSpace.x4
+                    : KSpace.x4 + KIconSize.sm + KSpace.x4,
                 0,
                 KSpace.x4,
                 KSpace.x2,

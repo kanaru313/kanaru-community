@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
+import '../../tokens/k_icon_size.dart';
 
 /// Which glyph [KRepeatIcon] draws. The app maps its repeat mode to one of
 /// these; this package knows nothing about the player.
@@ -43,7 +44,7 @@ class KRepeatIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = this.size ?? IconTheme.of(context).size ?? 24;
+    final size = this.size ?? IconTheme.of(context).size ?? KIconSize.md;
     return switch (glyph) {
       KRepeatGlyph.off => Icon(
         menu ? KIcons.flatList : KIcons.repeat,

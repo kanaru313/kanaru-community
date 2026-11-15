@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_layout.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
@@ -237,7 +238,7 @@ class _OrderButton extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(icon, size: 16, color: fg),
+                  Icon(icon, size: KIconSize.xs, color: fg),
                   const KGap(KSpace.x1),
                   Flexible(
                     child: Text(

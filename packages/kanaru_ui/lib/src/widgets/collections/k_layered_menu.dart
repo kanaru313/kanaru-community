@@ -7,6 +7,7 @@ import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
+import '../k_icon_button.dart';
 import 'k_menu_row.dart';
 
 export 'k_menu_row.dart'
@@ -464,10 +465,12 @@ class _SubPageTitle extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
       child: Row(
         children: [
-          IconButton(
-            tooltip: backTooltip,
+          KIconButton(
+            tooltip:
+                backTooltip ??
+                MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: onBack,
-            icon: const Icon(KIcons.back),
+            icon: KIcons.back,
           ),
           Expanded(
             child: Text(

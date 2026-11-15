@@ -10,6 +10,7 @@ import 'package:kanaru/src/screens/settings/state/appearance_settings.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../support/icon_button_finders.dart';
 import 'support/first_run_host.dart';
 
 Finder _tooltip(String message) => find.byWidgetPredicate(
@@ -165,7 +166,7 @@ void main() {
     expect(find.text('Podcasts'), findsOneWidget);
     expect(find.text('~/Music/Podcasts'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Remove Music'));
+    await tester.tap(byIconButton('Remove Music'));
     await tester.pumpAndSettle();
     expect(find.text('Podcasts'), findsNothing);
     expect(find.text('No folder excluded.'), findsOneWidget);
