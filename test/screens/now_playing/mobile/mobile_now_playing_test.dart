@@ -229,6 +229,19 @@ void main() {
     );
   });
 
+  testWidgets('the heart is as large as Next', (tester) async {
+    await _open(tester);
+    final heart = tester.widget<KIconButton>(
+      find.descendant(
+        of: find.byType(FavoriteButton),
+        matching: find.byType(KIconButton),
+      ),
+    );
+    final next = tester.widget<KIconButton>(byIconButton('Next'));
+    expect(heart.size, KIconSize.lg);
+    expect(heart.size, next.size);
+  });
+
   testWidgets('the heart is at the end of the title row', (tester) async {
     await _open(tester);
     // Row(Expanded(title), heart): the button ends at the page padding.

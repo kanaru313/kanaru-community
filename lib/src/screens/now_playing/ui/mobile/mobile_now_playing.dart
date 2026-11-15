@@ -252,7 +252,8 @@ class _TitleRow extends StatelessWidget {
             ],
           ),
         ),
-        if (trackId != null) FavoriteButton(trackId: trackId!),
+        if (trackId != null)
+          FavoriteButton(trackId: trackId!, iconSize: KIconSize.lg),
       ],
     );
   }
