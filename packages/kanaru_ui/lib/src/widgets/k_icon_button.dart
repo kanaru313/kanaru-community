@@ -19,8 +19,7 @@ import 'k_icon_button_scope.dart';
 /// only when focus came from the keyboard. A long press fires [onLongPress],
 /// or shows the tooltip when there is none. Semantics: one button node
 /// labelled [semanticLabel] (else [tooltip]), toggled when [selected] is set.
-///
-/// Filled and tonal icon buttons are the Material ones, not this widget.
+/// Filled and tonal icon buttons are the Material ones.
 class KIconButton extends StatefulWidget {
   const KIconButton({
     super.key,
@@ -43,12 +42,11 @@ class KIconButton extends StatefulWidget {
          'give exactly one of icon and child',
        );
 
-  /// Key of the focus ring box, for tests.
   @visibleForTesting
   static const ringKey = ValueKey('k-icon-button-ring');
 
-  /// True when the primary focus sits inside a [KIconButton]. The desktop
-  /// shell uses it to let Space activate the button instead of play/pause.
+  /// True when the primary focus sits inside a [KIconButton] (the shell lets
+  /// Space activate it instead of play/pause).
   static bool ownsPrimaryFocus() => primaryFocusInsideKIconButton();
 
   /// The glyph. Give this or [child].
@@ -109,9 +107,13 @@ class _KIconButtonState extends State<KIconButton>
     super.dispose();
   }
 
-  void _setHover(bool value) => setState(() => _hovered = value);
+  void _setHover(bool value) {
+    if (_hovered != value) setState(() => _hovered = value);
+  }
 
-  void _setRing(bool value) => setState(() => _ring = value);
+  void _setRing(bool value) {
+    if (_ring != value) setState(() => _ring = value);
+  }
 
   void _release() =>
       _pulse.release(reduceMotion: MediaQuery.disableAnimationsOf(context));

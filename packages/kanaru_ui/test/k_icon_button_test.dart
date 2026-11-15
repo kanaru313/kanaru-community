@@ -157,6 +157,29 @@ void main() {
   });
 
   group('long press', () {
+    testWidgets('gives long press feedback', (tester) async {
+      var haptics = 0;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'HapticFeedback.vibrate') haptics++;
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await tester.pumpWidget(
+        host(button(onPressed: () {}, onLongPress: () {})),
+      );
+      await tester.longPress(find.byType(KIconButton));
+      await settle(tester);
+      expect(haptics, 1);
+    });
+
     testWidgets('fires onLongPress and not onPressed', (tester) async {
       var longs = 0, taps = 0;
       await tester.pumpWidget(
