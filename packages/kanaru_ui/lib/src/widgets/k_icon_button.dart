@@ -109,16 +109,20 @@ class _KIconButtonState extends State<KIconButton>
     super.dispose();
   }
 
-  void _setHover(bool value) {
-    if (_hovered != value) setState(() => _hovered = value);
-  }
+  void _setHover(bool value) => setState(() => _hovered = value);
 
-  void _setRing(bool value) {
-    if (_ring != value) setState(() => _ring = value);
-  }
+  void _setRing(bool value) => setState(() => _ring = value);
 
   void _release() =>
       _pulse.release(reduceMotion: MediaQuery.disableAnimationsOf(context));
+
+  // Null without a callback, so the tooltip's own long press wins.
+  VoidCallback? get _longPress => widget.onLongPress == null
+      ? null
+      : () {
+          Feedback.forLongPress(context);
+          widget.onLongPress!();
+        };
 
   void _tap() {
     Feedback.forTap(context);
@@ -172,7 +176,7 @@ class _KIconButtonState extends State<KIconButton>
               onTapUp: _enabled ? (_) => _release() : null,
               onTapCancel: _enabled ? _release : null,
               onTap: _enabled ? _tap : null,
-              onLongPress: _enabled ? widget.onLongPress : null,
+              onLongPress: _enabled ? _longPress : null,
               child: Padding(
                 padding: widget.padding,
                 child: KIconButtonFace(

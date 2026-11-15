@@ -10,8 +10,9 @@ KIconButton button({
   VoidCallback? onPressed,
   Widget? child,
   bool? selected,
+  bool enabled = true,
 }) {
-  final onTap = onPressed ?? () {};
+  final onTap = enabled ? (onPressed ?? () {}) : null;
   final icon = child == null ? Icons.add : null;
   // Without [padding] the widget's own default applies.
   return padding == null
@@ -257,19 +258,49 @@ void main() {
       expect(tester.binding.transientCallbackCount, 0);
     });
 
-    testWidgets('the tree has the same widgets in every state', (tester) async {
-      List<Type> types() => find
+    testWidgets('the widgets the button owns are the same in every state', (
+      tester,
+    ) async {
+      // FocusableActionDetector adds its own Actions only while enabled; the
+      // widgets the button itself places must not change with its state.
+      const owned = {
+        'Semantics',
+        'Tooltip',
+        'KIconButtonScope',
+        'FocusableActionDetector',
+        'GestureDetector',
+        'Padding',
+        'KIconButtonFace',
+        'DecoratedBox',
+        'ExcludeSemantics',
+        'Icon',
+      };
+      List<String> types() => find
           .descendant(
             of: find.byType(KIconButton),
             matching: find.byWidgetPredicate((_) => true),
           )
           .evaluate()
-          .map((e) => e.widget.runtimeType)
+          .map((e) => e.widget.runtimeType.toString())
+          .where(owned.contains)
           .toList();
-      await tester.pumpWidget(host(Center(child: button(onPressed: null))));
+      await tester.pumpWidget(host(Center(child: button(enabled: false))));
       final disabled = types();
+      final state = tester.state(find.byType(KIconButton));
+      expect(
+        tester
+            .widget<FocusableActionDetector>(
+              find.byType(FocusableActionDetector),
+            )
+            .enabled,
+        isFalse,
+      );
+      await tester.pumpWidget(host(Center(child: button())));
+      expect(types(), disabled);
+      expect(tester.state(find.byType(KIconButton)), same(state));
       await tester.pumpWidget(host(Center(child: button(selected: true))));
       expect(types(), disabled);
+      expect(tester.state(find.byType(KIconButton)), same(state));
     });
   });
 }

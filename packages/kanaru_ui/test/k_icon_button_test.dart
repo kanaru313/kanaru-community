@@ -86,9 +86,10 @@ void main() {
       expect(rest.a, 1);
       await tester.tap(find.byType(KIconButton));
       await tester.pump();
-      expect(glyphColor(tester).a, lessThan(1));
+      // Held fully dimmed, not already fading, for the whole minimum hold.
+      expect(glyphColor(tester).a, closeTo(0.5, 0.01));
       await tester.pump(const Duration(milliseconds: 90));
-      expect(glyphColor(tester).a, lessThan(1));
+      expect(glyphColor(tester).a, closeTo(0.5, 0.01));
       await tester.pump(const Duration(milliseconds: 20));
       await tester.pump(KMotion.press);
       expect(glyphColor(tester), rest);
@@ -302,6 +303,35 @@ void main() {
     });
   });
 
+  testWidgets('a disabled button in a row lets the row take the tap', (
+    tester,
+  ) async {
+    var rowTaps = 0;
+    await tester.pumpWidget(
+      host(
+        GestureDetector(
+          onTap: () => rowTaps++,
+          child: SizedBox(
+            height: 56,
+            child: Row(
+              children: [
+                const Spacer(),
+                const KIconButton(
+                  icon: Icons.add,
+                  tooltip: 'Add',
+                  onPressed: null,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byType(KIconButton));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(rowTaps, 1);
+  });
+
   group('colour and cursor', () {
     Future<void> hover(WidgetTester tester) async {
       // Hover and focus highlights only show in traditional (mouse and
@@ -322,9 +352,7 @@ void main() {
       expect(glyphColor(tester), scheme(tester).onSurface);
     });
 
-    testWidgets('KIconButtonColors sets rest and hover; own colour wins', (
-      tester,
-    ) async {
+    testWidgets('KIconButtonColors sets rest and hover', (tester) async {
       const rest = Color(0xFFAA0000), over = Color(0xFF0000AA);
       await tester.pumpWidget(
         host(
@@ -338,7 +366,12 @@ void main() {
       expect(glyphColor(tester), rest);
       await hover(tester);
       expect(glyphColor(tester), over);
-      const own = Color(0xFF00AA00);
+    });
+
+    testWidgets('an own colour beats the inherited rest colour', (
+      tester,
+    ) async {
+      const rest = Color(0xFFAA0000), own = Color(0xFF00AA00);
       await tester.pumpWidget(
         host(
           KIconButtonColors(
@@ -347,7 +380,9 @@ void main() {
           ),
         ),
       );
-      expect(glyphColor(tester), isNot(rest));
+      expect(glyphColor(tester), own);
+      await hover(tester);
+      expect(glyphColor(tester), scheme(tester).onSurface);
     });
 
     testWidgets('selected is primary and a selectedIcon replaces the glyph', (
