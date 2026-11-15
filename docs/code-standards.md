@@ -35,8 +35,11 @@ enforced by the gate. This file covers the rest.
   `find.byTooltip` (its tooltip is kept out of semantics).
 - Text sizes come from the M3 `textTheme` or a `KText` style; no `fontSize:`
   literal outside `KText`.
-- Review greps for the two rules above (each hit outside the allow-list in
-  the plan is a finding):
+- Review greps for the two rules above. Allowed hits: the `iconButtonTheme`
+  in `kanaru_ui` `kanaru_theme.dart`; filled and tonal buttons
+  (`IconButton.filledTonal` / `.filled` with a local style); the icon-size
+  and font-size definitions in `KIconSize` and `KText`. Anything else is a
+  finding:
 
   ```bash
   git grep -nE "(^|[^A-Za-z_])IconButton(\.|\(|Theme)" -- lib packages/kanaru_ui/lib

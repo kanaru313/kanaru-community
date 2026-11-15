@@ -130,10 +130,16 @@ void main() {
   testWidgets('animateTo ends exactly on the target', (tester) async {
     late AnimationController c;
     late BuildContext ctx;
-    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) {
-      ctx = context;
-      return const SizedBox();
-    })));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            ctx = context;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
     c = AnimationController.unbounded(vsync: tester, value: 1);
     addTearDown(c.dispose);
     for (final spring in [KSpring.snappy, KSpring.gentle, KSpring.bouncy]) {

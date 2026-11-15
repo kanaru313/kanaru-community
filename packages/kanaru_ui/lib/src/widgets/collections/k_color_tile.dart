@@ -41,8 +41,8 @@ class KColorTile extends StatelessWidget {
 
   static const double minHeight = 88;
 
-  /// Faint icon behind the text: the tile height less a margin, so it
-  /// follows the tile.
+  /// Faint icon behind the text: a fixed 64 dp watermark, outside the icon
+  /// scale.
   static const double _watermark = minHeight - KSpace.x6;
 
   @override
@@ -138,7 +138,8 @@ class KColorBanner extends StatelessWidget {
   /// Buttons under the text (play, shuffle, more).
   final Widget? actions;
 
-  /// Faint icon behind the headline: twice the hero icon size.
+  /// Faint icon behind the headline: a fixed 96 dp watermark, outside the
+  /// icon scale.
   static const double _watermark = KIconSize.hero * 2;
 
   @override
