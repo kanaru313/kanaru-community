@@ -10,6 +10,12 @@ abstract final class KMotion {
   /// Fade back of an icon button after a press. `KPressable` keeps its scale
   /// for cards and rows; icon buttons only change opacity.
   static const Duration press = Duration(milliseconds: 200);
+
+  /// `KCheckMark` off -> on: disc pops in, tick draws, one pulse ring.
+  static const Duration checkOn = Duration(milliseconds: 480);
+
+  /// `KCheckMark` on -> off: tick retracts, disc shrinks. Quicker than on.
+  static const Duration checkOff = Duration(milliseconds: 220);
 }
 
 /// Spring tokens (04 §3.5): snappy = select/press, gentle = sheets/pages,
