@@ -249,6 +249,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get scanSetupSheetCancel => 'Huỷ';
 
   @override
+  String get scanSetupSheetSelectAll => 'Chọn tất cả';
+
+  @override
+  String scanSetupSheetSelectedCount(int count, int total) {
+    return '$count / $total thư mục';
+  }
+
+  @override
   String get scanSetupExclusionsTitle => 'Loại trừ';
 
   @override

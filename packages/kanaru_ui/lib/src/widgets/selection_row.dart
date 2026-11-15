@@ -1,16 +1,21 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../icons/k_icons.dart';
 import '../layout/form_factor.dart';
 import '../tokens/k_layout.dart';
 import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
+import 'k_check_mark.dart';
 import 'k_gap.dart';
 
-/// One option of a choice list: value on the left, a primary-colour check on
-/// the right of the selected row, tonal rounded fill when selected. The check
-/// slot keeps its width when unselected so titles line up. No radio buttons.
+/// One option of a choice list, tonal rounded fill and bold title when
+/// selected. No radio buttons.
+///
+/// Text row ([leading] null): a [KCheckMark] (ring / disc + tick) at the start,
+/// single and multi choice alike. Icon row: the icon, no mark for a single
+/// choice; with [multi] a [KCheckMarkStyle.plain] tick in a 24 slot on the
+/// right (empty when unchosen, so titles keep their width). [multi] rows expose
+/// checkbox semantics, others radio-group semantics.
 class SelectionRow extends StatelessWidget {
   const SelectionRow({
     super.key,
@@ -19,6 +24,9 @@ class SelectionRow extends StatelessWidget {
     this.subtitle,
     this.leading,
     this.enabled = true,
+    this.multi = false,
+    this.partial = false,
+    this.plainMark = false,
     this.onTap,
   });
 
@@ -31,6 +39,17 @@ class SelectionRow extends StatelessWidget {
 
   /// A disabled row is dimmed and ignores taps.
   final bool enabled;
+
+  /// One of several choices (checkbox semantics) instead of one of a group.
+  final bool multi;
+
+  /// Dash instead of tick: some, not all, of what this row stands for is
+  /// chosen. Only meaningful with [multi].
+  final bool partial;
+
+  /// Icon-row layout without an icon of its own (the select-all row of an
+  /// icon list): plain tick on the right, nothing at the start.
+  final bool plainMark;
   final VoidCallback? onTap;
 
   static const double _checkSlot = 24;
@@ -43,22 +62,40 @@ class SelectionRow extends StatelessWidget {
         ? KLayout.minTarget + KSpace.x2
         : KLayout.minTarget;
     final active = enabled && onTap != null;
+    final iconLayout = leading != null || plainMark;
+    final mixed = multi && partial;
+    final state = mixed
+        ? KCheckState.partial
+        : selected
+        ? KCheckState.on
+        : KCheckState.off;
     return Semantics(
-      selected: selected,
       enabled: enabled,
-      inMutuallyExclusiveGroup: true,
+      selected: multi ? null : selected,
+      inMutuallyExclusiveGroup: multi ? null : true,
+      // Flutter asserts checked is unset while mixed.
+      checked: multi && !mixed ? selected : null,
+      mixed: mixed ? true : null,
       child: Opacity(
         opacity: enabled ? 1 : 0.5,
         child: AnimatedContainer(
           duration: KMotion.fast,
           decoration: ShapeDecoration(
             shape: KShape.of(KRadius.md),
-            color: selected ? scheme.secondaryContainer : const Color(0x00000000),
+            color: selected
+                ? scheme.secondaryContainer
+                : const Color(0x00000000),
           ),
           child: Material(
             type: MaterialType.transparency,
             child: InkWell(
               customBorder: KShape.of(KRadius.md),
+              // M3 state layers (8 % hover, 10 % press/focus of onSurface),
+              // as the mockups draw them; the theme default (4 %) is too
+              // faint to see on surfaceContainerHighest menus.
+              hoverColor: scheme.onSurface.withValues(alpha: 0.08),
+              focusColor: scheme.onSurface.withValues(alpha: 0.10),
+              highlightColor: scheme.onSurface.withValues(alpha: 0.10),
               onTap: active ? onTap : null,
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: minHeight),
@@ -69,7 +106,10 @@ class SelectionRow extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      if (leading != null) ...[
+                      if (!iconLayout) ...[
+                        KCheckMark(size: _checkSlot, state: state),
+                        const KGap(KSpace.x3),
+                      ] else if (leading != null) ...[
                         IconTheme.merge(
                           data: IconThemeData(color: scheme.onSurfaceVariant),
                           child: leading!,
@@ -97,12 +137,14 @@ class SelectionRow extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const KGap(KSpace.x3),
-                      Icon(
-                        KIcons.check,
-                        size: _checkSlot,
-                        color: selected ? scheme.primary : const Color(0x00000000),
-                      ),
+                      if (iconLayout && multi) ...[
+                        const KGap(KSpace.x3),
+                        KCheckMark(
+                          size: _checkSlot,
+                          state: state,
+                          style: KCheckMarkStyle.plain,
+                        ),
+                      ],
                     ],
                   ),
                 ),

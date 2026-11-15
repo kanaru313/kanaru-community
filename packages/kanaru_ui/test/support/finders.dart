@@ -8,3 +8,9 @@ Finder byIconButton(String tooltip) => find.byWidgetPredicate(
   (widget) => widget is KIconButton && widget.tooltip == tooltip,
   description: 'KIconButton "$tooltip"',
 );
+
+/// Finds every [KCheckMark] whose state is [state].
+Finder byCheckState(KCheckState state) => find.byWidgetPredicate(
+  (widget) => widget is KCheckMark && widget.state == state,
+  description: 'KCheckMark $state',
+);

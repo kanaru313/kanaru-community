@@ -263,6 +263,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanSetupSheetCancel => 'Cancel';
 
   @override
+  String get scanSetupSheetSelectAll => 'Select all';
+
+  @override
+  String scanSetupSheetSelectedCount(int count, int total) {
+    return '$count / $total folders';
+  }
+
+  @override
   String get scanSetupExclusionsTitle => 'Excluded';
 
   @override

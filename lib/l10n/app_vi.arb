@@ -108,6 +108,18 @@
     }
   },
   "scanSetupSheetCancel": "Huỷ",
+  "scanSetupSheetSelectAll": "Chọn tất cả",
+  "scanSetupSheetSelectedCount": "{count} / {total} thư mục",
+  "@scanSetupSheetSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "scanSetupExclusionsTitle": "Loại trừ",
   "scanSetupExclusionsHint": "Bỏ qua các thư mục con này khi quét (nhạc chuông, ghi âm…).",
   "scanSetupExclusionsEmpty": "Không loại trừ thư mục nào.",
