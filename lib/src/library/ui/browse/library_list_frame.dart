@@ -109,7 +109,7 @@ class _LibraryListFrameState extends ConsumerState<LibraryListFrame> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final gutter = libraryGutter(context);
+    final gutter = libraryBarGutter(context);
     final prefs = ref.watch(
       libraryListViewsProvider.select((v) => v.of(widget.list)),
     );

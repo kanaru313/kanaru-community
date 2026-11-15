@@ -11,6 +11,7 @@ import 'package:kanaru/src/library/ui/folders/folder_slivers.dart';
 import 'package:kanaru/src/library/ui/folders/folder_tile.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/platform/domain/storage_volumes.dart';
+import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -111,6 +112,20 @@ void main() {
     expect(find.byTooltip('Hidden levels'), findsOneWidget);
     await unmountApp(tester);
   });
+
+  for (final (name, width) in [('mobile', 390.0), ('desktop', 1280.0)]) {
+    testWidgets('$name: the songs heading lines up with the song covers', (
+      tester,
+    ) async {
+      final (h, _) = await _single(tester, width: width);
+      await tester.tap(find.text('V-Pop › Singles › Deep'));
+      await _settle(tester, h);
+      final heading = tester.getRect(find.text('Songs in this folder · 2'));
+      final cover = tester.getRect(find.byType(TrackCover).first);
+      expect(heading.left, closeTo(cover.left, 0.5));
+      await unmountApp(tester);
+    });
+  }
 
   testWidgets('a tap on a song plays the level with a folder context', (
     tester,

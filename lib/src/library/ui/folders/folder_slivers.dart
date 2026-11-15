@@ -223,7 +223,7 @@ class FolderSongsHeader extends ConsumerWidget {
         : direct
         ? l10n.libraryFlatSongsHeader(count)
         : l10n.libraryFolderSongsHeader(count);
-    final gutter = libraryGutter(context);
+    final gutter = libraryBarGutter(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(gutter, KSpace.x3, gutter, KSpace.x2),
       child: Column(

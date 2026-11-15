@@ -15,6 +15,8 @@ import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/state/browse/selection_providers.dart';
 import 'package:kanaru/src/library/state/browse/song_list_providers.dart';
 import 'package:kanaru/src/library/state/favorites_providers.dart';
+import 'package:kanaru/src/library/ui/browse/play_shuffle_buttons.dart';
+import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru/src/library/ui/songs/song_tile.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
@@ -265,6 +267,36 @@ void main() {
     expect(find.text('Go to album'), findsOneWidget);
     await unmountApp(tester);
   });
+
+  for (final (name, width) in [('mobile', 400.0), ('desktop', 1280.0)]) {
+    testWidgets('$name: the list bar lines up with the rows below it', (
+      tester,
+    ) async {
+      final h = await pumpLibrary(
+        tester,
+        initial: '/library/songs',
+        width: width,
+        height: 800,
+      );
+      await _addSongs(h, ['Alpha', 'Bravo']);
+      await h.settle(tester);
+      // The bar's first control is at the first cover's left edge, its last
+      // button (the filter) ends where the row's ⋮ ends.
+      final cluster = tester.getRect(find.byType(PlayShuffleButtons));
+      final cover = tester.getRect(find.byType(TrackCover).first);
+      final filter = tester.getRect(byIconButton('Filter'));
+      final more = tester.getRect(byIconButton('More options').first);
+      expect(cluster.left, closeTo(cover.left, 0.5));
+      expect(filter.right, closeTo(more.right, 0.5));
+      // The filter field that opens under the bar is on the same edges.
+      await tester.tap(byIconButton('Filter'));
+      await h.settle(tester, rounds: 1);
+      final field = tester.getRect(find.byType(KFilterField));
+      expect(field.left, closeTo(cover.left, 0.5));
+      expect(field.right, closeTo(more.right, 0.5));
+      await unmountApp(tester);
+    });
+  }
 
   testWidgets('the playing row is tinted and shows the equalizer', (
     tester,
