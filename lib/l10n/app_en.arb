@@ -108,6 +108,18 @@
     }
   },
   "scanSetupSheetCancel": "Cancel",
+  "scanSetupSheetSelectAll": "Select all",
+  "scanSetupSheetSelectedCount": "{count} / {total} folders",
+  "@scanSetupSheetSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "scanSetupExclusionsTitle": "Excluded",
   "scanSetupExclusionsHint": "Skip these sub-folders when scanning (ringtones, recordings…).",
   "scanSetupExclusionsEmpty": "No folder excluded.",

@@ -148,6 +148,7 @@ class _QueueRowState extends ConsumerState<QueueRow> {
       currentLabel: l10n.playbackNowPlaying,
       dimmed: role == QueueRowRole.played,
       selected: selected,
+      selecting: sel != null && ref.watch(sel.selecting),
       onTap: _tap,
     );
     // Mobile always has a long press (select, or the menu without a selection

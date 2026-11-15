@@ -61,8 +61,12 @@ void _pick(UiHost host, int track) => host.container
 Finder _row(String title) =>
     find.ancestor(of: find.text(title), matching: find.byType(QueueRow));
 
-Finder _check(Finder row) =>
-    find.descendant(of: row, matching: find.byIcon(KIcons.check));
+Finder _check(Finder row) => find.descendant(
+  of: row,
+  matching: find.byWidgetPredicate(
+    (w) => w is KCheckMark && w.state == KCheckState.on,
+  ),
+);
 
 Future<void> _openRowMenu(WidgetTester tester, String title) async {
   await tester.tap(

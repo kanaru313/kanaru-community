@@ -188,6 +188,9 @@ Future<List<String>> _pickFromSheet(
     confirmLabel: (n) =>
         n == 0 ? l10n.scanSetupSheetAdd : l10n.scanSetupSheetAddCount(n),
     cancelLabel: l10n.scanSetupSheetCancel,
+    selectAllLabel: l10n.scanSetupSheetSelectAll,
+    selectedCountLabel: (n, total) =>
+        l10n.scanSetupSheetSelectedCount(n, total),
   );
   return topLevelPicks(picked ?? const <String>{});
 }

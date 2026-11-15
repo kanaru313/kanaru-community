@@ -105,7 +105,7 @@ void main() {
         expect(find.byType(RadioListTile), findsNothing);
       });
 
-      testWidgets('the current mode is the selected row, with a check', (
+      testWidgets('the current mode is the selected row, tinted, no mark', (
         tester,
       ) async {
         final host = await _pump(tester, size: size);
@@ -117,18 +117,14 @@ void main() {
             e.selected,
         ];
         expect(selected, [true, false, false, false, false]);
-        final scheme = Theme.of(tester.element(find.byType(SelectionRow).first))
-            .colorScheme;
-        Color checkColor(String title) => tester
-            .widget<Icon>(
-              find.descendant(
-                of: _row(title),
-                matching: find.byIcon(KIcons.check),
-              ),
-            )
-            .color!;
-        expect(checkColor(_off), scheme.primary);
-        expect(checkColor(_one).a, 0, reason: 'empty slot, not removed');
+        // Icon rows, single choice: the tint marks the choice, no check mark.
+        expect(
+          find.descendant(
+            of: find.byType(SelectionRow),
+            matching: find.byType(KCheckMark),
+          ),
+          findsNothing,
+        );
       });
 
       testWidgets('choosing a mode sets it and closes the menu', (

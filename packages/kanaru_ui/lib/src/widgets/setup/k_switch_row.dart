@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'k_switch.dart';
 import 'setup_row_frame.dart';
 
 /// A row with a title and a switch. `onChanged: null` locks the switch (for
@@ -45,7 +46,7 @@ class KSwitchRow extends StatelessWidget {
         onTap: changed == null ? null : () => changed(!value),
         trailing: Semantics(
           label: switchLabel,
-          child: Switch(value: value, onChanged: changed),
+          child: KSwitch(value: value, onChanged: changed),
         ),
       ),
     );

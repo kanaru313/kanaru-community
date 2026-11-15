@@ -530,6 +530,18 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get scanSetupSheetCancel;
 
+  /// No description provided for @scanSetupSheetSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get scanSetupSheetSelectAll;
+
+  /// No description provided for @scanSetupSheetSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / {total} folders'**
+  String scanSetupSheetSelectedCount(int count, int total);
+
   /// No description provided for @scanSetupExclusionsTitle.
   ///
   /// In en, this message translates to:

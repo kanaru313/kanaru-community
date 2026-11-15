@@ -136,6 +136,9 @@ class SongTile extends ConsumerWidget {
           current: current,
           currentLabel: l10n.libraryNowPlaying,
           selected: selected,
+          selecting: ref.watch(
+            librarySelectionProvider.select((s) => !s.isEmpty),
+          ),
           onLongPress: selected ? null : () => _select(ref),
           onTap: () => _tap(ref, context),
         ),

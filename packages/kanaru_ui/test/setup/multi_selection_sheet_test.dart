@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../support/finders.dart';
 import '../support/host.dart';
 
 const _options = [
@@ -23,6 +24,7 @@ Widget _opener(
   void Function(Set<String>?) onResult, {
   List<SelectionOption<String>> options = _options,
   Set<String> initial = const {},
+  bool selectAll = false,
 }) => Builder(
   builder: (context) => TextButton(
     onPressed: () async => onResult(
@@ -35,6 +37,8 @@ Widget _opener(
         emptyNote: const Text('Every folder is chosen.'),
         confirmLabel: (n) => n == 0 ? 'Add' : 'Add $n',
         cancelLabel: 'Cancel',
+        selectAllLabel: selectAll ? 'Select all' : null,
+        selectedCountLabel: selectAll ? (n, t) => '$n / $t folders' : null,
       ),
     ),
     child: const Text('open'),
@@ -168,5 +172,148 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.byType(Dialog), findsOneWidget);
+  });
+
+  group('select all', () {
+    Future<void> open(
+      WidgetTester tester, {
+      List<SelectionOption<String>> options = _options,
+      Set<String> initial = const {},
+      void Function(Set<String>?)? onResult,
+    }) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          _opener(
+            onResult ?? (_) {},
+            options: options,
+            initial: initial,
+            selectAll: true,
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+    }
+
+    SelectionRow allRow(WidgetTester tester) =>
+        tester.widget<SelectionRow>(find.byType(SelectionRow).first);
+
+    testWidgets('off, partial, on follow the chosen options', (tester) async {
+      await open(tester);
+      expect(find.byType(SelectionRow), findsNWidgets(4));
+      expect(find.text('0 / 3 folders'), findsOneWidget);
+      expect(allRow(tester).selected, isFalse);
+      await tester.tap(find.text('Download'));
+      await tester.pump();
+      expect(find.text('1 / 3 folders'), findsOneWidget);
+      expect(allRow(tester).selected, isTrue);
+      expect(allRow(tester).partial, isTrue);
+      await tester.tap(find.text('Telegram'));
+      await tester.tap(find.text('Recordings'));
+      await tester.pump();
+      expect(allRow(tester).partial, isFalse);
+      expect(allRow(tester).selected, isTrue);
+    });
+
+    testWidgets('tap chooses all, tap again clears', (tester) async {
+      await open(tester, initial: {'a'});
+      await tester.tap(find.text('Select all'));
+      await tester.pump();
+      expect(find.text('Add 3'), findsOneWidget);
+      expect(byCheckState(KCheckState.on), findsNWidgets(4));
+      await tester.tap(find.text('Select all'));
+      await tester.pump();
+      expect(find.text('Add'), findsOneWidget);
+      expect(byCheckState(KCheckState.off), findsNWidgets(4));
+    });
+
+    testWidgets('ignores disabled options', (tester) async {
+      Set<String>? result;
+      await open(
+        tester,
+        onResult: (r) => result = r,
+        options: const [
+          SelectionOption(value: 'a', title: Text('A')),
+          SelectionOption(value: 'b', title: Text('B')),
+          SelectionOption(value: 'c', title: Text('C'), enabled: false),
+        ],
+      );
+      expect(find.text('0 / 2 folders'), findsOneWidget);
+      await tester.tap(find.text('Select all'));
+      await tester.pump();
+      expect(allRow(tester).partial, isFalse);
+      await tester.tap(find.text('Add 2'));
+      await tester.pumpAndSettle();
+      expect(result, {'a', 'b'});
+    });
+
+    testWidgets('hidden with fewer than two enabled options', (tester) async {
+      await open(
+        tester,
+        options: const [
+          SelectionOption(value: 'a', title: Text('A')),
+          SelectionOption(value: 'b', title: Text('B'), enabled: false),
+        ],
+      );
+      expect(find.text('Select all'), findsNothing);
+      expect(find.byType(SelectionRow), findsNWidgets(2));
+    });
+
+    testWidgets('semantics: mixed when partial', (tester) async {
+      final handle = tester.ensureSemantics();
+      await open(tester, initial: {'a'});
+      expect(
+        tester.getSemantics(find.byType(SelectionRow).first),
+        isSemantics(hasCheckedState: true, isCheckStateMixed: true),
+      );
+      handle.dispose();
+    });
+
+    testWidgets('icon options: select-all is a plain tick on the right', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        options: const [
+          SelectionOption(
+            value: 'a',
+            title: Text('A'),
+            leading: Icon(KIcons.folders),
+          ),
+          SelectionOption(
+            value: 'b',
+            title: Text('B'),
+            leading: Icon(KIcons.folders),
+          ),
+        ],
+      );
+      final all = find.ancestor(
+        of: find.text('Select all'),
+        matching: find.byType(SelectionRow),
+      );
+      final mark = find.descendant(of: all, matching: find.byType(KCheckMark));
+      expect(tester.widget<KCheckMark>(mark).style, KCheckMarkStyle.plain);
+      expect(
+        tester.getRect(mark).left,
+        greaterThan(tester.getRect(find.text('Select all')).right),
+      );
+    });
+
+    testWidgets('options without an icon: select-all mark at the start', (
+      tester,
+    ) async {
+      await open(tester); // mixed: one option has no icon
+      final all = find.ancestor(
+        of: find.text('Select all'),
+        matching: find.byType(SelectionRow),
+      );
+      final mark = find.descendant(of: all, matching: find.byType(KCheckMark));
+      expect(tester.widget<KCheckMark>(mark).style, KCheckMarkStyle.surface);
+      expect(
+        tester.getRect(mark).right,
+        lessThanOrEqualTo(tester.getRect(find.text('Select all')).left),
+      );
+    });
   });
 }
