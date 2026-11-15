@@ -79,8 +79,12 @@ void main() {
   }
 
   Finder row(int index) => find.byType(QueueRow).at(index);
-  Finder checkIn(Finder r) =>
-      find.descendant(of: r, matching: find.byIcon(KIcons.check));
+  Finder checkIn(Finder r) => find.descendant(
+    of: r,
+    matching: find.byWidgetPredicate(
+      (w) => w is KCheckMark && w.state == KCheckState.on,
+    ),
+  );
   Finder handleOf(int index) => find.descendant(
     of: row(index),
     matching: find.byType(ReorderableDragStartListener),
@@ -109,7 +113,12 @@ void main() {
         'selected', (tester) async {
       await pump(tester);
       // Nothing selected: no ✓, the current row has its equalizer.
-      expect(find.byIcon(KIcons.check), findsNothing);
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is KCheckMark && w.state != KCheckState.off,
+        ),
+        findsNothing,
+      );
       expect(find.byType(KEqualizerIcon), findsOneWidget);
 
       pick(tester, 4); // upcoming
@@ -159,6 +168,9 @@ void main() {
       tester,
     ) async {
       await pump(tester, view: fakeView(8, current: 0));
+      // The first pick flips selection mode, which every row shows (ring).
+      pick(tester, 1);
+      await tester.pump();
       final before = {...builds};
       expect(before.keys.length, 8);
       pick(tester, 3);

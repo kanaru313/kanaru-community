@@ -8,6 +8,7 @@ import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
+import '../k_check_mark.dart';
 import '../k_cover.dart';
 import '../k_gap.dart';
 import '../k_icon_button.dart';
@@ -70,6 +71,7 @@ class KMediaCard extends StatefulWidget {
     this.current = false,
     this.currentLabel,
     this.selected = false,
+    this.selecting = false,
     this.dimmed = false,
     this.onTap,
     this.onLongPress,
@@ -133,6 +135,9 @@ class KMediaCard extends StatefulWidget {
   /// In the multi-select set: tinted `secondaryContainer`, check on the cover.
   final bool selected;
 
+  /// A multi-select is active: unselected covers show the ring mark.
+  final bool selecting;
+
   /// Unavailable item: dimmed, still tappable.
   final bool dimmed;
   final VoidCallback? onTap;
@@ -175,10 +180,17 @@ class _KMediaCardState extends State<KMediaCard> {
   bool _hovered = false;
   bool _focused = false;
 
+  /// Set once the card is selected or a selection is active. Until then no
+  /// cover overlay is mounted (most lists never select); afterwards it stays
+  /// mounted so the off animation plays when the selection ends.
+  bool _everActive = false;
+
   bool get _engaged => _hovered || _focused;
 
   @override
   Widget build(BuildContext context) {
+    // Idempotent latch, derived from the widget: no setState needed.
+    _everActive = _everActive || widget.selected || widget.selecting;
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final scaler = MediaQuery.textScalerOf(context);
@@ -238,9 +250,13 @@ class _KMediaCardState extends State<KMediaCard> {
                   child: Center(child: leading),
                 ),
                 // A dimmed card draws its mark outside the dim, below.
-                if (widget.selected && !widget.dimmed)
+                if (_everActive && !(widget.dimmed && widget.selected))
                   Positioned.fill(
-                    child: _SelectedMark(circle: widget.circleLeading),
+                    child: _CoverCheck(
+                      circle: widget.circleLeading,
+                      selected: widget.selected,
+                      selecting: widget.selecting,
+                    ),
                   ),
               ],
             ),
@@ -322,7 +338,11 @@ class _KMediaCardState extends State<KMediaCard> {
                 width: KMediaCard.coverSize,
                 height: KMediaCard.coverSize,
                 child: IgnorePointer(
-                  child: _SelectedMark(circle: widget.circleLeading),
+                  child: _CoverCheck(
+                    circle: widget.circleLeading,
+                    selected: true,
+                    selecting: true,
+                  ),
                 ),
               ),
             ],
@@ -424,22 +444,46 @@ class _Revealed extends StatelessWidget {
   }
 }
 
-/// Primary tint with a white check over a cover.
-class _SelectedMark extends StatelessWidget {
-  const _SelectedMark({required this.circle});
+/// Selection overlay of a cover: a 35 % black scrim and an "on" [KCheckMark]
+/// when selected, the bare ring while a selection is active. Stays mounted
+/// across toggles so the mark animates.
+class _CoverCheck extends StatelessWidget {
+  const _CoverCheck({
+    required this.circle,
+    required this.selected,
+    required this.selecting,
+  });
 
   final bool circle;
+  final bool selected;
+
+  /// A selection is active. Without it and without [selected] the overlay
+  /// stays mounted (so the off animation plays) but its ring fades out.
+  final bool selecting;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return DecoratedBox(
+    final instant = MediaQuery.disableAnimationsOf(context);
+    return AnimatedContainer(
+      duration: instant ? Duration.zero : KMotion.fast,
       decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.55),
+        color: selected
+            ? Colors.black.withValues(alpha: 0.35)
+            : Colors.transparent,
         shape: circle ? BoxShape.circle : BoxShape.rectangle,
         borderRadius: circle ? null : KRadius.sm,
       ),
-      child: Icon(KIcons.check, color: scheme.onPrimary),
+      child: Center(
+        child: AnimatedOpacity(
+          opacity: selecting || selected ? 1 : 0,
+          duration: instant ? Duration.zero : KMotion.fast,
+          child: KCheckMark(
+            size: 28,
+            style: KCheckMarkStyle.cover,
+            state: selected ? KCheckState.on : KCheckState.off,
+          ),
+        ),
+      ),
     );
   }
 }

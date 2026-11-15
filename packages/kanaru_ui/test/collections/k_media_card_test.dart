@@ -15,6 +15,7 @@ Widget _card({
   bool full = true,
   bool current = false,
   bool selected = false,
+  bool selecting = false,
   bool dimmed = false,
   bool circle = false,
   VoidCallback? onTap,
@@ -37,6 +38,7 @@ Widget _card({
       actionEnabled: actionEnabled,
       accessory: accessory,
       loading: loading,
+      selecting: selecting,
       style: style,
       leading: leading
           ? const ColoredBox(key: Key('cover'), color: Color(0xFF888888))
@@ -164,12 +166,90 @@ void main() {
     expect(fill(), scheme.surfaceContainerLow);
   });
 
+  final onCheck = find.byWidgetPredicate(
+    (w) => w is KCheckMark && w.state == KCheckState.on,
+  );
+
+  testWidgets('an idle card mounts no check until a selection starts', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_card()));
+    expect(find.byType(KCheckMark), findsNothing);
+    await tester.pumpWidget(host(_card(selecting: true)));
+    expect(find.byType(KCheckMark), findsOneWidget);
+    expect(onCheck, findsNothing);
+    final before = tester.element(find.byType(KCheckMark));
+    await tester.pumpWidget(host(_card()));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(tester.element(find.byType(KCheckMark)), same(before));
+    await tester.pumpAndSettle();
+    expect(find.byType(KCheckMark), findsOneWidget);
+  });
+
+  testWidgets('selecting shows a ring on unselected covers, no scrim', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_card(selecting: true)));
+    expect(find.byType(KCheckMark), findsOneWidget);
+    expect(onCheck, findsNothing);
+    final box = tester.widget<AnimatedContainer>(
+      find.ancestor(
+        of: find.byType(KCheckMark),
+        matching: find.byType(AnimatedContainer),
+      ),
+    );
+    expect((box.decoration! as BoxDecoration).color, const Color(0x00000000));
+  });
+
+  testWidgets('toggling selected keeps the same mark (it animates)', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_card(selecting: true)));
+    final before = tester.element(find.byType(KCheckMark));
+    await tester.pumpWidget(host(_card(selecting: true, selected: true)));
+    expect(tester.element(find.byType(KCheckMark)), same(before));
+    expect(onCheck, findsOneWidget);
+  });
+
+  testWidgets('ending the selection keeps the mark mounted while it animates', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_card(selecting: true, selected: true)));
+    await tester.pumpAndSettle();
+    final before = tester.element(find.byType(KCheckMark));
+    Color? scrim() =>
+        (tester
+                    .widget<AnimatedContainer>(
+                      find.ancestor(
+                        of: find.byType(KCheckMark),
+                        matching: find.byType(AnimatedContainer),
+                      ),
+                    )
+                    .decoration!
+                as BoxDecoration)
+            .color;
+    final start = scrim()!.a;
+    expect(start, greaterThan(0));
+    await tester.pumpWidget(host(_card()));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(tester.element(find.byType(KCheckMark)), same(before));
+    expect(onCheck, findsNothing);
+    final mid = scrim()!.a;
+    expect(mid, lessThan(start));
+    await tester.pumpAndSettle();
+    expect(scrim()!.a, 0);
+  });
+
   testWidgets('selected draws a check over the leading', (tester) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_card()));
-    expect(find.byIcon(KIcons.check), findsNothing);
+    expect(onCheck, findsNothing);
     await tester.pumpWidget(host(_card(selected: true, circle: true)));
-    expect(find.byIcon(KIcons.check), findsOneWidget);
+    expect(onCheck, findsOneWidget);
   });
 
   double minOpacityAbove(WidgetTester tester, Finder target) {
@@ -195,8 +275,8 @@ void main() {
   ) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_card(dimmed: true, selected: true)));
-    expect(find.byIcon(KIcons.check), findsOneWidget);
-    expect(minOpacityAbove(tester, find.byIcon(KIcons.check)), 1);
+    expect(onCheck, findsOneWidget);
+    expect(minOpacityAbove(tester, onCheck), 1);
     expect(minOpacityAbove(tester, find.byKey(const Key('cover'))), 0.5);
     expect(minOpacityAbove(tester, find.text('Title')), 0.5);
   });
@@ -215,7 +295,7 @@ void main() {
         ),
       );
       expect(
-        tester.getCenter(find.byIcon(KIcons.check)),
+        tester.getCenter(onCheck),
         tester.getCenter(find.byKey(const Key('cover'))),
       );
     });
@@ -226,7 +306,7 @@ void main() {
   ) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_card(dimmed: true)));
-    expect(find.byIcon(KIcons.check), findsNothing);
+    expect(onCheck, findsNothing);
     expect(minOpacityAbove(tester, find.byKey(const Key('cover'))), 0.5);
   });
 
@@ -235,7 +315,7 @@ void main() {
   ) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_card(selected: true)));
-    expect(minOpacityAbove(tester, find.byIcon(KIcons.check)), 1);
+    expect(minOpacityAbove(tester, onCheck), 1);
   });
 
   testWidgets('dimmed halves the opacity', (tester) async {
