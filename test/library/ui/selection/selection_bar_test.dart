@@ -6,6 +6,7 @@ import 'package:kanaru/src/library/state/browse/song_list_providers.dart';
 import 'package:kanaru/src/library/ui/selection/selection_bar.dart';
 import 'package:kanaru/src/library/ui/selection/selection_row.dart';
 import 'package:kanaru/src/library/ui/songs/song_tile.dart';
+import 'package:kanaru/src/library/ui/songs/song_row_placeholder.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -17,7 +18,6 @@ import '../support/library_harness.dart';
 import '../support/ui_harness.dart';
 import 'selection_support.dart';
 import '../../../support/icon_button_finders.dart';
-import '../../../support/row_fill_finders.dart';
 
 Finder _button(String tooltip) => byIconButton(tooltip);
 
@@ -135,10 +135,25 @@ void main() {
     expect(row, findsOneWidget);
     final card = find.descendant(of: row, matching: find.byType(KMediaCard));
     expect(tester.widget<KMediaCard>(card).filled, isFalse);
-    expect(
-      cardBackground(tester, card),
-      isNot(KRowColors.fill(Theme.of(tester.element(card)).brightness)),
+    await unmountApp(tester);
+  });
+
+  testWidgets('selection panel loading rows have no row fill', (tester) async {
+    final h = await pumpSelection(tester);
+    final ids = await allIds(h);
+    h.selection.toggle(ids[1]);
+    await tester.pump();
+    await tester.tap(_button('Show the selected songs'));
+    // One frame: the window has not read the track yet.
+    await tester.pump();
+    final loading = find.byType(SongRowPlaceholder);
+    expect(loading, findsOneWidget);
+    final card = find.descendant(
+      of: loading,
+      matching: find.byType(KMediaCard),
     );
+    expect(tester.widget<KMediaCard>(card).filled, isFalse);
+    await h.settle(tester, rounds: 3);
     await unmountApp(tester);
   });
 

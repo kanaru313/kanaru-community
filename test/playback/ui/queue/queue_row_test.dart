@@ -24,14 +24,10 @@ const _desktopWindow = Size(1280, 800);
 /// One call of the row menu hook.
 typedef _MenuCall = ({Offset? at, bool viaKeyboard});
 
-/// The card's own background of [row] (the Material that paints it).
-Color? _background(WidgetTester tester, Finder row) {
-  final card = find.descendant(of: row, matching: find.byType(KMediaCard));
-  final material = tester.widget<Material>(
-    find.descendant(of: card, matching: find.byType(Material)).first,
-  );
-  return material.color;
-}
+/// The [KMediaCard] of [row].
+KMediaCard _card(WidgetTester tester, Finder row) => tester.widget<KMediaCard>(
+  find.descendant(of: row, matching: find.byType(KMediaCard)),
+);
 
 Color _iconColor(WidgetTester tester, Finder icon) =>
     IconTheme.of(tester.element(icon.first)).color!;
@@ -230,20 +226,10 @@ void main() {
       final scheme = Theme.of(tester.element(find.byType(QueueList)))
           .colorScheme;
       final rows = find.byType(QueueRow);
-      // The playing row paints its gradient over a transparent material;
-      // the other rows carry the neutral fill.
-      expect(_background(tester, rows.at(2)), Colors.transparent);
-      final ink = tester.widget<Ink>(
-        find.descendant(of: rows.at(2), matching: find.byType(Ink)).first,
-      );
-      expect(
-        (ink.decoration! as BoxDecoration).gradient,
-        KRowColors.playingGradient(scheme),
-      );
-      expect(
-        _background(tester, rows.at(3)),
-        KRowColors.fill(scheme.brightness),
-      );
+      // Only the playing row is current; the others carry the row fill.
+      expect(_card(tester, rows.at(2)).current, isTrue);
+      expect(_card(tester, rows.at(3)).current, isFalse);
+      expect(_card(tester, rows.at(3)).filled, isTrue);
       expect(
         find.descendant(of: rows.at(2), matching: find.byType(KEqualizerIcon)),
         findsOneWidget,

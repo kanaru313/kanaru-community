@@ -4,6 +4,7 @@ import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
 import 'package:kanaru/src/library/domain/browse/song_scope.dart';
 import 'package:kanaru/src/library/ui/browse/group_play.dart';
+import 'package:kanaru/src/library/ui/collections/genre_tile.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/ui/menus/more_button.dart';
@@ -119,7 +120,7 @@ void main() {
         .read(libraryListViewsProvider.notifier)
         .setView(BrowseList.genres, CollectionView.list);
     await tester.pump();
-    expectRowFilled(tester);
+    expectRowFilled(tester, within: find.byType(GenreTile));
     await unmountApp(tester);
   });
 
