@@ -61,24 +61,38 @@ class _KMediaCardFrameState extends State<KMediaCardFrame> {
   @override
   void initState() {
     super.initState();
-    _node.addListener(_refresh);
-    FocusManager.instance.addHighlightModeListener(_onHighlightMode);
+    _node.addListener(_onFocus);
   }
 
   @override
   void dispose() {
+    // A row disposed while focused never gets the blur notification.
     FocusManager.instance.removeHighlightModeListener(_onHighlightMode);
-    _node.removeListener(_refresh);
+    _node.removeListener(_onFocus);
     _node.dispose();
     super.dispose();
   }
 
   void _refresh() => setState(() {});
 
-  // Only the row whose own node has primary focus can change its ring.
-  void _onHighlightMode(FocusHighlightMode _) {
-    if (_node.hasPrimaryFocus) _refresh();
+  bool _listening = false;
+
+  // Only the row whose own node has primary focus can change its ring, so
+  // only that row listens to the highlight mode.
+  void _onFocus() {
+    final focused = _node.hasPrimaryFocus;
+    if (focused != _listening) {
+      _listening = focused;
+      if (focused) {
+        FocusManager.instance.addHighlightModeListener(_onHighlightMode);
+      } else {
+        FocusManager.instance.removeHighlightModeListener(_onHighlightMode);
+      }
+    }
+    _refresh();
   }
+
+  void _onHighlightMode(FocusHighlightMode _) => _refresh();
 
   @override
   Widget build(BuildContext context) {

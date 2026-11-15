@@ -293,20 +293,32 @@ void main() {
       expect(_ringShown(), isTrue);
     });
 
-    testWidgets('removes its highlight-mode listener on dispose', (
-      tester,
-    ) async {
-      useWindow(tester, const Size(400, 800));
-      await tester.pumpWidget(host(_card(onTap: () {})));
-      await tester.pumpWidget(host(const SizedBox()));
-      // A mode change after dispose must not reach the dead State.
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTouch;
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTraditional;
-      await tester.pump();
-      expect(tester.takeException(), isNull);
-    });
+    testWidgets(
+      'a focused row removes its highlight-mode listener on dispose',
+      (tester) async {
+        useWindow(tester, const Size(400, 800));
+        FocusManager.instance.highlightStrategy =
+            FocusHighlightStrategy.alwaysTraditional;
+        await tester.pumpWidget(host(_card(onTap: () {})));
+        tester
+            .widget<InkWell>(
+              find.descendant(
+                of: find.byType(KMediaCard),
+                matching: find.byType(InkWell),
+              ),
+            )
+            .focusNode!
+            .requestFocus();
+        await tester.pump();
+        expect(_ringShown(), isTrue);
+        await tester.pumpWidget(host(const SizedBox()));
+        // A mode change after dispose must not reach the dead State.
+        FocusManager.instance.highlightStrategy =
+            FocusHighlightStrategy.alwaysTouch;
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 
   testWidgets('hover and press are onSurface state layers', (tester) async {
