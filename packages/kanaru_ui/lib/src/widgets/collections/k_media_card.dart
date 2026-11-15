@@ -38,7 +38,8 @@ enum KMediaCardStyle {
 /// [trailing] (the ⋮).
 /// The [trailing] button is always visible; only the play button appears on
 /// hover or focus on desktop. Every button is a [KIconButton] that takes its
-/// colours from the card (own ink on a tinted card). The few dp between the
+/// colours from the card (own ink on a tinted card). The end padding right of
+/// the [trailing] button belongs to that button, and the few dp between the
 /// right column, play button, accessory and ⋮ take a tap without acting, so a
 /// near miss next to a button never plays the row.
 ///

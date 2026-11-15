@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/rendering.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -93,15 +95,16 @@ class _RenderEndHitExtension extends RenderBox
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
     final c = child;
     if (c == null) return false;
-    // A tap in the strip is a tap on the child's end edge.
-    final x = (position.dx - _childOffset.dx)
-        .clamp(0.0, c.size.width - 0.01)
-        .toDouble();
+    // A tap in the strip is a tap on the child's end edge: the position the
+    // child sees is local to it, clamped inside its width.
     return result.addWithPaintOffset(
-      offset: Offset.zero,
-      position: Offset(x, position.dy),
-      hitTest: (result, transformed) =>
-          c.hitTest(result, position: transformed),
+      offset: _childOffset,
+      position: position,
+      hitTest: (result, local) {
+        final maxX = math.max(0.0, c.size.width - 0.01);
+        final x = local.dx.clamp(0.0, maxX).toDouble();
+        return c.hitTest(result, position: Offset(x, local.dy));
+      },
     );
   }
 }
