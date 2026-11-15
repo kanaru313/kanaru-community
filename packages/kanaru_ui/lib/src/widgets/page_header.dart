@@ -1,9 +1,11 @@
 import '../icons/k_icons.dart';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens/k_layout.dart';
 import '../tokens/k_space.dart';
 import 'page_header_scope.dart';
+import 'k_icon_button.dart';
 
 /// Header of every page: `[<]` (child pages only), title, spacer, actions.
 /// Root pages pass no [onBack], so the back button is hidden and the
@@ -35,9 +37,11 @@ class PageHeader extends StatelessWidget {
         children: [
           if (isRoot && scope?.leading != null) scope!.leading!,
           if (!isRoot)
-            IconButton(
-              icon: const Icon(KIcons.back),
-              tooltip: backTooltip ?? MaterialLocalizations.of(context).backButtonTooltip,
+            KIconButton(
+              icon: KIcons.back,
+              tooltip:
+                  backTooltip ??
+                  MaterialLocalizations.of(context).backButtonTooltip,
               onPressed: onBack,
             ),
           Expanded(
@@ -45,7 +49,8 @@ class PageHeader extends StatelessWidget {
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(context).textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           ...actions,

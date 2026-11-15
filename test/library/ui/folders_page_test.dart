@@ -18,6 +18,7 @@ import '../../support/fake_playback_commands.dart';
 import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
+import '../../support/icon_button_finders.dart';
 
 const _home = StorageVolume(root: '/home/u', kind: StorageVolumeKind.home);
 const _sd = StorageVolume(
@@ -301,7 +302,7 @@ void main() {
         .read(libraryListViewsProvider.notifier)
         .setFolderView(FolderView.flat);
     await _settle(tester, h);
-    await tester.tap(find.byTooltip('Filter'));
+    await tester.tap(byIconButton('Filter'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'singles');
     await tester.pump();
@@ -365,7 +366,7 @@ void main() {
     await tester.tap(find.text('Album A'));
     await _settle(tester, h);
     expect(h.location, _at(folder, 'Album A'));
-    await tester.tap(find.byTooltip('Filter'));
+    await tester.tap(byIconButton('Filter'));
     await tester.pumpAndSettle();
     await tester.binding.handlePopRoute();
     await _settle(tester, h);

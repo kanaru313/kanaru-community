@@ -24,6 +24,7 @@ import 'menus/menu_pump.dart';
 import 'support/detail_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
+import '../../support/icon_button_finders.dart';
 
 Future<LibraryHarness> _pump(
   WidgetTester tester, {
@@ -236,7 +237,7 @@ void main() {
 
   testWidgets('the filter narrows the songs and the count', (tester) async {
     final h = await _pump(tester);
-    await tester.tap(find.byTooltip('Filter'));
+    await tester.tap(byIconButton('Filter'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'blue 2');
     await tester.pump(const Duration(milliseconds: 300));

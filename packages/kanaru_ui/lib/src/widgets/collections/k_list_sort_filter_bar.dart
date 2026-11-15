@@ -4,9 +4,11 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
+import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
+import '../k_icon_button.dart';
 
 /// Bar above every list: [leading] group on the left (count, play buttons,
 /// view switch, breadcrumb), the sort chip and the filter toggle on the
@@ -58,9 +60,6 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
     final height = mobile
         ? KListSortFilterBar.heightMobile
         : KListSortFilterBar.heightDesktop;
-    final filterButton = widget.filterOpen
-        ? IconButton.filledTonal
-        : IconButton.new;
     return ConstrainedBox(
       constraints: BoxConstraints(minHeight: height),
       child: LayoutBuilder(
@@ -96,7 +95,9 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
                       borderRadius: KRadius.full,
                       onTap: () => widget.onSortPressed(_chipKey),
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(minHeight: mobile ? 48 : 40),
+                        constraints: BoxConstraints(
+                          minHeight: mobile ? 48 : 40,
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: KSpace.x3,
@@ -118,7 +119,7 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
                                 widget.ascending
                                     ? KIcons.sortAsc
                                     : KIcons.sortDesc,
-                                size: 14,
+                                size: KIconSize.xs,
                                 color: scheme.onSurfaceVariant,
                               ),
                             ],
@@ -130,12 +131,24 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
                 ),
               ),
               const KGap(KSpace.x2),
-              filterButton(
-                tooltip: widget.filterTooltip,
-                isSelected: widget.filterOpen,
-                onPressed: widget.onFilterToggle,
-                icon: const Icon(KIcons.filter),
-              ),
+              // Open: the tonal disc of a selected button. Closed: the light
+              // icon, padded to the same width so the glyph does not move.
+              if (widget.filterOpen)
+                IconButton.filledTonal(
+                  tooltip: widget.filterTooltip,
+                  isSelected: true,
+                  onPressed: widget.onFilterToggle,
+                  icon: const Icon(KIcons.filter),
+                )
+              else
+                KIconButton(
+                  tooltip: widget.filterTooltip ?? '',
+                  onPressed: widget.onFilterToggle,
+                  icon: KIcons.filter,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (filterWidth - KIconSize.md) / 2,
+                  ),
+                ),
             ],
           );
         },

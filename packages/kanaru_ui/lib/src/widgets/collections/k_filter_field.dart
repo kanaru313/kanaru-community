@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../icons/k_icons.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
+import '../k_icon_button.dart';
 
 /// Outlined field under the sort bar. Filters only the list in view; the
 /// caller listens to [controller]. The caller owns [controller]; the ✕ button
@@ -52,10 +53,12 @@ class KFilterField extends StatelessWidget {
               vertical: KSpace.x3,
             ),
             prefixIcon: const Icon(KIcons.filter),
-            suffixIcon: IconButton(
-              tooltip: closeTooltip,
+            suffixIcon: KIconButton(
+              tooltip:
+                  closeTooltip ??
+                  MaterialLocalizations.of(context).closeButtonTooltip,
               onPressed: _close,
-              icon: const Icon(KIcons.close),
+              icon: KIcons.close,
             ),
             border: OutlineInputBorder(
               borderRadius: KRadius.md,

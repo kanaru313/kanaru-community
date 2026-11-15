@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, debugDefaultTargetPlatformOverride;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -85,6 +87,28 @@ void main() {
     );
     expect(button.isSelected, isTrue);
   });
+
+  for (final (name, size, platform, width) in [
+    ('mobile', const Size(400, 800), TargetPlatform.android, 48.0),
+    ('desktop', const Size(1280, 800), TargetPlatform.linux, 40.0),
+  ]) {
+    testWidgets('the closed filter is a light button as wide as the open one '
+        '($name)', (tester) async {
+      debugDefaultTargetPlatformOverride = platform;
+      try {
+        useWindow(tester, size);
+        await tester.pumpWidget(host(_bar()));
+        final closed = tester.getSize(find.byType(KIconButton));
+        await tester.pumpWidget(host(_bar(filterOpen: true)));
+        final open = tester.getSize(find.byType(IconButton));
+        expect(closed.width, width);
+        expect(closed.width, open.width);
+        expect(find.byType(KIconButton), findsNothing);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+  }
 
   testWidgets('the sort chip is announced with its criterion', (tester) async {
     useWindow(tester, const Size(400, 800));

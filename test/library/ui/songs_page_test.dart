@@ -25,6 +25,7 @@ import '../../support/fake_playback_commands.dart';
 import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
+import '../../support/icon_button_finders.dart';
 
 Future<List<int>> _addSongs(LibraryHarness h, List<String> titles) async => [
   for (final t in titles)
@@ -96,7 +97,7 @@ void main() {
           const SortSpec(SortCriterion.title, descending: true),
         );
     await h.settle(tester);
-    await tester.tap(find.byTooltip('Filter'));
+    await tester.tap(byIconButton('Filter'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'a');
     await h.settle(tester);
