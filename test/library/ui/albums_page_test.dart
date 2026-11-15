@@ -67,7 +67,7 @@ void main() {
 
   testWidgets('the view switch shows rows and is remembered', (tester) async {
     final h = await _pump(tester);
-    await tester.tap(find.byTooltip('List'));
+    await tester.tap(byIconButton('List'));
     await h.settle(tester, rounds: 1);
     expect(find.byType(AlbumTile), findsNWidgets(3));
     expect(find.text('Yan • 2010'), findsOneWidget);
@@ -114,7 +114,7 @@ void main() {
   testWidgets('play on a row sends the album in track order', (tester) async {
     final playback = FakePlaybackCommands();
     final h = await _pump(tester, playback: playback);
-    await tester.tap(find.byTooltip('List'));
+    await tester.tap(byIconButton('List'));
     await h.settle(tester, rounds: 1);
     await tester.tap(byIconButton('Play album').at(0)); // Amber (A-Z order)
     await tester.runAsync(

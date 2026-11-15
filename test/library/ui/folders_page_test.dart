@@ -261,7 +261,7 @@ void main() {
     tester,
   ) async {
     final (h, folder) = await _single(tester);
-    await tester.tap(find.byTooltip('Flat list'));
+    await tester.tap(byIconButton('Flat list'));
     await h.settle(tester, rounds: 2);
     expect(
       h.container.read(libraryListViewsProvider).folderView,
@@ -438,7 +438,7 @@ void main() {
   ) async {
     final playback = FakePlaybackCommands();
     final (h, folder) = await _single(tester, playback: playback);
-    await tester.tap(find.byTooltip('Flat list'));
+    await tester.tap(byIconButton('Flat list'));
     await h.settle(tester, rounds: 2);
     final rows = tester.widgetList<FolderTile>(find.byType(FolderTile));
     final root = rows.toList().indexWhere((r) => r.title == 'Music');

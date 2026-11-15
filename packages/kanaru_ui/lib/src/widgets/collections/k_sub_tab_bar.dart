@@ -4,9 +4,12 @@ import '../../tokens/k_layout.dart';
 import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
+import 'k_icon_tab_row.dart';
 
 /// Row of text tabs that scrolls sideways, with a primary underline under the
-/// selected tab, which scrolls to the centre when selected.
+/// selected tab, which scrolls to the centre when selected. With [icons] each
+/// tab has an icon and only the selected one shows its label (see
+/// [KIconTabRow]).
 ///
 /// A page that replaces the bar (switching lists) passes the old row's
 /// [initialOffset], learnt from [onOffsetChanged], so the row starts where it
@@ -17,11 +20,15 @@ class KSubTabBar extends StatefulWidget {
     required this.labels,
     required this.selectedIndex,
     required this.onSelected,
+    this.icons,
     this.initialOffset = 0,
     this.onOffsetChanged,
-  });
+  }) : assert(icons == null || icons.length == labels.length);
 
   final List<String> labels;
+
+  /// One icon per label; null shows text-only tabs.
+  final List<IconData>? icons;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
   final double initialOffset;
@@ -91,58 +98,70 @@ class _KSubTabBarState extends State<KSubTabBar> {
       controller: _controller,
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
-      child: Row(
-        children: [
-          for (var i = 0; i < widget.labels.length; i++)
-            Semantics(
-              key: _keys[i],
-              button: true,
-              selected: i == widget.selectedIndex,
-              inMutuallyExclusiveGroup: true,
-              child: InkWell(
-                borderRadius: KRadius.sm,
-                onTap: () => widget.onSelected(i),
-                child: SizedBox(
-                  height: KLayout.minTarget,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: KSpace.x4),
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: Center(
-                            child: Text(
-                              widget.labels[i],
-                              maxLines: 1,
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: i == widget.selectedIndex
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                    color: i == widget.selectedIndex
-                                        ? scheme.primary
-                                        : scheme.onSurfaceVariant,
+      child: widget.icons != null
+          ? KIconTabRow(
+              labels: widget.labels,
+              icons: widget.icons!,
+              selectedIndex: widget.selectedIndex,
+              onSelected: widget.onSelected,
+              itemKeys: _keys,
+            )
+          : Row(
+              children: [
+                for (var i = 0; i < widget.labels.length; i++)
+                  Semantics(
+                    key: _keys[i],
+                    button: true,
+                    selected: i == widget.selectedIndex,
+                    inMutuallyExclusiveGroup: true,
+                    child: InkWell(
+                      borderRadius: KRadius.sm,
+                      onTap: () => widget.onSelected(i),
+                      child: SizedBox(
+                        height: KLayout.minTarget,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: KSpace.x4,
+                          ),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: Center(
+                                  child: Text(
+                                    widget.labels[i],
+                                    maxLines: 1,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(
+                                          fontWeight: i == widget.selectedIndex
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          color: i == widget.selectedIndex
+                                              ? scheme.primary
+                                              : scheme.onSurfaceVariant,
+                                        ),
                                   ),
-                            ),
+                                ),
+                              ),
+                              AnimatedContainer(
+                                duration: KMotion.fast,
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  color: i == widget.selectedIndex
+                                      ? scheme.primary
+                                      : const Color(0x00000000),
+                                  borderRadius: KRadius.full,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        AnimatedContainer(
-                          duration: KMotion.fast,
-                          height: 3,
-                          decoration: BoxDecoration(
-                            color: i == widget.selectedIndex
-                                ? scheme.primary
-                                : const Color(0x00000000),
-                            borderRadius: KRadius.full,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
+              ],
             ),
-        ],
-      ),
     );
   }
 }

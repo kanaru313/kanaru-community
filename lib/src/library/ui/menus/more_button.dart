@@ -7,13 +7,21 @@ import '../../../../l10n/gen/app_localizations.dart';
 /// is told whether the button was activated with the keyboard, so the menu can
 /// focus its first row.
 class LibraryMoreButton extends StatelessWidget {
-  const LibraryMoreButton({super.key, required this.onPressed});
+  const LibraryMoreButton({
+    super.key,
+    required this.onPressed,
+    this.large = false,
+  });
 
   final void Function({required bool viaKeyboard}) onPressed;
+
+  /// For a page's hero row: a larger icon and box.
+  final bool large;
 
   @override
   Widget build(BuildContext context) => KMoreButton(
     tooltip: AppLocalizations.of(context).libraryMenuMore,
     onPressed: onPressed,
+    large: large,
   );
 }

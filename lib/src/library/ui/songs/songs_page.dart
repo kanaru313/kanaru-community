@@ -65,7 +65,6 @@ class _SongsBarLeading extends ConsumerWidget {
     final total = ref.watch(songCountProvider(const SongScope.all())).value;
     final shown = ids?.length;
     final enabled = list.isNotEmpty;
-    final desktop = FormFactor.of(context) == FormFactor.desktop;
     final count = shown == null
         ? ''
         : input.filter.isNotEmpty && total != null
@@ -74,7 +73,6 @@ class _SongsBarLeading extends ConsumerWidget {
     return Row(
       children: [
         PlayShuffleButtons(
-          labelled: desktop,
           playLabel: l10n.libraryPlayAll,
           onPlay: enabled
               ? () => playAll(ref, context, list, playContext)

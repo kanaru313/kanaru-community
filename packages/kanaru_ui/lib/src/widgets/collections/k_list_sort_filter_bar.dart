@@ -11,8 +11,8 @@ import '../k_gap.dart';
 import '../k_icon_button.dart';
 
 /// Bar above every list: [leading] group on the left (count, play buttons,
-/// view switch, breadcrumb), the sort chip and the filter toggle on the
-/// right. No scrolling of its own; the page makes it sticky if it wants.
+/// breadcrumb), then on the right the sort chip, the optional [view] switch
+/// and the filter toggle (both small icon buttons, the same on every shell). No scrolling of its own; the page makes it sticky if it wants.
 class KListSortFilterBar extends StatefulWidget {
   const KListSortFilterBar({
     super.key,
@@ -24,6 +24,7 @@ class KListSortFilterBar extends StatefulWidget {
     required this.onFilterToggle,
     this.sortTooltip,
     required this.filterTooltip,
+    this.view,
   });
 
   /// Left group; takes the room the right group leaves.
@@ -42,6 +43,12 @@ class KListSortFilterBar extends StatefulWidget {
   final VoidCallback onFilterToggle;
   final String? sortTooltip;
   final String filterTooltip;
+
+  /// The grid / list switch, between the sort chip and the filter toggle.
+  final Widget? view;
+
+  /// Width of a small icon button: icon plus padding 8 each side.
+  static const double buttonSize = KIconSize.sm + 2 * KSpace.x2;
 
   static const double heightMobile = 52;
   static const double heightDesktop = 48;
@@ -77,7 +84,8 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
         // such as the mobile play/shuffle buttons): a long label is ellipsized.
         builder: (context, bar) {
           final leadingMin = mobile ? 96.0 : 0.0;
-          final filterWidth = mobile ? 48.0 : 40.0;
+          final filterWidth =
+              KListSortFilterBar.buttonSize * (widget.view == null ? 1 : 2);
           final gaps = KSpace.x3 + KSpace.x2;
           final maxChipWidth = math.max(
             48.0,
@@ -141,14 +149,22 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
                 ),
               ),
               const KGap(KSpace.x2),
-              // Open: the tonal disc of a selected button. Closed: the light
-              // icon, padded to the same width so the glyph does not move.
+              ?widget.view,
+              // Open: the tonal disc of a selected button, as big as the light
+              // button's box. Closed: the light icon.
               if (widget.filterOpen)
                 IconButton.filledTonal(
                   focusNode: _filterFocus,
                   tooltip: widget.filterTooltip,
                   isSelected: true,
                   onPressed: widget.onFilterToggle,
+                  iconSize: KIconSize.sm,
+                  style: IconButton.styleFrom(
+                    fixedSize: const Size.square(KListSortFilterBar.buttonSize),
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   icon: const Icon(KIcons.filter),
                 )
               else
@@ -157,9 +173,8 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
                   tooltip: widget.filterTooltip,
                   onPressed: widget.onFilterToggle,
                   icon: KIcons.filter,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: (filterWidth - KIconSize.md) / 2,
-                  ),
+                  size: KIconSize.sm,
+                  padding: const EdgeInsets.all(KSpace.x2),
                 ),
             ],
           );

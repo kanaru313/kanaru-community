@@ -6,6 +6,16 @@ import '../../domain/browse/language_names.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/library_tabs.dart';
 
+/// Icon of a library list (sub-tab).
+IconData libraryTabIcon(LibraryTab tab) => switch (tab) {
+  LibraryTab.songs => KIcons.songs,
+  LibraryTab.albums => KIcons.albums,
+  LibraryTab.artists => KIcons.artists,
+  LibraryTab.genres => KIcons.genres,
+  LibraryTab.languages => KIcons.languages,
+  LibraryTab.folders => KIcons.folders,
+};
+
 /// Name of a library list (sub-tab, sidebar item, desktop page title).
 String libraryTabLabel(AppLocalizations l10n, LibraryTab tab) => switch (tab) {
   LibraryTab.songs => l10n.libraryTabSongs,

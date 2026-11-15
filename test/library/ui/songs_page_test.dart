@@ -170,24 +170,30 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('desktop labels play all, shuffle stays an icon on its right', (
-    tester,
-  ) async {
-    final h = await pumpLibrary(
-      tester,
-      initial: '/library/songs',
-      width: 1280,
-      height: 800,
-    );
-    await _addSongs(h, ['Alpha']);
-    await h.settle(tester);
-    expect(find.text('Play all'), findsOneWidget);
-    expect(find.text('Shuffle'), findsNothing);
-    final play = tester.getCenter(find.text('Play all'));
-    final shuffle = tester.getCenter(find.byTooltip('Shuffle'));
-    expect(shuffle.dx, greaterThan(play.dx));
-    await unmountApp(tester);
-  });
+  for (final (name, width) in [('mobile', 400.0), ('desktop', 1280.0)]) {
+    testWidgets('$name: play all and shuffle are 36 dp icon discs, shuffle '
+        'on the right, no label', (tester) async {
+      final h = await pumpLibrary(
+        tester,
+        initial: '/library/songs',
+        width: width,
+        height: 800,
+      );
+      await _addSongs(h, ['Alpha']);
+      await h.settle(tester);
+      expect(find.text('Play all'), findsNothing);
+      expect(find.text('Shuffle'), findsNothing);
+      final play = find.byTooltip('Play all');
+      final shuffle = find.byTooltip('Shuffle');
+      expect(tester.getSize(play), const Size.square(36));
+      expect(tester.getSize(shuffle), const Size.square(36));
+      expect(
+        tester.getCenter(shuffle).dx,
+        greaterThan(tester.getCenter(play).dx),
+      );
+      await unmountApp(tester);
+    });
+  }
 
   testWidgets('the heart toggles the favorite on the row', (tester) async {
     final h = await pumpLibrary(tester, initial: '/library/songs');

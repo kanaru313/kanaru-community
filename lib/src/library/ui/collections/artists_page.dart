@@ -26,6 +26,8 @@ class ArtistsPage extends StatelessWidget {
       child: LibraryListFrame(
         list: BrowseList.artists,
         filterHint: l10n.libraryFilterArtistsHint,
+        viewBuilder: (context, input) =>
+            CollectionViewSwitch(list: BrowseList.artists, view: input.view),
         builder: (context, input) => (
           leading: _ArtistsLeading(input: input),
           body: _ArtistsBody(input: input),
@@ -57,8 +59,6 @@ class _ArtistsLeading extends ConsumerWidget {
         unit: l10n.libraryUnitArtists,
         l10n: l10n,
       ),
-      switchFor: BrowseList.artists,
-      view: input.view,
     );
   }
 }

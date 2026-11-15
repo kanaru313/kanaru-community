@@ -57,7 +57,7 @@ void main() {
     final h = await _pump(tester);
     // Artists open as rows; the switch makes them a grid.
     expect(find.byType(ArtistCard), findsNothing);
-    await tester.tap(find.byTooltip('Grid'));
+    await tester.tap(byIconButton('Grid'));
     await h.settle(tester, rounds: 1);
     expect(find.text('2 artists'), findsOneWidget);
     expect(find.byType(ArtistCard), findsNWidgets(2));

@@ -96,8 +96,8 @@ class FolderPlayRow extends StatelessWidget {
   );
 }
 
-/// Left group of the Folders bar: the breadcrumb (the count in the flat list),
-/// the tree / flat switch, and for a level (desktop) shuffle and play.
+/// Left group of the Folders bar: the breadcrumb (the count in the flat list)
+/// and for a level (desktop) shuffle and play.
 class FoldersBarLeading extends ConsumerWidget {
   const FoldersBarLeading({
     super.key,
@@ -158,24 +158,45 @@ class FoldersBarLeading extends ConsumerWidget {
     return Row(
       children: [
         Flexible(child: first),
-        const KGap(KSpace.x1),
-        LibraryViewToggle<FolderView>(
-          value: place is FlatListPlace || place is FlatOpenPlace
-              ? FolderView.flat
-              : FolderView.tree,
-          options: [
-            ViewOption(FolderView.tree, KIcons.tree, l10n.libraryViewTree),
-            ViewOption(FolderView.flat, KIcons.flatList, l10n.libraryViewFlat),
-          ],
-          onChanged: (view) async {
-            await ref
-                .read(libraryListViewsProvider.notifier)
-                .setFolderView(view);
-            if (context.mounted) open(FolderLocation.top);
-          },
-        ),
-        if (target != null) FolderPlayButtons(target: target),
+        if (target != null) ...[
+          const KGap(KSpace.x1),
+          FolderPlayButtons(target: target),
+        ],
       ],
+    );
+  }
+}
+
+/// The tree / flat switch of the Folders bar.
+class FoldersViewSwitch extends ConsumerWidget {
+  const FoldersViewSwitch({
+    super.key,
+    required this.placeKey,
+    required this.open,
+  });
+
+  final FolderPlaceKey placeKey;
+  final FolderNavigator open;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final place = ref.watch(folderPlaceProvider(placeKey)).value;
+    if (place == null || place is NoFoldersPlace) {
+      return const SizedBox.shrink();
+    }
+    return LibraryViewToggle<FolderView>(
+      value: place is FlatListPlace || place is FlatOpenPlace
+          ? FolderView.flat
+          : FolderView.tree,
+      options: [
+        ViewOption(FolderView.tree, KIcons.tree, l10n.libraryViewTree),
+        ViewOption(FolderView.flat, KIcons.flatList, l10n.libraryViewFlat),
+      ],
+      onChanged: (view) async {
+        await ref.read(libraryListViewsProvider.notifier).setFolderView(view);
+        if (context.mounted) open(FolderLocation.top);
+      },
     );
   }
 }

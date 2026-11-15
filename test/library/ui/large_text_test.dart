@@ -9,6 +9,7 @@ import '../browse/support/library_fixture.dart';
 import 'support/detail_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
+import '../../support/icon_button_finders.dart';
 
 /// Page of every kind at twice the text size in a narrow window: nothing may
 /// overflow (a RenderFlex overflow is a test failure).
@@ -84,7 +85,7 @@ void main() {
   testWidgets('albums list at text scale 2', (tester) async {
     final h = await _pump(tester, '/library/albums');
     await _songs(h, tester);
-    await tester.tap(find.byTooltip('List'));
+    await tester.tap(byIconButton('List'));
     await h.settle(tester, rounds: 1);
     expect(find.textContaining('A long album name'), findsWidgets);
     expect(tester.takeException(), isNull);

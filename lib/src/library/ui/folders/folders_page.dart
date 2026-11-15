@@ -48,6 +48,8 @@ class FoldersPage extends ConsumerWidget {
       child: LibraryListFrame(
         list: BrowseList.folders,
         filterHint: l10n.libraryFilterFoldersHint,
+        viewBuilder: (context, input) =>
+            FoldersViewSwitch(placeKey: key, open: open),
         builder: (context, input) => (
           leading: FoldersBarLeading(placeKey: key, input: input, open: open),
           body: _FoldersBody(

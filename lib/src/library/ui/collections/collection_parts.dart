@@ -10,60 +10,45 @@ import '../browse/library_list_scaffold.dart';
 import '../browse/library_view_toggle.dart';
 
 /// Left group of the bar of Albums, Artists, Genres and Languages: the count
-/// (`6 / 34 artists` while filtering) and, for the lists that have two
-/// layouts, the grid / list switch.
-class CollectionBarLeading extends ConsumerWidget {
-  const CollectionBarLeading({
-    super.key,
-    required this.text,
-    this.switchFor,
-    this.view,
-  });
+/// (`6 / 34 artists` while filtering).
+class CollectionBarLeading extends StatelessWidget {
+  const CollectionBarLeading({super.key, required this.text});
 
   /// The count, already worded.
   final String text;
 
-  /// The list whose layout the switch changes; null = no switch.
-  final BrowseList? switchFor;
-  final CollectionView? view;
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: Theme.of(context).textTheme.labelLarge
+        ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+  );
+}
+
+/// The grid / list switch of a list that has two layouts, for the bar.
+class CollectionViewSwitch extends ConsumerWidget {
+  const CollectionViewSwitch({
+    super.key,
+    required this.list,
+    required this.view,
+  });
+
+  final BrowseList list;
+  final CollectionView view;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final list = switchFor;
-    return Row(
-      children: [
-        Flexible(
-          child: Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        if (list != null && view != null) ...[
-          const KGap(KSpace.x2),
-          LibraryViewToggle<CollectionView>(
-            value: view!,
-            options: [
-              ViewOption(
-                CollectionView.grid,
-                KIcons.grid,
-                l10n.libraryViewGrid,
-              ),
-              ViewOption(
-                CollectionView.list,
-                KIcons.list,
-                l10n.libraryViewList,
-              ),
-            ],
-            onChanged: (v) =>
-                ref.read(libraryListViewsProvider.notifier).setView(list, v),
-          ),
-        ],
+    return LibraryViewToggle<CollectionView>(
+      value: view,
+      options: [
+        ViewOption(CollectionView.grid, KIcons.grid, l10n.libraryViewGrid),
+        ViewOption(CollectionView.list, KIcons.list, l10n.libraryViewList),
       ],
+      onChanged: (v) =>
+          ref.read(libraryListViewsProvider.notifier).setView(list, v),
     );
   }
 }

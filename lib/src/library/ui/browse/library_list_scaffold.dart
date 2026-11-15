@@ -194,6 +194,7 @@ class _LibraryListScaffoldState extends ConsumerState<LibraryListScaffold>
         if (mobile)
           KSubTabBar(
             labels: [for (final t in visible) libraryTabLabel(l10n, t)],
+            icons: [for (final t in visible) libraryTabIcon(t)],
             selectedIndex: visible.indexOf(widget.tab),
             onSelected: (i) => _goTo(visible[i]),
             initialOffset: ref.read(subTabOffsetProvider),
