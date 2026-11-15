@@ -23,7 +23,7 @@ class KListSortFilterBar extends StatefulWidget {
     required this.filterOpen,
     required this.onFilterToggle,
     this.sortTooltip,
-    this.filterTooltip,
+    required this.filterTooltip,
   });
 
   /// Left group; takes the room the right group leaves.
@@ -41,7 +41,7 @@ class KListSortFilterBar extends StatefulWidget {
   final bool filterOpen;
   final VoidCallback onFilterToggle;
   final String? sortTooltip;
-  final String? filterTooltip;
+  final String filterTooltip;
 
   static const double heightMobile = 52;
   static const double heightDesktop = 48;
@@ -52,6 +52,16 @@ class KListSortFilterBar extends StatefulWidget {
 
 class _KListSortFilterBarState extends State<KListSortFilterBar> {
   final GlobalKey _chipKey = GlobalKey();
+
+  /// Shared by the light and the tonal filter button: they are different
+  /// widgets, and the node keeps keyboard focus on the button across the swap.
+  final FocusNode _filterFocus = FocusNode(debugLabel: 'filter button');
+
+  @override
+  void dispose() {
+    _filterFocus.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +145,7 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
               // icon, padded to the same width so the glyph does not move.
               if (widget.filterOpen)
                 IconButton.filledTonal(
+                  focusNode: _filterFocus,
                   tooltip: widget.filterTooltip,
                   isSelected: true,
                   onPressed: widget.onFilterToggle,
@@ -142,7 +153,8 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
                 )
               else
                 KIconButton(
-                  tooltip: widget.filterTooltip ?? '',
+                  focusNode: _filterFocus,
+                  tooltip: widget.filterTooltip,
                   onPressed: widget.onFilterToggle,
                   icon: KIcons.filter,
                   padding: EdgeInsets.symmetric(

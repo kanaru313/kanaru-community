@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, debugDefaultTargetPlatformOverride;
 import 'package:flutter_test/flutter_test.dart';
@@ -109,6 +110,54 @@ void main() {
       }
     });
   }
+
+  testWidgets('keyboard focus stays on the filter button when it toggles', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    var open = false;
+    var toggles = 0;
+    await tester.pumpWidget(
+      host(
+        StatefulBuilder(
+          builder: (context, setState) {
+            return _bar(
+              filterOpen: open,
+              onFilter: () {
+                toggles++;
+                setState(() => open = !open);
+              },
+            );
+          },
+        ),
+      ),
+    );
+    // Focus the light button with the keyboard, then press Enter twice.
+    FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.alwaysTraditional;
+    addTearDown(
+      () => FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.automatic,
+    );
+    final button = tester.widget<KIconButton>(find.byType(KIconButton));
+    button.focusNode!.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    await tester.pump();
+    expect(open, isTrue);
+    expect(find.byType(KIconButton), findsNothing, reason: 'tonal now');
+    final tonal = tester.widget<IconButton>(find.byType(IconButton));
+    expect(tonal.focusNode!.hasFocus, isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    await tester.pump();
+    expect(open, isFalse);
+    expect(toggles, 2);
+    final light = tester.widget<KIconButton>(find.byType(KIconButton));
+    expect(light.focusNode!.hasFocus, isTrue);
+    await tester.pump(const Duration(milliseconds: 400));
+  });
 
   testWidgets('the sort chip is announced with its criterion', (tester) async {
     useWindow(tester, const Size(400, 800));
