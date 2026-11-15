@@ -11,7 +11,7 @@ import '../k_gap.dart';
 import '../k_icon_button.dart';
 
 /// Bar above every list: [leading] group on the left (count, play buttons,
-/// breadcrumb), then on the right the sort chip, the optional [view] switch
+/// breadcrumb), then on the right the optional [view] switch, the sort chip
 /// and the filter toggle (both small icon buttons, the same on every shell). No scrolling of its own; the page makes it sticky if it wants.
 class KListSortFilterBar extends StatefulWidget {
   const KListSortFilterBar({
@@ -44,7 +44,7 @@ class KListSortFilterBar extends StatefulWidget {
   final String? sortTooltip;
   final String filterTooltip;
 
-  /// The grid / list switch, between the sort chip and the filter toggle.
+  /// The grid / list switch, left of the sort chip.
   final Widget? view;
 
   /// Width of a small icon button: icon plus padding 8 each side.
@@ -98,6 +98,7 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
             children: [
               Expanded(child: widget.leading),
               const KGap(KSpace.x3),
+              ?widget.view,
               Semantics(
                 button: true,
                 label: widget.sortTooltip == null
@@ -149,7 +150,6 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
                 ),
               ),
               const KGap(KSpace.x2),
-              ?widget.view,
               // Open: the tonal disc of a selected button, as big as the light
               // button's box. Closed: the light icon.
               if (widget.filterOpen)

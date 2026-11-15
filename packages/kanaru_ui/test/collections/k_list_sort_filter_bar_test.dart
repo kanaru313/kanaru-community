@@ -111,7 +111,7 @@ void main() {
     });
   }
 
-  testWidgets('the view switch sits between the sort chip and the filter', (
+  testWidgets('the view switch sits left of the sort chip, filter last', (
     tester,
   ) async {
     useWindow(tester, const Size(400, 800));
@@ -140,8 +140,8 @@ void main() {
     final chip = tester.getRect(find.text('Title')).center.dx;
     final view = tester.getCenter(find.byIcon(KIcons.grid)).dx;
     final filter = tester.getCenter(find.byIcon(KIcons.filter)).dx;
-    expect(chip, lessThan(view));
-    expect(view, lessThan(filter));
+    expect(view, lessThan(chip));
+    expect(chip, lessThan(filter));
     expect(tester.takeException(), isNull);
   });
 
