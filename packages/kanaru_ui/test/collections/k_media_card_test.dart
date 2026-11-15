@@ -699,6 +699,7 @@ void main() {
     );
 
     Widget song({
+      String duration = '5:53',
       required VoidCallback onHeart,
       VoidCallback? onAction,
       VoidCallback? onMore,
@@ -710,7 +711,7 @@ void main() {
         line2: 'a',
         line3: 'b',
         leading: const ColoredBox(color: Color(0xFF888888)),
-        top: const Text('5:53', key: Key('dur')),
+        top: Text(duration, key: const Key('dur')),
         bottom: heartButton(onHeart),
         onAction: onAction,
         actionLabel: 'Play',
@@ -790,31 +791,68 @@ void main() {
       expect((taps, rowTaps), (0, 1));
     });
 
-    testWidgets(
-      'heart and more edges fire themselves; nothing reaches the row',
-      (tester) async {
-        useWindow(tester, const Size(400, 800));
-        var hearts = 0, mores = 0, rowTaps = 0;
-        await tester.pumpWidget(
-          host(
-            song(
-              onHeart: () => hearts++,
-              onMore: () => mores++,
-              onTap: () => rowTaps++,
+    // Every tap inside the right column's heart band, at any duration width
+    // and text scale, belongs to the heart (or to the more button beside it),
+    // never to the row. The duration text above the band is the row's.
+    for (final duration in ['3:45', '1:02:33']) {
+      for (final scale in [1.0, 2.0]) {
+        testWidgets('near the heart: duration $duration at $scale x', (
+          tester,
+        ) async {
+          useWindow(tester, const Size(400, 800));
+          var hearts = 0, mores = 0, rowTaps = 0;
+          await tester.pumpWidget(
+            host(
+              song(
+                duration: duration,
+                onHeart: () => hearts++,
+                onMore: () => mores++,
+                onTap: () => rowTaps++,
+              ),
+              textScale: scale,
             ),
-          ),
-        );
-        final heart = tester.getRect(find.byKey(const Key('heart')));
-        final more = tester.getRect(find.byKey(const Key('more')));
-        // The two boxes butt: heart right edge is more's left edge.
-        expect(heart.right, lessThanOrEqualTo(more.left));
-        await tester.tapAt(Offset(heart.right - 1, heart.center.dy));
-        await settle(tester);
-        await tester.tapAt(Offset(more.left + 1, more.center.dy));
-        await settle(tester);
-        expect((hearts, mores, rowTaps), (1, 1, 0));
-      },
-    );
+          );
+          final heart = tester.getRect(find.byKey(const Key('heart')));
+          final more = tester.getRect(find.byKey(const Key('more')));
+          final column = tester.getRect(find.byType(KMediaCardRightColumn));
+          final text = tester.getRect(find.byKey(const Key('dur')));
+          Future<void> tapAt(Offset p) async {
+            await tester.tapAt(p);
+            await settle(tester);
+          }
+
+          // Left and right of the heart inside the column (a wide duration
+          // leaves strips there; a narrow one leaves none), and the heart's
+          // own edges.
+          final taps = <Offset>[
+            Offset(heart.left + 1, heart.center.dy),
+            Offset(heart.right - 1, heart.center.dy),
+            Offset(column.left + 0.5, heart.center.dy),
+            Offset(column.right - 0.5, heart.center.dy),
+            // The strip between the heart and the more button (the column's
+            // right side; the more button starts where the column ends).
+            Offset((heart.right + column.right) / 2 - 0.25, heart.center.dy),
+            // Where the heart's box overlaps the lower edge of the duration.
+            Offset(heart.center.dx, text.bottom - 1),
+          ];
+          for (final p in taps) {
+            await tapAt(p);
+          }
+          expect(rowTaps, 0, reason: 'no near miss plays the row');
+          expect(mores, 0);
+          expect(hearts, taps.length);
+
+          // The more button takes its own edge.
+          await tapAt(Offset(more.left + 1, more.center.dy));
+          expect((hearts, mores, rowTaps), (taps.length, 1, 0));
+
+          // The duration text itself is the row's.
+          await tester.tapAt(Offset(text.center.dx, text.top + 1));
+          await tester.pump(const Duration(milliseconds: 100));
+          expect((hearts, rowTaps), (taps.length, 1));
+        });
+      }
+    }
 
     testWidgets('a tap on the duration behaves like a tap on the row', (
       tester,

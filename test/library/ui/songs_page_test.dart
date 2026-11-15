@@ -187,6 +187,8 @@ void main() {
       final shuffle = find.byTooltip('Shuffle');
       expect(tester.getSize(play), const Size.square(36));
       expect(tester.getSize(shuffle), const Size.square(36));
+      // 8 dp between the two discs.
+      expect(tester.getRect(shuffle).left - tester.getRect(play).right, 8);
       expect(
         tester.getCenter(shuffle).dx,
         greaterThan(tester.getCenter(play).dx),
@@ -241,6 +243,8 @@ void main() {
     await tester.tapAt(more.topRight - const Offset(1, -1));
     await h.settle(tester, rounds: 1);
     expect(playback.calls, isEmpty);
+    // The menu of the row is open: the tap reached the ⋮, not an absorber.
+    expect(find.text('Go to album'), findsOneWidget);
     await unmountApp(tester);
   });
 

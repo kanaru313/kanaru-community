@@ -48,7 +48,7 @@ class PlayShuffleButtons extends StatelessWidget {
           );
     // Wraps onto a second line when large text leaves no room side by side.
     return Wrap(
-      spacing: labelled ? KSpace.x2 : 0,
+      spacing: KSpace.x2,
       runSpacing: KSpace.x2,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [

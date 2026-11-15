@@ -175,19 +175,41 @@ class RenderKMediaCardRightColumn extends RenderBox
     }
   }
 
+  /// The bottom button owns its whole row band across the column's width:
+  /// a tap beside it (the duration is wider than the box, or text scale grew
+  /// the column) or in the few dp where its box overlaps the duration's lower
+  /// edge goes to it, never to the row. The duration text above that band is
+  /// ignored by the pointer, so a tap on the text itself is a tap on the row.
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
-    for (final child in [_top, _bottom]) {
-      if (child == null) continue;
-      final offset = (child.parentData! as BoxParentData).offset;
-      final hit = result.addWithPaintOffset(
-        offset: offset,
-        position: position,
-        hitTest: (result, transformed) =>
-            child.hitTest(result, position: transformed),
-      );
-      if (hit) return true;
+    final bottom = _bottom;
+    if (bottom != null) {
+      final offset = (bottom.parentData! as BoxParentData).offset;
+      final inBand =
+          position.dy >= offset.dy &&
+          position.dy < offset.dy + bottom.size.height &&
+          position.dx >= 0 &&
+          position.dx < size.width;
+      if (inBand) {
+        final x = position.dx.clamp(
+          offset.dx,
+          math.max(offset.dx, offset.dx + bottom.size.width - 0.01),
+        );
+        return result.addWithPaintOffset(
+          offset: offset,
+          position: Offset(x.toDouble(), position.dy),
+          hitTest: (result, transformed) =>
+              bottom.hitTest(result, position: transformed),
+        );
+      }
     }
-    return false;
+    final top = _top;
+    if (top == null) return false;
+    return result.addWithPaintOffset(
+      offset: (top.parentData! as BoxParentData).offset,
+      position: position,
+      hitTest: (result, transformed) =>
+          top.hitTest(result, position: transformed),
+    );
   }
 }
