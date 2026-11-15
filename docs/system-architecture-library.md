@@ -467,8 +467,8 @@ the `TrackId` anchor of this provider, because a track can be queued twice.
   Shift click (desktop; Shift extends from the last clicked row in the order on
   screen), Ctrl+A, or "Select" in a song's menu. While a selection exists a tap
   on any `SongTile` toggles it instead of playing. A selected tile is tinted
-  `secondaryContainer` with a check over its cover (over the playing gradient
-  when it is also the playing row).
+  `secondaryContainer` with a check over its cover; a selected row that is
+  also playing keeps the playing gradient and gets the check.
 - Ctrl+A (`SelectAllShortcut`): a global key handler registered by the song
   list that is on screen, so it works right after a click on the sidebar. It
   adds the songs of `activeTrackListProvider` to the selection (it does not
