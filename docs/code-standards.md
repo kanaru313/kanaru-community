@@ -38,8 +38,10 @@ enforced by the gate. This file covers the rest.
 - Review greps for the two rules above. Allowed hits: the `iconButtonTheme`
   in `kanaru_ui` `kanaru_theme.dart`; filled and tonal buttons
   (`IconButton.filledTonal` / `.filled` with a local style); the icon-size
-  and font-size definitions in `KIconSize` and `KText`. Anything else is a
-  finding:
+  and font-size definitions in `KIconSize` and `KText`. Known leftovers, to
+  be moved to the tokens with the row and app work: hits under `lib/` outside
+  `kanaru_ui`, and `const iconSize = 20` in `k_media_card_right_column.dart`.
+  Anything else is a finding:
 
   ```bash
   git grep -nE "(^|[^A-Za-z_])IconButton(\.|\(|Theme)" -- lib packages/kanaru_ui/lib
