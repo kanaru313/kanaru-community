@@ -33,21 +33,21 @@ enforced by the gate. This file covers the rest.
   `KPressable` (scale + ink) is for cards and rows; `KIconButton` (icon
   opacity) is for icons. Tests find a `KIconButton` by its widget, not with
   `find.byTooltip` (its tooltip is kept out of semantics).
-- Text sizes come from the M3 `textTheme` or a `KText` style; no `fontSize:`
-  literal outside `KText`.
+- Text sizes come from the `Theme.of(context).textTheme` roles; no `fontSize:`
+  literal anywhere. A weight is set at the site with `copyWith(fontWeight: ...)`.
 - Review greps for the two rules above. Allowed hits: the `iconButtonTheme`
   in `kanaru_ui` `kanaru_theme.dart`; filled and tonal buttons
-  (`IconButton.filledTonal` / `.filled` with a local style); the icon-size
-  and font-size definitions in `KIconSize` and `KText`. Known leftovers, to
-  be moved to the tokens with the row and app work: hits under `lib/` outside
-  `kanaru_ui`, and `const iconSize = 20` in `k_media_card_right_column.dart`.
-  Anything else is a finding:
+  (`IconButton.filled` / `.filledTonal` with a local style: the play and
+  shuffle discs, the filled play button, the queue locate button, the open
+  state of a panel or filter toggle); the 72 dp Now Playing play disc, which
+  is a button size, not an icon size; the icon-size definitions in
+  `KIconSize`. Anything else is a finding:
 
   ```bash
   git grep -nE "(^|[^A-Za-z_])IconButton(\.|\(|Theme)" -- lib packages/kanaru_ui/lib
   git grep -nE "\b(iconSize|size) *: *[0-9]+(\.[0-9]+)?\b" -- lib packages/kanaru_ui/lib
   git grep -nE "[A-Za-z]*[iI]con[A-Za-z]*Size *= *[0-9]" -- lib packages/kanaru_ui/lib
-  git grep -nE "fontSize *: *[0-9]" -- lib packages/kanaru_ui/lib ':!packages/kanaru_ui/lib/src/tokens/k_text.dart'
+  git grep -nE "fontSize *: *[0-9]" -- lib packages/kanaru_ui/lib
   ```
 - Spacing between siblings is `KGap(KSpace.xN)`, not a sized box. Choice lists
   use `SelectionRow` / `showSelectionPicker` (no radios); a choice needing
