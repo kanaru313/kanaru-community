@@ -49,8 +49,8 @@ class QueueShuffleButton extends ConsumerWidget {
   const QueueShuffleButton({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => IconButton(
-    icon: const Icon(KIcons.shuffle),
+  Widget build(BuildContext context, WidgetRef ref) => KIconButton(
+    icon: KIcons.shuffle,
     tooltip: AppLocalizations.of(context).playbackShuffle,
     onPressed: () => ref.read(playerControllerProvider).reshuffleUpcoming(),
   );
@@ -69,8 +69,8 @@ class QueueSoonButton extends StatelessWidget {
     final label = _save
         ? l10n.playbackQueueSavePlaylist
         : l10n.playbackQueueAddTracks;
-    return IconButton(
-      icon: Icon(_save ? KIcons.playlistAdd : KIcons.libraryAdd),
+    return KIconButton(
+      icon: _save ? KIcons.playlistAdd : KIcons.libraryAdd,
       tooltip: '$label · ${l10n.appComingSoon}',
       onPressed: null,
     );
@@ -153,8 +153,8 @@ class _QueueCleanupButtonState extends ConsumerState<QueueCleanupButton> {
           counts?.allButCurrent,
         ),
       ],
-      builder: (context, controller, _) => IconButton(
-        icon: const Icon(KIcons.cleaning),
+      builder: (context, controller, _) => KIconButton(
+        icon: KIcons.cleaning,
         tooltip: l10n.playbackQueueCleanup,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),

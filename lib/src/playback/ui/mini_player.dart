@@ -154,8 +154,14 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                           ),
                         ),
                       ),
-                      _piece(FlightPiece.play, const PlayPauseButton()),
-                      _piece(FlightPiece.next, const NextButton()),
+                      _piece(
+                        FlightPiece.play,
+                        const PlayPauseButton(iconSize: KIconSize.lg),
+                      ),
+                      _piece(
+                        FlightPiece.next,
+                        const NextButton(iconSize: KIconSize.md),
+                      ),
                     ],
                   ),
                   const Positioned(

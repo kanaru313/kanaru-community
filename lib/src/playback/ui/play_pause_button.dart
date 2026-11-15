@@ -19,8 +19,9 @@ class PlayPauseButton extends ConsumerWidget {
   final bool filled;
   final double? iconSize;
 
-  /// Width and height of the button when it must be bigger than the icon
-  /// needs (the 72 dp button of Now Playing).
+  /// Width and height of the filled button when it must be bigger than the
+  /// icon needs (the 72 dp button of Now Playing). The plain button is its
+  /// icon plus padding and ignores it.
   final double? size;
 
   @override
@@ -30,23 +31,23 @@ class PlayPauseButton extends ConsumerWidget {
     final icon = Icon(playing ? KIcons.pause : KIcons.play);
     void toggle() => ref.read(playerControllerProvider).playPause();
     final tooltip = playing ? l10n.playbackPause : l10n.playbackPlay;
-    final style = size == null
-        ? null
-        : IconButton.styleFrom(fixedSize: Size.square(size!));
-    return filled
-        ? IconButton.filled(
-            icon: icon,
-            iconSize: iconSize,
-            style: style,
-            tooltip: tooltip,
-            onPressed: toggle,
-          )
-        : IconButton(
-            icon: icon,
-            iconSize: iconSize,
-            style: style,
-            tooltip: tooltip,
-            onPressed: toggle,
-          );
+    if (!filled) {
+      return KIconButton(
+        icon: playing ? KIcons.pause : KIcons.play,
+        size: iconSize ?? KIconSize.md,
+        tooltip: tooltip,
+        onPressed: toggle,
+      );
+    }
+    // The filled button keeps the Material disc, sized locally.
+    return IconButton.filled(
+      icon: icon,
+      iconSize: iconSize,
+      style: size == null
+          ? null
+          : IconButton.styleFrom(fixedSize: Size.square(size!)),
+      tooltip: tooltip,
+      onPressed: toggle,
+    );
   }
 }

@@ -9,6 +9,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../support/ui_host.dart';
+import '../../../support/icon_button_finders.dart';
 
 void main() {
   test('remaining time reads as hours and minutes', () {
@@ -54,7 +55,7 @@ void main() {
     // 164 dp, about 26 characters at 12 sp in the app fonts.
     final room = tester.getSize(find.byType(QueueCounts)).width;
     expect(room, greaterThanOrEqualTo(164 - 1));
-    expect(tester.getSize(find.byTooltip('Shuffle')).width, 40);
+    expect(tester.getSize(byIconButton('Shuffle')).width, 40);
   });
 
   testWidgets('the head buttons keep 8 dp between them', (tester) async {
@@ -63,8 +64,8 @@ void main() {
       const QueuePanel(host: QueueHost.panel),
       size: const Size(420, 700),
     );
-    final shuffle = tester.getRect(find.byTooltip('Shuffle'));
-    final add = tester.getRect(find.byTooltip('Add tracks · Coming soon'));
+    final shuffle = tester.getRect(byIconButton('Shuffle'));
+    final add = tester.getRect(byIconButton('Add tracks · Coming soon'));
     expect(add.left - shuffle.right, greaterThanOrEqualTo(8));
   });
 

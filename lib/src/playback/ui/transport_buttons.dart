@@ -15,9 +15,9 @@ class NextButton extends ConsumerWidget {
   final double? iconSize;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => IconButton(
-    icon: const Icon(KIcons.skipNext),
-    iconSize: iconSize,
+  Widget build(BuildContext context, WidgetRef ref) => KIconButton(
+    icon: KIcons.skipNext,
+    size: iconSize ?? KIconSize.md,
     tooltip: AppLocalizations.of(context).playbackNext,
     onPressed: () => ref.read(playerControllerProvider).next(),
   );
@@ -31,9 +31,9 @@ class PreviousButton extends ConsumerWidget {
   final double? iconSize;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => IconButton(
-    icon: const Icon(KIcons.skipPrevious),
-    iconSize: iconSize,
+  Widget build(BuildContext context, WidgetRef ref) => KIconButton(
+    icon: KIcons.skipPrevious,
+    size: iconSize ?? KIconSize.md,
     tooltip: AppLocalizations.of(context).playbackPrevious,
     onPressed: () => ref.read(playerControllerProvider).previous(),
   );
