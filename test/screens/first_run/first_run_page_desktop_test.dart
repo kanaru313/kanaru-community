@@ -153,8 +153,8 @@ void main() {
       await tester.pumpAndSettle();
     }
     expect(h.container.read(libraryTabsProvider).enabled, {LibraryTab.folders});
-    expect(tester.widget<Switch>(switchOf('Folders')).onChanged, isNull);
-    expect(tester.widget<Switch>(switchOf('Songs')).onChanged, isNotNull);
+    expect(tester.widget<KSwitch>(switchOf('Folders')).onChanged, isNull);
+    expect(tester.widget<KSwitch>(switchOf('Songs')).onChanged, isNotNull);
   });
 
   testWidgets('removing a music folder removes its exclusions', (tester) async {

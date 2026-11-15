@@ -36,4 +36,5 @@ export 'src/widgets/page_header_scope.dart';
 export 'src/widgets/pro_badge.dart';
 export 'src/widgets/selection_picker.dart';
 export 'src/widgets/selection_row.dart';
+export 'src/widgets/setup/k_switch.dart';
 export 'src/widgets/setup/setup_widgets.dart';

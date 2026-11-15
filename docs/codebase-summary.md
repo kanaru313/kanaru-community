@@ -40,6 +40,7 @@ library UI bodies (their seeds are in the table above).
   - Icons: `KIcons` (the only file that names `Icons`).
   - Pages and headers: `KPage`, `PageHeader`, `PageHeaderScope`, `KEmpty`, `KEmptyPage`, `ProBadge`.
   - Choice and feedback: `KCheckMark` (animated ring / disc+tick / dash; `plain` style = bare tick; used by `SelectionRow`), `SelectionRow`, `SelectionOption`, `showSelectionPicker` (with `confirm`, `header`, `anchor`), `showMultiSelectionSheet` (optional tristate select-all row, plain tick on the right for icon options, mark at the start for text options), `showKSheet`, `showKDialog`, `confirmAction`, `showAppSnackBar`.
+  - Switch: `KSwitch` (own 52 × 32 switch: fill grows from the thumb, thumb springs, tick drawn; used by `KSwitchRow` in `widgets/setup/`, no M3 `Switch`).
   - Rows and tiles: `KListRow`, `KSwipeActions` (row swipe, per-pointer drag slop), `songClick` + `SongClick` (play / toggle / range click classifier), `KChip`, `KPressable`, `KContextRegion`, `KCover`, `KEqualizerIcon`, `KGap` (typedef of `Gap`).
   - Group folders, exported from their barrels and owned by the lanes: `widgets/setup/` (scanner lane), `widgets/media/` (playback lane), `widgets/collections/` (library lane). Empty in the foundation.
   - Tests in `packages/kanaru_ui/test/`, with a shared host helper in `test/support/`.

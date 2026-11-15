@@ -36,7 +36,7 @@ void main() {
       );
       expect(tester.takeException(), isNull);
       expect(find.byIcon(KIcons.dragIndicator), findsNWidgets(3));
-      expect(find.byType(Switch), findsNWidgets(3));
+      expect(find.byType(KSwitch), findsNWidgets(3));
     });
   }
 
@@ -48,15 +48,15 @@ void main() {
         _list({'songs', 'albums'}, onToggle: (v, on) => toggles.add((v, on))),
       ),
     );
-    await tester.tap(find.byType(Switch).at(2));
-    await tester.tap(find.byType(Switch).at(0));
+    await tester.tap(find.byType(KSwitch).at(2));
+    await tester.tap(find.byType(KSwitch).at(0));
     expect(toggles, [('artists', true), ('songs', false)]);
   });
 
   testWidgets('the last enabled row is locked', (tester) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_list({'albums'})));
-    final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
+    final switches = tester.widgetList<KSwitch>(find.byType(KSwitch)).toList();
     // songs is off and may be turned on; albums is the only one on: locked.
     expect(switches[0].onChanged, isNotNull);
     expect(switches[1].onChanged, isNull);

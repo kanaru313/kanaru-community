@@ -41,7 +41,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byType(KSwitch));
     await tester.tap(find.text('Albums'));
     expect(seen, [true, true]);
   });
@@ -59,7 +59,7 @@ void main() {
         ),
       ),
     );
-    final sw = tester.widget<Switch>(find.byType(Switch));
+    final sw = tester.widget<KSwitch>(find.byType(KSwitch));
     expect(sw.onChanged, isNull);
     await tester.tap(find.text('Songs'));
     await tester.pump();

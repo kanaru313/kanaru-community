@@ -279,5 +279,5 @@ extension FirstRunFinders on WidgetTester {
 /// A Switch row's switch by the row title.
 Finder switchOf(String title) => find.descendant(
   of: find.ancestor(of: find.text(title), matching: find.byType(KSwitchRow)),
-  matching: find.byType(Switch),
+  matching: find.byType(KSwitch),
 );
