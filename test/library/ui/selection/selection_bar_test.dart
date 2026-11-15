@@ -17,6 +17,7 @@ import '../support/library_harness.dart';
 import '../support/ui_harness.dart';
 import 'selection_support.dart';
 import '../../../support/icon_button_finders.dart';
+import '../../../support/row_fill_finders.dart';
 
 Finder _button(String tooltip) => byIconButton(tooltip);
 
@@ -120,6 +121,24 @@ void main() {
     await tester.pump();
     expect(h.selected.isEmpty, isTrue);
     expect(find.byType(KSelectionPanel), findsNothing);
+    await unmountApp(tester);
+  });
+
+  testWidgets('selection panel rows have no row fill', (tester) async {
+    final h = await pumpSelection(tester);
+    final ids = await allIds(h);
+    h.selection.toggle(ids[1]);
+    await tester.pump();
+    await tester.tap(_button('Show the selected songs'));
+    await h.settle(tester, rounds: 3);
+    final row = find.byType(SelectedSongRow);
+    expect(row, findsOneWidget);
+    final card = find.descendant(of: row, matching: find.byType(KMediaCard));
+    expect(tester.widget<KMediaCard>(card).filled, isFalse);
+    expect(
+      cardBackground(tester, card),
+      isNot(KRowColors.fill(Theme.of(tester.element(card)).brightness)),
+    );
     await unmountApp(tester);
   });
 

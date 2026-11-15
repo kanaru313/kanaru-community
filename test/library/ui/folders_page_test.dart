@@ -20,6 +20,7 @@ import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
 import '../../support/icon_button_finders.dart';
+import '../../support/row_fill_finders.dart';
 
 const _home = StorageVolume(root: '/home/u', kind: StorageVolumeKind.home);
 const _sd = StorageVolume(
@@ -98,6 +99,12 @@ void main() {
       await unmountApp(tester);
     },
   );
+
+  testWidgets('folder rows paint the neutral row fill', (tester) async {
+    await _single(tester);
+    expectRowFilled(tester, within: find.byType(FolderTile));
+    await unmountApp(tester);
+  });
 
   testWidgets('a folder row opens its level in place; a chain opens its end', (
     tester,

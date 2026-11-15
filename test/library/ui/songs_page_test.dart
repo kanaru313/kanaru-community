@@ -29,6 +29,7 @@ import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
 import '../../support/icon_button_finders.dart';
+import '../../support/row_fill_finders.dart';
 
 Future<List<int>> _addSongs(LibraryHarness h, List<String> titles) async => [
   for (final t in titles)
@@ -80,6 +81,14 @@ void main() {
       for (final i in [ids[1], ids[2], ids[0]]) TrackId(i),
     ]);
     expect(call.context.kind, PlayContextKind.songs);
+    await unmountApp(tester);
+  });
+
+  testWidgets('song rows paint the neutral row fill', (tester) async {
+    final h = await pumpLibrary(tester, initial: '/library/songs');
+    await _addSongs(h, ['Alpha', 'Bravo']);
+    await h.settle(tester);
+    expectRowFilled(tester, within: find.byType(SongTile));
     await unmountApp(tester);
   });
 

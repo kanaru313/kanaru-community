@@ -16,6 +16,7 @@ import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
 import '../../support/icon_button_finders.dart';
+import '../../support/row_fill_finders.dart';
 
 Future<LibraryHarness> _pump(
   WidgetTester tester, {
@@ -109,6 +110,16 @@ void main() {
     await tester.tap(find.text('Jazz'));
     await tester.pump();
     expect(h.location, '/library/genres/${encodeKey(groupKey('Jazz'))}');
+    await unmountApp(tester);
+  });
+
+  testWidgets('genre list rows paint the neutral row fill', (tester) async {
+    final h = await _pump(tester);
+    await h.container
+        .read(libraryListViewsProvider.notifier)
+        .setView(BrowseList.genres, CollectionView.list);
+    await tester.pump();
+    expectRowFilled(tester);
     await unmountApp(tester);
   });
 
