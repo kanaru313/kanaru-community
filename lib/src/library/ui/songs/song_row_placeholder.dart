@@ -40,9 +40,11 @@ class SongRowFailed extends StatelessWidget {
             borderRadius: flat ? null : BorderRadius.circular(14),
           ),
           child: Padding(
-            // The row padding of a loaded row; the Retry TextButton has its
-            // own 8 dp padding, which lines it up with the ⋮ of a loaded row.
-            padding: const EdgeInsets.only(left: KMediaCard.sidePadding),
+            // The row padding of a loaded row on both sides, so the Retry
+            // button ends where the ⋮ of a loaded row ends.
+            padding: const EdgeInsets.symmetric(
+              horizontal: KMediaCard.sidePadding,
+            ),
             child: Row(
               children: [
                 Expanded(
