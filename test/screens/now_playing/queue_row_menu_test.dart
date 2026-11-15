@@ -11,6 +11,7 @@ import 'package:kanaru/src/screens/now_playing/ui/queue_panel.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../playback/support/ui_host.dart';
+import '../../support/icon_button_finders.dart';
 
 final _routes = <RouteBase>[
   GoRoute(
@@ -324,7 +325,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byType(QueueRow).at(1),
-        matching: find.byTooltip('More'),
+        matching: byIconButton('More'),
       ),
     );
     await tester.pump();

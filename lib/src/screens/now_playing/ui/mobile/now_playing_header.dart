@@ -43,8 +43,8 @@ class NowPlayingHeader extends ConsumerWidget {
       height: nowPlayingHeaderHeight,
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(KIcons.collapse),
+          KIconButton(
+            icon: KIcons.collapse,
             tooltip: l10n.playbackMinimize,
             onPressed: onClose,
           ),
@@ -72,8 +72,8 @@ class NowPlayingHeader extends ConsumerWidget {
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(KIcons.moreVert),
+          KIconButton(
+            icon: KIcons.moreVert,
             tooltip: l10n.playbackMore,
             onPressed: onMore,
           ),

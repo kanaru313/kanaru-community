@@ -1,4 +1,7 @@
+import 'dart:ui' show lerpDouble;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../media/domain/cover_files.dart';
@@ -88,7 +91,7 @@ class StripPlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) => PlayPauseButton(
     filled: true,
-    iconSize: 28 + 8 * (1 - t),
+    iconSize: lerpDouble(KIconSize.lg, KIconSize.xl, 1 - t),
     size: rect.width,
   );
 }
@@ -99,5 +102,6 @@ class StripNext extends StatelessWidget {
   final double t;
 
   @override
-  Widget build(BuildContext context) => NextButton(iconSize: 28 + 4 * (1 - t));
+  Widget build(BuildContext context) =>
+      NextButton(iconSize: lerpDouble(KIconSize.md, KIconSize.lg, 1 - t));
 }

@@ -20,6 +20,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
 import '../../../playback/support/ui_host.dart';
+import '../../../support/icon_button_finders.dart';
 
 final _routes = <RouteBase>[
   GoRoute(
@@ -140,7 +141,7 @@ void main() {
 
   testWidgets('the chevron closes the page', (tester) async {
     final host = await _open(tester);
-    await tester.tap(find.byTooltip('Minimise'));
+    await tester.tap(byIconButton('Minimise'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(MobileNowPlaying), findsNothing);
@@ -289,10 +290,10 @@ void main() {
             .dx,
     ];
     expect(xs, [...xs]..sort());
-    final ai = tester.widget<IconButton>(
+    final ai = tester.widget<KIconButton>(
       find.descendant(
         of: row,
-        matching: find.widgetWithIcon(IconButton, KIcons.ai),
+        matching: find.widgetWithIcon(KIconButton, KIcons.ai),
       ),
     );
     expect(ai.onPressed, isNull);

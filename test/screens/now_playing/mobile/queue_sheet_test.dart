@@ -19,6 +19,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../playback/support/controller_harness.dart' show ctx;
 import '../../../playback/support/ui_host.dart';
+import '../../../support/icon_button_finders.dart';
 
 final _routes = <RouteBase>[
   GoRoute(
@@ -67,7 +68,7 @@ Future<UiHost> _openFromNowPlaying(
   await tester.pump();
   await _frames(tester, 5);
   await host.letStreamsArrive(tester);
-  await tester.tap(find.byTooltip('Queue'));
+  await tester.tap(byIconButton('Queue'));
   await tester.pump();
   await _frames(tester);
   await host.letStreamsArrive(tester);
@@ -221,7 +222,7 @@ void main() {
           )
           .first,
     );
-    await tester.tap(find.byTooltip('Queue'));
+    await tester.tap(byIconButton('Queue'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
     final mid = tester.getRect(find.byType(StripCover));
@@ -280,7 +281,7 @@ void main() {
 
   testWidgets('the chevron closes the sheet', (tester) async {
     await _openFromNowPlaying(tester);
-    await tester.tap(find.byTooltip('Minimise').last);
+    await tester.tap(byIconButton('Minimise').last);
     await tester.pump();
     await _frames(tester);
     expect(_sheet, findsNothing);
@@ -400,7 +401,7 @@ void main() {
     await tester.pump();
     await _frames(tester, 5);
     await host.letStreamsArrive(tester);
-    await tester.tap(find.byTooltip('Queue'));
+    await tester.tap(byIconButton('Queue'));
     await tester.pump();
     await _frames(tester);
     await host.letStreamsArrive(tester);
@@ -501,7 +502,7 @@ void main() {
     await tester.pump();
     await _frames(tester, 5);
     await host.letStreamsArrive(tester);
-    await tester.tap(find.byTooltip('Queue'));
+    await tester.tap(byIconButton('Queue'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     // The sheet is at its final place at once (the route animation is

@@ -37,16 +37,16 @@ class NowPlayingButtonRow extends StatelessWidget {
         cell(const ShuffleButton()),
         cell(const RepeatButton()),
         cell(
-          IconButton(
-            icon: const Icon(KIcons.ai),
+          KIconButton(
+            icon: KIcons.ai,
             color: scheme.primary,
             tooltip: '${l10n.playbackAskAi} · ${l10n.appComingSoon}',
             onPressed: null,
           ),
         ),
         cell(
-          IconButton(
-            icon: const Icon(KIcons.queueMusic),
+          KIconButton(
+            icon: KIcons.queueMusic,
             tooltip: l10n.playbackNavQueue,
             onPressed: onQueue,
           ),

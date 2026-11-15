@@ -92,8 +92,8 @@ class DesktopMoreMenu extends ConsumerWidget {
         const Divider(height: 1),
         for (final item in groups[1]) entry(item),
       ],
-      builder: (context, controller, _) => IconButton(
-        icon: const Icon(KIcons.moreVert),
+      builder: (context, controller, _) => KIconButton(
+        icon: KIcons.moreVert,
         tooltip: l10n.playbackMore,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),

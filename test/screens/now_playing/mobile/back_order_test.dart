@@ -7,6 +7,7 @@ import 'package:kanaru/src/screens/now_playing/ui/now_playing_page.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../playback/support/ui_host.dart';
+import '../../../support/icon_button_finders.dart';
 
 final _routes = <RouteBase>[
   GoRoute(
@@ -39,7 +40,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
     await host.letStreamsArrive(tester);
-    await tester.tap(find.byTooltip('Queue'));
+    await tester.tap(byIconButton('Queue'));
     await tester.pump();
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 100));

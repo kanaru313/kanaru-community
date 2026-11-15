@@ -213,9 +213,9 @@ class _TransportRow extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             spacing: 20,
             children: [
-              PreviousButton(iconSize: 28),
-              PlayPauseButton(iconSize: 36),
-              NextButton(iconSize: 28),
+              PreviousButton(iconSize: KIconSize.lg),
+              PlayPauseButton(iconSize: KIconSize.lg),
+              NextButton(iconSize: KIconSize.lg),
             ],
           ),
           Expanded(
