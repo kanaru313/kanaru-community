@@ -89,10 +89,12 @@ void main() {
         tester,
         size: QueueRowSize.desktop,
         window: _desktopWindow,
-        favorite: (context, item) => IconButton(
-          iconSize: 20,
+        favorite: (context, item) => KIconButton(
+          tooltip: 'Heart',
+          size: KIconSize.sm,
+          padding: const EdgeInsets.all(KSpace.x2),
           onPressed: () {},
-          icon: const Icon(KIcons.heart),
+          icon: KIcons.heart,
         ),
       );
       final row = find.byType(QueueRow).first;
@@ -106,7 +108,7 @@ void main() {
       final heart = rectIn(
         tester,
         row,
-        find.widgetWithIcon(IconButton, KIcons.heart),
+        find.widgetWithIcon(KIconButton, KIcons.heart),
       );
       final more = rectIn(tester, row, find.byIcon(KIcons.moreVert));
       expect(handle.size, const Size.square(KLayout.minTargetDesktop));
@@ -151,10 +153,12 @@ void main() {
         tester,
         size: QueueRowSize.desktop,
         window: _desktopWindow,
-        favorite: (context, item) => IconButton(
-          iconSize: 20,
+        favorite: (context, item) => KIconButton(
+          tooltip: 'Heart',
+          size: KIconSize.sm,
+          padding: const EdgeInsets.all(KSpace.x2),
           onPressed: () {},
-          icon: const Icon(KIcons.heart),
+          icon: KIcons.heart,
         ),
       );
       final row = find.byType(QueueRow).first;

@@ -227,8 +227,9 @@ void main() {
     tester,
   ) async {
     await _open(tester);
+    // The player bar button and the cover both carry this name.
+    expect(byAnyIconButton('Open Now Playing'), findsNothing);
     expect(find.byTooltip('Open Now Playing'), findsNothing);
-    expect(find.byTooltip('Expand'), findsNothing);
   });
 
   testWidgets('narrowing the window hands Now Playing to the mobile page', (

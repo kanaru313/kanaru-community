@@ -589,8 +589,10 @@ Every call is awaited; a failure is logged and shows a snack bar.
   The ♥ and ⋮ are `KIconButton`s (small icon, padding 8, so 36 dp boxes, no
   48 dp minimum); the duration sits 2 dp above the ♥ glyph and the pair is
   centred in the row. The gaps beside the right column, ▶ and ⋮ take a tap
-  without acting (a near miss does not play the row); a tap on the duration
-  text is a tap on the row.
+  without acting (a near miss does not play the row). The ♥'s row band across
+  the whole right column, including the few dp where its box overlaps the
+  lower edge of the duration, belongs to the ♥; a tap on the duration text
+  above that band is a tap on the row.
   Tap = `playTracks(ids, startIndex: index)`. The whole row (inside its
   `KContextRegion`) is a `KSwipeActions.capped`: swipe left = "Play next"
   (`MenuActionRunner.playNext([id])`, same call and toast as the menu footer),

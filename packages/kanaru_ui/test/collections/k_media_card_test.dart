@@ -46,6 +46,7 @@ Widget _card({
       bottom: full ? const Icon(KIcons.heart) : null,
       trailing: const Icon(KIcons.moreVert),
       onAction: onAction,
+      actionLabel: onAction == null ? null : 'Play',
       current: current,
       currentLabel: currentLabel,
       selected: selected,

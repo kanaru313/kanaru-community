@@ -320,6 +320,45 @@ void main() {
     },
   );
 
+  testWidgets(
+    'Space and Enter on a focused more button report a keyboard press and '
+    'do not play or pause',
+    (tester) async {
+      final calls = <bool>[];
+      final buttonFocus = FocusNode();
+      addTearDown(buttonFocus.dispose);
+      final host = await pumpDesktopShell(
+        tester,
+        routes: [
+          GoRoute(
+            path: '/more',
+            builder: (_, _) => Center(
+              child: KMoreButton(
+                tooltip: 'More',
+                onPressed: ({required viaKeyboard}) => calls.add(viaKeyboard),
+              ),
+            ),
+          ),
+        ],
+      );
+      host.routerRef.go('/more');
+      await tester.pumpAndSettle();
+      Focus.of(tester.element(find.byIcon(KIcons.moreVert))).requestFocus();
+      await tester.pump();
+
+      await _key(tester, host, LogicalKeyboardKey.space);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(calls, [true, true]);
+      expect(host.h.c.intent, PlayIntent.paused);
+
+      // A pointer press resets the answer.
+      await tester.tap(find.byIcon(KIcons.moreVert));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(calls, [true, true, false]);
+    },
+  );
+
   testWidgets('focused EditableText keeps Space, arrows and Ctrl+S', (
     tester,
   ) async {

@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/now_playing_text_styles.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/queue_strip.dart';
-import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../playback/support/ui_host.dart';
@@ -14,11 +13,20 @@ void main() {
     double t, {
     double scale = 1.0,
   }) async {
-    await pumpWithPlayer(
+    final host = await pumpWithPlayer(
       tester,
       Center(child: StripText(t: t)),
       textScale: scale,
+      play: false,
     );
+    // Give the playing track an artist so the artist line is built.
+    await host.run(tester, () async {
+      await host.h.db.customStatement(
+        "UPDATE tracks SET artist = 'Art' WHERE title = 'T0'",
+      );
+      await host.h.play();
+    });
+    await host.letStreamsArrive(tester);
     text = Theme.of(tester.element(find.byType(StripText))).textTheme;
     return [
       for (final w in tester.widgetList<Text>(find.byType(Text))) w.style,
@@ -48,15 +56,22 @@ void main() {
     expect(styles.first?.fontSize, closeTo((from + to) / 2, 0.01));
   });
 
-  // The test track has no artist line, so the artist ends are pinned on the
-  // style functions the strip and the page both use.
-  test('artist ends are the M3 body roles, titles are bold', () {
-    final text = buildKanaruTheme(brightness: Brightness.light).textTheme;
-    expect(coverArtistStyle(text)?.fontSize, text.bodyLarge?.fontSize);
-    expect(stripArtistStyle(text)?.fontSize, text.bodyMedium?.fontSize);
-    expect(coverTitleStyle(text)?.fontWeight, FontWeight.w700);
-    expect(stripTitleStyle(text)?.fontWeight, FontWeight.w700);
-  });
+  // The artist line flies from the Now Playing artist (t = 0) to the strip
+  // artist (t = 1), both M3 body roles.
+  for (final (t, pick) in [
+    (0.0, (TextTheme x) => x.bodyLarge!.fontSize!),
+    (1.0, (TextTheme x) => x.bodyMedium!.fontSize!),
+    (
+      0.5,
+      (TextTheme x) => (x.bodyLarge!.fontSize! + x.bodyMedium!.fontSize!) / 2,
+    ),
+  ]) {
+    testWidgets('artist font size at t = $t', (tester) async {
+      await stripStyles(tester, t);
+      final artist = tester.widget<Text>(find.text('Art'));
+      expect(artist.style?.fontSize, closeTo(pick(text), 0.01));
+    });
+  }
 
   for (final scale in [1.5, 2.0]) {
     for (final t in [0.0, 1.0]) {

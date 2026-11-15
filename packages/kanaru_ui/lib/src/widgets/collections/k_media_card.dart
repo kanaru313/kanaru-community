@@ -74,7 +74,10 @@ class KMediaCard extends StatefulWidget {
     this.onLongPress,
     this.loading = false,
     this.style = KMediaCardStyle.auto,
-  });
+  }) : assert(
+         onAction == null || actionLabel != null,
+         'the play button needs a label for its tooltip and screen reader',
+       );
 
   final String title;
 

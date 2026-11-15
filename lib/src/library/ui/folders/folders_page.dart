@@ -15,6 +15,7 @@ import '../collections/collection_parts.dart';
 import '../songs/song_list.dart';
 import 'folder_back.dart';
 import 'folder_bar.dart';
+import 'folders_view_switch.dart';
 import 'folder_locations.dart';
 import '../selection/selection_inset.dart';
 import 'folder_place.dart';
