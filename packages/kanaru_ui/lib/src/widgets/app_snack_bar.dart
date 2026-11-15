@@ -12,8 +12,26 @@ void showAppSnackBar(
   VoidCallback? onAction,
   Duration duration = const Duration(seconds: 4),
 }) {
+  showAppSnackBarOn(
+    ScaffoldMessenger.of(context),
+    message,
+    actionLabel: actionLabel,
+    onAction: onAction,
+    duration: duration,
+  );
+}
+
+/// [showAppSnackBar] on a [ScaffoldMessengerState] captured earlier, for
+/// callers that show it after an await when their context may be gone.
+void showAppSnackBarOn(
+  ScaffoldMessengerState messenger,
+  String message, {
+  String? actionLabel,
+  VoidCallback? onAction,
+  Duration duration = const Duration(seconds: 4),
+}) {
   final hasAction = actionLabel != null && onAction != null;
-  ScaffoldMessenger.of(context)
+  messenger
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(

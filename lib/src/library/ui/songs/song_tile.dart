@@ -290,6 +290,13 @@ class _SongFavoriteButtonState extends ConsumerState<SongFavoriteButton> {
   bool _writing = false;
 
   @override
+  void didUpdateWidget(SongFavoriteButton old) {
+    super.didUpdateWidget(old);
+    // A write in flight belongs to the previous track.
+    if (old.trackId != widget.trackId) _writing = false;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final favorite = ref.watch(isFavoriteProvider(widget.trackId));
@@ -319,19 +326,9 @@ class _SongFavoriteButtonState extends ConsumerState<SongFavoriteButton> {
       await controller.toggle(id);
     } on Object catch (e, s) {
       _log.warning('toggling favorite of $id failed', e, s);
-      // Same snack bar as showAppSnackBar, through the captured messenger
-      // (that helper needs a live context). A messenger whose page was
-      // popped during the write is gone: skip.
+      // A messenger whose page was popped during the write is gone: skip.
       if (messenger != null && messenger.mounted) {
-        messenger
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(message),
-              persist: false,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+        showAppSnackBarOn(messenger, message);
       }
     } finally {
       _writing = false;
