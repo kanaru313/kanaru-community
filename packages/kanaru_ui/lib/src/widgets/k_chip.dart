@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
+import '../tokens/k_icon_size.dart';
 import '../tokens/k_layout.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
@@ -51,7 +52,7 @@ class KChip extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: KSpace.x4),
                 child: IconTheme.merge(
-                  data: IconThemeData(color: fg, size: 18),
+                  data: IconThemeData(color: fg, size: KIconSize.xs),
                   child: DefaultTextStyle.merge(
                     style: Theme.of(context).textTheme.labelLarge
                         ?.copyWith(color: fg),

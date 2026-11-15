@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
+import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_layout.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
@@ -71,7 +72,11 @@ class KBreadcrumb extends StatelessWidget {
     void add(Widget w) {
       if (children.isNotEmpty) {
         children.add(
-          Icon(KIcons.chevronRight, size: 16, color: scheme.onSurfaceVariant),
+          Icon(
+            KIcons.chevronRight,
+            size: KIconSize.xs,
+            color: scheme.onSurfaceVariant,
+          ),
         );
       }
       children.add(w);
@@ -158,7 +163,7 @@ class _MoreButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    const label = Icon(KIcons.moreHoriz, size: 20);
+    const label = Icon(KIcons.moreHoriz, size: KIconSize.sm);
     return Tooltip(
       message: tooltip ?? '',
       child: Semantics(

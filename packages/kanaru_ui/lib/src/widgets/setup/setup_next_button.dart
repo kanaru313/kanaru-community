@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
+import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
@@ -45,7 +46,11 @@ class SetupNextButton extends StatelessWidget {
           onTap: onPressed,
           child: SizedBox.square(
             dimension: _size,
-            child: Icon(KIcons.arrowForward, size: 30, color: scheme.onPrimary),
+            child: Icon(
+              KIcons.arrowForward,
+              size: KIconSize.lg,
+              color: scheme.onPrimary,
+            ),
           ),
         ),
       ),

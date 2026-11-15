@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_cover.dart';
@@ -40,6 +41,10 @@ class KColorTile extends StatelessWidget {
 
   static const double minHeight = 88;
 
+  /// Faint icon behind the text: the tile height less a margin, so it
+  /// follows the tile.
+  static const double _watermark = minHeight - KSpace.x6;
+
   @override
   Widget build(BuildContext context) =>
       more == null ? _tile(context, false) : KEngageRegion(builder: _tile);
@@ -66,7 +71,7 @@ class KColorTile extends StatelessWidget {
                   child: ExcludeSemantics(
                     child: Icon(
                       icon,
-                      size: 64,
+                      size: _watermark,
                       color: tones.ink.withValues(alpha: 0.14),
                     ),
                   ),
@@ -133,6 +138,9 @@ class KColorBanner extends StatelessWidget {
   /// Buttons under the text (play, shuffle, more).
   final Widget? actions;
 
+  /// Faint icon behind the headline: twice the hero icon size.
+  static const double _watermark = KIconSize.hero * 2;
+
   @override
   Widget build(BuildContext context) {
     final tones = _tones(context, seed);
@@ -149,7 +157,7 @@ class KColorBanner extends StatelessWidget {
               child: ExcludeSemantics(
                 child: Icon(
                   icon,
-                  size: 96,
+                  size: _watermark,
                   color: tones.ink.withValues(alpha: 0.14),
                 ),
               ),

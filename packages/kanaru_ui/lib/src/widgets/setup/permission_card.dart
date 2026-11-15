@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
+import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
@@ -140,7 +141,11 @@ class _StateCircle extends StatelessWidget {
                 shape: KShape.of(KRadius.full),
                 color: scheme.primary,
               ),
-              child: Icon(KIcons.check, size: 18, color: scheme.onPrimary),
+              child: Icon(
+                KIcons.check,
+                size: KIconSize.xs,
+                color: scheme.onPrimary,
+              ),
             )
           : DecoratedBox(
               decoration: ShapeDecoration(
