@@ -325,8 +325,6 @@ void main() {
     'do not play or pause',
     (tester) async {
       final calls = <bool>[];
-      final buttonFocus = FocusNode();
-      addTearDown(buttonFocus.dispose);
       final host = await pumpDesktopShell(
         tester,
         routes: [
