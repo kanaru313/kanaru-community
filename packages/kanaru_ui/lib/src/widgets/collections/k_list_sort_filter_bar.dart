@@ -153,19 +153,23 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
               // Open: the tonal disc of a selected button, as big as the light
               // button's box. Closed: the light icon.
               if (widget.filterOpen)
-                IconButton.filledTonal(
-                  focusNode: _filterFocus,
-                  tooltip: widget.filterTooltip,
-                  isSelected: true,
-                  onPressed: widget.onFilterToggle,
-                  iconSize: KIconSize.sm,
-                  style: IconButton.styleFrom(
-                    fixedSize: const Size.square(KListSortFilterBar.buttonSize),
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                KIconButton.yieldSpace(
+                  child: IconButton.filledTonal(
+                    focusNode: _filterFocus,
+                    tooltip: widget.filterTooltip,
+                    isSelected: true,
+                    onPressed: widget.onFilterToggle,
+                    iconSize: KIconSize.sm,
+                    style: IconButton.styleFrom(
+                      fixedSize: const Size.square(
+                        KListSortFilterBar.buttonSize,
+                      ),
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    icon: const Icon(KIcons.filter),
                   ),
-                  icon: const Icon(KIcons.filter),
                 )
               else
                 KIconButton(

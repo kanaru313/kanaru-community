@@ -40,14 +40,16 @@ class PlayPauseButton extends ConsumerWidget {
       );
     }
     // The filled button keeps the Material disc, sized locally.
-    return IconButton.filled(
-      icon: icon,
-      iconSize: iconSize,
-      style: size == null
-          ? null
-          : IconButton.styleFrom(fixedSize: Size.square(size!)),
-      tooltip: tooltip,
-      onPressed: toggle,
+    return KIconButton.yieldSpace(
+      child: IconButton.filled(
+        icon: icon,
+        iconSize: iconSize,
+        style: size == null
+            ? null
+            : IconButton.styleFrom(fixedSize: Size.square(size!)),
+        tooltip: tooltip,
+        onPressed: toggle,
+      ),
     );
   }
 }

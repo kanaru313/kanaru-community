@@ -216,6 +216,9 @@ class _ToolsPart extends ConsumerWidget {
           onPressed: panel.open,
         ),
         PanelToggleButton(
+          // Keyed: the buttons before it come and go with the bar's width, and
+          // the toggle must keep its state and focus when they do.
+          key: const ValueKey('queue-toggle'),
           icon: KIcons.queueMusic,
           tooltip: l10n.playbackNavQueue,
           selected: queueOpen,

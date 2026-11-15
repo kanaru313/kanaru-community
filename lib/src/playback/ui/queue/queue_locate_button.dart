@@ -97,12 +97,14 @@ class QueueLocateButtonState extends State<QueueLocateButton> {
     if (_side == QueueLocateSide.none) return const SizedBox.shrink();
     return SizedBox.square(
       dimension: QueueLocateButton.size,
-      child: IconButton.filled(
-        icon: Icon(
-          _side == QueueLocateSide.above ? KIcons.arrowUp : KIcons.arrowDown,
+      child: KIconButton.yieldSpace(
+        child: IconButton.filled(
+          icon: Icon(
+            _side == QueueLocateSide.above ? KIcons.arrowUp : KIcons.arrowDown,
+          ),
+          tooltip: AppLocalizations.of(context).playbackQueueLocate,
+          onPressed: _go,
         ),
-        tooltip: AppLocalizations.of(context).playbackQueueLocate,
-        onPressed: _go,
       ),
     );
   }

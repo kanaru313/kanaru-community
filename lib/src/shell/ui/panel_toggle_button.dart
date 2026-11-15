@@ -55,19 +55,21 @@ class _PanelToggleButtonState extends State<PanelToggleButton> {
       );
     }
     final scheme = Theme.of(context).colorScheme;
-    return IconButton(
-      icon: Icon(widget.icon),
-      iconSize: widget.size,
-      tooltip: widget.tooltip,
-      focusNode: _focus,
-      isSelected: true,
-      style: IconButton.styleFrom(
-        backgroundColor: scheme.secondaryContainer,
-        foregroundColor: scheme.onSecondaryContainer,
-        fixedSize: Size.square(widget.disc),
-        padding: EdgeInsets.zero,
+    return KIconButton.yieldSpace(
+      child: IconButton(
+        icon: Icon(widget.icon),
+        iconSize: widget.size,
+        tooltip: widget.tooltip,
+        focusNode: _focus,
+        isSelected: true,
+        style: IconButton.styleFrom(
+          backgroundColor: scheme.secondaryContainer,
+          foregroundColor: scheme.onSecondaryContainer,
+          fixedSize: Size.square(widget.disc),
+          padding: EdgeInsets.zero,
+        ),
+        onPressed: widget.onPressed,
       ),
-      onPressed: widget.onPressed,
     );
   }
 }

@@ -59,19 +59,23 @@ class PlayShuffleButtons extends StatelessWidget {
             label: Text(playLabel),
           )
         else
-          IconButton.filled(
-            tooltip: playLabel,
+          KIconButton.yieldSpace(
+            child: IconButton.filled(
+              tooltip: playLabel,
+              style: style,
+              iconSize: compact ? KIconSize.sm : null,
+              onPressed: onPlay,
+              icon: const Icon(KIcons.play),
+            ),
+          ),
+        KIconButton.yieldSpace(
+          child: IconButton.filledTonal(
+            tooltip: l10n.libraryShuffle,
             style: style,
             iconSize: compact ? KIconSize.sm : null,
-            onPressed: onPlay,
-            icon: const Icon(KIcons.play),
+            onPressed: onShuffle,
+            icon: const Icon(KIcons.shuffle),
           ),
-        IconButton.filledTonal(
-          tooltip: l10n.libraryShuffle,
-          style: style,
-          iconSize: compact ? KIconSize.sm : null,
-          onPressed: onShuffle,
-          icon: const Icon(KIcons.shuffle),
         ),
         ...trailing,
       ],

@@ -49,6 +49,12 @@ class KIconButton extends StatefulWidget {
   /// Space activate it instead of play/pause).
   static bool ownsPrimaryFocus() => primaryFocusInsideKIconButton();
 
+  /// Marks a Material icon button (a filled or tonal one, or the open state of
+  /// a toggle) as an icon button for [ownsPrimaryFocus], so Space presses it
+  /// there too instead of toggling playback.
+  static Widget yieldSpace({required Widget child}) =>
+      KIconButtonScope(child: child);
+
   /// The glyph. Give this or [child].
   final IconData? icon;
 
