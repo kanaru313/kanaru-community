@@ -8,7 +8,7 @@ import '../../../../playback/ui/transport_buttons.dart';
 const double nowPlayingButtonRowHeight = 52;
 
 /// Shuffle · Repeat · Ask AI (soon) · Queue, icon only, equal widths, 52 dp
-/// tall, radius 16.
+/// tall, radius 16; each tile is one button from edge to edge.
 class NowPlayingButtonRow extends StatelessWidget {
   const NowPlayingButtonRow({super.key, required this.onQueue});
 
@@ -27,7 +27,8 @@ class NowPlayingButtonRow extends StatelessWidget {
             color: scheme.surfaceContainerHigh,
             borderRadius: KRadius.md,
           ),
-          child: Center(child: child),
+          // The button fills the tile, so the whole tile is one tap target.
+          child: SizedBox.expand(child: child),
         ),
       ),
     );
