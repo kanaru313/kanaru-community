@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/play_context.dart';
 import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/sort_order.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../state/browse/list_prefs_providers.dart';
 import '../../state/browse/song_list_providers.dart';
@@ -116,8 +117,8 @@ class _DetailSongsHostState extends ConsumerState<DetailSongsHost> {
                 filter: _filter,
                 durationMs: widget.durationMs,
               ),
-              criterionLabel: sortCriterionLabel(l10n, sort.criterion),
-              ascending: !sort.descending,
+              criterionLabel: sortCriterionLabel(l10n, sort.primary.criterion),
+              ascending: !sort.primary.descending,
               onSortPressed: (anchor) => openListSort(
                 context,
                 list: widget.list,
@@ -180,7 +181,7 @@ class _CountText extends ConsumerWidget {
   });
 
   final SongScope scope;
-  final SortSpec sort;
+  final SortOrder sort;
   final String filter;
   final int? durationMs;
 

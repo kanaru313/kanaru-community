@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/browse/folder_tree.dart';
 import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/sort_order.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../state/browse/song_list_providers.dart';
 import '../browse/library_list_scaffold.dart';
@@ -19,7 +20,7 @@ typedef FolderNavigator = void Function(FolderLocation to);
 
 /// Sort of the songs listed inside a folder: by title, whatever the sort of
 /// the folders above them.
-const folderSongSort = SortSpec(SortCriterion.title);
+final folderSongSort = SortOrder.by(SortCriterion.title);
 
 /// Rows of folders (and music folders) as a fixed-extent sliver with the
 /// row gutter.

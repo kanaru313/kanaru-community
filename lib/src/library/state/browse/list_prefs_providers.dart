@@ -4,6 +4,7 @@ import '../../../platform/domain/setting.dart';
 import '../../../platform/state/settings_providers.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/list_view_prefs.dart';
+import '../../domain/browse/sort_order.dart';
 
 /// Settings key `library.list_views`: sort and layout of every list.
 final Setting<LibraryListViews> libraryListViewsSetting = Setting(
@@ -17,7 +18,7 @@ final Setting<LibraryListViews> libraryListViewsSetting = Setting(
 class LibraryListViewsNotifier extends SettingNotifier<LibraryListViews> {
   LibraryListViewsNotifier() : super(libraryListViewsSetting);
 
-  Future<void> setSort(BrowseList list, SortSpec sort) =>
+  Future<void> setSort(BrowseList list, SortOrder sort) =>
       set(state.withList(list, state.of(list).copyWith(sort: sort)));
 
   Future<void> setView(BrowseList list, CollectionView view) =>
@@ -50,22 +51,31 @@ typedef DetailPageKey = ({BrowseList list, String item});
 
 /// Sorts chosen on detail pages during this session. A page nobody changed
 /// starts with the remembered default of its kind (`library.list_views`).
-class DetailSortOverrides extends Notifier<Map<DetailPageKey, SortSpec>> {
+class DetailSortOverrides extends Notifier<Map<DetailPageKey, SortOrder>> {
   @override
-  Map<DetailPageKey, SortSpec> build() => const {};
+  Map<DetailPageKey, SortOrder> build() => const {};
 
-  Future<void> set(DetailPageKey page, SortSpec sort) async =>
+  Future<void> set(DetailPageKey page, SortOrder sort) async =>
       state = {...state, page: sort};
+
+  /// Back to the kind's remembered sort ("Đặt lại" on a detail page).
+  void clear(DetailPageKey page) {
+    if (!state.containsKey(page)) return;
+    state = {...state}..remove(page);
+  }
 }
 
 final detailSortOverridesProvider =
-    NotifierProvider<DetailSortOverrides, Map<DetailPageKey, SortSpec>>(
+    NotifierProvider<DetailSortOverrides, Map<DetailPageKey, SortOrder>>(
       DetailSortOverrides.new,
     );
 
 /// Sort in use on one detail page: its override, else the kind's default.
-final detailSortProvider = Provider.autoDispose.family<SortSpec, DetailPageKey>(
-  (ref, page) =>
-      ref.watch(detailSortOverridesProvider.select((m) => m[page])) ??
-      ref.watch(libraryListViewsProvider.select((v) => v.of(page.list).sort)),
-);
+final detailSortProvider = Provider.autoDispose
+    .family<SortOrder, DetailPageKey>(
+      (ref, page) =>
+          ref.watch(detailSortOverridesProvider.select((m) => m[page])) ??
+          ref.watch(
+            libraryListViewsProvider.select((v) => v.of(page.list).sort),
+          ),
+    );

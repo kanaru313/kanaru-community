@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/library/domain/browse/song_scope.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/ui/browse/group_play.dart';
@@ -76,7 +77,7 @@ void main() {
           .read(libraryListViewsProvider.notifier)
           .setSort(
             BrowseList.languages,
-            SortSpec(SortCriterion.title, descending: desc),
+            SortOrder.by(SortCriterion.title, descending: desc),
           );
       await tester.pump();
       expect(_rows(tester).last, 'Unknown');
@@ -160,7 +161,7 @@ void main() {
     await h.container.read(detailSortOverridesProvider.notifier).set((
       list: BrowseList.detailSongs,
       item: languageDetailItem('vie'),
-    ), const SortSpec(SortCriterion.title, descending: true));
+    ), SortOrder.by(SortCriterion.title, descending: true));
     await tester.pump();
     final titles = [
       for (final r in tester.widgetList<KMediaCard>(find.byType(KMediaCard)))
@@ -177,7 +178,7 @@ void main() {
     final ascending = await songIds(
       h.db,
       const SongScope.language('vie'),
-      const SortSpec(SortCriterion.title),
+      SortOrder.by(SortCriterion.title),
       '',
     );
     expect(call.tracks, ascending.reversed.toList());

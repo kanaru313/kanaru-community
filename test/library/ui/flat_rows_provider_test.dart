@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/folder_tree.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/domain/music_folder.dart';
 import 'package:kanaru/src/library/state/browse/folder_providers.dart';
@@ -41,7 +42,7 @@ const _place = (
 
 FlatRowsKey _key({String filter = '', bool desc = false}) => (
   place: _place,
-  sort: SortSpec(SortCriterion.title, descending: desc),
+  sort: SortOrder.by(SortCriterion.title, descending: desc),
   filter: filter,
 );
 
@@ -100,13 +101,13 @@ void main() {
 
   test('the place is not the flat list: no rows', () async {
     final c = _container(_roots(3));
-    const key = (
+    final key = (
       place: (
         location: FolderLocation(sourceUid: 'uid1', key: ''),
         view: FolderView.tree,
         compact: true,
       ),
-      sort: SortSpec(SortCriterion.title),
+      sort: SortOrder.by(SortCriterion.title),
       filter: '',
     );
     c.listen(flatRowsProvider(key), (_, _) {});

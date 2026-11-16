@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 
 void main() {
   const c = SortCriterion.values;
@@ -48,32 +49,41 @@ void main() {
     expect(expected.keys.toSet(), BrowseList.values.toSet());
     for (final e in expected.entries) {
       expect(criteriaOf(e.key), e.value, reason: e.key.name);
-      expect(defaultSortOf(e.key).criterion, e.value.first);
+      expect(defaultSortOf(e.key).primary.criterion, e.value.first);
     }
   });
 
   test('detail songs and languages default to descending', () {
     for (final l in BrowseList.values) {
       expect(
-        defaultSortOf(l).descending,
+        defaultSortOf(l).primary.descending,
         l == BrowseList.detailSongs || l == BrowseList.languages,
         reason: l.name,
       );
     }
     expect(
       defaultSortOf(BrowseList.detailSongs),
-      const SortSpec(SortCriterion.playCount, descending: true),
+      SortOrder.by(SortCriterion.playCount, descending: true),
     );
   });
 
-  test('numeric criteria', () {
-    expect(SortCriterion.title.isNumeric, isFalse);
-    expect(SortCriterion.artist.isNumeric, isFalse);
-    expect(SortCriterion.album.isNumeric, isFalse);
-    for (final n in SortCriterion.values.where(
-      (x) => x.index > SortCriterion.album.index,
-    )) {
-      expect(n.isNumeric, isTrue, reason: n.name);
+  test('kind of each criterion', () {
+    const text = {
+      SortCriterion.title,
+      SortCriterion.artist,
+      SortCriterion.album,
+    };
+    const date = {SortCriterion.year, SortCriterion.dateAdded};
+    for (final c in SortCriterion.values) {
+      expect(
+        c.kind,
+        text.contains(c)
+            ? SortKind.text
+            : date.contains(c)
+            ? SortKind.date
+            : SortKind.number,
+        reason: c.name,
+      );
     }
   });
 

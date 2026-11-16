@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
 import 'package:kanaru/src/library/domain/browse/song_scope.dart';
 import 'package:kanaru/src/library/ui/browse/group_play.dart';
@@ -71,7 +72,7 @@ void main() {
         .read(libraryListViewsProvider.notifier)
         .setSort(
           BrowseList.genres,
-          const SortSpec(SortCriterion.trackCount, descending: true),
+          SortOrder.by(SortCriterion.trackCount, descending: true),
         );
     await tester.pump();
     final names = [
@@ -163,7 +164,7 @@ void main() {
     await h.container.read(detailSortOverridesProvider.notifier).set((
       list: BrowseList.detailSongs,
       item: genreDetailItem(groupKey('Jazz')),
-    ), const SortSpec(SortCriterion.title, descending: true));
+    ), SortOrder.by(SortCriterion.title, descending: true));
     await tester.pump();
     await tester.tap(byIconButton('Play all').at(1)); // Jazz
     await tester.runAsync(
@@ -175,7 +176,7 @@ void main() {
     final ascending = await songIds(
       h.db,
       scope,
-      const SortSpec(SortCriterion.title),
+      SortOrder.by(SortCriterion.title),
       '',
     );
     expect(call.tracks, ascending.reversed.toList());

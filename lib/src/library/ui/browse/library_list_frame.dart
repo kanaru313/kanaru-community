@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/sort_order.dart';
 import '../../domain/browse/list_view_prefs.dart';
 import '../../state/browse/list_prefs_providers.dart';
 import 'filter_debouncer.dart';
@@ -16,7 +17,7 @@ import 'list_sort_popover.dart';
 /// typed in the filter field (empty when it is closed) and whether the field
 /// is open (a page with a Back rule of its own yields while it is).
 typedef LibraryListInput = ({
-  SortSpec sort,
+  SortOrder sort,
   CollectionView view,
   String filter,
   bool filterOpen,
@@ -132,8 +133,11 @@ class _LibraryListFrameState extends ConsumerState<LibraryListFrame> {
             child: KListSortFilterBar(
               leading: content.leading,
               view: widget.viewBuilder?.call(context, input),
-              criterionLabel: sortCriterionLabel(l10n, prefs.sort.criterion),
-              ascending: !prefs.sort.descending,
+              criterionLabel: sortCriterionLabel(
+                l10n,
+                prefs.sort.primary.criterion,
+              ),
+              ascending: !prefs.sort.primary.descending,
               onSortPressed: _openSort,
               filterOpen: _filterOpen,
               onFilterToggle: _toggleFilter,

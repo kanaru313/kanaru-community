@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart' show TrackStatus;
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/playback/data/track_info_rows.dart';
 import 'package:kanaru/src/library/domain/browse/song_scope.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
@@ -106,7 +107,7 @@ void main() {
         .read(libraryListViewsProvider.notifier)
         .setSort(
           BrowseList.songs,
-          const SortSpec(SortCriterion.title, descending: true),
+          SortOrder.by(SortCriterion.title, descending: true),
         );
     await h.settle(tester);
     await tester.tap(byIconButton('Filter'));

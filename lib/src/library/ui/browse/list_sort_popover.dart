@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/sort_order.dart';
 import 'library_labels.dart';
 
 /// Opens the sort popover of [list] on [anchor]. The sort in use is read
@@ -13,12 +14,12 @@ Future<void> openListSort(
   BuildContext context, {
   required BrowseList list,
   required GlobalKey anchor,
-  required SortSpec Function() read,
-  required Future<void> Function(SortSpec sort) write,
+  required SortOrder Function() read,
+  required Future<void> Function(SortOrder sort) write,
 }) async {
   final l10n = AppLocalizations.of(context);
-  final current = read();
-  final numeric = current.criterion.isNumeric;
+  final current = read().primary;
+  final numeric = current.criterion.kind != SortKind.text;
   final picked = await showKSortPopover<SortCriterion>(
     context,
     anchor: anchor,
@@ -38,9 +39,12 @@ Future<void> openListSort(
     descendingLabel: numeric
         ? l10n.libraryOrderDescNumber
         : l10n.libraryOrderDescText,
-    onAscendingChanged: (ascending) =>
-        write(read().withDirection(descending: !ascending)),
+    onAscendingChanged: (ascending) {
+      final now = read();
+      if (now.primary.descending != ascending) return;
+      write(now.flip(now.primary.criterion));
+    },
   );
   if (picked == null) return;
-  await write(SortSpec(picked, descending: read().descending));
+  await write(read().pick(picked));
 }

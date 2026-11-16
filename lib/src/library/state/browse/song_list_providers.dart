@@ -7,6 +7,7 @@ import '../../../playback/data/track_info_rows.dart';
 import '../../data/browse/song_ids_query.dart';
 import '../../data/browse/throttled_query.dart';
 import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/sort_order.dart';
 import '../../domain/browse/song_scope.dart';
 
 /// Minimum gap between reloads of a list; tests override it.
@@ -28,7 +29,7 @@ final trackRowLoaderProvider = Provider<TrackRowLoader>((ref) {
 });
 
 /// What a song list shows: which tracks, in which order, narrowed by text.
-typedef SongListKey = ({SongScope scope, SortSpec sort, String filter});
+typedef SongListKey = ({SongScope scope, SortOrder sort, String filter});
 
 /// Ordered visible track ids of a list. Reloads while a scan writes (at most
 /// once per refresh interval) and re-emits only when the ids changed. Play
@@ -45,7 +46,7 @@ final songIdsProvider = StreamProvider.family<List<TrackId>, SongListKey>((
     {
       db.tracks,
       db.trackArtists,
-      if (key.sort.criterion == SortCriterion.playCount) db.playStats,
+      if (key.sort.contains(SortCriterion.playCount)) db.playStats,
     },
     () => songIds(db, key.scope, key.sort, key.filter),
     interval: ref.watch(browseRefreshIntervalProvider),

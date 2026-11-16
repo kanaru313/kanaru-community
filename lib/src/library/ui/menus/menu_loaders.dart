@@ -14,6 +14,7 @@ import '../../data/browse/menu_queries.dart';
 import '../../data/browse/song_ids_query.dart';
 import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/sort_order.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../domain/music_folder.dart';
 import '../../state/browse/list_prefs_providers.dart';
@@ -271,7 +272,7 @@ Future<MenuSpec> folderMenuSpec(
   required MenuOrigin origin,
 }) async {
   final db = container.read(appDatabaseProvider);
-  const sort = SortSpec(SortCriterion.title);
+  final sort = SortOrder.by(SortCriterion.title);
   final direct = await songIds(
     db,
     folderPlayScope(folder.sourceId, key, flat: true),

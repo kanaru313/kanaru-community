@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
@@ -26,14 +27,14 @@ void main() {
     expect(c.read(libraryListViewsProvider), LibraryListViews());
     await n.setSort(
       BrowseList.songs,
-      const SortSpec(SortCriterion.year, descending: true),
+      SortOrder.by(SortCriterion.year, descending: true),
     );
     await n.setView(BrowseList.albums, CollectionView.list);
     await n.setFolderView(FolderView.flat);
     final again = container().read(libraryListViewsProvider);
     expect(
       again.of(BrowseList.songs).sort,
-      const SortSpec(SortCriterion.year, descending: true),
+      SortOrder.by(SortCriterion.year, descending: true),
     );
     expect(again.of(BrowseList.albums).view, CollectionView.list);
     expect(again.folderView, FolderView.flat);
@@ -58,4 +59,46 @@ void main() {
     await c.read(compactFoldersProvider.notifier).set(false);
     expect(container().read(compactFoldersProvider), isFalse);
   });
+
+  test('a multi-criteria sort persists', () async {
+    final order = SortOrder([
+      const SortSpec(SortCriterion.artist),
+      const SortSpec(SortCriterion.year, descending: true),
+    ]);
+    await container()
+        .read(libraryListViewsProvider.notifier)
+        .setSort(BrowseList.albums, order);
+    expect(
+      container().read(libraryListViewsProvider).of(BrowseList.albums).sort,
+      order,
+    );
+  });
+
+  test(
+    'a detail page override is set, then cleared back to the default',
+    () async {
+      final c = container();
+      const page = (list: BrowseList.albumTracks, item: 'a');
+      const other = (list: BrowseList.albumTracks, item: 'b');
+      final provider = detailSortProvider(page);
+      c.listen(provider, (_, _) {});
+      expect(c.read(provider), defaultSortOf(BrowseList.albumTracks));
+      final notifier = c.read(detailSortOverridesProvider.notifier);
+      await notifier.set(
+        page,
+        SortOrder.by(SortCriterion.title, descending: true),
+      );
+      await notifier.set(other, SortOrder.by(SortCriterion.duration));
+      expect(
+        c.read(provider),
+        SortOrder.by(SortCriterion.title, descending: true),
+      );
+      notifier.clear(page);
+      expect(c.read(provider), defaultSortOf(BrowseList.albumTracks));
+      expect(
+        c.read(detailSortProvider(other)),
+        SortOrder.by(SortCriterion.duration),
+      );
+    },
+  );
 }

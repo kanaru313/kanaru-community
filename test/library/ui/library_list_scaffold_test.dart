@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/scan_status.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -178,7 +179,7 @@ void main() {
         .read(libraryListViewsProvider)
         .of(BrowseList.songs)
         .sort;
-    expect(sort, const SortSpec(SortCriterion.year, descending: true));
+    expect(sort, SortOrder.by(SortCriterion.year, descending: true));
     await unmountApp(tester);
   });
 

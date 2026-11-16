@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/ui/songs/song_tile.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -121,7 +122,7 @@ void main() {
         .read(libraryListViewsProvider.notifier)
         .setSort(
           BrowseList.songs,
-          const SortSpec(SortCriterion.title, descending: true),
+          SortOrder.by(SortCriterion.title, descending: true),
         );
     await h.settle(tester);
     final order = [

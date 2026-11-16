@@ -13,22 +13,26 @@ enum BrowseList {
 /// What a list can be ordered by. Which criteria a list offers is
 /// [criteriaOf].
 enum SortCriterion {
-  title(isNumeric: false),
-  artist(isNumeric: false),
-  album(isNumeric: false),
-  year(isNumeric: true),
-  dateAdded(isNumeric: true),
-  playCount(isNumeric: true),
-  duration(isNumeric: true),
-  trackCount(isNumeric: true),
-  albumCount(isNumeric: true),
-  trackNumber(isNumeric: true);
+  title(SortKind.text),
+  artist(SortKind.text),
+  album(SortKind.text),
+  year(SortKind.date),
+  dateAdded(SortKind.date),
+  playCount(SortKind.number),
+  duration(SortKind.number),
+  trackCount(SortKind.number),
+  albumCount(SortKind.number),
+  trackNumber(SortKind.number);
 
-  const SortCriterion({required this.isNumeric});
+  const SortCriterion(this.kind);
 
-  /// Numeric criteria read "Tăng dần/Giảm dần", text ones "A → Z / Z → A".
-  final bool isNumeric;
+  /// Words of its direction: text "A → Z / Z → A", number "Tăng dần /
+  /// Giảm dần", date "Cũ trước / Mới trước"; dates are added newest first.
+  final SortKind kind;
 }
+
+/// What kind of value a [SortCriterion] orders by.
+enum SortKind { text, number, date }
 
 /// A criterion and its direction.
 class SortSpec {
@@ -96,11 +100,3 @@ List<SortCriterion> criteriaOf(BrowseList list) => switch (list) {
     SortCriterion.duration,
   ],
 };
-
-/// The first criterion of [list], ascending, except where the biggest comes
-/// first: songs on a detail page start with the most played and languages with
-/// the largest one.
-SortSpec defaultSortOf(BrowseList list) => SortSpec(
-  criteriaOf(list).first,
-  descending: list == BrowseList.detailSongs || list == BrowseList.languages,
-);

@@ -5,25 +5,27 @@ import '../../../media/domain/library_keys.dart';
 import '../../../media/domain/track_id.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/song_scope.dart';
+import '../../domain/browse/sort_order.dart';
 import 'scope_sql.dart';
 
 /// Ids of the visible tracks of [scope], ordered by [sort], narrowed by the
 /// text [filter] (every whitespace-separated token, accents ignored, must
 /// occur in the title, artist or album; an empty filter keeps everything).
 ///
-/// Ties end with `title_sort, id`, so the order is total. A nullable sort key
+/// Ties end with `title_sort, id` (`id` only when title is itself a key), so
+/// the order is total. A nullable sort key
 /// puts its NULL rows last in both directions. All user text is bound, never
 /// part of the SQL string.
 Future<List<TrackId>> songIds(
   AppDatabase db,
   SongScope scope,
-  SortSpec sort,
+  SortOrder sort,
   String filter,
 ) async {
   final where = SqlWhere()..add(visibleTrackWhere('t'));
   addScope(where, scope);
   _filter(where, filter);
-  final joinPlays = sort.criterion == SortCriterion.playCount;
+  final joinPlays = sort.contains(SortCriterion.playCount);
   final rows = await db
       .customSelect(
         'SELECT t.id FROM tracks t '
@@ -68,9 +70,16 @@ void _filter(SqlWhere w, String filter) {
 String _nullsLast(String col, bool desc) =>
     '($col IS NULL), $col${desc ? ' DESC' : ''}';
 
-String _orderBy(SortSpec sort) {
-  final d = sort.descending;
-  final main = switch (sort.criterion) {
+String _orderBy(SortOrder sort) {
+  final terms = [
+    for (final spec in sort.specs) _term(spec.criterion, spec.descending),
+  ];
+  final titled = sort.contains(SortCriterion.title);
+  return [...terms, if (!titled) 't.title_sort', 't.id'].join(', ');
+}
+
+String _term(SortCriterion criterion, bool d) {
+  return switch (criterion) {
     SortCriterion.title => 't.title_sort${d ? ' DESC' : ''}',
     SortCriterion.artist => _nullsLast('t.artist_search', d),
     SortCriterion.album => _nullsLast('t.album_search', d),
@@ -81,10 +90,6 @@ String _orderBy(SortSpec sort) {
     SortCriterion.trackNumber =>
       '${_nullsLast('t.disc_no', d)}, ${_nullsLast('t.track_no', d)}',
     SortCriterion.trackCount || SortCriterion.albumCount =>
-      throw ArgumentError.value(sort.criterion, 'sort', 'not a song criterion'),
+      throw ArgumentError.value(criterion, 'sort', 'not a song criterion'),
   };
-  final tie = sort.criterion == SortCriterion.title
-      ? 't.id'
-      : 't.title_sort, t.id';
-  return '$main, $tie';
 }

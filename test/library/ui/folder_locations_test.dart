@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/folder_tree.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/domain/music_folder.dart';
 import 'package:kanaru/src/library/ui/folders/folder_locations.dart';
@@ -185,7 +186,7 @@ void main() {
       final byName = levelRows(
         node,
         compact: true,
-        sort: const SortSpec(SortCriterion.title),
+        sort: SortOrder.by(SortCriterion.title),
         filter: '',
       );
       expect(
@@ -196,24 +197,41 @@ void main() {
       final plain = levelRows(
         node,
         compact: false,
-        sort: const SortSpec(SortCriterion.title, descending: true),
+        sort: SortOrder.by(SortCriterion.title, descending: true),
         filter: '',
       );
       expect([for (final r in plain) r.label], ['Disc 10', 'Disc 2', 'Chain']);
       final byCount = levelRows(
         node,
         compact: true,
-        sort: const SortSpec(SortCriterion.trackCount, descending: true),
+        sort: SortOrder.by(SortCriterion.trackCount, descending: true),
         filter: '',
       );
       expect(byCount.first.label, 'Disc 2');
+    });
+
+    test('several criteria: song count, then name descending', () {
+      final rows = levelRows(
+        node,
+        compact: true,
+        sort: SortOrder([
+          const SortSpec(SortCriterion.trackCount),
+          const SortSpec(SortCriterion.title, descending: true),
+        ]),
+        filter: '',
+      );
+      // Chain and Disc 10 have one song each, Disc 2 has two.
+      expect(
+        [for (final r in rows) r.label],
+        ['Disc 10', 'Chain › One › Two', 'Disc 2'],
+      );
     });
 
     test('the filter ignores accents and matches the whole chain', () {
       final rows = levelRows(
         node,
         compact: true,
-        sort: const SortSpec(SortCriterion.title),
+        sort: SortOrder.by(SortCriterion.title),
         filter: 'ONE tw',
       );
       expect([for (final r in rows) r.label], ['Chain › One › Two']);
