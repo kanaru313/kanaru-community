@@ -291,40 +291,4 @@ void main() {
     expect(anchor?.currentContext, isNotNull);
     handle.dispose();
   });
-
-  group('older layout (criterionLabel)', () {
-    Widget legacy({Widget? view}) => Align(
-      alignment: Alignment.topCenter,
-      child: KListSortFilterBar(
-        leading: const Text('36 songs'),
-        criterionLabel: 'Title',
-        ascending: true,
-        onSortPressed: (_) {},
-        filterOpen: false,
-        onFilterToggle: () {},
-        filterTooltip: 'Filter',
-        view: view,
-      ),
-    );
-
-    testWidgets('renders, 52 tall on mobile and 48 on desktop, no reverse', (
-      tester,
-    ) async {
-      useWindow(tester, const Size(400, 800));
-      await tester.pumpWidget(host(legacy(view: _viewButton())));
-      expect(find.text('Title'), findsOneWidget);
-      expect(byIconButton('Filter'), findsOneWidget);
-      expect(
-        tester.getSize(find.byType(KListSortFilterBar)).height,
-        greaterThanOrEqualTo(KListSortFilterBar.heightMobile),
-      );
-      useWindow(tester, const Size(1300, 800));
-      await tester.pumpWidget(host(legacy()));
-      expect(
-        tester.getSize(find.byType(KListSortFilterBar)).height,
-        KListSortFilterBar.heightDesktop,
-      );
-      expect(tester.takeException(), isNull);
-    });
-  });
 }

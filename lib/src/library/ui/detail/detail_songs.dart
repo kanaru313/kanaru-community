@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -7,14 +7,14 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/play_context.dart';
 import '../../domain/browse/list_sort.dart';
-import '../../domain/browse/sort_order.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../state/browse/list_prefs_providers.dart';
-import '../../state/browse/song_list_providers.dart';
 import '../browse/filter_debouncer.dart';
 import '../browse/library_labels.dart';
 import '../browse/library_list_scaffold.dart';
+import '../browse/list_sort_dialog.dart';
 import '../browse/list_sort_popover.dart';
+import 'detail_songs_count.dart';
 import '../selection/selection_inset.dart';
 import '../songs/song_list.dart';
 
@@ -67,9 +67,11 @@ class _DetailSongsHostState extends ConsumerState<DetailSongsHost> {
   bool _filterOpen = false;
   String _filter = '';
   final FilterDebouncer _debounce = FilterDebouncer();
+  final ListSortGuard _sortGuard = ListSortGuard();
 
   @override
   void dispose() {
+    _sortGuard.close();
     _debounce.cancel();
     _controller.dispose();
     super.dispose();
@@ -92,42 +94,56 @@ class _DetailSongsHostState extends ConsumerState<DetailSongsHost> {
     });
   }
 
+  /// The container is taken now: the sort box is on the root navigator and
+  /// can outlive this page, whose `ref` is dead by then.
+  Future<void> _openSort(GlobalKey anchor) {
+    final container = ProviderScope.containerOf(context);
+    final page = (list: widget.list, item: widget.item);
+    return openListSort(
+      context,
+      list: widget.list,
+      anchor: anchor,
+      guard: _sortGuard,
+      read: () => container.read(detailSortProvider(page)),
+      write: (sort) =>
+          container.read(detailSortOverridesProvider.notifier).set(page, sort),
+      reset: () async =>
+          container.read(detailSortOverridesProvider.notifier).clear(page),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final gutter = libraryBarGutter(context);
     final page = (list: widget.list, item: widget.item);
     final sort = ref.watch(detailSortProvider(page));
-    final mobile = FormFactor.of(context) == FormFactor.mobile;
-    final barHeight = MediaQuery.textScalerOf(context).scale(
-      mobile
-          ? KListSortFilterBar.heightMobile
-          : KListSortFilterBar.heightDesktop,
-    );
+    final barHeight = MediaQuery.textScalerOf(context)
+        .scale(KListSortFilterBar.height);
     final slivers = <Widget>[
       if (widget.hasSongs) ...[
         KStickyBarSliver(
-          height: math.max(barHeight, KListSortFilterBar.heightMobile),
+          height: barHeight,
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: gutter),
             child: KListSortFilterBar(
-              leading: _CountText(
+              leading: DetailSongsCount(
                 scope: widget.scope,
                 sort: sort,
                 filter: _filter,
                 durationMs: widget.durationMs,
               ),
-              criterionLabel: sortCriterionLabel(l10n, sort.primary.criterion),
+              sortLabel: sortOrderLabel(l10n, sort),
               ascending: !sort.primary.descending,
-              onSortPressed: (anchor) => openListSort(
-                context,
-                list: widget.list,
-                anchor: anchor,
-                read: () => ref.read(detailSortProvider(page)),
-                write: (sort) => ref
+              onSortPressed: _openSort,
+              // The order at press time, not this build's: two taps in one frame
+              // must flip twice.
+              onReverse: () => unawaited(
+                ref
                     .read(detailSortOverridesProvider.notifier)
-                    .set(page, sort),
+                    .set(page, ref.read(detailSortProvider(page)).reversed()),
               ),
+              reverseTooltip: l10n.libraryOrderReverse,
               filterOpen: _filterOpen,
               onFilterToggle: _toggleFilter,
               sortTooltip: l10n.libraryOrderTooltip,
@@ -167,50 +183,6 @@ class _DetailSongsHostState extends ConsumerState<DetailSongsHost> {
         if (!didPop && _filterOpen) _closeFilter();
       },
       child: widget.builder(context, slivers),
-    );
-  }
-}
-
-/// `N songs · length`, or `6 / 34 songs` while a filter narrows the list.
-class _CountText extends ConsumerWidget {
-  const _CountText({
-    required this.scope,
-    required this.sort,
-    required this.filter,
-    required this.durationMs,
-  });
-
-  final SongScope scope;
-  final SortOrder sort;
-  final String filter;
-  final int? durationMs;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final shown = ref
-        .watch(songIdsProvider((scope: scope, sort: sort, filter: filter)))
-        .value
-        ?.length;
-    final total = ref.watch(songCountProvider(scope)).value;
-    final String text;
-    if (shown == null) {
-      text = '';
-    } else if (filter.isNotEmpty && total != null) {
-      text = l10n.libraryCountOf(shown, total, l10n.libraryUnitSongs);
-    } else {
-      final length = durationMs;
-      text = length == null
-          ? l10n.librarySongCount(shown)
-          : '${l10n.librarySongCount(shown)} · '
-                '${formatTotalDuration(l10n, length)}';
-    }
-    return Text(
-      text,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: Theme.of(context).textTheme.labelLarge
-          ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
     );
   }
 }

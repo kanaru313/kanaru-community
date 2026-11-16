@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -11,6 +13,7 @@ import '../../state/browse/list_prefs_providers.dart';
 import 'filter_debouncer.dart';
 import 'library_labels.dart';
 import 'library_list_scaffold.dart';
+import 'list_sort_dialog.dart';
 import 'list_sort_popover.dart';
 
 /// What a list page shows right now: remembered sort and layout, the text
@@ -64,9 +67,11 @@ class _LibraryListFrameState extends ConsumerState<LibraryListFrame> {
   bool _filterOpen = false;
   String _filter = '';
   final FilterDebouncer _debounce = FilterDebouncer();
+  final ListSortGuard _sortGuard = ListSortGuard();
 
   @override
   void dispose() {
+    _sortGuard.close();
     _debounce.cancel();
     _controller.dispose();
     super.dispose();
@@ -95,15 +100,31 @@ class _LibraryListFrameState extends ConsumerState<LibraryListFrame> {
     });
   }
 
+  /// The container is taken now: the sort box is on the root navigator and
+  /// can outlive this page, whose `ref` is dead by then.
   Future<void> _openSort(GlobalKey anchor) {
-    final notifier = ref.read(libraryListViewsProvider.notifier);
+    final container = ProviderScope.containerOf(context);
     final list = widget.list;
+    Future<void> write(SortOrder sort) =>
+        container.read(libraryListViewsProvider.notifier).setSort(list, sort);
     return openListSort(
       context,
       list: list,
       anchor: anchor,
-      read: () => ref.read(libraryListViewsProvider).of(list).sort,
-      write: (sort) => notifier.setSort(list, sort),
+      guard: _sortGuard,
+      read: () => container.read(libraryListViewsProvider).of(list).sort,
+      write: write,
+      reset: () => write(defaultSortOf(list)),
+    );
+  }
+
+  void _reverseSort() {
+    final list = widget.list;
+    final current = ref.read(libraryListViewsProvider).of(list).sort;
+    unawaited(
+      ref
+          .read(libraryListViewsProvider.notifier)
+          .setSort(list, current.reversed()),
     );
   }
 
@@ -133,12 +154,11 @@ class _LibraryListFrameState extends ConsumerState<LibraryListFrame> {
             child: KListSortFilterBar(
               leading: content.leading,
               view: widget.viewBuilder?.call(context, input),
-              criterionLabel: sortCriterionLabel(
-                l10n,
-                prefs.sort.primary.criterion,
-              ),
+              sortLabel: sortOrderLabel(l10n, prefs.sort),
               ascending: !prefs.sort.primary.descending,
               onSortPressed: _openSort,
+              onReverse: _reverseSort,
+              reverseTooltip: l10n.libraryOrderReverse,
               filterOpen: _filterOpen,
               onFilterToggle: _toggleFilter,
               sortTooltip: l10n.libraryOrderTooltip,

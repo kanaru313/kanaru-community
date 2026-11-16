@@ -142,7 +142,15 @@ Future<MenuSpec> albumMenuSpec(
     AlbumMenuData(
       album: album,
       key: key,
-      ids: await songIds(db, scope, defaultSortOf(BrowseList.albumTracks), ''),
+      // Play takes the songs in the sort the album page shows.
+      ids: await songIds(
+        db,
+        scope,
+        container.read(
+          detailSortProvider((list: BrowseList.albumTracks, item: encoded)),
+        ),
+        '',
+      ),
       folders: await foldersOf(db, scope),
     ),
     origin,
@@ -188,7 +196,15 @@ Future<MenuSpec> artistMenuSpec(
       artist: artist,
       key: key,
       albums: albums,
-      ids: await songIds(db, scope, defaultSortOf(BrowseList.detailSongs), ''),
+      // Play takes the songs in the sort the artist page shows.
+      ids: await songIds(
+        db,
+        scope,
+        container.read(
+          detailSortProvider((list: BrowseList.detailSongs, item: encoded)),
+        ),
+        '',
+      ),
       folders: await foldersOf(db, scope),
     ),
     origin,

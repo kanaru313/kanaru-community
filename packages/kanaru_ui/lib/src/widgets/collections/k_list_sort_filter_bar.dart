@@ -15,15 +15,11 @@ import 'k_list_sort_chip.dart';
 /// ([sortLabel] only), the reverse button and the filter toggle (small icon
 /// buttons, the same on every shell). [height] tall on both shells. No
 /// scrolling of its own; the page makes it sticky if it wants.
-///
-/// [criterionLabel] (with a direction arrow in the chip, 52 / 48 dp tall) is
-/// the older layout, kept until the callers move to [sortLabel].
 class KListSortFilterBar extends StatefulWidget {
   const KListSortFilterBar({
     super.key,
     required this.leading,
-    this.sortLabel,
-    this.criterionLabel,
+    required this.sortLabel,
     required this.ascending,
     required this.onSortPressed,
     this.onReverse,
@@ -34,10 +30,6 @@ class KListSortFilterBar extends StatefulWidget {
     required this.filterTooltip,
     this.view,
   }) : assert(
-         (sortLabel == null) != (criterionLabel == null),
-         'give exactly one of sortLabel and criterionLabel',
-       ),
-       assert(
          onReverse == null || reverseTooltip != null,
          'a reverse button needs its reverseTooltip',
        );
@@ -46,10 +38,7 @@ class KListSortFilterBar extends StatefulWidget {
   final Widget leading;
 
   /// Chip text: the first criterion's name, `"Nghệ sĩ +2"` when several.
-  final String? sortLabel;
-
-  /// Older chip text (name only, the arrow shows [ascending]).
-  final String? criterionLabel;
+  final String sortLabel;
 
   /// Direction of the first criterion: picks the reverse button's arrow.
   final bool ascending;
@@ -78,9 +67,6 @@ class KListSortFilterBar extends StatefulWidget {
   /// Sort chip height.
   static const double chipHeight = 32;
 
-  static const double heightMobile = 52;
-  static const double heightDesktop = 48;
-
   @override
   State<KListSortFilterBar> createState() => _KListSortFilterBarState();
 }
@@ -101,15 +87,9 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
   @override
   Widget build(BuildContext context) {
     final mobile = FormFactor.of(context) == FormFactor.mobile;
-    final legacy = widget.criterionLabel != null;
-    final height = legacy
-        ? (mobile
-              ? KListSortFilterBar.heightMobile
-              : KListSortFilterBar.heightDesktop)
-        : KListSortFilterBar.height;
-    final label = widget.sortLabel ?? widget.criterionLabel!;
+    final label = widget.sortLabel;
     return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: height),
+      constraints: const BoxConstraints(minHeight: KListSortFilterBar.height),
       child: LayoutBuilder(
         // The chip is at most half of the bar (and leaves room for leading actions
         // such as the mobile play/shuffle buttons): a long label is ellipsized.
@@ -119,7 +99,6 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
               1 +
               (widget.view == null ? 0 : 1) +
               (widget.onReverse == null ? 0 : 1);
-          final gaps = KSpace.x3 + (legacy ? KSpace.x2 : 0);
           final maxChipWidth = math.max(
             48.0,
             math.min(
@@ -127,7 +106,7 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
               bar.maxWidth -
                   leadingMin -
                   KListSortFilterBar.buttonSize * buttons -
-                  gaps,
+                  KSpace.x3,
             ),
           );
           return Row(
@@ -143,13 +122,9 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
                     : '${widget.sortTooltip}: $label',
                 tooltip: widget.sortTooltip ?? '',
                 maxWidth: maxChipWidth,
-                minHeight: legacy
-                    ? (mobile ? 48 : 40)
-                    : KListSortFilterBar.chipHeight,
-                arrowAscending: legacy ? widget.ascending : null,
+                minHeight: KListSortFilterBar.chipHeight,
                 onTap: () => widget.onSortPressed(_chipKey),
               ),
-              if (legacy) const KGap(KSpace.x2),
               if (widget.onReverse != null)
                 KIconButton(
                   tooltip: widget.reverseTooltip!,

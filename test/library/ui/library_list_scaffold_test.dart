@@ -166,12 +166,10 @@ void main() {
     await h.settle(tester);
     await tester.tap(find.text('Name'));
     await tester.pumpAndSettle();
-    expect(find.text('A → Z'), findsOneWidget);
+    expect(find.text('Advanced…'), findsOneWidget);
     expect(find.text('Play count'), findsOneWidget);
-    // The order buttons keep the popover open.
-    await tester.tap(find.text('Z → A'));
-    await tester.pumpAndSettle();
-    expect(find.text('Play count'), findsOneWidget);
+    // The dropdown has no direction row; a pick closes it.
+    expect(find.text('A → Z'), findsNothing);
     await tester.tap(find.text('Year'));
     await tester.pumpAndSettle();
     expect(find.text('Play count'), findsNothing);
@@ -179,7 +177,7 @@ void main() {
         .read(libraryListViewsProvider)
         .of(BrowseList.songs)
         .sort;
-    expect(sort, SortOrder.by(SortCriterion.year, descending: true));
+    expect(sort, SortOrder.by(SortCriterion.year));
     await unmountApp(tester);
   });
 

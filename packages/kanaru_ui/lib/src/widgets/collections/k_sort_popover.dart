@@ -11,7 +11,6 @@ import '../../tokens/k_space.dart';
 import '../k_gap.dart';
 import '../selection_row.dart';
 import 'k_sort_pick.dart';
-import 'k_sort_popover_order_row.dart';
 
 export 'k_sort_pick.dart';
 
@@ -28,33 +27,24 @@ const double _maxHeightShare = 0.7;
 /// the screen. The criterion in use ([selected]) is tinted and bold, with no
 /// tick. Resolves to [KSortPicked] (a criterion, closes), [KSortAdvanced]
 /// ("Nâng cao…", closes) or null (dismissed by Esc, Back or a tap outside).
-/// Opens on the root navigator so the app's shortcut guard sees it.
-///
-/// The direction row (two buttons) is drawn only while [onAscendingChanged]
-/// and both direction labels are given; it stays open when tapped. New callers
-/// leave all four out.
+/// Opens on the root navigator so the app's shortcut guard sees it. [onRoute]
+/// gets the pushed route, so a caller can remove exactly this route later.
 Future<KSortPick<T>?> showKSortPopover<T>(
   BuildContext context, {
   required GlobalKey anchor,
   required List<KSortCriterion<T>> criteria,
   required T selected,
   String? advancedLabel,
-  bool ascending = true,
-  String? ascendingLabel,
-  String? descendingLabel,
-  ValueChanged<bool>? onAscendingChanged,
+  ValueChanged<Route<dynamic>>? onRoute,
 }) {
   final box = anchor.currentContext?.findRenderObject();
   final rect = box is RenderBox && box.attached
       ? box.localToGlobal(Offset.zero) & box.size
       : null;
-  final showOrder =
-      onAscendingChanged != null &&
-      ascendingLabel != null &&
-      descendingLabel != null;
-  return showDialog<KSortPick<T>>(
+  final navigator = Navigator.of(context, rootNavigator: true);
+  final route = DialogRoute<KSortPick<T>>(
     context: context,
-    useRootNavigator: true,
+    themes: InheritedTheme.capture(from: context, to: navigator.context),
     // The panel position is in global coordinates; a SafeArea would shift it.
     useSafeArea: false,
     barrierColor: const Color(0x00000000),
@@ -70,19 +60,13 @@ Future<KSortPick<T>?> showKSortPopover<T>(
             criteria: criteria,
             selected: selected,
             advancedLabel: advancedLabel,
-            order: showOrder
-                ? SortPopoverOrderRow(
-                    ascending: ascending,
-                    ascendingLabel: ascendingLabel,
-                    descendingLabel: descendingLabel,
-                    onChanged: onAscendingChanged,
-                  )
-                : null,
           ),
         ),
       ),
     ),
   );
+  onRoute?.call(route);
+  return navigator.push(route);
 }
 
 /// Under the anchor, right edges aligned (the chip sits at the end of the
@@ -144,13 +128,11 @@ class _PopoverBody<T> extends StatelessWidget {
     required this.criteria,
     required this.selected,
     required this.advancedLabel,
-    required this.order,
   });
 
   final List<KSortCriterion<T>> criteria;
   final T selected;
   final String? advancedLabel;
-  final Widget? order;
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +148,6 @@ class _PopoverBody<T> extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ?order,
           if (advancedLabel != null) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -195,15 +176,14 @@ class _PopoverBody<T> extends StatelessWidget {
                 color: scheme.outlineVariant,
               ),
             ),
-          ] else if (order != null)
-            Divider(height: 1, thickness: 1, color: scheme.outlineVariant),
+          ],
           // SingleChildScrollView (not a ListView) so the dropdown can size to
           // its content: a viewport has no intrinsic width.
           Flexible(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 KSpace.x2,
-                advancedLabel == null && order == null ? KSpace.x2 : 0,
+                advancedLabel == null ? KSpace.x2 : 0,
                 KSpace.x2,
                 KSpace.x2,
               ),

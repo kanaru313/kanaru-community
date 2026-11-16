@@ -21,7 +21,6 @@ class _Opener extends StatelessWidget {
     this.firstLabel,
     this.advanced = 'Advanced',
     this.align = Alignment.topRight,
-    this.onOrder,
   });
 
   final void Function(Future<KSortPick<String>?>) onResult;
@@ -29,9 +28,6 @@ class _Opener extends StatelessWidget {
   final String? firstLabel;
   final String? advanced;
   final Alignment align;
-
-  /// Gives the direction row (still supported until callers drop it).
-  final ValueChanged<bool>? onOrder;
 
   @override
   Widget build(BuildContext context) {
@@ -47,9 +43,6 @@ class _Opener extends StatelessWidget {
             criteria: _criteria(count, firstLabel),
             selected: 'c0',
             advancedLabel: advanced,
-            ascendingLabel: onOrder == null ? null : 'A to Z',
-            descendingLabel: onOrder == null ? null : 'Z to A',
-            onAscendingChanged: onOrder,
           ),
         ),
         child: const Text('open'),
@@ -301,20 +294,5 @@ void main() {
     await _open(tester);
     expect(find.text('Advanced'), findsNothing);
     expect(find.text('Criterion 0'), findsOneWidget);
-  });
-
-  testWidgets('a caller that still passes the direction row gets it, open', (
-    tester,
-  ) async {
-    useWindow(tester, const Size(400, 800));
-    final orders = <bool>[];
-    await tester.pumpWidget(
-      host(_Opener(onResult: (_) {}, onOrder: orders.add)),
-    );
-    await _open(tester);
-    await tester.tap(find.text('Z to A'));
-    await tester.pumpAndSettle();
-    expect(orders, [false]);
-    expect(find.text('Criterion 1'), findsOneWidget);
   });
 }

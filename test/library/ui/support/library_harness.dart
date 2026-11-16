@@ -121,6 +121,8 @@ class LibraryHarness {
 
 /// Pumps the library routes at [initial] on a window of [width] x [height].
 ///
+/// [settings] is the store behind the settings (a test that opens a second
+/// container on the same data passes its own).
 /// [header] wraps the pages the way the app shell does (a header scope).
 /// [selectionBar] puts the selection slot under the pages in a shell route,
 /// as the mobile shell does: inside the router, in the page route of the root
@@ -138,6 +140,7 @@ Future<LibraryHarness> pumpLibrary(
   ScanStatus scan = const ScanIdle(),
   Locale locale = const Locale('en'),
   Widget? selectionBar,
+  MemorySettingsStore? settings,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, height);
@@ -186,7 +189,9 @@ Future<LibraryHarness> pumpLibrary(
   final container = ProviderContainer(
     overrides: [
       appDatabaseProvider.overrideWithValue(db),
-      settingsStoreProvider.overrideWithValue(MemorySettingsStore()),
+      settingsStoreProvider.overrideWithValue(
+        settings ?? MemorySettingsStore(),
+      ),
       appPathsProvider.overrideWithValue(_TempPaths(root)),
       playbackCommandsProvider.overrideWithValue(player),
       nowPlayingProvider.overrideWith((ref) => nowFeed.stream),

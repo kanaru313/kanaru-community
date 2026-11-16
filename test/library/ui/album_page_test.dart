@@ -204,8 +204,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Name'));
     await tester.pumpAndSettle();
-    await tester.tapAt(const Offset(5, 5));
-    await tester.pumpAndSettle();
     expect(
       h.container
           .read(detailSortOverridesProvider)[(

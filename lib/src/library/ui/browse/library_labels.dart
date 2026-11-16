@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/browse/language_names.dart';
 import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/sort_order.dart';
 import '../../domain/library_tabs.dart';
 
 /// Icon of a library list (sub-tab).
@@ -40,6 +41,13 @@ String sortCriterionLabel(AppLocalizations l10n, SortCriterion c) =>
       SortCriterion.albumCount => l10n.librarySortAlbumCount,
       SortCriterion.trackNumber => l10n.librarySortTrackNumber,
     };
+
+/// Text of the bar's sort chip: the first criterion's name, plus how many
+/// more follow (`Nghệ sĩ +2`).
+String sortOrderLabel(AppLocalizations l10n, SortOrder order) {
+  final first = sortCriterionLabel(l10n, order.primary.criterion);
+  return order.extra == 0 ? first : l10n.librarySortMore(first, order.extra);
+}
 
 /// Icon of a sort criterion in the sort popover.
 IconData sortCriterionIcon(SortCriterion c) => switch (c) {

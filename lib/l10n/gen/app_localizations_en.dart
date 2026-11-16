@@ -892,6 +892,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryOrderDescNumber => 'Descending';
 
   @override
+  String get librarySortDialogTitle => 'Sort by';
+
+  @override
+  String get librarySortChosen => 'Chosen';
+
+  @override
+  String get librarySortNotChosen => 'Not chosen';
+
+  @override
+  String get librarySortReset => 'Reset';
+
+  @override
+  String get librarySortDone => 'Done';
+
+  @override
+  String get libraryOrderReverse => 'Reverse order';
+
+  @override
+  String librarySortDragHint(String label) {
+    return 'Drag to reorder $label';
+  }
+
+  @override
+  String librarySortFlipTooltip(String word) {
+    return 'Switch direction: $word';
+  }
+
+  @override
+  String librarySortFlipSemantics(String label, String word) {
+    return '$label: $word, tap to switch direction';
+  }
+
+  @override
+  String librarySortRemove(String label) {
+    return 'Remove $label';
+  }
+
+  @override
+  String librarySortAdd(String label) {
+    return 'Add $label';
+  }
+
+  @override
+  String get libraryOrderOldFirst => 'Oldest first';
+
+  @override
+  String get libraryOrderNewFirst => 'Newest first';
+
+  @override
+  String librarySortMore(String label, int count) {
+    return '$label +$count';
+  }
+
+  @override
+  String get librarySortAdvanced => 'Advanced…';
+
+  @override
   String get librarySortTitle => 'Name';
 
   @override

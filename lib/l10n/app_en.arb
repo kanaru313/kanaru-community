@@ -541,6 +541,69 @@
   "libraryOrderDescText": "Z → A",
   "libraryOrderAscNumber": "Ascending",
   "libraryOrderDescNumber": "Descending",
+  "librarySortDialogTitle": "Sort by",
+  "librarySortChosen": "Chosen",
+  "librarySortNotChosen": "Not chosen",
+  "librarySortReset": "Reset",
+  "librarySortDone": "Done",
+  "libraryOrderReverse": "Reverse order",
+  "librarySortDragHint": "Drag to reorder {label}",
+  "@librarySortDragHint": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "librarySortFlipTooltip": "Switch direction: {word}",
+  "@librarySortFlipTooltip": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "librarySortFlipSemantics": "{label}: {word}, tap to switch direction",
+  "@librarySortFlipSemantics": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "librarySortRemove": "Remove {label}",
+  "@librarySortRemove": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "librarySortAdd": "Add {label}",
+  "@librarySortAdd": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryOrderOldFirst": "Oldest first",
+  "libraryOrderNewFirst": "Newest first",
+  "librarySortMore": "{label} +{count}",
+  "@librarySortMore": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "librarySortAdvanced": "Advanced…",
   "librarySortTitle": "Name",
   "librarySortArtist": "Artist",
   "librarySortAlbum": "Album",

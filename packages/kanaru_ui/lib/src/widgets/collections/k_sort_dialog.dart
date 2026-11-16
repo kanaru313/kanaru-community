@@ -22,6 +22,9 @@ export 'k_sort_dialog_types.dart';
 /// nothing needs confirming, so Esc, Back, a tap outside and "Xong" all just
 /// close it.
 ///
+/// [onRoute] gets the pushed route (before the dialog shows), so a caller can
+/// remove exactly this route later.
+///
 /// Centred on both shells (root navigator), at most [KLayout.sortDialog] wide.
 /// Drag a row by its handle, or use Alt + Up / Alt + Down on the keyboard;
 /// screen readers get the list's own move actions. Flutter's slide of the other
@@ -37,10 +40,14 @@ Future<void> showKSortDialog<T>(
   required void Function(int from, int to) onMove,
   required VoidCallback onReset,
   required KSortDialogStrings strings,
+  ValueChanged<Route<dynamic>>? onRoute,
 }) {
-  return showDialog<void>(
+  // The route is built here (what `showDialog` does) so the caller can be
+  // handed the exact route that was pushed.
+  final navigator = Navigator.of(context, rootNavigator: true);
+  final route = DialogRoute<void>(
     context: context,
-    useRootNavigator: true,
+    themes: InheritedTheme.capture(from: context, to: navigator.context),
     builder: (context) => Dialog(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
       shape: KShape.of(KRadius.xl, continuous: true),
@@ -68,6 +75,8 @@ Future<void> showKSortDialog<T>(
       ),
     ),
   );
+  onRoute?.call(route);
+  return navigator.push(route);
 }
 
 class _SortDialogBody<T> extends StatelessWidget {

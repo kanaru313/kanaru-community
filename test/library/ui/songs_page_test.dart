@@ -166,14 +166,14 @@ void main() {
     );
     final ids = await _addSongs(h, ['Alpha', 'Bravo', 'Charlie']);
     await h.settle(tester);
-    await tester.tap(find.byTooltip('Play all'));
+    await tester.tap(byIconButton('Play all'));
     await tester.pump();
     var call = _only(playback);
     expect(call.startIndex, 0);
     expect(call.shuffle, isFalse);
     expect(call.tracks, [for (final i in ids) TrackId(i)]);
     playback.calls.clear();
-    await tester.tap(find.byTooltip('Shuffle'));
+    await tester.tap(byIconButton('Shuffle'));
     await tester.pump();
     call = _only(playback);
     expect(call.shuffle, isTrue);
@@ -183,8 +183,8 @@ void main() {
   });
 
   for (final (name, width) in [('mobile', 400.0), ('desktop', 1280.0)]) {
-    testWidgets('$name: play all and shuffle are 36 dp icon discs, shuffle '
-        'on the right, no label', (tester) async {
+    testWidgets('$name: play all and shuffle are flat icons, shuffle on the '
+        'right, no label', (tester) async {
       final h = await pumpLibrary(
         tester,
         initial: '/library/songs',
@@ -195,16 +195,12 @@ void main() {
       await h.settle(tester);
       expect(find.text('Play all'), findsNothing);
       expect(find.text('Shuffle'), findsNothing);
-      final play = find.byTooltip('Play all');
-      final shuffle = find.byTooltip('Shuffle');
-      expect(tester.getSize(play), const Size.square(36));
-      expect(tester.getSize(shuffle), const Size.square(36));
-      // 8 dp between the two discs.
-      expect(tester.getRect(shuffle).left - tester.getRect(play).right, 8);
-      expect(
-        tester.getCenter(shuffle).dx,
-        greaterThan(tester.getCenter(play).dx),
-      );
+      final play = byIconButton('Play all');
+      final shuffle = byIconButton('Shuffle');
+      // 16 dp glyph with 8 dp around it; the two touch each other.
+      expect(tester.getSize(play), const Size.square(32));
+      expect(tester.getSize(shuffle), const Size.square(32));
+      expect(tester.getRect(shuffle).left, tester.getRect(play).right);
       await unmountApp(tester);
     });
   }
