@@ -4,6 +4,7 @@ import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
 import 'package:kanaru/src/library/domain/browse/song_scope.dart';
 import 'package:kanaru/src/library/ui/browse/group_play.dart';
+import 'package:kanaru/src/library/ui/collections/genre_tile.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/ui/menus/more_button.dart';
@@ -16,6 +17,7 @@ import '../browse/support/library_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
 import '../../support/icon_button_finders.dart';
+import '../../support/row_fill_finders.dart';
 
 Future<LibraryHarness> _pump(
   WidgetTester tester, {
@@ -109,6 +111,16 @@ void main() {
     await tester.tap(find.text('Jazz'));
     await tester.pump();
     expect(h.location, '/library/genres/${encodeKey(groupKey('Jazz'))}');
+    await unmountApp(tester);
+  });
+
+  testWidgets('genre list rows paint the neutral row fill', (tester) async {
+    final h = await _pump(tester);
+    await h.container
+        .read(libraryListViewsProvider.notifier)
+        .setView(BrowseList.genres, CollectionView.list);
+    await tester.pump();
+    expectRowFilled(tester, within: find.byType(GenreTile));
     await unmountApp(tester);
   });
 

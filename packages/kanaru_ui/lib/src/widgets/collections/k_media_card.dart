@@ -4,16 +4,14 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
+import '../../theme/k_row_colors.dart';
 import '../../tokens/k_icon_size.dart';
-import '../../tokens/k_motion.dart';
-import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
-import '../k_check_mark.dart';
 import '../k_cover.dart';
 import '../k_gap.dart';
 import '../k_icon_button.dart';
-import '../k_icon_button_colors.dart';
 import 'k_end_hit_extension.dart';
+import 'k_media_card_frame.dart';
 import 'k_media_card_right_column.dart';
 import 'k_media_card_text.dart';
 
@@ -25,8 +23,8 @@ enum KMediaCardStyle {
   /// Rounded tonal card; the list supplies the outer side space.
   card,
 
-  /// Full-width row: no radius, no fill unless current or selected, own
-  /// 8 dp side padding (the same as a card).
+  /// Full-width row: no radius, the neutral fill (or the playing / selected
+  /// colour), own 8 dp side padding (the same as a card).
   flat,
 }
 
@@ -77,6 +75,7 @@ class KMediaCard extends StatefulWidget {
     this.onLongPress,
     this.loading = false,
     this.style = KMediaCardStyle.auto,
+    this.filled = true,
   }) : assert(
          onAction == null || actionLabel != null,
          'the play button needs a label for its tooltip and screen reader',
@@ -125,7 +124,8 @@ class KMediaCard extends StatefulWidget {
   final IconData actionIcon;
   final String? actionLabel;
 
-  /// The row of the track that is playing: tinted `primaryContainer`.
+  /// The row of the track that is playing: gradient from `primaryContainer`
+  /// to `tertiaryContainer` (`KRowColors.playingGradient`).
   final bool current;
 
   /// Screen-reader text for [current] (for example "Now playing"), so the
@@ -148,6 +148,11 @@ class KMediaCard extends StatefulWidget {
 
   /// See [KMediaCardStyle].
   final KMediaCardStyle style;
+
+  /// Draws the neutral row fill (`KRowColors.fill`) in both styles. False for
+  /// rows that sit on a surface of their own (the selection panel): flat
+  /// transparent, or `surfaceContainerLow` as a card.
+  final bool filled;
 
   /// Space below a card.
   static const double gap = KSpace.x1;
@@ -177,15 +182,10 @@ class KMediaCard extends StatefulWidget {
 }
 
 class _KMediaCardState extends State<KMediaCard> {
-  bool _hovered = false;
-  bool _focused = false;
-
   /// Set once the card is selected or a selection is active. Until then no
   /// cover overlay is mounted (most lists never select); afterwards it stays
   /// mounted so the off animation plays when the selection ends.
   bool _everActive = false;
-
-  bool get _engaged => _hovered || _focused;
 
   @override
   Widget build(BuildContext context) {
@@ -198,10 +198,14 @@ class _KMediaCardState extends State<KMediaCard> {
     final flat =
         widget.style == KMediaCardStyle.flat ||
         (widget.style == KMediaCardStyle.auto && mobile);
+    // The playing row (also when selected) draws a gradient over a
+    // transparent material; every other state is one colour.
     final background = widget.current
-        ? scheme.primaryContainer
+        ? Colors.transparent
         : widget.selected
         ? scheme.secondaryContainer
+        : widget.filled
+        ? KRowColors.fill(Theme.of(context).brightness)
         : flat
         ? Colors.transparent
         : scheme.surfaceContainerLow;
@@ -211,7 +215,7 @@ class _KMediaCardState extends State<KMediaCard> {
         ? scheme.onSecondaryContainer
         : scheme.onSurface;
     final soft = widget.current || widget.selected
-        ? ink.withValues(alpha: 0.8)
+        ? ink.withValues(alpha: KRowColors.containerSoftAlpha)
         : scheme.onSurfaceVariant;
 
     // Height of the row content: the right column and the tap absorbers fill it.
@@ -230,7 +234,7 @@ class _KMediaCardState extends State<KMediaCard> {
             : null);
 
     final side = KMediaCard.sidePadding;
-    final content = Padding(
+    Widget content(bool engaged) => Padding(
       // With a trailing button the end padding belongs to that button (see
       // KEndHitExtension), so a tap right of it is not a tap on the row.
       padding: EdgeInsetsDirectional.fromSTEB(
@@ -252,7 +256,7 @@ class _KMediaCardState extends State<KMediaCard> {
                 // A dimmed card draws its mark outside the dim, below.
                 if (_everActive && !(widget.dimmed && widget.selected))
                   Positioned.fill(
-                    child: _CoverCheck(
+                    child: KMediaCardCoverCheck(
                       circle: widget.circleLeading,
                       selected: widget.selected,
                       selecting: widget.selecting,
@@ -295,8 +299,8 @@ class _KMediaCardState extends State<KMediaCard> {
           ],
           if (widget.onAction != null) ...[
             _TapAbsorber(width: KSpace.x2, height: rowHeight),
-            _Revealed(
-              visible: mobile || _engaged,
+            KMediaCardRevealed(
+              visible: mobile || engaged,
               child: KIconButton(
                 tooltip: widget.actionLabel ?? '',
                 size: KIconSize.sm,
@@ -319,35 +323,37 @@ class _KMediaCardState extends State<KMediaCard> {
     // The check of a dimmed, selected card stays fully opaque: it is drawn
     // over the dimmed card, on the cover's spot.
     final markOutsideDim = widget.dimmed && widget.selected && leading != null;
-    Widget card(Widget dimmedCard) => markOutsideDim
-        ? Stack(
-            children: [
-              dimmedCard,
-              PositionedDirectional(
-                start: KMediaCard.sidePadding,
-                // The cover is centred in the row, which is as high as the
-                // taller of the cover and the text block.
-                top:
-                    KMediaCard._padV +
-                    (math.max(
-                              KMediaCard.coverSize,
-                              KMediaCardMetrics.textBlock(scaler),
-                            ) -
-                            KMediaCard.coverSize) /
-                        2,
-                width: KMediaCard.coverSize,
-                height: KMediaCard.coverSize,
-                child: IgnorePointer(
-                  child: _CoverCheck(
-                    circle: widget.circleLeading,
-                    selected: true,
-                    selecting: true,
-                  ),
-                ),
+    Widget card(Widget dimmedCard) => Stack(
+      fit: StackFit.passthrough,
+      children: [
+        dimmedCard,
+        // Always a Stack, the mark its last child, so the card keeps its
+        // slot when the mark comes and goes.
+        if (markOutsideDim)
+          PositionedDirectional(
+            start: KMediaCard.sidePadding,
+            // The cover is centred in the row, which is as high as the
+            // taller of the cover and the text block.
+            top:
+                KMediaCard._padV +
+                (math.max(
+                          KMediaCard.coverSize,
+                          KMediaCardMetrics.textBlock(scaler),
+                        ) -
+                        KMediaCard.coverSize) /
+                    2,
+            width: KMediaCard.coverSize,
+            height: KMediaCard.coverSize,
+            child: IgnorePointer(
+              child: KMediaCardCoverCheck(
+                circle: widget.circleLeading,
+                selected: true,
+                selecting: true,
               ),
-            ],
-          )
-        : dimmedCard;
+            ),
+          ),
+      ],
+    );
 
     return Padding(
       padding: const EdgeInsets.only(bottom: KMediaCard.gap),
@@ -358,46 +364,18 @@ class _KMediaCardState extends State<KMediaCard> {
           selected: widget.selected,
           value: widget.current ? widget.currentLabel : null,
           child: card(
-            AnimatedOpacity(
-              opacity: widget.dimmed ? 0.5 : 1,
-              duration: MediaQuery.disableAnimationsOf(context)
-                  ? Duration.zero
-                  : KMotion.fast,
-              child: MouseRegion(
-                onEnter: (_) => setState(() => _hovered = true),
-                onExit: (_) => setState(() => _hovered = false),
-                child: Focus(
-                  canRequestFocus: false,
-                  skipTraversal: true,
-                  onFocusChange: (v) => setState(() => _focused = v),
-                  child: Material(
-                    color: background,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: flat
-                          ? BorderRadius.zero
-                          : KMediaCard._radius,
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: DefaultTextStyle.merge(
-                      style: TextStyle(color: ink),
-                      child: IconTheme.merge(
-                        data: IconThemeData(color: soft),
-                        // Light icon buttons read these: on a tinted row they
-                        // keep the row's ink instead of the theme colours.
-                        child: KIconButtonColors(
-                          rest: soft,
-                          hover: ink,
-                          child: InkWell(
-                            onTap: widget.onTap,
-                            onLongPress: widget.onLongPress,
-                            child: content,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            KMediaCardFrame(
+              background: background,
+              gradient: widget.current
+                  ? KRowColors.playingGradient(scheme)
+                  : null,
+              ink: ink,
+              soft: soft,
+              radius: flat ? BorderRadius.zero : KMediaCard._radius,
+              dimmed: widget.dimmed,
+              onTap: widget.onTap,
+              onLongPress: widget.onLongPress,
+              builder: (context, engaged) => content(engaged),
             ),
           ),
         ),
@@ -424,66 +402,4 @@ class _TapAbsorber extends StatelessWidget {
       child: SizedBox(width: width, height: height),
     ),
   );
-}
-
-/// Keeps its room when hidden so the card does not shift; hidden children
-/// stay focusable (Tab reveals them) but ignore the pointer.
-class _Revealed extends StatelessWidget {
-  const _Revealed({required this.visible, required this.child});
-
-  final bool visible;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      opacity: visible ? 1 : 0,
-      duration: KMotion.fast,
-      child: IgnorePointer(ignoring: !visible, child: child),
-    );
-  }
-}
-
-/// Selection overlay of a cover: a 35 % black scrim and an "on" [KCheckMark]
-/// when selected, the bare ring while a selection is active. Stays mounted
-/// across toggles so the mark animates.
-class _CoverCheck extends StatelessWidget {
-  const _CoverCheck({
-    required this.circle,
-    required this.selected,
-    required this.selecting,
-  });
-
-  final bool circle;
-  final bool selected;
-
-  /// A selection is active. Without it and without [selected] the overlay
-  /// stays mounted (so the off animation plays) but its ring fades out.
-  final bool selecting;
-
-  @override
-  Widget build(BuildContext context) {
-    final instant = MediaQuery.disableAnimationsOf(context);
-    return AnimatedContainer(
-      duration: instant ? Duration.zero : KMotion.fast,
-      decoration: BoxDecoration(
-        color: selected
-            ? Colors.black.withValues(alpha: 0.35)
-            : Colors.transparent,
-        shape: circle ? BoxShape.circle : BoxShape.rectangle,
-        borderRadius: circle ? null : KRadius.sm,
-      ),
-      child: Center(
-        child: AnimatedOpacity(
-          opacity: selecting || selected ? 1 : 0,
-          duration: instant ? Duration.zero : KMotion.fast,
-          child: KCheckMark(
-            size: 28,
-            style: KCheckMarkStyle.cover,
-            state: selected ? KCheckState.on : KCheckState.off,
-          ),
-        ),
-      ),
-    );
-  }
 }

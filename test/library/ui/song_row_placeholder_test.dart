@@ -48,7 +48,7 @@ void main() {
     );
   });
 
-  testWidgets('failed row is flat on mobile: no fill, no radius', (
+  testWidgets('failed row is flat on mobile: row fill, no radius', (
     tester,
   ) async {
     final extent = KMediaCard.extentOf(TextScaler.noScaling);
@@ -64,7 +64,10 @@ void main() {
         matching: find.byType(DecoratedBox),
       ),
     );
-    expect((box.decoration as BoxDecoration).color, isNull);
+    expect(
+      (box.decoration as BoxDecoration).color,
+      KRowColors.fill(Brightness.light),
+    );
     expect((box.decoration as BoxDecoration).borderRadius, isNull);
     expect(
       tester.getSize(find.byType(SongRowFailed)).height,
@@ -108,5 +111,9 @@ void main() {
       ),
     );
     expect((box.decoration as BoxDecoration).borderRadius, isNotNull);
+    expect(
+      (box.decoration as BoxDecoration).color,
+      KRowColors.fill(Brightness.light),
+    );
   });
 }

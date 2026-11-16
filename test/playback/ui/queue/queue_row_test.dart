@@ -24,14 +24,10 @@ const _desktopWindow = Size(1280, 800);
 /// One call of the row menu hook.
 typedef _MenuCall = ({Offset? at, bool viaKeyboard});
 
-/// The card's own background of [row] (the Material that paints it).
-Color? _background(WidgetTester tester, Finder row) {
-  final card = find.descendant(of: row, matching: find.byType(KMediaCard));
-  final material = tester.widget<Material>(
-    find.descendant(of: card, matching: find.byType(Material)).first,
-  );
-  return material.color;
-}
+/// The [KMediaCard] of [row].
+KMediaCard _card(WidgetTester tester, Finder row) => tester.widget<KMediaCard>(
+  find.descendant(of: row, matching: find.byType(KMediaCard)),
+);
 
 Color _iconColor(WidgetTester tester, Finder icon) =>
     IconTheme.of(tester.element(icon.first)).color!;
@@ -223,15 +219,17 @@ void main() {
   });
 
   group('state', () {
-    testWidgets('current row: primaryContainer, equalizer, card ink', (
+    testWidgets('current row: playing gradient, equalizer, card ink', (
       tester,
     ) async {
       await pump(tester);
       final scheme = Theme.of(tester.element(find.byType(QueueList)))
           .colorScheme;
       final rows = find.byType(QueueRow);
-      expect(_background(tester, rows.at(2)), scheme.primaryContainer);
-      expect(_background(tester, rows.at(3)), Colors.transparent);
+      // Only the playing row is current; the others carry the row fill.
+      expect(_card(tester, rows.at(2)).current, isTrue);
+      expect(_card(tester, rows.at(3)).current, isFalse);
+      expect(_card(tester, rows.at(3)).filled, isTrue);
       expect(
         find.descendant(of: rows.at(2), matching: find.byType(KEqualizerIcon)),
         findsOneWidget,
@@ -241,7 +239,9 @@ void main() {
         tester.widget<KEqualizerIcon>(find.byType(KEqualizerIcon)).playing,
         isTrue,
       );
-      final soft = scheme.onPrimaryContainer.withValues(alpha: 0.8);
+      final soft = scheme.onPrimaryContainer.withValues(
+        alpha: KRowColors.containerSoftAlpha,
+      );
       final handle = find.descendant(
         of: rows.at(2),
         matching: find.byIcon(KIcons.dragHandle),

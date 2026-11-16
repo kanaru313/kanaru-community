@@ -4,6 +4,7 @@ library;
 export 'src/icons/k_icons.dart';
 export 'src/layout/form_factor.dart';
 export 'src/selection/song_click.dart';
+export 'src/theme/k_row_colors.dart';
 export 'src/theme/kanaru_theme.dart';
 export 'src/tokens/k_icon_size.dart';
 export 'src/tokens/k_layout.dart';

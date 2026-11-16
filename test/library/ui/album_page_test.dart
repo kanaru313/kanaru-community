@@ -25,6 +25,7 @@ import 'support/detail_fixture.dart';
 import 'support/library_harness.dart';
 import 'support/ui_harness.dart';
 import '../../support/icon_button_finders.dart';
+import '../../support/row_fill_finders.dart';
 
 Future<LibraryHarness> _pump(
   WidgetTester tester, {
@@ -335,6 +336,12 @@ void main() {
     final card = find.byType(KMediaCard).first;
     expect(badgeOf(card, '1'), findsOneWidget);
     expect(badgeOf(card, '2'), findsNothing);
+    await unmountApp(tester);
+  });
+
+  testWidgets('song rows paint the neutral row fill', (tester) async {
+    await _pump(tester);
+    expectRowFilled(tester, within: find.byType(SongTile));
     await unmountApp(tester);
   });
 

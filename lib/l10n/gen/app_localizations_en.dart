@@ -985,6 +985,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryFavoriteFailed => 'Could not change favorites';
 
   @override
+  String get libraryFavoriteLabel => 'Favorite';
+
+  @override
   String libraryDurationMinutes(int minutes) {
     return '$minutes min';
   }

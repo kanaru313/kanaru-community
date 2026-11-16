@@ -24,6 +24,8 @@ class SelectedSongRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final duration = info.durationMs;
     return KMediaCard(
+      // The panel is a surface of its own: no row fill.
+      filled: false,
       title: info.title,
       line2: trackArtistLine(info),
       line3: trackAlbumLine(info),
