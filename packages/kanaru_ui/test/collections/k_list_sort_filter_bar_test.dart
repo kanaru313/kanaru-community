@@ -5,12 +5,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../support/finders.dart';
 import '../support/host.dart';
 
 Widget _bar({
+  String label = 'Title',
   bool ascending = true,
   bool filterOpen = false,
   void Function(GlobalKey)? onSort,
+  VoidCallback? onReverse,
+  bool withReverse = true,
   VoidCallback? onFilter,
   Widget? view,
 }) {
@@ -18,9 +22,11 @@ Widget _bar({
     alignment: Alignment.topCenter,
     child: KListSortFilterBar(
       leading: const Text('36 songs'),
-      criterionLabel: 'Title',
+      sortLabel: label,
       ascending: ascending,
       onSortPressed: onSort ?? (_) {},
+      onReverse: withReverse ? (onReverse ?? () {}) : null,
+      reverseTooltip: withReverse ? 'Reverse order' : null,
       filterOpen: filterOpen,
       onFilterToggle: onFilter ?? () {},
       sortTooltip: 'Sort',
@@ -29,6 +35,13 @@ Widget _bar({
     ),
   );
 }
+
+Widget _viewButton() => KIconButton(
+  tooltip: 'View',
+  icon: KIcons.grid,
+  size: KIconSize.sm,
+  onPressed: () {},
+);
 
 void main() {
   for (final (name, brightness, scale) in hostVariants) {
@@ -39,8 +52,8 @@ void main() {
       );
       expect(find.text('36 songs'), findsOneWidget);
       expect(find.text('Title'), findsOneWidget);
-      expect(find.byIcon(KIcons.sortAsc), findsOneWidget);
-      expect(find.byIcon(KIcons.filter), findsOneWidget);
+      expect(byIconButton('Reverse order'), findsOneWidget);
+      expect(byIconButton('Filter'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }
@@ -49,41 +62,95 @@ void main() {
     tester,
   ) async {
     useWindow(tester, const Size(360, 800));
-    await tester.pumpWidget(
-      host(
-        _bar(
-          view: KIconButton(
-            tooltip: 'View',
-            icon: KIcons.grid,
-            size: KIconSize.sm,
-            onPressed: () {},
-          ),
-        ),
-        textScale: 2.0,
-      ),
-    );
-    expect(find.byIcon(KIcons.grid), findsOneWidget);
-    expect(find.byIcon(KIcons.filter), findsOneWidget);
+    await tester.pumpWidget(host(_bar(view: _viewButton()), textScale: 2.0));
+    expect(byIconButton('View'), findsOneWidget);
+    expect(byIconButton('Reverse order'), findsOneWidget);
+    expect(byIconButton('Filter'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the arrow follows the direction', (tester) async {
-    useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_bar(ascending: false)));
-    expect(find.byIcon(KIcons.sortDesc), findsOneWidget);
-    expect(find.byIcon(KIcons.sortAsc), findsNothing);
+  testWidgets('a long label is ellipsized and every button stays at 320 dp', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(320, 800));
+    await tester.pumpWidget(
+      host(
+        _bar(
+          label: 'A criterion with a very long name +2',
+          view: _viewButton(),
+        ),
+      ),
+    );
+    final text = tester.widget<Text>(
+      find.text('A criterion with a very long name +2'),
+    );
+    expect(text.overflow, TextOverflow.ellipsis);
+    expect(byIconButton('View'), findsOneWidget);
+    expect(byIconButton('Reverse order'), findsOneWidget);
+    expect(byIconButton('Filter'), findsOneWidget);
+    expect(find.text('36 songs'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('52 tall on mobile, 48 on desktop', (tester) async {
+  testWidgets('the chip shows the label it is given, e.g. "Artist +2"', (
+    tester,
+  ) async {
     useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_bar(label: 'Artist +2')));
+    expect(find.text('Artist +2'), findsOneWidget);
+  });
+
+  testWidgets('the reverse button follows the direction and calls back', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    var reversed = 0;
+    await tester.pumpWidget(host(_bar(onReverse: () => reversed++)));
+    KIconButton button() =>
+        tester.widget<KIconButton>(byIconButton('Reverse order'));
+    expect(button().icon, KIcons.sortAsc);
+    await tester.tap(byIconButton('Reverse order'));
+    expect(reversed, 1);
+    await tester.pumpWidget(host(_bar(ascending: false)));
+    expect(button().icon, KIcons.sortDesc);
+  });
+
+  testWidgets('the reverse button is announced and is a button', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    final handle = tester.ensureSemantics();
     await tester.pumpWidget(host(_bar()));
-    expect(
-      tester.getSize(find.byType(KListSortFilterBar)).height,
-      greaterThanOrEqualTo(52),
-    );
-    useWindow(tester, const Size(1300, 800));
-    await tester.pumpWidget(host(_bar()));
-    expect(tester.getSize(find.byType(KListSortFilterBar)).height, 48);
+    final flags = tester
+        .getSemantics(byIconButton('Reverse order'))
+        .getSemanticsData();
+    expect(flags.label, 'Reverse order');
+    expect(flags.flagsCollection.isButton, isTrue);
+    handle.dispose();
+  });
+
+  testWidgets('no onReverse: no reverse button', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_bar(withReverse: false)));
+    expect(byIconButton('Reverse order'), findsNothing);
+    expect(byIconButton('Filter'), findsOneWidget);
+  });
+
+  testWidgets('40 tall on mobile and on desktop, the chip 32', (tester) async {
+    for (final size in [const Size(400, 800), const Size(1300, 800)]) {
+      useWindow(tester, size);
+      await tester.pumpWidget(host(_bar()));
+      expect(
+        tester.getSize(find.byType(KListSortFilterBar)).height,
+        KListSortFilterBar.height,
+      );
+      expect(KListSortFilterBar.height, 40);
+      final chip = find.ancestor(
+        of: find.text('Title'),
+        matching: find.byType(InkWell),
+      );
+      expect(tester.getSize(chip).height, KListSortFilterBar.chipHeight);
+    }
   });
 
   testWidgets('the chip hands over an attached anchor; filter toggles', (
@@ -97,19 +164,14 @@ void main() {
     );
     await tester.tap(find.text('Title'));
     expect(anchor?.currentContext, isNotNull);
-    await tester.tap(find.byIcon(KIcons.filter));
+    await tester.tap(byIconButton('Filter'));
     expect(toggles, 1);
   });
 
   testWidgets('the open filter button is selected', (tester) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_bar(filterOpen: true)));
-    final button = tester.widget<IconButton>(
-      find.ancestor(
-        of: find.byIcon(KIcons.filter),
-        matching: find.byType(IconButton),
-      ),
-    );
+    final button = tester.widget<IconButton>(find.byType(IconButton));
     expect(button.isSelected, isTrue);
   });
 
@@ -123,50 +185,45 @@ void main() {
       try {
         useWindow(tester, size);
         await tester.pumpWidget(host(_bar()));
-        final closed = tester.getSize(find.byType(KIconButton));
+        final closed = tester.getSize(byIconButton('Filter'));
         await tester.pumpWidget(host(_bar(filterOpen: true)));
         final open = tester.getSize(find.byType(IconButton));
         expect(closed, const Size.square(KListSortFilterBar.buttonSize));
         expect(open, closed);
-        expect(find.byType(KIconButton), findsNothing);
+        expect(byIconButton('Filter'), findsNothing);
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
     });
   }
 
-  testWidgets('the view switch sits left of the sort chip, filter last', (
+  testWidgets('order: leading, view, chip, reverse, filter', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_bar(view: _viewButton())));
+    final xs = [
+      tester.getCenter(find.text('36 songs')).dx,
+      tester.getCenter(byIconButton('View')).dx,
+      tester.getCenter(find.text('Title')).dx,
+      tester.getCenter(byIconButton('Reverse order')).dx,
+      tester.getCenter(byIconButton('Filter')).dx,
+    ];
+    expect(xs, orderedEquals([...xs]..sort()));
+    expect(xs.toSet().length, xs.length);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the reverse button sits right after the chip, filter last', (
     tester,
   ) async {
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(
-      host(
-        Align(
-          alignment: Alignment.topCenter,
-          child: KListSortFilterBar(
-            leading: const Text('36 songs'),
-            criterionLabel: 'Title',
-            ascending: true,
-            onSortPressed: (_) {},
-            filterOpen: false,
-            onFilterToggle: () {},
-            filterTooltip: 'Filter',
-            view: KIconButton(
-              tooltip: 'View',
-              icon: KIcons.grid,
-              size: KIconSize.sm,
-              onPressed: () {},
-            ),
-          ),
-        ),
-      ),
+    await tester.pumpWidget(host(_bar()));
+    final chip = tester.getRect(
+      find.ancestor(of: find.text('Title'), matching: find.byType(InkWell)),
     );
-    final chip = tester.getRect(find.text('Title')).center.dx;
-    final view = tester.getCenter(find.byIcon(KIcons.grid)).dx;
-    final filter = tester.getCenter(find.byIcon(KIcons.filter)).dx;
-    expect(view, lessThan(chip));
-    expect(chip, lessThan(filter));
-    expect(tester.takeException(), isNull);
+    final reverse = tester.getRect(byIconButton('Reverse order'));
+    final filter = tester.getRect(byIconButton('Filter'));
+    expect(reverse.left, closeTo(chip.right, 0.5));
+    expect(filter.left, closeTo(reverse.right, 0.5));
   });
 
   testWidgets('keyboard focus stays on the filter button when it toggles', (
@@ -197,14 +254,14 @@ void main() {
       () => FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.automatic,
     );
-    final button = tester.widget<KIconButton>(find.byType(KIconButton));
+    final button = tester.widget<KIconButton>(byIconButton('Filter'));
     button.focusNode!.requestFocus();
     await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
     await tester.pump();
     expect(open, isTrue);
-    expect(find.byType(KIconButton), findsNothing, reason: 'tonal now');
+    expect(byIconButton('Filter'), findsNothing, reason: 'tonal now');
     final tonal = tester.widget<IconButton>(find.byType(IconButton));
     expect(tonal.focusNode!.hasFocus, isTrue);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -212,7 +269,7 @@ void main() {
     await tester.pump();
     expect(open, isFalse);
     expect(toggles, 2);
-    final light = tester.widget<KIconButton>(find.byType(KIconButton));
+    final light = tester.widget<KIconButton>(byIconButton('Filter'));
     expect(light.focusNode!.hasFocus, isTrue);
     await tester.pump(const Duration(milliseconds: 400));
   });
@@ -223,5 +280,51 @@ void main() {
     await tester.pumpWidget(host(_bar()));
     expect(find.bySemanticsLabel('Sort: Title'), findsOneWidget);
     handle.dispose();
+  });
+
+  testWidgets('a screen reader can tap the sort chip', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    final handle = tester.ensureSemantics();
+    GlobalKey? anchor;
+    await tester.pumpWidget(host(_bar(onSort: (k) => anchor = k)));
+    tester.semantics.tap(find.semantics.byLabel('Sort: Title'));
+    expect(anchor?.currentContext, isNotNull);
+    handle.dispose();
+  });
+
+  group('older layout (criterionLabel)', () {
+    Widget legacy({Widget? view}) => Align(
+      alignment: Alignment.topCenter,
+      child: KListSortFilterBar(
+        leading: const Text('36 songs'),
+        criterionLabel: 'Title',
+        ascending: true,
+        onSortPressed: (_) {},
+        filterOpen: false,
+        onFilterToggle: () {},
+        filterTooltip: 'Filter',
+        view: view,
+      ),
+    );
+
+    testWidgets('renders, 52 tall on mobile and 48 on desktop, no reverse', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(legacy(view: _viewButton())));
+      expect(find.text('Title'), findsOneWidget);
+      expect(byIconButton('Filter'), findsOneWidget);
+      expect(
+        tester.getSize(find.byType(KListSortFilterBar)).height,
+        greaterThanOrEqualTo(KListSortFilterBar.heightMobile),
+      );
+      useWindow(tester, const Size(1300, 800));
+      await tester.pumpWidget(host(legacy()));
+      expect(
+        tester.getSize(find.byType(KListSortFilterBar)).height,
+        KListSortFilterBar.heightDesktop,
+      );
+      expect(tester.takeException(), isNull);
+    });
   });
 }

@@ -27,6 +27,8 @@ class SelectionRow extends StatelessWidget {
     this.multi = false,
     this.partial = false,
     this.plainMark = false,
+    this.dense = false,
+    this.autofocus = false,
     this.onTap,
   });
 
@@ -50,6 +52,14 @@ class SelectionRow extends StatelessWidget {
   /// Icon-row layout without an icon of its own (the select-all row of an
   /// icon list): plain tick on the right, nothing at the start.
   final bool plainMark;
+
+  /// Compact row of menus and dropdowns: `bodyMedium` text, 12 dp gaps, 8 / 12
+  /// padding, 48 dp tall with touch and 40 dp with a mouse (the desktop
+  /// shell). Pass the icon at `KIconSize.sm`.
+  final bool dense;
+
+  /// Takes keyboard focus when its route opens (the chosen row of a menu).
+  final bool autofocus;
   final VoidCallback? onTap;
 
   static const double _checkSlot = 24;
@@ -58,9 +68,12 @@ class SelectionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final minHeight = FormFactor.of(context) == FormFactor.mobile
-        ? KLayout.minTarget + KSpace.x2
-        : KLayout.minTarget;
+    final mobile = FormFactor.of(context) == FormFactor.mobile;
+    final minHeight = dense
+        ? (mobile ? KLayout.minTarget : KLayout.minTargetDesktop)
+        : (mobile ? KLayout.minTarget + KSpace.x2 : KLayout.minTarget);
+    final gap = dense ? KSpace.x3 : KSpace.x4;
+    final bodyStyle = dense ? textTheme.bodyMedium : textTheme.bodyLarge;
     final active = enabled && onTap != null;
     final iconLayout = leading != null || plainMark;
     final mixed = multi && partial;
@@ -96,12 +109,13 @@ class SelectionRow extends StatelessWidget {
               hoverColor: scheme.onSurface.withValues(alpha: 0.08),
               focusColor: scheme.onSurface.withValues(alpha: 0.10),
               highlightColor: scheme.onSurface.withValues(alpha: 0.10),
+              autofocus: autofocus,
               onTap: active ? onTap : null,
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: minHeight),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: KSpace.x4,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: dense ? KSpace.x3 : KSpace.x4,
                     vertical: KSpace.x2,
                   ),
                   child: Row(
@@ -114,7 +128,7 @@ class SelectionRow extends StatelessWidget {
                           data: IconThemeData(color: scheme.onSurfaceVariant),
                           child: leading!,
                         ),
-                        const KGap(KSpace.x4),
+                        KGap(gap),
                       ],
                       Expanded(
                         child: Column(
@@ -122,7 +136,7 @@ class SelectionRow extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             DefaultTextStyle.merge(
-                              style: textTheme.bodyLarge?.copyWith(
+                              style: bodyStyle?.copyWith(
                                 fontWeight: selected ? FontWeight.w700 : null,
                               ),
                               child: title,

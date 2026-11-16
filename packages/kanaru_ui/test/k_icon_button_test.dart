@@ -502,4 +502,58 @@ void main() {
       expect(KIconButton.ownsPrimaryFocus(), isFalse);
     });
   });
+
+  group('emphasis', () {
+    Widget emphasised({
+      KIconEmphasis emphasis = KIconEmphasis.primary,
+      VoidCallback? onPressed,
+      Color? color,
+    }) => Center(
+      child: KIconButton(
+        icon: Icons.add,
+        tooltip: 'Add',
+        emphasis: emphasis,
+        color: color,
+        onPressed: onPressed,
+      ),
+    );
+
+    testWidgets('normal is the quiet default, primary is the accent', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(emphasised(emphasis: KIconEmphasis.normal, onPressed: () {})),
+      );
+      expect(glyphColor(tester), scheme(tester).onSurfaceVariant);
+      await tester.pumpWidget(host(emphasised(onPressed: () {})));
+      expect(glyphColor(tester), scheme(tester).primary);
+    });
+
+    testWidgets('a disabled primary button is dimmed like any other', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(emphasised()));
+      expect(
+        glyphColor(tester),
+        scheme(tester).onSurface.withValues(alpha: 0.38),
+      );
+    });
+
+    testWidgets('an own colour and a KIconButtonColors scope win', (
+      tester,
+    ) async {
+      const own = Color(0xFF00AA00), scoped = Color(0xFFAA0000);
+      await tester.pumpWidget(host(emphasised(onPressed: () {}, color: own)));
+      expect(glyphColor(tester), own);
+      await tester.pumpWidget(
+        host(
+          KIconButtonColors(
+            rest: scoped,
+            child: emphasised(onPressed: () {}),
+          ),
+        ),
+      );
+      expect(glyphColor(tester), scoped);
+    });
+  });
 }

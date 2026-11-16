@@ -229,4 +229,36 @@ void main() {
     );
     handle.dispose();
   });
+
+  testWidgets('dense rows: 48 tall on mobile, 40 with a mouse; normal rows '
+      'stay taller', (tester) async {
+    Widget rows() => const Column(
+      children: [
+        SelectionRow(
+          dense: true,
+          leading: Icon(KIcons.songs, size: KIconSize.sm),
+          title: Text('Dense'),
+          selected: false,
+        ),
+        SelectionRow(
+          leading: Icon(KIcons.songs, size: KIconSize.sm),
+          title: Text('Normal'),
+          selected: false,
+        ),
+      ],
+    );
+    Finder rowOf(String text) =>
+        find.ancestor(of: find.text(text), matching: find.byType(SelectionRow));
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(rows()));
+    expect(tester.getSize(rowOf('Dense')).height, KLayout.minTarget);
+    expect(
+      tester.getSize(rowOf('Normal')).height,
+      greaterThan(KLayout.minTarget),
+    );
+    useWindow(tester, const Size(1300, 800));
+    await tester.pumpWidget(host(rows()));
+    expect(tester.getSize(rowOf('Dense')).height, KLayout.minTargetDesktop);
+    expect(tester.takeException(), isNull);
+  });
 }

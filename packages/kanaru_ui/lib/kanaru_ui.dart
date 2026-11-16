@@ -24,7 +24,8 @@ export 'src/widgets/k_empty_page.dart';
 export 'src/widgets/k_equalizer_icon.dart';
 export 'src/widgets/k_gap.dart';
 export 'src/widgets/k_icon_button.dart';
-export 'src/widgets/k_icon_button_colors.dart' show KIconButtonColors;
+export 'src/widgets/k_icon_button_colors.dart'
+    show KIconButtonColors, KIconEmphasis;
 export 'src/widgets/k_list_row.dart';
 export 'src/widgets/k_more_button.dart';
 export 'src/widgets/k_page.dart';

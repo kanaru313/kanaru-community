@@ -5,27 +5,29 @@ import 'package:material_ui/material_ui.dart';
 import 'support/host.dart';
 
 void main() {
-  Widget handle({double? dimension, double? iconSize}) => host(
-    ReorderableListView(
-      onReorderItem: (_, _) {},
-      buildDefaultDragHandles: false,
-      children: [
-        SizedBox(
-          key: const ValueKey(0),
-          height: 60,
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: KDragHandle(
-              index: 0,
-              dimension: dimension,
-              iconSize: iconSize,
-              semanticLabel: 'Reorder',
+  Widget handle({double? dimension, double? iconSize, bool compact = false}) =>
+      host(
+        ReorderableListView(
+          onReorderItem: (_, _) {},
+          buildDefaultDragHandles: false,
+          children: [
+            SizedBox(
+              key: const ValueKey(0),
+              height: 60,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: KDragHandle(
+                  index: 0,
+                  dimension: dimension,
+                  iconSize: iconSize,
+                  compact: compact,
+                  semanticLabel: 'Reorder',
+                ),
+              ),
             ),
-          ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
 
   // The handle's own box (the list gives its row the full width).
   Size box(WidgetTester tester) => tester.getSize(
@@ -58,5 +60,17 @@ void main() {
     await tester.pumpWidget(handle());
     expect(box(tester), const Size.square(KLayout.minTarget));
     expect(glyph(tester).size, isNull);
+  });
+
+  testWidgets('compact is 28 wide and as tall as a touch target', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 400));
+    await tester.pumpWidget(handle(compact: true, dimension: 99));
+    expect(
+      box(tester),
+      const Size(KDragHandle.compactWidth, KLayout.minTarget),
+    );
+    expect(KDragHandle.compactWidth, 28);
   });
 }

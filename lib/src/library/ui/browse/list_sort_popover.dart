@@ -20,7 +20,7 @@ Future<void> openListSort(
   final l10n = AppLocalizations.of(context);
   final current = read().primary;
   final numeric = current.criterion.kind != SortKind.text;
-  final picked = await showKSortPopover<SortCriterion>(
+  final pick = await showKSortPopover<SortCriterion>(
     context,
     anchor: anchor,
     criteria: [
@@ -45,6 +45,6 @@ Future<void> openListSort(
       write(now.flip(now.primary.criterion));
     },
   );
-  if (picked == null) return;
-  await write(read().pick(picked));
+  if (pick is! KSortPicked<SortCriterion>) return;
+  await write(read().pick(pick.value));
 }

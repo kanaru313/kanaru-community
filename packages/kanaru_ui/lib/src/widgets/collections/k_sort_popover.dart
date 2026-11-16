@@ -1,46 +1,58 @@
+import 'dart:math' as math;
+
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../icons/k_icons.dart';
 import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_layout.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
-import '../../icons/k_icons.dart';
 import '../k_gap.dart';
 import '../selection_row.dart';
+import 'k_sort_pick.dart';
+import 'k_sort_popover_order_row.dart';
 
-/// One sort criterion of [showKSortPopover].
-class KSortCriterion<T> {
-  const KSortCriterion({required this.value, required this.label, this.icon});
+export 'k_sort_pick.dart';
 
-  final T value;
-  final String label;
-  final IconData? icon;
-}
+/// Share of a short screen the dropdown may take.
+const double _maxHeightShare = 0.7;
 
 /// Sort dropdown anchored under [anchor] on both shells (never a sheet).
 ///
-/// Top row: two order buttons. Tapping one reports through
-/// [onAscendingChanged] and the popover stays open. Below a divider the
-/// criteria are selection rows; choosing one closes the popover and resolves
-/// to its value (null when dismissed). The criteria scroll when they do not
-/// fit; the order row stays. Esc and Back close it. Opens on the root
-/// navigator so the app's shortcut guard sees it.
-Future<T?> showKSortPopover<T>(
+/// Content: the "Nâng cao…" row ([advancedLabel], left out when null), a
+/// divider, then the criteria as compact icon rows; the criteria scroll when
+/// they do not fit and "Nâng cao…" stays put. The width follows the content
+/// ([KLayout.dropdownMinWidth] to [KLayout.dropdownMaxWidth], long names are
+/// ellipsized) and the height stops at [KLayout.dropdownMaxHeight] or 70 % of
+/// the screen. The criterion in use ([selected]) is tinted and bold, with no
+/// tick. Resolves to [KSortPicked] (a criterion, closes), [KSortAdvanced]
+/// ("Nâng cao…", closes) or null (dismissed by Esc, Back or a tap outside).
+/// Opens on the root navigator so the app's shortcut guard sees it.
+///
+/// The direction row (two buttons) is drawn only while [onAscendingChanged]
+/// and both direction labels are given; it stays open when tapped. New callers
+/// leave all four out.
+Future<KSortPick<T>?> showKSortPopover<T>(
   BuildContext context, {
   required GlobalKey anchor,
   required List<KSortCriterion<T>> criteria,
   required T selected,
-  required bool ascending,
-  required String ascendingLabel,
-  required String descendingLabel,
-  required ValueChanged<bool> onAscendingChanged,
+  String? advancedLabel,
+  bool ascending = true,
+  String? ascendingLabel,
+  String? descendingLabel,
+  ValueChanged<bool>? onAscendingChanged,
 }) {
   final box = anchor.currentContext?.findRenderObject();
   final rect = box is RenderBox && box.attached
       ? box.localToGlobal(Offset.zero) & box.size
       : null;
-  return showDialog<T>(
+  final showOrder =
+      onAscendingChanged != null &&
+      ascendingLabel != null &&
+      descendingLabel != null;
+  return showDialog<KSortPick<T>>(
     context: context,
     useRootNavigator: true,
     // The panel position is in global coordinates; a SafeArea would shift it.
@@ -53,23 +65,25 @@ Future<T?> showKSortPopover<T>(
         color: Theme.of(context).colorScheme.surfaceContainerHigh,
         shape: KShape.of(KRadius.lg, continuous: true),
         clipBehavior: Clip.antiAlias,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: _width, maxWidth: _width),
+        child: IntrinsicWidth(
           child: _PopoverBody<T>(
             criteria: criteria,
             selected: selected,
-            ascending: ascending,
-            ascendingLabel: ascendingLabel,
-            descendingLabel: descendingLabel,
-            onAscendingChanged: onAscendingChanged,
+            advancedLabel: advancedLabel,
+            order: showOrder
+                ? SortPopoverOrderRow(
+                    ascending: ascending,
+                    ascendingLabel: ascendingLabel,
+                    descendingLabel: descendingLabel,
+                    onChanged: onAscendingChanged,
+                  )
+                : null,
           ),
         ),
       ),
     ),
   );
 }
-
-const double _width = 280;
 
 /// Under the anchor, right edges aligned (the chip sits at the end of the
 /// bar), clamped to the screen; above the anchor when there is no room below.
@@ -79,11 +93,23 @@ class _PopoverLayout extends SingleChildLayoutDelegate {
   final Rect? anchor;
 
   @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
-      BoxConstraints(
-        maxWidth: constraints.maxWidth - 2 * KSpace.x4,
-        maxHeight: constraints.maxHeight - 2 * KSpace.x4,
-      );
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
+    final maxWidth = math.max(0.0, constraints.maxWidth - 2 * KSpace.x4);
+    return BoxConstraints(
+      minWidth: math.min(KLayout.dropdownMinWidth, maxWidth),
+      maxWidth: math.min(KLayout.dropdownMaxWidth, maxWidth),
+      maxHeight: math.max(
+        0.0,
+        math.min(
+          KLayout.dropdownMaxHeight,
+          math.min(
+            constraints.maxHeight * _maxHeightShare,
+            constraints.maxHeight - 2 * KSpace.x4,
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {
@@ -113,150 +139,108 @@ class _PopoverLayout extends SingleChildLayoutDelegate {
   bool shouldRelayout(_PopoverLayout old) => anchor != old.anchor;
 }
 
-class _PopoverBody<T> extends StatefulWidget {
+class _PopoverBody<T> extends StatelessWidget {
   const _PopoverBody({
     required this.criteria,
     required this.selected,
-    required this.ascending,
-    required this.ascendingLabel,
-    required this.descendingLabel,
-    required this.onAscendingChanged,
+    required this.advancedLabel,
+    required this.order,
   });
 
   final List<KSortCriterion<T>> criteria;
   final T selected;
-  final bool ascending;
-  final String ascendingLabel;
-  final String descendingLabel;
-  final ValueChanged<bool> onAscendingChanged;
-
-  @override
-  State<_PopoverBody<T>> createState() => _PopoverBodyState<T>();
-}
-
-class _PopoverBodyState<T> extends State<_PopoverBody<T>> {
-  late bool _ascending = widget.ascending;
-
-  void _setOrder(bool ascending) {
-    if (ascending == _ascending) return;
-    setState(() => _ascending = ascending);
-    widget.onAscendingChanged(ascending);
-  }
+  final String? advancedLabel;
+  final Widget? order;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    // The chosen row takes keyboard focus; the first row when none is chosen.
+    final hasSelected = criteria.any((c) => c.value == selected);
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.escape): () =>
             Navigator.of(context).maybePop(),
       },
-      child: Focus(
-        autofocus: true,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ?order,
+          if (advancedLabel != null) ...[
             Padding(
-              padding: const EdgeInsets.all(KSpace.x2),
-              child: Row(
+              padding: const EdgeInsets.fromLTRB(
+                KSpace.x2,
+                KSpace.x2,
+                KSpace.x2,
+                0,
+              ),
+              child: SelectionRow(
+                dense: true,
+                autofocus: !hasSelected,
+                leading: const Icon(KIcons.sortAdvanced, size: KIconSize.sm),
+                title: _RowText(advancedLabel!),
+                selected: false,
+                onTap: () => Navigator.of(context).pop(KSortAdvanced<T>()),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: KSpace.x2,
+                vertical: KSpace.x1,
+              ),
+              child: Divider(
+                height: 1,
+                thickness: 1,
+                color: scheme.outlineVariant,
+              ),
+            ),
+          ] else if (order != null)
+            Divider(height: 1, thickness: 1, color: scheme.outlineVariant),
+          // SingleChildScrollView (not a ListView) so the dropdown can size to
+          // its content: a viewport has no intrinsic width.
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                KSpace.x2,
+                advancedLabel == null && order == null ? KSpace.x2 : 0,
+                KSpace.x2,
+                KSpace.x2,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: _OrderButton(
-                      icon: KIcons.sortAsc,
-                      label: widget.ascendingLabel,
-                      selected: _ascending,
-                      onTap: () => _setOrder(true),
+                  for (var i = 0; i < criteria.length; i++) ...[
+                    if (i > 0) const KGap(KLayout.dropdownRowGap),
+                    SelectionRow(
+                      dense: true,
+                      autofocus: criteria[i].value == selected,
+                      leading: criteria[i].icon == null
+                          ? null
+                          : Icon(criteria[i].icon, size: KIconSize.sm),
+                      title: _RowText(criteria[i].label),
+                      selected: criteria[i].value == selected,
+                      onTap: () =>
+                          Navigator.of(context)
+                              .pop(KSortPicked<T>(criteria[i].value)),
                     ),
-                  ),
-                  const KGap(KSpace.x1),
-                  Expanded(
-                    child: _OrderButton(
-                      icon: KIcons.sortDesc,
-                      label: widget.descendingLabel,
-                      selected: !_ascending,
-                      onTap: () => _setOrder(false),
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
-            Divider(height: 1, thickness: 1, color: scheme.outlineVariant),
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: const EdgeInsets.all(KSpace.x2),
-                itemCount: widget.criteria.length,
-                separatorBuilder: (_, _) => const KGap(KSpace.x1),
-                itemBuilder: (context, i) {
-                  final c = widget.criteria[i];
-                  return SelectionRow(
-                    leading: c.icon == null ? null : Icon(c.icon),
-                    title: Text(c.label),
-                    selected: c.value == widget.selected,
-                    onTap: () => Navigator.of(context).pop(c.value),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _OrderButton extends StatelessWidget {
-  const _OrderButton({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+class _RowText extends StatelessWidget {
+  const _RowText(this.text);
 
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
+  final String text;
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final fg = selected ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: Material(
-        color: selected ? scheme.secondaryContainer : const Color(0x00000000),
-        shape: KShape.of(KRadius.full),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: KLayout.minTarget),
-            child: Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, size: KIconSize.xs, color: fg),
-                  const KGap(KSpace.x1),
-                  Flexible(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: fg,
-                        fontWeight: selected ? FontWeight.w700 : null,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      Text(text, maxLines: 1, overflow: TextOverflow.ellipsis);
 }
