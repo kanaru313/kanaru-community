@@ -792,7 +792,7 @@ colours are unknown it is `loading` with no palette; a cover with no colours
 page, header band included, in `CoverTintBackground(strength: 0.5, fadeIn:
 true)`: nothing is drawn until the colours are known, then a 300 ms fade-in;
 choosing or removing the custom cover on an open page tweens (the old colours
-stay while `loading`). Sticky bars keep `KBlurredBar`. Group pages pass no
+stay while `loading`). The sticky list bar (`KStickyBarSliver`) paints the page ground: the ground's base plus the same tint gradient shifted by the bar's place in the ground, so no seam and no blur; `surface` on untinted pages. Group pages pass no
 tint. `KDetailLayout` draws no background. The album artist link uses
 `primary` (follows the playing cover), so on a tinted page it can fall just
 under 4.5:1; the tint is not changed for it.
@@ -935,7 +935,7 @@ Sizes that the mockups give and the tokens lack (card radius 14, panel radius
 |---|---|
 | `KDetailLayout` | `header` plus list `slivers`. Under 840 px of page width (measured on the page, not the window) the header sits above the list; from 840 the header is a fixed 320 column, bottom aligned and scrolling on its own when the window is short. Draws no background: a page tints itself by wrapping the layout in `CoverTintBackground` (see "Detail page tint") |
 | `KDetailHero` | Top of an album or artist page for the `header` slot: narrow = 132 cover on the left, text and buttons aligned to its bottom; wide (asked of `KDetailLayout.isWide`) = cover as wide as the column, faded at the bottom and right edges (a round photo is not), text below |
-| `KBlurredBar`, `KStickyBarSliver` | Translucent blurred background and a pinned sliver bar over it, so the tint is not cut by a flat bar. Blur only on these bars |
+| `KStickyBarSliver` | Pinned sliver bar, opaque: painted with the page ground (`KPageGround` of the `CoverTintBackground` above: base + tint gradient shifted by the bar's place) or `surface` without one. No blur |
 | `showKLayeredMenu` | `KMenuPage` (optional `initialPage`: opens on that sub-page, Back goes to the root; header, groups of `KMenuRow`, footer of two `KMenuButton`s, note). A row either runs `onTap`, opens a sub-page (`opens`), or folds chips (`chips`); `soonLabel` or `enabled: false` dims it and makes it inert; `danger`, `proLabel`, `trailing` icon button. A chosen row closes the menu first and then runs its callback. Back, the arrow and Esc on a sub-page return one page; on the root they close |
 | `KMenuRow.leading` | A picture (an album cover) in place of the row's icon |
 | `KMenuPage` extras | `groupTitles` (a heading above each group; an empty group loses its heading) and `headerOpens` (the header becomes a button with a `›` that shows that page) |

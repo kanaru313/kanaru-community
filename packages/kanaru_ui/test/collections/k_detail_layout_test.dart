@@ -117,7 +117,7 @@ void main() {
     expect(find.byKey(const ValueKey('header')), findsOneWidget);
   });
 
-  testWidgets('a sticky bar stays pinned and blurs what is under it', (
+  testWidgets('a sticky bar stays pinned and is opaque, without blur', (
     tester,
   ) async {
     useWindow(tester, const Size(400, 800));
@@ -138,6 +138,6 @@ void main() {
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -900));
     await tester.pumpAndSettle();
     expect(tester.getTopLeft(find.text('bar')).dy, 0);
-    expect(find.byType(BackdropFilter), findsOneWidget);
+    expect(find.byType(BackdropFilter), findsNothing);
   });
 }
