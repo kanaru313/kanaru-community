@@ -36,7 +36,9 @@ class _BodyRowState extends State<_BodyRow> {
     return MouseRegion(
       cursor: _dragging ? SystemMouseCursors.grabbing : SystemMouseCursors.grab,
       child: Listener(
-        onPointerDown: (e) => _setDragging(e.kind == PointerDeviceKind.mouse),
+        onPointerDown: (e) => _setDragging(
+          e.kind == PointerDeviceKind.mouse && e.buttons == kPrimaryMouseButton,
+        ),
         onPointerUp: (_) => _setDragging(false),
         onPointerCancel: (_) => _setDragging(false),
         child: ScrollConfiguration(

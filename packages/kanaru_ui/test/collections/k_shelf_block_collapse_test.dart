@@ -152,6 +152,20 @@ void main() {
       await mouse.up();
       await tester.pump();
       expect(cursor(), SystemMouseCursors.grab);
+      await mouse.removePointer();
+      final right = await tester.createGesture(
+        kind: PointerDeviceKind.mouse,
+        buttons: kSecondaryMouseButton,
+      );
+      await right.addPointer(location: onRow);
+      await right.down(onRow);
+      await tester.pump();
+      expect(
+        cursor(),
+        SystemMouseCursors.grab,
+        reason: 'right click is not a drag',
+      );
+      await right.up();
     });
   });
 
