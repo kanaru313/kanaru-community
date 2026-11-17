@@ -82,6 +82,84 @@ void main() {
     });
   }
 
+  Future<Rect> openAt(
+    WidgetTester tester,
+    Size window,
+    Alignment align, {
+    TextDirection? dir,
+    int count = 3,
+    String? firstLabel,
+  }) async {
+    useWindow(tester, window);
+    Widget opener = _Opener(
+      onResult: (_) {},
+      align: align,
+      count: count,
+      firstLabel: firstLabel,
+    );
+    if (dir != null) opener = Directionality(textDirection: dir, child: opener);
+    await tester.pumpWidget(scaledHost(opener));
+    await _open(tester);
+    return tester.getRect(_panel());
+  }
+
+  testWidgets('centred on the anchor when there is room', (tester) async {
+    final panel = await openAt(
+      tester,
+      const Size(400, 800),
+      const Alignment(0, -1),
+    );
+    final chip = tester.getCenter(find.text('open')).dx;
+    expect(panel.center.dx, closeTo(chip, 1));
+  });
+
+  testWidgets('near the left edge it shifts inward, keeping the margin', (
+    tester,
+  ) async {
+    final panel = await openAt(
+      tester,
+      const Size(400, 800),
+      const Alignment(-1, -1),
+    );
+    expect(panel.left, closeTo(KSpace.x4, 0.01));
+    expect(panel.width, greaterThanOrEqualTo(KLayout.dropdownMinWidth));
+  });
+
+  testWidgets('near the right edge it shifts inward, keeping the margin', (
+    tester,
+  ) async {
+    final panel = await openAt(
+      tester,
+      const Size(400, 800),
+      const Alignment(1, -1),
+    );
+    expect(panel.right, closeTo(400 - KSpace.x4, 0.01));
+  });
+
+  testWidgets('a wide popover on a 320 px screen stays inside the margins', (
+    tester,
+  ) async {
+    final panel = await openAt(
+      tester,
+      const Size(320, 800),
+      const Alignment(0.8, -1),
+      count: 4,
+      firstLabel: 'A very long criterion name that needs the full width',
+    );
+    expect(panel.left, greaterThanOrEqualTo(KSpace.x4 - 0.01));
+    expect(panel.right, lessThanOrEqualTo(320 - KSpace.x4 + 0.01));
+    expect(panel.width, greaterThanOrEqualTo(KLayout.dropdownMinWidth));
+    expect(panel.width, lessThanOrEqualTo(KLayout.dropdownMaxWidth));
+    // The chip is off-centre, so the panel is clamped, not centred.
+    final chip = tester.getCenter(find.text('open')).dx;
+    expect((panel.center.dx - chip).abs(), greaterThan(1));
+    expect(
+      (panel.left - KSpace.x4).abs() < 0.01 ||
+          (panel.right - (320 - KSpace.x4)).abs() < 0.01,
+      isTrue,
+    );
+  });
+
   testWidgets('opens under the anchor', (tester) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(scaledHost(_Opener(onResult: (_) {})));

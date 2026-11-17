@@ -69,8 +69,9 @@ Future<KSortPick<T>?> showKSortPopover<T>(
   return navigator.push(route);
 }
 
-/// Under the anchor, right edges aligned (the chip sits at the end of the
-/// bar), clamped to the screen; above the anchor when there is no room below.
+/// Under the anchor, horizontally centred on it (symmetric, so RTL needs no
+/// special case), shifted inward to keep [KSpace.x4] from both screen edges;
+/// above the anchor when there is no room below.
 class _PopoverLayout extends SingleChildLayoutDelegate {
   _PopoverLayout(this.anchor);
 
@@ -108,7 +109,7 @@ class _PopoverLayout extends SingleChildLayoutDelegate {
       KSpace.x4,
       size.width,
     );
-    final x = (rect.right - childSize.width).clamp(KSpace.x4, maxX);
+    final x = (rect.center.dx - childSize.width / 2).clamp(KSpace.x4, maxX);
     final below = rect.bottom + KSpace.x1;
     final y = below + childSize.height <= size.height - KSpace.x4
         ? below
