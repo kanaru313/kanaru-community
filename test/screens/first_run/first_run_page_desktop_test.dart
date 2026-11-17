@@ -75,6 +75,34 @@ void main() {
     expect(find.text('~/Songs'), findsOneWidget);
   });
 
+  testWidgets('shows none of the Android rescan states and never refreshes the '
+      'index; the system dialog still adds the folder', (tester) async {
+    final h = await pumpFirstRun(tester);
+    await tester.pumpAndSettle();
+    for (final text in [
+      'Android sees no music',
+      'Still no music',
+      'Rescan',
+      'Rescanning',
+      'Could not rescan',
+      'Could not load the folder list',
+      'Looking for folders',
+    ]) {
+      expect(find.textContaining(text), findsNothing, reason: text);
+    }
+    expect(h.catalog.refreshCalls, 0);
+
+    h.catalog.picks.add('/home/u/Songs');
+    await tester.tap(find.text('Add folder…'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(h.catalog.pickStarts, [null]);
+    expect(find.text('~/Songs'), findsOneWidget);
+    expect(await liveScanFolders(h.db), hasLength(1));
+    expect(find.textContaining('Rescan'), findsNothing);
+    expect(h.catalog.refreshCalls, 0);
+  });
+
   testWidgets('the arrow finishes setup: flag set, one scan asked, settings '
       'flushed', (tester) async {
     final catalog = FakeCatalog()..suggestion = '/home/u/Music';

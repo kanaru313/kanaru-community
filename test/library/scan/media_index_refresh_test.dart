@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/database/state/database_providers.dart';
+import 'package:kanaru/src/library/data/scan/music_folder_writer.dart';
 import 'package:kanaru/src/library/domain/scan_status.dart';
 import 'package:kanaru/src/library/state/scan/folder_candidates_provider.dart';
 import 'package:kanaru/src/library/state/scan/media_index_refresh.dart';
@@ -26,6 +27,7 @@ class _Catalog implements LocalAudioCatalog {
   int refreshes = 0;
   int folderReads = 0;
   List<String>? lastRoots;
+  List<String>? lastFolders;
 
   @override
   Future<MediaIndexRefresh> refreshMediaIndex({
@@ -34,6 +36,7 @@ class _Catalog implements LocalAudioCatalog {
   }) async {
     refreshes++;
     lastRoots = volumeRoots;
+    lastFolders = folders;
     if (refreshError != null) throw refreshError!;
     return await gate?.future ?? outcome;
   }
@@ -128,6 +131,22 @@ void main() {
     expect(done.found, 7);
     expect(catalog.lastRoots, ['/storage/emulated/0']);
   });
+
+  test(
+    'the chosen folders reach the refresh, none when nothing is chosen',
+    () async {
+      await notifier().run();
+      expect(catalog.lastFolders, isEmpty);
+      await addLocalSource(
+        db,
+        root: '/storage/emulated/0/KanaruRepro',
+        name: 'KanaruRepro',
+        now: 1,
+      );
+      await notifier().run();
+      expect(catalog.lastFolders, ['/storage/emulated/0/KanaruRepro']);
+    },
+  );
 
   test('a later run gets the next runId', () async {
     await notifier().run();

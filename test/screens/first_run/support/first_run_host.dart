@@ -8,6 +8,7 @@ import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/library/domain/scan_status.dart';
 import 'package:kanaru/src/library/state/folder_exclusion_providers.dart';
+import 'package:kanaru/src/library/state/music_folders_providers.dart';
 import 'package:kanaru/src/library/state/scan/music_folder_editor.dart';
 import 'package:kanaru/src/library/state/scan/music_folder_editor_provider.dart';
 import 'package:kanaru/src/library/state/scan/scan_settings.dart';
@@ -20,6 +21,7 @@ import 'package:kanaru/src/platform/state/media_permissions_provider.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:kanaru/src/platform/state/storage_volumes_provider.dart';
 import 'package:kanaru/src/screens/first_run/ui/first_run_page.dart';
+import 'package:kanaru/src/screens/first_run/ui/folder_actions.dart';
 import 'package:kanaru/src/screens/settings/state/appearance_settings.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -56,9 +58,14 @@ class FakeCatalog implements LocalAudioCatalog {
   }) async => const AudioListing();
   int audioFolderReads = 0;
 
+  /// Held by [audioFolders] (after it counted the read) until the test
+  /// completes it: the list stays loading.
+  Completer<void>? readGate;
+
   @override
   Future<AudioFoldersResult> audioFolders() async {
     audioFolderReads++;
+    await readGate?.future;
     return result ?? AudioFoldersListed(folders);
   }
 
@@ -210,6 +217,7 @@ Future<FirstRunHarness> pumpFirstRun(
   MemorySettingsStore? settings,
   List<Override> overrides = const [],
   bool settle = true,
+  Widget child = const FirstRunPage(),
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width ?? (android ? 400 : 1280), height);
@@ -248,7 +256,7 @@ Future<FirstRunHarness> pumpFirstRun(
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: const _App(child: FirstRunPage()),
+      child: _App(child: child),
     ),
   );
   if (settle) await tester.pumpAndSettle();
@@ -260,6 +268,59 @@ Future<FirstRunHarness> pumpFirstRun(
     settings: store,
     scanner: scanner,
   );
+}
+
+/// Replaces the page with a fresh [FirstRunPage] on the same container (the
+/// providers keep their state; the page's own state starts over).
+Future<void> remountFirstRun(WidgetTester tester, FirstRunHarness h) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: h.container,
+      child: const _App(child: FirstRunPage()),
+    ),
+  );
+}
+
+/// Opens the Android folder sheets from two buttons, without the first-run
+/// page (so no card and no first-run defaults run beside the sheet).
+class SheetHost extends ConsumerWidget {
+  const SheetHost({super.key});
+
+  static const openAdd = 'open-add';
+  static const openExclude = 'open-exclude';
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // The page keeps the chosen folders loaded; the exclusion sheet reads them.
+    ref.watch(musicFoldersProvider);
+    return Scaffold(
+      body: Column(
+        children: [
+          TextButton(
+            onPressed: () => addMusicFolders(context, ref),
+            child: const Text(openAdd),
+          ),
+          TextButton(
+            onPressed: () => addExclusions(context, ref),
+            child: const Text(openExclude),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Pumps [n] frames [step] apart: lets sheets slide and futures land while a
+/// progress indicator keeps animating (`pumpAndSettle` would never return).
+Future<void> frames(
+  WidgetTester tester, [
+  int n = 3,
+  Duration step = const Duration(milliseconds: 300),
+]) async {
+  for (var i = 0; i < n; i++) {
+    await tester.pump(step);
+  }
 }
 
 /// A localized app whose theme follows the theme setting, like the real one.
