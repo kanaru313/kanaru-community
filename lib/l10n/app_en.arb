@@ -451,6 +451,7 @@
   "playbackQueueEmpty": "The queue is empty",
   "libraryTabSongs": "Songs",
   "libraryTabAlbums": "Albums",
+  "libraryShelfSeeAll": "See all",
   "libraryTabArtists": "Artists",
   "libraryTabGenres": "Genres",
   "libraryTabLanguages": "Languages",

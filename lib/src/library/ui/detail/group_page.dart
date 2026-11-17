@@ -11,6 +11,7 @@ import '../../domain/browse/song_scope.dart';
 import '../../domain/library_tabs.dart';
 import '../../state/browse/detail_expand_providers.dart';
 import '../../state/browse/detail_providers.dart';
+import '../../state/browse/shelf_block_providers.dart';
 import '../browse/group_play.dart';
 import '../browse/library_labels.dart';
 import '../browse/library_list_scaffold.dart';
@@ -216,6 +217,7 @@ class GroupPage extends ConsumerWidget {
           child: ArtistShelf(
             title: l10n.libraryTabArtists,
             artists: shelves.artists.take(cap).toList(),
+            total: shelves.artists.length,
             onSeeAll: () =>
                 openLibraryPage(context, SeeAllLocations.groupArtists(target)),
           ),
@@ -224,7 +226,9 @@ class GroupPage extends ConsumerWidget {
         SliverToBoxAdapter(
           child: AlbumShelf(
             title: l10n.libraryTabAlbums,
+            kind: ShelfBlockKind.albums,
             albums: shelves.albums.take(cap).toList(),
+            total: shelves.albums.length,
             onSeeAll: () =>
                 openLibraryPage(context, SeeAllLocations.groupAlbums(target)),
           ),

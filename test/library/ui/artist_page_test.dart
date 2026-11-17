@@ -55,6 +55,13 @@ Future<LibraryHarness> _pump(
   return h;
 }
 
+/// The "See all" button of the shelf block titled [title].
+Finder _seeAll(String title) => find.descendant(
+  of: find.ancestor(of: find.text(title), matching: find.byType(KShelfBlock)),
+  matching: find.byWidgetPredicate(
+    (w) => w is KIconButton && w.tooltip == 'See all',
+  ),
+);
 void main() {
   testWidgets('shows album count, shelves newest first and every song', (
     tester,
@@ -79,7 +86,7 @@ void main() {
         c.album.title,
     ];
     expect(shelfAlbums, ['New', 'Old', 'Mix']);
-    expect(find.byType(KShelf), findsNWidgets(2));
+    expect(find.byType(KShelfBlock), findsNWidgets(2));
     handle.dispose();
     await unmountApp(tester);
   });
@@ -192,7 +199,7 @@ void main() {
   ) async {
     final h = await _pump(tester, 'Zed');
     final artistLocation = h.location;
-    await tester.tap(find.text('Albums'));
+    await tester.tap(_seeAll('Albums'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     await h.settle(tester);
@@ -211,7 +218,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(h.location, artistLocation);
-    await tester.tap(find.text('Appears on'));
+    await tester.tap(_seeAll('Appears on'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     await h.settle(tester);
@@ -219,6 +226,42 @@ void main() {
     expect(find.text('Appears on · Zed'), findsOneWidget);
     expect(inPageHeader('Appears on · Zed'), findsNothing);
     expect(find.byType(AlbumCard), findsOneWidget);
+    await unmountApp(tester);
+  });
+
+  testWidgets('tapping a block head collapses that kind of block', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await _pump(tester, 'Zed');
+    Matcher head(String label, {required bool expanded}) => isSemantics(
+      label: label,
+      isButton: true,
+      hasTapAction: true,
+      hasExpandedState: true,
+      isExpanded: expanded,
+    );
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Albums, 2')),
+      head('Albums, 2', expanded: true),
+    );
+    await tester.tap(find.text('Albums'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Albums, 2')),
+      head('Albums, 2', expanded: false),
+    );
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Appears on, 1')),
+      head('Appears on, 1', expanded: true),
+    );
+    await tester.tap(find.text('Albums'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Albums, 2')),
+      head('Albums, 2', expanded: true),
+    );
+    handle.dispose();
     await unmountApp(tester);
   });
 
@@ -237,6 +280,25 @@ void main() {
       tester.getTopLeft(find.byType(DetailActions)).dx,
       lessThan(KDetailLayout.columnWidth),
     );
+    await unmountApp(tester);
+  });
+
+  testWidgets('on desktop a block is as wide as the song rows below it', (
+    tester,
+  ) async {
+    await _pump(tester, 'Zed', width: 1280);
+    // The card itself, inside the block's outer margin.
+    final block = tester.getRect(
+      find
+          .descendant(
+            of: find.byType(KShelfBlock).first,
+            matching: find.byType(DecoratedBox),
+          )
+          .first,
+    );
+    final row = tester.getRect(find.byType(KMediaCard).first);
+    expect(block.left, moreOrLessEquals(row.left, epsilon: 0.5));
+    expect(block.right, moreOrLessEquals(row.right, epsilon: 0.5));
     await unmountApp(tester);
   });
 }

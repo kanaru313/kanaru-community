@@ -674,6 +674,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get libraryTabAlbums => 'Album';
 
   @override
+  String get libraryShelfSeeAll => 'Xem tất cả';
+
+  @override
   String get libraryTabArtists => 'Nghệ sĩ';
 
   @override

@@ -737,6 +737,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryTabAlbums => 'Albums';
 
   @override
+  String get libraryShelfSeeAll => 'See all';
+
+  @override
   String get libraryTabArtists => 'Artists';
 
   @override

@@ -1226,6 +1226,12 @@ abstract class AppLocalizations {
   /// **'Albums'**
   String get libraryTabAlbums;
 
+  /// No description provided for @libraryShelfSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get libraryShelfSeeAll;
+
   /// No description provided for @libraryTabArtists.
   ///
   /// In en, this message translates to:
