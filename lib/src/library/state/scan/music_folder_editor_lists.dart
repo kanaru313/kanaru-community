@@ -8,21 +8,19 @@ import 'music_folder_editor.dart';
 /// The lists the Android sheets and the first-run subtitles are built from.
 /// They come from the folders MediaStore reports (`audioFolders()`, each
 /// with the audio it holds directly), with the short-file pre-filter and
-/// junk folders already applied by the catalog. Pass [raw] to reuse one
-/// MediaStore read for several lists.
+/// junk folders already applied by the catalog. [raw] is the listed folders of
+/// one MediaStore read, shared by several lists; a failed read has no list, so
+/// callers decide what to show before calling these.
 extension MusicFolderLists on MusicFolderEditor {
-  Future<List<AudioFolderSummary>> _raw(List<AudioFolderSummary>? raw) async =>
-      raw ?? await catalog.audioFolders();
-
   /// Android: folders that can become a music folder: every listed folder and
   /// each of its ancestors below the volume root, with the audio of its whole
   /// subtree, minus chosen folders and folders inside or containing one.
   Future<List<AudioFolderSummary>> folderCandidates({
-    List<AudioFolderSummary>? raw,
+    required List<AudioFolderSummary> raw,
   }) async {
     final roots = [for (final f in await liveScanFolders(db)) f.root];
     return [
-      for (final f in withAncestors(await _raw(raw), volumes))
+      for (final f in withAncestors(raw, volumes))
         if (checkNewRoot(f.path, roots) is RootOk) f,
     ];
   }
@@ -30,14 +28,14 @@ extension MusicFolderLists on MusicFolderEditor {
   /// Android: folders (with their ancestors, as above) strictly inside a
   /// chosen folder that are not excluded nor inside an excluded one.
   Future<List<AudioFolderSummary>> exclusionCandidates({
-    List<AudioFolderSummary>? raw,
+    required List<AudioFolderSummary> raw,
   }) async {
     final roots = [
       for (final f in await liveScanFolders(db)) normalizeRootPath(f.root),
     ];
     final excluded = await excludedPaths();
     return [
-      for (final f in withAncestors(await _raw(raw), volumes))
+      for (final f in withAncestors(raw, volumes))
         if (roots.any((r) => f.path != r && isSameOrInside(f.path, r)) &&
             !excluded.any((e) => isSameOrInside(f.path, e)))
           f,
@@ -46,15 +44,18 @@ extension MusicFolderLists on MusicFolderEditor {
 
   /// Android: tracks the chosen folders hold, without the excluded parts, as
   /// the scan will keep them. Null where the platform cannot count before a
-  /// scan (Linux).
-  Future<int?> estimatedTrackCount({List<AudioFolderSummary>? raw}) async {
-    if (!isAndroid) return null;
+  /// scan (Linux) or when the index holds nothing ([raw] empty): "0" would
+  /// claim knowledge the index does not have.
+  Future<int?> estimatedTrackCount({
+    required List<AudioFolderSummary> raw,
+  }) async {
+    if (!isAndroid || raw.isEmpty) return null;
     final roots = [
       for (final f in await liveScanFolders(db)) normalizeRootPath(f.root),
     ];
     final excluded = await excludedPaths();
     var total = 0;
-    for (final f in await _raw(raw)) {
+    for (final f in raw) {
       final path = normalizeRootPath(f.path);
       if (roots.any((r) => isSameOrInside(path, r)) &&
           !excluded.any((e) => isSameOrInside(path, e))) {
@@ -66,12 +67,12 @@ extension MusicFolderLists on MusicFolderEditor {
 
   /// Android: tracks under each chosen folder (excluded parts left out) and
   /// under each excluded folder, by absolute path. Null where the platform
-  /// cannot count before a scan (Linux).
+  /// cannot count before a scan (Linux) or when the index holds nothing.
   Future<Map<String, int>?> subtreeCounts({
-    List<AudioFolderSummary>? raw,
+    required List<AudioFolderSummary> raw,
   }) async {
-    if (!isAndroid) return null;
-    final folders = await _raw(raw);
+    if (!isAndroid || raw.isEmpty) return null;
+    final folders = raw;
     final excluded = await excludedPaths();
     int under(String base) {
       var total = 0;

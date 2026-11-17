@@ -167,6 +167,54 @@ class AudioFolderSummary {
   final int audioCount;
 }
 
+/// Why [LocalAudioCatalog.audioFolders] could not read the index.
+enum AudioFoldersFailure {
+  /// The platform refused the read (missing media permission).
+  permission,
+
+  /// The query ran past its time limit.
+  timedOut,
+
+  /// The query failed.
+  failed,
+}
+
+/// Outcome of [LocalAudioCatalog.audioFolders]: the folders, or why there are
+/// none to show. "The index holds no audio" ([AudioFoldersListed] with an empty
+/// list) and "the read failed" ([AudioFoldersFailed]) are different answers.
+sealed class AudioFoldersResult {
+  const AudioFoldersResult();
+}
+
+/// The index was read; [folders] may be empty.
+final class AudioFoldersListed extends AudioFoldersResult {
+  const AudioFoldersListed(this.folders);
+
+  final List<AudioFolderSummary> folders;
+}
+
+/// The index could not be read.
+final class AudioFoldersFailed extends AudioFoldersResult {
+  const AudioFoldersFailed(this.reason);
+
+  final AudioFoldersFailure reason;
+}
+
+/// How [LocalAudioCatalog.refreshMediaIndex] ended.
+enum MediaIndexRefresh {
+  /// The system finished indexing the requested folders.
+  done,
+
+  /// The wait ran out; the system may still be indexing.
+  timedOut,
+
+  /// The system refused or the request failed.
+  failed,
+
+  /// This Android version cannot index a folder on request.
+  unsupported,
+}
+
 /// How the user picks a music folder on this platform.
 enum FolderChoice { systemDialog, mediaStoreSheet }
 
@@ -184,8 +232,19 @@ abstract interface class LocalAudioCatalog {
     int skipShorterThanMs = 0,
   });
 
-  /// Android: MediaStore folders that hold audio. Linux: empty.
-  Future<List<AudioFolderSummary>> audioFolders();
+  /// Android: MediaStore folders that hold audio. Linux: listed, empty.
+  /// A listed empty result means the index holds no usable audio after the
+  /// junk, app-data and short-file filters. Failures come back as
+  /// [AudioFoldersFailed]; this never throws for a platform failure.
+  Future<AudioFoldersResult> audioFolders();
+
+  /// Android: asks the system media index to scan the top-level folders of
+  /// [volumeRoots] plus the chosen [folders], and waits for it. Never throws
+  /// for a platform failure. Linux: throws [UnsupportedError].
+  Future<MediaIndexRefresh> refreshMediaIndex({
+    required List<String> volumeRoots,
+    required List<String> folders,
+  });
 
   /// Linux: `XDG_MUSIC_DIR`, else `~/Music`. Android: `<internal>/Music` when
   /// it holds audio. Null when there is no suggestion.

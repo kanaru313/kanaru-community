@@ -1,6 +1,7 @@
 package io.github.kanaru313.kanaru_community
 
 import android.content.Context
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -11,6 +12,8 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * MediaStore access for the library module (channel `kanaru/media_store`).
@@ -21,12 +24,16 @@ import java.util.concurrent.Executors
  */
 object MediaStoreChannel {
     private const val CHANNEL = "kanaru/media_store"
+    private const val SCAN_WATCHDOG_MS = 3 * 60 * 1000L
 
     // A few threads, so one query stuck in MediaProvider does not hold up the next calls.
     private val executor = Executors.newFixedThreadPool(3) { r ->
         Thread(r, "kanaru-media-store").apply { isDaemon = true }
     }
     private val main = Handler(Looper.getMainLooper())
+
+    // Callers waiting for the scan in flight. Touched on the main looper only.
+    private var scanWaiters: MutableList<MethodChannel.Result>? = null
 
     fun register(engine: FlutterEngine, context: Context) {
         MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
@@ -38,6 +45,10 @@ object MediaStoreChannel {
                 // Shared storage of the current user (/storage/emulated/<N>).
                 @Suppress("DEPRECATION")
                 result.success(Environment.getExternalStorageDirectory().absolutePath)
+                return@setMethodCallHandler
+            }
+            if (call.method == "scanFolders") {
+                scanFolders(context, call, result)
                 return@setMethodCallHandler
             }
             executor.execute {
@@ -59,6 +70,72 @@ object MediaStoreChannel {
                     main.post { result.error("io", e.message, null) }
                 }
             }
+        }
+    }
+
+    /**
+     * Asks MediaProvider to scan the given directories and replies once every
+     * path has been answered, with {requested, nullUris}.
+     *
+     * MediaScannerConnection.scanFile calls back once per path, also when a
+     * path fails, and MediaProvider walks a directory recursively from API 29.
+     * The scan holds the framework-wide background thread for its whole
+     * duration, so only one runs at a time: a call made while one is running
+     * waits for it and gets its reply (its own paths are not scanned again; the
+     * next call covers them). Runs on the main looper, which owns scanWaiters.
+     */
+    private fun scanFolders(context: Context, call: MethodCall, result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            result.error("io", "scanFolders needs API 29", null)
+            return
+        }
+        val paths = call.argument<List<String>>("paths")
+        if (paths == null) {
+            result.error("io", "paths missing", null)
+            return
+        }
+        val running = scanWaiters
+        if (running != null) {
+            running.add(result)
+            return
+        }
+        if (paths.isEmpty()) {
+            result.success(mapOf("requested" to 0, "nullUris" to 0))
+            return
+        }
+        val waiters = mutableListOf(result)
+        scanWaiters = waiters
+        val left = AtomicInteger(paths.size)
+        val nulls = AtomicInteger(0)
+        val finished = AtomicBoolean(false)
+        // Callbacks arrive on a framework thread; answer on the main looper, once.
+        // A callback that never comes (a wedged MediaProvider) would keep every
+        // later call attached to this scan for ever. The watchdog outlasts the
+        // Dart-side limit (2 min), so Dart has already given up when it fires;
+        // it frees the single-flight slot and answers the waiters. A late
+        // callback is then ignored by `finished`.
+        lateinit var watchdog: Runnable // assigned below: it and finish() refer to each other
+        fun finish(reply: Map<String, Int>?, error: String?) {
+            if (!finished.compareAndSet(false, true)) return
+            main.post {
+                main.removeCallbacks(watchdog)
+                scanWaiters = null
+                for (waiter in waiters) {
+                    if (reply != null) waiter.success(reply) else waiter.error("io", error, null)
+                }
+            }
+        }
+        watchdog = Runnable { finish(null, "scan timed out") }
+        main.postDelayed(watchdog, SCAN_WATCHDOG_MS)
+        try {
+            MediaScannerConnection.scanFile(context, paths.toTypedArray(), null) { _, uri ->
+                if (uri == null) nulls.incrementAndGet()
+                if (left.decrementAndGet() == 0) {
+                    finish(mapOf("requested" to paths.size, "nullUris" to nulls.get()), null)
+                }
+            }
+        } catch (e: Throwable) {
+            finish(null, e.message ?: "scanFile failed")
         }
     }
 

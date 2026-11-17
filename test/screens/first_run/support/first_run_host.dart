@@ -35,6 +35,13 @@ class FakeCatalog implements LocalAudioCatalog {
   String? suggestion;
   List<AudioFolderSummary> folders = [];
 
+  /// When set, [audioFolders] answers this instead of listing [folders].
+  AudioFoldersResult? result;
+
+  /// Held by [refreshMediaIndex] until the test completes it.
+  Completer<MediaIndexRefresh>? refreshGate;
+  int refreshCalls = 0;
+
   /// Answers of the system folder dialog, one per call.
   final List<String?> picks = [];
   final List<String?> pickStarts = [];
@@ -50,9 +57,18 @@ class FakeCatalog implements LocalAudioCatalog {
   int audioFolderReads = 0;
 
   @override
-  Future<List<AudioFolderSummary>> audioFolders() async {
+  Future<AudioFoldersResult> audioFolders() async {
     audioFolderReads++;
-    return folders;
+    return result ?? AudioFoldersListed(folders);
+  }
+
+  @override
+  Future<MediaIndexRefresh> refreshMediaIndex({
+    required List<String> volumeRoots,
+    required List<String> folders,
+  }) async {
+    refreshCalls++;
+    return await refreshGate?.future ?? MediaIndexRefresh.done;
   }
 
   @override

@@ -56,7 +56,14 @@ class LinuxAudioCatalog implements LocalAudioCatalog {
   }
 
   @override
-  Future<List<AudioFolderSummary>> audioFolders() async => const [];
+  Future<AudioFoldersResult> audioFolders() async =>
+      const AudioFoldersListed([]);
+
+  @override
+  Future<MediaIndexRefresh> refreshMediaIndex({
+    required List<String> volumeRoots,
+    required List<String> folders,
+  }) => throw UnsupportedError('Linux has no media index to refresh');
 
   @override
   Future<String?> suggestedMusicFolder() => readXdgMusicDirectory(_env);

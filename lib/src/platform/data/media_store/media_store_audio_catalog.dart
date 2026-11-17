@@ -6,12 +6,15 @@ import 'package:path/path.dart' as p;
 
 import '../../domain/local_audio_catalog.dart';
 import '../local_files/walk_isolate.dart' show defaultWalkTimeout;
+import 'media_index_targets.dart';
 import 'media_store_channel_client.dart';
 import 'media_store_like_pattern.dart';
 
 /// `<volume>/Android/...`: app data and messenger voice notes, not music.
 /// Skipped by absolute path, so the scan and the folder sheet agree.
-final _volumeAppData = RegExp(r'^/storage/(?:emulated/\d+|[^/]+)/Android(?:/|$)');
+final _volumeAppData = RegExp(
+  r'^/storage/(?:emulated/\d+|[^/]+)/Android(?:/|$)',
+);
 final _upper = RegExp('[A-Z]');
 
 /// ASCII-only lower-casing: SQLite's `LIKE` folds nothing else, so the Dart
@@ -30,7 +33,11 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
     Future<String> Function(String path)? resolveLinks,
     this.firstRunMinDurationMs = 30000,
     this.timeout = defaultWalkTimeout,
+    this.foldersTimeout = const Duration(seconds: 10),
+    this.refreshTimeout = const Duration(minutes: 2),
+    ListChildDirs? listChildDirs,
   }) : _rootExists = rootExists ?? ((path) => Directory(path).exists()),
+       _listChildDirs = listChildDirs ?? _defaultListChildDirs,
        _resolveLinks =
            resolveLinks ?? ((path) => Directory(path).resolveSymbolicLinks());
 
@@ -39,6 +46,7 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
   final MediaStoreChannelClient _client;
   final Future<bool> Function(String) _rootExists;
   final Future<String> Function(String) _resolveLinks;
+  final ListChildDirs _listChildDirs;
 
   /// Rows shorter than this are not counted by [audioFolders] (the first-run
   /// estimate follows the "skip short tracks" default). 0 = off.
@@ -46,6 +54,24 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
 
   /// Longest a MediaStore listing may take.
   final Duration timeout;
+
+  /// Longest the folder query ([audioFolders]) may take.
+  final Duration foldersTimeout;
+
+  /// Longest [refreshMediaIndex] waits for the system scan.
+  final Duration refreshTimeout;
+
+  static Future<List<String>> _defaultListChildDirs(String dir) async {
+    try {
+      return [
+        await for (final e in Directory(dir).list(followLinks: false))
+          if (e is Directory) e.path,
+      ];
+    } on FileSystemException catch (error) {
+      _log.fine('Cannot list $dir: $error');
+      return const [];
+    }
+  }
 
   /// Paths already in MediaStore `_data` form (from [audioFolders] or the
   /// suggestion): [canonicalize] only normalises them.
@@ -85,10 +111,15 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
     final cancel = _Cancel();
     try {
       if (!await _rootExists(root)) return const AudioListing.unreachable();
-      return await _list(root, excludedKeys, skipShorterThanMs, cancel)
-          .timeout(timeout);
+      return await _list(
+        root,
+        excludedKeys,
+        skipShorterThanMs,
+        cancel,
+      ).timeout(timeout);
     } on TimeoutException {
-      cancel.cancelled = true; // a late audio reply must not start the next query
+      cancel.cancelled =
+          true; // a late audio reply must not start the next query
       _log.warning('MediaStore listing of $root timed out after $timeout');
       return const AudioListing.unreachable(UnreachableReason.timedOut);
     } on MediaStoreException catch (error) {
@@ -126,7 +157,8 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
     final prefix = '$root/';
     // A root the user picked inside the app-data tree is listed as chosen.
     final rootInAppData = _volumeAppData.hasMatch(prefix);
-    bool appData(String path) => !rootInAppData && _volumeAppData.hasMatch(path);
+    bool appData(String path) =>
+        !rootInAppData && _volumeAppData.hasMatch(path);
 
     for (var i = 0; i < audioRows.paths.length; i++) {
       final path = audioRows.paths[i];
@@ -147,7 +179,9 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
         continue;
       }
       final duration = audioRows.durationsMs[i];
-      if (skipShorterThanMs > 0 && duration > 0 && duration < skipShorterThanMs) {
+      if (skipShorterThanMs > 0 &&
+          duration > 0 &&
+          duration < skipShorterThanMs) {
         shortOut++;
         continue;
       }
@@ -189,7 +223,9 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
       );
     }
     if (audioRows.emptyPaths > 0) {
-      _log.warning('$root: ${audioRows.emptyPaths} MediaStore rows had no path');
+      _log.warning(
+        '$root: ${audioRows.emptyPaths} MediaStore rows had no path',
+      );
     }
     return AudioListing(
       audio: audio,
@@ -201,7 +237,7 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
   }
 
   @override
-  Future<List<AudioFolderSummary>> audioFolders() async {
+  Future<AudioFoldersResult> audioFolders() async {
     final MediaStoreFolderRows rows;
     try {
       rows = await _client
@@ -209,13 +245,17 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
             minDurationMs: firstRunMinDurationMs,
             extensions: audioExtensions.toList(),
           )
-          .timeout(timeout);
+          .timeout(foldersTimeout);
     } on TimeoutException {
       _log.warning('MediaStore folder listing timed out');
-      return const [];
+      return const AudioFoldersFailed(AudioFoldersFailure.timedOut);
     } on MediaStoreException catch (error) {
       _log.warning('MediaStore folder listing failed: $error');
-      return const [];
+      return AudioFoldersFailed(
+        error.kind == MediaStoreErrorKind.permission
+            ? AudioFoldersFailure.permission
+            : AudioFoldersFailure.failed,
+      );
     }
     final folders = <AudioFolderSummary>[];
     for (var i = 0; i < rows.paths.length; i++) {
@@ -228,7 +268,58 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
     }
     folders.sort((a, b) => a.path.compareTo(b.path));
     _indexRoots.addAll(folders.map((f) => f.path));
-    return folders;
+    return AudioFoldersListed(folders);
+  }
+
+  @override
+  Future<MediaIndexRefresh> refreshMediaIndex({
+    required List<String> volumeRoots,
+    required List<String> folders,
+  }) async {
+    final watch = Stopwatch()..start();
+    try {
+      // The timeout covers the whole request, also the sdk read and the
+      // directory listing, so a stuck call there cannot hang the caller.
+      return await _refresh(
+        volumeRoots,
+        folders,
+        watch,
+      ).timeout(refreshTimeout);
+    } on TimeoutException {
+      _log.warning('MediaStore scan timed out after $refreshTimeout');
+      return MediaIndexRefresh.timedOut;
+    } on MediaStoreException catch (error) {
+      _log.warning('MediaStore scan failed: $error');
+      return MediaIndexRefresh.failed;
+    }
+  }
+
+  Future<MediaIndexRefresh> _refresh(
+    List<String> volumeRoots,
+    List<String> folders,
+    Stopwatch watch,
+  ) async {
+    if (await _client.sdkInt() < 29) return MediaIndexRefresh.unsupported;
+    final targets = await mediaIndexTargets(
+      volumeRoots: volumeRoots,
+      folders: folders,
+      listChildDirs: _listChildDirs,
+    );
+    if (targets.isEmpty) return MediaIndexRefresh.done;
+    final reply = await _client.scanFolders(targets);
+    _log.info(
+      'MediaStore scan of ${targets.length} folders took '
+      '${watch.elapsedMilliseconds} ms, ${reply.nullUris} without a uri',
+    );
+    if (reply.requested > 0 && reply.nullUris == reply.requested) {
+      // Every path refused: the system no longer accepts our scan requests.
+      _log.warning(
+        'MediaStore scan refused: ${reply.nullUris} of ${reply.requested} '
+        'paths returned no uri',
+      );
+      return MediaIndexRefresh.failed;
+    }
+    return MediaIndexRefresh.done;
   }
 
   Future<String?> _primaryRoot() async {
@@ -245,8 +336,9 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
     final primary = await _primaryRoot();
     if (primary == null) return null;
     final music = '$primary/Music';
-    final folders = await audioFolders();
-    final has = folders.any(
+    final result = await audioFolders();
+    if (result is! AudioFoldersListed) return null;
+    final has = result.folders.any(
       (f) => f.path == music || f.path.startsWith('$music/'),
     );
     if (!has) return null;
@@ -277,8 +369,7 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
     }
   }
 
-  static String _strip(String path) =>
-      path.length > 1 && path.endsWith('/')
+  static String _strip(String path) => path.length > 1 && path.endsWith('/')
       ? path.substring(0, path.length - 1)
       : path;
 

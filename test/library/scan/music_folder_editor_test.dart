@@ -23,6 +23,7 @@ class _Catalog implements LocalAudioCatalog {
   final bool android;
   String? suggestion;
   List<AudioFolderSummary> folders = [];
+  AudioFoldersFailure? failure;
 
   /// Path prefix to replace, like a symlinked `/home`.
   final Map<String, String> links = {};
@@ -46,7 +47,15 @@ class _Catalog implements LocalAudioCatalog {
     int skipShorterThanMs = 0,
   }) async => const AudioListing();
   @override
-  Future<List<AudioFolderSummary>> audioFolders() async => folders;
+  Future<AudioFoldersResult> audioFolders() async => failure == null
+      ? AudioFoldersListed(folders)
+      : AudioFoldersFailed(failure!);
+
+  @override
+  Future<MediaIndexRefresh> refreshMediaIndex({
+    required List<String> volumeRoots,
+    required List<String> folders,
+  }) async => MediaIndexRefresh.done;
   @override
   Future<String?> suggestedMusicFolder() async => suggestion;
   @override
@@ -345,6 +354,21 @@ void main() {
       });
     });
 
+    test(
+      'a failed folder read adds Music and no exclusions, without throwing',
+      () async {
+        build(android: true);
+        const music = '/storage/emulated/0/Music';
+        catalog
+          ..suggestion = music
+          ..failure = AudioFoldersFailure.failed;
+        await editor.applyFirstRunDefaults();
+        expect(await roots(), [music]);
+        final f = await chosen(music);
+        expect(await excludedFolderKeys(db, f.sourceId), isEmpty);
+      },
+    );
+
     test('the flag is set before anything is written', () async {
       catalog.suggestion = '/music';
       var flagAtFirstWrite = false;
@@ -381,7 +405,10 @@ void main() {
       'candidates leave out chosen, nested and containing folders',
       () async {
         await editor.addFolder('/storage/emulated/0/Music', fromCatalog: true);
-        final paths = [for (final c in await editor.folderCandidates()) c.path];
+        final paths = [
+          for (final c in await editor.folderCandidates(raw: catalog.folders))
+            c.path,
+        ];
         expect(paths, [
           '/storage/emulated/0/Podcasts',
           '/storage/emulated/0/Podcasts/Tech',
@@ -399,7 +426,8 @@ void main() {
         fromCatalog: true,
       );
       final paths = [
-        for (final c in await editor.exclusionCandidates()) c.path,
+        for (final c in await editor.exclusionCandidates(raw: catalog.folders))
+          c.path,
       ];
       expect(paths, ['/storage/emulated/0/Music/Rock']);
     });
@@ -411,7 +439,8 @@ void main() {
         _f('/storage/emulated/0/Music/B/Live', 1),
       ];
       final offered = {
-        for (final c in await editor.folderCandidates()) c.path: c.audioCount,
+        for (final c in await editor.folderCandidates(raw: catalog.folders))
+          c.path: c.audioCount,
       };
       expect(offered, {
         '/storage/emulated/0/Music': 2,
@@ -432,7 +461,7 @@ void main() {
       ];
       await editor.addFolder('/storage/emulated/0/Music', fromCatalog: true);
       final offered = {
-        for (final c in await editor.exclusionCandidates())
+        for (final c in await editor.exclusionCandidates(raw: catalog.folders))
           c.path: c.audioCount,
       };
       expect(offered['/storage/emulated/0/Music/Artist'], 5);
@@ -460,21 +489,33 @@ void main() {
     });
 
     test('the estimate subtracts excluded subtrees', () async {
-      expect(await editor.estimatedTrackCount(), 0);
+      expect(await editor.estimatedTrackCount(raw: catalog.folders), 0);
       await editor.addFolder('/storage/emulated/0/Music', fromCatalog: true);
-      expect(await editor.estimatedTrackCount(), 17);
+      expect(await editor.estimatedTrackCount(raw: catalog.folders), 17);
       final f = await chosen('/storage/emulated/0/Music');
       await editor.excludeFolder(
         f,
         '/storage/emulated/0/Music/Ringtones',
         fromCatalog: true,
       );
-      expect(await editor.estimatedTrackCount(), 14);
+      expect(await editor.estimatedTrackCount(raw: catalog.folders), 14);
     });
+
+    test(
+      'the estimate and counts are unknown while the index is empty',
+      () async {
+        await editor.addFolder('/storage/emulated/0/Music', fromCatalog: true);
+        expect(await editor.estimatedTrackCount(raw: const []), isNull);
+        expect(await editor.subtreeCounts(raw: const []), isNull);
+        expect(await editor.subtreeCounts(raw: catalog.folders), isNotNull);
+      },
+    );
 
     test('the estimate is unknown on Linux', () async {
       build();
-      expect(await editor.estimatedTrackCount(), isNull);
+      final listed = [_f('/home/u/Music', 5)];
+      expect(await editor.estimatedTrackCount(raw: listed), isNull);
+      expect(await editor.subtreeCounts(raw: listed), isNull);
     });
   });
 }

@@ -114,7 +114,7 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
 ## Platform runners
 
 `android/` (`MainActivity.kt` registers the `kanaru/media_store` channel from
-`MediaStoreChannel.kt` (`listAudio`, `listLyrics`, `audioFolders`); the manifest declares the `READ_MEDIA_*` permissions and the
+`MediaStoreChannel.kt` (`listAudio`, `listLyrics`, `audioFolders`, `scanFolders`); the manifest declares the `READ_MEDIA_*` permissions and the
 backup rules exclude the device id) and `linux/` (GTK runner). `MainActivity.kt`
 and the manifest are hotspots: no lane edits them.
 

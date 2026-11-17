@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../library/domain/music_folder.dart';
+import '../../../library/domain/scan/folder_list_state.dart';
 import '../../../library/state/music_folders_providers.dart';
 import '../../../library/state/scan/display_volumes_provider.dart';
 import '../../../library/state/scan/folder_candidates_provider.dart';
@@ -86,7 +87,9 @@ Future<void> addMusicFolders(BuildContext context, WidgetRef ref) async {
   final List<String> paths;
   try {
     if (fromCatalog) {
-      final candidates = await ref.read(folderCandidatesProvider.future);
+      final candidates = _candidatesOf(
+        await ref.read(folderCandidatesProvider.future),
+      );
       if (!context.mounted) return;
       paths = await _pickFromSheet(
         context,
@@ -115,6 +118,14 @@ Future<void> addMusicFolders(BuildContext context, WidgetRef ref) async {
   }
 }
 
+/// The candidates of a ready list; a failed or empty index shows the empty
+/// sheet until the dedicated states exist.
+List<AudioFolderSummary> _candidatesOf(FolderListState state) =>
+    switch (state) {
+      FolderListReady(:final candidates) => candidates,
+      FolderListLoadFailed() || FolderListNoIndexedMusic() => const [],
+    };
+
 /// Excludes sub-folders of the chosen music folders, picked the same way.
 Future<void> addExclusions(BuildContext context, WidgetRef ref) async {
   final l10n = AppLocalizations.of(context);
@@ -126,7 +137,9 @@ Future<void> addExclusions(BuildContext context, WidgetRef ref) async {
   final List<String> paths;
   try {
     if (fromCatalog) {
-      final candidates = await ref.read(exclusionCandidatesProvider.future);
+      final candidates = _candidatesOf(
+        await ref.read(exclusionCandidatesProvider.future),
+      );
       if (!context.mounted) return;
       paths = await _pickFromSheet(
         context,
