@@ -1,13 +1,16 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/semantics.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/services.dart';
 import 'package:kanaru/src/database/tables.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/playback/ui/track_cover.dart';
+import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/ui/mini_player.dart';
 import 'package:kanaru/src/playback/ui/mini_player_body.dart';
+import 'package:kanaru/src/playback/ui/mini_seek_band.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -26,7 +29,7 @@ Widget _player(List<String> events) => Align(
 void main() {
   testWidgets('shows nothing without a current track', (tester) async {
     await pumpWithPlayer(tester, _player([]), play: false);
-    expect(find.byType(KProgressLine), findsNothing);
+    expect(find.byType(MiniSeekBand), findsNothing);
     expect(find.byType(PlayPauseButton), findsNothing);
   });
 
@@ -44,8 +47,7 @@ void main() {
       );
       expect(find.text('T0'), findsOneWidget);
       expect(find.byType(PlayPauseButton), findsOneWidget);
-      expect(find.byType(KProgressLine), findsOneWidget);
-      expect(tester.getSize(find.byType(KProgressLine)).height, 2);
+      expect(find.byType(MiniSeekBand), findsOneWidget);
       expect(byIconButton('Next'), findsOneWidget);
     });
   }
@@ -374,5 +376,210 @@ void main() {
     ];
     expect(labels, containsAll(['Open Now Playing', 'Queue']));
     handle.dispose();
+  });
+
+  group('drags on the card', () {
+    const total = Duration(seconds: 200);
+
+    Future<void> loaded(WidgetTester tester, UiHost host) async {
+      await host.run(
+        tester,
+        () async => host.h.engine.emit(EngineLoaded(host.h.loadedToken, total)),
+      );
+      await host.letStreamsArrive(tester);
+    }
+
+    Rect band(WidgetTester tester) => tester.getRect(find.byType(MiniSeekBand));
+
+    Future<Duration> position(WidgetTester tester, UiHost host) async =>
+        (await tester.runAsync(() => host.h.c.position.first))!.position;
+
+    bool sought(UiHost host) =>
+        host.h.engine.commands.any((c) => c.startsWith('seek:'));
+
+    testWidgets('a horizontal drag on the body opens nothing', (tester) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(12, 0));
+      await tester.pump();
+      await g.up();
+      await tester.pump();
+      expect(events, isEmpty, reason: 'the arena is won, the tap is not');
+      expect(host.h.c.queueState.current, 0);
+    });
+
+    testWidgets('a 6 dp wobble is still a tap', (tester) async {
+      final events = <String>[];
+      await pumpWithPlayer(tester, _player(events));
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(6, 0));
+      await g.up();
+      await tester.pump();
+      expect(events, ['open']);
+    });
+
+    testWidgets('a drag in the band seeks by where it ends', (tester) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      await loaded(tester, host);
+      final b = band(tester);
+      final g = await tester.startGesture(Offset(b.left + 96, b.center.dy));
+      await g.moveBy(const Offset(60, 0));
+      await host.run(tester, g.up);
+      final fraction = 156 / b.width;
+      expect(
+        (await position(tester, host)).inMilliseconds,
+        closeTo(total.inMilliseconds * fraction, total.inMilliseconds * 0.01),
+      );
+      expect(events, isEmpty);
+    });
+
+    testWidgets('a vertical drag that starts in the band still seeks', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      await loaded(tester, host);
+      final b = band(tester);
+      final g = await tester.startGesture(Offset(b.left + 192, b.center.dy));
+      await g.moveBy(const Offset(0, -40));
+      await host.run(tester, g.up);
+      expect(
+        (await position(tester, host)).inMilliseconds,
+        closeTo(total.inMilliseconds / 2, total.inMilliseconds * 0.01),
+      );
+      expect(events, isEmpty, reason: 'not a swipe up');
+    });
+
+    testWidgets('a tap on the band opens Now Playing and does not seek', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      await loaded(tester, host);
+      final b = band(tester);
+      await tester.tapAt(Offset(b.left + 300, b.center.dy));
+      await tester.pump();
+      expect(events, ['open']);
+      expect(sought(host), isFalse);
+    });
+
+    testWidgets('a track that cannot seek: a band drag moves the card', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      final b = band(tester);
+      final g = await tester.startGesture(Offset(b.left + 96, b.center.dy));
+      await g.moveBy(const Offset(0, -50));
+      await g.up();
+      await tester.pump();
+      expect(events, ['open'], reason: 'a swipe up, as anywhere on the card');
+      expect(sought(host), isFalse);
+    });
+
+    testWidgets('the track changing mid-drag drops the seek', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await loaded(tester, host);
+      final b = band(tester);
+      final g = await tester.startGesture(Offset(b.left + 96, b.center.dy));
+      await g.moveBy(const Offset(60, 0));
+      await host.run(tester, host.h.c.next);
+      await host.run(tester, g.up);
+      expect(sought(host), isFalse);
+    });
+
+    testWidgets('a cancelled band drag does not seek', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await loaded(tester, host);
+      final b = band(tester);
+      final g = await tester.startGesture(Offset(b.left + 96, b.center.dy));
+      await g.moveBy(const Offset(60, 0));
+      await host.run(tester, g.cancel);
+      expect(sought(host), isFalse);
+    });
+
+    testWidgets('a drag that starts on Pause does not seek', (tester) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      await loaded(tester, host);
+      final g = await tester.startGesture(
+        tester.getCenter(byIconButton('Pause')),
+      );
+      await g.moveBy(const Offset(-60, 0));
+      await host.run(tester, g.up);
+      expect(sought(host), isFalse);
+      expect(events, isEmpty);
+    });
+
+    testWidgets('holding in the band opens the queue', (tester) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      await loaded(tester, host);
+      final b = band(tester);
+      final g = await tester.startGesture(Offset(b.left + 96, b.center.dy));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(events, ['queue']);
+      await g.up();
+      await tester.pump();
+      expect(events, ['queue']);
+      expect(sought(host), isFalse);
+    });
+
+    testWidgets('a touch in the system gesture inset is not taken, a mouse '
+        'is', (tester) async {
+      final events = <String>[];
+      await pumpWithPlayer(
+        tester,
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(systemGestureInsets: const EdgeInsets.only(left: 30)),
+              child: MiniPlayer(
+                onOpen: () => events.add('open'),
+                onOpenQueue: () => events.add('queue'),
+              ),
+            ),
+          ),
+        ),
+      );
+      final card = tester.getRect(find.byType(MiniPlayer));
+      final start = Offset(card.left + 12, card.center.dy - 8);
+      // The touch is declined: its upward drag is no swipe up.
+      final touch = await tester.startGesture(start);
+      await touch.moveBy(const Offset(0, -60));
+      await touch.up();
+      await tester.pump();
+      expect(events, isEmpty);
+      // The same place with a mouse is an ordinary swipe up.
+      final mouse = await tester.startGesture(
+        start,
+        kind: PointerDeviceKind.mouse,
+      );
+      await mouse.moveBy(const Offset(0, -60));
+      await mouse.up();
+      await tester.pump();
+      expect(events, ['open']);
+    });
+
+    testWidgets('semantics: increase seeks 5 s on the band slider', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final host = await pumpWithPlayer(tester, _player([]));
+      await loaded(tester, host);
+      await host.run(
+        tester,
+        () async => tester.semantics.increase(
+          find.semantics.byLabel('Playback position'),
+        ),
+      );
+      expect(await position(tester, host), const Duration(seconds: 5));
+      handle.dispose();
+    });
   });
 }
