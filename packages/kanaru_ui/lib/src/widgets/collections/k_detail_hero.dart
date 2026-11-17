@@ -12,8 +12,8 @@ import 'k_detail_line.dart';
 ///
 /// Narrow: a [coverSize] cover on the left and the text column centred on
 /// it; the [description] runs under the whole row. Wide (the left column):
-/// the cover as wide as the column, fading into the page at its bottom and
-/// right edges (a [circle] photo is not faded), then the same lines in the
+/// the cover as wide as the column, fading into the page at its bottom edge
+/// (a [circle] photo is not faded), then the same lines in the
 /// same order.
 ///
 /// The title is the page's name: when it scrolls out of sight under a
@@ -126,7 +126,7 @@ class KDetailHero extends StatelessWidget {
       child: coverBuilder(context, side),
     );
     if (!circle) {
-      cover = _fade(_fade(cover, vertical: true), vertical: false);
+      cover = _fade(cover, vertical: true);
     }
     return SizedBox(
       width: side,

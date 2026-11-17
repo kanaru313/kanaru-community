@@ -72,7 +72,10 @@ class AlbumPage extends ConsumerWidget {
               itemKey: albumId,
               coverKey: album.coverKey,
               dimension: side,
-              radius: BorderRadius.circular(14),
+              // The wide (desktop) cover is square; the narrow one stays round.
+              radius: KDetailLayout.isWide(context)
+                  ? BorderRadius.zero
+                  : BorderRadius.circular(14),
             ),
             title: album.title,
             line2: _artistLine(context, key, album),

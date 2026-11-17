@@ -60,7 +60,8 @@ void main() {
     ];
     expect(ys.first, greaterThanOrEqualTo(cover.bottom));
     expect(ys, orderedEquals([...ys]..sort()));
-    expect(find.byType(ShaderMask), findsNWidgets(2));
+    // Only the bottom edge fades.
+    expect(find.byType(ShaderMask), findsOneWidget);
   });
 
   testWidgets('a round photo is not faded', (tester) async {
