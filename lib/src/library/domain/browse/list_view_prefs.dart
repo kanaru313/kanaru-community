@@ -11,11 +11,15 @@ enum FolderView { tree, flat }
 class ListViewPrefs {
   const ListViewPrefs({required this.sort, required this.view});
 
-  /// Defaults of [list]: its default sort; albums and genres as a grid, every
-  /// other list as rows (mobile first; one default for both shells).
+  /// Defaults of [list]: its default sort; albums, genres and languages as a
+  /// grid, every other list as rows (mobile first; one default for both
+  /// shells).
   factory ListViewPrefs.defaultsOf(BrowseList list) => ListViewPrefs(
     sort: defaultSortOf(list),
-    view: list == BrowseList.albums || list == BrowseList.genres
+    view:
+        list == BrowseList.albums ||
+            list == BrowseList.genres ||
+            list == BrowseList.languages
         ? CollectionView.grid
         : CollectionView.list,
   );

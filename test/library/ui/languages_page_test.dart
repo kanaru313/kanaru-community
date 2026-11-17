@@ -1,11 +1,15 @@
+import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/library/domain/browse/song_scope.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/ui/browse/group_play.dart';
+import 'package:kanaru/src/library/ui/collections/collection_parts.dart';
 import 'package:kanaru/src/library/ui/menus/more_button.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -19,11 +23,14 @@ import '../../support/icon_button_finders.dart';
 Future<LibraryHarness> _pump(
   WidgetTester tester, {
   FakePlaybackCommands? playback,
+  bool grid = false,
+  double width = 390,
 }) async {
   final h = await pumpLibrary(
     tester,
     initial: '/library/languages',
     playback: playback,
+    width: width,
   );
   var n = 0;
   Future<void> add(String? language, {bool detected = false}) =>
@@ -41,6 +48,12 @@ Future<LibraryHarness> _pump(
   await add(null);
   await add(null);
   await h.settle(tester);
+  if (!grid) {
+    await h.container
+        .read(libraryListViewsProvider.notifier)
+        .setView(BrowseList.languages, CollectionView.list);
+    await tester.pump();
+  }
   return h;
 }
 
@@ -50,6 +63,27 @@ List<String> _rows(WidgetTester tester) => [
 ];
 
 void main() {
+  for (final (width, scale) in [
+    (400.0, 1.0),
+    (400.0, 2.0),
+    (1400.0, 1.0),
+    (1400.0, 2.0),
+  ]) {
+    testWidgets('grid tiles fit at width $width, text scale $scale', (
+      tester,
+    ) async {
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearAllTestValues);
+      await _pump(tester, grid: true, width: width);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(KColorTile), findsNWidgets(3));
+      expect(find.text('Tiếng Việt · Vietnamese'), findsOneWidget);
+      expect(find.text('Unknown'), findsOneWidget);
+      await unmountApp(tester);
+    });
+  }
+
   testWidgets('languages by song count, "unknown" last, with the note', (
     tester,
   ) async {
@@ -211,6 +245,136 @@ void main() {
       '3 songs',
     );
     expect(cards.firstWhere((c) => c.title == 'Unknown').line2, '2 songs');
+    await unmountApp(tester);
+  });
+
+  testWidgets('grid is the default: tiles, note first, "unknown" last', (
+    tester,
+  ) async {
+    await _pump(tester, grid: true);
+    expect(find.byType(KMediaCard), findsNothing);
+    expect(
+      find.textContaining('From the language tag of each song'),
+      findsOneWidget,
+    );
+    final tiles = tester.widgetList<KColorTile>(find.byType(KColorTile));
+    expect(
+      [for (final t in tiles) t.title],
+      ['Tiếng Việt · Vietnamese', '日本語 · Japanese', 'Unknown'],
+    );
+    expect(find.text('3 songs'), findsOneWidget);
+    expect(find.byType(LibraryMoreButton), findsNothing);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a grid tile exposes its menu as a screen-reader action', (
+    tester,
+  ) async {
+    await _pump(tester, grid: true);
+    final handle = tester.ensureSemantics();
+    await tester.pump();
+    final tile = find.widgetWithText(KColorTile, 'Tiếng Việt · Vietnamese');
+    final node = tester.getSemantics(tile);
+    final id = node.getSemanticsData().customSemanticsActionIds!.single;
+    expect(CustomSemanticsAction.getAction(id)!.label, 'More options');
+    tester.semantics.performAction(
+      find.semantics.byLabel(RegExp('^Tiếng Việt')),
+      SemanticsAction.customAction,
+      args: id,
+    );
+    for (var i = 0; i < 5; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester.pumpAndSettle();
+    expect(find.text('Go to language'), findsOneWidget);
+    handle.dispose();
+    await unmountApp(tester);
+  });
+
+  for (final (name, press) in <(String, Future<void> Function(WidgetTester))>[
+    ('Menu key', (t) => t.sendKeyEvent(LogicalKeyboardKey.contextMenu)),
+    (
+      'Shift+F10',
+      (t) async {
+        await t.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await t.sendKeyEvent(LogicalKeyboardKey.f10);
+        await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      },
+    ),
+  ]) {
+    testWidgets('$name on a focused grid tile opens its menu (desktop)', (
+      tester,
+    ) async {
+      final h = await pumpLibrary(
+        tester,
+        initial: '/library/languages',
+        width: 1400,
+        height: 900,
+      );
+      await addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 'k0.flac',
+        language: 'vie',
+      );
+      await h.settle(tester);
+      final tile = find.widgetWithText(KColorTile, 'Tiếng Việt · Vietnamese');
+      expect(tile, findsOneWidget);
+      // The text sits under the tile's InkWell, so its nearest Focus is the
+      // tile's own focus node.
+      Focus.of(
+        tester.element(
+          find.descendant(of: tile, matching: find.byType(Text)).first,
+        ),
+      ).requestFocus();
+      await tester.pump();
+      await press(tester);
+      for (var i = 0; i < 5; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await tester.pumpAndSettle();
+      expect(find.text('Go to language'), findsOneWidget);
+      await unmountApp(tester);
+    });
+  }
+
+  testWidgets('the view toggle switches the grid to rows and back', (
+    tester,
+  ) async {
+    await _pump(tester, grid: true);
+    await tester.tap(byIconButton('List'));
+    await tester.pumpAndSettle();
+    expect(find.byType(KColorTile), findsNothing);
+    expect(_rows(tester).last, 'Unknown');
+    await tester.tap(byIconButton('Grid'));
+    await tester.pumpAndSettle();
+    expect(find.byType(KMediaCard), findsNothing);
+    expect(find.byType(KColorTile), findsNWidgets(3));
+    await unmountApp(tester);
+  });
+
+  testWidgets('a row and its grid tile share the colour seed', (tester) async {
+    await _pump(tester, grid: true);
+    final tileSeeds = [
+      for (final t in tester.widgetList<KColorTile>(find.byType(KColorTile)))
+        t.seed,
+    ];
+    await tester.tap(byIconButton('List'));
+    await tester.pumpAndSettle();
+    final rowSeeds = [
+      for (final c in tester.widgetList<CategoryIcon>(
+        find.byType(CategoryIcon),
+      ))
+        c.genre,
+    ];
+    expect(tileSeeds, hasLength(3));
+    expect(rowSeeds, tileSeeds);
     await unmountApp(tester);
   });
 }

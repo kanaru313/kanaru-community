@@ -49,6 +49,36 @@ Future<LibraryHarness> _pump(
 }
 
 void main() {
+  const longGenre = 'Nhạc trữ tình quê hương miền Nam thập niên bảy mươi';
+  for (final (width, scale) in [
+    (400.0, 1.0),
+    (400.0, 2.0),
+    (1400.0, 1.0),
+    (1400.0, 2.0),
+  ]) {
+    testWidgets('grid tiles fit at width $width, text scale $scale', (
+      tester,
+    ) async {
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearAllTestValues);
+      final h = await _pump(tester, width: width);
+      await addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 'long.flac',
+        title: 'Long',
+        genre: longGenre,
+      );
+      await h.settle(tester);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(KColorTile), findsNWidgets(4));
+      expect(find.text(longGenre), findsOneWidget);
+      expect(find.text('Rock'), findsOneWidget);
+      await unmountApp(tester);
+    });
+  }
+
   testWidgets('genres are coloured tiles in name order with song counts', (
     tester,
   ) async {

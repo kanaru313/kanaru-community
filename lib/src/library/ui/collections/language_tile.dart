@@ -30,7 +30,7 @@ class LanguageTile extends ConsumerWidget {
       child: KMediaCard(
         title: name,
         line2: l10n.librarySongCount(language.trackCount),
-        leading: CategoryIcon.language(known: language.code != null),
+        leading: CategoryIcon.language(code: language.code),
         onAction: () => playLanguage(ref, context, language.code, name),
         actionLabel: l10n.libraryPlayAll,
         trailing: LibraryMoreButton(onPressed: menu),

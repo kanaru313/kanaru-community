@@ -1,6 +1,3 @@
-import 'dart:math' as math;
-
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -15,7 +12,6 @@ import '../browse/library_list_frame.dart';
 import '../browse/library_list_scaffold.dart';
 import '../browse/library_navigation.dart';
 import '../library_locations.dart';
-import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
 import '../selection/selection_inset.dart';
 import 'collection_parts.dart';
@@ -80,7 +76,6 @@ class _GenresBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final gutter = libraryGutter(context);
     final scaler = MediaQuery.textScalerOf(context);
-    final scale = math.max(1.0, scaler.scale(1));
     return collectionBody(
       context,
       ref.watch(genreListProvider(_key(input))),
@@ -93,7 +88,10 @@ class _GenresBody extends ConsumerWidget {
                 mobileMinTileWidth: 150,
                 desktopMinTileWidth: 200,
                 tileAspect: 0,
-                footerExtent: KColorTile.minHeight * scale,
+                footerExtent: KColorTile.extentOf(
+                  scaler,
+                  Theme.of(context).textTheme,
+                ),
                 padding: EdgeInsets.symmetric(horizontal: gutter),
                 itemBuilder: (context, i) => _GenreCard(genre: genres[i]),
               )
@@ -145,7 +143,8 @@ class _GenreCard extends StatelessWidget {
         icon: KIcons.genres,
         onTap: () =>
             openLibraryPage(context, LibraryLocations.genre(genre.key)),
-        more: LibraryMoreButton(onPressed: menu),
+        menuLabel: l10n.libraryMenuMore,
+        onMenu: () => menu(viaKeyboard: true),
       ),
     );
   }
