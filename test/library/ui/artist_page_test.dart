@@ -282,4 +282,23 @@ void main() {
     );
     await unmountApp(tester);
   });
+
+  testWidgets('on desktop a block is as wide as the song rows below it', (
+    tester,
+  ) async {
+    await _pump(tester, 'Zed', width: 1280);
+    // The card itself, inside the block's outer margin.
+    final block = tester.getRect(
+      find
+          .descendant(
+            of: find.byType(KShelfBlock).first,
+            matching: find.byType(DecoratedBox),
+          )
+          .first,
+    );
+    final row = tester.getRect(find.byType(KMediaCard).first);
+    expect(block.left, moreOrLessEquals(row.left, epsilon: 0.5));
+    expect(block.right, moreOrLessEquals(row.right, epsilon: 0.5));
+    await unmountApp(tester);
+  });
 }

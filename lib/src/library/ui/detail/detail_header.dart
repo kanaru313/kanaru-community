@@ -300,9 +300,12 @@ class _Shelf extends ConsumerWidget {
       itemCount: count,
       itemWidth: width,
       height: width + KGridCard.footerExtent(scaler),
+      // Desktop: same side inset as the song rows below (card edges line up
+      // with the row cards). Mobile rows are flat full-width; the block keeps
+      // the page gutter there, as the mockup shows.
       margin: EdgeInsets.only(
-        left: desktop ? 0 : libraryGutter(context),
-        right: desktop ? 0 : libraryGutter(context),
+        left: desktop ? libraryRowGutter(context) : libraryGutter(context),
+        right: desktop ? libraryRowGutter(context) : libraryGutter(context),
         bottom: KSpace.x3,
       ),
       itemBuilder: (context, i) => card(i),
