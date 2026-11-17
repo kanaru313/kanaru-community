@@ -87,6 +87,15 @@ List<int> _img(int seed) => [
 final _album = AlbumKey('artist', 'title').encode();
 final _artist = ArtistKey('artist').encode();
 
+/// Waits (real time, up to 10 s) until [done] holds. Real file and database
+/// work finishes outside the event queue, so a fixed `pumpEventQueue` can
+/// return too early on a loaded machine.
+Future<void> until(bool Function() done) async {
+  for (var i = 0; i < 200 && !done(); i++) {
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
+}
+
 void main() {
   late Directory root;
   late AppDatabase db;
@@ -546,13 +555,19 @@ void main() {
       // through a store with the fake one on the same folder.
       Future<void> pick(List<int> bytes, String name) =>
           store.importCover(CustomCoverKind.album, _album, source(name, bytes));
-      await pumpEventQueue();
+      String? current() =>
+          seen.lastWhere((v) => v.hasValue).value?.path.split('/covers/').last;
+      await until(() => seen.any((v) => v.hasValue));
       await pick(_img(3), 'a');
-      await pumpEventQueue();
+      await until(
+        () => current() == 'full/${_FakeImporter.keyOf(_img(3))}.jpg',
+      );
       await pick(_img(9), 'b');
-      await pumpEventQueue();
+      await until(
+        () => current() == 'full/${_FakeImporter.keyOf(_img(9))}.jpg',
+      );
       await ctl.removeCover(CustomCoverKind.album, _album);
-      await pumpEventQueue();
+      await until(() => seen.where((v) => v.hasValue).length >= 4);
 
       final names = [
         for (final v in seen.where((v) => v.hasValue))
@@ -575,8 +590,12 @@ void main() {
         _album,
         source('a', _img(3)),
       );
-      await pumpEventQueue();
       final key = _FakeImporter.keyOf(_img(3));
+      await until(
+        () =>
+            c.read(customCoverKeyProvider(item)).value == key &&
+            c.read(customCoverThumbProvider(item)).value != null,
+      );
       expect(c.read(customCoverKeyProvider(item)).value, key);
       expect(
         c.read(customCoverThumbProvider(item)).value?.path,
@@ -592,18 +611,18 @@ void main() {
             _Paths(Directory('${root.path}/data')),
           ),
           customCoverKeepAliveProvider.overrideWithValue(
-            const Duration(milliseconds: 200),
+            const Duration(milliseconds: 500),
           ),
         ],
       );
       addTearDown(short.dispose);
       final item = (kind: CustomCoverKind.album, itemKey: _album);
       short.listen(customCoverFileProvider(item), (_, _) {}).close();
-      await Future<void>.delayed(const Duration(milliseconds: 50));
       // `exists` is deprecated for an experimental `.exist`; fine in a test.
       // ignore: deprecated_member_use
       expect(short.exists(customCoverFileProvider(item)), isTrue);
-      await Future<void>.delayed(const Duration(milliseconds: 300));
+      // ignore: deprecated_member_use
+      await until(() => !short.exists(customCoverFileProvider(item)));
       // ignore: deprecated_member_use
       expect(short.exists(customCoverFileProvider(item)), isFalse);
     });
