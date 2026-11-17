@@ -93,6 +93,69 @@
   "libraryOrderDescText": "Z → A",
   "libraryOrderAscNumber": "Tăng dần",
   "libraryOrderDescNumber": "Giảm dần",
+  "librarySortDialogTitle": "Sắp xếp theo",
+  "librarySortChosen": "Đã chọn",
+  "librarySortNotChosen": "Chưa chọn",
+  "librarySortReset": "Đặt lại",
+  "librarySortDone": "Xong",
+  "libraryOrderReverse": "Đảo thứ tự",
+  "librarySortDragHint": "Kéo để đổi thứ tự {label}",
+  "@librarySortDragHint": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "librarySortFlipTooltip": "Đổi chiều: {word}",
+  "@librarySortFlipTooltip": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "librarySortFlipSemantics": "{label}: {word}, bấm để đổi chiều",
+  "@librarySortFlipSemantics": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "librarySortRemove": "Bỏ {label}",
+  "@librarySortRemove": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "librarySortAdd": "Thêm {label}",
+  "@librarySortAdd": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryOrderOldFirst": "Cũ trước",
+  "libraryOrderNewFirst": "Mới trước",
+  "librarySortMore": "{label} +{count}",
+  "@librarySortMore": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "librarySortAdvanced": "Nâng cao…",
   "librarySortTitle": "Tên",
   "librarySortArtist": "Nghệ sĩ",
   "librarySortAlbum": "Album",
