@@ -3,9 +3,9 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../l10n/gen/app_localizations.dart';
-import '../../../media/domain/track_id.dart';
-import '../../state/favorites_providers.dart';
+import '../../../l10n/gen/app_localizations.dart';
+import '../../media/domain/track_id.dart';
+import '../state/favorites_providers.dart';
 
 final _log = Logger('library.favorite_toggle');
 

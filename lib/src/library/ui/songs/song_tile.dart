@@ -17,11 +17,11 @@ import '../../../playback/ui/track_cover.dart';
 import '../../state/browse/selection_providers.dart';
 import '../../state/favorites_providers.dart';
 import '../browse/play_actions.dart';
+import '../favorite_toggle.dart';
 import '../menus/menu_action_runner.dart';
 import '../menus/menu_origin.dart';
 import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
-import 'favorite_toggle.dart';
 
 /// One song row of every song list: cover, title / artists / `album • year`,
 /// duration over the heart. Tap plays `ids[index]` with the list as the

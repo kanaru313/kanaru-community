@@ -630,7 +630,11 @@ Every call is awaited; a failure is logged and shows a snack bar.
   (`KEndHitExtension`), within the ⋮'s own band.
   `SongFavoriteButton` ignores a press while its favourite write runs, and
   shows a failure through the `ScaffoldMessenger` captured before the write
-  (its screen-reader label is `libraryFavoriteLabel`).
+  (its screen-reader label is `libraryFavoriteLabel`). That write is the
+  `FavoriteToggle` mixin (`library/ui/favorite_toggle.dart`), shared with the
+  Now Playing `FavoriteButton`: one write per button at a time (a write
+  of the previous track cannot free the next one), failure logged and shown
+  as `libraryFavoriteFailed`.
   Tap = `playTracks(ids, startIndex: index)`. The whole row (inside its
   `KContextRegion`) is a `KSwipeActions.capped`: swipe left = "Play next"
   (`MenuActionRunner.playNext([id])`, same call and toast as the menu footer),

@@ -4,7 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../library/state/favorites_providers.dart';
-import '../../../library/ui/songs/favorite_toggle.dart';
+import '../../../library/ui/favorite_toggle.dart';
 import '../../../media/domain/track_id.dart';
 
 /// ♥ for [trackId]: filled while it is a favorite, toggled through the
