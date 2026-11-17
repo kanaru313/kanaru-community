@@ -10,6 +10,7 @@ import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../state/browse/list_prefs_providers.dart';
+import '../../state/browse/shelf_block_providers.dart';
 import '../../state/browse/song_list_providers.dart';
 import '../browse/library_list_scaffold.dart';
 import '../browse/play_actions.dart';
@@ -190,18 +191,26 @@ class DetailActions extends ConsumerWidget {
 int shelfCap(BuildContext context) =>
     FormFactor.of(context) == FormFactor.desktop ? 8 : 10;
 
-/// Horizontal shelf of album cards; `›` opens [onSeeAll].
+/// Collapsible block of album cards; the grid button opens [onSeeAll].
+/// [kind] (a [ShelfBlockKind]) keys the remembered collapsed state; [total]
+/// is the number shown on the head when [albums] is only the first cards.
 class AlbumShelf extends StatelessWidget {
   const AlbumShelf({
     super.key,
     required this.title,
+    required this.kind,
     required this.albums,
     required this.onSeeAll,
+    this.icon = KIcons.album,
+    this.total,
     this.origin = const MenuOrigin.list(),
   });
 
   final String title;
+  final String kind;
+  final IconData icon;
   final List<AlbumSummary> albums;
+  final int? total;
   final VoidCallback onSeeAll;
 
   /// The page the shelf is on, so a card's menu never links back to it.
@@ -210,62 +219,93 @@ class AlbumShelf extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _Shelf(
     title: title,
+    kind: kind,
+    icon: icon,
+    total: total ?? albums.length,
     count: albums.length,
     onSeeAll: onSeeAll,
     card: (i) => AlbumCard(album: albums[i], origin: origin),
   );
 }
 
-/// Horizontal shelf of artist cards; `›` opens [onSeeAll].
+/// Collapsible block of artist cards; the grid button opens [onSeeAll].
 class ArtistShelf extends StatelessWidget {
   const ArtistShelf({
     super.key,
     required this.title,
     required this.artists,
     required this.onSeeAll,
+    this.kind = ShelfBlockKind.artists,
+    this.icon = KIcons.artists,
+    this.total,
   });
 
   final String title;
+  final String kind;
+  final IconData icon;
   final List<ArtistSummary> artists;
+  final int? total;
   final VoidCallback onSeeAll;
 
   @override
   Widget build(BuildContext context) => _Shelf(
     title: title,
+    kind: kind,
+    icon: icon,
+    total: total ?? artists.length,
     count: artists.length,
     onSeeAll: onSeeAll,
     card: (i) => ArtistCard(artist: artists[i]),
   );
 }
 
-class _Shelf extends StatelessWidget {
+class _Shelf extends ConsumerWidget {
   const _Shelf({
     required this.title,
+    required this.kind,
+    required this.icon,
+    required this.total,
     required this.count,
     required this.onSeeAll,
     required this.card,
   });
 
   final String title;
+  final String kind;
+  final IconData icon;
+
+  /// Number on the head; [count] is how many cards the row builds.
+  final int total;
   final int count;
   final VoidCallback onSeeAll;
   final Widget Function(int index) card;
 
   @override
-  Widget build(BuildContext context) {
-    final width = FormFactor.of(context) == FormFactor.desktop ? 160.0 : 140.0;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final desktop = FormFactor.of(context) == FormFactor.desktop;
+    final width = desktop ? 150.0 : 128.0;
     final scaler = MediaQuery.textScalerOf(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: KSpace.x3),
-      child: KShelf(
-        title: title,
-        itemCount: count,
-        itemWidth: width,
-        height: width + KGridCard.footerExtent(scaler),
-        padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
-        onSeeAll: onSeeAll,
-        itemBuilder: (context, i) => card(i),
+    final collapsed = ref.watch(
+      shelfBlockCollapsedProvider.select((kinds) => kinds.contains(kind)),
+    );
+    return KShelfBlock(
+      title: title,
+      icon: icon,
+      count: total,
+      collapsed: collapsed,
+      onToggle: () =>
+          ref.read(shelfBlockCollapsedProvider.notifier).set(kind, !collapsed),
+      onSeeAll: onSeeAll,
+      seeAllLabel: AppLocalizations.of(context).libraryShelfSeeAll,
+      itemCount: count,
+      itemWidth: width,
+      height: width + KGridCard.footerExtent(scaler),
+      margin: EdgeInsets.only(
+        left: desktop ? 0 : libraryGutter(context),
+        right: desktop ? 0 : libraryGutter(context),
+        bottom: KSpace.x3,
       ),
+      itemBuilder: (context, i) => card(i),
     );
   }
 }

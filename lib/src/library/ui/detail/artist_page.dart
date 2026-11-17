@@ -11,6 +11,7 @@ import '../../domain/browse/menu_targets.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../domain/library_tabs.dart';
 import '../../state/browse/detail_providers.dart';
+import '../../state/browse/shelf_block_providers.dart';
 import '../../state/custom_cover_providers.dart';
 import '../browse/item_covers.dart';
 import '../browse/library_labels.dart';
@@ -103,6 +104,7 @@ class ArtistPage extends ConsumerWidget {
             SliverToBoxAdapter(
               child: AlbumShelf(
                 title: l10n.libraryTabAlbums,
+                kind: ShelfBlockKind.albums,
                 albums: albums.own,
                 origin: MenuOrigin.artist(key),
                 onSeeAll: () =>
@@ -113,6 +115,8 @@ class ArtistPage extends ConsumerWidget {
             SliverToBoxAdapter(
               child: AlbumShelf(
                 title: l10n.libraryAppearsIn,
+                kind: ShelfBlockKind.appears,
+                icon: KIcons.albumArtist,
                 albums: albums.appears,
                 origin: MenuOrigin.artist(key),
                 onSeeAll: () => openLibraryPage(

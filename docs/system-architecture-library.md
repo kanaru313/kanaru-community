@@ -783,16 +783,16 @@ routes in `ui/browse/library_routes.dart`.
 - Artist: round photo (not faded; the page is tinted like an album), the name,
   line two `N albums` (own; else `Appears on N albums`; left out when neither),
   line three `N songs · length` (from `groupTotalsProvider(playScope)`, the
-  same songs Play plays; left out until known or when empty), shelves Albums (newest
-  first) and Appears on, then the songs. A shelf with no item and the songs
+  same songs Play plays; left out until known or when empty), blocks Albums (newest
+  first) and Appears on (`KShelfBlock`, collapsible), then the songs. A shelf with no item and the songs
   part of an artist with no `track_artists` row are left out. Play and shuffle
   of such an album-artist-only page play `SongScope.albumArtist(key)` (tracks
   whose stored album artist key is the artist's); `ArtistSongs` is not widened. Name:
   `artistNameProvider` (tag name, else the display artist of its first album).
 - Genre / language: `KColorBanner` (colour from the name, the name as the
   headline, one line `N songs · length`; the unknown language adds a first
-  line "No language tag"), artist shelf and album shelf from two items up,
-  capped at 10 (mobile shell) or 8 (desktop), then the songs (`detailSongs`,
+  line "No language tag"), artist block and album block (`KShelfBlock`) from two items up,
+  the row capped at 10 (mobile shell) or 8 (desktop) cards while the head shows the full count, then the songs (`detailSongs`,
   most played first). The unknown language page has its note under the banner
   as a `KDetailDescription` (three lines, "Show more" / "Show less"); which
   pages are open is kept for the session in `detailDescriptionExpandedProvider`
@@ -969,7 +969,8 @@ callbacks come from the caller. Width-based layout lives here.
 | `showKSortDialog<T>` | "Sắp xếp theo", centred on both shells, at most `KLayout.sortDialog` (400) wide, `surfaceContainerHigh`. A deliberate exception to "modals under the breakpoint are sheets" (`k_layout.dart`). *Đã chọn*: drag handle, number, name, ↑/↓, ✕; *Chưa chọn*: icon, name, +, and a tap always appends (no exclusive criteria). It only reports intents (`onAdd`, `onRemove`, `onFlip`, `onMove`, reset); the rules are in `SortOrder` and the widget renders a `ValueListenable` of entries. Reorder by handle drag, Alt+Up / Alt+Down on a focused row, or the list's own screen-reader move actions. The slide of the other rows during a drag has a fixed duration and does not follow `MediaQuery.disableAnimations` (Flutter's `SliverReorderableList`); the lift of the dragged row does. Esc, Back, a tap outside and "Xong" close it |
 | `KFilterField` | Outlined, 48 tall, autofocus; the cross and Esc clear the controller and call `onClose` |
 | `KBreadcrumb` | `KBreadcrumbSegment`s, last one bold. Desktop above four levels: first and last three, rest behind "..."; mobile above two levels: tonal "..." then the open level. `onShowHidden` gets the hidden levels; the caller opens a `showSelectionPicker` |
-| `KShelf` | Titled horizontal list of fixed-width items; the `>` on the title row opens "see all" (`seeAllLabel` is its semantics label) |
+| `KShelf` | Titled horizontal list of fixed-width items without a card; the `>` on the title row opens "see all" (`seeAllLabel` is its semantics label). Kept for the home page; detail pages use `KShelfBlock` |
+| `KShelfBlock` | Collapsible card (fill = `KRowColors.fill`, radius 20) around a titled horizontal row of cards: head with icon, title, full count, ⊞ "see all" (`KIconButton`) and a chevron; tapping the head calls `onToggle` (no hover or press fill, only the chevron reacts); the body shrinks over `KMotion.normal`; the row also scrolls by mouse drag. The caller owns `collapsed`: the library keeps it per block kind for the session (`shelfBlockCollapsedProvider`) |
 | `KCollectionGrid` | Sliver; column count from the width and the shell's minimum tile width (`mobileMinTileWidth`, `desktopMinTileWidth`); tile height is width times `tileAspect` plus `footerExtent` |
 | `KGridCard` | Tile of an album or artist grid: a cover as wide as the tile (drawn by `coverBuilder(context, side)`), one title line, one subtitle line; `footerExtent(scaler)` is the height under the cover for `KCollectionGrid`; `circle` centres the texts for round photos |
 | `KColorTile`, `KColorBanner` | Pastel tile or banner for genres and languages (the banner: the name as headline, up to two lines, and `lines` under it); fill and ink from `KCoverPlaceholderColors.of(seed, brightness)`, so a tile matches the cover placeholder of the same seed |

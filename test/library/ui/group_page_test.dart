@@ -45,6 +45,13 @@ Future<LibraryHarness> _pump(
   return h;
 }
 
+/// The "See all" button of the shelf block titled [title].
+Finder _seeAll(String title) => find.descendant(
+  of: find.ancestor(of: find.text(title), matching: find.byType(KShelfBlock)),
+  matching: find.byWidgetPredicate(
+    (w) => w is KIconButton && w.tooltip == 'See all',
+  ),
+);
 void main() {
   testWidgets('genre: banner totals, both shelves, songs', (tester) async {
     final handle = tester.ensureSemantics();
@@ -74,7 +81,7 @@ void main() {
     tester,
   ) async {
     await _pump(tester, LibraryLocations.genre('jazz'));
-    expect(find.byType(KShelf), findsNothing);
+    expect(find.byType(KShelfBlock), findsNothing);
     expect(find.text('2 songs · 2 min'), findsWidgets);
     await unmountApp(tester);
   });
@@ -107,7 +114,7 @@ void main() {
       // Shelf lists build lazily; the item count is on the list.
       final shelves = tester.widgetList<ListView>(
         find.descendant(
-          of: find.byType(KShelf),
+          of: find.byType(KShelfBlock),
           matching: find.byType(ListView),
         ),
       );
@@ -119,6 +126,8 @@ void main() {
               2,
       ];
       expect(counts, [cap, cap]);
+      // The head shows the full count, not the cards of the row.
+      expect(find.text('12'), findsNWidgets(2));
       await unmountApp(tester);
     }
   });
@@ -126,7 +135,7 @@ void main() {
   testWidgets('genre see all opens the grid and Back returns', (tester) async {
     final h = await _pump(tester, LibraryLocations.genre('rock'));
     final genre = h.location;
-    await tester.tap(find.text('Artists'));
+    await tester.tap(_seeAll('Artists'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     await h.settle(tester);
@@ -137,7 +146,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(h.location, genre);
-    await tester.tap(find.text('Albums'));
+    await tester.tap(_seeAll('Albums'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     await h.settle(tester);
