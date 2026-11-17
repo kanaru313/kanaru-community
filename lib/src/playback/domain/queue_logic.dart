@@ -248,7 +248,13 @@ int? nextIndex(QueueState s, {required bool auto, int loops = 0}) {
 
 /// Index to play before the current entry; null at the first entry (the
 /// caller seeks to the start) or with nothing current.
+///
+/// At the first entry [RepeatMode.all] goes to the last one (a one-entry
+/// queue goes to itself). Repeat all shuffled does not go back: the end of
+/// the previous pass is no meaningful place in a new random order.
 int? previousIndex(QueueState s) {
   final c = s.current;
-  return c != null && c > 0 ? c - 1 : null;
+  if (c == null || s.items.isEmpty) return null;
+  if (c > 0) return c - 1;
+  return s.repeat == RepeatMode.all ? s.length - 1 : null;
 }

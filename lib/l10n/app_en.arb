@@ -305,6 +305,8 @@
       }
     }
   },
+  "playbackStopAndClear": "Stop playback",
+  "playbackStoppedAnnouncement": "Playback stopped",
   "playbackNoticeFirstTrack": "This is the first track",
   "playbackNoticeQueueEnd": "End of the queue",
   "playbackNoticeQueueEmpty": "The queue is empty",

@@ -97,4 +97,26 @@ void main() {
     await _frames(tester);
     expect(find.byType(QueueSheetPage), findsNothing);
   });
+
+  testWidgets('swiping the mini player down removes it and the dock shrinks', (
+    tester,
+  ) async {
+    final host = await _open(tester);
+    // The page keeps clear of the dock: its bottom padding is the dock.
+    double pageInset() =>
+        MediaQuery.paddingOf(tester.element(find.text('shell page'))).bottom;
+    final insetBefore = pageInset();
+    expect(insetBefore, greaterThanOrEqualTo(MiniPlayer.height));
+    final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+    await g.moveBy(const Offset(0, 70));
+    await host.run(tester, g.up);
+    await _frames(tester);
+    await host.letStreamsArrive(tester);
+    await _frames(tester);
+    expect(find.byType(MiniPlayer), findsNothing);
+    expect(host.h.c.queueState.items, isEmpty);
+    expect(find.text('shell page'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    expect(pageInset(), lessThan(insetBefore - MiniPlayer.height + 1));
+  });
 }

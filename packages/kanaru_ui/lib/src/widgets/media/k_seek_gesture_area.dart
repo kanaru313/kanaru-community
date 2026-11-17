@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -9,6 +10,8 @@ class KSeekState {
     required this.width,
     required this.active,
     required this.seekable,
+    this.dragging = false,
+    this.focused = false,
   });
 
   /// 0..1; follows the finger while dragging, [KSeekGestureArea.position]
@@ -21,6 +24,12 @@ class KSeekState {
 
   /// There is a duration to seek in.
   final bool seekable;
+
+  /// A drag is in progress (a subset of [active]).
+  final bool dragging;
+
+  /// Has keyboard focus (a subset of [active]).
+  final bool focused;
 }
 
 /// The input of every seek bar (flat and waveform), without a look of its own.
@@ -44,6 +53,8 @@ class KSeekGestureArea extends StatefulWidget {
     this.semanticLabel,
     this.semanticValue,
     this.keyStep = const Duration(seconds: 5),
+    this.seekOnTap = true,
+    this.anyDirection = false,
   });
 
   final Duration position;
@@ -63,6 +74,14 @@ class KSeekGestureArea extends StatefulWidget {
   final String? semanticValue;
   final Duration keyStep;
 
+  /// A tap seeks to the tapped point. False: a tap is not handled here and
+  /// falls to an ancestor (a card that opens on tap).
+  final bool seekOnTap;
+
+  /// A drag in any direction seeks by its x (a pan with the touch slop of the
+  /// device settings, not twice that). False: only horizontal drags seek.
+  final bool anyDirection;
+
   /// Height of the hit area.
   final double height;
   final Widget Function(BuildContext context, KSeekState state) builder;
@@ -81,6 +100,9 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
   /// [KSeekGestureArea.track] when the drag began.
   Object? _draggedTrack;
   bool _seeking = false;
+
+  /// The latest touch was cancelled by the system.
+  bool _cancelled = false;
 
   bool get _seekable => (widget.duration?.inMilliseconds ?? 0) > 0;
 
@@ -142,6 +164,91 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
     }
   }
 
+  void _dragStart(Offset local, double width) {
+    if (!_seekable) return;
+    _draggedTrack = widget.track;
+    _seeking = true;
+    widget.onSeekStart?.call();
+    setState(() => _drag = _fractionOf(local.dx, width));
+  }
+
+  void _dragUpdate(Offset local, double width) {
+    if (_drag != null) setState(() => _drag = _fractionOf(local.dx, width));
+  }
+
+  void _wireDrag(
+    DragGestureRecognizer r,
+    double width,
+    DeviceGestureSettings? settings,
+  ) {
+    r
+      ..gestureSettings = settings
+      ..onStart = (d) {
+        _dragStart(d.localPosition, width);
+      }
+      ..onUpdate = (d) {
+        _dragUpdate(d.localPosition, width);
+      }
+      // A cancelled touch after the drag started still ends it in Flutter;
+      // [_cancelled] tells the two apart so a cancel never seeks.
+      ..onEnd = (_) {
+        _endDrag(commit: !_cancelled);
+      }
+      ..onCancel = () {
+        _endDrag(commit: false);
+      };
+  }
+
+  Map<Type, GestureRecognizerFactory> _gestures(
+    BuildContext context,
+    double width,
+  ) {
+    final settings = MediaQuery.maybeGestureSettingsOf(context);
+    return {
+      if (widget.seekOnTap && _seekable)
+        TapGestureRecognizer:
+            GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+              TapGestureRecognizer.new,
+              (r) => r
+                ..gestureSettings = settings
+                ..onTapUp = (d) {
+                  Focus.of(context).requestFocus();
+                  widget.onSeekStart?.call();
+                  widget.onSeek(_at(_fractionOf(d.localPosition.dx, width)));
+                  widget.onSeekEnd?.call();
+                },
+            ),
+      // The handlers check [_seekable] themselves: a recognizer dropped
+      // mid-drag (the track changed and the duration went to zero) would
+      // never report the end of the drag, so the horizontal one is always
+      // attached. A pan claims any drag, so without a duration it is left
+      // out (the drag then belongs to an ancestor), unless one is running.
+      if (widget.anyDirection)
+        if (_seekable || _drag != null)
+          PanGestureRecognizer:
+              GestureRecognizerFactoryWithHandlers<PanGestureRecognizer>(
+                PanGestureRecognizer.new,
+                (r) => _wireDrag(
+                  r,
+                  width,
+                  // Pan slop is twice the touch slop: halve it so a drag
+                  // locks after the same distance as a horizontal one.
+                  DeviceGestureSettings(
+                    touchSlop: (settings?.touchSlop ?? kTouchSlop) / 2,
+                  ),
+                ),
+              ),
+      if (!widget.anyDirection)
+        HorizontalDragGestureRecognizer:
+            GestureRecognizerFactoryWithHandlers<
+              HorizontalDragGestureRecognizer
+            >(
+              HorizontalDragGestureRecognizer.new,
+              (r) => _wireDrag(r, width, settings),
+            ),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final total = widget.duration?.inMilliseconds ?? 0;
@@ -152,6 +259,7 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
             : 0.0);
     return Semantics(
       slider: true,
+      enabled: _seekable,
       label: widget.semanticLabel,
       value: widget.semanticValue,
       // Flutter wants the adjusted values whenever an adjust action exists;
@@ -174,48 +282,24 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
           child: LayoutBuilder(
             builder: (context, box) {
               final width = box.maxWidth;
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTapUp: _seekable
-                    ? (d) {
-                        Focus.of(context).requestFocus();
-                        widget.onSeekStart?.call();
-                        widget.onSeek(
-                          _at(_fractionOf(d.localPosition.dx, width)),
-                        );
-                        widget.onSeekEnd?.call();
-                      }
-                    : null,
-                // Always attached, checking [_seekable] inside: a recognizer
-                // dropped mid-drag (the track changed and the duration went
-                // to zero) would never report the end of the drag.
-                onHorizontalDragStart: (d) {
-                  if (!_seekable) return;
-                  _draggedTrack = widget.track;
-                  _seeking = true;
-                  widget.onSeekStart?.call();
-                  setState(
-                    () => _drag = _fractionOf(d.localPosition.dx, width),
-                  );
-                },
-                onHorizontalDragUpdate: (d) {
-                  if (_drag != null) {
-                    setState(
-                      () => _drag = _fractionOf(d.localPosition.dx, width),
-                    );
-                  }
-                },
-                onHorizontalDragEnd: (_) => _endDrag(commit: true),
-                onHorizontalDragCancel: () => _endDrag(commit: false),
-                child: SizedBox(
-                  height: widget.height,
-                  child: widget.builder(
-                    context,
-                    KSeekState(
-                      progress: shown,
-                      width: width,
-                      active: _hover || _focus || _drag != null,
-                      seekable: _seekable,
+              return Listener(
+                onPointerDown: (_) => _cancelled = false,
+                onPointerCancel: (_) => _cancelled = true,
+                child: RawGestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  gestures: _gestures(context, width),
+                  child: SizedBox(
+                    height: widget.height,
+                    child: widget.builder(
+                      context,
+                      KSeekState(
+                        progress: shown,
+                        width: width,
+                        active: _hover || _focus || _drag != null,
+                        seekable: _seekable,
+                        dragging: _drag != null,
+                        focused: _focus,
+                      ),
                     ),
                   ),
                 ),

@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
 import '../../../../media/domain/cover_files.dart';
 import '../../../../media/domain/track_id.dart';
+import '../../../../playback/domain/repeat_mode.dart';
 import '../../../../playback/state/playing_cover_colors.dart';
 import '../../../../playback/state/playback_settings_providers.dart';
 import '../../../../playback/state/playback_providers.dart';
@@ -180,7 +181,8 @@ class _Cover extends ConsumerWidget {
     );
     final (entryId, index, length) = place;
     // Both repeat-all modes wrap the last entry to the first, like Next.
-    final wraps = ref.watch(repeatSettingProvider).wrapsQueue;
+    final repeat = ref.watch(repeatSettingProvider);
+    final wraps = repeat.wrapsQueue;
     final trackId = ref.watch(
       nowPlayingProvider.select((n) => n.value?.trackId),
     );
@@ -189,7 +191,10 @@ class _Cover extends ConsumerWidget {
         : ref.watch(trackInfoProvider(trackId)).value;
     return CoverSwiper(
       entryId: entryId,
-      hasPrevious: (index ?? 0) > 0,
+      // Previous wraps to the last entry only in plain repeat all.
+      hasPrevious:
+          index != null &&
+          (index > 0 || (repeat == RepeatMode.all && (length ?? 0) > 1)),
       hasNext:
           index != null &&
           ((wraps && (length ?? 0) > 1) || index < (length ?? 0) - 1),

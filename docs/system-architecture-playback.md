@@ -206,7 +206,9 @@ Future<void> replaceQueue(DatabaseConnectionUser db, List<int> trackIds, int now
   their present order; a reshuffle writes keys for upcoming rows only. `unshuffle` returns to
   `sort_key` order, keeps the current entry and clears every `shuffle_key`.
 - **Repeat:** see [Repeat](#repeat). `nextIndex(s, auto, loops)` is the pure rule; `previousIndex`
-  returns null at the first entry (the caller seeks to 0) in every mode.
+  returns null at the first entry (the caller seeks to 0), except under plain `all`, where it
+  wraps to the last entry (a one-entry queue goes to itself). `allShuffled` does not wrap: the end
+  of the previous pass is no meaningful place in a new random order.
 - **Reshuffled pass:** `reshufflePass` gives every entry a fresh `shuffle_key` (one transaction, sort
   keys untouched), turns shuffle on, makes the first entry current and never puts the entry that just
   played first (two or more entries; fewer stay as they are).
@@ -300,7 +302,12 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
 `state/player_controller.dart` implements `PlaybackCommands` and adds transport (`play`, `pause`,
 `playPause`, `stop`, `next`, `previous`, `playEntry`, `seek`, `seekRelative`, `setVolume`,
 `setShuffle`, `reshuffleUpcoming`, `setRepeat`, `setRepeatTimes`) and queue edits (`remove`,
-`cleanup`, `undo`, `move`).
+`cleanup`, `undo`, `move`) and `clearQueue`.
+
+- **Clear queue:** `clearQueue` empties `queue_entries` in one transaction (a database error leaves
+  memory untouched), keeps shuffle and repeat, drops the context, stops playback and resets the
+  saved position, so nothing is restored on the next start. No undo. It emits the old tracks (in
+  play order) and context on `queueCleared`, for saved-queue history; an empty queue does nothing.
 
 - **One chain** (`command_chain.dart`): UI commands, media-control commands and engine events run in
   call order. A task that runs another task of the same chain asserts in debug. After the last
@@ -389,8 +396,8 @@ current entry plays that many more times, then the base mode goes on.
 - **Time left** ("còn …" in the queue head): hidden under any repeat mode (the queue never runs out),
   as in the old app; with "stop at the end" it stays "after the current entry", counted loops not
   added.
-- **Previous** keeps the shipped rule (first entry: back to 0) in every mode. The old app wrapped
-  Previous to the last entry under `all`; not ported (a user decision on Previous is needed first).
+- **Previous** at the first entry goes to the last entry under `all` and back to 0 (with the
+  "first track" notice) in every other mode; see `previousIndex`.
 
 ## Settings keys
 
@@ -571,7 +578,7 @@ Playback widgets and where each lives (UI layers import `state/`, never `data/`;
 | Widget | Where | Notes |
 |---|---|---|
 | `KProgressLine`, `KSeekBar`, `KToggleIconButton`, `KRepeatIcon`, `KCountStepper`, `CoverTintBackground` | `packages/kanaru_ui/.../widgets/media/` | Flat 2 dp line; flat 4 dp seek bar (tap, drag, Left/Right 5 s, `onSeek` once per drag); toggle with a dot when on; cover tint (see "Cover tint"). No app imports. |
-| `MiniPlayer({onOpen, onOpenQueue})` | `playback/ui/mini_player.dart` | Mobile, 72 dp (song row cover 56, text 15/13, text scale capped so it never grows). The whole card (not Play/Next) takes: tap/Enter/Space or swipe up > 30 dp open; long press 500 ms (cancelled by a 10 dp move) gives a haptic and opens the queue. Only `_Progress` listens to the position. |
+| `MiniPlayer({onOpen, onOpenQueue})` | `playback/ui/mini_player.dart` | Mobile, 72 dp (song row cover 56, text 15/13, text scale capped so it never grows). The whole card (not Play/Next) takes: tap/Enter/Space or swipe up > 30 dp open; long press 500 ms (cancelled by a 10 dp move) gives a haptic and opens the queue; the rest of that touch (a drag, its release) does nothing. The touch layer is `MiniCardLayer`; every drag on it is decided by one `MiniCardDragRecognizer` (`mini_card_drag.dart`): after 10 dp it locks to `x`, `up` or `down` and wins the arena, so the tap never also fires; released earlier it gives up and the tap wins. It does not take a touch that starts in the seek band (track has a duration) or inside `MediaQuery.systemGestureInsets` left/right (touch only), and follows only the first finger of a touch (`MiniCardLayer` ignores every other pointer until it lifts: no lock reset, no long press from it). `MiniSeekBand` (16 dp strip at the card's bottom edge, inside the tap layer) is drag only: a tap falls to the card. Its line grows up from the edge (2 rest, 4 hover or keyboard focus, 6 drag), clipped to the card's corners; a 12 dp thumb centred on the line shows while hovering, dragging or focused (never clipped, at most 5 dp below the card), and a time bubble floats above the card in the overlay while dragging. Seeks on release; ±5 s from the keyboard and the slider semantics. Only the band listens to the position. `MiniPlayerCarousel` (cover and text only; Play, Next and the band stay put, the area clips itself to the card's left corners) follows an `x` lock: left = Next, right = Previous, the neighbour peeking in 12 dp away. Neighbours come from `neighboursOf` (`domain/queue_neighbours.dart`), which reuses `nextIndex(auto: false)` / `previousIndex`: known entry, none (rubber band to 40 dp; a release that is a real swipe, the same third / fling threshold on the raw finger distance, runs the button command: "end of the queue", or back to 0 with the "first track" notice; a shorter release springs back with no command), or unknown (last entry of a reshuffled pass: a bare cover). A release past a third of the width, or faster than 0.5 px/ms, runs `next()` / `previous()` at once and slides the neighbour in with `KSpring.gentle`; the three entries are pinned from the lock until the entry id changed and the slide is done (1 s give-up), and the release is dropped (no command, also towards a missing neighbour) when the entry changed under the finger. Only the current body hosts the flight pieces; no drag while the queue sheet is up. `MiniPlayerVertical` moves the whole card: down follows the finger and fades (fully gone at 120 dp); past 48 dp or a fling over 0.5 px/ms `clearQueue()` runs at release on the controller taken before any await (so a card removed mid-drop still stops playback) while the card drops out (`KSpring.snappy`, visual only; a new entry arriving resets the card to its place and it takes touches again), and "Playback stopped" is announced to screen readers (`SemanticsService.sendAnnouncement`); no question, undo or snack bar; a failing clear logs and the card comes back. Up follows at most 30 dp (never below the start), opens past it, and the card springs back. Semantics actions: open Now Playing, Queue, Next, Previous, "Stop playback" (clear without the drop). |
 | `PlayPauseButton`, `NextButton`, `PreviousButton`, `ShuffleButton` | `playback/ui/` | Watch narrow providers; call the controller with `ref.read` on tap. |
 | `RepeatButton` (`repeat_button.dart`), `RepeatMenuRows` (`repeat_menu.dart`) | `playback/ui/` | One button for the player bar, both Now Playing shells (the mini player and the queue head have no repeat control). A `MenuAnchor` opens five `SelectionRow`s: Stop at the end, Repeat this song, Repeat this song N more times (the row carries the count; a `KCountStepper` minus/plus inside it, 1-99, dimmed while stopped), Repeat the whole queue, Repeat the whole queue reshuffled every pass. Selected row = tonal fill + primary check; a counted repeat selects the counted row, not the base row. The number the row arms with while no count runs (`draft`) lives in the button state. Icon: `KRepeatIcon` (plain arrows, repeat-one, arrows with a shuffle badge, the remaining count in a circle) inside `KToggleIconButton(iconWidget:)`; lit (primary + dot) unless the mode is stop-at-the-end; disabled with an empty queue. Tooltip = the mode label. |
 | `PlaybackTimeLabel`, `PlaybackSeekBar`, `VolumeControl` | `playback/ui/` | Labels select whole seconds. Volume is the persisted setting; mute remembers the last level. `PlaybackSeekBar` is the flat bar (mini player, player bar); `PlaybackWaveformSeekBar` is the Now Playing one (see Waveform). |
@@ -696,7 +703,7 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
   width and pads the other rows.
 - `CoverSwiper` is a plain widget (entry id, has previous/next, callbacks): left = next, right = previous; 25 % of the
   cover width or a fling over 160 dp/s commits; where there is no track to go to the cover moves at most 30 % and
-  springs back (the buttons raise the notices). With either repeat-all mode the last entry's left swipe wraps to the first, like Next (reshuffled: a new pass). The new cover slides in when the entry id changes; if it never does, the
+  springs back (the buttons raise the notices). With either repeat-all mode the last entry's left swipe wraps to the first, like Next (reshuffled: a new pass); under plain repeat all the first entry's right swipe goes to the last, like Previous. The new cover slides in when the entry id changes; if it never does, the
   cover comes back after 800 ms.
 - `NowPlayingMoreSheet` (⋮): the head and `nowPlayingMoreItems`, shared with the desktop dropdown. Only Go to album and Go
   to artist work; the rest is dimmed "Coming soon", Visual effects carries the Pro badge. `track_navigation.dart` goes
@@ -813,7 +820,7 @@ levels that arrive from a decode fade in. A retry waits for a new entry or a new
 may be tried again.
 
 **Display** (`packages/kanaru_ui/lib/src/widgets/media/`). `KWaveformSeekBar` has the input of `KSeekBar` (`KSeekGestureArea`: tap,
-drag, left/right 5 s, slider semantics) at 48 dp. Mirrored rounded bars 3 dp wide, 2 dp apart, 2 to 32 dp tall, centred; played
+drag, left/right 5 s, slider semantics; options `seekOnTap` and `anyDirection` (a pan with the device touch slop) for the mini player band, `KSeekState.dragging` / `focused`; a cancelled touch never seeks) at 48 dp. Mirrored rounded bars 3 dp wide, 2 dp apart, 2 to 32 dp tall, centred; played
 bars `primary` at 85 %, the rest at 35 %; an upright 4 x 36 dp thumb with 6 dp cleared on each side. `waveform_bars.dart` (pure):
 bars map time, not index (mean of the levels inside the bar's share of the duration; a shorter waveform leaves minimal bars; a
 longer one is cut), after a contrast stretch (the quietest tenth to 0, the loudest percent to full; a steady tone stays full;

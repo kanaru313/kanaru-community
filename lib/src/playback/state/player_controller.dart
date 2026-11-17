@@ -9,6 +9,7 @@ import '../../platform/domain/settings_store.dart';
 import '../data/queue_repository.dart';
 import '../domain/audio_engine.dart';
 import '../domain/cleanup_kind.dart';
+import '../domain/cleared_queue.dart';
 import '../domain/now_playing.dart';
 import '../domain/play_intent.dart';
 import '../domain/playable.dart';
@@ -159,12 +160,16 @@ class PlayerController implements PlaybackCommands {
   final _transport = ReplayStream<TransportView>(const TransportView());
   final _seekCtrl = StreamController<Duration>.broadcast();
   final _noticeCtrl = StreamController<PlaybackNotice>.broadcast();
+  final _clearedCtrl = StreamController<ClearedQueue>.broadcast();
 
   /// What is loaded, with the latest value for a late listener.
   Stream<NowPlaying> get nowPlaying => _now.stream;
   Stream<QueueView> get queueView => _view.stream;
   Stream<PlaybackPosition> get position => _pos.stream;
   Stream<PlaybackNotice> get notices => _noticeCtrl.stream;
+
+  /// The queue each time [clearQueue] emptied it, for saved-queue history.
+  Stream<ClearedQueue> get queueCleared => _clearedCtrl.stream;
 
   /// Play, pause or stop, and the volume.
   Stream<TransportView> get transport => _transport.stream;
@@ -663,6 +668,27 @@ class PlayerController implements PlaybackCommands {
     return _remember(edit.undo);
   });
 
+  /// Empties the queue and the saved session: nothing is loaded, playback is
+  /// stopped, shuffle and repeat stay. No undo. Does nothing on an empty
+  /// queue. A database error leaves the queue as it was.
+  Future<void> clearQueue() => _cmd(() async {
+    if (_queue.items.isEmpty) return;
+    final cleared = ClearedQueue(
+      tracks: [for (final i in _queue.items) i.trackId],
+      context: _context,
+    );
+    await _repo.replace(const [], _nowMs());
+    _queue = QueueState(shuffled: _queue.shuffled, repeat: _queue.repeat);
+    _context = null;
+    _intent = PlayIntent.stopped;
+    _undo = null;
+    _resetPlayback();
+    _thaw();
+    _write(positionMsSetting.key, 0);
+    _write(contextSetting.key, contextSetting.encode(null));
+    _clearedCtrl.add(cleared);
+  });
+
   Future<UndoToken?> cleanup(CleanupKind kind) => _cmd(() async {
     final ids = switch (kind) {
       CleanupKind.duplicates => duplicateEntryIds(_queue),
@@ -732,5 +758,6 @@ class PlayerController implements PlaybackCommands {
     await _transport.close();
     await _seekCtrl.close();
     await _noticeCtrl.close();
+    await _clearedCtrl.close();
   }
 }

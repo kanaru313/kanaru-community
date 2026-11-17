@@ -190,4 +190,208 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
     expect(trackHeight(), KSeekBar.trackHeightActive);
   });
+
+  group('KSeekGestureArea options', () {
+    /// A bare area, 200 dp wide and 16 high, that records the state it draws.
+    Widget area({
+      Duration? duration = _total,
+      required List<Duration> seeks,
+      required List<KSeekState> states,
+      bool seekOnTap = true,
+      bool anyDirection = false,
+    }) => Center(
+      child: SizedBox(
+        width: 200,
+        child: KSeekGestureArea(
+          position: const Duration(seconds: 20),
+          duration: duration,
+          height: 16,
+          seekOnTap: seekOnTap,
+          anyDirection: anyDirection,
+          semanticLabel: 'Position',
+          semanticValue: '0:20 of 1:40',
+          onSeek: seeks.add,
+          builder: (context, state) {
+            states.add(state);
+            return const SizedBox.expand();
+          },
+        ),
+      ),
+    );
+
+    testWidgets('seekOnTap false: a tap falls to the ancestor', (tester) async {
+      final seeks = <Duration>[];
+      var taps = 0;
+      await tester.pumpWidget(
+        host(
+          GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () => taps++,
+            child: area(seeks: seeks, states: [], seekOnTap: false),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(KSeekGestureArea));
+      await tester.pump();
+      expect(seeks, isEmpty);
+      expect(taps, 1);
+    });
+
+    testWidgets('anyDirection: a vertical drag seeks by x on release', (
+      tester,
+    ) async {
+      final seeks = <Duration>[];
+      await tester.pumpWidget(
+        host(area(seeks: seeks, states: [], anyDirection: true)),
+      );
+      final box = tester.getRect(find.byType(KSeekGestureArea));
+      final gesture = await tester.startGesture(
+        Offset(box.left + 40, box.center.dy),
+      );
+      await gesture.moveBy(const Offset(0, -30));
+      await gesture.moveBy(const Offset(20, 0));
+      expect(seeks, isEmpty);
+      await gesture.up();
+      expect(seeks, [const Duration(seconds: 30)]);
+    });
+
+    testWidgets('anyDirection: the lock distance is the touch slop', (
+      tester,
+    ) async {
+      final seeks = <Duration>[];
+      await tester.pumpWidget(
+        host(
+          MediaQuery(
+            data: const MediaQueryData(
+              gestureSettings: DeviceGestureSettings(touchSlop: 8),
+            ),
+            child: area(seeks: seeks, states: [], anyDirection: true),
+          ),
+        ),
+      );
+      final box = tester.getRect(find.byType(KSeekGestureArea));
+      final gesture = await tester.startGesture(
+        Offset(box.left + 40, box.center.dy),
+      );
+      await gesture.moveBy(const Offset(0, 10));
+      await tester.pump();
+      await gesture.up();
+      expect(seeks, hasLength(1), reason: '10 dp is past an 8 dp slop');
+    });
+
+    testWidgets('anyDirection without a duration leaves the drag to the '
+        'ancestor', (tester) async {
+      final seeks = <Duration>[];
+      var ancestorDrags = 0;
+      await tester.pumpWidget(
+        host(
+          GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onPanUpdate: (_) => ancestorDrags++,
+            child: area(
+              duration: null,
+              seeks: seeks,
+              states: [],
+              anyDirection: true,
+            ),
+          ),
+        ),
+      );
+      final box = tester.getRect(find.byType(KSeekGestureArea));
+      final gesture = await tester.startGesture(
+        Offset(box.left + 40, box.center.dy),
+      );
+      await gesture.moveBy(const Offset(0, -40));
+      await gesture.up();
+      expect(ancestorDrags, greaterThan(0));
+      expect(seeks, isEmpty);
+    });
+
+    for (final anyDirection in [false, true]) {
+      testWidgets('a cancelled touch after the drag started never seeks '
+          '(anyDirection $anyDirection)', (tester) async {
+        final seeks = <Duration>[];
+        final events = <String>[];
+        await tester.pumpWidget(
+          host(
+            Center(
+              child: SizedBox(
+                width: 200,
+                child: KSeekGestureArea(
+                  position: Duration.zero,
+                  duration: _total,
+                  height: 16,
+                  anyDirection: anyDirection,
+                  onSeek: seeks.add,
+                  onSeekEnd: () => events.add('end'),
+                  builder: (context, state) => const SizedBox.expand(),
+                ),
+              ),
+            ),
+          ),
+        );
+        final box = tester.getRect(find.byType(KSeekGestureArea));
+        final gesture = await tester.startGesture(
+          Offset(box.left + 40, box.center.dy),
+        );
+        await gesture.moveBy(const Offset(60, 0));
+        await gesture.cancel();
+        await tester.pump();
+        expect(seeks, isEmpty);
+        expect(events, ['end'], reason: 'the drag is over');
+      });
+    }
+
+    testWidgets('dragging is true only while dragging', (tester) async {
+      final states = <KSeekState>[];
+      await tester.pumpWidget(host(area(seeks: [], states: states)));
+      expect(states.last.dragging, isFalse);
+      final box = tester.getRect(find.byType(KSeekGestureArea));
+      final gesture = await tester.startGesture(
+        Offset(box.left + 40, box.center.dy),
+      );
+      await gesture.moveBy(const Offset(40, 0));
+      await tester.pump();
+      expect(states.last.dragging, isTrue);
+      expect(states.last.active, isTrue);
+      await gesture.up();
+      await tester.pump();
+      expect(states.last.dragging, isFalse);
+    });
+
+    testWidgets('a hover is active but not dragging', (tester) async {
+      final states = <KSeekState>[];
+      await tester.pumpWidget(host(area(seeks: [], states: states)));
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(
+        location: tester.getCenter(find.byType(KSeekGestureArea)),
+      );
+      await tester.pump();
+      expect(states.last.active, isTrue);
+      expect(states.last.dragging, isFalse);
+    });
+
+    testWidgets('the slider is disabled without a duration', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        host(area(duration: null, seeks: [], states: [])),
+      );
+      expect(
+        tester.getSemantics(find.byType(KSeekGestureArea)),
+        isSemantics(isSlider: true, hasEnabledState: true, isEnabled: false),
+      );
+      await tester.pumpWidget(host(area(seeks: [], states: [])));
+      expect(
+        tester.getSemantics(find.byType(KSeekGestureArea)),
+        isSemantics(
+          isSlider: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasIncreaseAction: true,
+          hasDecreaseAction: true,
+        ),
+      );
+      handle.dispose();
+    });
+  });
 }

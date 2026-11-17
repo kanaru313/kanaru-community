@@ -1,13 +1,16 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/semantics.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/services.dart';
 import 'package:kanaru/src/database/tables.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/playback/ui/track_cover.dart';
+import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/ui/mini_player.dart';
 import 'package:kanaru/src/playback/ui/mini_player_body.dart';
+import 'package:kanaru/src/playback/ui/mini_seek_band.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -26,7 +29,7 @@ Widget _player(List<String> events) => Align(
 void main() {
   testWidgets('shows nothing without a current track', (tester) async {
     await pumpWithPlayer(tester, _player([]), play: false);
-    expect(find.byType(KProgressLine), findsNothing);
+    expect(find.byType(MiniSeekBand), findsNothing);
     expect(find.byType(PlayPauseButton), findsNothing);
   });
 
@@ -44,8 +47,7 @@ void main() {
       );
       expect(find.text('T0'), findsOneWidget);
       expect(find.byType(PlayPauseButton), findsOneWidget);
-      expect(find.byType(KProgressLine), findsOneWidget);
-      expect(tester.getSize(find.byType(KProgressLine)).height, 2);
+      expect(find.byType(MiniSeekBand), findsOneWidget);
       expect(byIconButton('Next'), findsOneWidget);
     });
   }
@@ -374,5 +376,580 @@ void main() {
     ];
     expect(labels, containsAll(['Open Now Playing', 'Queue']));
     handle.dispose();
+  });
+
+  group('drags on the card', () {
+    const total = Duration(seconds: 200);
+
+    Future<void> loaded(WidgetTester tester, UiHost host) async {
+      await host.run(
+        tester,
+        () async => host.h.engine.emit(EngineLoaded(host.h.loadedToken, total)),
+      );
+      await host.letStreamsArrive(tester);
+    }
+
+    Rect band(WidgetTester tester) => tester.getRect(find.byType(MiniSeekBand));
+
+    Future<Duration> position(WidgetTester tester, UiHost host) async =>
+        (await tester.runAsync(() => host.h.c.position.first))!.position;
+
+    bool sought(UiHost host) =>
+        host.h.engine.commands.any((c) => c.startsWith('seek:'));
+
+    testWidgets('a short horizontal drag on the body opens nothing', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(-12, 0));
+      await tester.pump();
+      await host.run(tester, g.up);
+      expect(events, isEmpty, reason: 'the arena is won, the tap is not');
+      expect(host.h.c.queueState.current, 0, reason: 'too short to change');
+    });
+
+    testWidgets('a 6 dp wobble is still a tap', (tester) async {
+      final events = <String>[];
+      await pumpWithPlayer(tester, _player(events));
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(6, 0));
+      await g.up();
+      await tester.pump();
+      expect(events, ['open']);
+    });
+
+    testWidgets('a drag in the band seeks by where it ends', (tester) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      await loaded(tester, host);
+      final b = band(tester);
+      final g = await tester.startGesture(Offset(b.left + 96, b.center.dy));
+      await g.moveBy(const Offset(60, 0));
+      await host.run(tester, g.up);
+      final fraction = 156 / b.width;
+      expect(
+        (await position(tester, host)).inMilliseconds,
+        closeTo(total.inMilliseconds * fraction, total.inMilliseconds * 0.01),
+      );
+      expect(events, isEmpty);
+    });
+
+    testWidgets('a vertical drag that starts in the band still seeks', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      await loaded(tester, host);
+      final b = band(tester);
+      final g = await tester.startGesture(Offset(b.left + 192, b.center.dy));
+      await g.moveBy(const Offset(0, -40));
+      await host.run(tester, g.up);
+      expect(
+        (await position(tester, host)).inMilliseconds,
+        closeTo(total.inMilliseconds / 2, total.inMilliseconds * 0.01),
+      );
+      expect(events, isEmpty, reason: 'not a swipe up');
+    });
+
+    testWidgets('a tap on the band opens Now Playing and does not seek', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      await loaded(tester, host);
+      final b = band(tester);
+      await tester.tapAt(Offset(b.left + 300, b.center.dy));
+      await tester.pump();
+      expect(events, ['open']);
+      expect(sought(host), isFalse);
+    });
+
+    testWidgets('a track that cannot seek: a band drag moves the card', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      final b = band(tester);
+      final g = await tester.startGesture(Offset(b.left + 96, b.center.dy));
+      await g.moveBy(const Offset(0, -50));
+      await g.up();
+      await tester.pump();
+      expect(events, ['open'], reason: 'a swipe up, as anywhere on the card');
+      expect(sought(host), isFalse);
+    });
+
+    testWidgets('the track changing mid-drag drops the seek', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await loaded(tester, host);
+      final b = band(tester);
+      final g = await tester.startGesture(Offset(b.left + 96, b.center.dy));
+      await g.moveBy(const Offset(60, 0));
+      await host.run(tester, host.h.c.next);
+      await host.run(tester, g.up);
+      expect(sought(host), isFalse);
+    });
+
+    testWidgets('a cancelled band drag does not seek', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await loaded(tester, host);
+      final b = band(tester);
+      final g = await tester.startGesture(Offset(b.left + 96, b.center.dy));
+      await g.moveBy(const Offset(60, 0));
+      await host.run(tester, g.cancel);
+      expect(sought(host), isFalse);
+    });
+
+    testWidgets('a drag that starts on Pause does not seek', (tester) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      await loaded(tester, host);
+      final g = await tester.startGesture(
+        tester.getCenter(byIconButton('Pause')),
+      );
+      await g.moveBy(const Offset(-60, 0));
+      await host.run(tester, g.up);
+      expect(sought(host), isFalse);
+      expect(events, isEmpty);
+    });
+
+    testWidgets('holding in the band opens the queue', (tester) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      await loaded(tester, host);
+      final b = band(tester);
+      final g = await tester.startGesture(Offset(b.left + 96, b.center.dy));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(events, ['queue']);
+      await g.up();
+      await tester.pump();
+      expect(events, ['queue']);
+      expect(sought(host), isFalse);
+    });
+
+    testWidgets('a touch in the system gesture inset is not taken, a mouse '
+        'is', (tester) async {
+      final events = <String>[];
+      await pumpWithPlayer(
+        tester,
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(systemGestureInsets: const EdgeInsets.only(left: 30)),
+              child: MiniPlayer(
+                onOpen: () => events.add('open'),
+                onOpenQueue: () => events.add('queue'),
+              ),
+            ),
+          ),
+        ),
+      );
+      final card = tester.getRect(find.byType(MiniPlayer));
+      final start = Offset(card.left + 12, card.center.dy - 8);
+      // The touch is declined: its upward drag is no swipe up.
+      final touch = await tester.startGesture(start);
+      await touch.moveBy(const Offset(0, -60));
+      await touch.up();
+      await tester.pump();
+      expect(events, isEmpty);
+      // The same place with a mouse is an ordinary swipe up.
+      final mouse = await tester.startGesture(
+        start,
+        kind: PointerDeviceKind.mouse,
+      );
+      await mouse.moveBy(const Offset(0, -60));
+      await mouse.up();
+      await tester.pump();
+      expect(events, ['open']);
+    });
+
+    testWidgets('semantics: increase seeks 5 s on the band slider', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final host = await pumpWithPlayer(tester, _player([]));
+      await loaded(tester, host);
+      await host.run(
+        tester,
+        () async => tester.semantics.increase(
+          find.semantics.byLabel('Playback position'),
+        ),
+      );
+      expect(await position(tester, host), const Duration(seconds: 5));
+      handle.dispose();
+    });
+  });
+
+  group('swipe down, swipe up and actions', () {
+    Future<void> settle(WidgetTester tester, UiHost host) async {
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await host.letStreamsArrive(tester);
+      await host.run(tester, () async {});
+      await tester.pump(const Duration(seconds: 1));
+      await host.letStreamsArrive(tester);
+    }
+
+    /// A vertical drag of [dy] over [ms], released in the real zone so the
+    /// stop it may start can finish.
+    Future<void> swipe(
+      WidgetTester tester,
+      UiHost host,
+      double dy, {
+      int ms = 400,
+      int steps = 6,
+    }) async {
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      for (var i = 1; i <= steps; i++) {
+        await g.moveBy(
+          Offset(0, dy / steps),
+          timeStamp: Duration(milliseconds: ms * i ~/ steps),
+        );
+      }
+      await host.run(
+        tester,
+        () => g.up(timeStamp: Duration(milliseconds: ms + 1)),
+      );
+      await settle(tester, host);
+    }
+
+    Future<void> expectStopped(UiHost host, WidgetTester tester) async {
+      expect(find.byType(PlayPauseButton), findsNothing);
+      expect(host.h.c.queueState.items, isEmpty);
+      final view = await tester.runAsync(() => host.h.c.queueView.first);
+      expect(view!.items, isEmpty);
+      expect(host.h.settings.read('playback.queue.current_entry'), isNull);
+      expect(host.h.settings.read('playback.position_ms'), 0);
+    }
+
+    testWidgets('down past 48 dp stops, clears the queue and the session', (
+      tester,
+    ) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await swipe(tester, host, 60);
+      await expectStopped(host, tester);
+      expect(host.h.notices, isEmpty, reason: 'no snack bar, no notice');
+    });
+
+    testWidgets('down short of 48 dp and slow springs back', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      final before = tester.getTopLeft(find.byType(MiniPlayerBody));
+      await swipe(tester, host, 30);
+      expect(host.h.c.queueState.items, hasLength(6));
+      expect(host.h.c.intent, PlayIntent.playing);
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)), before);
+    });
+
+    testWidgets('a fast fling over 20 dp stops', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await swipe(tester, host, 20, ms: 24, steps: 3);
+      await expectStopped(host, tester);
+    });
+
+    testWidgets('reduced motion: stopped after one pump', (tester) async {
+      final host = await pumpWithPlayer(
+        tester,
+        Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: _player([]),
+          ),
+        ),
+      );
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(0, 70));
+      await host.run(tester, g.up);
+      await tester.pump();
+      await host.letStreamsArrive(tester);
+      await expectStopped(host, tester);
+      // Providers of the gone card close their streams on a zero timer.
+      await tester.pump(const Duration(milliseconds: 50));
+    });
+
+    testWidgets('the card leaving the tree in the middle of the drop still '
+        'stops playback', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(0, 70));
+      await host.run(tester, g.up);
+      await tester.pump(const Duration(milliseconds: 40));
+      // The card is built and disposed outside the fake zone, as in the app,
+      // so the stop it starts from dispose can reach the database.
+      await tester.runAsync(() => tester.pumpWidget(const SizedBox()));
+      await tester.runAsync(host.h.settle);
+      expect(host.h.c.queueState.items, isEmpty);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a failing clear keeps the queue and the card comes back', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      await host.run(tester, () async {
+        await host.h.db.customStatement(
+          'CREATE TRIGGER no_delete BEFORE DELETE ON queue_entries '
+          "BEGIN SELECT RAISE(ABORT, 'boom'); END",
+        );
+      });
+      final rest = tester.getTopLeft(find.byType(MiniPlayerBody));
+      await swipe(tester, host, 70);
+      expect(host.h.c.queueState.items, hasLength(6));
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)), rest);
+      // The card takes touches again: a tap opens Now Playing.
+      await tester.tap(find.text('T0'));
+      await tester.pump();
+      expect(events, ['open']);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a song picked while the card drops brings it back', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      final rest = tester.getTopLeft(find.byType(MiniPlayerBody));
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(0, 70));
+      await host.run(tester, g.up);
+      await tester.pump(const Duration(milliseconds: 40));
+      await host.run(tester, host.h.play);
+      await settle(tester, host);
+      expect(
+        host.h.c.queueState.items,
+        hasLength(6),
+        reason: 'new queue stays',
+      );
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)), rest);
+      await tester.tap(find.text('T0'));
+      await tester.pump();
+      expect(events, ['open']);
+    });
+
+    testWidgets('up never moves the card down, even if the finger does', (
+      tester,
+    ) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      final rest = tester.getTopLeft(find.byType(MiniPlayerBody)).dy;
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(0, -20));
+      await g.moveBy(const Offset(0, 60));
+      await tester.pump();
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)).dy, rest);
+      await host.run(tester, g.up);
+      await settle(tester, host);
+    });
+
+    group('after a long press the same touch does nothing', () {
+      Future<void> hold(WidgetTester tester, UiHost host, Offset by) async {
+        final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+        await tester.pump(const Duration(milliseconds: 600));
+        for (var i = 1; i <= 6; i++) {
+          await g.moveBy(
+            by / 6,
+            timeStamp: Duration(milliseconds: 600 + i * 50),
+          );
+        }
+        await host.run(
+          tester,
+          () => g.up(timeStamp: const Duration(milliseconds: 1000)),
+        );
+        await settle(tester, host);
+      }
+
+      testWidgets('then down 70: the queue is not cleared', (tester) async {
+        final events = <String>[];
+        final host = await pumpWithPlayer(tester, _player(events));
+        final rest = tester.getTopLeft(find.byType(MiniPlayerBody));
+        await hold(tester, host, const Offset(0, 70));
+        expect(events, ['queue']);
+        expect(host.h.c.queueState.items, hasLength(6));
+        expect(tester.getTopLeft(find.byType(MiniPlayerBody)), rest);
+      });
+
+      testWidgets('then left 150: the track does not change', (tester) async {
+        final events = <String>[];
+        final host = await pumpWithPlayer(tester, _player(events));
+        await hold(tester, host, const Offset(-150, 0));
+        expect(events, ['queue']);
+        expect(host.h.c.queueState.current, 0);
+      });
+    });
+
+    group('a second finger during a drag is ignored', () {
+      Offset onCard(WidgetTester tester) =>
+          tester.getCenter(find.text('T0')) + const Offset(20, 0);
+
+      testWidgets('vertical: the first finger still settles the card', (
+        tester,
+      ) async {
+        final events = <String>[];
+        final host = await pumpWithPlayer(tester, _player(events));
+        final rest = tester.getTopLeft(find.byType(MiniPlayerBody));
+        final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+        await g.moveBy(const Offset(0, 20));
+        await tester.pump();
+        final second = await tester.startGesture(onCard(tester), pointer: 99);
+        await tester.pump(const Duration(milliseconds: 50));
+        await second.cancel();
+        await g.moveBy(const Offset(0, 10));
+        await tester.pump();
+        await host.run(tester, g.up);
+        await settle(tester, host);
+        expect(tester.getTopLeft(find.byType(MiniPlayerBody)), rest);
+        expect(host.h.c.queueState.items, hasLength(6));
+        expect(events, isEmpty);
+      });
+
+      testWidgets('sideways: the carousel settles and the next swipe works', (
+        tester,
+      ) async {
+        final events = <String>[];
+        final host = await pumpWithPlayer(tester, _player(events));
+        final rest = tester.getTopLeft(find.byType(MiniPlayerBody));
+        final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+        await g.moveBy(const Offset(-40, 0));
+        await tester.pump();
+        final second = await tester.startGesture(onCard(tester), pointer: 99);
+        await tester.pump(const Duration(milliseconds: 50));
+        await second.cancel();
+        await g.moveBy(const Offset(-20, 0));
+        await tester.pump();
+        await host.run(tester, g.up);
+        await settle(tester, host);
+        expect(tester.getTopLeft(find.byType(MiniPlayerBody)), rest);
+        expect(host.h.c.queueState.current, 0);
+
+        final next = await tester.startGesture(
+          tester.getCenter(find.text('T0')),
+        );
+        for (var i = 1; i <= 6; i++) {
+          await next.moveBy(const Offset(-40, 0));
+        }
+        await host.run(tester, next.up);
+        await settle(tester, host);
+        expect(host.h.c.queueState.current, 1);
+      });
+
+      testWidgets('a second finger held 500 ms does not open the queue', (
+        tester,
+      ) async {
+        final events = <String>[];
+        final host = await pumpWithPlayer(tester, _player(events));
+        final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+        await g.moveBy(const Offset(0, 20));
+        await tester.pump();
+        final second = await tester.startGesture(onCard(tester), pointer: 99);
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(events, isEmpty);
+        await second.cancel();
+        await host.run(tester, g.up);
+        await settle(tester, host);
+        expect(events, isEmpty);
+      });
+    });
+
+    testWidgets('the stop is announced once to screen readers', (tester) async {
+      final messages = <Object?>[];
+      tester.binding.defaultBinaryMessenger
+          .setMockDecodedMessageHandler<dynamic>(SystemChannels.accessibility, (
+            message,
+          ) async {
+            messages.add(message);
+            return null;
+          });
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger
+            .setMockDecodedMessageHandler<dynamic>(
+              SystemChannels.accessibility,
+              null,
+            ),
+      );
+      final host = await pumpWithPlayer(tester, _player([]));
+      await swipe(tester, host, 60);
+      final announcements = [
+        for (final m in messages)
+          if (m is Map && m['type'] == 'announce') m['data'] as Map,
+      ];
+      expect(announcements, hasLength(1));
+      expect(announcements.single['message'], 'Playback stopped');
+    });
+
+    testWidgets('up follows the finger by at most 30 dp and opens past it', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      final rest = tester.getTopLeft(find.byType(MiniPlayerBody)).dy;
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(0, -20));
+      await tester.pump();
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)).dy, rest - 20);
+      await g.moveBy(const Offset(0, -40));
+      await tester.pump();
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)).dy, rest - 30);
+      await host.run(tester, g.up);
+      await settle(tester, host);
+      expect(events, ['open']);
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)).dy, rest);
+    });
+
+    testWidgets('up short of 30 dp does not open and the card returns', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      final rest = tester.getTopLeft(find.byType(MiniPlayerBody)).dy;
+      await swipe(tester, host, -20);
+      expect(events, isEmpty);
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)).dy, rest);
+    });
+
+    group('semantics actions', () {
+      Future<void> perform(
+        WidgetTester tester,
+        UiHost host,
+        String label,
+      ) async {
+        final data = tester
+            .getSemantics(
+              find.byWidgetPredicate(
+                (w) => w is Semantics && w.properties.label == 'Player',
+              ),
+            )
+            .getSemanticsData();
+        final id = data.customSemanticsActionIds!.firstWhere(
+          (id) => CustomSemanticsAction.getAction(id)!.label == label,
+        );
+        await host.run(tester, () async {
+          tester.semantics.performAction(
+            find.semantics.byPredicate((node) {
+              final data = node.getSemanticsData();
+              return data.label.contains('Player') &&
+                  data.customSemanticsActionIds != null;
+            }),
+            SemanticsAction.customAction,
+            args: id,
+          );
+        });
+        await settle(tester, host);
+      }
+
+      testWidgets('Next, Previous and Stop playback', (tester) async {
+        final handle = tester.ensureSemantics();
+        final host = await pumpWithPlayer(tester, _player([]));
+        await perform(tester, host, 'Next');
+        expect(host.h.c.queueState.current, 1);
+        await perform(tester, host, 'Previous');
+        expect(host.h.c.queueState.current, 0);
+        await perform(tester, host, 'Stop playback');
+        await expectStopped(host, tester);
+        handle.dispose();
+      });
+    });
   });
 }

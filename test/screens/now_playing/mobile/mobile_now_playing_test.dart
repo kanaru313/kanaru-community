@@ -426,4 +426,43 @@ void main() {
       expect(host.h.c.queueState.current, 5);
     });
   });
+
+  group('the cover swipe at the first entry', () {
+    Future<UiHost> openAtFirst(WidgetTester tester, RepeatMode repeat) async {
+      final host = await _open(tester);
+      await host.run(tester, () => host.h.c.setRepeat(repeat));
+      await host.letStreamsArrive(tester);
+      return host;
+    }
+
+    Future<void> swipePrevious(WidgetTester tester, UiHost host) async {
+      await tester.runAsync(() async {
+        await tester.timedDrag(
+          find.byType(CoverSwiper),
+          const Offset(200, 0),
+          const Duration(milliseconds: 400),
+        );
+        await host.h.settle();
+      });
+      await tester.pump(const Duration(seconds: 1));
+      await host.letStreamsArrive(tester);
+    }
+
+    testWidgets('repeat all: a right swipe goes to the last entry', (
+      tester,
+    ) async {
+      final host = await openAtFirst(tester, RepeatMode.all);
+      expect(host.h.c.queueState.current, 0);
+      await swipePrevious(tester, host);
+      expect(host.h.c.queueState.current, 5);
+    });
+
+    testWidgets('repeat all reshuffled: a right swipe bounces back', (
+      tester,
+    ) async {
+      final host = await openAtFirst(tester, RepeatMode.allShuffled);
+      await swipePrevious(tester, host);
+      expect(host.h.c.queueState.current, 0);
+    });
+  });
 }

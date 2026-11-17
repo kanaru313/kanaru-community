@@ -311,6 +311,11 @@ void main() {
       (RepeatMode.allShuffled, 1, true, 2, 0),
       (RepeatMode.allShuffled, 2, true, null, 1),
       (RepeatMode.allShuffled, 2, false, 0, 1),
+      // Previous at the first entry wraps to the last only in plain repeat
+      // all: a new shuffled pass has no meaningful "end of the last one".
+      (RepeatMode.all, 0, false, 1, 2),
+      (RepeatMode.allShuffled, 0, false, 1, null),
+      (RepeatMode.one, 0, false, 1, null),
     ];
     for (final (repeat, cur, auto, next, prev) in cases) {
       test('$repeat at $cur auto=$auto', () {
@@ -336,6 +341,18 @@ void main() {
       expect(nextIndex(makeQueue(0), auto: true), isNull);
       expect(nextIndex(makeQueue(2), auto: true), 0);
       expect(previousIndex(makeQueue(2)), isNull);
+      expect(previousIndex(makeQueue(0, repeat: RepeatMode.all)), isNull);
+    });
+
+    test('previous in a one-entry queue on repeat all is the entry itself', () {
+      expect(
+        previousIndex(makeQueue(1, current: 0, repeat: RepeatMode.all)),
+        0,
+      );
+      expect(
+        previousIndex(makeQueue(1, current: 0, repeat: RepeatMode.off)),
+        isNull,
+      );
     });
   });
 

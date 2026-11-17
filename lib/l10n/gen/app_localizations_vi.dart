@@ -480,6 +480,12 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get playbackStopAndClear => 'Dừng phát';
+
+  @override
+  String get playbackStoppedAnnouncement => 'Đã dừng phát';
+
+  @override
   String get playbackNoticeFirstTrack => 'Đây là bài đầu';
 
   @override
