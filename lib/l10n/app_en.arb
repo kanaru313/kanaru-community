@@ -96,8 +96,36 @@
     }
   },
   "scanSetupFolderPickerTitle": "Add music folders",
-  "scanSetupFolderPickerHint": "Folders with music that Android found.",
+  "scanSetupFolderPickerHint": "Folders with music that Android found. Music you just copied to the phone may not be here until Android rescans.",
   "scanSetupFolderPickerEmpty": "Every folder with music is already chosen.",
+  "scanSetupFolderSheetLoading": "Looking for folders with music…",
+  "scanSetupNoMusicTitle": "Android sees no music yet",
+  "scanSetupNoMusicBody": "Music you just copied to the phone often does not show up until Android rescans.",
+  "scanSetupNoMusicCard": "Android sees no music on this phone yet. Music you just copied often does not show up until Android rescans.",
+  "scanSetupRescan": "Rescan",
+  "scanSetupRescanRow": "Can't see your folder? Rescan",
+  "scanSetupRescanning": "Rescanning…",
+  "scanSetupRescanningBody": "Android is looking for music in the folders of internal storage and the SD card (Music and Download first).",
+  "scanSetupRescanningSheetNote": "If you close this sheet, Android keeps scanning.",
+  "scanSetupRescanDone": "{count, plural, =1{Rescanned · Android found 1 song.} other{Rescanned · Android found {count} songs.}}",
+  "@scanSetupRescanDone": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "scanSetupStillNoMusicTitle": "Still no music found",
+  "scanSetupStillNoMusicBody": "Android rescanned but found no music files.",
+  "scanSetupStillNoMusicTipShared": "Music must be in shared storage (for example Music or Download), not inside another app's Android › data folder.",
+  "scanSetupStillNoMusicTipRestart": "Restart the phone so Android rescans all storage, then reopen Kanaru.",
+  "scanSetupStillNoMusicCard": "Android still sees no music.",
+  "scanSetupRescanFailed": "Could not rescan.",
+  "scanSetupFolderListFailedTitle": "Could not load the folder list",
+  "scanSetupFolderListFailedBody": "Android did not answer in time or reported an error.",
+  "scanSetupExclusionSheetLoading": "Looking for sub-folders…",
+  "scanSetupExclusionListFailed": "Could not load the sub-folder list",
   "scanSetupSheetAdd": "Add",
   "scanSetupSheetAddCount": "Add {count}",
   "@scanSetupSheetAddCount": {
@@ -126,7 +154,7 @@
   "scanSetupAddExclusion": "Add excluded folder",
   "scanSetupAddExclusionDialog": "Add excluded folder…",
   "scanSetupExclusionPickerTitle": "Exclude folders",
-  "scanSetupExclusionPickerHint": "Sub-folders of the music folders you chose.",
+  "scanSetupExclusionPickerHint": "Sub-folders with music that Android has seen, inside the music folders you chose.",
   "scanSetupExclusionPickerEmpty": "There are no sub-folders to exclude.",
   "scanSetupRefusedAlreadyChosen": "“{folder}” is already chosen.",
   "@scanSetupRefusedAlreadyChosen": {

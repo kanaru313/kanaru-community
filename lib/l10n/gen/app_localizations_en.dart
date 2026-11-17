@@ -245,11 +245,92 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanSetupFolderPickerHint =>
-      'Folders with music that Android found.';
+      'Folders with music that Android found. Music you just copied to the phone may not be here until Android rescans.';
 
   @override
   String get scanSetupFolderPickerEmpty =>
       'Every folder with music is already chosen.';
+
+  @override
+  String get scanSetupFolderSheetLoading => 'Looking for folders with music…';
+
+  @override
+  String get scanSetupNoMusicTitle => 'Android sees no music yet';
+
+  @override
+  String get scanSetupNoMusicBody =>
+      'Music you just copied to the phone often does not show up until Android rescans.';
+
+  @override
+  String get scanSetupNoMusicCard =>
+      'Android sees no music on this phone yet. Music you just copied often does not show up until Android rescans.';
+
+  @override
+  String get scanSetupRescan => 'Rescan';
+
+  @override
+  String get scanSetupRescanRow => 'Can\'t see your folder? Rescan';
+
+  @override
+  String get scanSetupRescanning => 'Rescanning…';
+
+  @override
+  String get scanSetupRescanningBody =>
+      'Android is looking for music in the folders of internal storage and the SD card (Music and Download first).';
+
+  @override
+  String get scanSetupRescanningSheetNote =>
+      'If you close this sheet, Android keeps scanning.';
+
+  @override
+  String scanSetupRescanDone(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Rescanned · Android found $countString songs.',
+      one: 'Rescanned · Android found 1 song.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get scanSetupStillNoMusicTitle => 'Still no music found';
+
+  @override
+  String get scanSetupStillNoMusicBody =>
+      'Android rescanned but found no music files.';
+
+  @override
+  String get scanSetupStillNoMusicTipShared =>
+      'Music must be in shared storage (for example Music or Download), not inside another app\'s Android › data folder.';
+
+  @override
+  String get scanSetupStillNoMusicTipRestart =>
+      'Restart the phone so Android rescans all storage, then reopen Kanaru.';
+
+  @override
+  String get scanSetupStillNoMusicCard => 'Android still sees no music.';
+
+  @override
+  String get scanSetupRescanFailed => 'Could not rescan.';
+
+  @override
+  String get scanSetupFolderListFailedTitle => 'Could not load the folder list';
+
+  @override
+  String get scanSetupFolderListFailedBody =>
+      'Android did not answer in time or reported an error.';
+
+  @override
+  String get scanSetupExclusionSheetLoading => 'Looking for sub-folders…';
+
+  @override
+  String get scanSetupExclusionListFailed =>
+      'Could not load the sub-folder list';
 
   @override
   String get scanSetupSheetAdd => 'Add';
@@ -291,7 +372,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanSetupExclusionPickerHint =>
-      'Sub-folders of the music folders you chose.';
+      'Sub-folders with music that Android has seen, inside the music folders you chose.';
 
   @override
   String get scanSetupExclusionPickerEmpty =>

@@ -697,6 +697,32 @@ dialog or MediaStore sheet from `LocalAudioCatalog.folderChoice`.
   second one.
 - Each list switches on `AsyncValue`: a short spinner, an error line with
   "Try again", the empty note, or the rows.
+- Android folder lists (`FolderListState`: `loadFailed`, `noIndexedMusic`,
+  `ready(candidates)`) drive both folder sheets and the "Thư mục nhạc" card;
+  Linux never watches them. A failed read is "Không tải được" + Thử lại
+  (`ref.invalidate(audioFoldersProvider)`), never the empty note; "Đã chọn mọi
+  thư mục có nhạc." means the index holds music and every folder is chosen;
+  an index with no music is "Android chưa thấy bài nhạc nào" + Quét lại.
+- Quét lại is one shared run, `mediaIndexRefreshProvider` (`idle`,
+  `running(runId)`, `finished(runId, outcome, found)`): the add sheet's button
+  and trailing row and the card's button all start or join it, so the card
+  shows the progress of a run the sheet started. A surface shows a result only
+  for a run that started or ended while it was shown (it remembers the run id
+  at mount); an older `finished` is never news. The exclusion sheet has no
+  Quét lại.
+- The add sheet (`folder_picker_sheet.dart`) opens at once (no await before
+  `showKSheet`) and its `Consumer` follows the list: while the list reloads it
+  keeps the last rows (`asyncValue.value`, never `[]`), and
+  `MultiSelectionSheet` keeps every pick even when its option vanishes for a
+  frame (confirm and the count use the picks that have an enabled option). After
+  a run it saw ends with music, and no folder is chosen, `Music` (the suggested
+  folder, when listed) is added to the sheet's `initial`, so it starts chosen;
+  nothing is written before "Thêm".
+- Once per app launch, when the card shows "no music" and the audio permission
+  is granted, a post-frame callback calls `autoRunOnce()` (never from build).
+  "Thêm thư mục" is off while a run is in flight; "Tiếp tục" is unaffected.
+  On Android < 10 the first run reports `unsupported` and every Quét lại entry
+  disappears.
 
 ## Home scan card
 
@@ -764,7 +790,11 @@ Declared in `lib/src/library/state/scan/scan_settings.dart`.
 - **No automatic rescans.** Scans run at startup, after the first-run arrow, after an
   exclusion is undone and on any `rescan()` call. There is no folder watcher and no
   MediaStore observer. On Android a file copied in just now may be missing until
-  MediaStore has indexed it.
+  MediaStore has indexed it. The one user-facing exception is "Quét lại" in the
+  first-run folder sheet and card, which asks Android to index the top-level folders
+  (`MediaScannerConnection`) and rereads the list; it also runs once per app launch on
+  the first-run card when Android shows no music. Nothing else triggers it (no Home
+  action, no startup scan).
 - **A failed scan is invisible.** `ScanFailed` is published, but Home and the library
   pages draw nothing for it, so a user who revokes the audio permission sees the
   library stop updating without a message.

@@ -70,8 +70,36 @@
     }
   },
   "scanSetupFolderPickerTitle": "Thêm thư mục nhạc",
-  "scanSetupFolderPickerHint": "Các thư mục có nhạc mà Android tìm thấy.",
+  "scanSetupFolderPickerHint": "Các thư mục có nhạc mà Android tìm thấy. Nhạc vừa chép vào máy có thể chưa có ở đây cho tới khi Android quét lại.",
   "scanSetupFolderPickerEmpty": "Đã chọn mọi thư mục có nhạc.",
+  "scanSetupFolderSheetLoading": "Đang tìm thư mục có nhạc…",
+  "scanSetupNoMusicTitle": "Android chưa thấy bài nhạc nào",
+  "scanSetupNoMusicBody": "Nhạc vừa chép vào máy thường chưa hiện cho tới khi Android quét lại.",
+  "scanSetupNoMusicCard": "Android chưa thấy bài nhạc nào trong máy. Nhạc vừa chép vào thường chưa hiện cho tới khi Android quét lại.",
+  "scanSetupRescan": "Quét lại",
+  "scanSetupRescanRow": "Không thấy thư mục của bạn? Quét lại",
+  "scanSetupRescanning": "Đang quét lại…",
+  "scanSetupRescanningBody": "Android đang tìm nhạc trong các thư mục của bộ nhớ trong và thẻ nhớ (Music, Download trước).",
+  "scanSetupRescanningSheetNote": "Đóng sheet thì Android vẫn quét tiếp.",
+  "scanSetupRescanDone": "Đã quét lại · Android thấy {count} bài.",
+  "@scanSetupRescanDone": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "scanSetupStillNoMusicTitle": "Vẫn chưa thấy bài nhạc nào",
+  "scanSetupStillNoMusicBody": "Android đã quét lại nhưng không thấy tệp nhạc.",
+  "scanSetupStillNoMusicTipShared": "Nhạc phải nằm trong bộ nhớ chung (ví dụ Music, Download), không nằm trong Android › data của ứng dụng khác.",
+  "scanSetupStillNoMusicTipRestart": "Khởi động lại điện thoại để Android quét lại toàn bộ bộ nhớ, rồi mở lại Kanaru.",
+  "scanSetupStillNoMusicCard": "Android vẫn chưa thấy bài nhạc nào.",
+  "scanSetupRescanFailed": "Không quét lại được.",
+  "scanSetupFolderListFailedTitle": "Không tải được danh sách thư mục",
+  "scanSetupFolderListFailedBody": "Android không trả lời kịp hoặc báo lỗi.",
+  "scanSetupExclusionSheetLoading": "Đang tìm thư mục con…",
+  "scanSetupExclusionListFailed": "Không tải được danh sách thư mục con",
   "scanSetupSheetAdd": "Thêm",
   "scanSetupSheetAddCount": "Thêm {count}",
   "@scanSetupSheetAddCount": {
@@ -100,7 +128,7 @@
   "scanSetupAddExclusion": "Thêm thư mục loại trừ",
   "scanSetupAddExclusionDialog": "Thêm thư mục loại trừ…",
   "scanSetupExclusionPickerTitle": "Loại trừ thư mục",
-  "scanSetupExclusionPickerHint": "Thư mục con trong các thư mục nhạc đã chọn.",
+  "scanSetupExclusionPickerHint": "Thư mục con có nhạc mà Android đã thấy, trong các thư mục nhạc đã chọn.",
   "scanSetupExclusionPickerEmpty": "Không có thư mục con nào để loại trừ.",
   "scanSetupRefusedAlreadyChosen": "“{folder}” đã được chọn.",
   "@scanSetupRefusedAlreadyChosen": {

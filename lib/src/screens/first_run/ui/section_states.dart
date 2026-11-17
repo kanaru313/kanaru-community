@@ -17,11 +17,13 @@ class SectionSpinner extends StatelessWidget {
   );
 }
 
-/// The error state of a section: a line and a retry button.
+/// The error state of a section: a line and a retry button. [message]
+/// replaces the generic "could not load this section" line.
 class SectionLoadFailed extends StatelessWidget {
-  const SectionLoadFailed({super.key, required this.onRetry});
+  const SectionLoadFailed({super.key, required this.onRetry, this.message});
 
   final VoidCallback onRetry;
+  final String? message;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +31,7 @@ class SectionLoadFailed extends StatelessWidget {
     return SetupNote(
       child: Row(
         children: [
-          Expanded(child: Text(l10n.scanSetupLoadFailed)),
+          Expanded(child: Text(message ?? l10n.scanSetupLoadFailed)),
           TextButton(onPressed: onRetry, child: Text(l10n.scanSetupRetry)),
         ],
       ),

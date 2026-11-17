@@ -232,10 +232,86 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get scanSetupFolderPickerHint =>
-      'Các thư mục có nhạc mà Android tìm thấy.';
+      'Các thư mục có nhạc mà Android tìm thấy. Nhạc vừa chép vào máy có thể chưa có ở đây cho tới khi Android quét lại.';
 
   @override
   String get scanSetupFolderPickerEmpty => 'Đã chọn mọi thư mục có nhạc.';
+
+  @override
+  String get scanSetupFolderSheetLoading => 'Đang tìm thư mục có nhạc…';
+
+  @override
+  String get scanSetupNoMusicTitle => 'Android chưa thấy bài nhạc nào';
+
+  @override
+  String get scanSetupNoMusicBody =>
+      'Nhạc vừa chép vào máy thường chưa hiện cho tới khi Android quét lại.';
+
+  @override
+  String get scanSetupNoMusicCard =>
+      'Android chưa thấy bài nhạc nào trong máy. Nhạc vừa chép vào thường chưa hiện cho tới khi Android quét lại.';
+
+  @override
+  String get scanSetupRescan => 'Quét lại';
+
+  @override
+  String get scanSetupRescanRow => 'Không thấy thư mục của bạn? Quét lại';
+
+  @override
+  String get scanSetupRescanning => 'Đang quét lại…';
+
+  @override
+  String get scanSetupRescanningBody =>
+      'Android đang tìm nhạc trong các thư mục của bộ nhớ trong và thẻ nhớ (Music, Download trước).';
+
+  @override
+  String get scanSetupRescanningSheetNote =>
+      'Đóng sheet thì Android vẫn quét tiếp.';
+
+  @override
+  String scanSetupRescanDone(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Đã quét lại · Android thấy $countString bài.';
+  }
+
+  @override
+  String get scanSetupStillNoMusicTitle => 'Vẫn chưa thấy bài nhạc nào';
+
+  @override
+  String get scanSetupStillNoMusicBody =>
+      'Android đã quét lại nhưng không thấy tệp nhạc.';
+
+  @override
+  String get scanSetupStillNoMusicTipShared =>
+      'Nhạc phải nằm trong bộ nhớ chung (ví dụ Music, Download), không nằm trong Android › data của ứng dụng khác.';
+
+  @override
+  String get scanSetupStillNoMusicTipRestart =>
+      'Khởi động lại điện thoại để Android quét lại toàn bộ bộ nhớ, rồi mở lại Kanaru.';
+
+  @override
+  String get scanSetupStillNoMusicCard => 'Android vẫn chưa thấy bài nhạc nào.';
+
+  @override
+  String get scanSetupRescanFailed => 'Không quét lại được.';
+
+  @override
+  String get scanSetupFolderListFailedTitle =>
+      'Không tải được danh sách thư mục';
+
+  @override
+  String get scanSetupFolderListFailedBody =>
+      'Android không trả lời kịp hoặc báo lỗi.';
+
+  @override
+  String get scanSetupExclusionSheetLoading => 'Đang tìm thư mục con…';
+
+  @override
+  String get scanSetupExclusionListFailed =>
+      'Không tải được danh sách thư mục con';
 
   @override
   String get scanSetupSheetAdd => 'Thêm';
@@ -277,7 +353,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get scanSetupExclusionPickerHint =>
-      'Thư mục con trong các thư mục nhạc đã chọn.';
+      'Thư mục con có nhạc mà Android đã thấy, trong các thư mục nhạc đã chọn.';
 
   @override
   String get scanSetupExclusionPickerEmpty =>

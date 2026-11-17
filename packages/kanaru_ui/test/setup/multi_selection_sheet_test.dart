@@ -316,4 +316,173 @@ void main() {
       );
     });
   });
+
+  group('options that change while open', () {
+    const two = [
+      SelectionOption(value: 'a', title: Text('Download')),
+      SelectionOption(value: 'b', title: Text('Telegram')),
+    ];
+
+    /// Opens the sheet over a [ValueNotifier] so a test can swap the options
+    /// and the suggested picks the way a reloading list does.
+    Future<
+      ({
+        ValueNotifier<(List<SelectionOption<String>>, Set<String>)> config,
+        List<Set<String>?> results,
+      })
+    >
+    open(
+      WidgetTester tester, {
+      required List<SelectionOption<String>> options,
+      Set<String> initial = const {},
+      Widget? banner,
+      Widget? footerNote,
+    }) async {
+      useWindow(tester, const Size(400, 800));
+      final config = ValueNotifier((options, initial));
+      addTearDown(config.dispose);
+      final results = <Set<String>?>[];
+      await tester.pumpWidget(
+        host(
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () async => results.add(
+                await showKSheet<Set<String>>(
+                  context,
+                  builder: (_) => ValueListenableBuilder(
+                    valueListenable: config,
+                    builder: (_, value, _) => MultiSelectionSheet<String>(
+                      options: value.$1,
+                      initial: value.$2,
+                      title: const Text('Add music folders'),
+                      emptyNote: const Text('Every folder is chosen.'),
+                      banner: banner,
+                      footerNote: footerNote,
+                      confirmLabel: (n) => n == 0 ? 'Add' : 'Add $n',
+                      cancelLabel: 'Cancel',
+                      selectAllLabel: 'Select all',
+                      selectedCountLabel: (n, t) => '$n / $t folders',
+                    ),
+                  ),
+                ),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      return (config: config, results: results);
+    }
+
+    testWidgets('options 0 to 2 turn the empty note into rows', (tester) async {
+      final h = await open(tester, options: const []);
+      expect(find.text('Every folder is chosen.'), findsOneWidget);
+      expect(find.byType(SelectionRow), findsNothing);
+      h.config.value = (two, const <String>{});
+      await tester.pump();
+      expect(find.text('Every folder is chosen.'), findsNothing);
+      expect(find.text('Download'), findsOneWidget);
+      expect(find.text('Telegram'), findsOneWidget);
+      expect(find.text('0 / 2 folders'), findsOneWidget);
+    });
+
+    testWidgets('a pick survives a reload frame with no options', (
+      tester,
+    ) async {
+      final h = await open(tester, options: two);
+      await tester.tap(find.text('Download'));
+      await tester.pump();
+      expect(find.text('Add 1'), findsOneWidget);
+      h.config.value = (const [], const <String>{});
+      await tester.pump();
+      expect(find.byType(SelectionRow), findsNothing);
+      // Nothing with an option is chosen, so nothing can be confirmed.
+      expect(find.text('Add'), findsOneWidget);
+      h.config.value = (two, const <String>{});
+      await tester.pump();
+      expect(find.text('Add 1'), findsOneWidget);
+      expect(
+        tester
+            .widgetList<SelectionRow>(find.byType(SelectionRow))
+            .map((r) => r.selected),
+        [true, true, false],
+      );
+      await tester.tap(find.text('Add 1'));
+      await tester.pumpAndSettle();
+      expect(h.results.single, {'a'});
+    });
+
+    testWidgets('a pick whose option is gone is neither counted nor returned', (
+      tester,
+    ) async {
+      final h = await open(tester, options: two);
+      await tester.tap(find.text('Download'));
+      await tester.tap(find.text('Telegram'));
+      await tester.pump();
+      expect(find.text('Add 2'), findsOneWidget);
+      h.config.value = ([two.last], const <String>{});
+      await tester.pump();
+      expect(find.text('Add 1'), findsOneWidget);
+      await tester.tap(find.text('Add 1'));
+      await tester.pumpAndSettle();
+      expect(h.results.single, {'b'});
+    });
+
+    testWidgets('a value new to initial is chosen once and can be unticked', (
+      tester,
+    ) async {
+      final h = await open(tester, options: two);
+      expect(find.text('Add'), findsOneWidget);
+      h.config.value = (two, const {'a'});
+      await tester.pump();
+      expect(find.text('Add 1'), findsOneWidget);
+      // Same initial again (a rebuild) does not re-tick it after the user
+      // cleared it.
+      await tester.tap(find.text('Download'));
+      await tester.pump();
+      expect(find.text('Add'), findsOneWidget);
+      h.config.value = (List.of(two), const {'a'});
+      await tester.pump();
+      expect(find.text('Add'), findsOneWidget);
+      expect(
+        tester
+            .widgetList<SelectionRow>(find.byType(SelectionRow))
+            .map((r) => r.selected),
+        [false, false, false],
+      );
+    });
+
+    testWidgets('banner is above the rows and footerNote after them', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        options: two,
+        banner: const Text('Rescanned'),
+        footerNote: const Text('Missing a folder?'),
+      );
+      final banner = tester.getRect(find.text('Rescanned'));
+      final first = tester.getRect(find.text('Select all'));
+      final last = tester.getRect(find.text('Telegram'));
+      final foot = tester.getRect(find.text('Missing a folder?'));
+      expect(banner.bottom, lessThanOrEqualTo(first.top));
+      expect(foot.top, greaterThanOrEqualTo(last.bottom));
+    });
+
+    testWidgets('footerNote also follows the empty note', (tester) async {
+      await open(
+        tester,
+        options: const [],
+        footerNote: const Text('Missing a folder?'),
+      );
+      expect(
+        tester.getRect(find.text('Missing a folder?')).top,
+        greaterThanOrEqualTo(
+          tester.getRect(find.text('Every folder is chosen.')).bottom,
+        ),
+      );
+    });
+  });
 }

@@ -503,7 +503,7 @@ abstract class AppLocalizations {
   /// No description provided for @scanSetupFolderPickerHint.
   ///
   /// In en, this message translates to:
-  /// **'Folders with music that Android found.'**
+  /// **'Folders with music that Android found. Music you just copied to the phone may not be here until Android rescans.'**
   String get scanSetupFolderPickerHint;
 
   /// No description provided for @scanSetupFolderPickerEmpty.
@@ -511,6 +511,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Every folder with music is already chosen.'**
   String get scanSetupFolderPickerEmpty;
+
+  /// No description provided for @scanSetupFolderSheetLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for folders with music…'**
+  String get scanSetupFolderSheetLoading;
+
+  /// No description provided for @scanSetupNoMusicTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Android sees no music yet'**
+  String get scanSetupNoMusicTitle;
+
+  /// No description provided for @scanSetupNoMusicBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Music you just copied to the phone often does not show up until Android rescans.'**
+  String get scanSetupNoMusicBody;
+
+  /// No description provided for @scanSetupNoMusicCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Android sees no music on this phone yet. Music you just copied often does not show up until Android rescans.'**
+  String get scanSetupNoMusicCard;
+
+  /// No description provided for @scanSetupRescan.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan'**
+  String get scanSetupRescan;
+
+  /// No description provided for @scanSetupRescanRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t see your folder? Rescan'**
+  String get scanSetupRescanRow;
+
+  /// No description provided for @scanSetupRescanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescanning…'**
+  String get scanSetupRescanning;
+
+  /// No description provided for @scanSetupRescanningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Android is looking for music in the folders of internal storage and the SD card (Music and Download first).'**
+  String get scanSetupRescanningBody;
+
+  /// No description provided for @scanSetupRescanningSheetNote.
+  ///
+  /// In en, this message translates to:
+  /// **'If you close this sheet, Android keeps scanning.'**
+  String get scanSetupRescanningSheetNote;
+
+  /// No description provided for @scanSetupRescanDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Rescanned · Android found 1 song.} other{Rescanned · Android found {count} songs.}}'**
+  String scanSetupRescanDone(int count);
+
+  /// No description provided for @scanSetupStillNoMusicTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Still no music found'**
+  String get scanSetupStillNoMusicTitle;
+
+  /// No description provided for @scanSetupStillNoMusicBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Android rescanned but found no music files.'**
+  String get scanSetupStillNoMusicBody;
+
+  /// No description provided for @scanSetupStillNoMusicTipShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Music must be in shared storage (for example Music or Download), not inside another app\'s Android › data folder.'**
+  String get scanSetupStillNoMusicTipShared;
+
+  /// No description provided for @scanSetupStillNoMusicTipRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart the phone so Android rescans all storage, then reopen Kanaru.'**
+  String get scanSetupStillNoMusicTipRestart;
+
+  /// No description provided for @scanSetupStillNoMusicCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Android still sees no music.'**
+  String get scanSetupStillNoMusicCard;
+
+  /// No description provided for @scanSetupRescanFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not rescan.'**
+  String get scanSetupRescanFailed;
+
+  /// No description provided for @scanSetupFolderListFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the folder list'**
+  String get scanSetupFolderListFailedTitle;
+
+  /// No description provided for @scanSetupFolderListFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Android did not answer in time or reported an error.'**
+  String get scanSetupFolderListFailedBody;
+
+  /// No description provided for @scanSetupExclusionSheetLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for sub-folders…'**
+  String get scanSetupExclusionSheetLoading;
+
+  /// No description provided for @scanSetupExclusionListFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the sub-folder list'**
+  String get scanSetupExclusionListFailed;
 
   /// No description provided for @scanSetupSheetAdd.
   ///
@@ -581,7 +701,7 @@ abstract class AppLocalizations {
   /// No description provided for @scanSetupExclusionPickerHint.
   ///
   /// In en, this message translates to:
-  /// **'Sub-folders of the music folders you chose.'**
+  /// **'Sub-folders with music that Android has seen, inside the music folders you chose.'**
   String get scanSetupExclusionPickerHint;
 
   /// No description provided for @scanSetupExclusionPickerEmpty.

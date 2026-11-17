@@ -8,6 +8,7 @@ import '../../../library/domain/music_folder.dart';
 import '../../../library/state/music_folders_providers.dart';
 import '../../../library/state/scan/display_volumes_provider.dart';
 import '../../../library/state/scan/folder_candidates_provider.dart';
+import '../../../library/state/scan/media_index_refresh.dart';
 import '../../../library/state/scan/music_folder_editor_provider.dart';
 import '../../../library/ui/scan/folder_display_path.dart';
 import '../../../platform/domain/local_audio_catalog.dart';
@@ -15,6 +16,8 @@ import '../../../platform/domain/media_permissions.dart';
 import '../../../platform/state/local_audio_catalog_provider.dart';
 import '../../../platform/state/media_permissions_provider.dart';
 import 'folder_actions.dart';
+import 'folder_sheet_states.dart' show refreshSeenFrom;
+import 'no_music_card_note.dart';
 import 'section_states.dart';
 
 final _log = Logger('screens.first_run');
@@ -30,6 +33,15 @@ class MusicFoldersSection extends ConsumerStatefulWidget {
 
 class _MusicFoldersSectionState extends ConsumerState<MusicFoldersSection> {
   bool _busy = false;
+
+  /// Refresh results at or below this run id predate the section.
+  late final int _refreshSeenFrom;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshSeenFrom = refreshSeenFrom(ref.read(mediaIndexRefreshProvider));
+  }
 
   Future<void> _add() async {
     setState(() => _busy = true);
@@ -70,12 +82,26 @@ class _MusicFoldersSectionState extends ConsumerState<MusicFoldersSection> {
       subtitle: Text(blocked ? l10n.scanSetupFoldersNeedPermission : hint),
       children: blocked
           ? const [SetupNote(child: Text('—'))]
-          : _rows(l10n, android),
+          : _rows(
+              l10n,
+              android,
+              audioGranted:
+                  permission != null &&
+                  permission.applies &&
+                  permission.audio == MediaPermissionStatus.granted,
+            ),
     );
   }
 
-  List<Widget> _rows(AppLocalizations l10n, bool android) {
+  List<Widget> _rows(
+    AppLocalizations l10n,
+    bool android, {
+    required bool audioGranted,
+  }) {
     final folders = ref.watch(musicFoldersProvider);
+    // Android is indexing: the card and the sheet share one run.
+    final scanning =
+        android && ref.watch(mediaIndexRefreshProvider) is IndexRefreshRunning;
     return [
       folders.when(
         loading: () => const SetupNote(child: SectionSpinner()),
@@ -88,7 +114,7 @@ class _MusicFoldersSectionState extends ConsumerState<MusicFoldersSection> {
         data: (list) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (list.isEmpty) _emptyNote(l10n, android),
+            if (list.isEmpty) _emptyNote(l10n, android, audioGranted),
             for (final folder in list) _row(l10n, folder),
           ],
         ),
@@ -98,16 +124,19 @@ class _MusicFoldersSectionState extends ConsumerState<MusicFoldersSection> {
         label: Text(
           android ? l10n.scanSetupAddFolder : l10n.scanSetupAddFolderDialog,
         ),
-        onTap: _busy ? null : _add,
+        onTap: _busy || scanning ? null : _add,
       ),
     ];
   }
 
-  Widget _emptyNote(AppLocalizations l10n, bool android) {
+  Widget _emptyNote(AppLocalizations l10n, bool android, bool audioGranted) {
+    if (android) {
+      return NoMusicCardNote(autoRun: audioGranted, seenFrom: _refreshSeenFrom);
+    }
     final suggestion = ref.watch(suggestedFolderProvider).value;
     return SetupNote(
       child: Text(
-        !android && suggestion == null
+        suggestion == null
             ? l10n.scanSetupFoldersNoSystemMusic
             : l10n.scanSetupFoldersEmpty,
       ),
