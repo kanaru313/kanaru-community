@@ -884,6 +884,18 @@ abstract class AppLocalizations {
   /// **'Could not play “{title}”'**
   String playbackNoticeFailed(String title);
 
+  /// No description provided for @playbackStopAndClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop playback'**
+  String get playbackStopAndClear;
+
+  /// No description provided for @playbackStoppedAnnouncement.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback stopped'**
+  String get playbackStoppedAnnouncement;
+
   /// No description provided for @playbackNoticeFirstTrack.
   ///
   /// In en, this message translates to:

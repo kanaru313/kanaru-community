@@ -519,6 +519,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get playbackStopAndClear => 'Stop playback';
+
+  @override
+  String get playbackStoppedAnnouncement => 'Playback stopped';
+
+  @override
   String get playbackNoticeFirstTrack => 'This is the first track';
 
   @override

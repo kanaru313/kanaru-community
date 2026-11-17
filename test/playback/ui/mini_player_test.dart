@@ -583,4 +583,221 @@ void main() {
       handle.dispose();
     });
   });
+
+  group('swipe down, swipe up and actions', () {
+    Future<void> settle(WidgetTester tester, UiHost host) async {
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await host.letStreamsArrive(tester);
+      await host.run(tester, () async {});
+      await tester.pump(const Duration(seconds: 1));
+      await host.letStreamsArrive(tester);
+    }
+
+    /// A vertical drag of [dy] over [ms], released in the real zone so the
+    /// stop it may start can finish.
+    Future<void> swipe(
+      WidgetTester tester,
+      UiHost host,
+      double dy, {
+      int ms = 400,
+      int steps = 6,
+    }) async {
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      for (var i = 1; i <= steps; i++) {
+        await g.moveBy(
+          Offset(0, dy / steps),
+          timeStamp: Duration(milliseconds: ms * i ~/ steps),
+        );
+      }
+      await host.run(
+        tester,
+        () => g.up(timeStamp: Duration(milliseconds: ms + 1)),
+      );
+      await settle(tester, host);
+    }
+
+    Future<void> expectStopped(UiHost host, WidgetTester tester) async {
+      expect(find.byType(PlayPauseButton), findsNothing);
+      expect(host.h.c.queueState.items, isEmpty);
+      final view = await tester.runAsync(() => host.h.c.queueView.first);
+      expect(view!.items, isEmpty);
+      expect(host.h.settings.read('playback.queue.current_entry'), isNull);
+      expect(host.h.settings.read('playback.position_ms'), 0);
+    }
+
+    testWidgets('down past 48 dp stops, clears the queue and the session', (
+      tester,
+    ) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await swipe(tester, host, 60);
+      await expectStopped(host, tester);
+      expect(host.h.notices, isEmpty, reason: 'no snack bar, no notice');
+    });
+
+    testWidgets('down short of 48 dp and slow springs back', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      final before = tester.getTopLeft(find.byType(MiniPlayerBody));
+      await swipe(tester, host, 30);
+      expect(host.h.c.queueState.items, hasLength(6));
+      expect(host.h.c.intent, PlayIntent.playing);
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)), before);
+    });
+
+    testWidgets('a fast fling over 20 dp stops', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await swipe(tester, host, 20, ms: 24, steps: 3);
+      await expectStopped(host, tester);
+    });
+
+    testWidgets('reduced motion: stopped after one pump', (tester) async {
+      final host = await pumpWithPlayer(
+        tester,
+        Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: _player([]),
+          ),
+        ),
+      );
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(0, 70));
+      await host.run(tester, g.up);
+      await tester.pump();
+      await host.letStreamsArrive(tester);
+      await expectStopped(host, tester);
+      // Providers of the gone card close their streams on a zero timer.
+      await tester.pump(const Duration(milliseconds: 50));
+    });
+
+    testWidgets('the card leaving the tree in the middle of the drop still '
+        'stops playback', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(0, 70));
+      await host.run(tester, g.up);
+      await tester.pump(const Duration(milliseconds: 40));
+      // The card is built and disposed outside the fake zone, as in the app,
+      // so the stop it starts from dispose can reach the database.
+      await tester.runAsync(() => tester.pumpWidget(const SizedBox()));
+      await tester.runAsync(host.h.settle);
+      expect(host.h.c.queueState.items, isEmpty);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a failing clear keeps the queue and the card comes back', (
+      tester,
+    ) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await host.run(tester, () async {
+        await host.h.db.customStatement(
+          'CREATE TRIGGER no_delete BEFORE DELETE ON queue_entries '
+          "BEGIN SELECT RAISE(ABORT, 'boom'); END",
+        );
+      });
+      await swipe(tester, host, 70);
+      expect(host.h.c.queueState.items, hasLength(6));
+      expect(find.byType(PlayPauseButton), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the stop is announced once to screen readers', (tester) async {
+      final messages = <Object?>[];
+      tester.binding.defaultBinaryMessenger
+          .setMockDecodedMessageHandler<dynamic>(SystemChannels.accessibility, (
+            message,
+          ) async {
+            messages.add(message);
+            return null;
+          });
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger
+            .setMockDecodedMessageHandler<dynamic>(
+              SystemChannels.accessibility,
+              null,
+            ),
+      );
+      final host = await pumpWithPlayer(tester, _player([]));
+      await swipe(tester, host, 60);
+      final announcements = [
+        for (final m in messages)
+          if (m is Map && m['type'] == 'announce') m['data'] as Map,
+      ];
+      expect(announcements, hasLength(1));
+      expect(announcements.single['message'], 'Playback stopped');
+    });
+
+    testWidgets('up follows the finger by at most 30 dp and opens past it', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      final rest = tester.getTopLeft(find.byType(MiniPlayerBody)).dy;
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(0, -20));
+      await tester.pump();
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)).dy, rest - 20);
+      await g.moveBy(const Offset(0, -40));
+      await tester.pump();
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)).dy, rest - 30);
+      await host.run(tester, g.up);
+      await settle(tester, host);
+      expect(events, ['open']);
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)).dy, rest);
+    });
+
+    testWidgets('up short of 30 dp does not open and the card returns', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      final rest = tester.getTopLeft(find.byType(MiniPlayerBody)).dy;
+      await swipe(tester, host, -20);
+      expect(events, isEmpty);
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)).dy, rest);
+    });
+
+    group('semantics actions', () {
+      Future<void> perform(
+        WidgetTester tester,
+        UiHost host,
+        String label,
+      ) async {
+        final data = tester
+            .getSemantics(
+              find.byWidgetPredicate(
+                (w) => w is Semantics && w.properties.label == 'Player',
+              ),
+            )
+            .getSemanticsData();
+        final id = data.customSemanticsActionIds!.firstWhere(
+          (id) => CustomSemanticsAction.getAction(id)!.label == label,
+        );
+        await host.run(tester, () async {
+          tester.semantics.performAction(
+            find.semantics.byPredicate((node) {
+              final data = node.getSemanticsData();
+              return data.label.contains('Player') &&
+                  data.customSemanticsActionIds != null;
+            }),
+            SemanticsAction.customAction,
+            args: id,
+          );
+        });
+        await settle(tester, host);
+      }
+
+      testWidgets('Next, Previous and Stop playback', (tester) async {
+        final handle = tester.ensureSemantics();
+        final host = await pumpWithPlayer(tester, _player([]));
+        await perform(tester, host, 'Next');
+        expect(host.h.c.queueState.current, 1);
+        await perform(tester, host, 'Previous');
+        expect(host.h.c.queueState.current, 0);
+        await perform(tester, host, 'Stop playback');
+        await expectStopped(host, tester);
+        handle.dispose();
+      });
+    });
+  });
 }

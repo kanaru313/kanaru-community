@@ -305,6 +305,8 @@
       }
     }
   },
+  "playbackStopAndClear": "Dừng phát",
+  "playbackStoppedAnnouncement": "Đã dừng phát",
   "playbackNoticeFirstTrack": "Đây là bài đầu",
   "playbackNoticeQueueEnd": "Hết hàng đợi",
   "playbackNoticeQueueEmpty": "Hàng đợi trống",
