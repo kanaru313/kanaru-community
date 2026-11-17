@@ -7,19 +7,16 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
-import '../../media/domain/cover_files.dart';
-import '../../media/domain/track_id.dart';
 import '../state/playback_position_provider.dart';
 import '../state/playback_providers.dart';
-import '../state/track_info_providers.dart';
 import 'flight_source.dart';
+import 'mini_player_body.dart';
 import 'play_pause_button.dart';
-import 'track_cover.dart';
 import 'transport_buttons.dart';
 
 const miniRadius = BorderRadius.all(Radius.circular(14));
 
-/// Mobile mini player: 64 dp card above the bottom bar, shown only while a
+/// Mobile mini player: 72 dp card above the bottom bar, shown only while a
 /// track is current.
 ///
 /// - Tap, Enter or Space: [onOpen]. A swipe up of more than 30 dp: [onOpen].
@@ -33,7 +30,7 @@ class MiniPlayer extends ConsumerStatefulWidget {
     this.flight,
   });
 
-  static const double height = 64;
+  static const double height = 72;
   static const double margin = 8;
   static const double swipeDistance = 30;
   static const double longPressSlop = 10;
@@ -104,6 +101,13 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
     );
     if (trackId == null) return const SizedBox.shrink();
     final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    // The queue flight starts from this look (text sizes, cover corners).
+    widget.flight?.look = FlightLook(
+      title: KMediaCardMetrics.titleStyle(text),
+      artist: KMediaCardMetrics.lineStyle(text),
+      coverRadius: KMediaCard.coverRadius,
+    );
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(MiniPlayer.margin),
@@ -134,23 +138,30 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
               height: MiniPlayer.height,
               child: Stack(
                 children: [
+                  // The whole card takes the tap and the long press. Play and
+                  // Next sit above it and take their own touches first, so
+                  // holding either never reaches this layer.
+                  Positioned.fill(
+                    child: Listener(
+                      onPointerDown: _onDown,
+                      onPointerMove: _onMove,
+                      onPointerUp: (_) => _cancelLongPress(),
+                      onPointerCancel: (_) => _cancelLongPress(),
+                      child: KPressable(
+                        radius: miniRadius,
+                        onTap: _onTap,
+                        child: const SizedBox.expand(),
+                      ),
+                    ),
+                  ),
                   Row(
                     children: [
-                      // Only the body (cover and titles) takes the tap and the
-                      // long press; holding Play or Next does not open the queue.
                       Expanded(
-                        child: Listener(
-                          onPointerDown: _onDown,
-                          onPointerMove: _onMove,
-                          onPointerUp: (_) => _cancelLongPress(),
-                          onPointerCancel: (_) => _cancelLongPress(),
-                          child: KPressable(
-                            radius: miniRadius,
-                            onTap: _onTap,
-                            child: _Body(
-                              trackId: trackId,
-                              flight: widget.flight,
-                            ),
+                        child: IgnorePointer(
+                          child: MiniPlayerBody(
+                            trackId: trackId,
+                            flight: widget.flight,
+                            cardHeight: MiniPlayer.height,
                           ),
                         ),
                       ),
@@ -175,69 +186,6 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _Body extends ConsumerWidget {
-  const _Body({required this.trackId, required this.flight});
-
-  final TrackId trackId;
-  final FlightSource? flight;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final info = ref.watch(trackInfoProvider(trackId)).value;
-    final text = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
-    Widget wrap(FlightPiece piece, Widget child) => flight == null
-        ? child
-        : FlightPieceHost(source: flight!, piece: piece, child: child);
-    return Padding(
-      padding: const EdgeInsets.only(left: KSpace.x2),
-      child: Row(
-        spacing: KSpace.x3,
-        children: [
-          wrap(
-            FlightPiece.cover,
-            TrackCover(
-              coverKey: info?.coverKey,
-              seed: info?.coverSeed ?? '',
-              size: CoverSize.thumb,
-              dimension: 48,
-              radius: KRadius.xs,
-            ),
-          ),
-          Expanded(
-            child: wrap(
-              FlightPiece.text,
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    info?.title ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (info?.artist != null)
-                    Text(
-                      info!.artist!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

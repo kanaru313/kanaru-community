@@ -1,13 +1,13 @@
 import 'package:flutter/semantics.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/services.dart';
-import 'package:kanaru/src/database/app_database.dart';
 import 'package:kanaru/src/database/tables.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/ui/mini_player.dart';
+import 'package:kanaru/src/playback/ui/mini_player_body.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -69,13 +69,12 @@ void main() {
   });
 
   for (final scale in [1.5, 2.0]) {
-    testWidgets('title uses the title role and fits at text scale $scale', (
+    testWidgets('title uses the song row size and fits at text scale $scale', (
       tester,
     ) async {
       await pumpWithPlayer(tester, _player([]), textScale: scale);
-      final text = Theme.of(tester.element(find.text('T0'))).textTheme;
       final title = tester.widget<Text>(find.text('T0'));
-      expect(title.style?.fontSize, text.titleSmall?.fontSize);
+      expect(title.style?.fontSize, KMediaCardMetrics.titleSize);
       expect(title.style?.fontWeight, FontWeight.w600);
       expect(tester.takeException(), isNull);
     });
@@ -101,10 +100,126 @@ void main() {
     expect(cover.seed, AlbumKey('artist', 'album').encode());
   });
 
+  Finder card() => find.byWidgetPredicate(
+    (w) => w is SizedBox && w.height == MiniPlayer.height,
+  );
+
+  testWidgets('card is 72 dp high with a 56 dp cover of the row radius', (
+    tester,
+  ) async {
+    await pumpWithPlayer(tester, _player([]));
+    expect(MiniPlayer.height, 72);
+    expect(tester.getSize(card()).height, 72);
+    final cover = tester.widget<TrackCover>(find.byType(TrackCover));
+    expect(cover.dimension, KMediaCard.coverSize);
+    expect(cover.radius, KMediaCard.coverRadius);
+  });
+
+  for (final scale in [1.5, 2.0, 3.0]) {
+    testWidgets('title and artist stay in a 72 dp card at text scale $scale', (
+      tester,
+    ) async {
+      final host = await pumpWithPlayer(
+        tester,
+        _player([]),
+        play: false,
+        textScale: scale,
+      );
+      await host.run(tester, () async {
+        await host.h.db.customStatement(
+          "UPDATE tracks SET artist = 'Art' WHERE title = 'T0'",
+        );
+        await host.h.play();
+      });
+      await host.letStreamsArrive(tester);
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(card()).height, 72);
+      final cardRect = tester.getRect(card());
+      expect(
+        tester.getRect(find.text('T0')).top,
+        greaterThanOrEqualTo(cardRect.top),
+      );
+      expect(
+        tester.getRect(find.text('Art')).bottom,
+        lessThanOrEqualTo(cardRect.bottom),
+      );
+      final shown = MediaQuery.textScalerOf(tester.element(find.text('T0')));
+      expect(
+        shown.scale(100) / 100,
+        lessThanOrEqualTo(
+          MiniPlayerBody.maxTextScale(MiniPlayer.height) + 1e-9,
+        ),
+      );
+    });
+  }
+
+  testWidgets('tap on the gap between the text and Pause opens Now Playing', (
+    tester,
+  ) async {
+    final events = <String>[];
+    await pumpWithPlayer(tester, _player(events));
+    final pause = tester.getTopLeft(byIconButton('Pause'));
+    await tester.tapAt(Offset(pause.dx - 6, pause.dy + 10));
+    await tester.pump();
+    expect(events, ['open']);
+  });
+
+  testWidgets('tapping Pause only pauses, it does not open Now Playing', (
+    tester,
+  ) async {
+    final events = <String>[];
+    final host = await pumpWithPlayer(tester, _player(events));
+    await host.tap(tester, byIconButton('Pause'));
+    expect(events, isEmpty);
+    expect(host.h.c.intent, PlayIntent.paused);
+  });
+
+  testWidgets('holding Pause leaves the card untouched', (tester) async {
+    final events = <String>[];
+    await pumpWithPlayer(tester, _player(events));
+    final gesture = await tester.startGesture(
+      tester.getCenter(byIconButton('Pause')),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    final scale = tester.widget<AnimatedScale>(
+      find.descendant(
+        of: find.byType(KPressable),
+        matching: find.byType(AnimatedScale),
+      ),
+    );
+    expect(scale.scale, 1);
+    await tester.pump(const Duration(milliseconds: 700));
+    await gesture.up();
+    await tester.pump();
+    expect(events, isEmpty);
+  });
+
+  testWidgets('a second finger on the card while Pause is held opens nothing', (
+    tester,
+  ) async {
+    final events = <String>[];
+    await pumpWithPlayer(tester, _player(events));
+    final first = await tester.startGesture(
+      tester.getCenter(byIconButton('Pause')),
+    );
+    final second = await tester.startGesture(
+      tester.getCenter(find.text('T0')),
+      pointer: 2,
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    await second.up();
+    // Cancel, not release: releasing Pause would run controller work that
+    // needs real time.
+    await first.cancel();
+    await tester.pump(const Duration(milliseconds: 700));
+    // The second finger is a tap on the card, once; no queue from the first.
+    expect(events, isNot(contains('queue')));
+  });
+
   testWidgets('tap opens Now Playing', (tester) async {
     final events = <String>[];
     await pumpWithPlayer(tester, _player(events));
-    await tester.tap(find.text('T0'));
+    await tester.tapAt(tester.getCenter(find.text('T0')));
     await tester.pump();
     expect(events, ['open']);
   });
@@ -112,10 +227,16 @@ void main() {
   testWidgets('swipe up more than 30 dp opens, less does not', (tester) async {
     final events = <String>[];
     await pumpWithPlayer(tester, _player(events));
-    await tester.drag(find.text('T0'), const Offset(0, -20));
+    await tester.dragFrom(
+      tester.getCenter(find.text('T0')),
+      const Offset(0, -20),
+    );
     await tester.pump();
     expect(events, isEmpty);
-    await tester.drag(find.text('T0'), const Offset(0, -80));
+    await tester.dragFrom(
+      tester.getCenter(find.text('T0')),
+      const Offset(0, -80),
+    );
     await tester.pump();
     expect(events, ['open']);
   });

@@ -52,7 +52,7 @@ List<KFlightLayer> queueFlightLayers(
     to: strip.cover,
     builder: (context, rect, t) => GestureDetector(
       onTap: onTapPiece,
-      child: StripCover(rect: rect, t: t),
+      child: StripCover(rect: rect, t: t, look: source.look),
     ),
   ),
   KFlightLayer(
@@ -61,7 +61,7 @@ List<KFlightLayer> queueFlightLayers(
     builder: (context, rect, t) => GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTapPiece,
-      child: StripText(t: t),
+      child: StripText(t: t, look: source.look),
     ),
   ),
   KFlightLayer(
