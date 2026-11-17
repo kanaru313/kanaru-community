@@ -1,8 +1,8 @@
+import 'package:flutter/semantics.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
-import 'k_engage_region.dart';
 
 /// Tile of an album or artist grid: a square cover (or a round photo) as wide
 /// as the tile, a title and a subtitle under it. Both texts take one line, so
@@ -21,8 +21,9 @@ class KGridCard extends StatelessWidget {
     this.circle = false,
     this.onTap,
     this.onLongPress,
-    this.more,
-  });
+    this.onMenu,
+    this.menuLabel,
+  }) : assert(onMenu == null || menuLabel != null, 'onMenu needs menuLabel');
 
   /// Draws the cover in a square of the given side.
   final Widget Function(BuildContext context, double side) coverBuilder;
@@ -34,8 +35,13 @@ class KGridCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
-  /// Button over the cover's top-right corner (the ⋮ of the item).
-  final Widget? more;
+  /// Opens the item's menu. The card has no ⋮ button: the caller wraps it in
+  /// a context region (long press, right click); this gives screen readers
+  /// the same menu as a custom action named [menuLabel].
+  final VoidCallback? onMenu;
+
+  /// Name of the screen-reader menu action (needed with [onMenu]).
+  final String? menuLabel;
 
   static const double _titleSize = 14;
   static const double _subtitleSize = 12;
@@ -53,8 +59,12 @@ class KGridCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final align = circle ? TextAlign.center : TextAlign.start;
-    final card = Semantics(
+    final menuLabel = this.menuLabel;
+    return Semantics(
       button: onTap != null,
+      customSemanticsActions: onMenu == null || menuLabel == null
+          ? null
+          : {CustomSemanticsAction(label: menuLabel): onMenu!},
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
@@ -105,20 +115,6 @@ class KGridCard extends StatelessWidget {
             );
           },
         ),
-      ),
-    );
-    final button = more;
-    if (button == null) return card;
-    return KEngageRegion(
-      builder: (context, engaged) => Stack(
-        children: [
-          card,
-          Positioned(
-            top: KSpace.x1,
-            right: KSpace.x1,
-            child: KCardCorner(engaged: engaged, child: button),
-          ),
-        ],
       ),
     );
   }

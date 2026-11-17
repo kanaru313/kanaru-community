@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/semantics.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../tokens/k_icon_size.dart';
@@ -6,7 +9,6 @@ import '../../tokens/k_space.dart';
 import '../k_cover.dart';
 import '../k_detail_title.dart';
 import '../k_gap.dart';
-import 'k_engage_region.dart';
 
 /// Pastel fill and ink for [seed]: the colours a cover placeholder gets, so a
 /// genre tile and its placeholder agree.
@@ -26,8 +28,9 @@ class KColorTile extends StatelessWidget {
     this.subtitle,
     this.onTap,
     this.onLongPress,
-    this.more,
-  });
+    this.onMenu,
+    this.menuLabel,
+  }) : assert(onMenu == null || menuLabel != null, 'onMenu needs menuLabel');
 
   /// Picks the colour (the name, or a key).
   final String seed;
@@ -37,8 +40,13 @@ class KColorTile extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
-  /// Button over the top-right corner (the ⋮ of the item).
-  final Widget? more;
+  /// Opens the item's menu. The tile has no ⋮ button: the caller wraps it in
+  /// a context region (long press, right click); this gives screen readers
+  /// the same menu as a custom action named [menuLabel].
+  final VoidCallback? onMenu;
+
+  /// Name of the screen-reader menu action (needed with [onMenu]).
+  final String? menuLabel;
 
   static const double minHeight = 88;
 
@@ -46,15 +54,56 @@ class KColorTile extends StatelessWidget {
   /// scale.
   static const double _watermark = minHeight - KSpace.x6;
 
-  @override
-  Widget build(BuildContext context) =>
-      more == null ? _tile(context, false) : KEngageRegion(builder: _tile);
+  static const double _padding = KSpace.x4;
 
-  Widget _tile(BuildContext context, bool engaged) {
+  /// Sizes and line heights used when the theme style leaves them out, so the
+  /// drawn text and [extentOf] always use the same font size x height.
+  static const double _titleSize = 16;
+  static const double _titleHeight = 1.5;
+  static const double _subtitleSize = 12;
+  static const double _subtitleHeight = 1.35;
+
+  static TextStyle _titleStyle(TextTheme theme) {
+    final base = theme.titleMedium ?? const TextStyle();
+    return base.copyWith(
+      fontWeight: FontWeight.w800,
+      fontSize: base.fontSize ?? _titleSize,
+      height: base.height ?? _titleHeight,
+    );
+  }
+
+  static TextStyle _subtitleStyle(TextTheme theme) {
+    final base = theme.bodySmall ?? const TextStyle();
+    return base.copyWith(
+      fontSize: base.fontSize ?? _subtitleSize,
+      height: base.height ?? _subtitleHeight,
+    );
+  }
+
+  /// Height a tile needs under [scaler] for a two-line name and a one-line
+  /// count: padding plus those lines, never under [minHeight]. Give it to
+  /// `KCollectionGrid.footerExtent`; the tile draws its text from the same
+  /// styles, so the two cannot drift.
+  static double extentOf(TextScaler scaler, TextTheme theme) {
+    final title = _titleStyle(theme);
+    final sub = _subtitleStyle(theme);
+    // The text engine rounds a line up to whole pixels, so do the same.
+    double line(TextStyle style) =>
+        (scaler.scale(style.fontSize!) * style.height!).ceilToDouble();
+    final lines = 2 * line(title) + line(sub);
+    return math.max(minHeight, 2 * _padding + lines);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final menuLabel = this.menuLabel;
     final tones = _tones(context, seed);
     final textTheme = Theme.of(context).textTheme;
     return Semantics(
       button: onTap != null,
+      customSemanticsActions: onMenu == null || menuLabel == null
+          ? null
+          : {CustomSemanticsAction(label: menuLabel): onMenu!},
       child: Material(
         color: tones.fill,
         shape: KShape.of(KRadius.md),
@@ -78,7 +127,10 @@ class KColorTile extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(KSpace.x4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: KSpace.x4,
+                    vertical: _padding,
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,29 +139,21 @@ class KColorTile extends StatelessWidget {
                         title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: textTheme.titleMedium?.copyWith(
-                          color: tones.ink,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: _titleStyle(textTheme)
+                            .copyWith(color: tones.ink),
                       ),
                       if (subtitle != null)
                         Text(
                           subtitle!,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: textTheme.bodySmall?.copyWith(
-                            color: tones.ink.withValues(alpha: 0.8),
-                          ),
+                          style: _subtitleStyle(
+                            textTheme,
+                          ).copyWith(color: tones.ink.withValues(alpha: 0.8)),
                         ),
                     ],
                   ),
                 ),
-                if (more != null)
-                  Positioned(
-                    top: KSpace.x1,
-                    right: KSpace.x1,
-                    child: KCardCorner(engaged: engaged, child: more!),
-                  ),
               ],
             ),
           ),

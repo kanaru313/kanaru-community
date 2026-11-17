@@ -127,10 +127,8 @@ class ArtistCard extends StatelessWidget {
         subtitle: AppLocalizations.of(context)
             .librarySongCount(artist.trackCount),
         onTap: () => _open(context, artist),
-        more: LibraryMoreButton(
-          onPressed: ({required viaKeyboard}) =>
-              _menu(context, artist, origin, viaKeyboard: viaKeyboard),
-        ),
+        menuLabel: AppLocalizations.of(context).libraryMenuMore,
+        onMenu: () => _menu(context, artist, origin, viaKeyboard: true),
         coverBuilder: (context, side) => ArtistCover(
           itemKey: artist.key,
           name: artist.name,

@@ -106,6 +106,10 @@ String collectionCountText({
   return plain(shown);
 }
 
+/// Colour seed of a language, shared by its grid tile and its list row. The
+/// unknown language (null code) has a fixed seed.
+String languageColorSeed(String? code) => code ?? '_unknown';
+
 /// Icon block of a genre or language row: a [KMediaCard.coverSize] square with
 /// rounded corners and a centred icon.
 class CategoryIcon extends StatelessWidget {
@@ -113,12 +117,14 @@ class CategoryIcon extends StatelessWidget {
   const CategoryIcon.genre({super.key, required String this.genre})
     : icon = KIcons.genres;
 
-  /// Language block; [known] false (the "unknown" row) shows the help icon.
-  const CategoryIcon.language({super.key, required bool known})
-    : genre = null,
-      icon = known ? KIcons.languages : KIcons.help;
+  /// Language block: colours seeded by [languageColorSeed] of [code], the
+  /// same as its grid tile; the "unknown" language (null code) shows the help
+  /// icon.
+  CategoryIcon.language({super.key, required String? code})
+    : genre = languageColorSeed(code),
+      icon = code == null ? KIcons.help : KIcons.languages;
 
-  /// Seed of the genre colours; null = the language look.
+  /// Seed of the colours of the block (genre name or language seed).
   final String? genre;
   final IconData icon;
 

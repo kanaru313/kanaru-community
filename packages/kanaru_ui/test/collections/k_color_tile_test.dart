@@ -1,3 +1,4 @@
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -189,5 +190,119 @@ void main() {
       isSemantics(isHeader: true, label: 'Indie'),
     );
     handle.dispose();
+  });
+
+  testWidgets('the menu is a screen-reader action, no button', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    final handle = tester.ensureSemantics();
+    var menus = 0;
+    await tester.pumpWidget(
+      host(
+        SizedBox(
+          width: 150,
+          child: KColorTile(
+            seed: 'x',
+            title: 'Rock',
+            icon: KIcons.genres,
+            onMenu: () => menus++,
+            menuLabel: 'More options',
+          ),
+        ),
+      ),
+    );
+    expect(find.byType(IconButton), findsNothing);
+    final node = tester.getSemantics(find.byType(KColorTile));
+    final id = node.getSemanticsData().customSemanticsActionIds!.single;
+    expect(CustomSemanticsAction.getAction(id)!.label, 'More options');
+    tester.semantics.performAction(
+      find.semantics.byLabel(RegExp('Rock')),
+      SemanticsAction.customAction,
+      args: id,
+    );
+    expect(menus, 1);
+    handle.dispose();
+  });
+
+  for (final scale in [1.0, 2.0]) {
+    testWidgets('two-line name and count fit extentOf (text x$scale)', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      late double extent;
+      await tester.pumpWidget(
+        host(
+          Builder(
+            builder: (context) {
+              extent = KColorTile.extentOf(
+                MediaQuery.textScalerOf(context),
+                Theme.of(context).textTheme,
+              );
+              return Align(
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: 150,
+                  height: extent,
+                  child: const KColorTile(
+                    seed: 'vie',
+                    title:
+                        'Tiếng Việt Nam miền Nam · Vietnamese của người Việt',
+                    subtitle: '1 234 bài hát',
+                    icon: KIcons.genres,
+                  ),
+                ),
+              );
+            },
+          ),
+          textScale: scale,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(extent, greaterThanOrEqualTo(KColorTile.minHeight));
+      expect(tester.getSize(find.byType(KColorTile)).height, extent);
+    });
+  }
+
+  testWidgets('a text theme without font sizes still lays out and fits', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    late double extent;
+    await tester.pumpWidget(
+      host(
+        Builder(
+          builder: (context) => Theme(
+            data: Theme.of(context).copyWith(
+              textTheme: const TextTheme(
+                titleMedium: TextStyle(fontWeight: FontWeight.w600),
+                bodySmall: TextStyle(),
+              ),
+            ),
+            child: Builder(
+              builder: (context) {
+                extent = KColorTile.extentOf(
+                  MediaQuery.textScalerOf(context),
+                  Theme.of(context).textTheme,
+                );
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: SizedBox(
+                    width: 150,
+                    height: extent,
+                    child: const KColorTile(
+                      seed: 'vie',
+                      title: 'Tiếng Việt Nam miền Nam · Vietnamese',
+                      subtitle: '1 234 bài hát',
+                      icon: KIcons.genres,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(extent, greaterThanOrEqualTo(KColorTile.minHeight));
   });
 }

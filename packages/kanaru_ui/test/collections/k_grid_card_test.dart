@@ -1,4 +1,4 @@
-import 'package:flutter/gestures.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -100,11 +100,12 @@ void main() {
     );
   });
 
-  testWidgets('the more button shows at once on mobile and runs', (
+  testWidgets('no more button; the menu is a screen-reader action', (
     tester,
   ) async {
     useWindow(tester, const Size(400, 800));
-    var taps = 0;
+    final handle = tester.ensureSemantics();
+    var menus = 0;
     await tester.pumpWidget(
       host(
         SizedBox(
@@ -112,51 +113,42 @@ void main() {
           child: KGridCard(
             title: 'T',
             coverBuilder: (context, side) => SizedBox.square(dimension: side),
-            more: IconButton(
-              tooltip: 'More',
-              onPressed: () => taps++,
-              icon: const Icon(KIcons.moreVert),
-            ),
+            onMenu: () => menus++,
+            menuLabel: 'More options',
           ),
         ),
       ),
     );
-    await tester.tap(find.byTooltip('More'));
-    expect(taps, 1);
+    expect(find.byType(IconButton), findsNothing);
+    final node = tester.getSemantics(find.byType(KGridCard));
+    final data = node.getSemanticsData();
+    final id = data.customSemanticsActionIds!.single;
+    expect(CustomSemanticsAction.getAction(id)!.label, 'More options');
+    tester.semantics.performAction(
+      find.semantics.byLabel(RegExp('^T')),
+      SemanticsAction.customAction,
+      args: id,
+    );
+    expect(menus, 1);
+    handle.dispose();
   });
 
-  testWidgets('on desktop the more button waits for the pointer', (
-    tester,
-  ) async {
-    useWindow(tester, const Size(1300, 900));
-    var taps = 0;
+  testWidgets('without onMenu the card has no custom action', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    final handle = tester.ensureSemantics();
     await tester.pumpWidget(
       host(
-        Align(
-          alignment: Alignment.topLeft,
-          child: SizedBox(
-            width: 180,
-            child: KGridCard(
-              title: 'T',
-              coverBuilder: (context, side) => SizedBox.square(dimension: side),
-              more: IconButton(
-                tooltip: 'More',
-                onPressed: () => taps++,
-                icon: const Icon(KIcons.moreVert),
-              ),
-            ),
+        SizedBox(
+          width: 180,
+          child: KGridCard(
+            title: 'T',
+            coverBuilder: (context, side) => SizedBox.square(dimension: side),
           ),
         ),
       ),
     );
-    await tester.tap(find.byTooltip('More'), warnIfMissed: false);
-    expect(taps, 0);
-    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
-    await mouse.addPointer(location: Offset.zero);
-    addTearDown(mouse.removePointer);
-    await mouse.moveTo(tester.getCenter(find.text('T')));
-    await tester.pump(const Duration(milliseconds: 200));
-    await tester.tap(find.byTooltip('More'));
-    expect(taps, 1);
+    final data = tester.getSemantics(find.byType(KGridCard)).getSemanticsData();
+    expect(data.customSemanticsActionIds, anyOf(isNull, isEmpty));
+    handle.dispose();
   });
 }

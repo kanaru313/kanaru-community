@@ -130,10 +130,8 @@ class AlbumCard extends StatelessWidget {
         title: album.title,
         subtitle: albumByLine(album, separator: ' · '),
         onTap: () => _open(context, album),
-        more: LibraryMoreButton(
-          onPressed: ({required viaKeyboard}) =>
-              _menu(context, album, origin, viaKeyboard: viaKeyboard),
-        ),
+        menuLabel: AppLocalizations.of(context).libraryMenuMore,
+        onMenu: () => _menu(context, album, origin, viaKeyboard: true),
         coverBuilder: (context, side) => AlbumCover(
           itemKey: album.key,
           coverKey: album.coverKey,

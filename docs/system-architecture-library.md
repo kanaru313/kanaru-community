@@ -458,9 +458,9 @@ what the menu showed.
 - `menu_renderer.dart` maps a `MenuSpec` to `KMenuPage`s (`menu_header.dart`
   draws the picture and names). `KMenuPage` got `groupTitles` (headings) and
   `headerOpens` (the song header opens the song info page).
-- Triggers: a ⋮ on every tile, card and page (`LibraryMoreButton`, a thin
-  wrapper of `KMoreButton`; always visible on rows, on hover or focus on grid
-  cards through `KCardCorner`), right click / Menu / Shift+F10 (`KContextRegion`),
+- Triggers: a ⋮ on every row and page (`LibraryMoreButton`, a thin wrapper of
+  `KMoreButton`; grid cards have no ⋮, they give screen readers a "More
+  options" custom action), right click / Menu / Shift+F10 (`KContextRegion`),
   and a long press on an album, artist, genre, language or folder card on the
   mobile shell. A long press on a song selects it instead. The page ⋮ opens
   the same centred dialog on desktop.
@@ -685,7 +685,7 @@ Every call is awaited; a failure is logged and shows a snack bar.
   160 px minimum, artists 100 / 160) or rows (`AlbumTile`, `ArtistTile` on
   `KMediaCard`, ▶ always on mobile and on hover or focus on desktop). The view
   switch (`LibraryViewToggle`: one icon on mobile, a double button on desktop)
-  is stored per list. Albums and genres open as a grid, every other list as
+  is stored per list. Albums, genres and languages open as a grid, every other list as
   rows, on both shells. Tiles get their summary by value and watch nothing.
 - Album ▶ plays the album in track order (`playScope` with the `albumTracks`
   default sort), artist ▶ plays every song of the artist (`detailSongs`
@@ -711,9 +711,11 @@ Every call is awaited; a failure is logged and shows a snack bar.
   small icon button between the sort chip and the filter toggle (it shows the
   layout it switches to), the same on both shells. The ▶ of a collection row is
   a plain small icon, no disc.
-- Languages: `LanguageTile` (`KMediaCard`, ▶) per language with `languages`
+- Languages: grid of `KColorTile` (same sizes and view switch as Genres, seed
+  `languageColorSeed`, shared with the row's icon block) or `LanguageTile`
+  (`KMediaCard`, ▶) per language with `languages`
   (`help` for "unknown", always last), `N songs`, and the note above the list.
-  Nothing on a row says a language was detected. `languageDisplayName`: the native
+  Nothing on a row or tile says a language was detected. `languageDisplayName`: the native
   name, plus the name in the app language when it differs; an unknown code
   shows as the code.
 - Loading: in list view `collectionBody` shows skeleton rows
@@ -974,7 +976,7 @@ Sizes that the mockups give and the tokens lack (card radius 14, panel radius
 
 ## kanaru_ui collections: menu, detail, selection
 
-`KGridCard` and `KColorTile` take a `more` widget (the ⋮ of the item) laid over a corner of the card: always visible on the mobile shell, on hover or focus on desktop (`KEngageRegion`, `KCardCorner`).
+`KGridCard` and `KColorTile` have no ⋮ button: `onMenu` + `menuLabel` expose the menu to screen readers as a custom semantics action; the caller wraps the card in `KContextRegion` for long press, right click and the Menu key.
 
 | Widget | Notes |
 |---|---|

@@ -205,12 +205,8 @@ void main() {
       initial: '/library/albums',
       playback: playback,
     );
-    await tester.tap(
-      find.descendant(
-        of: find.byType(AlbumCard).first,
-        matching: find.byIcon(KIcons.moreVert),
-      ),
-    );
+    // Grid cards have no ⋮: long press opens the card's menu.
+    await tester.longPress(find.byType(AlbumCard).first);
     await pumpMenu(tester);
     // A song arrives after the menu opened: the buttons keep their ids.
     await addAlbum(h, 'Amber', 'Yan', year: 2010, tracks: 5);
@@ -230,12 +226,8 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
 
-    await tester.tap(
-      find.descendant(
-        of: find.byType(AlbumCard).first,
-        matching: find.byIcon(KIcons.moreVert),
-      ),
-    );
+    // Grid cards have no ⋮: long press opens the card's menu.
+    await tester.longPress(find.byType(AlbumCard).first);
     await pumpMenu(tester);
     await tester.tap(find.text('Add to queue'));
     await pumpMenu(tester);
