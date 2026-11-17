@@ -287,7 +287,7 @@ void main() {
       expect(find.byType(BottomSheet), findsOneWidget);
       expect(find.text('Add music folders'), findsOneWidget);
       expect(
-        find.text('Folders with music that Android found.'),
+        find.textContaining('Folders with music that Android found.'),
         findsOneWidget,
       );
       expect(

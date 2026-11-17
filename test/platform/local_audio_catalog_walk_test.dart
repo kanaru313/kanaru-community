@@ -30,10 +30,9 @@ void main() {
     tmp.deleteSync(recursive: true);
   });
 
-  File touch(String rel, {String content = 'x'}) =>
-      File('$root/$rel')
-        ..createSync(recursive: true)
-        ..writeAsStringSync(content);
+  File touch(String rel, {String content = 'x'}) => File('$root/$rel')
+    ..createSync(recursive: true)
+    ..writeAsStringSync(content);
 
   Set<String> names(Iterable<String> paths) =>
       paths.map((p) => p.substring(root.length + 1)).toSet();
@@ -79,7 +78,10 @@ void main() {
     touch('real/x.flac');
     Link('$root/alias.flac').createSync('$root/real/x.flac');
     final listing = walkAudioTree(WalkRequest(root: root));
-    expect(names(listing.audio.map((f) => f.path)), {'real/x.flac', 'alias.flac'});
+    expect(names(listing.audio.map((f) => f.path)), {
+      'real/x.flac',
+      'alias.flac',
+    });
   });
 
   test('an empty sub-folder is just empty unless it is a mount point', () {
@@ -153,13 +155,8 @@ void main() {
     touch('A/x.mp3');
     touch('A B/x.mp3');
     touch('C/A/y.mp3');
-    final listing = walkAudioTree(
-      WalkRequest(root: root, excludedKeys: {'A'}),
-    );
-    expect(
-      names(listing.audio.map((f) => f.path)),
-      {'A B/x.mp3', 'C/A/y.mp3'},
-    );
+    final listing = walkAudioTree(WalkRequest(root: root, excludedKeys: {'A'}));
+    expect(names(listing.audio.map((f) => f.path)), {'A B/x.mp3', 'C/A/y.mp3'});
     expect(listing.excludedOut, 1);
   });
 
@@ -172,16 +169,18 @@ void main() {
     expect(names(listing.audio.map((f) => f.path)), {'A/C/y.mp3'});
   });
 
-  test('dot-folders, junk folders and hidden files are skipped below the root',
-      () {
-    touch('.hidden/a.mp3');
-    touch('@eaDir/b.mp3');
-    touch('Ok/c.mp3');
-    touch('Ok/._c.mp3');
-    final listing = walkAudioTree(WalkRequest(root: root));
-    expect(names(listing.audio.map((f) => f.path)), {'Ok/c.mp3'});
-    expect(listing.skippedOut, 1);
-  });
+  test(
+    'dot-folders, junk folders and hidden files are skipped below the root',
+    () {
+      touch('.hidden/a.mp3');
+      touch('@eaDir/b.mp3');
+      touch('Ok/c.mp3');
+      touch('Ok/._c.mp3');
+      final listing = walkAudioTree(WalkRequest(root: root));
+      expect(names(listing.audio.map((f) => f.path)), {'Ok/c.mp3'});
+      expect(listing.skippedOut, 1);
+    },
+  );
 
   test('the root itself may be a dot-folder', () {
     final hidden = Directory('$root/.music')..createSync();
@@ -189,7 +188,6 @@ void main() {
     final listing = walkAudioTree(WalkRequest(root: hidden.path));
     expect(listing.audio, hasLength(1));
   });
-
 
   test('an empty root is reachable with nothing in it', () {
     final listing = walkAudioTree(WalkRequest(root: root));
@@ -200,7 +198,10 @@ void main() {
 
   test('a root that is a file is unreachable', () {
     touch('plain.mp3');
-    expect(walkAudioTree(WalkRequest(root: '$root/plain.mp3')).reachable, isFalse);
+    expect(
+      walkAudioTree(WalkRequest(root: '$root/plain.mp3')).reachable,
+      isFalse,
+    );
   });
 
   test('empty folders below a removable-media prefix are reported', () {
@@ -259,27 +260,29 @@ void main() {
       expect(runner.spawned, 1);
     });
 
-    test('a hung walk times out, is killed, and its root stays busy until exit',
-        () async {
-      final runner = WalkIsolateRunner(
-        entry: _blockedWalk,
-        timeout: const Duration(milliseconds: 200),
-      );
-      final first = await runner.run(WalkRequest(root: root));
-      expect(first.reachable, isFalse);
-      expect(first.unreachableReason, UnreachableReason.timedOut);
-      expect(runner.isBusy(root), isTrue);
+    test(
+      'a hung walk times out, is killed, and its root stays busy until exit',
+      () async {
+        final runner = WalkIsolateRunner(
+          entry: _blockedWalk,
+          timeout: const Duration(milliseconds: 200),
+        );
+        final first = await runner.run(WalkRequest(root: root));
+        expect(first.reachable, isFalse);
+        expect(first.unreachableReason, UnreachableReason.timedOut);
+        expect(runner.isBusy(root), isTrue);
 
-      final second = await runner.run(WalkRequest(root: root));
-      expect(second.reachable, isFalse);
-      expect(second.unreachableReason, UnreachableReason.busy);
-      expect(runner.spawned, 1);
+        final second = await runner.run(WalkRequest(root: root));
+        expect(second.reachable, isFalse);
+        expect(second.unreachableReason, UnreachableReason.busy);
+        expect(runner.spawned, 1);
 
-      for (var i = 0; i < 100 && runner.isBusy(root); i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-      }
-      expect(runner.isBusy(root), isFalse);
-    });
+        for (var i = 0; i < 100 && runner.isBusy(root); i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+        }
+        expect(runner.isBusy(root), isFalse);
+      },
+    );
 
     test('the catalog lists through the runner', () async {
       touch('B/x.ogg');
@@ -290,7 +293,14 @@ void main() {
       );
       expect(listing.audio, hasLength(1));
       expect(catalog.folderChoice, FolderChoice.systemDialog);
-      expect(await catalog.audioFolders(), isEmpty);
+      final folders = await catalog.audioFolders();
+      expect(folders, isA<AudioFoldersListed>());
+      expect((folders as AudioFoldersListed).folders, isEmpty);
+      expect(
+        () =>
+            catalog.refreshMediaIndex(volumeRoots: const [], folders: const []),
+        throwsUnsupportedError,
+      );
       expect(await catalog.canonicalize('$root/B/'), '$root/B');
     });
 

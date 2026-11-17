@@ -2,17 +2,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../platform/domain/local_audio_catalog.dart';
 import '../../../platform/state/local_audio_catalog_provider.dart';
+import '../../domain/scan/folder_list_state.dart';
 import '../music_folders_providers.dart';
 import 'music_folder_editor_lists.dart';
 import 'music_folder_editor_provider.dart';
 
 /// One MediaStore read of the folders that hold audio (Android), shared by
-/// every list below. It is not refreshed by edits: choosing folders does not
-/// change what MediaStore holds.
-final audioFoldersProvider =
-    FutureProvider.autoDispose<List<AudioFolderSummary>>(
-      (ref) => ref.watch(localAudioCatalogProvider).audioFolders(),
-    );
+/// every list below. It is not refreshed by edits (choosing folders does not
+/// change what MediaStore holds); a failed read or a media index refresh
+/// invalidates it.
+final audioFoldersProvider = FutureProvider.autoDispose<AudioFoldersResult>(
+  (ref) => ref.watch(localAudioCatalogProvider).audioFolders(),
+);
 
 /// Re-run the derived lists after an edit of folders or exclusions.
 void _afterEdits(Ref ref) {
@@ -21,39 +22,56 @@ void _afterEdits(Ref ref) {
     ..watch(musicFoldersProvider);
 }
 
-/// Android: folders that can still be added, for the add sheet.
-final folderCandidatesProvider =
-    FutureProvider.autoDispose<List<AudioFolderSummary>>((ref) async {
-      _afterEdits(ref);
-      final raw = await ref.watch(audioFoldersProvider.future);
-      return ref.watch(musicFolderEditorProvider).folderCandidates(raw: raw);
-    });
+/// Android: folders that can still be added, for the add sheet, or why there
+/// are none to list.
+final folderCandidatesProvider = FutureProvider.autoDispose<FolderListState>((
+  ref,
+) async {
+  _afterEdits(ref);
+  final raw = await ref.watch(audioFoldersProvider.future);
+  final editor = ref.watch(musicFolderEditorProvider);
+  return folderListStateOf(
+    raw,
+    (listed) => editor.folderCandidates(raw: listed),
+  );
+});
 
-/// Android: sub-folders of the chosen folders that can be excluded.
-final exclusionCandidatesProvider =
-    FutureProvider.autoDispose<List<AudioFolderSummary>>((ref) async {
-      _afterEdits(ref);
-      final raw = await ref.watch(audioFoldersProvider.future);
-      return ref.watch(musicFolderEditorProvider).exclusionCandidates(raw: raw);
-    });
+/// Android: sub-folders of the chosen folders that can be excluded, or why
+/// there are none to list.
+final exclusionCandidatesProvider = FutureProvider.autoDispose<FolderListState>(
+  (ref) async {
+    _afterEdits(ref);
+    final raw = await ref.watch(audioFoldersProvider.future);
+    final editor = ref.watch(musicFolderEditorProvider);
+    return folderListStateOf(
+      raw,
+      (listed) => editor.exclusionCandidates(raw: listed),
+    );
+  },
+);
 
-/// Android: "about N tracks" for the chosen folders; null when unknown.
+/// Android: "about N tracks" for the chosen folders; null when unknown (read
+/// failed or index empty).
 final estimatedTrackCountProvider = FutureProvider.autoDispose<int?>((
   ref,
 ) async {
   _afterEdits(ref);
   final raw = await ref.watch(audioFoldersProvider.future);
-  return ref.watch(musicFolderEditorProvider).estimatedTrackCount(raw: raw);
+  if (raw is! AudioFoldersListed) return null;
+  return ref
+      .watch(musicFolderEditorProvider)
+      .estimatedTrackCount(raw: raw.folders);
 });
 
 /// Android: track counts by absolute path for the chosen and excluded
-/// folders; null where unknown.
+/// folders; null where unknown (read failed or index empty).
 final folderCountsProvider = FutureProvider.autoDispose<Map<String, int>?>((
   ref,
 ) async {
   _afterEdits(ref);
   final raw = await ref.watch(audioFoldersProvider.future);
-  return ref.watch(musicFolderEditorProvider).subtreeCounts(raw: raw);
+  if (raw is! AudioFoldersListed) return null;
+  return ref.watch(musicFolderEditorProvider).subtreeCounts(raw: raw.folders);
 });
 
 /// The platform's suggested music folder in canonical form (so it compares

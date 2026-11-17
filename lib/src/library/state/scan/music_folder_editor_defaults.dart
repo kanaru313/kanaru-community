@@ -1,5 +1,6 @@
 import 'package:logging/logging.dart';
 
+import '../../../platform/domain/local_audio_catalog.dart';
 import '../../../platform/domain/media_permissions.dart';
 import '../../data/scan/scan_folders.dart';
 import '../../domain/music_folder.dart';
@@ -42,7 +43,12 @@ extension MusicFolderDefaults on MusicFolderEditor {
         volume: volumes.volumeOf(target.root),
         name: folderBaseName(target.root),
       );
-      for (final candidate in await catalog.audioFolders()) {
+      final listed = await catalog.audioFolders();
+      if (listed is AudioFoldersFailed) {
+        _log.warning('default exclusions skipped: ${listed.reason.name}');
+        return;
+      }
+      for (final candidate in (listed as AudioFoldersListed).folders) {
         final path = normalizeRootPath(candidate.path);
         if (folderParentPath(path) == base &&
             _defaultExclusions.contains(folderBaseName(path).toLowerCase())) {

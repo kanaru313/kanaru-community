@@ -50,14 +50,24 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
   pre-filter. `filteredOut = excludedOut + shortOut`: only the user's own
   filters may switch off the empty-root guard (never `skippedOut`, since
   `.stfolder`, `lost+found` or `@eaDir` sit in many roots). Failures are reported there, never thrown.
-- The catalog also answers `audioFolders()` (Android MediaStore folders; Linux
-  none), `suggestedMusicFolder()`, `canonicalize(path)`, `folderChoice`
+- The catalog also answers `audioFolders()` (an `AudioFoldersResult`: `AudioFoldersListed`
+  with the MediaStore folders, empty when the index holds no usable audio, or
+  `AudioFoldersFailed` with `permission` / `timedOut` / `failed`; Linux: always listed,
+  empty), `refreshMediaIndex(volumeRoots, folders)` (Android: asks the system to
+  index the top-level folders of each volume except `Android` (`Music` and `Download`
+  first), plus chosen folders, and returns `done` / `timedOut` / `failed` /
+  `unsupported`; Linux throws `UnsupportedError`), `suggestedMusicFolder()`, `canonicalize(path)`, `folderChoice`
   (`systemDialog` or `mediaStoreSheet`) and `pickFolder()` (Linux only).
 - Android (`platform/data/media_store/`): `MediaStoreChannel.kt` (channel
   `kanaru/media_store`; queries on a small pool of background threads, replies on the
-  main looper, every `Throwable` answered) answers `sdkInt`, `primaryRoot` (shared
+  main looper, every `Throwable` answered; `sdkInt`, `primaryRoot` and `scanFolders`
+  are handled on the main looper, and the scan itself runs inside MediaProvider) answers `sdkInt`, `primaryRoot` (shared
   storage of the current user), `listAudio`, `listLyrics` (Files collection,
-  `.lrc`) and `audioFolders` as parallel lists. A null cursor is an error, not
+  `.lrc`) and `audioFolders` as parallel lists, and `scanFolders(paths)`:
+  `MediaScannerConnection.scanFile` on directories (recursive since API 29, one
+  callback per path), answered on the main looper with `{requested, nullUris}`.
+  One scan runs at a time: a call made meanwhile waits for it and gets its reply;
+  a 3 min watchdog answers the waiters with an `io` error if no callback ever completes it. A null cursor is an error, not
   an empty result. The `LIKE` pattern is built and escaped in Dart
   (`mediaStoreLikePattern`: `%`, `_`, `\`) and keeps the root's spelling for
   audio and lyrics alike (SQLite folds ASCII case only, so no lower-casing: a
@@ -74,8 +84,11 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
   failed query or one past the 120 s limit comes back as an unreachable listing
   with `unreachableReason` `permission`, `failed` or `timedOut` (no lyrics query
   starts after the audio query timed out); an absent root
-  is `missing`. `audioFolders()` and `suggestedMusicFolder()` return empty/null
-  on failure. `canonicalize` only normalises paths that came from `audioFolders()`
+  is `missing`. `audioFolders()` never throws either: a failure, or a query past
+  10 s, is `AudioFoldersFailed`, so it is never mistaken for an empty index;
+  `suggestedMusicFolder()` returns null on failure. `refreshMediaIndex` waits at most
+  2 min (`timedOut`; the system keeps scanning), is `unsupported` below API 29 and
+  `failed` when a channel error occurs or every path came back without a media uri. `canonicalize` only normalises paths that came from `audioFolders()`
   or the suggestion (already in `_data` form); other input has `/sdcard` and
   `/storage/self/primary` mapped to the primary root, then links resolved.
   `suggestedMusicFolder()` is `<primary>/Music` when any audio folder lies in its
@@ -613,12 +626,21 @@ buttons in `finally`.
   Android adds `<internal>/Music` when MediaStore has audio in it and
   excludes its direct `Ringtones`, `Notifications` and `Alarms` folders that
   have audio (any letter case).
-- Android lists: `folderCandidates()` (MediaStore folders not chosen, not
+- Android lists (they take the listed folders `raw`, required: a failed read has
+  no list): `folderCandidates()` (MediaStore folders not chosen, not
   inside or containing a chosen one), `exclusionCandidates()` (strictly inside
   a chosen folder, not excluded), `estimatedTrackCount()` and `subtreeCounts()`
   (counts from the catalog's pre-filtered numbers minus excluded subtrees;
-  null on Linux). Providers in `folder_candidates_provider.dart` refresh after
-  each edit (`folderEditsProvider`) and when `musicFoldersProvider` changes.
+  null on Linux, and null when the index is empty or the read failed, never "0").
+  `folderCandidatesProvider` and `exclusionCandidatesProvider` yield a
+  `FolderListState` (`FolderListLoadFailed`, `FolderListNoIndexedMusic`,
+  `FolderListReady(candidates)`). Providers in `folder_candidates_provider.dart`
+  refresh after each edit (`folderEditsProvider`) and when `musicFoldersProvider` changes.
+  `mediaIndexRefreshProvider` (`media_index_refresh.dart`, not autoDispose) runs one
+  index refresh at a time for the sheet and the first-run card (`idle` / `running` /
+  `finished` with a `runId`); on `done` or `timedOut` it re-reads the folders,
+  invalidates `audioFoldersProvider` and the suggestion, and asks for a library
+  rescan (a no-op before setup).
 
 ## First run
 
@@ -675,6 +697,32 @@ dialog or MediaStore sheet from `LocalAudioCatalog.folderChoice`.
   second one.
 - Each list switches on `AsyncValue`: a short spinner, an error line with
   "Try again", the empty note, or the rows.
+- Android folder lists (`FolderListState`: `loadFailed`, `noIndexedMusic`,
+  `ready(candidates)`) drive both folder sheets and the "Thư mục nhạc" card;
+  Linux never watches them. A failed read is "Không tải được" + Thử lại
+  (`ref.invalidate(audioFoldersProvider)`), never the empty note; "Đã chọn mọi
+  thư mục có nhạc." means the index holds music and every folder is chosen;
+  an index with no music is "Android chưa thấy bài nhạc nào" + Quét lại.
+- Quét lại is one shared run, `mediaIndexRefreshProvider` (`idle`,
+  `running(runId)`, `finished(runId, outcome, found)`): the add sheet's button
+  and trailing row and the card's button all start or join it, so the card
+  shows the progress of a run the sheet started. A surface shows a result only
+  for a run that started or ended while it was shown (it remembers the run id
+  at mount); an older `finished` is never news. The exclusion sheet has no
+  Quét lại.
+- The add sheet (`folder_picker_sheet.dart`) opens at once (no await before
+  `showKSheet`) and its `Consumer` follows the list: while the list reloads it
+  keeps the last rows (`asyncValue.value`, never `[]`), and
+  `MultiSelectionSheet` keeps every pick even when its option vanishes for a
+  frame (confirm and the count use the picks that have an enabled option). After
+  a run it saw ends with music, and no folder is chosen, `Music` (the suggested
+  folder, when listed) is added to the sheet's `initial`, so it starts chosen;
+  nothing is written before "Thêm".
+- Once per app launch, when the card shows "no music" and the audio permission
+  is granted, a post-frame callback calls `autoRunOnce()` (never from build).
+  "Thêm thư mục" is off while a run is in flight; "Tiếp tục" is unaffected.
+  On Android < 10 the first run reports `unsupported` and every Quét lại entry
+  disappears.
 
 ## Home scan card
 
@@ -742,7 +790,11 @@ Declared in `lib/src/library/state/scan/scan_settings.dart`.
 - **No automatic rescans.** Scans run at startup, after the first-run arrow, after an
   exclusion is undone and on any `rescan()` call. There is no folder watcher and no
   MediaStore observer. On Android a file copied in just now may be missing until
-  MediaStore has indexed it.
+  MediaStore has indexed it. Two paths ask Android to index the top-level folders
+  (`MediaScannerConnection`) and reread the list: "Quét lại" in the first-run folder
+  sheet and card (user), and one run per app launch on the first-run card when Android
+  shows no music (automatic). Neither adds a Home action or a startup scan; a run that
+  ends after setup asks for a library rescan (`mediaIndexRefreshProvider`).
 - **A failed scan is invisible.** `ScanFailed` is published, but Home and the library
   pages draw nothing for it, so a user who revokes the audio permission sees the
   library stop updating without a message.

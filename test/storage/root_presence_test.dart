@@ -20,7 +20,14 @@ class _Catalog implements LocalAudioCatalog {
       reachable ? const AudioListing() : const AudioListing.unreachable();
 
   @override
-  Future<List<AudioFolderSummary>> audioFolders() async => const [];
+  Future<AudioFoldersResult> audioFolders() async =>
+      const AudioFoldersListed([]);
+
+  @override
+  Future<MediaIndexRefresh> refreshMediaIndex({
+    required List<String> volumeRoots,
+    required List<String> folders,
+  }) async => MediaIndexRefresh.done;
   @override
   Future<String?> suggestedMusicFolder() async => null;
   @override

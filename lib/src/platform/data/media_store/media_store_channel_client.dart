@@ -57,6 +57,14 @@ class MediaStoreFolderRows {
   final List<int> counts;
 }
 
+/// Answer of the native `scanFolders`: how many paths were scanned and how many
+/// of them got no media uri back.
+class MediaStoreScanReply {
+  const MediaStoreScanReply({required this.requested, required this.nullUris});
+
+  final int requested, nullUris;
+}
+
 /// Typed client of the `kanaru/media_store` channel.
 class MediaStoreChannelClient {
   MediaStoreChannelClient({MethodChannel? channel})
@@ -95,7 +103,10 @@ class MediaStoreChannelClient {
     required String likePattern,
     required String root,
   }) async {
-    final m = await _map('listAudio', {'likePattern': likePattern, 'root': root});
+    final m = await _map('listAudio', {
+      'likePattern': likePattern,
+      'root': root,
+    });
     final paths = _strings(m, 'paths');
     final sizes = _ints(m, 'sizes');
     final modifiedSec = _ints(m, 'modifiedSec');
@@ -114,7 +125,10 @@ class MediaStoreChannelClient {
     required String likePattern,
     required String root,
   }) async {
-    final m = await _map('listLyrics', {'likePattern': likePattern, 'root': root});
+    final m = await _map('listLyrics', {
+      'likePattern': likePattern,
+      'root': root,
+    });
     final paths = _strings(m, 'paths');
     final sizes = _ints(m, 'sizes');
     final modifiedSec = _ints(m, 'modifiedSec');
@@ -138,6 +152,16 @@ class MediaStoreChannelClient {
     return MediaStoreFolderRows(
       paths: _strings(m, 'paths'),
       counts: _ints(m, 'counts'),
+    );
+  }
+
+  /// Asks MediaProvider to scan [paths] (directories, recursively) and waits
+  /// until every path has been answered.
+  Future<MediaStoreScanReply> scanFolders(List<String> paths) async {
+    final m = await _map('scanFolders', {'paths': paths});
+    return MediaStoreScanReply(
+      requested: _int(m, 'requested'),
+      nullUris: _int(m, 'nullUris'),
     );
   }
 
@@ -166,7 +190,11 @@ class MediaStoreChannelClient {
 
   /// The parallel lists of a reply must have one entry per path; a mismatch
   /// is an io failure here, not a `RangeError` later.
-  static void _sameLength(String method, int length, List<List<Object?>> others) {
+  static void _sameLength(
+    String method,
+    int length,
+    List<List<Object?>> others,
+  ) {
     if (others.any((l) => l.length != length)) {
       throw MediaStoreException(
         MediaStoreErrorKind.io,
@@ -177,7 +205,9 @@ class MediaStoreChannelClient {
 
   static List<String> _strings(Map<Object?, Object?> m, String key) {
     final v = m[key];
-    if (v is! List) throw MediaStoreException(MediaStoreErrorKind.io, 'bad $key');
+    if (v is! List) {
+      throw MediaStoreException(MediaStoreErrorKind.io, 'bad $key');
+    }
     try {
       return List<String>.from(v); // eager: a bad element fails here
     } on TypeError {
@@ -185,9 +215,19 @@ class MediaStoreChannelClient {
     }
   }
 
+  static int _int(Map<Object?, Object?> m, String key) {
+    final v = m[key];
+    if (v is! int) {
+      throw MediaStoreException(MediaStoreErrorKind.io, 'bad $key');
+    }
+    return v;
+  }
+
   static List<int> _ints(Map<Object?, Object?> m, String key) {
     final v = m[key];
-    if (v is! List) throw MediaStoreException(MediaStoreErrorKind.io, 'bad $key');
+    if (v is! List) {
+      throw MediaStoreException(MediaStoreErrorKind.io, 'bad $key');
+    }
     try {
       return List<int>.from(v);
     } on TypeError {

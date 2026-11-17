@@ -6,6 +6,13 @@ import 'package:kanaru/src/platform/data/linux_storage_volumes.dart';
 import 'package:kanaru/src/platform/domain/storage_volumes.dart';
 
 void main() {
+  test('isPathInside matches whole segments only', () {
+    expect(isPathInside('/sd2/a', '/sd'), isFalse);
+    expect(isPathInside('/sd/a', '/sd'), isTrue);
+    expect(isPathInside('/sd', '/sd'), isTrue);
+    expect(isPathInside('/sd/a', '/sd/'), isTrue);
+  });
+
   group('Android', () {
     test('strips the app-specific suffix', () {
       expect(

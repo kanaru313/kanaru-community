@@ -40,9 +40,17 @@ abstract interface class StorageVolumes {
 StorageVolume volumeForPath(List<StorageVolume> volumes, String path) {
   StorageVolume? best;
   for (final v in volumes) {
-    final root = v.root.endsWith('/') ? v.root : '${v.root}/';
-    final inside = path == v.root || path.startsWith(root);
-    if (inside && (best == null || v.root.length > best.root.length)) best = v;
+    if (isPathInside(path, v.root) &&
+        (best == null || v.root.length > best.root.length)) {
+      best = v;
+    }
   }
   return best ?? otherVolume;
+}
+
+/// Whether [path] is [root] or below it, on path segments (`/sd2/a` is not
+/// inside `/sd`).
+bool isPathInside(String path, String root) {
+  final prefix = root.endsWith('/') ? root : '$root/';
+  return path == root || path.startsWith(prefix);
 }

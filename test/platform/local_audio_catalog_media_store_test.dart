@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/platform/data/media_store/media_index_targets.dart';
 import 'package:kanaru/src/platform/data/media_store/media_store_audio_catalog.dart';
 import 'package:kanaru/src/platform/data/media_store/media_store_channel_client.dart';
 import 'package:kanaru/src/platform/data/media_store/media_store_like_pattern.dart';
@@ -37,12 +39,18 @@ void main() {
     Future<String> Function(String)? resolve,
     int firstRunMin = 30000,
     Duration timeout = const Duration(seconds: 5),
+    Duration foldersTimeout = const Duration(seconds: 5),
+    Duration refreshTimeout = const Duration(seconds: 5),
+    ListChildDirs? listChildDirs,
   }) => MediaStoreAudioCatalog(
     MediaStoreChannelClient(),
     rootExists: (_) async => exists,
     resolveLinks: resolve,
     firstRunMinDurationMs: firstRunMin,
     timeout: timeout,
+    foldersTimeout: foldersTimeout,
+    refreshTimeout: refreshTimeout,
+    listChildDirs: listChildDirs,
   );
 
   Map<String, Object?> audioReply(List<(String, int, int, int)> rows) => {
@@ -102,7 +110,8 @@ void main() {
         ('/storage/emulated/0/Other/w.mp3', 1, 1, 1000),
         ('$_music/ok.mp3', 1, 1, 1000),
       ]);
-      handlers['listLyrics'] = (_) => lyricsReply(['/storage/emulated/0/Other/a.lrc']);
+      handlers['listLyrics'] = (_) =>
+          lyricsReply(['/storage/emulated/0/Other/a.lrc']);
       final records = <LogRecord>[];
       final sub = Logger('platform.media_store').onRecord.listen(records.add);
       addTearDown(sub.cancel);
@@ -112,88 +121,98 @@ void main() {
         excludedKeys: const {},
       );
       expect(listing.audio.map((f) => f.path), ['$_music/ok.mp3']);
-      final line = records.map((r) => r.message).singleWhere(
-        (m) => m.contains('outside the root'),
-      );
+      final line = records
+          .map((r) => r.message)
+          .singleWhere((m) => m.contains('outside the root'));
       expect(line, contains('5 MediaStore rows'));
       expect(line, contains('Library/x.flac'));
       expect(line, isNot(contains('w.mp3')), reason: 'only 3 samples');
     });
 
-    test('case differences follow SQLite LIKE: ASCII folds, others do not',
-        () async {
-      handlers['listAudio'] = (_) => audioReply([
-        ('/storage/emulated/0/music/z.mp3', 1, 1, 1000),
-        ('/storage/emulated/0/NHẠC ĐỎ/a.mp3', 1, 1, 1000),
-      ]);
-      handlers['listLyrics'] = (_) => lyricsReply([]);
-      final asciiRoot = await catalog().listAudio(
-        root: _music,
-        excludedKeys: const {},
-      );
-      expect(asciiRoot.audio, hasLength(1));
-      final vi = await catalog().listAudio(
-        root: '/storage/emulated/0/Nhạc Đỏ',
-        excludedKeys: const {},
-      );
-      expect(vi.audio, isEmpty);
-    });
+    test(
+      'case differences follow SQLite LIKE: ASCII folds, others do not',
+      () async {
+        handlers['listAudio'] = (_) => audioReply([
+          ('/storage/emulated/0/music/z.mp3', 1, 1, 1000),
+          ('/storage/emulated/0/NHẠC ĐỎ/a.mp3', 1, 1, 1000),
+        ]);
+        handlers['listLyrics'] = (_) => lyricsReply([]);
+        final asciiRoot = await catalog().listAudio(
+          root: _music,
+          excludedKeys: const {},
+        );
+        expect(asciiRoot.audio, hasLength(1));
+        final vi = await catalog().listAudio(
+          root: '/storage/emulated/0/Nhạc Đỏ',
+          excludedKeys: const {},
+        );
+        expect(vi.audio, isEmpty);
+      },
+    );
 
-    test('lyrics under a root with a non-ASCII capital keep the root spelling',
-        () async {
-      const root = '/storage/emulated/0/Nhạc Đỏ';
-      handlers['listAudio'] = (_) => audioReply([]);
-      handlers['listLyrics'] = (_) => lyricsReply(['$root/a.LRC']);
-      final listing = await catalog().listAudio(
-        root: root,
-        excludedKeys: const {},
-      );
-      expect((calls[1].arguments as Map)['likePattern'], '$root/%.lrc');
-      expect(listing.lyrics.single.path, '$root/a.LRC');
-    });
+    test(
+      'lyrics under a root with a non-ASCII capital keep the root spelling',
+      () async {
+        const root = '/storage/emulated/0/Nhạc Đỏ';
+        handlers['listAudio'] = (_) => audioReply([]);
+        handlers['listLyrics'] = (_) => lyricsReply(['$root/a.LRC']);
+        final listing = await catalog().listAudio(
+          root: root,
+          excludedKeys: const {},
+        );
+        expect((calls[1].arguments as Map)['likePattern'], '$root/%.lrc');
+        expect(listing.lyrics.single.path, '$root/a.LRC');
+      },
+    );
 
-    test('the Android app-data tree is skipped by absolute path under any root',
-        () async {
-      handlers['listAudio'] = (_) => audioReply([
-        ('/storage/emulated/0/Android/media/wa/v.mp3', 1, 1, 1000),
-        ('/storage/emulated/0/Music/Android/b.mp3', 1, 1, 1000),
-        ('/storage/emulated/0/Music/ok.mp3', 1, 1, 1000),
-      ]);
-      handlers['listLyrics'] = (_) =>
-          lyricsReply(['/storage/emulated/0/Android/media/wa/v.lrc']);
-      final wide = await catalog().listAudio(
-        root: '/storage/emulated/0',
-        excludedKeys: const {},
-      );
-      expect(wide.audio.map((f) => f.path), [
-        '/storage/emulated/0/Music/Android/b.mp3',
-        '/storage/emulated/0/Music/ok.mp3',
-      ]);
-      expect(wide.skippedOut, 1);
-      expect(wide.lyrics, isEmpty);
-      // A user folder called Android below Music is not app data.
-      final music = await catalog().listAudio(
-        root: _music,
-        excludedKeys: const {},
-      );
-      expect(music.audio.map((f) => f.path), [
-        '$_music/Android/b.mp3',
-        '$_music/ok.mp3',
-      ]);
-      expect(music.skippedOut, 0);
-    });
+    test(
+      'the Android app-data tree is skipped by absolute path under any root',
+      () async {
+        handlers['listAudio'] = (_) => audioReply([
+          ('/storage/emulated/0/Android/media/wa/v.mp3', 1, 1, 1000),
+          ('/storage/emulated/0/Music/Android/b.mp3', 1, 1, 1000),
+          ('/storage/emulated/0/Music/ok.mp3', 1, 1, 1000),
+        ]);
+        handlers['listLyrics'] = (_) =>
+            lyricsReply(['/storage/emulated/0/Android/media/wa/v.lrc']);
+        final wide = await catalog().listAudio(
+          root: '/storage/emulated/0',
+          excludedKeys: const {},
+        );
+        expect(wide.audio.map((f) => f.path), [
+          '/storage/emulated/0/Music/Android/b.mp3',
+          '/storage/emulated/0/Music/ok.mp3',
+        ]);
+        expect(wide.skippedOut, 1);
+        expect(wide.lyrics, isEmpty);
+        // A user folder called Android below Music is not app data.
+        final music = await catalog().listAudio(
+          root: _music,
+          excludedKeys: const {},
+        );
+        expect(music.audio.map((f) => f.path), [
+          '$_music/Android/b.mp3',
+          '$_music/ok.mp3',
+        ]);
+        expect(music.skippedOut, 0);
+      },
+    );
 
-    test('a root the user picked inside Android/ is listed as chosen', () async {
-      const root = '/storage/emulated/0/Android/media/Podcasts';
-      handlers['listAudio'] = (_) => audioReply([('$root/e1.mp3', 1, 1, 1000)]);
-      handlers['listLyrics'] = (_) => lyricsReply([]);
-      final listing = await catalog().listAudio(
-        root: root,
-        excludedKeys: const {},
-      );
-      expect(listing.audio, hasLength(1));
-      expect(listing.skippedOut, 0);
-    });
+    test(
+      'a root the user picked inside Android/ is listed as chosen',
+      () async {
+        const root = '/storage/emulated/0/Android/media/Podcasts';
+        handlers['listAudio'] = (_) =>
+            audioReply([('$root/e1.mp3', 1, 1, 1000)]);
+        handlers['listLyrics'] = (_) => lyricsReply([]);
+        final listing = await catalog().listAudio(
+          root: root,
+          excludedKeys: const {},
+        );
+        expect(listing.audio, hasLength(1));
+        expect(listing.skippedOut, 0);
+      },
+    );
 
     test('no lyrics query starts after the audio query timed out', () async {
       handlers['listAudio'] = (_) async {
@@ -201,26 +220,27 @@ void main() {
         return audioReply([]);
       };
       handlers['listLyrics'] = (_) => lyricsReply([]);
-      final listing = await catalog(
-        timeout: const Duration(milliseconds: 30),
-      ).listAudio(root: _music, excludedKeys: const {});
+      final listing = await catalog(timeout: const Duration(milliseconds: 30))
+          .listAudio(root: _music, excludedKeys: const {});
       expect(listing.unreachableReason, UnreachableReason.timedOut);
       await Future<void>.delayed(const Duration(milliseconds: 300));
       expect(calls.map((c) => c.method), ['listAudio']);
     });
 
-    test('a reply with a wrong element type is an io failure, not a crash',
-        () async {
-      handlers['listAudio'] = (_) => {
-        ...audioReply([]),
-        'paths': <Object>[1, 2],
-      };
-      final listing = await catalog().listAudio(
-        root: _music,
-        excludedKeys: const {},
-      );
-      expect(listing.unreachableReason, UnreachableReason.failed);
-    });
+    test(
+      'a reply with a wrong element type is an io failure, not a crash',
+      () async {
+        handlers['listAudio'] = (_) => {
+          ...audioReply([]),
+          'paths': <Object>[1, 2],
+        };
+        final listing = await catalog().listAudio(
+          root: _music,
+          excludedKeys: const {},
+        );
+        expect(listing.unreachableReason, UnreachableReason.failed);
+      },
+    );
 
     test('parallel lists of different length are an io failure', () async {
       handlers['listAudio'] = (_) => {
@@ -235,7 +255,8 @@ void main() {
     });
 
     test('lyrics lists of different length are an io failure', () async {
-      handlers['listAudio'] = (_) => audioReply([('$_music/a.mp3', 1, 1, 1000)]);
+      handlers['listAudio'] = (_) =>
+          audioReply([('$_music/a.mp3', 1, 1, 1000)]);
       handlers['listLyrics'] = (_) => {
         ...lyricsReply(['$_music/a.lrc']),
         'modifiedSec': <int>[],
@@ -269,7 +290,10 @@ void main() {
         excludedKeys: const {},
       );
       expect(listing.audio, hasLength(1));
-      expect((calls.first.arguments as Map)['likePattern'], r'/storage/emulated/0/100\%\_mix/%');
+      expect(
+        (calls.first.arguments as Map)['likePattern'],
+        r'/storage/emulated/0/100\%\_mix/%',
+      );
     });
 
     test('dot-folders and @eaDir rows are dropped and counted', () async {
@@ -326,10 +350,8 @@ void main() {
     });
 
     test('a missing root is unreachable without a query', () async {
-      final listing = await catalog(exists: false).listAudio(
-        root: _music,
-        excludedKeys: const {},
-      );
+      final listing = await catalog(exists: false)
+          .listAudio(root: _music, excludedKeys: const {});
       expect(listing.reachable, isFalse);
       expect(calls, isEmpty);
     });
@@ -359,9 +381,8 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 300));
         return audioReply([]);
       };
-      final listing = await catalog(
-        timeout: const Duration(milliseconds: 50),
-      ).listAudio(root: _music, excludedKeys: const {});
+      final listing = await catalog(timeout: const Duration(milliseconds: 50))
+          .listAudio(root: _music, excludedKeys: const {});
       expect(listing.unreachableReason, UnreachableReason.timedOut);
     });
   });
@@ -374,6 +395,11 @@ void main() {
       };
     }
 
+    Future<List<AudioFolderSummary>> listed([MediaStoreAudioCatalog? c]) async {
+      final result = await (c ?? catalog()).audioFolders();
+      return (result as AudioFoldersListed).folders;
+    }
+
     test('audioFolders drops dot and junk folders and sorts', () async {
       folders({
         '$_music/Library': 5,
@@ -381,7 +407,7 @@ void main() {
         '/storage/emulated/0/@eaDir/x': 1,
         '/storage/emulated/0/Download': 2,
       });
-      final result = await catalog().audioFolders();
+      final result = await listed();
       expect(result.map((f) => f.path), [
         '/storage/emulated/0/Download',
         '$_music/Library',
@@ -406,24 +432,57 @@ void main() {
         '$_music/Android': 1,
         '/storage/1234-ABCD/Music': 3,
       });
-      final result = await catalog().audioFolders();
+      final result = await listed();
       expect(result.map((f) => f.path), [
         '/storage/1234-ABCD/Music',
         '$_music/Android',
       ]);
     });
 
-    test('a failing folder query gives an empty list, not an exception',
-        () async {
+    test('an index with no usable audio is a listed empty result', () async {
+      folders({'$_music/.thumbs': 9});
+      expect(await listed(), isEmpty);
+    });
+
+    test('a failing folder query is a failure, not an empty list', () async {
       handlers['audioFolders'] = (_) => throw PlatformException(code: 'io');
-      expect(await catalog().audioFolders(), isEmpty);
+      final result = await catalog().audioFolders();
+      expect(result, isA<AudioFoldersFailed>());
+      expect((result as AudioFoldersFailed).reason, AudioFoldersFailure.failed);
       expect(await catalog().suggestedMusicFolder(), isNull);
+    });
+
+    test('a refused folder query reports the permission', () async {
+      handlers['audioFolders'] = (_) =>
+          throw PlatformException(code: 'permission');
+      final result = await catalog().audioFolders();
+      expect(
+        (result as AudioFoldersFailed).reason,
+        AudioFoldersFailure.permission,
+      );
+    });
+
+    test('a folder query past its limit reports timedOut', () async {
+      handlers['audioFolders'] = (_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        return {'paths': <String>[], 'counts': Int32List(0)};
+      };
+      final result = await catalog(
+        foldersTimeout: const Duration(milliseconds: 50),
+      ).audioFolders();
+      expect(
+        (result as AudioFoldersFailed).reason,
+        AudioFoldersFailure.timedOut,
+      );
     });
 
     test('the suggestion follows the user primary root', () async {
       handlers['primaryRoot'] = (_) => '/storage/emulated/10';
       folders({'/storage/emulated/10/Music/Library': 3});
-      expect(await catalog().suggestedMusicFolder(), '/storage/emulated/10/Music');
+      expect(
+        await catalog().suggestedMusicFolder(),
+        '/storage/emulated/10/Music',
+      );
     });
 
     test('Music is suggested when audio lies in its subtree', () async {
@@ -436,25 +495,30 @@ void main() {
       expect(await catalog().suggestedMusicFolder(), isNull);
     });
 
-    test('canonicalize only normalises roots that came from the index', () async {
-      folders({'$_music/Library': 3});
-      final c = catalog();
-      await c.audioFolders();
-      expect(await c.canonicalize('$_music/Library/'), '$_music/Library');
-    });
+    test(
+      'canonicalize only normalises roots that came from the index',
+      () async {
+        folders({'$_music/Library': 3});
+        final c = catalog();
+        await c.audioFolders();
+        expect(await c.canonicalize('$_music/Library/'), '$_music/Library');
+      },
+    );
 
-    test('canonicalize maps /sdcard to the primary root, then resolves links',
-        () async {
-      final resolved = <String>[];
-      final c = catalog(
-        resolve: (path) async {
-          resolved.add(path);
-          return path.replaceFirst('/storage/emulated/0', '/data/media/0');
-        },
-      );
-      expect(await c.canonicalize('/sdcard/Music/'), '/data/media/0/Music');
-      expect(resolved, ['/storage/emulated/0/Music']);
-    });
+    test(
+      'canonicalize maps /sdcard to the primary root, then resolves links',
+      () async {
+        final resolved = <String>[];
+        final c = catalog(
+          resolve: (path) async {
+            resolved.add(path);
+            return path.replaceFirst('/storage/emulated/0', '/data/media/0');
+          },
+        );
+        expect(await c.canonicalize('/sdcard/Music/'), '/data/media/0/Music');
+        expect(resolved, ['/storage/emulated/0/Music']);
+      },
+    );
 
     test('canonicalize keeps the mapped path when resolving fails', () async {
       final c = catalog(
@@ -470,6 +534,123 @@ void main() {
       final c = catalog();
       expect(c.folderChoice, FolderChoice.mediaStoreSheet);
       expect(() => c.pickFolder(), throwsUnsupportedError);
+    });
+  });
+
+  group('refreshMediaIndex', () {
+    Future<List<String>> children(String dir) async => switch (dir) {
+      '/storage/emulated/0' => [
+        '/storage/emulated/0/Android',
+        '/storage/emulated/0/DCIM',
+        '/storage/emulated/0/Music',
+      ],
+      _ => const [],
+    };
+
+    Future<MediaIndexRefresh> refresh(
+      MediaStoreAudioCatalog c, {
+      List<String> roots = const ['/storage/emulated/0'],
+      List<String> chosen = const [],
+    }) => c.refreshMediaIndex(volumeRoots: roots, folders: chosen);
+
+    test('Android 9 is unsupported and scans nothing', () async {
+      handlers['sdkInt'] = (_) => 28;
+      expect(
+        await refresh(catalog(listChildDirs: children)),
+        MediaIndexRefresh.unsupported,
+      );
+      expect(calls.map((c) => c.method), isNot(contains('scanFolders')));
+    });
+
+    test('scans the top-level folders, Music first', () async {
+      handlers['sdkInt'] = (_) => 33;
+      handlers['scanFolders'] = (_) => {'requested': 2, 'nullUris': 1};
+      expect(
+        await refresh(catalog(listChildDirs: children)),
+        MediaIndexRefresh.done,
+      );
+      final call = calls.singleWhere((c) => c.method == 'scanFolders');
+      expect((call.arguments as Map)['paths'], [
+        '/storage/emulated/0/Music',
+        '/storage/emulated/0/DCIM',
+      ]);
+    });
+
+    test('no folders to scan is done without a channel call', () async {
+      handlers['sdkInt'] = (_) => 33;
+      expect(
+        await refresh(catalog(listChildDirs: (_) async => const [])),
+        MediaIndexRefresh.done,
+      );
+      expect(calls.map((c) => c.method), isNot(contains('scanFolders')));
+    });
+
+    test('every path answered without a uri is a failure', () async {
+      handlers['sdkInt'] = (_) => 33;
+      handlers['scanFolders'] = (_) => {'requested': 3, 'nullUris': 3};
+      expect(
+        await refresh(catalog(listChildDirs: children)),
+        MediaIndexRefresh.failed,
+      );
+    });
+
+    test('a channel error is a failure', () async {
+      handlers['sdkInt'] = (_) => 33;
+      handlers['scanFolders'] = (_) => throw PlatformException(code: 'io');
+      expect(
+        await refresh(catalog(listChildDirs: children)),
+        MediaIndexRefresh.failed,
+      );
+    });
+
+    test('a failing sdkInt is a failure', () async {
+      handlers['sdkInt'] = (_) => throw PlatformException(code: 'io');
+      expect(
+        await refresh(catalog(listChildDirs: children)),
+        MediaIndexRefresh.failed,
+      );
+    });
+
+    test('a scan past its limit reports timedOut', () async {
+      handlers['sdkInt'] = (_) => 33;
+      handlers['scanFolders'] = (_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        return {'requested': 1, 'nullUris': 0};
+      };
+      final c = catalog(
+        listChildDirs: children,
+        refreshTimeout: const Duration(milliseconds: 50),
+      );
+      expect(await refresh(c), MediaIndexRefresh.timedOut);
+    });
+
+    test('a hanging directory listing is bounded by the same limit', () async {
+      handlers['sdkInt'] = (_) => 33;
+      final c = catalog(
+        listChildDirs: (_) => Completer<List<String>>().future,
+        refreshTimeout: const Duration(milliseconds: 50),
+      );
+      expect(await refresh(c), MediaIndexRefresh.timedOut);
+      expect(calls.map((c) => c.method), isNot(contains('scanFolders')));
+    });
+
+    test('a reply without counts is an io failure of the client', () async {
+      handlers['scanFolders'] = (_) => {'requested': 1};
+      await expectLater(
+        MediaStoreChannelClient().scanFolders(['/x']),
+        throwsA(
+          isA<MediaStoreException>().having(
+            (e) => e.kind,
+            'kind',
+            MediaStoreErrorKind.io,
+          ),
+        ),
+      );
+      handlers['scanFolders'] = (_) => {'requested': 1, 'nullUris': 'a'};
+      await expectLater(
+        MediaStoreChannelClient().scanFolders(['/x']),
+        throwsA(isA<MediaStoreException>()),
+      );
     });
   });
 

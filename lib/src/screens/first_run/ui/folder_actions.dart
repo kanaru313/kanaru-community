@@ -8,14 +8,12 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../library/domain/music_folder.dart';
 import '../../../library/state/music_folders_providers.dart';
-import '../../../library/state/scan/display_volumes_provider.dart';
-import '../../../library/state/scan/folder_candidates_provider.dart';
 import '../../../library/state/scan/music_folder_editor.dart';
 import '../../../library/state/scan/music_folder_editor_provider.dart';
 import '../../../library/domain/scan/root_rules.dart';
-import '../../../library/ui/scan/folder_display_path.dart';
 import '../../../platform/domain/local_audio_catalog.dart';
 import '../../../platform/state/local_audio_catalog_provider.dart';
+import 'folder_picker_sheet.dart';
 
 final _log = Logger('screens.first_run');
 
@@ -86,16 +84,7 @@ Future<void> addMusicFolders(BuildContext context, WidgetRef ref) async {
   final List<String> paths;
   try {
     if (fromCatalog) {
-      final candidates = await ref.read(folderCandidatesProvider.future);
-      if (!context.mounted) return;
-      paths = await _pickFromSheet(
-        context,
-        ref,
-        candidates,
-        title: l10n.scanSetupFolderPickerTitle,
-        hint: l10n.scanSetupFolderPickerHint,
-        empty: l10n.scanSetupFolderPickerEmpty,
-      );
+      paths = await _pickFromSheet(context, FolderSheetKind.add);
     } else {
       final path = await catalog.pickFolder();
       paths = [?path];
@@ -126,16 +115,7 @@ Future<void> addExclusions(BuildContext context, WidgetRef ref) async {
   final List<String> paths;
   try {
     if (fromCatalog) {
-      final candidates = await ref.read(exclusionCandidatesProvider.future);
-      if (!context.mounted) return;
-      paths = await _pickFromSheet(
-        context,
-        ref,
-        candidates,
-        title: l10n.scanSetupExclusionPickerTitle,
-        hint: l10n.scanSetupExclusionPickerHint,
-        empty: l10n.scanSetupExclusionPickerEmpty,
-      );
+      paths = await _pickFromSheet(context, FolderSheetKind.exclude);
     } else {
       final path = await catalog.pickFolder(
         initialDirectory: folders.first.root,
@@ -157,40 +137,15 @@ Future<void> addExclusions(BuildContext context, WidgetRef ref) async {
   }
 }
 
+/// Opens the folder sheet at once (it loads its own list) and returns the
+/// picked paths, without the ones inside another picked path.
 Future<List<String>> _pickFromSheet(
   BuildContext context,
-  WidgetRef ref,
-  List<AudioFolderSummary> candidates, {
-  required String title,
-  required String hint,
-  required String empty,
-}) async {
-  final l10n = AppLocalizations.of(context);
-  final volumes = await ref.read(displayVolumesProvider.future);
-  if (!context.mounted) return const [];
-  final picked = await showMultiSelectionSheet<String>(
+  FolderSheetKind kind,
+) async {
+  final picked = await showKSheet<Set<String>>(
     context,
-    options: [
-      for (final c in candidates)
-        SelectionOption(
-          value: c.path,
-          leading: const Icon(KIcons.folders),
-          title: Text(baseName(c.path)),
-          subtitle: Text(
-            '${folderDisplayPathOf(l10n, volumes, c.path)} · '
-            '${l10n.scanSetupFolderSongs(c.audioCount)}',
-          ),
-        ),
-    ],
-    title: Text(title),
-    subtitle: Text(hint),
-    emptyNote: Text(empty),
-    confirmLabel: (n) =>
-        n == 0 ? l10n.scanSetupSheetAdd : l10n.scanSetupSheetAddCount(n),
-    cancelLabel: l10n.scanSetupSheetCancel,
-    selectAllLabel: l10n.scanSetupSheetSelectAll,
-    selectedCountLabel: (n, total) =>
-        l10n.scanSetupSheetSelectedCount(n, total),
+    builder: (_) => FolderPickerSheet(kind: kind),
   );
   return topLevelPicks(picked ?? const <String>{});
 }
