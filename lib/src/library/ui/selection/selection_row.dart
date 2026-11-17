@@ -5,8 +5,8 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/cover_files.dart';
 import '../../../media/domain/track_info.dart';
 import '../../../media/domain/track_lines.dart';
+import '../../../playback/ui/playback_time_label.dart' show formatClock;
 import '../../../playback/ui/track_cover.dart';
-import '../browse/library_labels.dart';
 import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
 import '../songs/song_tile.dart';
@@ -38,7 +38,9 @@ class SelectedSongRow extends StatelessWidget {
           radius: KMediaCard.coverRadius,
         ),
       ),
-      top: duration == null ? null : Text(formatClock(duration)),
+      top: duration == null
+          ? null
+          : Text(formatClock(Duration(milliseconds: duration))),
       bottom: SongFavoriteButton(trackId: info.id),
       // Same box as the row's icon buttons, like the queue's handle.
       accessory: KDragHandle(

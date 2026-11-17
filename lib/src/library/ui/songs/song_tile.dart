@@ -13,10 +13,10 @@ import '../../../media/domain/track_id.dart';
 import '../../../media/domain/track_info.dart';
 import '../../../media/domain/track_lines.dart';
 import '../../../playback/state/playback_providers.dart';
+import '../../../playback/ui/playback_time_label.dart' show formatClock;
 import '../../../playback/ui/track_cover.dart';
 import '../../state/browse/selection_providers.dart';
 import '../../state/favorites_providers.dart';
-import '../browse/library_labels.dart';
 import '../browse/play_actions.dart';
 import '../menus/menu_action_runner.dart';
 import '../menus/menu_origin.dart';
@@ -120,7 +120,9 @@ class SongTile extends ConsumerWidget {
                 ? info.trackNo
                 : null,
           ),
-          top: duration == null ? null : Text(formatClock(duration)),
+          top: duration == null
+              ? null
+              : Text(formatClock(Duration(milliseconds: duration))),
           bottom: SongFavoriteButton(trackId: info.id),
           trailing: LibraryMoreButton(onPressed: menu),
           current: current,
