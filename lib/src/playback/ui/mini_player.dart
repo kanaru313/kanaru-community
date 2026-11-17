@@ -8,7 +8,7 @@ import '../state/playback_providers.dart';
 import 'flight_source.dart';
 import 'mini_card_drag.dart';
 import 'mini_card_layer.dart';
-import 'mini_player_body.dart';
+import 'mini_player_carousel.dart';
 import 'play_pause_button.dart';
 import 'transport_buttons.dart';
 
@@ -46,10 +46,29 @@ class MiniPlayer extends ConsumerStatefulWidget {
 }
 
 class _MiniPlayerState extends ConsumerState<MiniPlayer> {
+  final _carousel = GlobalKey<MiniPlayerCarouselState>();
+
+  void _onLock(MiniDragLock lock) {
+    if (lock == MiniDragLock.x) _carousel.currentState?.dragStart();
+  }
+
+  void _onDragUpdate(MiniDragLock lock, Offset total) {
+    if (lock == MiniDragLock.x) _carousel.currentState?.dragUpdate(total.dx);
+  }
+
   void _onDragEnd(MiniDragLock lock, Offset total, Offset velocity) {
-    if (lock == MiniDragLock.up && total.dy < -MiniPlayer.swipeDistance) {
-      widget.onOpen();
+    switch (lock) {
+      case MiniDragLock.x:
+        _carousel.currentState?.dragEnd(total.dx, velocity.dx);
+      case MiniDragLock.up:
+        if (total.dy < -MiniPlayer.swipeDistance) widget.onOpen();
+      case MiniDragLock.down:
+        break;
     }
+  }
+
+  void _onDragCancel(MiniDragLock lock) {
+    if (lock == MiniDragLock.x) _carousel.currentState?.dragCancel();
   }
 
   Widget _piece(FlightPiece piece, Widget child) => widget.flight == null
@@ -100,17 +119,20 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                     radius: miniRadius,
                     onTap: widget.onOpen,
                     onLongPress: widget.onOpenQueue,
+                    onLock: _onLock,
+                    onUpdate: _onDragUpdate,
                     onEnd: _onDragEnd,
+                    onCancel: _onDragCancel,
                   ),
                 ),
                 Row(
                   children: [
                     Expanded(
                       child: IgnorePointer(
-                        child: MiniPlayerBody(
-                          trackId: trackId,
-                          flight: widget.flight,
+                        child: MiniPlayerCarousel(
+                          key: _carousel,
                           cardHeight: MiniPlayer.height,
+                          flight: widget.flight,
                         ),
                       ),
                     ),

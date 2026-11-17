@@ -397,16 +397,17 @@ void main() {
     bool sought(UiHost host) =>
         host.h.engine.commands.any((c) => c.startsWith('seek:'));
 
-    testWidgets('a horizontal drag on the body opens nothing', (tester) async {
+    testWidgets('a short horizontal drag on the body opens nothing', (
+      tester,
+    ) async {
       final events = <String>[];
       final host = await pumpWithPlayer(tester, _player(events));
       final g = await tester.startGesture(tester.getCenter(find.text('T0')));
-      await g.moveBy(const Offset(12, 0));
+      await g.moveBy(const Offset(-12, 0));
       await tester.pump();
-      await g.up();
-      await tester.pump();
+      await host.run(tester, g.up);
       expect(events, isEmpty, reason: 'the arena is won, the tap is not');
-      expect(host.h.c.queueState.current, 0);
+      expect(host.h.c.queueState.current, 0, reason: 'too short to change');
     });
 
     testWidgets('a 6 dp wobble is still a tap', (tester) async {
