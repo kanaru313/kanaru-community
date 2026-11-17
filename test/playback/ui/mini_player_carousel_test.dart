@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/domain/playback_notice.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/ui/flight_source.dart';
+import 'package:kanaru/src/playback/ui/mini_carousel_math.dart';
 import 'package:kanaru/src/playback/ui/mini_player.dart';
 import 'package:kanaru/src/playback/ui/mini_player_carousel.dart';
 import 'package:kanaru/src/playback/ui/track_cover.dart';
@@ -184,6 +185,54 @@ void main() {
       expect(_current(host), 0);
       expect(host.h.notices.whereType<FirstTrack>(), hasLength(1));
       expect(host.h.engine.commands.last, startsWith('seek:0'));
+    });
+
+    testWidgets('the first entry, a short wobble right: springs back, no '
+        'command', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await _swipe(tester, host, _width(tester) * 0.2);
+      expect(_current(host), 0);
+      expect(host.h.notices, isEmpty);
+      expect(
+        host.h.engine.commands.where((c) => c.startsWith('seek:0')),
+        isEmpty,
+      );
+    });
+
+    testWidgets('the first entry, a short fast fling right: restarts it', (
+      tester,
+    ) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await _swipe(tester, host, _width(tester) * 0.2, ms: 40, steps: 4);
+      expect(host.h.notices.whereType<FirstTrack>(), hasLength(1));
+    });
+
+    testWidgets('the last entry, a short wobble left: no notice', (
+      tester,
+    ) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await host.run(
+        tester,
+        () => host.h.c.playEntry(host.h.c.queueState.items.last.entryId),
+      );
+      await host.letStreamsArrive(tester);
+      await _swipe(tester, host, -_width(tester) * 0.2);
+      expect(_current(host), 5);
+      expect(host.h.notices, isEmpty);
+    });
+
+    testWidgets('towards a missing neighbour the entry changing under the '
+        'finger runs no command', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      final g = await tester.startGesture(_grab(tester));
+      await g.moveBy(Offset(_width(tester) * 0.2, 0));
+      await g.moveBy(Offset(_width(tester) * 0.2, 0));
+      await host.run(tester, host.h.c.next);
+      await host.letStreamsArrive(tester);
+      await host.run(tester, g.up);
+      await _settle(tester, host);
+      expect(_current(host), 1, reason: 'no Previous on the new entry');
+      expect(host.h.notices, isEmpty);
     });
 
     testWidgets('repeat all: left at the last goes to the first, right at '

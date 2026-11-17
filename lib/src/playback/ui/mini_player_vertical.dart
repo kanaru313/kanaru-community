@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/semantics.dart' show SemanticsService;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,10 +27,12 @@ const double miniFadeDistance = 120;
 /// Moves the whole mini player card up and down with a vertical drag.
 ///
 /// - Down: the card follows the finger and fades. Past [miniDropDistance] or
-///   a fling it drops out (`KSpring.snappy`), then the queue and the saved
-///   session are cleared and "Playback stopped" is announced to screen
-///   readers. No question, no undo, no snack bar. Short of it, it springs
-///   back.
+///   a fling the queue and the saved session are cleared at once (like the
+///   carousel runs Next at release) while the card drops out of sight
+///   (`KSpring.snappy`, visual only), and "Playback stopped" is announced to
+///   screen readers. No question, no undo, no snack bar. Short of it, it
+///   springs back. When a new entry arrives after the drop the card is back
+///   in place and takes touches again.
 /// - Up: the card follows up to [miniSwipeUpTravel]; a release past it opens
 ///   Now Playing ([onOpen]); either way the card springs back.
 ///
@@ -63,17 +64,12 @@ class MiniPlayerVerticalState extends ConsumerState<MiniPlayerVertical>
   );
   bool _dropping = false;
 
-  /// What is left to do once the card is out of sight: clear the queue and
-  /// announce it. Taken from here by the animation, or by [dispose] when the
-  /// card leaves the tree first, so the stop is never lost.
-  Future<void> Function()? _pendingStop;
+  /// Entry that was current when the drop started.
+  int? _droppedEntry;
 
   @override
   void dispose() {
     _y.dispose();
-    final stop = _pendingStop;
-    _pendingStop = null;
-    if (stop != null) unawaited(stop());
     super.dispose();
   }
 
@@ -85,9 +81,9 @@ class MiniPlayerVerticalState extends ConsumerState<MiniPlayerVertical>
     if (_dropping) return;
     switch (lock) {
       case MiniDragLock.up:
-        _y.value = math.max(dy, -miniSwipeUpTravel);
+        _y.value = dy.clamp(-miniSwipeUpTravel, 0.0);
       case MiniDragLock.down:
-        _y.value = math.max(0, dy);
+        _y.value = dy.clamp(0.0, double.infinity);
       case MiniDragLock.x:
         break;
     }
@@ -118,46 +114,54 @@ class MiniPlayerVerticalState extends ConsumerState<MiniPlayerVertical>
     animateSpringTo(context, _y, 0, KSpring.snappy);
   }
 
-  /// Stops playback and clears the queue and the saved session. With
-  /// [animate] the card drops out of sight first (a semantics action does not
-  /// need that). The controller and the announcement are taken before any
-  /// await, so the stop still happens if the card is gone by then.
+  /// Stops playback and clears the queue and the saved session at once. With
+  /// [animate] the card also drops out of sight (a semantics action does not
+  /// need that); the drop is only visual. The controller and the announcement
+  /// are taken before any await, so the stop does not depend on the card
+  /// staying in the tree.
   Future<void> stopPlayback({bool animate = true}) async {
     if (_dropping) return;
     final controller = ref.read(playerControllerProvider);
     final message = AppLocalizations.of(context).playbackStoppedAnnouncement;
     final view = View.of(context);
     final direction = Directionality.of(context);
+    _droppedEntry = ref.read(nowPlayingProvider).value?.entryId;
     setState(() => _dropping = true);
-    _pendingStop = () async {
-      try {
-        await controller.clearQueue();
-      } on Object catch (e, s) {
-        _log.warning('could not stop playback', e, s);
-        if (mounted) {
-          setState(() => _dropping = false);
-          _back();
-        }
-        return;
-      }
-      try {
-        await SemanticsService.sendAnnouncement(view, message, direction);
-      } on Object catch (e, s) {
-        _log.fine('could not announce the stop', e, s);
-      }
-    };
     if (animate) {
-      await animateSpringTo(context, _y, widget.travel, KSpring.snappy);
-      // Never reached when the card left the tree: dispose ran the stop.
-      if (!mounted) return;
+      unawaited(animateSpringTo(context, _y, widget.travel, KSpring.snappy));
     }
-    final stop = _pendingStop;
-    _pendingStop = null;
-    if (stop != null) await stop();
+    try {
+      await controller.clearQueue();
+    } on Object catch (e, s) {
+      _log.warning('could not stop playback', e, s);
+      if (mounted) {
+        setState(() => _dropping = false);
+        _back();
+      }
+      return;
+    }
+    try {
+      await SemanticsService.sendAnnouncement(view, message, direction);
+    } on Object catch (e, s) {
+      _log.fine('could not announce the stop', e, s);
+    }
+  }
+
+  /// A new entry after the drop (a song picked while the card was falling):
+  /// the card is back in place and takes touches.
+  void _onEntry(int? entryId) {
+    if (!_dropping || entryId == null || entryId == _droppedEntry) return;
+    _y.stop();
+    _y.value = 0;
+    setState(() => _dropping = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(
+      nowPlayingProvider.select((n) => n.value?.entryId),
+      (_, entryId) => _onEntry(entryId),
+    );
     return AnimatedBuilder(
       animation: _y,
       child: IgnorePointer(ignoring: _dropping, child: widget.child),

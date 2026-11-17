@@ -5,7 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../state/playback_position_provider.dart';
 import '../state/playback_providers.dart';
-import 'mini_player_body.dart';
+import 'mini_seek_bubble.dart';
 import 'playback_time_label.dart';
 
 /// Seek strip along the bottom edge of the mini player card, inside it.
@@ -16,7 +16,11 @@ import 'playback_time_label.dart';
 /// floats above the card while dragging. Only this widget rebuilds on a
 /// position tick.
 class MiniSeekBand extends ConsumerStatefulWidget {
-  const MiniSeekBand({super.key, required this.cardHeight});
+  const MiniSeekBand({
+    super.key,
+    required this.cardHeight,
+    required this.radius,
+  });
 
   /// Height of the hit area, inside the card.
   static const double height = 16;
@@ -24,11 +28,13 @@ class MiniSeekBand extends ConsumerStatefulWidget {
   static const double lineRest = 2;
   static const double lineActive = 4;
   static const double lineDragging = 6;
-  static const double bubbleGap = 8;
   static const Duration keyStep = Duration(seconds: 5);
 
   /// Height of the card the band sits in (the bubble floats above it).
   final double cardHeight;
+
+  /// Corner radius of the card; the line is clipped to its bottom corners.
+  final BorderRadius radius;
 
   @override
   ConsumerState<MiniSeekBand> createState() => _MiniSeekBandState();
@@ -67,13 +73,14 @@ class _MiniSeekBandState extends ConsumerState<MiniSeekBand> {
           link: _link,
           child: OverlayPortal(
             controller: _bubble,
-            overlayChildBuilder: (_) => _TimeBubble(
+            overlayChildBuilder: (_) => MiniSeekBubble(
               link: _link,
               state: state,
               duration: duration ?? Duration.zero,
               cardHeight: widget.cardHeight,
+              bandHeight: MiniSeekBand.height,
             ),
-            child: _Strip(state: state),
+            child: _Strip(state: state, radius: widget.radius),
           ),
         ),
       ),
@@ -84,9 +91,10 @@ class _MiniSeekBandState extends ConsumerState<MiniSeekBand> {
 /// The line (clipped to the card's corners) and the thumb (never clipped:
 /// it centres on the line and so hangs up to 5 dp below the card edge).
 class _Strip extends StatelessWidget {
-  const _Strip({required this.state});
+  const _Strip({required this.state, required this.radius});
 
   final KSeekState state;
+  final BorderRadius radius;
 
   @override
   Widget build(BuildContext context) {
@@ -118,9 +126,7 @@ class _Strip extends StatelessWidget {
         children: [
           Positioned.fill(
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(14),
-              ),
+              borderRadius: BorderRadius.vertical(bottom: radius.bottomLeft),
               child: Align(
                 alignment: Alignment.bottomLeft,
                 child: Container(
@@ -177,121 +183,4 @@ class _Strip extends StatelessWidget {
       ),
     );
   }
-}
-
-/// "0:00 / 4:12" above the card at the finger, 8 dp from the card edges. It
-/// lives in the overlay, so no clip of the card cuts it.
-class _TimeBubble extends StatelessWidget {
-  const _TimeBubble({
-    required this.link,
-    required this.state,
-    required this.duration,
-    required this.cardHeight,
-  });
-
-  final LayerLink link;
-  final KSeekState state;
-  final Duration duration;
-  final double cardHeight;
-
-  static const double _padV = 4;
-  static const double _lineHeight = 16;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!state.dragging) return const SizedBox.shrink();
-    final scheme = Theme.of(context).colorScheme;
-    final scaler = MediaQuery.textScalerOf(context)
-        .clamp(maxScaleFactor: MiniPlayerBody.maxTextScale(cardHeight));
-    final at = Duration(
-      milliseconds: (duration.inMilliseconds * state.progress).round(),
-    );
-    final style = Theme.of(context).textTheme.labelMedium?.copyWith(
-      color: scheme.onInverseSurface,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 0.5,
-      height: _lineHeight / 12,
-      fontFeatures: const [FontFeature.tabularFigures()],
-    );
-    // The overlay gives its child tight constraints: Align frees the follower
-    // to take the size of the bubble box.
-    return Align(
-      alignment: Alignment.topLeft,
-      child: CompositedTransformFollower(
-        link: link,
-        showWhenUnlinked: false,
-        targetAnchor: Alignment.topLeft,
-        followerAnchor: Alignment.bottomLeft,
-        offset: Offset(
-          0,
-          -(cardHeight - MiniSeekBand.height) - MiniSeekBand.bubbleGap,
-        ),
-        child: SizedBox(
-          width: state.width,
-          height: scaler.scale(_lineHeight) + 2 * _padV,
-          child: CustomSingleChildLayout(
-            delegate: _BubbleLayout(state.progress * state.width),
-            child: Semantics(
-              // The slider already speaks the position.
-              excludeSemantics: true,
-              child: DecoratedBox(
-                decoration: ShapeDecoration(
-                  color: scheme.inverseSurface,
-                  shape: const StadiumBorder(),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: _padV,
-                  ),
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(text: '${formatClock(at)} '),
-                        TextSpan(
-                          text: '/ ${formatClock(duration)}',
-                          style: TextStyle(
-                            color: scheme.onInverseSurface.withValues(
-                              alpha: 0.7,
-                            ),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    style: style,
-                    textScaler: scaler,
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Centres the bubble on [x], keeping 8 dp from both edges.
-class _BubbleLayout extends SingleChildLayoutDelegate {
-  const _BubbleLayout(this.x);
-
-  final double x;
-
-  @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
-      constraints.loosen();
-
-  @override
-  Offset getPositionForChild(Size size, Size childSize) {
-    const edge = MiniSeekBand.bubbleGap;
-    final max = size.width - childSize.width - edge;
-    final left = (x - childSize.width / 2).clamp(edge, max < edge ? edge : max);
-    return Offset(left, 0);
-  }
-
-  @override
-  bool shouldRelayout(_BubbleLayout old) => old.x != x;
 }

@@ -165,6 +165,7 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
                           child: MiniPlayerCarousel(
                             key: _carousel,
                             cardHeight: MiniPlayer.height,
+                            radius: miniRadius,
                             flight: widget.flight,
                           ),
                         ),

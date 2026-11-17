@@ -688,17 +688,96 @@ void main() {
     testWidgets('a failing clear keeps the queue and the card comes back', (
       tester,
     ) async {
-      final host = await pumpWithPlayer(tester, _player([]));
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
       await host.run(tester, () async {
         await host.h.db.customStatement(
           'CREATE TRIGGER no_delete BEFORE DELETE ON queue_entries '
           "BEGIN SELECT RAISE(ABORT, 'boom'); END",
         );
       });
+      final rest = tester.getTopLeft(find.byType(MiniPlayerBody));
       await swipe(tester, host, 70);
       expect(host.h.c.queueState.items, hasLength(6));
-      expect(find.byType(PlayPauseButton), findsOneWidget);
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)), rest);
+      // The card takes touches again: a tap opens Now Playing.
+      await tester.tap(find.text('T0'));
+      await tester.pump();
+      expect(events, ['open']);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a song picked while the card drops brings it back', (
+      tester,
+    ) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      final rest = tester.getTopLeft(find.byType(MiniPlayerBody));
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(0, 70));
+      await host.run(tester, g.up);
+      await tester.pump(const Duration(milliseconds: 40));
+      await host.run(tester, host.h.play);
+      await settle(tester, host);
+      expect(
+        host.h.c.queueState.items,
+        hasLength(6),
+        reason: 'new queue stays',
+      );
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)), rest);
+      await tester.tap(find.text('T0'));
+      await tester.pump();
+      expect(events, ['open']);
+    });
+
+    testWidgets('up never moves the card down, even if the finger does', (
+      tester,
+    ) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      final rest = tester.getTopLeft(find.byType(MiniPlayerBody)).dy;
+      final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+      await g.moveBy(const Offset(0, -20));
+      await g.moveBy(const Offset(0, 60));
+      await tester.pump();
+      expect(tester.getTopLeft(find.byType(MiniPlayerBody)).dy, rest);
+      await host.run(tester, g.up);
+      await settle(tester, host);
+    });
+
+    group('after a long press the same touch does nothing', () {
+      Future<void> hold(WidgetTester tester, UiHost host, Offset by) async {
+        final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+        await tester.pump(const Duration(milliseconds: 600));
+        for (var i = 1; i <= 6; i++) {
+          await g.moveBy(
+            by / 6,
+            timeStamp: Duration(milliseconds: 600 + i * 50),
+          );
+        }
+        await host.run(
+          tester,
+          () => g.up(timeStamp: const Duration(milliseconds: 1000)),
+        );
+        await settle(tester, host);
+      }
+
+      testWidgets('then down 70: the queue is not cleared', (tester) async {
+        final events = <String>[];
+        final host = await pumpWithPlayer(tester, _player(events));
+        final rest = tester.getTopLeft(find.byType(MiniPlayerBody));
+        await hold(tester, host, const Offset(0, 70));
+        expect(events, ['queue']);
+        expect(host.h.c.queueState.items, hasLength(6));
+        expect(tester.getTopLeft(find.byType(MiniPlayerBody)), rest);
+      });
+
+      testWidgets('then left 150: the track does not change', (tester) async {
+        final events = <String>[];
+        final host = await pumpWithPlayer(tester, _player(events));
+        await hold(tester, host, const Offset(-150, 0));
+        expect(events, ['queue']);
+        expect(host.h.c.queueState.current, 0);
+      });
     });
 
     testWidgets('the stop is announced once to screen readers', (tester) async {

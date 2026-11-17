@@ -102,13 +102,16 @@ class _MiniCardLayerState extends ConsumerState<MiniCardLayer> {
   void _setUp(MiniCardDragRecognizer r) {
     r
       ..onLock = (lock) {
+        // The long press already opened the queue: the rest of this touch
+        // does nothing (a drag that locks after it never starts).
+        if (_longPressed) return;
         _lock = lock;
         _cancelLongPress();
         widget.onLock?.call(lock);
       }
       ..onUpdate = (total) {
         final lock = _lock;
-        if (lock != null && !_longPressed) widget.onUpdate?.call(lock, total);
+        if (lock != null) widget.onUpdate?.call(lock, total);
       }
       ..onEnd = (total, velocity) {
         final lock = _lock;
@@ -156,7 +159,10 @@ class _MiniCardLayerState extends ConsumerState<MiniCardLayer> {
                 right: 0,
                 bottom: 0,
                 height: MiniSeekBand.height,
-                child: MiniSeekBand(cardHeight: widget.cardHeight),
+                child: MiniSeekBand(
+                  cardHeight: widget.cardHeight,
+                  radius: widget.radius,
+                ),
               ),
             ],
           ),
