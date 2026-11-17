@@ -79,26 +79,31 @@ class _PanelHeader extends ConsumerWidget {
             onPressed: selection.clear,
           ),
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.librarySongCount(count),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.titleSmall,
-                ),
-                if (expanded && duration != null)
+            // The head is a fixed 56 dp (the buttons need it), so its two
+            // text lines stop growing at 140 %: 36 dp of text x 1.4 fits.
+            child: MediaQuery.withClampedTextScaling(
+              maxScaleFactor: 1.4,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    formatTotalDuration(l10n, duration),
+                    l10n.librarySongCount(count),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    style: textTheme.titleSmall,
                   ),
-              ],
+                  if (expanded && duration != null)
+                    Text(
+                      formatTotalDuration(l10n, duration),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
           _Button(
