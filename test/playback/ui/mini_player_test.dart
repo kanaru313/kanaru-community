@@ -780,6 +780,79 @@ void main() {
       });
     });
 
+    group('a second finger during a drag is ignored', () {
+      Offset onCard(WidgetTester tester) =>
+          tester.getCenter(find.text('T0')) + const Offset(20, 0);
+
+      testWidgets('vertical: the first finger still settles the card', (
+        tester,
+      ) async {
+        final events = <String>[];
+        final host = await pumpWithPlayer(tester, _player(events));
+        final rest = tester.getTopLeft(find.byType(MiniPlayerBody));
+        final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+        await g.moveBy(const Offset(0, 20));
+        await tester.pump();
+        final second = await tester.startGesture(onCard(tester), pointer: 99);
+        await tester.pump(const Duration(milliseconds: 50));
+        await second.cancel();
+        await g.moveBy(const Offset(0, 10));
+        await tester.pump();
+        await host.run(tester, g.up);
+        await settle(tester, host);
+        expect(tester.getTopLeft(find.byType(MiniPlayerBody)), rest);
+        expect(host.h.c.queueState.items, hasLength(6));
+        expect(events, isEmpty);
+      });
+
+      testWidgets('sideways: the carousel settles and the next swipe works', (
+        tester,
+      ) async {
+        final events = <String>[];
+        final host = await pumpWithPlayer(tester, _player(events));
+        final rest = tester.getTopLeft(find.byType(MiniPlayerBody));
+        final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+        await g.moveBy(const Offset(-40, 0));
+        await tester.pump();
+        final second = await tester.startGesture(onCard(tester), pointer: 99);
+        await tester.pump(const Duration(milliseconds: 50));
+        await second.cancel();
+        await g.moveBy(const Offset(-20, 0));
+        await tester.pump();
+        await host.run(tester, g.up);
+        await settle(tester, host);
+        expect(tester.getTopLeft(find.byType(MiniPlayerBody)), rest);
+        expect(host.h.c.queueState.current, 0);
+
+        final next = await tester.startGesture(
+          tester.getCenter(find.text('T0')),
+        );
+        for (var i = 1; i <= 6; i++) {
+          await next.moveBy(const Offset(-40, 0));
+        }
+        await host.run(tester, next.up);
+        await settle(tester, host);
+        expect(host.h.c.queueState.current, 1);
+      });
+
+      testWidgets('a second finger held 500 ms does not open the queue', (
+        tester,
+      ) async {
+        final events = <String>[];
+        final host = await pumpWithPlayer(tester, _player(events));
+        final g = await tester.startGesture(tester.getCenter(find.text('T0')));
+        await g.moveBy(const Offset(0, 20));
+        await tester.pump();
+        final second = await tester.startGesture(onCard(tester), pointer: 99);
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(events, isEmpty);
+        await second.cancel();
+        await host.run(tester, g.up);
+        await settle(tester, host);
+        expect(events, isEmpty);
+      });
+    });
+
     testWidgets('the stop is announced once to screen readers', (tester) async {
       final messages = <Object?>[];
       tester.binding.defaultBinaryMessenger

@@ -6,8 +6,9 @@ import '../domain/queue_neighbours.dart';
 import 'mini_player_body.dart';
 import 'track_cover.dart';
 
-/// What peeks in for [n] (null: no drag pinned the entries): nothing where there is no neighbour (the area only
-/// stretches there), a bare cover where the entry is not known yet.
+/// What peeks in for [n] (null: no drag pinned the entries): nothing where
+/// there is no neighbour (the area only stretches there), a bare cover where
+/// the entry is not known yet.
 Widget? miniCarouselSlot(Neighbour? n, double cardHeight) => switch (n) {
   KnownNeighbour(:final item) => MiniPlayerBody(
     trackId: item.trackId,

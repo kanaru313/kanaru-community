@@ -52,6 +52,10 @@ class MiniCardLayer extends ConsumerStatefulWidget {
 class _MiniCardLayerState extends ConsumerState<MiniCardLayer> {
   Timer? _longPress;
   Offset? _downAt;
+
+  /// The first finger of the touch; every other pointer is ignored until it
+  /// lifts, so a second finger cannot reset the lock or start a long press.
+  int? _pointer;
   bool _longPressed = false;
   MiniDragLock? _lock;
 
@@ -61,6 +65,8 @@ class _MiniCardLayerState extends ConsumerState<MiniCardLayer> {
   }
 
   void _onDown(PointerDownEvent e) {
+    if (_pointer != null) return;
+    _pointer = e.pointer;
     _downAt = e.position;
     _longPressed = false;
     _lock = null;
@@ -73,7 +79,14 @@ class _MiniCardLayerState extends ConsumerState<MiniCardLayer> {
     });
   }
 
+  void _onEnd(PointerEvent e) {
+    if (e.pointer != _pointer) return;
+    _pointer = null;
+    _cancelLongPress();
+  }
+
   void _onMove(PointerMoveEvent e) {
+    if (e.pointer != _pointer) return;
     final start = _downAt;
     if (start != null && (e.position - start).distance > miniDragSlop) {
       _cancelLongPress();
@@ -144,8 +157,8 @@ class _MiniCardLayerState extends ConsumerState<MiniCardLayer> {
       child: Listener(
         onPointerDown: _onDown,
         onPointerMove: _onMove,
-        onPointerUp: (_) => _cancelLongPress(),
-        onPointerCancel: (_) => _cancelLongPress(),
+        onPointerUp: _onEnd,
+        onPointerCancel: _onEnd,
         child: KPressable(
           radius: widget.radius,
           onTap: () {
