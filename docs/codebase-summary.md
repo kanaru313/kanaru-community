@@ -38,7 +38,7 @@ library UI bodies (their seeds are in the table above).
 - `packages/kanaru_ui` (no music types, imports no app code):
   - Tokens and theme: `KSpace`, `KRadius`, `KShape`, `KLayout`, `KBreakpoints`, `KMotion`, `buildKanaruTheme`, `FormFactor`.
   - Icons: `KIcons` (the only file that names `Icons`).
-  - Pages and headers: `KPage`, `PageHeader`, `PageHeaderScope`, `KEmpty`, `KEmptyPage`, `ProBadge`.
+  - Pages and headers: `KPage`, `PageHeader`, `PageHeaderScope`, `KDetailTitleHost`, `KEmpty`, `KEmptyPage`, `ProBadge`.
   - Choice and feedback: `KCheckMark` (animated ring / disc+tick / dash; `plain` style = bare tick; used by `SelectionRow`), `SelectionRow`, `SelectionOption`, `showSelectionPicker` (with `confirm`, `header`, `anchor`), `showMultiSelectionSheet` (optional tristate select-all row, plain tick on the right for icon options, mark at the start for text options), `showKSheet`, `showKDialog`, `confirmAction`, `showAppSnackBar`.
   - Switch: `KSwitch` (own 52 × 32 switch: fill grows from the thumb, thumb springs, tick drawn; used by `KSwitchRow` in `widgets/setup/`, no M3 `Switch`).
   - Rows and tiles: `KListRow`, `KSwipeActions` (row swipe, per-pointer drag slop), `songClick` + `SongClick` (play / toggle / range click classifier), `KChip`, `KPressable`, `KContextRegion`, `KCover`, `KEqualizerIcon`, `KGap` (typedef of `Gap`).

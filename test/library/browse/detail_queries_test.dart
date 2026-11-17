@@ -87,7 +87,7 @@ void main() {
     expect(rock.albums.single.title, 'Z');
   });
 
-  test('group totals with detected languages', () async {
+  test('group totals', () async {
     await add(
       '1.flac',
       artists: ['A', 'B'],
@@ -98,12 +98,9 @@ void main() {
     await add('2.flac', artists: ['A'], language: 'vi', durationMs: 50);
     await add('3.flac', artists: ['C'], language: 'en', durationMs: 7);
     final t = await groupTotals(db, const SongScope.language('vie'));
-    expect((t.tracks, t.artists, t.durationMs, t.detected), (2, 2, 150, 1));
+    expect((t.tracks, t.durationMs), (2, 150));
     final none = await groupTotals(db, const SongScope.language('xxx'));
-    expect(
-      (none.tracks, none.artists, none.durationMs, none.detected),
-      (0, 0, 0, 0),
-    );
+    expect((none.tracks, none.durationMs), (0, 0));
     final unknown = await add('4.flac');
     expect(unknown, greaterThan(0));
     expect((await groupTotals(db, const SongScope.language(null))).tracks, 1);

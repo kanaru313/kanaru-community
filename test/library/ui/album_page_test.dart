@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui' show SemanticsAction, SemanticsFlag;
 
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
@@ -60,21 +61,34 @@ Future<LibraryHarness> _pump(
 }
 
 void main() {
-  testWidgets('shows the album: title in the header, artist, year, songs', (
+  testWidgets('shows the album: name once in the card, artist, year, songs', (
     tester,
   ) async {
+    final handle = tester.ensureSemantics();
     await _pump(tester);
+    expect(find.text('Blue'), findsOneWidget);
+    expect(inPageHeader('Blue'), findsNothing);
+    expect(headerNodes(tester, 'Blue'), 1);
+    expect(find.bySemanticsLabel('Zed'), findsOneWidget);
     expect(
-      find.descendant(of: find.byType(PageHeader), matching: find.text('Blue')),
+      find.descendant(
+        of: find.byType(KDetailLine),
+        matching: find.textContaining('2001'),
+      ),
       findsOneWidget,
     );
-    expect(find.text('Zed'), findsWidgets);
-    expect(find.text('2001'), findsOneWidget);
-    expect(find.text('3 songs · 3 min'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(KDetailHero),
+        matching: find.text('3 songs · 3 min'),
+      ),
+      findsOneWidget,
+    );
     expect(tileTitles(tester), ['Blue 1', 'Blue 2', 'Blue 3']);
     final tile = tester.widget<SongTile>(find.byType(SongTile).first);
     expect(tile.showNumber, isTrue);
     expect(find.text('1'), findsOneWidget);
+    handle.dispose();
     await unmountApp(tester);
   });
 
@@ -255,7 +269,9 @@ void main() {
   ) async {
     final h = await _pump(tester);
     final albumLocation = h.location;
-    await tester.tap(find.text('Zed').first);
+    await tester.tap(
+      find.descendant(of: find.byType(KDetailLine), matching: find.text('Zed')),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(h.location, startsWith('/library/artists/'));
@@ -289,6 +305,73 @@ void main() {
     await unmountApp(tester);
   });
 
+  testWidgets('the artist link opens the artist from the keyboard', (
+    tester,
+  ) async {
+    final h = await _pump(tester);
+    final link = find.descendant(
+      of: find.byType(KDetailLine),
+      matching: find.text('Zed'),
+    );
+    Focus.of(tester.element(link)).requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(h.location, startsWith('/library/artists/'));
+    await unmountApp(tester);
+  });
+
+  testWidgets('an album without an artist has the year and no link', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    final h = await _pump(tester);
+    await addAlbum(h, 'Lone', '', year: 1987, trackArtists: []);
+    await h.settle(tester);
+    h.router.push(
+      LibraryLocations.album(
+        AlbumKey.decode(
+          albumKeyFor(
+            album: 'Lone',
+            albumArtist: '',
+            artists: const [],
+          )!.encode(),
+        )!,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await h.settle(tester);
+    expect(find.text('1987'), findsOneWidget);
+    expect(find.semantics.byFlag(SemanticsFlag.isLink), findsNothing);
+    handle.dispose();
+    await unmountApp(tester);
+  });
+
+  testWidgets('the header shows the name only once it scrolls out of sight', (
+    tester,
+  ) async {
+    final h = await _pump(tester, width: 400);
+    await addAlbum(h, 'Long', 'Zed', year: 2002, tracks: 30);
+    await h.settle(tester);
+    h.router.push(
+      LibraryLocations.album(AlbumKey.decode(albumId('Long', 'Zed'))!),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await h.settle(tester);
+    expect(inPageHeader('Long'), findsNothing);
+    final list = find.byType(CustomScrollView).last;
+    await tester.drag(list, const Offset(0, -500));
+    await tester.pumpAndSettle();
+    expect(inPageHeader('Long'), findsOneWidget);
+    await tester.drag(list, const Offset(0, 900));
+    await tester.pumpAndSettle();
+    expect(inPageHeader('Long'), findsNothing);
+    await unmountApp(tester);
+  });
+
   testWidgets('a key that does not decode, or no album, is not found', (
     tester,
   ) async {
@@ -296,7 +379,7 @@ void main() {
     h.router.push('/library/albums/abc');
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Not found'), findsWidgets);
+    expect(inPageHeader('Not found'), findsOneWidget);
     h.router.pop();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));

@@ -64,7 +64,7 @@ void main() {
       '日本語 · Japanese',
       'Unknown',
     ]);
-    expect(find.text('3 songs · 1 auto-detected'), findsOneWidget);
+    expect(find.text('3 songs'), findsOneWidget);
     expect(find.text('1 song'), findsOneWidget);
     expect(find.text('2 songs'), findsOneWidget);
     await unmountApp(tester);
@@ -203,14 +203,12 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('a language with detected songs counts them on line two', (
-    tester,
-  ) async {
+  testWidgets('line two is the song count', (tester) async {
     await _pump(tester);
     final cards = tester.widgetList<KMediaCard>(find.byType(KMediaCard));
     expect(
       cards.firstWhere((c) => c.title.startsWith('Tiếng')).line2,
-      '3 songs · 1 auto-detected',
+      '3 songs',
     );
     expect(cards.firstWhere((c) => c.title == 'Unknown').line2, '2 songs');
     await unmountApp(tester);

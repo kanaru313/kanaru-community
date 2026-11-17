@@ -22,32 +22,22 @@ class GroupShelves {
       Object.hash(Object.hashAll(artists), Object.hashAll(albums));
 }
 
-/// Totals of a scope (genre, language) for its banner.
+/// Songs and length of a scope: the banner of a genre or language, the third
+/// line of an artist page.
 class GroupTotals {
-  const GroupTotals({
-    required this.tracks,
-    required this.artists,
-    required this.durationMs,
-    required this.detected,
-  });
+  const GroupTotals({required this.tracks, required this.durationMs});
 
   final int tracks;
-  final int artists;
   final int durationMs;
-
-  /// Tracks whose language came from detection.
-  final int detected;
 
   @override
   bool operator ==(Object other) =>
       other is GroupTotals &&
       other.tracks == tracks &&
-      other.artists == artists &&
-      other.durationMs == durationMs &&
-      other.detected == detected;
+      other.durationMs == durationMs;
 
   @override
-  int get hashCode => Object.hash(tracks, artists, durationMs, detected);
+  int get hashCode => Object.hash(tracks, durationMs);
 }
 
 bool _same<T>(List<T> a, List<T> b) {

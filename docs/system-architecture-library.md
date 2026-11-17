@@ -351,8 +351,8 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
 - `groupShelves(db, scope)` (genre or language): artists, most tracks first,
   and albums, newest first, counted inside the scope. The page shows a shelf
   from two items up and caps it.
-- `groupTotals(db, scope)`: tracks, distinct artists, duration, tracks whose
-  language was detected.
+- `groupTotals(db, scope)`: tracks and duration. The artist
+  page reads it too (`groupTotalsProvider(playScope)`) for its third line.
 - The providers are throttled streams (`artistAlbumsProvider`,
   `groupShelvesProvider`, `groupTotalsProvider`), deduplicated.
 
@@ -712,8 +712,8 @@ Every call is awaited; a failure is logged and shows a snack bar.
   layout it switches to), the same on both shells. The ▶ of a collection row is
   a plain small icon, no disc.
 - Languages: `LanguageTile` (`KMediaCard`, ▶) per language with `languages`
-  (`help` for "unknown", always last), `N songs · M auto-detected` (the
-  second part only when nonzero), and the note above the list. `languageDisplayName`: the native
+  (`help` for "unknown", always last), `N songs`, and the note above the list.
+  Nothing on a row says a language was detected. `languageDisplayName`: the native
   name, plus the name in the app language when it differs; an unknown code
   shows as the code.
 - Loading: in list view `collectionBody` shows skeleton rows
@@ -747,8 +747,13 @@ routes in `ui/browse/library_routes.dart`.
   "Not found" with a back button. Every open from a page is `openLibraryPage`
   (push): Back returns one page at a time. A page that was the first of the
   stack (a link from outside) goes back to its list.
-- `DetailFrame`: `PageHeader(title: name, onBack)` and the page. No ⋮ in the
-  header. `DetailActions`: Play (filled), shuffle (tonal), ⋮ (the page's own menu: a sheet on the mobile shell, a centred dialog on desktop). Play and shuffle take every song of the
+- `DetailFrame(title, titleInContent: true)`: `PageHeader(title, titleInContent,
+  onBack)` and the page, inside a `KDetailTitleHost` (itself inside the tint).
+  The page shows its name once, in its content (`KDetailHero`, `KColorBanner`,
+  `KGridHeading`, each a header for screen readers); the header is empty
+  until that name is scrolled out of sight, then shows it. `DetailNotFound`
+  passes `titleInContent: false` ("Not found" stays in the header);
+  `DetailPending` has an empty title. No ⋮ in the header. `DetailActions`: Play (filled), shuffle (tonal), ⋮ (the page's own menu: a sheet on the mobile shell, a centred dialog on desktop). Play and shuffle take every song of the
   page in the page's current sort, ignoring its filter; the context carries the
   encoded key and the name.
 - `DetailSongsHost(list, scope, ...)` owns the page's filter and builds the
@@ -764,27 +769,34 @@ routes in `ui/browse/library_routes.dart`.
   `openListSort` (`ui/browse/list_sort_popover.dart`). On the mobile shell Back
   closes the filter first.
 - Album: `KDetailLayout` (wide from 840 px of page width) with `KDetailHero`:
-  cover and, bottom aligned or under it, the album artist (primary colour, opens
-  the artist page; plain text for the unknown artist), the year and the
-  buttons. The page is tinted (see "Detail page tint"). Rows are
+  cover, the name, line two (`KDetailLine`: the album artist as a link to the
+  artist page, ` · year`; the year alone when there is no artist; plain text
+  when the album has no artist key), line three `N songs · length` (the sticky
+  list bar under it repeats the count on purpose) and the buttons. The page is tinted (see "Detail page tint"). Rows are
   `SongTile(showNumber: true)`; no disc headers and no "other albums".
-- Artist: round photo (not faded; the page is tinted like an album), `N albums` (own; the line is left out when
-  the artist owns none), shelves Albums (newest
+- Artist: round photo (not faded; the page is tinted like an album), the name,
+  line two `N albums` (own; else `Appears on N albums`; left out when neither),
+  line three `N songs · length` (from `groupTotalsProvider(playScope)`, the
+  same songs Play plays; left out until known or when empty), shelves Albums (newest
   first) and Appears on, then the songs. A shelf with no item and the songs
   part of an artist with no `track_artists` row are left out. Play and shuffle
   of such an album-artist-only page play `SongScope.albumArtist(key)` (tracks
   whose stored album artist key is the artist's); `ArtistSongs` is not widened. Name:
   `artistNameProvider` (tag name, else the display artist of its first album).
-- Genre / language: `KColorBanner` (colour from the name, big `N songs`,
-  `M artists · length`, language adds `· K auto-detected`), artist shelf and
-  album shelf from two items up, capped at 10 (mobile shell) or 8 (desktop),
-  then the songs (`detailSongs`, most played first). Language pages note what
-  "auto-detected" means when the page has detected songs (the unknown group
-  always has its own note) and
-  `SongTile(showDetected)` tags songs whose language was detected.
+- Genre / language: `KColorBanner` (colour from the name, the name as the
+  headline, one line `N songs · length`; the unknown language adds a first
+  line "No language tag"), artist shelf and album shelf from two items up,
+  capped at 10 (mobile shell) or 8 (desktop), then the songs (`detailSongs`,
+  most played first). The unknown language page has its note under the banner
+  as a `KDetailDescription` (three lines, "Show more" / "Show less"); which
+  pages are open is kept for the session in `detailDescriptionExpandedProvider`
+  (keyed `'<kind>:<id>'`, not stored). No label anywhere says a language was
+  detected (page, song rows, list row, menu header).
 - See all: `ArtistAlbumsPage(appears)` and `GroupSeeAllPage(artists)` are
-  `KCollectionGrid`s of `AlbumCard` / `ArtistCard`, titled `Albums · name`,
-  `Appears on · name`, `Artists · name`. `SeeAllLocations` builds the paths. A
+  `KCollectionGrid`s of `AlbumCard` / `ArtistCard` under a `KGridHeading`
+  (`Albums · name`, `Appears on · name`, `Artists · name`, caption `N albums`
+  / `N artists`); the header carries the same title once the heading scrolls
+  away. `SeeAllLocations` builds the paths. A
   group that does not exist (or has no track) is "Not found" here too.
 - Data: `albumDetailProvider`, `artistDetailProvider`, `artistNameProvider`,
   `genreNameProvider` on top of the throttled summaries; the shelves and totals
@@ -826,9 +838,8 @@ page, header band included, in `CoverTintBackground(strength: 0.5, fadeIn:
 true)`: nothing is drawn until the colours are known, then a 300 ms fade-in;
 choosing or removing the custom cover on an open page tweens (the old colours
 stay while `loading`). The sticky list bar (`KStickyBarSliver`) paints the page ground: the ground's base plus the same tint gradient shifted by the bar's place in the ground, so no seam and no blur; `surface` on untinted pages. Group pages pass no
-tint. `KDetailLayout` draws no background. The album artist link uses
-`primary` (follows the playing cover), so on a tinted page it can fall just
-under 4.5:1; the tint is not changed for it.
+tint. `KDetailLayout` draws no background. The album artist link is
+`onSurface` and underlined, so the tint does not affect its contrast.
 
 ## Folders tab
 
@@ -955,7 +966,7 @@ callbacks come from the caller. Width-based layout lives here.
 | `KShelf` | Titled horizontal list of fixed-width items; the `>` on the title row opens "see all" (`seeAllLabel` is its semantics label) |
 | `KCollectionGrid` | Sliver; column count from the width and the shell's minimum tile width (`mobileMinTileWidth`, `desktopMinTileWidth`); tile height is width times `tileAspect` plus `footerExtent` |
 | `KGridCard` | Tile of an album or artist grid: a cover as wide as the tile (drawn by `coverBuilder(context, side)`), one title line, one subtitle line; `footerExtent(scaler)` is the height under the cover for `KCollectionGrid`; `circle` centres the texts for round photos |
-| `KColorTile`, `KColorBanner` | Pastel tile or banner for genres and languages; fill and ink from `KCoverPlaceholderColors.of(seed, brightness)`, so a tile matches the cover placeholder of the same seed |
+| `KColorTile`, `KColorBanner` | Pastel tile or banner for genres and languages (the banner: the name as headline, up to two lines, and `lines` under it); fill and ink from `KCoverPlaceholderColors.of(seed, brightness)`, so a tile matches the cover placeholder of the same seed |
 | `KSubTabBar` | Scrolling tab row, underline on the selected tab, which scrolls to the centre. `initialOffset` and `onOffsetChanged` let the next page start where this row was |
 
 Sizes that the mockups give and the tokens lack (card radius 14, panel radius
@@ -967,8 +978,12 @@ Sizes that the mockups give and the tokens lack (card radius 14, panel radius
 
 | Widget | Notes |
 |---|---|
-| `KDetailLayout` | `header` plus list `slivers`. Under 840 px of page width (measured on the page, not the window) the header sits above the list; from 840 the header is a fixed 320 column, bottom aligned and scrolling on its own when the window is short. Draws no background: a page tints itself by wrapping the layout in `CoverTintBackground` (see "Detail page tint") |
-| `KDetailHero` | Top of an album or artist page for the `header` slot: narrow = 132 cover on the left, text and buttons aligned to its bottom; wide (asked of `KDetailLayout.isWide`) = cover as wide as the column, faded at the bottom and right edges (a round photo is not), text below |
+| `KDetailLayout` | `header` plus list `slivers`. Under 840 px of page width (measured on the page, not the window) the header sits above the list; from 840 the header is a fixed 320 column, aligned to the top and scrolling on its own when the window is short. Draws no background: a page tints itself by wrapping the layout in `CoverTintBackground` (see "Detail page tint") |
+| `KDetailHero` | Top of an album or artist page for the `header` slot: the name (`KDetailTitle`), `line2` (`KDetailLine`), `line3`, buttons, optional description; narrow = 132 cover on the left, text centred on it; wide (asked of `KDetailLayout.isWide`) = cover as wide as the column, faded at the bottom and right edges (a round photo is not), same lines below |
+| `KDetailLine` | Second line of a hero: text (a focusable underlined link when `onTap` is set, touch area at least 48 dp tall without growing the row) and a plain ` · trailing` (the year) |
+| `KDetailDescription` | Text clamped to three lines with "more" / "less" only when it overflows; controlled (`expanded`, `onExpandedChanged`, labels from the caller) |
+| `KDetailTitleHost` | Wraps a page's header and content; tells `PageHeader(titleInContent: true)` whether the name in the content (`KDetailTitle`) is scrolled out of sight, so the header shows it then |
+| `KGridHeading` | Name (up to two lines) and one-line caption at the head of a "see all" grid |
 | `KStickyBarSliver` | Pinned sliver bar, opaque: painted with the page ground (`KPageGround` of the `CoverTintBackground` above: base + tint gradient shifted by the bar's place) or `surface` without one. No blur |
 | `showKLayeredMenu` | `KMenuPage` (optional `initialPage`: opens on that sub-page, Back goes to the root; header, groups of `KMenuRow`, footer of two `KMenuButton`s, note). A row either runs `onTap`, opens a sub-page (`opens`), or folds chips (`chips`); `soonLabel` or `enabled: false` dims it and makes it inert; `danger`, `proLabel`, `trailing` icon button. A chosen row closes the menu first and then runs its callback. Back, the arrow and Esc on a sub-page return one page; on the root they close |
 | `KMenuRow.leading` | A picture (an album cover) in place of the row's icon |

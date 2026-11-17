@@ -1,6 +1,10 @@
 import 'package:kanaru/src/library/ui/songs/song_tile.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
+
+import 'dart:ui' show SemanticsFlag;
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../browse/support/library_fixture.dart';
 import 'library_harness.dart';
@@ -49,3 +53,16 @@ List<String> tileTitles(WidgetTester tester) => [
   for (final t in tester.widgetList<SongTile>(find.byType(SongTile)))
     t.info.title,
 ];
+
+/// [text] inside the page header (the name the header shows once it is
+/// scrolled out of sight, or a fixed title).
+Finder inPageHeader(String text) =>
+    find.descendant(of: find.byType(PageHeader), matching: find.text(text));
+
+/// How many semantics nodes are a header labelled exactly [label]. Needs
+/// `tester.ensureSemantics()` to be held.
+int headerNodes(WidgetTester tester, String label) => find.semantics
+    .byFlag(SemanticsFlag.isHeader)
+    .evaluate()
+    .where((n) => n.getSemanticsData().label == label)
+    .length;

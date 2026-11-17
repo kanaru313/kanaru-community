@@ -13,7 +13,6 @@ MenuSpec _menu(
   MenuOrigin origin = const MenuOrigin.list(),
   String? key = 'indie',
   int albums = 7,
-  int detected = 0,
 }) => buildGroupMenu(
   GroupMenuData(
     kind: kind,
@@ -23,7 +22,6 @@ MenuSpec _menu(
     albums: [for (var i = 0; i < albums; i++) albumSummary('A$i', 'X')],
     folders: [folderRef('One')],
     durationMs: 600000,
-    detected: detected,
   ),
   origin,
   env(),
@@ -58,7 +56,7 @@ void main() {
   });
 
   test('language rows end with the dimmed detection settings row', () {
-    final spec = _menu(GroupMenuKind.language, key: 'vie', detected: 2);
+    final spec = _menu(GroupMenuKind.language, key: 'vie');
     expect(rowIds(spec.groups), [
       MenuItemId.goLanguage,
       MenuItemId.goAlbum,
@@ -70,7 +68,12 @@ void main() {
       MenuItemId.languageSettings,
     ]);
     expect(rowOf(spec, MenuItemId.languageSettings).soon, isTrue);
-    expect(spec.header.subtitle, '5 songs · 2 auto-detected');
+    expect(spec.header.subtitle, '5 songs · 10 min');
+  });
+
+  test('the unknown language header says it has no language tag', () {
+    final spec = _menu(GroupMenuKind.language, key: null);
+    expect(spec.header.subtitle, 'No language tag · 5 songs · 10 min');
   });
 
   test('own page hides the kind link, play and shuffle', () {

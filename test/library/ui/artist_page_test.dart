@@ -59,12 +59,19 @@ void main() {
   testWidgets('shows album count, shelves newest first and every song', (
     tester,
   ) async {
+    final handle = tester.ensureSemantics();
     await _pump(tester, 'Zed');
+    expect(find.text('Zed'), findsOneWidget);
+    expect(inPageHeader('Zed'), findsNothing);
+    expect(headerNodes(tester, 'Zed'), 1);
+    expect(find.text('2 albums'), findsOneWidget);
     expect(
-      find.descendant(of: find.byType(PageHeader), matching: find.text('Zed')),
+      find.descendant(
+        of: find.byType(KDetailHero),
+        matching: find.text('6 songs · 6 min'),
+      ),
       findsOneWidget,
     );
-    expect(find.text('2 albums'), findsOneWidget);
     expect(find.text('Albums'), findsOneWidget);
     expect(find.text('Appears on'), findsOneWidget);
     final shelfAlbums = [
@@ -73,6 +80,7 @@ void main() {
     ];
     expect(shelfAlbums, ['New', 'Old', 'Mix']);
     expect(find.byType(KShelf), findsNWidgets(2));
+    handle.dispose();
     await unmountApp(tester);
   });
 
@@ -101,6 +109,8 @@ void main() {
   ) async {
     await _pump(tester, 'Various');
     expect(find.text('1 album'), findsOneWidget);
+    // Line three counts what Play plays: the songs of the artist's albums.
+    expect(find.text('1 song · 1 min'), findsOneWidget);
     expect(find.byType(KListSortFilterBar), findsNothing);
     expect(find.text('Appears on'), findsNothing);
     await unmountApp(tester);
@@ -146,9 +156,22 @@ void main() {
     tester,
   ) async {
     await _pump(tester, 'Solo');
-    expect(find.textContaining('album'), findsNothing);
+    expect(find.text('Appears on 1 album'), findsOneWidget);
+    expect(find.textContaining('albums'), findsNothing);
     expect(find.text('Appears on'), findsOneWidget);
     expect(find.byType(KListSortFilterBar), findsOneWidget);
+    await unmountApp(tester);
+  });
+
+  testWidgets('albums arriving late do not throw and leave the header empty', (
+    tester,
+  ) async {
+    final h = await _pump(tester, 'Various');
+    await addAlbum(h, 'Fresh', 'Various', tracks: 1);
+    await h.settle(tester);
+    expect(tester.takeException(), isNull);
+    expect(inPageHeader('Various'), findsNothing);
+    expect(find.text('2 albums'), findsOneWidget);
     await unmountApp(tester);
   });
 
@@ -176,11 +199,13 @@ void main() {
     expect(h.location, '$artistLocation/albums');
     expect(
       find.descendant(
-        of: find.byType(PageHeader),
+        of: find.byType(KGridHeading),
         matching: find.text('Albums · Zed'),
       ),
       findsOneWidget,
     );
+    expect(inPageHeader('Albums · Zed'), findsNothing);
+    expect(find.text('2 albums'), findsOneWidget);
     expect(find.byType(AlbumCard), findsNWidgets(2));
     h.router.pop();
     await tester.pump();
@@ -192,6 +217,7 @@ void main() {
     await h.settle(tester);
     expect(h.location, '$artistLocation/appears');
     expect(find.text('Appears on · Zed'), findsOneWidget);
+    expect(inPageHeader('Appears on · Zed'), findsNothing);
     expect(find.byType(AlbumCard), findsOneWidget);
     await unmountApp(tester);
   });

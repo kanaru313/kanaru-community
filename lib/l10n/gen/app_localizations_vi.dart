@@ -1003,11 +1003,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get libraryLanguageUnknown => 'Chưa rõ';
 
   @override
-  String libraryLanguageStatsDetected(int songs, int detected) {
-    return '$songs bài · $detected tự nhận diện';
-  }
-
-  @override
   String get libraryLanguagesNote =>
       'Lấy từ tag ngôn ngữ của bài; bài không có tag thì Kanaru tự nhận diện. Đổi trong Cài đặt › Thư viện.';
 
@@ -1081,16 +1076,18 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String libraryDetectedCount(int count) {
-    return '$count tự nhận diện';
+  String libraryAppearsInAlbumCount(int count) {
+    return 'Xuất hiện trong $count album';
   }
 
   @override
-  String get libraryAutoDetectedTag => 'tự nhận diện';
+  String get libraryLanguageNoTag => 'Không có tag ngôn ngữ';
 
   @override
-  String get libraryLanguageDetectedNote =>
-      'Bài có nhãn “tự nhận diện” không có tag ngôn ngữ; Kanaru đoán từ tên bài và lời.';
+  String get libraryShowMore => 'Xem thêm';
+
+  @override
+  String get libraryShowLess => 'Thu gọn';
 
   @override
   String get libraryLanguageUnknownNote =>

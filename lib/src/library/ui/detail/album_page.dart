@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/library_keys.dart';
 import '../../../media/domain/play_context.dart';
 import '../../domain/browse/browse_items.dart';
@@ -11,6 +12,7 @@ import '../../domain/library_tabs.dart';
 import '../../state/browse/detail_providers.dart';
 import '../../state/custom_cover_providers.dart';
 import '../browse/item_covers.dart';
+import '../browse/library_labels.dart';
 import '../browse/library_navigation.dart';
 import '../library_locations.dart';
 import '../menus/menu_origin.dart';
@@ -19,9 +21,9 @@ import 'detail_header.dart';
 import 'detail_tint.dart';
 import 'detail_songs.dart';
 
-/// Album page: cover, artist link, year and buttons (a left column on a wide
-/// page), then the album's songs in track order with their numbers. The page
-/// takes a soft tint from the cover it shows.
+/// Album page: cover, name, artist link with the year, counts and buttons (a
+/// left column on a wide page), then the album's songs in track order with
+/// their numbers. The page takes a soft tint from the cover it shows.
 class AlbumPage extends ConsumerWidget {
   const AlbumPage({super.key, required this.albumId});
 
@@ -52,6 +54,7 @@ class AlbumPage extends ConsumerWidget {
       label: album.title,
     );
     final scope = SongScope.album(key);
+    final l10n = AppLocalizations.of(context);
     return DetailFrame(
       title: album.title,
       fallback: _fallback,
@@ -71,16 +74,12 @@ class AlbumPage extends ConsumerWidget {
               dimension: side,
               radius: BorderRadius.circular(14),
             ),
-            body: [
-              _ArtistLink(albumKey: key, album: album),
-              if (album.year != null)
-                Text(
-                  '${album.year}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-            ],
+            title: album.title,
+            line2: _artistLine(context, key, album),
+            line3: [
+              l10n.librarySongCount(album.trackCount),
+              formatTotalDuration(l10n, album.durationMs),
+            ].join(' · '),
             actions: DetailActions(
               scope: scope,
               list: BrowseList.albumTracks,
@@ -99,50 +98,28 @@ class AlbumPage extends ConsumerWidget {
       ),
     );
   }
-}
 
-/// The album artist, in the primary colour, opening the artist page.
-class _ArtistLink extends StatelessWidget {
-  const _ArtistLink({required this.albumKey, required this.album});
-
-  final AlbumKey albumKey;
-  final AlbumSummary album;
-
-  @override
-  Widget build(BuildContext context) {
+  /// Second line: the album artist (a link when the album has an artist key)
+  /// and the year; null when the album has neither.
+  KDetailLine? _artistLine(
+    BuildContext context,
+    AlbumKey key,
+    AlbumSummary album,
+  ) {
     final name = album.artist;
-    if (name == null || name.isEmpty) return const SizedBox.shrink();
-    final style = Theme.of(context).textTheme.titleMedium?.copyWith(
-      color: Theme.of(context).colorScheme.primary,
-      fontWeight: FontWeight.w600,
-    );
-    if (albumKey.artistKey.isEmpty) return Text(name, style: style);
-    void open() => openLibraryPage(
-      context,
-      LibraryLocations.artist(ArtistKey(albumKey.artistKey)),
-    );
-    return Semantics(
-      button: true,
-      link: true,
-      excludeSemantics: true,
-      label: name,
-      onTap: open,
-      child: InkWell(
-        borderRadius: KRadius.sm,
-        onTap: open,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: KLayout.minTarget),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              name,
-              style: style,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+    final year = album.year;
+    if (name == null || name.isEmpty) {
+      return year == null ? null : KDetailLine(text: '$year');
+    }
+    return KDetailLine(
+      text: name,
+      onTap: key.artistKey.isEmpty
+          ? null
+          : () => openLibraryPage(
+              context,
+              LibraryLocations.artist(ArtistKey(key.artistKey)),
             ),
-          ),
-        ),
-      ),
+      trailing: year?.toString(),
     );
   }
 }

@@ -27,7 +27,6 @@ class GroupMenuData {
     required this.albums,
     required this.folders,
     required this.durationMs,
-    this.detected = 0,
   });
 
   final GroupMenuKind kind;
@@ -39,9 +38,6 @@ class GroupMenuData {
   final List<AlbumSummary> albums;
   final List<FolderRef> folders;
   final int durationMs;
-
-  /// Languages: how many of [ids] got their language by detection.
-  final int detected;
 }
 
 /// Menu of a genre or a language: the same rows, apart from the kind's own
@@ -110,9 +106,11 @@ MenuSpec buildGroupMenu(GroupMenuData data, MenuOrigin origin, MenuEnv env) {
           l10n.librarySongCount(data.ids.length),
           formatTotalDuration(l10n, data.durationMs),
         ].join(' · ')
-      : data.detected > 0
-      ? l10n.libraryLanguageStatsDetected(data.ids.length, data.detected)
-      : l10n.librarySongCount(data.ids.length);
+      : [
+          if (data.key == null) l10n.libraryLanguageNoTag,
+          l10n.librarySongCount(data.ids.length),
+          formatTotalDuration(l10n, data.durationMs),
+        ].join(' · ');
   return MenuSpec(
     header: MenuHeader(
       image: MenuImage.tile,

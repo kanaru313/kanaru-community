@@ -102,25 +102,18 @@ class GenreSummary {
 }
 
 /// One language of the Languages list; [code] null groups tracks without one.
-/// [detectedCount] is how many of [trackCount] got the language by detection.
 class LanguageSummary {
-  const LanguageSummary({
-    required this.code,
-    required this.trackCount,
-    required this.detectedCount,
-  });
+  const LanguageSummary({required this.code, required this.trackCount});
 
   final String? code;
   final int trackCount;
-  final int detectedCount;
 
   @override
   bool operator ==(Object other) =>
       other is LanguageSummary &&
       other.code == code &&
-      other.trackCount == trackCount &&
-      other.detectedCount == detectedCount;
+      other.trackCount == trackCount;
 
   @override
-  int get hashCode => Object.hash(code, trackCount, detectedCount);
+  int get hashCode => Object.hash(code, trackCount);
 }

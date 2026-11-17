@@ -237,7 +237,6 @@ Future<MenuSpec> _groupMenuSpec(
       albums: await albumSummaries(db, scope: scope, newestFirst: true),
       folders: await foldersOf(db, scope),
       durationMs: totals.durationMs,
-      detected: totals.detected,
     ),
     origin,
     env,
