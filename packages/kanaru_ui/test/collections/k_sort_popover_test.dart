@@ -303,17 +303,50 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('criteria rows are 2 dp apart', (tester) async {
+  testWidgets('criteria hit areas touch (tints end up 4 dp apart)', (
+    tester,
+  ) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(scaledHost(_Opener(onResult: (_) {})));
     await _open(tester);
     Rect row(String t) => tester.getRect(
       find.ancestor(of: find.text(t), matching: find.byType(SelectionRow)),
     );
-    expect(
-      row('Criterion 1').top - row('Criterion 0').bottom,
-      KLayout.dropdownRowGap,
+    expect(row('Criterion 1').top - row('Criterion 0').bottom, 0);
+  });
+
+  for (final (name, size) in [
+    ('mobile', const Size(400, 800)),
+    ('desktop', const Size(1300, 800)),
+  ]) {
+    testWidgets('rows are 40 tall on $name', (tester) async {
+      useWindow(tester, size);
+      await tester.pumpWidget(scaledHost(_Opener(onResult: (_) {})));
+      await _open(tester);
+      final r = tester.getRect(
+        find.ancestor(
+          of: find.text('Criterion 0'),
+          matching: find.byType(SelectionRow),
+        ),
+      );
+      expect(r.height, KLayout.dropdownRowHeight);
+    });
+  }
+
+  testWidgets('200 % text: rows grow, no overflow', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      scaledHost(_Opener(onResult: (_) {}), textScale: 2),
     );
+    await _open(tester);
+    final r = tester.getRect(
+      find.ancestor(
+        of: find.text('Criterion 0'),
+        matching: find.byType(SelectionRow),
+      ),
+    );
+    expect(r.height, greaterThanOrEqualTo(KLayout.dropdownRowHeight));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('a short screen caps the height at 70 %', (tester) async {

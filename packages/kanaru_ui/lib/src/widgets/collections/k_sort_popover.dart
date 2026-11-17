@@ -8,7 +8,6 @@ import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_layout.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
-import '../k_gap.dart';
 import '../selection_row.dart';
 import 'k_sort_pick.dart';
 
@@ -192,7 +191,6 @@ class _PopoverBody<T> extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   for (var i = 0; i < criteria.length; i++) ...[
-                    if (i > 0) const KGap(KLayout.dropdownRowGap),
                     SelectionRow(
                       dense: true,
                       autofocus: criteria[i].value == selected,

@@ -53,9 +53,10 @@ class SelectionRow extends StatelessWidget {
   /// icon list): plain tick on the right, nothing at the start.
   final bool plainMark;
 
-  /// Compact row of menus and dropdowns: `bodyMedium` text, 12 dp gaps, 8 / 12
-  /// padding, 48 dp tall with touch and 40 dp with a mouse (the desktop
-  /// shell). Pass the icon at `KIconSize.sm`.
+  /// Compact row of menus and dropdowns: `bodyMedium` text, 12 dp gaps, 12 dp
+  /// side padding. 40 dp hit area on both shells, the visible shape (tint,
+  /// hover, press, focus) is 36 dp, centred, with a transparent band above and
+  /// below that still takes taps. Pass the icon at `KIconSize.sm`.
   final bool dense;
 
   /// Takes keyboard focus when its route opens (the chosen row of a menu).
@@ -70,8 +71,12 @@ class SelectionRow extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final mobile = FormFactor.of(context) == FormFactor.mobile;
     final minHeight = dense
-        ? (mobile ? KLayout.minTarget : KLayout.minTargetDesktop)
+        ? KLayout.dropdownRowHeight
         : (mobile ? KLayout.minTarget + KSpace.x2 : KLayout.minTarget);
+    // Transparent band above and below the visible shape of a dense row.
+    final band = dense
+        ? (KLayout.dropdownRowHeight - KLayout.dropdownRowVisible) / 2
+        : 0.0;
     final gap = dense ? KSpace.x3 : KSpace.x4;
     final bodyStyle = dense ? textTheme.bodyMedium : textTheme.bodyLarge;
     final active = enabled && onTap != null;
@@ -91,82 +96,123 @@ class SelectionRow extends StatelessWidget {
       mixed: mixed ? true : null,
       child: Opacity(
         opacity: enabled ? 1 : 0.5,
-        child: AnimatedContainer(
-          duration: KMotion.fast,
-          decoration: ShapeDecoration(
-            shape: KShape.of(KRadius.md),
-            color: selected
-                ? scheme.secondaryContainer
-                : const Color(0x00000000),
-          ),
-          child: Material(
-            type: MaterialType.transparency,
-            child: InkWell(
-              customBorder: KShape.of(KRadius.md),
-              // M3 state layers (8 % hover, 10 % press/focus of onSurface),
-              // as the mockups draw them; the theme default (4 %) is too
-              // faint to see on surfaceContainerHighest menus.
-              hoverColor: scheme.onSurface.withValues(alpha: 0.08),
-              focusColor: scheme.onSurface.withValues(alpha: 0.10),
-              highlightColor: scheme.onSurface.withValues(alpha: 0.10),
-              autofocus: autofocus,
-              onTap: active ? onTap : null,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: minHeight),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: dense ? KSpace.x3 : KSpace.x4,
-                    vertical: KSpace.x2,
-                  ),
-                  child: Row(
-                    children: [
-                      if (!iconLayout) ...[
-                        KCheckMark(size: _checkSlot, state: state),
-                        const KGap(KSpace.x3),
-                      ] else if (leading != null) ...[
-                        IconTheme.merge(
-                          data: IconThemeData(color: scheme.onSurfaceVariant),
-                          child: leading!,
-                        ),
-                        KGap(gap),
-                      ],
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            DefaultTextStyle.merge(
-                              style: bodyStyle?.copyWith(
-                                fontWeight: selected ? FontWeight.w700 : null,
-                              ),
-                              child: title,
-                            ),
-                            if (subtitle != null)
+        child: Stack(
+          children: [
+            // Tint on the visible shape only; ink and focus use the same
+            // inset shape, taps use the whole row.
+            Positioned.fill(
+              top: band,
+              bottom: band,
+              child: AnimatedContainer(
+                duration: KMotion.fast,
+                decoration: ShapeDecoration(
+                  shape: KShape.of(KRadius.md),
+                  color: selected
+                      ? scheme.secondaryContainer
+                      : const Color(0x00000000),
+                ),
+              ),
+            ),
+            Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                customBorder: _InsetShape(KShape.of(KRadius.md), band),
+                // M3 state layers (8 % hover, 10 % press/focus of onSurface),
+                // as the mockups draw them; the theme default (4 %) is too
+                // faint to see on surfaceContainerHighest menus.
+                hoverColor: scheme.onSurface.withValues(alpha: 0.08),
+                focusColor: scheme.onSurface.withValues(alpha: 0.10),
+                highlightColor: scheme.onSurface.withValues(alpha: 0.10),
+                autofocus: autofocus,
+                onTap: active ? onTap : null,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: minHeight),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: dense ? KSpace.x3 : KSpace.x4,
+                      vertical: KSpace.x2,
+                    ),
+                    child: Row(
+                      children: [
+                        if (!iconLayout) ...[
+                          KCheckMark(size: _checkSlot, state: state),
+                          const KGap(KSpace.x3),
+                        ] else if (leading != null) ...[
+                          IconTheme.merge(
+                            data: IconThemeData(color: scheme.onSurfaceVariant),
+                            child: leading!,
+                          ),
+                          KGap(gap),
+                        ],
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               DefaultTextStyle.merge(
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: scheme.onSurfaceVariant,
+                                style: bodyStyle?.copyWith(
+                                  fontWeight: selected ? FontWeight.w700 : null,
                                 ),
-                                child: subtitle!,
+                                child: title,
                               ),
-                          ],
+                              if (subtitle != null)
+                                DefaultTextStyle.merge(
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                  child: subtitle!,
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                      if (iconLayout && multi) ...[
-                        const KGap(KSpace.x3),
-                        KCheckMark(
-                          size: _checkSlot,
-                          state: state,
-                          style: KCheckMarkStyle.plain,
-                        ),
+                        if (iconLayout && multi) ...[
+                          const KGap(KSpace.x3),
+                          KCheckMark(
+                            size: _checkSlot,
+                            state: state,
+                            style: KCheckMarkStyle.plain,
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
+}
+
+/// [base] shrunk by [inset] above and below: the ink / hover / focus shape of a
+/// dense row while the widget itself keeps the full hit area.
+class _InsetShape extends ShapeBorder {
+  const _InsetShape(this.base, this.inset);
+
+  final ShapeBorder base;
+  final double inset;
+
+  @override
+  EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) => base
+      .getInnerPath(rect.insetVertically(inset), textDirection: textDirection);
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) => base
+      .getOuterPath(rect.insetVertically(inset), textDirection: textDirection);
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {}
+
+  @override
+  ShapeBorder scale(double t) => _InsetShape(base.scale(t), inset * t);
+}
+
+extension on Rect {
+  Rect insetVertically(double v) =>
+      Rect.fromLTRB(left, top + v, right, bottom - v);
 }
