@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/ui/collections/album_tile.dart';
 import 'package:kanaru/src/library/ui/collections/artist_tile.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
-import 'package:kanaru/src/library/ui/songs/song_tile.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -48,18 +47,26 @@ Future<LibraryHarness> _pump(
 
 void main() {
   testWidgets('genre: banner totals, both shelves, songs', (tester) async {
+    final handle = tester.ensureSemantics();
     await _pump(tester, LibraryLocations.genre('rock'));
+    expect(find.text('Rock'), findsOneWidget);
+    expect(inPageHeader('Rock'), findsNothing);
+    expect(headerNodes(tester, 'Rock'), 1);
+    expect(find.byType(KColorBanner), findsOneWidget);
     expect(
-      find.descendant(of: find.byType(PageHeader), matching: find.text('Rock')),
+      find.descendant(
+        of: find.byType(KColorBanner),
+        matching: find.text('9 songs · 9 min'),
+      ),
       findsOneWidget,
     );
-    expect(find.byType(KColorBanner), findsOneWidget);
-    expect(find.text('9 songs'), findsWidgets);
-    expect(find.text('3 artists · 9 min'), findsOneWidget);
+    expect(find.textContaining('artists'), findsNothing);
+    expect(find.textContaining('auto-detected'), findsNothing);
     expect(find.byType(ArtistCard), findsNWidgets(3));
     expect(find.byType(AlbumCard), findsNWidgets(3));
     expect(find.text('Artists'), findsOneWidget);
     expect(find.text('Albums'), findsOneWidget);
+    handle.dispose();
     await unmountApp(tester);
   });
 
@@ -68,7 +75,7 @@ void main() {
   ) async {
     await _pump(tester, LibraryLocations.genre('jazz'));
     expect(find.byType(KShelf), findsNothing);
-    expect(find.text('2 songs'), findsWidgets);
+    expect(find.text('2 songs · 2 min'), findsWidgets);
     await unmountApp(tester);
   });
 
@@ -158,24 +165,27 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('language: names, detected count, note and tag on songs', (
+  testWidgets('language: the name is the headline, songs and length under it', (
     tester,
   ) async {
     await _pump(tester, LibraryLocations.language('vie'));
-    expect(find.textContaining('Tiếng Việt'), findsWidgets);
-    expect(find.text('2 artists · 6 min · 3 auto-detected'), findsOneWidget);
     expect(
-      find.textContaining('Songs labelled “auto-detected”'),
+      find.descendant(
+        of: find.byType(KColorBanner),
+        matching: find.textContaining('Tiếng Việt'),
+      ),
       findsOneWidget,
     );
-    await tester.scrollUntilVisible(
-      find.text('A3 1'),
-      200,
-      scrollable: find.byType(Scrollable).first,
+    expect(inPageHeader('Tiếng Việt'), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(KColorBanner),
+        matching: find.text('6 songs · 6 min'),
+      ),
+      findsOneWidget,
     );
-    final tiles = tester.widgetList<SongTile>(find.byType(SongTile));
-    expect(tiles.every((t) => t.showDetected), isTrue);
-    expect(find.text('auto-detected'), findsWidgets);
+    expect(find.textContaining('auto-detected'), findsNothing);
+    expect(find.textContaining('artists'), findsNothing);
     await unmountApp(tester);
   });
 
@@ -208,14 +218,6 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('a language with no detected song has no detection note', (
-    tester,
-  ) async {
-    await _pump(tester, LibraryLocations.language('eng'));
-    expect(find.textContaining('auto-detected'), findsNothing);
-    await unmountApp(tester);
-  });
-
   testWidgets('see all of an unknown group is not found', (tester) async {
     final h = await _pump(
       tester,
@@ -230,11 +232,41 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('the unknown language page shows its own note', (tester) async {
+  testWidgets('the unknown language page says it has no tag, with a note', (
+    tester,
+  ) async {
     await _pump(tester, LibraryLocations.language(null));
-    expect(find.text('Unknown'), findsWidgets);
+    expect(find.text('Unknown'), findsOneWidget);
+    expect(find.text('No language tag'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(KColorBanner),
+        matching: find.text('2 songs · 2 min'),
+      ),
+      findsOneWidget,
+    );
     expect(find.textContaining('could not detect one'), findsOneWidget);
-    expect(find.text('2 songs'), findsWidgets);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a long note folds at a narrow width and stays open on return', (
+    tester,
+  ) async {
+    final h = await _pump(tester, LibraryLocations.language(null), width: 360);
+    expect(find.text('Show more'), findsOneWidget);
+    expect(find.text('Show less'), findsNothing);
+    await tester.tap(find.text('Show more'));
+    await tester.pump();
+    expect(find.text('Show less'), findsOneWidget);
+    h.router.pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    h.router.push(LibraryLocations.language(null));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await h.settle(tester);
+    expect(find.text('Show less'), findsOneWidget);
+    expect(find.text('Show more'), findsNothing);
     await unmountApp(tester);
   });
 

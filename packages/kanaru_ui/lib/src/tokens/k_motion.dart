@@ -7,6 +7,10 @@ abstract final class KMotion {
   static const Duration normal = Duration(milliseconds: 250);
   static const Duration slow = Duration(milliseconds: 400);
 
+  /// Curve of colour and opacity changes (04 §3.5: colour = emphasized,
+  /// position = spring).
+  static const Curve emphasized = Curves.easeInOutCubicEmphasized;
+
   /// Fade back of an icon button after a press. `KPressable` keeps its scale
   /// for cards and rows; icon buttons only change opacity.
   static const Duration press = Duration(milliseconds: 200);

@@ -19,9 +19,13 @@ import '../menus/menu_origin.dart';
 import '../menus/more_button.dart';
 import 'detail_tint.dart';
 
-/// Frame of a detail page: the page [title] in a header with a back button
-/// (no root slots, no ⋮), and the page below it. Back pops one page; a page
-/// opened as the first one (a link from outside) goes to [fallback] instead.
+/// Frame of a detail page: a header with a back button (no root slots, no ⋮)
+/// and the page below it. Back pops one page; a page opened as the first one
+/// (a link from outside) goes to [fallback] instead.
+///
+/// With [titleInContent] (the default) the page [title] is shown in the page
+/// content; the header shows it again only while it is scrolled out of sight.
+/// Without it the header always shows the [title].
 ///
 /// The frame has its own solid ground: the detail layouts paint over a
 /// translucent tint, and the page under would show through while this one
@@ -37,12 +41,14 @@ class DetailFrame extends StatelessWidget {
     required this.fallback,
     required this.child,
     this.tint,
+    this.titleInContent = true,
   });
 
   final String title;
   final String fallback;
   final Widget child;
   final DetailTint? tint;
+  final bool titleInContent;
 
   @override
   Widget build(BuildContext context) {
@@ -50,22 +56,27 @@ class DetailFrame extends StatelessWidget {
       children: [
         Padding(
           padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
-          child: PageHeader(title: title, onBack: () => _back(context)),
+          child: PageHeader(
+            title: title,
+            titleInContent: titleInContent,
+            onBack: () => _back(context),
+          ),
         ),
         Expanded(child: KScrollInkSurface(child: child)),
       ],
     );
+    final hosted = KDetailTitleHost(child: page);
     final t = tint;
     return ColoredBox(
       color: Theme.of(context).colorScheme.surface,
       child: t == null
-          ? page
+          ? hosted
           : CoverTintBackground(
               palette: t.palette,
               loading: t.loading,
               strength: _tintStrength,
               fadeIn: true,
-              child: page,
+              child: hosted,
             ),
     );
   }
@@ -94,6 +105,7 @@ class DetailNotFound extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return DetailFrame(
       title: l10n.libraryNotFoundTitle,
+      titleInContent: false,
       fallback: fallback,
       child: KEmpty(icon: KIcons.help, message: l10n.libraryNotFoundMessage),
     );

@@ -28,8 +28,7 @@ Future<List<GenreSummary>> genreSummaries(AppDatabase db) async {
 Future<List<LanguageSummary>> languageSummaries(AppDatabase db) async {
   final rows = await db
       .customSelect(
-        'SELECT t.language AS code, COUNT(*) AS tracks, '
-        'coalesce(SUM(t.language_detected), 0) AS detected '
+        'SELECT t.language AS code, COUNT(*) AS tracks '
         "FROM tracks t WHERE ${visibleTrackWhere('t')} GROUP BY t.language",
         readsFrom: {db.tracks},
       )
@@ -39,7 +38,6 @@ Future<List<LanguageSummary>> languageSummaries(AppDatabase db) async {
       LanguageSummary(
         code: r.readNullable<String>('code'),
         trackCount: r.read<int>('tracks'),
-        detectedCount: r.read<int>('detected'),
       ),
   ];
 }

@@ -62,13 +62,17 @@ class ArtistAlbumsPage extends ConsumerWidget {
           ? DetailNotFound(fallback: _fallback)
           : DetailPending(fallback: _fallback, failed: albums.hasError);
     }
+    final heading = appears
+        ? l10n.libraryAppearsInOf(title)
+        : l10n.libraryAlbumsOf(title);
+    final shown = appears ? data.appears : data.own;
     return DetailFrame(
-      title: appears
-          ? l10n.libraryAppearsInOf(title)
-          : l10n.libraryAlbumsOf(title),
+      title: heading,
       fallback: LibraryLocations.artist(key),
       child: _AlbumGrid(
-        albums: appears ? data.appears : data.own,
+        title: heading,
+        caption: l10n.libraryAlbumCount(shown.length),
+        albums: shown,
         origin: MenuOrigin.artist(key),
       ),
     );
@@ -115,28 +119,58 @@ class GroupSeeAllPage extends ConsumerWidget {
     final back = kind == GroupKind.genre
         ? LibraryLocations.genre(target.genreKey!)
         : LibraryLocations.language(target.code);
+    final heading = artists
+        ? l10n.libraryArtistsOf(name)
+        : l10n.libraryAlbumsOf(name);
     return DetailFrame(
-      title: artists ? l10n.libraryArtistsOf(name) : l10n.libraryAlbumsOf(name),
+      title: heading,
       fallback: back,
       child: artists
-          ? _ArtistGrid(artists: data.artists)
-          : _AlbumGrid(albums: data.albums),
+          ? _ArtistGrid(
+              title: heading,
+              caption: l10n.libraryArtistCount(data.artists.length),
+              artists: data.artists,
+            )
+          : _AlbumGrid(
+              title: heading,
+              caption: l10n.libraryAlbumCount(data.albums.length),
+              albums: data.albums,
+            ),
     );
   }
 }
 
+/// Name block at the head of a see-all grid.
+Widget _gridHeading(BuildContext context, String title, String caption) =>
+    SliverPadding(
+      padding: EdgeInsets.fromLTRB(
+        libraryGutter(context),
+        KSpace.x2,
+        libraryGutter(context),
+        KSpace.x3,
+      ),
+      sliver: SliverToBoxAdapter(
+        child: KGridHeading(title: title, caption: caption),
+      ),
+    );
+
 class _AlbumGrid extends StatelessWidget {
   const _AlbumGrid({
+    required this.title,
+    required this.caption,
     required this.albums,
     this.origin = const MenuOrigin.list(),
   });
 
+  final String title;
+  final String caption;
   final List<AlbumSummary> albums;
   final MenuOrigin origin;
 
   @override
   Widget build(BuildContext context) => CustomScrollView(
     slivers: [
+      _gridHeading(context, title, caption),
       KCollectionGrid(
         itemCount: albums.length,
         mobileMinTileWidth: 150,
@@ -152,13 +186,20 @@ class _AlbumGrid extends StatelessWidget {
 }
 
 class _ArtistGrid extends StatelessWidget {
-  const _ArtistGrid({required this.artists});
+  const _ArtistGrid({
+    required this.title,
+    required this.caption,
+    required this.artists,
+  });
 
+  final String title;
+  final String caption;
   final List<ArtistSummary> artists;
 
   @override
   Widget build(BuildContext context) => CustomScrollView(
     slivers: [
+      _gridHeading(context, title, caption),
       KCollectionGrid(
         itemCount: artists.length,
         mobileMinTileWidth: 100,

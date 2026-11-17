@@ -1742,12 +1742,6 @@ abstract class AppLocalizations {
   /// **'Unknown'**
   String get libraryLanguageUnknown;
 
-  /// No description provided for @libraryLanguageStatsDetected.
-  ///
-  /// In en, this message translates to:
-  /// **'{songs, plural, =1{1 song} other{{songs} songs}} · {detected} auto-detected'**
-  String libraryLanguageStatsDetected(int songs, int detected);
-
   /// No description provided for @libraryLanguagesNote.
   ///
   /// In en, this message translates to:
@@ -1868,23 +1862,29 @@ abstract class AppLocalizations {
   /// **'Appears on · {name}'**
   String libraryAppearsInOf(String name);
 
-  /// No description provided for @libraryDetectedCount.
+  /// No description provided for @libraryAppearsInAlbumCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} auto-detected'**
-  String libraryDetectedCount(int count);
+  /// **'Appears on {count, plural, =1{1 album} other{{count} albums}}'**
+  String libraryAppearsInAlbumCount(int count);
 
-  /// No description provided for @libraryAutoDetectedTag.
+  /// No description provided for @libraryLanguageNoTag.
   ///
   /// In en, this message translates to:
-  /// **'auto-detected'**
-  String get libraryAutoDetectedTag;
+  /// **'No language tag'**
+  String get libraryLanguageNoTag;
 
-  /// No description provided for @libraryLanguageDetectedNote.
+  /// No description provided for @libraryShowMore.
   ///
   /// In en, this message translates to:
-  /// **'Songs labelled “auto-detected” have no language tag; Kanaru guesses it from the title and lyrics.'**
-  String get libraryLanguageDetectedNote;
+  /// **'Show more'**
+  String get libraryShowMore;
+
+  /// No description provided for @libraryShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get libraryShowLess;
 
   /// No description provided for @libraryLanguageUnknownNote.
   ///

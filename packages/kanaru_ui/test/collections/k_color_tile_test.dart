@@ -45,7 +45,7 @@ void main() {
             seed: 'Indie',
             icon: KIcons.genres,
             headline: '120 songs',
-            caption: '12 artists',
+            lines: ['12 artists'],
             actions: Text('buttons'),
           ),
           brightness: brightness,
@@ -142,5 +142,52 @@ void main() {
     await tester.tap(find.text('Tap me'));
     await tester.longPress(find.text('Tap me'));
     expect([taps, longs], [1, 1]);
+  });
+
+  testWidgets('a long banner headline is clamped to two lines', (tester) async {
+    useWindow(tester, const Size(300, 800));
+    const long =
+        'Những bài hát hay nhất của Trịnh Công Sơn tuyển tập đặc biệt nhiều '
+        'năm tháng và còn rất nhiều chữ nữa cho dài';
+    Widget banner(String text) =>
+        host(KColorBanner(seed: 's', icon: KIcons.genres, headline: text));
+    await tester.pumpWidget(banner('Short'));
+    final one = tester.getSize(find.text('Short')).height;
+    await tester.pumpWidget(banner(long));
+    expect(tester.getSize(find.text(long)).height, closeTo(one * 2, 1));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('banner lines show in order, one line each', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        const KColorBanner(
+          seed: 's',
+          icon: KIcons.genres,
+          headline: 'Indie',
+          lines: ['120 songs · 8 h', 'No language tag'],
+        ),
+      ),
+    );
+    final first = tester.getTopLeft(find.text('120 songs · 8 h')).dy;
+    final second = tester.getTopLeft(find.text('No language tag')).dy;
+    expect(tester.getTopLeft(find.text('Indie')).dy, lessThan(first));
+    expect(first, lessThan(second));
+  });
+
+  testWidgets('the banner headline is a semantics header', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      host(
+        const KColorBanner(seed: 's', icon: KIcons.genres, headline: 'Indie'),
+      ),
+    );
+    expect(
+      tester.getSemantics(find.text('Indie')),
+      isSemantics(isHeader: true, label: 'Indie'),
+    );
+    handle.dispose();
   });
 }

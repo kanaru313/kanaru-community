@@ -31,33 +31,21 @@ Future<GroupShelves> groupShelves(AppDatabase db, SongScope scope) async {
   return GroupShelves(artists: artists, albums: albums);
 }
 
-/// Track, artist and duration totals of [scope], and how many of its tracks
-/// got their language by detection.
+/// Track and duration totals of [scope].
 Future<GroupTotals> groupTotals(AppDatabase db, SongScope scope) async {
   final where = SqlWhere()..add(visibleTrackWhere('t'));
   addScope(where, scope);
   final row = await db
       .customSelect(
         'SELECT COUNT(*) AS tracks, '
-        'SUM(coalesce(t.duration_ms, 0)) AS duration, '
-        'SUM(t.language_detected) AS detected '
+        'SUM(coalesce(t.duration_ms, 0)) AS duration '
         'FROM tracks t WHERE ${where.sql}',
         variables: where.vars,
         readsFrom: {db.tracks},
       )
       .getSingle();
-  final artists = await db
-      .customSelect(
-        'SELECT COUNT(DISTINCT ta.artist_key) AS n FROM track_artists ta '
-        'JOIN tracks t ON t.id = ta.track_id WHERE ${where.sql}',
-        variables: where.vars,
-        readsFrom: {db.tracks, db.trackArtists},
-      )
-      .getSingle();
   return GroupTotals(
     tracks: row.read<int>('tracks'),
-    artists: artists.read<int>('n'),
     durationMs: row.readNullable<int>('duration') ?? 0,
-    detected: row.readNullable<int>('detected') ?? 0,
   );
 }

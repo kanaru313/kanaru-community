@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/library_keys.dart';
 import '../../../media/domain/play_context.dart';
+import '../../domain/browse/detail_data.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/menu_targets.dart';
 import '../../domain/browse/song_scope.dart';
@@ -12,6 +13,7 @@ import '../../domain/library_tabs.dart';
 import '../../state/browse/detail_providers.dart';
 import '../../state/custom_cover_providers.dart';
 import '../browse/item_covers.dart';
+import '../browse/library_labels.dart';
 import '../browse/library_navigation.dart';
 import '../library_locations.dart';
 import '../menus/menu_origin.dart';
@@ -21,10 +23,11 @@ import 'detail_tint.dart';
 import 'detail_songs.dart';
 import 'see_all_page.dart';
 
-/// Artist page: round photo and `N albums` with the buttons (a left column on
-/// a wide page), then the shelves of own albums and of albums the artist
-/// appears on, then every song of the artist. A section with nothing in it is
-/// left out; an artist that is only an album artist has no songs section.
+/// Artist page: round photo, name, `N albums`, songs and length with the
+/// buttons (a left column on a wide page), then the shelves of own albums and
+/// of albums the artist appears on, then every song of the artist. A section
+/// with nothing in it is left out; an artist that is only an album artist has
+/// no songs section.
 class ArtistPage extends ConsumerWidget {
   const ArtistPage({super.key, required this.artistId});
 
@@ -66,6 +69,8 @@ class ArtistPage extends ConsumerWidget {
     // plays what its albums hold.
     final playScope = hasSongs ? scope : SongScope.albumArtist(key);
 
+    final totals = ref.watch(groupTotalsProvider(playScope)).value;
+
     Widget layout(List<Widget> songs) {
       final l10n = AppLocalizations.of(context);
       return KDetailLayout(
@@ -77,13 +82,9 @@ class ArtistPage extends ConsumerWidget {
             coverKey: photo,
             dimension: side,
           ),
-          body: [
-            if (albums.own.isNotEmpty)
-              Text(
-                l10n.libraryAlbumCount(albums.own.length),
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-          ],
+          title: title,
+          line2: _albumCountLine(l10n, albums),
+          line3: _songsLine(l10n, totals),
           actions: DetailActions(
             scope: playScope,
             list: BrowseList.detailSongs,
@@ -139,5 +140,27 @@ class ArtistPage extends ConsumerWidget {
         builder: (context, songs) => layout(songs),
       ),
     );
+  }
+
+  /// Own albums, else the albums the artist appears on; null with neither.
+  KDetailLine? _albumCountLine(AppLocalizations l10n, ArtistAlbums albums) {
+    if (albums.own.isNotEmpty) {
+      return KDetailLine(text: l10n.libraryAlbumCount(albums.own.length));
+    }
+    if (albums.appears.isNotEmpty) {
+      return KDetailLine(
+        text: l10n.libraryAppearsInAlbumCount(albums.appears.length),
+      );
+    }
+    return null;
+  }
+
+  /// Songs and length of what Play plays; null until known or when empty.
+  String? _songsLine(AppLocalizations l10n, GroupTotals? totals) {
+    if (totals == null || totals.tracks == 0) return null;
+    return [
+      l10n.librarySongCount(totals.tracks),
+      formatTotalDuration(l10n, totals.durationMs),
+    ].join(' · ');
   }
 }

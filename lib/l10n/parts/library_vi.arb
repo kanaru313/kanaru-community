@@ -253,17 +253,6 @@
     }
   },
   "libraryLanguageUnknown": "Chưa rõ",
-  "libraryLanguageStatsDetected": "{songs} bài · {detected} tự nhận diện",
-  "@libraryLanguageStatsDetected": {
-    "placeholders": {
-      "songs": {
-        "type": "int"
-      },
-      "detected": {
-        "type": "int"
-      }
-    }
-  },
   "libraryLanguagesNote": "Lấy từ tag ngôn ngữ của bài; bài không có tag thì Kanaru tự nhận diện. Đổi trong Cài đặt › Thư viện.",
   "libraryFoldersAll": "Tất cả thư mục",
   "libraryFoldersHidden": "Các cấp bị ẩn",
@@ -329,16 +318,17 @@
       }
     }
   },
-  "libraryDetectedCount": "{count} tự nhận diện",
-  "@libraryDetectedCount": {
+  "libraryAppearsInAlbumCount": "Xuất hiện trong {count} album",
+  "@libraryAppearsInAlbumCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "libraryAutoDetectedTag": "tự nhận diện",
-  "libraryLanguageDetectedNote": "Bài có nhãn “tự nhận diện” không có tag ngôn ngữ; Kanaru đoán từ tên bài và lời.",
+  "libraryLanguageNoTag": "Không có tag ngôn ngữ",
+  "libraryShowMore": "Xem thêm",
+  "libraryShowLess": "Thu gọn",
   "libraryLanguageUnknownNote": "Các bài này không có tag ngôn ngữ và Kanaru không nhận diện được (thường là nhạc không lời). Thêm tag ngôn ngữ trong Sửa thông tin bài, hoặc đổi cách nhận diện trong Cài đặt › Thư viện.",
   "libraryMenuGoAlbum": "Đi tới album",
   "libraryMenuGoArtist": "Đi tới nghệ sĩ",

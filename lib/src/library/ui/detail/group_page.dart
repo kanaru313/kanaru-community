@@ -9,6 +9,7 @@ import '../../domain/browse/detail_data.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../domain/library_tabs.dart';
+import '../../state/browse/detail_expand_providers.dart';
 import '../../state/browse/detail_providers.dart';
 import '../browse/group_play.dart';
 import '../browse/library_labels.dart';
@@ -78,9 +79,10 @@ AsyncValue<String?> groupName(
   return ref.watch(genreNameProvider(target.genreKey!));
 }
 
-/// Genre or language page: a colour banner (big song count, artists and
-/// length, buttons), the artist and album shelves when they have two items or
-/// more, then every song. A language page explains the "auto-detected" tag.
+/// Genre or language page: a colour banner (the name, songs and length,
+/// buttons), the artist and album shelves when they have two items or more,
+/// then every song. The "unknown" language page says in the banner that its
+/// songs have no language tag and explains it under the banner.
 class GroupPage extends ConsumerWidget {
   const GroupPage({super.key, required this.kind, required this.id});
 
@@ -111,6 +113,11 @@ class GroupPage extends ConsumerWidget {
     if (stats.tracks == 0) return DetailNotFound(fallback: fallback);
     final shelves = ref.watch(groupShelvesProvider(target.scope)).value;
     final language = kind == GroupKind.language;
+    final unknown = language && target.code == null;
+    final pageKey = '${kind.name}:$id';
+    final expanded = ref.watch(
+      detailDescriptionExpandedProvider.select((s) => s.contains(pageKey)),
+    );
     final playContext = language
         ? languagePlayContext(target.code, title)
         : genrePlayContext(target.genreKey!, title);
@@ -119,11 +126,10 @@ class GroupPage extends ConsumerWidget {
       fallback: fallback,
       child: DetailSongsHost(
         list: BrowseList.detailSongs,
-        item: '${kind.name}:$id',
+        item: pageKey,
         scope: target.scope,
         playContext: playContext,
         durationMs: stats.durationMs,
-        showDetected: language,
         builder: (context, songs) => CustomScrollView(
           slivers: [
             SliverPadding(
@@ -137,12 +143,18 @@ class GroupPage extends ConsumerWidget {
                   icon: language
                       ? (target.code == null ? KIcons.help : KIcons.languages)
                       : KIcons.genres,
-                  headline: l10n.librarySongCount(stats.tracks),
-                  caption: _caption(l10n, stats, language),
+                  headline: title,
+                  lines: [
+                    if (unknown) l10n.libraryLanguageNoTag,
+                    [
+                      l10n.librarySongCount(stats.tracks),
+                      formatTotalDuration(l10n, stats.durationMs),
+                    ].join(' · '),
+                  ],
                   actions: DetailActions(
                     scope: target.scope,
                     list: BrowseList.detailSongs,
-                    item: '${kind.name}:$id',
+                    item: pageKey,
                     playContext: playContext,
                     onMenu: (c, {required viaKeyboard}) => language
                         ? openLanguageMenu(
@@ -162,22 +174,23 @@ class GroupPage extends ConsumerWidget {
                 ),
               ),
             ),
-            if (language && (target.code == null || stats.detected > 0))
+            if (unknown)
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(
                   libraryGutter(context),
-                  0,
+                  KSpace.x1,
                   libraryGutter(context),
                   KSpace.x3,
                 ),
                 sliver: SliverToBoxAdapter(
-                  child: Text(
-                    target.code == null
-                        ? l10n.libraryLanguageUnknownNote
-                        : l10n.libraryLanguageDetectedNote,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  child: KDetailDescription(
+                    text: l10n.libraryLanguageUnknownNote,
+                    expanded: expanded,
+                    onExpandedChanged: (v) => ref
+                        .read(detailDescriptionExpandedProvider.notifier)
+                        .set(pageKey, v),
+                    moreLabel: l10n.libraryShowMore,
+                    lessLabel: l10n.libraryShowLess,
                   ),
                 ),
               ),
@@ -188,13 +201,6 @@ class GroupPage extends ConsumerWidget {
       ),
     );
   }
-
-  String _caption(AppLocalizations l10n, GroupTotals stats, bool language) => [
-    l10n.libraryArtistCount(stats.artists),
-    formatTotalDuration(l10n, stats.durationMs),
-    if (language && stats.detected > 0)
-      l10n.libraryDetectedCount(stats.detected),
-  ].join(' · ');
 
   List<Widget> _shelves(
     BuildContext context,

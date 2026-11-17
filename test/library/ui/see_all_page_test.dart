@@ -36,14 +36,29 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       await h.settle(tester, rounds: 3);
       expect(h.location, entry.key);
+      // The name is in the page (a heading of the grid, a card, a banner),
+      // never in the header while the page is at its top.
+      expect(find.textContaining(entry.value), findsWidgets, reason: entry.key);
       expect(
         find.descendant(
           of: find.byType(PageHeader),
           matching: find.textContaining(entry.value),
         ),
-        findsOneWidget,
+        findsNothing,
         reason: entry.key,
       );
+      if (entry.key.endsWith('/albums') ||
+          entry.key.endsWith('/artists') ||
+          entry.key.endsWith('/appears')) {
+        expect(
+          find.descendant(
+            of: find.byType(KGridHeading),
+            matching: find.text(entry.value),
+          ),
+          findsOneWidget,
+          reason: entry.key,
+        );
+      }
       expect(find.text('Not found'), findsNothing, reason: entry.key);
     }
     await unmountApp(tester);
@@ -70,7 +85,9 @@ void main() {
     await tester.tap(find.byType(AlbumCard).first);
     await settle();
     expect(h.location, startsWith('/library/albums/'));
-    await tester.tap(find.text('Zed').first);
+    await tester.tap(
+      find.descendant(of: find.byType(KDetailLine), matching: find.text('Zed')),
+    );
     await settle();
     expect(h.location, startsWith('/library/artists/'));
     h.router.pop();

@@ -1078,17 +1078,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryLanguageUnknown => 'Unknown';
 
   @override
-  String libraryLanguageStatsDetected(int songs, int detected) {
-    String _temp0 = intl.Intl.pluralLogic(
-      songs,
-      locale: localeName,
-      other: '$songs songs',
-      one: '1 song',
-    );
-    return '$_temp0 · $detected auto-detected';
-  }
-
-  @override
   String get libraryLanguagesNote =>
       'From the language tag of each song; songs without a tag are detected by Kanaru. Change this in Settings › Library.';
 
@@ -1174,16 +1163,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String libraryDetectedCount(int count) {
-    return '$count auto-detected';
+  String libraryAppearsInAlbumCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count albums',
+      one: '1 album',
+    );
+    return 'Appears on $_temp0';
   }
 
   @override
-  String get libraryAutoDetectedTag => 'auto-detected';
+  String get libraryLanguageNoTag => 'No language tag';
 
   @override
-  String get libraryLanguageDetectedNote =>
-      'Songs labelled “auto-detected” have no language tag; Kanaru guesses it from the title and lyrics.';
+  String get libraryShowMore => 'Show more';
+
+  @override
+  String get libraryShowLess => 'Show less';
 
   @override
   String get libraryLanguageUnknownNote =>

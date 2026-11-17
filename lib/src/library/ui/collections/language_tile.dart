@@ -12,7 +12,7 @@ import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
 import 'collection_parts.dart';
 
-/// Language row: icon, display name, song count (and how many were detected).
+/// Language row: icon, display name, song count.
 /// ▶ plays the whole language.
 class LanguageTile extends ConsumerWidget {
   const LanguageTile({super.key, required this.language});
@@ -23,16 +23,13 @@ class LanguageTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final name = languageDisplayName(l10n, language.code);
-    final detected = language.detectedCount;
     void menu({bool viaKeyboard = false}) =>
         openLanguageMenu(context, language.code, viaKeyboard: viaKeyboard);
     return KContextRegion(
       onOpen: (at) => menu(viaKeyboard: at == null),
       child: KMediaCard(
         title: name,
-        line2: detected > 0
-            ? l10n.libraryLanguageStatsDetected(language.trackCount, detected)
-            : l10n.librarySongCount(language.trackCount),
+        line2: l10n.librarySongCount(language.trackCount),
         leading: CategoryIcon.language(known: language.code != null),
         onAction: () => playLanguage(ref, context, language.code, name),
         actionLabel: l10n.libraryPlayAll,

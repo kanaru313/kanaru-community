@@ -183,7 +183,7 @@ void main() {
     expect(list.last.trackCount, 2);
   });
 
-  test('languages: unknown group has a null code, detected counted', () async {
+  test('languages: unknown group has a null code', () async {
     await add('1.flac', language: 'vi', detected: true);
     await add('2.flac', language: 'vie');
     await add('3.flac', language: 'en', detected: true);
@@ -191,9 +191,7 @@ void main() {
     await add('5.flac', language: 'und');
     final by = {for (final l in await languageSummaries(db)) l.code: l};
     expect(by['vie']!.trackCount, 2);
-    expect(by['vie']!.detectedCount, 1);
-    expect(by['eng']!.detectedCount, 1);
+    expect(by['eng']!.trackCount, 1);
     expect(by[null]!.trackCount, 2);
-    expect(by[null]!.detectedCount, 0);
   });
 }

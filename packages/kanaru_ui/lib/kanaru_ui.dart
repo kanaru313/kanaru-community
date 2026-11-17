@@ -17,6 +17,7 @@ export 'src/widgets/k_check_mark.dart';
 export 'src/widgets/k_chip.dart';
 export 'src/widgets/k_context_region.dart';
 export 'src/widgets/k_cover.dart' show KCover, KCoverPlaceholderColors;
+export 'src/widgets/k_detail_title.dart' show KDetailTitleHost;
 export 'src/widgets/k_dialog.dart';
 export 'src/widgets/k_drag_handle.dart';
 export 'src/widgets/k_empty.dart';

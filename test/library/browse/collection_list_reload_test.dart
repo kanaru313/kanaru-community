@@ -33,9 +33,7 @@ void main() {
     addTearDown(sub.close);
     expect(sub.read().hasValue, isFalse);
 
-    pending.complete(const [
-      LanguageSummary(code: 'en', trackCount: 3, detectedCount: 0),
-    ]);
+    pending.complete(const [LanguageSummary(code: 'en', trackCount: 3)]);
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
     expect(sub.read().value?.length, 1);
@@ -64,9 +62,7 @@ void main() {
     final key = (sort: SortOrder.by(SortCriterion.title), filter: '');
     final sub = container.listen(languageListProvider(key), (_, _) {});
     addTearDown(sub.close);
-    pending.complete(const [
-      LanguageSummary(code: 'en', trackCount: 3, detectedCount: 0),
-    ]);
+    pending.complete(const [LanguageSummary(code: 'en', trackCount: 3)]);
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
     expect(sub.read().hasValue, isTrue);

@@ -37,7 +37,6 @@ class DetailSongsHost extends ConsumerStatefulWidget {
     this.hasSongs = true,
     this.durationMs,
     this.showNumber = false,
-    this.showDetected = false,
   });
 
   final BrowseList list;
@@ -53,7 +52,6 @@ class DetailSongsHost extends ConsumerStatefulWidget {
   final PlayContext playContext;
   final int? durationMs;
   final bool showNumber;
-  final bool showDetected;
 
   /// Builds the page around the song [slivers].
   final Widget Function(BuildContext context, List<Widget> slivers) builder;
@@ -172,7 +170,6 @@ class _DetailSongsHostState extends ConsumerState<DetailSongsHost> {
           filter: _filter,
           playContext: widget.playContext,
           showNumber: widget.showNumber,
-          showDetected: widget.showDetected,
         ),
       ],
       const SelectionInsetSliver(),

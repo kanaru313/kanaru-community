@@ -63,7 +63,17 @@ void main() {
     expect(header.width, 320);
     expect(row.left, 320);
     expect(row.top, 0);
-    expect(header.bottom, closeTo(800, 0.01), reason: 'aligned to the bottom');
+  });
+
+  testWidgets('wide: a short header sits at the top of the left column', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(840, 800));
+    await tester.pumpWidget(host(_layout()));
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('header'))).dy,
+      tester.getTopLeft(find.byType(KDetailLayout)).dy,
+    );
   });
 
   testWidgets('the left column stays while the right scrolls', (tester) async {
@@ -92,6 +102,17 @@ void main() {
       lessThan(0),
     );
     expect(tester.getTopLeft(find.byKey(const ValueKey('row0'))).dy, 0);
+  });
+
+  testWidgets('a short window leaves the right column where it is', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(1000, 300));
+    await tester.pumpWidget(host(_layout(headerHeight: 600)));
+    final before = tester.getTopLeft(find.byKey(const ValueKey('row0')));
+    await tester.dragFrom(const Offset(100, 100), const Offset(0, -200));
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(find.byKey(const ValueKey('row0'))), before);
   });
 
   testWidgets('the layout draws no background of its own', (tester) async {

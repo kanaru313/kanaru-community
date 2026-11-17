@@ -73,7 +73,6 @@ class SongSlivers extends ConsumerStatefulWidget {
     required this.filter,
     required this.playContext,
     this.showNumber = false,
-    this.showDetected = false,
   });
 
   final SongScope scope;
@@ -81,7 +80,6 @@ class SongSlivers extends ConsumerStatefulWidget {
   final String filter;
   final PlayContext playContext;
   final bool showNumber;
-  final bool showDetected;
 
   @override
   ConsumerState<SongSlivers> createState() => _SongSliversState();
@@ -206,7 +204,6 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
                   ids: ids,
                   playContext: widget.playContext,
                   showNumber: widget.showNumber,
-                  showDetected: widget.showDetected,
                   origin: origin,
                 );
               },
