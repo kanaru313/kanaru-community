@@ -11,6 +11,7 @@ import '../../tokens/k_space.dart';
 import '../k_gap.dart';
 import '../k_icon_button.dart';
 
+part 'k_shelf_block_body.dart';
 part 'k_shelf_block_head.dart';
 
 /// Rounded card around a titled, collapsible row of fixed-width items
@@ -78,25 +79,13 @@ class KShelfBlock extends StatelessWidget {
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : KMotion.normal;
-    final behavior = ScrollConfiguration.of(context).copyWith(
-      scrollbars: false,
-      dragDevices: {
-        ...ScrollConfiguration.of(context).dragDevices,
-        PointerDeviceKind.mouse,
-      },
-    );
     final body = SizedBox(
       height: height + _bodyBottom,
-      child: ScrollConfiguration(
-        behavior: behavior,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: _bodyPadding,
-          itemCount: itemCount,
-          separatorBuilder: (_, _) => const KGap(KSpace.x3),
-          itemBuilder: (context, i) =>
-              SizedBox(width: itemWidth, child: itemBuilder(context, i)),
-        ),
+      child: _BodyRow(
+        itemCount: itemCount,
+        itemBuilder: itemBuilder,
+        itemWidth: itemWidth,
+        padding: _bodyPadding,
       ),
     );
     return Padding(

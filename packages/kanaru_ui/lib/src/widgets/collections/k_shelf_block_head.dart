@@ -51,57 +51,58 @@ class _HeadState extends State<_Head> {
           },
         ),
       },
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        excludeFromSemantics: true,
-        onTap: widget.onToggle,
-        onTapDown: (_) => _set(() => _pressed = true),
-        onTapUp: (_) => _set(() => _pressed = false),
-        onTapCancel: () => _set(() => _pressed = false),
-        child: DecoratedBox(
-          position: DecorationPosition.foreground,
-          decoration: BoxDecoration(
-            borderRadius: KRadius.lg,
-            border: _focused
-                ? Border.all(color: scheme.primary, width: 2)
-                : null,
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: KLayout.minTarget),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Semantics(
-                    button: true,
-                    expanded: !widget.collapsed,
-                    label: '${widget.title}, ${widget.count}',
-                    onTap: widget.onToggle,
-                    excludeSemantics: true,
-                    child: Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                        start: KSpace.x4,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            widget.icon,
-                            size: KIconSize.sm,
-                            color: scheme.primary,
-                          ),
-                          const KGap(KSpace.x2),
-                          Flexible(
-                            child: Text(
-                              widget.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          onTap: widget.onToggle,
+          onTapDown: (_) => _set(() => _pressed = true),
+          onTapUp: (_) => _set(() => _pressed = false),
+          onTapCancel: () => _set(() => _pressed = false),
+          child: DecoratedBox(
+            position: DecorationPosition.foreground,
+            decoration: BoxDecoration(
+              borderRadius: KRadius.lg,
+              border: _focused
+                  ? Border.all(color: scheme.primary, width: 2)
+                  : null,
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: KLayout.minTarget),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Semantics(
+                      button: true,
+                      expanded: !widget.collapsed,
+                      label: '${widget.title}, ${widget.count}',
+                      onTap: widget.onToggle,
+                      excludeSemantics: true,
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.only(
+                          start: KSpace.x4,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              widget.icon,
+                              size: KIconSize.sm,
+                              color: scheme.primary,
+                            ),
+                            const KGap(KSpace.x2),
+                            Flexible(
+                              child: Text(
+                                widget.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
-                          ),
-                          const KGap(KSpace.x2),
-                          Expanded(
-                            child: Text(
+                            const KGap(KSpace.x2),
+                            Text(
                               '${widget.count}',
                               maxLines: 1,
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -111,41 +112,41 @@ class _HeadState extends State<_Head> {
                                 ],
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                if (widget.onSeeAll != null)
-                  KIconButton(
-                    icon: KIcons.grid,
-                    size: KIconSize.sm,
-                    tooltip: widget.seeAllLabel,
-                    onPressed: widget.onSeeAll,
-                  ),
-                ExcludeSemantics(
-                  child: SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: Center(
-                      child: Opacity(
-                        opacity: _pressed ? 0.5 : 1,
-                        child: AnimatedRotation(
-                          turns: widget.collapsed ? 0.5 : 0,
-                          duration: widget.duration,
-                          curve: KMotion.emphasized,
-                          child: Icon(
-                            KIcons.collapse,
-                            size: KIconSize.sm,
-                            color: chevronColor,
+                  if (widget.onSeeAll != null)
+                    KIconButton(
+                      icon: KIcons.grid,
+                      size: KIconSize.sm,
+                      tooltip: widget.seeAllLabel,
+                      onPressed: widget.onSeeAll,
+                    ),
+                  ExcludeSemantics(
+                    child: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Center(
+                        child: Opacity(
+                          opacity: _pressed ? 0.5 : 1,
+                          child: AnimatedRotation(
+                            turns: widget.collapsed ? 0.5 : 0,
+                            duration: widget.duration,
+                            curve: KMotion.emphasized,
+                            child: Icon(
+                              KIcons.collapse,
+                              size: KIconSize.sm,
+                              color: chevronColor,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
