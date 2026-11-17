@@ -3,7 +3,9 @@ import '../icons/k_icons.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens/k_layout.dart';
+import '../tokens/k_motion.dart';
 import '../tokens/k_space.dart';
+import 'k_detail_title.dart';
 import 'page_header_scope.dart';
 import 'k_icon_button.dart';
 
@@ -17,6 +19,7 @@ class PageHeader extends StatelessWidget {
     this.onBack,
     this.actions = const [],
     this.backTooltip,
+    this.titleInContent = false,
   });
 
   final String title;
@@ -25,6 +28,11 @@ class PageHeader extends StatelessWidget {
   final VoidCallback? onBack;
   final List<Widget> actions;
   final String? backTooltip;
+
+  /// The page shows its name in its content; the header shows [title] only
+  /// while that name is scrolled out of sight (see [KDetailTitleHost]) and
+  /// stays empty otherwise.
+  final bool titleInContent;
 
   @override
   Widget build(BuildContext context) {
@@ -45,19 +53,109 @@ class PageHeader extends StatelessWidget {
               onPressed: onBack,
             ),
           Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
+            child: titleInContent
+                ? _CollapsingTitle(
+                    title: title,
+                    show: KDetailTitleHost.collapsedOf(context),
+                  )
+                : Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _style(context),
+                  ),
           ),
           ...actions,
           ...?scope?.trailing,
           if (isRoot) ...?scope?.rootTrailing,
         ],
       ),
+    );
+  }
+}
+
+TextStyle? _style(BuildContext context) =>
+    Theme.of(context).textTheme.titleLarge
+        ?.copyWith(fontWeight: FontWeight.w700);
+
+/// Title that fades in (and rises 4 dp) when [show] turns true and out when
+/// it turns false. While hidden after the fade it builds no [Text], so the
+/// hidden name is not in the tree at all.
+class _CollapsingTitle extends StatefulWidget {
+  const _CollapsingTitle({required this.title, required this.show});
+
+  final String title;
+  final bool show;
+
+  @override
+  State<_CollapsingTitle> createState() => _CollapsingTitleState();
+}
+
+class _CollapsingTitleState extends State<_CollapsingTitle>
+    with TickerProviderStateMixin {
+  /// Distance the title rests below its place while hidden.
+  static const double _rise = KSpace.x1;
+
+  late final AnimationController _fade = AnimationController(
+    vsync: this,
+    duration: KMotion.fast,
+    value: widget.show ? 1 : 0,
+  );
+
+  // Unbounded: the snappy spring overshoots.
+  late final AnimationController _offset = AnimationController.unbounded(
+    vsync: this,
+    value: widget.show ? 0 : _rise,
+  );
+
+  @override
+  void didUpdateWidget(_CollapsingTitle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.show == widget.show) return;
+    final show = widget.show;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _fade.value = show ? 1 : 0;
+    } else {
+      _fade.animateTo(
+        show ? 1 : 0,
+        duration: KMotion.fast,
+        curve: KMotion.emphasized,
+      );
+    }
+    KSpring.animateTo(context, _offset, show ? 0 : _rise, KSpring.snappy);
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    _offset.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_fade, _offset]),
+      builder: (context, _) {
+        if (!widget.show && _fade.value == 0) return const SizedBox.shrink();
+        return ExcludeSemantics(
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Opacity(
+              opacity: _fade.value.clamp(0.0, 1.0),
+              child: Transform.translate(
+                offset: Offset(0, _offset.value),
+                child: Text(
+                  widget.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _style(context),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

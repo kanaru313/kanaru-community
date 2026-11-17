@@ -4,6 +4,7 @@ import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_cover.dart';
+import '../k_detail_title.dart';
 import '../k_gap.dart';
 import 'k_engage_region.dart';
 
@@ -119,21 +120,24 @@ class KColorTile extends StatelessWidget {
 }
 
 /// Wide colour banner heading a genre or language page: faint icon, large
-/// [headline], a [caption] and optional [actions] row.
+/// [headline] (the page's name, up to two lines), the [lines] under it and
+/// an optional [actions] row.
 class KColorBanner extends StatelessWidget {
   const KColorBanner({
     super.key,
     required this.seed,
     required this.icon,
     required this.headline,
-    this.caption,
+    this.lines = const [],
     this.actions,
   });
 
   final String seed;
   final IconData icon;
   final String headline;
-  final String? caption;
+
+  /// One line each, in order, under the headline (counts, notes).
+  final List<String> lines;
 
   /// Buttons under the text (play, shuffle, more).
   final Widget? actions;
@@ -168,16 +172,19 @@ class KColorBanner extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  KDetailTitle(
                     headline,
-                    style: textTheme.headlineMedium?.copyWith(
+                    maxLines: 2,
+                    style: textTheme.headlineMedium!.copyWith(
                       color: tones.ink,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  if (caption != null)
+                  for (final line in lines)
                     Text(
-                      caption!,
+                      line,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: textTheme.bodyMedium?.copyWith(
                         color: tones.ink.withValues(alpha: 0.85),
                       ),

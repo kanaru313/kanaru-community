@@ -8,7 +8,7 @@ import '../media/page_ground.dart';
 ///
 /// Narrow (< [wideBreakpoint] px, measured on the page, not the window): the
 /// header sits above the list in one scroll. Wide: a fixed left column of
-/// [columnWidth] holds the header, aligned to the column bottom and scrolling
+/// [columnWidth] holds the header, aligned to the column top and scrolling
 /// on its own when the window is short; the slivers scroll on the right.
 ///
 /// It draws no background: a page tints itself by putting the layout (and its
@@ -39,19 +39,7 @@ class KDetailLayout extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: columnWidth,
-                    child: LayoutBuilder(
-                      builder: (context, column) => SingleChildScrollView(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: column.maxHeight,
-                          ),
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: header,
-                          ),
-                        ),
-                      ),
-                    ),
+                    child: SingleChildScrollView(child: header),
                   ),
                   Expanded(child: CustomScrollView(slivers: slivers)),
                 ],
