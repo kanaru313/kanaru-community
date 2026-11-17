@@ -194,26 +194,54 @@ void main() {
     expect(events, isEmpty);
   });
 
-  testWidgets('a second finger on the card while Pause is held opens nothing', (
-    tester,
-  ) async {
+  testWidgets(
+    'a tap with a second finger opens Now Playing while Pause is held',
+    (tester) async {
+      final events = <String>[];
+      final host = await pumpWithPlayer(tester, _player(events));
+      final first = await tester.startGesture(
+        tester.getCenter(byIconButton('Pause')),
+      );
+      final second = await tester.startGesture(
+        tester.getCenter(find.text('T0')),
+        pointer: 2,
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      await second.up();
+      await tester.pump();
+      expect(events, ['open']);
+      // Releasing Pause starts controller (database) work that needs real
+      // time: release in the real zone, as UiHost.tap does.
+      await host.run(tester, first.up);
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(events, ['open']);
+    },
+  );
+
+  testWidgets('holding the card with a second finger opens the queue once, '
+      'from that finger only', (tester) async {
     final events = <String>[];
-    await pumpWithPlayer(tester, _player(events));
+    final host = await pumpWithPlayer(tester, _player(events));
     final first = await tester.startGesture(
       tester.getCenter(byIconButton('Pause')),
     );
+    // Finger 1 alone for longer than the long-press time: no queue.
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(events, isEmpty);
     final second = await tester.startGesture(
       tester.getCenter(find.text('T0')),
       pointer: 2,
     );
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(events, isEmpty);
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(events, ['queue']);
     await second.up();
-    // Cancel, not release: releasing Pause would run controller work that
-    // needs real time.
-    await first.cancel();
+    // Releasing Pause starts controller (database) work that needs real
+    // time: release in the real zone, as UiHost.tap does.
+    await host.run(tester, first.up);
     await tester.pump(const Duration(milliseconds: 700));
-    // The second finger is a tap on the card, once; no queue from the first.
-    expect(events, isNot(contains('queue')));
+    expect(events, ['queue']);
   });
 
   testWidgets('tap opens Now Playing', (tester) async {
