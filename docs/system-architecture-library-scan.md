@@ -54,8 +54,8 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
   with the MediaStore folders, empty when the index holds no usable audio, or
   `AudioFoldersFailed` with `permission` / `timedOut` / `failed`; Linux: always listed,
   empty), `refreshMediaIndex(volumeRoots, folders)` (Android: asks the system to
-  index the top-level folders of each volume except `Android`, `Music` and `Download`
-  first, plus chosen folders, and returns `done` / `timedOut` / `failed` /
+  index the top-level folders of each volume except `Android` (`Music` and `Download`
+  first), plus chosen folders, and returns `done` / `timedOut` / `failed` /
   `unsupported`; Linux throws `UnsupportedError`), `suggestedMusicFolder()`, `canonicalize(path)`, `folderChoice`
   (`systemDialog` or `mediaStoreSheet`) and `pickFolder()` (Linux only).
 - Android (`platform/data/media_store/`): `MediaStoreChannel.kt` (channel
@@ -790,11 +790,11 @@ Declared in `lib/src/library/state/scan/scan_settings.dart`.
 - **No automatic rescans.** Scans run at startup, after the first-run arrow, after an
   exclusion is undone and on any `rescan()` call. There is no folder watcher and no
   MediaStore observer. On Android a file copied in just now may be missing until
-  MediaStore has indexed it. The one user-facing exception is "Quét lại" in the
-  first-run folder sheet and card, which asks Android to index the top-level folders
-  (`MediaScannerConnection`) and rereads the list; it also runs once per app launch on
-  the first-run card when Android shows no music. Nothing else triggers it (no Home
-  action, no startup scan).
+  MediaStore has indexed it. Two paths ask Android to index the top-level folders
+  (`MediaScannerConnection`) and reread the list: "Quét lại" in the first-run folder
+  sheet and card (user), and one run per app launch on the first-run card when Android
+  shows no music (automatic). Neither adds a Home action or a startup scan; a run that
+  ends after setup asks for a library rescan (`mediaIndexRefreshProvider`).
 - **A failed scan is invisible.** `ScanFailed` is published, but Home and the library
   pages draw nothing for it, so a user who revokes the audio permission sees the
   library stop updating without a message.
