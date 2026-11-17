@@ -12,6 +12,34 @@ Color _fill(WidgetTester tester, Finder tile) => tester
     .color!;
 
 void main() {
+  testWidgets('a one-line name sits at the top, the spare room is below', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 180,
+            child: KColorTile(
+              key: ValueKey('tile'),
+              seed: 'Indie',
+              title: 'Indie',
+              subtitle: '120 songs',
+              icon: KIcons.genres,
+            ),
+          ),
+        ),
+      ),
+    );
+    final tile = tester.getRect(find.byKey(const ValueKey('tile')));
+    final title = tester.getRect(find.text('Indie'));
+    final count = tester.getRect(find.text('120 songs'));
+    expect(title.top - tile.top, KSpace.x4); // the tile's own padding
+    expect(tile.bottom - count.bottom, greaterThan(KSpace.x4));
+  });
+
   for (final (name, brightness, scale) in hostVariants) {
     testWidgets('tile renders ($name)', (tester) async {
       useWindow(tester, const Size(400, 800));

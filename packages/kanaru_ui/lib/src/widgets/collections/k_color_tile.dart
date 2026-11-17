@@ -132,7 +132,9 @@ class KColorTile extends StatelessWidget {
                     vertical: _padding,
                   ),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    // Top-aligned: a one-line name leaves the spare line under
+                    // the count, not above the name.
+                    mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
