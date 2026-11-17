@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../database/state/database_providers.dart';
 import '../../../media/domain/library_keys.dart';
-import '../../../media/domain/track_id.dart';
 import '../../../media/domain/track_info.dart';
 import '../../../platform/state/file_manager_provider.dart';
 import '../../data/browse/detail_queries.dart';
@@ -89,14 +88,17 @@ Future<MenuEnv> loadMenuEnv(
   );
 }
 
-/// The song of a menu left the library before its data was read.
-class TrackGoneException implements Exception {
-  const TrackGoneException(this.id);
+/// The item of a menu (a song, an album, an artist, later a playlist) left
+/// the library before its data was read. Not a fault: the menu shows "no
+/// longer in your library" instead of a load failure.
+class ItemGoneException implements Exception {
+  const ItemGoneException(this.what);
 
-  final TrackId id;
+  /// What is gone, for the log: `track 4`, `album <key>`.
+  final String what;
 
   @override
-  String toString() => 'track $id is gone';
+  String toString() => '$what is gone';
 }
 
 Future<MenuSpec> songMenuSpec(
@@ -107,7 +109,7 @@ Future<MenuSpec> songMenuSpec(
 ) async {
   final db = container.read(appDatabaseProvider);
   final links = await trackLinks(db, info.id);
-  if (links == null) throw TrackGoneException(info.id);
+  if (links == null) throw ItemGoneException('track ${info.id}');
   final file = await songInfo(db, info.id);
   final favorites = await _first(container, favoriteTrackIdsProvider);
   return buildSongMenu(
@@ -137,7 +139,7 @@ Future<MenuSpec> albumMenuSpec(
     db,
     scope: scope,
   )).where((a) => a.key == encoded).firstOrNull;
-  if (album == null) throw StateError('album $encoded is gone');
+  if (album == null) throw ItemGoneException('album $encoded');
   return buildAlbumMenu(
     AlbumMenuData(
       album: album,
@@ -175,7 +177,7 @@ Future<MenuSpec> artistMenuSpec(
   if (artist == null) {
     // Only an album artist: no track of its own, the albums name it.
     if (albums.own.isEmpty && albums.appears.isEmpty) {
-      throw StateError('artist $encoded is gone');
+      throw ItemGoneException('artist $encoded');
     }
     final named = albums.own.firstOrNull?.artist;
     artist = ArtistSummary(

@@ -154,8 +154,8 @@ Future<void> _open(
     spec = await build(container, env).timeout(_loadLimit);
     if (!root.mounted) return;
     page = renderMenu(spec, l10n, MenuActionRunner(container, root));
-  } on TrackGoneException catch (e) {
-    _log.info('menu of a song that is gone: $e');
+  } on ItemGoneException catch (e) {
+    _log.info('menu of an item that is gone: $e');
     if (root.mounted) showAppSnackBar(root, l10n.libraryNotFoundMessage);
     return;
   } on Object catch (e, s) {
