@@ -75,6 +75,10 @@ class TrackInfo {
   final TrackAvailability status;
   final String relPath;
 
+  /// Seed of the placeholder cover when the track has no cover image: one value
+  /// for every surface, so the same track never changes colour between them.
+  String get coverSeed => albumKey?.encode() ?? title;
+
   @override
   bool operator ==(Object other) {
     if (other is! TrackInfo) return false;

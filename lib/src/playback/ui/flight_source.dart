@@ -4,6 +4,17 @@ import 'package:material_ui/material_ui.dart';
 /// player) and the strip at the top of the queue sheet.
 enum FlightPiece { cover, text, play, next }
 
+/// How a surface draws its title, artist and cover corners, so the flight to
+/// the queue strip starts from exactly that look. Styles are already resolved
+/// from the theme. A null style means "the Now Playing text".
+class FlightLook {
+  const FlightLook({this.title, this.artist, required this.coverRadius});
+
+  final TextStyle? title;
+  final TextStyle? artist;
+  final BorderRadius coverRadius;
+}
+
 /// A surface the queue sheet flies from and back to: it owns a key per piece
 /// (to read where the piece is) and a flag the surface uses to hide its own
 /// pieces while the flight draws them, so nothing shows twice.
@@ -11,6 +22,10 @@ class FlightSource {
   FlightSource() : keys = {for (final p in FlightPiece.values) p: GlobalKey()};
 
   final Map<FlightPiece, GlobalKey> keys;
+
+  /// Look of the surface's pieces; the surface sets it when it builds. Null
+  /// flies the Now Playing look.
+  FlightLook? look;
 
   /// True while the queue sheet is open or moving.
   final ValueNotifier<bool> hidden = ValueNotifier(false);

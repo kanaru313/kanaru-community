@@ -201,7 +201,7 @@ class _Cover extends ConsumerWidget {
           piece: FlightPiece.cover,
           child: TrackCover(
             coverKey: loaded?.coverKey,
-            seed: loaded?.albumKey?.toString() ?? loaded?.title ?? '',
+            seed: loaded?.coverSeed ?? '',
             size: CoverSize.full,
             dimension: side,
           ),

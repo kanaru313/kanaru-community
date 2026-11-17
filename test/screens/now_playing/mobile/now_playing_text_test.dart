@@ -1,4 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/playback/ui/flight_source.dart';
+import 'package:kanaru/src/playback/ui/track_cover.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/now_playing_text_styles.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/queue_strip.dart';
 import 'package:material_ui/material_ui.dart';
@@ -12,10 +15,13 @@ void main() {
     WidgetTester tester,
     double t, {
     double scale = 1.0,
+    FlightLook? look,
   }) async {
     final host = await pumpWithPlayer(
       tester,
-      Center(child: StripText(t: t)),
+      Center(
+        child: StripText(t: t, look: look),
+      ),
       textScale: scale,
       play: false,
     );
@@ -87,4 +93,76 @@ void main() {
       });
     }
   }
+
+  group('flight from the mini player', () {
+    const miniLook = FlightLook(
+      title: TextStyle(
+        inherit: false,
+        fontSize: 15, fontWeight: FontWeight.w600, height: 1.35),
+      artist: TextStyle(inherit: false, fontSize: 13, height: 1.35),
+      coverRadius: KMediaCard.coverRadius,
+    );
+
+    testWidgets('text starts at the mini player size and line height', (
+      tester,
+    ) async {
+      final styles = await stripStyles(tester, 0, look: miniLook);
+      expect(styles[0]?.fontSize, 15);
+      expect(styles[0]?.height, 1.35);
+      expect(styles[1]?.fontSize, 13);
+      expect(styles[1]?.height, 1.35);
+    });
+
+    testWidgets('text ends in the strip style at t = 1', (tester) async {
+      final styles = await stripStyles(tester, 1, look: miniLook);
+      expect(styles[0]?.fontSize, stripTitleStyle(text)?.fontSize);
+      expect(styles[1]?.fontSize, stripArtistStyle(text)?.fontSize);
+    });
+
+    testWidgets('without a look the Now Playing line heights stay', (
+      tester,
+    ) async {
+      final styles = await stripStyles(tester, 0);
+      expect(styles[0]?.height, nowPlayingTitleLineHeight);
+      expect(styles[1]?.height, nowPlayingArtistLineHeight);
+    });
+
+    Future<BorderRadius?> coverRadius(
+      WidgetTester tester,
+      double t,
+      FlightLook? look,
+    ) async {
+      await pumpWithPlayer(
+        tester,
+        Center(
+          child: StripCover(
+            rect: const Rect.fromLTWH(0, 0, 56, 56),
+            t: t,
+            look: look,
+          ),
+        ),
+      );
+      return tester.widget<TrackCover>(find.byType(TrackCover)).radius;
+    }
+
+    testWidgets('cover corners start at the source radius', (tester) async {
+      expect(await coverRadius(tester, 0, miniLook), KMediaCard.coverRadius);
+    });
+
+    testWidgets('Now Playing look starts at its own 12 dp corner', (
+      tester,
+    ) async {
+      expect(
+        await coverRadius(tester, 0, const FlightLook(coverRadius: KRadius.sm)),
+        KRadius.sm,
+      );
+    });
+
+    testWidgets('cover corners end at the strip radius', (tester) async {
+      expect(
+        await coverRadius(tester, 1, miniLook),
+        const BorderRadius.all(Radius.circular(8)),
+      );
+    });
+  });
 }

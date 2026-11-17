@@ -62,6 +62,27 @@ Widget _card({
 }
 
 void main() {
+  group('text styles', () {
+    testWidgets('metrics styles are what the card text uses', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(_card()));
+      final theme = Theme.of(tester.element(find.byType(KMediaCard)));
+      final title = KMediaCardMetrics.titleStyle(theme.textTheme)!;
+      final line = KMediaCardMetrics.lineStyle(theme.textTheme)!;
+      expect(title.fontSize, 15);
+      expect(title.fontWeight, FontWeight.w600);
+      expect(title.height, 1.35);
+      expect(line.fontSize, 13);
+      expect(line.height, 1.35);
+      final shown = tester.widget<Text>(find.text('Title'));
+      expect(shown.style?.fontSize, title.fontSize);
+      expect(shown.style?.height, title.height);
+      final artist = tester.widget<Text>(find.text('Artist'));
+      expect(artist.style?.fontSize, line.fontSize);
+      expect(artist.style?.height, line.height);
+    });
+  });
+
   group('extentOf', () {
     for (final scale in [1.0, 1.3, 1.5]) {
       testWidgets('matches the laid-out height at $scale x', (tester) async {

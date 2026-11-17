@@ -246,7 +246,7 @@ class _Cover extends ConsumerWidget {
     const radius = KMediaCard.coverRadius;
     final cover = TrackCover(
       coverKey: info?.coverKey,
-      seed: info?.albumKey?.encode() ?? info?.title ?? '',
+      seed: info?.coverSeed ?? '',
       size: CoverSize.thumb,
       dimension: KMediaCard.coverSize,
       radius: radius,

@@ -15,6 +15,8 @@ import 'k_media_card_frame.dart';
 import 'k_media_card_right_column.dart';
 import 'k_media_card_text.dart';
 
+export 'k_media_card_text.dart' show KMediaCardMetrics;
+
 /// Look of a [KMediaCard].
 enum KMediaCardStyle {
   /// [flat] on the mobile shell, [card] on desktop.

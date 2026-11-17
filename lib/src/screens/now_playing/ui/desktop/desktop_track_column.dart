@@ -109,7 +109,7 @@ class _Artwork extends ConsumerWidget {
       ),
       child: TrackCover(
         coverKey: info?.coverKey,
-        seed: info?.albumKey?.toString() ?? info?.title ?? '',
+        seed: info?.coverSeed ?? '',
         size: CoverSize.full,
         dimension: side,
         radius: radius,

@@ -26,7 +26,8 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
   bool _leaving = false;
 
   /// The cover, title and buttons that fly to the queue strip.
-  final FlightSource _flight = FlightSource();
+  final FlightSource _flight = FlightSource()
+    ..look = const FlightLook(coverRadius: KRadius.sm);
 
   @override
   void dispose() {
