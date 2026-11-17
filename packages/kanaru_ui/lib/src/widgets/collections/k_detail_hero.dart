@@ -20,8 +20,10 @@ import 'k_detail_line.dart';
 /// `PageHeader(titleInContent: true)` inside a [KDetailTitleHost], the header
 /// shows it instead.
 ///
-/// [coverBuilder] draws the cover in a square of the side it is given, so the
-/// caller keeps the music types.
+/// [coverBuilder] draws the cover in a square of the side it is given, with
+/// the corner radius this layout wants (round when narrow, square in the wide
+/// column), so the caller keeps the music types and never asks which layout
+/// it is in.
 class KDetailHero extends StatelessWidget {
   const KDetailHero({
     super.key,
@@ -34,7 +36,8 @@ class KDetailHero extends StatelessWidget {
     this.circle = false,
   });
 
-  final Widget Function(BuildContext context, double side) coverBuilder;
+  final Widget Function(BuildContext context, double side, BorderRadius radius)
+  coverBuilder;
 
   /// Name of the page (album, artist).
   final String title;
@@ -56,6 +59,11 @@ class KDetailHero extends StatelessWidget {
   final bool circle;
 
   static const double coverSize = 132;
+
+  /// Corner radius of the narrow cover; the wide cover is square.
+  static const BorderRadius narrowCoverRadius = BorderRadius.all(
+    Radius.circular(14),
+  );
 
   Widget _text(BuildContext context, {required bool wide}) {
     final textTheme = Theme.of(context).textTheme;
@@ -109,7 +117,7 @@ class KDetailHero extends StatelessWidget {
               children: [
                 SizedBox.square(
                   dimension: coverSize,
-                  child: coverBuilder(context, coverSize),
+                  child: coverBuilder(context, coverSize, narrowCoverRadius),
                 ),
                 const KGap(KSpace.x4),
                 Expanded(child: text),
@@ -123,10 +131,10 @@ class KDetailHero extends StatelessWidget {
     const side = KDetailLayout.columnWidth;
     Widget cover = SizedBox.square(
       dimension: side,
-      child: coverBuilder(context, side),
+      child: coverBuilder(context, side, BorderRadius.zero),
     );
     if (!circle) {
-      cover = _fade(cover, vertical: true);
+      cover = _fadeBottom(cover);
     }
     return SizedBox(
       width: side,
@@ -139,7 +147,11 @@ class KDetailHero extends StatelessWidget {
                   padding: const EdgeInsets.all(KSpace.x4),
                   child: SizedBox.square(
                     dimension: side - KSpace.x4 * 2,
-                    child: coverBuilder(context, side - KSpace.x4 * 2),
+                    child: coverBuilder(
+                      context,
+                      side - KSpace.x4 * 2,
+                      BorderRadius.zero,
+                    ),
                   ),
                 )
               : cover,
@@ -167,14 +179,14 @@ class KDetailHero extends StatelessWidget {
     );
   }
 
-  /// Fades the last quarter of [child] to transparent along one axis.
-  static Widget _fade(Widget child, {required bool vertical}) => ShaderMask(
+  /// Fades the last 30 % of [child] to transparent, top to bottom.
+  static Widget _fadeBottom(Widget child) => ShaderMask(
     blendMode: BlendMode.dstIn,
-    shaderCallback: (rect) => LinearGradient(
-      begin: Alignment.topLeft,
-      end: vertical ? Alignment.bottomLeft : Alignment.topRight,
-      stops: const [0.7, 1],
-      colors: const [Color(0xFF000000), Color(0x00000000)],
+    shaderCallback: (rect) => const LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      stops: [0.7, 1],
+      colors: [Color(0xFF000000), Color(0x00000000)],
     ).createShader(rect),
     child: child,
   );

@@ -20,20 +20,23 @@ void main() {
     addTearDown(container.dispose);
   });
 
-  test('the menu of an album that left the library is "gone", not a fault', () {
-    expect(
-      albumMenuSpec(
-        container,
-        env(),
-        AlbumKey('artist', 'title'),
-        const MenuOrigin.list(),
-      ),
-      throwsA(isA<ItemGoneException>()),
-    );
-  });
+  test(
+    'the menu of an album that left the library is "gone", not a fault',
+    () async {
+      await expectLater(
+        albumMenuSpec(
+          container,
+          env(),
+          AlbumKey('artist', 'title'),
+          const MenuOrigin.list(),
+        ),
+        throwsA(isA<ItemGoneException>()),
+      );
+    },
+  );
 
-  test('the menu of an artist that left the library is "gone"', () {
-    expect(
+  test('the menu of an artist that left the library is "gone"', () async {
+    await expectLater(
       artistMenuSpec(
         container,
         env(),

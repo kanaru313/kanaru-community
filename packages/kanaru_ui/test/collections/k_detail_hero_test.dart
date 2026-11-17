@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -7,6 +8,8 @@ import '../support/scaled_host.dart';
 
 const _longTitle =
     'Những bài hát hay nhất của Trịnh Công Sơn tuyển tập đặc biệt';
+
+BorderRadius? lastRadius;
 
 Widget _page({
   bool circle = false,
@@ -21,8 +24,14 @@ Widget _page({
     line2: line2,
     line3: line3,
     description: description,
-    coverBuilder: (context, side) =>
-        SizedBox.square(key: const ValueKey('cover'), dimension: side),
+    coverBuilder: (context, side, radius) {
+      lastRadius = radius;
+      return ColoredBox(
+        key: const ValueKey('cover'),
+        color: const Color(0xFFFF0000),
+        child: SizedBox.square(dimension: side),
+      );
+    },
     actions: const Text('buttons'),
   ),
   slivers: [
@@ -62,6 +71,37 @@ void main() {
     expect(ys, orderedEquals([...ys]..sort()));
     // Only the bottom edge fades.
     expect(find.byType(ShaderMask), findsOneWidget);
+    expect(lastRadius, BorderRadius.zero);
+  });
+
+  testWidgets(
+    'wide: the cover is opaque at the right edge, clear at the foot',
+    (tester) async {
+      useWindow(tester, const Size(840, 800));
+      final key = GlobalKey();
+      await tester.pumpWidget(host(RepaintBoundary(key: key, child: _page())));
+      final cover = tester.getRect(find.byKey(const ValueKey('cover')));
+      final boundary =
+          key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+      final bytes = (await tester.runAsync(() async {
+        final image = await boundary.toImage();
+        return image.toByteData();
+      }))!;
+      final width = boundary.size.width.toInt();
+      int alphaAt(double x, double y) =>
+          bytes.getUint8((y.toInt() * width + x.toInt()) * 4 + 3);
+      // Top right corner and mid-height of the right edge: not faded.
+      expect(alphaAt(cover.right - 2, cover.top + 2), 255);
+      expect(alphaAt(cover.right - 2, cover.center.dy), 255);
+      // Last pixels of the foot: nearly clear (the page ground is transparent).
+      expect(alphaAt(cover.center.dx, cover.bottom - 1), lessThan(20));
+    },
+  );
+
+  testWidgets('narrow: the cover is round', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_page()));
+    expect(lastRadius, KDetailHero.narrowCoverRadius);
   });
 
   testWidgets('a round photo is not faded', (tester) async {

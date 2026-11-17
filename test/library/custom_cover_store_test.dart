@@ -87,13 +87,15 @@ List<int> _img(int seed) => [
 final _album = AlbumKey('artist', 'title').encode();
 final _artist = ArtistKey('artist').encode();
 
-/// Waits (real time, up to 10 s) until [done] holds. Real file and database
+/// Waits (real time, up to 5 s) until [done] holds. Real file and database
 /// work finishes outside the event queue, so a fixed `pumpEventQueue` can
-/// return too early on a loaded machine.
-Future<void> until(bool Function() done) async {
-  for (var i = 0; i < 200 && !done(); i++) {
+/// return too early on a loaded machine. A condition that never holds fails
+/// here, naming [what], not as a timeout of the whole test.
+Future<void> until(bool Function() done, {String what = 'condition'}) async {
+  for (var i = 0; i < 100 && !done(); i++) {
     await Future<void>.delayed(const Duration(milliseconds: 50));
   }
+  if (!done()) fail('timed out waiting for: $what');
 }
 
 void main() {
@@ -557,17 +559,22 @@ void main() {
           store.importCover(CustomCoverKind.album, _album, source(name, bytes));
       String? current() =>
           seen.lastWhere((v) => v.hasValue).value?.path.split('/covers/').last;
-      await until(() => seen.any((v) => v.hasValue));
+      await until(() => seen.any((v) => v.hasValue), what: 'the first value');
       await pick(_img(3), 'a');
       await until(
         () => current() == 'full/${_FakeImporter.keyOf(_img(3))}.jpg',
+        what: 'the first cover',
       );
       await pick(_img(9), 'b');
       await until(
         () => current() == 'full/${_FakeImporter.keyOf(_img(9))}.jpg',
+        what: 'the second cover',
       );
       await ctl.removeCover(CustomCoverKind.album, _album);
-      await until(() => seen.where((v) => v.hasValue).length >= 4);
+      await until(
+        () => seen.where((v) => v.hasValue).length >= 4,
+        what: 'the cover to be removed',
+      );
 
       final names = [
         for (final v in seen.where((v) => v.hasValue))
@@ -617,14 +624,22 @@ void main() {
       );
       addTearDown(short.dispose);
       final item = (kind: CustomCoverKind.album, itemKey: _album);
+      final watch = Stopwatch()..start();
       short.listen(customCoverFileProvider(item), (_, _) {}).close();
       // `exists` is deprecated for an experimental `.exist`; fine in a test.
       // ignore: deprecated_member_use
       expect(short.exists(customCoverFileProvider(item)), isTrue);
-      // ignore: deprecated_member_use
-      await until(() => !short.exists(customCoverFileProvider(item)));
-      // ignore: deprecated_member_use
-      expect(short.exists(customCoverFileProvider(item)), isFalse);
+      await until(
+        // ignore: deprecated_member_use
+        () => !short.exists(customCoverFileProvider(item)),
+        what: 'the provider to be disposed',
+      );
+      // A timer never fires early, so this cannot flake: it proves the
+      // keep-alive held (a zero keep-alive would dispose at once).
+      expect(
+        watch.elapsed,
+        greaterThanOrEqualTo(const Duration(milliseconds: 450)),
+      );
     });
 
     test('a row whose file is missing (restored backup) gives null', () async {
