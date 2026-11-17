@@ -194,15 +194,36 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
 `lib/src/library/data/browse/throttled_query.dart`.
 
 - `BrowseList` (songs, albums, artists, genres, languages, folders,
-  albumTracks, detailSongs), `SortCriterion` (`isNumeric` picks the direction
-  wording: "Tăng dần/Giảm dần" vs "A → Z / Z → A"), `SortSpec(criterion,
-  descending)`. `criteriaOf(list)` lists the criteria in menu order; the first
-  is the default (`defaultSortOf`; detail songs default to play count and
-  languages to track count, both descending).
+  albumTracks, detailSongs), `SortCriterion` (its `kind`, text / number / date,
+  picks the direction wording: "A → Z / Z → A", "Tăng dần / Giảm dần",
+  "Cũ trước / Mới trước"), `SortSpec(criterion, descending)`. `criteriaOf(list)`
+  lists the criteria in menu order; the first is the default (`defaultSortOf`;
+  detail songs default to play count and languages to track count, both
+  descending).
+- `SortOrder` (`library/domain/browse/sort_order.dart`): the sort of a list as
+  an ordered, non-empty, duplicate-free `List<SortSpec>`; the first criterion
+  orders, each next one breaks ties. Immutable with value equality (it is part
+  of provider family keys). All sort rules live here, not in the widgets:
+  `pick(c)` (the dropdown: the order becomes `[c]` and keeps the direction of
+  the current first criterion), `add(c)` (Nâng cao: always appends; date
+  criteria start descending), `remove(c)` (the last criterion cannot be
+  removed), `flip(c)`, `reversed()` (the "Đảo thứ tự" button: flips every
+  criterion), `move(from, to)` (`to` is the final index of the moved row, as
+  `onReorderItem`). Missing values (NULL) stay last in both directions and ties
+  end with the title key then id; the SQL (`song_ids_query.dart`) and the
+  in-memory comparators (albums, artists, genres, languages, folders) apply the
+  same rule.
 - `LibraryListViews`: sort and `CollectionView` (grid/list) per list plus
-  `FolderView` (tree/flat). `toJson`/`fromJson` ignore unknown lists,
-  criteria the list does not offer and unknown views (defaults); only a
-  non-map throws `FormatException`. Albums default to a grid, the rest to rows.
+  `FolderView` (tree/flat). Stored in `library.list_views` (settings JSON, no
+  schema change). Written as v2: `{"lists": {<list>: {"sort": [{"by":
+  "artist", "desc": false}, ...], "view": "grid"}}, "folderView": ...}`. Read:
+  v2, and v1 (`"sort": "artist", "desc": true`, one criterion; a missing `desc`
+  means the list default's direction). Unknown lists, criteria the list does
+  not offer, duplicates and unknown views are dropped (defaults; an empty
+  sort becomes the default); only a non-map throws `FormatException`. A build
+  from before v2 reading a v2 value does not throw: it compares the list
+  `sort` with criterion names, finds none and uses the default sort (the view
+  is kept); saving there writes v1 again. Albums default to a grid, the rest to rows.
 - `AlbumSummary`, `ArtistSummary`, `GenreSummary`, `LanguageSummary` (code
   null = unknown): value types the list queries return.
 - `NaturalKey` / `naturalCompare`: digit runs by value (any length), then
@@ -564,9 +585,21 @@ dimmed with "Coming soon" until Settings has the folders screen.
 (`KListSortFilterBar`: the page's left group, the sort chip, the filter
 toggle) and the filter field. The builder gets `LibraryListInput` (remembered
 sort and view, filter text, whether the field is open) and returns the left
-group and the body. The sort chip opens `showKSortPopover` (order buttons keep
-it open) and stores the choice in `libraryListViewsProvider`. The filter text
-is the page's own state and is never stored; closing the field clears it. The
+group and the body. The sort chip opens `showKSortPopover` (a dropdown anchored
+under the chip: "Nâng cao…" first, then the criteria; no direction row). Picking
+a criterion applies `SortOrder.pick` (the direction of the first criterion is
+kept) and closes it; "Nâng cao…" closes it and opens `showKSortDialog`. The bar
+also has "Đảo thứ tự" (`SortOrder.reversed`). Every change is stored in
+`libraryListViewsProvider`, so list pages remember sort and direction. The
+dialog applies each change at once; the library keeps the route it pushed
+(`onRoute`) so it can close exactly that route when the list goes away. Detail
+pages (album, artist, genre, language, folder) keep the sort for the session
+only (`DetailSortOverrides`, a `SortOrder` per page); "Đặt lại" there removes
+the page's override, so the page falls back to the kind's remembered sort. A
+sort with `playCount` anywhere in it also reads and watches `play_stats`
+(`readsFrom` of the song-ids query, and the provider's table watch), so each
+counted play reloads the list. The filter text is the page's own state and is
+never stored; closing the field clears it. The
 text reaches the list query 250 ms after the last keystroke (`FilterDebouncer`,
 also on the detail pages); emptying or closing the field applies at once. On
 the mobile shell Back closes the field first.
@@ -914,8 +947,9 @@ callbacks come from the caller. Width-based layout lives here.
 |---|---|
 | `KMediaCard` | Row card of the song, album track, queue, selection panel, folder, genre, language, album and artist rows. Three text lines always reserved (`titleLines: 2` lets a long name wrap over the title and second line, which is then not shown, in the same height); slots in order `leading` (cover only), text, right column (internal to `kanaru_ui`, not exported: `top` duration over `bottom` heart, same horizontal centre, laid out from the measured `bottom` box so the text sits 2 dp above the visible icon with a 48 dp mobile button, a 40 dp desktop one or a bare icon; the heart box stays whole, the text ignores the pointer, and the heart has the same height with or without a duration), no gap after the right column or play button (heart, play and ⋮ boxes sit 48 dp apart); `accessory` to `trailing` keeps 4 dp, optional round `onAction` (always on mobile, hover or focus on desktop), `accessory` (the queue and selection-panel drag handle, both shells), `trailing` (the ⋮, always visible); `style` (`KMediaCardStyle.auto` is flat full-width on mobile and a rounded card on desktop; lists use `libraryRowGutter`, 0 on mobile), `loading` placeholder bars at the same height, and for a null `leading` a `KCover.loading` block (56 dp, radius 10, round with `circleLeading`; `KCover.loading` is the neutral `surfaceContainerHigh` box for "image not yet known", no icon, no shimmer; the seed placeholder stays for "no cover" or a failed image); icon buttons take the card's ink on tinted rows; states `current`, `selected` (check over the leading), `dimmed`. Background: every row draws `KRowColors.fill` (white 5 % on a dark theme, black 4.5 % on a light one, translucent over whatever is under it) in both styles, so the desktop card no longer uses `surfaceContainerLow`; `filled: false` (selection panel rows, `SelectedSongRow` and `SongRowPlaceholder(filled: false)`) keeps the old look (flat transparent, card `surfaceContainerLow`); `current` (also with `selected`) paints `KRowColors.playingGradient` (`primaryContainer` solid to 25 %, then `tertiaryContainer`, start to end, mirrored in RTL) over a transparent `Material` through an `Ink`; `selected` is `secondaryContainer`; secondary text and icons on playing and selected rows are the row ink at `KRowColors.containerSoftAlpha` (85 %); hover and press are `onSurface` 8 % / 10 % state layers on the row's `InkWell`; keyboard focus on the row itself (not a button inside it) draws a 2 dp `primary` ring in the row shape only in keyboard highlight mode; the widget tree is the same in every state (the frame lives in the package-private `k_media_card_frame.dart`), so a state flip never remounts the row or drops focus; `dimmed` wraps the filled row in the 0.5 opacity. `KMediaCard.extentOf(TextScaler)` is the exact height with its bottom gap, for fixed list extents (it assumes a 56 dp leading; `hasLeading: false` for cards without one); `currentLabel` gives the playing state a screen-reader value; a test pins it to the laid-out height at 1.0, 1.3 and 1.5 |
 | `KMoreButton`, `ViaKeyboardTracker` | The ⋮ button (`packages/kanaru_ui/.../widgets/k_more_button.dart`): `onPressed({required bool viaKeyboard})` tells a menu opened by Enter or Space from a pointer or assistive tap; the tracker holds that flag and resets it on a pointer press. `LibraryMoreButton` wraps it with the library's tooltip |
-| `KListSortFilterBar` | `leading` group, criterion chip (label and direction arrow) and filter toggle. The chip is announced as `<tooltip>: <criterion>`; it passes an anchor key to `onSortPressed`; 52 tall on mobile, 48 on desktop |
-| `showKSortPopover<T>` | Anchored under the chip on both shells. Order buttons keep it open (`onAscendingChanged`); a criterion (`KSortCriterion`, shown as a `SelectionRow`) closes it and is the result. Criteria scroll, the order row stays. Root navigator; Esc closes. Its anchored layout copies the private one of `selection_picker.dart` (follow-up: export one helper) |
+| `KListSortFilterBar` | 40 tall on both shells: `leading` group, view switch, sort chip (label only, `"Nghệ sĩ +2"` when more criteria), "Đảo thứ tự" (`KIconButton`, icon from the direction of the first criterion) and filter toggle. The chip is announced as `<tooltip>: <label>`; it passes an anchor key to `onSortPressed`. The ▶ and ⤨ of a list bar are flat `KIconButton`s (xs 16, `KIconEmphasis.primary`) |
+| `showKSortPopover<T>` | The sort dropdown, anchored under the chip on both shells: "Nâng cao…" first, divider, then criteria (`KSortCriterion`) as compact icon rows (text 14, icon 20, the chosen one in `primary`); no direction row. Width follows the content (160 to 280), height at most 360, criteria scroll. Picking closes it and is the result. Root navigator; Esc closes. Its anchored layout copies the private one of `selection_picker.dart` (follow-up: export one helper) |
+| `showKSortDialog<T>` | "Sắp xếp theo", centred on both shells, at most `KLayout.sortDialog` (400) wide, `surfaceContainerHigh`. A deliberate exception to "modals under the breakpoint are sheets" (`k_layout.dart`). *Đã chọn*: drag handle, number, name, ↑/↓, ✕; *Chưa chọn*: icon, name, +, and a tap always appends (no exclusive criteria). It only reports intents (`onAdd`, `onRemove`, `onFlip`, `onMove`, reset); the rules are in `SortOrder` and the widget renders a `ValueListenable` of entries. Reorder by handle drag, Alt+Up / Alt+Down on a focused row, or the list's own screen-reader move actions. The slide of the other rows during a drag has a fixed duration and does not follow `MediaQuery.disableAnimations` (Flutter's `SliverReorderableList`); the lift of the dragged row does. Esc, Back, a tap outside and "Xong" close it |
 | `KFilterField` | Outlined, 48 tall, autofocus; the cross and Esc clear the controller and call `onClose` |
 | `KBreadcrumb` | `KBreadcrumbSegment`s, last one bold. Desktop above four levels: first and last three, rest behind "..."; mobile above two levels: tonal "..." then the open level. `onShowHidden` gets the hidden levels; the caller opens a `showSelectionPicker` |
 | `KShelf` | Titled horizontal list of fixed-width items; the `>` on the title row opens "see all" (`seeAllLabel` is its semantics label) |
