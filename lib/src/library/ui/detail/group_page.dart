@@ -178,7 +178,7 @@ class GroupPage extends ConsumerWidget {
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(
                   libraryGutter(context),
-                  KSpace.x3,
+                  KSpace.x1,
                   libraryGutter(context),
                   KSpace.x3,
                 ),

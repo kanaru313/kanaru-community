@@ -96,4 +96,82 @@ void main() {
     );
     await unmountApp(tester);
   });
+
+  testWidgets('a collapsed page keeps a right header through a resize to a '
+      'short wide window and back', (tester) async {
+    final h = await pumpLibrary(
+      tester,
+      initial: '/library/songs',
+      width: 400,
+      height: 844,
+    );
+    await addAlbum(h, 'Long', 'Zed', year: 2002, tracks: 30);
+    await h.settle(tester);
+    h.router.push(
+      LibraryLocations.album(AlbumKey.decode(albumId('Long', 'Zed'))!),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await h.settle(tester);
+    await tester.drag(
+      find.byType(CustomScrollView).last,
+      const Offset(0, -500),
+    );
+    await tester.pumpAndSettle();
+    expect(inPageHeader('Long'), findsOneWidget);
+
+    tester.view.physicalSize = const Size(1300, 420);
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    // The wide layout keeps the name in a column that never scrolls it away.
+    expect(inPageHeader('Long'), findsNothing);
+
+    tester.view.physicalSize = const Size(400, 844);
+    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(inPageHeader('Long'), findsNothing);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a detail page pushed over a collapsed one has its own header '
+      'state and the page below keeps its own', (tester) async {
+    final h = await pumpLibrary(
+      tester,
+      initial: '/library/songs',
+      width: 400,
+      height: 844,
+    );
+    await addAlbum(h, 'Long', 'Zed', year: 2002, tracks: 30);
+    await h.settle(tester);
+    h.router.push(
+      LibraryLocations.album(AlbumKey.decode(albumId('Long', 'Zed'))!),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await h.settle(tester);
+    await tester.drag(
+      find.byType(CustomScrollView).last,
+      const Offset(0, -500),
+    );
+    await tester.pumpAndSettle();
+    expect(inPageHeader('Long'), findsOneWidget);
+
+    h.router.push(LibraryLocations.artist(ArtistKey('zed')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await h.settle(tester);
+    expect(inPageHeader('Zed'), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    h.router.pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await h.settle(tester);
+    expect(inPageHeader('Long'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await unmountApp(tester);
+  });
 }
