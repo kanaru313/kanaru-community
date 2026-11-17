@@ -149,8 +149,12 @@ class _SortDialogBody<T> extends StatelessWidget {
             KSpace.x4,
             KSpace.x4,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // OverflowBar: Reset at the start, Done at the end; when they do
+          // not fit (large text) they stack, Reset above Done, both at the end.
+          child: OverflowBar(
+            alignment: MainAxisAlignment.spaceBetween,
+            overflowAlignment: OverflowBarAlignment.end,
+            overflowSpacing: KSpace.x1,
             children: [
               TextButton(onPressed: onReset, child: Text(strings.reset)),
               TextButton(

@@ -4,6 +4,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../support/host.dart';
+import '../support/scaled_host.dart';
 
 List<KSortCriterion<String>> _criteria([int n = 3, String? firstLabel]) => [
   for (var i = 0; i < n; i++)
@@ -67,7 +68,7 @@ void main() {
     testWidgets('anchored popover on mobile too ($name)', (tester) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(
-        host(
+        scaledHost(
           _Opener(onResult: (_) {}),
           brightness: brightness,
           textScale: scale,
@@ -83,7 +84,7 @@ void main() {
 
   testWidgets('opens under the anchor', (tester) async {
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_Opener(onResult: (_) {})));
+    await tester.pumpWidget(scaledHost(_Opener(onResult: (_) {})));
     final anchorBottom = tester.getBottomLeft(find.text('open')).dy;
     await _open(tester);
     expect(
@@ -96,7 +97,7 @@ void main() {
     tester,
   ) async {
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_Opener(onResult: (_) {})));
+    await tester.pumpWidget(scaledHost(_Opener(onResult: (_) {})));
     await _open(tester);
     expect(find.text('A to Z'), findsNothing);
     expect(find.text('Z to A'), findsNothing);
@@ -123,7 +124,7 @@ void main() {
   testWidgets('a criterion resolves to picked and closes', (tester) async {
     useWindow(tester, const Size(400, 800));
     late Future<KSortPick<String>?> result;
-    await tester.pumpWidget(host(_Opener(onResult: (f) => result = f)));
+    await tester.pumpWidget(scaledHost(_Opener(onResult: (f) => result = f)));
     await _open(tester);
     await tester.tap(find.text('Criterion 1'));
     await tester.pumpAndSettle();
@@ -136,7 +137,7 @@ void main() {
   testWidgets('Advanced resolves to advanced and closes', (tester) async {
     useWindow(tester, const Size(400, 800));
     late Future<KSortPick<String>?> result;
-    await tester.pumpWidget(host(_Opener(onResult: (f) => result = f)));
+    await tester.pumpWidget(scaledHost(_Opener(onResult: (f) => result = f)));
     await _open(tester);
     await tester.tap(find.text('Advanced'));
     await tester.pumpAndSettle();
@@ -149,7 +150,7 @@ void main() {
   ) async {
     final handle = tester.ensureSemantics();
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_Opener(onResult: (_) {})));
+    await tester.pumpWidget(scaledHost(_Opener(onResult: (_) {})));
     await _open(tester);
     expect(
       tester.getSemantics(find.text('Criterion 0')),
@@ -165,7 +166,7 @@ void main() {
   testWidgets('Esc and a tap outside dismiss it with null', (tester) async {
     useWindow(tester, const Size(400, 800));
     late Future<KSortPick<String>?> result;
-    await tester.pumpWidget(host(_Opener(onResult: (f) => result = f)));
+    await tester.pumpWidget(scaledHost(_Opener(onResult: (f) => result = f)));
     await _open(tester);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
@@ -180,7 +181,7 @@ void main() {
 
   testWidgets('Back dismisses it', (tester) async {
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_Opener(onResult: (_) {})));
+    await tester.pumpWidget(scaledHost(_Opener(onResult: (_) {})));
     await _open(tester);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
@@ -192,7 +193,7 @@ void main() {
   ) async {
     useWindow(tester, const Size(400, 800));
     late Future<KSortPick<String>?> result;
-    await tester.pumpWidget(host(_Opener(onResult: (f) => result = f)));
+    await tester.pumpWidget(scaledHost(_Opener(onResult: (f) => result = f)));
     await _open(tester);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
@@ -203,7 +204,7 @@ void main() {
     tester,
   ) async {
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_Opener(onResult: (_) {}, count: 12)));
+    await tester.pumpWidget(scaledHost(_Opener(onResult: (_) {}, count: 12)));
     await _open(tester);
     final panel = tester.getRect(_panel().first);
     expect(panel.height, lessThanOrEqualTo(KLayout.dropdownMaxHeight));
@@ -226,7 +227,7 @@ void main() {
 
   testWidgets('criteria rows are 2 dp apart', (tester) async {
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_Opener(onResult: (_) {})));
+    await tester.pumpWidget(scaledHost(_Opener(onResult: (_) {})));
     await _open(tester);
     Rect row(String t) => tester.getRect(
       find.ancestor(of: find.text(t), matching: find.byType(SelectionRow)),
@@ -239,7 +240,7 @@ void main() {
 
   testWidgets('a short screen caps the height at 70 %', (tester) async {
     useWindow(tester, const Size(400, 400));
-    await tester.pumpWidget(host(_Opener(onResult: (_) {}, count: 12)));
+    await tester.pumpWidget(scaledHost(_Opener(onResult: (_) {}, count: 12)));
     await _open(tester);
     expect(tester.getRect(_panel().first).height, lessThanOrEqualTo(280));
     expect(tester.takeException(), isNull);
@@ -248,7 +249,7 @@ void main() {
   testWidgets('width follows the content between 160 and 280', (tester) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(
-      host(
+      scaledHost(
         _Opener(
           onResult: (_) {},
           firstLabel:
@@ -266,7 +267,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.pumpWidget(
-      host(_Opener(onResult: (_) {}, count: 1), textScale: 1.0),
+      scaledHost(_Opener(onResult: (_) {}, count: 1), textScale: 1.0),
     );
     await _open(tester);
     expect(
@@ -278,7 +279,7 @@ void main() {
   testWidgets('flips above the anchor near the bottom edge', (tester) async {
     useWindow(tester, const Size(400, 500));
     await tester.pumpWidget(
-      host(_Opener(onResult: (_) {}, align: Alignment.bottomRight)),
+      scaledHost(_Opener(onResult: (_) {}, align: Alignment.bottomRight)),
     );
     final anchorTop = tester.getTopLeft(find.text('open')).dy;
     await _open(tester);
@@ -290,7 +291,9 @@ void main() {
 
   testWidgets('without an Advanced label the row is left out', (tester) async {
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_Opener(onResult: (_) {}, advanced: null)));
+    await tester.pumpWidget(
+      scaledHost(_Opener(onResult: (_) {}, advanced: null)),
+    );
     await _open(tester);
     expect(find.text('Advanced'), findsNothing);
     expect(find.text('Criterion 0'), findsOneWidget);

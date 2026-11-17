@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../support/finders.dart';
 import '../support/host.dart';
+import '../support/scaled_host.dart';
 
 Widget _bar({
   String label = 'Title',
@@ -48,7 +49,7 @@ void main() {
     testWidgets('renders both groups ($name)', (tester) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(
-        host(_bar(), brightness: brightness, textScale: scale),
+        scaledHost(_bar(), brightness: brightness, textScale: scale),
       );
       expect(find.text('36 songs'), findsOneWidget);
       expect(find.text('Title'), findsOneWidget);
@@ -62,7 +63,9 @@ void main() {
     tester,
   ) async {
     useWindow(tester, const Size(360, 800));
-    await tester.pumpWidget(host(_bar(view: _viewButton()), textScale: 2.0));
+    await tester.pumpWidget(
+      scaledHost(_bar(view: _viewButton()), textScale: 2.0),
+    );
     expect(byIconButton('View'), findsOneWidget);
     expect(byIconButton('Reverse order'), findsOneWidget);
     expect(byIconButton('Filter'), findsOneWidget);
@@ -74,7 +77,7 @@ void main() {
   ) async {
     useWindow(tester, const Size(320, 800));
     await tester.pumpWidget(
-      host(
+      scaledHost(
         _bar(
           label: 'A criterion with a very long name +2',
           view: _viewButton(),
@@ -96,7 +99,7 @@ void main() {
     tester,
   ) async {
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_bar(label: 'Artist +2')));
+    await tester.pumpWidget(scaledHost(_bar(label: 'Artist +2')));
     expect(find.text('Artist +2'), findsOneWidget);
   });
 
@@ -105,13 +108,13 @@ void main() {
   ) async {
     useWindow(tester, const Size(400, 800));
     var reversed = 0;
-    await tester.pumpWidget(host(_bar(onReverse: () => reversed++)));
+    await tester.pumpWidget(scaledHost(_bar(onReverse: () => reversed++)));
     KIconButton button() =>
         tester.widget<KIconButton>(byIconButton('Reverse order'));
     expect(button().icon, KIcons.sortAsc);
     await tester.tap(byIconButton('Reverse order'));
     expect(reversed, 1);
-    await tester.pumpWidget(host(_bar(ascending: false)));
+    await tester.pumpWidget(scaledHost(_bar(ascending: false)));
     expect(button().icon, KIcons.sortDesc);
   });
 
@@ -120,7 +123,7 @@ void main() {
   ) async {
     useWindow(tester, const Size(400, 800));
     final handle = tester.ensureSemantics();
-    await tester.pumpWidget(host(_bar()));
+    await tester.pumpWidget(scaledHost(_bar()));
     final flags = tester
         .getSemantics(byIconButton('Reverse order'))
         .getSemanticsData();
@@ -131,7 +134,7 @@ void main() {
 
   testWidgets('no onReverse: no reverse button', (tester) async {
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_bar(withReverse: false)));
+    await tester.pumpWidget(scaledHost(_bar(withReverse: false)));
     expect(byIconButton('Reverse order'), findsNothing);
     expect(byIconButton('Filter'), findsOneWidget);
   });
@@ -139,7 +142,7 @@ void main() {
   testWidgets('40 tall on mobile and on desktop, the chip 32', (tester) async {
     for (final size in [const Size(400, 800), const Size(1300, 800)]) {
       useWindow(tester, size);
-      await tester.pumpWidget(host(_bar()));
+      await tester.pumpWidget(scaledHost(_bar()));
       expect(
         tester.getSize(find.byType(KListSortFilterBar)).height,
         KListSortFilterBar.height,
@@ -160,7 +163,7 @@ void main() {
     GlobalKey? anchor;
     var toggles = 0;
     await tester.pumpWidget(
-      host(_bar(onSort: (k) => anchor = k, onFilter: () => toggles++)),
+      scaledHost(_bar(onSort: (k) => anchor = k, onFilter: () => toggles++)),
     );
     await tester.tap(find.text('Title'));
     expect(anchor?.currentContext, isNotNull);
@@ -170,7 +173,7 @@ void main() {
 
   testWidgets('the open filter button is selected', (tester) async {
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_bar(filterOpen: true)));
+    await tester.pumpWidget(scaledHost(_bar(filterOpen: true)));
     final button = tester.widget<IconButton>(find.byType(IconButton));
     expect(button.isSelected, isTrue);
   });
@@ -184,9 +187,9 @@ void main() {
       debugDefaultTargetPlatformOverride = platform;
       try {
         useWindow(tester, size);
-        await tester.pumpWidget(host(_bar()));
+        await tester.pumpWidget(scaledHost(_bar()));
         final closed = tester.getSize(byIconButton('Filter'));
-        await tester.pumpWidget(host(_bar(filterOpen: true)));
+        await tester.pumpWidget(scaledHost(_bar(filterOpen: true)));
         final open = tester.getSize(find.byType(IconButton));
         expect(closed, const Size.square(KListSortFilterBar.buttonSize));
         expect(open, closed);
@@ -199,7 +202,7 @@ void main() {
 
   testWidgets('order: leading, view, chip, reverse, filter', (tester) async {
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_bar(view: _viewButton())));
+    await tester.pumpWidget(scaledHost(_bar(view: _viewButton())));
     final xs = [
       tester.getCenter(find.text('36 songs')).dx,
       tester.getCenter(byIconButton('View')).dx,
@@ -216,7 +219,7 @@ void main() {
     tester,
   ) async {
     useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_bar()));
+    await tester.pumpWidget(scaledHost(_bar()));
     final chip = tester.getRect(
       find.ancestor(of: find.text('Title'), matching: find.byType(InkWell)),
     );
@@ -233,7 +236,7 @@ void main() {
     var open = false;
     var toggles = 0;
     await tester.pumpWidget(
-      host(
+      scaledHost(
         StatefulBuilder(
           builder: (context, setState) {
             return _bar(
@@ -277,7 +280,7 @@ void main() {
   testWidgets('the sort chip is announced with its criterion', (tester) async {
     useWindow(tester, const Size(400, 800));
     final handle = tester.ensureSemantics();
-    await tester.pumpWidget(host(_bar()));
+    await tester.pumpWidget(scaledHost(_bar()));
     expect(find.bySemanticsLabel('Sort: Title'), findsOneWidget);
     handle.dispose();
   });
@@ -286,7 +289,7 @@ void main() {
     useWindow(tester, const Size(400, 800));
     final handle = tester.ensureSemantics();
     GlobalKey? anchor;
-    await tester.pumpWidget(host(_bar(onSort: (k) => anchor = k)));
+    await tester.pumpWidget(scaledHost(_bar(onSort: (k) => anchor = k)));
     tester.semantics.tap(find.semantics.byLabel('Sort: Title'));
     expect(anchor?.currentContext, isNotNull);
     handle.dispose();

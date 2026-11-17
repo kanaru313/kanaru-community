@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -43,6 +45,7 @@ class SortChosenRow extends StatelessWidget {
   final VoidCallback? onRemove;
   final ValueChanged<int> onMoveBy;
 
+  /// Disc size at 1x text; grows with the text scale so the number never clips.
   static const double _disc = 22;
 
   KeyEventResult _key(FocusNode node, KeyEvent event) {
@@ -65,6 +68,7 @@ class SortChosenRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final fg = scheme.onSecondaryContainer;
+    final disc = math.max(_disc, MediaQuery.textScalerOf(context).scale(_disc));
     return Focus(
       canRequestFocus: false,
       skipTraversal: true,
@@ -95,8 +99,9 @@ class SortChosenRow extends StatelessWidget {
                       const KGap(KSpace.x2),
                     ExcludeSemantics(
                       child: Container(
-                        width: _disc,
-                        height: _disc,
+                        key: const ValueKey('sort-number-disc'),
+                        width: disc,
+                        height: disc,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
@@ -107,6 +112,11 @@ class SortChosenRow extends StatelessWidget {
                           style: text.labelMedium?.copyWith(
                             color: scheme.onPrimary,
                             fontWeight: FontWeight.w700,
+                            height: 1,
+                          ),
+                          textHeightBehavior: const TextHeightBehavior(
+                            applyHeightToFirstAscent: false,
+                            applyHeightToLastDescent: false,
                           ),
                         ),
                       ),

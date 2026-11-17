@@ -4,8 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'package:kanaru_ui/src/widgets/collections/k_sort_dialog_rows.dart'
+    show SortSectionHeader;
+
 import '../support/finders.dart';
 import '../support/host.dart';
+import '../support/scaled_host.dart';
 
 const _strings = KSortDialogStrings(
   title: 'Sort by',
@@ -95,7 +99,7 @@ Future<_Rules> _open(
   useWindow(tester, size);
   final rules = _Rules(_entries(chosen));
   await tester.pumpWidget(
-    host(
+    scaledHost(
       Builder(
         builder: (context) => TextButton(
           onPressed: () => showKSortDialog<String>(
@@ -197,7 +201,7 @@ void main() {
         useWindow(tester, const Size(400, 800));
         final rules = _Rules(_entries(['k0', 'k1']));
         await tester.pumpWidget(
-          host(
+          scaledHost(
             Builder(
               builder: (context) => TextButton(
                 onPressed: () => showKSortDialog<String>(
@@ -246,6 +250,71 @@ void main() {
       );
       expect(tester.takeException(), isNull);
       expect(find.text('Done'), findsOneWidget);
+    });
+
+    testWidgets('number disc is 22 at 1x', (tester) async {
+      await _open(tester);
+      expect(
+        tester.getSize(find.byKey(const ValueKey('sort-number-disc')).first),
+        const Size(22, 22),
+      );
+    });
+
+    testWidgets('number disc holds its number at 200 %', (tester) async {
+      await _open(tester, textScale: 2.0);
+      final disc = find.byKey(const ValueKey('sort-number-disc')).first;
+      final box = tester.getRect(disc);
+      final number = tester.getRect(
+        find.descendant(of: disc, matching: find.text('1')),
+      );
+      expect(box.width, greaterThan(22));
+      expect(box.contains(number.topLeft), isTrue);
+      expect(box.contains(number.bottomRight), isTrue);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('actions: Reset left of Done on one line at 1x', (
+      tester,
+    ) async {
+      await _open(tester);
+      final reset = tester.getRect(find.text('Reset'));
+      final done = tester.getRect(find.text('Done'));
+      expect(reset.right, lessThan(done.left));
+      expect(reset.center.dy, closeTo(done.center.dy, 0.5));
+      final bar = tester.getRect(find.byType(OverflowBar));
+      expect(
+        tester.getRect(find.widgetWithText(TextButton, 'Done')).right,
+        closeTo(bar.right, 0.5),
+      );
+    });
+
+    testWidgets('actions at 200 % on 320 px stack with Done at the end', (
+      tester,
+    ) async {
+      await _open(tester, size: const Size(320, 640), textScale: 2.0);
+      expect(tester.takeException(), isNull);
+      final reset = tester.getRect(find.widgetWithText(TextButton, 'Reset'));
+      final done = tester.getRect(find.widgetWithText(TextButton, 'Done'));
+      final bar = tester.getRect(find.byType(OverflowBar));
+      expect(reset.bottom, lessThanOrEqualTo(done.top));
+      expect(done.right, closeTo(bar.right, 0.5));
+    });
+
+    testWidgets('chosen header keeps its count at 200 % on 320 px', (
+      tester,
+    ) async {
+      await _open(tester, size: const Size(320, 640), textScale: 2.0);
+      expect(tester.takeException(), isNull);
+      expect(find.text('Chosen'), findsOneWidget);
+      final count = find.descendant(
+        of: find.byType(SortSectionHeader).first,
+        matching: find.text('2'),
+      );
+      final title = tester.getRect(find.text('Chosen'));
+      final box = tester.getRect(find.byType(SortSectionHeader).first);
+      expect(count, findsOneWidget);
+      expect(box.contains(tester.getRect(count).bottomRight), isTrue);
+      expect(title.right, lessThanOrEqualTo(tester.getRect(count).left));
     });
 
     testWidgets('animations off: a drag still moves the row', (tester) async {
