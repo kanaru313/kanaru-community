@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/browse_items.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/library/state/browse/collection_providers.dart';
 
 class _Counter extends Notifier<int> {
@@ -27,7 +28,7 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    const key = (sort: SortSpec(SortCriterion.title), filter: '');
+    final key = (sort: SortOrder.by(SortCriterion.title), filter: '');
     final sub = container.listen(languageListProvider(key), (_, _) {});
     addTearDown(sub.close);
     expect(sub.read().hasValue, isFalse);
@@ -60,7 +61,7 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    const key = (sort: SortSpec(SortCriterion.title), filter: '');
+    final key = (sort: SortOrder.by(SortCriterion.title), filter: '');
     final sub = container.listen(languageListProvider(key), (_, _) {});
     addTearDown(sub.close);
     pending.complete(const [

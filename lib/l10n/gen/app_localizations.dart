@@ -1436,6 +1436,96 @@ abstract class AppLocalizations {
   /// **'Descending'**
   String get libraryOrderDescNumber;
 
+  /// No description provided for @librarySortDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get librarySortDialogTitle;
+
+  /// No description provided for @librarySortChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Chosen'**
+  String get librarySortChosen;
+
+  /// No description provided for @librarySortNotChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Not chosen'**
+  String get librarySortNotChosen;
+
+  /// No description provided for @librarySortReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get librarySortReset;
+
+  /// No description provided for @librarySortDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get librarySortDone;
+
+  /// No description provided for @libraryOrderReverse.
+  ///
+  /// In en, this message translates to:
+  /// **'Reverse order'**
+  String get libraryOrderReverse;
+
+  /// No description provided for @librarySortDragHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder {label}'**
+  String librarySortDragHint(String label);
+
+  /// No description provided for @librarySortFlipTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch direction: {word}'**
+  String librarySortFlipTooltip(String word);
+
+  /// No description provided for @librarySortFlipSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}: {word}, tap to switch direction'**
+  String librarySortFlipSemantics(String label, String word);
+
+  /// No description provided for @librarySortRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {label}'**
+  String librarySortRemove(String label);
+
+  /// No description provided for @librarySortAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {label}'**
+  String librarySortAdd(String label);
+
+  /// No description provided for @libraryOrderOldFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest first'**
+  String get libraryOrderOldFirst;
+
+  /// No description provided for @libraryOrderNewFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest first'**
+  String get libraryOrderNewFirst;
+
+  /// No description provided for @librarySortMore.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} +{count}'**
+  String librarySortMore(String label, int count);
+
+  /// No description provided for @librarySortAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced…'**
+  String get librarySortAdvanced;
+
   /// No description provided for @librarySortTitle.
   ///
   /// In en, this message translates to:

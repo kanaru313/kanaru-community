@@ -4,6 +4,7 @@ import 'dart:ui' show SemanticsAction, SemanticsFlag;
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/ui/browse/item_covers.dart';
 import 'package:kanaru/src/library/ui/detail/detail_header.dart';
@@ -187,7 +188,7 @@ void main() {
           .read(libraryListViewsProvider.notifier)
           .setSort(
             BrowseList.albumTracks,
-            const SortSpec(SortCriterion.trackNumber, descending: true),
+            SortOrder.by(SortCriterion.trackNumber, descending: true),
           );
       await h.settle(tester, rounds: 2);
       expect(tileTitles(tester), ['Blue 3', 'Blue 2', 'Blue 1']);
@@ -203,15 +204,14 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Name'));
     await tester.pumpAndSettle();
-    await tester.tapAt(const Offset(5, 5));
-    await tester.pumpAndSettle();
     expect(
       h.container
           .read(detailSortOverridesProvider)[(
             list: BrowseList.albumTracks,
             item: albumId('Blue', 'Zed'),
           )]
-          ?.criterion,
+          ?.primary
+          .criterion,
       SortCriterion.title,
     );
     h.router.pop();
@@ -230,6 +230,7 @@ void main() {
           .read(libraryListViewsProvider)
           .of(BrowseList.albumTracks)
           .sort
+          .primary
           .criterion,
       SortCriterion.trackNumber,
     );

@@ -28,6 +28,12 @@ class KIconButtonColors extends InheritedWidget {
       rest != oldWidget.rest || hover != oldWidget.hover;
 }
 
+/// How strongly an icon button reads at rest. [normal] is the quiet
+/// `onSurfaceVariant` glyph; [primary] is the accent glyph of the one action a
+/// row or bar wants noticed (a play button): `primary` at rest and on hover (a [KIconButtonColors] above, made for
+/// surfaces where the theme colours do not read, still wins).
+enum KIconEmphasis { normal, primary }
+
 /// Glyph colour of a `KIconButton` for its current state. [pressed] (0..1)
 /// dims the colour by up to half through its alpha: press feedback needs no
 /// Opacity layer.
@@ -40,12 +46,16 @@ Color resolveKIconButtonColor({
   required bool hovered,
   required bool enabled,
   required double pressed,
+  KIconEmphasis emphasis = KIconEmphasis.normal,
 }) {
   if (!enabled) return scheme.onSurface.withValues(alpha: 0.38);
+  final accent = emphasis == KIconEmphasis.primary;
   final base = selected
       ? selectedColor ?? scheme.primary
       : hovered
-      ? colors?.hover ?? scheme.onSurface
-      : color ?? colors?.rest ?? scheme.onSurfaceVariant;
+      ? colors?.hover ?? (accent ? scheme.primary : scheme.onSurface)
+      : color ??
+            colors?.rest ??
+            (accent ? scheme.primary : scheme.onSurfaceVariant);
   return base.withValues(alpha: base.a * (1 - 0.5 * pressed));
 }

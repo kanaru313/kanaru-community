@@ -34,6 +34,7 @@ class KIconButton extends StatefulWidget {
     this.size = KIconSize.md,
     this.color,
     this.selectedColor,
+    this.emphasis = KIconEmphasis.normal,
     this.padding = const EdgeInsets.symmetric(horizontal: KSpace.x2),
     this.focusNode,
     this.autofocus = false,
@@ -77,6 +78,10 @@ class KIconButton extends StatefulWidget {
   final double size;
   final Color? color;
   final Color? selectedColor;
+
+  /// [KIconEmphasis.primary] draws the glyph in `primary` instead of the quiet
+  /// default; an explicit [color] or a [KIconButtonColors] above still wins.
+  final KIconEmphasis emphasis;
   final EdgeInsetsGeometry padding;
   final FocusNode? focusNode;
   final bool autofocus;
@@ -149,6 +154,7 @@ class _KIconButtonState extends State<KIconButton>
       hovered: _hovered,
       enabled: _enabled,
       pressed: _pulse.value,
+      emphasis: widget.emphasis,
     );
     final label = widget.semanticLabel ?? widget.tooltip;
     return Semantics(

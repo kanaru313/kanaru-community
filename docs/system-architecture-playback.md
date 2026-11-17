@@ -881,8 +881,9 @@ transparent stops; at most `maxGradientStops` (4). The palette is not softened.
 - Input: `palette` (null = none), `loading`, `strength` (multiplies the alpha every frame, outside the colour tween),
   `fadeIn`, `base`. No Riverpod in the package.
 - Motion: colour changes tween over `coverTintTransition` (300 ms, `easeInOut`, zero with reduced motion). Losing the
-  colours fades the alpha only (a transparent stop takes the other stop's hue). The tween is keyed by brightness, so
-  a light/dark switch starts at the new stops. The gradient sits in a `RepaintBoundary`; the child is outside the tween.
+  colours fades the alpha only (a transparent stop takes the other stop's hue). A brightness change jumps, so
+  a light/dark switch starts at the new stops (the tween is an `AnimationController` owned by the widget state). The gradient sits in a `RepaintBoundary`; the child is outside the tween.
+- Every `CoverTintBackground` provides a `KPageGround` (current base, stops and strength as a listenable). Only `KStickyBarSliver` reads it, to continue the tint under a pinned bar; its box registers with the ground and repaints when the ground lays out or the tint changes.
 - `loading` true with a null `palette` keeps the last palette; only a settled null fades out. `fadeIn` draws nothing
   until the first palette, then fades it in once.
 - Callers (Now Playing mobile and desktop, queue sheet) read `playingCoverColorsProvider`: `Found` gives `palette`,

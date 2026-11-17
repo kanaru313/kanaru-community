@@ -1,4 +1,5 @@
 import 'list_sort.dart';
+import 'sort_order.dart';
 
 /// Grid or list layout of a collection.
 enum CollectionView { grid, list }
@@ -19,10 +20,10 @@ class ListViewPrefs {
         : CollectionView.list,
   );
 
-  final SortSpec sort;
+  final SortOrder sort;
   final CollectionView view;
 
-  ListViewPrefs copyWith({SortSpec? sort, CollectionView? view}) =>
+  ListViewPrefs copyWith({SortOrder? sort, CollectionView? view}) =>
       ListViewPrefs(sort: sort ?? this.sort, view: view ?? this.view);
 
   @override
@@ -55,20 +56,24 @@ class LibraryListViews {
   LibraryListViews withFolderView(FolderView view) =>
       LibraryListViews(lists: lists, folderView: view);
 
-  /// JSON form: `{"lists": {<list>: {"sort", "desc", "view"}}, "folderView"}`.
+  /// JSON form: `{"lists": {list name: {"sort": [{"by", "desc"}, ...], "view"}},
+  /// "folderView"}`.
   Object toJson() => {
     'lists': {
       for (final e in lists.entries)
         e.key.name: {
-          'sort': e.value.sort.criterion.name,
-          'desc': e.value.sort.descending,
+          'sort': [
+            for (final s in e.value.sort.specs)
+              {'by': s.criterion.name, 'desc': s.descending},
+          ],
           'view': e.value.view.name,
         },
     },
     'folderView': folderView.name,
   };
 
-  /// Reads [toJson] output. Unknown lists, criteria (also ones the list does
+  /// Reads [toJson] output and the older single-criterion form
+  /// (`"sort": "year", "desc": true`). Unknown lists, criteria (also ones the list does
   /// not offer) and views fall back to defaults. Throws [FormatException]
   /// when [json] is not a map.
   static LibraryListViews fromJson(Object? json) {
@@ -93,22 +98,46 @@ class LibraryListViews {
 
   static ListViewPrefs _prefsFrom(BrowseList list, Map<Object?, Object?> m) {
     final base = ListViewPrefs.defaultsOf(list);
-    final criterion = criteriaOf(list)
-        .where((c) => c.name == m['sort'])
-        .firstOrNull;
-    final desc = m['desc'];
     return ListViewPrefs(
-      sort: criterion == null
-          ? base.sort
-          : SortSpec(
-              criterion,
-              descending: desc is bool
-                  ? desc
-                  : criterion == base.sort.criterion && base.sort.descending,
-            ),
+      sort: _sortFrom(list, m, base.sort),
       view:
           CollectionView.values.where((v) => v.name == m['view']).firstOrNull ??
           base.view,
+    );
+  }
+
+  /// Never throws: an entry that is not understood is skipped, and a list
+  /// with no usable criterion gets [base].
+  static SortOrder _sortFrom(
+    BrowseList list,
+    Map<Object?, Object?> m,
+    SortOrder base,
+  ) {
+    final offered = criteriaOf(list);
+    SortCriterion? byName(Object? name) =>
+        offered.where((c) => c.name == name).firstOrNull;
+    final raw = m['sort'];
+    if (raw is List) {
+      final specs = <SortSpec>[];
+      for (final e in raw) {
+        if (e is! Map) continue;
+        final c = byName(e['by']);
+        if (c == null) continue;
+        final desc = e['desc'];
+        specs.add(SortSpec(c, descending: desc is bool && desc));
+      }
+      return SortOrder.normalized(specs, offered, fallback: base);
+    }
+    final c = byName(raw);
+    if (c == null) return base;
+    final desc = m['desc'];
+    return SortOrder.single(
+      SortSpec(
+        c,
+        descending: desc is bool
+            ? desc
+            : c == base.primary.criterion && base.primary.descending,
+      ),
     );
   }
 

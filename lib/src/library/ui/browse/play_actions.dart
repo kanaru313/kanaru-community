@@ -13,6 +13,7 @@ import '../../../playback/domain/playback_commands.dart';
 import '../../../playback/state/playback_providers.dart';
 import '../../data/browse/song_ids_query.dart';
 import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/sort_order.dart';
 import '../../domain/browse/song_scope.dart';
 
 final _log = Logger('library.play');
@@ -56,7 +57,7 @@ Future<void> shuffleAll(
 /// replace it to hold a read back.
 typedef ScopeIdsReader = Future<List<TrackId>> Function(
   SongScope scope,
-  SortSpec sort,
+  SortOrder sort,
 );
 
 final scopeIdsReaderProvider = Provider<ScopeIdsReader>((ref) {
@@ -114,7 +115,7 @@ Future<void> playScope(
   SongScope scope,
   BrowseList list,
   PlayContext playContext, {
-  SortSpec? sort,
+  SortOrder? sort,
 }) => _playScoped(
   ref,
   context,
@@ -132,7 +133,7 @@ Future<void> shuffleScope(
   SongScope scope,
   BrowseList list,
   PlayContext playContext, {
-  SortSpec? sort,
+  SortOrder? sort,
 }) => _playScoped(
   ref,
   context,
@@ -150,7 +151,7 @@ Future<void> _playScoped(
   BrowseList list,
   PlayContext playContext, {
   required bool shuffle,
-  SortSpec? sort,
+  SortOrder? sort,
 }) async {
   final requests = ref.read(playRequestsProvider.notifier);
   final request = requests.begin();

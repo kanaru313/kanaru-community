@@ -5,40 +5,51 @@ import 'package:material_ui/material_ui.dart';
 import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
 import '../../tokens/k_icon_size.dart';
-import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
 import '../k_icon_button.dart';
+import 'k_list_sort_chip.dart';
 
 /// Bar above every list: [leading] group on the left (count, play buttons,
 /// breadcrumb), then on the right the optional [view] switch, the sort chip
-/// and the filter toggle (both small icon buttons, the same on every shell). No scrolling of its own; the page makes it sticky if it wants.
+/// ([sortLabel] only), the reverse button and the filter toggle (small icon
+/// buttons, the same on every shell). [height] tall on both shells. No
+/// scrolling of its own; the page makes it sticky if it wants.
 class KListSortFilterBar extends StatefulWidget {
   const KListSortFilterBar({
     super.key,
     required this.leading,
-    required this.criterionLabel,
+    required this.sortLabel,
     required this.ascending,
     required this.onSortPressed,
+    this.onReverse,
+    this.reverseTooltip,
     required this.filterOpen,
     required this.onFilterToggle,
     this.sortTooltip,
     required this.filterTooltip,
     this.view,
-  });
+  }) : assert(
+         onReverse == null || reverseTooltip != null,
+         'a reverse button needs its reverseTooltip',
+       );
 
   /// Left group; takes the room the right group leaves.
   final Widget leading;
 
-  /// Name of the criterion in use.
-  final String criterionLabel;
+  /// Chip text: the first criterion's name, `"Nghệ sĩ +2"` when several.
+  final String sortLabel;
 
-  /// Direction shown as a small arrow next to [criterionLabel].
+  /// Direction of the first criterion: picks the reverse button's arrow.
   final bool ascending;
 
   /// Opens the sort popover; [anchor] is the chip to attach it to
   /// (`showKSortPopover(anchor: anchor, ...)`).
   final void Function(GlobalKey anchor) onSortPressed;
+
+  /// Reverses the whole order; null hides the reverse button.
+  final VoidCallback? onReverse;
+  final String? reverseTooltip;
   final bool filterOpen;
   final VoidCallback onFilterToggle;
   final String? sortTooltip;
@@ -50,8 +61,11 @@ class KListSortFilterBar extends StatefulWidget {
   /// Width of a small icon button: icon plus padding 8 each side.
   static const double buttonSize = KIconSize.sm + 2 * KSpace.x2;
 
-  static const double heightMobile = 52;
-  static const double heightDesktop = 48;
+  /// Bar height on both shells.
+  static const double height = 40;
+
+  /// Sort chip height.
+  static const double chipHeight = 32;
 
   @override
   State<KListSortFilterBar> createState() => _KListSortFilterBarState();
@@ -72,26 +86,27 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final mobile = FormFactor.of(context) == FormFactor.mobile;
-    final height = mobile
-        ? KListSortFilterBar.heightMobile
-        : KListSortFilterBar.heightDesktop;
+    final label = widget.sortLabel;
     return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: height),
+      constraints: const BoxConstraints(minHeight: KListSortFilterBar.height),
       child: LayoutBuilder(
         // The chip is at most half of the bar (and leaves room for leading actions
         // such as the mobile play/shuffle buttons): a long label is ellipsized.
         builder: (context, bar) {
           final leadingMin = mobile ? 96.0 : 0.0;
-          final filterWidth =
-              KListSortFilterBar.buttonSize * (widget.view == null ? 1 : 2);
-          final gaps = KSpace.x3 + KSpace.x2;
+          final buttons =
+              1 +
+              (widget.view == null ? 0 : 1) +
+              (widget.onReverse == null ? 0 : 1);
           final maxChipWidth = math.max(
             48.0,
             math.min(
               bar.maxWidth / 2,
-              bar.maxWidth - leadingMin - filterWidth - gaps,
+              bar.maxWidth -
+                  leadingMin -
+                  KListSortFilterBar.buttonSize * buttons -
+                  KSpace.x3,
             ),
           );
           return Row(
@@ -99,57 +114,25 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
               Expanded(child: widget.leading),
               const KGap(KSpace.x3),
               ?widget.view,
-              Semantics(
-                button: true,
-                label: widget.sortTooltip == null
-                    ? widget.criterionLabel
-                    : '${widget.sortTooltip}: ${widget.criterionLabel}',
-                excludeSemantics: true,
-                child: Tooltip(
-                  message: widget.sortTooltip ?? '',
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: maxChipWidth),
-                    child: InkWell(
-                      key: _chipKey,
-                      borderRadius: KRadius.full,
-                      onTap: () => widget.onSortPressed(_chipKey),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: mobile ? 48 : 40,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: KSpace.x3,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  widget.criterionLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.labelLarge
-                                      ?.copyWith(color: scheme.onSurface),
-                                ),
-                              ),
-                              const KGap(KSpace.x1),
-                              Icon(
-                                widget.ascending
-                                    ? KIcons.sortAsc
-                                    : KIcons.sortDesc,
-                                size: KIconSize.xs,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+              ListSortChip(
+                chipKey: _chipKey,
+                label: label,
+                semanticLabel: widget.sortTooltip == null
+                    ? label
+                    : '${widget.sortTooltip}: $label',
+                tooltip: widget.sortTooltip ?? '',
+                maxWidth: maxChipWidth,
+                minHeight: KListSortFilterBar.chipHeight,
+                onTap: () => widget.onSortPressed(_chipKey),
               ),
-              const KGap(KSpace.x2),
+              if (widget.onReverse != null)
+                KIconButton(
+                  tooltip: widget.reverseTooltip!,
+                  onPressed: widget.onReverse,
+                  icon: widget.ascending ? KIcons.sortAsc : KIcons.sortDesc,
+                  size: KIconSize.sm,
+                  padding: const EdgeInsets.all(KSpace.x2),
+                ),
               // Open: the tonal disc of a selected button, as big as the light
               // button's box. Closed: the light icon.
               if (widget.filterOpen)

@@ -3,6 +3,7 @@ import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/library/data/browse/song_ids_query.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/domain/browse/song_scope.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 
@@ -53,15 +54,15 @@ void main() {
 
   Future<List<int>> ids(
     SongScope scope,
-    SortSpec sort, [
+    SortOrder sort, [
     String filter = '',
   ]) async => [
     for (final id in await songIds(db, scope, sort, filter)) id.value,
   ];
 
   const all = SongScope.all();
-  SortSpec asc(SortCriterion c) => SortSpec(c);
-  SortSpec desc(SortCriterion c) => SortSpec(c, descending: true);
+  SortOrder asc(SortCriterion c) => SortOrder.by(c);
+  SortOrder desc(SortCriterion c) => SortOrder.by(c, descending: true);
 
   test('title sort orders by folded title, ties by id', () async {
     final b = await add('b.flac', title: 'beta');
@@ -131,7 +132,116 @@ void main() {
     expect(await ids(all, asc(SortCriterion.playCount)), [fresh, old, mid]);
   });
 
+  group('several criteria', () {
+    SortOrder order(List<SortSpec> specs) => SortOrder(specs);
+    const artist = SortSpec(SortCriterion.artist);
+    const yearDesc = SortSpec(SortCriterion.year, descending: true);
+
+    test('artist ascending then year descending', () async {
+      final b2000 = await add(
+        '1.flac',
+        title: 'x',
+        artists: ['Bo'],
+        year: 2000,
+      );
+      final a1990 = await add(
+        '2.flac',
+        title: 'y',
+        artists: ['Abe'],
+        year: 1990,
+      );
+      final a2010 = await add(
+        '3.flac',
+        title: 'z',
+        artists: ['Abe'],
+        year: 2010,
+      );
+      final b2005 = await add(
+        '4.flac',
+        title: 'w',
+        artists: ['Bo'],
+        year: 2005,
+      );
+      expect(await ids(all, order([artist, yearDesc])), [
+        a2010,
+        a1990,
+        b2005,
+        b2000,
+      ]);
+    });
+
+    test(
+      'a NULL artist stays last in both directions with a second key',
+      () async {
+        final none = await add('1.flac', title: 'a', year: 2020);
+        final abe = await add('2.flac', title: 'b', artists: ['Abe'], year: 1);
+        final bo = await add('3.flac', title: 'c', artists: ['Bo'], year: 1);
+        const year = SortSpec(SortCriterion.year);
+        expect(await ids(all, order([artist, year])), [abe, bo, none]);
+        expect(
+          await ids(
+            all,
+            order([
+              const SortSpec(SortCriterion.artist, descending: true),
+              year,
+            ]),
+          ),
+          [bo, abe, none],
+        );
+      },
+    );
+
+    test('play count as second key joins the plays', () async {
+      final a = await add('1.flac', title: 'a', artists: ['Abe']);
+      final b = await add('2.flac', title: 'b', artists: ['Abe']);
+      final c = await add('3.flac', title: 'c', artists: ['Bo']);
+      await addPlays(db, b, 5);
+      await addPlays(db, a, 1);
+      await addPlays(db, c, 9);
+      expect(
+        await ids(
+          all,
+          order([
+            artist,
+            const SortSpec(SortCriterion.playCount, descending: true),
+          ]),
+        ),
+        [b, a, c],
+      );
+    });
+
+    test('track number then title still runs', () async {
+      final second = await add('1.flac', title: 'a', discNo: 1, trackNo: 2);
+      final first = await add('2.flac', title: 'z', discNo: 1, trackNo: 1);
+      expect(
+        await ids(
+          all,
+          order([
+            const SortSpec(SortCriterion.trackNumber),
+            const SortSpec(SortCriterion.title),
+          ]),
+        ),
+        [first, second],
+      );
+    });
+
+    test('reversing mirrors the order, ties keep title then id', () async {
+      final a = await add('1.flac', title: 'beta', artists: ['Abe'], year: 1);
+      final b = await add('2.flac', title: 'alpha', artists: ['Abe'], year: 1);
+      final c = await add('3.flac', title: 'gamma', artists: ['Bo'], year: 1);
+      final forward = order([artist, const SortSpec(SortCriterion.year)]);
+      expect(await ids(all, forward), [b, a, c]);
+      // Directions flip; the equal pair (a, b) keeps title order.
+      expect(await ids(all, forward.reversed()), [c, b, a]);
+    });
+  });
+
   group('filter', () {
+    test('plain text matches a name with accents (son tung)', () async {
+      final id = await add('1.flac', title: 'x', artists: ['Sơn Tùng']);
+      await add('2.flac', title: 'y', artists: ['Other']);
+      expect(await ids(all, asc(SortCriterion.title), 'son tung'), [id]);
+    });
     test('ignores accents and case, matches title artist and album', () async {
       final vu = await add('1.flac', title: 'Sóng', artists: ['Vũ']);
       final al = await add('2.flac', title: 'Other', album: 'Vũ Trụ');

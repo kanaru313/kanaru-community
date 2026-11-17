@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
 import 'package:kanaru/src/library/ui/collections/album_tile.dart';
@@ -93,7 +94,7 @@ void main() {
         .read(libraryListViewsProvider.notifier)
         .setSort(
           BrowseList.albums,
-          const SortSpec(SortCriterion.year, descending: true),
+          SortOrder.by(SortCriterion.year, descending: true),
         );
     await tester.pump();
     final titles = [

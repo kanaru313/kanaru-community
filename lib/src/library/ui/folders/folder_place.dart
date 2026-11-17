@@ -2,10 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/browse/folder_tree.dart';
 import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/sort_arrange.dart';
+import '../../domain/browse/sort_order.dart';
 import '../../domain/browse/list_view_prefs.dart';
 import '../../domain/browse/natural_compare.dart';
 import '../../state/browse/folder_providers.dart';
 import '../../../foundation/text/text_fold.dart';
+import '../../../media/domain/library_keys.dart';
 import 'folder_locations.dart';
 
 /// What the Folders page shows for a [FolderLocation] and the folder trees.
@@ -182,7 +185,7 @@ class FolderRowItem {
 List<FolderRowItem> levelRows(
   FolderNode node, {
   required bool compact,
-  required SortSpec sort,
+  required SortOrder sort,
   required String filter,
 }) {
   final match = foldedMatcher(filter);
@@ -202,7 +205,7 @@ List<FolderRowItem> levelRows(
 /// ordered by [sort] (by direct songs for the count).
 List<FlatFolder> flatRows(
   List<FlatFolder> all, {
-  required SortSpec sort,
+  required SortOrder sort,
   required String filter,
 }) {
   final match = foldedMatcher(filter);
@@ -215,7 +218,7 @@ List<FlatFolder> flatRows(
 
 List<T> _ordered<T>(
   List<T> rows,
-  SortSpec sort, {
+  SortOrder sort, {
   required String Function(T) name,
   required int Function(T) songs,
 }) {
@@ -223,20 +226,17 @@ List<T> _ordered<T>(
   final keyed = [for (final r in rows) (naturalKeyOf(name(r)), r)]
     ..sort((a, b) => a.$1.compareTo(b.$1));
   final byName = [for (final e in keyed) e.$2];
-  if (sort.criterion == SortCriterion.trackCount) {
-    final indexed = [for (var i = 0; i < byName.length; i++) (i, byName[i])];
-    indexed.sort((a, b) {
-      final c = songs(a.$2).compareTo(songs(b.$2));
-      if (c != 0) return sort.descending ? -c : c;
-      return a.$1.compareTo(b.$1);
-    });
-    return [for (final e in indexed) e.$2];
-  }
-  return sort.descending ? byName.reversed.toList() : byName;
+  return arrangeByName(byName, sort, (r) => sortForm(name(r)), (spec) {
+    if (spec.criterion != SortCriterion.trackCount) return (a, b) => 0;
+    return (a, b) {
+      final c = songs(a).compareTo(songs(b));
+      return spec.descending ? -c : c;
+    };
+  });
 }
 
 /// Key of [flatRowsProvider].
-typedef FlatRowsKey = ({FolderPlaceKey place, SortSpec sort, String filter});
+typedef FlatRowsKey = ({FolderPlaceKey place, SortOrder sort, String filter});
 
 /// The rows of the flat folder list, filtered and ordered once per place,
 /// sort and filter, and shared by the list and the bar's count. Null when the

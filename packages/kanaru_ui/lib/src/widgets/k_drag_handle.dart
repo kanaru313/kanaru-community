@@ -19,6 +19,7 @@ class KDragHandle extends StatelessWidget {
     required this.index,
     this.dimension,
     this.iconSize,
+    this.compact = false,
     this.semanticLabel,
     this.tooltip,
   }) : assert(
@@ -34,6 +35,12 @@ class KDragHandle extends StatelessWidget {
   /// action buttons to `KIconSize.sm` pass the same size so the handle sits
   /// in the same cluster.
   final double? iconSize;
+
+  /// Narrow handle for a dense row with several controls (the sort box):
+  /// [compactWidth] wide and [KLayout.minTarget] tall; [dimension] is ignored.
+  final bool compact;
+
+  static const double compactWidth = 28;
   final String? semanticLabel;
   final String? tooltip;
 
@@ -44,12 +51,16 @@ class KDragHandle extends StatelessWidget {
         (FormFactor.of(context) == FormFactor.desktop
             ? KLayout.minTargetDesktop
             : KLayout.minTarget);
+    final icon = Icon(KIcons.dragHandle, size: iconSize);
     Widget handle = MouseRegion(
       cursor: SystemMouseCursors.grab,
-      child: SizedBox.square(
-        dimension: size,
-        child: Icon(KIcons.dragHandle, size: iconSize),
-      ),
+      child: compact
+          ? SizedBox(
+              width: compactWidth,
+              height: KLayout.minTarget,
+              child: icon,
+            )
+          : SizedBox.square(dimension: size, child: icon),
     );
     if (tooltip != null) handle = Tooltip(message: tooltip, child: handle);
     if (semanticLabel != null) {

@@ -6,6 +6,7 @@ import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/library/domain/browse/browse_items.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
+import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/library/domain/browse/song_scope.dart';
 import 'package:kanaru/src/library/state/browse/collection_providers.dart';
 import 'package:kanaru/src/library/state/browse/song_list_providers.dart';
@@ -61,7 +62,7 @@ void main() {
     String filter = '',
   }) => (
     scope: const SongScope.all(),
-    sort: SortSpec(by, descending: desc),
+    sort: SortOrder.by(by, descending: desc),
     filter: filter,
   );
 
@@ -125,6 +126,38 @@ void main() {
     expect(byPlays.last, [TrackId(b), TrackId(a)]);
     // The by-plays list has reloaded; the by-title list watches no play table.
     expect(byTitle, hasLength(1));
+  });
+
+  test('a play reloads a list that has play count as a later key', () async {
+    final a = await addLibraryTrack(
+      db,
+      source: src,
+      locator: 'a.flac',
+      title: 'a',
+      artists: ['Same'],
+    );
+    final b = await addLibraryTrack(
+      db,
+      source: src,
+      locator: 'b.flac',
+      title: 'b',
+      artists: ['Same'],
+    );
+    final seen = collect(
+      songIdsProvider((
+        scope: const SongScope.all(),
+        sort: SortOrder([
+          const SortSpec(SortCriterion.artist),
+          const SortSpec(SortCriterion.playCount, descending: true),
+        ]),
+        filter: '',
+      )),
+    );
+    await until(() => seen.isNotEmpty);
+    expect(seen.single, [TrackId(a), TrackId(b)]);
+    await addPlays(db, b, 2);
+    await until(() => seen.length == 2);
+    expect(seen.last, [TrackId(b), TrackId(a)]);
   });
 
   test('the revision ticks on every reload, even when the ids stay', () async {
@@ -200,30 +233,126 @@ void main() {
             .requireValue
             .map((a) => a.title)
             .toList();
-        expect(
-          titles((sort: const SortSpec(SortCriterion.title), filter: '')),
-          ['Alpha', 'Beta', 'Gamma'],
-        );
+        expect(titles((sort: SortOrder.by(SortCriterion.title), filter: '')), [
+          'Alpha',
+          'Beta',
+          'Gamma',
+        ]);
         expect(
           titles((
-            sort: const SortSpec(SortCriterion.title, descending: true),
+            sort: SortOrder.by(SortCriterion.title, descending: true),
             filter: '',
           )),
           ['Gamma', 'Beta', 'Alpha'],
         );
         expect(
-          titles((sort: const SortSpec(SortCriterion.artist), filter: 'mia')),
+          titles((sort: SortOrder.by(SortCriterion.artist), filter: 'mia')),
           ['Beta', 'Gamma'],
         );
         expect(
           titles((
-            sort: const SortSpec(SortCriterion.artist, descending: true),
+            sort: SortOrder.by(SortCriterion.artist, descending: true),
             filter: '',
           )),
           ['Alpha', 'Beta', 'Gamma'],
         );
       },
     );
+
+    test(
+      'albums: several criteria chain, equal ones keep name order',
+      () async {
+        Future<void> album(String title, String artist, int? year) =>
+            addLibraryTrack(
+              db,
+              source: src,
+              locator: '$title.flac',
+              title: title,
+              artists: [artist],
+              album: title,
+              year: year,
+            );
+        await album('Delta', 'Mia', 2000);
+        await album('Alpha', 'Zed', 1990);
+        await album('Beta', 'Mia', 2010);
+        await album('Gamma', 'Mia', 2010);
+        await album('Omega', 'Abe', null);
+        final seen = collect(albumSummariesProvider);
+        await until(() => seen.isNotEmpty && seen.last.length == 5);
+        List<String> titles(SortOrder s) => c
+            .read(albumListProvider((sort: s, filter: '')))
+            .requireValue
+            .map((a) => a.title)
+            .toList();
+        final order = SortOrder([
+          const SortSpec(SortCriterion.artist),
+          const SortSpec(SortCriterion.year, descending: true),
+        ]);
+        // Mia: 2010 (Beta, Gamma tie: name order), then 2000; Zed last.
+        expect(titles(order), ['Omega', 'Beta', 'Gamma', 'Delta', 'Alpha']);
+        // Reversed: directions flip; the tied pair still keeps name order.
+        expect(titles(order.reversed()), [
+          'Alpha',
+          'Delta',
+          'Beta',
+          'Gamma',
+          'Omega',
+        ]);
+        // A title key inside the chain compares by name with its direction.
+        expect(
+          titles(
+            SortOrder([
+              const SortSpec(SortCriterion.year, descending: true),
+              const SortSpec(SortCriterion.title, descending: true),
+            ]),
+          ),
+          ['Gamma', 'Beta', 'Delta', 'Alpha', 'Omega'],
+        );
+      },
+    );
+
+    test('albums: a later criterion applies between equal titles', () async {
+      Future<void> album(String title, String artist) => addLibraryTrack(
+        db,
+        source: src,
+        locator: '$artist$title.flac',
+        title: '$artist$title',
+        artists: [artist],
+        album: title,
+      );
+      await album('Greatest Hits', 'Abe');
+      await album('Greatest Hits', 'Zed');
+      await album('Greatest Hits', 'Mia');
+      await album('Zeta', 'Abe');
+      final seen = collect(albumSummariesProvider);
+      await until(() => seen.isNotEmpty && seen.last.length == 4);
+      List<String?> artists(SortOrder s) => c
+          .read(albumListProvider((sort: s, filter: '')))
+          .requireValue
+          .map((a) => a.artist)
+          .toList();
+      final desc = SortOrder([
+        const SortSpec(SortCriterion.title),
+        const SortSpec(SortCriterion.artist, descending: true),
+      ]);
+      // Equal titles: artist descending decides, not the name position.
+      expect(artists(desc), ['Zed', 'Mia', 'Abe', 'Abe']);
+      // Equal on every key (no years): name order, in both directions.
+      for (final descending in [false, true]) {
+        final order = SortOrder([
+          SortSpec(SortCriterion.title, descending: descending),
+          const SortSpec(SortCriterion.year),
+        ]);
+        final hits = [
+          for (final a
+              in c
+                  .read(albumListProvider((sort: order, filter: '')))
+                  .requireValue)
+            if (a.title == 'Greatest Hits') a.artist,
+        ];
+        expect(hits, ['Abe', 'Mia', 'Zed'], reason: 'desc: $descending');
+      }
+    });
 
     test(
       'languages: unknown last in both directions, hidden by a filter',
@@ -249,24 +378,20 @@ void main() {
         await addLibraryTrack(db, source: src, locator: '4.flac');
         final seen = collect(languageSummariesProvider);
         await until(() => seen.isNotEmpty);
-        List<String?> codes(SortSpec s, [String f = '']) => c
+        List<String?> codes(SortOrder s, [String f = '']) => c
             .read(languageListProvider((sort: s, filter: f)))
             .requireValue
             .map((l) => l.code)
             .toList();
         const count = SortCriterion.trackCount;
-        expect(codes(const SortSpec(count, descending: true)), [
+        expect(codes(SortOrder.by(count, descending: true)), [
           'vie',
           'eng',
           null,
         ]);
-        expect(codes(const SortSpec(count)), ['eng', 'vie', null]);
-        expect(codes(const SortSpec(SortCriterion.title)), [
-          'eng',
-          'vie',
-          null,
-        ]);
-        expect(codes(const SortSpec(count), 'viet'), ['vie']);
+        expect(codes(SortOrder.by(count)), ['eng', 'vie', null]);
+        expect(codes(SortOrder.by(SortCriterion.title)), ['eng', 'vie', null]);
+        expect(codes(SortOrder.by(count), 'viet'), ['vie']);
       },
     );
 
@@ -283,7 +408,7 @@ void main() {
       }
       final artists = collect(artistSummariesProvider);
       await until(() => artists.isNotEmpty && artists.last.length == 2);
-      const byName = (sort: SortSpec(SortCriterion.title), filter: '');
+      final byName = (sort: SortOrder.by(SortCriterion.title), filter: '');
       expect(
         c.read(artistListProvider(byName)).requireValue.map((a) => a.name),
         ['x\uE000', 'x\u{1F600}'],
@@ -308,13 +433,13 @@ void main() {
       final artists = collect(artistSummariesProvider);
       final genres = collect(genreSummariesProvider);
       await until(() => artists.isNotEmpty && genres.isNotEmpty);
-      const byName = (sort: SortSpec(SortCriterion.title), filter: '');
+      final byName = (sort: SortOrder.by(SortCriterion.title), filter: '');
       expect(
         c.read(artistListProvider(byName)).requireValue.map((a) => a.name),
         ['Abe', 'Đen'],
       );
-      const byCount = (
-        sort: SortSpec(SortCriterion.trackCount, descending: true),
+      final byCount = (
+        sort: SortOrder.by(SortCriterion.trackCount, descending: true),
         filter: '',
       );
       expect(

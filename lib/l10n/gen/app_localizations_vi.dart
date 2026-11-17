@@ -823,6 +823,63 @@ class AppLocalizationsVi extends AppLocalizations {
   String get libraryOrderDescNumber => 'Giảm dần';
 
   @override
+  String get librarySortDialogTitle => 'Sắp xếp theo';
+
+  @override
+  String get librarySortChosen => 'Đã chọn';
+
+  @override
+  String get librarySortNotChosen => 'Chưa chọn';
+
+  @override
+  String get librarySortReset => 'Đặt lại';
+
+  @override
+  String get librarySortDone => 'Xong';
+
+  @override
+  String get libraryOrderReverse => 'Đảo thứ tự';
+
+  @override
+  String librarySortDragHint(String label) {
+    return 'Kéo để đổi thứ tự $label';
+  }
+
+  @override
+  String librarySortFlipTooltip(String word) {
+    return 'Đổi chiều: $word';
+  }
+
+  @override
+  String librarySortFlipSemantics(String label, String word) {
+    return '$label: $word, bấm để đổi chiều';
+  }
+
+  @override
+  String librarySortRemove(String label) {
+    return 'Bỏ $label';
+  }
+
+  @override
+  String librarySortAdd(String label) {
+    return 'Thêm $label';
+  }
+
+  @override
+  String get libraryOrderOldFirst => 'Cũ trước';
+
+  @override
+  String get libraryOrderNewFirst => 'Mới trước';
+
+  @override
+  String librarySortMore(String label, int count) {
+    return '$label +$count';
+  }
+
+  @override
+  String get librarySortAdvanced => 'Nâng cao…';
+
+  @override
   String get librarySortTitle => 'Tên';
 
   @override

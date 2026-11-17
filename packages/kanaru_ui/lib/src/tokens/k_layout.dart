@@ -9,6 +9,22 @@ abstract final class KLayout {
   static const double dialog = 440;
   static const double sheet = 640;
 
+  /// Max width of the "Sắp xếp theo" box (`KSortDialog`), centred on both shells.
+  static const double sortDialog = 400;
+
+  /// Sort dropdown (`showKSortPopover`): width follows the content between
+  /// these two, height stops at [dropdownMaxHeight] (or 70 % of a short screen).
+  static const double dropdownMinWidth = 160;
+  static const double dropdownMaxWidth = 280;
+  static const double dropdownMaxHeight = 360;
+
+  /// Dropdown item row (dense `SelectionRow`), both shells: the hit area is
+  /// [dropdownRowHeight] tall, the visible tint / hover / focus shape is
+  /// [dropdownRowVisible] tall and centred (a transparent band above and below
+  /// still takes taps). Rows grow with large text.
+  static const double dropdownRowHeight = 40;
+  static const double dropdownRowVisible = 36;
+
   /// Minimum touch target of rows, text buttons, chips and headers: 48 on
   /// touch, 40 with a mouse. Icon buttons are exempt: they are the icon plus
   /// their own padding (`KIconButton`), and header heights stay on this value.

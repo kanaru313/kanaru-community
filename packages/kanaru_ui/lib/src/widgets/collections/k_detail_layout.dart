@@ -1,8 +1,7 @@
-import 'dart:ui' show ImageFilter;
-
+import 'package:flutter/rendering.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../tokens/k_space.dart';
+import '../media/page_ground.dart';
 
 /// Page of a library item (album, artist, genre): a [header] and list
 /// [slivers].
@@ -69,27 +68,15 @@ class KDetailLayout extends StatelessWidget {
   }
 }
 
-/// Translucent, blurred background for bars that stay on top while the page
-/// scrolls under them, so a page tint is not cut by a flat bar.
-/// Blur costs GPU: use it on those bars only.
-class KBlurredBar extends StatelessWidget {
-  const KBlurredBar({super.key, required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final surface = Theme.of(context).colorScheme.surface;
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: KSpace.x4, sigmaY: KSpace.x4),
-        child: ColoredBox(color: surface.withValues(alpha: 0.72), child: child),
-      ),
-    );
-  }
-}
-
-/// Sliver that pins [child] (a bar of fixed [height]) over a [KBlurredBar].
+/// Sliver that pins [child] (a bar of fixed [height]) on the page's own
+/// ground, so a bar over a scrolling list is no seam in the page.
+///
+/// The bar is opaque: the page ground's base colour plus its gradient, as the
+/// ground paints it at the bar's place in the page (the bar paints the
+/// gradient shifted by its position, so tint and bar line up at rest, while
+/// the bar slides under the header and while the tint animates). A page
+/// without a ground (`CoverTintBackground`) gets plain `surface`. No blur:
+/// nothing is drawn through the bar, so nothing needs a backdrop filter.
 class KStickyBarSliver extends StatelessWidget {
   const KStickyBarSliver({
     super.key,
@@ -106,16 +93,25 @@ class KStickyBarSliver extends StatelessWidget {
       pinned: true,
       delegate: _BarDelegate(
         height: height,
-        child: KBlurredBar(child: child),
+        ground: KPageGround.maybeOf(context),
+        surface: Theme.of(context).colorScheme.surface,
+        child: child,
       ),
     );
   }
 }
 
 class _BarDelegate extends SliverPersistentHeaderDelegate {
-  _BarDelegate({required this.height, required this.child});
+  _BarDelegate({
+    required this.height,
+    required this.ground,
+    required this.surface,
+    required this.child,
+  });
 
   final double height;
+  final KPageGroundPaint? ground;
+  final Color surface;
   final Widget child;
 
   @override
@@ -129,11 +125,107 @@ class _BarDelegate extends SliverPersistentHeaderDelegate {
     BuildContext context,
     double shrinkOffset,
     bool overlapsContent,
-  ) => SizedBox(height: height, child: child);
+  ) => SizedBox(
+    height: height,
+    child: _GroundedBar(ground: ground, surface: surface, child: child),
+  );
 
   @override
   bool shouldRebuild(_BarDelegate old) =>
-      height != old.height || child != old.child;
+      height != old.height ||
+      child != old.child ||
+      ground != old.ground ||
+      surface != old.surface;
+}
+
+class _GroundedBar extends SingleChildRenderObjectWidget {
+  const _GroundedBar({
+    required this.ground,
+    required this.surface,
+    required super.child,
+  });
+
+  final KPageGroundPaint? ground;
+  final Color surface;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderGroundedBar(ground, surface);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderGroundedBar renderObject,
+  ) {
+    renderObject
+      ..ground = ground
+      ..surface = surface;
+  }
+}
+
+/// Paints the page ground under its child: [surface] without a drawn ground,
+/// else the ground's base and its gradient shaded for the whole ground's rect
+/// and shifted by this box's place in it. Repaints when the ground changes
+/// (each frame of a tint tween) and, like any box, after every layout.
+class _RenderGroundedBar extends RenderProxyBox {
+  _RenderGroundedBar(this._ground, this._surface);
+
+  KPageGroundPaint? _ground;
+  Color _surface;
+
+  set ground(KPageGroundPaint? value) {
+    if (value == _ground) return;
+    if (attached) _ground?.removeListener(markNeedsPaint);
+    _ground = value;
+    if (attached) value?.addListener(markNeedsPaint);
+    markNeedsPaint();
+  }
+
+  set surface(Color value) {
+    if (value == _surface) return;
+    _surface = value;
+    markNeedsPaint();
+  }
+
+  /// The ground box this bar registered with, to repaint when it lays out.
+  RenderPageGround? _groundBox;
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _ground?.addListener(markNeedsPaint);
+    _groundBox = RenderPageGround.nearestAbove(this)?..addBar(this);
+  }
+
+  @override
+  void detach() {
+    _ground?.removeListener(markNeedsPaint);
+    _groundBox?.removeBar(this);
+    _groundBox = null;
+    super.detach();
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final rect = offset & size;
+    final canvas = context.canvas;
+    final ground = _ground;
+    final placement = ground != null && ground.drawn
+        ? RenderPageGround.placementOf(this, ground)
+        : null;
+    if (ground == null || placement == null) {
+      canvas.drawRect(rect, Paint()..color = _surface);
+    } else {
+      canvas.drawRect(rect, Paint()..color = ground.base);
+      // The ground's rect in this box's coordinates, moved to the paint offset.
+      final groundRect = (offset - placement.origin) & placement.size;
+      canvas.drawRect(
+        rect,
+        Paint()..shader = ground.gradient.createShader(groundRect),
+      );
+    }
+    super.paint(context, offset);
+  }
 }
 
 class _DetailMode extends InheritedWidget {

@@ -14,3 +14,9 @@ Finder byCheckState(KCheckState state) => find.byWidgetPredicate(
   (widget) => widget is KCheckMark && widget.state == state,
   description: 'KCheckMark $state',
 );
+
+/// Finds the [KDragHandle] of the row at [index].
+Finder byDragHandle(int index) => find.byWidgetPredicate(
+  (widget) => widget is KDragHandle && widget.index == index,
+  description: 'KDragHandle $index',
+);

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:material_ui/material_ui.dart';
 
+import 'page_ground.dart';
 import 'readable_gradient_stops.dart';
 
 /// How long the tint takes to move to new colours or to fade in and out.
@@ -16,6 +17,10 @@ const coverTintTransition = Duration(milliseconds: 300);
 /// Colour changes tween over [coverTintTransition] (nothing with reduced
 /// motion). Losing the colours fades only the alpha, so the hue does not slide
 /// through grey. The child sits outside the tween and is not rebuilt by it.
+///
+/// Provides a [KPageGround] to its descendants: the colours it paints this
+/// frame, so a layer that floats over the page (a pinned bar) can continue
+/// the same picture instead of covering it with a flat colour.
 ///
 /// - [palette]: the cover's colours; null = none.
 /// - [loading]: the colours are not known yet. A null [palette] while loading
@@ -49,16 +54,72 @@ class CoverTintBackground extends StatefulWidget {
   State<CoverTintBackground> createState() => _CoverTintBackgroundState();
 }
 
-class _CoverTintBackgroundState extends State<CoverTintBackground> {
+class _CoverTintBackgroundState extends State<CoverTintBackground>
+    with SingleTickerProviderStateMixin {
   /// The palette on screen: set by a palette, cleared by a settled null, kept
   /// while loading.
   List<Color>? _shown;
 
-  /// True until the first build that draws, so [fadeIn] starts from nothing.
-  bool _firstDraw = true;
+  /// False until the first sync that draws, so [fadeIn] starts from nothing.
+  bool _started = false;
+  Brightness? _brightness;
+  Color _base = const Color(0x00000000);
+
+  /// The tween between two stop lists, owned here (not by a builder) so the
+  /// current colours can be published to widgets below as a listenable.
+  late final AnimationController _controller;
+  List<Color> _from = const [];
+  List<Color> _to = const [];
+  KPageGroundPaint? _paint;
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, value: 1)
+      ..addListener(_publish);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(CoverTintBackground old) {
+    super.didUpdateWidget(old);
+    _sync();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _paint?.dispose();
+    super.dispose();
+  }
+
+  double get _strength => widget.strength.clamp(0.0, 1.0);
+
+  /// The stops between [_from] and [_to] at the controller's position.
+  List<Color> _current() => _StopsTween(
+    begin: _Stops(_from),
+    end: _Stops(_to),
+  ).transform(Curves.easeInOut.transform(_controller.value)).colors;
+
+  void _publish() {
+    final paint = _paint;
+    if (paint == null || !_started) return;
+    paint.update(
+      base: _base,
+      stops: _current(),
+      strength: _strength,
+      drawn: true,
+    );
+  }
+
+  /// Takes the palette, theme and strength of the widget: starts a tween when
+  /// the stops changed, publishes the result to [_paint].
+  void _sync() {
     final palette = widget.palette;
     if (palette != null) {
       _shown = palette;
@@ -66,75 +127,111 @@ class _CoverTintBackgroundState extends State<CoverTintBackground> {
       _shown = null;
     }
     final scheme = Theme.of(context).colorScheme;
-    final base = widget.base ?? scheme.surface;
-
+    _base = widget.base ?? scheme.surface;
     final shown = _shown;
-    // Nothing drawn before the first palette; the Stack stays so the child
-    // keeps its state when the layer appears.
-    if (widget.fadeIn && _firstDraw && shown == null) {
-      return Stack(
-        fit: StackFit.passthrough,
-        children: [
-          Positioned.fill(child: const SizedBox.shrink()),
-          widget.child,
-        ],
-      );
+    // Nothing drawn before the first palette of a fading-in ground.
+    if (!_started && widget.fadeIn && shown == null) {
+      final none = List.filled(maxGradientStops, const Color(0x00000000));
+      final paint = _paint;
+      if (paint == null) {
+        _paint = KPageGroundPaint(
+          base: _base,
+          stops: none,
+          strength: _strength,
+          drawn: false,
+        );
+      } else {
+        paint.update(
+          base: _base,
+          stops: none,
+          strength: _strength,
+          drawn: false,
+        );
+      }
+      return;
     }
     final stops = shown == null
         ? List.filled(maxGradientStops, const Color(0x00000000))
         : _padded(
             readableGradientStops(
               shown,
-              base: base,
+              base: _base,
               onSurface: scheme.onSurface,
               onSurfaceVariant: scheme.onSurfaceVariant,
               brightness: scheme.brightness,
             ),
           );
-    final from = _firstDraw && widget.fadeIn
-        ? _Stops(
-            List.filled(maxGradientStops, stops.first.withValues(alpha: 0)),
-          )
-        : null;
-    _firstDraw = false;
-    final strength = widget.strength.clamp(0.0, 1.0);
-    return Stack(
-      fit: StackFit.passthrough,
-      children: [
-        Positioned.fill(
-          child: RepaintBoundary(
-            child: TweenAnimationBuilder<_Stops>(
-              // The surface jumps at once on a light/dark switch; a fade from
-              // the other brightness's stops could briefly break the text
-              // contrast, so a new brightness starts at its own stops.
-              key: ValueKey(scheme.brightness),
-              tween: _StopsTween(begin: from, end: _Stops(stops)),
-              duration: MediaQuery.disableAnimationsOf(context)
-                  ? Duration.zero
-                  : coverTintTransition,
-              curve: Curves.easeInOut,
-              // Two layers: a BoxDecoration ignores its color once it has a
-              // gradient, and the gradient is translucent.
-              builder: (context, value, _) => ColoredBox(
-                color: base,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        for (final c in value.colors)
-                          c.withValues(alpha: c.a * strength),
-                      ],
+    if (!_started) {
+      _started = true;
+      _brightness = scheme.brightness;
+      _to = stops;
+      _from = widget.fadeIn
+          ? List.filled(maxGradientStops, stops.first.withValues(alpha: 0))
+          : stops;
+      _paint ??= KPageGroundPaint(
+        base: _base,
+        stops: stops,
+        strength: _strength,
+        drawn: true,
+      );
+      _animate(MediaQuery.disableAnimationsOf(context));
+    } else if (scheme.brightness != _brightness) {
+      // The surface jumps at once on a light/dark switch; a fade from the
+      // other brightness's stops could briefly break the text contrast, so a
+      // new brightness starts at its own stops.
+      _brightness = scheme.brightness;
+      _from = _to = stops;
+      _controller.value = 1;
+    } else if (!listEquals(stops, _to)) {
+      _from = _current();
+      _to = stops;
+      _animate(MediaQuery.disableAnimationsOf(context));
+    }
+    _publish();
+  }
+
+  void _animate(bool instant) {
+    if (listEquals(_from, _to)) {
+      _controller.value = 1;
+      return;
+    }
+    _controller.duration = instant ? Duration.zero : coverTintTransition;
+    _controller.forward(from: 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final paint = _paint!;
+    return KPageGround(
+      paint: paint,
+      child: PageGroundBox(
+        paint: paint,
+        // The Stack stays when nothing is drawn yet so the child keeps its
+        // state when the layer appears.
+        child: Stack(
+          fit: StackFit.passthrough,
+          children: [
+            Positioned.fill(
+              child: !_started
+                  ? const SizedBox.shrink()
+                  : RepaintBoundary(
+                      child: AnimatedBuilder(
+                        animation: paint,
+                        // Two layers: a BoxDecoration ignores its color once it
+                        // has a gradient, and the gradient is translucent.
+                        builder: (context, _) => ColoredBox(
+                          color: paint.base,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(gradient: paint.gradient),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
             ),
-          ),
+            widget.child,
+          ],
         ),
-        widget.child,
-      ],
+      ),
     );
   }
 }

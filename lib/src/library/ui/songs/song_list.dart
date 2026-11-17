@@ -4,7 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
-import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/sort_order.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../state/browse/selection_providers.dart';
 import '../../state/browse/song_list_providers.dart';
@@ -39,7 +39,7 @@ class SongList extends StatelessWidget {
   });
 
   final SongScope scope;
-  final SortSpec sort;
+  final SortOrder sort;
   final String filter;
   final PlayContext playContext;
   final bool showNumber;
@@ -77,7 +77,7 @@ class SongSlivers extends ConsumerStatefulWidget {
   });
 
   final SongScope scope;
-  final SortSpec sort;
+  final SortOrder sort;
   final String filter;
   final PlayContext playContext;
   final bool showNumber;

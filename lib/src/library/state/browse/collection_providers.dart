@@ -10,10 +10,12 @@ import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/code_point_compare.dart';
 import '../../domain/browse/language_names.dart';
 import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/sort_arrange.dart';
+import '../../domain/browse/sort_order.dart';
 import 'song_list_providers.dart';
 
 /// Sort and text filter applied to one collection.
-typedef CollectionViewKey = ({SortSpec sort, String filter});
+typedef CollectionViewKey = ({SortOrder sort, String filter});
 
 /// Albums, name order. Reloads at most once per refresh interval; an
 /// unchanged result is not re-emitted.
@@ -80,35 +82,40 @@ final languageSummariesProvider =
 final albumListProvider = Provider.autoDispose
     .family<AsyncValue<List<AlbumSummary>>, CollectionViewKey>((ref, key) {
       final match = foldedMatcher(key.filter);
-      final d = key.sort.descending;
       return ref
           .watch(albumSummariesProvider)
           .mapKeepingValue(
-            (all) => _arrange(
+            (all) => arrangeByName(
               [
                 for (final a in all)
                   if (match('${a.title} ${a.artist ?? ''}')) a,
               ],
               key.sort,
-              (a, b) => switch (key.sort.criterion) {
-                SortCriterion.artist => _cmpNullable(
-                  a.artist == null ? null : sortKeyOf(a.artist!),
-                  b.artist == null ? null : sortKeyOf(b.artist!),
-                  d,
-                ),
-                SortCriterion.year => _cmpNullable(a.year, b.year, d),
-                SortCriterion.dateAdded => _cmpNullable(
-                  a.addedAt,
-                  b.addedAt,
-                  d,
-                ),
-                SortCriterion.trackCount => _cmpNullable(
-                  a.trackCount,
-                  b.trackCount,
-                  d,
-                ),
-                _ => 0,
-              },
+              (a) => sortKeyOf(a.title),
+              (spec) =>
+                  (a, b) => switch (spec.criterion) {
+                    SortCriterion.artist => _cmpNullable(
+                      a.artist == null ? null : sortKeyOf(a.artist!),
+                      b.artist == null ? null : sortKeyOf(b.artist!),
+                      spec.descending,
+                    ),
+                    SortCriterion.year => _cmpNullable(
+                      a.year,
+                      b.year,
+                      spec.descending,
+                    ),
+                    SortCriterion.dateAdded => _cmpNullable(
+                      a.addedAt,
+                      b.addedAt,
+                      spec.descending,
+                    ),
+                    SortCriterion.trackCount => _cmpNullable(
+                      a.trackCount,
+                      b.trackCount,
+                      spec.descending,
+                    ),
+                    _ => 0,
+                  },
             ),
           );
     });
@@ -117,29 +124,30 @@ final albumListProvider = Provider.autoDispose
 final artistListProvider = Provider.autoDispose
     .family<AsyncValue<List<ArtistSummary>>, CollectionViewKey>((ref, key) {
       final match = foldedMatcher(key.filter);
-      final d = key.sort.descending;
       return ref
           .watch(artistSummariesProvider)
           .mapKeepingValue(
-            (all) => _arrange(
+            (all) => arrangeByName(
               [
                 for (final a in all)
                   if (match(a.name)) a,
               ],
               key.sort,
-              (a, b) => switch (key.sort.criterion) {
-                SortCriterion.trackCount => _cmpNullable(
-                  a.trackCount,
-                  b.trackCount,
-                  d,
-                ),
-                SortCriterion.albumCount => _cmpNullable(
-                  a.albumCount,
-                  b.albumCount,
-                  d,
-                ),
-                _ => 0,
-              },
+              (a) => sortKeyOf(a.name),
+              (spec) =>
+                  (a, b) => switch (spec.criterion) {
+                    SortCriterion.trackCount => _cmpNullable(
+                      a.trackCount,
+                      b.trackCount,
+                      spec.descending,
+                    ),
+                    SortCriterion.albumCount => _cmpNullable(
+                      a.albumCount,
+                      b.albumCount,
+                      spec.descending,
+                    ),
+                    _ => 0,
+                  },
             ),
           );
     });
@@ -151,18 +159,16 @@ final genreListProvider = Provider.autoDispose
       return ref
           .watch(genreSummariesProvider)
           .mapKeepingValue(
-            (all) => _arrange(
+            (all) => arrangeByName(
               [
                 for (final g in all)
                   if (match(g.name)) g,
               ],
               key.sort,
-              (a, b) => key.sort.criterion == SortCriterion.trackCount
-                  ? _cmpNullable(
-                      a.trackCount,
-                      b.trackCount,
-                      key.sort.descending,
-                    )
+              (g) => sortKeyOf(g.name),
+              (spec) =>
+                  (a, b) => spec.criterion == SortCriterion.trackCount
+                  ? _cmpNullable(a.trackCount, b.trackCount, spec.descending)
                   : 0,
             ),
           );
@@ -178,11 +184,13 @@ final languageListProvider = Provider.autoDispose
           for (final l in all)
             if (l.code != null && match(_languageHaystack(l.code!))) l,
         ];
-        final sorted = _arrange(
+        final sorted = arrangeByName<LanguageSummary>(
           known,
           key.sort,
-          (a, b) => key.sort.criterion == SortCriterion.trackCount
-              ? _cmpNullable(a.trackCount, b.trackCount, key.sort.descending)
+          (l) => _languageNameKey(l.code!),
+          (spec) =>
+              (a, b) => spec.criterion == SortCriterion.trackCount
+              ? _cmpNullable(a.trackCount, b.trackCount, spec.descending)
               : 0,
         );
         final unknown = all.where((l) => l.code == null);
@@ -196,9 +204,11 @@ String _languageHaystack(String code) {
   return n == null ? code : '$code ${n.native} ${n.en} ${n.vi}';
 }
 
+String _languageNameKey(String code) =>
+    sortKeyOf(languageNameOf(code)?.native ?? code);
+
 List<LanguageSummary> _languagesByName(List<LanguageSummary> all) {
-  String nameKey(String code) =>
-      sortKeyOf(languageNameOf(code)?.native ?? code);
+  String nameKey(String code) => _languageNameKey(code);
   final known = all.where((l) => l.code != null).toList()
     ..sort(
       (a, b) => _byName(nameKey(a.code!), nameKey(b.code!), a.code!, b.code!),
@@ -220,26 +230,6 @@ extension AsyncKeepValue<T> on AsyncValue<T> {
       return AsyncError(e, st);
     }
   }
-}
-
-/// [byName] is in ascending name order. Title keeps (or reverses) that
-/// order; any other criterion sorts by [compare] (which already applies the
-/// direction and puts missing values last) and falls back to name order, so
-/// ties never flip with the direction.
-List<T> _arrange<T>(
-  List<T> byName,
-  SortSpec sort,
-  int Function(T a, T b) compare,
-) {
-  if (sort.criterion == SortCriterion.title) {
-    return sort.descending ? byName.reversed.toList() : byName;
-  }
-  final indexed = [for (var i = 0; i < byName.length; i++) (i, byName[i])];
-  indexed.sort((a, b) {
-    final c = compare(a.$2, b.$2);
-    return c != 0 ? c : a.$1.compareTo(b.$1);
-  });
-  return [for (final e in indexed) e.$2];
 }
 
 int _cmpNullable<V extends Comparable<Object>>(V? a, V? b, bool desc) {

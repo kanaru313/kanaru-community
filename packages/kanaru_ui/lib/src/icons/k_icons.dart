@@ -90,6 +90,9 @@ abstract final class KIcons {
   static const IconData close = FluentIcons.dismiss_24_regular;
   static const IconData sortAsc = FluentIcons.arrow_sort_up_24_regular;
   static const IconData sortDesc = FluentIcons.arrow_sort_down_24_regular;
+
+  /// "Nâng cao…" row of the sort dropdown.
+  static const IconData sortAdvanced = FluentIcons.options_24_regular;
   static const IconData chevronRight = FluentIcons.chevron_right_24_regular;
   static const IconData folderOpen = FluentIcons.folder_open_24_regular;
   static const IconData folderOff = FluentIcons.folder_prohibited_24_regular;
