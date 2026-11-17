@@ -444,8 +444,8 @@ what the menu showed.
   `openGenreMenu`, `openLanguageMenu`, `openFolderMenu`, `openSelectionMenu`,
   and `openSongInfo` (the song menu opened straight on its info page, the page
   its header opens, through the same load guard and limit; Back goes to the
-  song menu). A song that left the library (`TrackGoneException` from
-  `songMenuSpec`) is the toast `libraryNotFoundMessage`, not a failed load;
+  song menu). A song that left the library (`ItemGoneException` from
+  `songMenuSpec`; albums and artists throw it too) is the toast `libraryNotFoundMessage`, not a failed load;
   this holds for every song menu (⋮, right click, Menu key, selection panel
   ⋮), not only `openSongInfo`.
   Each loads its data once (`menu_loaders.dart`: direct one-shot reads), builds
@@ -630,7 +630,11 @@ Every call is awaited; a failure is logged and shows a snack bar.
   (`KEndHitExtension`), within the ⋮'s own band.
   `SongFavoriteButton` ignores a press while its favourite write runs, and
   shows a failure through the `ScaffoldMessenger` captured before the write
-  (its screen-reader label is `libraryFavoriteLabel`).
+  (its screen-reader label is `libraryFavoriteLabel`). That write is the
+  `FavoriteToggle` mixin (`library/ui/favorite_toggle.dart`), shared with the
+  Now Playing `FavoriteButton`: one write per button at a time (a write
+  of the previous track cannot free the next one), failure logged and shown
+  as `libraryFavoriteFailed`.
   Tap = `playTracks(ids, startIndex: index)`. The whole row (inside its
   `KContextRegion`) is a `KSwipeActions.capped`: swipe left = "Play next"
   (`MenuActionRunner.playNext([id])`, same call and toast as the menu footer),
@@ -981,7 +985,7 @@ Sizes that the mockups give and the tokens lack (card radius 14, panel radius
 | Widget | Notes |
 |---|---|
 | `KDetailLayout` | `header` plus list `slivers`. Under 840 px of page width (measured on the page, not the window) the header sits above the list; from 840 the header is a fixed 320 column, aligned to the top and scrolling on its own when the window is short. Draws no background: a page tints itself by wrapping the layout in `CoverTintBackground` (see "Detail page tint") |
-| `KDetailHero` | Top of an album or artist page for the `header` slot: the name (`KDetailTitle`), `line2` (`KDetailLine`), `line3`, buttons, optional description; narrow = 132 cover on the left, text centred on it; wide (asked of `KDetailLayout.isWide`) = cover as wide as the column, faded at the bottom and right edges (a round photo is not), same lines below |
+| `KDetailHero` | Top of an album or artist page for the `header` slot: the name (`KDetailTitle`), `line2` (`KDetailLine`), `line3`, buttons, optional description; narrow = 132 cover on the left, text centred on it; wide (asked of `KDetailLayout.isWide`) = cover as wide as the column, square (no corner radius) and faded at the bottom edge only (a round photo is not faded), same lines below |
 | `KDetailLine` | Second line of a hero: text (a focusable underlined link when `onTap` is set, touch area at least 48 dp tall without growing the row) and a plain ` · trailing` (the year) |
 | `KDetailDescription` | Text clamped to three lines with "more" / "less" only when it overflows; controlled (`expanded`, `onExpandedChanged`, labels from the caller) |
 | `KDetailTitleHost` | Wraps a page's header and content; tells `PageHeader(titleInContent: true)` whether the name in the content (`KDetailTitle`) is scrolled out of sight, so the header shows it then |

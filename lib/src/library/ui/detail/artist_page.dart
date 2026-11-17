@@ -76,7 +76,7 @@ class ArtistPage extends ConsumerWidget {
       return KDetailLayout(
         header: KDetailHero(
           circle: true,
-          coverBuilder: (context, side) => ArtistCover(
+          coverBuilder: (context, side, _) => ArtistCover(
             itemKey: artistId,
             name: title,
             coverKey: photo,

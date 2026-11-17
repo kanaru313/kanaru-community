@@ -68,11 +68,11 @@ class AlbumPage extends ConsumerWidget {
         showNumber: true,
         builder: (context, songs) => KDetailLayout(
           header: KDetailHero(
-            coverBuilder: (context, side) => AlbumCover(
+            coverBuilder: (context, side, radius) => AlbumCover(
               itemKey: albumId,
               coverKey: album.coverKey,
               dimension: side,
-              radius: BorderRadius.circular(14),
+              radius: radius,
             ),
             title: album.title,
             line2: _artistLine(context, key, album),

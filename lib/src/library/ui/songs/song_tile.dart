@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
-import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
@@ -13,17 +12,16 @@ import '../../../media/domain/track_id.dart';
 import '../../../media/domain/track_info.dart';
 import '../../../media/domain/track_lines.dart';
 import '../../../playback/state/playback_providers.dart';
+import '../../../playback/ui/playback_time_label.dart' show formatClock;
 import '../../../playback/ui/track_cover.dart';
 import '../../state/browse/selection_providers.dart';
 import '../../state/favorites_providers.dart';
-import '../browse/library_labels.dart';
 import '../browse/play_actions.dart';
+import '../favorite_toggle.dart';
 import '../menus/menu_action_runner.dart';
 import '../menus/menu_origin.dart';
 import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
-
-final _log = Logger('library.song_tile');
 
 /// One song row of every song list: cover, title / artists / `album • year`,
 /// duration over the heart. Tap plays `ids[index]` with the list as the
@@ -120,7 +118,9 @@ class SongTile extends ConsumerWidget {
                 ? info.trackNo
                 : null,
           ),
-          top: duration == null ? null : Text(formatClock(duration)),
+          top: duration == null
+              ? null
+              : Text(formatClock(Duration(milliseconds: duration))),
           bottom: SongFavoriteButton(trackId: info.id),
           trailing: LibraryMoreButton(onPressed: menu),
           current: current,
@@ -276,14 +276,12 @@ class SongFavoriteButton extends ConsumerStatefulWidget {
   ConsumerState<SongFavoriteButton> createState() => _SongFavoriteButtonState();
 }
 
-class _SongFavoriteButtonState extends ConsumerState<SongFavoriteButton> {
-  bool _writing = false;
-
+class _SongFavoriteButtonState extends ConsumerState<SongFavoriteButton>
+    with FavoriteToggle {
   @override
   void didUpdateWidget(SongFavoriteButton old) {
     super.didUpdateWidget(old);
-    // A write in flight belongs to the previous track.
-    if (old.trackId != widget.trackId) _writing = false;
+    if (old.trackId != widget.trackId) forgetFavoriteWrite();
   }
 
   @override
@@ -294,34 +292,12 @@ class _SongFavoriteButtonState extends ConsumerState<SongFavoriteButton> {
       tooltip: favorite ? l10n.libraryFavoriteRemove : l10n.libraryFavoriteAdd,
       semanticLabel: l10n.libraryFavoriteLabel,
       selected: favorite,
-      onPressed: _toggle,
+      onPressed: () => toggleFavorite(widget.trackId),
       size: KIconSize.sm,
       // The card's right column places this slot against the duration.
       padding: const EdgeInsets.all(KSpace.x2),
       icon: KIcons.heart,
       selectedIcon: KIcons.heartFilled,
     );
-  }
-
-  Future<void> _toggle() async {
-    if (_writing) return;
-    // Taken before the await: the failure is shown even if the row was
-    // rebuilt or removed while the write ran.
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    final message = AppLocalizations.of(context).libraryFavoriteFailed;
-    final controller = ref.read(favoritesControllerProvider);
-    final id = widget.trackId;
-    _writing = true;
-    try {
-      await controller.toggle(id);
-    } on Object catch (e, s) {
-      _log.warning('toggling favorite of $id failed', e, s);
-      // A messenger whose page was popped during the write is gone: skip.
-      if (messenger != null && messenger.mounted) {
-        showAppSnackBarOn(messenger, message);
-      }
-    } finally {
-      _writing = false;
-    }
   }
 }

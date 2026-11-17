@@ -63,16 +63,6 @@ IconData sortCriterionIcon(SortCriterion c) => switch (c) {
   SortCriterion.trackNumber => KIcons.trackNumber,
 };
 
-/// `m:ss`, or `h:mm:ss` from one hour up.
-String formatClock(int milliseconds) {
-  final total = milliseconds < 0 ? 0 : milliseconds ~/ 1000;
-  final h = total ~/ 3600;
-  final m = (total % 3600) ~/ 60;
-  final s = total % 60;
-  String two(int v) => v.toString().padLeft(2, '0');
-  return h > 0 ? '$h:${two(m)}:${two(s)}' : '$m:${two(s)}';
-}
-
 /// Whole minutes of a length, at least 1 for a non-empty one.
 int minutesOf(int milliseconds) {
   if (milliseconds <= 0) return 0;
