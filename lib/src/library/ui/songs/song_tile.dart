@@ -183,7 +183,7 @@ class _SongCover extends StatelessWidget {
       children: [
         TrackCover(
           coverKey: info.coverKey,
-          seed: info.albumKey?.encode() ?? info.title,
+          seed: info.coverSeed,
           size: CoverSize.thumb,
           dimension: KMediaCard.coverSize,
           radius: radius,

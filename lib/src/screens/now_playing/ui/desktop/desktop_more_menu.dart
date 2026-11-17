@@ -56,7 +56,7 @@ class DesktopMoreMenu extends ConsumerWidget {
             children: [
               TrackCover(
                 coverKey: info?.coverKey,
-                seed: info?.albumKey?.toString() ?? info?.title ?? '',
+                seed: info?.coverSeed ?? '',
                 size: CoverSize.thumb,
                 dimension: 44,
                 radius: KRadius.xs,

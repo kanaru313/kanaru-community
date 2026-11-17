@@ -118,7 +118,7 @@ class _TrackPart extends ConsumerWidget {
             onTap: () => ref.read(nowPlayingPanelProvider.notifier).open(),
             child: TrackCover(
               coverKey: info?.coverKey,
-              seed: info?.albumKey?.toString() ?? info?.title ?? '',
+              seed: info?.coverSeed ?? '',
               size: CoverSize.thumb,
               dimension: 58,
               radius: KRadius.xs,

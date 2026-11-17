@@ -113,7 +113,7 @@ MenuSpec buildSongMenu(
         info.album,
       ].whereType<String>().where((s) => s.isNotEmpty).join(' · '),
       coverKey: info.coverKey,
-      seed: info.albumKey?.encode() ?? info.title,
+      seed: info.coverSeed,
       infoPage: infoPage == null ? null : infoPageKey,
     ),
     groups: withAdvanced(

@@ -26,7 +26,7 @@ class StripCover extends ConsumerWidget {
     final info = id == null ? null : ref.watch(trackInfoProvider(id)).value;
     return TrackCover(
       coverKey: info?.coverKey,
-      seed: info?.albumKey?.toString() ?? info?.title ?? '',
+      seed: info?.coverSeed ?? '',
       size: rect.width > 120 ? CoverSize.full : CoverSize.thumb,
       dimension: rect.width,
       radius: BorderRadius.circular(8 + 12 * (1 - t)),

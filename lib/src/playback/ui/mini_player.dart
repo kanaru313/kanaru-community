@@ -203,7 +203,7 @@ class _Body extends ConsumerWidget {
             FlightPiece.cover,
             TrackCover(
               coverKey: info?.coverKey,
-              seed: info?.albumKey?.toString() ?? info?.title ?? '',
+              seed: info?.coverSeed ?? '',
               size: CoverSize.thumb,
               dimension: 48,
               radius: KRadius.xs,

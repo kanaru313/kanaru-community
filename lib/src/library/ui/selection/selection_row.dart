@@ -32,7 +32,7 @@ class SelectedSongRow extends StatelessWidget {
       leading: ExcludeSemantics(
         child: TrackCover(
           coverKey: info.coverKey,
-          seed: info.albumKey?.encode() ?? info.title,
+          seed: info.coverSeed,
           size: CoverSize.thumb,
           dimension: KMediaCard.coverSize,
           radius: KMediaCard.coverRadius,

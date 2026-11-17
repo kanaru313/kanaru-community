@@ -11,6 +11,17 @@ abstract final class KMediaCardMetrics {
   static const double lineSize = 13;
   static const double lineHeight = 1.35;
 
+  /// Title style of a media card (also used by the mini player).
+  static TextStyle? titleStyle(TextTheme t) => t.bodyLarge?.copyWith(
+    fontWeight: FontWeight.w600,
+    fontSize: titleSize,
+    height: lineHeight,
+  );
+
+  /// Style of the lines under the title.
+  static TextStyle? lineStyle(TextTheme t) =>
+      t.bodySmall?.copyWith(fontSize: lineSize, height: lineHeight);
+
   /// Height of one text line of [size] under [scaler].
   static double line(TextScaler scaler, double size) =>
       scaler.scale(size) * lineHeight;
@@ -69,11 +80,7 @@ class KMediaCardText extends StatelessWidget {
             text ?? '',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: base?.copyWith(
-              fontSize: size,
-              height: KMediaCardMetrics.lineHeight,
-              color: color,
-            ),
+            style: base?.copyWith(color: color),
           ),
         ),
       );
@@ -112,9 +119,8 @@ class KMediaCardText extends StatelessWidget {
       );
     }
 
-    final titleStyle = textTheme.bodyLarge?.copyWith(
-      fontWeight: FontWeight.w600,
-    );
+    final lineStyle = KMediaCardMetrics.lineStyle(textTheme);
+    final titleStyle = KMediaCardMetrics.titleStyle(textTheme);
     // A two-line title takes the room of a title and a second line.
     final twoLineHeight =
         KMediaCardMetrics.line(scaler, KMediaCardMetrics.titleSize) +
@@ -159,8 +165,8 @@ class KMediaCardText extends StatelessWidget {
           ],
         ),
         if (titleLines != 2)
-          line(line2, KMediaCardMetrics.lineSize, textTheme.bodySmall, soft),
-        line(line3, KMediaCardMetrics.lineSize, textTheme.bodySmall, soft),
+          line(line2, KMediaCardMetrics.lineSize, lineStyle, soft),
+        line(line3, KMediaCardMetrics.lineSize, lineStyle, soft),
       ],
     );
   }

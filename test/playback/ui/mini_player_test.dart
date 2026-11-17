@@ -1,5 +1,10 @@
 import 'package:flutter/semantics.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/services.dart';
+import 'package:kanaru/src/database/app_database.dart';
+import 'package:kanaru/src/database/tables.dart';
+import 'package:kanaru/src/media/domain/library_keys.dart';
+import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/ui/mini_player.dart';
@@ -75,6 +80,26 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('placeholder seed of a track with an album is its album key', (
+    tester,
+  ) async {
+    final host = await pumpWithPlayer(tester, _player([]), play: false);
+    await host.run(tester, () async {
+      await host.h.db
+          .update(host.h.db.tracks)
+          .write(
+            const TracksCompanion(
+              albumArtistKey: Value('artist'),
+              albumTitleKey: Value('album'),
+            ),
+          );
+      await host.h.play();
+    });
+    await host.letStreamsArrive(tester);
+    final cover = tester.widget<TrackCover>(find.byType(TrackCover));
+    expect(cover.seed, AlbumKey('artist', 'album').encode());
+  });
 
   testWidgets('tap opens Now Playing', (tester) async {
     final events = <String>[];
