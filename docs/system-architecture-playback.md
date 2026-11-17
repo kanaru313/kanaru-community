@@ -206,7 +206,9 @@ Future<void> replaceQueue(DatabaseConnectionUser db, List<int> trackIds, int now
   their present order; a reshuffle writes keys for upcoming rows only. `unshuffle` returns to
   `sort_key` order, keeps the current entry and clears every `shuffle_key`.
 - **Repeat:** see [Repeat](#repeat). `nextIndex(s, auto, loops)` is the pure rule; `previousIndex`
-  returns null at the first entry (the caller seeks to 0) in every mode.
+  returns null at the first entry (the caller seeks to 0), except under plain `all`, where it
+  wraps to the last entry (a one-entry queue goes to itself). `allShuffled` does not wrap: the end
+  of the previous pass is no meaningful place in a new random order.
 - **Reshuffled pass:** `reshufflePass` gives every entry a fresh `shuffle_key` (one transaction, sort
   keys untouched), turns shuffle on, makes the first entry current and never puts the entry that just
   played first (two or more entries; fewer stay as they are).
@@ -300,7 +302,12 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
 `state/player_controller.dart` implements `PlaybackCommands` and adds transport (`play`, `pause`,
 `playPause`, `stop`, `next`, `previous`, `playEntry`, `seek`, `seekRelative`, `setVolume`,
 `setShuffle`, `reshuffleUpcoming`, `setRepeat`, `setRepeatTimes`) and queue edits (`remove`,
-`cleanup`, `undo`, `move`).
+`cleanup`, `undo`, `move`) and `clearQueue`.
+
+- **Clear queue:** `clearQueue` empties `queue_entries` in one transaction (a database error leaves
+  memory untouched), keeps shuffle and repeat, drops the context, stops playback and resets the
+  saved position, so nothing is restored on the next start. No undo. It emits the old tracks (in
+  play order) and context on `queueCleared`, for saved-queue history; an empty queue does nothing.
 
 - **One chain** (`command_chain.dart`): UI commands, media-control commands and engine events run in
   call order. A task that runs another task of the same chain asserts in debug. After the last
@@ -389,8 +396,8 @@ current entry plays that many more times, then the base mode goes on.
 - **Time left** ("còn …" in the queue head): hidden under any repeat mode (the queue never runs out),
   as in the old app; with "stop at the end" it stays "after the current entry", counted loops not
   added.
-- **Previous** keeps the shipped rule (first entry: back to 0) in every mode. The old app wrapped
-  Previous to the last entry under `all`; not ported (a user decision on Previous is needed first).
+- **Previous** at the first entry goes to the last entry under `all` and back to 0 (with the
+  "first track" notice) in every other mode; see `previousIndex`.
 
 ## Settings keys
 
@@ -696,7 +703,7 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
   width and pads the other rows.
 - `CoverSwiper` is a plain widget (entry id, has previous/next, callbacks): left = next, right = previous; 25 % of the
   cover width or a fling over 160 dp/s commits; where there is no track to go to the cover moves at most 30 % and
-  springs back (the buttons raise the notices). With either repeat-all mode the last entry's left swipe wraps to the first, like Next (reshuffled: a new pass). The new cover slides in when the entry id changes; if it never does, the
+  springs back (the buttons raise the notices). With either repeat-all mode the last entry's left swipe wraps to the first, like Next (reshuffled: a new pass); under plain repeat all the first entry's right swipe goes to the last, like Previous. The new cover slides in when the entry id changes; if it never does, the
   cover comes back after 800 ms.
 - `NowPlayingMoreSheet` (⋮): the head and `nowPlayingMoreItems`, shared with the desktop dropdown. Only Go to album and Go
   to artist work; the rest is dimmed "Coming soon", Visual effects carries the Pro badge. `track_navigation.dart` goes

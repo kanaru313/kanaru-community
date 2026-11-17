@@ -418,6 +418,60 @@ void main() {
     });
   });
 
+  group('Previous at the first entry', () {
+    test('repeat all goes to the last entry, quietly', () async {
+      await h.c.setRepeat(RepeatMode.all);
+      await h.play();
+      await h.settle();
+      final order = h.order();
+      await h.c.previous();
+      await h.settle();
+      expect(h.c.queueState.current, 5);
+      expect(h.notices, isEmpty);
+      expect(h.order(), order);
+    });
+
+    test('repeat all shuffled restarts the entry and says so', () async {
+      await h.c.setRepeat(RepeatMode.allShuffled);
+      await h.play();
+      await h.settle();
+      final order = h.order();
+      await h.c.previous();
+      await h.settle();
+      expect(h.c.queueState.current, 0);
+      expect(h.notices.whereType<FirstTrack>(), hasLength(1));
+      expect(h.engine.commands.last, startsWith('seek:0'));
+      expect(h.order(), order, reason: 'no new pass');
+    });
+
+    for (final mode in [RepeatMode.off, RepeatMode.one]) {
+      test('$mode restarts the entry and says so', () async {
+        await h.c.setRepeat(mode);
+        await h.play();
+        await h.settle();
+        await h.c.previous();
+        await h.settle();
+        expect(h.c.queueState.current, 0);
+        expect(h.notices.whereType<FirstTrack>(), hasLength(1));
+        expect(h.engine.commands.last, startsWith('seek:0'));
+      });
+    }
+
+    test('a one-entry queue on repeat all plays again from 0', () async {
+      final one = await Harness.create(tracks: 1);
+      addTearDown(one.close);
+      await one.c.setRepeat(RepeatMode.all);
+      await one.play();
+      await one.settle();
+      final entry = one.c.queueState.currentItem!.entryId;
+      await one.c.previous();
+      await one.settle();
+      expect(one.c.queueState.currentItem!.entryId, entry);
+      expect(one.notices, isEmpty);
+      expect(one.engine.lastStart, Duration.zero);
+    });
+  });
+
   group('repeat with an empty queue', () {
     test(
       'setting a repeat mode on an empty queue saves it without touching the '
