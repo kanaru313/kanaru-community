@@ -385,12 +385,19 @@ covers), exactly like the song-cover pass, under a caller-given folder:
 
 ```dart
 // lib/src/rust/api/covers.dart (generated)
-Future<CoverImportDto> importCoverFile({required String path, required String outDir});
+Future<CoverImportDto> importCoverFile({required String path, required String outDir, CoverCropDto? crop});
 // CoverImportDto { String? key, CoverColorsDto? colors, NativeError? error }
+// CoverCropDto { int left, top, side }  // u32, upright pixels of the original
+Future<CoverPreviewDto> prepareCoverPreview({required String path, required String outDir});
+// CoverPreviewDto { String? previewPath, int width, height, NativeError? error }
 ```
 
 Dart wrapper: `lib/src/library/data/scan/native_cover_import.dart`
-(`CoverImporter.import(path:, outDir:) -> CoverImportResult`, `RustCoverImporter`).
+(`CoverImporter.import(path:, outDir:, crop:) -> CoverImportResult`,
+`RustCoverImporter`; `CoverPreviewer.prepare(path:, outDir:) -> CoverPreview`,
+`RustCoverPreviewer`, `coverPreviewerProvider`). `CoverCrop` lives in
+`library/domain/covers/cover_choice.dart`, `CoverPreview` in
+`library/domain/covers/cover_preview.dart`.
 
 - `path`: any JPEG, PNG or WebP; the format is sniffed from the content, so the
   name may have any extension or none. Opened through `open_source` (regular files
@@ -410,12 +417,41 @@ Dart wrapper: `lib/src/library/data/scan/native_cover_import.dart`
   exceptions: permanent = `FormatException`, transient, `permissionDenied` and a 60 s
   timeout = `FileSystemException`. The scan controller waits at most 30 s for the
   store's GC (`coverGcTimeout`), so a stuck import never holds the scan loop.
-- `colors`: seed and palette as in Cover colours; null (with `key` set) for a
-  near-gray image (chroma below 5).
+- Crop: `crop` is a square (`left`, `top`, `side`) in pixels of the **upright**
+  original (after the EXIF turn; what `prepare_cover_preview` shows). `null` keeps
+  the whole image with its aspect ratio: the output is byte-identical to a call
+  without a crop. With a crop the square is cut from the decoded picture before
+  the shrink: `thumb` at most 256 px, `full` at most `min(1024, side)`, always square.
+  The crop is mapped back to the stored orientation (EXIF 1 to 8, `covers/crop.rs`)
+  and, for a large JPEG, to the scaled decode, whose scale is chosen from the crop
+  side (the crop stays at least 1024 px across, or the whole of it when smaller),
+  not from the longest side. A crop never takes the passthrough shortcut.
+- Key rule: a crop that covers the whole of a square image (`left = top = 0`,
+  `side = width = height`) is normalised to no crop and keeps the key of the bytes,
+  so existing keys stay valid. Any other crop has the key
+  `blake3(bytes || "crop:" || left || top || side)` (the three as little-endian
+  `u32`), first 16 bytes as hex like any key. The same image with the same crop is
+  always the same key. A crop with side 0 or outside the upright image is
+  `unsupported` (permanent) and writes nothing.
+- Preview: `prepare_cover_preview` reads the whole file with the same limits as the
+  import (full read up to 32 MiB, content sniffed, decode cap, gate; not a
+  header-only probe), decodes once (scaled for a large JPEG), turns it upright, fits
+  the long side to 1024 px and writes a JPEG q85 to
+  `<outDir>/.kanaru-tmp-preview-<unique>.jpg` (`outDir` absolute, created when
+  missing). `width` and `height` are the upright size of the original, the space of
+  `CoverCropDto`; the file is only the picture to show. The caller deletes the file;
+  names with the prefix `.kanaru-tmp-preview-` (Dart: `coverPreviewPrefix`) in that
+  folder are leftovers once no dialog is open and are safe to sweep. Errors and
+  mapping to Dart exceptions are those of the import. Both calls run on the
+  background pool, not the two-thread interactive pool, so a stalled read cannot
+  starve imports; Dart wraps them in the 60 s limit.
+- `colors`: seed and palette as in Cover colours, taken from the stored `thumb`
+  (so of the crop when there is one); null (with `key` set) for a near-gray image
+  (chroma below 5).
 - Errors: transient for I/O (`io`) and for failing to write under `outDir`
   (detail starts with `cover cache`); permanent for `corrupt` (does not decode),
-  `unsupported` (another format, a special file, a relative `outDir`), `tooLarge`
-  and `notFound`.
+  `unsupported` (another format, a special file, a relative `outDir`, a bad crop),
+  `tooLarge` and `notFound`.
 
 ## Pass versions and errors
 

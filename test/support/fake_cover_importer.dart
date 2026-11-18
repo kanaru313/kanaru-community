@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:kanaru/src/library/data/scan/native_cover_import.dart';
+import 'package:kanaru/src/library/domain/covers/cover_choice.dart';
 import 'package:kanaru/src/library/domain/scan/native_failure.dart';
 import 'package:kanaru/src/media/domain/cover_files.dart';
 
@@ -16,6 +17,7 @@ class FakeCoverImporter implements CoverImporter {
   Future<CoverImportResult> import({
     required String path,
     required String outDir,
+    CoverCrop? crop,
   }) async {
     if (fail) {
       return const CoverImportResult.failed(
@@ -29,6 +31,7 @@ class FakeCoverImporter implements CoverImporter {
         ..createSync(recursive: true)
         ..writeAsBytesSync(bytes);
     }
-    return CoverImportResult.done(key: key); // colors null, like a near-gray image
+    // Colors are null, like a near-gray image.
+    return CoverImportResult.done(key: key);
   }
 }

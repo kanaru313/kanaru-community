@@ -11,7 +11,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use kanaru_media::covers::key::{is_cover_key, relative_path, CoverSize};
 use kanaru_media::covers::{
-    colors, import_cover, make_cover, CoverColors, CoverError, CoverOutcome, FolderMemo,
+    colors, import_cover_cropped, make_cover, prepare_preview, CoverColors, CoverError,
+    CoverOutcome, CropRect, FolderMemo,
 };
 use kanaru_media::Cancel;
 use rayon::prelude::*;
@@ -203,6 +204,26 @@ pub struct CoverImportDto {
     pub error: Option<NativeError>,
 }
 
+/// The square a user cut out of an image: `side` x `side` pixels with its
+/// top-left corner at (`left`, `top`), in pixels of the **upright** original
+/// (after its EXIF turn), the picture `prepare_cover_preview` describes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CoverCropDto {
+    pub left: u32,
+    pub top: u32,
+    pub side: u32,
+}
+
+impl From<CoverCropDto> for CropRect {
+    fn from(c: CoverCropDto) -> Self {
+        CropRect {
+            left: c.left,
+            top: c.top,
+            side: c.side,
+        }
+    }
+}
+
 /// Makes a cover from one user-chosen image, exactly like the song-cover pass:
 /// `<out_dir>/covers/{thumb,full}/<key>.jpg`, 256 px and 1024 px JPEG q85, the
 /// key from the image bytes. `path` may have any name (or none): the format is
@@ -211,11 +232,21 @@ pub struct CoverImportDto {
 /// Both files are always written again, so importing the same image repairs a
 /// damaged one. Runs on the background pool under `guarded`.
 ///
+/// With `crop` the cover is just that square (`thumb` at most 256 px, `full`
+/// at most 1024 px and the crop's side) and the key also covers the crop; a
+/// crop of the whole of a square image is the same cover as `None`. `None`
+/// keeps the aspect ratio of the image.
+///
 /// Errors: transient for I/O and for failing to write under `out_dir`;
 /// permanent for an undecodable (`Corrupt`), unsupported (`Unsupported`, also a
-/// FIFO or other special file) or oversized (`TooLarge`) image, and for a
-/// relative `out_dir` (`Unsupported`).
-pub fn import_cover_file(path: String, out_dir: String) -> CoverImportDto {
+/// FIFO or other special file) or oversized (`TooLarge`) image, for a relative
+/// `out_dir` and for a crop that is empty or leaves the image (`Unsupported`,
+/// nothing written).
+pub fn import_cover_file(
+    path: String,
+    out_dir: String,
+    crop: Option<CoverCropDto>,
+) -> CoverImportDto {
     if !Path::new(&out_dir).is_absolute() {
         return import_failed(relative_cache_error());
     }
@@ -224,12 +255,14 @@ pub fn import_cover_file(path: String, out_dir: String) -> CoverImportDto {
         guarded(|| {
             let parked = RefCell::new(None);
             let open = opener(&parked);
-            let result = import_cover(Path::new(&path), &open, &out_dir, &Cancel::new());
-            result.map_err(|e| match e {
-                CoverError::Source(e) => native_error(&parked, Path::new(&path), e),
-                CoverError::Cache(e) => cache_error(&e),
-                CoverError::Retry(m) => NativeError::new(NativeErrorKind::Io, m, true),
-            })
+            let result = import_cover_cropped(
+                Path::new(&path),
+                &open,
+                &out_dir,
+                crop.map(Into::into),
+                &Cancel::new(),
+            );
+            result.map_err(|e| cover_error(&parked, Path::new(&path), e))
         })
     });
     match result {
@@ -239,6 +272,74 @@ pub fn import_cover_file(path: String, out_dir: String) -> CoverImportDto {
             error: None,
         },
         Err(error) => import_failed(error),
+    }
+}
+
+/// How a cover error reaches Dart.
+fn cover_error(
+    parked: &RefCell<Option<(PathBuf, NativeError)>>,
+    path: &Path,
+    e: CoverError,
+) -> NativeError {
+    match e {
+        CoverError::Source(e) => native_error(parked, path, e),
+        CoverError::Cache(e) => cache_error(&e),
+        CoverError::Retry(m) => NativeError::new(NativeErrorKind::Io, m, true),
+    }
+}
+
+/// Result of [`prepare_cover_preview`]: `preview_path` (an upright JPEG) and
+/// the upright size of the **original** on success, `error` otherwise (never
+/// both; the size is 0 on error).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CoverPreviewDto {
+    pub preview_path: Option<String>,
+    pub width: u32,
+    pub height: u32,
+    pub error: Option<NativeError>,
+}
+
+/// Decodes the image at `path` once (same read limits, format sniffing and
+/// decode limits as [`import_cover_file`]: the whole file is read, at most
+/// 32 MiB) and writes it turned upright, long side at most 1024 px, as a JPEG
+/// q85 to `<out_dir>/.kanaru-tmp-preview-<unique>.jpg` (`out_dir` is an
+/// absolute folder, created when missing; the caller deletes the file, and
+/// leftovers are the files there that start with `.kanaru-tmp-preview-`).
+/// `width` and `height` are the upright size of the original, the space
+/// `CoverCropDto` is given in. Runs on the background pool under `guarded`,
+/// so a stalled read cannot starve the small interactive pool.
+///
+/// Errors as [`import_cover_file`].
+pub fn prepare_cover_preview(path: String, out_dir: String) -> CoverPreviewDto {
+    if !Path::new(&out_dir).is_absolute() {
+        return preview_failed(relative_cache_error());
+    }
+    let out_dir = PathBuf::from(out_dir);
+    let result = pools::background().install(|| {
+        guarded(|| {
+            let parked = RefCell::new(None);
+            let open = opener(&parked);
+            prepare_preview(Path::new(&path), &open, &out_dir, &Cancel::new())
+                .map_err(|e| cover_error(&parked, Path::new(&path), e))
+        })
+    });
+    match result {
+        Ok(done) => CoverPreviewDto {
+            preview_path: Some(done.path.to_string_lossy().into_owned()),
+            width: done.width,
+            height: done.height,
+            error: None,
+        },
+        Err(error) => preview_failed(error),
+    }
+}
+
+fn preview_failed(error: NativeError) -> CoverPreviewDto {
+    CoverPreviewDto {
+        preview_path: None,
+        width: 0,
+        height: 0,
+        error: Some(error),
     }
 }
 
@@ -691,6 +792,7 @@ mod tests {
             let r = import_cover_file(
                 dir.join(name).to_string_lossy().into_owned(),
                 out.to_string_lossy().into_owned(),
+                None,
             );
             assert!(r.error.is_none(), "{name}: {r:?}");
             let key = r.key.expect("key");
@@ -705,7 +807,7 @@ mod tests {
         let dir = temp_dir("import-err");
         let out = dir.to_string_lossy().into_owned();
         let kind = |path: &Path, out: &str| {
-            import_cover_file(path.to_string_lossy().into_owned(), out.to_owned())
+            import_cover_file(path.to_string_lossy().into_owned(), out.to_owned(), None)
                 .error
                 .map(|e| (e.kind, e.transient))
         };
@@ -751,8 +853,100 @@ mod tests {
         let r = import_cover_file(
             fifo.to_string_lossy().into_owned(),
             dir.to_string_lossy().into_owned(),
+            None,
         );
         assert_eq!(r.error.map(|e| e.kind), Some(NativeErrorKind::Unsupported));
+        let p = prepare_cover_preview(
+            fifo.to_string_lossy().into_owned(),
+            dir.join("previews").to_string_lossy().into_owned(),
+        );
+        assert_eq!(p.error.map(|e| e.kind), Some(NativeErrorKind::Unsupported));
+        assert_eq!(p.preview_path, None);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn import_with_a_crop_normalises_a_whole_image_and_rejects_a_bad_one() {
+        let dir = temp_dir("import-crop");
+        let out = dir.join("data");
+        write(&dir.join("wide.png"), &PNG_1X1);
+        let run = |crop| {
+            import_cover_file(
+                dir.join("wide.png").to_string_lossy().into_owned(),
+                out.to_string_lossy().into_owned(),
+                crop,
+            )
+        };
+        let whole = run(None);
+        // The whole of a square image is the same cover as no crop.
+        let same = run(Some(CoverCropDto {
+            left: 0,
+            top: 0,
+            side: 1,
+        }));
+        assert!(whole.error.is_none() && same.error.is_none(), "{same:?}");
+        assert_eq!(whole.key, same.key);
+        let key = same.key.expect("key");
+        assert!(out.join(format!("covers/full/{key}.jpg")).is_file());
+        let bad = run(Some(CoverCropDto {
+            left: 0,
+            top: 0,
+            side: 2,
+        }));
+        let error = bad.error.expect("error");
+        assert_eq!(
+            (error.kind, error.transient),
+            (NativeErrorKind::Unsupported, false)
+        );
+        assert_eq!(bad.key, None);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn preview_reports_the_original_size_and_types_its_errors() {
+        let dir = temp_dir("preview");
+        let out = dir.join("previews");
+        write(&dir.join("wide.png"), &PNG_1X1);
+        let ok = prepare_cover_preview(
+            dir.join("wide.png").to_string_lossy().into_owned(),
+            out.to_string_lossy().into_owned(),
+        );
+        assert!(ok.error.is_none(), "{ok:?}");
+        assert_eq!((ok.width, ok.height), (1, 1));
+        let path = PathBuf::from(ok.preview_path.expect("path"));
+        assert!(path.is_file());
+        assert!(path
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .starts_with(".kanaru-tmp-preview-"));
+        let kind = |path: &Path, out: &str| {
+            prepare_cover_preview(path.to_string_lossy().into_owned(), out.to_owned())
+                .error
+                .map(|e| (e.kind, e.transient))
+        };
+        let out = out.to_string_lossy().into_owned();
+        assert_eq!(
+            kind(&dir.join("gone.png"), &out),
+            Some((NativeErrorKind::NotFound, false))
+        );
+        write(&dir.join("text.png"), b"not an image at all");
+        assert_eq!(
+            kind(&dir.join("text.png"), &out),
+            Some((NativeErrorKind::Unsupported, false))
+        );
+        assert_eq!(
+            kind(&dir.join("wide.png"), "relative/dir"),
+            Some((NativeErrorKind::Unsupported, false))
+        );
+        write(&dir.join("blocker"), b"file");
+        assert_eq!(
+            kind(
+                &dir.join("wide.png"),
+                &dir.join("blocker").to_string_lossy()
+            ),
+            Some((NativeErrorKind::Io, true))
+        );
         std::fs::remove_dir_all(&dir).unwrap();
     }
 

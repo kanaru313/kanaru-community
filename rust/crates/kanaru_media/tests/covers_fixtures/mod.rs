@@ -134,6 +134,12 @@ pub fn webp_with_orientation(width: u32, height: u32, orientation: u16) -> Vec<u
             image::Rgb([20, 20, 200])
         }
     });
+    webp_of(image, orientation)
+}
+
+/// Lossless WebP of `image` with an EXIF chunk that says `orientation`.
+fn webp_of(image: RgbImage, orientation: u16) -> Vec<u8> {
+    let (width, height) = image.dimensions();
     let plain = encode_with(ImageFormat::WebP, image::DynamicImage::ImageRgb8(image));
     // Pick the VP8L chunk out of the simple file: "RIFF" size "WEBP" then chunks.
     let vp8l = &plain[12..];
@@ -178,4 +184,61 @@ pub fn pixel_at(bytes: &[u8], x: u32, y: u32) -> [u8; 3] {
         .expect("decode jpeg")
         .into_rgb8();
     image.get_pixel(x, y).0
+}
+
+/// Corner colours of the quadrant fixtures, in stored (unturned) layout:
+/// top-left red, top-right green, bottom-left blue, bottom-right yellow.
+pub const RED: [u8; 3] = [220, 30, 30];
+pub const GREEN: [u8; 3] = [30, 200, 30];
+pub const BLUE: [u8; 3] = [30, 30, 220];
+pub const YELLOW: [u8; 3] = [230, 220, 30];
+
+/// The quadrant colour of stored pixel (x, y) in a `width` x `height` picture.
+pub fn quadrant_color(x: u32, y: u32, width: u32, height: u32) -> [u8; 3] {
+    match (x < width / 2, y < height / 2) {
+        (true, true) => RED,
+        (false, true) => GREEN,
+        (true, false) => BLUE,
+        (false, false) => YELLOW,
+    }
+}
+
+/// Baseline JPEG with the four quadrant colours (stored layout).
+pub fn quadrant_jpeg(width: u16, height: u16) -> Vec<u8> {
+    jpeg(width, height, false, |x, y| {
+        quadrant_color(
+            u32::from(x),
+            u32::from(y),
+            u32::from(width),
+            u32::from(height),
+        )
+    })
+}
+
+/// PNG with the four quadrant colours.
+pub fn quadrant_png(width: u32, height: u32) -> Vec<u8> {
+    png(width, height, |x, y| quadrant_color(x, y, width, height))
+}
+
+/// Lossless WebP with the four quadrant colours (stored layout) and EXIF
+/// `orientation`.
+pub fn webp_quadrants(width: u32, height: u32, orientation: u16) -> Vec<u8> {
+    let image = RgbImage::from_fn(width, height, |x, y| {
+        image::Rgb(quadrant_color(x, y, width, height))
+    });
+    webp_of(image, orientation)
+}
+
+/// Which of the four quadrant colours `pixel` is closest to.
+pub fn nearest_quadrant_color(pixel: [u8; 3]) -> [u8; 3] {
+    let distance = |c: &[u8; 3]| -> i32 {
+        c.iter()
+            .zip(pixel)
+            .map(|(a, b)| (i32::from(*a) - i32::from(b)).pow(2))
+            .sum()
+    };
+    [RED, GREEN, BLUE, YELLOW]
+        .into_iter()
+        .min_by_key(|c| distance(c))
+        .expect("four colours")
 }

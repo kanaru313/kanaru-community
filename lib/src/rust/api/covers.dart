@@ -8,9 +8,9 @@ import 'error.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `cache_error`, `failed`, `found_or_none`, `import_failed`, `relative_cache_error`, `run_batch`, `run_item`
+// These functions are ignored because they are not marked as `pub`: `cache_error`, `cover_error`, `failed`, `found_or_none`, `import_failed`, `preview_failed`, `relative_cache_error`, `run_batch`, `run_item`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Failure`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`
 // These functions are ignored (category: IgnoreBecauseExplicitAttribute): `from`
 
 /// Finds and caches the cover of every item, one result per item in the same
@@ -50,14 +50,41 @@ Future<List<CoverColorsResultDto>> coverColorsFor({
 /// Both files are always written again, so importing the same image repairs a
 /// damaged one. Runs on the background pool under `guarded`.
 ///
+/// With `crop` the cover is just that square (`thumb` at most 256 px, `full`
+/// at most 1024 px and the crop's side) and the key also covers the crop; a
+/// crop of the whole of a square image is the same cover as `None`. `None`
+/// keeps the aspect ratio of the image.
+///
 /// Errors: transient for I/O and for failing to write under `out_dir`;
 /// permanent for an undecodable (`Corrupt`), unsupported (`Unsupported`, also a
-/// FIFO or other special file) or oversized (`TooLarge`) image, and for a
-/// relative `out_dir` (`Unsupported`).
+/// FIFO or other special file) or oversized (`TooLarge`) image, for a relative
+/// `out_dir` and for a crop that is empty or leaves the image (`Unsupported`,
+/// nothing written).
 Future<CoverImportDto> importCoverFile({
   required String path,
   required String outDir,
+  CoverCropDto? crop,
 }) => RustLib.instance.api.crateApiCoversImportCoverFile(
+  path: path,
+  outDir: outDir,
+  crop: crop,
+);
+
+/// Decodes the image at `path` once (same read limits, format sniffing and
+/// decode limits as [`import_cover_file`]: the whole file is read, at most
+/// 32 MiB) and writes it turned upright, long side at most 1024 px, as a JPEG
+/// q85 to `<out_dir>/.kanaru-tmp-preview-<unique>.jpg` (`out_dir` is an
+/// absolute folder, created when missing; the caller deletes the file, and
+/// leftovers are the files there that start with `.kanaru-tmp-preview-`).
+/// `width` and `height` are the upright size of the original, the space
+/// `CoverCropDto` is given in. Runs on the background pool under `guarded`,
+/// so a stalled read cannot starve the small interactive pool.
+///
+/// Errors as [`import_cover_file`].
+Future<CoverPreviewDto> prepareCoverPreview({
+  required String path,
+  required String outDir,
+}) => RustLib.instance.api.crateApiCoversPrepareCoverPreview(
   path: path,
   outDir: outDir,
 );
@@ -104,6 +131,33 @@ class CoverColorsResultDto {
           error == other.error;
 }
 
+/// The square a user cut out of an image: `side` x `side` pixels with its
+/// top-left corner at (`left`, `top`), in pixels of the **upright** original
+/// (after its EXIF turn), the picture `prepare_cover_preview` describes.
+class CoverCropDto {
+  final int left;
+  final int top;
+  final int side;
+
+  const CoverCropDto({
+    required this.left,
+    required this.top,
+    required this.side,
+  });
+
+  @override
+  int get hashCode => left.hashCode ^ top.hashCode ^ side.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CoverCropDto &&
+          runtimeType == other.runtimeType &&
+          left == other.left &&
+          top == other.top &&
+          side == other.side;
+}
+
 /// Result of [`import_cover_file`]: `key` (and `colors`, null for a near-gray
 /// image) on success, `error` otherwise (never both).
 class CoverImportDto {
@@ -123,6 +177,37 @@ class CoverImportDto {
           runtimeType == other.runtimeType &&
           key == other.key &&
           colors == other.colors &&
+          error == other.error;
+}
+
+/// Result of [`prepare_cover_preview`]: `preview_path` (an upright JPEG) and
+/// the upright size of the **original** on success, `error` otherwise (never
+/// both; the size is 0 on error).
+class CoverPreviewDto {
+  final String? previewPath;
+  final int width;
+  final int height;
+  final NativeError? error;
+
+  const CoverPreviewDto({
+    this.previewPath,
+    required this.width,
+    required this.height,
+    this.error,
+  });
+
+  @override
+  int get hashCode =>
+      previewPath.hashCode ^ width.hashCode ^ height.hashCode ^ error.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CoverPreviewDto &&
+          runtimeType == other.runtimeType &&
+          previewPath == other.previewPath &&
+          width == other.width &&
+          height == other.height &&
           error == other.error;
 }
 

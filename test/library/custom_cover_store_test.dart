@@ -8,6 +8,7 @@ import 'package:sqlite3/sqlite3.dart' show SqliteException;
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/library/data/custom_cover_store.dart';
 import 'package:kanaru/src/library/data/scan/native_cover_import.dart';
+import 'package:kanaru/src/library/domain/covers/cover_choice.dart';
 import 'package:kanaru/src/library/domain/scan/native_failure.dart';
 import 'package:kanaru/src/library/state/custom_cover_providers.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
@@ -52,6 +53,7 @@ class _FakeImporter implements CoverImporter {
   Future<CoverImportResult> import({
     required String path,
     required String outDir,
+    CoverCrop? crop,
   }) async {
     calls++;
     await hang?.future;

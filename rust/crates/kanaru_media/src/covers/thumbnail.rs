@@ -7,11 +7,13 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use image::metadata::Orientation;
 use image::{DynamicImage, GrayImage, ImageFormat, ImageReader, RgbImage};
 
+use super::crop::CropRect;
 use super::decode_limits::{
     decode_limits, full_decode_fits, jpeg_data_fills_frame, scaled_plan, ScaledPlan,
 };
 use super::gate;
 use super::jpeg_header::{self, JpegHeader};
+use super::sources::ImageHeader;
 use super::webp_exif;
 
 /// Longest side of a `thumb`, in pixels.
@@ -32,41 +34,80 @@ pub struct CoverJpegs {
     pub full: Vec<u8>,
 }
 
-/// Decodes `bytes` (already checked by `sources::validate_header`, which also
-/// gives `pixels`) and encodes both sizes, keeping the aspect ratio. Smaller
-/// images are re-encoded at their own size, never enlarged. Transparent parts
-/// end up on black. A JPEG or WebP is turned upright per its EXIF
-/// orientation. `full` is the original JPEG minus its metadata when that is
-/// safe (see [`passthrough`]); a large JPEG is decoded scaled down (see
-/// `scaled_plan`). Every shortcut falls back to the full path on any trouble.
-/// `None` when the image breaks a decode limit or is corrupt. A decode of an
-/// image over 8 MP waits for the process-wide gate.
-pub fn make_jpegs(bytes: &[u8], format: ImageFormat, pixels: u64) -> Option<CoverJpegs> {
+/// Decodes `bytes` (already checked by `sources::check_header`, which gave
+/// `header`) and encodes both sizes. Without `crop` the aspect ratio is kept;
+/// with one (an upright square of the original, already validated) the
+/// result is that square: the crop is taken from the decoded picture before
+/// the shrink, so `full` is at most `min(1024, side)` and `thumb` at most 256.
+/// Smaller images are re-encoded at their own size, never enlarged.
+/// Transparent parts end up on black. A JPEG or WebP is turned upright per
+/// its EXIF orientation. Without a crop, `full` is the original JPEG minus its
+/// metadata when that is safe (see [`passthrough`]); a large JPEG is decoded
+/// scaled down (see `scaled_plan`). Every shortcut falls back to the full path
+/// on any trouble. `None` when the image breaks a decode limit or is corrupt.
+/// A decode of an image over 8 MP waits for the process-wide gate.
+pub fn make_jpegs(bytes: &[u8], header: ImageHeader, crop: Option<CropRect>) -> Option<CoverJpegs> {
     // A panic anywhere (decode, blend, resize, turn, encode) means this source
     // is unusable, so the caller moves on to the next one.
     guarded(|| {
-        let _gate = gate::enter_for(pixels);
-        build(bytes, format)
+        let _gate = gate::enter_for(header.pixels());
+        build(bytes, header, crop)
     })
 }
 
-fn build(bytes: &[u8], format: ImageFormat) -> Option<CoverJpegs> {
+/// The upright preview of `bytes`: the whole picture, long side at most
+/// [`FULL_SIDE`], as a JPEG. Same decode path and limits as [`make_jpegs`].
+pub fn make_preview_jpeg(bytes: &[u8], header: ImageHeader) -> Option<Vec<u8>> {
+    guarded(|| {
+        let _gate = gate::enter_for(header.pixels());
+        let (image, _) = decode(bytes, header.format, None)?;
+        let rgb = flatten_and_shrink(image, FULL_SIDE)?;
+        encode(&turn_upright(rgb, exif_orientation(bytes, header.format)))
+    })
+}
+
+/// Decodes `bytes`, scaled when that applies (see `scaled_plan`; with a
+/// `crop_side` the scale keeps that many stored pixels at least [`FULL_SIDE`]
+/// across, or all of them when fewer). The flag is true for a full decode.
+fn decode(
+    bytes: &[u8],
+    format: ImageFormat,
+    crop_side: Option<u32>,
+) -> Option<(DynamicImage, bool)> {
     if format == ImageFormat::Jpeg && !jpeg_data_fills_frame(bytes) {
         return None;
     }
-    let mut original = None;
-    let image = match guarded(|| scaled_decode(bytes, format)) {
-        Some(image) => image,
-        None => {
-            if !full_decode_fits(bytes, format) {
-                return None;
-            }
-            let image = full_decode(bytes, format)?;
-            if format == ImageFormat::Jpeg {
-                original = guarded(|| passthrough(bytes, &image));
-            }
-            image
+    if let Some(image) = guarded(|| scaled_decode(bytes, format, crop_side, false)) {
+        return Some((image, false));
+    }
+    if full_decode_fits(bytes, format) {
+        if let Some(image) = full_decode(bytes, format) {
+            return Some((image, true));
         }
+    }
+    // A crop of a huge picture takes a coarser scale rather than no cover.
+    crop_side?;
+    let image = guarded(|| scaled_decode(bytes, format, crop_side, true))?;
+    Some((image, false))
+}
+
+fn build(bytes: &[u8], header: ImageHeader, crop: Option<CropRect>) -> Option<CoverJpegs> {
+    let format = header.format;
+    let orientation = exif_orientation(bytes, format);
+    let stored_crop = crop.map(|c| c.to_stored(orientation, header.width, header.height));
+    let (image, full) = decode(bytes, format, stored_crop.map(|c| c.side))?;
+    let original = (format == ImageFormat::Jpeg && full && crop.is_none())
+        .then(|| guarded(|| passthrough(bytes, &image)))
+        .flatten();
+    let image = match stored_crop {
+        Some(rect) => {
+            let rect = rect.scaled(
+                (header.width, header.height),
+                (image.width(), image.height()),
+            );
+            image.crop_imm(rect.left, rect.top, rect.side, rect.side)
+        }
+        None => image,
     };
 
     // Blended over black before the resize: averaging blended colours is what
@@ -74,7 +115,7 @@ fn build(bytes: &[u8], format: ImageFormat) -> Option<CoverJpegs> {
     // shrink: turning a small picture costs next to nothing and needs no
     // buffer the size of the original.
     let rgb = flatten_and_shrink(image, FULL_SIDE)?;
-    let rgb = turn_upright(rgb, exif_orientation(bytes, format));
+    let rgb = turn_upright(rgb, orientation);
     let full = match original {
         Some(original) => original,
         None => encode(&rgb)?,
@@ -85,7 +126,7 @@ fn build(bytes: &[u8], format: ImageFormat) -> Option<CoverJpegs> {
 
 /// EXIF orientation of the original: from the JPEG header or the WebP `EXIF`
 /// chunk; PNG is not read, so it counts as upright.
-fn exif_orientation(bytes: &[u8], format: ImageFormat) -> u16 {
+pub(super) fn exif_orientation(bytes: &[u8], format: ImageFormat) -> u16 {
     match format {
         ImageFormat::Jpeg => jpeg_header::parse(bytes).map_or(1, |header| header.orientation),
         ImageFormat::WebP => webp_exif::orientation(bytes),
@@ -96,7 +137,7 @@ fn exif_orientation(bytes: &[u8], format: ImageFormat) -> u16 {
 /// `rgb` turned or flipped as the EXIF `orientation` says; a value that is
 /// not an orientation leaves it as is. Neither the JPEG decoder nor `image`
 /// applies it on its own.
-fn turn_upright(rgb: RgbImage, orientation: u16) -> RgbImage {
+pub(super) fn turn_upright(rgb: RgbImage, orientation: u16) -> RgbImage {
     let orientation = u8::try_from(orientation)
         .ok()
         .and_then(Orientation::from_exif)
@@ -136,13 +177,18 @@ fn full_decode(bytes: &[u8], format: ImageFormat) -> Option<DynamicImage> {
 
 /// A large JPEG decoded at a DCT scale of 1/2, 1/4 or 1/8 (see [`scaled_plan`]
 /// for when that applies). `None` when it does not apply or on any error.
-fn scaled_decode(bytes: &[u8], format: ImageFormat) -> Option<DynamicImage> {
+fn scaled_decode(
+    bytes: &[u8],
+    format: ImageFormat,
+    crop_side: Option<u32>,
+    degrade: bool,
+) -> Option<DynamicImage> {
     let ScaledPlan {
         mut decoder,
         width,
         height,
         output,
-    } = scaled_plan(bytes, format)?;
+    } = scaled_plan(bytes, format, crop_side, degrade)?;
     decoder.set_max_decoding_buffer_size(usize::try_from(output).ok()?);
     let pixels = decoder.decode().ok()?;
     let (width, height) = (u32::from(width), u32::from(height));

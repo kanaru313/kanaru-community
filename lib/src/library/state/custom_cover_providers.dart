@@ -19,6 +19,11 @@ final coverImporterProvider = Provider<CoverImporter>(
   (ref) => const RustCoverImporter(),
 );
 
+/// Overridden in tests so they do not need the native library.
+final coverPreviewerProvider = Provider<CoverPreviewer>(
+  (ref) => const RustCoverPreviewer(),
+);
+
 final _storeProvider = Provider<CustomCoverStore>(
   (ref) => CustomCoverStore(
     ref.watch(appDatabaseProvider),
