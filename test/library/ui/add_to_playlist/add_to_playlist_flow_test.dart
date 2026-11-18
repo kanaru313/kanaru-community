@@ -128,7 +128,7 @@ void main() {
       await answerAlready(tester, en, en.playlistAlreadyMove);
       await pumpUntil(
         tester,
-        () => toast('Added 2 songs to “Chill”, dropped 1 old copy'),
+        () => toast('Added 3 songs to “Chill”, dropped 1 old copy'),
       );
 
       final t = env.tracks;

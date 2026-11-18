@@ -239,12 +239,21 @@ AddSummary summarize(
         ? (newNames.isEmpty ? '' : newNames.first)
         : (namesByUid[o.uid] ?? '');
   }
+  // A song moved to the end was appended again, so it counts as added. The
+  // store counts only songs that were not there before; a target that moved
+  // songs wrote the whole batch, so its total is the distinct song count.
+  final widest = outcomes.fold(0, (m, o) {
+    final written = o.added + o.movedToEnd;
+    return written > m ? written : m;
+  });
   return AddSummary(
     failed: outcomes.isEmpty,
-    songs: r.addedTrackCount,
+    songs: r.addedTrackCount > widest ? r.addedTrackCount : widest,
     playlists: outcomes.length,
     singleName: singleName,
-    singleAdded: outcomes.length == 1 ? outcomes.single.added : 0,
+    singleAdded: outcomes.length == 1
+        ? outcomes.single.added + outcomes.single.movedToEnd
+        : 0,
     singleSkipped: outcomes.length == 1 ? outcomes.single.skipped : 0,
     created: outcomes.where((o) => o.created).length,
     skipped: r.skippedTrackCount,

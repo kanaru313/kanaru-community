@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/ui/add_to_playlist/add_to_playlist_message.dart';
+import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/ui/add_to_playlist/add_to_playlist_model.dart';
 
 import 'support/picker_host.dart';
@@ -32,9 +33,53 @@ AddSummary _s({
   nothingNew: nothingNew,
 );
 
+PlaylistAddOutcome _o(String uid, {int added = 0, int moved = 0}) =>
+    PlaylistAddOutcome(
+      uid: uid,
+      created: false,
+      added: added,
+      skipped: 0,
+      movedToEnd: moved,
+    );
+
+// The summary the store's numbers give when every song was already present
+// and the user chose to move the old copies to the end.
+AddSummary _allMoved(List<PlaylistAddOutcome> outcomes) => summarize(
+  AddToPlaylistsResult(
+    outcomes: outcomes,
+    goneUids: const [],
+    addedTrackCount: 0,
+    skippedTrackCount: 0,
+  ),
+  dropped: 0,
+  namesByUid: {for (final o in outcomes) o.uid: 'Chill'},
+  newNames: const [],
+);
+
 void main() {
   final en = l10nOf('en');
   final vi = l10nOf('vi');
+
+  test('every song moved to the end counts as added', () {
+    final one = _allMoved([_o('a', moved: 3)]);
+    expect(
+      addToPlaylistMessage(en, one),
+      'Added 3 songs to “Chill”, dropped 3 old copies',
+    );
+    expect(
+      addToPlaylistMessage(vi, one),
+      'Đã thêm 3 bài vào “Chill”, bỏ 3 bản cũ',
+    );
+    final many = _allMoved([_o('a', moved: 3), _o('b', moved: 3)]);
+    expect(
+      addToPlaylistMessage(en, many),
+      'Added 3 songs to 2 playlists, dropped 6 old copies',
+    );
+    expect(
+      addToPlaylistMessage(vi, many),
+      'Đã thêm 3 bài vào 2 playlist, bỏ 6 bản cũ',
+    );
+  });
 
   group('english', () {
     String msg(AddSummary s) => addToPlaylistMessage(en, s);

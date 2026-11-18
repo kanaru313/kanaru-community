@@ -46,8 +46,28 @@ Future<void> runAddToPlaylist(
   _running = true;
   try {
     await _flow(context, request, limit ?? addToPlaylistLimit);
+  } on Object catch (e, s) {
+    // The lookups before the first await or the summary after the picker
+    // threw. Callers often drop the future, so nothing may escape.
+    _log.severe('add to playlist failed', e, s);
+    if (context.mounted) _notifyFailure(context);
   } finally {
     _running = false;
+  }
+}
+
+/// Shows the failure toast when [context] still has a messenger; a lookup
+/// that fails here is logged, never rethrown.
+void _notifyFailure(BuildContext context) {
+  try {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+    showAppSnackBarOn(
+      messenger,
+      AppLocalizations.of(context).playlistAddFailed,
+    );
+  } on Object catch (e, s) {
+    _log.warning('could not show the failure toast', e, s);
   }
 }
 

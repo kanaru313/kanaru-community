@@ -1,7 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/l10n/gen/app_localizations.dart';
+import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
+import 'package:kanaru/src/library/ui/add_to_playlist/add_to_playlist.dart';
+import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:logging/logging.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'support/flow_harness.dart';
 import 'support/picker_host.dart';
@@ -271,5 +276,43 @@ void main() {
     final second = env.flowAgain(tester);
     await second;
     expect(title, findsOneWidget, reason: 'still one picker');
+  });
+
+  testWidgets('a lookup that throws before the first await: failed toast, '
+      'nothing escapes, guard released', (tester) async {
+    // No ProviderScope above the button, so the container lookup throws.
+    final request = AddToPlaylistRequest(
+      tracks: [TrackId(1)],
+      sourceLabel: 'Album',
+    );
+    Future<void>? running;
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => running = showAddToPlaylist(context, request),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    final records = <LogRecord>[];
+    final sub = Logger.root.onRecord.listen(records.add);
+    addTearDown(sub.cancel);
+
+    await tester.tap(find.text('open'));
+    await running;
+    await tester.pump();
+
+    expect(find.text(en.playlistAddFailed), findsOneWidget);
+    expect(records.any((r) => r.level >= Level.SEVERE), isTrue);
+    expect(tester.takeException(), isNull);
   });
 }

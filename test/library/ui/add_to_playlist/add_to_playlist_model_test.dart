@@ -359,6 +359,19 @@ void main() {
       expect(s.moved, 3);
     });
 
+    test('moved songs count as added, one target', () {
+      final s = _sum(_r([_o('a', moved: 3)]), names: {'a': 'A'});
+      expect(s.singleAdded, 3);
+      expect(s.songs, 3);
+    });
+
+    test('moved songs count as added, several targets', () {
+      final s = _sum(
+        _r([_o('a', moved: 3), _o('b', added: 1, moved: 2)], songs: 1),
+      );
+      expect(s.songs, 3);
+    });
+
     test('moved sums entries removed; dropped is passed through', () {
       final s = _sum(
         _r([
