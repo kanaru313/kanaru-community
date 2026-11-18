@@ -12,8 +12,11 @@ import 'package:kanaru/src/library/ui/playlists/menu/favorites_menu_spec.dart';
 import 'package:kanaru/src/library/ui/playlists/menu/playlist_menu_actions.dart';
 import 'package:kanaru/src/library/ui/playlists/menu/playlist_menu_spec.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
+import 'package:kanaru/src/platform/state/document_picker_provider.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../m3u/support/m3u_fixtures.dart' show FakePicker;
+import '../../m3u/support/m3u_flow_harness.dart' show FlowPicker;
 import 'support/playlist_menu_support.dart';
 import 'support/playlist_ui_harness.dart';
 
@@ -468,18 +471,24 @@ void main() {
       await t.tap(find.text('Cancel'));
     });
 
-    uiTest('both M3U rows call the export entry point', (t) async {
-      final h = await PlaylistUiHarness.pump(t);
+    uiTest('both M3U rows start the export (the save dialog opens)', (t) async {
+      // The user cancels the dialog: nothing is written, no notice shows.
+      final picker = FlowPicker(FakePicker());
+      final h = await PlaylistUiHarness.pump(
+        t,
+        overrides: [documentPickerProvider.overrideWithValue(picker)],
+      );
       final l10n = h.l10n(t);
       final src = await _seed(t, h, 'Src');
       final spec = await specOf(t, h, src.uid);
       await runRow(t, h, spec, MenuItemId.playlistExportM3u);
       await t.pump();
-      expect(find.text(l10n.appComingSoon), findsOneWidget);
-      await t.pump(const Duration(seconds: 6));
+      expect(picker.suggestedName, 'Src.m3u8');
+      picker.suggestedName = null;
       await runRow(t, h, spec, MenuItemId.playlistExportM3uRelative);
       await t.pump();
-      expect(find.text(l10n.appComingSoon), findsOneWidget);
+      expect(picker.suggestedName, 'Src.m3u8');
+      expect(find.text(l10n.appComingSoon), findsNothing);
     });
 
     uiTest('the head cover button is still soft and Add to playlist opens the '
