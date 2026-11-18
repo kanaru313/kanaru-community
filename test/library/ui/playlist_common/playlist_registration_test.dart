@@ -8,6 +8,7 @@ import 'package:kanaru/src/library/library_extension.dart';
 import 'package:kanaru/src/library/ui/playlist_common/playlist_labels.dart';
 import 'package:kanaru/src/library/ui/playlists/playlist_page.dart';
 import 'package:kanaru/src/shell/state/mobile_sidebar_state.dart';
+import 'package:kanaru/src/shell/ui/mobile_sidebar.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/library/ui/m3u/m3u_entry_points.dart';
@@ -125,7 +126,10 @@ void main() {
         .go(LibraryLocations.playlists);
     c.read(mobileSidebarOpenProvider.notifier).open();
     await tester.pumpAndSettle();
-    final favorites = find.bySemanticsLabel('Favorites');
+    final favorites = find.descendant(
+      of: find.byType(MobileSidebar),
+      matching: find.bySemanticsLabel('Favorites'),
+    );
     expect(
       tester.getSemantics(favorites),
       isSemantics(isSelected: false, isButton: true, isEnabled: true),
@@ -136,8 +140,9 @@ void main() {
     expect(page(PlaylistUids.favorites), findsOneWidget);
     c.read(mobileSidebarOpenProvider.notifier).open();
     await tester.pumpAndSettle();
+    // The page title is also labelled Favorites: scope to the drawer.
     expect(
-      tester.getSemantics(find.bySemanticsLabel('Favorites')),
+      tester.getSemantics(favorites),
       isSemantics(isSelected: true, isButton: true, isEnabled: true),
     );
     handle.dispose();
