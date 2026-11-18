@@ -124,6 +124,8 @@ void main() {
       tester.getSemantics(inSidebar('Playlists')),
       isSemantics(isSelected: true, isButton: true, isEnabled: true),
     );
+    // Let the page's query cooldown run out before the test ends.
+    await tester.pump(const Duration(seconds: 2));
     handle.dispose();
   });
 
