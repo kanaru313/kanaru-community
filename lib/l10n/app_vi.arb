@@ -1472,6 +1472,8 @@
   "plScreensCoverFailed": "Không đổi được ảnh bìa",
   "plScreensDuplicateCopyCover": "Chép cả ảnh bìa tự chọn",
   "plScreensDuplicateConfirm": "Nhân bản",
+  "plScreensPlay": "Phát playlist",
+  "plScreensUnitPlaylists": "playlist",
   "plAddMovedSuffix": "{count, plural, other{, bỏ {count} bản cũ}}",
   "@plAddMovedSuffix": {
     "description": "Toast suffix: old copies of songs removed when they were moved to the end of a playlist.",

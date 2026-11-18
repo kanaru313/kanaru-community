@@ -3414,6 +3414,18 @@ abstract class AppLocalizations {
   /// **'Duplicate'**
   String get plScreensDuplicateConfirm;
 
+  /// No description provided for @plScreensPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play playlist'**
+  String get plScreensPlay;
+
+  /// No description provided for @plScreensUnitPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'playlists'**
+  String get plScreensUnitPlaylists;
+
   /// Toast suffix: old copies of songs removed when they were moved to the end of a playlist.
   ///
   /// In en, this message translates to:

@@ -58,7 +58,9 @@ Future<void> eventually(
 
 /// A [MaterialApp.router] over the real repository (in-memory database) with
 /// a host screen at `/`, a list stub at `/playlists` and `/playlists/:uid`
-/// built by [pageBuilder]. Use [launch] to run a flow with the host's context.
+/// built by [pageBuilder]. The list stub is built by [listBuilder]
+/// (`router.push('/playlists')` shows it above the host). Use [launch] to run
+/// a flow with the host's context.
 class PlaylistUiHarness {
   PlaylistUiHarness._(
     this.fixture,
@@ -78,6 +80,7 @@ class PlaylistUiHarness {
     WidgetTester tester, {
     double width = 400,
     Widget Function(BuildContext, String uid)? pageBuilder,
+    Widget Function(BuildContext)? listBuilder,
     bool disableAnimations = false,
     double textScale = 1,
     List<Override> overrides = const [],
@@ -115,7 +118,11 @@ class PlaylistUiHarness {
         ),
         GoRoute(
           path: '/playlists',
-          builder: (_, _) => const Scaffold(body: Text('PLAYLISTS LIST')),
+          builder: (context, _) => Scaffold(
+            body: listBuilder == null
+                ? const Text('PLAYLISTS LIST')
+                : listBuilder(context),
+          ),
         ),
         GoRoute(
           path: '/playlists/:uid',

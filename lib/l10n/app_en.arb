@@ -1472,6 +1472,8 @@
   "plScreensCoverFailed": "Couldn't change the cover",
   "plScreensDuplicateCopyCover": "Copy the custom cover too",
   "plScreensDuplicateConfirm": "Duplicate",
+  "plScreensPlay": "Play playlist",
+  "plScreensUnitPlaylists": "playlists",
   "plAddMovedSuffix": "{count, plural, =1{, dropped 1 old copy} other{, dropped {count} old copies}}",
   "@plAddMovedSuffix": {
     "description": "Toast suffix: old copies of songs removed when they were moved to the end of a playlist.",

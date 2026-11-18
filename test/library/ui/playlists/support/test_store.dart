@@ -34,6 +34,16 @@ class TestStore implements PlaylistStore {
   /// Run at the start of `deletePlaylist` (observes the world at that moment).
   void Function()? onDelete;
 
+  /// While set, `loadPlaylist` waits for it first.
+  Completer<void>? loadGate;
+
+  /// While set, `loadPlaylist` throws it / answers "no such playlist".
+  Object? loadError;
+  bool loadMissing = false;
+
+  /// Number of `watchSummaries` subscriptions started.
+  int watchCalls = 0;
+
   int createCalls = 0;
   int updateCalls = 0;
   int deleteCalls = 0;
@@ -105,13 +115,21 @@ class TestStore implements PlaylistStore {
   }
 
   @override
-  Stream<PlaylistSummaries> watchSummaries() => inner.watchSummaries();
+  Stream<PlaylistSummaries> watchSummaries() {
+    watchCalls++;
+    return inner.watchSummaries();
+  }
 
   @override
   Stream<PlaylistDetail?> watchPlaylist(String uid) => inner.watchPlaylist(uid);
 
   @override
-  Future<PlaylistDetail?> loadPlaylist(String uid) => inner.loadPlaylist(uid);
+  Future<PlaylistDetail?> loadPlaylist(String uid) async {
+    await loadGate?.future;
+    if (loadError != null) throw loadError!;
+    if (loadMissing) return null;
+    return inner.loadPlaylist(uid);
+  }
 
   @override
   Future<Map<String, int>> countExisting(List<TrackId> tracks) =>

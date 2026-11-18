@@ -21,5 +21,7 @@
   },
   "plScreensCoverFailed": "Couldn't change the cover",
   "plScreensDuplicateCopyCover": "Copy the custom cover too",
-  "plScreensDuplicateConfirm": "Duplicate"
+  "plScreensDuplicateConfirm": "Duplicate",
+  "plScreensPlay": "Play playlist",
+  "plScreensUnitPlaylists": "playlists"
 }

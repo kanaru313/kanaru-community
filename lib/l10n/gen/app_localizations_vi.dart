@@ -2032,6 +2032,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get plScreensDuplicateConfirm => 'Nhân bản';
 
   @override
+  String get plScreensPlay => 'Phát playlist';
+
+  @override
+  String get plScreensUnitPlaylists => 'playlist';
+
+  @override
   String plAddMovedSuffix(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

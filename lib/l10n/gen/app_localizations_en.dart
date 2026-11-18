@@ -2284,6 +2284,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get plScreensDuplicateConfirm => 'Duplicate';
 
   @override
+  String get plScreensPlay => 'Play playlist';
+
+  @override
+  String get plScreensUnitPlaylists => 'playlists';
+
+  @override
   String plAddMovedSuffix(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
