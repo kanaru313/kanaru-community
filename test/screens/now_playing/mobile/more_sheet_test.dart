@@ -97,7 +97,6 @@ void main() {
     await _openSheet(tester);
     for (final label in [
       'Sleep timer',
-      'Add to playlist',
       'Lyrics source',
       'Translate lyrics…',
       'Track info',
@@ -116,7 +115,7 @@ void main() {
         of: find.byType(NowPlayingMoreSheet),
         matching: find.text('Coming soon'),
       ),
-      findsNWidgets(5),
+      findsNWidgets(4),
     );
     expect(find.byType(ProBadge), findsOneWidget);
   });

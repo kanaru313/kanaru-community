@@ -622,7 +622,7 @@ Rules:
 The queue content is shared by the mobile sheet and the desktop right panel. Widgets live in
 `playback/ui/queue/` (no library imports); the row menu, the ♥ and navigation to the library live in
 `screens/now_playing/ui/` (`queue_row_menu.dart`, `track_navigation.dart`; the ♥ is the library's `SongFavoriteButton`) and are handed
-to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). `QueuePanel(host: sheet | panel)` composes them. On the panel the shell draws the header ("Queue" and ✕); `QueuePanel` adds the line under it: counts left (`N tracks · time left`; the tooltip has the playing position, and the whole line first when the panel cut it short; 40 dp action buttons with 8 dp between them, about 164 dp for the line), Shuffle, Add tracks (soon), Clean up, Save as playlist (soon) | ⋮ right, no footer.
+to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). `QueuePanel(host: sheet | panel)` composes them. On the panel the shell draws the header ("Queue" and ✕); `QueuePanel` adds the line under it: counts left (`N tracks · time left`; the tooltip has the playing position, and the whole line first when the panel cut it short; 40 dp action buttons with 8 dp between them, about 164 dp for the line), Shuffle, Add tracks (soon), Clean up, Save as playlist | ⋮ right, no footer.
 
 - **List** (`queue_list.dart`): one `ReorderableListView.builder`, fixed row extent (`KMediaCard.extentOf` for the text scale in effect, the same height as a library song row; `QueueRowSize` picks the handle size, 48 dp mobile and 40 dp desktop, long press selects on both shells when the host gives a selection hook (without one: menu on mobile, nothing on desktop), and Delete on desktop), keys by
   entry id, `buildDefaultDragHandles: false`, bottom padding 72 (plus `bottomInset` while the sheet floats the selection panel). A drop is resolved by the dragged entry's id, not by
@@ -676,8 +676,10 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). 
 - **Locate button** (`queue_locate_button.dart`): 48 dp, bottom right, only while the current row is out of view; arrow by
   direction; rebuilds only when the side changes.
 - **Actions** (`queue_actions.dart`, `queue_header.dart`): Shuffle (reshuffles the upcoming and turns shuffle on), Add
-  tracks and Save as playlist (dimmed "Coming soon"), Clean up (`MenuAnchor`, four choices with counts worked out when
-  it opens; 0 = dimmed; opens up on the sheet, down on the panel; the toast counts what the controller removed when the choice ran, not what the menu promised), ⋮ (only "Select several": selects the current song).
+  tracks (dimmed "Coming soon"), Clean up (`MenuAnchor`, four choices with counts worked out when
+  it opens; 0 = dimmed; opens up on the sheet, down on the panel; the toast counts what the controller removed when the choice ran, not what the menu promised), ⋮ (only "Select several": selects the current song). `QueueSaveButton(onSave:)` is
+  enabled while the queue has a track; the host supplies the callback (`playback/` does not import `library/`), and without one it is dimmed "Coming soon". `screens/now_playing` passes
+  `saveQueueToPlaylist` (ids in play order, repeats kept, taken at the tap).
 - **Row menu** (`screens/now_playing/ui/queue_row_menu.dart`): Play this | Play next (queues a **copy**) | Go to album,
   Go to artist (a `showSelectionPicker` when the track has several artists), Select / Deselect, Ask AI (dimmed) | Remove. A popup at the
   pointer on the panel, a sheet on mobile (⋮). Every action first checks the entry is still queued ("That track is
@@ -754,7 +756,7 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
   `DesktopNowPlayingBody` (auto-hiding header, then the split or the side pane alone, 300 ms cross-fade, the outgoing body ignores
   pointer and focus). `V` flips the cover column only with no modifier, no menu open and no text field focused; the choice lives in
   `coverColumnShownProvider` for the session.
-- **Header** (`desktop_now_playing_header.dart`, 64 dp): `[⌄] [cover column] | [♥] [add to playlist, soon] [Translate chip, soon]`
+- **Header** (`desktop_now_playing_header.dart`, 64 dp): `[⌄] [cover column] | [♥] [add to playlist] [Translate chip, soon]`
   and `[repeat] [sleep timer, soon] [volume] [⋮]`. No Shuffle, no window buttons. The ⋮ menu (`desktop_more_menu.dart`) is the head row
   plus the shared items; while it is open the header stays shown (`floatingOpen`). `now_playing_auto_hide.dart` is the old controller
   as it was: hides after 3 s still, shows on a move (throttled to 300 ms) or any key, pinned while the pointer is on the header or the

@@ -152,17 +152,71 @@ void main() {
     expect(menu.top, greaterThanOrEqualTo(button.bottom - 1));
   });
 
-  testWidgets('Add tracks and Save as playlist are dimmed with "Soon"', (
-    tester,
-  ) async {
+  testWidgets('Add tracks is dimmed with "Soon"', (tester) async {
     await pumpWithPlayer(tester, _actions());
-    for (final tip in [
-      'Add tracks · Coming soon',
-      'Save as playlist · Coming soon',
-    ]) {
-      final button = tester.widget<KIconButton>(byIconButton(tip));
-      expect(button.onPressed, isNull, reason: tip);
-    }
+    final button = tester.widget<KIconButton>(
+      byIconButton('Add tracks · Coming soon'),
+    );
+    expect(button.onPressed, isNull);
+  });
+
+  group('Save as playlist', () {
+    testWidgets('without a host callback it is dimmed with "Soon"', (
+      tester,
+    ) async {
+      await pumpWithPlayer(tester, _actions());
+      final button = tester.widget<KIconButton>(
+        byIconButton('Save as playlist · Coming soon'),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('with a callback and a queue it calls it', (tester) async {
+      var saved = 0;
+      await pumpWithPlayer(
+        tester,
+        Align(
+          alignment: Alignment.topCenter,
+          child: QueueActions(onSave: () => saved++),
+        ),
+      );
+      final button = tester.widget<KIconButton>(
+        byIconButton('Save as playlist'),
+      );
+      expect(button.onPressed, isNotNull);
+      await tester.tap(byIconButton('Save as playlist'));
+      expect(saved, 1);
+    });
+
+    testWidgets('it is disabled while the queue is empty', (tester) async {
+      await pumpWithPlayer(
+        tester,
+        Align(
+          alignment: Alignment.topCenter,
+          child: QueueActions(onSave: () {}),
+        ),
+        play: false,
+      );
+      final button = tester.widget<KIconButton>(
+        byIconButton('Save as playlist'),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('it turns disabled when the queue is cleared', (tester) async {
+      final host = await pumpWithPlayer(
+        tester,
+        Align(
+          alignment: Alignment.topCenter,
+          child: QueueActions(onSave: () {}),
+        ),
+      );
+      await host.run(tester, () => host.h.c.clearQueue());
+      final button = tester.widget<KIconButton>(
+        byIconButton('Save as playlist'),
+      );
+      expect(button.onPressed, isNull);
+    });
   });
 
   testWidgets('Shuffle turns shuffle on and reshuffles the upcoming', (

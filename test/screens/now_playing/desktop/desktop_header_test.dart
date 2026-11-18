@@ -7,7 +7,9 @@ import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_now_playing_he
 import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
 import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+
 import '../../../support/icon_button_finders.dart';
+
 import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
 import '../../../shell/support/desktop_now_playing_host.dart';
@@ -78,13 +80,10 @@ void main() {
 
   testWidgets('unbuilt items are dimmed and inert', (tester) async {
     await _open(tester);
-    for (final tip in [
-      'Add to playlist · Coming soon',
-      'Sleep timer · Coming soon',
-    ]) {
-      final button = tester.widget<KIconButton>(byIconButton(tip));
-      expect(button.onPressed, isNull, reason: tip);
-    }
+    final button = tester.widget<KIconButton>(
+      byIconButton('Sleep timer · Coming soon'),
+    );
+    expect(button.onPressed, isNull);
     final chip = find.ancestor(
       of: find.text('Translate'),
       matching: find.byType(Opacity),

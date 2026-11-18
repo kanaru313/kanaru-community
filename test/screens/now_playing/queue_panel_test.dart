@@ -50,9 +50,7 @@ Future<void> _failingToggle(
 
 void main() {
   group('sheet host', () {
-    testWidgets('head: title and counts, Save (soon), more, close', (
-      tester,
-    ) async {
+    testWidgets('head: title and counts, Save, more, close', (tester) async {
       var closed = 0;
       await pumpWithPlayer(
         tester,
@@ -60,10 +58,8 @@ void main() {
       );
       expect(find.text('Queue'), findsOneWidget);
       expect(find.textContaining('1/6'), findsOneWidget);
-      final save = tester.widget<KIconButton>(
-        byIconButton('Save as playlist · Coming soon'),
-      );
-      expect(save.onPressed, isNull);
+      final save = tester.widget<KIconButton>(byIconButton('Save as playlist'));
+      expect(save.onPressed, isNotNull);
       // Rows carry a ⋮ with the same tooltip: look inside the head menu only.
       expect(
         find.descendant(

@@ -11,6 +11,7 @@ import '../../../playback/ui/queue/queue_header.dart';
 import '../../../playback/ui/queue/queue_list.dart';
 import '../../../playback/ui/queue/queue_row_hooks.dart';
 import '../state/queue_selection.dart';
+import 'now_playing_playlist_actions.dart';
 import 'queue_host.dart';
 import 'queue_row_menu.dart';
 
@@ -73,6 +74,7 @@ class QueuePanel extends ConsumerWidget {
         viaKeyboard: viaKeyboard,
       ),
     );
+    void save() => saveQueueToPlaylist(context, ref);
     // Its own Scaffold: toasts raised here show inside the panel, above the
     // footer, not behind it.
     return Scaffold(
@@ -84,14 +86,19 @@ class QueuePanel extends ConsumerWidget {
                   _SheetHead(
                     onClose: onClose,
                     onSelectMany: queueSelection.selectCurrent,
+                    onSave: save,
                   ),
                 ) ??
                 _SheetHead(
                   onClose: onClose,
                   onSelectMany: queueSelection.selectCurrent,
+                  onSave: save,
                 )
           else
-            _PanelHead(onSelectMany: queueSelection.selectCurrent),
+            _PanelHead(
+              onSelectMany: queueSelection.selectCurrent,
+              onSave: save,
+            ),
           Expanded(
             child: selecting
                 ? Stack(children: [list, const _FloatingBar()])
@@ -138,10 +145,15 @@ class _FloatingBar extends StatelessWidget {
 }
 
 class _SheetHead extends StatelessWidget {
-  const _SheetHead({required this.onClose, required this.onSelectMany});
+  const _SheetHead({
+    required this.onClose,
+    required this.onSelectMany,
+    required this.onSave,
+  });
 
   final VoidCallback? onClose;
   final VoidCallback onSelectMany;
+  final VoidCallback onSave;
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +174,7 @@ class _SheetHead extends StatelessWidget {
               ],
             ),
           ),
-          const QueueSoonButton.save(),
+          QueueSaveButton(onSave: onSave),
           QueueMoreMenu(onSelectMany: onSelectMany),
           KIconButton(
             icon: KIcons.collapse,
@@ -177,9 +189,10 @@ class _SheetHead extends StatelessWidget {
 
 /// Counts on the left, actions on the right, under the panel's own header.
 class _PanelHead extends StatelessWidget {
-  const _PanelHead({required this.onSelectMany});
+  const _PanelHead({required this.onSelectMany, required this.onSave});
 
   final VoidCallback onSelectMany;
+  final VoidCallback onSave;
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +205,7 @@ class _PanelHead extends StatelessWidget {
         child: Row(
           children: [
             const Expanded(child: QueueCounts(mobile: false)),
-            const QueueActions(gap: KSpace.x2),
+            QueueActions(gap: KSpace.x2, onSave: onSave),
             const VerticalDivider(width: KSpace.x2, indent: 12, endIndent: 12),
             QueueMoreMenu(onSelectMany: onSelectMany),
           ],
