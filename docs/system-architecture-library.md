@@ -364,8 +364,8 @@ Dialogs and flows, shared by every entry point (FAB, menus, pages):
   Save, through `playlistEditorProvider`. Unchanged text with no cover change
   closes without a write. Results: gone -> `playlistNotFoundTitle`, cover failure
   -> `plScreensCoverFailed`, saved -> `playlistSaved`, a throw keeps the dialog.
-- **`deletePlaylistFlow(context, summary, {onOwnPage, routeAnimation})`**: confirm,
-  then (own page) leave the page and wait until its route is gone (exit animation
+- **`deletePlaylistFlow(context, summary, {pageRoute})`**: confirm,
+  then (with `pageRoute`, the own page's route) leave the page and wait for `pageRoute.completed` (exit animation
   dismissed or the page element unmounted, at most 1 s) before
   `deletePlaylist`, so the page never shows "not found" while sliding out. All
   objects used after an await (container, root messenger, router) are captured
@@ -382,6 +382,24 @@ Dialogs and flows, shared by every entry point (FAB, menus, pages):
   toast on the root messenger; Undo goes through the open page's controller
   (kept alive by a listener for the call) or the store, and a result of 0 or a
   throw shows `libraryMenuUndoFailed`.
+- **Menus** (`playlists/menu/`): `openPlaylistMenu(context, uid, {onOwnPage,
+  pageRoute, viaKeyboard})` is one `openMenu` builder, so the single-load guard
+  and the 10 s limit apply. On the playlist's own page it first awaits
+  `playlistPageProvider(uid).afterWrites()`, then `loadPlaylist(uid)`; `null`
+  throws `ItemGoneException` (not-found toast, no menu). The snapshot fixes the
+  counts, the playable ids (Play, queue buttons, copy to playlist) and the uids
+  of missing entries ("Remove missing songs" acts on those uids, so entries a
+  scan marks missing later stay). `buildPlaylistMenu` / `buildFavoritesMenu`
+  are pure functions of the snapshot: head = the playlist's row (cover button
+  only for a playlist, not Favorites), `onOwnPage` drops Go to / Play / Shuffle,
+  cleanup rows exist only above 0, Delete lives in Advanced (`pageRoute` goes to
+  `deletePlaylistFlow` on the own page), "Ask AI" is a dimmed non-Pro row.
+  Explanations are `MenuItemSpec.hint` (screen readers); state and warning lines
+  (duplicate and missing counts, "Music files stay") are subtitles. Row bodies
+  (`playlist_menu_actions.dart`) route a removal through the page controller
+  when the page is open, else the store, then show the Undo toast; a gone
+  playlist toasts `libraryNotFoundMessage`, a throw `playlistSaveFailed`.
+  M3U rows call `exportM3u` and stay dimmed while `m3uAvailable` is false.
 - l10n part `plscreens` (`lib/l10n/parts/plscreens_{en,vi}.arb`, prefix
   `plScreens`); every other string reuses the `playlist*` / `library*` keys.
 - Known gap: the dialogs use `AlertDialog` inside `showKDialog` because

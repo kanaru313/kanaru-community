@@ -19,7 +19,11 @@ class TestStore implements PlaylistStore {
       deleteError,
       duplicateError,
       removeError,
-      undoError;
+      undoError,
+      addAllError;
+
+  /// While set, `removeEntries` reports that it removed nothing.
+  bool removeNothing = false;
 
   /// While set, `createPlaylist` waits for it before it forwards.
   Completer<void>? createGate;
@@ -90,6 +94,7 @@ class TestStore implements PlaylistStore {
   ) async {
     await removeGate?.future;
     if (removeError != null) throw removeError!;
+    if (removeNothing) return null;
     return inner.removeEntries(playlistUid, entryUids);
   }
 
@@ -149,6 +154,8 @@ class TestStore implements PlaylistStore {
   }
 
   @override
-  Future<AddToPlaylistsResult> addAllToFavorites(String uid) =>
-      inner.addAllToFavorites(uid);
+  Future<AddToPlaylistsResult> addAllToFavorites(String uid) async {
+    if (addAllError != null) throw addAllError!;
+    return inner.addAllToFavorites(uid);
+  }
 }
