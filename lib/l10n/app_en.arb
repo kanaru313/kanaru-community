@@ -1278,7 +1278,6 @@
   },
   "playlistPickerFavoritesHint": "Songs already there are skipped.",
   "playlistPickerNew": "New playlist…",
-  "playlistPickerNewMessage": "It is added to the list, checked, and only created when you press Add.",
   "playlistPickerNewConfirm": "Add to list",
   "playlistPickerNewBadge": "New",
   "playlistPickerNewHint": "Created when you press Add",
@@ -1314,25 +1313,11 @@
   },
   "playlistAlreadyTitle": "Already in the playlist",
   "playlistAlreadySkip": "Only add new songs",
-  "playlistAlreadySkipHint": "Skip {count, plural, =1{1 song} other{{count} songs}} already there",
-  "@playlistAlreadySkipHint": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "playlistAlreadySkipHint": "Songs already there stay as they are",
   "playlistAlreadyMove": "Add all, drop the old copies",
-  "playlistAlreadyMoveHint": "Duplicates move to the end",
+  "playlistAlreadyMoveHint": "Songs already there move to the end",
   "playlistAlreadyAll": "Add all",
-  "playlistAlreadyAllHint": "{count, plural, =1{1 song} other{{count} songs}} will be there twice",
-  "@playlistAlreadyAllHint": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "playlistAlreadyAllHint": "Songs already there appear twice",
   "playlistAlreadyAppliesToAll": "The choice applies to all of them.",
   "playlistAddedSummary": "Added {songs, plural, =1{1 song} other{{songs} songs}} to {playlists, plural, =1{1 playlist} other{{playlists} playlists}}{newPlaylists, plural, =0{} other{ ({newPlaylists} new)}}{skipped, plural, =0{} other{, skipped {skipped}}}",
   "@playlistAddedSummary": {

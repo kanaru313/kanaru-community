@@ -278,7 +278,6 @@
   },
   "playlistPickerFavoritesHint": "Bài đã có được bỏ qua.",
   "playlistPickerNew": "Playlist mới…",
-  "playlistPickerNewMessage": "Playlist được thêm vào danh sách, đã chọn sẵn, và chỉ được tạo khi bấm Thêm.",
   "playlistPickerNewConfirm": "Thêm vào danh sách",
   "playlistPickerNewBadge": "Mới",
   "playlistPickerNewHint": "Tạo khi bấm Thêm",
@@ -314,25 +313,11 @@
   },
   "playlistAlreadyTitle": "Đã có trong playlist",
   "playlistAlreadySkip": "Chỉ thêm bài chưa có",
-  "playlistAlreadySkipHint": "Bỏ qua {count} bài đã có",
-  "@playlistAlreadySkipHint": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "playlistAlreadySkipHint": "Bài đã có giữ nguyên",
   "playlistAlreadyMove": "Thêm tất cả, bỏ bản cũ",
-  "playlistAlreadyMoveHint": "Các bài trùng chuyển xuống cuối",
+  "playlistAlreadyMoveHint": "Bài đã có chuyển xuống cuối",
   "playlistAlreadyAll": "Thêm tất cả",
-  "playlistAlreadyAllHint": "{count} bài sẽ có hai lần",
-  "@playlistAlreadyAllHint": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
+  "playlistAlreadyAllHint": "Bài đã có sẽ lặp lại",
   "playlistAlreadyAppliesToAll": "Lựa chọn áp dụng cho tất cả.",
   "playlistAddedSummary": "Đã thêm {songs} bài vào {playlists} playlist{newPlaylists, plural, =0{} other{ ({newPlaylists} mới)}}{skipped, plural, =0{} other{, bỏ qua {skipped}}}",
   "@playlistAddedSummary": {

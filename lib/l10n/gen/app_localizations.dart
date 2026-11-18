@@ -3152,12 +3152,6 @@ abstract class AppLocalizations {
   /// **'New playlist…'**
   String get playlistPickerNew;
 
-  /// No description provided for @playlistPickerNewMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'It is added to the list, checked, and only created when you press Add.'**
-  String get playlistPickerNewMessage;
-
   /// No description provided for @playlistPickerNewConfirm.
   ///
   /// In en, this message translates to:
@@ -3227,8 +3221,8 @@ abstract class AppLocalizations {
   /// No description provided for @playlistAlreadySkipHint.
   ///
   /// In en, this message translates to:
-  /// **'Skip {count, plural, =1{1 song} other{{count} songs}} already there'**
-  String playlistAlreadySkipHint(int count);
+  /// **'Songs already there stay as they are'**
+  String get playlistAlreadySkipHint;
 
   /// No description provided for @playlistAlreadyMove.
   ///
@@ -3239,7 +3233,7 @@ abstract class AppLocalizations {
   /// No description provided for @playlistAlreadyMoveHint.
   ///
   /// In en, this message translates to:
-  /// **'Duplicates move to the end'**
+  /// **'Songs already there move to the end'**
   String get playlistAlreadyMoveHint;
 
   /// No description provided for @playlistAlreadyAll.
@@ -3251,8 +3245,8 @@ abstract class AppLocalizations {
   /// No description provided for @playlistAlreadyAllHint.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 song} other{{count} songs}} will be there twice'**
-  String playlistAlreadyAllHint(int count);
+  /// **'Songs already there appear twice'**
+  String get playlistAlreadyAllHint;
 
   /// No description provided for @playlistAlreadyAppliesToAll.
   ///

@@ -165,48 +165,59 @@ void main() {
     await expectOpensAgain(tester, env);
   });
 
-  group('at 360 px and 200 % text the message is read in full', () {
-    final cases = <String, Future<String> Function(WidgetTester, FlowEnv)>{
-      'failed': (tester, env) async {
-        env.store.countErrors.add(StateError('database is locked'));
-        return en.playlistAddFailed;
-      },
-      'timed out': (tester, env) async {
-        env.store.countGate = Completer<void>();
-        return en.plAddTimedOut;
-      },
-      'playlist gone': (tester, env) async {
-        final uid = await env.uidOf(tester, 'A');
-        await env.db(tester, () => env.store.deletePlaylist(uid));
-        return en.playlistAddedGone(1);
-      },
-      'songs gone': (tester, env) async {
-        for (final t in env.tracks) {
-          await env.deleteTrack(tester, t);
-        }
-        return en.plAddSongsGone;
-      },
-    };
-    for (final e in cases.entries) {
-      testWidgets(e.key, (tester) async {
-        final env = await FlowEnv.open(tester);
-        await env.playlist(tester, 'A');
-        await env.start(tester, limit: _limit, textScale: 2);
-        final text = await e.value(tester, env);
+  group(
+    'on the test phone size and 200 % text the message is read in full',
+    () {
+      final cases = <String, Future<String> Function(WidgetTester, FlowEnv)>{
+        'failed': (tester, env) async {
+          env.store.countErrors.add(StateError('database is locked'));
+          return en.playlistAddFailed;
+        },
+        'timed out': (tester, env) async {
+          env.store.countGate = Completer<void>();
+          return en.plAddTimedOut;
+        },
+        'playlist gone': (tester, env) async {
+          final uid = await env.uidOf(tester, 'A');
+          await env.db(tester, () => env.store.deletePlaylist(uid));
+          return en.playlistAddedGone(1);
+        },
+        'songs gone': (tester, env) async {
+          for (final t in env.tracks) {
+            await env.deleteTrack(tester, t);
+          }
+          return en.plAddSongsGone;
+        },
+      };
+      for (final e in cases.entries) {
+        testWidgets(e.key, (tester) async {
+          final env = await FlowEnv.open(tester);
+          await env.playlist(tester, 'A');
+          // Taller window: the test font is twice as wide as the real one, so
+          // the note beside the buttons wraps to many lines at 200 %.
+          await env.start(
+            tester,
+            // The test phone size in dp (392 x 873).
+            size: const Size(392, 873),
+            limit: _limit,
+            textScale: 2,
+          );
+          final text = await e.value(tester, env);
 
-        // At 200 % the list is short: bring the row into view first.
-        await tester.scrollUntilVisible(find.text('A'), 100);
-        await tester.ensureVisible(find.text('A'));
-        await tester.pump();
-        await tick(tester, 'A');
-        await pressAdd(tester);
-        await pumpUntil(tester, () => footerError(text));
+          // At 200 % the list is short: bring the row into view first.
+          await tester.scrollUntilVisible(find.text('A'), 100);
+          await tester.ensureVisible(find.text('A'));
+          await tester.pump();
+          await tick(tester, 'A');
+          await pressAdd(tester);
+          await pumpUntil(tester, () => footerError(text));
 
-        expect(tester.takeException(), isNull);
-        expect(find.text(text).hitTestable(), findsOneWidget);
-      });
-    }
-  });
+          expect(tester.takeException(), isNull);
+          expect(find.text(text).hitTestable(), findsOneWidget);
+        });
+      }
+    },
+  );
 
   testWidgets('ticking back to the failing set does not bring the message '
       'back', (tester) async {

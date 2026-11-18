@@ -46,22 +46,26 @@ FilledButton _confirm(WidgetTester tester) =>
 void main() {
   final l10n = l10nOf('vi');
 
-  testWidgets('shows the message as a visible line, prefilled and selected', (
-    tester,
-  ) async {
-    await _open(tester, initial: 'Chill');
-    expect(find.text(l10n.playlistCreateTitle), findsOneWidget);
-    expect(find.text(l10n.playlistPickerNewMessage), findsOneWidget);
-    final c = _controller(tester);
-    expect(c.text, 'Chill');
-    expect(c.selection, const TextSelection(baseOffset: 0, extentOffset: 5));
-    expect(
-      tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
-      isTrue,
-    );
-    expect(find.text('5 / $playlistNameMaxLength'), findsOneWidget);
-    expect(_confirm(tester).onPressed, isNotNull);
-  });
+  testWidgets(
+    'shows title and field only (no description), prefilled and selected',
+    (tester) async {
+      await _open(tester, initial: 'Chill');
+      expect(find.text(l10n.playlistCreateTitle), findsOneWidget);
+      expect(find.textContaining('chỉ được tạo khi bấm Thêm'), findsNothing);
+      final c = _controller(tester);
+      expect(c.text, 'Chill');
+      expect(c.selection, const TextSelection(baseOffset: 0, extentOffset: 5));
+      expect(
+        tester
+            .widget<EditableText>(find.byType(EditableText))
+            .focusNode
+            .hasFocus,
+        isTrue,
+      );
+      expect(find.text('5 / $playlistNameMaxLength'), findsOneWidget);
+      expect(_confirm(tester).onPressed, isNotNull);
+    },
+  );
 
   testWidgets('empty and too long names show an error and block confirm', (
     tester,
@@ -140,7 +144,7 @@ void main() {
           reduceMotion: reduce,
         );
         expect(tester.takeException(), isNull);
-        expect(find.text(l10n.playlistPickerNewMessage), findsOneWidget);
+        expect(find.text(l10n.playlistCreateTitle), findsOneWidget);
       });
     }
   });

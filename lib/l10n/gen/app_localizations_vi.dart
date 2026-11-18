@@ -1848,10 +1848,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistPickerNew => 'Playlist mới…';
 
   @override
-  String get playlistPickerNewMessage =>
-      'Playlist được thêm vào danh sách, đã chọn sẵn, và chỉ được tạo khi bấm Thêm.';
-
-  @override
   String get playlistPickerNewConfirm => 'Thêm vào danh sách';
 
   @override
@@ -1891,23 +1887,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistAlreadySkip => 'Chỉ thêm bài chưa có';
 
   @override
-  String playlistAlreadySkipHint(int count) {
-    return 'Bỏ qua $count bài đã có';
-  }
+  String get playlistAlreadySkipHint => 'Bài đã có giữ nguyên';
 
   @override
   String get playlistAlreadyMove => 'Thêm tất cả, bỏ bản cũ';
 
   @override
-  String get playlistAlreadyMoveHint => 'Các bài trùng chuyển xuống cuối';
+  String get playlistAlreadyMoveHint => 'Bài đã có chuyển xuống cuối';
 
   @override
   String get playlistAlreadyAll => 'Thêm tất cả';
 
   @override
-  String playlistAlreadyAllHint(int count) {
-    return '$count bài sẽ có hai lần';
-  }
+  String get playlistAlreadyAllHint => 'Bài đã có sẽ lặp lại';
 
   @override
   String get playlistAlreadyAppliesToAll => 'Lựa chọn áp dụng cho tất cả.';

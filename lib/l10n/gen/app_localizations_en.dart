@@ -2033,10 +2033,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistPickerNew => 'New playlist…';
 
   @override
-  String get playlistPickerNewMessage =>
-      'It is added to the list, checked, and only created when you press Add.';
-
-  @override
   String get playlistPickerNewConfirm => 'Add to list';
 
   @override
@@ -2082,35 +2078,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistAlreadySkip => 'Only add new songs';
 
   @override
-  String playlistAlreadySkipHint(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count songs',
-      one: '1 song',
-    );
-    return 'Skip $_temp0 already there';
-  }
+  String get playlistAlreadySkipHint => 'Songs already there stay as they are';
 
   @override
   String get playlistAlreadyMove => 'Add all, drop the old copies';
 
   @override
-  String get playlistAlreadyMoveHint => 'Duplicates move to the end';
+  String get playlistAlreadyMoveHint => 'Songs already there move to the end';
 
   @override
   String get playlistAlreadyAll => 'Add all';
 
   @override
-  String playlistAlreadyAllHint(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count songs',
-      one: '1 song',
-    );
-    return '$_temp0 will be there twice';
-  }
+  String get playlistAlreadyAllHint => 'Songs already there appear twice';
 
   @override
   String get playlistAlreadyAppliesToAll =>

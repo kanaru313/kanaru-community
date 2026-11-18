@@ -40,7 +40,7 @@ Future<DuplicatePolicy?> showAlreadyInPlaylistDialog(
       SelectionOption(
         value: DuplicatePolicy.skipExisting,
         title: Text(l10n.playlistAlreadySkip),
-        subtitle: Text(l10n.playlistAlreadySkipHint(held)),
+        subtitle: Text(l10n.playlistAlreadySkipHint),
       ),
       SelectionOption(
         value: DuplicatePolicy.moveToEnd,
@@ -50,7 +50,7 @@ Future<DuplicatePolicy?> showAlreadyInPlaylistDialog(
       SelectionOption(
         value: DuplicatePolicy.addAll,
         title: Text(l10n.playlistAlreadyAll),
-        subtitle: Text(l10n.playlistAlreadyAllHint(held)),
+        subtitle: Text(l10n.playlistAlreadyAllHint),
       ),
     ],
     selected: DuplicatePolicy.skipExisting,

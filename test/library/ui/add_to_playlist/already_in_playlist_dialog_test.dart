@@ -54,8 +54,8 @@ void main() {
     expect(find.text(l10n.plAddAlreadyInOne(2, 'Chill')), findsOneWidget);
     expect(find.text(l10n.playlistAlreadyAppliesToAll), findsNothing);
     expect(find.byType(SelectionRow), findsNWidgets(3));
-    expect(find.text(l10n.playlistAlreadySkipHint(2)), findsOneWidget);
-    expect(find.text(l10n.playlistAlreadyAllHint(2)), findsOneWidget);
+    expect(find.text(l10n.playlistAlreadySkipHint), findsOneWidget);
+    expect(find.text(l10n.playlistAlreadyAllHint), findsOneWidget);
 
     final handle = tester.ensureSemantics();
     expect(
@@ -82,8 +82,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    // The held songs add up over the playlists.
-    expect(find.text(l10n.playlistAlreadySkipHint(3)), findsOneWidget);
+    expect(find.text(l10n.playlistAlreadySkipHint), findsOneWidget);
   });
 
   testWidgets('Confirm returns the preselected policy', (tester) async {

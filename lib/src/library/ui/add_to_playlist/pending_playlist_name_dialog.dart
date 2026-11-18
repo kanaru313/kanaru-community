@@ -68,8 +68,6 @@ class _PendingNameDialogState extends State<_PendingNameDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.playlistPickerNewMessage),
-            const SizedBox(height: KSpace.x4),
             TextField(
               controller: _controller,
               autofocus: true,
