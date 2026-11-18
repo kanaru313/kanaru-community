@@ -10,6 +10,7 @@ enum PlayContextKind {
   favorites,
   selection,
   queue,
+  playlist,
 }
 
 /// [ref] is the encoded key (album/artist/genre/language) or the folder

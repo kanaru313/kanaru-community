@@ -8,6 +8,8 @@ enum BrowseList {
   folders,
   albumTracks,
   detailSongs,
+  playlists,
+  playlistTracks,
 }
 
 /// What a list can be ordered by. Which criteria a list offers is
@@ -22,7 +24,10 @@ enum SortCriterion {
   duration(SortKind.number),
   trackCount(SortKind.number),
   albumCount(SortKind.number),
-  trackNumber(SortKind.number);
+  trackNumber(SortKind.number),
+  name(SortKind.text),
+  dateModified(SortKind.date),
+  playlistOrder(SortKind.position);
 
   const SortCriterion(this.kind);
 
@@ -32,7 +37,8 @@ enum SortCriterion {
 }
 
 /// What kind of value a [SortCriterion] orders by.
-enum SortKind { text, number, date }
+/// [position] is the order of a hand-arranged list ("First → last").
+enum SortKind { text, number, date, position }
 
 /// A criterion and its direction.
 class SortSpec {
@@ -98,5 +104,17 @@ List<SortCriterion> criteriaOf(BrowseList list) => switch (list) {
     SortCriterion.album,
     SortCriterion.year,
     SortCriterion.duration,
+  ],
+  BrowseList.playlists => const [
+    SortCriterion.dateModified,
+    SortCriterion.name,
+  ],
+  BrowseList.playlistTracks => const [
+    SortCriterion.playlistOrder,
+    SortCriterion.title,
+    SortCriterion.artist,
+    SortCriterion.album,
+    SortCriterion.duration,
+    SortCriterion.playCount,
   ],
 };
