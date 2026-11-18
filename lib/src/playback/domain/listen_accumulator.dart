@@ -1,7 +1,8 @@
 /// Tracks of this length or shorter never count as a listen.
 const listenMinTrackLength = Duration(seconds: 30);
 
-/// A listen needs at most this much listening time, however long the track.
+/// The time that counts when the length of the track is unknown and the rule
+/// has no time part; also the cap of the standard rule.
 const listenMaxRequired = Duration(minutes: 4);
 
 /// The share of a track that counts never exceeds its length minus this: the
@@ -13,22 +14,81 @@ const listenEndSlack = Duration(seconds: 1);
 /// played (ticks delivered late, in a burst); more than that is a seek.
 const listenSeekSlack = Duration(seconds: 1);
 
-/// Listening time that makes a listen of a track [length] long: half of it
-/// (kept below the end), at most four minutes. An unknown length needs the
-/// four minutes.
-Duration listenRequiredFor(Duration? length) {
-  if (length == null) return listenMaxRequired;
-  final half = Duration(microseconds: length.inMicroseconds ~/ 2);
+/// Stops of the "listening time" slider, ms; 0 = no time rule.
+const listenAfterStopsMs = <int>[
+  0,
+  10000,
+  20000,
+  30000,
+  45000,
+  60000,
+  90000,
+  120000,
+  180000,
+  240000,
+  300000,
+  420000,
+  600000,
+];
+
+/// When a listen counts: after [afterMs] of listening (0 = no time rule) or
+/// after [percent] of the track, whichever comes first. 100 % means the
+/// whole track.
+class ListenRule {
+  const ListenRule({required this.afterMs, required this.percent});
+
+  /// A rule from stored numbers: [percent] kept in 10..100 on a step of 5,
+  /// [afterMs] moved to the nearest of [listenAfterStopsMs].
+  factory ListenRule.snapped(int afterMs, int percent) => ListenRule(
+    afterMs: listenAfterStopsMs.reduce(
+      (best, stop) =>
+          (stop - afterMs).abs() < (best - afterMs).abs() ? stop : best,
+    ),
+    percent: ((percent.clamp(10, 100) / 5).round() * 5),
+  );
+
+  /// Four minutes or half of the track.
+  static const standard = ListenRule(afterMs: 240000, percent: 50);
+
+  final int afterMs;
+  final int percent;
+
+  @override
+  bool operator ==(Object other) =>
+      other is ListenRule &&
+      other.afterMs == afterMs &&
+      other.percent == percent;
+
+  @override
+  int get hashCode => Object.hash(afterMs, percent);
+}
+
+/// Listening time that makes a listen of a track [length] long under [rule]:
+/// the earlier of the time rule and the share of the track, kept below the
+/// end. An unknown length needs the time rule, or four minutes without one.
+Duration listenRequiredFor(
+  Duration? length, [
+  ListenRule rule = ListenRule.standard,
+]) {
+  final after = rule.afterMs > 0 ? Duration(milliseconds: rule.afterMs) : null;
+  if (length == null) return after ?? listenMaxRequired;
+  final share = Duration(
+    microseconds: length.inMicroseconds * rule.percent ~/ 100,
+  );
+  final wanted = after != null && after < share ? after : share;
   final reachable = length - listenEndSlack;
-  final needed = half < reachable ? half : reachable;
-  return needed < listenMaxRequired ? needed : listenMaxRequired;
+  return wanted < reachable ? wanted : reachable;
 }
 
 /// Whether [listened] makes a listen of a track [length] long: the track is
 /// longer than 30 s and was heard for [listenRequiredFor] it.
-bool qualifiesAsListen(Duration listened, Duration? length) {
+bool qualifiesAsListen(
+  Duration listened,
+  Duration? length, [
+  ListenRule rule = ListenRule.standard,
+]) {
   if (length != null && length <= listenMinTrackLength) return false;
-  return listened >= listenRequiredFor(length);
+  return listened >= listenRequiredFor(length, rule);
 }
 
 /// Listening time of one load of one entry. Feed it every observation.
@@ -63,8 +123,12 @@ class ListenAccumulator {
   /// Whether the last sample was playing.
   bool get playing => _wasPlaying;
 
-  /// Whether the listen counts now.
-  bool get qualifies => qualifiesAsListen(_listened, _length);
+  /// Whether the listen counts now under the standard rule.
+  bool get qualifies => qualifiesUnder(ListenRule.standard);
+
+  /// Whether the listen counts now under [rule].
+  bool qualifiesUnder(ListenRule rule) =>
+      qualifiesAsListen(_listened, _length, rule);
 
   /// Sets the length once; later values are ignored.
   void lockLength(Duration? length) {

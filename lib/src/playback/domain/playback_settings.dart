@@ -1,5 +1,6 @@
 import '../../media/domain/play_context.dart';
 import '../../platform/domain/setting.dart';
+import 'listen_accumulator.dart';
 import 'repeat_mode.dart';
 
 T _enumByName<T extends Enum>(List<T> values, Object? json) {
@@ -13,7 +14,9 @@ T _enumByName<T extends Enum>(List<T> values, Object? json) {
 
 int _int(Object? json) {
   if (json is int) return json;
-  if (json is double && json == json.roundToDouble()) return json.toInt();
+  if (json is double && json.isFinite && json == json.roundToDouble()) {
+    return json.toInt();
+  }
   throw FormatException('Not an integer: $json');
 }
 
@@ -118,4 +121,50 @@ final Setting<int?> volumeBeforeMuteSetting = Setting<int?>(
   null,
   decode: (json) => json == null ? null : _int(json).clamp(1, 100),
   encode: (v) => v?.clamp(1, 100),
+);
+
+/// Which button of the transport row "previous" is.
+enum PreviousButtonPolicy {
+  /// Always the previous track (today's behaviour).
+  alwaysPrevious,
+
+  /// After 3 s of the track the button restarts it; within the first 3 s it
+  /// goes to the previous track.
+  restartAfter3s,
+}
+
+/// Settings key `playback.previous_button`, default
+/// [PreviousButtonPolicy.alwaysPrevious]. Applies to the buttons and the
+/// system media controls, never to swipes.
+final Setting<PreviousButtonPolicy> previousButtonSetting =
+    Setting<PreviousButtonPolicy>(
+      'playback.previous_button',
+      PreviousButtonPolicy.alwaysPrevious,
+      decode: (json) => enumByName(PreviousButtonPolicy.values, json),
+      encode: (v) => v.name,
+    );
+
+/// Settings key `playback.listen_rule`: `{afterMs, percent}`. Not a map, a
+/// missing or non-finite number reads as the default; numbers off the grid
+/// are snapped to it.
+final Setting<ListenRule> listenRuleSetting = Setting<ListenRule>(
+  'playback.listen_rule',
+  ListenRule.standard,
+  decode: (json) {
+    if (json is! Map) throw FormatException('Not a listen rule: $json');
+    return ListenRule.snapped(_int(json['afterMs']), _int(json['percent']));
+  },
+  encode: (v) => {'afterMs': v.afterMs, 'percent': v.percent},
+);
+
+/// Settings key `playback.history_enabled`, default on. Off: no new listen is
+/// written to the play log; the rows already there stay.
+final Setting<bool> historyEnabledSetting = Setting<bool>(
+  'playback.history_enabled',
+  true,
+  decode: (json) {
+    if (json is bool) return json;
+    throw FormatException('Not a bool: $json');
+  },
+  encode: (v) => v,
 );

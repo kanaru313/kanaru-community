@@ -1643,5 +1643,115 @@
       }
     }
   },
-  "settingsAboutLicense": "License"
+  "settingsAboutLicense": "License",
+  "settingsPlaybackBlockPlay": "Playback",
+  "settingsPlaybackBlockSound": "Sound",
+  "settingsPlaybackBlockHistory": "Listening history",
+  "settingsPlaybackGapless": "Gapless playback",
+  "settingsPlaybackGaplessDesc": "Applies from the next track",
+  "settingsPlaybackFadeIn": "Fade in when playing",
+  "settingsPlaybackFadeOut": "Fade out when pausing",
+  "settingsPlaybackCrossfade": "Crossfade",
+  "settingsPlaybackCrossfadeDesc": "Crossfade: the old track fades out while the new one fades in.",
+  "settingsPlaybackOutputDevice": "Output device",
+  "settingsPlaybackReplayGain": "ReplayGain",
+  "settingsPlaybackPreamp": "Preamp",
+  "settingsPlaybackClipping": "Prevent clipping",
+  "settingsPlaybackClippingDesc": "Lowers the level when the preamp would distort the sound.",
+  "settingsPlaybackOff": "Off",
+  "settingsPlaybackAuto": "Automatic",
+  "settingsPlaybackPreviousButton": "Previous button",
+  "settingsPlaybackPreviousAlways": "Always go to the previous track",
+  "settingsPlaybackPreviousAlwaysDesc": "Default",
+  "settingsPlaybackPreviousRestart": "Restart after 3 seconds",
+  "settingsPlaybackPreviousRestartDesc": "Within the first 3 seconds it goes to the previous track.",
+  "settingsPlaybackHistory": "Record listening history",
+  "settingsPlaybackHistoryDesc": "Used by History, Most played and Continue listening.",
+  "settingsPlaybackHistoryOff": "Off · what was recorded stays",
+  "settingsPlaybackListenRule": "Count a listen after",
+  "settingsPlaybackListenCaption": "A track counts as a listen when it reaches whichever comes first.",
+  "settingsPlaybackListenNeedsHistory": "Turn on Record listening history to use this",
+  "settingsPlaybackListenNoTime": "Not used",
+  "settingsPlaybackListenEndLabel": "Whole track",
+  "settingsPlaybackListenTimeLive": "After {duration} of listening",
+  "@settingsPlaybackListenTimeLive": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlaybackListenNoTimeLive": "Not counted by time",
+  "settingsPlaybackListenPercentLive": "or after {percent} % of the track",
+  "@settingsPlaybackListenPercentLive": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlaybackListenEndLive": "or after the whole track",
+  "settingsPlaybackListenTimeOrPercent": "{duration} or {percent} %",
+  "@settingsPlaybackListenTimeOrPercent": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlaybackListenTimeOrEnd": "{duration} or the whole track",
+  "@settingsPlaybackListenTimeOrEnd": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlaybackListenEnd": "Listen to the end",
+  "settingsPlaybackListenPercentOnly": "{percent} % of the track",
+  "@settingsPlaybackListenPercentOnly": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDurationSeconds": "{seconds, plural, =1{1 second} other{{seconds} seconds}}",
+  "@settingsDurationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDurationMinutes": "{minutes, plural, =1{1 minute} other{{minutes} minutes}}",
+  "@settingsDurationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDurationMinutesSeconds": "{minutes} min {seconds} s",
+  "@settingsDurationMinutesSeconds": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlaybackPreampValue": "{db} dB",
+  "@settingsPlaybackPreampValue": {
+    "placeholders": {
+      "db": {
+        "type": "int"
+      }
+    }
+  }
 }

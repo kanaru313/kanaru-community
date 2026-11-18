@@ -53,5 +53,115 @@
       }
     }
   },
-  "settingsAboutLicense": "Giấy phép"
+  "settingsAboutLicense": "Giấy phép",
+  "settingsPlaybackBlockPlay": "Phát",
+  "settingsPlaybackBlockSound": "Âm thanh",
+  "settingsPlaybackBlockHistory": "Lịch sử nghe",
+  "settingsPlaybackGapless": "Phát liền mạch",
+  "settingsPlaybackGaplessDesc": "Áp dụng từ bài sau",
+  "settingsPlaybackFadeIn": "Tăng dần âm lượng khi phát",
+  "settingsPlaybackFadeOut": "Giảm dần âm lượng khi tạm dừng",
+  "settingsPlaybackCrossfade": "Chuyển bài mờ dần",
+  "settingsPlaybackCrossfadeDesc": "Crossfade: bài cũ nhỏ dần trong khi bài mới to dần.",
+  "settingsPlaybackOutputDevice": "Thiết bị đầu ra",
+  "settingsPlaybackReplayGain": "ReplayGain",
+  "settingsPlaybackPreamp": "Tăng thêm",
+  "settingsPlaybackClipping": "Chống méo tiếng",
+  "settingsPlaybackClippingDesc": "Giảm mức khi tăng thêm làm vỡ tiếng.",
+  "settingsPlaybackOff": "Tắt",
+  "settingsPlaybackAuto": "Tự động",
+  "settingsPlaybackPreviousButton": "Nút Bài trước",
+  "settingsPlaybackPreviousAlways": "Luôn về bài trước",
+  "settingsPlaybackPreviousAlwaysDesc": "Mặc định",
+  "settingsPlaybackPreviousRestart": "Quá 3 giây thì về đầu bài",
+  "settingsPlaybackPreviousRestartDesc": "Bấm trong 3 giây đầu bài thì về bài trước",
+  "settingsPlaybackHistory": "Ghi lịch sử nghe",
+  "settingsPlaybackHistoryDesc": "Dùng cho Lịch sử, Phát nhiều nhất, Nghe tiếp.",
+  "settingsPlaybackHistoryOff": "Đang tắt · lịch sử đã ghi vẫn giữ",
+  "settingsPlaybackListenRule": "Tính một lượt nghe sau",
+  "settingsPlaybackListenCaption": "Bài được tính một lượt nghe khi tới mốc nào trước.",
+  "settingsPlaybackListenNeedsHistory": "Bật Ghi lịch sử nghe để dùng",
+  "settingsPlaybackListenNoTime": "Không dùng",
+  "settingsPlaybackListenEndLabel": "Hết bài",
+  "settingsPlaybackListenTimeLive": "Sau {duration} nghe",
+  "@settingsPlaybackListenTimeLive": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlaybackListenNoTimeLive": "Không tính theo thời gian",
+  "settingsPlaybackListenPercentLive": "hoặc khi nghe {percent} % bài",
+  "@settingsPlaybackListenPercentLive": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlaybackListenEndLive": "hoặc khi nghe hết bài",
+  "settingsPlaybackListenTimeOrPercent": "{duration} hoặc {percent} %",
+  "@settingsPlaybackListenTimeOrPercent": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlaybackListenTimeOrEnd": "{duration} hoặc hết bài",
+  "@settingsPlaybackListenTimeOrEnd": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlaybackListenEnd": "Nghe hết bài",
+  "settingsPlaybackListenPercentOnly": "{percent} % bài",
+  "@settingsPlaybackListenPercentOnly": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDurationSeconds": "{seconds} giây",
+  "@settingsDurationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDurationMinutes": "{minutes} phút",
+  "@settingsDurationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDurationMinutesSeconds": "{minutes} phút {seconds} giây",
+  "@settingsDurationMinutesSeconds": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlaybackPreampValue": "{db} dB",
+  "@settingsPlaybackPreampValue": {
+    "placeholders": {
+      "db": {
+        "type": "int"
+      }
+    }
+  }
 }

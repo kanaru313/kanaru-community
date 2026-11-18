@@ -40,8 +40,18 @@ void main() {
     ]) {
       expect(find.text(name), findsOneWidget, reason: name);
     }
-    // Only Appearance and About are built here; the rest wait.
-    expect(find.text('Coming soon'), findsNWidgets(9));
+    // Appearance, Playback and About are built here; the rest wait.
+    expect(find.text('Coming soon'), findsNWidgets(8));
+  });
+
+  testWidgets('the Playback row opens its page', (tester) async {
+    final h = await pumpSettings(tester, size: const Size(400, 1600));
+    await tester.tap(find.text('Playback'));
+    await tester.pumpAndSettle();
+    expect(
+      h.router.routerDelegate.currentConfiguration.last.matchedLocation,
+      SettingsPaths.playback,
+    );
   });
 
   testWidgets('integrations summary follows the shell', (tester) async {
@@ -95,7 +105,7 @@ void main() {
       expect(find.text('Activated'), findsOneWidget);
       expect(find.text('PRO'), findsNothing);
       // The Pro row is no longer one of the coming-soon rows.
-      expect(find.text('Coming soon'), findsNWidgets(8));
+      expect(find.text('Coming soon'), findsNWidgets(7));
     });
   });
 

@@ -2565,4 +2565,164 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAboutLicense => 'License';
+
+  @override
+  String get settingsPlaybackBlockPlay => 'Playback';
+
+  @override
+  String get settingsPlaybackBlockSound => 'Sound';
+
+  @override
+  String get settingsPlaybackBlockHistory => 'Listening history';
+
+  @override
+  String get settingsPlaybackGapless => 'Gapless playback';
+
+  @override
+  String get settingsPlaybackGaplessDesc => 'Applies from the next track';
+
+  @override
+  String get settingsPlaybackFadeIn => 'Fade in when playing';
+
+  @override
+  String get settingsPlaybackFadeOut => 'Fade out when pausing';
+
+  @override
+  String get settingsPlaybackCrossfade => 'Crossfade';
+
+  @override
+  String get settingsPlaybackCrossfadeDesc =>
+      'Crossfade: the old track fades out while the new one fades in.';
+
+  @override
+  String get settingsPlaybackOutputDevice => 'Output device';
+
+  @override
+  String get settingsPlaybackReplayGain => 'ReplayGain';
+
+  @override
+  String get settingsPlaybackPreamp => 'Preamp';
+
+  @override
+  String get settingsPlaybackClipping => 'Prevent clipping';
+
+  @override
+  String get settingsPlaybackClippingDesc =>
+      'Lowers the level when the preamp would distort the sound.';
+
+  @override
+  String get settingsPlaybackOff => 'Off';
+
+  @override
+  String get settingsPlaybackAuto => 'Automatic';
+
+  @override
+  String get settingsPlaybackPreviousButton => 'Previous button';
+
+  @override
+  String get settingsPlaybackPreviousAlways =>
+      'Always go to the previous track';
+
+  @override
+  String get settingsPlaybackPreviousAlwaysDesc => 'Default';
+
+  @override
+  String get settingsPlaybackPreviousRestart => 'Restart after 3 seconds';
+
+  @override
+  String get settingsPlaybackPreviousRestartDesc =>
+      'Within the first 3 seconds it goes to the previous track.';
+
+  @override
+  String get settingsPlaybackHistory => 'Record listening history';
+
+  @override
+  String get settingsPlaybackHistoryDesc =>
+      'Used by History, Most played and Continue listening.';
+
+  @override
+  String get settingsPlaybackHistoryOff => 'Off · what was recorded stays';
+
+  @override
+  String get settingsPlaybackListenRule => 'Count a listen after';
+
+  @override
+  String get settingsPlaybackListenCaption =>
+      'A track counts as a listen when it reaches whichever comes first.';
+
+  @override
+  String get settingsPlaybackListenNeedsHistory =>
+      'Turn on Record listening history to use this';
+
+  @override
+  String get settingsPlaybackListenNoTime => 'Not used';
+
+  @override
+  String get settingsPlaybackListenEndLabel => 'Whole track';
+
+  @override
+  String settingsPlaybackListenTimeLive(String duration) {
+    return 'After $duration of listening';
+  }
+
+  @override
+  String get settingsPlaybackListenNoTimeLive => 'Not counted by time';
+
+  @override
+  String settingsPlaybackListenPercentLive(int percent) {
+    return 'or after $percent % of the track';
+  }
+
+  @override
+  String get settingsPlaybackListenEndLive => 'or after the whole track';
+
+  @override
+  String settingsPlaybackListenTimeOrPercent(String duration, int percent) {
+    return '$duration or $percent %';
+  }
+
+  @override
+  String settingsPlaybackListenTimeOrEnd(String duration) {
+    return '$duration or the whole track';
+  }
+
+  @override
+  String get settingsPlaybackListenEnd => 'Listen to the end';
+
+  @override
+  String settingsPlaybackListenPercentOnly(int percent) {
+    return '$percent % of the track';
+  }
+
+  @override
+  String settingsDurationSeconds(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: '$seconds seconds',
+      one: '1 second',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsDurationMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsDurationMinutesSeconds(int minutes, int seconds) {
+    return '$minutes min $seconds s';
+  }
+
+  @override
+  String settingsPlaybackPreampValue(int db) {
+    return '$db dB';
+  }
 }

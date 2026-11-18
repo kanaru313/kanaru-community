@@ -107,6 +107,10 @@ class PlayerController implements PlaybackCommands {
   static const _seekGuard = Duration(seconds: 3);
   static const _seekLanded = Duration(seconds: 1);
 
+  /// Past this much of the track, a "previous" button press restarts it (when
+  /// the setting asks for that).
+  static const _previousRestartAfter = Duration(seconds: 3);
+
   /// Where the next load starts. Commands set it; the live [_position] never
   /// feeds a load, so a tick of the old file cannot leak into the new one.
   Duration _startAt = Duration.zero;
@@ -475,6 +479,10 @@ class PlayerController implements PlaybackCommands {
   /// Always the previous entry; at the first one, back to the start.
   Future<void> previous() => _cmd(() async {
     if (_queue.items.isEmpty) return;
+    await _previousBody();
+  });
+
+  Future<void> _previousBody() async {
     final i = previousIndex(_queue);
     if (i == null) {
       _notice(const FirstTrack());
@@ -482,6 +490,23 @@ class PlayerController implements PlaybackCommands {
       return;
     }
     _jump(i);
+  }
+
+  /// "Previous" from a button or the system media controls. With the
+  /// restart policy on and the track past [_previousRestartAfter] it restarts
+  /// the track; otherwise it is [previous]. The policy is read when the
+  /// command runs, with the same position the seek bar shows. Swipes call
+  /// [previous] directly: they animate to the previous card.
+  Future<void> previousPressed() => _cmd(() async {
+    if (_queue.items.isEmpty) return;
+    final restart =
+        readSetting(_settings, previousButtonSetting) ==
+        PreviousButtonPolicy.restartAfter3s;
+    if (restart && _position > _previousRestartAfter) {
+      await _seekTo(Duration.zero);
+      return;
+    }
+    await _previousBody();
   });
 
   Future<void> playEntry(int entryId) => _cmd(() async {

@@ -50,10 +50,11 @@ class SettingsRootPage extends ConsumerWidget {
                       ? l10n.settingsRootLibraryMissingPermission
                       : ''),
             ),
-            SoonRow(
+            SetupValueRow(
               icon: KIcons.playCircle,
               title: Text(l10n.settingsRootPlayback),
-              desc: l10n.settingsRootPlaybackDesc,
+              value: Text(l10n.settingsRootPlaybackDesc),
+              onTap: () => context.push(SettingsPaths.playback),
             ),
             SoonRow(
               icon: KIcons.lyrics,

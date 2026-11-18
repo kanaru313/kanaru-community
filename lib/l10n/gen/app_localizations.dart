@@ -3821,6 +3821,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'License'**
   String get settingsAboutLicense;
+
+  /// No description provided for @settingsPlaybackBlockPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback'**
+  String get settingsPlaybackBlockPlay;
+
+  /// No description provided for @settingsPlaybackBlockSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get settingsPlaybackBlockSound;
+
+  /// No description provided for @settingsPlaybackBlockHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening history'**
+  String get settingsPlaybackBlockHistory;
+
+  /// No description provided for @settingsPlaybackGapless.
+  ///
+  /// In en, this message translates to:
+  /// **'Gapless playback'**
+  String get settingsPlaybackGapless;
+
+  /// No description provided for @settingsPlaybackGaplessDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies from the next track'**
+  String get settingsPlaybackGaplessDesc;
+
+  /// No description provided for @settingsPlaybackFadeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Fade in when playing'**
+  String get settingsPlaybackFadeIn;
+
+  /// No description provided for @settingsPlaybackFadeOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Fade out when pausing'**
+  String get settingsPlaybackFadeOut;
+
+  /// No description provided for @settingsPlaybackCrossfade.
+  ///
+  /// In en, this message translates to:
+  /// **'Crossfade'**
+  String get settingsPlaybackCrossfade;
+
+  /// No description provided for @settingsPlaybackCrossfadeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Crossfade: the old track fades out while the new one fades in.'**
+  String get settingsPlaybackCrossfadeDesc;
+
+  /// No description provided for @settingsPlaybackOutputDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Output device'**
+  String get settingsPlaybackOutputDevice;
+
+  /// No description provided for @settingsPlaybackReplayGain.
+  ///
+  /// In en, this message translates to:
+  /// **'ReplayGain'**
+  String get settingsPlaybackReplayGain;
+
+  /// No description provided for @settingsPlaybackPreamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Preamp'**
+  String get settingsPlaybackPreamp;
+
+  /// No description provided for @settingsPlaybackClipping.
+  ///
+  /// In en, this message translates to:
+  /// **'Prevent clipping'**
+  String get settingsPlaybackClipping;
+
+  /// No description provided for @settingsPlaybackClippingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowers the level when the preamp would distort the sound.'**
+  String get settingsPlaybackClippingDesc;
+
+  /// No description provided for @settingsPlaybackOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get settingsPlaybackOff;
+
+  /// No description provided for @settingsPlaybackAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get settingsPlaybackAuto;
+
+  /// No description provided for @settingsPlaybackPreviousButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous button'**
+  String get settingsPlaybackPreviousButton;
+
+  /// No description provided for @settingsPlaybackPreviousAlways.
+  ///
+  /// In en, this message translates to:
+  /// **'Always go to the previous track'**
+  String get settingsPlaybackPreviousAlways;
+
+  /// No description provided for @settingsPlaybackPreviousAlwaysDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get settingsPlaybackPreviousAlwaysDesc;
+
+  /// No description provided for @settingsPlaybackPreviousRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart after 3 seconds'**
+  String get settingsPlaybackPreviousRestart;
+
+  /// No description provided for @settingsPlaybackPreviousRestartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Within the first 3 seconds it goes to the previous track.'**
+  String get settingsPlaybackPreviousRestartDesc;
+
+  /// No description provided for @settingsPlaybackHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Record listening history'**
+  String get settingsPlaybackHistory;
+
+  /// No description provided for @settingsPlaybackHistoryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Used by History, Most played and Continue listening.'**
+  String get settingsPlaybackHistoryDesc;
+
+  /// No description provided for @settingsPlaybackHistoryOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off · what was recorded stays'**
+  String get settingsPlaybackHistoryOff;
+
+  /// No description provided for @settingsPlaybackListenRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Count a listen after'**
+  String get settingsPlaybackListenRule;
+
+  /// No description provided for @settingsPlaybackListenCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'A track counts as a listen when it reaches whichever comes first.'**
+  String get settingsPlaybackListenCaption;
+
+  /// No description provided for @settingsPlaybackListenNeedsHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Record listening history to use this'**
+  String get settingsPlaybackListenNeedsHistory;
+
+  /// No description provided for @settingsPlaybackListenNoTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Not used'**
+  String get settingsPlaybackListenNoTime;
+
+  /// No description provided for @settingsPlaybackListenEndLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole track'**
+  String get settingsPlaybackListenEndLabel;
+
+  /// No description provided for @settingsPlaybackListenTimeLive.
+  ///
+  /// In en, this message translates to:
+  /// **'After {duration} of listening'**
+  String settingsPlaybackListenTimeLive(String duration);
+
+  /// No description provided for @settingsPlaybackListenNoTimeLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Not counted by time'**
+  String get settingsPlaybackListenNoTimeLive;
+
+  /// No description provided for @settingsPlaybackListenPercentLive.
+  ///
+  /// In en, this message translates to:
+  /// **'or after {percent} % of the track'**
+  String settingsPlaybackListenPercentLive(int percent);
+
+  /// No description provided for @settingsPlaybackListenEndLive.
+  ///
+  /// In en, this message translates to:
+  /// **'or after the whole track'**
+  String get settingsPlaybackListenEndLive;
+
+  /// No description provided for @settingsPlaybackListenTimeOrPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} or {percent} %'**
+  String settingsPlaybackListenTimeOrPercent(String duration, int percent);
+
+  /// No description provided for @settingsPlaybackListenTimeOrEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} or the whole track'**
+  String settingsPlaybackListenTimeOrEnd(String duration);
+
+  /// No description provided for @settingsPlaybackListenEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen to the end'**
+  String get settingsPlaybackListenEnd;
+
+  /// No description provided for @settingsPlaybackListenPercentOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} % of the track'**
+  String settingsPlaybackListenPercentOnly(int percent);
+
+  /// No description provided for @settingsDurationSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds, plural, =1{1 second} other{{seconds} seconds}}'**
+  String settingsDurationSeconds(int seconds);
+
+  /// No description provided for @settingsDurationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =1{1 minute} other{{minutes} minutes}}'**
+  String settingsDurationMinutes(int minutes);
+
+  /// No description provided for @settingsDurationMinutesSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min {seconds} s'**
+  String settingsDurationMinutesSeconds(int minutes, int seconds);
+
+  /// No description provided for @settingsPlaybackPreampValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{db} dB'**
+  String settingsPlaybackPreampValue(int db);
 }
 
 class _AppLocalizationsDelegate

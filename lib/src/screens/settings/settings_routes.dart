@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'ui/about/about_settings_page.dart';
 import 'ui/appearance/appearance_settings_page.dart';
 import 'ui/appearance/seek_bar_style_page.dart';
+import 'ui/playback/playback_settings_page.dart';
 import 'ui/root/settings_root_page.dart';
 
 /// Locations of the Settings pages. A page's header back arrow leads to its
@@ -11,6 +12,7 @@ abstract final class SettingsPaths {
   static const root = '/settings';
   static const appearance = '/settings/appearance';
   static const seekBar = '/settings/appearance/seek-bar';
+  static const playback = '/settings/playback';
   static const about = '/settings/about';
 }
 
@@ -26,6 +28,7 @@ GoRoute buildSettingsRoute() => GoRoute(
         GoRoute(path: 'seek-bar', builder: (_, _) => const SeekBarStylePage()),
       ],
     ),
+    GoRoute(path: 'playback', builder: (_, _) => const PlaybackSettingsPage()),
     GoRoute(path: 'about', builder: (_, _) => const AboutSettingsPage()),
   ],
 );

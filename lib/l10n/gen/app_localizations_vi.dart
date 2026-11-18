@@ -2295,4 +2295,151 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsAboutLicense => 'Giấy phép';
+
+  @override
+  String get settingsPlaybackBlockPlay => 'Phát';
+
+  @override
+  String get settingsPlaybackBlockSound => 'Âm thanh';
+
+  @override
+  String get settingsPlaybackBlockHistory => 'Lịch sử nghe';
+
+  @override
+  String get settingsPlaybackGapless => 'Phát liền mạch';
+
+  @override
+  String get settingsPlaybackGaplessDesc => 'Áp dụng từ bài sau';
+
+  @override
+  String get settingsPlaybackFadeIn => 'Tăng dần âm lượng khi phát';
+
+  @override
+  String get settingsPlaybackFadeOut => 'Giảm dần âm lượng khi tạm dừng';
+
+  @override
+  String get settingsPlaybackCrossfade => 'Chuyển bài mờ dần';
+
+  @override
+  String get settingsPlaybackCrossfadeDesc =>
+      'Crossfade: bài cũ nhỏ dần trong khi bài mới to dần.';
+
+  @override
+  String get settingsPlaybackOutputDevice => 'Thiết bị đầu ra';
+
+  @override
+  String get settingsPlaybackReplayGain => 'ReplayGain';
+
+  @override
+  String get settingsPlaybackPreamp => 'Tăng thêm';
+
+  @override
+  String get settingsPlaybackClipping => 'Chống méo tiếng';
+
+  @override
+  String get settingsPlaybackClippingDesc =>
+      'Giảm mức khi tăng thêm làm vỡ tiếng.';
+
+  @override
+  String get settingsPlaybackOff => 'Tắt';
+
+  @override
+  String get settingsPlaybackAuto => 'Tự động';
+
+  @override
+  String get settingsPlaybackPreviousButton => 'Nút Bài trước';
+
+  @override
+  String get settingsPlaybackPreviousAlways => 'Luôn về bài trước';
+
+  @override
+  String get settingsPlaybackPreviousAlwaysDesc => 'Mặc định';
+
+  @override
+  String get settingsPlaybackPreviousRestart => 'Quá 3 giây thì về đầu bài';
+
+  @override
+  String get settingsPlaybackPreviousRestartDesc =>
+      'Bấm trong 3 giây đầu bài thì về bài trước';
+
+  @override
+  String get settingsPlaybackHistory => 'Ghi lịch sử nghe';
+
+  @override
+  String get settingsPlaybackHistoryDesc =>
+      'Dùng cho Lịch sử, Phát nhiều nhất, Nghe tiếp.';
+
+  @override
+  String get settingsPlaybackHistoryOff => 'Đang tắt · lịch sử đã ghi vẫn giữ';
+
+  @override
+  String get settingsPlaybackListenRule => 'Tính một lượt nghe sau';
+
+  @override
+  String get settingsPlaybackListenCaption =>
+      'Bài được tính một lượt nghe khi tới mốc nào trước.';
+
+  @override
+  String get settingsPlaybackListenNeedsHistory =>
+      'Bật Ghi lịch sử nghe để dùng';
+
+  @override
+  String get settingsPlaybackListenNoTime => 'Không dùng';
+
+  @override
+  String get settingsPlaybackListenEndLabel => 'Hết bài';
+
+  @override
+  String settingsPlaybackListenTimeLive(String duration) {
+    return 'Sau $duration nghe';
+  }
+
+  @override
+  String get settingsPlaybackListenNoTimeLive => 'Không tính theo thời gian';
+
+  @override
+  String settingsPlaybackListenPercentLive(int percent) {
+    return 'hoặc khi nghe $percent % bài';
+  }
+
+  @override
+  String get settingsPlaybackListenEndLive => 'hoặc khi nghe hết bài';
+
+  @override
+  String settingsPlaybackListenTimeOrPercent(String duration, int percent) {
+    return '$duration hoặc $percent %';
+  }
+
+  @override
+  String settingsPlaybackListenTimeOrEnd(String duration) {
+    return '$duration hoặc hết bài';
+  }
+
+  @override
+  String get settingsPlaybackListenEnd => 'Nghe hết bài';
+
+  @override
+  String settingsPlaybackListenPercentOnly(int percent) {
+    return '$percent % bài';
+  }
+
+  @override
+  String settingsDurationSeconds(int seconds) {
+    return '$seconds giây';
+  }
+
+  @override
+  String settingsDurationMinutes(int minutes) {
+    return '$minutes phút';
+  }
+
+  @override
+  String settingsDurationMinutesSeconds(int minutes, int seconds) {
+    return '$minutes phút $seconds giây';
+  }
+
+  @override
+  String settingsPlaybackPreampValue(int db) {
+    return '$db dB';
+  }
 }
