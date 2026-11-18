@@ -146,7 +146,7 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   `false`), and the cover rule (the first distinct album covers in playlist
   order, one track without album counts as its own group).
 - **`PlaylistStore`** (`playlist_store.dart`, implemented by
-  `PlaylistRepository`): `watchSummaries`, `watchPlaylist`, `loadPlaylist`,
+  `PlaylistRepository`): `watchSummaries` (also re-emits when track rows change, so covers and durations follow a scan), `watchPlaylist`, `loadPlaylist`,
   `countExisting`, `createPlaylist`, `createImportedPlaylist`, `updatePlaylist`,
   `deletePlaylist`, `addToPlaylists` (duplicate policy `skipExisting`,
   `moveToEnd`, `addAll` applies only to targets that already hold a batch
@@ -234,10 +234,9 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   `covers/pick_custom_cover.dart` (custom-cover picker lane). All show the
   "coming soon" snack bar or nothing.
 - **`PlaylistCover({uid, autoCoverKeys, dimension, radius, automaticOnly})`**:
-  Favorites is a heart tile (`primaryContainer`; it has no custom cover). Others
+  Favorites is a heart tile (icon at 0.42 of the side on `primaryContainer`; it has no custom cover). Others
   show the custom cover when there is one, else the automatic one: 2 to 4 keys
-  in a `KCoverMosaic`, 1 key as that cover, none as a placeholder icon seeded by
-  the uid. `automaticOnly` skips the custom cover (the Edit preview). Size
+  in a `KCoverMosaic`, 1 key as that cover, none as a neutral tile (`surfaceContainerHighest`, playlist icon in `onSurfaceVariant` at 0.42 of the side). `automaticOnly` skips the custom cover (the Edit preview). Size
   rule: when the decoded side (`dimension`, or the mosaic tile's longer side)
   times the device pixel ratio is above 256, it reads the `full` file, else the
   `thumb`; a thumb path is derived from the key of the cover shown, so it never
