@@ -1,0 +1,136 @@
+import 'dart:io';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/domain/custom_cover_controller.dart';
+import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
+import 'package:kanaru/src/library/domain/playlists/playlist_store.dart';
+import 'package:kanaru/src/library/state/playlists/playlist_editor.dart';
+
+class _Store implements PlaylistStore {
+  PlaylistUpdate result = PlaylistUpdate.saved;
+  Object? error;
+  final calls = <(String, String?, String?)>[];
+
+  @override
+  Future<PlaylistUpdate> updatePlaylist(
+    String uid, {
+    String? name,
+    String? description,
+  }) async {
+    calls.add((uid, name, description));
+    if (error != null) throw error!;
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _Covers implements CustomCoverController {
+  final log = <String>[];
+  Object? error;
+
+  @override
+  Future<void> importCover(
+    CustomCoverKind kind,
+    String itemKey,
+    File source,
+  ) async {
+    log.add('import ${kind.name} $itemKey ${source.path}');
+    if (error != null) throw error!;
+  }
+
+  @override
+  Future<void> removeCover(CustomCoverKind kind, String itemKey) async {
+    log.add('remove ${kind.name} $itemKey');
+    if (error != null) throw error!;
+  }
+
+  @override
+  Future<int> collectUnreferencedFiles() async => 0;
+}
+
+void main() {
+  late _Store store;
+  late _Covers covers;
+  late PlaylistEditor editor;
+
+  setUp(() {
+    store = _Store();
+    covers = _Covers();
+    editor = PlaylistEditor(store, covers);
+  });
+
+  test('keep writes the text only', () async {
+    final r = await editor.save('p', name: 'N', description: 'D');
+    expect(r, const PlaylistEditResult(text: PlaylistUpdate.saved));
+    expect(store.calls, [('p', 'N', 'D')]);
+    expect(covers.log, isEmpty);
+  });
+
+  test('automatic removes the custom cover after the text', () async {
+    final r = await editor.save(
+      'p',
+      name: 'N',
+      description: '',
+      cover: const PlaylistCoverEdit.automatic(),
+    );
+    expect(r.coverFailed, isFalse);
+    expect(covers.log, ['remove playlist p']);
+  });
+
+  test(
+    'file imports the image; unchanged text still applies the cover',
+    () async {
+      store.result = PlaylistUpdate.unchanged;
+      final r = await editor.save(
+        'p',
+        name: 'N',
+        description: '',
+        cover: PlaylistCoverEdit.file(File('/x/a.png')),
+      );
+      expect(r.text, PlaylistUpdate.unchanged);
+      expect(covers.log, ['import playlist p /x/a.png']);
+    },
+  );
+
+  test('a playlist that is gone skips the cover', () async {
+    store.result = PlaylistUpdate.gone;
+    final r = await editor.save(
+      'p',
+      name: 'N',
+      description: '',
+      cover: const PlaylistCoverEdit.automatic(),
+    );
+    expect(r.text, PlaylistUpdate.gone);
+    expect(covers.log, isEmpty);
+  });
+
+  test('a cover failure keeps the saved text and is reported', () async {
+    covers.error = const FileSystemException('disk full');
+    final r = await editor.save(
+      'p',
+      name: 'N',
+      description: '',
+      cover: PlaylistCoverEdit.file(File('/x/a.png')),
+    );
+    expect(
+      r,
+      const PlaylistEditResult(text: PlaylistUpdate.saved, coverFailed: true),
+    );
+  });
+
+  test('an invalid text propagates and touches no cover', () async {
+    store.error = ArgumentError('name');
+    await expectLater(
+      editor.save(
+        'p',
+        name: '',
+        description: '',
+        cover: const PlaylistCoverEdit.automatic(),
+      ),
+      throwsArgumentError,
+    );
+    expect(covers.log, isEmpty);
+  });
+}
