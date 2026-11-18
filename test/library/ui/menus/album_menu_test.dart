@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/library/ui/menus/album_menu.dart';
 import 'package:kanaru/src/library/ui/menus/menu_model.dart';
@@ -10,6 +11,7 @@ import 'menu_fixtures.dart';
 MenuSpec _menu({
   MenuOrigin origin = const MenuOrigin.list(),
   List<int> folders = const [3],
+  int tracks = 3,
   bool canReveal = true,
 }) {
   final album = albumSummary('Blue', 'Miles', tracks: 3);
@@ -17,7 +19,7 @@ MenuSpec _menu({
     AlbumMenuData(
       album: album,
       key: albumKeyOf('Blue', 'Miles'),
-      ids: trackIds(3),
+      ids: trackIds(tracks),
       folders: [for (final n in folders) folderRef('Dir$n', songs: n)],
     ),
     origin,
@@ -26,6 +28,24 @@ MenuSpec _menu({
 }
 
 void main() {
+  test('add to playlist takes the album ids and says where they come from', () {
+    final spec = _menu();
+    expect(
+      rowOf(spec, MenuItemId.playlist).action,
+      MenuAction.addToPlaylist(
+        AddToPlaylistRequest(tracks: trackIds(3), sourceLabel: 'from Blue'),
+      ),
+    );
+    expect(rowOf(spec, MenuItemId.playlist).soon, isFalse);
+    expect(rowOf(spec, MenuItemId.playlist).active, isTrue);
+  });
+
+  test('add to playlist is disabled for an album without tracks', () {
+    final row = rowOf(_menu(tracks: 0), MenuItemId.playlist);
+    expect(row.soon, isFalse);
+    expect(row.active, isFalse);
+  });
+
   test('rows of an album menu and its queue ids', () {
     final spec = _menu();
     expect(rowIds(spec.groups), [
@@ -71,7 +91,6 @@ void main() {
   test('dimmed set', () {
     final spec = _menu();
     for (final id in [
-      MenuItemId.playlist,
       MenuItemId.edit,
       MenuItemId.ai,
       MenuItemId.hide,

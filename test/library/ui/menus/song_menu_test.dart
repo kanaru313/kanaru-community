@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/library/ui/menus/menu_model.dart';
 import 'package:kanaru/src/library/ui/menus/menu_origin.dart';
@@ -36,6 +37,43 @@ MenuSpec _menu({
 );
 
 void main() {
+  test('add to playlist takes the song and its title', () {
+    expect(
+      rowOf(_menu(), MenuItemId.playlist).action,
+      MenuAction.addToPlaylist(
+        AddToPlaylistRequest(tracks: [TrackId(1)], sourceLabel: 'So What'),
+      ),
+    );
+  });
+
+  test('on a playlist page the add picker leaves that playlist out', () {
+    expect(
+      rowOf(
+        _menu(origin: const MenuOrigin.playlist('p1')),
+        MenuItemId.playlist,
+      ).action,
+      MenuAction.addToPlaylist(
+        AddToPlaylistRequest(
+          tracks: [TrackId(1)],
+          sourceLabel: 'So What',
+          excludePlaylistUid: 'p1',
+        ),
+      ),
+    );
+    for (final origin in [
+      const MenuOrigin.list(),
+      const MenuOrigin.own(),
+      const MenuOrigin.genre('indie'),
+    ]) {
+      final action = rowOf(_menu(origin: origin), MenuItemId.playlist).action;
+      expect(
+        (action as AddToPlaylistAction).request.excludePlaylistUid,
+        isNull,
+        reason: '$origin',
+      );
+    }
+  });
+
   test('rows of a song in a list, and the queue ids captured', () {
     final spec = _menu();
     expect(rowIds(spec.groups), [
@@ -62,7 +100,6 @@ void main() {
   test('rows that are not built are dimmed with the coming-soon label', () {
     final spec = _menu();
     for (final id in [
-      MenuItemId.playlist,
       MenuItemId.edit,
       MenuItemId.ai,
       MenuItemId.lyrics,
@@ -74,6 +111,8 @@ void main() {
     }
     expect(rowOf(spec, MenuItemId.ai).pro, isTrue);
     expect(rowOf(spec, MenuItemId.delete).danger, isTrue);
+    expect(rowOf(spec, MenuItemId.playlist).soon, isFalse);
+    expect(rowOf(spec, MenuItemId.playlist).active, isTrue);
     expect(rowOf(spec, MenuItemId.favorite).active, isTrue);
     expect(rowOf(spec, MenuItemId.select).active, isTrue);
   });

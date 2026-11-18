@@ -125,11 +125,7 @@ MenuSpec buildGroupMenu(GroupMenuData data, MenuOrigin origin, MenuEnv env) {
       [if (!own) goOwn, albumLink.item, ?folderLink?.item],
       [
         ...playRows(l10n, data.ids, context, own: own),
-        soonRow(
-          MenuItemId.playlist,
-          KIcons.playlistAdd,
-          l10n.libraryMenuAddToPlaylist,
-        ),
+        addToPlaylistRow(l10n, data.ids, l10n.playlistPickerFrom(data.name)),
         favoriteAllRow(l10n, data.ids),
         if (genre)
           soonRow(

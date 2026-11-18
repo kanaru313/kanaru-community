@@ -104,10 +104,10 @@ MenuSpec buildAlbumMenu(AlbumMenuData data, MenuOrigin origin, MenuEnv env) {
         ],
         [
           ...playRows(l10n, data.ids, context, own: own),
-          soonRow(
-            MenuItemId.playlist,
-            KIcons.playlistAdd,
-            l10n.libraryMenuAddToPlaylist,
+          addToPlaylistRow(
+            l10n,
+            data.ids,
+            l10n.playlistPickerFrom(album.title),
           ),
           favoriteAllRow(l10n, data.ids),
           soonRow(

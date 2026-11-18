@@ -15,6 +15,7 @@ import '../../state/browse/selection_providers.dart';
 import '../../state/favorites_providers.dart';
 import '../../state/folder_exclusion_providers.dart';
 import '../browse/library_navigation.dart';
+import '../add_to_playlist/add_to_playlist.dart';
 import '../browse/play_actions.dart';
 import 'menu_model.dart';
 
@@ -121,6 +122,10 @@ class MenuActionRunner {
         // own failures; one that escapes is logged and toasted here.
         await _guard('running a menu action', _l10n.libraryActionFailed, () {
           return run(_context);
+        });
+      case AddToPlaylistAction(:final request):
+        await _guard('adding to a playlist', _l10n.playlistAddFailed, () {
+          return showAddToPlaylist(_context, request);
         });
       case PlayAction(:final ids, :final shuffle, :final context):
         if (ids.isEmpty) {

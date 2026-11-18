@@ -136,11 +136,7 @@ MenuSpec buildFolderMenu(FolderMenuData data, MenuOrigin origin, MenuEnv env) {
                 context: context,
               ),
             ),
-          soonRow(
-            MenuItemId.playlist,
-            KIcons.playlistAdd,
-            l10n.libraryMenuAddToPlaylist,
-          ),
+          addToPlaylistRow(l10n, data.ids, l10n.playlistPickerFrom(data.name)),
         ],
       ],
       advanced,

@@ -4,6 +4,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
+import '../../domain/playlists/playlist_models.dart';
 import 'menu_model.dart';
 
 /// A row that is not built yet: dimmed, labelled "coming soon", inert.
@@ -20,6 +21,28 @@ MenuItemSpec soonRow(
   subtitle: subtitle,
   soon: true,
   danger: danger,
+);
+
+/// "Add to playlist...": opens the picker for [ids], listed as coming from
+/// [sourceLabel]; [excludePlaylistUid] is the playlist the tracks are shown
+/// in, which the picker leaves out. Disabled without tracks.
+MenuItemSpec addToPlaylistRow(
+  AppLocalizations l10n,
+  List<TrackId> ids,
+  String sourceLabel, {
+  String? excludePlaylistUid,
+}) => MenuItemSpec(
+  MenuItemId.playlist,
+  icon: KIcons.playlistAdd,
+  title: l10n.libraryMenuAddToPlaylist,
+  action: MenuAction.addToPlaylist(
+    AddToPlaylistRequest(
+      tracks: ids,
+      sourceLabel: sourceLabel,
+      excludePlaylistUid: excludePlaylistUid,
+    ),
+  ),
+  enabled: ids.isNotEmpty,
 );
 
 /// "Ask AI ...": a Pro surface, dimmed with the Pro badge until the Pro

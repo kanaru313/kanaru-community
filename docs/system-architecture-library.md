@@ -666,8 +666,9 @@ the `TrackId` anchor of this provider, because a track can be queued twice.
 - `LibrarySelectionBar` (const, in both shells' slot) shows `SelectionPanel`
   when something is selected. The panel is a `KSelectionPanel`: clear, `N songs`
   (and the length when open), play all (replaces the queue with the selection
-  in panel order; the selection stays), edit and add to playlist (dimmed), the
-  selection's menu, "select all songs of this screen" (off without a list), and
+  in panel order; the selection stays), edit (dimmed), add to playlist (opens
+  the picker for the selection ids in panel order, no source label; the
+  selection stays), the selection's menu, "select all songs of this screen" (off without a list), and
   open / collapse. Open, it lists the selected songs in play order with a drag
   handle, a ♥ and the song's menu; that list is a `ReorderableListView.builder`
   over a `TrackWindow` that exists only while the panel is open, so a selection
@@ -1078,10 +1079,10 @@ Dimmed and inert, with the tooltip or subtitle "Coming soon" (`appComingSoon`,
 
 | Where | Item | Waits for |
 |---|---|---|
-| Context menus (`soonRow`) | Add to playlist (all kinds), edit song / album info, find lyrics online, remove from library, delete files (Move to Trash wording when `MenuEnv.trash`), split genres / artists, language detection settings | playlists, tag editor, lyrics, library management, Settings |
+| Context menus (`soonRow`) | Edit song / album info, find lyrics online, remove from library, delete files (Move to Trash wording when `MenuEnv.trash`), split genres / artists, language detection settings | tag editor, lyrics, library management, Settings |
 | Context menus (`proRow`) | Ask AI (song, album, artist, selection), with the Pro badge | the Pro build |
 | Context menus | "Show in file manager" where `FileManager.canReveal` is false (Android) | a platform implementation |
-| Selection panel | Edit, Add to playlist | tag editor, playlists |
+| Selection panel | Edit | tag editor |
 | Library empty state | "Choose music folders" | the Settings folders screen |
 | Scan banner (failed scan) | "Grant permission" | the Android permission flow |
 | Sidebar (`comingSoon: true`) | History, Most played | their mockups |

@@ -27,7 +27,6 @@ KIconButton _iconButton(WidgetTester tester, String tooltip) => tester
 // The panel icon behind a tooltip, for dimmed checks.
 IconData _icon(String tooltip) => switch (tooltip) {
   'Edit info · Coming soon' => KIcons.edit,
-  'Add to playlist… · Coming soon' => KIcons.playlistAdd,
   _ => throw ArgumentError(tooltip),
 };
 
@@ -60,8 +59,8 @@ void main() {
     }
     expect(_iconButton(tester, 'Edit info · Coming soon').onPressed, isNull);
     expect(
-      _iconButton(tester, 'Add to playlist… · Coming soon').onPressed,
-      isNull,
+      tester.widget<KIconButton>(_button('Add to playlist…')).onPressed,
+      isNotNull,
     );
     await unmountApp(tester);
   });
