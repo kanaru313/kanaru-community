@@ -20,7 +20,8 @@ class TestStore implements PlaylistStore {
       duplicateError,
       removeError,
       undoError,
-      addAllError;
+      addAllError,
+      moveError;
 
   /// While set, `removeEntries` reports that it removed nothing.
   bool removeNothing = false;
@@ -33,6 +34,9 @@ class TestStore implements PlaylistStore {
 
   /// Run at the start of `deletePlaylist` (observes the world at that moment).
   void Function()? onDelete;
+
+  /// While set, `moveEntry` waits for it first.
+  Completer<void>? moveGate;
 
   /// While set, `loadPlaylist` waits for it first.
   Completer<void>? loadGate;
@@ -159,7 +163,11 @@ class TestStore implements PlaylistStore {
     String playlistUid,
     String entryUid, {
     required String? afterEntryUid,
-  }) => inner.moveEntry(playlistUid, entryUid, afterEntryUid: afterEntryUid);
+  }) async {
+    await moveGate?.future;
+    if (moveError != null) throw moveError!;
+    return inner.moveEntry(playlistUid, entryUid, afterEntryUid: afterEntryUid);
+  }
 
   @override
   Future<PlaylistRemoval?> removeDuplicates(String playlistUid) =>

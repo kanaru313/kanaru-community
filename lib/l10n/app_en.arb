@@ -1473,6 +1473,16 @@
   "plScreensDuplicateCopyCover": "Copy the custom cover too",
   "plScreensDuplicateConfirm": "Duplicate",
   "plScreensPlay": "Play playlist",
+  "plScreensEditList": "Edit list",
+  "plScreensEditDone": "Done",
+  "plScreensEditBarLead": "{count, plural, =1{1 song} other{{count} songs}} · Playlist order",
+  "@plScreensEditBarLead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "plScreensUnitPlaylists": "playlists",
   "plAddMovedSuffix": "{count, plural, =1{, dropped 1 old copy} other{, dropped {count} old copies}}",
   "@plAddMovedSuffix": {

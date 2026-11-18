@@ -23,5 +23,15 @@
   "plScreensDuplicateCopyCover": "Copy the custom cover too",
   "plScreensDuplicateConfirm": "Duplicate",
   "plScreensPlay": "Play playlist",
+  "plScreensEditList": "Edit list",
+  "plScreensEditDone": "Done",
+  "plScreensEditBarLead": "{count, plural, =1{1 song} other{{count} songs}} · Playlist order",
+  "@plScreensEditBarLead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "plScreensUnitPlaylists": "playlists"
 }

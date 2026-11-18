@@ -148,3 +148,31 @@ List<String> rowOrder(WidgetTester t, List<String> names) {
 /// The detail the page shows now.
 PlaylistDetail? shownDetail(PlaylistUiHarness h, String uid) =>
     h.container.read(playlistPageProvider(uid)).detail.value;
+
+/// Opens the page of a new playlist [name] holding [titles] (a title ending
+/// in `*` is a missing file) and returns the harness and the playlist's uid.
+Future<(PlaylistUiHarness, String)> openSeededPlaylist(
+  WidgetTester t,
+  List<String> titles, {
+  String name = 'Mix',
+  FakePlaybackCommands? playback,
+  double width = 360,
+}) async {
+  final h = await pumpPlaylistPage(
+    t,
+    uid: 'x',
+    playback: playback,
+    width: width,
+  );
+  final uid = await seedTracks(t, h, titles, name: name);
+  h.router.go('/');
+  await settlePlaylistPage(t);
+  unawaited(h.router.push<void>('/playlists/$uid'));
+  await settlePlaylistPage(t);
+  return (h, uid);
+}
+
+/// Entry uids of playlist [uid] in the order the page's data holds them now.
+List<String> entryUids(PlaylistUiHarness h, String uid) => [
+  for (final e in shownDetail(h, uid)!.entries) e.uid,
+];

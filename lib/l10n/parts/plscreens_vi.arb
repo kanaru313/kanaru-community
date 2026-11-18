@@ -23,5 +23,15 @@
   "plScreensDuplicateCopyCover": "Chép cả ảnh bìa tự chọn",
   "plScreensDuplicateConfirm": "Nhân bản",
   "plScreensPlay": "Phát playlist",
+  "plScreensEditList": "Sửa danh sách",
+  "plScreensEditDone": "Xong",
+  "plScreensEditBarLead": "{count} bài · Thứ tự playlist",
+  "@plScreensEditBarLead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "plScreensUnitPlaylists": "playlist"
 }

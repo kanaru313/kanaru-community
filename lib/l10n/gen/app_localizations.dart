@@ -3420,6 +3420,24 @@ abstract class AppLocalizations {
   /// **'Play playlist'**
   String get plScreensPlay;
 
+  /// No description provided for @plScreensEditList.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit list'**
+  String get plScreensEditList;
+
+  /// No description provided for @plScreensEditDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get plScreensEditDone;
+
+  /// No description provided for @plScreensEditBarLead.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} · Playlist order'**
+  String plScreensEditBarLead(int count);
+
   /// No description provided for @plScreensUnitPlaylists.
   ///
   /// In en, this message translates to:

@@ -2287,6 +2287,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get plScreensPlay => 'Play playlist';
 
   @override
+  String get plScreensEditList => 'Edit list';
+
+  @override
+  String get plScreensEditDone => 'Done';
+
+  @override
+  String plScreensEditBarLead(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0 · Playlist order';
+  }
+
+  @override
   String get plScreensUnitPlaylists => 'playlists';
 
   @override

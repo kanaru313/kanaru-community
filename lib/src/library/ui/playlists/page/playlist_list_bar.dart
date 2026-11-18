@@ -18,6 +18,7 @@ class PlaylistListBar extends StatelessWidget {
     required this.onReverse,
     required this.filterOpen,
     required this.onFilterToggle,
+    this.editLead,
   });
 
   /// Already worded.
@@ -28,33 +29,41 @@ class PlaylistListBar extends StatelessWidget {
   final bool filterOpen;
   final VoidCallback onFilterToggle;
 
+  /// Edit mode: the bar is only this text (the count and the fixed order),
+  /// in the same box, with no sort or filter controls. Null: the usual bar.
+  final String? editLead;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final lead = editLead;
+    final leading = Text(
+      lead ?? countText,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.labelLarge?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    );
     return KStickyBarSliver(
       height: MediaQuery.textScalerOf(context).scale(KListSortFilterBar.height),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: libraryBarGutter(context)),
-        child: KListSortFilterBar(
-          leading: Text(
-            countText,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          sortLabel: sortOrderLabel(l10n, sort),
-          ascending: !sort.primary.descending,
-          onSortPressed: onSortPressed,
-          onReverse: onReverse,
-          reverseTooltip: l10n.libraryOrderReverse,
-          filterOpen: filterOpen,
-          onFilterToggle: onFilterToggle,
-          sortTooltip: l10n.libraryOrderTooltip,
-          filterTooltip: l10n.libraryFilter,
-        ),
+        child: lead != null
+            ? Align(alignment: AlignmentDirectional.centerStart, child: leading)
+            : KListSortFilterBar(
+                leading: leading,
+                sortLabel: sortOrderLabel(l10n, sort),
+                ascending: !sort.primary.descending,
+                onSortPressed: onSortPressed,
+                onReverse: onReverse,
+                reverseTooltip: l10n.libraryOrderReverse,
+                filterOpen: filterOpen,
+                onFilterToggle: onFilterToggle,
+                sortTooltip: l10n.libraryOrderTooltip,
+                filterTooltip: l10n.libraryFilter,
+              ),
       ),
     );
   }

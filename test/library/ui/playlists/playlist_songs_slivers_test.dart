@@ -263,7 +263,6 @@ void main() {
       final (h, _) = await _open(t, ['Alpha', 'Gone1*', 'Gone2*', 'Gone3*']);
       final l10n = pageL10n(t);
       final failures = <String>[];
-      Logger.root.level = Level.ALL;
       final sub = Logger.root.onRecord.listen((r) {
         if (r.message == 'A playlist removal failed') failures.add(r.message);
       });

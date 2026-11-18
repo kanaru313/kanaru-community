@@ -2035,6 +2035,17 @@ class AppLocalizationsVi extends AppLocalizations {
   String get plScreensPlay => 'Phát playlist';
 
   @override
+  String get plScreensEditList => 'Sửa danh sách';
+
+  @override
+  String get plScreensEditDone => 'Xong';
+
+  @override
+  String plScreensEditBarLead(int count) {
+    return '$count bài · Thứ tự playlist';
+  }
+
+  @override
   String get plScreensUnitPlaylists => 'playlist';
 
   @override
