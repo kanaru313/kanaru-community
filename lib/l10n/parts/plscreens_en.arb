@@ -1,0 +1,25 @@
+{
+  "plScreensDeleted": "Deleted “{name}”",
+  "@plScreensDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "plScreensDeleteFailed": "Couldn't delete the playlist",
+  "plScreensCharCount": "{count} / {max}",
+  "@plScreensCharCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "plScreensCoverFailed": "Couldn't change the cover",
+  "plScreensDuplicateCopyCover": "Copy the custom cover too",
+  "plScreensDuplicateConfirm": "Duplicate"
+}

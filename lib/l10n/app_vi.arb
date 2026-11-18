@@ -1449,6 +1449,29 @@
     }
   },
   "playlistM3uExportFailed": "Không lưu được tệp.",
+  "plScreensDeleted": "Đã xoá “{name}”",
+  "@plScreensDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "plScreensDeleteFailed": "Không xoá được playlist",
+  "plScreensCharCount": "{count} / {max}",
+  "@plScreensCharCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "plScreensCoverFailed": "Không đổi được ảnh bìa",
+  "plScreensDuplicateCopyCover": "Chép cả ảnh bìa tự chọn",
+  "plScreensDuplicateConfirm": "Nhân bản",
   "plAddMovedSuffix": "{count, plural, other{, bỏ {count} bản cũ}}",
   "@plAddMovedSuffix": {
     "description": "Toast suffix: old copies of songs removed when they were moved to the end of a playlist.",

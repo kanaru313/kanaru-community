@@ -2262,6 +2262,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistM3uExportFailed => 'Couldn\'t save the file.';
 
   @override
+  String plScreensDeleted(String name) {
+    return 'Deleted “$name”';
+  }
+
+  @override
+  String get plScreensDeleteFailed => 'Couldn\'t delete the playlist';
+
+  @override
+  String plScreensCharCount(int count, int max) {
+    return '$count / $max';
+  }
+
+  @override
+  String get plScreensCoverFailed => 'Couldn\'t change the cover';
+
+  @override
+  String get plScreensDuplicateCopyCover => 'Copy the custom cover too';
+
+  @override
+  String get plScreensDuplicateConfirm => 'Duplicate';
+
+  @override
   String plAddMovedSuffix(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

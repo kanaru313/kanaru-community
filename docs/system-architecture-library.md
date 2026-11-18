@@ -343,6 +343,49 @@ what the picker shows), `_confirm` (`AddConfirmStep`), `_message` (toast text),
 Queue Save reaches the flow through the `onSave` callback of `QueueActions` /
 `QueueSaveButton` (`playback/ui/queue/queue_actions.dart`) because `playback`
 is below `library`; without `onSave` the button is dimmed with "Coming soon".
+### Playlist screens
+
+`library/ui/playlists/` (the screens, owned by the playlist-screens lane).
+Dialogs and flows, shared by every entry point (FAB, menus, pages):
+
+- **Create** `showCreatePlaylistDialog(context) -> uid?`; **Duplicate**
+  `showDuplicatePlaylistDialog(context, summary) -> uid?`. Both are
+  `PlaylistNameDialog` (440 dp `showKDialog`): a prefilled, fully selected
+  Name field, `n / 200` counter on the cleaned value, Enter submits, one submit
+  at a time, a throw keeps the dialog open with the `playlistSaveFailed` toast.
+  Create then opens the playlist's page; Duplicate stays on the page and toasts
+  `playlistDuplicated`. Duplicate shows the "copy the custom cover" `KSwitchRow`
+  (off) only when `customCoverKeyProvider` has a cover; no explanation text.
+- **Edit** `showEditPlaylistDialog(context, summary)`: full-screen dialog on the
+  mobile shell (`showKFullScreenDialog`, `actionEnabledListenable` = form
+  validity, the action pops the route itself), 620 dp `showKDialog` with the cover
+  on the left on the desktop shell. `PlaylistFormModel` holds the controllers,
+  the validity and the staged "automatic cover"; the cover is written only by
+  Save, through `playlistEditorProvider`. Unchanged text with no cover change
+  closes without a write. Results: gone -> `playlistNotFoundTitle`, cover failure
+  -> `plScreensCoverFailed`, saved -> `playlistSaved`, a throw keeps the dialog.
+- **`deletePlaylistFlow(context, summary, {onOwnPage, routeAnimation})`**: confirm,
+  then (own page) leave the page and wait until its route is gone (exit animation
+  dismissed or the page element unmounted, at most 1 s) before
+  `deletePlaylist`, so the page never shows "not found" while sliding out. All
+  objects used after an await (container, root messenger, router) are captured
+  before it. Also forgets the playlist's remembered track sort.
+- **`clearFavoritesFlow(context, favorites)`**: confirm, then remove the entries
+  seen in the dialog, through the Favorites page controller when that page is
+  open (`playlistPageProvider(favorites)` exists) or straight through the store,
+  with an Undo toast.
+- **`playlist_removal_toasts.dart`**: `PlaylistRemovalHolder` (provider
+  `playlistRemovalHolderProvider`, keep-alive) keeps at most one removal waiting
+  for its toast and commits it when the toast closes untouched, when the next
+  removal replaces it and when the container ends (idempotent per removal).
+  `showRemovalToast(rootContext, container, removal, message)` shows the Undo
+  toast on the root messenger; Undo goes through the open page's controller
+  (kept alive by a listener for the call) or the store, and a result of 0 or a
+  throw shows `libraryMenuUndoFailed`.
+- l10n part `plscreens` (`lib/l10n/parts/plscreens_{en,vi}.arb`, prefix
+  `plScreens`); every other string reuses the `playlist*` / `library*` keys.
+- Known gap: the dialogs use `AlertDialog` inside `showKDialog` because
+  `kanaru_ui` has no form-dialog frame yet (only `confirmAction`).
 
 ## Library tabs
 
