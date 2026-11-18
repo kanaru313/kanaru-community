@@ -227,12 +227,12 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   Most played, still coming soon, would match `:uid` and show "not found").
 - **Seeds** (the placeholder body is replaced by the owner lane, the
   declaration stays): `PlaylistsPage`, `PlaylistPage({uid})` (playlist screens),
-  `showAddToPlaylist` (add-to-playlist lane), `m3uAvailable` / `importM3u` /
-  `exportM3u` / `M3uImportProgressSliver` in `m3u/m3u_entry_points.dart` (M3U
-  lane; the playlist screens render their M3U entry points dimmed while
-  `m3uAvailable` is false), `pickCustomCover(context, kind, itemKey)` in
-  `covers/pick_custom_cover.dart` (custom-cover picker lane). All show the
-  "coming soon" snack bar or nothing.
+  `m3uAvailable` / `importM3u` / `exportM3u` / `M3uImportProgressSliver` in
+  `m3u/m3u_entry_points.dart` (M3U lane; the playlist screens render their M3U
+  entry points dimmed while `m3uAvailable` is false), `pickCustomCover(context,
+  kind, itemKey)` in `covers/pick_custom_cover.dart` (custom-cover picker lane).
+  All show the "coming soon" snack bar or nothing. `showAddToPlaylist` was a seed
+  and is now the real flow: see "Add to playlist" below.
 - **`PlaylistCover({uid, autoCoverKeys, dimension, radius, automaticOnly})`**:
   Favorites is a heart tile (icon at 0.42 of the side on `primaryContainer`; it has no custom cover). Others
   show the custom cover when there is one, else the automatic one: 2 to 4 keys
@@ -280,6 +280,69 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   its ✕ (`onRemove`, always on mobile, on hover or focus on desktop) removes it.
   Selection stays the app-wide `TrackId` selection. Toggling `edit` does not
   remount the row.
+
+### Add to playlist
+
+`library/ui/add_to_playlist/`. `showAddToPlaylist(context, request)` is the real
+flow (no longer a seed). The folder splits as `add_to_playlist.dart` (flow and
+guard), `_model` (pure rules, no Flutter), `_options` (`AddToPlaylistPickerContent`:
+what the picker shows), `_confirm` (`AddConfirmStep`), `_message` (toast text),
+`already_in_playlist_dialog.dart` and `pending_playlist_name_dialog.dart`.
+
+1. **Request**: `AddToPlaylistRequest({tracks, sourceLabel, excludePlaylistUid})`
+   (`playlists/playlist_models.dart`; compares tracks in order). An empty list
+   does nothing. One flow runs at a time: a second call while one is open is
+   ignored. The navigator, messenger, store and l10n are taken before the first
+   await (the page that asked may be gone), from the root navigator, so the
+   toast is not trapped in a panel's own Scaffold.
+2. **Load**: `watchSummaries().first` and `countExisting(tracks)`, read on every
+   open and each limited to `addToPlaylistLimit` (10 s). Failure or timeout:
+   `playlistAddFailed` / `plAddTimedOut` toast, no picker.
+3. **Picker**: `showMultiSelectionPicker<String>`, option keys are uids,
+   `PlaylistUids.favorites` or `new:<n>`. Rows: Favorites pinned (hidden when
+   it is `excludePlaylistUid`) → divider → "New playlist…" (`leadingAction`) →
+   pending new playlists (with a badge, ticked when added) → the other playlists
+   by date modified, newest first; the source playlist is hidden. Each subtitle
+   is the song count plus "has this" / "has n of m" for the batch. The filter
+   field shows above 10 playlists (Favorites not counted). No select-all row.
+   The title is "Add to playlist"; the visible caption under it is
+   `N songs · <source>` (`N songs` when the label is empty; N counts distinct
+   songs, repeats of a queue once). The Favorites hint is only its accessible
+   description. No ⓘ. The footer shows the count of ticks, or the error of the
+   last confirm in the error colour until the ticks change.
+4. **Name dialog** (`showPendingPlaylistNameDialog`): a visible body line, a
+   prefilled and selected default name (`nextDefaultName` over existing and
+   pending names). Nothing is created here: a pending playlist is created on
+   Add only if its key is still ticked.
+5. **`confirm:` step** (`AddConfirmStep`, runs with the picker open, so a failure
+   keeps the ticks; `confirmTimeout: null`, the step bounds each read and the
+   write itself by the same 10 s): fresh summaries drop playlists deleted
+   meanwhile (`knownGone`; all ticks gone → footer error, picker stays); songs
+   with no row are dropped (all gone → footer error); fresh `countExisting`. If
+   a ticked playlist (Favorites excluded: it always skips what it holds, never
+   asks) holds some songs, the "Already in playlist" dialog (centred on both
+   shells) asks for `skipExisting` (preselected), `moveToEnd` or `addAll`;
+   Cancel, Esc or Back returns to the picker with the ticks. Then one
+   `addToPlaylists(tracks, playlistUids, newPlaylistNames, policy)`. A vanished
+   song (`ArgumentError`) re-filters and retries once. A write that passes the
+   limit may still commit (drift cannot cancel): toast `plAddNotConfirmed` and the
+   picker closes so it is not pressed twice.
+6. **Toast** (`addToPlaylistMessage`): from `AddSummary`: one target "Added n to
+   X" with skipped / moved suffixes, "nothing new" when all were held, several
+   targets a summary of songs, playlists, created and skipped; plus the dropped
+   songs suffix and, after `. `, the playlists that were gone. Nothing written
+   anywhere: `playlistAddFailed`.
+
+| Entry point | Request (`sourceLabel`, `excludePlaylistUid`) |
+|---|---|
+| Song, album, artist, genre, language and folder menus: `addToPlaylistRow` → `MenuAction.addToPlaylist` (`AddToPlaylistAction`) run by `menu_action_runner.dart` | the menu's ids; label = song title (song menu) or `playlistPickerFrom(name)`; the song menu opened from a playlist page excludes that playlist |
+| Selection panel button (`selection_panel.dart`) | `librarySelectionProvider.ids` in panel order, empty label; the selection stays |
+| Now Playing ⋮ item and desktop header button (`now_playing_playlist_actions.dart`: `addCurrentToPlaylist`) | the current track, label = its title |
+| Queue Save: mobile sheet head and desktop panel head (`queue_panel.dart` → `saveQueueToPlaylist`) | whole queue in play order, repeats kept, ids taken at open, label `plAddSourceQueue`; empty queue does nothing |
+
+Queue Save reaches the flow through the `onSave` callback of `QueueActions` /
+`QueueSaveButton` (`playback/ui/queue/queue_actions.dart`) because `playback`
+is below `library`; without `onSave` the button is dimmed with "Coming soon".
 
 ## Library tabs
 
@@ -668,8 +731,8 @@ the `TrackId` anchor of this provider, because a track can be queued twice.
   (and the length when open), play all (replaces the queue with the selection
   in panel order; the selection stays), edit (dimmed), add to playlist (opens
   the picker for the selection ids in panel order, no source label; the
-  selection stays), the selection's menu, "select all songs of this screen" (off without a list), and
-  open / collapse. Open, it lists the selected songs in play order with a drag
+  selection stays), the selection's menu, "select all songs of this screen"
+  (off without a list), and open / collapse. Open, it lists the selected songs in play order with a drag
   handle, a ♥ and the song's menu; that list is a `ReorderableListView.builder`
   over a `TrackWindow` that exists only while the panel is open, so a selection
   of thousands loads only the rows in view: the range is reported from the
