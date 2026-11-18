@@ -3687,7 +3687,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsRootProActive.
   ///
   /// In en, this message translates to:
-  /// **'Activated'**
+  /// **'Activated · thank you'**
   String get settingsRootProActive;
 
   /// No description provided for @settingsRootAboutDesc.
@@ -3975,7 +3975,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPlaybackListenCaption.
   ///
   /// In en, this message translates to:
-  /// **'A track counts as a listen when it reaches whichever comes first.'**
+  /// **'A track counts as a listen when it reaches whichever comes first. Default: 4 minutes or 50 %.'**
   String get settingsPlaybackListenCaption;
 
   /// No description provided for @settingsPlaybackListenNeedsHistory.
@@ -4067,6 +4067,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{db} dB'**
   String settingsPlaybackPreampValue(int db);
+
+  /// No description provided for @settingsAppearancePureBlackDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A fully black background in the Dark theme, good for OLED screens.'**
+  String get settingsAppearancePureBlackDesc;
+
+  /// No description provided for @settingsAppearanceMotionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: pages and sheets appear at once, without sliding.'**
+  String get settingsAppearanceMotionDesc;
+
+  /// No description provided for @settingsAppearanceWindowFrameDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the system title bar and window border instead of the Kanaru bar.'**
+  String get settingsAppearanceWindowFrameDesc;
+
+  /// No description provided for @settingsAppearanceWindowFrameApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies after Kanaru is reopened'**
+  String get settingsAppearanceWindowFrameApply;
+
+  /// No description provided for @settingsAppearanceTextSizeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get settingsAppearanceTextSizeDefault;
+
+  /// No description provided for @settingsPlaybackNeedsReplayGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on ReplayGain to use this'**
+  String get settingsPlaybackNeedsReplayGain;
 }
 
 class _AppLocalizationsDelegate

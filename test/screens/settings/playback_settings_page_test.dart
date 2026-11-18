@@ -57,6 +57,18 @@ void main() {
     expect(find.text('Coming soon'), findsNWidgets(7));
   });
 
+  testWidgets('dependent sound rows say what they need', (tester) async {
+    await pumpSettings(
+      tester,
+      location: SettingsPaths.playback,
+      size: const Size(400, 1600),
+    );
+    expect(
+      find.textContaining('Turn on ReplayGain to use this'),
+      findsNWidgets(2),
+    );
+  });
+
   testWidgets('desktop adds the output device row, coming soon', (
     tester,
   ) async {
@@ -123,7 +135,7 @@ void main() {
       expect(
         find.text(
           'A track counts as a listen when it reaches whichever '
-          'comes first.',
+          'comes first. Default: 4 minutes or 50 %.',
         ),
         findsOneWidget,
       );

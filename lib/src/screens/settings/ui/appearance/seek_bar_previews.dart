@@ -25,6 +25,7 @@ class WaveformSeekPreview extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: FractionallySizedBox(
+                    widthFactor: 1,
                     heightFactor: _barHeight(i),
                     child: DecoratedBox(
                       decoration: BoxDecoration(

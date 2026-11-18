@@ -2493,7 +2493,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'One-time purchase · sync, many sources, advanced stats…';
 
   @override
-  String get settingsRootProActive => 'Activated';
+  String get settingsRootProActive => 'Activated · thank you';
 
   @override
   String get settingsRootAboutDesc => 'License, native libraries';
@@ -2648,7 +2648,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPlaybackListenCaption =>
-      'A track counts as a listen when it reaches whichever comes first.';
+      'A track counts as a listen when it reaches whichever comes first. Default: 4 minutes or 50 %.';
 
   @override
   String get settingsPlaybackListenNeedsHistory =>
@@ -2725,4 +2725,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String settingsPlaybackPreampValue(int db) {
     return '$db dB';
   }
+
+  @override
+  String get settingsAppearancePureBlackDesc =>
+      'A fully black background in the Dark theme, good for OLED screens.';
+
+  @override
+  String get settingsAppearanceMotionDesc =>
+      'Off: pages and sheets appear at once, without sliding.';
+
+  @override
+  String get settingsAppearanceWindowFrameDesc =>
+      'Use the system title bar and window border instead of the Kanaru bar.';
+
+  @override
+  String get settingsAppearanceWindowFrameApply =>
+      'Applies after Kanaru is reopened';
+
+  @override
+  String get settingsAppearanceTextSizeDefault => 'Default';
+
+  @override
+  String get settingsPlaybackNeedsReplayGain =>
+      'Turn on ReplayGain to use this';
 }

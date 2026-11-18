@@ -35,7 +35,7 @@ class AboutSettingsPage extends ConsumerWidget {
             KListRow(
               leading: const Icon(KIcons.info),
               title: Text(l10n.settingsAboutLicense),
-              trailing: const Text(kanaruLicenseId),
+              subtitle: const Text(kanaruLicenseId),
             ),
             KListRow(
               leading: const Icon(KIcons.openInNew),

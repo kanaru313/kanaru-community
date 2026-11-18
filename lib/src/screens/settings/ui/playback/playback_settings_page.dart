@@ -129,12 +129,16 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
             SoonRow(
               icon: KIcons.arrowUp,
               title: Text(l10n.settingsPlaybackPreamp),
-              desc: l10n.settingsPlaybackPreampValue(0),
+              desc:
+                  '${l10n.settingsPlaybackPreampValue(0)}\n'
+                  '${l10n.settingsPlaybackNeedsReplayGain}',
             ),
             SoonRow(
               icon: KIcons.permissionMissing,
               title: Text(l10n.settingsPlaybackClipping),
-              desc: l10n.settingsPlaybackClippingDesc,
+              desc:
+                  '${l10n.settingsPlaybackClippingDesc}\n'
+                  '${l10n.settingsPlaybackNeedsReplayGain}',
             ),
           ],
         ),

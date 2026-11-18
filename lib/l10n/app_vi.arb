@@ -1614,7 +1614,7 @@
   "settingsRootAdvancedDesc": "Nhật ký, quyền riêng tư, đặt lại",
   "settingsRootPro": "Kanaru Pro",
   "settingsRootProFreeDesc": "Mua một lần · đồng bộ, nhiều nguồn, thống kê nâng cao…",
-  "settingsRootProActive": "Đã kích hoạt",
+  "settingsRootProActive": "Đã kích hoạt · cảm ơn bạn",
   "settingsRootAboutDesc": "Giấy phép, thư viện native",
   "settingsAppearanceColorMotionTitle": "Màu và chuyển động",
   "settingsAppearancePureBlack": "Nền đen tuyền",
@@ -1669,7 +1669,7 @@
   "settingsPlaybackHistoryDesc": "Dùng cho Lịch sử, Phát nhiều nhất, Nghe tiếp.",
   "settingsPlaybackHistoryOff": "Đang tắt · lịch sử đã ghi vẫn giữ",
   "settingsPlaybackListenRule": "Tính một lượt nghe sau",
-  "settingsPlaybackListenCaption": "Bài được tính một lượt nghe khi tới mốc nào trước.",
+  "settingsPlaybackListenCaption": "Bài được tính một lượt nghe khi tới mốc nào trước. Mặc định 4 phút hoặc 50 %.",
   "settingsPlaybackListenNeedsHistory": "Bật Ghi lịch sử nghe để dùng",
   "settingsPlaybackListenNoTime": "Không dùng",
   "settingsPlaybackListenEndLabel": "Hết bài",
@@ -1753,5 +1753,11 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settingsAppearancePureBlackDesc": "Nền đen hẳn khi chủ đề Tối, hợp với màn OLED.",
+  "settingsAppearanceMotionDesc": "Tắt thì trang và sheet hiện ngay, không trượt.",
+  "settingsAppearanceWindowFrameDesc": "Dùng thanh tiêu đề và viền cửa sổ của hệ thống thay cho thanh của Kanaru.",
+  "settingsAppearanceWindowFrameApply": "Áp dụng sau khi mở lại Kanaru",
+  "settingsAppearanceTextSizeDefault": "Mặc định",
+  "settingsPlaybackNeedsReplayGain": "Bật ReplayGain để dùng"
 }

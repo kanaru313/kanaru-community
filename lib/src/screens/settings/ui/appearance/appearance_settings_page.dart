@@ -13,6 +13,12 @@ import '../settings_scaffold.dart';
 import '../soon_row.dart';
 import 'theme_language_rows.dart';
 
+/// The font in use until the font page exists (the built-in default).
+const String _defaultFontName = 'Nunito';
+
+/// Text size step shown as "Default".
+const int _defaultTextScale = 100;
+
 /// Appearance: theme and language (the first-run rows), colour and motion,
 /// text, and the seek bar.
 class AppearanceSettingsPage extends ConsumerStatefulWidget {
@@ -37,7 +43,13 @@ class _AppearanceSettingsPageState
       selected: current,
       options: [
         for (final step in textScaleSteps)
-          SelectionOption(value: step, title: Text(l10n.settingsPercent(step))),
+          SelectionOption(
+            value: step,
+            title: Text(l10n.settingsPercent(step)),
+            subtitle: step == _defaultTextScale
+                ? Text(l10n.settingsAppearanceTextSizeDefault)
+                : null,
+          ),
       ],
     );
     if (chosen != null) await notifier.set(chosen);
@@ -68,9 +80,12 @@ class _AppearanceSettingsPageState
             KSwitchRow(
               leading: const Icon(KIcons.themeDark),
               title: Text(l10n.settingsAppearancePureBlack),
-              subtitle: pureBlackLocked
-                  ? Text(l10n.settingsAppearancePureBlackNeedsDark)
-                  : null,
+              // Locked: the reason replaces the desc.
+              subtitle: Text(
+                pureBlackLocked
+                    ? l10n.settingsAppearancePureBlackNeedsDark
+                    : l10n.settingsAppearancePureBlackDesc,
+              ),
               lockedLabel: l10n.settingsAppearancePureBlackNeedsDark,
               switchLabel: l10n.settingsAppearancePureBlack,
               value: pureBlack,
@@ -81,6 +96,7 @@ class _AppearanceSettingsPageState
             KSwitchRow(
               leading: const Icon(KIcons.ai),
               title: Text(l10n.settingsAppearanceMotion),
+              subtitle: Text(l10n.settingsAppearanceMotionDesc),
               switchLabel: l10n.settingsAppearanceMotion,
               value: motion,
               onChanged: (v) => ref.read(appMotionProvider.notifier).set(v),
@@ -93,6 +109,7 @@ class _AppearanceSettingsPageState
             SoonRow(
               icon: KIcons.edit,
               title: Text(l10n.settingsAppearanceFont),
+              desc: _defaultFontName,
             ),
             SetupValueRow(
               anchorKey: _textSizeKey,
@@ -119,6 +136,9 @@ class _AppearanceSettingsPageState
               SoonRow(
                 icon: KIcons.openFull,
                 title: Text(l10n.settingsAppearanceWindowFrame),
+                desc:
+                    '${l10n.settingsAppearanceWindowFrameDesc}\n'
+                    '${l10n.settingsAppearanceWindowFrameApply}',
               ),
           ],
         ),

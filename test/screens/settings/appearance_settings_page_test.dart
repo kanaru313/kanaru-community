@@ -65,6 +65,13 @@ void main() {
       await h.store.write('app.theme', 'light');
       await tester.pumpAndSettle();
       expect(find.text('Dark theme only'), findsOneWidget);
+      // The reason replaces the desc.
+      expect(
+        find.text(
+          'A fully black background in the Dark theme, good for OLED screens.',
+        ),
+        findsNothing,
+      );
       await tester.tap(find.text('Pure black'));
       await tester.pumpAndSettle();
       expect(h.store.read('app.pure_black'), isNull);
@@ -79,6 +86,12 @@ void main() {
       await h.store.write('app.theme', 'dark');
       await tester.pumpAndSettle();
       expect(find.text('Dark theme only'), findsNothing);
+      expect(
+        find.text(
+          'A fully black background in the Dark theme, good for OLED screens.',
+        ),
+        findsOneWidget,
+      );
       await tester.tap(find.text('Pure black'));
       await tester.pumpAndSettle();
       expect(h.store.read('app.pure_black'), true);
@@ -92,6 +105,11 @@ void main() {
       size: tall,
     );
     expect(find.text('100 %'), findsOneWidget);
+    expect(find.text('Nunito'), findsOneWidget);
+    expect(
+      find.text('Off: pages and sheets appear at once, without sliding.'),
+      findsOneWidget,
+    );
     await tester.tap(find.text('Text size'));
     await tester.pumpAndSettle();
     // The caption sits under the picker title.

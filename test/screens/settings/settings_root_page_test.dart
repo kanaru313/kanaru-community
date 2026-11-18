@@ -93,7 +93,7 @@ void main() {
     testWidgets('free: badge and coming soon', (tester) async {
       await pumpSettings(tester, size: const Size(400, 1600));
       expect(find.text('PRO'), findsOneWidget);
-      expect(find.text('Activated'), findsNothing);
+      expect(find.text('Activated · thank you'), findsNothing);
     });
 
     testWidgets('pro override: activated', (tester) async {
@@ -102,7 +102,7 @@ void main() {
         size: const Size(400, 1600),
         overrides: [appEditionProvider.overrideWithValue(AppEdition.pro)],
       );
-      expect(find.text('Activated'), findsOneWidget);
+      expect(find.text('Activated · thank you'), findsOneWidget);
       expect(find.text('PRO'), findsNothing);
       // The Pro row is no longer one of the coming-soon rows.
       expect(find.text('Coming soon'), findsNWidgets(7));

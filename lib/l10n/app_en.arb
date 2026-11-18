@@ -1614,7 +1614,7 @@
   "settingsRootAdvancedDesc": "Logs, privacy, reset",
   "settingsRootPro": "Kanaru Pro",
   "settingsRootProFreeDesc": "One-time purchase · sync, many sources, advanced stats…",
-  "settingsRootProActive": "Activated",
+  "settingsRootProActive": "Activated · thank you",
   "settingsRootAboutDesc": "License, native libraries",
   "settingsAppearanceColorMotionTitle": "Color and motion",
   "settingsAppearancePureBlack": "Pure black",
@@ -1669,7 +1669,7 @@
   "settingsPlaybackHistoryDesc": "Used by History, Most played and Continue listening.",
   "settingsPlaybackHistoryOff": "Off · what was recorded stays",
   "settingsPlaybackListenRule": "Count a listen after",
-  "settingsPlaybackListenCaption": "A track counts as a listen when it reaches whichever comes first.",
+  "settingsPlaybackListenCaption": "A track counts as a listen when it reaches whichever comes first. Default: 4 minutes or 50 %.",
   "settingsPlaybackListenNeedsHistory": "Turn on Record listening history to use this",
   "settingsPlaybackListenNoTime": "Not used",
   "settingsPlaybackListenEndLabel": "Whole track",
@@ -1753,5 +1753,11 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settingsAppearancePureBlackDesc": "A fully black background in the Dark theme, good for OLED screens.",
+  "settingsAppearanceMotionDesc": "Off: pages and sheets appear at once, without sliding.",
+  "settingsAppearanceWindowFrameDesc": "Use the system title bar and window border instead of the Kanaru bar.",
+  "settingsAppearanceWindowFrameApply": "Applies after Kanaru is reopened",
+  "settingsAppearanceTextSizeDefault": "Default",
+  "settingsPlaybackNeedsReplayGain": "Turn on ReplayGain to use this"
 }

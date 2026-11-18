@@ -2224,7 +2224,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mua một lần · đồng bộ, nhiều nguồn, thống kê nâng cao…';
 
   @override
-  String get settingsRootProActive => 'Đã kích hoạt';
+  String get settingsRootProActive => 'Đã kích hoạt · cảm ơn bạn';
 
   @override
   String get settingsRootAboutDesc => 'Giấy phép, thư viện native';
@@ -2377,7 +2377,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsPlaybackListenCaption =>
-      'Bài được tính một lượt nghe khi tới mốc nào trước.';
+      'Bài được tính một lượt nghe khi tới mốc nào trước. Mặc định 4 phút hoặc 50 %.';
 
   @override
   String get settingsPlaybackListenNeedsHistory =>
@@ -2442,4 +2442,26 @@ class AppLocalizationsVi extends AppLocalizations {
   String settingsPlaybackPreampValue(int db) {
     return '$db dB';
   }
+
+  @override
+  String get settingsAppearancePureBlackDesc =>
+      'Nền đen hẳn khi chủ đề Tối, hợp với màn OLED.';
+
+  @override
+  String get settingsAppearanceMotionDesc =>
+      'Tắt thì trang và sheet hiện ngay, không trượt.';
+
+  @override
+  String get settingsAppearanceWindowFrameDesc =>
+      'Dùng thanh tiêu đề và viền cửa sổ của hệ thống thay cho thanh của Kanaru.';
+
+  @override
+  String get settingsAppearanceWindowFrameApply =>
+      'Áp dụng sau khi mở lại Kanaru';
+
+  @override
+  String get settingsAppearanceTextSizeDefault => 'Mặc định';
+
+  @override
+  String get settingsPlaybackNeedsReplayGain => 'Bật ReplayGain để dùng';
 }
