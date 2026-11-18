@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/library/state/browse/custom_cover_index_providers.dart';
@@ -35,6 +36,7 @@ Future<void> pumpOpener(
   Brightness brightness = Brightness.light,
   double textScale = 1,
   bool reduceMotion = false,
+  List<Override> overrides = const [],
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -46,6 +48,7 @@ Future<void> pumpOpener(
         customCoverIndexProvider.overrideWith(
           (ref, kind) => Stream.value(const <String>{}),
         ),
+        ...overrides,
       ],
       child: MaterialApp(
         locale: Locale(locale),

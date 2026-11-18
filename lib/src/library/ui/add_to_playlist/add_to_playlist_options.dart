@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -102,11 +103,49 @@ class AddToPlaylistPickerContent {
       ? l10n.playlistPickerAddMany(selected.length)
       : l10n.playlistPickerAdd;
 
-  Widget footerNote(BuildContext context, Set<String> selected) => Text(
-    selected.isEmpty
-        ? l10n.playlistPickerNoneSelected
-        : l10n.playlistPickerSelected(selected.length),
-  );
+  /// Message of the last failed confirm, shown in the footer while the same
+  /// ticks stand (a toast would sit under the mobile sheet).
+  final ValueNotifier<String?> _error = ValueNotifier(null);
+  Set<String> _errorFor = const {};
+
+  /// Shows [message] in the footer for the ticks [selected].
+  void showError(String message, Set<String> selected) {
+    _errorFor = {...selected};
+    _error.value = message;
+  }
+
+  /// Hides the message (the next confirm starts).
+  void clearError() => _error.value = null;
+
+  /// The count of ticks, or the error in its colour, announced to screen
+  /// readers, until the ticks change.
+  Widget footerNote(BuildContext context, Set<String> selected) =>
+      ValueListenableBuilder<String?>(
+        valueListenable: _error,
+        builder: (context, error, _) {
+          if (error != null && !setEquals(selected, _errorFor)) {
+            // The ticks changed: forget the message for good, so ticking
+            // back does not bring it back. Not while building.
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!setEquals(selected, _errorFor)) _error.value = null;
+            });
+          } else if (error != null) {
+            return Semantics(
+              liveRegion: true,
+              container: true,
+              child: Text(
+                error,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            );
+          }
+          return Text(
+            selected.isEmpty
+                ? l10n.playlistPickerNoneSelected
+                : l10n.playlistPickerSelected(selected.length),
+          );
+        },
+      );
 
   /// False while every ticked key is a playlist a confirm found deleted.
   bool canConfirm(Set<String> selected) => !selected.every(knownGone.contains);
