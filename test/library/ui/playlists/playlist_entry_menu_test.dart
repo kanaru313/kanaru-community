@@ -104,6 +104,22 @@ void main() {
       semantics.dispose();
     });
 
+    pageTest('the add-to-playlist picker from a row leaves the open playlist '
+        'out', (t) async {
+      final (h, _) = await openSeededPlaylist(t, _all, name: 'Mix');
+      await t.runAsync(
+        () => h.fixture.repo.createPlaylist(name: 'Other', tracks: const []),
+      );
+      final l10n = pageL10n(t);
+      await _openMenu(t, 'Alpha');
+      await t.tap(find.text(l10n.libraryMenuAddToPlaylist));
+      await settlePlaylistPage(t);
+      expect(find.text(l10n.playlistPickerTitle), findsOneWidget);
+      expect(find.text('Other'), findsOneWidget);
+      // Only the page's own title: the picker has no "Mix" row.
+      expect(find.text('Mix'), findsOneWidget);
+    });
+
     pageTest('a menu opened before another move acts on the row where the '
         'entry is now', (t) async {
       final (h, uid) = await openSeededPlaylist(t, _all);

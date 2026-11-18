@@ -482,23 +482,33 @@ void main() {
       expect(find.text(l10n.appComingSoon), findsOneWidget);
     });
 
-    uiTest(
-      'the head cover button and Add to playlist call their entry points',
-      (t) async {
-        final h = await PlaylistUiHarness.pump(t);
-        final l10n = h.l10n(t);
-        final src = await _seed(t, h, 'Src');
-        final spec = await specOf(t, h, src.uid);
-        final cover = spec.header.action!.action as RunAction;
-        await h.launch(t, (c) => cover.run(c));
-        await t.pump();
-        expect(find.text(l10n.appComingSoon), findsOneWidget);
-        await t.pump(const Duration(seconds: 6));
-        await runRow(t, h, spec, MenuItemId.playlist);
-        await t.pump();
-        expect(find.text(l10n.appComingSoon), findsOneWidget);
-      },
-    );
+    uiTest('the head cover button is still soft and Add to playlist opens the '
+        'picker without this playlist', (t) async {
+      final h = await PlaylistUiHarness.pump(t);
+      final l10n = h.l10n(t);
+      final src = await _seed(t, h, 'Src');
+      await t.runAsync(
+        () => h.fixture.repo.createPlaylist(name: 'Other', tracks: const []),
+      );
+      final spec = await specOf(t, h, src.uid);
+      final cover = spec.header.action!.action as RunAction;
+      await h.launch(t, (c) => cover.run(c));
+      await t.pump();
+      expect(find.text(l10n.appComingSoon), findsOneWidget);
+      await t.pump(const Duration(seconds: 6));
+
+      unawaited(runRow(t, h, spec, MenuItemId.playlist));
+      for (var i = 0; i < 40; i++) {
+        if (find.text(l10n.playlistPickerTitle).evaluate().isNotEmpty) break;
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 25)),
+        );
+        await t.pump(const Duration(milliseconds: 100));
+      }
+      expect(find.text(l10n.playlistPickerTitle), findsOneWidget);
+      expect(find.text('Other'), findsOneWidget);
+      expect(find.text('Src'), findsNothing);
+    });
 
     uiTest('Favorites: Remove all asks, Save as copies at once', (t) async {
       final h = await PlaylistUiHarness.pump(t);
