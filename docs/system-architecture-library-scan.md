@@ -417,6 +417,21 @@ Dart wrapper: `lib/src/library/data/scan/native_cover_import.dart`
   exceptions: permanent = `FormatException`, transient, `permissionDenied` and a 60 s
   timeout = `FileSystemException`. The scan controller waits at most 30 s for the
   store's GC (`coverGcTimeout`), so a stuck import never holds the scan loop.
+- Changes and undo: `CustomCoverController.changeCover(kind, itemKey, CoverChoice)`
+  (`CoverChoice.automatic()` or `.file(image, crop:)`) runs in the store's serial
+  queue and returns a `CoverChange { previousKey, currentKey, undo(), release() }`.
+  While a change is unreleased its `previousKey` is pinned (a count per key in the
+  store); every delete path (replace, remove, a late timed-out import, the GC)
+  skips a pinned key, so the old files survive for the undo. `undo()` is a
+  compare-and-set: the item must still hold `currentKey`, else it returns false.
+  It restores `previousKey` (or clears the row), then deletes `currentKey`'s files
+  if nothing references or pins them. A database error (a playlist deleted
+  meanwhile: the trigger aborts the write) returns false, never throws. `undo()`
+  and `release()` both end the pin; `release()` is idempotent and deletes the old
+  files when nothing references or pins them. `importCover` / `removeCover` are
+  `changeCover` plus an immediate `release()`. A change never released (process
+  killed) leaves files the GC removes after its age window. `previewCover(File)`
+  delegates to `prepare_cover_preview` with the preview folder `<cache>/cover-preview` (`coverPreviewDirProvider`; the app sweeps its leftovers at startup, never while a dialog is open).
 - Crop: `crop` is a square (`left`, `top`, `side`) in pixels of the **upright**
   original (after the EXIF turn; what `prepare_cover_preview` shows). `null` keeps
   the whole image with its aspect ratio: the output is byte-identical to a call

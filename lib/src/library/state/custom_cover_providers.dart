@@ -13,6 +13,7 @@ import '../domain/custom_cover_controller.dart';
 
 export '../domain/custom_cover_controller.dart'
     show CustomCoverController, CustomCoverKind;
+export '../domain/covers/cover_choice.dart' show CoverChange, CoverChoice;
 
 /// Overridden in tests so they do not need the native library.
 final coverImporterProvider = Provider<CoverImporter>(
@@ -24,11 +25,20 @@ final coverPreviewerProvider = Provider<CoverPreviewer>(
   (ref) => const RustCoverPreviewer(),
 );
 
+/// Folder of the crop dialog's preview files, in the cache folder. The app
+/// removes `.kanaru-tmp-preview-*` leftovers in it at startup only.
+final coverPreviewDirProvider = Provider<Directory>(
+  (ref) =>
+      Directory('${ref.watch(appPathsProvider).cacheDir.path}/cover-preview'),
+);
+
 final _storeProvider = Provider<CustomCoverStore>(
   (ref) => CustomCoverStore(
     ref.watch(appDatabaseProvider),
     ref.watch(appPathsProvider).dataDir,
     importer: ref.watch(coverImporterProvider),
+    previewer: ref.watch(coverPreviewerProvider),
+    previewDir: ref.watch(coverPreviewDirProvider),
   ),
 );
 

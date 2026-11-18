@@ -7,7 +7,10 @@ import '../../database/database.dart';
 import '../../media/domain/cover_colors.dart' as media;
 import '../../media/domain/cover_files.dart';
 import '../../media/domain/library_keys.dart';
+import '../domain/covers/cover_choice.dart';
+import '../domain/covers/cover_preview.dart';
 import '../domain/custom_cover_controller.dart';
+import 'cover_change.dart';
 import 'scan/native_cover_import.dart';
 
 final _log = Logger('kanaru.library.custom_cover');
@@ -25,20 +28,32 @@ bool isCustomCoverKey(String key) => isCoverKey(key);
 /// `<dataDir>/custom_covers/covers/` and keeps the `custom_covers` rows in
 /// step. Import (Rust call and row write) and GC run one after the other in
 /// one serial queue, so the GC never sees a file whose row is not written yet.
+/// A change pins the replaced cover's files until it is released, so it can
+/// be undone.
 /// The folder is created by the first import.
 class CustomCoverStore implements CustomCoverController {
   CustomCoverStore(
     this._db,
     Directory dataDir, {
     this._importer = const RustCoverImporter(),
+    this._previewer = const RustCoverPreviewer(),
+    Directory? previewDir,
     this.gcMinAge = const Duration(hours: 1),
     this.importTimeout = const Duration(seconds: 60),
     this._clock = DateTime.now,
-  }) : _dir = Directory('${dataDir.path}/$customCoversDirName');
+  }) : _dir = Directory('${dataDir.path}/$customCoversDirName'),
+       previewDir =
+           previewDir ??
+           Directory('${Directory.systemTemp.path}/kanaru-cover-preview');
 
   final AppDatabase _db;
   final Directory _dir;
   final CoverImporter _importer;
+  final CoverPreviewer _previewer;
+
+  /// Cover keys held by unreleased changes (count per key). Every delete goes
+  /// through [_deleteIfUnreferenced], which leaves a pinned key alone.
+  final Map<String, int> _pins = {};
   final DateTime Function() _clock;
 
   /// The GC leaves files younger than this alone: an import of a second
@@ -50,6 +65,10 @@ class CustomCoverStore implements CustomCoverController {
   /// stalled read returns; its late files get no row and the GC removes them.
   final Duration importTimeout;
   Future<void> _tail = Future.value();
+
+  /// Folder the previews are written to (a cache folder, so clearing the cache
+  /// removes leftovers; the app sweeps it at startup).
+  final Directory previewDir;
 
   /// The folder passed to the importer as `outDir`.
   Directory get directory => _dir;
@@ -94,52 +113,160 @@ class CustomCoverStore implements CustomCoverController {
     String itemKey,
     File source,
   ) async {
+    final change = await changeCover(kind, itemKey, CoverChoice.file(source));
+    await change.release();
+  }
+
+  @override
+  Future<CoverChange> changeCover(
+    CustomCoverKind kind,
+    String itemKey,
+    CoverChoice choice,
+  ) async {
     _checkItem(kind, itemKey);
-    await _serial(() async {
-      final pending = _importer.import(path: source.path, outDir: _dir.path);
-      final CoverImportResult result;
-      try {
-        result = await pending.timeout(importTimeout);
-      } on TimeoutException {
-        // A late success has no row: drop its files once it returns (in the
-        // queue, so no other import is cut short); else the GC gets them.
-        unawaited(
-          pending.then<void>((late) {
-            final k = late.key;
-            if (k != null) return _serial(() => _deleteIfUnreferenced(k));
-          }, onError: (Object _) {}),
-        );
-        throw FileSystemException(
-          'cover import timed out after $importTimeout',
-          source.path,
-        );
+    return _serial(() async {
+      final String? newKey;
+      switch (choice) {
+        case AutomaticCover():
+          newKey = null;
+        case FileCover(:final image, :final crop):
+          newKey = await _import(image, crop);
       }
-      final key = result.key;
-      if (key == null || !isCustomCoverKey(key)) {
-        throw _failureOf(result, source);
-      }
+      final String? previous;
       try {
-        final colors = result.colors;
-        if (colors != null && colors.palette.isNotEmpty) {
-          await upsertCoverColors(
-            _db,
-            coverKey: key,
-            seed: colors.seed,
-            colors: colors.palette,
-            version: media.coverColorsVersion,
-            now: _clock().millisecondsSinceEpoch,
-          );
-        }
-        final previous = await setCustomCover(_db, kind.name, itemKey, key);
-        if (previous != null && previous != key) {
-          await _deleteIfUnreferenced(previous);
-        }
+        previous = newKey == null
+            ? await clearCustomCover(_db, kind.name, itemKey)
+            : await setCustomCover(_db, kind.name, itemKey, newKey);
       } catch (_) {
-        await _deleteIfUnreferenced(key);
+        if (newKey != null) await _deleteIfUnreferenced(newKey);
         rethrow;
       }
+      if (previous != null) _pin(previous);
+      return StoreCoverChange(
+        previousKey: previous,
+        currentKey: newKey,
+        onUndo: (c) => _undo(kind, itemKey, c),
+        onRelease: (c) => _serial(() => _releaseNow(c)),
+      );
     });
   }
+
+  /// Runs the native import and writes the colours; returns the new key. The
+  /// row is the caller's. Files of a failed or late import are removed.
+  Future<String> _import(File source, CoverCrop? crop) async {
+    final pending = _importer.import(
+      path: source.path,
+      outDir: _dir.path,
+      crop: crop,
+    );
+    final CoverImportResult result;
+    try {
+      result = await pending.timeout(importTimeout);
+    } on TimeoutException {
+      // A late success has no row: drop its files once it returns (in the
+      // queue, so no other import is cut short); else the GC gets them.
+      unawaited(
+        pending.then<void>((late) {
+          final k = late.key;
+          if (k != null) return _serial(() => _deleteIfUnreferenced(k));
+        }, onError: (Object _) {}),
+      );
+      throw FileSystemException(
+        'cover import timed out after $importTimeout',
+        source.path,
+      );
+    }
+    final key = result.key;
+    if (key == null || !isCustomCoverKey(key)) {
+      throw _failureOf(result, source);
+    }
+    try {
+      final colors = result.colors;
+      if (colors != null && colors.palette.isNotEmpty) {
+        await upsertCoverColors(
+          _db,
+          coverKey: key,
+          seed: colors.seed,
+          colors: colors.palette,
+          version: media.coverColorsVersion,
+          now: _clock().millisecondsSinceEpoch,
+        );
+      }
+    } catch (_) {
+      await _deleteIfUnreferenced(key);
+      rethrow;
+    }
+    return key;
+  }
+
+  /// Compare-and-set back to the previous cover; see [CoverChange.undo].
+  Future<bool> _undo(
+    CustomCoverKind kind,
+    String itemKey,
+    StoreCoverChange change,
+  ) => _serial(() async {
+    if (change.released) return false;
+    var done = false;
+    try {
+      try {
+        done = await _db.transaction(() async {
+          if (await customCoverKey(_db, kind.name, itemKey) !=
+              change.currentKey) {
+            return false;
+          }
+          final back = change.previousKey;
+          if (back == null) {
+            await clearCustomCover(_db, kind.name, itemKey);
+          } else {
+            await setCustomCover(_db, kind.name, itemKey, back);
+          }
+          return true;
+        });
+      } on Exception catch (e) {
+        // SqliteException, wrapped in DriftRemoteException on the file
+        // database: the item is gone (deleted playlist) or the write failed.
+        _log.warning('undo of a cover change failed: $e');
+      }
+      final cur = change.currentKey;
+      if (done && cur != null) {
+        // The restore is committed: a failing cleanup must not undo that.
+        try {
+          await _deleteIfUnreferenced(cur);
+        } on Exception catch (e) {
+          _log.warning('could not delete files of $cur after undo: $e');
+        }
+      }
+    } finally {
+      await _releaseNow(change);
+    }
+    return done;
+  });
+
+  void _pin(String key) => _pins[key] = (_pins[key] ?? 0) + 1;
+
+  /// Drops the pin of [change] (once) and deletes its previous files when
+  /// nothing references or pins them. Runs inside the queue.
+  Future<void> _releaseNow(StoreCoverChange change) async {
+    if (change.released) return;
+    change.released = true;
+    final key = change.previousKey;
+    if (key == null) return;
+    final left = (_pins[key] ?? 1) - 1;
+    if (left <= 0) {
+      _pins.remove(key);
+    } else {
+      _pins[key] = left;
+    }
+    try {
+      await _deleteIfUnreferenced(key);
+    } on Exception catch (e) {
+      _log.warning('could not delete files of $key after release: $e');
+    }
+  }
+
+  @override
+  Future<CoverPreview> previewCover(File source) =>
+      _previewer.prepare(path: source.path, outDir: previewDir.path);
 
   /// Permanent failures (undecodable, unsupported, too large, missing file,
   /// a native panic) are a [FormatException]; transient ones (I/O, failing to
@@ -155,11 +282,14 @@ class CustomCoverStore implements CustomCoverController {
   }
 
   @override
-  Future<void> removeCover(CustomCoverKind kind, String itemKey) =>
-      _serial(() async {
-        final previous = await clearCustomCover(_db, kind.name, itemKey);
-        if (previous != null) await _deleteIfUnreferenced(previous);
-      });
+  Future<void> removeCover(CustomCoverKind kind, String itemKey) async {
+    final change = await changeCover(
+      kind,
+      itemKey,
+      const CoverChoice.automatic(),
+    );
+    await change.release();
+  }
 
   @override
   Future<int> collectUnreferencedFiles() => _serial(() async {
@@ -188,6 +318,7 @@ class CustomCoverStore implements CustomCoverController {
             stale =
                 isCustomCoverKey(key) &&
                 !keep.contains(key) &&
+                !_pins.containsKey(key) &&
                 !(await file.lastModified()).isAfter(cutoff);
           } else {
             stale = false; // unknown files are not ours
@@ -200,7 +331,7 @@ class CustomCoverStore implements CustomCoverController {
   });
 
   Future<void> _deleteIfUnreferenced(String coverKey) async {
-    if (!isCustomCoverKey(coverKey)) return;
+    if (!isCustomCoverKey(coverKey) || _pins.containsKey(coverKey)) return;
     if (await isCustomCoverKeyReferenced(_db, coverKey)) return;
     for (final size in CoverSize.values) {
       final file = File('${_dir.path}/${coverRelativePath(coverKey, size)}');

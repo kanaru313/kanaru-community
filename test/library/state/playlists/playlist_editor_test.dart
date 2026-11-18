@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/domain/covers/cover_choice.dart';
+import 'package:kanaru/src/library/domain/covers/cover_preview.dart';
 import 'package:kanaru/src/library/domain/custom_cover_controller.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_store.dart';
@@ -27,6 +29,16 @@ class _Store implements PlaylistStore {
 }
 
 class _Covers implements CustomCoverController {
+  @override
+  Future<CoverChange> changeCover(
+    CustomCoverKind kind,
+    String itemKey,
+    CoverChoice choice,
+  ) => throw UnimplementedError();
+
+  @override
+  Future<CoverPreview> previewCover(File source) => throw UnimplementedError();
+
   final log = <String>[];
   Object? error;
 

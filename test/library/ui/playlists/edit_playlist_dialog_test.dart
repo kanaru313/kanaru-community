@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/custom_covers_store.dart';
+import 'package:kanaru/src/library/domain/covers/cover_preview.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_ids.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/state/custom_cover_providers.dart';
@@ -24,6 +25,16 @@ Finder _save(String label) => find.ancestor(
 );
 
 class _FailingCovers implements CustomCoverController {
+  @override
+  Future<CoverChange> changeCover(
+    CustomCoverKind kind,
+    String itemKey,
+    CoverChoice choice,
+  ) => throw UnimplementedError();
+
+  @override
+  Future<CoverPreview> previewCover(File source) => throw UnimplementedError();
+
   @override
   Future<void> removeCover(CustomCoverKind kind, String itemKey) =>
       Future.error(const FileSystemException('disk gone'));

@@ -24,7 +24,7 @@ class _Paths implements AppPaths {
   @override
   final Directory dataDir;
   @override
-  Directory get cacheDir => throw UnimplementedError();
+  Directory get cacheDir => Directory('${dataDir.path}/../cache');
   @override
   Directory get configDir => throw UnimplementedError();
 }

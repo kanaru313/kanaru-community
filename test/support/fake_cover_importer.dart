@@ -11,7 +11,9 @@ class FakeCoverImporter implements CoverImporter {
 
   /// When true, every import reports a permanent failure.
   final bool fail;
-  int _n = 0;
+
+  /// Counter behind the keys: the next import gets key `n + 1`.
+  int n = 0;
 
   @override
   Future<CoverImportResult> import({
@@ -25,7 +27,7 @@ class FakeCoverImporter implements CoverImporter {
       );
     }
     final bytes = File(path).readAsBytesSync();
-    final key = 'ab/${(++_n).toRadixString(16).padLeft(32, '0')}';
+    final key = 'ab/${(++n).toRadixString(16).padLeft(32, '0')}';
     for (final size in CoverSize.values) {
       File('$outDir/${coverRelativePath(key, size)}')
         ..createSync(recursive: true)
