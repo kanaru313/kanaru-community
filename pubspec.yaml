@@ -40,6 +40,10 @@ dependencies:
   dbus: ^0.8.0
   window_manager: ^0.5.2
   file_selector: ^1.1.0
+  image_picker: ^1.2.1
+  image_picker_android: ^0.8.13
+  image_picker_platform_interface: ^2.11.0
+  desktop_drop: ^0.8.0
 
   # Utilities & Networking
   archive: ^4.5.2
