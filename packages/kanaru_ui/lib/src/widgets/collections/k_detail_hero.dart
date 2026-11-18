@@ -32,6 +32,8 @@ class KDetailHero extends StatelessWidget {
     required this.actions,
     this.line2,
     this.line3,
+    this.line3Trailing,
+    this.line3Semantics,
     this.description,
     this.circle = false,
     this.framedCover = false,
@@ -48,6 +50,15 @@ class KDetailHero extends StatelessWidget {
 
   /// Third line, one plain line (counts); null or empty leaves it out.
   final String? line3;
+
+  /// Widget drawn inline right after [line3] (a mark such as a heart), centred
+  /// on the text line. Ignored when [line3] is null or empty. An `Icon` given
+  /// here with no size takes the text's size, scaled with the text.
+  final Widget? line3Trailing;
+
+  /// Screen-reader label of the whole third line when [line3Trailing] is set
+  /// (the trailing widget is then left out of semantics); null reads [line3].
+  final String? line3Semantics;
 
   /// Buttons row (play, shuffle, more).
   final Widget actions;
@@ -88,6 +99,38 @@ class KDetailHero extends StatelessWidget {
     Radius.circular(14),
   );
 
+  Widget _line3(BuildContext context, String line3) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final text = Text(
+      line3,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    );
+    final trailing = line3Trailing;
+    if (trailing == null) return text;
+    final iconSize = MediaQuery.textScalerOf(context)
+        .scale(style?.fontSize ?? 14);
+    return Semantics(
+      label: line3Semantics ?? line3,
+      excludeSemantics: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(child: text),
+          const KGap(KSpace.x1),
+          IconTheme.merge(
+            data: IconThemeData(size: iconSize, color: style?.color),
+            child: trailing,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _text(BuildContext context, {required bool wide, int wideLines = 3}) {
     final textTheme = Theme.of(context).textTheme;
     final line3 = this.line3;
@@ -104,16 +147,7 @@ class KDetailHero extends StatelessWidget {
         ?line2,
         // Ignored for touch: the second line's touch area overlaps it.
         if (line3 != null && line3.isNotEmpty)
-          IgnorePointer(
-            child: Text(
-              line3,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
+          IgnorePointer(child: _line3(context, line3)),
         const KGap(KSpace.x2),
         actions,
       ],

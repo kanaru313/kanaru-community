@@ -73,20 +73,26 @@ void main() {
       expect(find.text(l10n.libraryShowMore), findsNothing);
     });
 
-    pageTest('Favorites: heart line under the counts, no description', (
-      t,
-    ) async {
-      final h = await pumpPlaylistPage(t, uid: PlaylistUids.favorites);
-      await seedFavorites(t, h, ['One']);
-      await eventually(
-        t,
-        () => find.text('One').evaluate().isNotEmpty,
-        what: 'the favorite',
-      );
-      final l10n = pageL10n(t);
-      expect(find.text(l10n.playlistFavoritesName), findsWidgets);
-      expect(find.text(l10n.playlistFavoritesSubtitle), findsOneWidget);
-    });
+    pageTest(
+      'Favorites: heart line (text + icon, no glyph) under the counts, no description',
+      (t) async {
+        final h = await pumpPlaylistPage(t, uid: PlaylistUids.favorites);
+        await seedFavorites(t, h, ['One']);
+        await eventually(
+          t,
+          () => find.text('One').evaluate().isNotEmpty,
+          what: 'the favorite',
+        );
+        final l10n = pageL10n(t);
+        expect(find.text(l10n.playlistFavoritesName), findsWidgets);
+        expect(find.text(l10n.plScreensFavoritesLine), findsOneWidget);
+        expect(find.textContaining('♥'), findsNothing);
+        expect(
+          find.bySemanticsLabel(l10n.plScreensFavoritesLineSemantics),
+          findsOneWidget,
+        );
+      },
+    );
 
     pageTest('description sits under the row; Show more survives leaving', (
       t,

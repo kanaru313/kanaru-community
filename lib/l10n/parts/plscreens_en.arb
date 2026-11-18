@@ -1,4 +1,6 @@
 {
+  "plScreensFavoritesLine": "Songs you tapped",
+  "plScreensFavoritesLineSemantics": "Songs you liked",
   "plScreensDeleted": "Deleted “{name}”",
   "@plScreensDeleted": {
     "placeholders": {

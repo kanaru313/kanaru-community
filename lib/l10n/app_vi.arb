@@ -1449,6 +1449,8 @@
     }
   },
   "playlistM3uExportFailed": "Không lưu được tệp.",
+  "plScreensFavoritesLine": "Bài bạn bấm",
+  "plScreensFavoritesLineSemantics": "Bài bạn bấm yêu thích",
   "plScreensDeleted": "Đã xoá “{name}”",
   "@plScreensDeleted": {
     "placeholders": {

@@ -2262,6 +2262,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistM3uExportFailed => 'Couldn\'t save the file.';
 
   @override
+  String get plScreensFavoritesLine => 'Songs you tapped';
+
+  @override
+  String get plScreensFavoritesLineSemantics => 'Songs you liked';
+
+  @override
   String plScreensDeleted(String name) {
     return 'Deleted “$name”';
   }

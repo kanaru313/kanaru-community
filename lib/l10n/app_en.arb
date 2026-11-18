@@ -1449,6 +1449,8 @@
     }
   },
   "playlistM3uExportFailed": "Couldn't save the file.",
+  "plScreensFavoritesLine": "Songs you tapped",
+  "plScreensFavoritesLineSemantics": "Songs you liked",
   "plScreensDeleted": "Deleted “{name}”",
   "@plScreensDeleted": {
     "placeholders": {

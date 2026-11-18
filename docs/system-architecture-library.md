@@ -421,7 +421,10 @@ list page, the playlist page and their behaviour:
   link starts no query.
 - **Playlist / Favorites page** (`playlist_page.dart`, `page/`): one template on
   `DetailFrame(actions:, showBack:)`; `KDetailHero(framedCover: true)` gives the
-  wide-column variant. Favorites has no "not found", so its pending and error
+  wide-column variant. Favorites' third hero line is the text
+  `plScreensFavoritesLine` plus a filled heart (`KIcons.heartFilled`, `primary`,
+  via `KDetailHero.line3Trailing`, read as `plScreensFavoritesLineSemantics`).
+  Favorites has no "not found", so its pending and error
   frames are a local `DetailFrame(title: '', showBack: <page rule>)`
   (`playlist_page_states.dart`) because `DetailPending` / `DetailNotFound` take
   no `showBack`. **Counts** (hero, bar, filter "x / N") are distinct songs,

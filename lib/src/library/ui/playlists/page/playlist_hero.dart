@@ -16,8 +16,8 @@ import '../menu/playlist_menu.dart';
 import 'playlist_shown_entries.dart';
 
 /// Top of a playlist page (the left column on a wide page): cover, name,
-/// `N songs · length` (the hint for Favorites), `[▶ Play] [shuffle] [⋮]` and
-/// the description. The wide column shows the cover as a framed card over a
+/// `N songs · length` (a line with a heart for Favorites),
+/// `[▶ Play] [shuffle] [⋮]` and the description. The wide column shows the cover as a framed card over a
 /// washed backdrop. The cover has no action of its own.
 ///
 /// While [editing] they and ⋮ are off.
@@ -69,7 +69,17 @@ class PlaylistHero extends ConsumerWidget {
                   '${formatTotalDuration(l10n, totals.durationMs)}'
             : l10n.playlistTrackCount(0),
       ),
-      line3: summary.isFavorites ? l10n.playlistFavoritesSubtitle : null,
+      line3: summary.isFavorites ? l10n.plScreensFavoritesLine : null,
+      line3Semantics: summary.isFavorites
+          ? l10n.plScreensFavoritesLineSemantics
+          : null,
+      // The same filled heart and colour as the favourite toggle on a song.
+      line3Trailing: summary.isFavorites
+          ? Icon(
+              KIcons.heartFilled,
+              color: Theme.of(context).colorScheme.primary,
+            )
+          : null,
       actions: PlayShuffleButtons(
         compact: false,
         labelled: true,

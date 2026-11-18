@@ -2010,6 +2010,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistM3uExportFailed => 'Không lưu được tệp.';
 
   @override
+  String get plScreensFavoritesLine => 'Bài bạn bấm';
+
+  @override
+  String get plScreensFavoritesLineSemantics => 'Bài bạn bấm yêu thích';
+
+  @override
   String plScreensDeleted(String name) {
     return 'Đã xoá “$name”';
   }

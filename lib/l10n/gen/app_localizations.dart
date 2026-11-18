@@ -3378,6 +3378,18 @@ abstract class AppLocalizations {
   /// **'Couldn\'t save the file.'**
   String get playlistM3uExportFailed;
 
+  /// No description provided for @plScreensFavoritesLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs you tapped'**
+  String get plScreensFavoritesLine;
+
+  /// No description provided for @plScreensFavoritesLineSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs you liked'**
+  String get plScreensFavoritesLineSemantics;
+
   /// No description provided for @plScreensDeleted.
   ///
   /// In en, this message translates to:

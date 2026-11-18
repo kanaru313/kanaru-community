@@ -426,4 +426,59 @@ void main() {
       );
     });
   });
+
+  group('line3Trailing', () {
+    Widget hero({String? semantics}) => KDetailLayout(
+      header: KDetailHero(
+        title: 'Fav',
+        line3: 'Songs you tapped',
+        line3Semantics: semantics,
+        line3Trailing: const Icon(KIcons.heartFilled, key: ValueKey('heart')),
+        coverBuilder: (c, s, r) => SizedBox.square(dimension: s),
+        actions: const Text('buttons'),
+      ),
+      slivers: const [],
+    );
+
+    for (final width in [400.0, 1300.0]) {
+      testWidgets('sits right after the text, centred on it ($width)', (
+        tester,
+      ) async {
+        tester.view.physicalSize = Size(width, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(host(hero()));
+        final text = tester.getRect(find.text('Songs you tapped'));
+        final heart = tester.getRect(find.byKey(const ValueKey('heart')));
+        expect(heart.left, greaterThanOrEqualTo(text.right));
+        expect(heart.center.dy, closeTo(text.center.dy, 1.5));
+      });
+    }
+
+    testWidgets('heart grows with text scale', (tester) async {
+      await tester.pumpWidget(host(hero()));
+      final base = tester.getSize(find.byKey(const ValueKey('heart'))).height;
+      await tester.pumpWidget(host(hero(), textScale: 2));
+      final big = tester.getSize(find.byKey(const ValueKey('heart'))).height;
+      expect(big, greaterThan(base));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('reads the label and leaves the icon out of semantics', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(hero(semantics: 'Songs you liked')));
+      expect(find.bySemanticsLabel('Songs you liked'), findsOneWidget);
+      expect(find.bySemanticsLabel('Songs you tapped'), findsNothing);
+    });
+
+    testWidgets('without a trailing widget the line is plain text', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(_page()));
+      expect(find.byKey(const ValueKey('heart')), findsNothing);
+      expect(find.text('3 songs'), findsOneWidget);
+      expect(find.bySemanticsLabel('3 songs'), findsOneWidget);
+    });
+  });
 }
