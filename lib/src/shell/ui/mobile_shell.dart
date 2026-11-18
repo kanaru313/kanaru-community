@@ -33,7 +33,8 @@ class MobileShell extends ConsumerWidget {
 
   final StatefulNavigationShell navigationShell;
 
-  /// Tab nav items in branch order (pushed pages are not shell branches).
+  /// Shell branches in branch order: the tabs plus non-tab branches such as
+  /// Settings (pushed pages are not branches).
   final List<NavItem> items;
 
   /// Every nav item in nav order; the sidebar lists those with `sidebar`.
@@ -63,9 +64,6 @@ class MobileShell extends ConsumerWidget {
       onSelect(context);
     } else if (item.pushed) {
       context.push(item.path);
-    } else if (item.isBranch) {
-      final branch = items.indexOf(item);
-      if (branch >= 0) navigationShell.goBranch(branch, initialLocation: true);
     } else if (item.parentId != null) {
       context.go(item.path);
     } else {

@@ -2,6 +2,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/playback/state/playback_providers.dart';
+import 'package:kanaru/src/playback/ui/mini_player.dart';
 import 'package:kanaru/src/router/state/router_provider.dart';
 import 'package:kanaru/src/screens/first_run/state/first_run_gate.dart';
 import 'package:kanaru/src/screens/now_playing/now_playing_path.dart';
@@ -70,7 +72,15 @@ void main() {
         expect(
           find.descendant(
             of: find.byType(PageHeader),
-            matching: find.byIcon(KIcons.back),
+            matching: byIconButton('Back'),
+          ),
+          findsNothing,
+        );
+        // No search action on Settings headers.
+        expect(
+          find.descendant(
+            of: find.byType(PageHeader),
+            matching: byIconButton('Search'),
           ),
           findsNothing,
         );
@@ -87,6 +97,16 @@ void main() {
         await tester.tap(_sidebarRow('Settings'));
         await tester.pumpAndSettle();
         expect(_location(c), '/settings');
+
+        // Other pages keep the search action.
+        await _go(tester, c, '/');
+        expect(
+          find.descendant(
+            of: find.byType(PageHeader),
+            matching: byIconButton('Search'),
+          ),
+          findsOneWidget,
+        );
       },
     );
 
@@ -113,7 +133,7 @@ void main() {
       expect(_location(c), '/settings');
       expect(find.byType(NavigationBar), findsNothing);
       expect(byIconButton('Menu'), findsNothing);
-      expect(find.byIcon(KIcons.ai), findsNothing);
+      expect(byAnyIconButton('AI chat · Coming soon'), findsNothing);
       expect(byIconButton('Settings'), findsNothing);
       expect(byIconButton('Back'), findsOneWidget);
 
@@ -121,6 +141,22 @@ void main() {
       await _go(tester, c, '/settings/sub');
       expect(find.byType(NavigationBar), findsNothing);
       expect(byIconButton('Back'), findsOneWidget);
+    });
+
+    testWidgets('no mini player under Settings, one on Home', (tester) async {
+      final c = await pumpKanaruApp(
+        tester,
+        width: mobileW,
+        height: mobileH,
+        overrides: [hasCurrentTrackProvider.overrideWithValue(true)],
+      );
+      expect(find.byType(MiniPlayer), findsOneWidget);
+      await _go(tester, c, '/settings');
+      expect(find.byType(MiniPlayer), findsNothing);
+      await _go(tester, c, '/settings/sub');
+      expect(find.byType(MiniPlayer), findsNothing);
+      await _go(tester, c, '/');
+      expect(find.byType(MiniPlayer), findsOneWidget);
     });
 
     testWidgets('Back goes sub-page, Settings root, Home', (tester) async {

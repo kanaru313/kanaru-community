@@ -287,7 +287,7 @@ never 1000 or more, which belongs to the Settings footer.
 | `app.theme` | `ThemeChoice` | `system` | `screens/settings/state/appearance_settings.dart` |
 | `app.language` | `AppLanguage` (`vi`, `en`) | device locale (`vi` or `en`) | same |
 | `app.pure_black` | bool | false (dark theme only) | `screens/settings/state/display_settings.dart` |
-| `app.motion` | bool | true (false turns animations off app-wide) | same |
+| `app.motion` | bool | true (false forces `MediaQuery.disableAnimations`: widgets that honour it stop animating; page, sheet and dialog transitions still animate, tracked as a follow-up) | same |
 | `app.text_scale` | int percent: 80, 90, 100, 110, 125, 150 | 100 (another whole number snaps to the nearest step; the app caps system x factor at 2.0) | same |
 | `library.tabs` | `LibraryTabsConfig` | all tabs, default order | `library/state/library_tabs_providers.dart` |
 | `library.setup_done` | bool | false | reserved, scanner lane (A) |

@@ -188,11 +188,11 @@ void main() {
 
         // A read-only directory refuses the temp file of the atomic write.
         Process.runSync('chmod', ['500', dir.path]);
+        addTearDown(() => Process.runSync('chmod', ['700', dir.path]));
         try {
           File('${dir.path}/probe').writeAsStringSync('x');
           File('${dir.path}/probe').deleteSync();
           markTestSkipped('permissions not enforced (running as root)');
-          Process.runSync('chmod', ['700', dir.path]);
           return;
         } on FileSystemException {
           // Expected: the directory is read-only.

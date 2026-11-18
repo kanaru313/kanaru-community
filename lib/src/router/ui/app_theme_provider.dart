@@ -28,5 +28,6 @@ final appThemeProvider = Provider.family<ThemeData, Brightness>((
   return theme.copyWith(
     colorScheme: theme.colorScheme.copyWith(surface: Colors.black),
     scaffoldBackgroundColor: Colors.black,
+    canvasColor: Colors.black,
   );
 });

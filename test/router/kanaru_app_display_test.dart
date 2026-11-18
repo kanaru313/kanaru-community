@@ -91,6 +91,7 @@ void main() {
     final dark = c.read(appThemeProvider(Brightness.dark));
     expect(dark.colorScheme.surface, Colors.black);
     expect(dark.scaffoldBackgroundColor, Colors.black);
+    expect(dark.canvasColor, Colors.black);
     // Container tiers stay tinted.
     expect(dark.colorScheme.surfaceContainerHigh, isNot(Colors.black));
     expect(dark.colorScheme.surfaceContainer, isNot(Colors.black));
