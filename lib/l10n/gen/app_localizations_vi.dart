@@ -2025,4 +2025,92 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get playlistM3uExportFailed => 'Không lưu được tệp.';
+
+  @override
+  String plAddMovedSuffix(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: ', bỏ $count bản cũ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plAddSkippedSuffix(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: ', bỏ qua $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plAddAlreadyInOne(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bài đã có trong “$name”.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plAddAlreadyInMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Một số bài đã có trong $count playlist.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plAddDefaultNameNumbered(int count) {
+    return 'Playlist mới $count';
+  }
+
+  @override
+  String plAddAddedToOne(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bài',
+    );
+    return 'Đã thêm $_temp0 vào “$name”';
+  }
+
+  @override
+  String plAddNothingNewOne(String name) {
+    return 'Mọi bài đã có trong “$name”';
+  }
+
+  @override
+  String plAddNothingNewMany(int count) {
+    return 'Mọi bài đã có trong $count playlist';
+  }
+
+  @override
+  String get plAddSourceQueue => 'từ hàng đợi';
+
+  @override
+  String plAddDroppedSuffix(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: ', $count bài không còn trong thư viện',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get plAddSongsGone => 'Các bài này không còn trong thư viện';
+
+  @override
+  String get plAddTimedOut => 'Mất quá nhiều thời gian. Thử lại.';
+
+  @override
+  String get plAddNotConfirmed =>
+      'Chưa xác nhận được việc thêm bài. Hãy xem lại playlist.';
 }
