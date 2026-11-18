@@ -125,12 +125,13 @@ files. Each file is one of two kinds:
 | Extension and router | `extension/**`, `router/**` | none |
 | Playback | `playback/domain/{playback_commands,now_playing}.dart`, `playback/data/{track_info_rows,cover_colors_rows}.dart`, `playback/state/{track_info_providers,cover_providers}.dart`, `playback/ui/track_cover.dart` | `playback/state/playback_providers.dart` (declarations F, body B), `playback/data/unavailable_playback.dart` (B deletes) |
 | Library | `library/domain/**` (also the `FavoritesController` and `FolderExclusions` interfaces), `library/data/{favorites,folder_exclusion,music_folders}_repository.dart`, `library/state/{library_tabs,favorites,music_folders,folder_exclusion,custom_cover}_providers.dart`, `library/data/custom_cover_store.dart`, `library/ui/library_locations.dart` | `library/state/scan_providers.dart` (declarations F, body A), `library/ui/selection/selection_bar.dart` (C), lane folders `library/{domain,data,state}/scan/**` (A) and `library/{domain,data,state}/browse/**` (C), registration files (below) |
+| Playlists | `library/{domain,data,state}/playlists/**` (the `PlaylistStore` contract, repository, providers, page write gate, `PlaylistEditor`), `library/ui/playlist_common/**` (`PlaylistCover`, `playlistDisplayName`, registration), the playlist values of `library/domain/browse/list_sort.dart` (`BrowseList.playlists` / `playlistTracks`, `SortCriterion.name` / `dateModified` / `playlistOrder`, `SortKind.position`), `library/ui/menus/{menu_model,menu_actions,menu_header,menu_renderer,open_menu}.dart` hooks (`RunAction`, `MenuHeader.note` / `action`, `MenuItemSpec.hint`, `MenuOrigin.playlist`, `openMenu`, `withSongPageRows`), `library/ui/songs/song_tile.dart` params (`markCurrent`, `menuExtras`, `menuFavoriteRow`, `edit`, `unavailable`, `onRemove`, `onMenu`), `library/ui/detail/detail_header.dart` (`DetailFrame(actions:, showBack:)`), `l10n/parts/playlist_*.arb` | `library/ui/playlists/{playlists_page,playlist_page}.dart` (playlist screens lane), `library/ui/add_to_playlist/add_to_playlist.dart` (add-to-playlist lane), `library/ui/m3u/m3u_entry_points.dart` (M3U lane; declarations incl. `m3uAvailable` and `M3uImportProgressSliver` F, bodies S), `library/ui/covers/pick_custom_cover.dart` (custom-cover picker, a later lane); spare l10n parts `plscreens_*` (playlist screens), `pladd_*` (add-to-playlist), `m3u_*` (M3U) |
 | Screens | `screens/settings/state/appearance_settings.dart` | `screens/first_run/state/first_run_gate.dart` (declarations F, body A), `screens/first_run/first_run_registration.dart` (A), `screens/now_playing/now_playing_registration.dart` (B), `screens/ui/home_page.dart` (A, Home scan card) |
-| Registration | none | `library/ui/scan/library_scan_registration.dart` (A), `library/ui/library_browse_registration.dart` (C) |
+| Registration | `library/ui/playlist_common/playlist_registration.dart` (Playlists and Favorites nav items, `/playlists` routes; static children before `:uid`) | `library/ui/scan/library_scan_registration.dart` (A), `library/ui/library_browse_registration.dart` (C) |
 | Foundation | `foundation/**` | none |
-| kanaru_ui | every widget and token of the foundation, `KIcons` | group barrels `widgets/setup/` (A), `widgets/media/` (B), `widgets/collections/` (C) |
+| kanaru_ui | every widget and token of the foundation, `KIcons`, and the playlist pieces `KCoverMosaic`, `KFabMenu`, `showMultiSelectionPicker`, `showKFullScreenDialog`, `KTonalToggleButton`, `KMediaCard.missing` / `.editing`, `KIconEmphasis.destructive`, the `hint` params | group barrels `widgets/setup/` (A), `widgets/media/` (B), `widgets/collections/` (C) |
 | Rust | `kanaru_media` `error`, `cancel`, `limits`; `kanaru_bridge` `error`, `guard`, `pools`, `os`, `source`, `api/error.rs`; manifests | `kanaru_media` `tags/` and `covers/` (A), `waveform/` (B), `kanaru_bridge` `api/{tags,covers}.rs` (A), `api/waveform.rs` (B) |
-| l10n | `lib/l10n/parts/app_*.arb`, `l10n.yaml`, `tool/**` | `scan_*.arb` (A), `playback_*.arb` (B), `library_*.arb` (C) |
+| l10n | `lib/l10n/parts/app_*.arb`, `l10n.yaml`, `tool/**`, `playlist_*.arb` | `scan_*.arb` (A), `playback_*.arb` (B), `library_*.arb` (C), spare parts `plscreens_*`, `pladd_*`, `m3u_*` |
 
 Generated files (`lib/src/rust/`, `frb_generated.rs`, `lib/l10n/app_*.arb`,
 `lib/l10n/gen/`) are never hand-merged: on a conflict take either side and
@@ -308,6 +309,8 @@ Strings live in parts, one file per part and locale:
 | `scan` | `scan_en.arb`, `scan_vi.arb` | `scan` | lane A |
 | `playback` | `playback_en.arb`, `playback_vi.arb` | `playback` | lane B |
 | `library` | `library_en.arb`, `library_vi.arb` | `library` | lane C |
+| `playlist` | `playlist_en.arb`, `playlist_vi.arb` | `playlist` | playlist foundation (frozen) |
+| `plscreens`, `pladd`, `m3u` | `plscreens_*.arb`, `pladd_*.arb`, `m3u_*.arb` (created by the lane that needs one) | `plScreens`, `plAdd`, `m3u` | spare parts of the playlist screens, add-to-playlist and M3U lanes, so a lane never edits `playlist_*` |
 
 `dart run tool/merge_arb.dart` merges the parts into `lib/l10n/app_<locale>.arb`,
 then `flutter gen-l10n` generates `AppLocalizations` (one class for every part).
@@ -332,6 +335,11 @@ in one locale, or an unknown part file.
   tombstoned rows, `replaceTrackArtists`, `markTracksMissing`, `upsertTrackDetails`,
   `upsertCoverColors`, and the folder exclusion helpers. Library reads filter
   with `visibleTrackWhere`.
+- Playlists (`PlaylistStore`, `library/data/playlists/`) are a repository on
+  the existing `playlists` and `playlist_entries` tables, no schema change.
+  Its SQL needs the bundled SQLite of the `sqlite3` package (3.44 or newer for
+  the aggregate `ORDER BY`), never the system library. Entry removal is a
+  tombstone for an undo window, purged by the track GC after 1 h.
 - Drift runs in modular mode (`build.yaml`), so another package can import the
   public tables and define its own database over the same connection.
 - Extensions never use drift's `schemaVersion` or `MigrationStrategy`. Each

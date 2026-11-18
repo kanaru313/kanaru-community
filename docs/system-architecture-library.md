@@ -113,6 +113,8 @@ these functions and never build the paths themselves.
 | `artist(ArtistKey key)` | `/library/artists/<key.encode()>` |
 | `genre(String genreKey)` | `/library/genres/<encodeKey(genreKey)>` |
 | `language(String? languageKey)` | `/library/languages/<encodeKey>`, or `/library/languages/_unknown` for null |
+| `playlists` | `/playlists` |
+| `playlist(String uid)` | `/playlists/<uid>`; Favorites is `/playlists/favorites` (`PlaylistUids.favorites`) |
 
 ## Favorites
 
@@ -127,6 +129,158 @@ the entry; a tombstoned Favorites playlist is revived by the next favorite.
 | `favoriteTrackIdsProvider` | `StreamProvider<Set<TrackId>>` | One query for the whole set |
 | `isFavoriteProvider(id)` | `Provider.family<bool, TrackId>`, `isAutoDispose` | Selects from the set |
 | `favoritesControllerProvider` | `Provider<FavoritesController>` | |
+
+## Playlists
+
+Domain `library/domain/playlists/` (no Flutter), data `library/data/playlists/`,
+state `library/state/playlists/`. A repository on the existing `playlists` and
+`playlist_entries` tables: no schema change.
+
+- **Domain.** `PlaylistUids.favorites` (equals the database's
+  `favoritesPlaylistUid`), name and description rules (`cleanPlaylistName`,
+  `checkPlaylistName`, `capPlaylistName`; limits in graphemes), `PlaylistSummary`
+  (counts, duration, `updatedAt`, up to four `autoCoverKeys`), `PlaylistDetail`
+  (entries in order, `unavailableCount`, `duplicateCount`, `playableIds`),
+  `PlaylistEntryView` (`available` = track not missing or hidden), the result
+  types (`PlaylistUpdate`, `PlaylistMove`: "unchanged" and "gone" are never one
+  `false`), and the cover rule (the first distinct album covers in playlist
+  order, one track without album counts as its own group).
+- **`PlaylistStore`** (`playlist_store.dart`, implemented by
+  `PlaylistRepository`): `watchSummaries`, `watchPlaylist`, `loadPlaylist`,
+  `countExisting`, `createPlaylist`, `createImportedPlaylist`, `updatePlaylist`,
+  `deletePlaylist`, `addToPlaylists` (duplicate policy `skipExisting`,
+  `moveToEnd`, `addAll` applies only to targets that already hold a batch
+  track), `moveEntry`, `removeEntries`, `removeDuplicates`, `undoRemoval`,
+  `commitRemoval`, `duplicatePlaylist`, `addAllToFavorites`. Every write is one
+  transaction. Watchers use `throttledQuery`. Only user playlists and Favorites
+  take writes: a playlist of another kind counts as gone.
+- **Keys.** Entries are ordered by a fractional `sort_key` (then uid). An
+  append or a move computes its key against **all** rows of the playlist,
+  tombstones included, so it never reuses the key of a pending removal. The
+  favorites append (`favorite_entries.dart`, also behind `FavoritesRepository`)
+  follows the same rule; a revived favorite takes a fresh key.
+- **Removal.** `removeEntries` / `removeDuplicates` set `deleted_at` (a
+  tombstone, hidden from every read) and return a `PlaylistRemoval`.
+  `undoRemoval` revives exactly those rows (same `deleted_at`); `commitRemoval`
+  deletes them. Tombstones nobody settled are purged by the track GC
+  (`runTrackGc`) once older than `removedEntryGraceMs` (1 h), so a removal never
+  pins its tracks for good.
+- **`updated_at`.** Every real write sets the playlist's `updated_at` to
+  `MAX(now, updated_at + 1)`: strictly increasing per playlist, also when two
+  writes share a millisecond or the clock steps back, and also for un-favoriting
+  (`FavoritesRepository` does it). A write that changes nothing writes and
+  notifies nothing (`writeNotifyingOnChange`), so no watcher wakes.
+- **Import.** `createImportedPlaylist` takes `ImportedTrack` and
+  `ImportedMissing` entries in file order. An `ImportedMissing` line (a file under
+  a live local music folder with no `tracks` row) reuses the row of its
+  `(source, locator)` or creates a `missing` placeholder (`hidden` under a live
+  exclusion) holding the title, artist and duration of the `#EXTINF` line; the
+  next scan adopts it when the file is there (see the database doc, "Track
+  status"). The entry then shows as unavailable until then.
+- **SQL.** The bundled SQLite of the `sqlite3` package (3.54 on Android and
+  Linux) is the only one used: the summary query needs the aggregate `ORDER BY`
+  of SQLite 3.44, and Android 11 to 13 ship 3.32. Never switch to the system
+  library. Lists of ids go in as one JSON array parameter read by `json_each`
+  (`jsonEach`, `jsonList`), so there is no variable limit and no chunking; the
+  summary covers come from a per-playlist subquery that stops after 64 entries
+  with a cover.
+- **State** (`library/state/playlists/`). `playlistStoreProvider` (tests
+  override it), `playlistSummariesProvider` with `playlistsProvider`,
+  `favoritesSummaryProvider` and `sortedPlaylistsProvider` (the order of
+  `libraryListViewsProvider` for `BrowseList.playlists`),
+  `playlistDetailProvider(uid)`, `playlistMembershipProvider(TrackIdList)`
+  (`countExisting`), `playlistEditorProvider`.
+  `playlistTrackSortsProvider` keeps the track sort of each playlist in
+  `library.playlist_track_sorts` (`{uid: [{by, desc}, ...]}`; default:
+  playlist order, the filter text is not kept; a corrupt entry is dropped);
+  `playlistTrackSortProvider(uid)` reads one.
+- **Page write gate** (`playlistPageProvider(uid)`,
+  `PlaylistPageController`; state = detail shown plus `busy`). `move`, `remove`,
+  `removeDuplicates`, `removeUnavailable` and `undo` run one at a time in
+  call order. Each shows its effect at once, before its first await (an
+  optimistic edit of the entry list, `playlist_overlay_edits.dart`; a move is
+  shown where it will land), and the stored state is read again after the last
+  one. When a write fails, the ones queued behind it are cancelled
+  (`PlaylistWriteFailure(cancelled: true)`; one message per burst, from the
+  call that is not cancelled) and the stored state is read once. While busy,
+  values of the stored stream are held; when idle a value replaces the shown one
+  unless it is older by `updatedAt`, so a load that began before the last write
+  never brings back the old order. A rebuild of the provider keeps the queue
+  and the shown state while busy; a page that is disposed with writes queued
+  still runs them, and calls on a kept notifier after dispose keep working (only
+  state updates stop).
+- **`PlaylistEditor.save(uid, name:, description:, cover:)`**: name and
+  description in one transaction (`ArgumentError` for an invalid value), then
+  the cover (`PlaylistCoverEdit.keep` / `automatic` / `file`). A cover failure
+  is reported in the result (`coverFailed`) and the text stays saved.
+
+### Playlist UI glue
+
+`library/ui/playlist_common/` (shared) and the seed pages below.
+
+- **Routes** (`playlist_registration.dart`, called from `LibraryExtension`):
+  nav items `playlists` (210, mobile 30) and `favorites` (220, `parentId:
+  'playlists'`, not a tab); route `/playlists` (`PlaylistsPage`) with the child
+  `favorites` first, then `:uid`, both through `libraryDetailPage` (the detail
+  transition, public in `library_routes.dart`). A static child always goes
+  before `:uid`, so a fixed name is never read as a playlist id (History and
+  Most played, still coming soon, would match `:uid` and show "not found").
+- **Seeds** (the placeholder body is replaced by the owner lane, the
+  declaration stays): `PlaylistsPage`, `PlaylistPage({uid})` (playlist screens),
+  `showAddToPlaylist` (add-to-playlist lane), `m3uAvailable` / `importM3u` /
+  `exportM3u` / `M3uImportProgressSliver` in `m3u/m3u_entry_points.dart` (M3U
+  lane; the playlist screens render their M3U entry points dimmed while
+  `m3uAvailable` is false), `pickCustomCover(context, kind, itemKey)` in
+  `covers/pick_custom_cover.dart` (custom-cover picker lane). All show the
+  "coming soon" snack bar or nothing.
+- **`PlaylistCover({uid, autoCoverKeys, dimension, radius, automaticOnly})`**:
+  Favorites is a heart tile (`primaryContainer`; it has no custom cover). Others
+  show the custom cover when there is one, else the automatic one: 2 to 4 keys
+  in a `KCoverMosaic`, 1 key as that cover, none as a placeholder icon seeded by
+  the uid. `automaticOnly` skips the custom cover (the Edit preview). Size
+  rule: when the decoded side (`dimension`, or the mosaic tile's longer side)
+  times the device pixel ratio is above 256, it reads the `full` file, else the
+  `thumb`; a thumb path is derived from the key of the cover shown, so it never
+  pairs with an older cover. `ItemCover` (public, in `browse/item_covers.dart`;
+  `thumb:` picks the small file) is the one widget for a custom or automatic
+  cover. `playlistDisplayName(l10n, summary)` gives Favorites its localized name.
+- **`DetailFrame(actions:, showBack:)`** (`detail/detail_header.dart`):
+  `actions` go to the page header before the scope's trailing buttons;
+  `showBack: false` drops the `[←]`, which makes it a root header, so the scope's
+  `leading` and `rootTrailing` show (nothing on the desktop shell; ☰ and ⚙ on the
+  mobile one), so pass it on desktop only (Favorites is a sidebar item there).
+  Defaults leave the other callers unchanged.
+- **Menu hooks** (`library/ui/menus/`). `menu_model.dart` (specs, header)
+  re-exports `menu_actions.dart` (`MenuAction` and its cases). `MenuAction.run`
+  = `RunAction`: runs the caller's function with the root navigator's context
+  once the menu closed; a failure is logged and shown as the `libraryActionFailed`
+  toast. `MenuSpec.origin` (kept for rows that depend on the page; `copyWith`
+  replaces the groups), `MenuOrigin.playlist(uid)` (`PlaylistOrigin`),
+  `MenuItemSpec.hint` (the row's accessible description, never the subtitle),
+  `MenuImage.playlist` with `MenuHeader.autoCoverKeys`, `note` (third line, one
+  line, ellipsis) and `action` (a `MenuTrailingSpec` icon button at the header's
+  end, e.g. "change cover"). `MenuItemId` has the playlist ids
+  (`playlistMoveUp` ... `playlistAskAi`). `openMenu(context, build, {viaKeyboard})`
+  is public (same load guard as the typed openers). `openSongMenu(...,
+  playlistGroup:, favoriteRow:)` goes through `withSongPageRows`: the page's
+  own group becomes the second group (after "Go to"), and `favoriteRow: false`
+  drops the heart row. A playlist menu builder throws
+  `ItemGoneException('playlist <uid>')` when `loadPlaylist` returns null: the
+  `libraryNotFoundMessage` toast, no menu.
+- **`SongTile`** (`songs/song_tile.dart`, with `song_tile_edit.dart`,
+  `song_tile_cover.dart`): `markCurrent: false` never shows the row as playing;
+  `menuExtras` and `menuFavoriteRow` go to `openSongMenu` from ⋮, right click and
+  the Menu key; `onMenu` replaces the menu. `edit: SongTileEdit(handle,
+  removeLabel, onRemove)` is edit mode: the handle sits before the row end, the
+  desktop shell also has a destructive ✕, ♥ and ⋮ are not built, tap and long
+  press do nothing, right click and Menu key open nothing, the swipe is
+  `KSwipeActions.remove` (a `false` result or a throw springs back) and Delete on
+  the focused row removes; the swipe, ✕ and Delete share one pending removal per
+  row. `unavailable: true` is the missing row: dashed, dimmed, "not in library"
+  as line 3, `KIcons.musicOff` cover, not playable, no ♥ and no capped swipes;
+  its ✕ (`onRemove`, always on mobile, on hover or focus on desktop) removes it.
+  Selection stays the app-wide `TrackId` selection. Toggling `edit` does not
+  remount the row.
 
 ## Library tabs
 
@@ -194,12 +348,20 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
 `lib/src/library/data/browse/throttled_query.dart`.
 
 - `BrowseList` (songs, albums, artists, genres, languages, folders,
-  albumTracks, detailSongs), `SortCriterion` (its `kind`, text / number / date,
-  picks the direction wording: "A → Z / Z → A", "Tăng dần / Giảm dần",
-  "Cũ trước / Mới trước"), `SortSpec(criterion, descending)`. `criteriaOf(list)`
-  lists the criteria in menu order; the first is the default (`defaultSortOf`;
-  detail songs default to play count and languages to track count, both
-  descending).
+  albumTracks, detailSongs, playlists, playlistTracks), `SortCriterion` (its
+  `kind`, text / number / date / position, picks the direction wording: "A → Z /
+  Z → A", "Tăng dần / Giảm dần", "Cũ trước / Mới trước", "First → last / Last →
+  first" for `SortKind.position`), `SortSpec(criterion, descending)`.
+  `criteriaOf(list)` lists the criteria in menu order; the first is the default
+  (`defaultSortOf`; detail songs default to play count, languages to track
+  count and playlists to date modified, all descending). Playlists offer
+  `dateModified`, `name`; a playlist's songs (`playlistTracks`) offer
+  `playlistOrder` (the hand-arranged order, default), `title`, `artist`,
+  `album`, `duration`, `playCount`. The song SQL (`song_ids_query.dart`) rejects
+  the playlist criteria (`ArgumentError`): playlists sort in memory
+  (`playlists/playlist_sort.dart`: `sortPlaylists` by `updatedAt` or natural
+  name, ties by name then uid; `sortPlaylistEntries`, stable, missing text last
+  in both directions, `playlistOrder` = input position).
 - `SortOrder` (`library/domain/browse/sort_order.dart`): the sort of a list as
   an ordered, non-empty, duplicate-free `List<SortSpec>`; the first criterion
   orders, each next one breaks ties. Immutable with value equality (it is part
@@ -220,10 +382,15 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
   v2, and v1 (`"sort": "artist", "desc": true`, one criterion; a missing `desc`
   means the list default's direction). Unknown lists, criteria the list does
   not offer, duplicates and unknown views are dropped (defaults; an empty
-  sort becomes the default); only a non-map throws `FormatException`. A build
+  sort becomes the default); only a non-map throws `FormatException`.
+  `sortOrderToJson(order)` and `sortOrderFromJson(list, json, {fallback})`
+  (public; never throws, unknown or repeated entries dropped, nothing usable
+  gives `fallback`) are the one JSON form of a `SortOrder`, shared with
+  `library.playlist_track_sorts` (below). A build
   from before v2 reading a v2 value does not throw: it compares the list
   `sort` with criterion names, finds none and uses the default sort (the view
-  is kept); saving there writes v1 again. Albums default to a grid, the rest to rows.
+  is kept); saving there writes v1 again. Albums, genres, languages and
+  playlists default to a grid, the rest to rows.
 - `AlbumSummary`, `ArtistSummary`, `GenreSummary`, `LanguageSummary` (code
   null = unknown): value types the list queries return.
 - `NaturalKey` / `naturalCompare`: digit runs by value (any length), then
@@ -407,8 +574,9 @@ both shells. The builders are pure functions of loaded data (no
 
 | File | Role |
 |---|---|
-| `menu_origin.dart` | `MenuOrigin`: `list`, `album(key)`, `artist(key)`, `genre(key)`, `language(code)`, `folder(sourceId, key)`, `own`. `MenuOrigin.ofScope(scope)` gives the origin of the songs of a list. It travels page -> tile -> builder |
-| `menu_model.dart` | `MenuSpec` (header, groups, `advanced` groups, named `pages`, `queueIds`), `MenuItemSpec` (id, icon, title, subtitle, `action` or `page` or `chips`, `trailing`, `enabled`, `soon`, `danger`, `pro`), `MenuAction` (`go`, `favorite`, `exclude`, `copy`, `reveal`, `select`, `play`), `MenuEnv` (l10n, `canReveal`, folder paths, Trash wording) |
+| `menu_origin.dart` | `MenuOrigin`: `list`, `album(key)`, `artist(key)`, `genre(key)`, `language(code)`, `folder(sourceId, key)`, `playlist(uid)`, `own`. `MenuOrigin.ofScope(scope)` gives the origin of the songs of a list. It travels page -> tile -> builder |
+| `menu_model.dart` | `MenuSpec` (header, groups, `advanced` groups, named `pages`, `queueIds`, `origin`), `MenuItemSpec` (id, icon, title, subtitle, `hint`, `action` or `page` or `chips`, `trailing`, `enabled`, `soon`, `danger`, `pro`), `MenuHeader` (`autoCoverKeys`, `note`, `action`), `MenuEnv` (l10n, `canReveal`, folder paths, Trash wording); re-exports `menu_actions.dart` |
+| `menu_actions.dart` | `MenuAction` (`go`, `favorite`, `exclude`, `copy`, `reveal`, `select`, `play`, `run`) and its cases |
 | `link_rows.dart` | The "Go to ..." rules in one place (below) |
 | `{song,album,artist,group,folder,selection}_menu.dart` | The builder of each kind (`group` = genre and language) |
 | `menu_items.dart` | Shared rows: Play / Shuffle, add all to favorites, the dimmed rows, the "Advanced" row |
@@ -442,10 +610,11 @@ what the menu showed.
 
 - `open_menu.dart`: `openSongMenu`, `openAlbumMenu`, `openArtistMenu`,
   `openGenreMenu`, `openLanguageMenu`, `openFolderMenu`, `openSelectionMenu`,
-  and `openSongInfo` (the song menu opened straight on its info page, the page
+  `openMenu` (any builder, same load guard; the playlist menu uses it) and
+  `openSongInfo` (the song menu opened straight on its info page, the page
   its header opens, through the same load guard and limit; Back goes to the
   song menu). A song that left the library (`ItemGoneException` from
-  `songMenuSpec`; albums and artists throw it too) is the toast `libraryNotFoundMessage`, not a failed load;
+  `songMenuSpec`; albums, artists and playlists throw it too) is the toast `libraryNotFoundMessage`, not a failed load;
   this holds for every song menu (⋮, right click, Menu key, selection panel
   ⋮), not only `openSongInfo`.
   Each loads its data once (`menu_loaders.dart`: direct one-shot reads), builds
@@ -544,8 +713,9 @@ the `TrackId` anchor of this provider, because a track can be queued twice.
 |---|---|---|
 | Library | 105 (mobile 20) | Tab, route `/library`; `sidebar: false` (the six lists replace it in the desktop sidebar) |
 | Songs to Folders | 110-160 | Children of `library` (`parentId`, `mobileTab: false`), paths `LibraryLocations.list(tab)`; always all six in the sidebar, in default order (the tab setting steers the mobile sub-tabs only) |
-| Playlists | 210 (mobile 30) | Tab, route `/playlists` |
-| Favorites, History, Most played | 220, 240, 250 | `comingSoon`, `mobileTab: false` until their mockup exists |
+| Playlists | 210 (mobile 30) | Tab, route `/playlists`; registered in `library/ui/playlist_common/playlist_registration.dart` (see "Playlists") |
+| Favorites | 220 | Child of `playlists` (`parentId`, `mobileTab: false`), path `/playlists/favorites` |
+| History, Most played | 240, 250 | `comingSoon`, `mobileTab: false` until their mockup exists |
 
 - `libraryRoute()` is `/library` with six sibling list routes under it
   (`songs` ... `folders`, `NoTransitionPage`, `state.pageKey`). The parent has
@@ -899,6 +1069,7 @@ tint. `KDetailLayout` draws no background. The album artist link is
 |---|---|---|---|
 | `library.tabs` | `libraryTabsSetting`, `libraryTabsProvider` | all six tabs, default order | mobile sub-tabs; Settings reorder UI is not built |
 | `library.list_views` | `libraryListViewsSetting`, `libraryListViewsProvider` (`setSort`, `setView`, `setFolderView`) | first criterion per list (descending for detail songs and languages), albums as grid, others as rows, folders as tree | sort chip, view switch, folder view switch |
+| `library.playlist_track_sorts` | `playlistTrackSortsSetting`, `playlistTrackSortsProvider` (`set`, `reset`, `forget`) | none (a playlist without an entry uses playlist order) | track sort of each playlist, by uid |
 | `library.compact_folders` | `compactFoldersSetting`, `compactFoldersProvider` | `true` | `folders_page.dart` merges single-subfolder chains; no Settings toggle yet |
 
 ## Coming soon
@@ -914,7 +1085,7 @@ Dimmed and inert, with the tooltip or subtitle "Coming soon" (`appComingSoon`,
 | Selection panel | Edit, Add to playlist | tag editor, playlists |
 | Library empty state | "Choose music folders" | the Settings folders screen |
 | Scan banner (failed scan) | "Grant permission" | the Android permission flow |
-| Sidebar (`comingSoon: true`) | Favorites, History, Most played | their mockups |
+| Sidebar (`comingSoon: true`) | History, Most played | their mockups |
 
 The empty state scrolls (centred when there is room), so a short window or
 large text never overflows.
