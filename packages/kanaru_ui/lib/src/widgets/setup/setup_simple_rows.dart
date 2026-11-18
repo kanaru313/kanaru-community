@@ -1,13 +1,19 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
+import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
 import 'setup_row_frame.dart';
 
 /// A row that shows the current value of a choice and opens its picker when
-/// tapped: leading icon, title, value text and a chevron. Pass [anchorKey] to
+/// tapped: leading icon, title, the value as the line under the title (with
+/// an optional small [valueLeading] icon) and a chevron. Pass [anchorKey] to
 /// let a desktop picker open anchored under the row.
+///
+/// [enabled] false dims the row, ignores taps and shows [disabledReason] in
+/// place of the value. [comingSoon] dims it too and shows [soonLabel] where
+/// the chevron was.
 class SetupValueRow extends StatelessWidget {
   const SetupValueRow({
     super.key,
@@ -15,44 +21,69 @@ class SetupValueRow extends StatelessWidget {
     required this.title,
     required this.value,
     required this.onTap,
+    this.valueLeading,
     this.anchorKey,
+    this.enabled = true,
+    this.disabledReason,
+    this.comingSoon = false,
+    this.soonLabel,
   });
 
   final IconData icon;
   final Widget title;
   final Widget value;
   final VoidCallback? onTap;
+
+  /// Small icon (16 dp) before the value, for example a plugin's logo.
+  final IconData? valueLeading;
   final GlobalKey? anchorKey;
+  final bool enabled;
+
+  /// Why the row is disabled; replaces the value line while [enabled] is false.
+  final Widget? disabledReason;
+  final bool comingSoon;
+  final String? soonLabel;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final reason = !enabled ? disabledReason : null;
     return KeyedSubtree(
       key: anchorKey,
       child: SetupRowFrame(
         leading: Icon(icon),
         title: title,
+        enabled: enabled,
+        comingSoon: comingSoon,
+        soonLabel: soonLabel,
         onTap: onTap,
-        sharedTrailing: true,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: DefaultTextStyle.merge(
-                style: textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                child: value,
-              ),
-            ),
-            const KGap(KSpace.x1),
-            Icon(KIcons.chevronRight, color: scheme.onSurfaceVariant),
-          ],
-        ),
+        subtitle: reason ?? _valueLine(),
+        trailing: Icon(KIcons.chevronRight, color: scheme.onSurfaceVariant),
       ),
+    );
+  }
+
+  Widget _valueLine() {
+    final leading = valueLeading;
+    if (leading == null) {
+      return DefaultTextStyle.merge(
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+        child: value,
+      );
+    }
+    return Row(
+      children: [
+        Icon(leading, size: KIconSize.xs),
+        const KGap(KSpace.x1),
+        Expanded(
+          child: DefaultTextStyle.merge(
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+            child: value,
+          ),
+        ),
+      ],
     );
   }
 }

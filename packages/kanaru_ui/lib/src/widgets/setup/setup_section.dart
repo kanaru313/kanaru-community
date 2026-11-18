@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
+import '../k_help_icon.dart';
 
 /// A group of a setup page: a heading, an optional caption and a rounded
 /// tonal card holding [children] (rows). Rows are separated by space and
@@ -14,11 +15,27 @@ class SetupSection extends StatelessWidget {
     this.subtitle,
     required this.children,
     this.card = true,
-  });
+    this.hint,
+    this.hintTooltip,
+    this.hintTitle,
+  }) : assert(
+         hint == null || hintTooltip != null,
+         'a hint needs the accessible name of its icon',
+       );
 
   final Widget title;
   final Widget? subtitle;
   final List<Widget> children;
+
+  /// A note about the whole section, shown behind an ⓘ after the title and
+  /// read as the section's description. Only Settings sections use it.
+  final String? hint;
+
+  /// Accessible name of the ⓘ button; required with [hint].
+  final String? hintTooltip;
+
+  /// Heading of the sheet / panel a long [hint] opens in.
+  final String? hintTitle;
 
   /// False when [children] bring their own card (the permission card).
   final bool card;
@@ -32,15 +49,28 @@ class SetupSection extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: KSpace.x1),
-          child: Semantics(
-            header: true,
-            child: DefaultTextStyle.merge(
-              style: textTheme.titleSmall?.copyWith(
-                color: scheme.primary,
-                fontWeight: FontWeight.w700,
+          child: Row(
+            children: [
+              Flexible(
+                child: Semantics(
+                  header: true,
+                  hint: hint,
+                  child: DefaultTextStyle.merge(
+                    style: textTheme.titleSmall?.copyWith(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    child: title,
+                  ),
+                ),
               ),
-              child: title,
-            ),
+              if (hint != null)
+                KHelpIcon(
+                  message: hint!,
+                  tooltip: hintTooltip!,
+                  title: hintTitle,
+                ),
+            ],
           ),
         ),
         if (subtitle != null) ...[

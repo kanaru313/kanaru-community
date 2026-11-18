@@ -77,4 +77,58 @@ void main() {
         .length;
     expect(bare, withCard - 1);
   });
+
+  testWidgets('the hint is the heading description and shows an icon button', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      host(
+        const SetupSection(
+          title: Text('Look'),
+          hint: 'Applies to every row below.',
+          hintTooltip: 'Giải thích',
+          children: [Text('row')],
+        ),
+      ),
+    );
+    expect(find.byType(KHelpIcon), findsOneWidget);
+    expect(
+      tester.getSemantics(find.text('Look')),
+      matchesSemantics(
+        label: 'Look',
+        hint: 'Applies to every row below.',
+        isHeader: true,
+      ),
+    );
+    handle.dispose();
+  });
+
+  testWidgets('without a hint there is no help icon', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(const SetupSection(title: Text('Look'), children: [Text('row')])),
+    );
+    expect(find.byType(KHelpIcon), findsNothing);
+  });
+
+  testWidgets('a long title at 200 % keeps the icon without overflow', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(320, 800));
+    await tester.pumpWidget(
+      host(
+        const SetupSection(
+          title: Text('Thư mục nhạc và các thư mục con được quét'),
+          hint: 'Ghi chú.',
+          hintTooltip: 'Giải thích',
+          children: [Text('row')],
+        ),
+        textScale: 2,
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.byType(KHelpIcon), findsOneWidget);
+  });
 }
