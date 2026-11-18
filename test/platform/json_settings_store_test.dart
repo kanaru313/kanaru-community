@@ -21,8 +21,11 @@ void main() {
     await dir.delete(recursive: true);
   });
 
-  List<File> badCopies() =>
-      dir.listSync().whereType<File>().where((f) => f.path.contains('.bad-')).toList();
+  List<File> badCopies() => dir
+      .listSync()
+      .whereType<File>()
+      .where((f) => f.path.contains('.bad-'))
+      .toList();
 
   Future<void> expectRecovered(String content) async {
     await file.writeAsString(content);
@@ -64,10 +67,13 @@ void main() {
 
   test('writes are coalesced into one scheduled write', () async {
     final timers = <void Function()>[];
-    final store = await JsonSettingsStore.open(file, timerFactory: (_, cb) {
-      timers.add(cb);
-      return Timer(const Duration(days: 1), () {});
-    });
+    final store = await JsonSettingsStore.open(
+      file,
+      timerFactory: (_, cb) {
+        timers.add(cb);
+        return Timer(const Duration(days: 1), () {});
+      },
+    );
     await store.write('a.b', 1);
     await store.write('a.b', 2);
     expect(timers, hasLength(1));
@@ -96,10 +102,17 @@ void main() {
     expect(tmp.existsSync(), isFalse);
   });
 
-  test('version 0 is rejected', () => expectRecovered('{"format":"kanaru-settings","version":0,"values":{}}'));
+  test(
+    'version 0 is rejected',
+    () =>
+        expectRecovered('{"format":"kanaru-settings","version":0,"values":{}}'),
+  );
 
   test('flush writes immediately', () async {
-    final store = await JsonSettingsStore.open(file, writeDelay: const Duration(seconds: 30));
+    final store = await JsonSettingsStore.open(
+      file,
+      writeDelay: const Duration(seconds: 30),
+    );
     await store.write('a.b', 1);
     await store.flush();
     expect(file.existsSync(), isTrue);
@@ -120,27 +133,84 @@ void main() {
 
   test('invalid JSON is copied aside', () => expectRecovered('{nope'));
   test('a JSON array is copied aside', () => expectRecovered('[1,2]'));
-  test('an old-app shaped object is copied aside',
-      () => expectRecovered('{"version": 3, "theme": "dark"}'));
-  test('a newer version is copied aside',
-      () => expectRecovered('{"format":"kanaru-settings","version":2,"values":{"theme":"x"}}'));
+  test(
+    'an old-app shaped object is copied aside',
+    () => expectRecovered('{"version": 3, "theme": "dark"}'),
+  );
+  test(
+    'a newer version is copied aside',
+    () => expectRecovered(
+      '{"format":"kanaru-settings","version":2,"values":{"theme":"x"}}',
+    ),
+  );
 
-  test('an unreadable file is set aside once and the store works again', () async {
-    await file.writeAsString('{"format":"kanaru-settings","version":1,"values":{"theme":"x"}}');
-    Process.runSync('chmod', ['000', file.path]);
-    try {
-      file.readAsStringSync();
-      markTestSkipped('permissions not enforced (running as root)');
-      return;
-    } on FileSystemException {
-      // Expected: the file is unreadable.
-    }
-    final store = await JsonSettingsStore.open(file);
-    expect(store.read('theme'), isNull);
-    expect(badCopies(), hasLength(1));
-    await store.write('a.b', 1);
-    await store.flush();
-    expect((await JsonSettingsStore.open(file)).read('a.b'), 1);
-    expect(badCopies(), hasLength(1));
-  }, testOn: 'linux');
+  test(
+    'an unreadable file is set aside once and the store works again',
+    () async {
+      await file.writeAsString(
+        '{"format":"kanaru-settings","version":1,"values":{"theme":"x"}}',
+      );
+      Process.runSync('chmod', ['000', file.path]);
+      try {
+        file.readAsStringSync();
+        markTestSkipped('permissions not enforced (running as root)');
+        return;
+      } on FileSystemException {
+        // Expected: the file is unreadable.
+      }
+      final store = await JsonSettingsStore.open(file);
+      expect(store.read('theme'), isNull);
+      expect(badCopies(), hasLength(1));
+      await store.write('a.b', 1);
+      await store.flush();
+      expect((await JsonSettingsStore.open(file)).read('a.b'), 1);
+      expect(badCopies(), hasLength(1));
+    },
+    testOn: 'linux',
+  );
+
+  group('save status', () {
+    test('is not failing before any write', () async {
+      final store = await JsonSettingsStore.open(file);
+      expect(store.isFailing, isFalse);
+    });
+
+    test(
+      'a failed write reports true, the next success false, no repeats',
+      () async {
+        final store = await JsonSettingsStore.open(
+          file,
+          writeDelay: const Duration(hours: 1),
+          timerFactory: (_, _) => Timer(const Duration(hours: 1), () {}),
+        );
+        final seen = <bool>[];
+        store.saveFailing.listen(seen.add);
+
+        // A read-only directory refuses the temp file of the atomic write.
+        Process.runSync('chmod', ['500', dir.path]);
+        addTearDown(() => Process.runSync('chmod', ['700', dir.path]));
+        try {
+          File('${dir.path}/probe').writeAsStringSync('x');
+          File('${dir.path}/probe').deleteSync();
+          markTestSkipped('permissions not enforced (running as root)');
+          return;
+        } on FileSystemException {
+          // Expected: the directory is read-only.
+        }
+        await store.write('a.b', 1);
+        await store.flush();
+        await store.write('a.b', 2);
+        await store.flush();
+        expect(store.isFailing, isTrue);
+
+        Process.runSync('chmod', ['700', dir.path]);
+        await store.flush();
+        await Future<void>.delayed(Duration.zero);
+        expect(store.isFailing, isFalse);
+        expect(seen, [true, false]);
+        expect((await JsonSettingsStore.open(file)).read('a.b'), 2);
+      },
+      testOn: 'linux',
+    );
+  });
 }

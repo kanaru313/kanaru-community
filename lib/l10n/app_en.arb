@@ -12,9 +12,6 @@
   "emptyPlaylists": "No playlists yet.",
   "emptySearch": "Search your music.",
   "emptyOnline": "No online sources yet.",
-  "settingsAbout": "About",
-  "settingsNativeVersions": "Native libraries",
-  "settingsNoSections": "No other settings yet.",
   "proBadge": "Pro",
   "tooltipToggleSidebar": "Show or hide the sidebar",
   "tooltipBack": "Back",
@@ -1554,5 +1551,7 @@
   "plAddNotConfirmed": "Couldn't confirm the songs were added. Check the playlist.",
   "@plAddNotConfirmed": {
     "description": "Toast: the write did not answer in time."
-  }
+  },
+  "settingsAbout": "About",
+  "settingsNativeVersions": "Native libraries"
 }

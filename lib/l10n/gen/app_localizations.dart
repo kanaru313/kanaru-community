@@ -164,24 +164,6 @@ abstract class AppLocalizations {
   /// **'No online sources yet.'**
   String get emptyOnline;
 
-  /// No description provided for @settingsAbout.
-  ///
-  /// In en, this message translates to:
-  /// **'About'**
-  String get settingsAbout;
-
-  /// No description provided for @settingsNativeVersions.
-  ///
-  /// In en, this message translates to:
-  /// **'Native libraries'**
-  String get settingsNativeVersions;
-
-  /// No description provided for @settingsNoSections.
-  ///
-  /// In en, this message translates to:
-  /// **'No other settings yet.'**
-  String get settingsNoSections;
-
   /// No description provided for @proBadge.
   ///
   /// In en, this message translates to:
@@ -3473,6 +3455,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t confirm the songs were added. Check the playlist.'**
   String get plAddNotConfirmed;
+
+  /// No description provided for @settingsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAbout;
+
+  /// No description provided for @settingsNativeVersions.
+  ///
+  /// In en, this message translates to:
+  /// **'Native libraries'**
+  String get settingsNativeVersions;
 }
 
 class _AppLocalizationsDelegate
