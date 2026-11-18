@@ -2558,6 +2558,12 @@ abstract class AppLocalizations {
   /// **'Could not copy'**
   String get libraryMenuCopyFailed;
 
+  /// No description provided for @libraryActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t complete the action'**
+  String get libraryActionFailed;
+
   /// No description provided for @playlistFavoritesName.
   ///
   /// In en, this message translates to:

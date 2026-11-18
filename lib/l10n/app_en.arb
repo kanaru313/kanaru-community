@@ -998,6 +998,7 @@
   "libraryPanelCollapse": "Collapse",
   "libraryPanelReorder": "Drag to change the play order",
   "libraryMenuCopyFailed": "Could not copy",
+  "libraryActionFailed": "Couldn't complete the action",
   "playlistFavoritesName": "Favorites",
   "playlistDefaultName": "New playlist",
   "playlistCopyName": "{name} (copy)",

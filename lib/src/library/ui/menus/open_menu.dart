@@ -12,18 +12,37 @@ import 'menu_loaders.dart';
 import 'menu_model.dart';
 import 'menu_origin.dart';
 import 'menu_renderer.dart';
+import 'song_menu.dart' show withSongPageRows;
 
 final _log = Logger('library.menu');
 
+/// Opens a menu built by [build] (data loading and spec building, off the
+/// widget tree). Throwing `ItemGoneException` shows the "not found" toast and
+/// no menu; any other failure shows the load-failed toast.
+Future<void> openMenu(
+  BuildContext context,
+  Future<MenuSpec> Function(ProviderContainer container, MenuEnv env) build, {
+  bool viaKeyboard = false,
+}) => _open(context, build, viaKeyboard: viaKeyboard);
+
 /// Opens the menu of a song. [origin] is the page the song is listed on.
+/// [playlistGroup] is a group of rows of the page's own (in a playlist: move,
+/// remove) placed after the "Go to" group; [favoriteRow] false leaves out the
+/// heart row.
 Future<void> openSongMenu(
   BuildContext context,
   TrackInfo info, {
   MenuOrigin origin = const MenuOrigin.list(),
   bool viaKeyboard = false,
+  List<MenuItemSpec> playlistGroup = const [],
+  bool favoriteRow = true,
 }) => _open(
   context,
-  (container, env) => songMenuSpec(container, env, info, origin),
+  (container, env) async => withSongPageRows(
+    await songMenuSpec(container, env, info, origin),
+    playlistGroup: playlistGroup,
+    favoriteRow: favoriteRow,
+  ),
   viaKeyboard: viaKeyboard,
 );
 

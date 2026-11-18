@@ -6,22 +6,27 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
-import '../../../media/domain/cover_files.dart';
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
 import '../../../media/domain/track_info.dart';
 import '../../../media/domain/track_lines.dart';
 import '../../../playback/state/playback_providers.dart';
 import '../../../playback/ui/playback_time_label.dart' show formatClock;
-import '../../../playback/ui/track_cover.dart';
+import '../../domain/playlists/playlist_ids.dart';
 import '../../state/browse/selection_providers.dart';
 import '../../state/favorites_providers.dart';
 import '../browse/play_actions.dart';
 import '../favorite_toggle.dart';
 import '../menus/menu_action_runner.dart';
+import '../menus/menu_model.dart' show MenuItemSpec;
 import '../menus/menu_origin.dart';
 import '../menus/more_button.dart';
 import '../menus/open_menu.dart';
+import 'song_tile_cover.dart';
+import 'song_tile_edit.dart';
+
+export 'song_tile_cover.dart' show songTileBadgeKey;
+export 'song_tile_edit.dart' show SongTileEdit;
 
 /// One song row of every song list: cover, title / artists / `album • year`,
 /// duration over the heart. Tap plays `ids[index]` with the list as the
@@ -40,6 +45,13 @@ class SongTile extends ConsumerWidget {
     required this.playContext,
     this.showNumber = false,
     this.origin = const MenuOrigin.list(),
+    this.markCurrent = true,
+    this.menuExtras = const [],
+    this.menuFavoriteRow = true,
+    this.edit,
+    this.unavailable = false,
+    this.onRemove,
+    this.onMenu,
   });
 
   final TrackInfo info;
@@ -51,14 +63,61 @@ class SongTile extends ConsumerWidget {
   /// The page the list is on, so the song's menu never links back to it.
   final MenuOrigin origin;
 
+  /// False: never shown as the playing row (a track listed twice marks only
+  /// its first row).
+  final bool markCurrent;
+
+  /// Rows of the page's own, a group of the song menu (⋮, right click, Menu
+  /// key).
+  final List<MenuItemSpec> menuExtras;
+
+  /// False leaves the heart row out of the song menu.
+  final bool menuFavoriteRow;
+
+  /// Playlist edit mode; null = an ordinary row. While set the row has the
+  /// handle and a remove (swipe either way, Delete, ✕ on desktop) and no tap,
+  /// long press, menu, heart or ⋮. The widget tree keeps its shape, so turning
+  /// it on or off remounts nothing.
+  final SongTileEdit? edit;
+
+  /// The file is gone from the library (a playlist entry): dashed, dimmed,
+  /// "not in library", not playable, no heart, no swipes. [onRemove] is the ✕.
+  final bool unavailable;
+
+  /// Removes an [unavailable] row in normal mode (the ✕ of its action slot).
+  final VoidCallback? onRemove;
+
+  /// Replaces the song menu entirely (right click, Menu key). A missing row
+  /// ([unavailable]) opens no menu without it.
+  final Future<void> Function({required bool viaKeyboard})? onMenu;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final current = ref.watch(isCurrentTrackProvider(info.id));
+    final playing = ref.watch(isCurrentTrackProvider(info.id));
+    final current = playing && markCurrent && !unavailable;
     final selected = ref.watch(isSelectedProvider(info.id));
     final duration = info.durationMs;
-    void menu({bool viaKeyboard = false}) =>
-        openSongMenu(context, info, origin: origin, viaKeyboard: viaKeyboard);
+    void menu({bool viaKeyboard = false}) {
+      final custom = onMenu;
+      if (custom != null) {
+        unawaited(custom(viaKeyboard: viaKeyboard));
+        return;
+      }
+      // A missing row has no song to act on: without its own menu, none.
+      if (unavailable) return;
+      unawaited(
+        openSongMenu(
+          context,
+          info,
+          origin: origin,
+          viaKeyboard: viaKeyboard,
+          playlistGroup: menuExtras,
+          favoriteRow: menuFavoriteRow,
+        ),
+      );
+    }
+
     // Long press on a song selects it (the menu has ⋮, right click, Menu).
     // Swipe left queues it next, right opens its info; both stay on while a
     // selection is active. The row is keyed by track (see the song list), so
@@ -82,57 +141,133 @@ class SongTile extends ConsumerWidget {
     int? duration,
     void Function({bool viaKeyboard}) menu,
   ) {
-    return KContextRegion(
-      longPressOpens: false,
-      // Right click on one of several selected songs is about the selection.
-      onOpen: (at) {
-        final selection = ref.read(librarySelectionProvider);
-        if (selection.set.contains(info.id) && selection.ids.length > 1) {
-          openSelectionMenu(context, viaKeyboard: at == null);
-        } else {
-          menu(viaKeyboard: at == null);
-        }
-      },
-      // Inside the region, around the card only: the swipe actions then sit
-      // on the card's labelled node, the one a screen reader focuses.
-      child: KSwipeActions.capped(
-        end: KSwipeAction(
-          icon: KIcons.playlistPlay,
-          label: l10n.libraryMenuPlayNext,
-          onTrigger: () => _playNext(context),
-        ),
-        start: KSwipeAction(
-          icon: KIcons.info,
-          label: l10n.libraryMenuSongInfo,
-          onTrigger: () =>
-              unawaited(openSongInfo(context, info, origin: origin)),
-        ),
-        child: KMediaCard(
-          title: info.title,
-          line2: trackArtistLine(info),
-          line3: trackAlbumLine(info),
-          leading: _SongCover(
-            info: info,
-            current: current,
-            number: showNumber && !selected && (info.trackNo ?? 0) > 0
-                ? info.trackNo
-                : null,
+    final edit = this.edit;
+    final desktop = FormFactor.of(context) == FormFactor.desktop;
+    final plain = edit == null && !unavailable;
+    final removeLabel =
+        origin is PlaylistOrigin &&
+            (origin as PlaylistOrigin).uid == PlaylistUids.favorites
+        ? l10n.playlistMenuRemoveFavorite
+        : l10n.playlistMenuRemoveEntry;
+    // One ✕ at most: a missing row's, or the desktop one of an edit row.
+    final showEditX = edit != null && (desktop || unavailable);
+    final markNumber = showNumber && !selected && (info.trackNo ?? 0) > 0;
+    return SongTileRemovalScope(
+      builder: (context, removal) => KContextRegion(
+        longPressOpens: false,
+        // Right click on one of several selected songs is about the selection.
+        // Edit mode has no menu.
+        onOpen: (at) {
+          if (edit != null) return;
+          final selection = ref.read(librarySelectionProvider);
+          if (!unavailable &&
+              selection.set.contains(info.id) &&
+              selection.ids.length > 1) {
+            openSelectionMenu(context, viaKeyboard: at == null);
+          } else {
+            menu(viaKeyboard: at == null);
+          }
+        },
+        // Inside the region, around the card only: the swipe actions then sit
+        // on the card's labelled node, the one a screen reader focuses. The
+        // same widgets in every mode: only their arguments change.
+        child: _swipe(
+          context,
+          l10n,
+          edit,
+          removal,
+          CallbackShortcuts(
+            bindings: edit == null
+                ? const {}
+                : {
+                    // No key repeat: a held key removes one entry.
+                    const SingleActivator(
+                      LogicalKeyboardKey.delete,
+                      includeRepeats: false,
+                    ): () =>
+                        removal.fire(edit),
+                  },
+            child: KMediaCard(
+              title: info.title,
+              line2: trackArtistLine(info),
+              line3: unavailable
+                  ? l10n.playlistNotInLibrary
+                  : trackAlbumLine(info),
+              leading: unavailable
+                  ? KCover(
+                      image: null,
+                      size: KMediaCard.coverSize,
+                      placeholderSeed: info.coverSeed,
+                      placeholderIcon: KIcons.musicOff,
+                      radius: KMediaCard.coverRadius,
+                    )
+                  : SongTileCover(
+                      info: info,
+                      current: current,
+                      number: markNumber ? info.trackNo : null,
+                    ),
+              top: duration == null
+                  ? null
+                  : Text(formatClock(Duration(milliseconds: duration))),
+              bottom: plain ? SongFavoriteButton(trackId: info.id) : null,
+              onAction: unavailable && edit == null ? onRemove : null,
+              actionIcon: KIcons.close,
+              actionLabel: removeLabel,
+              accessory: edit == null
+                  ? null
+                  : songTileEditAccessory(
+                      edit,
+                      showRemove: showEditX,
+                      onRemove: () => removal.fire(edit),
+                    ),
+              trailing: plain ? LibraryMoreButton(onPressed: menu) : null,
+              current: current,
+              currentLabel: l10n.libraryNowPlaying,
+              selected: selected,
+              selecting: ref.watch(
+                librarySelectionProvider.select((s) => !s.isEmpty),
+              ),
+              missing: unavailable,
+              editing: edit != null,
+              onLongPress: selected || !plain ? null : () => _select(ref),
+              onTap: plain ? () => _tap(ref, context) : null,
+            ),
           ),
-          top: duration == null
-              ? null
-              : Text(formatClock(Duration(milliseconds: duration))),
-          bottom: SongFavoriteButton(trackId: info.id),
-          trailing: LibraryMoreButton(onPressed: menu),
-          current: current,
-          currentLabel: l10n.libraryNowPlaying,
-          selected: selected,
-          selecting: ref.watch(
-            librarySelectionProvider.select((s) => !s.isEmpty),
-          ),
-          onLongPress: selected ? null : () => _select(ref),
-          onTap: () => _tap(ref, context),
         ),
       ),
+    );
+  }
+
+  /// Swipe left queues the song next, right opens its info (both stay on
+  /// while a selection is active); in edit mode either way removes the entry;
+  /// a missing row has neither.
+  Widget _swipe(
+    BuildContext context,
+    AppLocalizations l10n,
+    SongTileEdit? edit,
+    SongTileRemoval removal,
+    Widget child,
+  ) {
+    if (edit != null) {
+      return KSwipeActions.remove(
+        label: edit.removeLabel,
+        onRemove: () => removal.run(edit),
+        child: child,
+      );
+    }
+    return KSwipeActions.capped(
+      enabled: !unavailable,
+      end: KSwipeAction(
+        icon: KIcons.playlistPlay,
+        label: l10n.libraryMenuPlayNext,
+        onTrigger: () => _playNext(context),
+      ),
+      start: KSwipeAction(
+        icon: KIcons.info,
+        label: l10n.libraryMenuSongInfo,
+        onTrigger: () => unawaited(openSongInfo(context, info, origin: origin)),
+      ),
+      child: child,
     );
   }
 
@@ -155,114 +290,6 @@ class SongTile extends ConsumerWidget {
     HapticFeedback.selectionClick();
     ref.read(librarySelectionProvider.notifier).toggle(info.id);
   }
-}
-
-class _SongCover extends StatelessWidget {
-  const _SongCover({required this.info, required this.current, this.number});
-
-  final TrackInfo info;
-  final bool current;
-
-  /// Track number badge in the bottom end corner; null shows none.
-  final int? number;
-
-  @override
-  Widget build(BuildContext context) {
-    const radius = KMediaCard.coverRadius;
-    return Stack(
-      children: [
-        TrackCover(
-          coverKey: info.coverKey,
-          seed: info.coverSeed,
-          size: CoverSize.thumb,
-          dimension: KMediaCard.coverSize,
-          radius: radius,
-        ),
-        if (current)
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.scrim
-                    .withValues(alpha: 0.45),
-                borderRadius: radius,
-              ),
-              child: Center(
-                child: _PlayingMark(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-              ),
-            ),
-          ),
-        if (number != null)
-          PositionedDirectional(
-            key: songTileBadgeKey,
-            end: _badgeInset,
-            bottom: _badgeInset,
-            child: _NumberBadge(number: number!),
-          ),
-      ],
-    );
-  }
-}
-
-const double _badgeInset = 4;
-
-/// Key of the track number badge (tests find it by this).
-const Key songTileBadgeKey = ValueKey('song-tile-number-badge');
-
-/// Track number pill on a cover: round for one digit, wider for more.
-/// Text scale is clamped so the badge stays inside the 56 dp cover.
-class _NumberBadge extends StatelessWidget {
-  const _NumberBadge({required this.number});
-
-  final int number;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scaler = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
-    final style = theme.textTheme.labelSmall!.copyWith(
-      color: Colors.white,
-      fontFeatures: const [FontFeature.tabularFigures()],
-    );
-    final height = scaler.scale(style.fontSize ?? 11) * (style.height ?? 1.3);
-    // Not excluded: the number is read once, as text of the merged row.
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.scrim.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(height),
-      ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minWidth: height, minHeight: height),
-        child: Padding(
-          // Round for one digit; more digits get side room.
-          padding: EdgeInsets.symmetric(horizontal: number > 9 ? 3 : 0),
-          child: Center(
-            widthFactor: 1,
-            heightFactor: 1,
-            child: Text(
-              '$number',
-              maxLines: 1,
-              softWrap: false,
-              textScaler: scaler,
-              style: style,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Equalizer bars; the only part of a tile that watches play / pause.
-class _PlayingMark extends ConsumerWidget {
-  const _PlayingMark({this.color});
-
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) =>
-      KEqualizerIcon(playing: ref.watch(isPlayingProvider), color: color);
 }
 
 /// The ♥ of a song row: filled for a favourite, toggles on press. Watches

@@ -519,5 +519,6 @@
   "libraryPanelExpand": "Mở danh sách đã chọn",
   "libraryPanelCollapse": "Thu gọn",
   "libraryPanelReorder": "Kéo để đổi thứ tự phát",
-  "libraryMenuCopyFailed": "Không sao chép được"
+  "libraryMenuCopyFailed": "Không sao chép được",
+  "libraryActionFailed": "Không thực hiện được thao tác"
 }

@@ -4,14 +4,18 @@ import 'package:material_ui/material_ui.dart';
 import '../../../media/domain/cover_files.dart';
 import '../../../playback/ui/track_cover.dart';
 import '../browse/item_covers.dart';
+import '../playlist_common/playlist_cover.dart';
 import 'menu_model.dart';
 
 /// The top of a menu: picture, name and a line under it. The picture is 56
 /// on the mobile shell and 64 on desktop.
 class MenuHeaderView extends StatelessWidget {
-  const MenuHeaderView({super.key, required this.header});
+  const MenuHeaderView({super.key, required this.header, this.onAction});
 
   final MenuHeader header;
+
+  /// Runs the header's [MenuHeader.action] (the renderer owns the runner).
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -46,9 +50,30 @@ class MenuHeaderView extends StatelessWidget {
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
+                if (header.note != null && header.note!.isNotEmpty)
+                  Text(
+                    header.note!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
               ],
             ),
           ),
+          if (header.action != null)
+            KIconButton(
+              icon: header.action!.icon,
+              tooltip: header.action!.tooltip,
+              // Closes the menu first, like a row, then runs the action.
+              onPressed: onAction == null
+                  ? null
+                  : () {
+                      Navigator.of(context).pop();
+                      onAction!();
+                    },
+            ),
         ],
       ),
     );
@@ -91,6 +116,13 @@ class MenuHeaderView extends StatelessWidget {
           fill: colors.fill,
           ink: colors.ink,
           icon: header.tileIcon ?? KIcons.songs,
+        );
+      case MenuImage.playlist:
+        return PlaylistCover(
+          uid: header.itemKey,
+          autoCoverKeys: header.autoCoverKeys,
+          dimension: side,
+          radius: radius,
         );
       case MenuImage.folder:
         final scheme = Theme.of(context).colorScheme;

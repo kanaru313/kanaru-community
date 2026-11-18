@@ -35,7 +35,12 @@ KMenuPage renderMenu(
 
   final header = spec.header;
   return KMenuPage(
-    header: MenuHeaderView(header: header),
+    header: MenuHeaderView(
+      header: header,
+      onAction: header.action == null
+          ? null
+          : () => runner.run(header.action!.action),
+    ),
     headerOpens: pageOf(header.infoPage),
     groups: _groups(spec.groups, pageOf, l10n, runner),
     footer: spec.queueIds.isEmpty
@@ -116,5 +121,6 @@ KMenuRow _row(
     soonLabel: item.soon ? l10n.appComingSoon : null,
     danger: item.danger,
     proLabel: item.pro ? l10n.proBadge : null,
+    hint: item.hint,
   );
 }

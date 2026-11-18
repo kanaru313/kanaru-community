@@ -1490,6 +1490,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get libraryMenuCopyFailed => 'Không sao chép được';
 
   @override
+  String get libraryActionFailed => 'Không thực hiện được thao tác';
+
+  @override
   String get playlistFavoritesName => 'Yêu thích';
 
   @override

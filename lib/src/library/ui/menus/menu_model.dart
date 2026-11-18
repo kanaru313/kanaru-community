@@ -1,10 +1,12 @@
 import 'package:flutter/widgets.dart' show IconData;
 
 import '../../../../l10n/gen/app_localizations.dart';
-import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
 import '../../domain/browse/menu_targets.dart';
-import '../../domain/music_folder.dart';
+import 'menu_actions.dart';
+import 'menu_origin.dart';
+
+export 'menu_actions.dart';
 
 /// Key of the "Nâng cao" sub-page in [MenuSpec.pages].
 const String advancedPageKey = 'advanced';
@@ -39,137 +41,20 @@ enum MenuItemId {
   exclude,
   link,
   info,
-}
-
-/// What a row does once chosen. Executed by the action runner, never by the
-/// builder, so a model is plain data.
-sealed class MenuAction {
-  const MenuAction();
-
-  /// Opens a library page.
-  const factory MenuAction.go(String location) = GoAction;
-
-  /// Favourites or unfavourites [ids].
-  const factory MenuAction.favorite(List<TrackId> ids, {required bool on}) =
-      FavoriteAction;
-
-  /// Excludes [folderKey] of [folder] from the library.
-  const factory MenuAction.exclude(
-    MusicFolder folder,
-    String folderKey, {
-    required String displayPath,
-  }) = ExcludeAction;
-
-  /// Puts [text] on the clipboard.
-  const factory MenuAction.copy(String text) = CopyAction;
-
-  /// Shows the file or folder at [path] in the file manager.
-  const factory MenuAction.reveal(String path) = RevealAction;
-
-  /// Adds [id] to the selection, or removes it.
-  const factory MenuAction.select(TrackId id, {required bool on}) =
-      SelectTrackAction;
-
-  /// Replaces the queue with [ids].
-  const factory MenuAction.play(
-    List<TrackId> ids, {
-    required bool shuffle,
-    required PlayContext context,
-  }) = PlayAction;
-}
-
-class GoAction extends MenuAction {
-  const GoAction(this.location);
-  final String location;
-
-  @override
-  bool operator ==(Object other) =>
-      other is GoAction && other.location == location;
-
-  @override
-  int get hashCode => location.hashCode;
-}
-
-class FavoriteAction extends MenuAction {
-  const FavoriteAction(this.ids, {required this.on});
-  final List<TrackId> ids;
-  final bool on;
-
-  @override
-  bool operator ==(Object other) =>
-      other is FavoriteAction && other.on == on && _same(other.ids, ids);
-
-  @override
-  int get hashCode => Object.hash(on, Object.hashAll(ids));
-}
-
-class ExcludeAction extends MenuAction {
-  const ExcludeAction(this.folder, this.folderKey, {required this.displayPath});
-  final MusicFolder folder;
-  final String folderKey;
-  final String displayPath;
-
-  @override
-  bool operator ==(Object other) =>
-      other is ExcludeAction &&
-      other.folder == folder &&
-      other.folderKey == folderKey &&
-      other.displayPath == displayPath;
-
-  @override
-  int get hashCode => Object.hash(folder, folderKey, displayPath);
-}
-
-class CopyAction extends MenuAction {
-  const CopyAction(this.text);
-  final String text;
-
-  @override
-  bool operator ==(Object other) => other is CopyAction && other.text == text;
-
-  @override
-  int get hashCode => text.hashCode;
-}
-
-class RevealAction extends MenuAction {
-  const RevealAction(this.path);
-  final String path;
-
-  @override
-  bool operator ==(Object other) => other is RevealAction && other.path == path;
-
-  @override
-  int get hashCode => path.hashCode;
-}
-
-class SelectTrackAction extends MenuAction {
-  const SelectTrackAction(this.id, {required this.on});
-  final TrackId id;
-  final bool on;
-
-  @override
-  bool operator ==(Object other) =>
-      other is SelectTrackAction && other.id == id && other.on == on;
-
-  @override
-  int get hashCode => Object.hash(id, on);
-}
-
-class PlayAction extends MenuAction {
-  const PlayAction(this.ids, {required this.shuffle, required this.context});
-  final List<TrackId> ids;
-  final bool shuffle;
-  final PlayContext context;
-
-  @override
-  bool operator ==(Object other) =>
-      other is PlayAction &&
-      other.shuffle == shuffle &&
-      other.context == context &&
-      _same(other.ids, ids);
-
-  @override
-  int get hashCode => Object.hash(shuffle, context, Object.hashAll(ids));
+  playlistMoveUp,
+  playlistMoveDown,
+  playlistRemove,
+  playlistEdit,
+  playlistDelete,
+  playlistDuplicate,
+  playlistRemoveDuplicates,
+  playlistRemoveMissing,
+  playlistFavoriteAll,
+  playlistSaveAs,
+  playlistClearFavorites,
+  playlistExportM3u,
+  playlistExportM3uRelative,
+  playlistAskAi,
 }
 
 /// A chip under a row: one of several targets.
@@ -230,6 +115,7 @@ class MenuItemSpec {
     this.danger = false,
     this.pro = false,
     this.cover,
+    this.hint,
   });
 
   final MenuItemId id;
@@ -250,6 +136,10 @@ class MenuItemSpec {
 
   /// Album cover drawn in place of [icon].
   final MenuCover? cover;
+
+  /// Explanation of the row (ui-hints): the row's accessible description,
+  /// never shown as the subtitle.
+  final String? hint;
 
   /// Whether the row does anything when chosen.
   bool get active => enabled && !soon;
@@ -274,7 +164,7 @@ class MenuPageSpec {
 }
 
 /// The picture at the top of a menu.
-enum MenuImage { track, album, artist, tile, folder }
+enum MenuImage { track, album, artist, tile, folder, playlist }
 
 class MenuHeader {
   const MenuHeader({
@@ -286,6 +176,9 @@ class MenuHeader {
     this.seed = '',
     this.tileIcon,
     this.infoPage,
+    this.autoCoverKeys = const [],
+    this.note,
+    this.action,
   });
 
   final MenuImage image;
@@ -304,6 +197,17 @@ class MenuHeader {
 
   /// Key of the page the header opens (`›`), the song info of a song.
   final String? infoPage;
+
+  /// Cover keys of the first tracks of a playlist ([MenuImage.playlist]):
+  /// the automatic cover when it has no custom one.
+  final List<String> autoCoverKeys;
+
+  /// Third line under the subtitle, one line with an ellipsis (a playlist's
+  /// description); null = none.
+  final String? note;
+
+  /// Icon button at the header's end, centred on the image; null = none.
+  final MenuTrailingSpec? action;
 }
 
 /// A whole menu, built before it is shown.
@@ -314,6 +218,7 @@ class MenuSpec {
     this.advanced = const [],
     this.pages = const {},
     this.queueIds = const [],
+    this.origin,
   });
 
   final MenuHeader header;
@@ -328,6 +233,20 @@ class MenuSpec {
   /// was built (the list may change before a button is pressed). Empty = the
   /// two buttons are left out.
   final List<TrackId> queueIds;
+
+  /// The page the menu was opened from, kept for rows that depend on it
+  /// (a song's "Add to playlist" leaves out the playlist it is listed in).
+  final MenuOrigin? origin;
+
+  /// A copy with [groups] replaced; every other field is kept.
+  MenuSpec copyWith({List<List<MenuItemSpec>>? groups}) => MenuSpec(
+    header: header,
+    groups: groups ?? this.groups,
+    advanced: advanced,
+    pages: pages,
+    queueIds: queueIds,
+    origin: origin,
+  );
 }
 
 /// What a builder needs besides its data.
@@ -349,12 +268,4 @@ class MenuEnv {
 
   /// Desktop: deleting moves the files to the Trash.
   final bool trash;
-}
-
-bool _same<T>(List<T> a, List<T> b) {
-  if (a.length != b.length) return false;
-  for (var i = 0; i < a.length; i++) {
-    if (a[i] != b[i]) return false;
-  }
-  return true;
 }

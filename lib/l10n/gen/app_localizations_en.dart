@@ -1603,6 +1603,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryMenuCopyFailed => 'Could not copy';
 
   @override
+  String get libraryActionFailed => 'Couldn\'t complete the action';
+
+  @override
   String get playlistFavoritesName => 'Favorites';
 
   @override

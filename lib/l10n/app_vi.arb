@@ -998,6 +998,7 @@
   "libraryPanelCollapse": "Thu gọn",
   "libraryPanelReorder": "Kéo để đổi thứ tự phát",
   "libraryMenuCopyFailed": "Không sao chép được",
+  "libraryActionFailed": "Không thực hiện được thao tác",
   "playlistFavoritesName": "Yêu thích",
   "playlistDefaultName": "Playlist mới",
   "playlistCopyName": "{name} (bản sao)",
