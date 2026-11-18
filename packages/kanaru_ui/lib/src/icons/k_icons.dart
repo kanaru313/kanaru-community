@@ -21,7 +21,6 @@ abstract final class KIcons {
   static const IconData back = FluentIcons.arrow_left_24_regular;
   static const IconData forward = FluentIcons.arrow_right_24_regular;
   static const IconData sidebarToggle = FluentIcons.navigation_24_regular;
-  static const IconData appLogo = FluentIcons.music_note_2_24_filled;
 
   // Generic glyphs, used by tests and placeholders.
   static const IconData placeholder = FluentIcons.circle_24_filled;

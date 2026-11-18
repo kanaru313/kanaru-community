@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptive launcher icon foreground: white stem, coral wedge. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Logo glyph of packaging/linux/icons/hicolor/scalable/apps/io.github.kanaru313.kanaru_community.svg
+         (viewBox 128): the 128 box maps onto the visible 72 dp of the 108 dp
+         adaptive canvas (scale 0.5625), glyph centre (65, 64) on (54, 54);
+         its bounds stay inside the 66 dp safe circle. -->
+    <group
+        android:scaleX="0.5625"
+        android:scaleY="0.5625"
+        android:translateX="17.4375"
+        android:translateY="18">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M38,28 A8,8 0 0 1 46,36 L46,92 A8,8 0 0 1 30,92 L30,36 A8,8 0 0 1 38,28 Z" />
+        <path
+            android:fillColor="#FFFFB4A2"
+            android:pathData="M52.441,59.169 L90.441,31.169 A6,6 0 0 1 100,36 L100,92 A6,6 0 0 1 90.441,96.831 L52.441,68.831 A6,6 0 0 1 52.441,59.169 Z" />
+    </group>
+</vector>

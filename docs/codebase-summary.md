@@ -37,7 +37,7 @@ library UI bodies (their seeds are in the table above).
 
 - `packages/kanaru_ui` (no music types, imports no app code):
   - Tokens and theme: `KSpace`, `KRadius`, `KShape`, `KLayout`, `KBreakpoints`, `KMotion`, `buildKanaruTheme`, `FormFactor`.
-  - Icons: `KIcons` (the only file that names `Icons`).
+  - Icons: `KIcons` (the only file that names `Icons`). Logo: `KanaruLogo` (the app icon in fixed colours; sources and decisions in `packaging/branding/README.md`).
   - Pages and headers: `KPage`, `PageHeader`, `PageHeaderScope`, `KDetailTitleHost`, `KEmpty`, `KEmptyPage`, `ProBadge`.
   - Choice and feedback: `KCheckMark` (animated ring / disc+tick / dash; `plain` style = bare tick; used by `SelectionRow`), `SelectionRow`, `SelectionOption`, `showSelectionPicker` (with `confirm`, `header`, `anchor`), `showMultiSelectionSheet` (optional tristate select-all row, plain tick on the right for icon options, mark at the start for text options), `showKSheet`, `showKDialog`, `confirmAction`, `showAppSnackBar`.
   - Switch: `KSwitch` (own 52 × 32 switch: fill grows from the thumb, thumb springs, tick drawn; used by `KSwitchRow` in `widgets/setup/`, no M3 `Switch`).
@@ -118,7 +118,13 @@ Cargo workspace with `kanaru_media`, `kanaru_plugin_runtime` and
 `android/` (`MainActivity.kt` registers the `kanaru/media_store` channel from
 `MediaStoreChannel.kt` (`listAudio`, `listLyrics`, `audioFolders`, `scanFolders`); the manifest declares the `READ_MEDIA_*` permissions and the
 backup rules exclude the device id) and `linux/` (GTK runner). `MainActivity.kt`
-and the manifest are hotspots: no lane edits them.
+and the manifest are hotspots: no lane edits them. Launcher icons (adaptive +
+themed + legacy PNGs) and the notification icon are the app logo
+(`packaging/branding/README.md`).
+
+`packaging/`: `branding/` (logo sources, colours, decisions, export recipe) and
+`linux/` (hicolor icons, `.desktop` entry and AppStream metainfo named after the
+app id `io.github.kanaru313.kanaru_community`; inert until packaging installs them).
 
 ## Tests (`test/`)
 

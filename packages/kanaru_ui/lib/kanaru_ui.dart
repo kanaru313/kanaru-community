@@ -37,6 +37,7 @@ export 'src/widgets/k_pressable.dart';
 export 'src/widgets/k_sheet.dart';
 export 'src/widgets/k_swipe_actions.dart';
 export 'src/widgets/k_tonal_toggle_button.dart';
+export 'src/widgets/kanaru_logo.dart' show KanaruLogo;
 export 'src/widgets/media/media_widgets.dart';
 export 'src/widgets/multi_selection_picker.dart';
 export 'src/widgets/page_header.dart';
