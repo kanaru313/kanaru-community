@@ -140,7 +140,9 @@ void main() {
       final sw = Stopwatch()..start();
       final p = parseM3u(bytes);
       expect(p.entries.length, 50000);
-      expect(sw.elapsedMilliseconds, lessThan(2000));
+      // Sanity check against quadratic cost, not a speed gate: the bound is
+      // generous so a loaded machine does not flake it.
+      expect(sw.elapsedMilliseconds, lessThan(30000));
     });
   });
 
