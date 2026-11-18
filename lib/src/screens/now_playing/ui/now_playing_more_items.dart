@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/track_info.dart';
+import 'now_playing_playlist_actions.dart';
 import 'track_navigation.dart';
 
 /// One entry of the "More" menu of Now Playing.
@@ -31,9 +32,10 @@ class NowPlayingMoreItem {
 
 /// The two groups of the "More" menu, shared by the mobile sheet and the
 /// desktop dropdown: sleep timer, add to playlist, go to album, go to artist
-/// | lyrics source, translate, visual effects (Pro), track info. Only the
-/// two navigation items work now; [beforeNavigate] closes what covers the
-/// library first.
+/// | lyrics source, translate, visual effects (Pro), track info. Add to
+/// playlist and the two navigation items work now; [beforeNavigate] closes
+/// what covers the library first (the picker opens over Now Playing, so it
+/// needs no such call).
 List<List<NowPlayingMoreItem>> nowPlayingMoreItems(
   BuildContext context,
   TrackInfo? info, {
@@ -49,6 +51,8 @@ List<List<NowPlayingMoreItem>> nowPlayingMoreItems(
       NowPlayingMoreItem(
         label: l10n.playbackAddToPlaylist,
         icon: KIcons.playlistAdd,
+        soon: false,
+        onTap: info == null ? null : () => addCurrentToPlaylist(context, info),
       ),
       NowPlayingMoreItem(
         label: l10n.playbackGoAlbum,

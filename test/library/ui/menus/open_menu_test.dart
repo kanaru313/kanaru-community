@@ -242,7 +242,7 @@ void main() {
     await tester.tap(_firstMore());
     await pumpMenu(tester);
     expect(find.text('Coming soon'), findsWidgets);
-    await tester.tap(find.text('Add to playlist…'));
+    await tester.tap(find.text('Edit song info'));
     await pumpMenu(tester);
     expect(_sheet(), findsOneWidget);
     expect(playback.calls, isEmpty);

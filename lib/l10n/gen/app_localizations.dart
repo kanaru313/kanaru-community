@@ -3134,12 +3134,6 @@ abstract class AppLocalizations {
   /// **'New playlist…'**
   String get playlistPickerNew;
 
-  /// No description provided for @playlistPickerNewMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'It is added to the list, checked, and only created when you press Add.'**
-  String get playlistPickerNewMessage;
-
   /// No description provided for @playlistPickerNewConfirm.
   ///
   /// In en, this message translates to:
@@ -3209,8 +3203,8 @@ abstract class AppLocalizations {
   /// No description provided for @playlistAlreadySkipHint.
   ///
   /// In en, this message translates to:
-  /// **'Skip {count, plural, =1{1 song} other{{count} songs}} already there'**
-  String playlistAlreadySkipHint(int count);
+  /// **'Songs already there stay as they are'**
+  String get playlistAlreadySkipHint;
 
   /// No description provided for @playlistAlreadyMove.
   ///
@@ -3221,7 +3215,7 @@ abstract class AppLocalizations {
   /// No description provided for @playlistAlreadyMoveHint.
   ///
   /// In en, this message translates to:
-  /// **'Duplicates move to the end'**
+  /// **'Songs already there move to the end'**
   String get playlistAlreadyMoveHint;
 
   /// No description provided for @playlistAlreadyAll.
@@ -3233,8 +3227,8 @@ abstract class AppLocalizations {
   /// No description provided for @playlistAlreadyAllHint.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 song} other{{count} songs}} will be there twice'**
-  String playlistAlreadyAllHint(int count);
+  /// **'Songs already there appear twice'**
+  String get playlistAlreadyAllHint;
 
   /// No description provided for @playlistAlreadyAppliesToAll.
   ///
@@ -3383,6 +3377,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t save the file.'**
   String get playlistM3uExportFailed;
+
+  /// Toast suffix: old copies of songs removed when they were moved to the end of a playlist.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{, dropped 1 old copy} other{, dropped {count} old copies}}'**
+  String plAddMovedSuffix(int count);
+
+  /// Toast suffix for one target: songs skipped because the playlist already had them.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{, skipped 1} other{, skipped {count}}}'**
+  String plAddSkippedSuffix(int count);
+
+  /// Question body: songs the one ticked playlist already holds.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song is} other{{count} songs are}} already in “{name}”.'**
+  String plAddAlreadyInOne(int count, String name);
+
+  /// Question body: several ticked playlists already hold some songs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Some songs are already in 1 playlist.} other{Some songs are already in {count} playlists.}}'**
+  String plAddAlreadyInMany(int count);
+
+  /// Default name of a new playlist when the plain default is taken; the number starts at 2.
+  ///
+  /// In en, this message translates to:
+  /// **'New playlist {count}'**
+  String plAddDefaultNameNumbered(int count);
+
+  /// Toast: songs added to one playlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count, plural, =1{1 song} other{{count} songs}} to “{name}”'**
+  String plAddAddedToOne(int count, String name);
+
+  /// Toast: nothing was added because the one playlist held every song.
+  ///
+  /// In en, this message translates to:
+  /// **'Every song is already in “{name}”'**
+  String plAddNothingNewOne(String name);
+
+  /// Toast: nothing was added because every playlist held every song.
+  ///
+  /// In en, this message translates to:
+  /// **'Every song is already in the {count} playlists'**
+  String plAddNothingNewMany(int count);
+
+  /// Source label in the picker header when the songs are the play queue.
+  ///
+  /// In en, this message translates to:
+  /// **'from the queue'**
+  String get plAddSourceQueue;
+
+  /// Toast suffix: songs left out because they were removed from the library.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{, 1 song no longer in the library} other{, {count} songs no longer in the library}}'**
+  String plAddDroppedSuffix(int count);
+
+  /// Toast: every song was removed from the library before adding.
+  ///
+  /// In en, this message translates to:
+  /// **'These songs are no longer in your library'**
+  String get plAddSongsGone;
+
+  /// Toast: reading playlists took too long.
+  ///
+  /// In en, this message translates to:
+  /// **'This is taking too long. Try again.'**
+  String get plAddTimedOut;
+
+  /// Toast: the write did not answer in time.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t confirm the songs were added. Check the playlist.'**
+  String get plAddNotConfirmed;
 
   /// No description provided for @settingsAbout.
   ///

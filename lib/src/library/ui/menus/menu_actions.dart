@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart' show BuildContext;
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
 import '../../domain/music_folder.dart';
+import '../../domain/playlists/playlist_models.dart';
 
 /// What a row does once chosen. Executed by the action runner, never by the
 /// builder, so a model is plain data.
@@ -39,6 +40,10 @@ sealed class MenuAction {
     required bool shuffle,
     required PlayContext context,
   }) = PlayAction;
+
+  /// Opens the add-to-playlist picker for [request].
+  const factory MenuAction.addToPlaylist(AddToPlaylistRequest request) =
+      AddToPlaylistAction;
 
   /// Runs [run] with the root navigator's context once the menu has closed
   /// (a dialog, a picker, a page of the caller's own). A failure is logged
@@ -140,6 +145,20 @@ class PlayAction extends MenuAction {
 
   @override
   int get hashCode => Object.hash(shuffle, context, Object.hashAll(ids));
+}
+
+class AddToPlaylistAction extends MenuAction {
+  const AddToPlaylistAction(this.request);
+  final AddToPlaylistRequest request;
+
+  // The request compares its tracks in order, its label and the excluded
+  // playlist.
+  @override
+  bool operator ==(Object other) =>
+      other is AddToPlaylistAction && other.request == request;
+
+  @override
+  int get hashCode => request.hashCode;
 }
 
 /// An action the caller supplies as code. Compared by identity of [run].

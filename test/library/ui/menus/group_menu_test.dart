@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/ui/browse/group_play.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
@@ -28,6 +29,29 @@ MenuSpec _menu(
 );
 
 void main() {
+  test('add to playlist takes the genre and language ids and names', () {
+    expect(
+      rowOf(_menu(GroupMenuKind.genre), MenuItemId.playlist).action,
+      MenuAction.addToPlaylist(
+        AddToPlaylistRequest(tracks: trackIds(5), sourceLabel: 'from Indie'),
+      ),
+    );
+    final language = rowOf(
+      _menu(GroupMenuKind.language, key: 'vie'),
+      MenuItemId.playlist,
+    );
+    expect(
+      language.action,
+      MenuAction.addToPlaylist(
+        AddToPlaylistRequest(
+          tracks: trackIds(5),
+          sourceLabel: 'from Vietnamese',
+        ),
+      ),
+    );
+    expect(language.active, isTrue);
+  });
+
   test('genre rows: links, play block with split or merge, no advanced', () {
     final spec = _menu(GroupMenuKind.genre);
     expect(rowIds(spec.groups), [

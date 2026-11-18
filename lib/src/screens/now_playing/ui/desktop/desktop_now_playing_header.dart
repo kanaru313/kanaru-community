@@ -4,15 +4,17 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../playback/state/playback_providers.dart';
+import '../../../../playback/state/track_info_providers.dart';
 import '../../../../playback/ui/transport_buttons.dart';
 import '../../../../playback/ui/volume_control.dart';
 import '../favorite_button.dart';
+import '../now_playing_playlist_actions.dart';
 import 'desktop_more_menu.dart';
 
 /// Height of the header strip across the top of Now Playing.
 const double desktopNowPlayingHeaderHeight = 64;
 
-/// Left: close, show/hide the cover column | favourite, add to playlist (soon),
+/// Left: close, show/hide the cover column | favourite, add to playlist,
 /// translate chip (soon). Right: repeat, sleep timer (soon), volume, more.
 /// There is no Shuffle (it is on the queue panel and the player bar) and no
 /// window buttons (they are on the top bar).
@@ -55,6 +57,9 @@ class _DesktopNowPlayingHeaderState
     final trackId = ref.watch(
       nowPlayingProvider.select((n) => n.value?.trackId),
     );
+    final info = trackId == null
+        ? null
+        : ref.watch(trackInfoProvider(trackId)).value;
     return SizedBox(
       height: desktopNowPlayingHeaderHeight,
       child: Padding(
@@ -79,8 +84,10 @@ class _DesktopNowPlayingHeaderState
             if (trackId != null) FavoriteButton(trackId: trackId),
             KIconButton(
               icon: KIcons.playlistAdd,
-              tooltip: '${l10n.playbackAddToPlaylist} · $soon',
-              onPressed: null,
+              tooltip: l10n.playbackAddToPlaylist,
+              onPressed: info == null
+                  ? null
+                  : () => addCurrentToPlaylist(context, info),
             ),
             Padding(
               padding: const EdgeInsets.only(left: KSpace.x1),

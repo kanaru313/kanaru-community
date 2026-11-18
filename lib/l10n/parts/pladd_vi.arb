@@ -1,0 +1,105 @@
+{
+  "plAddMovedSuffix": "{count, plural, other{, bỏ {count} bản cũ}}",
+  "@plAddMovedSuffix": {
+    "description": "Toast suffix: old copies of songs removed when they were moved to the end of a playlist.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plAddSkippedSuffix": "{count, plural, other{, bỏ qua {count}}}",
+  "@plAddSkippedSuffix": {
+    "description": "Toast suffix for one target: songs skipped because the playlist already had them.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plAddAlreadyInOne": "{count, plural, other{{count} bài đã có trong “{name}”.}}",
+  "@plAddAlreadyInOne": {
+    "description": "Question body: songs the one ticked playlist already holds.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "plAddAlreadyInMany": "{count, plural, other{Một số bài đã có trong {count} playlist.}}",
+  "@plAddAlreadyInMany": {
+    "description": "Question body: several ticked playlists already hold some songs.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plAddDefaultNameNumbered": "Playlist mới {count}",
+  "@plAddDefaultNameNumbered": {
+    "description": "Default name of a new playlist when the plain default is taken; the number starts at 2.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plAddAddedToOne": "Đã thêm {count, plural, other{{count} bài}} vào “{name}”",
+  "@plAddAddedToOne": {
+    "description": "Toast: songs added to one playlist.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "plAddNothingNewOne": "Mọi bài đã có trong “{name}”",
+  "@plAddNothingNewOne": {
+    "description": "Toast: nothing was added because the one playlist held every song.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "plAddNothingNewMany": "Mọi bài đã có trong {count} playlist",
+  "@plAddNothingNewMany": {
+    "description": "Toast: nothing was added because every playlist held every song.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plAddSourceQueue": "từ hàng đợi",
+  "@plAddSourceQueue": {
+    "description": "Source label in the picker header when the songs are the play queue."
+  },
+  "plAddDroppedSuffix": "{count, plural, other{, {count} bài không còn trong thư viện}}",
+  "@plAddDroppedSuffix": {
+    "description": "Toast suffix: songs left out because they were removed from the library.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plAddSongsGone": "Các bài này không còn trong thư viện",
+  "@plAddSongsGone": {
+    "description": "Toast: every song was removed from the library before adding."
+  },
+  "plAddTimedOut": "Mất quá nhiều thời gian. Thử lại.",
+  "@plAddTimedOut": {
+    "description": "Toast: reading playlists took too long."
+  },
+  "plAddNotConfirmed": "Chưa xác nhận được việc thêm bài. Hãy xem lại playlist.",
+  "@plAddNotConfirmed": {
+    "description": "Toast: the write did not answer in time."
+  }
+}

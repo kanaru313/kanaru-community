@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -48,6 +49,8 @@ Widget _opener(
   bool Function(Set<String>)? canConfirm,
   String? selectAllLabel,
   Widget title = const Text('Add to playlist'),
+  String? note,
+  String? confirmText,
 }) => Builder(
   builder: (context) => TextButton(
     onPressed: () => run.result = showMultiSelectionPicker<String>(
@@ -61,9 +64,10 @@ Widget _opener(
       filterHint: filterHint,
       selectAllLabel: selectAllLabel,
       selectedCountLabel: selectAllLabel == null ? null : (n, t) => '$n / $t',
-      footerNote: (context, s) => Text('${s.length} chosen'),
+      footerNote: (context, s) =>
+          Text(note != null && s.isNotEmpty ? note : '${s.length} chosen'),
       cancelLabel: 'Cancel',
-      confirmLabel: (s) => 'Add ${s.length}',
+      confirmLabel: (s) => confirmText ?? 'Add ${s.length}',
       confirm: confirm,
       confirmTimeout: confirmTimeout,
       canConfirm: canConfirm,
@@ -89,6 +93,8 @@ Future<_Run> _show(
   String? selectAllLabel,
   Widget title = const Text('Add to playlist'),
   double textScale = 1,
+  String? note,
+  String? confirmText,
 }) async {
   useWindow(tester, size);
   final run = _Run();
@@ -106,6 +112,8 @@ Future<_Run> _show(
         canConfirm: canConfirm,
         selectAllLabel: selectAllLabel,
         title: title,
+        note: note,
+        confirmText: confirmText,
       ),
       textScale: textScale,
     ),
@@ -688,7 +696,7 @@ void main() {
         find.text('Item 999'),
         2000,
         scrollable: find.descendant(
-          of: find.byType(BottomSheet),
+          of: find.byType(ListView),
           matching: find.byType(Scrollable),
         ),
         maxScrolls: 200,
@@ -744,5 +752,89 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
+
+    for (final c in [(_phone, 1.0), (_phone, 2.0), (_desktop, 1.0)]) {
+      testWidgets(
+        'footer: note and both buttons on one row (${c.$1}, x${c.$2})',
+        (tester) async {
+          await _show(tester, size: c.$1, textScale: c.$2, initial: {'Rock'});
+          expect(tester.takeException(), isNull);
+          final note = tester.getRect(find.text('1 chosen'));
+          final cancel = tester.getRect(
+            find.widgetWithText(TextButton, 'Cancel'),
+          );
+          final confirm = tester.getRect(
+            find.widgetWithText(FilledButton, 'Add 1'),
+          );
+          expect(cancel.center.dy, closeTo(confirm.center.dy, 0.5));
+          expect(note.center.dy, closeTo(confirm.center.dy, 0.5));
+          expect(cancel.right, lessThanOrEqualTo(confirm.left));
+          expect(note.right, lessThanOrEqualTo(cancel.left));
+        },
+      );
+    }
+
+    for (final scale in [1.0, 2.0]) {
+      testWidgets(
+        'footer: long note wraps, buttons stay on one row (x$scale)',
+        (tester) async {
+          const long = 'Không thể thêm vào danh sách. Hãy thử lại sau.';
+          await _show(
+            tester,
+            // Taller window at 2x: the test font is twice as wide as the real
+            // one, and the note gets 30 % of the row once the buttons are at
+            // their cap, so it needs many lines.
+            size: Size(360, 800.0 * scale),
+            textScale: scale,
+            note: long,
+            confirmText: 'Thêm vào 3 playlist',
+          );
+          // The note is long once something is ticked (it opens short).
+          await tester.tap(find.text('Rock'));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          final noteFinder = find.text(long);
+          expect(noteFinder, findsOneWidget);
+          final text = tester.widget<Text>(noteFinder);
+          expect(text.maxLines, isNull);
+          expect(text.overflow, isNull);
+          final noteBox = tester.getRect(noteFinder);
+          final style = DefaultTextStyle.of(tester.element(noteFinder)).style;
+          final oneLine = (style.fontSize ?? 12) * scale;
+          expect(noteBox.height, greaterThan(oneLine * 1.5));
+          final cancel = tester.getRect(
+            find.widgetWithText(TextButton, 'Cancel'),
+          );
+          final confirm = tester.getRect(
+            find.widgetWithText(FilledButton, 'Thêm vào 3 playlist'),
+          );
+          expect(cancel.center.dy, closeTo(confirm.center.dy, 0.5));
+          expect(cancel.right, lessThanOrEqualTo(confirm.left));
+          expect(noteBox.right, lessThanOrEqualTo(cancel.left));
+        },
+      );
+    }
+
+    testWidgets('footer: confirm label stays on one line at 360 dp x1', (
+      tester,
+    ) async {
+      await _show(
+        tester,
+        // The test font (Ahem) is about twice as wide as the real one, so
+        // 0.5 gives the real label width at 1x.
+        textScale: 0.5,
+        note: '3 đã chọn',
+        confirmText: 'Thêm vào 3 playlist',
+        initial: {'Rock'},
+      );
+      expect(tester.takeException(), isNull);
+      final label = find.descendant(
+        of: find.widgetWithText(FilledButton, 'Thêm vào 3 playlist'),
+        matching: find.text('Thêm vào 3 playlist'),
+      );
+      final box = tester.renderObject<RenderParagraph>(label);
+      final line = box.text.style!.fontSize! * (box.text.style!.height ?? 1.5);
+      expect(box.size.height, lessThan(line * 1.5));
+    });
   });
 }

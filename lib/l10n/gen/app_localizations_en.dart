@@ -2024,10 +2024,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistPickerNew => 'New playlist…';
 
   @override
-  String get playlistPickerNewMessage =>
-      'It is added to the list, checked, and only created when you press Add.';
-
-  @override
   String get playlistPickerNewConfirm => 'Add to list';
 
   @override
@@ -2073,35 +2069,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistAlreadySkip => 'Only add new songs';
 
   @override
-  String playlistAlreadySkipHint(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count songs',
-      one: '1 song',
-    );
-    return 'Skip $_temp0 already there';
-  }
+  String get playlistAlreadySkipHint => 'Songs already there stay as they are';
 
   @override
   String get playlistAlreadyMove => 'Add all, drop the old copies';
 
   @override
-  String get playlistAlreadyMoveHint => 'Duplicates move to the end';
+  String get playlistAlreadyMoveHint => 'Songs already there move to the end';
 
   @override
   String get playlistAlreadyAll => 'Add all';
 
   @override
-  String playlistAlreadyAllHint(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count songs',
-      one: '1 song',
-    );
-    return '$_temp0 will be there twice';
-  }
+  String get playlistAlreadyAllHint => 'Songs already there appear twice';
 
   @override
   String get playlistAlreadyAppliesToAll =>
@@ -2280,6 +2260,100 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playlistM3uExportFailed => 'Couldn\'t save the file.';
+
+  @override
+  String plAddMovedSuffix(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: ', dropped $count old copies',
+      one: ', dropped 1 old copy',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plAddSkippedSuffix(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: ', skipped $count',
+      one: ', skipped 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plAddAlreadyInOne(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs are',
+      one: '1 song is',
+    );
+    return '$_temp0 already in “$name”.';
+  }
+
+  @override
+  String plAddAlreadyInMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Some songs are already in $count playlists.',
+      one: 'Some songs are already in 1 playlist.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String plAddDefaultNameNumbered(int count) {
+    return 'New playlist $count';
+  }
+
+  @override
+  String plAddAddedToOne(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'Added $_temp0 to “$name”';
+  }
+
+  @override
+  String plAddNothingNewOne(String name) {
+    return 'Every song is already in “$name”';
+  }
+
+  @override
+  String plAddNothingNewMany(int count) {
+    return 'Every song is already in the $count playlists';
+  }
+
+  @override
+  String get plAddSourceQueue => 'from the queue';
+
+  @override
+  String plAddDroppedSuffix(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: ', $count songs no longer in the library',
+      one: ', 1 song no longer in the library',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get plAddSongsGone => 'These songs are no longer in your library';
+
+  @override
+  String get plAddTimedOut => 'This is taking too long. Try again.';
+
+  @override
+  String get plAddNotConfirmed =>
+      'Couldn\'t confirm the songs were added. Check the playlist.';
 
   @override
   String get settingsAbout => 'About';

@@ -120,10 +120,11 @@ MenuSpec buildSongMenu(
       [
         [?goAlbum, artistRow, ?albumArtistRow, folderRow],
         [
-          soonRow(
-            MenuItemId.playlist,
-            KIcons.playlistAdd,
-            l10n.libraryMenuAddToPlaylist,
+          addToPlaylistRow(
+            l10n,
+            [id],
+            info.title,
+            excludePlaylistUid: origin is PlaylistOrigin ? origin.uid : null,
           ),
           MenuItemSpec(
             MenuItemId.favorite,

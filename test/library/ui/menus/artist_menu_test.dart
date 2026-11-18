@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/domain/browse/browse_items.dart';
 import 'package:kanaru/src/library/domain/browse/menu_targets.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
@@ -40,6 +41,16 @@ MenuSpec _menu({
 );
 
 void main() {
+  test('add to playlist takes the artist ids and name', () {
+    expect(
+      rowOf(_menu(), MenuItemId.playlist).action,
+      MenuAction.addToPlaylist(
+        AddToPlaylistRequest(tracks: trackIds(10), sourceLabel: 'from Vu'),
+      ),
+    );
+    expect(rowOf(_menu(), MenuItemId.playlist).active, isTrue);
+  });
+
   test('rows and header', () {
     final spec = _menu();
     expect(rowIds(spec.groups), [

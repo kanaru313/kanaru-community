@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +13,8 @@ import '../../../media/domain/track_id.dart';
 import '../../state/browse/selection_providers.dart';
 import '../../state/browse/song_list_providers.dart';
 import '../../state/browse/track_window.dart';
+import '../../domain/playlists/playlist_models.dart';
+import '../add_to_playlist/add_to_playlist.dart';
 import '../browse/library_labels.dart';
 import '../browse/play_actions.dart';
 import '../menus/open_menu.dart';
@@ -22,7 +25,7 @@ import 'selection_row.dart';
 /// The floating panel of the selected songs, in both shells' selection slot.
 ///
 /// Top row: clear, `N songs` (and the length when open), then play all,
-/// edit and add to playlist (not built: dimmed), the selection's menu, select
+/// edit (not built: dimmed) and add to playlist, the selection's menu, select
 /// all songs of the screen, and open / collapse. Open, it lists the selected
 /// songs in play order, which can be dragged to reorder.
 class SelectionPanel extends ConsumerWidget {
@@ -118,8 +121,16 @@ class _PanelHeader extends ConsumerWidget {
           ),
           _Button(
             icon: KIcons.playlistAdd,
-            tooltip:
-                '${l10n.libraryPanelAddToPlaylist} · ${l10n.appComingSoon}',
+            tooltip: l10n.libraryPanelAddToPlaylist,
+            onPressed: () => unawaited(
+              showAddToPlaylist(
+                context,
+                AddToPlaylistRequest(
+                  tracks: ref.read(librarySelectionProvider).ids,
+                  sourceLabel: '',
+                ),
+              ),
+            ),
           ),
           ViaKeyboardTracker(
             builder: (context, viaKeyboard) => _Button(

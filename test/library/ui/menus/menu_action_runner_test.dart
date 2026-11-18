@@ -2,12 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
+import 'package:kanaru/src/database/state/database_providers.dart';
+import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/state/browse/selection_providers.dart';
 import 'package:kanaru/src/library/state/favorites_providers.dart';
 import 'package:kanaru/src/library/state/folder_exclusion_providers.dart';
+import 'package:kanaru/src/library/ui/add_to_playlist/add_to_playlist.dart';
 import 'package:kanaru/src/library/ui/menus/menu_action_runner.dart';
 import 'package:kanaru/src/library/ui/menus/menu_model.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
@@ -19,6 +23,8 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fake_playback_commands.dart';
+import '../../playlists/support/playlist_fixtures.dart';
+import '../support/ui_harness.dart';
 import 'menu_fakes.dart';
 import 'menu_fixtures.dart';
 
@@ -56,7 +62,11 @@ class _Rig {
   final FakeFileManager files;
 }
 
-Future<_Rig> _pump(WidgetTester tester, {FileManagerError? revealError}) async {
+Future<_Rig> _pump(
+  WidgetTester tester, {
+  FileManagerError? revealError,
+  List<Override> overrides = const [],
+}) async {
   final playback = FakePlaybackCommands();
   final exclusions = FakeFolderExclusions();
   final favorites = _Favorites();
@@ -67,6 +77,7 @@ Future<_Rig> _pump(WidgetTester tester, {FileManagerError? revealError}) async {
       folderExclusionsProvider.overrideWithValue(exclusions),
       favoritesControllerProvider.overrideWithValue(favorites),
       fileManagerProvider.overrideWithValue(files),
+      ...overrides,
     ],
   );
   addTearDown(container.dispose);
@@ -116,6 +127,35 @@ Future<_Rig> _pump(WidgetTester tester, {FileManagerError? revealError}) async {
 const _ctx = PlayContext(PlayContextKind.album, ref: 'k', label: 'Blue');
 
 void main() {
+  testWidgets('add to playlist opens the picker for the tracks', (
+    tester,
+  ) async {
+    addTearDown(resetAddToPlaylistGuard);
+    late PlaylistFixture fx;
+    await tester.runAsync(() async => fx = await PlaylistFixture.open());
+    final rig = await _pump(
+      tester,
+      overrides: [appDatabaseProvider.overrideWithValue(fx.db)],
+    );
+    final tracks = await tester.runAsync(() => fx.tracks(2)) ?? const [];
+    unawaited(
+      rig.runner.run(
+        MenuAction.addToPlaylist(
+          AddToPlaylistRequest(tracks: tracks, sourceLabel: 'from Blue'),
+        ),
+      ),
+    );
+    for (var i = 0; i < 200; i++) {
+      if (find.text('2 songs · from Blue').evaluate().isNotEmpty) break;
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(find.text('Add to playlist'), findsWidgets);
+    expect(find.text('2 songs · from Blue'), findsOneWidget);
+    expect(rig.playback.calls, isEmpty);
+    await unmountApp(tester);
+  });
+
   testWidgets('favorites go through the controller; a failure is a toast', (
     tester,
   ) async {

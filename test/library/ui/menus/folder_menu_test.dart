@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/ui/folders/folder_locations.dart';
 import 'package:kanaru/src/library/ui/menus/folder_menu.dart';
 import 'package:kanaru/src/library/ui/menus/menu_model.dart';
@@ -28,6 +29,21 @@ MenuSpec _menu({
 );
 
 void main() {
+  test('add to playlist takes the same ids as Play and the folder name', () {
+    final spec = _menu();
+    expect(
+      rowOf(spec, MenuItemId.playlist).action,
+      MenuAction.addToPlaylist(
+        AddToPlaylistRequest(tracks: trackIds(8), sourceLabel: 'from Jazz'),
+      ),
+    );
+    expect(
+      (rowOf(spec, MenuItemId.play).action as PlayAction).ids,
+      trackIds(8),
+    );
+    expect(rowOf(spec, MenuItemId.playlist).active, isTrue);
+  });
+
   test('tree view with songs and subfolders', () {
     final spec = _menu();
     expect(rowIds(spec.groups), [
