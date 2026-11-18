@@ -14,6 +14,7 @@ import '../../browse/list_sort_dialog.dart';
 import '../../selection/selection_inset.dart';
 import '../menu/playlist_menu_rows.dart';
 import 'playlist_edit_host.dart';
+import 'playlist_entry_removal.dart';
 import 'playlist_edit_mode.dart';
 import 'playlist_filter_state.dart';
 import 'playlist_list_bar.dart';
@@ -30,8 +31,8 @@ import 'playlist_sort_actions.dart';
 /// The songs part of a playlist page: the sticky list bar, the filter field,
 /// the missing-songs note and the rows, as slivers for the page's own scroll
 /// view; or the empty state. Owns what is never stored: the filter, and the
-/// sort box (closed with the page). On the mobile shell Back closes the
-/// filter field first, then leaves edit mode.
+/// sort box (closed with the page). The filter state itself is the page's
+/// (its Back / Esc chain reads it).
 ///
 /// The sort is remembered per playlist (`playlistTrackSortsProvider`). In
 /// [edit] mode the page shows the playlist's own order with no filter, whatever
@@ -42,11 +43,17 @@ class PlaylistSongsHost extends ConsumerStatefulWidget {
     super.key,
     required this.detail,
     required this.edit,
+    required this.filter,
+    required this.pageFocus,
     required this.builder,
   });
 
   final PlaylistDetail detail;
   final PlaylistEditMode edit;
+  final PlaylistFilterState filter;
+
+  /// The page's focus node: where focus lands when the last row is removed.
+  final FocusNode pageFocus;
 
   /// Builds the page around the song [slivers]. [serving] and [play] are the
   /// Play / shuffle gate, kept here because this host outlives the layout
@@ -64,9 +71,7 @@ class PlaylistSongsHost extends ConsumerStatefulWidget {
 }
 
 class _PlaylistSongsHostState extends ConsumerState<PlaylistSongsHost> {
-  late final PlaylistFilterState _filter = PlaylistFilterState(
-    onChanged: () => setState(() {}),
-  );
+  PlaylistFilterState get _filter => widget.filter;
   final ListSortGuard _sortGuard = ListSortGuard();
   final ShownEntriesMemo _memo = ShownEntriesMemo();
 
@@ -75,6 +80,7 @@ class _PlaylistSongsHostState extends ConsumerState<PlaylistSongsHost> {
 
   late final SelectAllClaim _claim;
   late final PlaylistEditHost _editHost;
+  late final PlaylistEntryRemoval _removal;
 
   /// The rows as drawn by the last build (frozen ones while dragging).
   late ShownEntries _shown;
@@ -82,6 +88,13 @@ class _PlaylistSongsHostState extends ConsumerState<PlaylistSongsHost> {
   @override
   void initState() {
     super.initState();
+    _filter.addListener(_onFilterChanged);
+    _removal = PlaylistEntryRemoval(
+      context: () => context,
+      uid: () => _uid,
+      rows: () => _shown.rows,
+      pageFocus: widget.pageFocus,
+    );
     _claim = SelectAllClaim(context, ref);
     _editHost = PlaylistEditHost(
       edit: widget.edit,
@@ -94,6 +107,10 @@ class _PlaylistSongsHostState extends ConsumerState<PlaylistSongsHost> {
         if (mounted) setState(() {});
       },
     );
+  }
+
+  void _onFilterChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _play({required bool shuffle}) async {
@@ -119,7 +136,7 @@ class _PlaylistSongsHostState extends ConsumerState<PlaylistSongsHost> {
     _editHost.dispose();
     _claim.dispose();
     _sortGuard.close();
-    _filter.dispose();
+    _filter.removeListener(_onFilterChanged);
     super.dispose();
   }
 
@@ -214,6 +231,7 @@ class _PlaylistSongsHostState extends ConsumerState<PlaylistSongsHost> {
               canStep: canReorder(stored, _filter.text),
               rowCount: () => _shown.rows.length,
               onStep: _editHost.step,
+              removal: _removal,
               onReorderStart: _editHost.dragStart,
               onReorderItem: _editHost.drop,
             ),
@@ -221,23 +239,11 @@ class _PlaylistSongsHostState extends ConsumerState<PlaylistSongsHost> {
       ],
       const SelectionInsetSliver(),
     ];
-    return PopScope(
-      canPop: !_filter.open && !editing,
-      onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
-        if (editing) {
-          // A drag in progress ends first.
-          if (!widget.edit.dragging) widget.edit.exit();
-        } else if (_filter.open) {
-          _filter.close();
-        }
-      },
-      child: Listener(
-        onPointerDown: (e) => _editHost.pointerDown(e.pointer),
-        onPointerUp: (e) => _editHost.pointerGone(e.pointer),
-        onPointerCancel: (e) => _editHost.pointerGone(e.pointer),
-        child: widget.builder(context, slivers, _serving, _play),
-      ),
+    return Listener(
+      onPointerDown: (e) => _editHost.pointerDown(e.pointer),
+      onPointerUp: (e) => _editHost.pointerGone(e.pointer),
+      onPointerCancel: (e) => _editHost.pointerGone(e.pointer),
+      child: widget.builder(context, slivers, _serving, _play),
     );
   }
 }

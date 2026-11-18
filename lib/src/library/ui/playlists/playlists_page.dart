@@ -23,6 +23,7 @@ import 'list/new_playlist_shortcut.dart';
 import 'list/playlists_hub.dart';
 import 'list/playlists_list_bar.dart';
 import 'list/playlists_list_slivers.dart';
+import 'page/playlist_back_chain.dart';
 
 /// Root page of the Playlists tab. Desktop: the page "Playlist". Mobile: the
 /// tab root, with the hub of shortcuts above "Playlist của bạn".
@@ -44,6 +45,12 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
   final FilterDebouncer _debounce = FilterDebouncer();
   final ListSortGuard _sortGuard = ListSortGuard();
   final KFabMenuController _fab = KFabMenuController();
+
+  /// Owns Esc while the filter is open (see `PlaylistBackScope`).
+  final FocusNode _focus = FocusNode(
+    debugLabel: 'PlaylistsPage',
+    skipTraversal: true,
+  );
   late final NewPlaylistShortcut _shortcut = NewPlaylistShortcut(
     context,
     _newPlaylist,
@@ -69,6 +76,7 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
     _debounce.cancel();
     _filterController.dispose();
     _fab.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -147,19 +155,26 @@ class _PlaylistsPageState extends ConsumerState<PlaylistsPage> {
         if (mounted) _closeFilter();
       });
     }
-    // On the mobile shell Back first reaches the shell's own listener (it
-    // would go Home), so the filter answers Back itself, like the FAB menu;
-    // the PopScope covers a page pushed above other routes.
+    // Back and Esc, outermost last: a dialog or sheet (root routes), the FAB
+    // menu (its own listener and key handler, nearer than this one), the
+    // filter, then the page. On the mobile shell Back first reaches the
+    // shell's own listener (it would go Home), so the filter answers Back
+    // itself, like the FAB menu; the scope's PopScope covers a page pushed
+    // above other routes, and its Focus owns Esc on desktop.
     return BackButtonListener(
       onBackButtonPressed: () async {
         if (!filterOpen || rootModalOpen(context)) return false;
         _closeFilter();
         return true;
       },
-      child: PopScope(
-        canPop: !filterOpen,
-        onPopInvokedWithResult: (didPop, _) {
-          if (!didPop && filterOpen) _closeFilter();
+      child: PlaylistBackScope(
+        active: filterOpen,
+        focusNode: _focus,
+        outerMenu: _fab,
+        closeTop: () {
+          if (!filterOpen) return false;
+          _closeFilter();
+          return true;
         },
         child: KFabMenu(
           controller: _fab,

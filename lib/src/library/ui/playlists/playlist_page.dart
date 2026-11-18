@@ -1,6 +1,3 @@
-import 'dart:async';
-
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -13,8 +10,10 @@ import '../detail/detail_tint.dart';
 import '../library_locations.dart';
 import '../playlist_common/playlist_labels.dart';
 import '../../../../l10n/gen/app_localizations.dart';
+import 'page/playlist_back_chain.dart';
 import 'page/playlist_edit_mode.dart';
 import 'page/playlist_edit_toggle.dart';
+import 'page/playlist_filter_state.dart';
 import 'page/playlist_hero.dart';
 import 'page/playlist_page_states.dart';
 import 'page/playlist_songs_slivers.dart';
@@ -38,56 +37,38 @@ class _PlaylistPageState extends ConsumerState<PlaylistPage> {
   /// Edit mode lives and dies with this page.
   final PlaylistEditMode _edit = PlaylistEditMode();
 
-  /// Owns Esc while editing. Focus sits in the page then, so the desktop
-  /// shell's own Esc (history back) is not asked and the page is not left.
+  /// The filter of the songs part; here so Back / Esc can close it.
+  final PlaylistFilterState _filter = PlaylistFilterState();
+
+  /// Owns Esc while a layer (edit mode, the filter) is open: focus sits in the
+  /// page then, so the desktop shell's own Esc (history back) is not asked and
+  /// the page is not left.
   final FocusNode _focus = FocusNode(
     debugLabel: 'PlaylistPage',
     skipTraversal: true,
   );
 
   @override
-  void initState() {
-    super.initState();
-    _edit.addListener(_onEditChanged);
-  }
-
-  @override
   void dispose() {
-    _edit.removeListener(_onEditChanged);
     _edit.dispose();
+    _filter.dispose();
     _focus.dispose();
     super.dispose();
   }
 
-  /// Entering takes focus unless something inside the page has it already (a
-  /// keyboard user's toggle); leaving gives back what the page took.
-  void _onEditChanged() {
+  /// Back and Esc close one layer: edit mode first (it restores the sort and
+  /// the filter), then the filter. A drag in progress ends first; the key is
+  /// still the page's.
+  bool _closeTop() {
     if (_edit.editing) {
-      if (!_focus.hasFocus) _focus.requestFocus();
-      // Focus that sat on a node the rebuild removes (the filter field, a
-      // row) falls back to the route once the frame is done (the focus
-      // manager settles in a microtask): take it again then.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        scheduleMicrotask(() {
-          if (mounted && _edit.editing && !_focus.hasFocus) {
-            _focus.requestFocus();
-          }
-        });
-      });
-    } else if (_focus.hasPrimaryFocus) {
-      _focus.unfocus();
+      if (!_edit.dragging) _edit.exit();
+      return true;
     }
-  }
-
-  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
-    if (!_edit.editing ||
-        event is! KeyDownEvent ||
-        event.logicalKey != LogicalKeyboardKey.escape) {
-      return KeyEventResult.ignored;
+    if (_filter.open) {
+      _filter.close();
+      return true;
     }
-    // A drag in progress ends first; the key is still the page's.
-    if (!_edit.dragging) _edit.exit();
-    return KeyEventResult.handled;
+    return false;
   }
 
   String get uid => widget.uid;
@@ -111,9 +92,14 @@ class _PlaylistPageState extends ConsumerState<PlaylistPage> {
             kind: CustomCoverKind.playlist,
             itemKey: uid,
           ), summary.autoCoverKeys.firstOrNull);
-    return Focus(
-      focusNode: _focus,
-      onKeyEvent: _onKey,
+    return ListenableBuilder(
+      listenable: Listenable.merge([_edit, _filter]),
+      builder: (context, child) => PlaylistBackScope(
+        active: _edit.editing || _filter.open,
+        closeTop: _closeTop,
+        focusNode: _focus,
+        child: child!,
+      ),
       child: ListenableBuilder(
         listenable: _edit,
         builder: (context, _) => DetailFrame(
@@ -132,6 +118,8 @@ class _PlaylistPageState extends ConsumerState<PlaylistPage> {
           child: PlaylistSongsHost(
             detail: detail,
             edit: _edit,
+            filter: _filter,
+            pageFocus: _focus,
             builder: (context, slivers, serving, play) => KDetailLayout(
               header: PlaylistHero(
                 detail: detail,

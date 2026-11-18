@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../domain/playlists/playlist_models.dart';
 import 'playlist_entry_menu.dart';
+import 'playlist_entry_removal.dart';
 import 'playlist_page_actions.dart';
 import 'playlist_rows_sliver.dart';
 
@@ -19,6 +20,7 @@ PlaylistRowActions playlistRowActions(
   required bool canStep,
   required int Function() rowCount,
   required void Function(String entryUid, int delta) onStep,
+  required PlaylistEntryRemoval removal,
   required void Function(int index) onReorderStart,
   required void Function(int oldIndex, int newIndex) onReorderItem,
 }) {
@@ -42,12 +44,7 @@ PlaylistRowActions playlistRowActions(
       viaKeyboard: viaKeyboard,
     ),
     removeMissing: (entry) => unawaited(remove(context, entry)),
-    // The row leaves with the list update; a failed write brings the saved
-    // list back, so there is nothing to spring back from.
-    removeInEditMode: (entry) async {
-      await remove(context, entry);
-      return false;
-    },
+    removal: removal,
     onReorderStart: onReorderStart,
     onReorderItem: onReorderItem,
   );

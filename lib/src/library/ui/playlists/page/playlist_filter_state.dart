@@ -4,12 +4,9 @@ import '../../browse/filter_debouncer.dart';
 import 'playlist_edit_mode.dart' show SavedFilter;
 
 /// The filter of a playlist page: whether its field is open and what it holds
-/// (the debounced text the rows use). Never stored. [onChanged] is the host's
-/// `setState`.
-class PlaylistFilterState {
-  PlaylistFilterState({required this.onChanged});
-
-  final VoidCallback onChanged;
+/// (the debounced text the rows use). Never stored. Owned by the page (its
+/// Back / Esc chain reads it); the songs part listens and rebuilds.
+class PlaylistFilterState extends ChangeNotifier {
   final TextEditingController controller = TextEditingController();
   final FilterDebouncer _debounce = FilterDebouncer();
 
@@ -23,7 +20,7 @@ class PlaylistFilterState {
   void typed(String value, bool Function() alive) => _debounce(value, (v) {
     if (!alive()) return;
     text = v;
-    onChanged();
+    notifyListeners();
   });
 
   void toggle() => open ? close() : _set(open: true, value: text);
@@ -39,11 +36,13 @@ class PlaylistFilterState {
     this.open = open;
     text = value;
     if (controller.text != value) controller.text = value;
-    onChanged();
+    notifyListeners();
   }
 
+  @override
   void dispose() {
     _debounce.cancel();
     controller.dispose();
+    super.dispose();
   }
 }

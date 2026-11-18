@@ -21,9 +21,24 @@ Future<void> removeUnavailableOnPage(BuildContext context, String uid) =>
           l10n.playlistRemovedUnavailable(removal.entryUids.length),
     );
 
+/// How a removal through the open page ended.
+enum PageRemoval {
+  /// Written; the Undo toast is up.
+  removed,
+
+  /// Nothing to remove (the entry was already gone).
+  nothing,
+
+  /// The write failed (the toast said so).
+  failed,
+
+  /// Dropped silently behind an earlier failed write.
+  cancelled,
+}
+
 /// Removes one entry of playlist [uid] through its open page, with an Undo
-/// toast.
-Future<void> removeEntryOnPage(
+/// toast. The one path of every single-entry removal.
+Future<PageRemoval> removeEntryOnPage(
   BuildContext context,
   String uid,
   PlaylistEntryView entry,
@@ -41,7 +56,7 @@ typedef _PageOf = PlaylistPageController Function(String uid);
 /// that failed says so once; the writes queued behind it were cancelled and
 /// stay silent. Everything the toast needs is taken before the write, as the
 /// row may be gone when it ends.
-Future<void> _removeOnPage(
+Future<PageRemoval> _removeOnPage(
   BuildContext context,
   Future<PlaylistRemoval?> Function(_PageOf page) remove,
   String Function(AppLocalizations l10n, PlaylistRemoval removal) message,
@@ -53,14 +68,18 @@ Future<void> _removeOnPage(
     final removal = await remove(
       (uid) => container.read(playlistPageProvider(uid).notifier),
     );
-    if (removal == null || !root.mounted) return;
-    showRemovalToast(root, container, removal, message(l10n, removal));
+    if (removal == null) return PageRemoval.nothing;
+    if (root.mounted) {
+      showRemovalToast(root, container, removal, message(l10n, removal));
+    }
+    return PageRemoval.removed;
   } on PlaylistWriteFailure catch (failure) {
-    if (failure.cancelled) return;
+    if (failure.cancelled) return PageRemoval.cancelled;
     _log.warning('A playlist removal failed', failure.cause);
     if (root.mounted) showAppSnackBar(root, l10n.playlistSaveFailed);
   } on Object catch (error, stack) {
     _log.warning('A playlist removal failed', error, stack);
     if (root.mounted) showAppSnackBar(root, l10n.playlistSaveFailed);
   }
+  return PageRemoval.failed;
 }

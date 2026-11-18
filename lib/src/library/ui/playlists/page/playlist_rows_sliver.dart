@@ -9,6 +9,8 @@ import '../../browse/library_list_scaffold.dart';
 import '../../menus/menu_model.dart' show MenuItemSpec;
 import '../../menus/menu_origin.dart';
 import '../../songs/song_tile.dart';
+import 'playlist_entry_removal.dart';
+import 'playlist_row_shell.dart';
 import 'playlist_shown_entries.dart';
 
 /// What the rows of a playlist page ask the page to do.
@@ -17,7 +19,7 @@ class PlaylistRowActions {
     required this.menuExtras,
     required this.missingMenu,
     required this.removeMissing,
-    required this.removeInEditMode,
+    required this.removal,
     required this.onReorderStart,
     required this.onReorderItem,
   });
@@ -36,8 +38,9 @@ class PlaylistRowActions {
   /// The ✕ of a missing row in normal mode.
   final void Function(PlaylistEntryView entry) removeMissing;
 
-  /// Swipe, ✕ or Delete on an edit-mode row; false = the row springs back.
-  final Future<bool> Function(PlaylistEntryView entry) removeInEditMode;
+  /// Swipe, ✕ or Delete on an edit-mode row (`removal.remove`: false = the
+  /// row springs back), and the row focus nodes.
+  final PlaylistEntryRemoval removal;
 
   /// A drag began on the row at this index of the shown rows.
   final void Function(int index) onReorderStart;
@@ -88,7 +91,7 @@ class PlaylistRowsSliver extends StatelessWidget {
               semanticLabel: l10n.playlistDragHandle,
             ),
             removeLabel: removeLabel,
-            onRemove: () => actions.removeInEditMode(entry),
+            onRemove: () => actions.removal.remove(entry),
           )
         : null;
     return SliverPadding(
@@ -104,36 +107,44 @@ class PlaylistRowsSliver extends StatelessWidget {
         },
         itemBuilder: (context, i) {
           final entry = shown.rows[i];
-          // Keyed by entry: a row whose index now holds another entry
-          // starts over, so a swipe never acts on the wrong one.
+          // Keyed by entry (on the shell): a row whose index now holds
+          // another entry starts over, so a swipe never acts on the wrong one.
+          Widget shell(Widget row) => PlaylistRowShell(
+            key: ValueKey(entry.uid),
+            uid: entry.uid,
+            removal: actions.removal,
+            child: row,
+          );
           if (!entry.available) {
-            return SongTile(
-              key: ValueKey(entry.uid),
+            return shell(
+              SongTile(
+                info: entry.info,
+                index: 0,
+                ids: shown.playable,
+                playContext: playContext,
+                origin: origin,
+                unavailable: true,
+                edit: editOf(entry, i),
+                onRemove: () => actions.removeMissing(entry),
+                onMenu: editing
+                    ? null
+                    : ({required viaKeyboard}) =>
+                          actions.missingMenu(entry, viaKeyboard: viaKeyboard),
+              ),
+            );
+          }
+          return shell(
+            SongTile(
               info: entry.info,
-              index: 0,
+              index: shown.playableIndex[i],
               ids: shown.playable,
               playContext: playContext,
               origin: origin,
-              unavailable: true,
+              markCurrent: shown.firstOfTrack.contains(entry.uid),
               edit: editOf(entry, i),
-              onRemove: () => actions.removeMissing(entry),
-              onMenu: editing
-                  ? null
-                  : ({required viaKeyboard}) =>
-                        actions.missingMenu(entry, viaKeyboard: viaKeyboard),
-            );
-          }
-          return SongTile(
-            key: ValueKey(entry.uid),
-            info: entry.info,
-            index: shown.playableIndex[i],
-            ids: shown.playable,
-            playContext: playContext,
-            origin: origin,
-            markCurrent: shown.firstOfTrack.contains(entry.uid),
-            edit: editOf(entry, i),
-            menuExtras: editing ? const [] : actions.menuExtras(entry, i),
-            menuFavoriteRow: !isFavorites,
+              menuExtras: editing ? const [] : actions.menuExtras(entry, i),
+              menuFavoriteRow: !isFavorites,
+            ),
           );
         },
       ),
