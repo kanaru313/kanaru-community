@@ -1,8 +1,10 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:material_ui/material_ui.dart';
 
-import '../../../l10n/gen/app_localizations.dart';
+import '../../../../l10n/gen/app_localizations.dart';
 
+/// Root page of the Playlists tab. Placeholder until the playlist screens
+/// replace the body.
 class PlaylistsPage extends StatelessWidget {
   const PlaylistsPage({super.key});
 

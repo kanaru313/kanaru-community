@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart' show AsyncLoading;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/library/ui/detail/detail_header.dart';
 import 'package:kanaru/src/library/state/browse/detail_providers.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
@@ -173,5 +175,48 @@ void main() {
     expect(inPageHeader('Long'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await unmountApp(tester);
+  });
+
+  testWidgets('a frame without a back button still collapses its title into '
+      'the header', (tester) async {
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => Scaffold(
+            body: DetailFrame(
+              title: 'Name',
+              fallback: '/',
+              showBack: false,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const KGridHeading(title: 'Name'),
+                    for (var i = 0; i < 40; i++) Text('row $i'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+    expect(inPageHeader('Name'), findsNothing);
+    await tester.drag(
+      find.byType(SingleChildScrollView),
+      const Offset(0, -600),
+    );
+    await tester.pumpAndSettle();
+    expect(inPageHeader('Name'), findsOneWidget);
+    await tester.drag(
+      find.byType(SingleChildScrollView),
+      const Offset(0, 2000),
+    );
+    await tester.pumpAndSettle();
+    expect(inPageHeader('Name'), findsNothing);
   });
 }

@@ -55,12 +55,14 @@ GoRoute libraryRoute() => GoRoute(
 List<GoRoute> _detailRoutes() => [
   GoRoute(
     path: 'albums/:album',
-    pageBuilder: (context, state) =>
-        _detailPage(state, AlbumPage(albumId: state.pathParameters['album']!)),
+    pageBuilder: (context, state) => libraryDetailPage(
+      state,
+      AlbumPage(albumId: state.pathParameters['album']!),
+    ),
   ),
   GoRoute(
     path: 'artists/:artist',
-    pageBuilder: (context, state) => _detailPage(
+    pageBuilder: (context, state) => libraryDetailPage(
       state,
       ArtistPage(artistId: state.pathParameters['artist']!),
     ),
@@ -68,7 +70,7 @@ List<GoRoute> _detailRoutes() => [
   for (final appears in [false, true])
     GoRoute(
       path: 'artists/:artist/${appears ? 'appears' : 'albums'}',
-      pageBuilder: (context, state) => _detailPage(
+      pageBuilder: (context, state) => libraryDetailPage(
         state,
         ArtistAlbumsPage(
           artistId: state.pathParameters['artist']!,
@@ -79,7 +81,7 @@ List<GoRoute> _detailRoutes() => [
   for (final kind in GroupKind.values) ...[
     GoRoute(
       path: '${kind.name == 'genre' ? 'genres' : 'languages'}/:${kind.name}',
-      pageBuilder: (context, state) => _detailPage(
+      pageBuilder: (context, state) => libraryDetailPage(
         state,
         GroupPage(kind: kind, id: state.pathParameters[kind.name]!),
       ),
@@ -89,7 +91,7 @@ List<GoRoute> _detailRoutes() => [
         path:
             '${kind.name == 'genre' ? 'genres' : 'languages'}/:${kind.name}/'
             '${artists ? 'artists' : 'albums'}',
-        pageBuilder: (context, state) => _detailPage(
+        pageBuilder: (context, state) => libraryDetailPage(
           state,
           GroupSeeAllPage(
             kind: kind,
@@ -101,6 +103,8 @@ List<GoRoute> _detailRoutes() => [
   ],
 ];
 
+/// Transition of every detail page, in the library and in playlists.
+///
 /// A detail page slides in from the right and out again on one smooth curve
 /// on mobile. The platform default (Cupertino) eases fast-to-slow, so the
 /// last part of the slide crawls and the page below stays on screen as a
@@ -109,7 +113,7 @@ List<GoRoute> _detailRoutes() => [
 /// On desktop the page replaces the content area between the sidebar and the
 /// right panel: a slide across that width feels heavy, so it fades in quickly
 /// (the first ~150 ms of the route) and out in ~120 ms instead.
-Page<void> _detailPage(GoRouterState state, Widget child) =>
+Page<void> libraryDetailPage(GoRouterState state, Widget child) =>
     CustomTransitionPage<void>(
       key: state.pageKey,
       child: child,

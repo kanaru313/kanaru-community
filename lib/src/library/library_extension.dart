@@ -1,6 +1,7 @@
 import '../extension/kanaru_extension.dart';
 import '../extension/state/extension_registry.dart';
 import 'ui/library_browse_registration.dart';
+import 'ui/playlist_common/playlist_registration.dart';
 import 'ui/scan/library_scan_registration.dart';
 
 /// Library and Playlists: nav entries and root pages. Each concern registers
@@ -14,6 +15,7 @@ class LibraryExtension implements KanaruExtension {
   @override
   void register(ExtensionRegistry registry) {
     registerLibraryBrowse(registry);
+    registerPlaylists(registry);
     registerLibraryScan(registry);
   }
 }
