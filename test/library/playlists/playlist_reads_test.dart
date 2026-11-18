@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show TableUpdate;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/library/data/playlists/playlist_reads.dart';
@@ -75,6 +76,41 @@ void main() {
       expect(seen.last.playlists.single.trackCount, 0);
     },
   );
+
+  test('a cover change on a playlist track re-emits the summary', () async {
+    final a = await withAlbum('a', 'X', 1000, cover: 'old');
+    await f.repo.createPlaylist(name: 'P', tracks: [a]);
+    final seen = <PlaylistSummaries>[];
+    final sub = f.repo.watchSummaries().listen(seen.add);
+    addTearDown(sub.cancel);
+    await pumpUntil(() => seen.length == 1);
+    expect(seen.single.playlists.single.autoCoverKeys, ['old']);
+    await f.db.customStatement(
+      "UPDATE tracks SET cover_key = 'new' WHERE id = ?",
+      [a.value],
+    );
+    f.db.notifyUpdates({const TableUpdate('tracks')});
+    await pumpUntil(() => seen.length == 2);
+    expect(seen.last.playlists.single.autoCoverKeys, ['new']);
+  });
+
+  test('a track write outside every playlist emits nothing new', () async {
+    final a = await f.track('a');
+    final other = await f.track('other');
+    await f.repo.createPlaylist(name: 'P', tracks: [a]);
+    final seen = <PlaylistSummaries>[];
+    final sub = f.repo.watchSummaries().listen(seen.add);
+    addTearDown(sub.cancel);
+    await pumpUntil(() => seen.length == 1);
+    await f.db.customStatement(
+      "UPDATE tracks SET cover_key = 'x' WHERE id = ?",
+      [other.value],
+    );
+    f.db.notifyUpdates({const TableUpdate('tracks')});
+    // Wait past one refresh interval so a reload had the chance to emit.
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    expect(seen, hasLength(1));
+  });
 
   test('summary query walks the order index', () async {
     final plan = await f.db

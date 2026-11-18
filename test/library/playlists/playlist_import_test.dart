@@ -183,4 +183,34 @@ void main() {
     expect(d.entries.single.info.id.value, placeholder.id);
     expect(d.unavailableCount, 0);
   });
+
+  test('5 000 missing lines import with batched lookups', () async {
+    final existing = await f.track('have');
+    final lines = <ImportedEntry>[
+      for (var i = 0; i < 5000; i++)
+        ImportedMissing(
+          sourceId: f.source,
+          locator: 'big/$i.mp3',
+          title: 'Song $i',
+        ),
+      ImportedTrack(existing),
+      ImportedMissing(sourceId: f.source, locator: 'big/0.mp3', title: 'dup'),
+    ];
+    final watch = Stopwatch()..start();
+    final r = await f.repo.createImportedPlaylist(name: 'Big', entries: lines);
+    watch.stop();
+    expect(watch.elapsed, lessThan(const Duration(seconds: 60)));
+    expect(r.entryCount, 5002);
+    expect(r.missingCreated, 5000);
+    final rows = await f.db
+        .customSelect(
+          "SELECT COUNT(*) AS c FROM tracks WHERE status = 'missing' "
+          'AND missing_since = 10000',
+        )
+        .getSingle();
+    expect(rows.read<int>('c'), 5000);
+    final live = await f.liveTracks(r.uid);
+    expect(live, hasLength(5002));
+    expect(live[0], live[5001], reason: 'repeat of the first line');
+  });
 }

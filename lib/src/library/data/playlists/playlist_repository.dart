@@ -28,7 +28,9 @@ class PlaylistRepository implements PlaylistStore {
   @override
   Stream<PlaylistSummaries> watchSummaries() => throttledQuery(
     _db,
-    {_db.playlists, _db.playlistEntries},
+    // `tracks` too: a scan writes covers and durations there. The value
+    // equality below drops emissions that change nothing shown.
+    {_db.playlists, _db.playlistEntries, _db.tracks},
     () => loadSummaries(_db),
     equals: (a, b) => a == b,
   );
