@@ -1589,6 +1589,68 @@
   "@plAddNotConfirmed": {
     "description": "Toast: the write did not answer in time."
   },
+  "m3uImportProgressTitle": "Importing {file}",
+  "@m3uImportProgressTitle": {
+    "description": "Title of the card shown on the playlists page while an M3U file is imported.",
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "m3uImportProgressLines": "{done} / {total} lines",
+  "@m3uImportProgressLines": {
+    "description": "Subtitle of the M3U import card: lines read so far out of all lines.",
+    "placeholders": {
+      "done": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "m3uImportFailed": "Couldn't import the file.",
+  "@m3uImportFailed": {
+    "description": "Toast: an M3U import failed for an unexpected reason. Nothing was created."
+  },
+  "m3uReportTruncated": "The file has more lines than the limit, so only the first {max} were read.",
+  "@m3uReportTruncated": {
+    "description": "Note at the end of the M3U import report when the file was cut.",
+    "placeholders": {
+      "max": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "m3uExportedSkipped": "Saved {count, plural, =1{1 song} other{{count} songs}} to {file}, {skipped, plural, =1{1 skipped (no file on this device)} other{{skipped} skipped (no file on this device)}}",
+  "@m3uExportedSkipped": {
+    "description": "Export toast when some songs were left out of the M3U file.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "file": {
+        "type": "String"
+      },
+      "skipped": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "m3uExportFolderUnknown": "Couldn't write relative paths: the folder of this file is unknown. Save it in internal storage, or export with absolute paths.",
+  "@m3uExportFolderUnknown": {
+    "description": "Toast: a relative-path export was refused because the chosen location has no known folder."
+  },
+  "m3uExportReplace": "Replace",
+  "@m3uExportReplace": {
+    "description": "Confirm button when the chosen M3U file already exists."
+  },
   "settingsAbout": "About",
   "settingsNativeVersions": "Native libraries"
 }

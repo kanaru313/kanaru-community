@@ -2143,6 +2143,56 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chưa xác nhận được việc thêm bài. Hãy xem lại playlist.';
 
   @override
+  String m3uImportProgressTitle(String file) {
+    return 'Đang nhập $file';
+  }
+
+  @override
+  String m3uImportProgressLines(int done, int total) {
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$doneString / $totalString dòng';
+  }
+
+  @override
+  String get m3uImportFailed => 'Không nhập được tệp.';
+
+  @override
+  String m3uReportTruncated(int max) {
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String maxString = maxNumberFormat.format(max);
+
+    return 'Tệp có nhiều dòng hơn giới hạn, nên chỉ đọc $maxString dòng đầu.';
+  }
+
+  @override
+  String m3uExportedSkipped(int count, String file, int skipped) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+    final intl.NumberFormat skippedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String skippedString = skippedNumberFormat.format(skipped);
+
+    return 'Đã lưu $countString bài vào $file, bỏ qua $skippedString bài không có tệp trong máy';
+  }
+
+  @override
+  String get m3uExportFolderUnknown =>
+      'Không ghi được đường dẫn tương đối vì không biết thư mục của tệp. Lưu tệp vào bộ nhớ trong, hoặc xuất với đường dẫn tuyệt đối.';
+
+  @override
+  String get m3uExportReplace => 'Thay thế';
+
+  @override
   String get settingsAbout => 'Giới thiệu';
 
   @override

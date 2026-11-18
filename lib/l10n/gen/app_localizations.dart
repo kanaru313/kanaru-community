@@ -3534,6 +3534,48 @@ abstract class AppLocalizations {
   /// **'Couldn\'t confirm the songs were added. Check the playlist.'**
   String get plAddNotConfirmed;
 
+  /// Title of the card shown on the playlists page while an M3U file is imported.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing {file}'**
+  String m3uImportProgressTitle(String file);
+
+  /// Subtitle of the M3U import card: lines read so far out of all lines.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} / {total} lines'**
+  String m3uImportProgressLines(int done, int total);
+
+  /// Toast: an M3U import failed for an unexpected reason. Nothing was created.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t import the file.'**
+  String get m3uImportFailed;
+
+  /// Note at the end of the M3U import report when the file was cut.
+  ///
+  /// In en, this message translates to:
+  /// **'The file has more lines than the limit, so only the first {max} were read.'**
+  String m3uReportTruncated(int max);
+
+  /// Export toast when some songs were left out of the M3U file.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {count, plural, =1{1 song} other{{count} songs}} to {file}, {skipped, plural, =1{1 skipped (no file on this device)} other{{skipped} skipped (no file on this device)}}'**
+  String m3uExportedSkipped(int count, String file, int skipped);
+
+  /// Toast: a relative-path export was refused because the chosen location has no known folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t write relative paths: the folder of this file is unknown. Save it in internal storage, or export with absolute paths.'**
+  String get m3uExportFolderUnknown;
+
+  /// Confirm button when the chosen M3U file already exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get m3uExportReplace;
+
   /// No description provided for @settingsAbout.
   ///
   /// In en, this message translates to:

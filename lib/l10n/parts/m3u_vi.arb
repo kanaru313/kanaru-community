@@ -1,0 +1,54 @@
+{
+  "m3uImportProgressTitle": "Đang nhập {file}",
+  "@m3uImportProgressTitle": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "m3uImportProgressLines": "{done} / {total} dòng",
+  "@m3uImportProgressLines": {
+    "placeholders": {
+      "done": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "m3uImportFailed": "Không nhập được tệp.",
+  "@m3uImportFailed": {},
+  "m3uReportTruncated": "Tệp có nhiều dòng hơn giới hạn, nên chỉ đọc {max} dòng đầu.",
+  "@m3uReportTruncated": {
+    "placeholders": {
+      "max": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "m3uExportedSkipped": "Đã lưu {count} bài vào {file}, bỏ qua {skipped} bài không có tệp trong máy",
+  "@m3uExportedSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "file": {
+        "type": "String"
+      },
+      "skipped": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "m3uExportFolderUnknown": "Không ghi được đường dẫn tương đối vì không biết thư mục của tệp. Lưu tệp vào bộ nhớ trong, hoặc xuất với đường dẫn tuyệt đối.",
+  "@m3uExportFolderUnknown": {},
+  "m3uExportReplace": "Thay thế",
+  "@m3uExportReplace": {}
+}

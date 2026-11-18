@@ -2407,6 +2407,68 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t confirm the songs were added. Check the playlist.';
 
   @override
+  String m3uImportProgressTitle(String file) {
+    return 'Importing $file';
+  }
+
+  @override
+  String m3uImportProgressLines(int done, int total) {
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$doneString / $totalString lines';
+  }
+
+  @override
+  String get m3uImportFailed => 'Couldn\'t import the file.';
+
+  @override
+  String m3uReportTruncated(int max) {
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String maxString = maxNumberFormat.format(max);
+
+    return 'The file has more lines than the limit, so only the first $maxString were read.';
+  }
+
+  @override
+  String m3uExportedSkipped(int count, String file, int skipped) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+    final intl.NumberFormat skippedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String skippedString = skippedNumberFormat.format(skipped);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString songs',
+      one: '1 song',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: '$skippedString skipped (no file on this device)',
+      one: '1 skipped (no file on this device)',
+    );
+    return 'Saved $_temp0 to $file, $_temp1';
+  }
+
+  @override
+  String get m3uExportFolderUnknown =>
+      'Couldn\'t write relative paths: the folder of this file is unknown. Save it in internal storage, or export with absolute paths.';
+
+  @override
+  String get m3uExportReplace => 'Replace';
+
+  @override
   String get settingsAbout => 'About';
 
   @override
