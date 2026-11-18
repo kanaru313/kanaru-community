@@ -7,6 +7,11 @@ import '../domain/library_tabs.dart';
 abstract final class LibraryLocations {
   static const root = '/library';
 
+  /// Playlists root and one playlist (a ULID, or `favorites`).
+  static const playlists = '/playlists';
+
+  static String playlist(String uid) => '$playlists/$uid';
+
   /// Root page of one list: `/library/songs` … `/library/folders`.
   static String list(LibraryTab tab) => '$root/${tab.name}';
 

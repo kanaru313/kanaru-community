@@ -40,6 +40,9 @@ String sortCriterionLabel(AppLocalizations l10n, SortCriterion c) =>
       SortCriterion.trackCount => l10n.librarySortTrackCount,
       SortCriterion.albumCount => l10n.librarySortAlbumCount,
       SortCriterion.trackNumber => l10n.librarySortTrackNumber,
+      SortCriterion.name => l10n.librarySortName,
+      SortCriterion.dateModified => l10n.librarySortDateModified,
+      SortCriterion.playlistOrder => l10n.librarySortPlaylistOrder,
     };
 
 /// Text of the bar's sort chip: the first criterion's name, plus how many
@@ -61,6 +64,9 @@ IconData sortCriterionIcon(SortCriterion c) => switch (c) {
   SortCriterion.trackCount => KIcons.count,
   SortCriterion.albumCount => KIcons.albums,
   SortCriterion.trackNumber => KIcons.trackNumber,
+  SortCriterion.name => KIcons.sortName,
+  SortCriterion.dateModified => KIcons.dateModified,
+  SortCriterion.playlistOrder => KIcons.trackNumber,
 };
 
 /// Whole minutes of a length, at least 1 for a non-empty one.

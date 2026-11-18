@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -27,7 +29,7 @@ class AlbumCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ExcludeSemantics(
-    child: _ItemCover(
+    child: ItemCover(
       item: (kind: CustomCoverKind.album, itemKey: itemKey),
       seed: itemKey,
       automaticCoverKey: coverKey,
@@ -64,7 +66,7 @@ class ArtistCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ExcludeSemantics(
-    child: _ItemCover(
+    child: ItemCover(
       item: (kind: CustomCoverKind.artist, itemKey: itemKey),
       seed: name,
       automaticCoverKey: coverKey,
@@ -90,8 +92,9 @@ class ArtistCover extends StatelessWidget {
 /// cover first). The file goes through [KCover], which decodes at display
 /// size. A file that exists but cannot be decoded falls back to [automatic] at
 /// paint time (the provider only knows whether the file exists).
-class _ItemCover extends ConsumerWidget {
-  const _ItemCover({
+class ItemCover extends ConsumerWidget {
+  const ItemCover({
+    super.key,
     required this.item,
     required this.seed,
     required this.automaticCoverKey,
@@ -99,7 +102,13 @@ class _ItemCover extends ConsumerWidget {
     required this.automatic,
     this.radius,
     this.circle = false,
+    this.thumb = false,
   });
+
+  /// Draw the 256 px `thumb` file of a custom cover instead of the `full`
+  /// one: for small tiles, so a list does not decode 1024 px files (the
+  /// thumb path comes from the shown key, no second lookup).
+  final bool thumb;
 
   final CustomCoverItem item;
   final String seed;
@@ -121,14 +130,44 @@ class _ItemCover extends ConsumerWidget {
         circle: circle,
       ),
       ShownAutomaticCover() => automatic,
-      ShownCustomCover(:final file) => KCover(
-        image: FileImage(file),
-        size: dimension,
-        placeholderSeed: seed,
-        radius: radius,
-        circle: circle,
-        errorFallback: automatic,
+      ShownCustomCover(:final coverKey, :final file) => _custom(
+        file,
+        thumb ? _thumbOf(coverKey, file) : null,
       ),
     };
   }
+
+  /// The picture of a custom cover [full] file. With a [small] file (the
+  /// `thumb` of the same key) the tile decodes that only; a missing thumb
+  /// falls back to the full file, a missing full file to [automatic].
+  Widget _custom(File full, File? small) {
+    final fullCover = KCover(
+      image: FileImage(full),
+      size: dimension,
+      placeholderSeed: seed,
+      radius: radius,
+      circle: circle,
+      errorFallback: automatic,
+    );
+    if (small == null) return fullCover;
+    return KCover(
+      image: FileImage(small),
+      size: dimension,
+      placeholderSeed: seed,
+      radius: radius,
+      circle: circle,
+      errorFallback: fullCover,
+    );
+  }
+}
+
+/// The `thumb` file next to a custom cover's [full] file, derived from the
+/// shown cover's own key (the store's layout, `coverRelativePath`), so it
+/// always belongs to the picture shown: a cover change never pairs the new
+/// key with the old thumb. Null when [full] is not in that layout.
+File? _thumbOf(String coverKey, File full) {
+  final suffix = coverRelativePath(coverKey, CoverSize.full);
+  if (!full.path.endsWith(suffix)) return null;
+  final root = full.path.substring(0, full.path.length - suffix.length);
+  return File('$root${coverRelativePath(coverKey, CoverSize.thumb)}');
 }

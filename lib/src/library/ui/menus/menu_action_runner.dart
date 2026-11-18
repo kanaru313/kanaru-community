@@ -116,6 +116,12 @@ class MenuActionRunner {
         } else {
           selection.remove(id);
         }
+      case RunAction(:final run):
+        // The caller's own code: run with the root context. It reports its
+        // own failures; one that escapes is logged and toasted here.
+        await _guard('running a menu action', _l10n.libraryActionFailed, () {
+          return run(_context);
+        });
       case PlayAction(:final ids, :final shuffle, :final context):
         if (ids.isEmpty) {
           if (_context.mounted) {

@@ -69,11 +69,22 @@ void main() {
       tester,
     ) async {
       await pumpKanaruApp(tester);
-      // Favorites, Queue, History, Most played.
-      expect(_byTooltip('Coming soon'), findsNWidgets(4));
-      await tester.tap(find.text('Favorites'));
+      // Queue, History, Most played.
+      expect(_byTooltip('Coming soon'), findsNWidgets(3));
+      final scheme = Theme.of(tester.element(find.byType(Scaffold).first))
+          .colorScheme;
+      await tester.tap(find.text('History'));
       await tester.pumpAndSettle();
-      expect(find.text('Your library is empty.'), findsNothing);
+      expect(
+        GoRouter.of(tester.element(find.byType(Scaffold).first))
+            .routerDelegate
+            .currentConfiguration
+            .uri
+            .path,
+        '/',
+      );
+      expect(_rowColor(tester, 'Home'), scheme.secondaryContainer);
+      expect(_rowColor(tester, 'History'), Colors.transparent);
     });
 
     testWidgets('the item of the open page is tinted', (tester) async {

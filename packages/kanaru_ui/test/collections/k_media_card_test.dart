@@ -1,11 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'package:kanaru_ui/src/widgets/collections/k_media_card_frame.dart';
 import 'package:kanaru_ui/src/widgets/collections/k_media_card_right_column.dart';
 
 import '../support/finders.dart';
@@ -28,6 +30,8 @@ Widget _card({
   bool leading = true,
   String? currentLabel,
   bool filled = true,
+  bool missing = false,
+  bool editing = false,
 }) {
   return Align(
     alignment: Alignment.topCenter,
@@ -55,11 +59,16 @@ Widget _card({
       currentLabel: currentLabel,
       selected: selected,
       dimmed: dimmed,
+      missing: missing,
+      editing: editing,
       onTap: onTap,
       onLongPress: onLongPress,
     ),
   );
 }
+
+/// The dashed outline of a missing row (a custom painter in the card frame).
+Finder dashed() => find.byKey(KMediaCardFrame.dashedKey);
 
 void main() {
   group('text styles', () {
@@ -1384,6 +1393,168 @@ void main() {
         host(const KMediaCardSkeletonList(roundCover: true)),
       );
       expect(find.byType(ClipOval), findsWidgets);
+    });
+  });
+
+  group('editing', () {
+    final ringFinder = find.byWidgetPredicate(
+      (w) =>
+          w is DecoratedBox &&
+          w.decoration is BoxDecoration &&
+          (w.decoration as BoxDecoration).border is Border,
+      description: 'focus ring',
+    );
+    bool ring() => ringFinder.evaluate().isNotEmpty;
+
+    void traditional() => FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.alwaysTraditional;
+    tearDown(
+      () => FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.automatic,
+    );
+
+    testWidgets('Tab focuses an editing row and shows the ring', (
+      tester,
+    ) async {
+      traditional();
+      useWindow(tester, const Size(1300, 800));
+      await tester.pumpWidget(host(_card(editing: true)));
+      expect(ring(), isFalse);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(ring(), isTrue);
+    });
+
+    testWidgets('a row not in edit mode without a tap is not focusable', (
+      tester,
+    ) async {
+      traditional();
+      useWindow(tester, const Size(1300, 800));
+      await tester.pumpWidget(host(_card()));
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(ring(), isFalse);
+    });
+
+    testWidgets('a click takes focus and shows the ring, no tap runs', (
+      tester,
+    ) async {
+      traditional();
+      useWindow(tester, const Size(1300, 800));
+      await tester.pumpWidget(host(_card(editing: true)));
+      await tester.tap(find.text('Title'), kind: PointerDeviceKind.mouse);
+      await tester.pump();
+      expect(ring(), isTrue);
+    });
+
+    testWidgets('an editing row announces no tap action', (tester) async {
+      useWindow(tester, const Size(1300, 800));
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(host(_card(editing: true)));
+      final data = tester
+          .getSemantics(find.byType(KMediaCard))
+          .getSemanticsData();
+      expect(data.hasAction(SemanticsAction.tap), isFalse);
+      handle.dispose();
+    });
+
+    testWidgets('touch focus shows no ring', (tester) async {
+      FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.alwaysTouch;
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(_card(editing: true)));
+      await tester.tap(find.text('Title'));
+      await tester.pump();
+      expect(ring(), isFalse);
+    });
+
+    testWidgets('with missing, the ring replaces the dashes', (tester) async {
+      traditional();
+      useWindow(tester, const Size(1300, 800));
+      await tester.pumpWidget(host(_card(editing: true, missing: true)));
+      expect(dashed(), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(ring(), isTrue);
+      expect(dashed(), findsNothing);
+    });
+  });
+
+  group('missing', () {
+    testWidgets('dims, draws a dashed outline, line 3 in the error colour', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1300, 800));
+      await tester.pumpWidget(host(_card(missing: true)));
+      final opacity = tester.widget<AnimatedOpacity>(
+        find
+            .descendant(
+              of: find.byType(KMediaCard),
+              matching: find.byType(AnimatedOpacity),
+            )
+            .first,
+      );
+      expect(opacity.opacity, 0.5);
+      expect(dashed(), findsOneWidget);
+      final scheme = Theme.of(tester.element(find.byType(KMediaCard)));
+      expect(
+        tester.widget<Text>(find.text('Album • 2020')).style?.color,
+        scheme.colorScheme.error,
+      );
+      expect(
+        tester.widget<Text>(find.text('Artist')).style?.color,
+        isNot(scheme.colorScheme.error),
+      );
+    });
+
+    testWidgets('a normal card has no outline and keeps line 3 quiet', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1300, 800));
+      await tester.pumpWidget(host(_card()));
+      expect(dashed(), findsNothing);
+    });
+
+    for (final (name, style) in [
+      ('flat', KMediaCardStyle.flat),
+      ('card', KMediaCardStyle.card),
+    ]) {
+      testWidgets('draws in the $name style, selected and current', (
+        tester,
+      ) async {
+        useWindow(tester, const Size(400, 800));
+        await tester.pumpWidget(
+          host(_card(missing: true, style: style, selected: true)),
+        );
+        expect(dashed(), findsOneWidget);
+        await tester.pumpWidget(
+          host(_card(missing: true, style: style, current: true)),
+        );
+        expect(dashed(), findsOneWidget);
+      });
+    }
+
+    testWidgets('semantics are those of a normal row', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(host(_card(onTap: () {})));
+      final normal = tester.getSemantics(find.byType(KMediaCard));
+      await tester.pumpWidget(host(_card(onTap: () {}, missing: true)));
+      final gone = tester.getSemantics(find.byType(KMediaCard));
+      expect(gone.label, normal.label);
+      expect(
+        gone.getSemanticsData().flagsCollection,
+        normal.getSemanticsData().flagsCollection,
+      );
+      handle.dispose();
+    });
+
+    testWidgets('fits at 200 % text, dark', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(_card(missing: true), brightness: Brightness.dark, textScale: 2),
+      );
+      expect(tester.takeException(), isNull);
     });
   });
 }

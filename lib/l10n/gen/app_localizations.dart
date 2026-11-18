@@ -1652,6 +1652,18 @@ abstract class AppLocalizations {
   /// **'Newest first'**
   String get libraryOrderNewFirst;
 
+  /// No description provided for @libraryOrderFirstToLast.
+  ///
+  /// In en, this message translates to:
+  /// **'First → last'**
+  String get libraryOrderFirstToLast;
+
+  /// No description provided for @libraryOrderLastToFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Last → first'**
+  String get libraryOrderLastToFirst;
+
   /// No description provided for @librarySortMore.
   ///
   /// In en, this message translates to:
@@ -1723,6 +1735,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Track number'**
   String get librarySortTrackNumber;
+
+  /// No description provided for @librarySortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get librarySortName;
+
+  /// No description provided for @librarySortDateModified.
+  ///
+  /// In en, this message translates to:
+  /// **'Date modified'**
+  String get librarySortDateModified;
+
+  /// No description provided for @librarySortPlaylistOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist order'**
+  String get librarySortPlaylistOrder;
 
   /// No description provided for @libraryViewGrid.
   ///
@@ -2527,6 +2557,850 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not copy'**
   String get libraryMenuCopyFailed;
+
+  /// No description provided for @libraryActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t complete the action'**
+  String get libraryActionFailed;
+
+  /// No description provided for @playlistFavoritesName.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get playlistFavoritesName;
+
+  /// No description provided for @playlistDefaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'New playlist'**
+  String get playlistDefaultName;
+
+  /// No description provided for @playlistCopyName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (copy)'**
+  String playlistCopyName(String name);
+
+  /// No description provided for @playlistFavoritesCopyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites ({date})'**
+  String playlistFavoritesCopyName(String date);
+
+  /// No description provided for @playlistYours.
+  ///
+  /// In en, this message translates to:
+  /// **'Your playlists'**
+  String get playlistYours;
+
+  /// No description provided for @playlistCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 playlist} other{{count} playlists}}'**
+  String playlistCount(int count);
+
+  /// No description provided for @playlistTrackCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No songs} =1{1 song} other{{count} songs}}'**
+  String playlistTrackCount(int count);
+
+  /// No description provided for @playlistEditedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited {date}'**
+  String playlistEditedOn(String date);
+
+  /// No description provided for @playlistFilterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter playlists'**
+  String get playlistFilterHint;
+
+  /// No description provided for @playlistFilterNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No playlists match.'**
+  String get playlistFilterNoMatch;
+
+  /// No description provided for @playlistsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No playlists yet'**
+  String get playlistsEmptyTitle;
+
+  /// No description provided for @playlistsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a playlist to keep songs in your own order, or import an M3U file.'**
+  String get playlistsEmptyMessage;
+
+  /// No description provided for @playlistCreateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create playlist'**
+  String get playlistCreateAction;
+
+  /// No description provided for @playlistImportM3uAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Import M3U file…'**
+  String get playlistImportM3uAction;
+
+  /// No description provided for @playlistFavoritesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs you ♥'**
+  String get playlistFavoritesSubtitle;
+
+  /// No description provided for @playlistHubStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get playlistHubStats;
+
+  /// No description provided for @playlistFabOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get playlistFabOpen;
+
+  /// No description provided for @playlistFabClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get playlistFabClose;
+
+  /// No description provided for @playlistFabNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New playlist'**
+  String get playlistFabNew;
+
+  /// No description provided for @playlistFabImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import M3U file'**
+  String get playlistFabImport;
+
+  /// No description provided for @playlistFabSmart.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart playlist'**
+  String get playlistFabSmart;
+
+  /// No description provided for @playlistFilterSongsNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No songs match.'**
+  String get playlistFilterSongsNoMatch;
+
+  /// No description provided for @playlistDragHandle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get playlistDragHandle;
+
+  /// No description provided for @playlistNotInLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in library'**
+  String get playlistNotInLibrary;
+
+  /// No description provided for @playlistUnavailableNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song is} other{{count} songs are}} not in your library: dimmed and skipped when playing.'**
+  String playlistUnavailableNote(int count);
+
+  /// No description provided for @playlistRemoveUnavailableAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {count}'**
+  String playlistRemoveUnavailableAction(int count);
+
+  /// No description provided for @playlistEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This playlist is empty'**
+  String get playlistEmptyTitle;
+
+  /// No description provided for @playlistEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add songs from the menu of any song, album or artist (Add to playlist…), or select several songs and add them at once.'**
+  String get playlistEmptyMessage;
+
+  /// No description provided for @playlistFavoritesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorites yet'**
+  String get playlistFavoritesEmptyTitle;
+
+  /// No description provided for @playlistFavoritesEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap ♥ on a song to add it here.'**
+  String get playlistFavoritesEmptyMessage;
+
+  /// No description provided for @playlistNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist not found'**
+  String get playlistNotFoundTitle;
+
+  /// No description provided for @playlistNotFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'It may have been deleted.'**
+  String get playlistNotFoundMessage;
+
+  /// No description provided for @playlistSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the playlist'**
+  String get playlistSaveFailed;
+
+  /// No description provided for @playlistMenuGoTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to playlist'**
+  String get playlistMenuGoTo;
+
+  /// No description provided for @playlistMenuGoToFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Favorites'**
+  String get playlistMenuGoToFavorites;
+
+  /// No description provided for @playlistMenuCopyTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to playlist…'**
+  String get playlistMenuCopyTo;
+
+  /// No description provided for @playlistMenuCopyToHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy {count, plural, =1{1 song} other{{count} songs}} to another playlist.'**
+  String playlistMenuCopyToHint(int count);
+
+  /// No description provided for @playlistMenuAskAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI about this playlist'**
+  String get playlistMenuAskAi;
+
+  /// No description provided for @playlistMenuEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit playlist'**
+  String get playlistMenuEdit;
+
+  /// No description provided for @playlistMenuEditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the name, description and cover.'**
+  String get playlistMenuEditHint;
+
+  /// No description provided for @playlistMenuChangeCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Change playlist image'**
+  String get playlistMenuChangeCover;
+
+  /// No description provided for @playlistMenuDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete playlist'**
+  String get playlistMenuDelete;
+
+  /// No description provided for @playlistMenuDeleteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Music files stay'**
+  String get playlistMenuDeleteHint;
+
+  /// No description provided for @playlistMenuDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate playlist'**
+  String get playlistMenuDuplicate;
+
+  /// No description provided for @playlistMenuExportM3u.
+  ///
+  /// In en, this message translates to:
+  /// **'Export M3U file…'**
+  String get playlistMenuExportM3u;
+
+  /// No description provided for @playlistMenuExportM3uHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Absolute paths'**
+  String get playlistMenuExportM3uHint;
+
+  /// No description provided for @playlistMenuExportM3uRelative.
+  ///
+  /// In en, this message translates to:
+  /// **'Export M3U, relative paths…'**
+  String get playlistMenuExportM3uRelative;
+
+  /// No description provided for @playlistMenuExportM3uRelativeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the .m3u8 file next to the music folder: copy the whole folder to another device and it still opens.'**
+  String get playlistMenuExportM3uRelativeHint;
+
+  /// No description provided for @playlistMenuRemoveDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove duplicates'**
+  String get playlistMenuRemoveDuplicates;
+
+  /// No description provided for @playlistMenuRemoveDuplicatesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 repeated song} other{{count} repeated songs}} · keep the first'**
+  String playlistMenuRemoveDuplicatesHint(int count);
+
+  /// No description provided for @playlistMenuRemoveUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove missing songs'**
+  String get playlistMenuRemoveUnavailable;
+
+  /// No description provided for @playlistMenuRemoveUnavailableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} not in your library'**
+  String playlistMenuRemoveUnavailableHint(int count);
+
+  /// No description provided for @playlistMenuSaveAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as playlist'**
+  String get playlistMenuSaveAs;
+
+  /// No description provided for @playlistMenuClearFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all from Favorites'**
+  String get playlistMenuClearFavorites;
+
+  /// No description provided for @playlistMenuClearFavoritesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} · music files stay'**
+  String playlistMenuClearFavoritesHint(int count);
+
+  /// No description provided for @playlistMenuMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get playlistMenuMoveUp;
+
+  /// No description provided for @playlistMenuMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get playlistMenuMoveDown;
+
+  /// No description provided for @playlistMenuRemoveEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from playlist'**
+  String get playlistMenuRemoveEntry;
+
+  /// No description provided for @playlistMenuRemoveFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Favorites'**
+  String get playlistMenuRemoveFavorite;
+
+  /// No description provided for @playlistRemovedEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed “{title}”'**
+  String playlistRemovedEntry(String title);
+
+  /// No description provided for @playlistRemovedFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed “{title}” from Favorites'**
+  String playlistRemovedFavorite(String title);
+
+  /// No description provided for @playlistRemovedEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {count, plural, =1{1 song} other{{count} songs}}'**
+  String playlistRemovedEntries(int count);
+
+  /// No description provided for @playlistRemovedDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {count, plural, =1{1 duplicate} other{{count} duplicates}}'**
+  String playlistRemovedDuplicates(int count);
+
+  /// No description provided for @playlistRemovedUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {count, plural, =1{1 missing song} other{{count} missing songs}}'**
+  String playlistRemovedUnavailable(int count);
+
+  /// No description provided for @playlistClearedFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed everything from Favorites'**
+  String get playlistClearedFavorites;
+
+  /// No description provided for @playlistSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist saved'**
+  String get playlistSaved;
+
+  /// No description provided for @playlistCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Created {name}'**
+  String playlistCreated(String name);
+
+  /// No description provided for @playlistDuplicated.
+  ///
+  /// In en, this message translates to:
+  /// **'Created “{name}”'**
+  String playlistDuplicated(String name);
+
+  /// No description provided for @playlistFavoritedAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {added} to Favorites, skipped {skipped}'**
+  String playlistFavoritedAll(int added, int skipped);
+
+  /// No description provided for @playlistCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New playlist'**
+  String get playlistCreateTitle;
+
+  /// No description provided for @playlistCreateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get playlistCreateConfirm;
+
+  /// No description provided for @playlistEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit playlist'**
+  String get playlistEditTitle;
+
+  /// No description provided for @playlistNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get playlistNameLabel;
+
+  /// No description provided for @playlistDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get playlistDescriptionLabel;
+
+  /// No description provided for @playlistDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a description (optional)'**
+  String get playlistDescriptionHint;
+
+  /// No description provided for @playlistNameEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Name can\'t be empty'**
+  String get playlistNameEmpty;
+
+  /// No description provided for @playlistNameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Too long'**
+  String get playlistNameTooLong;
+
+  /// No description provided for @playlistDescriptionTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Too long'**
+  String get playlistDescriptionTooLong;
+
+  /// No description provided for @playlistCoverChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Change cover…'**
+  String get playlistCoverChoose;
+
+  /// No description provided for @playlistCoverAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic cover'**
+  String get playlistCoverAuto;
+
+  /// No description provided for @playlistCoverUsingAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Using the automatic cover'**
+  String get playlistCoverUsingAuto;
+
+  /// No description provided for @playlistCoverAutoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The automatic cover combines the covers of the first 4 albums in the playlist.'**
+  String get playlistCoverAutoHint;
+
+  /// No description provided for @playlistDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String playlistDeleteTitle(String name);
+
+  /// No description provided for @playlistDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The playlist has {count, plural, =1{1 song} other{{count} songs}}. The songs stay in your library.'**
+  String playlistDeleteBody(int count);
+
+  /// No description provided for @playlistDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get playlistDeleteConfirm;
+
+  /// No description provided for @playlistClearFavoritesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all from Favorites?'**
+  String get playlistClearFavoritesTitle;
+
+  /// No description provided for @playlistClearFavoritesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song leaves} other{{count} songs leave}} Favorites. The songs stay in your library.'**
+  String playlistClearFavoritesBody(int count);
+
+  /// No description provided for @playlistClearFavoritesConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all'**
+  String get playlistClearFavoritesConfirm;
+
+  /// No description provided for @playlistCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get playlistCancel;
+
+  /// No description provided for @playlistSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get playlistSave;
+
+  /// No description provided for @playlistClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get playlistClose;
+
+  /// No description provided for @playlistConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get playlistConfirm;
+
+  /// No description provided for @playlistPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to playlist'**
+  String get playlistPickerTitle;
+
+  /// No description provided for @playlistPickerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{songs, plural, =1{1 song} other{{songs} songs}} · {source}'**
+  String playlistPickerSubtitle(int songs, String source);
+
+  /// No description provided for @playlistPickerFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'from {name}'**
+  String playlistPickerFrom(String name);
+
+  /// No description provided for @playlistPickerSelectedSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected songs'**
+  String playlistPickerSelectedSongs(int count);
+
+  /// No description provided for @playlistPickerFavoritesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs already there are skipped.'**
+  String get playlistPickerFavoritesHint;
+
+  /// No description provided for @playlistPickerNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New playlist…'**
+  String get playlistPickerNew;
+
+  /// No description provided for @playlistPickerNewMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'It is added to the list, checked, and only created when you press Add.'**
+  String get playlistPickerNewMessage;
+
+  /// No description provided for @playlistPickerNewConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to list'**
+  String get playlistPickerNewConfirm;
+
+  /// No description provided for @playlistPickerNewBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get playlistPickerNewBadge;
+
+  /// No description provided for @playlistPickerNewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Created when you press Add'**
+  String get playlistPickerNewHint;
+
+  /// No description provided for @playlistPickerHasThis.
+  ///
+  /// In en, this message translates to:
+  /// **'has this song'**
+  String get playlistPickerHasThis;
+
+  /// No description provided for @playlistPickerHasSome.
+  ///
+  /// In en, this message translates to:
+  /// **'has {have} / {total}'**
+  String playlistPickerHasSome(int have, int total);
+
+  /// No description provided for @playlistPickerNoneSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose one or more playlists'**
+  String get playlistPickerNoneSelected;
+
+  /// No description provided for @playlistPickerSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String playlistPickerSelected(int count);
+
+  /// No description provided for @playlistPickerAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get playlistPickerAdd;
+
+  /// No description provided for @playlistPickerAddMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to {count, plural, =1{1 playlist} other{{count} playlists}}'**
+  String playlistPickerAddMany(int count);
+
+  /// No description provided for @playlistAlreadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in the playlist'**
+  String get playlistAlreadyTitle;
+
+  /// No description provided for @playlistAlreadySkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Only add new songs'**
+  String get playlistAlreadySkip;
+
+  /// No description provided for @playlistAlreadySkipHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip {count, plural, =1{1 song} other{{count} songs}} already there'**
+  String playlistAlreadySkipHint(int count);
+
+  /// No description provided for @playlistAlreadyMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Add all, drop the old copies'**
+  String get playlistAlreadyMove;
+
+  /// No description provided for @playlistAlreadyMoveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicates move to the end'**
+  String get playlistAlreadyMoveHint;
+
+  /// No description provided for @playlistAlreadyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Add all'**
+  String get playlistAlreadyAll;
+
+  /// No description provided for @playlistAlreadyAllHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} will be there twice'**
+  String playlistAlreadyAllHint(int count);
+
+  /// No description provided for @playlistAlreadyAppliesToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'The choice applies to all of them.'**
+  String get playlistAlreadyAppliesToAll;
+
+  /// No description provided for @playlistAddedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {songs, plural, =1{1 song} other{{songs} songs}} to {playlists, plural, =1{1 playlist} other{{playlists} playlists}}{newPlaylists, plural, =0{} other{ ({newPlaylists} new)}}{skipped, plural, =0{} other{, skipped {skipped}}}'**
+  String playlistAddedSummary(
+    int songs,
+    int playlists,
+    int newPlaylists,
+    int skipped,
+  );
+
+  /// No description provided for @playlistAddedGone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 playlist was} other{{count} playlists were}} deleted meanwhile'**
+  String playlistAddedGone(int count);
+
+  /// No description provided for @playlistAddFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add to the playlist'**
+  String get playlistAddFailed;
+
+  /// No description provided for @playlistProSmartNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart playlists are part of Pro'**
+  String get playlistProSmartNote;
+
+  /// No description provided for @playlistM3uFileTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist files'**
+  String get playlistM3uFileTypes;
+
+  /// No description provided for @playlistM3uImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count, plural, =1{1 song} other{{count} songs}} into {name}'**
+  String playlistM3uImported(int count, String name);
+
+  /// No description provided for @playlistM3uReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist imported'**
+  String get playlistM3uReportTitle;
+
+  /// No description provided for @playlistM3uReportSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {added} / {total} lines of {file} to “{name}”.'**
+  String playlistM3uReportSummary(
+    int added,
+    int total,
+    String file,
+    String name,
+  );
+
+  /// No description provided for @playlistM3uReportNotInLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song is} other{{count} songs are}} not in your library yet: they show once their folder is added.'**
+  String playlistM3uReportNotInLibrary(int count);
+
+  /// No description provided for @playlistM3uReportUnresolved.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 line is} other{{count} lines are}} not music files on this device or are outside your music folders (add that folder in Settings › Library):'**
+  String playlistM3uReportUnresolved(int count);
+
+  /// No description provided for @playlistM3uReportSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 line is a file} other{{count} lines are files}} the library skips when scanning (in a hidden folder, or shorter than 30 seconds while “Skip short songs” is on in Settings › Library):'**
+  String playlistM3uReportSkipped(int count);
+
+  /// No description provided for @playlistM3uReportNoBase.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 line uses} other{{count} lines use}} relative paths, but the playlist file is not in internal storage, so their starting folder is unknown. Copy the playlist file next to the music folder and import it again:'**
+  String playlistM3uReportNoBase(int count);
+
+  /// No description provided for @playlistM3uAllOutside.
+  ///
+  /// In en, this message translates to:
+  /// **'The songs of this playlist are outside your music folders. Add that folder in Settings › Library, then import again. Nothing was imported.'**
+  String get playlistM3uAllOutside;
+
+  /// No description provided for @playlistM3uReportLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Line {line}: {text}'**
+  String playlistM3uReportLine(int line, String text);
+
+  /// No description provided for @playlistM3uReportMore.
+  ///
+  /// In en, this message translates to:
+  /// **'and {count, plural, =1{1 more line} other{{count} more lines}}'**
+  String playlistM3uReportMore(int count);
+
+  /// No description provided for @playlistM3uOpenPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Open playlist'**
+  String get playlistM3uOpenPlaylist;
+
+  /// No description provided for @playlistM3uNothingFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No song of this playlist was found on this device. Nothing was imported.'**
+  String get playlistM3uNothingFound;
+
+  /// No description provided for @playlistM3uTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is too large to be a playlist.'**
+  String get playlistM3uTooLarge;
+
+  /// No description provided for @playlistM3uReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the file.'**
+  String get playlistM3uReadFailed;
+
+  /// No description provided for @playlistM3uExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {count, plural, =1{1 song} other{{count} songs}} to {file}'**
+  String playlistM3uExported(int count, String file);
+
+  /// No description provided for @playlistM3uReplaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace {file}?'**
+  String playlistM3uReplaceTitle(String file);
+
+  /// No description provided for @playlistM3uExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the file.'**
+  String get playlistM3uExportFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -957,6 +957,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get libraryOrderNewFirst => 'Mới trước';
 
   @override
+  String get libraryOrderFirstToLast => 'Đầu → cuối';
+
+  @override
+  String get libraryOrderLastToFirst => 'Cuối → đầu';
+
+  @override
   String librarySortMore(String label, int count) {
     return '$label +$count';
   }
@@ -993,6 +999,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get librarySortTrackNumber => 'Số thứ tự';
+
+  @override
+  String get librarySortName => 'Tên';
+
+  @override
+  String get librarySortDateModified => 'Ngày sửa';
+
+  @override
+  String get librarySortPlaylistOrder => 'Thứ tự playlist';
 
   @override
   String get libraryViewGrid => 'Chế độ lưới';
@@ -1473,4 +1488,541 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get libraryMenuCopyFailed => 'Không sao chép được';
+
+  @override
+  String get libraryActionFailed => 'Không thực hiện được thao tác';
+
+  @override
+  String get playlistFavoritesName => 'Yêu thích';
+
+  @override
+  String get playlistDefaultName => 'Playlist mới';
+
+  @override
+  String playlistCopyName(String name) {
+    return '$name (bản sao)';
+  }
+
+  @override
+  String playlistFavoritesCopyName(String date) {
+    return 'Yêu thích ($date)';
+  }
+
+  @override
+  String get playlistYours => 'Playlist của bạn';
+
+  @override
+  String playlistCount(int count) {
+    return '$count playlist';
+  }
+
+  @override
+  String playlistTrackCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bài',
+      zero: 'Trống',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playlistEditedOn(String date) {
+    return 'Sửa $date';
+  }
+
+  @override
+  String get playlistFilterHint => 'Lọc playlist';
+
+  @override
+  String get playlistFilterNoMatch => 'Không có playlist nào khớp.';
+
+  @override
+  String get playlistsEmptyTitle => 'Chưa có playlist';
+
+  @override
+  String get playlistsEmptyMessage =>
+      'Tạo playlist để giữ bài theo thứ tự của riêng bạn, hoặc nhập một tệp M3U.';
+
+  @override
+  String get playlistCreateAction => 'Tạo playlist';
+
+  @override
+  String get playlistImportM3uAction => 'Nhập tệp M3U…';
+
+  @override
+  String get playlistFavoritesSubtitle => 'Bài bạn bấm ♥';
+
+  @override
+  String get playlistHubStats => 'Thống kê';
+
+  @override
+  String get playlistFabOpen => 'Tạo';
+
+  @override
+  String get playlistFabClose => 'Đóng';
+
+  @override
+  String get playlistFabNew => 'Playlist mới';
+
+  @override
+  String get playlistFabImport => 'Nhập tệp M3U';
+
+  @override
+  String get playlistFabSmart => 'Smart playlist';
+
+  @override
+  String get playlistFilterSongsNoMatch => 'Không có bài nào khớp.';
+
+  @override
+  String get playlistDragHandle => 'Kéo để đổi thứ tự';
+
+  @override
+  String get playlistNotInLibrary => 'Không có trong thư viện';
+
+  @override
+  String playlistUnavailableNote(int count) {
+    return '$count bài không có trong thư viện: hiện mờ và được bỏ qua khi phát.';
+  }
+
+  @override
+  String playlistRemoveUnavailableAction(int count) {
+    return 'Bỏ $count bài';
+  }
+
+  @override
+  String get playlistEmptyTitle => 'Playlist trống';
+
+  @override
+  String get playlistEmptyMessage =>
+      'Thêm bài từ menu của bất kỳ bài, album hay nghệ sĩ nào (Thêm vào playlist…), hoặc chọn nhiều bài rồi thêm một lần.';
+
+  @override
+  String get playlistFavoritesEmptyTitle => 'Chưa có bài yêu thích';
+
+  @override
+  String get playlistFavoritesEmptyMessage =>
+      'Bấm ♥ trên một bài để thêm vào đây.';
+
+  @override
+  String get playlistNotFoundTitle => 'Không tìm thấy playlist';
+
+  @override
+  String get playlistNotFoundMessage => 'Có thể nó đã bị xoá.';
+
+  @override
+  String get playlistSaveFailed => 'Không lưu được playlist';
+
+  @override
+  String get playlistMenuGoTo => 'Đi tới playlist';
+
+  @override
+  String get playlistMenuGoToFavorites => 'Đi tới Yêu thích';
+
+  @override
+  String get playlistMenuCopyTo => 'Thêm vào playlist…';
+
+  @override
+  String playlistMenuCopyToHint(int count) {
+    return 'Chép $count bài sang playlist khác.';
+  }
+
+  @override
+  String get playlistMenuAskAi => 'Hỏi AI về playlist này';
+
+  @override
+  String get playlistMenuEdit => 'Sửa playlist';
+
+  @override
+  String get playlistMenuEditHint => 'Đổi tên, mô tả và ảnh bìa.';
+
+  @override
+  String get playlistMenuChangeCover => 'Đổi ảnh playlist';
+
+  @override
+  String get playlistMenuDelete => 'Xoá playlist';
+
+  @override
+  String get playlistMenuDeleteHint => 'Tệp nhạc giữ nguyên';
+
+  @override
+  String get playlistMenuDuplicate => 'Nhân bản playlist';
+
+  @override
+  String get playlistMenuExportM3u => 'Xuất tệp M3U…';
+
+  @override
+  String get playlistMenuExportM3uHint => 'Đường dẫn tuyệt đối';
+
+  @override
+  String get playlistMenuExportM3uRelative => 'Xuất M3U, đường dẫn tương đối…';
+
+  @override
+  String get playlistMenuExportM3uRelativeHint =>
+      'Để tệp .m3u8 cạnh thư mục nhạc: chép cả thư mục sang máy khác vẫn mở được.';
+
+  @override
+  String get playlistMenuRemoveDuplicates => 'Bỏ bài trùng';
+
+  @override
+  String playlistMenuRemoveDuplicatesHint(int count) {
+    return '$count bài lặp lại · giữ lần đầu';
+  }
+
+  @override
+  String get playlistMenuRemoveUnavailable => 'Bỏ bài không còn tệp';
+
+  @override
+  String playlistMenuRemoveUnavailableHint(int count) {
+    return '$count bài không có trong thư viện';
+  }
+
+  @override
+  String get playlistMenuSaveAs => 'Lưu thành playlist';
+
+  @override
+  String get playlistMenuClearFavorites => 'Bỏ hết khỏi Yêu thích';
+
+  @override
+  String playlistMenuClearFavoritesHint(int count) {
+    return '$count bài · tệp nhạc giữ nguyên';
+  }
+
+  @override
+  String get playlistMenuMoveUp => 'Lên một bậc';
+
+  @override
+  String get playlistMenuMoveDown => 'Xuống một bậc';
+
+  @override
+  String get playlistMenuRemoveEntry => 'Bỏ khỏi playlist';
+
+  @override
+  String get playlistMenuRemoveFavorite => 'Bỏ khỏi Yêu thích';
+
+  @override
+  String playlistRemovedEntry(String title) {
+    return 'Đã bỏ “$title”';
+  }
+
+  @override
+  String playlistRemovedFavorite(String title) {
+    return 'Đã bỏ “$title” khỏi Yêu thích';
+  }
+
+  @override
+  String playlistRemovedEntries(int count) {
+    return 'Đã bỏ $count bài';
+  }
+
+  @override
+  String playlistRemovedDuplicates(int count) {
+    return 'Đã bỏ $count bài trùng';
+  }
+
+  @override
+  String playlistRemovedUnavailable(int count) {
+    return 'Đã bỏ $count bài không còn tệp';
+  }
+
+  @override
+  String get playlistClearedFavorites => 'Đã bỏ hết khỏi Yêu thích';
+
+  @override
+  String get playlistSaved => 'Đã lưu playlist';
+
+  @override
+  String playlistCreated(String name) {
+    return 'Đã tạo $name';
+  }
+
+  @override
+  String playlistDuplicated(String name) {
+    return 'Đã tạo “$name”';
+  }
+
+  @override
+  String playlistFavoritedAll(int added, int skipped) {
+    return 'Đã thêm $added bài vào Yêu thích, bỏ qua $skipped';
+  }
+
+  @override
+  String get playlistCreateTitle => 'Playlist mới';
+
+  @override
+  String get playlistCreateConfirm => 'Tạo';
+
+  @override
+  String get playlistEditTitle => 'Sửa playlist';
+
+  @override
+  String get playlistNameLabel => 'Tên';
+
+  @override
+  String get playlistDescriptionLabel => 'Mô tả';
+
+  @override
+  String get playlistDescriptionHint => 'Thêm mô tả (không bắt buộc)';
+
+  @override
+  String get playlistNameEmpty => 'Tên không được để trống';
+
+  @override
+  String get playlistNameTooLong => 'Quá dài';
+
+  @override
+  String get playlistDescriptionTooLong => 'Quá dài';
+
+  @override
+  String get playlistCoverChoose => 'Đổi ảnh bìa…';
+
+  @override
+  String get playlistCoverAuto => 'Bìa tự động';
+
+  @override
+  String get playlistCoverUsingAuto => 'Đang dùng bìa tự động';
+
+  @override
+  String get playlistCoverAutoHint =>
+      'Bìa tự động ghép bìa của 4 album đầu trong playlist.';
+
+  @override
+  String playlistDeleteTitle(String name) {
+    return 'Xoá “$name”?';
+  }
+
+  @override
+  String playlistDeleteBody(int count) {
+    return 'Playlist có $count bài. Các bài vẫn ở trong thư viện.';
+  }
+
+  @override
+  String get playlistDeleteConfirm => 'Xoá';
+
+  @override
+  String get playlistClearFavoritesTitle => 'Bỏ hết khỏi Yêu thích?';
+
+  @override
+  String playlistClearFavoritesBody(int count) {
+    return '$count bài sẽ bỏ khỏi Yêu thích. Các bài vẫn ở trong thư viện.';
+  }
+
+  @override
+  String get playlistClearFavoritesConfirm => 'Bỏ hết';
+
+  @override
+  String get playlistCancel => 'Huỷ';
+
+  @override
+  String get playlistSave => 'Lưu';
+
+  @override
+  String get playlistClose => 'Đóng';
+
+  @override
+  String get playlistConfirm => 'Xác nhận';
+
+  @override
+  String get playlistPickerTitle => 'Thêm vào playlist';
+
+  @override
+  String playlistPickerSubtitle(int songs, String source) {
+    return '$songs bài · $source';
+  }
+
+  @override
+  String playlistPickerFrom(String name) {
+    return 'từ $name';
+  }
+
+  @override
+  String playlistPickerSelectedSongs(int count) {
+    return '$count bài đã chọn';
+  }
+
+  @override
+  String get playlistPickerFavoritesHint => 'Bài đã có được bỏ qua.';
+
+  @override
+  String get playlistPickerNew => 'Playlist mới…';
+
+  @override
+  String get playlistPickerNewMessage =>
+      'Playlist được thêm vào danh sách, đã chọn sẵn, và chỉ được tạo khi bấm Thêm.';
+
+  @override
+  String get playlistPickerNewConfirm => 'Thêm vào danh sách';
+
+  @override
+  String get playlistPickerNewBadge => 'Mới';
+
+  @override
+  String get playlistPickerNewHint => 'Tạo khi bấm Thêm';
+
+  @override
+  String get playlistPickerHasThis => 'đã có bài này';
+
+  @override
+  String playlistPickerHasSome(int have, int total) {
+    return 'đã có $have / $total bài';
+  }
+
+  @override
+  String get playlistPickerNoneSelected => 'Chọn một hoặc nhiều playlist';
+
+  @override
+  String playlistPickerSelected(int count) {
+    return '$count đã chọn';
+  }
+
+  @override
+  String get playlistPickerAdd => 'Thêm';
+
+  @override
+  String playlistPickerAddMany(int count) {
+    return 'Thêm vào $count playlist';
+  }
+
+  @override
+  String get playlistAlreadyTitle => 'Đã có trong playlist';
+
+  @override
+  String get playlistAlreadySkip => 'Chỉ thêm bài chưa có';
+
+  @override
+  String playlistAlreadySkipHint(int count) {
+    return 'Bỏ qua $count bài đã có';
+  }
+
+  @override
+  String get playlistAlreadyMove => 'Thêm tất cả, bỏ bản cũ';
+
+  @override
+  String get playlistAlreadyMoveHint => 'Các bài trùng chuyển xuống cuối';
+
+  @override
+  String get playlistAlreadyAll => 'Thêm tất cả';
+
+  @override
+  String playlistAlreadyAllHint(int count) {
+    return '$count bài sẽ có hai lần';
+  }
+
+  @override
+  String get playlistAlreadyAppliesToAll => 'Lựa chọn áp dụng cho tất cả.';
+
+  @override
+  String playlistAddedSummary(
+    int songs,
+    int playlists,
+    int newPlaylists,
+    int skipped,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      newPlaylists,
+      locale: localeName,
+      other: ' ($newPlaylists mới)',
+      zero: '',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: ', bỏ qua $skipped',
+      zero: '',
+    );
+    return 'Đã thêm $songs bài vào $playlists playlist$_temp0$_temp1';
+  }
+
+  @override
+  String playlistAddedGone(int count) {
+    return '$count playlist đã bị xoá trong lúc đó';
+  }
+
+  @override
+  String get playlistAddFailed => 'Không thêm được vào playlist';
+
+  @override
+  String get playlistProSmartNote => 'Smart playlist có trong bản Pro';
+
+  @override
+  String get playlistM3uFileTypes => 'Tệp playlist';
+
+  @override
+  String playlistM3uImported(int count, String name) {
+    return 'Đã nhập $count bài vào $name';
+  }
+
+  @override
+  String get playlistM3uReportTitle => 'Đã nhập playlist';
+
+  @override
+  String playlistM3uReportSummary(
+    int added,
+    int total,
+    String file,
+    String name,
+  ) {
+    return 'Đã thêm $added / $total dòng của $file vào playlist “$name”.';
+  }
+
+  @override
+  String playlistM3uReportNotInLibrary(int count) {
+    return '$count bài chưa có trong thư viện: hiện ra khi thư mục của chúng được thêm.';
+  }
+
+  @override
+  String playlistM3uReportUnresolved(int count) {
+    return '$count dòng không phải tệp nhạc trong máy hoặc nằm ngoài các thư mục nhạc (thêm thư mục đó trong Cài đặt › Thư viện):';
+  }
+
+  @override
+  String playlistM3uReportSkipped(int count) {
+    return '$count dòng là tệp mà thư viện bỏ qua khi quét (nằm trong thư mục ẩn, hoặc ngắn hơn 30 giây khi bật “Bỏ qua bài ngắn” trong Cài đặt › Thư viện):';
+  }
+
+  @override
+  String playlistM3uReportNoBase(int count) {
+    return '$count dòng dùng đường dẫn tương đối, nhưng tệp playlist không nằm trong bộ nhớ trong nên không biết chúng bắt đầu từ thư mục nào. Chép tệp playlist vào cạnh thư mục nhạc rồi nhập lại:';
+  }
+
+  @override
+  String get playlistM3uAllOutside =>
+      'Các bài của playlist này nằm ngoài các thư mục nhạc. Thêm thư mục đó trong Cài đặt › Thư viện rồi nhập lại. Chưa nhập gì.';
+
+  @override
+  String playlistM3uReportLine(int line, String text) {
+    return 'Dòng $line: $text';
+  }
+
+  @override
+  String playlistM3uReportMore(int count) {
+    return 'và $count dòng nữa';
+  }
+
+  @override
+  String get playlistM3uOpenPlaylist => 'Mở playlist';
+
+  @override
+  String get playlistM3uNothingFound =>
+      'Không tìm thấy tệp nhạc nào của playlist này trong máy. Chưa nhập gì.';
+
+  @override
+  String get playlistM3uTooLarge => 'Tệp quá lớn, không phải playlist.';
+
+  @override
+  String get playlistM3uReadFailed => 'Không đọc được tệp.';
+
+  @override
+  String playlistM3uExported(int count, String file) {
+    return 'Đã lưu $count bài vào $file';
+  }
+
+  @override
+  String playlistM3uReplaceTitle(String file) {
+    return 'Thay tệp $file?';
+  }
+
+  @override
+  String get playlistM3uExportFailed => 'Không lưu được tệp.';
 }

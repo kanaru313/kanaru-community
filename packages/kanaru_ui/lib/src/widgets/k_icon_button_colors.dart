@@ -32,7 +32,10 @@ class KIconButtonColors extends InheritedWidget {
 /// `onSurfaceVariant` glyph; [primary] is the accent glyph of the one action a
 /// row or bar wants noticed (a play button): `primary` at rest and on hover (a [KIconButtonColors] above, made for
 /// surfaces where the theme colours do not read, still wins).
-enum KIconEmphasis { normal, primary }
+/// [destructive] keeps the quiet glyph at rest and turns `error` on hover,
+/// press and focus (the remove button of an edit-mode row); a
+/// [KIconButtonColors] above wins for the rest colour only.
+enum KIconEmphasis { normal, primary, destructive }
 
 /// Glyph colour of a `KIconButton` for its current state. [pressed] (0..1)
 /// dims the colour by up to half through its alpha: press feedback needs no
@@ -46,12 +49,16 @@ Color resolveKIconButtonColor({
   required bool hovered,
   required bool enabled,
   required double pressed,
+  bool focused = false,
   KIconEmphasis emphasis = KIconEmphasis.normal,
 }) {
   if (!enabled) return scheme.onSurface.withValues(alpha: 0.38);
   final accent = emphasis == KIconEmphasis.primary;
   final base = selected
       ? selectedColor ?? scheme.primary
+      : emphasis == KIconEmphasis.destructive &&
+            (hovered || focused || pressed > 0)
+      ? scheme.error
       : hovered
       ? colors?.hover ?? (accent ? scheme.primary : scheme.onSurface)
       : color ??

@@ -1031,6 +1031,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryOrderNewFirst => 'Newest first';
 
   @override
+  String get libraryOrderFirstToLast => 'First → last';
+
+  @override
+  String get libraryOrderLastToFirst => 'Last → first';
+
+  @override
   String librarySortMore(String label, int count) {
     return '$label +$count';
   }
@@ -1067,6 +1073,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get librarySortTrackNumber => 'Track number';
+
+  @override
+  String get librarySortName => 'Name';
+
+  @override
+  String get librarySortDateModified => 'Date modified';
+
+  @override
+  String get librarySortPlaylistOrder => 'Playlist order';
 
   @override
   String get libraryViewGrid => 'Grid';
@@ -1586,4 +1601,692 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryMenuCopyFailed => 'Could not copy';
+
+  @override
+  String get libraryActionFailed => 'Couldn\'t complete the action';
+
+  @override
+  String get playlistFavoritesName => 'Favorites';
+
+  @override
+  String get playlistDefaultName => 'New playlist';
+
+  @override
+  String playlistCopyName(String name) {
+    return '$name (copy)';
+  }
+
+  @override
+  String playlistFavoritesCopyName(String date) {
+    return 'Favorites ($date)';
+  }
+
+  @override
+  String get playlistYours => 'Your playlists';
+
+  @override
+  String playlistCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count playlists',
+      one: '1 playlist',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playlistTrackCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+      zero: 'No songs',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playlistEditedOn(String date) {
+    return 'Edited $date';
+  }
+
+  @override
+  String get playlistFilterHint => 'Filter playlists';
+
+  @override
+  String get playlistFilterNoMatch => 'No playlists match.';
+
+  @override
+  String get playlistsEmptyTitle => 'No playlists yet';
+
+  @override
+  String get playlistsEmptyMessage =>
+      'Create a playlist to keep songs in your own order, or import an M3U file.';
+
+  @override
+  String get playlistCreateAction => 'Create playlist';
+
+  @override
+  String get playlistImportM3uAction => 'Import M3U file…';
+
+  @override
+  String get playlistFavoritesSubtitle => 'Songs you ♥';
+
+  @override
+  String get playlistHubStats => 'Stats';
+
+  @override
+  String get playlistFabOpen => 'Create';
+
+  @override
+  String get playlistFabClose => 'Close';
+
+  @override
+  String get playlistFabNew => 'New playlist';
+
+  @override
+  String get playlistFabImport => 'Import M3U file';
+
+  @override
+  String get playlistFabSmart => 'Smart playlist';
+
+  @override
+  String get playlistFilterSongsNoMatch => 'No songs match.';
+
+  @override
+  String get playlistDragHandle => 'Drag to reorder';
+
+  @override
+  String get playlistNotInLibrary => 'Not in library';
+
+  @override
+  String playlistUnavailableNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs are',
+      one: '1 song is',
+    );
+    return '$_temp0 not in your library: dimmed and skipped when playing.';
+  }
+
+  @override
+  String playlistRemoveUnavailableAction(int count) {
+    return 'Remove $count';
+  }
+
+  @override
+  String get playlistEmptyTitle => 'This playlist is empty';
+
+  @override
+  String get playlistEmptyMessage =>
+      'Add songs from the menu of any song, album or artist (Add to playlist…), or select several songs and add them at once.';
+
+  @override
+  String get playlistFavoritesEmptyTitle => 'No favorites yet';
+
+  @override
+  String get playlistFavoritesEmptyMessage => 'Tap ♥ on a song to add it here.';
+
+  @override
+  String get playlistNotFoundTitle => 'Playlist not found';
+
+  @override
+  String get playlistNotFoundMessage => 'It may have been deleted.';
+
+  @override
+  String get playlistSaveFailed => 'Couldn\'t save the playlist';
+
+  @override
+  String get playlistMenuGoTo => 'Go to playlist';
+
+  @override
+  String get playlistMenuGoToFavorites => 'Go to Favorites';
+
+  @override
+  String get playlistMenuCopyTo => 'Add to playlist…';
+
+  @override
+  String playlistMenuCopyToHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'Copy $_temp0 to another playlist.';
+  }
+
+  @override
+  String get playlistMenuAskAi => 'Ask AI about this playlist';
+
+  @override
+  String get playlistMenuEdit => 'Edit playlist';
+
+  @override
+  String get playlistMenuEditHint => 'Change the name, description and cover.';
+
+  @override
+  String get playlistMenuChangeCover => 'Change playlist image';
+
+  @override
+  String get playlistMenuDelete => 'Delete playlist';
+
+  @override
+  String get playlistMenuDeleteHint => 'Music files stay';
+
+  @override
+  String get playlistMenuDuplicate => 'Duplicate playlist';
+
+  @override
+  String get playlistMenuExportM3u => 'Export M3U file…';
+
+  @override
+  String get playlistMenuExportM3uHint => 'Absolute paths';
+
+  @override
+  String get playlistMenuExportM3uRelative => 'Export M3U, relative paths…';
+
+  @override
+  String get playlistMenuExportM3uRelativeHint =>
+      'Keep the .m3u8 file next to the music folder: copy the whole folder to another device and it still opens.';
+
+  @override
+  String get playlistMenuRemoveDuplicates => 'Remove duplicates';
+
+  @override
+  String playlistMenuRemoveDuplicatesHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count repeated songs',
+      one: '1 repeated song',
+    );
+    return '$_temp0 · keep the first';
+  }
+
+  @override
+  String get playlistMenuRemoveUnavailable => 'Remove missing songs';
+
+  @override
+  String playlistMenuRemoveUnavailableHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0 not in your library';
+  }
+
+  @override
+  String get playlistMenuSaveAs => 'Save as playlist';
+
+  @override
+  String get playlistMenuClearFavorites => 'Remove all from Favorites';
+
+  @override
+  String playlistMenuClearFavoritesHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0 · music files stay';
+  }
+
+  @override
+  String get playlistMenuMoveUp => 'Move up';
+
+  @override
+  String get playlistMenuMoveDown => 'Move down';
+
+  @override
+  String get playlistMenuRemoveEntry => 'Remove from playlist';
+
+  @override
+  String get playlistMenuRemoveFavorite => 'Remove from Favorites';
+
+  @override
+  String playlistRemovedEntry(String title) {
+    return 'Removed “$title”';
+  }
+
+  @override
+  String playlistRemovedFavorite(String title) {
+    return 'Removed “$title” from Favorites';
+  }
+
+  @override
+  String playlistRemovedEntries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'Removed $_temp0';
+  }
+
+  @override
+  String playlistRemovedDuplicates(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count duplicates',
+      one: '1 duplicate',
+    );
+    return 'Removed $_temp0';
+  }
+
+  @override
+  String playlistRemovedUnavailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count missing songs',
+      one: '1 missing song',
+    );
+    return 'Removed $_temp0';
+  }
+
+  @override
+  String get playlistClearedFavorites => 'Removed everything from Favorites';
+
+  @override
+  String get playlistSaved => 'Playlist saved';
+
+  @override
+  String playlistCreated(String name) {
+    return 'Created $name';
+  }
+
+  @override
+  String playlistDuplicated(String name) {
+    return 'Created “$name”';
+  }
+
+  @override
+  String playlistFavoritedAll(int added, int skipped) {
+    return 'Added $added to Favorites, skipped $skipped';
+  }
+
+  @override
+  String get playlistCreateTitle => 'New playlist';
+
+  @override
+  String get playlistCreateConfirm => 'Create';
+
+  @override
+  String get playlistEditTitle => 'Edit playlist';
+
+  @override
+  String get playlistNameLabel => 'Name';
+
+  @override
+  String get playlistDescriptionLabel => 'Description';
+
+  @override
+  String get playlistDescriptionHint => 'Add a description (optional)';
+
+  @override
+  String get playlistNameEmpty => 'Name can\'t be empty';
+
+  @override
+  String get playlistNameTooLong => 'Too long';
+
+  @override
+  String get playlistDescriptionTooLong => 'Too long';
+
+  @override
+  String get playlistCoverChoose => 'Change cover…';
+
+  @override
+  String get playlistCoverAuto => 'Automatic cover';
+
+  @override
+  String get playlistCoverUsingAuto => 'Using the automatic cover';
+
+  @override
+  String get playlistCoverAutoHint =>
+      'The automatic cover combines the covers of the first 4 albums in the playlist.';
+
+  @override
+  String playlistDeleteTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String playlistDeleteBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'The playlist has $_temp0. The songs stay in your library.';
+  }
+
+  @override
+  String get playlistDeleteConfirm => 'Delete';
+
+  @override
+  String get playlistClearFavoritesTitle => 'Remove all from Favorites?';
+
+  @override
+  String playlistClearFavoritesBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs leave',
+      one: '1 song leaves',
+    );
+    return '$_temp0 Favorites. The songs stay in your library.';
+  }
+
+  @override
+  String get playlistClearFavoritesConfirm => 'Remove all';
+
+  @override
+  String get playlistCancel => 'Cancel';
+
+  @override
+  String get playlistSave => 'Save';
+
+  @override
+  String get playlistClose => 'Close';
+
+  @override
+  String get playlistConfirm => 'Confirm';
+
+  @override
+  String get playlistPickerTitle => 'Add to playlist';
+
+  @override
+  String playlistPickerSubtitle(int songs, String source) {
+    String _temp0 = intl.Intl.pluralLogic(
+      songs,
+      locale: localeName,
+      other: '$songs songs',
+      one: '1 song',
+    );
+    return '$_temp0 · $source';
+  }
+
+  @override
+  String playlistPickerFrom(String name) {
+    return 'from $name';
+  }
+
+  @override
+  String playlistPickerSelectedSongs(int count) {
+    return '$count selected songs';
+  }
+
+  @override
+  String get playlistPickerFavoritesHint => 'Songs already there are skipped.';
+
+  @override
+  String get playlistPickerNew => 'New playlist…';
+
+  @override
+  String get playlistPickerNewMessage =>
+      'It is added to the list, checked, and only created when you press Add.';
+
+  @override
+  String get playlistPickerNewConfirm => 'Add to list';
+
+  @override
+  String get playlistPickerNewBadge => 'New';
+
+  @override
+  String get playlistPickerNewHint => 'Created when you press Add';
+
+  @override
+  String get playlistPickerHasThis => 'has this song';
+
+  @override
+  String playlistPickerHasSome(int have, int total) {
+    return 'has $have / $total';
+  }
+
+  @override
+  String get playlistPickerNoneSelected => 'Choose one or more playlists';
+
+  @override
+  String playlistPickerSelected(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get playlistPickerAdd => 'Add';
+
+  @override
+  String playlistPickerAddMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count playlists',
+      one: '1 playlist',
+    );
+    return 'Add to $_temp0';
+  }
+
+  @override
+  String get playlistAlreadyTitle => 'Already in the playlist';
+
+  @override
+  String get playlistAlreadySkip => 'Only add new songs';
+
+  @override
+  String playlistAlreadySkipHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'Skip $_temp0 already there';
+  }
+
+  @override
+  String get playlistAlreadyMove => 'Add all, drop the old copies';
+
+  @override
+  String get playlistAlreadyMoveHint => 'Duplicates move to the end';
+
+  @override
+  String get playlistAlreadyAll => 'Add all';
+
+  @override
+  String playlistAlreadyAllHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0 will be there twice';
+  }
+
+  @override
+  String get playlistAlreadyAppliesToAll =>
+      'The choice applies to all of them.';
+
+  @override
+  String playlistAddedSummary(
+    int songs,
+    int playlists,
+    int newPlaylists,
+    int skipped,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      songs,
+      locale: localeName,
+      other: '$songs songs',
+      one: '1 song',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      playlists,
+      locale: localeName,
+      other: '$playlists playlists',
+      one: '1 playlist',
+    );
+    String _temp2 = intl.Intl.pluralLogic(
+      newPlaylists,
+      locale: localeName,
+      other: ' ($newPlaylists new)',
+      zero: '',
+    );
+    String _temp3 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: ', skipped $skipped',
+      zero: '',
+    );
+    return 'Added $_temp0 to $_temp1$_temp2$_temp3';
+  }
+
+  @override
+  String playlistAddedGone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count playlists were',
+      one: '1 playlist was',
+    );
+    return '$_temp0 deleted meanwhile';
+  }
+
+  @override
+  String get playlistAddFailed => 'Couldn\'t add to the playlist';
+
+  @override
+  String get playlistProSmartNote => 'Smart playlists are part of Pro';
+
+  @override
+  String get playlistM3uFileTypes => 'Playlist files';
+
+  @override
+  String playlistM3uImported(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'Imported $_temp0 into $name';
+  }
+
+  @override
+  String get playlistM3uReportTitle => 'Playlist imported';
+
+  @override
+  String playlistM3uReportSummary(
+    int added,
+    int total,
+    String file,
+    String name,
+  ) {
+    return 'Added $added / $total lines of $file to “$name”.';
+  }
+
+  @override
+  String playlistM3uReportNotInLibrary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs are',
+      one: '1 song is',
+    );
+    return '$_temp0 not in your library yet: they show once their folder is added.';
+  }
+
+  @override
+  String playlistM3uReportUnresolved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lines are',
+      one: '1 line is',
+    );
+    return '$_temp0 not music files on this device or are outside your music folders (add that folder in Settings › Library):';
+  }
+
+  @override
+  String playlistM3uReportSkipped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lines are files',
+      one: '1 line is a file',
+    );
+    return '$_temp0 the library skips when scanning (in a hidden folder, or shorter than 30 seconds while “Skip short songs” is on in Settings › Library):';
+  }
+
+  @override
+  String playlistM3uReportNoBase(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lines use',
+      one: '1 line uses',
+    );
+    return '$_temp0 relative paths, but the playlist file is not in internal storage, so their starting folder is unknown. Copy the playlist file next to the music folder and import it again:';
+  }
+
+  @override
+  String get playlistM3uAllOutside =>
+      'The songs of this playlist are outside your music folders. Add that folder in Settings › Library, then import again. Nothing was imported.';
+
+  @override
+  String playlistM3uReportLine(int line, String text) {
+    return 'Line $line: $text';
+  }
+
+  @override
+  String playlistM3uReportMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more lines',
+      one: '1 more line',
+    );
+    return 'and $_temp0';
+  }
+
+  @override
+  String get playlistM3uOpenPlaylist => 'Open playlist';
+
+  @override
+  String get playlistM3uNothingFound =>
+      'No song of this playlist was found on this device. Nothing was imported.';
+
+  @override
+  String get playlistM3uTooLarge => 'The file is too large to be a playlist.';
+
+  @override
+  String get playlistM3uReadFailed => 'Couldn\'t read the file.';
+
+  @override
+  String playlistM3uExported(int count, String file) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'Saved $_temp0 to $file';
+  }
+
+  @override
+  String playlistM3uReplaceTitle(String file) {
+    return 'Replace $file?';
+  }
+
+  @override
+  String get playlistM3uExportFailed => 'Couldn\'t save the file.';
 }

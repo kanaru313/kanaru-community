@@ -1,0 +1,470 @@
+{
+  "playlistFavoritesName": "Favorites",
+  "playlistDefaultName": "New playlist",
+  "playlistCopyName": "{name} (copy)",
+  "@playlistCopyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistFavoritesCopyName": "Favorites ({date})",
+  "@playlistFavoritesCopyName": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistYours": "Your playlists",
+  "playlistCount": "{count, plural, =1{1 playlist} other{{count} playlists}}",
+  "@playlistCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistTrackCount": "{count, plural, =0{No songs} =1{1 song} other{{count} songs}}",
+  "@playlistTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistEditedOn": "Edited {date}",
+  "@playlistEditedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistFilterHint": "Filter playlists",
+  "playlistFilterNoMatch": "No playlists match.",
+  "playlistsEmptyTitle": "No playlists yet",
+  "playlistsEmptyMessage": "Create a playlist to keep songs in your own order, or import an M3U file.",
+  "playlistCreateAction": "Create playlist",
+  "playlistImportM3uAction": "Import M3U file…",
+  "playlistFavoritesSubtitle": "Songs you ♥",
+  "playlistHubStats": "Stats",
+  "playlistFabOpen": "Create",
+  "playlistFabClose": "Close",
+  "playlistFabNew": "New playlist",
+  "playlistFabImport": "Import M3U file",
+  "playlistFabSmart": "Smart playlist",
+  "playlistFilterSongsNoMatch": "No songs match.",
+  "playlistDragHandle": "Drag to reorder",
+  "playlistNotInLibrary": "Not in library",
+  "playlistUnavailableNote": "{count, plural, =1{1 song is} other{{count} songs are}} not in your library: dimmed and skipped when playing.",
+  "@playlistUnavailableNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistRemoveUnavailableAction": "Remove {count}",
+  "@playlistRemoveUnavailableAction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistEmptyTitle": "This playlist is empty",
+  "playlistEmptyMessage": "Add songs from the menu of any song, album or artist (Add to playlist…), or select several songs and add them at once.",
+  "playlistFavoritesEmptyTitle": "No favorites yet",
+  "playlistFavoritesEmptyMessage": "Tap ♥ on a song to add it here.",
+  "playlistNotFoundTitle": "Playlist not found",
+  "playlistNotFoundMessage": "It may have been deleted.",
+  "playlistSaveFailed": "Couldn't save the playlist",
+  "playlistMenuGoTo": "Go to playlist",
+  "playlistMenuGoToFavorites": "Go to Favorites",
+  "playlistMenuCopyTo": "Add to playlist…",
+  "playlistMenuCopyToHint": "Copy {count, plural, =1{1 song} other{{count} songs}} to another playlist.",
+  "@playlistMenuCopyToHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistMenuAskAi": "Ask AI about this playlist",
+  "playlistMenuEdit": "Edit playlist",
+  "playlistMenuEditHint": "Change the name, description and cover.",
+  "playlistMenuChangeCover": "Change playlist image",
+  "playlistMenuDelete": "Delete playlist",
+  "playlistMenuDeleteHint": "Music files stay",
+  "playlistMenuDuplicate": "Duplicate playlist",
+  "playlistMenuExportM3u": "Export M3U file…",
+  "playlistMenuExportM3uHint": "Absolute paths",
+  "playlistMenuExportM3uRelative": "Export M3U, relative paths…",
+  "playlistMenuExportM3uRelativeHint": "Keep the .m3u8 file next to the music folder: copy the whole folder to another device and it still opens.",
+  "playlistMenuRemoveDuplicates": "Remove duplicates",
+  "playlistMenuRemoveDuplicatesHint": "{count, plural, =1{1 repeated song} other{{count} repeated songs}} · keep the first",
+  "@playlistMenuRemoveDuplicatesHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistMenuRemoveUnavailable": "Remove missing songs",
+  "playlistMenuRemoveUnavailableHint": "{count, plural, =1{1 song} other{{count} songs}} not in your library",
+  "@playlistMenuRemoveUnavailableHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistMenuSaveAs": "Save as playlist",
+  "playlistMenuClearFavorites": "Remove all from Favorites",
+  "playlistMenuClearFavoritesHint": "{count, plural, =1{1 song} other{{count} songs}} · music files stay",
+  "@playlistMenuClearFavoritesHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistMenuMoveUp": "Move up",
+  "playlistMenuMoveDown": "Move down",
+  "playlistMenuRemoveEntry": "Remove from playlist",
+  "playlistMenuRemoveFavorite": "Remove from Favorites",
+  "playlistRemovedEntry": "Removed “{title}”",
+  "@playlistRemovedEntry": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistRemovedFavorite": "Removed “{title}” from Favorites",
+  "@playlistRemovedFavorite": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistRemovedEntries": "Removed {count, plural, =1{1 song} other{{count} songs}}",
+  "@playlistRemovedEntries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistRemovedDuplicates": "Removed {count, plural, =1{1 duplicate} other{{count} duplicates}}",
+  "@playlistRemovedDuplicates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistRemovedUnavailable": "Removed {count, plural, =1{1 missing song} other{{count} missing songs}}",
+  "@playlistRemovedUnavailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistClearedFavorites": "Removed everything from Favorites",
+  "playlistSaved": "Playlist saved",
+  "playlistCreated": "Created {name}",
+  "@playlistCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistDuplicated": "Created “{name}”",
+  "@playlistDuplicated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistFavoritedAll": "Added {added} to Favorites, skipped {skipped}",
+  "@playlistFavoritedAll": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistCreateTitle": "New playlist",
+  "playlistCreateConfirm": "Create",
+  "playlistEditTitle": "Edit playlist",
+  "playlistNameLabel": "Name",
+  "playlistDescriptionLabel": "Description",
+  "playlistDescriptionHint": "Add a description (optional)",
+  "playlistNameEmpty": "Name can't be empty",
+  "playlistNameTooLong": "Too long",
+  "playlistDescriptionTooLong": "Too long",
+  "playlistCoverChoose": "Change cover…",
+  "playlistCoverAuto": "Automatic cover",
+  "playlistCoverUsingAuto": "Using the automatic cover",
+  "playlistCoverAutoHint": "The automatic cover combines the covers of the first 4 albums in the playlist.",
+  "playlistDeleteTitle": "Delete “{name}”?",
+  "@playlistDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistDeleteBody": "The playlist has {count, plural, =1{1 song} other{{count} songs}}. The songs stay in your library.",
+  "@playlistDeleteBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistDeleteConfirm": "Delete",
+  "playlistClearFavoritesTitle": "Remove all from Favorites?",
+  "playlistClearFavoritesBody": "{count, plural, =1{1 song leaves} other{{count} songs leave}} Favorites. The songs stay in your library.",
+  "@playlistClearFavoritesBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistClearFavoritesConfirm": "Remove all",
+  "playlistCancel": "Cancel",
+  "playlistSave": "Save",
+  "playlistClose": "Close",
+  "playlistConfirm": "Confirm",
+  "playlistPickerTitle": "Add to playlist",
+  "playlistPickerSubtitle": "{songs, plural, =1{1 song} other{{songs} songs}} · {source}",
+  "@playlistPickerSubtitle": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistPickerFrom": "from {name}",
+  "@playlistPickerFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistPickerSelectedSongs": "{count} selected songs",
+  "@playlistPickerSelectedSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistPickerFavoritesHint": "Songs already there are skipped.",
+  "playlistPickerNew": "New playlist…",
+  "playlistPickerNewMessage": "It is added to the list, checked, and only created when you press Add.",
+  "playlistPickerNewConfirm": "Add to list",
+  "playlistPickerNewBadge": "New",
+  "playlistPickerNewHint": "Created when you press Add",
+  "playlistPickerHasThis": "has this song",
+  "playlistPickerHasSome": "has {have} / {total}",
+  "@playlistPickerHasSome": {
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistPickerNoneSelected": "Choose one or more playlists",
+  "playlistPickerSelected": "{count} selected",
+  "@playlistPickerSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistPickerAdd": "Add",
+  "playlistPickerAddMany": "Add to {count, plural, =1{1 playlist} other{{count} playlists}}",
+  "@playlistPickerAddMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistAlreadyTitle": "Already in the playlist",
+  "playlistAlreadySkip": "Only add new songs",
+  "playlistAlreadySkipHint": "Skip {count, plural, =1{1 song} other{{count} songs}} already there",
+  "@playlistAlreadySkipHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistAlreadyMove": "Add all, drop the old copies",
+  "playlistAlreadyMoveHint": "Duplicates move to the end",
+  "playlistAlreadyAll": "Add all",
+  "playlistAlreadyAllHint": "{count, plural, =1{1 song} other{{count} songs}} will be there twice",
+  "@playlistAlreadyAllHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistAlreadyAppliesToAll": "The choice applies to all of them.",
+  "playlistAddedSummary": "Added {songs, plural, =1{1 song} other{{songs} songs}} to {playlists, plural, =1{1 playlist} other{{playlists} playlists}}{newPlaylists, plural, =0{} other{ ({newPlaylists} new)}}{skipped, plural, =0{} other{, skipped {skipped}}}",
+  "@playlistAddedSummary": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "playlists": {
+        "type": "int"
+      },
+      "newPlaylists": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistAddedGone": "{count, plural, =1{1 playlist was} other{{count} playlists were}} deleted meanwhile",
+  "@playlistAddedGone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistAddFailed": "Couldn't add to the playlist",
+  "playlistProSmartNote": "Smart playlists are part of Pro",
+  "playlistM3uFileTypes": "Playlist files",
+  "playlistM3uImported": "Imported {count, plural, =1{1 song} other{{count} songs}} into {name}",
+  "@playlistM3uImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistM3uReportTitle": "Playlist imported",
+  "playlistM3uReportSummary": "Added {added} / {total} lines of {file} to “{name}”.",
+  "@playlistM3uReportSummary": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "file": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistM3uReportNotInLibrary": "{count, plural, =1{1 song is} other{{count} songs are}} not in your library yet: they show once their folder is added.",
+  "@playlistM3uReportNotInLibrary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistM3uReportUnresolved": "{count, plural, =1{1 line is} other{{count} lines are}} not music files on this device or are outside your music folders (add that folder in Settings › Library):",
+  "@playlistM3uReportUnresolved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistM3uReportSkipped": "{count, plural, =1{1 line is a file} other{{count} lines are files}} the library skips when scanning (in a hidden folder, or shorter than 30 seconds while “Skip short songs” is on in Settings › Library):",
+  "@playlistM3uReportSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistM3uReportNoBase": "{count, plural, =1{1 line uses} other{{count} lines use}} relative paths, but the playlist file is not in internal storage, so their starting folder is unknown. Copy the playlist file next to the music folder and import it again:",
+  "@playlistM3uReportNoBase": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistM3uAllOutside": "The songs of this playlist are outside your music folders. Add that folder in Settings › Library, then import again. Nothing was imported.",
+  "playlistM3uReportLine": "Line {line}: {text}",
+  "@playlistM3uReportLine": {
+    "placeholders": {
+      "line": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistM3uReportMore": "and {count, plural, =1{1 more line} other{{count} more lines}}",
+  "@playlistM3uReportMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistM3uOpenPlaylist": "Open playlist",
+  "playlistM3uNothingFound": "No song of this playlist was found on this device. Nothing was imported.",
+  "playlistM3uTooLarge": "The file is too large to be a playlist.",
+  "playlistM3uReadFailed": "Couldn't read the file.",
+  "playlistM3uExported": "Saved {count, plural, =1{1 song} other{{count} songs}} to {file}",
+  "@playlistM3uExported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistM3uReplaceTitle": "Replace {file}?",
+  "@playlistM3uReplaceTitle": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistM3uExportFailed": "Couldn't save the file."
+}

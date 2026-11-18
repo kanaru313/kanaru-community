@@ -368,4 +368,42 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('hint is the accessible description, not visible text', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      host(
+        const SelectionRow(
+          title: Text('Favorites'),
+          selected: false,
+          multi: true,
+          hint: 'Songs already in it are skipped.',
+        ),
+      ),
+    );
+    expect(find.text('Songs already in it are skipped.'), findsNothing);
+    expect(
+      tester.getSemantics(find.byType(SelectionRow)),
+      isSemantics(
+        label: 'Favorites',
+        hint: 'Songs already in it are skipped.',
+        hasCheckedState: true,
+        isChecked: false,
+        hasEnabledState: true,
+        isEnabled: true,
+      ),
+    );
+    handle.dispose();
+  });
+
+  testWidgets('without a hint the semantics carry none', (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      host(const SelectionRow(title: Text('Plain'), selected: false)),
+    );
+    expect(tester.getSemantics(find.byType(SelectionRow)).hint, isEmpty);
+    handle.dispose();
+  });
 }

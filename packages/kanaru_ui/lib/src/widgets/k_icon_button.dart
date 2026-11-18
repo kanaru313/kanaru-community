@@ -80,7 +80,8 @@ class KIconButton extends StatefulWidget {
   final Color? selectedColor;
 
   /// [KIconEmphasis.primary] draws the glyph in `primary` instead of the quiet
-  /// default; an explicit [color] or a [KIconButtonColors] above still wins.
+  /// default, [KIconEmphasis.destructive] in `error` on hover, press and
+  /// focus; an explicit [color] or a [KIconButtonColors] above still wins.
   final KIconEmphasis emphasis;
   final EdgeInsetsGeometry padding;
   final FocusNode? focusNode;
@@ -154,6 +155,7 @@ class _KIconButtonState extends State<KIconButton>
       hovered: _hovered,
       enabled: _enabled,
       pressed: _pulse.value,
+      focused: _ring,
       emphasis: widget.emphasis,
     );
     final label = widget.semanticLabel ?? widget.tooltip;

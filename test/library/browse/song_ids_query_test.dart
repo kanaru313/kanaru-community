@@ -351,6 +351,16 @@ void main() {
     );
   });
 
+  test('playlist-only criteria throw', () {
+    for (final c in [
+      SortCriterion.name,
+      SortCriterion.dateModified,
+      SortCriterion.playlistOrder,
+    ]) {
+      expect(songIds(db, all, asc(c), ''), throwsArgumentError, reason: '$c');
+    }
+  });
+
   test('result type is TrackId', () async {
     final id = await add('1.flac');
     expect(await songIds(db, all, asc(SortCriterion.title), ''), [TrackId(id)]);

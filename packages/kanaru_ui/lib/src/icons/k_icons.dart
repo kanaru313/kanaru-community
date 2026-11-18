@@ -142,4 +142,22 @@ abstract final class KIcons {
   static const IconData deselect = FluentIcons.select_all_off_24_regular;
   static const IconData advanced = FluentIcons.wrench_24_regular;
   static const IconData hideFromLibrary = FluentIcons.eye_off_24_regular;
+
+  // Playlists.
+  static const IconData editList =
+      FluentIcons.text_bullet_list_square_edit_24_regular;
+  static const IconData playlistRemove = FluentIcons.subtract_circle_24_regular;
+  static const IconData musicOff = FluentIcons.music_note_off_2_24_regular;
+  static const IconData fileImport = FluentIcons.arrow_import_24_regular;
+  static const IconData fileExport = FluentIcons.arrow_export_ltr_24_regular;
+  static const IconData duplicate = FluentIcons.copy_add_24_regular;
+  static const IconData removeDuplicates = FluentIcons.copy_select_24_regular;
+  static const IconData heartOff = FluentIcons.heart_off_24_regular;
+  static const IconData smartPlaylist =
+      FluentIcons.text_bullet_list_square_sparkle_24_regular;
+  static const IconData imageEdit = FluentIcons.image_edit_24_regular;
+  static const IconData dateModified = FluentIcons.calendar_edit_24_regular;
+  static const IconData sortName = FluentIcons.text_sort_ascending_24_regular;
+  static const IconData stats = FluentIcons.data_trending_24_regular;
+  static const IconData linkOff = FluentIcons.link_dismiss_24_regular;
 }

@@ -8,7 +8,8 @@ import '../k_icon_button.dart';
 
 /// Outlined field under the sort bar. Filters only the list in view; the
 /// caller listens to [controller]. The caller owns [controller]; the ✕ button
-/// and Esc clear it and call [onClose].
+/// and Esc clear it, report the empty text through [onChanged] (so an applied
+/// filter clears with the text) and then call [onClose].
 class KFilterField extends StatelessWidget {
   const KFilterField({
     super.key,
@@ -17,6 +18,7 @@ class KFilterField extends StatelessWidget {
     required this.onClose,
     this.closeTooltip,
     this.onChanged,
+    this.autofocus = true,
   });
 
   final TextEditingController controller;
@@ -25,10 +27,15 @@ class KFilterField extends StatelessWidget {
   final String? closeTooltip;
   final ValueChanged<String>? onChanged;
 
+  /// Takes the keyboard when it appears; off for a field that sits above a
+  /// list in a picker, where the list is what the user acts on first.
+  final bool autofocus;
+
   static const double height = 48;
 
   void _close() {
     controller.clear();
+    onChanged?.call('');
     onClose();
   }
 
@@ -41,7 +48,7 @@ class KFilterField extends StatelessWidget {
         height: height,
         child: TextField(
           controller: controller,
-          autofocus: true,
+          autofocus: autofocus,
           onChanged: onChanged,
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(

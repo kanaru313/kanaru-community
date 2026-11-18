@@ -28,6 +28,9 @@ sealed class MenuOrigin {
   /// The page of the item the menu is about (the ⋮ of a detail page).
   const factory MenuOrigin.own() = OwnOrigin;
 
+  /// The page of one playlist (Favorites included), by uid.
+  const factory MenuOrigin.playlist(String uid) = PlaylistOrigin;
+
   /// The origin of the songs of a list that shows [scope].
   factory MenuOrigin.ofScope(SongScope scope) => switch (scope) {
     AllSongs() => const ListOrigin(),
@@ -122,4 +125,15 @@ class OwnOrigin extends MenuOrigin {
 
   @override
   int get hashCode => 2;
+}
+
+class PlaylistOrigin extends MenuOrigin {
+  const PlaylistOrigin(this.uid);
+  final String uid;
+
+  @override
+  bool operator ==(Object other) => other is PlaylistOrigin && other.uid == uid;
+
+  @override
+  int get hashCode => Object.hash('playlist', uid);
 }

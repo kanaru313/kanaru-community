@@ -12,6 +12,8 @@ void main() {
     expect(v.of(BrowseList.albums).view, CollectionView.grid);
     expect(v.of(BrowseList.genres).view, CollectionView.grid);
     expect(v.of(BrowseList.languages).view, CollectionView.grid);
+    expect(v.of(BrowseList.playlists).view, CollectionView.grid);
+    expect(v.of(BrowseList.playlistTracks).view, CollectionView.list);
     expect(v.of(BrowseList.artists).view, CollectionView.list);
     expect(v.of(BrowseList.songs).view, CollectionView.list);
     expect(v.folderView, FolderView.tree);
@@ -201,6 +203,59 @@ void main() {
       );
       expect(v.of(BrowseList.artists).sort, defaultSortOf(BrowseList.artists));
       expect(v.of(BrowseList.artists).view, CollectionView.grid);
+    });
+  });
+
+  group('sortOrderFromJson', () {
+    final fallback = defaultSortOf(BrowseList.playlistTracks);
+
+    test('round trips the v2 form', () {
+      final order = SortOrder([
+        const SortSpec(SortCriterion.artist, descending: true),
+        const SortSpec(SortCriterion.title),
+      ]);
+      expect(
+        sortOrderFromJson(
+          BrowseList.playlistTracks,
+          sortOrderToJson(order),
+          fallback: fallback,
+        ),
+        order,
+      );
+    });
+
+    test('drops unknown, unoffered and repeated criteria', () {
+      final r = sortOrderFromJson(BrowseList.playlistTracks, [
+        {'by': 'nope', 'desc': true},
+        {'by': 'year'},
+        7,
+        {'by': 'album', 'desc': true},
+        {'by': 'album'},
+      ], fallback: fallback);
+      expect(r, SortOrder.by(SortCriterion.album, descending: true));
+    });
+
+    test('empty or malformed gives the fallback', () {
+      for (final j in <Object?>[
+        [],
+        'title',
+        null,
+        {'by': 'title'},
+      ]) {
+        expect(
+          sortOrderFromJson(BrowseList.playlistTracks, j, fallback: fallback),
+          fallback,
+        );
+      }
+    });
+
+    test('a song list never keeps a playlist criterion', () {
+      final r = sortOrderFromJson(BrowseList.songs, [
+        {'by': 'playlistOrder'},
+        {'by': 'name'},
+        {'by': 'dateModified'},
+      ], fallback: defaultSortOf(BrowseList.songs));
+      expect(r, defaultSortOf(BrowseList.songs));
     });
   });
 }

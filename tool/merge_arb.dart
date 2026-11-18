@@ -17,6 +17,12 @@ const Map<String, String?> arbParts = {
   'scan': 'scan',
   'playback': 'playback',
   'library': 'library',
+  'playlist': 'playlist',
+  // Spare parts: a lane that finds a string missing from `playlist` adds it
+  // here, so lanes never edit the same part file.
+  'plscreens': 'plScreens',
+  'pladd': 'plAdd',
+  'm3u': 'm3u',
 };
 
 /// Locale whose key set every other locale must match.

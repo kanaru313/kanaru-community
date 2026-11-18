@@ -145,6 +145,8 @@
   },
   "libraryOrderOldFirst": "Cũ trước",
   "libraryOrderNewFirst": "Mới trước",
+  "libraryOrderFirstToLast": "Đầu → cuối",
+  "libraryOrderLastToFirst": "Cuối → đầu",
   "librarySortMore": "{label} +{count}",
   "@librarySortMore": {
     "placeholders": {
@@ -167,6 +169,9 @@
   "librarySortTrackCount": "Số bài",
   "librarySortAlbumCount": "Số album",
   "librarySortTrackNumber": "Số thứ tự",
+  "librarySortName": "Tên",
+  "librarySortDateModified": "Ngày sửa",
+  "librarySortPlaylistOrder": "Thứ tự playlist",
   "libraryViewGrid": "Chế độ lưới",
   "libraryViewList": "Chế độ danh sách",
   "libraryViewTree": "Chế độ cây thư mục",
@@ -514,5 +519,6 @@
   "libraryPanelExpand": "Mở danh sách đã chọn",
   "libraryPanelCollapse": "Thu gọn",
   "libraryPanelReorder": "Kéo để đổi thứ tự phát",
-  "libraryMenuCopyFailed": "Không sao chép được"
+  "libraryMenuCopyFailed": "Không sao chép được",
+  "libraryActionFailed": "Không thực hiện được thao tác"
 }

@@ -43,6 +43,8 @@ class DetailFrame extends StatelessWidget {
     required this.child,
     this.tint,
     this.titleInContent = true,
+    this.actions = const [],
+    this.showBack = true,
   });
 
   final String title;
@@ -50,6 +52,16 @@ class DetailFrame extends StatelessWidget {
   final Widget child;
   final DetailTint? tint;
   final bool titleInContent;
+
+  /// Header buttons before the scope's trailing ones (an edit toggle, a
+  /// search).
+  final List<Widget> actions;
+
+  /// False drops the `[←]`: a page that is also a sidebar item (Favorites on
+  /// desktop). The header becomes a root header, so the enclosing
+  /// `PageHeaderScope`'s `leading` and `rootTrailing` show: none on the
+  /// desktop shell, but ☰ and ⚙ on the mobile shell. Pass it on desktop only.
+  final bool showBack;
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +72,8 @@ class DetailFrame extends StatelessWidget {
           child: PageHeader(
             title: title,
             titleInContent: titleInContent,
-            onBack: () => _back(context),
+            actions: actions,
+            onBack: showBack ? () => _back(context) : null,
           ),
         ),
         Expanded(child: KScrollInkSurface(child: child)),

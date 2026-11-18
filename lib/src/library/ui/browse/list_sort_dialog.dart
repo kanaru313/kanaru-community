@@ -45,6 +45,10 @@ SortOrder normalizedSortOf(BrowseList list, SortOrder order) =>
     ascending: l10n.libraryOrderOldFirst,
     descending: l10n.libraryOrderNewFirst,
   ),
+  SortKind.position => (
+    ascending: l10n.libraryOrderFirstToLast,
+    descending: l10n.libraryOrderLastToFirst,
+  ),
 };
 
 SortDialogModel sortDialogModel(

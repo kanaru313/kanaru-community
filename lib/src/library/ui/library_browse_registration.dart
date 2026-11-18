@@ -1,4 +1,3 @@
-import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
@@ -8,7 +7,6 @@ import '../domain/library_tabs.dart';
 import 'browse/library_labels.dart';
 import 'browse/library_routes.dart';
 import 'library_locations.dart';
-import 'playlists_page.dart';
 
 const _tabIcons = {
   LibraryTab.songs: KIcons.songs,
@@ -19,8 +17,8 @@ const _tabIcons = {
   LibraryTab.folders: KIcons.folders,
 };
 
-/// Library tab with its six lists, Playlists tab, the placeholder items that
-/// follow Playlists in the sidebar, and the pages of the library lists.
+/// Library tab with its six lists, the placeholder items that follow
+/// Playlists in the sidebar (History, Most played), and the pages of the library lists.
 void registerLibraryBrowse(ExtensionRegistry registry) {
   registry.addNavItem(
     NavItem(
@@ -55,29 +53,6 @@ void registerLibraryBrowse(ExtensionRegistry registry) {
   registry
     ..addNavItem(
       NavItem(
-        id: 'playlists',
-        path: '/playlists',
-        icon: KIcons.playlists,
-        selectedIcon: KIcons.playlistsSelected,
-        label: (c) => AppLocalizations.of(c).navPlaylists,
-        order: 210,
-        mobileOrder: 30,
-      ),
-    )
-    ..addNavItem(
-      NavItem(
-        id: 'favorites',
-        path: '/playlists/favorites',
-        icon: KIcons.favorites,
-        selectedIcon: KIcons.favoritesSelected,
-        label: (c) => AppLocalizations.of(c).libraryNavFavorites,
-        order: 220,
-        mobileTab: false,
-        comingSoon: true,
-      ),
-    )
-    ..addNavItem(
-      NavItem(
         id: 'history',
         path: '/playlists/history',
         icon: KIcons.history,
@@ -100,8 +75,5 @@ void registerLibraryBrowse(ExtensionRegistry registry) {
         comingSoon: true,
       ),
     )
-    ..addRoute(libraryRoute())
-    ..addRoute(
-      GoRoute(path: '/playlists', builder: (_, _) => const PlaylistsPage()),
-    );
+    ..addRoute(libraryRoute());
 }

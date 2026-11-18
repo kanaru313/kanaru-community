@@ -11,15 +11,16 @@ enum FolderView { tree, flat }
 class ListViewPrefs {
   const ListViewPrefs({required this.sort, required this.view});
 
-  /// Defaults of [list]: its default sort; albums, genres and languages as a
-  /// grid, every other list as rows (mobile first; one default for both
+  /// Defaults of [list]: its default sort; albums, genres, languages and
+  /// playlists as a grid, every other list as rows (mobile first; one default for both
   /// shells).
   factory ListViewPrefs.defaultsOf(BrowseList list) => ListViewPrefs(
     sort: defaultSortOf(list),
     view:
         list == BrowseList.albums ||
             list == BrowseList.genres ||
-            list == BrowseList.languages
+            list == BrowseList.languages ||
+            list == BrowseList.playlists
         ? CollectionView.grid
         : CollectionView.list,
   );
@@ -66,10 +67,7 @@ class LibraryListViews {
     'lists': {
       for (final e in lists.entries)
         e.key.name: {
-          'sort': [
-            for (final s in e.value.sort.specs)
-              {'by': s.criterion.name, 'desc': s.descending},
-          ],
+          'sort': sortOrderToJson(e.value.sort),
           'view': e.value.view.name,
         },
     },
@@ -117,22 +115,9 @@ class LibraryListViews {
     Map<Object?, Object?> m,
     SortOrder base,
   ) {
-    final offered = criteriaOf(list);
-    SortCriterion? byName(Object? name) =>
-        offered.where((c) => c.name == name).firstOrNull;
     final raw = m['sort'];
-    if (raw is List) {
-      final specs = <SortSpec>[];
-      for (final e in raw) {
-        if (e is! Map) continue;
-        final c = byName(e['by']);
-        if (c == null) continue;
-        final desc = e['desc'];
-        specs.add(SortSpec(c, descending: desc is bool && desc));
-      }
-      return SortOrder.normalized(specs, offered, fallback: base);
-    }
-    final c = byName(raw);
+    if (raw is List) return sortOrderFromJson(list, raw, fallback: base);
+    final c = criteriaOf(list).where((c) => c.name == raw).firstOrNull;
     if (c == null) return base;
     final desc = m['desc'];
     return SortOrder.single(
@@ -156,4 +141,30 @@ class LibraryListViews {
     folderView,
     Object.hashAll([for (final l in BrowseList.values) lists[l]]),
   );
+}
+
+/// JSON form of [order]: `[{"by": criterion name, "desc": bool}, ...]`.
+List<Map<String, Object>> sortOrderToJson(SortOrder order) => [
+  for (final s in order.specs) {'by': s.criterion.name, 'desc': s.descending},
+];
+
+/// Reads [sortOrderToJson] output for [list]. Never throws: entries that are
+/// not understood, criteria [list] does not offer and repeats are dropped; no
+/// usable entry (or a [json] that is not a list) gives [fallback].
+SortOrder sortOrderFromJson(
+  BrowseList list,
+  Object? json, {
+  required SortOrder fallback,
+}) {
+  if (json is! List) return fallback;
+  final offered = criteriaOf(list);
+  final specs = <SortSpec>[];
+  for (final e in json) {
+    if (e is! Map) continue;
+    final c = offered.where((c) => c.name == e['by']).firstOrNull;
+    if (c == null) continue;
+    final desc = e['desc'];
+    specs.add(SortSpec(c, descending: desc is bool && desc));
+  }
+  return SortOrder.normalized(specs, offered, fallback: fallback);
 }

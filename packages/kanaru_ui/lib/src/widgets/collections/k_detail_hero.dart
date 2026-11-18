@@ -34,7 +34,8 @@ class KDetailHero extends StatelessWidget {
     this.line3,
     this.description,
     this.circle = false,
-  });
+    this.framedCover = false,
+  }) : assert(!(circle && framedCover), 'a round photo has no framed cover');
 
   final Widget Function(BuildContext context, double side, BorderRadius radius)
   coverBuilder;
@@ -58,14 +59,36 @@ class KDetailHero extends StatelessWidget {
   /// Round photo: no fade, drawn inside the circle.
   final bool circle;
 
+  /// Playlist look of the wide column: the cover washed out as a backdrop
+  /// (35 % opacity, no blur, fading at its foot and right edge) with the
+  /// cover again as a framed card centred on it, and a two-line name. The
+  /// cover is built once, at the card's inner side, and the backdrop scales
+  /// that same widget, so one image decode serves both. That widget is placed in
+  /// two spots of the tree, so what [coverBuilder] returns must not carry a
+  /// `GlobalKey`. Ignored when narrow.
+  final bool framedCover;
+
   static const double coverSize = 132;
+
+  /// Framed card over the backdrop: outer side, border, outer and inner radii.
+  static const double frameSize = 240;
+  static const double frameBorder = 4;
+  static const double frameRadius = 16;
+  static const double frameInnerSize = frameSize - 2 * frameBorder;
+  static const double frameInnerRadius = frameRadius - frameBorder;
+
+  /// Opacity of the framed backdrop.
+  static const double backdropOpacity = 0.35;
+  static const double _frameShadowAlpha = 0.3;
+  static const double _frameShadowBlur = 24;
+  static const double _frameShadowDrop = 8;
 
   /// Corner radius of the narrow cover; the wide cover is square.
   static const BorderRadius narrowCoverRadius = BorderRadius.all(
     Radius.circular(14),
   );
 
-  Widget _text(BuildContext context, {required bool wide}) {
+  Widget _text(BuildContext context, {required bool wide, int wideLines = 3}) {
     final textTheme = Theme.of(context).textTheme;
     final line3 = this.line3;
     return Column(
@@ -74,7 +97,7 @@ class KDetailHero extends StatelessWidget {
       children: [
         KDetailTitle(
           title,
-          maxLines: wide ? 3 : 2,
+          maxLines: wide ? wideLines : 2,
           style: (wide ? textTheme.headlineSmall : textTheme.titleLarge)!
               .copyWith(fontWeight: FontWeight.w700),
         ),
@@ -100,7 +123,8 @@ class KDetailHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wide = KDetailLayout.isWide(context);
-    final text = _text(context, wide: wide);
+    final framed = framedCover && wide;
+    final text = _text(context, wide: wide, wideLines: framed ? 2 : 3);
     if (!wide) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -129,6 +153,7 @@ class KDetailHero extends StatelessWidget {
       );
     }
     const side = KDetailLayout.columnWidth;
+    if (framed) return _framed(context, text);
     Widget cover = SizedBox.square(
       dimension: side,
       child: coverBuilder(context, side, BorderRadius.zero),
@@ -178,6 +203,98 @@ class KDetailHero extends StatelessWidget {
       ),
     );
   }
+
+  Widget _framed(BuildContext context, Widget text) {
+    const side = KDetailLayout.columnWidth;
+    final scheme = Theme.of(context).colorScheme;
+    // Built once: the card and the backdrop show the same widget.
+    final cover = coverBuilder(context, frameInnerSize, BorderRadius.zero);
+    return SizedBox(
+      width: side,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox.square(
+                dimension: side,
+                child: Opacity(
+                  opacity: backdropOpacity,
+                  child: _fadeBottom(
+                    _fadeRight(
+                      FittedBox(
+                        fit: BoxFit.fill,
+                        child: SizedBox.square(
+                          dimension: frameInnerSize,
+                          child: cover,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(frameRadius),
+                  boxShadow: [
+                    BoxShadow(
+                      color: scheme.shadow.withValues(alpha: _frameShadowAlpha),
+                      blurRadius: _frameShadowBlur,
+                      offset: const Offset(0, _frameShadowDrop),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(frameBorder),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(frameInnerRadius),
+                    child: SizedBox.square(
+                      dimension: frameInnerSize,
+                      child: cover,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              KSpace.x4,
+              KSpace.x2,
+              KSpace.x4,
+              KSpace.x6,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                text,
+                if (description != null) ...[
+                  const KGap(KSpace.x3),
+                  description!,
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Fades the last 5 % of [child] at the right edge down to half.
+  static Widget _fadeRight(Widget child) => ShaderMask(
+    blendMode: BlendMode.dstIn,
+    shaderCallback: (rect) => const LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      stops: [0.95, 1],
+      colors: [Color(0xFF000000), Color(0x80000000)],
+    ).createShader(rect),
+    child: child,
+  );
 
   /// Fades the last 30 % of [child] to transparent, top to bottom.
   static Widget _fadeBottom(Widget child) => ShaderMask(

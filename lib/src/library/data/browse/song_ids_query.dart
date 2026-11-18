@@ -89,7 +89,14 @@ String _term(SortCriterion criterion, bool d) {
     SortCriterion.duration => _nullsLast('t.duration_ms', d),
     SortCriterion.trackNumber =>
       '${_nullsLast('t.disc_no', d)}, ${_nullsLast('t.track_no', d)}',
-    SortCriterion.trackCount || SortCriterion.albumCount =>
-      throw ArgumentError.value(criterion, 'sort', 'not a song criterion'),
+    SortCriterion.trackCount ||
+    SortCriterion.albumCount ||
+    SortCriterion.name ||
+    SortCriterion.dateModified ||
+    SortCriterion.playlistOrder => throw ArgumentError.value(
+      criterion,
+      'sort',
+      'not a song criterion',
+    ),
   };
 }

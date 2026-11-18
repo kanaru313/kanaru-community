@@ -23,6 +23,13 @@ void main() {
       );
     });
 
+    test('dateModified goes in descending', () {
+      expect(
+        SortOrder.single(_artist).add(SortCriterion.dateModified).specs.last,
+        const SortSpec(SortCriterion.dateModified, descending: true),
+      );
+    });
+
     test('a text criterion goes in ascending', () {
       expect(SortOrder.single(_yearDesc).add(SortCriterion.album).specs, [
         _yearDesc,

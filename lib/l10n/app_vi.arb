@@ -623,6 +623,8 @@
   },
   "libraryOrderOldFirst": "Cũ trước",
   "libraryOrderNewFirst": "Mới trước",
+  "libraryOrderFirstToLast": "Đầu → cuối",
+  "libraryOrderLastToFirst": "Cuối → đầu",
   "librarySortMore": "{label} +{count}",
   "@librarySortMore": {
     "placeholders": {
@@ -645,6 +647,9 @@
   "librarySortTrackCount": "Số bài",
   "librarySortAlbumCount": "Số album",
   "librarySortTrackNumber": "Số thứ tự",
+  "librarySortName": "Tên",
+  "librarySortDateModified": "Ngày sửa",
+  "librarySortPlaylistOrder": "Thứ tự playlist",
   "libraryViewGrid": "Chế độ lưới",
   "libraryViewList": "Chế độ danh sách",
   "libraryViewTree": "Chế độ cây thư mục",
@@ -992,5 +997,474 @@
   "libraryPanelExpand": "Mở danh sách đã chọn",
   "libraryPanelCollapse": "Thu gọn",
   "libraryPanelReorder": "Kéo để đổi thứ tự phát",
-  "libraryMenuCopyFailed": "Không sao chép được"
+  "libraryMenuCopyFailed": "Không sao chép được",
+  "libraryActionFailed": "Không thực hiện được thao tác",
+  "playlistFavoritesName": "Yêu thích",
+  "playlistDefaultName": "Playlist mới",
+  "playlistCopyName": "{name} (bản sao)",
+  "@playlistCopyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistFavoritesCopyName": "Yêu thích ({date})",
+  "@playlistFavoritesCopyName": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistYours": "Playlist của bạn",
+  "playlistCount": "{count} playlist",
+  "@playlistCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistTrackCount": "{count, plural, =0{Trống} other{{count} bài}}",
+  "@playlistTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistEditedOn": "Sửa {date}",
+  "@playlistEditedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistFilterHint": "Lọc playlist",
+  "playlistFilterNoMatch": "Không có playlist nào khớp.",
+  "playlistsEmptyTitle": "Chưa có playlist",
+  "playlistsEmptyMessage": "Tạo playlist để giữ bài theo thứ tự của riêng bạn, hoặc nhập một tệp M3U.",
+  "playlistCreateAction": "Tạo playlist",
+  "playlistImportM3uAction": "Nhập tệp M3U…",
+  "playlistFavoritesSubtitle": "Bài bạn bấm ♥",
+  "playlistHubStats": "Thống kê",
+  "playlistFabOpen": "Tạo",
+  "playlistFabClose": "Đóng",
+  "playlistFabNew": "Playlist mới",
+  "playlistFabImport": "Nhập tệp M3U",
+  "playlistFabSmart": "Smart playlist",
+  "playlistFilterSongsNoMatch": "Không có bài nào khớp.",
+  "playlistDragHandle": "Kéo để đổi thứ tự",
+  "playlistNotInLibrary": "Không có trong thư viện",
+  "playlistUnavailableNote": "{count} bài không có trong thư viện: hiện mờ và được bỏ qua khi phát.",
+  "@playlistUnavailableNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistRemoveUnavailableAction": "Bỏ {count} bài",
+  "@playlistRemoveUnavailableAction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistEmptyTitle": "Playlist trống",
+  "playlistEmptyMessage": "Thêm bài từ menu của bất kỳ bài, album hay nghệ sĩ nào (Thêm vào playlist…), hoặc chọn nhiều bài rồi thêm một lần.",
+  "playlistFavoritesEmptyTitle": "Chưa có bài yêu thích",
+  "playlistFavoritesEmptyMessage": "Bấm ♥ trên một bài để thêm vào đây.",
+  "playlistNotFoundTitle": "Không tìm thấy playlist",
+  "playlistNotFoundMessage": "Có thể nó đã bị xoá.",
+  "playlistSaveFailed": "Không lưu được playlist",
+  "playlistMenuGoTo": "Đi tới playlist",
+  "playlistMenuGoToFavorites": "Đi tới Yêu thích",
+  "playlistMenuCopyTo": "Thêm vào playlist…",
+  "playlistMenuCopyToHint": "Chép {count} bài sang playlist khác.",
+  "@playlistMenuCopyToHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistMenuAskAi": "Hỏi AI về playlist này",
+  "playlistMenuEdit": "Sửa playlist",
+  "playlistMenuEditHint": "Đổi tên, mô tả và ảnh bìa.",
+  "playlistMenuChangeCover": "Đổi ảnh playlist",
+  "playlistMenuDelete": "Xoá playlist",
+  "playlistMenuDeleteHint": "Tệp nhạc giữ nguyên",
+  "playlistMenuDuplicate": "Nhân bản playlist",
+  "playlistMenuExportM3u": "Xuất tệp M3U…",
+  "playlistMenuExportM3uHint": "Đường dẫn tuyệt đối",
+  "playlistMenuExportM3uRelative": "Xuất M3U, đường dẫn tương đối…",
+  "playlistMenuExportM3uRelativeHint": "Để tệp .m3u8 cạnh thư mục nhạc: chép cả thư mục sang máy khác vẫn mở được.",
+  "playlistMenuRemoveDuplicates": "Bỏ bài trùng",
+  "playlistMenuRemoveDuplicatesHint": "{count} bài lặp lại · giữ lần đầu",
+  "@playlistMenuRemoveDuplicatesHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistMenuRemoveUnavailable": "Bỏ bài không còn tệp",
+  "playlistMenuRemoveUnavailableHint": "{count} bài không có trong thư viện",
+  "@playlistMenuRemoveUnavailableHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistMenuSaveAs": "Lưu thành playlist",
+  "playlistMenuClearFavorites": "Bỏ hết khỏi Yêu thích",
+  "playlistMenuClearFavoritesHint": "{count} bài · tệp nhạc giữ nguyên",
+  "@playlistMenuClearFavoritesHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistMenuMoveUp": "Lên một bậc",
+  "playlistMenuMoveDown": "Xuống một bậc",
+  "playlistMenuRemoveEntry": "Bỏ khỏi playlist",
+  "playlistMenuRemoveFavorite": "Bỏ khỏi Yêu thích",
+  "playlistRemovedEntry": "Đã bỏ “{title}”",
+  "@playlistRemovedEntry": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistRemovedFavorite": "Đã bỏ “{title}” khỏi Yêu thích",
+  "@playlistRemovedFavorite": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistRemovedEntries": "Đã bỏ {count} bài",
+  "@playlistRemovedEntries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistRemovedDuplicates": "Đã bỏ {count} bài trùng",
+  "@playlistRemovedDuplicates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistRemovedUnavailable": "Đã bỏ {count} bài không còn tệp",
+  "@playlistRemovedUnavailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistClearedFavorites": "Đã bỏ hết khỏi Yêu thích",
+  "playlistSaved": "Đã lưu playlist",
+  "playlistCreated": "Đã tạo {name}",
+  "@playlistCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistDuplicated": "Đã tạo “{name}”",
+  "@playlistDuplicated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistFavoritedAll": "Đã thêm {added} bài vào Yêu thích, bỏ qua {skipped}",
+  "@playlistFavoritedAll": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistCreateTitle": "Playlist mới",
+  "playlistCreateConfirm": "Tạo",
+  "playlistEditTitle": "Sửa playlist",
+  "playlistNameLabel": "Tên",
+  "playlistDescriptionLabel": "Mô tả",
+  "playlistDescriptionHint": "Thêm mô tả (không bắt buộc)",
+  "playlistNameEmpty": "Tên không được để trống",
+  "playlistNameTooLong": "Quá dài",
+  "playlistDescriptionTooLong": "Quá dài",
+  "playlistCoverChoose": "Đổi ảnh bìa…",
+  "playlistCoverAuto": "Bìa tự động",
+  "playlistCoverUsingAuto": "Đang dùng bìa tự động",
+  "playlistCoverAutoHint": "Bìa tự động ghép bìa của 4 album đầu trong playlist.",
+  "playlistDeleteTitle": "Xoá “{name}”?",
+  "@playlistDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistDeleteBody": "Playlist có {count} bài. Các bài vẫn ở trong thư viện.",
+  "@playlistDeleteBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistDeleteConfirm": "Xoá",
+  "playlistClearFavoritesTitle": "Bỏ hết khỏi Yêu thích?",
+  "playlistClearFavoritesBody": "{count} bài sẽ bỏ khỏi Yêu thích. Các bài vẫn ở trong thư viện.",
+  "@playlistClearFavoritesBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistClearFavoritesConfirm": "Bỏ hết",
+  "playlistCancel": "Huỷ",
+  "playlistSave": "Lưu",
+  "playlistClose": "Đóng",
+  "playlistConfirm": "Xác nhận",
+  "playlistPickerTitle": "Thêm vào playlist",
+  "playlistPickerSubtitle": "{songs} bài · {source}",
+  "@playlistPickerSubtitle": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistPickerFrom": "từ {name}",
+  "@playlistPickerFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistPickerSelectedSongs": "{count} bài đã chọn",
+  "@playlistPickerSelectedSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistPickerFavoritesHint": "Bài đã có được bỏ qua.",
+  "playlistPickerNew": "Playlist mới…",
+  "playlistPickerNewMessage": "Playlist được thêm vào danh sách, đã chọn sẵn, và chỉ được tạo khi bấm Thêm.",
+  "playlistPickerNewConfirm": "Thêm vào danh sách",
+  "playlistPickerNewBadge": "Mới",
+  "playlistPickerNewHint": "Tạo khi bấm Thêm",
+  "playlistPickerHasThis": "đã có bài này",
+  "playlistPickerHasSome": "đã có {have} / {total} bài",
+  "@playlistPickerHasSome": {
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistPickerNoneSelected": "Chọn một hoặc nhiều playlist",
+  "playlistPickerSelected": "{count} đã chọn",
+  "@playlistPickerSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistPickerAdd": "Thêm",
+  "playlistPickerAddMany": "Thêm vào {count} playlist",
+  "@playlistPickerAddMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistAlreadyTitle": "Đã có trong playlist",
+  "playlistAlreadySkip": "Chỉ thêm bài chưa có",
+  "playlistAlreadySkipHint": "Bỏ qua {count} bài đã có",
+  "@playlistAlreadySkipHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistAlreadyMove": "Thêm tất cả, bỏ bản cũ",
+  "playlistAlreadyMoveHint": "Các bài trùng chuyển xuống cuối",
+  "playlistAlreadyAll": "Thêm tất cả",
+  "playlistAlreadyAllHint": "{count} bài sẽ có hai lần",
+  "@playlistAlreadyAllHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistAlreadyAppliesToAll": "Lựa chọn áp dụng cho tất cả.",
+  "playlistAddedSummary": "Đã thêm {songs} bài vào {playlists} playlist{newPlaylists, plural, =0{} other{ ({newPlaylists} mới)}}{skipped, plural, =0{} other{, bỏ qua {skipped}}}",
+  "@playlistAddedSummary": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "playlists": {
+        "type": "int"
+      },
+      "newPlaylists": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistAddedGone": "{count} playlist đã bị xoá trong lúc đó",
+  "@playlistAddedGone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistAddFailed": "Không thêm được vào playlist",
+  "playlistProSmartNote": "Smart playlist có trong bản Pro",
+  "playlistM3uFileTypes": "Tệp playlist",
+  "playlistM3uImported": "Đã nhập {count} bài vào {name}",
+  "@playlistM3uImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistM3uReportTitle": "Đã nhập playlist",
+  "playlistM3uReportSummary": "Đã thêm {added} / {total} dòng của {file} vào playlist “{name}”.",
+  "@playlistM3uReportSummary": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "file": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistM3uReportNotInLibrary": "{count} bài chưa có trong thư viện: hiện ra khi thư mục của chúng được thêm.",
+  "@playlistM3uReportNotInLibrary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistM3uReportUnresolved": "{count} dòng không phải tệp nhạc trong máy hoặc nằm ngoài các thư mục nhạc (thêm thư mục đó trong Cài đặt › Thư viện):",
+  "@playlistM3uReportUnresolved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistM3uReportSkipped": "{count} dòng là tệp mà thư viện bỏ qua khi quét (nằm trong thư mục ẩn, hoặc ngắn hơn 30 giây khi bật “Bỏ qua bài ngắn” trong Cài đặt › Thư viện):",
+  "@playlistM3uReportSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistM3uReportNoBase": "{count} dòng dùng đường dẫn tương đối, nhưng tệp playlist không nằm trong bộ nhớ trong nên không biết chúng bắt đầu từ thư mục nào. Chép tệp playlist vào cạnh thư mục nhạc rồi nhập lại:",
+  "@playlistM3uReportNoBase": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistM3uAllOutside": "Các bài của playlist này nằm ngoài các thư mục nhạc. Thêm thư mục đó trong Cài đặt › Thư viện rồi nhập lại. Chưa nhập gì.",
+  "playlistM3uReportLine": "Dòng {line}: {text}",
+  "@playlistM3uReportLine": {
+    "placeholders": {
+      "line": {
+        "type": "int"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistM3uReportMore": "và {count} dòng nữa",
+  "@playlistM3uReportMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistM3uOpenPlaylist": "Mở playlist",
+  "playlistM3uNothingFound": "Không tìm thấy tệp nhạc nào của playlist này trong máy. Chưa nhập gì.",
+  "playlistM3uTooLarge": "Tệp quá lớn, không phải playlist.",
+  "playlistM3uReadFailed": "Không đọc được tệp.",
+  "playlistM3uExported": "Đã lưu {count} bài vào {file}",
+  "@playlistM3uExported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistM3uReplaceTitle": "Thay tệp {file}?",
+  "@playlistM3uReplaceTitle": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistM3uExportFailed": "Không lưu được tệp."
 }

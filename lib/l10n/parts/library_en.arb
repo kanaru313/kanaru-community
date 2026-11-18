@@ -145,6 +145,8 @@
   },
   "libraryOrderOldFirst": "Oldest first",
   "libraryOrderNewFirst": "Newest first",
+  "libraryOrderFirstToLast": "First → last",
+  "libraryOrderLastToFirst": "Last → first",
   "librarySortMore": "{label} +{count}",
   "@librarySortMore": {
     "placeholders": {
@@ -167,6 +169,9 @@
   "librarySortTrackCount": "Songs",
   "librarySortAlbumCount": "Albums",
   "librarySortTrackNumber": "Track number",
+  "librarySortName": "Name",
+  "librarySortDateModified": "Date modified",
+  "librarySortPlaylistOrder": "Playlist order",
   "libraryViewGrid": "Grid",
   "libraryViewList": "List",
   "libraryViewTree": "Folder tree",
@@ -514,5 +519,6 @@
   "libraryPanelExpand": "Show the selected songs",
   "libraryPanelCollapse": "Collapse",
   "libraryPanelReorder": "Drag to change the play order",
-  "libraryMenuCopyFailed": "Could not copy"
+  "libraryMenuCopyFailed": "Could not copy",
+  "libraryActionFailed": "Couldn't complete the action"
 }

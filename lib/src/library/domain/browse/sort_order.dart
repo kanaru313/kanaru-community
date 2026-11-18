@@ -97,12 +97,15 @@ class SortOrder {
   String toString() => 'SortOrder($specs)';
 }
 
-/// The first criterion of [list], ascending, except where the biggest comes
-/// first: songs on a detail page start with the most played and languages with
-/// the largest one.
+/// The first criterion of [list], ascending, except where the biggest or
+/// newest comes first: songs on a detail page start with the most played,
+/// languages with the largest one and playlists with the latest changed.
 SortOrder defaultSortOf(BrowseList list) => SortOrder.single(
   SortSpec(
     criteriaOf(list).first,
-    descending: list == BrowseList.detailSongs || list == BrowseList.languages,
+    descending:
+        list == BrowseList.detailSongs ||
+        list == BrowseList.languages ||
+        list == BrowseList.playlists,
   ),
 );

@@ -151,6 +151,7 @@ MenuSpec buildSongMenu(
     advanced: advanced,
     pages: pages,
     queueIds: [id],
+    origin: origin,
   );
 }
 
@@ -173,5 +174,32 @@ MenuItemSpec? _goAlbum(SongMenuData data, MenuOrigin origin, MenuEnv env) {
     title: l10n.libraryMenuGoAlbum,
     subtitle: data.links.albumTitle,
     action: MenuAction.go(LibraryLocations.album(key)),
+  );
+}
+
+/// Adds the page's own rows to a song menu: [playlistGroup] as a group of its
+/// own right after the "Go to" group (the first), and drops the heart row when
+/// [favoriteRow] is false. Defaults return [spec] as it is.
+MenuSpec withSongPageRows(
+  MenuSpec spec, {
+  List<MenuItemSpec> playlistGroup = const [],
+  bool favoriteRow = true,
+}) {
+  if (playlistGroup.isEmpty && favoriteRow) return spec;
+  final groups = [
+    for (final g in spec.groups)
+      [
+        for (final item in g)
+          if (favoriteRow || item.id != MenuItemId.favorite) item,
+      ],
+  ];
+  if (playlistGroup.isNotEmpty) {
+    groups.insert(groups.isEmpty ? 0 : 1, playlistGroup);
+  }
+  return spec.copyWith(
+    groups: [
+      for (final g in groups)
+        if (g.isNotEmpty) g,
+    ],
   );
 }

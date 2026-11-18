@@ -43,6 +43,15 @@ void main() {
       SortCriterion.year,
       SortCriterion.duration,
     ],
+    BrowseList.playlists: [SortCriterion.dateModified, SortCriterion.name],
+    BrowseList.playlistTracks: [
+      SortCriterion.playlistOrder,
+      SortCriterion.title,
+      SortCriterion.artist,
+      SortCriterion.album,
+      SortCriterion.duration,
+      SortCriterion.playCount,
+    ],
   };
 
   test('criteria per list match the mockup, first is default', () {
@@ -53,11 +62,13 @@ void main() {
     }
   });
 
-  test('detail songs and languages default to descending', () {
+  test('detail songs, languages and playlists default to descending', () {
     for (final l in BrowseList.values) {
       expect(
         defaultSortOf(l).primary.descending,
-        l == BrowseList.detailSongs || l == BrowseList.languages,
+        l == BrowseList.detailSongs ||
+            l == BrowseList.languages ||
+            l == BrowseList.playlists,
         reason: l.name,
       );
     }
@@ -72,8 +83,13 @@ void main() {
       SortCriterion.title,
       SortCriterion.artist,
       SortCriterion.album,
+      SortCriterion.name,
     };
-    const date = {SortCriterion.year, SortCriterion.dateAdded};
+    const date = {
+      SortCriterion.year,
+      SortCriterion.dateAdded,
+      SortCriterion.dateModified,
+    };
     for (final c in SortCriterion.values) {
       expect(
         c.kind,
@@ -81,6 +97,8 @@ void main() {
             ? SortKind.text
             : date.contains(c)
             ? SortKind.date
+            : c == SortCriterion.playlistOrder
+            ? SortKind.position
             : SortKind.number,
         reason: c.name,
       );
