@@ -91,6 +91,21 @@ void showRemovalToast(
   );
 }
 
+/// A removal that failed: logs it ([what] names the action and playlist) and
+/// says so once on [messenger]. A write cancelled because one queued before it
+/// failed is silent (that failure said it already).
+void reportRemovalFailure(
+  Object error,
+  StackTrace stack,
+  ScaffoldMessengerState messenger,
+  AppLocalizations l10n, {
+  required String what,
+}) {
+  if (error is PlaylistWriteFailure && error.cancelled) return;
+  _log.warning('$what failed', error, stack);
+  if (messenger.mounted) showAppSnackBarOn(messenger, l10n.playlistSaveFailed);
+}
+
 Future<void> _undo(
   ProviderContainer container,
   ScaffoldMessengerState messenger,

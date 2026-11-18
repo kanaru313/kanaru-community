@@ -133,10 +133,13 @@ Future<void> _removeAndAnnounce(
     }
     await _announceIfGone(container, messenger, l10n, uid);
   } on Object catch (error, stack) {
-    _log.warning('Removing entries of $uid failed', error, stack);
-    if (messenger.mounted) {
-      showAppSnackBarOn(messenger, l10n.playlistSaveFailed);
-    }
+    reportRemovalFailure(
+      error,
+      stack,
+      messenger,
+      l10n,
+      what: 'Removing entries of $uid',
+    );
   }
 }
 

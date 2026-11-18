@@ -131,9 +131,12 @@ Future<void> clearFavoritesFlow(
       l10n.playlistClearedFavorites,
     );
   } on Object catch (error, stack) {
-    _log.warning('Clearing Favorites failed', error, stack);
-    if (messenger.mounted) {
-      showAppSnackBarOn(messenger, l10n.playlistSaveFailed);
-    }
+    reportRemovalFailure(
+      error,
+      stack,
+      messenger,
+      l10n,
+      what: 'Clearing Favorites',
+    );
   }
 }

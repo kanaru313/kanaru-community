@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
@@ -16,6 +15,7 @@ import '../menu/playlist_menu_rows.dart';
 import 'playlist_edit_host.dart';
 import 'playlist_entry_removal.dart';
 import 'playlist_edit_mode.dart';
+import 'playlist_filter_field_sliver.dart';
 import 'playlist_filter_state.dart';
 import 'playlist_list_bar.dart';
 import 'playlist_missing_note.dart';
@@ -146,12 +146,7 @@ class _PlaylistSongsHostState extends ConsumerState<PlaylistSongsHost> {
     final detail = widget.detail;
     final editing = widget.edit.editing;
     final empty = detail.entries.isEmpty;
-    if (empty && (_filter.open || _filter.text.isNotEmpty)) {
-      // The list emptied under an open filter: it has nothing to narrow.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _filter.close();
-      });
-    }
+    _filter.closeWhenEmpty(empty: empty, alive: () => mounted);
     // This page is the one on screen: no page or modal above it and its
     // branch not hidden behind another tab.
     final onTop =
@@ -196,17 +191,10 @@ class _PlaylistSongsHostState extends ConsumerState<PlaylistSongsHost> {
           onFilterToggle: _filter.toggle,
         ),
         if (_filter.open)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(gutter, 0, gutter, KSpace.x2),
-              child: KFilterField(
-                controller: _filter.controller,
-                hint: l10n.libraryFilterSongsHint,
-                closeTooltip: l10n.libraryFilterClose,
-                onChanged: (text) => _filter.typed(text, () => mounted),
-                onClose: _filter.close,
-              ),
-            ),
+          PlaylistFilterFieldSliver(
+            filter: _filter,
+            gutter: gutter,
+            alive: () => mounted,
           ),
         if (unavailable > 0 && !editing)
           SliverToBoxAdapter(

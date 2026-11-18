@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -6,9 +8,11 @@ import 'package:logging/logging.dart';
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../domain/playlists/playlist_models.dart';
+import '../../../state/playlists/playlist_page_controller.dart';
 import '../../../state/playlists/playlist_providers.dart';
 import '../../browse/play_actions.dart';
 import '../menu/playlist_menu_rows.dart';
+import '../page/playlist_play_gate.dart' show playlistWriteWait;
 
 final _log = Logger('library.playlist_play');
 
@@ -33,6 +37,20 @@ Future<void> playPlaylist(
   // The root navigator outlives the tile, so a toast can still be shown.
   final root = Navigator.of(context, rootNavigator: true).context;
   try {
+    // The open page's queued writes land first, as for the menu's Play.
+    final container = ProviderScope.containerOf(context, listen: false);
+    final page = playlistPageProvider(summary.uid);
+    if (container.read(page.exists)) {
+      try {
+        await container
+            .read(page.notifier)
+            .afterWrites()
+            .timeout(playlistWriteWait);
+      } on TimeoutException {
+        if (root.mounted) showAppSnackBar(root, l10n.playlistSaveFailed);
+        return;
+      }
+    }
     final detail = await store.loadPlaylist(summary.uid);
     if (!requests.isNewest(request)) {
       _log.fine('play request $request dropped: a newer one started');

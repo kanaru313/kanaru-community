@@ -9,6 +9,7 @@ import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_ids.dart';
 import 'package:kanaru/src/library/domain/browse/sort_order.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
+import 'package:kanaru/src/library/state/playlists/playlist_page_controller.dart';
 import 'package:kanaru/src/library/ui/browse/play_actions.dart';
 import 'package:kanaru/src/library/ui/m3u/m3u_entry_points.dart';
 import 'package:kanaru/src/library/ui/playlists/list/playlist_card.dart';
@@ -19,6 +20,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../support/icon_button_finders.dart';
 import '../../../support/fake_playback_commands.dart';
+import 'support/playlist_page_support.dart' show shownDetail;
 import 'support/playlist_ui_harness.dart';
 import 'support/playlists_page_support.dart';
 
@@ -153,6 +155,63 @@ void main() {
       await t.tap(byIconButton(l10n.plScreensPlay));
       await t.pump();
       h.container.read(playRequestsProvider.notifier).begin();
+      gate.complete();
+      await settlePage(t);
+      expect(playback.calls, isEmpty);
+    });
+
+    /// Opens the page controller of a 3-song playlist (kept alive by a
+    /// listener) and queues a held write on it: removing its first entry.
+    Future<(PlaylistUiHarness, FakePlaybackCommands, Completer<void>)> held(
+      WidgetTester t,
+    ) async {
+      final playback = FakePlaybackCommands();
+      final h = await pumpPlaylistsPage(t, playback: playback);
+      final uid = (await t.runAsync(() async {
+        final tracks = await h.fixture.tracks(3);
+        return h.fixture.repo.createPlaylist(name: 'Mix', tracks: tracks);
+      }))!;
+      await settlePage(t);
+      final page = playlistPageProvider(uid);
+      final sub = h.container.listen(page, (_, _) {});
+      addTearDown(sub.close);
+      await eventually(
+        t,
+        () => h.container.read(page).detail.value?.entries.length == 3,
+        what: 'page loaded',
+      );
+      final gate = h.store.removeGate = Completer<void>();
+      final first = shownDetail(h, uid)!.entries.first.uid;
+      unawaited(
+        h.container.read(page.notifier).remove([first]).catchError((_) => null),
+      );
+      await t.pump();
+      await t.tap(byIconButton(pageL10n(t).libraryViewList));
+      await settlePage(t);
+      return (h, playback, gate);
+    }
+
+    pageTest('▶ waits for the open page\'s queued write, then plays the new '
+        'order', (t) async {
+      final (_, playback, gate) = await held(t);
+      await t.tap(byIconButton(pageL10n(t).plScreensPlay));
+      await t.pump(const Duration(milliseconds: 200));
+      expect(playback.calls, isEmpty);
+
+      gate.complete();
+      await eventually(t, () => playback.calls.isNotEmpty, what: 'play');
+      expect((playback.calls.single as PlayTracksCall).tracks, hasLength(2));
+      await settlePage(t);
+    });
+
+    pageTest('▶ gives up on a write that never lands: save-failed toast, '
+        'nothing played', (t) async {
+      final (_, playback, gate) = await held(t);
+      final l10n = pageL10n(t);
+      await t.tap(byIconButton(l10n.plScreensPlay));
+      await t.pump(const Duration(seconds: 6));
+      expect(find.text(l10n.playlistSaveFailed), findsOneWidget);
+      expect(playback.calls, isEmpty);
       gate.complete();
       await settlePage(t);
       expect(playback.calls, isEmpty);

@@ -27,6 +27,15 @@ class PlaylistFilterState extends ChangeNotifier {
 
   void close() => _set(open: false, value: '');
 
+  /// The list under the filter emptied: it has nothing to narrow, so the
+  /// filter goes (after the frame, as it is called from a build).
+  void closeWhenEmpty({required bool empty, required bool Function() alive}) {
+    if (!empty || !(open || text.isNotEmpty)) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (alive()) close();
+    });
+  }
+
   SavedFilter save() => (open: open, text: controller.text);
 
   void restore(SavedFilter saved) => _set(open: saved.open, value: saved.text);

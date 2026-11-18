@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:logging/logging.dart';
 import 'package:kanaru/src/database/database.dart' show TrackStatus;
 import 'package:kanaru/src/library/domain/playlists/playlist_ids.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
@@ -365,6 +366,50 @@ void main() {
         what: 'both removals',
       );
       await _toast(t, l10n.playlistRemovedDuplicates(1));
+      sub.close();
+      await t.pump(const Duration(seconds: 2));
+    });
+
+    uiTest('a write cancelled behind a failing one stays silent: one '
+        'save-failed toast in all', (t) async {
+      final h = await PlaylistUiHarness.pump(t);
+      final l10n = h.l10n(t);
+      final src = await _seed(t, h, 'Src', songs: 2, missing: 2);
+      final missing = (await _detail(
+        t,
+        h,
+        src.uid,
+      )).entries.where((e) => !e.available).map((e) => e.uid).toList();
+      final page = playlistPageProvider(src.uid);
+      final sub = h.container.listen(page, (_, _) {});
+      await eventually(
+        t,
+        () => h.container.read(page).detail.value?.entries.length == 4,
+        what: 'page loaded',
+      );
+      // Each failure that is not silent logs once (a snackbar of the same text
+      // would hide a second toast).
+      final failures = <LogRecord>[];
+      final logSub = Logger.root.onRecord.listen((r) {
+        if (r.message.startsWith('Removing entries of')) failures.add(r);
+      });
+      addTearDown(logSub.cancel);
+      final gate = h.store.removeGate = Completer<void>();
+      h.store.removeError = StateError('disk');
+      unawaited(
+        h.launch(t, (c) => removeMissingEntries(c, src.uid, [missing.first])),
+      );
+      await t.pump(const Duration(milliseconds: 100));
+      // Queued behind the held (and soon failing) write: cancelled with it.
+      unawaited(
+        h.launch(t, (c) => removeMissingEntries(c, src.uid, [missing.last])),
+      );
+      await t.pump(const Duration(milliseconds: 100));
+      gate.complete();
+      await _toast(t, l10n.playlistSaveFailed);
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.playlistSaveFailed), findsOneWidget);
+      expect(failures, hasLength(1));
       sub.close();
       await t.pump(const Duration(seconds: 2));
     });
