@@ -148,11 +148,18 @@ void main() {
     });
 
     pageTest('Favorites empty: its own empty state', (t) async {
+      final handle = t.ensureSemantics();
       await pumpPlaylistPage(t, uid: PlaylistUids.favorites);
       final l10n = pageL10n(t);
       expect(find.text(l10n.playlistFavoritesEmptyTitle), findsOneWidget);
-      expect(find.text(l10n.playlistFavoritesEmptyMessage), findsOneWidget);
+      final spoken = l10n.playlistFavoritesEmptyMessage.replaceFirst(
+        KEmpty.iconToken,
+        l10n.playlistFavoritesEmptyIconLabel,
+      );
+      expect(find.bySemanticsLabel(spoken), findsOneWidget);
+      expect(find.textContaining(KEmpty.iconToken), findsNothing);
       expect(find.byType(KListSortFilterBar), findsNothing);
+      handle.dispose();
     });
   });
 

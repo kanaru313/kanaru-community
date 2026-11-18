@@ -2630,12 +2630,6 @@ abstract class AppLocalizations {
   /// **'Import M3U file…'**
   String get playlistImportM3uAction;
 
-  /// No description provided for @playlistFavoritesSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Songs you ♥'**
-  String get playlistFavoritesSubtitle;
-
   /// No description provided for @playlistHubStats.
   ///
   /// In en, this message translates to:
@@ -2723,8 +2717,14 @@ abstract class AppLocalizations {
   /// No description provided for @playlistFavoritesEmptyMessage.
   ///
   /// In en, this message translates to:
-  /// **'Tap ♥ on a song to add it here.'**
+  /// **'Tap [icon] on a song to add it here.'**
   String get playlistFavoritesEmptyMessage;
+
+  /// No description provided for @playlistFavoritesEmptyIconLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'favorite'**
+  String get playlistFavoritesEmptyIconLabel;
 
   /// No description provided for @playlistNotFoundTitle.
   ///

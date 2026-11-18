@@ -80,4 +80,32 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('inline icon replaces the token, themed, one spoken sentence', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        KEmpty(
+          icon: KIcons.heart,
+          message: 'Tap [icon] on a song.',
+          messageIcon: KIcons.heartFilled,
+          messageIconLabel: 'favorite',
+        ),
+      ),
+    );
+    final scheme = Theme.of(tester.element(find.byType(KEmpty))).colorScheme;
+    final inline = find.descendant(
+      of: find.byType(RichText),
+      matching: find.byIcon(KIcons.heartFilled),
+    );
+    expect(inline, findsOneWidget);
+    expect(tester.widget<Icon>(inline).color, scheme.primary);
+    expect(find.textContaining('Tap ', findRichText: true), findsOneWidget);
+    expect(find.textContaining('[icon]', findRichText: true), findsNothing);
+    expect(find.bySemanticsLabel('Tap favorite on a song.'), findsOneWidget);
+    handle.dispose();
+  });
 }

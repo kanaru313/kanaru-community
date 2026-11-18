@@ -1663,9 +1663,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistImportM3uAction => 'Import M3U file…';
 
   @override
-  String get playlistFavoritesSubtitle => 'Songs you ♥';
-
-  @override
   String get playlistHubStats => 'Stats';
 
   @override
@@ -1719,7 +1716,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistFavoritesEmptyTitle => 'No favorites yet';
 
   @override
-  String get playlistFavoritesEmptyMessage => 'Tap ♥ on a song to add it here.';
+  String get playlistFavoritesEmptyMessage =>
+      'Tap [icon] on a song to add it here.';
+
+  @override
+  String get playlistFavoritesEmptyIconLabel => 'favorite';
 
   @override
   String get playlistNotFoundTitle => 'Playlist not found';

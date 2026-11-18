@@ -1543,9 +1543,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistImportM3uAction => 'Nhập tệp M3U…';
 
   @override
-  String get playlistFavoritesSubtitle => 'Bài bạn bấm ♥';
-
-  @override
   String get playlistHubStats => 'Thống kê';
 
   @override
@@ -1594,7 +1591,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get playlistFavoritesEmptyMessage =>
-      'Bấm ♥ trên một bài để thêm vào đây.';
+      'Bấm [icon] trên một bài để thêm vào đây.';
+
+  @override
+  String get playlistFavoritesEmptyIconLabel => 'yêu thích';
 
   @override
   String get playlistNotFoundTitle => 'Không tìm thấy playlist';
