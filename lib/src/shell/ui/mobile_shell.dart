@@ -63,6 +63,9 @@ class MobileShell extends ConsumerWidget {
       onSelect(context);
     } else if (item.pushed) {
       context.push(item.path);
+    } else if (item.isBranch) {
+      final branch = items.indexOf(item);
+      if (branch >= 0) navigationShell.goBranch(branch, initialLocation: true);
     } else if (item.parentId != null) {
       context.go(item.path);
     } else {
@@ -100,9 +103,10 @@ class MobileShell extends ConsumerWidget {
         if (i.sidebar) i,
     ];
     final current = selectedNavId(listed, location);
-    final settings = sidebarItems
-        .where((i) => i.footer && i.pushed)
-        .firstOrNull;
+    final settings = sidebarItems.where((i) => i.footer).firstOrNull;
+    // Settings is a full-screen branch: no dock, no tab-style header actions.
+    final inSettings = settings != null && settings.containsLocation(location);
+    final homeBranch = items.indexWhere((i) => i.path == '/');
     // Branch index of each tab; items that are not tabs have no bar entry.
     // Bar order follows `mobileOrder`; ties keep branch order (stable sort).
     final tabs =
@@ -117,27 +121,41 @@ class MobileShell extends ConsumerWidget {
     return BackButtonListener(
       onBackButtonPressed: () => _onBack(context),
       child: PageHeaderScope(
-        leading: KIconButton(
-          icon: KIcons.sidebarToggle,
-          tooltip: l10n.playbackSidebarOpen,
-          onPressed: ref.read(mobileSidebarOpenProvider.notifier).open,
-        ),
+        // Settings root: a back to Home replaces the menu button, which is
+        // also what keeps the sidebar closed there.
+        leading: inSettings
+            ? KIconButton(
+                icon: KIcons.back,
+                tooltip: l10n.tooltipBack,
+                onPressed: () => homeBranch < 0
+                    ? context.go('/')
+                    : navigationShell.goBranch(
+                        homeBranch,
+                        initialLocation: true,
+                      ),
+              )
+            : KIconButton(
+                icon: KIcons.sidebarToggle,
+                tooltip: l10n.playbackSidebarOpen,
+                onPressed: ref.read(mobileSidebarOpenProvider.notifier).open,
+              ),
         // A registered action (Pro chat) replaces the placeholder.
         trailing: [
-          if (aiActions.isEmpty)
+          if (!inSettings && aiActions.isEmpty)
             KIconButton(
               icon: KIcons.ai,
               tooltip: '${l10n.appAiChat} · ${l10n.appComingSoon}',
               onPressed: null,
             ),
-          for (final a in aiActions) a.builder(context),
+          if (!inSettings)
+            for (final a in aiActions) a.builder(context),
         ],
         rootTrailing: [
-          if (settings != null)
+          if (settings != null && !inSettings)
             KIconButton(
               icon: KIcons.settings,
               tooltip: settings.label(context),
-              onPressed: () => context.push(settings.path),
+              onPressed: () => _select(context, ref, settings, current),
             ),
         ],
         child: MobilePushLayout(
@@ -156,8 +174,8 @@ class MobileShell extends ConsumerWidget {
               dock: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  selectionBar,
-                  if (hasTrack)
+                  if (!inSettings) selectionBar,
+                  if (hasTrack && !inSettings)
                     MiniPlayer(
                       flight: flight,
                       onOpen:

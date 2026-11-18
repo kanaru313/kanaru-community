@@ -173,7 +173,7 @@ file per concern (`*_registration.dart`), so lanes never share a file.
 | `mobileOrder` | Position in the mobile bottom bar; defaults to `order`. |
 | `mobileTab` | Shown in the mobile bottom bar (default true). |
 | `footer` | Desktop: pinned at the foot of the sidebar (Settings). |
-| `pushed` | Opens above the shell as a full page with its own back. |
+| `pushed` | Opens above the shell as a full page with its own back. Settings is not pushed: it is a footer branch (see below). |
 | `parentId` | A child item: its route nests under the parent's tab route. Not a branch, not in the mobile bar. |
 | `sidebar` | Listed in the desktop sidebar (default true; Search is false). |
 | `comingSoon` | Dimmed "coming soon" entry, not selectable, needs no route. |
@@ -196,6 +196,13 @@ nav item has no route at its `path` (child items: nested under the parent's
 route), when a child names an unknown parent, or when there is no tab item.
 `comingSoon` and `onSelect` items are skipped by that check.
 
+Settings is the last shell branch (footer item, not a mobile tab). Desktop
+shows it inside the shell (top bar, sidebar and player bar stay; the sidebar
+footer item is selected on every `/settings/**` location). Mobile shows the same
+branch full screen: no bottom bar, no dock or mini player, no menu or AI/gear
+header actions; the root header has a back arrow to Home and sub-pages push
+inside the branch navigator. Android Back: sub-page, Settings root, Home.
+
 Mobile bottom bar today: Home (10), Library (20), Playlists (30), Search (40),
 Online (50).
 
@@ -210,7 +217,7 @@ neighbours, so pick `order` by band:
 | 1 | 100-199 | Library 105 (tab); its six list items (Songs to Folders) take 110-160 as children of `library` (reserved for the library UI lane, not registered yet) |
 | 2 | 200-299 | Playlists 210, Favorites 220, Queue 230, History 240, Most played 250 |
 | 9 | 900-999 | Search 900 (`sidebar: false`) |
-| footer | 1000 | Settings (`footer: true`, `pushed: true`) |
+| footer | 1000 | Settings (`footer: true`, `mobileTab: false`; a shell branch) |
 
 Extensions, Pro included, pick orders below 900 inside the bands above and
 never 1000 or more, which belongs to the Settings footer.

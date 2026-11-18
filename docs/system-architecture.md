@@ -40,6 +40,8 @@ main.dart
 - **Navigation**: go_router; one shell branch per tab nav item, other routes
   above the shell; child nav items nest under their tab's route. Every
   location redirects to `/welcome` while `firstRunRequiredProvider` is true.
+  `/settings` (with its sub-pages) is a branch too: inside the shell on
+  desktop, full screen without bottom bar or dock on mobile.
   Desktop keeps its own back/forward history, a sidebar grouped by order band
   (ARCHITECTURE.md), Rescan in the top bar, a page-header search icon and
   Ctrl+F / Ctrl+K. Both shells render the library selection bar slot.
