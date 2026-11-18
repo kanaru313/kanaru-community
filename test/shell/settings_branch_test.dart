@@ -45,6 +45,29 @@ Future<bool> _back(WidgetTester tester) async {
   return handled;
 }
 
+/// Records what the app tells the platform about handling Back; Android
+/// forwards Back to Flutter only while the last value is true.
+List<bool> _recordFrameworkHandlesBack(WidgetTester tester) {
+  final calls = <bool>[];
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    SystemChannels.platform,
+    (call) async {
+      if (call.method == 'SystemNavigator.setFrameworkHandlesBack') {
+        calls.add(call.arguments as bool);
+      }
+      return null;
+    },
+  );
+  addTearDown(
+    () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      null,
+    ),
+  );
+  tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+  return calls;
+}
+
 /// The sidebar row labelled [label], read through semantics.
 Finder _sidebarRow(String label) => find.descendant(
   of: find.byKey(const ValueKey('sidebar')),
@@ -175,6 +198,24 @@ void main() {
       // On Home Back is left to the system.
       expect(await _back(tester), isFalse);
     });
+
+    testWidgets(
+      'the platform is told the app handles Back at the Settings root',
+      (tester) async {
+        final calls = _recordFrameworkHandlesBack(tester);
+        await pumpKanaruApp(tester, width: mobileW, height: mobileH);
+        // Home: Back is left to the system.
+        expect(calls.isEmpty || calls.last == false, isTrue);
+
+        await tester.tap(byIconButton('Settings'));
+        await tester.pumpAndSettle();
+        expect(calls.last, isTrue);
+
+        await tester.tap(byIconButton('Back'));
+        await tester.pumpAndSettle();
+        expect(calls.last, isFalse);
+      },
+    );
 
     testWidgets('the root back arrow goes Home', (tester) async {
       final c = await pumpKanaruApp(tester, width: mobileW, height: mobileH);

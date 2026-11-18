@@ -116,96 +116,118 @@ class MobileShell extends ConsumerWidget {
           return byOrder != 0 ? byOrder : a.compareTo(b);
         });
     final selected = tabs.indexOf(navigationShell.currentIndex);
-    return BackButtonListener(
-      onBackButtonPressed: () => _onBack(context),
-      child: PageHeaderScope(
-        // Settings root: a back to Home replaces the menu button, which is
-        // also what keeps the sidebar closed there.
-        leading: inSettings
-            ? KIconButton(
-                icon: KIcons.back,
-                tooltip: l10n.tooltipBack,
-                onPressed: () => homeBranch < 0
-                    ? context.go('/')
-                    : navigationShell.goBranch(
-                        homeBranch,
-                        initialLocation: true,
-                      ),
-              )
-            : KIconButton(
-                icon: KIcons.sidebarToggle,
-                tooltip: l10n.playbackSidebarOpen,
-                onPressed: ref.read(mobileSidebarOpenProvider.notifier).open,
-              ),
-        // A registered action (Pro chat) replaces the placeholder.
-        trailing: [
-          if (!inSettings && aiActions.isEmpty)
-            KIconButton(
-              icon: KIcons.ai,
-              tooltip: '${l10n.appAiChat} · ${l10n.appComingSoon}',
-              onPressed: null,
-            ),
-          if (!inSettings)
-            for (final a in aiActions) a.builder(context),
-        ],
-        rootTrailing: [
-          if (settings != null && !inSettings)
-            KIconButton(
-              icon: KIcons.settings,
-              tooltip: settings.label(context),
-              onPressed: () => _select(context, ref, settings, current),
-            ),
-        ],
-        child: MobilePushLayout(
-          sidebar: MobileSidebar(
-            items: listed,
-            selectedId: current,
-            onSelect: (item) => _select(context, ref, item, current),
-          ),
-          content: Scaffold(
-            // The selection bar slot and the mini player float over the page
-            // (selection bar above the mini player); only the bar below is
-            // the scaffold's. A branch that is not a tab has no bar entry.
-            body: MobileFloatingDock(
-              hidden: MediaQuery.viewInsetsOf(context).bottom > 0,
-              body: SafeArea(bottom: false, child: navigationShell),
-              dock: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!inSettings) selectionBar,
-                  if (hasTrack && !inSettings)
-                    MiniPlayer(
-                      flight: flight,
-                      onOpen:
-                          onOpenNowPlaying ??
-                          () => context.push(nowPlayingPath),
-                      onOpenQueue:
-                          onOpenQueue ??
-                          () => showQueueSheet(context, from: flight),
-                    ),
-                ],
-              ),
-            ),
-            bottomNavigationBar: selected < 0
-                ? null
-                : NavigationBar(
-                    selectedIndex: selected,
-                    labelBehavior:
-                        NavigationDestinationLabelBehavior.alwaysHide,
-                    onDestinationSelected: (tab) => navigationShell.goBranch(
-                      tabs[tab],
-                      initialLocation: tab == selected,
-                    ),
-                    destinations: [
-                      for (final branch in tabs)
-                        NavigationDestination(
-                          icon: Icon(items[branch].icon),
-                          selectedIcon: Icon(items[branch].selectedIcon),
-                          label: items[branch].label(context),
-                          tooltip: items[branch].label(context),
+    final sidebarOpen = ref.watch(mobileSidebarOpenProvider);
+    final currentBranch = navigationShell.currentIndex;
+    final backToHome =
+        homeBranch >= 0 &&
+        currentBranch != homeBranch &&
+        currentBranch < items.length &&
+        location == items[currentBranch].path;
+    // With predictive back enabled Android hands Back to Flutter only when the
+    // framework says it can handle it, and no navigator can pop at a branch
+    // root. The PopScope makes the route report that; the listener below
+    // answers first on a normal Back, so the action never runs twice.
+    return PopScope(
+      canPop: !(backToHome || sidebarOpen),
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (sidebarOpen) {
+          ref.read(mobileSidebarOpenProvider.notifier).close();
+        } else {
+          _onBack(context);
+        }
+      },
+      child: BackButtonListener(
+        onBackButtonPressed: () => _onBack(context),
+        child: PageHeaderScope(
+          // Settings root: a back to Home replaces the menu button, which is
+          // also what keeps the sidebar closed there.
+          leading: inSettings
+              ? KIconButton(
+                  icon: KIcons.back,
+                  tooltip: l10n.tooltipBack,
+                  onPressed: () => homeBranch < 0
+                      ? context.go('/')
+                      : navigationShell.goBranch(
+                          homeBranch,
+                          initialLocation: true,
                         ),
-                    ],
-                  ),
+                )
+              : KIconButton(
+                  icon: KIcons.sidebarToggle,
+                  tooltip: l10n.playbackSidebarOpen,
+                  onPressed: ref.read(mobileSidebarOpenProvider.notifier).open,
+                ),
+          // A registered action (Pro chat) replaces the placeholder.
+          trailing: [
+            if (!inSettings && aiActions.isEmpty)
+              KIconButton(
+                icon: KIcons.ai,
+                tooltip: '${l10n.appAiChat} · ${l10n.appComingSoon}',
+                onPressed: null,
+              ),
+            if (!inSettings)
+              for (final a in aiActions) a.builder(context),
+          ],
+          rootTrailing: [
+            if (settings != null && !inSettings)
+              KIconButton(
+                icon: KIcons.settings,
+                tooltip: settings.label(context),
+                onPressed: () => _select(context, ref, settings, current),
+              ),
+          ],
+          child: MobilePushLayout(
+            sidebar: MobileSidebar(
+              items: listed,
+              selectedId: current,
+              onSelect: (item) => _select(context, ref, item, current),
+            ),
+            content: Scaffold(
+              // The selection bar slot and the mini player float over the page
+              // (selection bar above the mini player); only the bar below is
+              // the scaffold's. A branch that is not a tab has no bar entry.
+              body: MobileFloatingDock(
+                hidden: MediaQuery.viewInsetsOf(context).bottom > 0,
+                body: SafeArea(bottom: false, child: navigationShell),
+                dock: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!inSettings) selectionBar,
+                    if (hasTrack && !inSettings)
+                      MiniPlayer(
+                        flight: flight,
+                        onOpen:
+                            onOpenNowPlaying ??
+                            () => context.push(nowPlayingPath),
+                        onOpenQueue:
+                            onOpenQueue ??
+                            () => showQueueSheet(context, from: flight),
+                      ),
+                  ],
+                ),
+              ),
+              bottomNavigationBar: selected < 0
+                  ? null
+                  : NavigationBar(
+                      selectedIndex: selected,
+                      labelBehavior:
+                          NavigationDestinationLabelBehavior.alwaysHide,
+                      onDestinationSelected: (tab) => navigationShell.goBranch(
+                        tabs[tab],
+                        initialLocation: tab == selected,
+                      ),
+                      destinations: [
+                        for (final branch in tabs)
+                          NavigationDestination(
+                            icon: Icon(items[branch].icon),
+                            selectedIcon: Icon(items[branch].selectedIcon),
+                            label: items[branch].label(context),
+                            tooltip: items[branch].label(context),
+                          ),
+                      ],
+                    ),
+            ),
           ),
         ),
       ),

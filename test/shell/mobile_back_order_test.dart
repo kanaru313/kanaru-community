@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/kanaru.dart';
@@ -102,5 +103,50 @@ void main() {
     expect(find.text('page /gear'), findsNothing);
     // Still on the Beta tab, not sent Home.
     expect(find.text('page /beta'), findsOneWidget);
+  });
+
+  testWidgets('the platform is told the app handles Back at a tab root and '
+      'with the sidebar open', (tester) async {
+    final calls = <bool>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'SystemNavigator.setFrameworkHandlesBack') {
+          calls.add(call.arguments as bool);
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final c = await pumpKanaruApp(
+      tester,
+      extensions: [const NavFixture(), const _Child()],
+      width: 400,
+    );
+    // Home: Back is left to the system.
+    expect(calls.where((v) => v), isEmpty);
+
+    _go(tester, '/deep');
+    await tester.pumpAndSettle();
+    expect(calls.last, isTrue);
+
+    // One Back goes Home and releases the claim.
+    expect(await _back(tester), isTrue);
+    expect(_location(tester), '/');
+    expect(calls.last, isFalse);
+
+    // The open sidebar claims Back on Home, too.
+    c.read(mobileSidebarOpenProvider.notifier).open();
+    await tester.pumpAndSettle();
+    expect(calls.last, isTrue);
+    expect(await _back(tester), isTrue);
+    expect(c.read(mobileSidebarOpenProvider), isFalse);
+    expect(calls.last, isFalse);
   });
 }
