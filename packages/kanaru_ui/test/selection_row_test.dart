@@ -137,6 +137,103 @@ void main() {
     );
   });
 
+  testWidgets('alikeOptions icon row: tick on the chosen row, same slot', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        const Column(
+          children: [
+            SelectionRow(
+              leading: Icon(KIcons.image),
+              title: Text('A'),
+              alikeOptions: true,
+              selected: true,
+            ),
+            SelectionRow(
+              leading: Icon(KIcons.image),
+              title: Text('B'),
+              alikeOptions: true,
+              selected: false,
+            ),
+          ],
+        ),
+      ),
+    );
+    final marks = tester.widgetList<KCheckMark>(find.byType(KCheckMark));
+    expect(marks.map((m) => m.style), everyElement(KCheckMarkStyle.plain));
+    expect(byCheckState(KCheckState.on), findsOneWidget);
+    expect(byCheckState(KCheckState.off), findsOneWidget);
+    expect(
+      tester.getRect(find.byType(KCheckMark).first).left,
+      greaterThanOrEqualTo(tester.getRect(find.text('A')).right),
+    );
+    expect(
+      tester.getTopLeft(find.text('A')).dx,
+      tester.getTopLeft(find.text('B')).dx,
+    );
+    expect(
+      tester.getSize(find.byType(KCheckMark).first),
+      tester.getSize(find.byType(KCheckMark).last),
+    );
+    expect(
+      tester.getSemantics(find.text('A')),
+      isSemantics(
+        isSelected: true,
+        hasSelectedState: true,
+        isInMutuallyExclusiveGroup: true,
+        label: 'A',
+      ),
+    );
+    expect(
+      tester.getSemantics(find.text('B')),
+      isSemantics(
+        isSelected: false,
+        hasSelectedState: true,
+        isInMutuallyExclusiveGroup: true,
+        label: 'B',
+      ),
+    );
+  });
+
+  testWidgets('alikeOptions on a text row behaves as before', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        const SelectionRow(
+          title: Text('One'),
+          alikeOptions: true,
+          selected: true,
+        ),
+      ),
+    );
+    expect(_mark(tester).style, KCheckMarkStyle.surface);
+    expect(
+      tester.getRect(find.byType(KCheckMark)).right,
+      lessThanOrEqualTo(tester.getRect(find.text('One')).left),
+    );
+  });
+
+  testWidgets('alikeOptions with multi keeps checkbox semantics', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        const SelectionRow(
+          leading: Icon(KIcons.image),
+          title: Text('A'),
+          alikeOptions: true,
+          multi: true,
+          selected: true,
+        ),
+      ),
+    );
+    expect(_mark(tester).style, KCheckMarkStyle.plain);
+    expect(byCheckState(KCheckState.on), findsOneWidget);
+  });
+
   testWidgets('plainMark without icon: tick right, nothing at the start', (
     tester,
   ) async {

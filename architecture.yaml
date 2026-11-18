@@ -11,6 +11,10 @@ domain_forbidden:
   - table_calendar
   - window_manager
   - file_selector
+  - image_picker
+  - image_picker_android
+  - image_picker_platform_interface
+  - desktop_drop
   - audio_service
   - audio_session
   - permission_handler

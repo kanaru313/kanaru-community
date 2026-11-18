@@ -14,7 +14,9 @@ import 'k_gap.dart';
 /// Text row ([leading] null): a [KCheckMark] (ring / disc + tick) at the start,
 /// single and multi choice alike. Icon row: the icon, no mark for a single
 /// choice; with [multi] a [KCheckMarkStyle.plain] tick in a 24 slot on the
-/// right (empty when unchosen, so titles keep their width). [multi] rows expose
+/// right (empty when unchosen, so titles keep their width). A single-choice
+/// icon row of [alikeOptions] (pictures that look alike) gets that same plain
+/// tick, because tint alone does not show the choice. [multi] rows expose
 /// checkbox semantics, others radio-group semantics.
 class SelectionRow extends StatelessWidget {
   const SelectionRow({
@@ -27,6 +29,7 @@ class SelectionRow extends StatelessWidget {
     this.multi = false,
     this.partial = false,
     this.plainMark = false,
+    this.alikeOptions = false,
     this.dense = false,
     this.autofocus = false,
     this.hint,
@@ -53,6 +56,11 @@ class SelectionRow extends StatelessWidget {
   /// Icon-row layout without an icon of its own (the select-all row of an
   /// icon list): plain tick on the right, nothing at the start.
   final bool plainMark;
+
+  /// The options look alike (pictures), so tint alone is not enough to show
+  /// the single choice: an icon row shows the plain tick on the right of the
+  /// chosen row (empty slot on the others). No effect on text rows or [multi].
+  final bool alikeOptions;
 
   /// Compact row of menus and dropdowns: `bodyMedium` text, 12 dp gaps, 12 dp
   /// side padding. 40 dp hit area on both shells, the visible shape (tint,
@@ -171,7 +179,8 @@ class SelectionRow extends StatelessWidget {
                             ],
                           ),
                         ),
-                        if (iconLayout && multi) ...[
+                        if (iconLayout &&
+                            (multi || (alikeOptions && leading != null))) ...[
                           const KGap(KSpace.x3),
                           KCheckMark(
                             size: _checkSlot,
