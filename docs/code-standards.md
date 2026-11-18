@@ -50,7 +50,7 @@ enforced by the gate. This file covers the rest.
   git grep -nE "fontSize *: *[0-9]" -- lib packages/kanaru_ui/lib
   ```
 - Spacing between siblings is `KGap(KSpace.xN)`, not a sized box. Choice lists
-  use `SelectionRow` (text row: `KCheckMark` at the start; icon row: tint only, plain tick on the right when `multi`) / `showSelectionPicker` (no radios); a choice needing
+  use `SelectionRow` (text row: `KCheckMark` at the start; icon row: tint only, plain tick on the right when `multi` or `alikeOptions`) / `showSelectionPicker` (no radios); a choice needing
   confirmation goes through `confirm:`, never pop-then-ask. `kanaru_ui` has no
   music types; app covers wrap `KCover`.
 - Errors: expected failures are values (`Result`, sealed `Ok`/`Err` in

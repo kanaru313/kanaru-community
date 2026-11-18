@@ -156,6 +156,9 @@ abstract final class KIcons {
   static const IconData smartPlaylist =
       FluentIcons.text_bullet_list_square_sparkle_24_regular;
   static const IconData imageEdit = FluentIcons.image_edit_24_regular;
+  static const IconData imageAdd = FluentIcons.image_add_24_regular;
+  static const IconData pan = FluentIcons.hand_left_24_regular;
+  static const IconData warning = FluentIcons.warning_24_regular;
   static const IconData dateModified = FluentIcons.calendar_edit_24_regular;
   static const IconData sortName = FluentIcons.text_sort_ascending_24_regular;
   static const IconData stats = FluentIcons.data_trending_24_regular;
