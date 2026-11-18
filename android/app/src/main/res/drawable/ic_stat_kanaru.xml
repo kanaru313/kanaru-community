@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Monochrome status-bar icon (music note) for the playback notification. -->
+<!-- Monochrome status-bar icon (logo glyph) for the playback notification:
+     packaging/linux/icons/hicolor/symbolic/apps/io.github.kanaru313.kanaru_community-symbolic.svg. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M12,3v10.55c-0.59,-0.34 -1.27,-0.55 -2,-0.55 -2.21,0 -4,1.79 -4,4s1.79,4 4,4 4,-1.79 4,-4V7h4V3h-6z" />
+    android:viewportWidth="76"
+    android:viewportHeight="76">
+    <group
+        android:translateX="-27"
+        android:translateY="-26">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M38,28 A8,8 0 0 1 46,36 L46,92 A8,8 0 0 1 30,92 L30,36 A8,8 0 0 1 38,28 Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M52.441,59.169 L90.441,31.169 A6,6 0 0 1 100,36 L100,92 A6,6 0 0 1 90.441,96.831 L52.441,68.831 A6,6 0 0 1 52.441,59.169 Z" />
+    </group>
 </vector>

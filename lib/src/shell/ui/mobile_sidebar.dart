@@ -78,14 +78,13 @@ class _Head extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return SizedBox(
       height: KLayout.minTarget + KSpace.x4,
       child: Row(
         spacing: KSpace.x3,
         children: [
           const SizedBox(width: KSpace.x3),
-          Icon(KIcons.appLogo, color: scheme.primary),
+          const KanaruLogo(size: KIconSize.lg),
           Text('Kanaru', style: Theme.of(context).textTheme.titleMedium),
         ],
       ),
