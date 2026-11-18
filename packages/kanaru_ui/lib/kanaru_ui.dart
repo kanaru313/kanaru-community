@@ -26,6 +26,7 @@ export 'src/widgets/k_empty_page.dart';
 export 'src/widgets/k_equalizer_icon.dart';
 export 'src/widgets/k_fab_menu.dart';
 export 'src/widgets/k_gap.dart';
+export 'src/widgets/k_help_icon.dart';
 export 'src/widgets/k_icon_button.dart';
 export 'src/widgets/k_icon_button_colors.dart'
     show KIconButtonColors, KIconEmphasis;
