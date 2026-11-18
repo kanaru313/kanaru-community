@@ -343,6 +343,141 @@ what the picker shows), `_confirm` (`AddConfirmStep`), `_message` (toast text),
 Queue Save reaches the flow through the `onSave` callback of `QueueActions` /
 `QueueSaveButton` (`playback/ui/queue/queue_actions.dart`) because `playback`
 is below `library`; without `onSave` the button is dimmed with "Coming soon".
+### Playlist screens
+
+`library/ui/playlists/` (the screens, owned by the playlist-screens lane):
+the dialogs and flows shared by every entry point (FAB, menus, pages), then the
+list page, the playlist page and their behaviour:
+
+- **Create** `showCreatePlaylistDialog(context) -> uid?`; **Duplicate**
+  `showDuplicatePlaylistDialog(context, summary) -> uid?`. Both are
+  `PlaylistNameDialog` (440 dp `showKDialog`): a prefilled, fully selected
+  Name field, `n / 200` counter on the cleaned value, Enter submits, one submit
+  at a time, a throw keeps the dialog open with the `playlistSaveFailed` toast.
+  Create then opens the playlist's page; Duplicate stays on the page and toasts
+  `playlistDuplicated`. Duplicate shows the "copy the custom cover" `KSwitchRow`
+  (off) only when `customCoverKeyProvider` has a cover; no explanation text.
+- **Edit** `showEditPlaylistDialog(context, summary)`: full-screen dialog on the
+  mobile shell (`showKFullScreenDialog`, `actionEnabledListenable` = form
+  validity, the action pops the route itself), 620 dp `showKDialog` with the cover
+  on the left on the desktop shell. `PlaylistFormModel` holds the controllers,
+  the validity and the staged "automatic cover"; the cover is written only by
+  Save, through `playlistEditorProvider`. Unchanged text with no cover change
+  closes without a write. Results: gone -> `playlistNotFoundTitle`, cover failure
+  -> `plScreensCoverFailed`, saved -> `playlistSaved`, a throw keeps the dialog.
+- **`deletePlaylistFlow(context, summary, {pageRoute})`**: confirm,
+  then (with `pageRoute`, the own page's route) leave the page and wait for `pageRoute.completed` (exit animation
+  dismissed or the page element unmounted, at most 1 s) before
+  `deletePlaylist`, so the page never shows "not found" while sliding out. All
+  objects used after an await (container, root messenger, router) are captured
+  before it. Also forgets the playlist's remembered track sort.
+- **`clearFavoritesFlow(context, favorites)`**: confirm, then remove the entries
+  seen in the dialog, through the Favorites page controller when that page is
+  open (`playlistPageProvider(favorites)` exists) or straight through the store,
+  with an Undo toast. A cancelled write (queued behind one that failed) is
+  silent; any other failure toasts `playlistSaveFailed` once
+  (`reportRemovalFailure`, shared with the menu cleanup rows).
+- **`playlist_removal_toasts.dart`**: `PlaylistRemovalHolder` (provider
+  `playlistRemovalHolderProvider`, keep-alive) keeps at most one removal waiting
+  for its toast and commits it when the toast closes untouched, when the next
+  removal replaces it and when the container ends (idempotent per removal).
+  `showRemovalToast(rootContext, container, removal, message)` shows the Undo
+  toast on the root messenger; Undo goes through the open page's controller (the
+  controller finishes its write queue even if the page closes meanwhile, so no
+  listener is needed) or the store, and a result of 0 or a throw shows
+  `libraryMenuUndoFailed`.
+- **Menus** (`playlists/menu/`): `openPlaylistMenu(context, uid, {onOwnPage,
+  pageRoute, viaKeyboard})` is one `openMenu` builder, so the single-load guard
+  and the 10 s limit apply. On the playlist's own page it first awaits
+  `playlistPageProvider(uid).afterWrites()`, then `loadPlaylist(uid)`; `null`
+  throws `ItemGoneException` (not-found toast, no menu). The snapshot fixes the
+  counts, the playable ids (Play, queue buttons, copy to playlist) and the uids
+  of missing entries ("Remove missing songs" acts on those uids, so entries a
+  scan marks missing later stay). `buildPlaylistMenu` / `buildFavoritesMenu` are
+  pure functions of the snapshot: head = the playlist's row (cover button only
+  for a playlist, not Favorites), `onOwnPage` drops Go to / Play / Shuffle,
+  cleanup rows exist only above 0, Delete lives in Advanced (`pageRoute` goes to
+  `deletePlaylistFlow` on the own page), "Ask AI" is a dimmed non-Pro row.
+  Explanations are `MenuItemSpec.hint` (screen readers); state and warning lines
+  (duplicate and missing counts, "Music files stay") are subtitles. Row bodies
+  (`playlist_menu_actions.dart`) route a removal through the page controller
+  when the page is open, else the store, then show the Undo toast; a gone
+  playlist toasts `libraryNotFoundMessage`, a throw `playlistSaveFailed` (a
+  cancelled page write stays silent). M3U rows call `exportM3u` and stay dimmed
+  while `m3uAvailable` is false.
+- **List page** (`playlists_page.dart`, `list/`): `PlaylistsPage` shows the
+  playlists as a grid or a list (`list_view_prefs`), sorted by `SortOrder` on
+  `BrowseList.playlists`, with a filter field (`PlaylistFilterState`, the same
+  one the playlist page uses; own Back / Esc layer). The FAB menu holds "New
+  playlist" and the M3U import entries; `NewPlaylistShortcut` (Ctrl+N / Cmd+N)
+  is a global key handler that runs only while the page is on screen: no dialog
+  or sheet above, not in a hidden tab (`TickerMode`), no text field focused. The
+  mobile hub (`playlists_hub.dart`) holds the shortcut tiles Favorites, History,
+  Most played, Queue (from the registry's nav items) and Stats (Pro, coming
+  soon), above "Playlist của bạn" and the playlists. The list listens for Back
+  only while it is the current, visible route. `M3uImportProgressSliver` (m3u
+  seed) sits at the top of the slivers. The page builds nothing until it is
+  first shown (`TickerMode` latch, one-way), so a hidden tab root under a deep
+  link starts no query.
+- **Playlist / Favorites page** (`playlist_page.dart`, `page/`): one template on
+  `DetailFrame(actions:, showBack:)`; `KDetailHero(framedCover: true)` gives the
+  wide-column variant. Favorites' third hero line is the text
+  `plScreensFavoritesLine` plus a filled heart (`KIcons.heartFilled`, `primary`,
+  via `KDetailHero.line3Trailing`, read as `plScreensFavoritesLineSemantics`).
+  Favorites has no "not found", so its pending and error
+  frames are a local `DetailFrame(title: '', showBack: <page rule>)`
+  (`playlist_page_states.dart`) because `DetailPending` / `DetailNotFound` take
+  no `showBack`. **Counts** (hero, bar, filter "x / N") are distinct songs,
+  missing ones included, computed from `detail.entries` so an optimistic removal
+  shows at once; duration comes from the available entries; "Empty" only when
+  there are no entries. **Play / Shuffle** (`playlist_play_gate.dart`): the play
+  request is taken before any await, then `afterWrites()` (5 s limit,
+  `playlistWriteWait`; the list tile's ▶ waits the same way when the page's
+  controller exists), then the result is dropped when the page is unmounted or a
+  newer request exists; entries are the page's sort (filter ignored), missing
+  entries are never queued. The select-all claim and the play-wait state sit
+  above the wide / narrow layout switch so a resize keeps them. Per-playlist
+  sort is `BrowseList.playlistTracks`, remembered by
+  `playlistTrackSortsProvider`.
+- **Edit mode** (`page/playlist_edit_*.dart`, `playlist_reorder.dart`): a header
+  toggle (`KTonalToggleButton`). It forces the stored order (the sort is
+  labelled "Playlist order" in the bar, `plScreensEditBarLead`, and is never
+  written) and closes the filter, restoring it on exit if it was open and the
+  list still has entries. The drag handle (`KDragHandle`, default size) exists
+  only in edit mode. During a drag the rows are frozen (`ReorderFreeze`: the
+  list keeps indexes); a pointer up starts a 350 ms grace timer (drop animation
+  + margin) that releases the freeze when the drop callback never ran, and only
+  the last pointer up counts. Esc / Back, an emptied list and a tab switch end
+  edit mode (ignored, or the drag cancelled, while dragging).
+- **Removal**: one path (`removeEntryOnPage` in `playlist_page_actions.dart`)
+  for swipe, the row's ✕ (always on mobile, hover / focus on desktop; mobile
+  edit mode only on missing rows; the normal-mode ✕ of a missing row calls it
+  directly) and Delete. `PlaylistEntryRemoval` adds only the focus heir in edit
+  mode. It goes through the page controller, shows the Undo toast via the holder
+  above, and moves focus to the next row (or the page node when the last goes).
+  Removing from Favorites is un-favoriting.
+- **Back and Esc** (`page/playlist_back_chain.dart`, `PlaylistBackScope`): both
+  pages close one layer per press (edit mode, then the filter), then leave. Back
+  is a `PopScope(canPop: !active)` on the page's route; a dialog, sheet, menu
+  and the app-wide selection panel answer before it. Every `BackButtonListener`
+  (shell, sidebar, selection panel, list page) is asked first, most recently
+  rebuilt first, and a page `PopScope` sees Back only when all of them decline.
+  So a page owns Back through its own listener (the list page's filter) or
+  `PlaylistBackScope`, and a listener answers only while its page is the current
+  visible route (`ModalRoute.isCurrentOf`, `TickerMode`), else it would close
+  the hidden filter of a page a playlist page covers. Esc is a page-owned
+  `Focus` that holds focus while a layer or the FAB menu is open, because the
+  desktop shell maps Esc to history back unless the focus tree below handles it;
+  it yields to a text field and a root modal, and swallows an Esc that just
+  closed the selection panel or the FAB menu.
+- The duplicate dialog's cover switch and the `cover` seed come from the
+  custom-cover state; delete leaves the page first.
+- **No ⓘ**: the screens are outside Settings. The `playlist*` hint strings are
+  semantics `hint:` only, never visible text.
+- l10n part `plscreens` (`lib/l10n/parts/plscreens_{en,vi}.arb`, prefix
+  `plScreens`); every other string reuses the `playlist*` / `library*` keys.
+- Known gap: the dialogs use `AlertDialog` inside `showKDialog` because
+  `kanaru_ui` has no form-dialog frame yet (only `confirmAction`).
 
 ## Library tabs
 

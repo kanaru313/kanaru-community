@@ -2010,6 +2010,51 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistM3uExportFailed => 'Không lưu được tệp.';
 
   @override
+  String get plScreensFavoritesLine => 'Bài bạn bấm';
+
+  @override
+  String get plScreensFavoritesLineSemantics => 'Bài bạn bấm yêu thích';
+
+  @override
+  String plScreensDeleted(String name) {
+    return 'Đã xoá “$name”';
+  }
+
+  @override
+  String get plScreensDeleteFailed => 'Không xoá được playlist';
+
+  @override
+  String plScreensCharCount(int count, int max) {
+    return '$count / $max';
+  }
+
+  @override
+  String get plScreensCoverFailed => 'Không đổi được ảnh bìa';
+
+  @override
+  String get plScreensDuplicateCopyCover => 'Chép cả ảnh bìa tự chọn';
+
+  @override
+  String get plScreensDuplicateConfirm => 'Nhân bản';
+
+  @override
+  String get plScreensPlay => 'Phát playlist';
+
+  @override
+  String get plScreensEditList => 'Sửa danh sách';
+
+  @override
+  String get plScreensEditDone => 'Xong';
+
+  @override
+  String plScreensEditBarLead(int count) {
+    return '$count bài · Thứ tự playlist';
+  }
+
+  @override
+  String get plScreensUnitPlaylists => 'playlist';
+
+  @override
   String plAddMovedSuffix(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

@@ -3378,6 +3378,84 @@ abstract class AppLocalizations {
   /// **'Couldn\'t save the file.'**
   String get playlistM3uExportFailed;
 
+  /// No description provided for @plScreensFavoritesLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs you tapped'**
+  String get plScreensFavoritesLine;
+
+  /// No description provided for @plScreensFavoritesLineSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs you liked'**
+  String get plScreensFavoritesLineSemantics;
+
+  /// No description provided for @plScreensDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted “{name}”'**
+  String plScreensDeleted(String name);
+
+  /// No description provided for @plScreensDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the playlist'**
+  String get plScreensDeleteFailed;
+
+  /// No description provided for @plScreensCharCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / {max}'**
+  String plScreensCharCount(int count, int max);
+
+  /// No description provided for @plScreensCoverFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change the cover'**
+  String get plScreensCoverFailed;
+
+  /// No description provided for @plScreensDuplicateCopyCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the custom cover too'**
+  String get plScreensDuplicateCopyCover;
+
+  /// No description provided for @plScreensDuplicateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get plScreensDuplicateConfirm;
+
+  /// No description provided for @plScreensPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play playlist'**
+  String get plScreensPlay;
+
+  /// No description provided for @plScreensEditList.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit list'**
+  String get plScreensEditList;
+
+  /// No description provided for @plScreensEditDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get plScreensEditDone;
+
+  /// No description provided for @plScreensEditBarLead.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} · Playlist order'**
+  String plScreensEditBarLead(int count);
+
+  /// No description provided for @plScreensUnitPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'playlists'**
+  String get plScreensUnitPlaylists;
+
   /// Toast suffix: old copies of songs removed when they were moved to the end of a playlist.
   ///
   /// In en, this message translates to:

@@ -1,0 +1,39 @@
+{
+  "plScreensFavoritesLine": "Songs you tapped",
+  "plScreensFavoritesLineSemantics": "Songs you liked",
+  "plScreensDeleted": "Deleted “{name}”",
+  "@plScreensDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "plScreensDeleteFailed": "Couldn't delete the playlist",
+  "plScreensCharCount": "{count} / {max}",
+  "@plScreensCharCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "plScreensCoverFailed": "Couldn't change the cover",
+  "plScreensDuplicateCopyCover": "Copy the custom cover too",
+  "plScreensDuplicateConfirm": "Duplicate",
+  "plScreensPlay": "Play playlist",
+  "plScreensEditList": "Edit list",
+  "plScreensEditDone": "Done",
+  "plScreensEditBarLead": "{count, plural, =1{1 song} other{{count} songs}} · Playlist order",
+  "@plScreensEditBarLead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plScreensUnitPlaylists": "playlists"
+}

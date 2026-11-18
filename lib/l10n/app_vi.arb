@@ -1449,6 +1449,43 @@
     }
   },
   "playlistM3uExportFailed": "Không lưu được tệp.",
+  "plScreensFavoritesLine": "Bài bạn bấm",
+  "plScreensFavoritesLineSemantics": "Bài bạn bấm yêu thích",
+  "plScreensDeleted": "Đã xoá “{name}”",
+  "@plScreensDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "plScreensDeleteFailed": "Không xoá được playlist",
+  "plScreensCharCount": "{count} / {max}",
+  "@plScreensCharCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "plScreensCoverFailed": "Không đổi được ảnh bìa",
+  "plScreensDuplicateCopyCover": "Chép cả ảnh bìa tự chọn",
+  "plScreensDuplicateConfirm": "Nhân bản",
+  "plScreensPlay": "Phát playlist",
+  "plScreensEditList": "Sửa danh sách",
+  "plScreensEditDone": "Xong",
+  "plScreensEditBarLead": "{count} bài · Thứ tự playlist",
+  "@plScreensEditBarLead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plScreensUnitPlaylists": "playlist",
   "plAddMovedSuffix": "{count, plural, other{, bỏ {count} bản cũ}}",
   "@plAddMovedSuffix": {
     "description": "Toast suffix: old copies of songs removed when they were moved to the end of a playlist.",

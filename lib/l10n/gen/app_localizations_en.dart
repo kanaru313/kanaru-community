@@ -2262,6 +2262,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistM3uExportFailed => 'Couldn\'t save the file.';
 
   @override
+  String get plScreensFavoritesLine => 'Songs you tapped';
+
+  @override
+  String get plScreensFavoritesLineSemantics => 'Songs you liked';
+
+  @override
+  String plScreensDeleted(String name) {
+    return 'Deleted “$name”';
+  }
+
+  @override
+  String get plScreensDeleteFailed => 'Couldn\'t delete the playlist';
+
+  @override
+  String plScreensCharCount(int count, int max) {
+    return '$count / $max';
+  }
+
+  @override
+  String get plScreensCoverFailed => 'Couldn\'t change the cover';
+
+  @override
+  String get plScreensDuplicateCopyCover => 'Copy the custom cover too';
+
+  @override
+  String get plScreensDuplicateConfirm => 'Duplicate';
+
+  @override
+  String get plScreensPlay => 'Play playlist';
+
+  @override
+  String get plScreensEditList => 'Edit list';
+
+  @override
+  String get plScreensEditDone => 'Done';
+
+  @override
+  String plScreensEditBarLead(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0 · Playlist order';
+  }
+
+  @override
+  String get plScreensUnitPlaylists => 'playlists';
+
+  @override
   String plAddMovedSuffix(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
