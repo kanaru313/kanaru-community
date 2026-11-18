@@ -17,6 +17,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../support/app_harness.dart';
+import '../../../support/icon_button_finders.dart';
 
 String _location(WidgetTester tester) =>
     GoRouter.of(tester.element(find.byType(Scaffold).first))
@@ -95,6 +96,15 @@ void main() {
       tester.getSemantics(inSidebar('Playlists')),
       isSemantics(isSelected: false, isButton: true, isEnabled: true),
     );
+    // A sidebar item has an empty left side in its header, no back button
+    // (the top bar's history back is outside the page).
+    expect(
+      find.descendant(
+        of: page(PlaylistUids.favorites),
+        matching: byIconButton('Back'),
+      ),
+      findsNothing,
+    );
     router.pop();
     await tester.pumpAndSettle();
     expect(_location(tester), '/playlists');
@@ -122,8 +132,8 @@ void main() {
   ) async {
     final handle = tester.ensureSemantics();
     final c = await pumpKanaruApp(tester, width: 400);
-    GoRouter.of(tester.element(find.byType(Scaffold).first))
-        .go(LibraryLocations.playlists);
+    final router = GoRouter.of(tester.element(find.byType(Scaffold).first));
+    router.go(LibraryLocations.playlists);
     c.read(mobileSidebarOpenProvider.notifier).open();
     await tester.pumpAndSettle();
     final favorites = find.descendant(
@@ -138,6 +148,28 @@ void main() {
     await tester.pumpAndSettle();
     expect(_location(tester), '/playlists/favorites');
     expect(page(PlaylistUids.favorites), findsOneWidget);
+    // A child page of the tab: back instead of the shell's menu button.
+    expect(byIconButton('Back'), findsOneWidget);
+    expect(byIconButton('Menu'), findsNothing);
+    // The Playlists tab of the bottom bar stays selected.
+    final tab = find.descendant(
+      of: find.byType(NavigationBar),
+      matching: find.bySemanticsLabel(RegExp('Playlists')),
+    );
+    expect(
+      tester.getSemantics(tab.first),
+      isSemantics(
+        isSelected: true,
+        isButton: true,
+        isEnabled: true,
+        hasSelectedState: true,
+        hasEnabledState: true,
+        hasTapAction: true,
+        hasFocusAction: true,
+        isFocusable: true,
+        label: 'Playlists\nTab 3 of 5',
+      ),
+    );
     c.read(mobileSidebarOpenProvider.notifier).open();
     await tester.pumpAndSettle();
     // The page title is also labelled Favorites: scope to the drawer.
@@ -145,6 +177,20 @@ void main() {
       tester.getSemantics(favorites),
       isSemantics(isSelected: true, isButton: true, isEnabled: true),
     );
+    c.read(mobileSidebarOpenProvider.notifier).close();
+    await tester.pumpAndSettle();
+    await tester.tap(byIconButton('Back'));
+    await tester.pumpAndSettle();
+    expect(_location(tester), '/playlists');
+    expect(byIconButton('Menu'), findsOneWidget);
+
+    // Tapping the tab on a child page returns to the tab root.
+    router.go(LibraryLocations.playlist(PlaylistUids.favorites));
+    await tester.pumpAndSettle();
+    expect(_location(tester), '/playlists/favorites');
+    await tester.tap(tab.first);
+    await tester.pumpAndSettle();
+    expect(_location(tester), '/playlists');
     handle.dispose();
   });
 
