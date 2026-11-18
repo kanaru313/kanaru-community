@@ -556,4 +556,115 @@ void main() {
       expect(glyphColor(tester), scoped);
     });
   });
+
+  group('destructive emphasis', () {
+    Widget destructive({Widget Function(Widget)? wrap}) {
+      final b = Center(
+        child: KIconButton(
+          icon: Icons.add,
+          tooltip: 'Add',
+          emphasis: KIconEmphasis.destructive,
+          onPressed: () {},
+        ),
+      );
+      return wrap == null ? b : wrap(b);
+    }
+
+    Future<void> hoverIt(WidgetTester tester) async {
+      FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.alwaysTraditional;
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+      await mouse.moveTo(tester.getCenter(find.byType(KIconButton)));
+      await tester.pump();
+    }
+
+    testWidgets('quiet at rest, error on hover', (tester) async {
+      await tester.pumpWidget(host(destructive()));
+      expect(glyphColor(tester), scheme(tester).onSurfaceVariant);
+      await hoverIt(tester);
+      expect(glyphColor(tester), scheme(tester).error);
+    });
+
+    testWidgets('error with keyboard focus', (tester) async {
+      FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.alwaysTraditional;
+      await tester.pumpWidget(host(destructive()));
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(glyphColor(tester), scheme(tester).error);
+    });
+
+    testWidgets('disabled stays dimmed, never error', (tester) async {
+      await tester.pumpWidget(
+        host(
+          const Center(
+            child: KIconButton(
+              icon: Icons.add,
+              tooltip: 'Add',
+              emphasis: KIconEmphasis.destructive,
+              onPressed: null,
+            ),
+          ),
+        ),
+      );
+      expect(
+        glyphColor(tester),
+        scheme(tester).onSurface.withValues(alpha: 0.38),
+      );
+    });
+
+    testWidgets('pressed turns error', (tester) async {
+      await tester.pumpWidget(host(destructive()));
+      final g = await tester.startGesture(
+        tester.getCenter(find.byType(KIconButton)),
+      );
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(glyphColor(tester).withValues(alpha: 1), scheme(tester).error);
+      await g.up();
+      await settle(tester);
+    });
+
+    testWidgets('hover under a tinted row colour still turns error', (
+      tester,
+    ) async {
+      const rest = Color(0xFFAA0000), over = Color(0xFF0000AA);
+      await tester.pumpWidget(
+        host(
+          destructive(
+            wrap: (b) => KIconButtonColors(rest: rest, hover: over, child: b),
+          ),
+        ),
+      );
+      expect(glyphColor(tester), rest);
+      await hoverIt(tester);
+      expect(glyphColor(tester), scheme(tester).error);
+    });
+
+    testWidgets('inside a media card frame hover is error', (tester) async {
+      useWindow(tester, const Size(1300, 800));
+      await tester.pumpWidget(
+        host(
+          Align(
+            alignment: Alignment.topCenter,
+            child: KMediaCard(
+              title: 'T',
+              selected: true,
+              trailing: KIconButton(
+                icon: Icons.add,
+                tooltip: 'Add',
+                emphasis: KIconEmphasis.destructive,
+                onPressed: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      final rest = glyphColor(tester);
+      expect(rest, isNot(scheme(tester).error));
+      await hoverIt(tester);
+      expect(glyphColor(tester), scheme(tester).error);
+    });
+  });
 }

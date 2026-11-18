@@ -45,6 +45,7 @@ class KMediaCardText extends StatelessWidget {
     this.line3,
     this.loading = false,
     this.barColor,
+    this.line3Color,
   });
 
   final String title;
@@ -64,6 +65,9 @@ class KMediaCardText extends StatelessWidget {
 
   /// Colour of the tag and the lines under the title.
   final Color soft;
+
+  /// Colour of [line3] when it differs from [soft] (the missing-file error).
+  final Color? line3Color;
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +170,7 @@ class KMediaCardText extends StatelessWidget {
         ),
         if (titleLines != 2)
           line(line2, KMediaCardMetrics.lineSize, lineStyle, soft),
-        line(line3, KMediaCardMetrics.lineSize, lineStyle, soft),
+        line(line3, KMediaCardMetrics.lineSize, lineStyle, line3Color ?? soft),
       ],
     );
   }

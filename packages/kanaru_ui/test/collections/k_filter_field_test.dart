@@ -10,17 +10,21 @@ void main() {
   setUp(() => controller = TextEditingController());
   tearDown(() => controller.dispose());
 
-  Widget field({ValueChanged<String>? onChanged, VoidCallback? onClose}) =>
-      Align(
-        alignment: Alignment.topCenter,
-        child: KFilterField(
-          controller: controller,
-          hint: 'Filter songs',
-          closeTooltip: 'Close filter',
-          onChanged: onChanged,
-          onClose: onClose ?? () {},
-        ),
-      );
+  Widget field({
+    ValueChanged<String>? onChanged,
+    VoidCallback? onClose,
+    bool autofocus = true,
+  }) => Align(
+    alignment: Alignment.topCenter,
+    child: KFilterField(
+      controller: controller,
+      hint: 'Filter songs',
+      closeTooltip: 'Close filter',
+      onChanged: onChanged,
+      autofocus: autofocus,
+      onClose: onClose ?? () {},
+    ),
+  );
 
   for (final (name, brightness, scale) in hostVariants) {
     testWidgets('renders hint and icons ($name)', (tester) async {
@@ -72,5 +76,44 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     expect(controller.text, '');
     expect(closed, 1);
+  });
+
+  testWidgets('autofocus: false leaves the keyboard alone', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(field(autofocus: false)));
+    await tester.pump();
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
+      isFalse,
+    );
+  });
+
+  testWidgets('the cross reports the empty text before it closes', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    final log = <String>[];
+    await tester.pumpWidget(
+      host(
+        field(
+          onChanged: (v) => log.add('changed:"$v"'),
+          onClose: () => log.add('closed'),
+        ),
+      ),
+    );
+    await tester.enterText(find.byType(TextField), 'vu');
+    log.clear();
+    await tester.tap(find.byIcon(KIcons.close));
+    expect(log, ['changed:""', 'closed']);
+  });
+
+  testWidgets('Esc reports the empty text too', (tester) async {
+    useWindow(tester, const Size(1300, 800));
+    final seen = <String>[];
+    await tester.pumpWidget(host(field(onChanged: seen.add)));
+    await tester.enterText(find.byType(TextField), 'vu');
+    seen.clear();
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    expect(seen, ['']);
   });
 }

@@ -7,6 +7,9 @@ abstract final class KMotion {
   static const Duration normal = Duration(milliseconds: 250);
   static const Duration slow = Duration(milliseconds: 400);
 
+  /// Delay between consecutive items of a staggered entrance (`KFabMenu`).
+  static const Duration stagger = Duration(milliseconds: 50);
+
   /// Curve of colour and opacity changes (04 §3.5: colour = emphasized,
   /// position = spring).
   static const Curve emphasized = Curves.easeInOutCubicEmphasized;

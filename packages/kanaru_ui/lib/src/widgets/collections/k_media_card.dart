@@ -73,6 +73,8 @@ class KMediaCard extends StatefulWidget {
     this.selected = false,
     this.selecting = false,
     this.dimmed = false,
+    this.missing = false,
+    this.editing = false,
     this.onTap,
     this.onLongPress,
     this.loading = false,
@@ -142,6 +144,15 @@ class KMediaCard extends StatefulWidget {
 
   /// Unavailable item: dimmed, still tappable.
   final bool dimmed;
+
+  /// The item's file is gone: dashed outline, dimmed, [line3] in the error
+  /// colour. Still tappable; combines with [selected] and [current].
+  final bool missing;
+
+  /// The row of a list in edit mode: focusable by Tab and by click although it
+  /// has no tap action (no tap callback runs); the focus ring shows while it
+  /// has focus.
+  final bool editing;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
@@ -188,6 +199,8 @@ class _KMediaCardState extends State<KMediaCard> {
   /// cover overlay is mounted (most lists never select); afterwards it stays
   /// mounted so the off animation plays when the selection ends.
   bool _everActive = false;
+
+  bool get _dim => widget.dimmed || widget.missing;
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +269,7 @@ class _KMediaCardState extends State<KMediaCard> {
                   child: Center(child: leading),
                 ),
                 // A dimmed card draws its mark outside the dim, below.
-                if (_everActive && !(widget.dimmed && widget.selected))
+                if (_everActive && !(_dim && widget.selected))
                   Positioned.fill(
                     child: KMediaCardCoverCheck(
                       circle: widget.circleLeading,
@@ -275,6 +288,7 @@ class _KMediaCardState extends State<KMediaCard> {
               titleLines: widget.titleLines,
               line2: widget.line2,
               line3: widget.line3,
+              line3Color: widget.missing ? scheme.error : null,
               ink: ink,
               soft: soft,
               loading: widget.loading,
@@ -324,7 +338,7 @@ class _KMediaCardState extends State<KMediaCard> {
 
     // The check of a dimmed, selected card stays fully opaque: it is drawn
     // over the dimmed card, on the cover's spot.
-    final markOutsideDim = widget.dimmed && widget.selected && leading != null;
+    final markOutsideDim = _dim && widget.selected && leading != null;
     Widget card(Widget dimmedCard) => Stack(
       fit: StackFit.passthrough,
       children: [
@@ -374,7 +388,9 @@ class _KMediaCardState extends State<KMediaCard> {
               ink: ink,
               soft: soft,
               radius: flat ? BorderRadius.zero : KMediaCard._radius,
-              dimmed: widget.dimmed,
+              dimmed: _dim,
+              missing: widget.missing,
+              focusable: widget.editing,
               onTap: widget.onTap,
               onLongPress: widget.onLongPress,
               builder: (context, engaged) => content(engaged),

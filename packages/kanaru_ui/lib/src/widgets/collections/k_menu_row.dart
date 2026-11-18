@@ -57,6 +57,7 @@ class KMenuRow {
     this.soonLabel,
     this.danger = false,
     this.proLabel,
+    this.hint,
   });
 
   final String title;
@@ -78,6 +79,9 @@ class KMenuRow {
 
   /// Shows a Pro badge with this text.
   final String? proLabel;
+
+  /// Accessible description of what the row does (no visible text).
+  final String? hint;
 
   bool get active => enabled && soonLabel == null;
 }
@@ -175,6 +179,7 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
           Semantics(
             button: true,
             enabled: row.active,
+            hint: row.hint,
             child: InkWell(
               autofocus: widget.autofocus,
               borderRadius: KRadius.sm,

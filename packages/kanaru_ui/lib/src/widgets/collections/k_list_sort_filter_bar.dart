@@ -8,6 +8,7 @@ import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
 import '../k_icon_button.dart';
+import '../k_tonal_toggle_button.dart';
 import 'k_list_sort_chip.dart';
 
 /// Bar above every list: [leading] group on the left (count, play buttons,
@@ -74,16 +75,6 @@ class KListSortFilterBar extends StatefulWidget {
 class _KListSortFilterBarState extends State<KListSortFilterBar> {
   final GlobalKey _chipKey = GlobalKey();
 
-  /// Shared by the light and the tonal filter button: they are different
-  /// widgets, and the node keeps keyboard focus on the button across the swap.
-  final FocusNode _filterFocus = FocusNode(debugLabel: 'filter button');
-
-  @override
-  void dispose() {
-    _filterFocus.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final mobile = FormFactor.of(context) == FormFactor.mobile;
@@ -133,36 +124,13 @@ class _KListSortFilterBarState extends State<KListSortFilterBar> {
                   size: KIconSize.sm,
                   padding: const EdgeInsets.all(KSpace.x2),
                 ),
-              // Open: the tonal disc of a selected button, as big as the light
-              // button's box. Closed: the light icon.
-              if (widget.filterOpen)
-                KIconButton.yieldSpace(
-                  child: IconButton.filledTonal(
-                    focusNode: _filterFocus,
-                    tooltip: widget.filterTooltip,
-                    isSelected: true,
-                    onPressed: widget.onFilterToggle,
-                    iconSize: KIconSize.sm,
-                    style: IconButton.styleFrom(
-                      fixedSize: const Size.square(
-                        KListSortFilterBar.buttonSize,
-                      ),
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    icon: const Icon(KIcons.filter),
-                  ),
-                )
-              else
-                KIconButton(
-                  focusNode: _filterFocus,
-                  tooltip: widget.filterTooltip,
-                  onPressed: widget.onFilterToggle,
-                  icon: KIcons.filter,
-                  size: KIconSize.sm,
-                  padding: const EdgeInsets.all(KSpace.x2),
-                ),
+              KTonalToggleButton(
+                tooltip: widget.filterTooltip,
+                selected: widget.filterOpen,
+                onPressed: widget.onFilterToggle,
+                icon: KIcons.filter,
+                disc: KListSortFilterBar.buttonSize,
+              ),
             ],
           );
         },

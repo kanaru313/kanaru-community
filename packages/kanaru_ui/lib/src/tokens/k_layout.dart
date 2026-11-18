@@ -7,6 +7,9 @@ abstract final class KLayout {
   static const double readable = 720;
   static const double settings = 720;
   static const double dialog = 440;
+
+  /// Wide dialog: playlist Edit, song info.
+  static const double dialogWide = 620;
   static const double sheet = 640;
 
   /// Max width of the "Sắp xếp theo" box (`KSortDialog`), centred on both shells.

@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:kanaru_ui/src/widgets/collections/k_menu_row.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../support/finders.dart';
@@ -681,5 +682,38 @@ void main() {
           ?.findAncestorWidgetOfExactType<InkWell>(),
       isNotNull,
     );
+  });
+
+  testWidgets('KMenuRow.hint is the row description, not visible text', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      host(
+        Material(
+          child: KMenuRowTile(
+            row: const KMenuRow(
+              title: 'Clean up',
+              hint: 'Removes songs whose file is gone.',
+            ),
+            onActivate: (_) {},
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Removes songs whose file is gone.'), findsNothing);
+    expect(
+      tester.getSemantics(find.text('Clean up')),
+      isSemantics(
+        label: 'Clean up',
+        hint: 'Removes songs whose file is gone.',
+        isButton: true,
+        hasEnabledState: true,
+        isEnabled: true,
+        hasTapAction: true,
+        isFocusable: true,
+      ),
+    );
+    handle.dispose();
   });
 }

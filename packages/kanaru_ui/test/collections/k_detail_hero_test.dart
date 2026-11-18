@@ -17,22 +17,27 @@ Widget _page({
   KDetailLine? line2 = const KDetailLine(text: 'by artist', trailing: '2020'),
   String? line3 = '3 songs',
   Widget? description,
+  bool framedCover = false,
+  List<double>? sides,
+  Widget? actions,
 }) => KDetailLayout(
   header: KDetailHero(
     circle: circle,
+    framedCover: framedCover,
     title: title,
     line2: line2,
     line3: line3,
     description: description,
     coverBuilder: (context, side, radius) {
       lastRadius = radius;
+      sides?.add(side);
       return ColoredBox(
         key: const ValueKey('cover'),
         color: const Color(0xFFFF0000),
         child: SizedBox.square(dimension: side),
       );
     },
-    actions: const Text('buttons'),
+    actions: actions ?? const Text('buttons'),
   ),
   slivers: [
     SliverList.builder(
@@ -218,5 +223,207 @@ void main() {
     expect(tester.getSize(year).width, closeTo(painter.width, 0.5));
     painter.dispose();
     expect(tester.takeException(), isNull);
+  });
+
+  group('framedCover', () {
+    Finder card() => find.byKey(const ValueKey('cover')).last;
+
+    testWidgets('wide: backdrop fills the column, card 240 centred on it', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1000, 900));
+      await tester.pumpWidget(host(_page(framedCover: true)));
+      final covers = find.byKey(const ValueKey('cover'));
+      expect(covers, findsNWidgets(2));
+      final backdrop = tester.getRect(covers.first);
+      final inner = tester.getRect(covers.last);
+      expect(backdrop.size, const Size.square(320));
+      expect(inner.size, const Size.square(KDetailHero.frameInnerSize));
+      expect(inner.center.dx, closeTo(backdrop.center.dx, 0.5));
+      expect(inner.center.dy, closeTo(backdrop.center.dy, 0.5));
+    });
+
+    testWidgets('wide: backdrop is washed out at 0.35 and faded, the card '
+        'is not', (tester) async {
+      useWindow(tester, const Size(1000, 900));
+      await tester.pumpWidget(host(_page(framedCover: true)));
+      final covers = find.byKey(const ValueKey('cover'));
+      final opacity = tester.widget<Opacity>(
+        find.ancestor(of: covers.first, matching: find.byType(Opacity)).first,
+      );
+      expect(opacity.opacity, KDetailHero.backdropOpacity);
+      expect(KDetailHero.backdropOpacity, 0.35);
+      expect(
+        find.ancestor(of: covers.first, matching: find.byType(ShaderMask)),
+        findsNWidgets(2),
+      );
+      expect(
+        find.ancestor(of: card(), matching: find.byType(ShaderMask)),
+        findsNothing,
+      );
+      expect(find.byType(BackdropFilter), findsNothing);
+    });
+
+    testWidgets('wide: the card has the 4 dp border and a radius 16 frame', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1000, 900));
+      await tester.pumpWidget(host(_page(framedCover: true)));
+      final frame = tester.getRect(
+        find.ancestor(of: card(), matching: find.byType(DecoratedBox)).first,
+      );
+      expect(frame.size, const Size.square(KDetailHero.frameSize));
+      final deco =
+          tester
+                  .widget<DecoratedBox>(
+                    find
+                        .ancestor(
+                          of: card(),
+                          matching: find.byType(DecoratedBox),
+                        )
+                        .first,
+                  )
+                  .decoration
+              as BoxDecoration;
+      expect(deco.borderRadius, BorderRadius.circular(KDetailHero.frameRadius));
+      expect(deco.boxShadow, isNotEmpty);
+    });
+
+    testWidgets('wide: the cover is built once, at the card side', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1000, 900));
+      final sides = <double>[];
+      await tester.pumpWidget(host(_page(framedCover: true, sides: sides)));
+      expect(sides.toSet(), {KDetailHero.frameInnerSize});
+      expect(sides, hasLength(1));
+    });
+
+    testWidgets('wide: name has 2 lines, the default keeps 3', (tester) async {
+      useWindow(tester, const Size(1000, 900));
+      await tester.pumpWidget(
+        host(_page(framedCover: true, title: _longTitle)),
+      );
+      int lines() => tester
+          .widget<Text>(find.text(_longTitle, findRichText: false))
+          .maxLines!;
+      expect(lines(), 2);
+      await tester.pumpWidget(host(_page(title: _longTitle)));
+      expect(lines(), 3);
+    });
+
+    testWidgets('wide: the action row starts at the text edge', (tester) async {
+      useWindow(tester, const Size(1000, 900));
+      await tester.pumpWidget(
+        host(
+          _page(
+            framedCover: true,
+            actions: const Row(children: [Text('buttons')]),
+          ),
+        ),
+      );
+      expect(
+        tester.getTopLeft(find.text('buttons')).dx,
+        tester.getTopLeft(find.text('Album')).dx,
+      );
+      expect(tester.getTopLeft(find.text('Album')).dx, 16);
+    });
+
+    testWidgets('narrow: unchanged, one 132 cover, framedCover ignored', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(_page(framedCover: true)));
+      expect(find.byKey(const ValueKey('cover')), findsOneWidget);
+      expect(tester.getSize(find.byKey(const ValueKey('cover'))).width, 132);
+      expect(lastRadius, KDetailHero.narrowCoverRadius);
+    });
+
+    testWidgets('long name at 200 % text does not overflow', (tester) async {
+      useWindow(tester, const Size(1000, 900));
+      await tester.pumpWidget(
+        scaledHost(_page(framedCover: true, title: _longTitle)),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('wide: a description sits under the actions', (tester) async {
+      useWindow(tester, const Size(1000, 900));
+      await tester.pumpWidget(
+        host(_page(framedCover: true, description: const Text('Xem thêm'))),
+      );
+      expect(
+        tester.getTopLeft(find.text('Xem thêm')).dy,
+        greaterThan(tester.getBottomLeft(find.text('buttons')).dy - 1),
+      );
+    });
+
+    testWidgets('wide: dark theme builds the framed cover', (tester) async {
+      useWindow(tester, const Size(1000, 900));
+      await tester.pumpWidget(
+        host(_page(framedCover: true), brightness: Brightness.dark),
+      );
+      expect(find.byKey(const ValueKey('cover')), findsNWidgets(2));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('wide: a short window scrolls the column, no overflow', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1000, 300));
+      await tester.pumpWidget(
+        host(_page(framedCover: true, description: const Text('Xem thêm'))),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -300));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('wide: a multi-tile cover is built once at the card side', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1000, 900));
+      final sides = <double>[];
+      await tester.pumpWidget(
+        host(
+          KDetailLayout(
+            header: KDetailHero(
+              framedCover: true,
+              title: 'Mix',
+              actions: const Text('buttons'),
+              coverBuilder: (context, side, radius) {
+                sides.add(side);
+                return SizedBox.square(
+                  dimension: side,
+                  child: Row(
+                    children: [
+                      for (final c in [0xFFFF0000, 0xFF00FF00])
+                        Expanded(child: ColoredBox(color: Color(c))),
+                    ],
+                  ),
+                );
+              },
+            ),
+            slivers: const [],
+          ),
+        ),
+      );
+      expect(sides, [KDetailHero.frameInnerSize]);
+      expect(tester.takeException(), isNull);
+    });
+
+    test('circle and framedCover together are refused', () {
+      expect(
+        () => KDetailHero(
+          circle: true,
+          framedCover: true,
+          title: 't',
+          actions: const SizedBox(),
+          coverBuilder: (c, s, r) => const SizedBox(),
+        ),
+        throwsAssertionError,
+      );
+    });
   });
 }

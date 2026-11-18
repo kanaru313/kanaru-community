@@ -29,6 +29,7 @@ class SelectionRow extends StatelessWidget {
     this.plainMark = false,
     this.dense = false,
     this.autofocus = false,
+    this.hint,
     this.onTap,
   });
 
@@ -61,6 +62,10 @@ class SelectionRow extends StatelessWidget {
 
   /// Takes keyboard focus when its route opens (the chosen row of a menu).
   final bool autofocus;
+
+  /// What choosing this row does or means: the row's accessible description
+  /// (no visible text; the ⓘ explanation widget reads it later).
+  final String? hint;
   final VoidCallback? onTap;
 
   static const double _checkSlot = 24;
@@ -89,6 +94,7 @@ class SelectionRow extends StatelessWidget {
         : KCheckState.off;
     return Semantics(
       enabled: enabled,
+      hint: hint,
       selected: multi ? null : selected,
       inMutuallyExclusiveGroup: multi ? null : true,
       // Flutter asserts checked is unset while mixed.
