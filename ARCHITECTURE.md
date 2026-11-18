@@ -287,11 +287,20 @@ never 1000 or more, which belongs to the Settings footer.
 | `app.theme` | `ThemeChoice` | `system` | `screens/settings/state/appearance_settings.dart` |
 | `app.language` | `AppLanguage` (`vi`, `en`) | device locale (`vi` or `en`) | same |
 | `app.pure_black` | bool | false (dark theme only) | `screens/settings/state/display_settings.dart` |
-| `app.motion` | bool | true (false forces `MediaQuery.disableAnimations`: widgets that honour it stop animating; page, sheet and dialog transitions still animate, tracked as a follow-up) | same |
+| `app.motion` | bool | true (false forces `MediaQuery.disableAnimations`: widgets that honour it stop animating, and `kanaru_ui` pages, sheets, dialogs and popovers open without a transition, see Settings pages) | same |
+| `playback.seek_bar_style` | `SeekBarStyle` (`waveform`, `flat`) | `waveform` | `playback/domain/seek_bar_style.dart` |
 | `app.text_scale` | int percent: 80, 90, 100, 110, 125, 150 | 100 (another whole number snaps to the nearest step; the app caps system x factor at 2.0) | same |
 | `library.tabs` | `LibraryTabsConfig` | all tabs, default order | `library/state/library_tabs_providers.dart` |
 | `library.setup_done` | bool | false | reserved, scanner lane (A) |
 | `playback.queue.current_entry`, `playback.position_ms`, `playback.shuffle`, `playback.repeat` | reserved | | playback lane (B) |
+
+## Settings pages
+
+- `screens/settings/settings_routes.dart` builds the `/settings` branch route (`SettingsPaths`): root, `appearance`, `appearance/seek-bar`, `about`. `ScreensExtension` registers it; each page is a `SettingsScaffold` (`KPage` + `PageHeader` + the "could not save" banner from `settingsSaveFailingProvider`). The header back arrow pops, or goes to the page's parent when the page was opened directly (Seek bar to Appearance, others to the root).
+- The root page has four untitled blocks, then one block per `extensionRegistryProvider.settingsSections` entry, in registry order: that is where Pro (and later modules) add their pages. Rows for pages that do not exist yet are `SoonRow`s.
+- `appEditionProvider` (`screens/settings/state/app_edition.dart`, `AppEdition.free` by default) is the seam for the Pro row and the edition line of About. Public code holds no Pro logic; the Pro build overrides the provider.
+- Rows read and write through the declared `SettingNotifier` providers (see Riverpod providers); a picker captures the notifier before its `await`.
+- Reduced motion: `app.motion` off sets `MediaQuery.disableAnimations`. Flutter routes ignore it, so `kanaru_ui` handles it in two places: `buildKanaruTheme` wraps each platform page transition in `KPageTransitionsBuilder` (the page appears without a transition), and every helper that opens a route (`showKDialog`, `showKSheet`, pickers, sort dialog and popover, layered menu, slider sheet) passes `KMotion.routeAnimationStyle(context)` (`AnimationStyle.noAnimation` when animations are off). A new route-opening helper in `kanaru_ui` does the same.
 
 ## Device id
 

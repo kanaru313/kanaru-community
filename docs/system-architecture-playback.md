@@ -779,6 +779,8 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
 
 Levels for the Now Playing seek bar on both shells. The mini player and the player bar keep the flat `KSeekBar`.
 
+**Style setting.** `playback.seek_bar_style` (`playback/domain/seek_bar_style.dart`, `SeekBarStyle.waveform` default | `flat`, `seekBarStyleProvider`), chosen on Settings > Appearance > Seek bar. `PlaybackWaveformSeekBar` watches `waveformProvider` only in the waveform style; in the flat style it does not, so no decode job starts, and it passes `levels: null` (the flat track).
+
 **Decode** (`rust/crates/kanaru_media/src/waveform/`, no FFI). `compute(source, ext_hint, cancel) -> Waveform { levels, duration_ms }`
 with symphonia 0.6 (`next_packet() -> Result<Option<Packet>>`), codecs of the Cargo features: MP3, FLAC, Ogg Vorbis, AAC and
 ALAC in MP4, WAV/PCM.

@@ -3,6 +3,7 @@ import 'package:material_color_utilities/material_color_utilities.dart'
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens/k_shape.dart';
+import 'k_page_transitions.dart';
 
 /// Default brand seed colour.
 const Color kanaruSeed = Color(0xFFFFB4A2);
@@ -62,6 +63,7 @@ ThemeData buildKanaruTheme({
     segmentedButtonTheme: SegmentedButtonThemeData(style: _noAnimation),
     // Groups are separated by space, not by lines.
     dividerTheme: const DividerThemeData(space: 0, thickness: 0),
+    pageTransitionsTheme: kanaruPageTransitionsTheme(instant: false),
   );
 }
 

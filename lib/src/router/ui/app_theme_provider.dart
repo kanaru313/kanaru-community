@@ -12,14 +12,20 @@ import '../../screens/settings/state/display_settings.dart';
 /// `ColorScheme` instead of two; the other brightness is built when the theme
 /// mode or the system brightness switches to it (an unwatched instance is
 /// rebuilt lazily, on its next read). Rebuilt only when the seed or the
-/// pure black setting changes, so a track change that keeps the seed costs nothing.
+/// pure black or motion setting changes, so a track change that keeps the seed costs nothing.
 final appThemeProvider = Provider.family<ThemeData, Brightness>((
   ref,
   brightness,
 ) {
   final stored = ref.watch(appCoverSeedProvider);
   final seed = stored == null ? kanaruSeed : Color(stored);
-  final theme = buildKanaruTheme(brightness: brightness, seed: seed);
+  var theme = buildKanaruTheme(brightness: brightness, seed: seed);
+  // Motion off: page routes get zero durations too (they read the theme).
+  if (!ref.watch(appMotionProvider)) {
+    theme = theme.copyWith(
+      pageTransitionsTheme: kanaruPageTransitionsTheme(instant: true),
+    );
+  }
   if (brightness != Brightness.dark || !ref.watch(pureBlackProvider)) {
     return theme;
   }

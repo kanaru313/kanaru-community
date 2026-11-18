@@ -7,9 +7,9 @@ import '../extension/state/extension_registry.dart';
 import '../extension/state/registry_entries.dart';
 import 'first_run/first_run_registration.dart';
 import 'now_playing/now_playing_registration.dart';
+import 'settings/settings_routes.dart';
 import 'ui/home_page.dart';
 import 'ui/search_page.dart';
-import 'ui/settings_page.dart';
 
 /// Home, Search and Settings. Settings is a shell branch that is not a mobile
 /// tab; desktop pins it at the foot of the sidebar.
@@ -60,18 +60,7 @@ class ScreensExtension implements KanaruExtension {
       ..addRoute(
         GoRoute(path: '/search', builder: (_, _) => const SearchPage()),
       )
-      ..addRoute(
-        GoRoute(
-          path: '/settings',
-          builder: (_, _) => const SettingsPage(),
-          routes: [
-            GoRoute(
-              path: 'sub',
-              builder: (_, _) => const SettingsSubPagePlaceholder(),
-            ),
-          ],
-        ),
-      );
+      ..addRoute(buildSettingsRoute());
     registerFirstRun(registry);
     registerNowPlaying(registry);
   }

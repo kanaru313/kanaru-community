@@ -3,14 +3,17 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
+import '../domain/seek_bar_style.dart';
 import '../state/playback_position_provider.dart';
 import '../state/playback_providers.dart';
+import '../state/seek_bar_style_provider.dart';
 import '../state/waveform_providers.dart';
 import 'playback_time_label.dart';
 
 /// Waveform seek bar bound to the player: position in, `seek` out. Watching
 /// the waveform here is what keeps the decoder busy: it runs only while one of
-/// these is mounted. Flat until the levels of the playing entry arrive.
+/// these is mounted in the waveform style. Flat until the levels of the playing
+/// entry arrive, and always flat (waveform not watched) in the flat style.
 class PlaybackWaveformSeekBar extends ConsumerWidget {
   const PlaybackWaveformSeekBar({super.key});
 
@@ -21,7 +24,9 @@ class PlaybackWaveformSeekBar extends ConsumerWidget {
     final position = pos?.position ?? Duration.zero;
     final duration = pos?.duration;
     final entry = ref.watch(nowPlayingProvider.select((n) => n.value?.entryId));
-    final view = ref.watch(waveformProvider).value;
+    final flat = ref.watch(seekBarStyleProvider) == SeekBarStyle.flat;
+    // Not watched when flat, so the decoder never starts for a flat bar.
+    final view = flat ? null : ref.watch(waveformProvider).value;
     // A view of another entry is the previous track's: draw it flat.
     final mine = view != null && entry != null && view.entryId == entry;
     return KWaveformSeekBar(

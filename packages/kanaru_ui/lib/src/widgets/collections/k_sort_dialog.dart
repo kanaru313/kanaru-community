@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../tokens/k_layout.dart';
+import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import 'k_sort_chosen_row.dart';
@@ -47,6 +48,7 @@ Future<void> showKSortDialog<T>(
   final navigator = Navigator.of(context, rootNavigator: true);
   final route = DialogRoute<void>(
     context: context,
+    animationStyle: KMotion.routeAnimationStyle(context),
     themes: InheritedTheme.capture(from: context, to: navigator.context),
     builder: (context) => Dialog(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,

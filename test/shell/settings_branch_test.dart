@@ -90,7 +90,7 @@ void main() {
         );
         await _go(tester, c, '/settings');
         expect(find.byKey(const ValueKey('sidebar')), findsOneWidget);
-        expect(find.text('Native libraries'), findsOneWidget);
+        expect(find.text('Appearance'), findsOneWidget);
         // Root of the branch: no back arrow in the page header.
         expect(
           find.descendant(
@@ -113,8 +113,8 @@ void main() {
         );
         semantics.dispose();
 
-        await _go(tester, c, '/settings/sub');
-        expect(_location(c), '/settings/sub');
+        await _go(tester, c, '/settings/about');
+        expect(_location(c), '/settings/about');
         expect(find.byKey(const ValueKey('sidebar')), findsOneWidget);
         // Selecting Settings again from a sub-page goes to the root.
         await tester.tap(_sidebarRow('Settings'));
@@ -136,7 +136,7 @@ void main() {
     testWidgets('each Settings page is a history entry', (tester) async {
       final c = await pumpKanaruApp(tester, width: desktopW, height: desktopH);
       await _go(tester, c, '/settings');
-      await _go(tester, c, '/settings/sub');
+      await _go(tester, c, '/settings/about');
       // Alt+Left walks the history one step, like the top-bar back.
       await _altLeft(tester);
       expect(_location(c), '/settings');
@@ -161,7 +161,7 @@ void main() {
       expect(byIconButton('Back'), findsOneWidget);
 
       // A sub-page pushes inside the branch with its own back.
-      await _go(tester, c, '/settings/sub');
+      await _go(tester, c, '/settings/about');
       expect(find.byType(NavigationBar), findsNothing);
       expect(byIconButton('Back'), findsOneWidget);
     });
@@ -176,7 +176,7 @@ void main() {
       expect(find.byType(MiniPlayer), findsOneWidget);
       await _go(tester, c, '/settings');
       expect(find.byType(MiniPlayer), findsNothing);
-      await _go(tester, c, '/settings/sub');
+      await _go(tester, c, '/settings/about');
       expect(find.byType(MiniPlayer), findsNothing);
       await _go(tester, c, '/');
       expect(find.byType(MiniPlayer), findsOneWidget);
@@ -186,9 +186,9 @@ void main() {
       final c = await pumpKanaruApp(tester, width: mobileW, height: mobileH);
       await tester.tap(byIconButton('Settings'));
       await tester.pumpAndSettle();
-      _router(c).push('/settings/sub');
+      _router(c).push('/settings/about');
       await tester.pumpAndSettle();
-      expect(_location(c), '/settings/sub');
+      expect(_location(c), '/settings/about');
 
       expect(await _back(tester), isTrue);
       expect(_location(c), '/settings');
@@ -231,15 +231,15 @@ void main() {
     tester,
   ) async {
     final c = await pumpKanaruApp(tester, width: desktopW, height: desktopH);
-    await _go(tester, c, '/settings/sub');
+    await _go(tester, c, '/settings/about');
     tester.view.physicalSize = const Size(800, 800);
     await tester.pumpAndSettle();
     expect(find.byType(NavigationBar), findsNothing);
-    expect(_location(c), '/settings/sub');
+    expect(_location(c), '/settings/about');
     tester.view.physicalSize = const Size(desktopW, desktopH);
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('sidebar')), findsOneWidget);
-    expect(_location(c), '/settings/sub');
+    expect(_location(c), '/settings/about');
   });
 
   group('root-level behaviour from Settings', () {

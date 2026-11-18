@@ -2411,4 +2411,158 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsNativeVersions => 'Native libraries';
+
+  @override
+  String get settingsSaveFailed =>
+      'Couldn\'t save settings. Changes last until the app closes.';
+
+  @override
+  String get settingsRootAppearance => 'Appearance';
+
+  @override
+  String get settingsRootAppearanceDesc =>
+      'Theme, language, colors, text, seek bar';
+
+  @override
+  String get settingsRootLibrary => 'Library';
+
+  @override
+  String get settingsRootLibraryDesc =>
+      'Music folders, scan, tabs, artist split';
+
+  @override
+  String get settingsRootLibraryMissingPermission =>
+      ' · music permission missing';
+
+  @override
+  String get settingsRootPlayback => 'Playback';
+
+  @override
+  String get settingsRootPlaybackDesc =>
+      'Gapless, sound, ReplayGain, listening history';
+
+  @override
+  String get settingsRootLyrics => 'Lyrics';
+
+  @override
+  String get settingsRootLyricsDesc =>
+      'Display, search and save, sources, translation';
+
+  @override
+  String get settingsRootPlugins => 'Plugins';
+
+  @override
+  String get settingsRootPluginsDesc =>
+      'Installed plugins, plugin store, updates';
+
+  @override
+  String get settingsRootAi => 'AI chat';
+
+  @override
+  String get settingsRootAiDesc =>
+      'AI services, permissions, tools, skills, history';
+
+  @override
+  String get settingsRootIntegrations => 'Integrations';
+
+  @override
+  String get settingsRootIntegrationsDescDesktop =>
+      'MCP server, web server on the local network';
+
+  @override
+  String get settingsRootIntegrationsDescMobile =>
+      'Web server on the local network';
+
+  @override
+  String get settingsRootData => 'Data and storage';
+
+  @override
+  String get settingsRootDataDesc => 'Cache, backup';
+
+  @override
+  String get settingsRootAdvanced => 'Advanced';
+
+  @override
+  String get settingsRootAdvancedDesc => 'Logs, privacy, reset';
+
+  @override
+  String get settingsRootPro => 'Kanaru Pro';
+
+  @override
+  String get settingsRootProFreeDesc =>
+      'One-time purchase · sync, many sources, advanced stats…';
+
+  @override
+  String get settingsRootProActive => 'Activated';
+
+  @override
+  String get settingsRootAboutDesc => 'License, native libraries';
+
+  @override
+  String get settingsAppearanceColorMotionTitle => 'Color and motion';
+
+  @override
+  String get settingsAppearancePureBlack => 'Pure black';
+
+  @override
+  String get settingsAppearancePureBlackNeedsDark => 'Dark theme only';
+
+  @override
+  String get settingsAppearanceMotion => 'Animations';
+
+  @override
+  String get settingsAppearanceTextTitle => 'Text';
+
+  @override
+  String get settingsAppearanceFont => 'Font';
+
+  @override
+  String get settingsAppearanceTextSize => 'Text size';
+
+  @override
+  String get settingsAppearanceTextSizeCaption =>
+      'Text size of the whole app, multiplied by the system text size.';
+
+  @override
+  String get settingsAppearanceDisplayTitle => 'Display';
+
+  @override
+  String get settingsAppearanceSeekBar => 'Seek bar';
+
+  @override
+  String get settingsAppearanceWindowFrame => 'System window frame';
+
+  @override
+  String get settingsSeekBarCaption =>
+      'Used in Now Playing and the lyrics screen.';
+
+  @override
+  String get settingsSeekBarWaveform => 'Waveform';
+
+  @override
+  String get settingsSeekBarWaveformCaption =>
+      'Local files and some plugins. Tracks without a waveform use the flat bar.';
+
+  @override
+  String get settingsSeekBarFlat => 'Flat bar';
+
+  @override
+  String get settingsSeekBarFlatCaption => 'Every track';
+
+  @override
+  String get settingsAboutEditionFree => 'Free edition';
+
+  @override
+  String get settingsAboutEditionPro => 'Kanaru Pro';
+
+  @override
+  String get settingsAboutLicenses => 'Open source licenses';
+
+  @override
+  String settingsPercent(int percent) {
+    return '$percent %';
+  }
+
+  @override
+  String get settingsAboutLicense => 'License';
 }

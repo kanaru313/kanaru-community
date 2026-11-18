@@ -3545,6 +3545,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Native libraries'**
   String get settingsNativeVersions;
+
+  /// No description provided for @settingsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save settings. Changes last until the app closes.'**
+  String get settingsSaveFailed;
+
+  /// No description provided for @settingsRootAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsRootAppearance;
+
+  /// No description provided for @settingsRootAppearanceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme, language, colors, text, seek bar'**
+  String get settingsRootAppearanceDesc;
+
+  /// No description provided for @settingsRootLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get settingsRootLibrary;
+
+  /// No description provided for @settingsRootLibraryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Music folders, scan, tabs, artist split'**
+  String get settingsRootLibraryDesc;
+
+  /// No description provided for @settingsRootLibraryMissingPermission.
+  ///
+  /// In en, this message translates to:
+  /// **' · music permission missing'**
+  String get settingsRootLibraryMissingPermission;
+
+  /// No description provided for @settingsRootPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback'**
+  String get settingsRootPlayback;
+
+  /// No description provided for @settingsRootPlaybackDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Gapless, sound, ReplayGain, listening history'**
+  String get settingsRootPlaybackDesc;
+
+  /// No description provided for @settingsRootLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get settingsRootLyrics;
+
+  /// No description provided for @settingsRootLyricsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Display, search and save, sources, translation'**
+  String get settingsRootLyricsDesc;
+
+  /// No description provided for @settingsRootPlugins.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins'**
+  String get settingsRootPlugins;
+
+  /// No description provided for @settingsRootPluginsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed plugins, plugin store, updates'**
+  String get settingsRootPluginsDesc;
+
+  /// No description provided for @settingsRootAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI chat'**
+  String get settingsRootAi;
+
+  /// No description provided for @settingsRootAiDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AI services, permissions, tools, skills, history'**
+  String get settingsRootAiDesc;
+
+  /// No description provided for @settingsRootIntegrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations'**
+  String get settingsRootIntegrations;
+
+  /// No description provided for @settingsRootIntegrationsDescDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP server, web server on the local network'**
+  String get settingsRootIntegrationsDescDesktop;
+
+  /// No description provided for @settingsRootIntegrationsDescMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Web server on the local network'**
+  String get settingsRootIntegrationsDescMobile;
+
+  /// No description provided for @settingsRootData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data and storage'**
+  String get settingsRootData;
+
+  /// No description provided for @settingsRootDataDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache, backup'**
+  String get settingsRootDataDesc;
+
+  /// No description provided for @settingsRootAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get settingsRootAdvanced;
+
+  /// No description provided for @settingsRootAdvancedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs, privacy, reset'**
+  String get settingsRootAdvancedDesc;
+
+  /// No description provided for @settingsRootPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru Pro'**
+  String get settingsRootPro;
+
+  /// No description provided for @settingsRootProFreeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time purchase · sync, many sources, advanced stats…'**
+  String get settingsRootProFreeDesc;
+
+  /// No description provided for @settingsRootProActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Activated'**
+  String get settingsRootProActive;
+
+  /// No description provided for @settingsRootAboutDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'License, native libraries'**
+  String get settingsRootAboutDesc;
+
+  /// No description provided for @settingsAppearanceColorMotionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Color and motion'**
+  String get settingsAppearanceColorMotionTitle;
+
+  /// No description provided for @settingsAppearancePureBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'Pure black'**
+  String get settingsAppearancePureBlack;
+
+  /// No description provided for @settingsAppearancePureBlackNeedsDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark theme only'**
+  String get settingsAppearancePureBlackNeedsDark;
+
+  /// No description provided for @settingsAppearanceMotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Animations'**
+  String get settingsAppearanceMotion;
+
+  /// No description provided for @settingsAppearanceTextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get settingsAppearanceTextTitle;
+
+  /// No description provided for @settingsAppearanceFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Font'**
+  String get settingsAppearanceFont;
+
+  /// No description provided for @settingsAppearanceTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get settingsAppearanceTextSize;
+
+  /// No description provided for @settingsAppearanceTextSizeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size of the whole app, multiplied by the system text size.'**
+  String get settingsAppearanceTextSizeCaption;
+
+  /// No description provided for @settingsAppearanceDisplayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display'**
+  String get settingsAppearanceDisplayTitle;
+
+  /// No description provided for @settingsAppearanceSeekBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Seek bar'**
+  String get settingsAppearanceSeekBar;
+
+  /// No description provided for @settingsAppearanceWindowFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'System window frame'**
+  String get settingsAppearanceWindowFrame;
+
+  /// No description provided for @settingsSeekBarCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Used in Now Playing and the lyrics screen.'**
+  String get settingsSeekBarCaption;
+
+  /// No description provided for @settingsSeekBarWaveform.
+  ///
+  /// In en, this message translates to:
+  /// **'Waveform'**
+  String get settingsSeekBarWaveform;
+
+  /// No description provided for @settingsSeekBarWaveformCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Local files and some plugins. Tracks without a waveform use the flat bar.'**
+  String get settingsSeekBarWaveformCaption;
+
+  /// No description provided for @settingsSeekBarFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'Flat bar'**
+  String get settingsSeekBarFlat;
+
+  /// No description provided for @settingsSeekBarFlatCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Every track'**
+  String get settingsSeekBarFlatCaption;
+
+  /// No description provided for @settingsAboutEditionFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free edition'**
+  String get settingsAboutEditionFree;
+
+  /// No description provided for @settingsAboutEditionPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru Pro'**
+  String get settingsAboutEditionPro;
+
+  /// No description provided for @settingsAboutLicenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Open source licenses'**
+  String get settingsAboutLicenses;
+
+  /// No description provided for @settingsPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} %'**
+  String settingsPercent(int percent);
+
+  /// No description provided for @settingsAboutLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get settingsAboutLicense;
 }
 
 class _AppLocalizationsDelegate

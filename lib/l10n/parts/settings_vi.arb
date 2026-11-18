@@ -1,4 +1,57 @@
 {
   "settingsAbout": "Giới thiệu",
-  "settingsNativeVersions": "Thư viện native"
+  "settingsNativeVersions": "Thư viện native",
+  "settingsSaveFailed": "Không lưu được cài đặt. Thay đổi chỉ giữ tới khi đóng app.",
+  "settingsRootAppearance": "Giao diện",
+  "settingsRootAppearanceDesc": "Chủ đề, ngôn ngữ, màu, chữ, thanh tua",
+  "settingsRootLibrary": "Thư viện",
+  "settingsRootLibraryDesc": "Thư mục nhạc, quét, tab, tách nghệ sĩ",
+  "settingsRootLibraryMissingPermission": " · thiếu quyền nhạc",
+  "settingsRootPlayback": "Phát nhạc",
+  "settingsRootPlaybackDesc": "Liền mạch, âm thanh, ReplayGain, lịch sử nghe",
+  "settingsRootLyrics": "Lời bài",
+  "settingsRootLyricsDesc": "Hiển thị lời, tìm và lưu lời, nguồn lời, dịch",
+  "settingsRootPlugins": "Plugin",
+  "settingsRootPluginsDesc": "Plugin đã cài, kho plugin, cập nhật",
+  "settingsRootAi": "Trò chuyện AI",
+  "settingsRootAiDesc": "Dịch vụ AI, quyền, công cụ, skill, lịch sử",
+  "settingsRootIntegrations": "Tích hợp",
+  "settingsRootIntegrationsDescDesktop": "Máy chủ MCP, web server trong mạng LAN",
+  "settingsRootIntegrationsDescMobile": "Web server trong mạng LAN",
+  "settingsRootData": "Dữ liệu và bộ nhớ",
+  "settingsRootDataDesc": "Bộ nhớ đệm, sao lưu",
+  "settingsRootAdvanced": "Nâng cao",
+  "settingsRootAdvancedDesc": "Nhật ký, quyền riêng tư, đặt lại",
+  "settingsRootPro": "Kanaru Pro",
+  "settingsRootProFreeDesc": "Mua một lần · đồng bộ, nhiều nguồn, thống kê nâng cao…",
+  "settingsRootProActive": "Đã kích hoạt",
+  "settingsRootAboutDesc": "Giấy phép, thư viện native",
+  "settingsAppearanceColorMotionTitle": "Màu và chuyển động",
+  "settingsAppearancePureBlack": "Nền đen tuyền",
+  "settingsAppearancePureBlackNeedsDark": "Chỉ dùng với chủ đề Tối",
+  "settingsAppearanceMotion": "Hiệu ứng chuyển động",
+  "settingsAppearanceTextTitle": "Chữ",
+  "settingsAppearanceFont": "Phông chữ",
+  "settingsAppearanceTextSize": "Cỡ chữ",
+  "settingsAppearanceTextSizeCaption": "Cỡ chữ của cả app, nhân với cỡ chữ của hệ thống.",
+  "settingsAppearanceDisplayTitle": "Hiển thị",
+  "settingsAppearanceSeekBar": "Thanh tua",
+  "settingsAppearanceWindowFrame": "Khung cửa sổ của hệ thống",
+  "settingsSeekBarCaption": "Dùng ở Now Playing và màn lời.",
+  "settingsSeekBarWaveform": "Dạng sóng",
+  "settingsSeekBarWaveformCaption": "Tệp trong máy và một số plugin. Bài không có dạng sóng dùng thanh phẳng.",
+  "settingsSeekBarFlat": "Thanh phẳng",
+  "settingsSeekBarFlatCaption": "Mọi bài",
+  "settingsAboutEditionFree": "Bản miễn phí",
+  "settingsAboutEditionPro": "Kanaru Pro",
+  "settingsAboutLicenses": "Giấy phép mã nguồn mở",
+  "settingsPercent": "{percent} %",
+  "@settingsPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsAboutLicense": "Giấy phép"
 }

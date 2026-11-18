@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
 import '../tokens/k_layout.dart';
+import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 import 'k_gap.dart';
@@ -94,6 +95,7 @@ Future<T?> showSelectionPicker<T>(
   if (rect == null) {
     return showDialog<T>(
       context: context,
+      animationStyle: KMotion.routeAnimationStyle(context),
       builder: (context) => Dialog(
         shape: KShape.of(KRadius.xl, continuous: true),
         clipBehavior: Clip.antiAlias,
@@ -106,6 +108,7 @@ Future<T?> showSelectionPicker<T>(
   }
   return showDialog<T>(
     context: context,
+    animationStyle: KMotion.routeAnimationStyle(context),
     // The panel position is computed in global coordinates; the route's
     // SafeArea would shift it by the insets.
     useSafeArea: false,

@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../icons/k_icons.dart';
 import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_layout.dart';
+import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../selection_row.dart';
@@ -43,6 +44,7 @@ Future<KSortPick<T>?> showKSortPopover<T>(
   final navigator = Navigator.of(context, rootNavigator: true);
   final route = DialogRoute<KSortPick<T>>(
     context: context,
+    animationStyle: KMotion.routeAnimationStyle(context),
     themes: InheritedTheme.capture(from: context, to: navigator.context),
     // The panel position is in global coordinates; a SafeArea would shift it.
     useSafeArea: false,

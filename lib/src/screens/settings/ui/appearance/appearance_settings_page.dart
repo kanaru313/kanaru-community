@@ -1,0 +1,128 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:material_ui/material_ui.dart';
+
+import '../../../../../l10n/gen/app_localizations.dart';
+import '../../../../playback/domain/seek_bar_style.dart';
+import '../../../../playback/state/seek_bar_style_provider.dart';
+import '../../settings_routes.dart';
+import '../../state/appearance_settings.dart';
+import '../../state/display_settings.dart';
+import '../settings_scaffold.dart';
+import '../soon_row.dart';
+import 'theme_language_rows.dart';
+
+/// Appearance: theme and language (the first-run rows), colour and motion,
+/// text, and the seek bar.
+class AppearanceSettingsPage extends ConsumerStatefulWidget {
+  const AppearanceSettingsPage({super.key});
+
+  @override
+  ConsumerState<AppearanceSettingsPage> createState() =>
+      _AppearanceSettingsPageState();
+}
+
+class _AppearanceSettingsPageState
+    extends ConsumerState<AppearanceSettingsPage> {
+  final _textSizeKey = GlobalKey();
+
+  Future<void> _pickTextSize(AppLocalizations l10n, int current) async {
+    final notifier = ref.read(appTextScaleProvider.notifier);
+    final chosen = await showSelectionPicker<int>(
+      context,
+      anchor: _textSizeKey,
+      title: Text(l10n.settingsAppearanceTextSize),
+      header: Text(l10n.settingsAppearanceTextSizeCaption),
+      selected: current,
+      options: [
+        for (final step in textScaleSteps)
+          SelectionOption(value: step, title: Text(l10n.settingsPercent(step))),
+      ],
+    );
+    if (chosen != null) await notifier.set(chosen);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = ref.watch(themeChoiceProvider);
+    final pureBlack = ref.watch(pureBlackProvider);
+    final motion = ref.watch(appMotionProvider);
+    final textScale = ref.watch(appTextScaleProvider);
+    final seekStyle = ref.watch(seekBarStyleProvider);
+    final desktop = FormFactor.of(context) == FormFactor.desktop;
+    // Pure black only changes the dark theme.
+    final pureBlackLocked = theme == ThemeChoice.light;
+    return SettingsScaffold(
+      title: l10n.settingsRootAppearance,
+      parentPath: SettingsPaths.root,
+      children: [
+        SetupSection(
+          title: Text(l10n.scanSetupAppearanceTitle),
+          children: const [ThemeLanguageRows()],
+        ),
+        SetupSection(
+          title: Text(l10n.settingsAppearanceColorMotionTitle),
+          children: [
+            KSwitchRow(
+              leading: const Icon(KIcons.themeDark),
+              title: Text(l10n.settingsAppearancePureBlack),
+              subtitle: pureBlackLocked
+                  ? Text(l10n.settingsAppearancePureBlackNeedsDark)
+                  : null,
+              lockedLabel: l10n.settingsAppearancePureBlackNeedsDark,
+              switchLabel: l10n.settingsAppearancePureBlack,
+              value: pureBlack,
+              onChanged: pureBlackLocked
+                  ? null
+                  : (v) => ref.read(pureBlackProvider.notifier).set(v),
+            ),
+            KSwitchRow(
+              leading: const Icon(KIcons.ai),
+              title: Text(l10n.settingsAppearanceMotion),
+              switchLabel: l10n.settingsAppearanceMotion,
+              value: motion,
+              onChanged: (v) => ref.read(appMotionProvider.notifier).set(v),
+            ),
+          ],
+        ),
+        SetupSection(
+          title: Text(l10n.settingsAppearanceTextTitle),
+          children: [
+            SoonRow(
+              icon: KIcons.edit,
+              title: Text(l10n.settingsAppearanceFont),
+            ),
+            SetupValueRow(
+              anchorKey: _textSizeKey,
+              icon: KIcons.sortName,
+              title: Text(l10n.settingsAppearanceTextSize),
+              value: Text(l10n.settingsPercent(textScale)),
+              onTap: () => _pickTextSize(l10n, textScale),
+            ),
+          ],
+        ),
+        SetupSection(
+          title: Text(l10n.settingsAppearanceDisplayTitle),
+          children: [
+            SetupValueRow(
+              icon: KIcons.mostPlayed,
+              title: Text(l10n.settingsAppearanceSeekBar),
+              value: Text(switch (seekStyle) {
+                SeekBarStyle.waveform => l10n.settingsSeekBarWaveform,
+                SeekBarStyle.flat => l10n.settingsSeekBarFlat,
+              }),
+              onTap: () => context.push(SettingsPaths.seekBar),
+            ),
+            if (desktop)
+              SoonRow(
+                icon: KIcons.openFull,
+                title: Text(l10n.settingsAppearanceWindowFrame),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}

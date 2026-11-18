@@ -23,6 +23,14 @@ abstract final class KMotion {
 
   /// `KCheckMark` on -> off: tick retracts, disc shrinks. Quicker than on.
   static const Duration checkOff = Duration(milliseconds: 220);
+
+  /// Animation style for a route a helper opens (dialog, sheet, popover):
+  /// none when the platform or the app turns animations off, else null (the
+  /// route's own default). Flutter routes do not read `disableAnimations`.
+  static AnimationStyle? routeAnimationStyle(BuildContext context) =>
+      MediaQuery.disableAnimationsOf(context)
+      ? AnimationStyle.noAnimation
+      : null;
 }
 
 /// Spring tokens (04 §3.5): snappy = select/press, gentle = sheets/pages,

@@ -1,4 +1,57 @@
 {
   "settingsAbout": "About",
-  "settingsNativeVersions": "Native libraries"
+  "settingsNativeVersions": "Native libraries",
+  "settingsSaveFailed": "Couldn't save settings. Changes last until the app closes.",
+  "settingsRootAppearance": "Appearance",
+  "settingsRootAppearanceDesc": "Theme, language, colors, text, seek bar",
+  "settingsRootLibrary": "Library",
+  "settingsRootLibraryDesc": "Music folders, scan, tabs, artist split",
+  "settingsRootLibraryMissingPermission": " · music permission missing",
+  "settingsRootPlayback": "Playback",
+  "settingsRootPlaybackDesc": "Gapless, sound, ReplayGain, listening history",
+  "settingsRootLyrics": "Lyrics",
+  "settingsRootLyricsDesc": "Display, search and save, sources, translation",
+  "settingsRootPlugins": "Plugins",
+  "settingsRootPluginsDesc": "Installed plugins, plugin store, updates",
+  "settingsRootAi": "AI chat",
+  "settingsRootAiDesc": "AI services, permissions, tools, skills, history",
+  "settingsRootIntegrations": "Integrations",
+  "settingsRootIntegrationsDescDesktop": "MCP server, web server on the local network",
+  "settingsRootIntegrationsDescMobile": "Web server on the local network",
+  "settingsRootData": "Data and storage",
+  "settingsRootDataDesc": "Cache, backup",
+  "settingsRootAdvanced": "Advanced",
+  "settingsRootAdvancedDesc": "Logs, privacy, reset",
+  "settingsRootPro": "Kanaru Pro",
+  "settingsRootProFreeDesc": "One-time purchase · sync, many sources, advanced stats…",
+  "settingsRootProActive": "Activated",
+  "settingsRootAboutDesc": "License, native libraries",
+  "settingsAppearanceColorMotionTitle": "Color and motion",
+  "settingsAppearancePureBlack": "Pure black",
+  "settingsAppearancePureBlackNeedsDark": "Dark theme only",
+  "settingsAppearanceMotion": "Animations",
+  "settingsAppearanceTextTitle": "Text",
+  "settingsAppearanceFont": "Font",
+  "settingsAppearanceTextSize": "Text size",
+  "settingsAppearanceTextSizeCaption": "Text size of the whole app, multiplied by the system text size.",
+  "settingsAppearanceDisplayTitle": "Display",
+  "settingsAppearanceSeekBar": "Seek bar",
+  "settingsAppearanceWindowFrame": "System window frame",
+  "settingsSeekBarCaption": "Used in Now Playing and the lyrics screen.",
+  "settingsSeekBarWaveform": "Waveform",
+  "settingsSeekBarWaveformCaption": "Local files and some plugins. Tracks without a waveform use the flat bar.",
+  "settingsSeekBarFlat": "Flat bar",
+  "settingsSeekBarFlatCaption": "Every track",
+  "settingsAboutEditionFree": "Free edition",
+  "settingsAboutEditionPro": "Kanaru Pro",
+  "settingsAboutLicenses": "Open source licenses",
+  "settingsPercent": "{percent} %",
+  "@settingsPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsAboutLicense": "License"
 }

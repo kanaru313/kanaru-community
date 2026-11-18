@@ -2147,4 +2147,152 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsNativeVersions => 'Thư viện native';
+
+  @override
+  String get settingsSaveFailed =>
+      'Không lưu được cài đặt. Thay đổi chỉ giữ tới khi đóng app.';
+
+  @override
+  String get settingsRootAppearance => 'Giao diện';
+
+  @override
+  String get settingsRootAppearanceDesc =>
+      'Chủ đề, ngôn ngữ, màu, chữ, thanh tua';
+
+  @override
+  String get settingsRootLibrary => 'Thư viện';
+
+  @override
+  String get settingsRootLibraryDesc => 'Thư mục nhạc, quét, tab, tách nghệ sĩ';
+
+  @override
+  String get settingsRootLibraryMissingPermission => ' · thiếu quyền nhạc';
+
+  @override
+  String get settingsRootPlayback => 'Phát nhạc';
+
+  @override
+  String get settingsRootPlaybackDesc =>
+      'Liền mạch, âm thanh, ReplayGain, lịch sử nghe';
+
+  @override
+  String get settingsRootLyrics => 'Lời bài';
+
+  @override
+  String get settingsRootLyricsDesc =>
+      'Hiển thị lời, tìm và lưu lời, nguồn lời, dịch';
+
+  @override
+  String get settingsRootPlugins => 'Plugin';
+
+  @override
+  String get settingsRootPluginsDesc => 'Plugin đã cài, kho plugin, cập nhật';
+
+  @override
+  String get settingsRootAi => 'Trò chuyện AI';
+
+  @override
+  String get settingsRootAiDesc => 'Dịch vụ AI, quyền, công cụ, skill, lịch sử';
+
+  @override
+  String get settingsRootIntegrations => 'Tích hợp';
+
+  @override
+  String get settingsRootIntegrationsDescDesktop =>
+      'Máy chủ MCP, web server trong mạng LAN';
+
+  @override
+  String get settingsRootIntegrationsDescMobile => 'Web server trong mạng LAN';
+
+  @override
+  String get settingsRootData => 'Dữ liệu và bộ nhớ';
+
+  @override
+  String get settingsRootDataDesc => 'Bộ nhớ đệm, sao lưu';
+
+  @override
+  String get settingsRootAdvanced => 'Nâng cao';
+
+  @override
+  String get settingsRootAdvancedDesc => 'Nhật ký, quyền riêng tư, đặt lại';
+
+  @override
+  String get settingsRootPro => 'Kanaru Pro';
+
+  @override
+  String get settingsRootProFreeDesc =>
+      'Mua một lần · đồng bộ, nhiều nguồn, thống kê nâng cao…';
+
+  @override
+  String get settingsRootProActive => 'Đã kích hoạt';
+
+  @override
+  String get settingsRootAboutDesc => 'Giấy phép, thư viện native';
+
+  @override
+  String get settingsAppearanceColorMotionTitle => 'Màu và chuyển động';
+
+  @override
+  String get settingsAppearancePureBlack => 'Nền đen tuyền';
+
+  @override
+  String get settingsAppearancePureBlackNeedsDark => 'Chỉ dùng với chủ đề Tối';
+
+  @override
+  String get settingsAppearanceMotion => 'Hiệu ứng chuyển động';
+
+  @override
+  String get settingsAppearanceTextTitle => 'Chữ';
+
+  @override
+  String get settingsAppearanceFont => 'Phông chữ';
+
+  @override
+  String get settingsAppearanceTextSize => 'Cỡ chữ';
+
+  @override
+  String get settingsAppearanceTextSizeCaption =>
+      'Cỡ chữ của cả app, nhân với cỡ chữ của hệ thống.';
+
+  @override
+  String get settingsAppearanceDisplayTitle => 'Hiển thị';
+
+  @override
+  String get settingsAppearanceSeekBar => 'Thanh tua';
+
+  @override
+  String get settingsAppearanceWindowFrame => 'Khung cửa sổ của hệ thống';
+
+  @override
+  String get settingsSeekBarCaption => 'Dùng ở Now Playing và màn lời.';
+
+  @override
+  String get settingsSeekBarWaveform => 'Dạng sóng';
+
+  @override
+  String get settingsSeekBarWaveformCaption =>
+      'Tệp trong máy và một số plugin. Bài không có dạng sóng dùng thanh phẳng.';
+
+  @override
+  String get settingsSeekBarFlat => 'Thanh phẳng';
+
+  @override
+  String get settingsSeekBarFlatCaption => 'Mọi bài';
+
+  @override
+  String get settingsAboutEditionFree => 'Bản miễn phí';
+
+  @override
+  String get settingsAboutEditionPro => 'Kanaru Pro';
+
+  @override
+  String get settingsAboutLicenses => 'Giấy phép mã nguồn mở';
+
+  @override
+  String settingsPercent(int percent) {
+    return '$percent %';
+  }
+
+  @override
+  String get settingsAboutLicense => 'Giấy phép';
 }
