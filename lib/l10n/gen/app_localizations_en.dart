@@ -43,15 +43,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emptyOnline => 'No online sources yet.';
 
   @override
-  String get settingsAbout => 'About';
-
-  @override
-  String get settingsNativeVersions => 'Native libraries';
-
-  @override
-  String get settingsNoSections => 'No other settings yet.';
-
-  @override
   String get proBadge => 'Pro';
 
   @override
@@ -2289,4 +2280,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playlistM3uExportFailed => 'Couldn\'t save the file.';
+
+  @override
+  String get settingsAbout => 'About';
+
+  @override
+  String get settingsNativeVersions => 'Native libraries';
 }

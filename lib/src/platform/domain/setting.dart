@@ -18,3 +18,15 @@ class Setting<T> {
   /// Turns [T] into a JSON-encodable value.
   final Object? Function(T value) encode;
 }
+
+/// The member of [values] named [raw]. Throws [FormatException] when [raw] is
+/// not a string or names no member, so a [Setting.decode] using it falls back
+/// to the default.
+T enumByName<T extends Enum>(List<T> values, Object? raw) {
+  if (raw is String) {
+    for (final v in values) {
+      if (v.name == raw) return v;
+    }
+  }
+  throw FormatException('unknown value: $raw');
+}

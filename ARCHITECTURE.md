@@ -119,19 +119,19 @@ files. Each file is one of two kinds:
 
 | Area | F (frozen) | S (seeded, owner lane) |
 |---|---|---|
-| Platform | `platform/domain/{settings_store,setting,device_id,storage_volumes,app_paths}.dart`, `platform/data/{json_settings_store,file_device_id}.dart`, `platform/state/{settings_providers,device_id_provider,storage_volumes_provider,platform_providers}.dart` | Lane files created by their lanes: `local_audio_catalog`, `media_permissions` (A); `media_controls` (B); `platform/{domain,data,state}/file_manager*` (C: new, Linux implementation, Android unsupported). Android seed: `MediaStoreChannel.kt` (A) |
+| Platform | `platform/domain/{settings_store,setting,settings_save_status,device_id,storage_volumes,app_paths}.dart` (`setting.dart` also holds `enumByName`, the shared enum decode), `platform/data/{json_settings_store,file_device_id}.dart` (the store also implements `SettingsSaveStatus`), `platform/state/{settings_providers,settings_save_status_provider,device_id_provider,storage_volumes_provider,platform_providers}.dart` | Lane files created by their lanes: `local_audio_catalog`, `media_permissions` (A); `media_controls` (B); `platform/{domain,data,state}/file_manager*` (C: new, Linux implementation, Android unsupported). Android seed: `MediaStoreChannel.kt` (A) |
 | Media | everything in `media/domain/` | none |
 | Database | `database/**` (tables, helpers, schema) | none |
 | Extension and router | `extension/**`, `router/**` | none |
 | Playback | `playback/domain/{playback_commands,now_playing}.dart`, `playback/data/{track_info_rows,cover_colors_rows}.dart`, `playback/state/{track_info_providers,cover_providers}.dart`, `playback/ui/track_cover.dart` | `playback/state/playback_providers.dart` (declarations F, body B), `playback/data/unavailable_playback.dart` (B deletes) |
 | Library | `library/domain/**` (also the `FavoritesController` and `FolderExclusions` interfaces), `library/data/{favorites,folder_exclusion,music_folders}_repository.dart`, `library/state/{library_tabs,favorites,music_folders,folder_exclusion,custom_cover}_providers.dart`, `library/data/custom_cover_store.dart`, `library/ui/library_locations.dart` | `library/state/scan_providers.dart` (declarations F, body A), `library/ui/selection/selection_bar.dart` (C), lane folders `library/{domain,data,state}/scan/**` (A) and `library/{domain,data,state}/browse/**` (C), registration files (below) |
 | Playlists | `library/{domain,data,state}/playlists/**` (the `PlaylistStore` contract, repository, providers, page write gate, `PlaylistEditor`), `library/ui/playlist_common/**` (`PlaylistCover`, `playlistDisplayName`, registration), the playlist values of `library/domain/browse/list_sort.dart` (`BrowseList.playlists` / `playlistTracks`, `SortCriterion.name` / `dateModified` / `playlistOrder`, `SortKind.position`), `library/ui/menus/{menu_model,menu_actions,menu_header,menu_renderer,open_menu}.dart` hooks (`RunAction`, `MenuHeader.note` / `action`, `MenuItemSpec.hint`, `MenuOrigin.playlist`, `openMenu`, `withSongPageRows`), `library/ui/songs/{song_tile,song_tile_edit,song_tile_cover}.dart` params (`markCurrent`, `menuExtras`, `menuFavoriteRow`, `edit`, `unavailable`, `onRemove`, `onMenu`), `library/ui/detail/detail_header.dart` (`DetailFrame(actions:, showBack:)`), `l10n/parts/playlist_*.arb` | `library/ui/playlists/{playlists_page,playlist_page}.dart` (playlist screens lane), `library/ui/add_to_playlist/add_to_playlist.dart` (add-to-playlist lane), `library/ui/m3u/m3u_entry_points.dart` (M3U lane; declarations incl. `m3uAvailable` and `M3uImportProgressSliver` F, bodies S), `library/ui/covers/pick_custom_cover.dart` (custom-cover picker, a later lane); spare l10n parts `plscreens_*` (playlist screens), `pladd_*` (add-to-playlist), `m3u_*` (M3U) |
-| Screens | `screens/settings/state/appearance_settings.dart` | `screens/first_run/state/first_run_gate.dart` (declarations F, body A), `screens/first_run/first_run_registration.dart` (A), `screens/now_playing/now_playing_registration.dart` (B), `screens/ui/home_page.dart` (A, Home scan card) |
+| Screens | `screens/settings/state/{appearance_settings,display_settings}.dart` (`display_settings.dart`: `app.pure_black`, `app.motion`, `app.text_scale`, applied in `router/ui/kanaru_app.dart` and `app_theme_provider.dart`) | `screens/first_run/state/first_run_gate.dart` (declarations F, body A), `screens/first_run/first_run_registration.dart` (A), `screens/now_playing/now_playing_registration.dart` (B), `screens/ui/home_page.dart` (A, Home scan card) |
 | Registration | `library/ui/playlist_common/playlist_registration.dart` (Playlists and Favorites nav items, `/playlists` routes; static children before `:uid`) | `library/ui/scan/library_scan_registration.dart` (A), `library/ui/library_browse_registration.dart` (C) |
 | Foundation | `foundation/**` | none |
 | kanaru_ui | every widget and token of the foundation, `KIcons`, and the playlist pieces `KCoverMosaic`, `KFabMenu`, `showMultiSelectionPicker`, `showKFullScreenDialog`, `KTonalToggleButton`, `KMediaCard.missing` / `.editing`, `KIconEmphasis.destructive`, the `hint` params | group barrels `widgets/setup/` (A), `widgets/media/` (B), `widgets/collections/` (C) |
 | Rust | `kanaru_media` `error`, `cancel`, `limits`; `kanaru_bridge` `error`, `guard`, `pools`, `os`, `source`, `api/error.rs`; manifests | `kanaru_media` `tags/` and `covers/` (A), `waveform/` (B), `kanaru_bridge` `api/{tags,covers}.rs` (A), `api/waveform.rs` (B) |
-| l10n | `lib/l10n/parts/app_*.arb`, `l10n.yaml`, `tool/**`, `playlist_*.arb` | `scan_*.arb` (A), `playback_*.arb` (B), `library_*.arb` (C), spare parts `plscreens_*`, `pladd_*`, `m3u_*` |
+| l10n | `lib/l10n/parts/app_*.arb`, `l10n.yaml`, `tool/**`, `playlist_*.arb` | `scan_*.arb` (A), `playback_*.arb` (B), `library_*.arb` (C), `settings_*.arb` (Settings lane), spare parts `plscreens_*`, `pladd_*`, `m3u_*` |
 
 Generated files (`lib/src/rust/`, `frb_generated.rs`, `lib/l10n/app_*.arb`,
 `lib/l10n/gen/`) are never hand-merged: on a conflict take either side and
@@ -276,6 +276,8 @@ never 1000 or more, which belongs to the Settings footer.
   subclass). `settingNotifierProvider` is a plain function that builds a new
   provider on each call, so never call it inside a widget or provider body.
   `set(value)` updates state at once, then writes.
+- `SettingsSaveStatus` (`platform/domain/settings_save_status.dart`) is an optional second interface of a store: `JsonSettingsStore` reports `true` when a write fails and `false` on the next success; `settingsSaveFailingProvider` is `false` for a store without it. `SettingsStore` itself is unchanged.
+- Enum settings decode with `enumByName(values, raw)` (`platform/domain/setting.dart`); a wrong type or unknown name throws `FormatException`.
 - A file that is unreadable or has another `format` or a newer `version` is moved
   to `settings.json.bad-<epoch ms>` (copied if the rename fails), and the store
   starts from defaults.
@@ -284,6 +286,9 @@ never 1000 or more, which belongs to the Settings footer.
 |---|---|---|---|
 | `app.theme` | `ThemeChoice` | `system` | `screens/settings/state/appearance_settings.dart` |
 | `app.language` | `AppLanguage` (`vi`, `en`) | device locale (`vi` or `en`) | same |
+| `app.pure_black` | bool | false (dark theme only) | `screens/settings/state/display_settings.dart` |
+| `app.motion` | bool | true (false turns animations off app-wide) | same |
+| `app.text_scale` | int percent: 80, 90, 100, 110, 125, 150 | 100 (another whole number snaps to the nearest step; the app caps system x factor at 2.0) | same |
 | `library.tabs` | `LibraryTabsConfig` | all tabs, default order | `library/state/library_tabs_providers.dart` |
 | `library.setup_done` | bool | false | reserved, scanner lane (A) |
 | `playback.queue.current_entry`, `playback.position_ms`, `playback.shuffle`, `playback.repeat` | reserved | | playback lane (B) |
@@ -317,6 +322,7 @@ Strings live in parts, one file per part and locale:
 | `playback` | `playback_en.arb`, `playback_vi.arb` | `playback` | lane B |
 | `library` | `library_en.arb`, `library_vi.arb` | `library` | lane C |
 | `playlist` | `playlist_en.arb`, `playlist_vi.arb` | `playlist` | playlist foundation (frozen) |
+| `settings` | `settings_en.arb`, `settings_vi.arb` | `settings` | Settings lane (every Settings string) |
 | `plscreens`, `pladd`, `m3u` | `plscreens_*.arb`, `pladd_*.arb`, `m3u_*.arb` (created by the lane that needs one) | `plScreens`, `plAdd`, `m3u` | spare parts of the playlist screens, add-to-playlist and M3U lanes, so a lane never edits `playlist_*` |
 
 `dart run tool/merge_arb.dart` merges the parts into `lib/l10n/app_<locale>.arb`,

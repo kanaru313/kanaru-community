@@ -23,6 +23,7 @@ const Map<String, String?> arbParts = {
   'plscreens': 'plScreens',
   'pladd': 'plAdd',
   'm3u': 'm3u',
+  'settings': 'settings',
 };
 
 /// Locale whose key set every other locale must match.

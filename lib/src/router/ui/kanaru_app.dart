@@ -9,6 +9,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../extension/state/extension_providers.dart';
 import '../../platform/state/window_close_provider.dart';
 import '../../screens/settings/state/appearance_settings.dart';
+import '../../screens/settings/state/display_settings.dart';
 import '../state/app_flush.dart';
 import 'app_theme_provider.dart';
 import '../state/router_provider.dart';
@@ -101,6 +102,8 @@ class _KanaruAppState extends ConsumerState<KanaruApp>
       ThemeMode.system => _platformBrightness,
     };
     final theme = ref.watch(appThemeProvider(brightness));
+    final textFactor = ref.watch(appTextScaleProvider) / 100;
+    final motion = ref.watch(appMotionProvider);
     return MaterialApp.router(
       title: 'Kanaru',
       theme: theme,
@@ -118,7 +121,48 @@ class _KanaruAppState extends ConsumerState<KanaruApp>
         ...registry.l10nDelegates,
         ...GlobalMaterialLocalizations.delegates,
       ],
+      // Always wraps a MediaQuery (even at 100 % with motion on), so a toggle
+      // changes values and never the widget structure above the router.
+      builder: (context, child) {
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(
+            textScaler: _CappedTextScaler(media.textScaler, textFactor),
+            disableAnimations: media.disableAnimations || !motion,
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       supportedLocales: AppLocalizations.supportedLocales,
     );
   }
+}
+
+/// The system text scaler times [factor], never above [maxScale] overall.
+class _CappedTextScaler extends TextScaler {
+  const _CappedTextScaler(this.system, this.factor);
+
+  static const double maxScale = 2.0;
+
+  final TextScaler system;
+  final double factor;
+
+  @override
+  double scale(double fontSize) {
+    final scaled = system.scale(fontSize) * factor;
+    final cap = fontSize * maxScale;
+    return scaled > cap ? cap : scaled;
+  }
+
+  @override
+  double get textScaleFactor => scale(14) / 14;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _CappedTextScaler &&
+      other.factor == factor &&
+      other.system == system;
+
+  @override
+  int get hashCode => Object.hash(system, factor);
 }

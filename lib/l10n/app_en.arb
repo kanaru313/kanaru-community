@@ -12,9 +12,6 @@
   "emptyPlaylists": "No playlists yet.",
   "emptySearch": "Search your music.",
   "emptyOnline": "No online sources yet.",
-  "settingsAbout": "About",
-  "settingsNativeVersions": "Native libraries",
-  "settingsNoSections": "No other settings yet.",
   "proBadge": "Pro",
   "tooltipToggleSidebar": "Show or hide the sidebar",
   "tooltipBack": "Back",
@@ -1466,5 +1463,7 @@
       }
     }
   },
-  "playlistM3uExportFailed": "Couldn't save the file."
+  "playlistM3uExportFailed": "Couldn't save the file.",
+  "settingsAbout": "About",
+  "settingsNativeVersions": "Native libraries"
 }
