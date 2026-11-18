@@ -219,6 +219,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     bool hasTrack, {
     required bool expanded,
   }) {
+    // Settings headers carry no search action.
+    final settings = widget.items.where((i) => i.footer).firstOrNull;
+    final inSettings = settings != null && settings.containsLocation(location);
     return Column(
       children: [
         Expanded(
@@ -236,12 +239,13 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
               Expanded(
                 child: PageHeaderScope(
                   trailing: [
-                    KIconButton(
-                      icon: KIcons.search,
-                      size: KIconSize.sm,
-                      tooltip: l10n.appSearch,
-                      onPressed: _openSearch,
-                    ),
+                    if (!inSettings)
+                      KIconButton(
+                        icon: KIcons.search,
+                        size: KIconSize.sm,
+                        tooltip: l10n.appSearch,
+                        onPressed: _openSearch,
+                      ),
                   ],
                   // Selection bar floats above the player bar's place.
                   child: Stack(

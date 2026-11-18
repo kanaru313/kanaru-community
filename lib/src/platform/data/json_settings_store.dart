@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:logging/logging.dart';
 
+import '../domain/settings_save_status.dart';
 import '../domain/settings_store.dart';
 import 'atomic_file.dart';
 
@@ -14,7 +15,7 @@ const _retryDelay = Duration(seconds: 5);
 
 /// [SettingsStore] backed by one JSON file, `{"format", "version", "values"}`.
 /// Reads are served from memory; writes are coalesced and atomic.
-class JsonSettingsStore implements SettingsStore {
+class JsonSettingsStore implements SettingsStore, SettingsSaveStatus {
   JsonSettingsStore._(this._file, this._values, this._delay, this._timerFactory);
 
   static final _log = Logger('settings');
@@ -25,6 +26,8 @@ class JsonSettingsStore implements SettingsStore {
   final Timer Function(Duration, void Function()) _timerFactory;
   // Not sync: a listener may write again without hitting a nested add.
   final _changes = StreamController<String>.broadcast();
+  final _saveFailing = StreamController<bool>.broadcast();
+  bool _isFailing = false;
   int _failures = 0;
   Timer? _timer;
   bool _dirty = false;
@@ -107,6 +110,18 @@ class JsonSettingsStore implements SettingsStore {
   static bool _sameJson(Object? a, Object? b) => jsonEncode(a) == jsonEncode(b);
 
   @override
+  Stream<bool> get saveFailing => _saveFailing.stream;
+
+  @override
+  bool get isFailing => _isFailing;
+
+  void _setFailing(bool value) {
+    if (value == _isFailing) return;
+    _isFailing = value;
+    _saveFailing.add(value);
+  }
+
+  @override
   Stream<String> get changes => _changes.stream;
 
   @override
@@ -127,8 +142,10 @@ class JsonSettingsStore implements SettingsStore {
         jsonEncode({'format': _format, 'version': _version, 'values': _values}),
       );
       _failures = 0;
+      _setFailing(false);
     } on Object catch (e, st) {
       _dirty = true;
+      _setFailing(true);
       _log.severe('Could not save settings', e, st);
       // Bounded retry; a later write or flush also tries again.
       if (++_failures <= _maxRetries) {

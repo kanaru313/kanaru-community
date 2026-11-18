@@ -43,15 +43,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get emptyOnline => 'Chưa có nguồn trực tuyến nào.';
 
   @override
-  String get settingsAbout => 'Giới thiệu';
-
-  @override
-  String get settingsNativeVersions => 'Thư viện native';
-
-  @override
-  String get settingsNoSections => 'Chưa có cài đặt nào khác.';
-
-  @override
   String get proBadge => 'Pro';
 
   @override
@@ -2025,4 +2016,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get playlistM3uExportFailed => 'Không lưu được tệp.';
+
+  @override
+  String get settingsAbout => 'Giới thiệu';
+
+  @override
+  String get settingsNativeVersions => 'Thư viện native';
 }

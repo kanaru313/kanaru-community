@@ -22,10 +22,9 @@ class SettingsPage extends ConsumerWidget {
       children: [
         PageHeader(
           title: l10n.navSettings,
-          // Full page above the shell: back pops, or goes Home when it is the
-          // only page (reached by history, not by push).
-          onBack: () => context.canPop() ? context.pop() : context.go('/'),
-          backTooltip: l10n.tooltipBack,
+          // Root of the Settings branch: no back button here. The mobile
+          // shell supplies its own leading back (to Home); desktop walks
+          // the history.
         ),
         for (final section in sections) ...[
           section.builder(context),
@@ -45,6 +44,26 @@ class SettingsPage extends ConsumerWidget {
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Stand-in sub-page of Settings: proves a page can push inside the branch.
+class SettingsSubPagePlaceholder extends StatelessWidget {
+  const SettingsSubPagePlaceholder({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return KPage(
+      maxWidth: KLayout.settings,
+      children: [
+        PageHeader(
+          title: l10n.navSettings,
+          onBack: context.pop,
+          backTooltip: l10n.tooltipBack,
         ),
       ],
     );
