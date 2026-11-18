@@ -171,4 +171,14 @@ void main() {
       });
     }
   });
+
+  test(
+    'theme rebuilt twice compares equal (no theme animation on rebuild)',
+    () {
+      expect(
+        buildKanaruTheme(brightness: Brightness.light),
+        buildKanaruTheme(brightness: Brightness.light),
+      );
+    },
+  );
 }

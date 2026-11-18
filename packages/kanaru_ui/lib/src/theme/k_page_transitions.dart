@@ -14,6 +14,17 @@ class KPageTransitionsBuilder extends PageTransitionsBuilder {
   /// No transition and zero duration, whatever the media query says.
   final bool instant;
 
+  // Value equality: the theme is rebuilt often, and a ThemeData that compares
+  // unequal makes MaterialApp animate a theme change (a running animation).
+  @override
+  bool operator ==(Object other) =>
+      other is KPageTransitionsBuilder &&
+      other.inner == inner &&
+      other.instant == instant;
+
+  @override
+  int get hashCode => Object.hash(inner, instant);
+
   @override
   Duration get transitionDuration =>
       instant ? Duration.zero : inner.transitionDuration;
