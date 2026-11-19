@@ -15,22 +15,6 @@
   "@coverAutoTitle": {
     "description": "Row that picks the automatic cover."
   },
-  "coverDefaultPill": "Mặc định",
-  "@coverDefaultPill": {
-    "description": "Pill on the automatic row."
-  },
-  "coverAutoAlbum": "Bìa trong tệp nhạc",
-  "@coverAutoAlbum": {
-    "description": "Subtitle of the automatic row of an album."
-  },
-  "coverAutoArtist": "Ảnh tự động",
-  "@coverAutoArtist": {
-    "description": "Subtitle of the automatic row of an artist."
-  },
-  "coverAutoPlaylist": "Bìa tự động",
-  "@coverAutoPlaylist": {
-    "description": "Subtitle of the automatic row of a playlist."
-  },
   "coverCurrentTitle": "Ảnh đang dùng",
   "@coverCurrentTitle": {
     "description": "Row of the custom cover the item has now."
@@ -50,6 +34,15 @@
   "coverGroupOther": "Ảnh khác",
   "@coverGroupOther": {
     "description": "Group title of the pick-from-device row."
+  },
+  "coverMoreAlbums": "Xem thêm {count} album",
+  "@coverMoreAlbums": {
+    "description": "Row that shows the remaining album suggestions.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "coverAlbumSubtitle": "Bìa album",
   "@coverAlbumSubtitle": {
@@ -119,18 +112,6 @@
   "coverHintResetPlaylist": "Lưu: bỏ ảnh riêng, dùng lại bìa tự động",
   "@coverHintResetPlaylist": {
     "description": "Hint under the preview: automatic chosen while a custom cover exists (playlist)."
-  },
-  "coverHintUsingAlbum": "Đang dùng bìa trong tệp nhạc",
-  "@coverHintUsingAlbum": {
-    "description": "Hint under the preview: automatic, no custom cover (album)."
-  },
-  "coverHintUsingArtist": "Đang dùng ảnh tự động",
-  "@coverHintUsingArtist": {
-    "description": "Hint under the preview: automatic, no custom cover (artist)."
-  },
-  "coverHintUsingPlaylist": "Đang dùng bìa tự động",
-  "@coverHintUsingPlaylist": {
-    "description": "Hint under the preview: automatic, no custom cover (playlist)."
   },
   "coverHintCopied": "Ảnh được chép vào dữ liệu của Kanaru; tệp gốc và tag không đổi",
   "@coverHintCopied": {

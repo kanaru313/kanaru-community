@@ -2503,18 +2503,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coverAutoTitle => 'Automatic';
 
   @override
-  String get coverDefaultPill => 'Default';
-
-  @override
-  String get coverAutoAlbum => 'Cover in the music file';
-
-  @override
-  String get coverAutoArtist => 'Automatic image';
-
-  @override
-  String get coverAutoPlaylist => 'Automatic cover';
-
-  @override
   String get coverCurrentTitle => 'Current image';
 
   @override
@@ -2528,6 +2516,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coverGroupOther => 'Other images';
+
+  @override
+  String coverMoreAlbums(int count) {
+    return 'Show $count more albums';
+  }
 
   @override
   String get coverAlbumSubtitle => 'Album cover';
@@ -2574,15 +2567,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get coverHintResetPlaylist =>
       'Save: drops your image and uses the automatic cover again';
-
-  @override
-  String get coverHintUsingAlbum => 'Using the cover in the music file';
-
-  @override
-  String get coverHintUsingArtist => 'Using the automatic image';
-
-  @override
-  String get coverHintUsingPlaylist => 'Using the automatic cover';
 
   @override
   String get coverHintCopied =>

@@ -479,8 +479,13 @@ State of the cover dialog lives in `library/state/covers/` (no widgets):
   the automatic cover keys, the item's current custom cover (thumb + full files) and the
   suggestions. Artist: own albums, then albums it appears in, only with a cover, at most 4.
   Playlist: `albumCoverCandidates` (distinct albums in track order, skipping tracks without
-  an album or cover), at most 6. Album: none. A suggestion's file is the album's shown cover
+  an album or cover), every album (no cap; the reads of the albums' own covers run in
+  parallel). Album: none. A suggestion's file is the album's shown cover
   (its custom cover first, else the song cover), so a pick copies what the user sees.
+- UI: `CoverDialog` is a `CustomScrollView`; `CoverOptionRows` is one sliver group whose
+  album suggestions are a lazy `SliverList` (rows and thumbs are built near the viewport),
+  4 rows until "Xem thêm N album" expands them. The footer is the shared `PickerFooter`
+  (scope note left, buttons right). The desktop dialog is `KLayout.dialogWide` (620) wide.
 - Controller: `coverDialogControllerProvider((kind, itemKey, draft))` is auto-disposed
   with the dialog. It holds the chosen row, the picked image (reading, then ready with
   its upright size), the pan offset (`cropFor`: centred by default, clamped, `null` for a

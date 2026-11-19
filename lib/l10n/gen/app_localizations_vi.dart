@@ -2218,18 +2218,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get coverAutoTitle => 'Tự động';
 
   @override
-  String get coverDefaultPill => 'Mặc định';
-
-  @override
-  String get coverAutoAlbum => 'Bìa trong tệp nhạc';
-
-  @override
-  String get coverAutoArtist => 'Ảnh tự động';
-
-  @override
-  String get coverAutoPlaylist => 'Bìa tự động';
-
-  @override
   String get coverCurrentTitle => 'Ảnh đang dùng';
 
   @override
@@ -2243,6 +2231,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get coverGroupOther => 'Ảnh khác';
+
+  @override
+  String coverMoreAlbums(int count) {
+    return 'Xem thêm $count album';
+  }
 
   @override
   String get coverAlbumSubtitle => 'Bìa album';
@@ -2287,15 +2280,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get coverHintResetPlaylist =>
       'Lưu: bỏ ảnh riêng, dùng lại bìa tự động';
-
-  @override
-  String get coverHintUsingAlbum => 'Đang dùng bìa trong tệp nhạc';
-
-  @override
-  String get coverHintUsingArtist => 'Đang dùng ảnh tự động';
-
-  @override
-  String get coverHintUsingPlaylist => 'Đang dùng bìa tự động';
 
   @override
   String get coverHintCopied =>

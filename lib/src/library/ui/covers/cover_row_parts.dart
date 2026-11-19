@@ -12,36 +12,6 @@ class CoverText extends StatelessWidget {
       Text(text, maxLines: 2, overflow: TextOverflow.ellipsis);
 }
 
-class CoverPill extends StatelessWidget {
-  const CoverPill(this.label, {super.key});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.tertiaryContainer,
-        borderRadius: KRadius.full,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: KSpace.x2,
-          vertical: KSpace.x1 / 2,
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: scheme.onTertiaryContainer,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class CoverGroupTitle extends StatelessWidget {
   const CoverGroupTitle(this.text, {super.key});
 

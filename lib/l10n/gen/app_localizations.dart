@@ -3612,30 +3612,6 @@ abstract class AppLocalizations {
   /// **'Automatic'**
   String get coverAutoTitle;
 
-  /// Pill on the automatic row.
-  ///
-  /// In en, this message translates to:
-  /// **'Default'**
-  String get coverDefaultPill;
-
-  /// Subtitle of the automatic row of an album.
-  ///
-  /// In en, this message translates to:
-  /// **'Cover in the music file'**
-  String get coverAutoAlbum;
-
-  /// Subtitle of the automatic row of an artist.
-  ///
-  /// In en, this message translates to:
-  /// **'Automatic image'**
-  String get coverAutoArtist;
-
-  /// Subtitle of the automatic row of a playlist.
-  ///
-  /// In en, this message translates to:
-  /// **'Automatic cover'**
-  String get coverAutoPlaylist;
-
   /// Row of the custom cover the item has now.
   ///
   /// In en, this message translates to:
@@ -3665,6 +3641,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other images'**
   String get coverGroupOther;
+
+  /// Row that shows the remaining album suggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {count} more albums'**
+  String coverMoreAlbums(int count);
 
   /// Subtitle of an album suggestion without a year.
   ///
@@ -3737,24 +3719,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save: drops your image and uses the automatic cover again'**
   String get coverHintResetPlaylist;
-
-  /// Hint under the preview: automatic, no custom cover (album).
-  ///
-  /// In en, this message translates to:
-  /// **'Using the cover in the music file'**
-  String get coverHintUsingAlbum;
-
-  /// Hint under the preview: automatic, no custom cover (artist).
-  ///
-  /// In en, this message translates to:
-  /// **'Using the automatic image'**
-  String get coverHintUsingArtist;
-
-  /// Hint under the preview: automatic, no custom cover (playlist).
-  ///
-  /// In en, this message translates to:
-  /// **'Using the automatic cover'**
-  String get coverHintUsingPlaylist;
 
   /// Hint under the preview when an image is chosen.
   ///

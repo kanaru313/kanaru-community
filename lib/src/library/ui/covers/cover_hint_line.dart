@@ -19,18 +19,18 @@ class CoverHintLine extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final auto = state.selectedId == CoverRowIds.automatic;
     final hasCustom = state.options.value?.current != null;
-    final text = state.panPossible
+    // Automatic with no custom cover to drop needs no sentence.
+    final String? text = state.panPossible
         ? l10n.coverPanHint
         : auto
         ? switch ((kind, hasCustom)) {
+            (_, false) => null,
             (CustomCoverKind.album, true) => l10n.coverHintResetAlbum,
             (CustomCoverKind.artist, true) => l10n.coverHintResetArtist,
             (CustomCoverKind.playlist, true) => l10n.coverHintResetPlaylist,
-            (CustomCoverKind.album, false) => l10n.coverHintUsingAlbum,
-            (CustomCoverKind.artist, false) => l10n.coverHintUsingArtist,
-            (CustomCoverKind.playlist, false) => l10n.coverHintUsingPlaylist,
           }
         : l10n.coverHintCopied;
+    if (text == null) return const SizedBox.shrink();
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(KSpace.x6, KSpace.x3, KSpace.x6, 0),

@@ -13,9 +13,9 @@ abstract final class CoverRowIds {
   static String album(String encodedAlbumKey) => 'album:$encodedAlbumKey';
 }
 
-/// How many album covers each kind suggests.
+/// How many album covers an artist suggests. A playlist suggests every album
+/// it has (the dialog shows the first few and the rest on demand).
 const int artistSuggestionLimit = 4;
-const int playlistSuggestionLimit = 6;
 
 /// The custom cover an item has, as files.
 typedef CurrentCover = ({File thumb, File full});

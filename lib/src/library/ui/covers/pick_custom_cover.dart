@@ -58,14 +58,20 @@ Future<CoverDraft?> _open(
   }
   return showKDialog<CoverDraft?>(
     context,
+    maxWidth: KLayout.dialogWide,
     // Height: at most 760 and, through the Dialog's own inset, the window's
     // height less 48 (reading the window here is only allowed in kanaru_ui).
     builder: (context) => Dialog(
+      // No side inset: the 620 dp width is the dialog's own (the desktop
+      // shell is at least 1200 dp wide).
+      insetPadding: const EdgeInsets.symmetric(vertical: KSpace.x6),
       shape: KShape.of(KRadius.xl, continuous: true),
       clipBehavior: Clip.antiAlias,
       child: ConstrainedBox(
         constraints: const BoxConstraints(
-          maxWidth: KLayout.dialog,
+          // Fixed width: the content has no natural width of its own.
+          minWidth: KLayout.dialogWide,
+          maxWidth: KLayout.dialogWide,
           maxHeight: 760,
         ),
         child: dialog(fixedHeight: false),

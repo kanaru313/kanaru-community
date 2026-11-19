@@ -130,7 +130,7 @@ void main() {
   );
 
   test(
-    'playlist: distinct albums in order, no-album tracks skipped, max 6',
+    'playlist: every distinct album in order, no-album tracks skipped',
     () async {
       final tracks = [
         track(100), // no album
@@ -173,7 +173,56 @@ void main() {
       expect(opts.itemName, 'Mix');
       expect(opts.automaticCoverKeys, [coverKeyOf(1), coverKeyOf(2)]);
       expect(opts.suggestions.map((s) => s.title), [
-        for (var i = 0; i < playlistSuggestionLimit; i++) 'alb$i',
+        for (var i = 0; i < 8; i++) 'alb$i',
+      ]);
+    },
+  );
+
+  test(
+    'playlist: album reads run at most coverResolveConcurrency at once',
+    () async {
+      var inFlight = 0;
+      var peak = 0;
+      final tracks = [
+        for (var i = 0; i < 40; i++)
+          track(i, album: 'alb$i', cover: coverKeyOf(i + 1)),
+      ];
+      final opts = await load(item(CustomCoverKind.playlist, 'pl1'), [
+        albumDetailProvider.overrideWith((ref, k) async* {
+          inFlight++;
+          if (inFlight > peak) peak = inFlight;
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+          inFlight--;
+          yield _album(
+            k.titleKey,
+            coverKeyOf(int.parse(k.titleKey.substring(3)) + 1),
+          );
+        }),
+        playlistDetailProvider.overrideWith(
+          (ref, uid) => Stream.value(
+            PlaylistDetail(
+              summary: PlaylistSummary(
+                uid: uid,
+                name: 'Mix',
+                description: '',
+                isFavorites: false,
+                trackCount: 40,
+                durationMs: 1,
+                createdAt: 0,
+                updatedAt: 0,
+                autoCoverKeys: const [],
+              ),
+              entries: [
+                for (final t in tracks)
+                  PlaylistEntryView(uid: 'e${t.id.value}', info: t),
+              ],
+            ),
+          ),
+        ),
+      ]);
+      expect(peak, inInclusiveRange(2, coverResolveConcurrency));
+      expect(opts.suggestions.map((s) => s.title), [
+        for (var i = 0; i < 40; i++) 'alb$i',
       ]);
     },
   );

@@ -139,7 +139,17 @@ void main() {
   /// The pick row says "Chọn ảnh…" on mobile and "Chọn ảnh từ máy…" on desktop.
   Future<void> tapPickRow(WidgetTester tester) async {
     final f = find.textContaining('Chọn ảnh');
-    await tester.ensureVisible(f);
+    // The rows are a lazy sliver: scroll until the row is built.
+    await tester.scrollUntilVisible(
+      f,
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(CoverDialog),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.pump();
     await tester.tap(f);
   }
@@ -186,6 +196,25 @@ void main() {
       expect(enabled(tester, button('Lưu')), isFalse);
     });
 
+    testWidgets('pick, other row, back: the picked row stays and saves', (
+      tester,
+    ) async {
+      await open(tester);
+      await pickImage(tester, name: 'IMG_2041.png');
+      expect(selected(tester, 'IMG_2041.png'), isTrue);
+      await tester.tap(row('Alpha'));
+      await tester.pumpAndSettle();
+      expect(row('IMG_2041.png'), findsOneWidget);
+      expect(selected(tester, 'Alpha'), isTrue);
+      expect(enabled(tester, row('IMG_2041.png')), isTrue);
+      await tester.tap(row('IMG_2041.png'));
+      await tester.pumpAndSettle();
+      expect(selected(tester, 'IMG_2041.png'), isTrue);
+      await tapSave(tester);
+      final choice = cover.changes.single.choice as FileCover;
+      expect(choice.image.path.endsWith('IMG_2041.png'), isTrue);
+    });
+
     testWidgets('a picked image is read first, then selected', (tester) async {
       cover.previewGate = Completer<void>();
       await open(tester);
@@ -217,7 +246,116 @@ void main() {
       );
       expect(find.text('Bìa album trong playlist'), findsNothing);
       expect(find.text('Bìa album của nghệ sĩ'), findsNothing);
-      expect(find.text('Bìa trong tệp nhạc'), findsOneWidget);
+      // Tự động is a bare row: no subtitle, no pill, no "using" hint.
+      expect(find.text('Tự động'), findsOneWidget);
+      for (final gone in [
+        'Bìa trong tệp nhạc',
+        'Bìa tự động',
+        'Ảnh tự động',
+        'Mặc định',
+        'Đang dùng bìa trong tệp nhạc',
+      ]) {
+        expect(find.text(gone), findsNothing, reason: gone);
+      }
+    });
+
+    testWidgets('a playlist with many albums shows 4, builds lazily and '
+        'expands on tap', (tester) async {
+      final many = [for (var i = 0; i < 40; i++) suggestion('Album $i')];
+      await open(tester, opts: options(suggestions: many));
+      expect(find.text('Album 0'), findsOneWidget);
+      expect(find.text('Album 3'), findsOneWidget);
+      expect(find.text('Album 4'), findsNothing);
+      await tester.scrollUntilVisible(
+        find.text('Xem thêm 36 album'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(CoverDialog),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.tap(find.text('Xem thêm 36 album'));
+      await tester.pumpAndSettle();
+      expect(find.text('Xem thêm 36 album'), findsNothing);
+      // Only the rows near the viewport exist, not all 40.
+      expect(find.byType(SelectionRow).evaluate().length, lessThan(30));
+      await tester.scrollUntilVisible(
+        find.text('Album 39'),
+        300,
+        scrollable: find
+            .descendant(
+              of: find.byType(CoverDialog),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.tap(row('Album 39'));
+      await tester.pumpAndSettle();
+      expect(selected(tester, 'Album 39'), isTrue);
+      expect(enabled(tester, button('Lưu')), isTrue);
+      await tester.scrollUntilVisible(
+        find.text('Thu gọn'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(CoverDialog),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.tap(find.text('Thu gọn'));
+      await tester.pumpAndSettle();
+      expect(find.text('Album 39'), findsNothing);
+      expect(find.text('Album 3'), findsOneWidget);
+    });
+
+    testWidgets('desktop dialog is 620 wide: frame centred at its size, footer '
+        'on one row', (tester) async {
+      await open(
+        tester,
+        size: const Size(1280, 800),
+        opts: options(suggestions: [suggestion('A long album title here')]),
+      );
+      final dialog = tester.getRect(find.byType(CoverDialog));
+      expect(dialog.width, KLayout.dialogWide);
+      final frame = tester.getRect(find.byType(CoverPreviewFrame));
+      expect(frame.size, const Size.square(216));
+      expect(frame.center.dx, closeTo(dialog.center.dx, 0.5));
+      final scope = tester.getRect(find.text('Chỉ playlist này'));
+      expect(scope.height, lessThan(30), reason: 'scope note is one line');
+      expect(
+        (scope.center.dy - tester.getRect(button('Lưu')).center.dy).abs(),
+        lessThan(8),
+      );
+      expect(
+        tester.getRect(find.text('A long album title here')).height,
+        lessThan(30),
+      );
+    });
+
+    testWidgets('4 albums or fewer have no Xem thêm row', (tester) async {
+      await open(
+        tester,
+        opts: options(
+          suggestions: [for (var i = 0; i < 4; i++) suggestion('A$i')],
+        ),
+      );
+      expect(find.textContaining('Xem thêm'), findsNothing);
+    });
+
+    testWidgets('footer: scope left, buttons right, one row, edges even', (
+      tester,
+    ) async {
+      await open(tester);
+      final scope = tester.getRect(find.text('Chỉ playlist này'));
+      final save = tester.getRect(button('Lưu'));
+      final cancel = tester.getRect(find.widgetWithText(TextButton, 'Huỷ'));
+      expect((scope.center.dy - save.center.dy).abs(), lessThan(8));
+      expect(cancel.left, greaterThan(scope.left));
+      // 360 dp wide: the same 16 dp gutter on both sides.
+      expect(360 - save.right, closeTo(scope.left, 1));
     });
 
     testWidgets('artist suggestions show title and year', (tester) async {
@@ -640,7 +778,7 @@ void main() {
         if (size.width >= 1200) {
           expect(
             tester.getSize(find.byType(CoverDialog)).width,
-            lessThanOrEqualTo(KLayout.dialog),
+            lessThanOrEqualTo(KLayout.dialogWide),
           );
         }
       });

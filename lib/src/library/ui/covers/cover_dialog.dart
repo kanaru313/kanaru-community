@@ -49,6 +49,9 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
   /// there, above the modal (the root messenger draws under it).
   final _inner = GlobalKey<ScaffoldMessengerState>();
 
+  /// The album suggestions show all rows instead of the first few.
+  bool _suggestionsExpanded = false;
+
   CoverDialogArgs get _args =>
       (kind: widget.kind, itemKey: widget.itemKey, draft: widget.draft);
 
@@ -91,35 +94,47 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
     });
     final ctl = _ctl;
     final picked = s.chosenPicked?.preview;
-    final body = SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const KGap(KSpace.x2),
-          Center(
-            child: CoverPreviewFrame(
-              kind: widget.kind,
-              itemKey: widget.itemKey,
-              state: s,
-              onOffset: ctl.setOffset,
-              onDrop: ctl.drop,
-            ),
+    // Slivers: the album rows are built lazily. The desktop dialog fits its
+    // content (shrink-wrapped) until the list is expanded, then it fills the
+    // room it has and scrolls.
+    final body = CustomScrollView(
+      shrinkWrap: !widget.fixedHeight && !_suggestionsExpanded,
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const KGap(KSpace.x2),
+              Center(
+                child: CoverPreviewFrame(
+                  kind: widget.kind,
+                  itemKey: widget.itemKey,
+                  state: s,
+                  onOffset: ctl.setOffset,
+                  onDrop: ctl.drop,
+                ),
+              ),
+              CoverHintLine(kind: widget.kind, state: s),
+              if (picked != null &&
+                  (picked.width < smallCoverSide ||
+                      picked.height < smallCoverSide))
+                CoverSmallImageCard(width: picked.width, height: picked.height),
+              const KGap(KSpace.x2),
+            ],
           ),
-          CoverHintLine(kind: widget.kind, state: s),
-          if (picked != null &&
-              (picked.width < smallCoverSide || picked.height < smallCoverSide))
-            CoverSmallImageCard(width: picked.width, height: picked.height),
-          const KGap(KSpace.x2),
-          CoverOptionRows(
-            kind: widget.kind,
-            itemKey: widget.itemKey,
-            state: s,
-            onSelect: ctl.select,
-            onPick: () => ctl.pick(dialogLabel: widget.texts.linuxDialogLabel),
-          ),
-          const KGap(KSpace.x2),
-        ],
-      ),
+        ),
+        CoverOptionRows(
+          kind: widget.kind,
+          itemKey: widget.itemKey,
+          state: s,
+          suggestionsExpanded: _suggestionsExpanded,
+          onToggleSuggestions: () =>
+              setState(() => _suggestionsExpanded = !_suggestionsExpanded),
+          onSelect: ctl.select,
+          onPick: () => ctl.pick(dialogLabel: widget.texts.linuxDialogLabel),
+        ),
+        const SliverToBoxAdapter(child: KGap(KSpace.x2)),
+      ],
     );
     final column = Column(
       mainAxisSize: MainAxisSize.min,

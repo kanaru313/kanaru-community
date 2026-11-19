@@ -1681,22 +1681,6 @@
   "@coverAutoTitle": {
     "description": "Row that picks the automatic cover."
   },
-  "coverDefaultPill": "Default",
-  "@coverDefaultPill": {
-    "description": "Pill on the automatic row."
-  },
-  "coverAutoAlbum": "Cover in the music file",
-  "@coverAutoAlbum": {
-    "description": "Subtitle of the automatic row of an album."
-  },
-  "coverAutoArtist": "Automatic image",
-  "@coverAutoArtist": {
-    "description": "Subtitle of the automatic row of an artist."
-  },
-  "coverAutoPlaylist": "Automatic cover",
-  "@coverAutoPlaylist": {
-    "description": "Subtitle of the automatic row of a playlist."
-  },
   "coverCurrentTitle": "Current image",
   "@coverCurrentTitle": {
     "description": "Row of the custom cover the item has now."
@@ -1716,6 +1700,15 @@
   "coverGroupOther": "Other images",
   "@coverGroupOther": {
     "description": "Group title of the pick-from-device row."
+  },
+  "coverMoreAlbums": "Show {count} more albums",
+  "@coverMoreAlbums": {
+    "description": "Row that shows the remaining album suggestions.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "coverAlbumSubtitle": "Album cover",
   "@coverAlbumSubtitle": {
@@ -1785,18 +1778,6 @@
   "coverHintResetPlaylist": "Save: drops your image and uses the automatic cover again",
   "@coverHintResetPlaylist": {
     "description": "Hint under the preview: automatic chosen while a custom cover exists (playlist)."
-  },
-  "coverHintUsingAlbum": "Using the cover in the music file",
-  "@coverHintUsingAlbum": {
-    "description": "Hint under the preview: automatic, no custom cover (album)."
-  },
-  "coverHintUsingArtist": "Using the automatic image",
-  "@coverHintUsingArtist": {
-    "description": "Hint under the preview: automatic, no custom cover (artist)."
-  },
-  "coverHintUsingPlaylist": "Using the automatic cover",
-  "@coverHintUsingPlaylist": {
-    "description": "Hint under the preview: automatic, no custom cover (playlist)."
   },
   "coverHintCopied": "The image is copied into Kanaru's data; the original file and tags are unchanged",
   "@coverHintCopied": {

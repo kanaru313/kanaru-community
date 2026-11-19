@@ -46,6 +46,7 @@ export 'src/widgets/media/media_widgets.dart';
 export 'src/widgets/multi_selection_picker.dart';
 export 'src/widgets/page_header.dart';
 export 'src/widgets/page_header_scope.dart';
+export 'src/widgets/picker_footer.dart';
 export 'src/widgets/pro_badge.dart';
 export 'src/widgets/selection_picker.dart';
 export 'src/widgets/selection_row.dart';

@@ -59,19 +59,24 @@ Future<CoverDialogOptions> _load(Ref ref, CustomCoverItem item) async {
       auto = detail?.summary.autoCoverKeys ?? const [];
       // The track's cover only picks the albums; each suggestion shows the
       // album's own cover, like the album's tile does.
-      candidates = await Future.wait([
-        for (final c in albumCoverCandidates([
-          for (final e in detail?.entries ?? const <PlaylistEntryView>[])
-            e.info,
-        ], playlistSuggestionLimit))
-          _albumCandidate(ref, c),
-      ]);
+      // Every distinct album of the playlist (no cap: the dialog shows the
+      // first rows and builds the rest lazily). The reads run a few at a
+      // time ([coverResolveConcurrency]), so a big playlist does not fire
+      // hundreds of reads at once.
+      final infos = [
+        for (final e in detail?.entries ?? const <PlaylistEntryView>[]) e.info,
+      ];
+      candidates = await _mapBounded(
+        albumCoverCandidates(infos, infos.length),
+        (c) => _albumCandidate(ref, c),
+      );
   }
 
   final cache = ref.read(appPathsProvider).cacheDir.path;
-  final suggestions = await Future.wait([
-    for (final c in candidates) _suggestion(ref, cache, c),
-  ]);
+  final suggestions = await _mapBounded(
+    candidates,
+    (c) => _suggestion(ref, cache, c),
+  );
   final full = await firstAsync(ref, customCoverFileProvider(item));
   final thumb = await firstAsync(ref, customCoverThumbProvider(item));
   return CoverDialogOptions(
@@ -80,6 +85,31 @@ Future<CoverDialogOptions> _load(Ref ref, CustomCoverItem item) async {
     current: full == null || thumb == null ? null : (thumb: thumb, full: full),
     suggestions: suggestions.whereType<CoverSuggestion>().toList(),
   );
+}
+
+/// Most album reads in flight at once while the dialog options load.
+const coverResolveConcurrency = 6;
+
+/// `items.map(f)` awaited with at most [coverResolveConcurrency] calls running
+/// at once; the result keeps the order of [items].
+Future<List<R>> _mapBounded<T, R>(
+  List<T> items,
+  Future<R> Function(T) f,
+) async {
+  final results = List<R?>.filled(items.length, null);
+  var next = 0;
+  Future<void> worker() async {
+    while (next < items.length) {
+      final i = next++;
+      results[i] = await f(items[i]);
+    }
+  }
+
+  await Future.wait([
+    for (var w = 0; w < coverResolveConcurrency && w < items.length; w++)
+      worker(),
+  ]);
+  return [for (final r in results) r as R];
 }
 
 Future<_Candidate> _albumCandidate(Ref ref, AlbumCoverCandidate c) async {

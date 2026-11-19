@@ -4,10 +4,10 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../state/custom_cover_providers.dart';
 
-/// Fixed footer: what the change applies to, [Huỷ] and [Lưu] / [Chọn]. The
-/// confirm button is off until the choice differs from the opening one (and
-/// while an image is read), and shows a progress ring while saving. At large
-/// text the scope sits above the buttons.
+/// Fixed footer on the shared `PickerFooter`: what the change applies to,
+/// [Huỷ] and [Lưu] / [Chọn]. The confirm button is off until the choice
+/// differs from the opening one (and while an image is read), and shows a
+/// progress ring while saving.
 class CoverDialogFooter extends StatelessWidget {
   const CoverDialogFooter({
     super.key,
@@ -29,7 +29,6 @@ class CoverDialogFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
     final label = formMode ? l10n.coverChoose : l10n.coverSave;
     final scope = formMode
         ? l10n.coverScopeForm
@@ -38,17 +37,10 @@ class CoverDialogFooter extends StatelessWidget {
             CustomCoverKind.artist => l10n.coverScopeArtist,
             CustomCoverKind.playlist => l10n.coverScopePlaylist,
           };
-    final scopeText = Text(
-      scope,
-      style: Theme.of(context).textTheme.bodySmall
-          ?.copyWith(color: scheme.onSurfaceVariant),
-    );
-    final buttons = Wrap(
-      alignment: WrapAlignment.end,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: KSpace.x2,
-      runSpacing: KSpace.x1,
-      children: [
+    // The shared picker footer: scope note left, buttons right, one row.
+    return PickerFooter(
+      note: Text(scope),
+      buttons: [
         TextButton(onPressed: onCancel, child: Text(l10n.coverCancel)),
         FilledButton(
           onPressed: enabled ? onConfirm : null,
@@ -63,32 +55,6 @@ class CoverDialogFooter extends StatelessWidget {
               : Text(label),
         ),
       ],
-    );
-    final stacked = MediaQuery.textScalerOf(context).scale(1) > 1.3;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: scheme.outlineVariant)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          KSpace.x4,
-          KSpace.x2,
-          KSpace.x4,
-          KSpace.x2,
-        ),
-        child: stacked
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [scopeText, const KGap(KSpace.x1), buttons],
-              )
-            : Row(
-                children: [
-                  Expanded(child: scopeText),
-                  const KGap(KSpace.x2),
-                  Flexible(child: buttons),
-                ],
-              ),
-      ),
     );
   }
 }
