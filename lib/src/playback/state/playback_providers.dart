@@ -16,6 +16,7 @@ import 'listen_recorder.dart';
 import 'player_controller.dart';
 import 'player_ready.dart';
 import 'session_restore.dart' show readSetting;
+import 'sleep_ticker_provider.dart';
 import 'playback_data_providers.dart';
 
 /// The player. Created by [nowPlayingProvider] and by commands, never while a
@@ -33,6 +34,7 @@ final playerControllerProvider = Provider<PlayerController>((ref) {
     settings: store,
     engineFactory: ref.read(audioEngineFactoryProvider),
     focus: _LiveFocus(ref),
+    periodic: ref.read(sleepTickerProvider),
     titles: ref.read(trackTitleLookupProvider),
     listens: ListenRecorder(
       writer: ref.read(playLogWriterProvider),

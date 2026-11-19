@@ -32,6 +32,7 @@ part 'player_controller_events.dart';
 part 'player_controller_reconcile.dart';
 part 'player_controller_session.dart';
 part 'player_controller_sleep.dart';
+part 'player_controller_sleep_fade.dart';
 
 final _log = Logger('PlayerController');
 
@@ -52,11 +53,15 @@ class PlayerController implements PlaybackCommands {
     required this._titles,
     required this._listens,
     int Function()? clock,
+
+    /// Makes the periodic timer of the sleep fade; tests drive it by hand.
+    Timer Function(Duration, void Function())? periodic,
     Random? random,
     this._keys = const KeyGen(),
     this._undoWindow = const Duration(seconds: 4),
     this._focusTimeout = const Duration(seconds: 2),
   }) : _clock = clock ?? (() => DateTime.now().millisecondsSinceEpoch),
+       _periodic = periodic ?? ((d, f) => Timer.periodic(d, (_) => f())),
        _random = random ?? Random(),
        _homeZone = Zone.current,
        _saver = PositionSaver(_settings) {
@@ -85,6 +90,7 @@ class PlayerController implements PlaybackCommands {
   final ListenRecorder _listens;
   final PositionSaver _saver;
   final int Function() _clock;
+  final Timer Function(Duration, void Function()) _periodic;
   final Random _random;
   final KeyGen _keys;
   final Duration _undoWindow;
@@ -176,6 +182,18 @@ class PlayerController implements PlaybackCommands {
   int? _withheldFor;
   final List<TrackEnd> _pendingEnds = [];
 
+  // The sleep fade (see player_controller_sleep_fade.dart). [_gain] scales
+  // the user's volume; [_fadeGen] changes whenever a ramp ends, so a step
+  // queued before that drops itself. [_restoreVolumePending]: a fade ended
+  // and the engine has not yet got the user's volume back.
+  double _gain = 1;
+  double _fadeStartGain = 1;
+  int _fadeGen = 0;
+  int _fadeFromMs = 0;
+  int _fadeLengthMs = 1;
+  Timer? _fadeTimer;
+  bool _restoreVolumePending = false;
+
   /// What is loaded, with the latest value for a late listener.
   Stream<NowPlaying> get nowPlaying => _now.stream;
   Stream<QueueView> get queueView => _view.stream;
@@ -197,13 +215,13 @@ class PlayerController implements PlaybackCommands {
     return _cmd(() async {
       _policy = policy;
       _withheldFor = null;
-    });
+    }, keepsSleepFade: true);
   }
 
   /// The policy's answer may have changed: decide the next entry again.
   /// Does nothing after [dispose].
   Future<void> sleepPolicyChanged() =>
-      _disposed ? Future.value() : _cmd(() async {});
+      _disposed ? Future.value() : _cmd(() async {}, keepsSleepFade: true);
 
   /// Play, pause or stop, and the volume.
   Stream<TransportView> get transport => _transport.stream;
@@ -215,15 +233,41 @@ class PlayerController implements PlaybackCommands {
   PlayIntent get intent => _intent;
   PlayContext? get context => _context;
 
-  Future<T> _cmd<T>(Future<T> Function() body, {bool reconcile = true}) =>
-      _chain.run(() async {
-        if (reconcile) _dirty = true;
-        try {
-          return await body();
-        } finally {
-          _publish();
-        }
-      });
+  /// Fades the volume to silence over [length] for the sleep timer, leaving
+  /// the play state alone. Ignored while not playing. Any other command ends
+  /// the fade. Never throws; does nothing after [dispose].
+  Future<void> fadeOutForSleep(Duration length) =>
+      _sleepCmd(() => _startFade(length));
+
+  /// Ends the fade and gives the user's volume back at once; playback goes
+  /// on. Nothing happens without a fade. Never throws.
+  Future<void> endSleepFade() => _sleepCmd(_endFadeNow);
+
+  /// [pause] for the sleep timer: the fade ends, and the user's volume goes
+  /// back only after the engine paused. Never throws.
+  Future<void> sleepPause() =>
+      _sleepCmd(_pauseBody, keepsFade: false, reconcile: true);
+
+  /// Milliseconds on the controller's clock, for the sleep timer.
+  int get nowMs => _clock();
+
+  /// Runs [body] as a task of the chain. Every command ends a running sleep
+  /// fade, except the four sleep commands that pass [keepsSleepFade].
+  Future<T> _cmd<T>(
+    Future<T> Function() body, {
+    bool reconcile = true,
+    bool keepsSleepFade = false,
+  }) => _chain.run(() async {
+    if (!keepsSleepFade) _endFadeDeferred();
+    if (reconcile) _dirty = true;
+    try {
+      final result = await body();
+      if (!reconcile) await _restoreVolumeUnlessDirty();
+      return result;
+    } finally {
+      _publish();
+    }
+  });
 
   /// Completes when the queued commands and the reconcile after them are done.
   Future<void> settled() => _chain.whenIdle();
@@ -468,12 +512,14 @@ class PlayerController implements PlaybackCommands {
     _intent = PlayIntent.playing;
   }
 
-  Future<void> pause() => _cmd(() async {
+  Future<void> pause() => _cmd(_pauseBody);
+
+  Future<void> _pauseBody() async {
     if (_intent == PlayIntent.playing) {
       _intent = PlayIntent.paused;
       _saveNow();
     }
-  });
+  }
 
   Future<void> playPause() => _cmd(() async {
     if (_intent == PlayIntent.playing) {
@@ -617,7 +663,11 @@ class PlayerController implements PlaybackCommands {
     }
     _volume = volume;
     _write(volumeSetting.key, volume);
-    await _engine?.setVolume(volume.toDouble());
+    if (_restoreVolumePending) {
+      await _restoreVolumeUnlessDirty();
+    } else {
+      await _engine?.setVolume(_outVolume);
+    }
   }
 
   /// Sets the base repeat mode. Also ends a counted repeat, even when the mode
@@ -803,6 +853,7 @@ class PlayerController implements PlaybackCommands {
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
+    _cancelRamp();
     await _chain.close();
     for (final s in _subs) {
       await s.cancel();

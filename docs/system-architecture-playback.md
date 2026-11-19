@@ -355,6 +355,20 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
   engine finished by itself (accepted or replaced advance, a loop, `Ended` with or without a next;
   `queueEnded` when nothing followed; `sleepStop` when the policy stopped it), emitted after the
   handler's publish. Never for failures, next, previous, jumps, seeks or plays.
+- **Sleep fade** (`player_controller_sleep_fade.dart`): `fadeOutForSleep(length)` ramps a gain (1 to 0) over
+  `length`; the engine gets `volume * gain`, play state, position and media controls are untouched, and
+  `volumeSetting` is never written. Ticks (50 ms) come from an injected `Timer Function(Duration, void
+  Function())` (`sleepTickerProvider`, shared with the sleep timer); each tick queues one chain step that
+  computes the level from the controller's clock (`nowMs`) and drops itself when its generation is stale.
+  Ignored while not playing. `endSleepFade()` ends it at once (gain 1, user volume sent). `sleepPause()` is
+  `pause()` for the timer. **Every command ends the fade** (`_cmd` prologue), except `setSleepStopPolicy`,
+  `sleepPolicyChanged`, `fadeOutForSleep` and `endSleepFade`; engine events do not, so a track change keeps
+  fading. Ending it from a command cancels the ramp and marks the volume restore pending; the user's volume
+  is sent only after the reconcile finished (so after `pause`/`stop`/`load`), or, for commands without a
+  reconcile (`seek`, `setVolume`...), after their body. If `pause` throws, the restore is skipped (the
+  engine stays silent), `_enginePlaying` stays true and the next reconcile retries the pause, then restores.
+  A new engine gets `volume * gain`. Sleep methods never throw and complete at once after `dispose`;
+  `dispose` stops the ticker first.
 - **Intent** (`PlayIntent`: playing, paused, stopped) is the only source of play/pause. Stop empties
   the engine and gives focus back; the entry stays.
 - **Audio focus:** every transition to playing awaits `PlaybackFocus.activate()` (2 s timeout = denied).
