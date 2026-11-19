@@ -2218,6 +2218,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get coverAutoTitle => 'Tự động';
 
   @override
+  String get coverAutoSubtitleAlbum => 'Bìa trong tệp nhạc';
+
+  @override
+  String get coverAutoSubtitleArtist => 'Bìa album đầu tiên';
+
+  @override
+  String get coverAutoSubtitlePlaylist => 'Ghép bìa 4 album đầu';
+
+  @override
   String get coverCurrentTitle => 'Ảnh đang dùng';
 
   @override

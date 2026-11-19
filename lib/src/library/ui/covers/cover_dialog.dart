@@ -53,6 +53,26 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
   /// The album suggestions show all rows instead of the first few.
   bool _suggestionsExpanded = false;
 
+  /// Scrolls the body back to the preview after an image is read.
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// Brings the preview frame into view: animated, or at once when the
+  /// platform asks for no animations.
+  void _scrollToPreview() {
+    if (!_scroll.hasClients || _scroll.offset == 0) return;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _scroll.jumpTo(0);
+    } else {
+      _scroll.animateTo(0, duration: KMotion.normal, curve: KMotion.emphasized);
+    }
+  }
+
   CoverDialogArgs get _args =>
       (kind: widget.kind, itemKey: widget.itemKey, draft: widget.draft);
 
@@ -98,12 +118,17 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
       );
       _ctl.clearError();
     });
+    // A picked (or dropped) image became ready: show its preview.
+    ref.listen(provider.select((s) => s.picked?.preview), (before, after) {
+      if (after != null && !identical(before, after)) _scrollToPreview();
+    });
     final ctl = _ctl;
     final picked = s.chosenPicked?.preview;
     // Slivers: the album rows are built lazily. The desktop dialog fits its
     // content (shrink-wrapped) until the list is expanded, then it fills the
     // room it has and scrolls.
     final body = CustomScrollView(
+      controller: _scroll,
       shrinkWrap: !widget.fixedHeight && !_suggestionsExpanded,
       slivers: [
         SliverToBoxAdapter(

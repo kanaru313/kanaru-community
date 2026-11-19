@@ -2503,6 +2503,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coverAutoTitle => 'Automatic';
 
   @override
+  String get coverAutoSubtitleAlbum => 'Cover in the music file';
+
+  @override
+  String get coverAutoSubtitleArtist => 'First album cover';
+
+  @override
+  String get coverAutoSubtitlePlaylist => 'Made from the first 4 album covers';
+
+  @override
   String get coverCurrentTitle => 'Current image';
 
   @override

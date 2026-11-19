@@ -1681,6 +1681,18 @@
   "@coverAutoTitle": {
     "description": "Row that picks the automatic cover."
   },
+  "coverAutoSubtitleAlbum": "Cover in the music file",
+  "@coverAutoSubtitleAlbum": {
+    "description": "Subtitle of the automatic cover row (album)."
+  },
+  "coverAutoSubtitleArtist": "First album cover",
+  "@coverAutoSubtitleArtist": {
+    "description": "Subtitle of the automatic cover row (artist)."
+  },
+  "coverAutoSubtitlePlaylist": "Made from the first 4 album covers",
+  "@coverAutoSubtitlePlaylist": {
+    "description": "Subtitle of the automatic cover row (playlist)."
+  },
   "coverCurrentTitle": "Current image",
   "@coverCurrentTitle": {
     "description": "Row of the custom cover the item has now."

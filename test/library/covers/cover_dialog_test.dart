@@ -246,15 +246,11 @@ void main() {
       );
       expect(find.text('Bìa album trong playlist'), findsNothing);
       expect(find.text('Bìa album của nghệ sĩ'), findsNothing);
-      // Tự động is a bare row: no subtitle, no pill, no "using" hint.
+      // Tự động says where the automatic cover comes from; no pill, no
+      // "using" hint.
       expect(find.text('Tự động'), findsOneWidget);
-      for (final gone in [
-        'Bìa trong tệp nhạc',
-        'Bìa tự động',
-        'Ảnh tự động',
-        'Mặc định',
-        'Đang dùng bìa trong tệp nhạc',
-      ]) {
+      expect(find.text('Bìa trong tệp nhạc'), findsOneWidget);
+      for (final gone in ['Mặc định', 'Đang dùng bìa trong tệp nhạc']) {
         expect(find.text(gone), findsNothing, reason: gone);
       }
     });
@@ -879,6 +875,52 @@ void main() {
             lessThanOrEqualTo(KLayout.dialogWide),
           );
         }
+      });
+    }
+  });
+
+  group('automatic row subtitle', () {
+    for (final (kind, text) in [
+      (CustomCoverKind.album, 'Bìa trong tệp nhạc'),
+      (CustomCoverKind.artist, 'Bìa album đầu tiên'),
+      (CustomCoverKind.playlist, 'Ghép bìa 4 album đầu'),
+    ]) {
+      testWidgets('${kind.name} shows "$text"', (tester) async {
+        await open(tester, kind: kind);
+        expect(
+          find.descendant(of: row('Tự động'), matching: find.text(text)),
+          findsOneWidget,
+        );
+      });
+    }
+  });
+
+  group('scroll to the preview after a pick', () {
+    for (final animations in [true, false]) {
+      testWidgets('offset returns to 0 (animations: $animations)', (
+        tester,
+      ) async {
+        final many = [for (var i = 0; i < 40; i++) suggestion('Album $i')];
+        await open(
+          tester,
+          opts: options(suggestions: many),
+          size: const Size(360, 520),
+          animations: animations,
+        );
+        final scrollable = find
+            .descendant(
+              of: find.byType(CoverDialog),
+              matching: find.byType(Scrollable),
+            )
+            .first;
+        await tester.drag(scrollable, const Offset(0, -300));
+        await tester.pumpAndSettle();
+        double offset() =>
+            tester.state<ScrollableState>(scrollable).position.pixels;
+        expect(offset(), greaterThan(0));
+
+        await pickImage(tester);
+        expect(offset(), 0);
       });
     }
   });

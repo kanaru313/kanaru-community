@@ -96,6 +96,11 @@ class CoverOptionRows extends StatelessWidget {
               _row(
                 CoverRowIds.automatic,
                 title: l10n.coverAutoTitle,
+                subtitle: switch (kind) {
+                  CustomCoverKind.album => l10n.coverAutoSubtitleAlbum,
+                  CustomCoverKind.artist => l10n.coverAutoSubtitleArtist,
+                  CustomCoverKind.playlist => l10n.coverAutoSubtitlePlaylist,
+                },
                 art: AutomaticCoverArt(
                   kind: kind,
                   itemKey: itemKey,

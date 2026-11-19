@@ -3612,6 +3612,24 @@ abstract class AppLocalizations {
   /// **'Automatic'**
   String get coverAutoTitle;
 
+  /// Subtitle of the automatic cover row (album).
+  ///
+  /// In en, this message translates to:
+  /// **'Cover in the music file'**
+  String get coverAutoSubtitleAlbum;
+
+  /// Subtitle of the automatic cover row (artist).
+  ///
+  /// In en, this message translates to:
+  /// **'First album cover'**
+  String get coverAutoSubtitleArtist;
+
+  /// Subtitle of the automatic cover row (playlist).
+  ///
+  /// In en, this message translates to:
+  /// **'Made from the first 4 album covers'**
+  String get coverAutoSubtitlePlaylist;
+
   /// Row of the custom cover the item has now.
   ///
   /// In en, this message translates to:
