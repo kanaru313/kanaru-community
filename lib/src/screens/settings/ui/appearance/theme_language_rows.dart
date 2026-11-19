@@ -42,6 +42,7 @@ class _ThemeLanguageRowsState extends ConsumerState<ThemeLanguageRows> {
     final chosen = await showSelectionPicker<ThemeChoice>(
       context,
       anchor: _themeKey,
+      anchorAlign: KAnchorAlign.end,
       title: Text(l10n.scanSetupThemeLabel),
       selected: current,
       options: [
@@ -61,6 +62,7 @@ class _ThemeLanguageRowsState extends ConsumerState<ThemeLanguageRows> {
     final chosen = await showSelectionPicker<AppLanguage>(
       context,
       anchor: _languageKey,
+      anchorAlign: KAnchorAlign.end,
       title: Text(l10n.scanSetupLanguageLabel),
       selected: current,
       options: [

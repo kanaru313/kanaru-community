@@ -38,6 +38,7 @@ class _AppearanceSettingsPageState
     final chosen = await showSelectionPicker<int>(
       context,
       anchor: _textSizeKey,
+      anchorAlign: KAnchorAlign.end,
       title: Text(l10n.settingsAppearanceTextSize),
       header: Text(l10n.settingsAppearanceTextSizeCaption),
       selected: current,
@@ -78,7 +79,7 @@ class _AppearanceSettingsPageState
           title: Text(l10n.settingsAppearanceColorMotionTitle),
           children: [
             KSwitchRow(
-              leading: const Icon(KIcons.themeDark),
+              leading: const Icon(KIcons.pureBlack),
               title: Text(l10n.settingsAppearancePureBlack),
               // Locked: the reason replaces the desc.
               subtitle: Text(
@@ -94,7 +95,7 @@ class _AppearanceSettingsPageState
                   : (v) => ref.read(pureBlackProvider.notifier).set(v),
             ),
             KSwitchRow(
-              leading: const Icon(KIcons.ai),
+              leading: const Icon(KIcons.motion),
               title: Text(l10n.settingsAppearanceMotion),
               subtitle: Text(l10n.settingsAppearanceMotionDesc),
               switchLabel: l10n.settingsAppearanceMotion,
@@ -107,13 +108,13 @@ class _AppearanceSettingsPageState
           title: Text(l10n.settingsAppearanceTextTitle),
           children: [
             SoonRow(
-              icon: KIcons.edit,
+              icon: KIcons.font,
               title: Text(l10n.settingsAppearanceFont),
               desc: _defaultFontName,
             ),
             SetupValueRow(
               anchorKey: _textSizeKey,
-              icon: KIcons.sortName,
+              icon: KIcons.textSize,
               title: Text(l10n.settingsAppearanceTextSize),
               value: Text(l10n.settingsPercent(textScale)),
               onTap: () => _pickTextSize(l10n, textScale),
@@ -124,7 +125,7 @@ class _AppearanceSettingsPageState
           title: Text(l10n.settingsAppearanceDisplayTitle),
           children: [
             SetupValueRow(
-              icon: KIcons.mostPlayed,
+              icon: KIcons.seekBar,
               title: Text(l10n.settingsAppearanceSeekBar),
               value: Text(switch (seekStyle) {
                 SeekBarStyle.waveform => l10n.settingsSeekBarWaveform,
@@ -134,7 +135,7 @@ class _AppearanceSettingsPageState
             ),
             if (desktop)
               SoonRow(
-                icon: KIcons.openFull,
+                icon: KIcons.windowFrame,
                 title: Text(l10n.settingsAppearanceWindowFrame),
                 desc:
                     '${l10n.settingsAppearanceWindowFrameDesc}\n'

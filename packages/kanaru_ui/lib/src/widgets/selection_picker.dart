@@ -5,6 +5,7 @@ import '../tokens/k_layout.dart';
 import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
+import 'anchored_panel_layout.dart';
 import 'k_gap.dart';
 import 'k_sheet.dart';
 import 'picker_footer.dart';
@@ -49,7 +50,9 @@ enum SelectionPickerPresentation {
 
 /// Single-choice picker. Mobile: sheet ([showKSheet]). Desktop: a panel
 /// anchored under [anchor] when given, otherwise a centred dialog
-/// ([presentation] `dialog` forces the dialog on both shells).
+/// ([presentation] `dialog` forces the dialog on both shells). [anchorAlign]
+/// picks which edge of the panel lines up with the anchor (`end` for panels
+/// opened from a Settings or first-run row).
 ///
 /// [header] sits above the options and stays put while they scroll.
 /// With [confirmLabel] and [cancelLabel] a tap only selects the row and the
@@ -69,6 +72,7 @@ Future<T?> showSelectionPicker<T>(
   String? confirmLabel,
   String? cancelLabel,
   SelectionPickerPresentation presentation = SelectionPickerPresentation.auto,
+  KAnchorAlign anchorAlign = KAnchorAlign.start,
 }) {
   assert(
     (confirmLabel == null) == (cancelLabel == null),
@@ -114,7 +118,7 @@ Future<T?> showSelectionPicker<T>(
     useSafeArea: false,
     barrierColor: const Color(0x00000000),
     builder: (context) => CustomSingleChildLayout(
-      delegate: _AnchoredLayout(rect),
+      delegate: AnchoredPanelLayout(rect, align: anchorAlign),
       child: Material(
         elevation: 3,
         color: Theme.of(context).colorScheme.surfaceContainerHigh,
@@ -127,41 +131,6 @@ Future<T?> showSelectionPicker<T>(
       ),
     ),
   );
-}
-
-/// Places the panel under the anchor, left edges aligned, clamped to the
-/// screen; flips above the anchor when there is no room below.
-class _AnchoredLayout extends SingleChildLayoutDelegate {
-  _AnchoredLayout(this.anchor);
-
-  final Rect anchor;
-
-  @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
-      BoxConstraints(
-        maxWidth: constraints.maxWidth - 2 * KSpace.x4,
-        maxHeight: constraints.maxHeight - 2 * KSpace.x4,
-      );
-
-  @override
-  Offset getPositionForChild(Size size, Size childSize) {
-    final x = anchor.left.clamp(
-      KSpace.x4,
-      (size.width - childSize.width - KSpace.x4).clamp(KSpace.x4, size.width),
-    );
-    final below = anchor.bottom + KSpace.x1;
-    final y = below + childSize.height <= size.height - KSpace.x4
-        ? below
-        : (anchor.top - KSpace.x1 - childSize.height).clamp(
-            KSpace.x4,
-            size.height,
-          );
-    return Offset(x, y);
-  }
-
-  @override
-  bool shouldRelayout(_AnchoredLayout oldDelegate) =>
-      anchor != oldDelegate.anchor;
 }
 
 class _PickerBody<T> extends StatefulWidget {

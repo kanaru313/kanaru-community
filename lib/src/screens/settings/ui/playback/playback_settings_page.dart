@@ -32,6 +32,7 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
     final chosen = await showSelectionPicker<PreviousButtonPolicy>(
       context,
       anchor: _previousKey,
+      anchorAlign: KAnchorAlign.end,
       title: Text(l10n.settingsPlaybackPreviousButton),
       selected: current,
       options: [
@@ -79,23 +80,23 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
           title: Text(l10n.settingsPlaybackBlockPlay),
           children: [
             SoonRow(
-              icon: KIcons.playlistPlay,
+              icon: KIcons.gapless,
               title: Text(l10n.settingsPlaybackGapless),
               desc: l10n.settingsPlaybackGaplessDesc,
             ),
             SoonRow(
-              icon: KIcons.volume,
+              icon: KIcons.fadeIn,
               title: Text(l10n.settingsPlaybackFadeIn),
               desc: l10n.settingsPlaybackOff,
             ),
             SoonRow(
-              icon: KIcons.volumeOff,
+              icon: KIcons.fadeOut,
               title: Text(l10n.settingsPlaybackFadeOut),
               desc: l10n.settingsPlaybackOff,
             ),
             SetupValueRow(
               anchorKey: _previousKey,
-              icon: KIcons.skipPrevious,
+              icon: KIcons.previousButton,
               title: Text(l10n.settingsPlaybackPreviousButton),
               value: Text(switch (previous) {
                 PreviousButtonPolicy.alwaysPrevious =>
@@ -106,7 +107,7 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
               onTap: () => _pickPrevious(l10n, previous),
             ),
             SoonRow(
-              icon: KIcons.shuffle,
+              icon: KIcons.crossfade,
               title: Text(l10n.settingsPlaybackCrossfade),
               desc: l10n.settingsPlaybackCrossfadeDesc,
             ),
@@ -117,24 +118,24 @@ class _PlaybackSettingsPageState extends ConsumerState<PlaybackSettingsPage> {
           children: [
             if (desktop)
               SoonRow(
-                icon: KIcons.playCount,
+                icon: KIcons.outputDevice,
                 title: Text(l10n.settingsPlaybackOutputDevice),
                 desc: l10n.settingsPlaybackAuto,
               ),
             SoonRow(
-              icon: KIcons.stats,
+              icon: KIcons.replayGain,
               title: Text(l10n.settingsPlaybackReplayGain),
               desc: l10n.settingsPlaybackOff,
             ),
             SoonRow(
-              icon: KIcons.arrowUp,
+              icon: KIcons.preamp,
               title: Text(l10n.settingsPlaybackPreamp),
               desc:
                   '${l10n.settingsPlaybackPreampValue(0)}\n'
                   '${l10n.settingsPlaybackNeedsReplayGain}',
             ),
             SoonRow(
-              icon: KIcons.permissionMissing,
+              icon: KIcons.clipping,
               title: Text(l10n.settingsPlaybackClipping),
               desc:
                   '${l10n.settingsPlaybackClippingDesc}\n'

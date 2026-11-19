@@ -59,6 +59,7 @@ Future<void> showSliderSheet(
   Widget? caption,
   required List<KSliderSpec> sliders,
   GlobalKey? anchor,
+  KAnchorAlign anchorAlign = KAnchorAlign.start,
 }) {
   assert(
     sliders.isNotEmpty && sliders.length <= 2,
@@ -90,7 +91,7 @@ Future<void> showSliderSheet(
     useSafeArea: false,
     barrierColor: const Color(0x00000000),
     builder: (context) => CustomSingleChildLayout(
-      delegate: AnchoredPanelLayout(rect),
+      delegate: AnchoredPanelLayout(rect, align: anchorAlign),
       child: Material(
         elevation: 3,
         color: Theme.of(context).colorScheme.surfaceContainerHigh,

@@ -46,6 +46,7 @@ Future<void> showListenRuleSheet(
   return showSliderSheet(
     context,
     anchor: anchor,
+    anchorAlign: KAnchorAlign.end,
     title: Text(l10n.settingsPlaybackListenRule),
     caption: Text(l10n.settingsPlaybackListenCaption),
     sliders: [
