@@ -110,6 +110,7 @@ void main() {
       CustomCoverStore(
         db,
         Directory('${root.path}/data'),
+        previewDir: Directory('${root.path}/preview'),
         importer: importer,
         gcMinAge: gcMinAge,
       );
@@ -289,6 +290,7 @@ void main() {
     CustomCoverStore stalledStore() => CustomCoverStore(
       db,
       Directory('${root.path}/data'),
+      previewDir: Directory('${root.path}/preview'),
       importer: importer,
       gcMinAge: const Duration(hours: 1), // the GC cannot be what cleans up
       importTimeout: const Duration(milliseconds: 50),

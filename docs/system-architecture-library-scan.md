@@ -431,7 +431,7 @@ Dart wrapper: `lib/src/library/data/scan/native_cover_import.dart`
   files when nothing references or pins them. `importCover` / `removeCover` are
   `changeCover` plus an immediate `release()`. A change never released (process
   killed) leaves files the GC removes after its age window. `previewCover(File)`
-  delegates to `prepare_cover_preview` with the preview folder `<cache>/cover-preview` (`coverPreviewDirProvider`; the app sweeps its leftovers at startup, never while a dialog is open).
+  delegates to `prepare_cover_preview` with the preview folder `<cache>/cover-preview` (`coverPreviewDirProvider`; a required constructor argument of `CustomCoverStore`, no fallback folder; the startup sweep below removes its leftovers).
 - Crop: `crop` is a square (`left`, `top`, `side`) in pixels of the **upright**
   original (after the EXIF turn; what `prepare_cover_preview` shows). `null` keeps
   the whole image with its aspect ratio: the output is byte-identical to a call
@@ -467,6 +467,40 @@ Dart wrapper: `lib/src/library/data/scan/native_cover_import.dart`
   (detail starts with `cover cache`); permanent for `corrupt` (does not decode),
   `unsupported` (another format, a special file, a relative `outDir`, a bad crop),
   `tooLarge` and `notFound`.
+
+### Cover dialog state
+
+State of the cover dialog lives in `library/state/covers/` (no widgets):
+
+- Strings: `lib/l10n/parts/covers_{en,vi}.arb` (prefix `cover`, part `covers` in
+  `tool/merge_arb.dart`). `CoverTexts.of(l10n)` copies the words the save job needs, so
+  the job holds no `BuildContext`.
+- Options: `coverDialogOptionsProvider((kind, itemKey))` reads once what the rows show:
+  the automatic cover keys, the item's current custom cover (thumb + full files) and the
+  suggestions. Artist: own albums, then albums it appears in, only with a cover, at most 4.
+  Playlist: `albumCoverCandidates` (distinct albums in track order, skipping tracks without
+  an album or cover), at most 6. Album: none. A suggestion's file is the album's shown cover
+  (its custom cover first, else the song cover), so a pick copies what the user sees.
+- Controller: `coverDialogControllerProvider((kind, itemKey, draft))` is auto-disposed
+  with the dialog. It holds the chosen row, the picked image (reading, then ready with
+  its upright size), the pan offset (`cropFor`: centred by default, clamped, `null` for a
+  square image), `saving`, a one-shot `error`, and `changed` (false while reading or
+  saving). A newer pick or drop replaces the earlier one and deletes its temp copy and
+  preview; a result that arrives after the dialog closed is deleted. Dispose deletes only
+  files the controller still owns: a file the user picked in place (`temporary: false`)
+  is never deleted, a save or a draft takes ownership away.
+- Save mode: `save()` starts a `CoverSaveJob`, which holds the root messenger, the texts
+  and the temp files, so closing the dialog does not stop it. Success: SnackBar with Undo
+  (undo returning false or throwing shows "can't undo"; closing without Undo releases the
+  change). Failure: SnackBar with the error text; the temp files are kept only while the
+  dialog is still open, for a retry.
+- Form mode (Edit playlist): `toDraft()` returns a `CoverDraft` (choice, row, display
+  file, picked image, offset) with nothing written; the form owns the draft's temp files
+  and calls `discard()`. Reopening the dialog with the draft restores its row and pan.
+- Startup sweep: `coverLeftoversSweepProvider`, started in the background from
+  `scanStartupWorkProvider` (after the first frame), runs the image picker's
+  `cleanImagePickerLeftovers()` and deletes `.kanaru-tmp-preview-*` files older than
+  one hour in the preview folder. Failures are logged, never thrown.
 
 ## Pass versions and errors
 

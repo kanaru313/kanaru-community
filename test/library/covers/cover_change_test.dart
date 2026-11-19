@@ -51,6 +51,7 @@ void main() {
   CustomCoverStore newStore(CoverImporter importer) => CustomCoverStore(
     db,
     Directory('${root.path}/data'),
+    previewDir: Directory('${root.path}/preview'),
     importer: importer,
     previewer: previewer,
     gcMinAge: Duration.zero,
@@ -260,6 +261,7 @@ void main() {
       s = CustomCoverStore(
         db,
         Directory('${root.path}/data'),
+        previewDir: Directory('${root.path}/preview'),
         importer: slow,
         importTimeout: const Duration(milliseconds: 50),
         gcMinAge: Duration.zero,

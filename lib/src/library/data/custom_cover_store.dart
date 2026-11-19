@@ -37,14 +37,11 @@ class CustomCoverStore implements CustomCoverController {
     Directory dataDir, {
     this._importer = const RustCoverImporter(),
     this._previewer = const RustCoverPreviewer(),
-    Directory? previewDir,
+    required this.previewDir,
     this.gcMinAge = const Duration(hours: 1),
     this.importTimeout = const Duration(seconds: 60),
     this._clock = DateTime.now,
-  }) : _dir = Directory('${dataDir.path}/$customCoversDirName'),
-       previewDir =
-           previewDir ??
-           Directory('${Directory.systemTemp.path}/kanaru-cover-preview');
+  }) : _dir = Directory('${dataDir.path}/$customCoversDirName');
 
   final AppDatabase _db;
   final Directory _dir;

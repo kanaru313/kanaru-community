@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
+import '../covers/cover_leftovers_sweep.dart';
 import '../scan_providers.dart';
 import 'scan_capabilities.dart';
 
 final _log = Logger('library.scan');
 
 /// Asks the scanner for its startup work (incremental scan, garbage
-/// collection). Home calls it once after its first frame.
+/// collection) and sweeps cover dialog leftovers. Home calls it once after
+/// its first frame.
 ///
 /// It goes through [libraryScanCommandsProvider]: only a scanner that
 /// implements [ScanStartupWork] has startup work, so a different
@@ -15,6 +19,8 @@ final _log = Logger('library.scan');
 /// and starts no timer.
 final scanStartupWorkProvider = Provider<void Function()>((ref) {
   return () {
+    // Cover dialog leftovers: background, independent of the scanner.
+    unawaited(ref.read(coverLeftoversSweepProvider)());
     // As an Object, so the capability check is a plain runtime type test.
     final Object commands = ref.read(libraryScanCommandsProvider);
     if (commands is ScanStartupWork) {
