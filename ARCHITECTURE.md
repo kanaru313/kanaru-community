@@ -201,7 +201,9 @@ shows it inside the shell (top bar, sidebar and player bar stay; the sidebar
 footer item is selected on every `/settings/**` location). Mobile shows the same
 branch full screen: no bottom bar, no dock or mini player, no menu or AI/gear
 header actions; the root header has a back arrow to Home and sub-pages push
-inside the branch navigator. Android Back: sub-page, Settings root, Home.
+inside the branch navigator. Android Back (`MobileShell`): sidebar, popover / filter / pushed page /
+Folders level, tab root (`NavItem.atRoot`) to Home, a page opened with `go` to
+its tab's page, and at Home the shell exits the app.
 
 Mobile bottom bar today: Home (10), Library (20), Playlists (30), Search (40),
 Online (50).

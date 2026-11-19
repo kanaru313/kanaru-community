@@ -7,8 +7,12 @@ extension _Reconcile on PlayerController {
     _dirty = false;
     try {
       await _reconcile();
+      await _restoreVolume();
     } on Object catch (e, st) {
       _log.warning('reconcile failed: $e', e, st);
+      // A pause that failed is tried again by the next reconcile, which then
+      // restores the volume; until then the engine stays silent.
+      if (_restoreVolumePending) _dirty = true;
     } finally {
       _publish();
     }
@@ -89,7 +93,7 @@ extension _Reconcile on PlayerController {
         }),
       );
     });
-    unawaited(engine.setVolume(_volume.toDouble()));
+    unawaited(engine.setVolume(_outVolume));
     return engine;
   }
 
@@ -245,7 +249,13 @@ extension _Reconcile on PlayerController {
       }
     } else if (!wantPlay && _enginePlaying) {
       _enginePlaying = false;
-      await engine.pause();
+      try {
+        await engine.pause();
+      } on Object {
+        // Still playing as far as the engine is concerned: retried later.
+        _enginePlaying = true;
+        rethrow;
+      }
     }
   }
 
@@ -271,6 +281,13 @@ extension _Reconcile on PlayerController {
   /// current itself under repeat one), or the first playable one after it
   /// (looking at most 50 ahead). Entries passed over are reported in `skip`.
   Future<_NextPick?> _nextCandidate(Map<int, Playable> cache) async {
+    // The sleep stop is decided here, with the queue as it is now: nothing is
+    // handed over, and the entry is remembered as the one stopped after.
+    if (_policy != null && _sleepStopNow(_queue)) {
+      _withheldFor = _queue.currentItem?.entryId;
+      return null;
+    }
+    _withheldFor = null;
     var i = nextIndex(_queue, auto: true, loops: _repeatTimes);
     if (i == null) return null;
     final start = _queue.current!;

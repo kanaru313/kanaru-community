@@ -192,6 +192,10 @@ class MprisMediaControls implements MediaControls {
   @override
   Future<void> deactivate() async {}
 
+  /// Linux has no interruptions to resume from.
+  @override
+  void cancelPendingResume() {}
+
   @override
   Future<void> dispose() async {
     if (_disposed) return;

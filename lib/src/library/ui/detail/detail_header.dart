@@ -28,9 +28,8 @@ import 'detail_tint.dart';
 /// content; the header shows it again only while it is scrolled out of sight.
 /// Without it the header always shows the [title].
 ///
-/// The frame has its own solid ground: the detail layouts paint over a
-/// translucent tint, and the page under would show through while this one
-/// slides in.
+/// The frame paints no ground of its own: the `KDetailPage` route it sits in
+/// does, so the page under never shows through while this one moves.
 ///
 /// A non-null [tint] washes the whole page, header band included, with the
 /// colours of the cover the page shows (see [watchDetailTint]); null leaves
@@ -81,18 +80,15 @@ class DetailFrame extends StatelessWidget {
     );
     final hosted = KDetailTitleHost(child: page);
     final t = tint;
-    return ColoredBox(
-      color: Theme.of(context).colorScheme.surface,
-      child: t == null
-          ? hosted
-          : CoverTintBackground(
-              palette: t.palette,
-              loading: t.loading,
-              strength: _tintStrength,
-              fadeIn: true,
-              child: hosted,
-            ),
-    );
+    return t == null
+        ? hosted
+        : CoverTintBackground(
+            palette: t.palette,
+            loading: t.loading,
+            strength: _tintStrength,
+            fadeIn: true,
+            child: hosted,
+          );
   }
 
   /// Half the tint of the player surfaces: a page is read for a long time.

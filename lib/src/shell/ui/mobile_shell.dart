@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -72,17 +73,53 @@ class MobileShell extends ConsumerWidget {
     }
   }
 
-  /// Back at the root of a tab other than Home goes to Home. It acts only
-  /// while the shell is the top route and has no child page open; the sidebar
-  /// (a deeper listener) and the router's own pop see Back first or after.
+  /// The navigator of the branch at [index] (null before it is built).
+  NavigatorState? _branchNavigator(int index) =>
+      navigationShell.route.branches[index].navigatorKey.currentState;
+
+  /// Whether Back is the shell's to end, not the branch navigator's: in a tab
+  /// other than Home, at one of its roots, or inside it with no page to pop
+  /// (a detail opened with `go`).
+  bool _leavesTab(int home, String location) {
+    final current = navigationShell.currentIndex;
+    if (home < 0 || current == home || current >= items.length) return false;
+    final item = items[current];
+    if (item.atRoot(location)) return true;
+    return item.containsLocation(location) &&
+        !(_branchNavigator(current)?.canPop() ?? false);
+  }
+
+  /// The shell ends Back for every tab, in this order (it acts only while the
+  /// shell is the top route; the sidebar, a deeper listener, sees Back first):
+  ///
+  /// 1. The branch navigator pops first: an open filter or popover (a
+  ///    `PopScope(canPop: false)`), a Folders level, a pushed page.
+  /// 2. In a tab other than Home: at a root the tab goes to Home; inside the
+  ///    tab (a page opened with `go`) it goes to the tab's own page (Library
+  ///    redirects to its last list).
+  /// 3. At Home the app exits. This is done here, not left to the system: a
+  ///    hidden branch that still has a pushed page keeps go_router's Back
+  ///    claim, which would swallow Back at Home.
   Future<bool> _onBack(BuildContext context) async {
     if (ModalRoute.of(context)?.isCurrent == false) return false;
     final home = items.indexWhere((i) => i.path == '/');
     final current = navigationShell.currentIndex;
-    if (home < 0 || current == home || current >= items.length) return false;
-    final atRoot = GoRouterState.of(context).uri.path == items[current].path;
-    if (!atRoot) return false;
-    navigationShell.goBranch(home, initialLocation: true);
+    if (home < 0 || current >= items.length) return false;
+    final location = GoRouterState.of(context).uri.path;
+    final router = GoRouter.of(context);
+    final item = items[current];
+    final atHome = current == home;
+    if (!atHome && !item.containsLocation(location)) return false;
+    final popped =
+        await (_branchNavigator(current)?.maybePop() ?? Future.value(false));
+    if (popped) return true;
+    if (atHome) {
+      await SystemNavigator.pop();
+    } else if (item.atRoot(location)) {
+      navigationShell.goBranch(home, initialLocation: true);
+    } else {
+      router.go(item.path);
+    }
     return true;
   }
 
@@ -117,18 +154,14 @@ class MobileShell extends ConsumerWidget {
         });
     final selected = tabs.indexOf(navigationShell.currentIndex);
     final sidebarOpen = ref.watch(mobileSidebarOpenProvider);
-    final currentBranch = navigationShell.currentIndex;
-    final backToHome =
-        homeBranch >= 0 &&
-        currentBranch != homeBranch &&
-        currentBranch < items.length &&
-        location == items[currentBranch].path;
+    final shellTakesBack = _leavesTab(homeBranch, location);
     // With predictive back enabled Android hands Back to Flutter only when the
     // framework says it can handle it, and no navigator can pop at a branch
-    // root. The PopScope makes the route report that; the listener below
-    // answers first on a normal Back, so the action never runs twice.
+    // root or at a page opened with `go`. The PopScope makes the route report
+    // that; the listener below answers first on a normal Back, so the action
+    // never runs twice.
     return PopScope(
-      canPop: !(backToHome || sidebarOpen),
+      canPop: !(shellTakesBack || sidebarOpen),
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
         if (sidebarOpen) {

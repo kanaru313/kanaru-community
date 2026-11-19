@@ -8,10 +8,12 @@ import '../shell/ui/app_shell.dart';
 /// Builds the router from what the registry holds. Nav items that are tabs
 /// get one shell branch each (in nav order) holding the route at the item's
 /// path. A child nav item ([NavItem.parentId]) has its route nested under its
-/// parent's route. Every other route (pushed nav items such as Settings, detail
-/// pages with path parameters, Pro routes) is a top-level route on the root
-/// navigator, pushed above the shell so system back returns to where it came
-/// from. Nothing is hardcoded here.
+/// parent's route, and a tab's own pages (Library details) may be nested in the
+/// tab's route too. Every other route (pushed nav items such as Settings, Pro
+/// routes) is a top-level route on the root navigator, pushed above the shell
+/// so system back returns to where it came from. Android Back inside the shell
+/// is ended by `MobileShell`, not by the route shape. Nothing is hardcoded
+/// here.
 ///
 /// While [firstRunRequired] returns true every location redirects to
 /// [firstRunPath]; [refresh] must notify when its answer changes. Throws

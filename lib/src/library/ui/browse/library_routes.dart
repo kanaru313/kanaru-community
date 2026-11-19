@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kanaru_ui/kanaru_ui.dart' show FormFactor;
+import 'package:kanaru_ui/kanaru_ui.dart' show KDetailPage;
 
 import '../../domain/library_tabs.dart';
 import '../../state/library_tabs_providers.dart';
@@ -19,14 +19,16 @@ import '../library_locations.dart';
 import '../songs/songs_page.dart';
 import 'library_navigation.dart';
 
-/// The route tree of the library: `/library` and its six list pages.
+/// The route tree of the library: `/library` and its six list pages, with
+/// the detail pages nested under it.
 ///
 /// `/library` has no page. It redirects to the list shown last (or the first
 /// visible one) and only when the location is exactly `/library`: go_router
 /// runs the redirect of every route in a matched chain, parents included, so
 /// an unguarded redirect would also rewrite every `/library/...` location.
 /// The list routes are siblings, so a list switch replaces the page, and
-/// pages opened later (details, folder levels) are pushed on top.
+/// pages opened later (details, folder levels) are pushed on top. Android
+/// Back is ended by the shell, not by this route shape (`MobileShell`).
 GoRoute libraryRoute() => GoRoute(
   path: LibraryLocations.root,
   redirect: (context, state) {
@@ -50,29 +52,29 @@ GoRoute libraryRoute() => GoRoute(
   ],
 );
 
-/// Detail and see-all pages. Flat siblings of the list routes (no nesting),
-/// so each location shows exactly one page and a push stacks one page.
+/// Detail and see-all pages, relative to `/library`. Siblings of the list
+/// routes, so each location shows one page and a push stacks one.
 List<GoRoute> _detailRoutes() => [
   GoRoute(
     path: 'albums/:album',
-    pageBuilder: (context, state) => libraryDetailPage(
-      state,
-      AlbumPage(albumId: state.pathParameters['album']!),
+    pageBuilder: (context, state) => KDetailPage(
+      key: state.pageKey,
+      child: AlbumPage(albumId: state.pathParameters['album']!),
     ),
   ),
   GoRoute(
     path: 'artists/:artist',
-    pageBuilder: (context, state) => libraryDetailPage(
-      state,
-      ArtistPage(artistId: state.pathParameters['artist']!),
+    pageBuilder: (context, state) => KDetailPage(
+      key: state.pageKey,
+      child: ArtistPage(artistId: state.pathParameters['artist']!),
     ),
   ),
   for (final appears in [false, true])
     GoRoute(
       path: 'artists/:artist/${appears ? 'appears' : 'albums'}',
-      pageBuilder: (context, state) => libraryDetailPage(
-        state,
-        ArtistAlbumsPage(
+      pageBuilder: (context, state) => KDetailPage(
+        key: state.pageKey,
+        child: ArtistAlbumsPage(
           artistId: state.pathParameters['artist']!,
           appears: appears,
         ),
@@ -81,9 +83,9 @@ List<GoRoute> _detailRoutes() => [
   for (final kind in GroupKind.values) ...[
     GoRoute(
       path: '${kind.name == 'genre' ? 'genres' : 'languages'}/:${kind.name}',
-      pageBuilder: (context, state) => libraryDetailPage(
-        state,
-        GroupPage(kind: kind, id: state.pathParameters[kind.name]!),
+      pageBuilder: (context, state) => KDetailPage(
+        key: state.pageKey,
+        child: GroupPage(kind: kind, id: state.pathParameters[kind.name]!),
       ),
     ),
     for (final artists in [true, false])
@@ -91,9 +93,9 @@ List<GoRoute> _detailRoutes() => [
         path:
             '${kind.name == 'genre' ? 'genres' : 'languages'}/:${kind.name}/'
             '${artists ? 'artists' : 'albums'}',
-        pageBuilder: (context, state) => libraryDetailPage(
-          state,
-          GroupSeeAllPage(
+        pageBuilder: (context, state) => KDetailPage(
+          key: state.pageKey,
+          child: GroupSeeAllPage(
             kind: kind,
             id: state.pathParameters[kind.name]!,
             artists: artists,
@@ -102,46 +104,6 @@ List<GoRoute> _detailRoutes() => [
       ),
   ],
 ];
-
-/// Transition of every detail page, in the library and in playlists.
-///
-/// A detail page slides in from the right and out again on one smooth curve
-/// on mobile. The platform default (Cupertino) eases fast-to-slow, so the
-/// last part of the slide crawls and the page below stays on screen as a
-/// trailing image. Each detail page paints its own ground (`DetailFrame`).
-///
-/// On desktop the page replaces the content area between the sidebar and the
-/// right panel: a slide across that width feels heavy, so it fades in quickly
-/// (the first ~150 ms of the route) and out in ~120 ms instead.
-Page<void> libraryDetailPage(GoRouterState state, Widget child) =>
-    CustomTransitionPage<void>(
-      key: state.pageKey,
-      child: child,
-      transitionDuration: const Duration(milliseconds: 280),
-      reverseTransitionDuration: const Duration(milliseconds: 240),
-      transitionsBuilder: (context, animation, secondary, child) {
-        if (FormFactor.of(context) == FormFactor.desktop) {
-          return FadeTransition(
-            opacity: CurvedAnimation(
-              parent: animation,
-              curve: const Interval(0, 0.55, curve: Curves.easeOut),
-              reverseCurve: const Interval(0.5, 1, curve: Curves.easeIn),
-            ),
-            child: child,
-          );
-        }
-        return SlideTransition(
-          position: Tween(begin: const Offset(1, 0), end: Offset.zero).animate(
-            CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutCubic,
-              reverseCurve: Curves.easeInCubic,
-            ),
-          ),
-          child: child,
-        );
-      },
-    );
 
 Widget _pageOf(LibraryTab tab, GoRouterState state) => switch (tab) {
   LibraryTab.songs => const SongsPage(),
