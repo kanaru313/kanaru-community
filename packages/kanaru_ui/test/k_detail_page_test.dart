@@ -52,6 +52,26 @@ Future<void> _open(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('paints an opaque surface ground under its child', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(500, 900));
+    await tester.pumpWidget(_app(disableAnimations: false));
+    await _open(tester);
+    await tester.pumpAndSettle();
+    final surface = Theme.of(tester.element(find.text('content')))
+        .colorScheme
+        .surface;
+    final boxes = tester.widgetList<ColoredBox>(
+      find.ancestor(
+        of: find.text('content'),
+        matching: find.byType(ColoredBox),
+      ),
+    );
+    expect(boxes.map((b) => b.color), contains(surface));
+    expect(surface.a, 1.0);
+  });
+
   testWidgets('desktop fades in and does not slide', (tester) async {
     useWindow(tester, const Size(1400, 900));
     await tester.pumpWidget(_app(disableAnimations: false));

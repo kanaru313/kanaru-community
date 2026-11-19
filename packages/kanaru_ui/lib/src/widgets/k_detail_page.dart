@@ -15,6 +15,9 @@ import '../tokens/k_motion.dart';
 /// page pushes and when it pops, so toggling motion while a page is open
 /// takes effect on its Back.
 ///
+/// The page paints its own opaque `colorScheme.surface` ground, so a child that
+/// draws nothing (a Settings page) never lets the page below show through.
+///
 /// Use with go_router: `pageBuilder: (_, s) => KDetailPage(key: s.pageKey,
 /// child: ...)`.
 class KDetailPage extends Page<void> {
@@ -92,7 +95,12 @@ class _KDetailRoute extends PageRoute<void> {
   ) => Semantics(
     scopesRoute: true,
     explicitChildNodes: true,
-    child: _page.child,
+    // Opaque ground that slides with the page: pages paint over translucent
+    // surfaces and the page below would show through while this one moves.
+    child: ColoredBox(
+      color: Theme.of(context).colorScheme.surface,
+      child: _page.child,
+    ),
   );
 
   @override

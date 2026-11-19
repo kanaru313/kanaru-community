@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
+import 'package:kanaru/src/screens/settings/ui/settings_scaffold.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -44,6 +45,22 @@ void main() {
     expect(tester.hasRunningAnimations, isTrue);
     await tester.pumpAndSettle();
     expect(find.text('Native libraries'), findsOneWidget);
+  });
+
+  testWidgets('a sub-page paints an opaque surface ground', (tester) async {
+    final h = await pumpSettings(tester);
+    h.router.push(SettingsPaths.about);
+    await tester.pumpAndSettle();
+    final scaffold = find.byType(SettingsScaffold);
+    final ground = tester
+        .widgetList<ColoredBox>(
+          find.ancestor(of: scaffold, matching: find.byType(ColoredBox)),
+        )
+        .map((b) => b.color)
+        .toList();
+    final surface = Theme.of(tester.element(scaffold)).colorScheme.surface;
+    expect(ground, contains(surface));
+    expect(surface.a, 1.0);
   });
 
   testWidgets('with the instant theme the push completes in one pump', (
