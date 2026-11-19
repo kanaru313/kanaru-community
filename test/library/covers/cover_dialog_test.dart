@@ -348,6 +348,13 @@ void main() {
       await flushIo(tester);
       expect(cover.changes, hasLength(1));
       expect(find.text('Đã đổi ảnh bìa'), findsOneWidget);
+      await tester.runAsync(
+        () => waitUntil(
+          () =>
+              !image.file.existsSync() &&
+              cover.previews.every((f) => !f.existsSync()),
+        ),
+      );
       expect(image.file.existsSync(), isFalse);
       expect(cover.previews.every((f) => !f.existsSync()), isTrue);
     });
@@ -406,6 +413,11 @@ void main() {
       await tester.pumpAndSettle();
       await flushIo(tester);
       expect(cover.changes, isEmpty);
+      await tester.runAsync(
+        () => waitUntil(
+          () => !image.file.existsSync() && !cover.previews.single.existsSync(),
+        ),
+      );
       expect(image.file.existsSync(), isFalse);
       expect(cover.previews.single.existsSync(), isFalse);
     });

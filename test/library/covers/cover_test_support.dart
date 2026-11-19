@@ -115,3 +115,20 @@ PickedImage pickedFile(Directory dir, String name, {bool temporary = true}) {
   final file = File('${dir.path}/$name')..writeAsBytesSync([1, 2, 3]);
   return PickedImage(file: file, name: name, temporary: temporary);
 }
+
+/// Polls [condition] with real async delays until it holds, so a test waits
+/// for background file work instead of guessing a delay. Fails after
+/// [timeout]. Inside `testWidgets` call it within `tester.runAsync`.
+Future<void> waitUntil(
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 5),
+  String? reason,
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (!condition()) {
+    if (DateTime.now().isAfter(deadline)) {
+      throw TimeoutException(reason ?? 'condition not met', timeout);
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+  }
+}

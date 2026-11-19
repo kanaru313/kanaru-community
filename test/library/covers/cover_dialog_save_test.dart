@@ -92,7 +92,8 @@ void main() {
       final saving = d.ctl.save(messenger: messenger, texts: _texts);
       await Future<void>.delayed(Duration.zero);
       d.c.dispose(); // the dialog closes while the job runs
-      await Future<void>.delayed(const Duration(milliseconds: 30));
+      // Nothing positive to wait for: give a wrong delete time to happen.
+      await Future<void>.delayed(const Duration(milliseconds: 100));
       expect(d.image.file.existsSync(), isTrue, reason: 'the job owns them');
       expect(previewFile.existsSync(), isTrue);
 
@@ -144,7 +145,7 @@ void main() {
       expect(await d.ctl.save(messenger: messenger, texts: _texts), isFalse);
 
       d.c.dispose();
-      await Future<void>.delayed(const Duration(milliseconds: 30));
+      await waitUntil(() => !d.image.file.existsSync());
       expect(d.image.file.existsSync(), isFalse);
     });
   });
@@ -169,7 +170,9 @@ void main() {
       cover.gate!.complete();
 
       expect(await saving, isFalse);
-      await Future<void>.delayed(const Duration(milliseconds: 30));
+      await waitUntil(
+        () => !d.image.file.existsSync() && !previewFile.existsSync(),
+      );
       expect(d.image.file.existsSync(), isFalse);
       expect(previewFile.existsSync(), isFalse);
     });

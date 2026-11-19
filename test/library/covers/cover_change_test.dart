@@ -30,6 +30,9 @@ class _Previewer implements CoverPreviewer {
 /// Importer that waits for [hold] while it is set.
 class _SlowImporter extends FakeCoverImporter {
   Completer<void>? hold;
+
+  /// Completes when a held import has finished writing its files.
+  Completer<void>? finished;
   @override
   Future<CoverImportResult> import({
     required String path,
@@ -37,7 +40,9 @@ class _SlowImporter extends FakeCoverImporter {
     CoverCrop? crop,
   }) async {
     await hold?.future;
-    return super.import(path: path, outDir: outDir, crop: crop);
+    final result = await super.import(path: path, outDir: outDir, crop: crop);
+    if (hold != null) finished?.complete();
+    return result;
   }
 }
 
@@ -272,12 +277,13 @@ void main() {
     /// until the store's queue has handled it.
     Future<void> timeOutAndDrain(String uid, String name) async {
       slow.hold = Completer<void>();
+      slow.finished = Completer<void>();
       await expectLater(
         s.changeCover(kind, uid, CoverChoice.file(img(name))),
         throwsA(isA<FileSystemException>()),
       );
       slow.hold!.complete();
-      await Future<void>.delayed(const Duration(milliseconds: 200));
+      await slow.finished!.future.timeout(const Duration(seconds: 5));
       await s.collectUnreferencedFiles(); // queued after the late drop
     }
 

@@ -294,7 +294,7 @@ void main() {
     await ctl.drop(image);
     final preview = stateOf(c).picked!.preview!.file;
     c.dispose();
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await waitUntil(() => !image.file.existsSync() && !preview.existsSync());
     expect(image.file.existsSync(), isFalse);
     expect(preview.existsSync(), isFalse);
   });
@@ -306,11 +306,12 @@ void main() {
     await ctl.drop(own);
     final preview = stateOf(c).picked!.preview!.file;
     await ctl.drop(pickedFile(dir, 'next.jpg', temporary: false));
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await waitUntil(() => !preview.existsSync());
     expect(own.file.existsSync(), isTrue);
     expect(preview.existsSync(), isFalse);
     c.dispose();
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    // Nothing positive to wait for: give a wrong delete time to happen.
+    await Future<void>.delayed(const Duration(milliseconds: 100));
     expect(own.file.existsSync(), isTrue);
   });
 
@@ -357,7 +358,7 @@ void main() {
     final second = pickedFile(dir, 'two.jpg');
     cover.previewError = const FormatException('bad');
     await ctl.drop(second);
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await waitUntil(() => !second.file.existsSync());
 
     final s = stateOf(c);
     expect(s.picked!.image, same(first));
@@ -370,7 +371,9 @@ void main() {
 
     // Still the controller's: dispose deletes it.
     c.dispose();
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await waitUntil(
+      () => !first.file.existsSync() && !firstPreview.existsSync(),
+    );
     expect(first.file.existsSync(), isFalse);
     expect(firstPreview.existsSync(), isFalse);
   });
@@ -382,11 +385,12 @@ void main() {
     await ctl.drop(first);
     cover.previewGate = Completer<void>();
     final done = ctl.drop(pickedFile(dir, 'two.jpg'));
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    // Nothing positive to wait for: give a wrong delete time to happen.
+    await Future<void>.delayed(const Duration(milliseconds: 100));
     expect(first.file.existsSync(), isTrue, reason: 'new one still reading');
     cover.previewGate!.complete();
     await done;
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await waitUntil(() => !first.file.existsSync());
     expect(first.file.existsSync(), isFalse);
   });
 
@@ -403,7 +407,12 @@ void main() {
     c.dispose();
     cover.previewGate!.complete();
     await done;
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await waitUntil(
+      () =>
+          !first.file.existsSync() &&
+          !firstPreview.existsSync() &&
+          !second.file.existsSync(),
+    );
     expect(first.file.existsSync(), isFalse);
     expect(firstPreview.existsSync(), isFalse);
     expect(second.file.existsSync(), isFalse);
@@ -425,7 +434,8 @@ void main() {
     expect(s.selectedId, CoverRowIds.picked);
     expect(s.changed, isFalse, reason: 'the draft row is still the choice');
     c2.dispose();
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    // Nothing positive to wait for: give a wrong delete time to happen.
+    await Future<void>.delayed(const Duration(milliseconds: 100));
     expect(draft.picked!.image.file.existsSync(), isTrue);
   });
 
@@ -438,7 +448,8 @@ void main() {
     final drafting = ctl.toDraft(); // takes the files before its first await
     c.dispose();
     final draft = await drafting;
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    // Nothing positive to wait for: give a wrong delete time to happen.
+    await Future<void>.delayed(const Duration(milliseconds: 100));
     expect(draft, isNotNull);
     expect(image.file.existsSync(), isTrue);
     expect(preview.existsSync(), isTrue);
