@@ -32,6 +32,8 @@ void main() {
       for (final (kind, transient) in [
         (NativeErrorKind.io, true),
         (NativeErrorKind.permissionDenied, false),
+        // A file that went missing is a read problem, not a bad format.
+        (NativeErrorKind.notFound, false),
       ]) {
         expect(
           () => coverPreviewOf(_failed(kind, transient: transient), '/s'),
@@ -46,7 +48,6 @@ void main() {
         NativeErrorKind.corrupt,
         NativeErrorKind.unsupported,
         NativeErrorKind.tooLarge,
-        NativeErrorKind.notFound,
         NativeErrorKind.panic,
       ]) {
         expect(

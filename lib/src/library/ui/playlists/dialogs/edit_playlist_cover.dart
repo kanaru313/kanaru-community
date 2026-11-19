@@ -6,8 +6,10 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../domain/playlists/playlist_models.dart';
+import '../../../state/covers/cover_dialog_models.dart';
 import '../../../state/covers/cover_draft.dart';
 import '../../../state/custom_cover_providers.dart';
+import '../../covers/panned_cover_image.dart';
 import '../../covers/pick_custom_cover.dart';
 import '../../playlist_common/playlist_cover.dart';
 import 'playlist_form_model.dart';
@@ -61,7 +63,7 @@ class PlaylistCoverEditor extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (file != null)
-              ExcludeSemantics(child: _StagedImage(file, dimension))
+              ExcludeSemantics(child: _StagedImage(file, dimension, draft!))
             else
               PlaylistCover(
                 uid: summary.uid,
@@ -71,7 +73,13 @@ class PlaylistCoverEditor extends ConsumerWidget {
               ),
             const KGap(KSpace.x3),
             FilledButton.tonalIcon(
-              onPressed: !enabled ? null : () => _choose(context, draft),
+              onPressed: !enabled
+                  ? null
+                  : () => _choose(
+                      context,
+                      // A staged automatic cover reopens the dialog on Tự động.
+                      draft ?? (edit is AutomaticFormCover ? _automatic : null),
+                    ),
               icon: const Icon(KIcons.image),
               label: Text(l10n.playlistCoverChoose),
             ),
@@ -121,23 +129,46 @@ class PlaylistCoverEditor extends ConsumerWidget {
   }
 }
 
-/// The staged image, cut square the way a cover is shown.
+/// Stands for a staged automatic cover when the dialog reopens: it opens on
+/// the Tự động row; choosing the stored cover there un-stages it.
+const _automatic = CoverDraft(
+  choice: CoverChoice.automatic(),
+  rowId: CoverRowIds.automatic,
+);
+
+/// The staged image, cut square the way a cover is shown: a picked image at
+/// the pan the draft will save, a suggestion at the centre (its crop).
 class _StagedImage extends StatelessWidget {
-  const _StagedImage(this.file, this.dimension);
+  const _StagedImage(this.file, this.dimension, this.draft);
 
   final File file;
   final double dimension;
+  final CoverDraft draft;
 
   @override
-  Widget build(BuildContext context) => ClipRRect(
-    borderRadius: KRadius.sm,
-    child: Image.file(
-      file,
-      width: dimension,
-      height: dimension,
-      fit: BoxFit.cover,
-      // A missing preview file leaves the empty tile, never an error box.
-      errorBuilder: (_, _, _) => SizedBox.square(dimension: dimension),
-    ),
-  );
+  Widget build(BuildContext context) {
+    // A missing preview file leaves the empty tile, never an error box.
+    Widget empty(BuildContext _, Object _, StackTrace? _) =>
+        SizedBox.square(dimension: dimension);
+    final preview = draft.picked?.preview;
+    return ClipRRect(
+      borderRadius: KRadius.sm,
+      child: preview == null
+          ? Image.file(
+              file,
+              width: dimension,
+              height: dimension,
+              fit: BoxFit.cover,
+              errorBuilder: empty,
+            )
+          : PannedCoverImage(
+              file: preview.file,
+              width: preview.width,
+              height: preview.height,
+              offset: draft.offset,
+              dimension: dimension,
+              errorBuilder: empty,
+            ),
+    );
+  }
 }

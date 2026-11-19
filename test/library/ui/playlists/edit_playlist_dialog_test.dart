@@ -13,6 +13,9 @@ import 'package:kanaru/src/library/ui/playlist_common/playlist_cover.dart';
 import 'package:kanaru/src/library/ui/playlists/dialogs/edit_playlist_dialog.dart';
 import 'package:kanaru/src/platform/domain/image_file_picker.dart';
 import 'package:kanaru/src/platform/state/image_file_picker_provider.dart';
+import 'package:kanaru/src/library/ui/covers/cover_preview_frame.dart';
+import 'package:kanaru/src/library/ui/playlists/dialogs/edit_playlist_cover.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/icon_button_finders.dart';
@@ -42,10 +45,6 @@ class _FailingCovers implements CustomCoverController {
 
   @override
   Future<void> removeCover(CustomCoverKind kind, String itemKey) =>
-      Future.error(const FileSystemException('disk gone'));
-
-  @override
-  Future<void> importCover(CustomCoverKind kind, String itemKey, File source) =>
       Future.error(const FileSystemException('disk gone'));
 
   @override
@@ -338,6 +337,61 @@ void main() {
     expect(h.store.updateCalls, 1);
   });
 
+  uiTest('a staged automatic cover reopens the dialog on Tự động', (t) async {
+    final h = await PlaylistUiHarness.pump(
+      t,
+      overrides: [
+        coverDialogOptionsProvider.overrideWith(
+          (ref, i) async => CoverDialogOptions(
+            itemName: 'Mix',
+            automaticCoverKeys: const [],
+            current: (
+              thumb: File('/none/thumb.jpg'),
+              full: File('/none/full.jpg'),
+            ),
+            suggestions: const [],
+          ),
+        ),
+      ],
+    );
+    final l10n = h.l10n(t);
+    final src = await seedPlaylist(t, h);
+    await h.giveCustomCover(t, src.uid);
+    await _open(t, h, src);
+    await eventually(
+      t,
+      () => find.text(l10n.playlistCoverAuto).evaluate().isNotEmpty,
+      what: 'automatic cover button',
+    );
+    await t.tap(find.text(l10n.playlistCoverAuto));
+    await t.pump();
+    await t.tap(find.text(l10n.playlistCoverChoose));
+    await t.pumpAndSettle();
+    final semantics = t.ensureSemantics();
+    Finder row(String title) => find.widgetWithText(SelectionRow, title);
+    bool selected(String title) =>
+        isSemantics(isSelected: true).matches(t.getSemantics(row(title)), {});
+    await eventually(
+      t,
+      () => row(l10n.coverAutoTitle).evaluate().isNotEmpty,
+      what: 'dialog rows',
+    );
+    await t.pumpAndSettle();
+    expect(selected(l10n.coverAutoTitle), isTrue);
+    expect(selected(l10n.coverCurrentTitle), isFalse);
+
+    // The stored cover again: Chọn un-stages the automatic cover.
+    await t.tap(row(l10n.coverCurrentTitle));
+    await t.pump();
+    await t.tap(find.widgetWithText(FilledButton, l10n.coverChoose));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.playlistCoverAuto), findsOneWidget);
+    expect(find.text(l10n.playlistCoverUsingAuto), findsNothing);
+    semantics.dispose();
+    await t.tap(byIconButton(l10n.playlistClose));
+    await t.pumpAndSettle();
+  });
+
   uiTest('cover failure: text saved, closes, cover toast', (t) async {
     final h = await PlaylistUiHarness.pump(
       t,
@@ -445,6 +499,42 @@ void main() {
       expect(choice.crop, isNotNull);
       expect(choice.image.path, image.file.path);
       expect(covers.change.releases, 1);
+    });
+
+    uiTest('the form previews the pan the dialog chose, as saved', (t) async {
+      final h = await pumpHarness(t);
+      final l10n = h.l10n(t);
+      final src = await seedPlaylist(t, h);
+      await _open(t, h, src);
+      await t.tap(find.text(l10n.playlistCoverChoose));
+      await t.pumpAndSettle();
+      picker.next = pickedFile(dir, 'staged.jpg');
+      await t.tap(find.text(l10n.coverPickMobile));
+      await t.pump();
+      await flushIo(t);
+      // Pan to the far end of the long axis (the fake image is portrait).
+      await t.drag(find.byType(CoverPreviewFrame), const Offset(0, -2000));
+      await t.pump();
+      await t.tap(find.widgetWithText(FilledButton, l10n.coverChoose));
+      await t.pump();
+      await flushIo(t);
+
+      final shown = t.widget<Image>(
+        find.descendant(
+          of: find.byType(PlaylistCoverEditor),
+          matching: find.byType(Image),
+        ),
+      );
+      // Not the centre, and the end the save will cut.
+      expect(shown.alignment, const Alignment(0, 1));
+      await _tapSave(t, h);
+      await eventually(
+        t,
+        () => find.text(l10n.playlistSaved).evaluate().isNotEmpty,
+        what: 'saved toast',
+      );
+      final crop = (covers.changes.single.choice as FileCover).crop;
+      expect(crop, const CoverCrop(left: 0, top: 1008, side: 3024));
     });
 
     uiTest('Cancel writes nothing and deletes the temporary files', (t) async {

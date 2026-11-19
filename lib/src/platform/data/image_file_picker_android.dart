@@ -33,7 +33,7 @@ class AndroidImageFilePicker implements ImageFilePicker {
   }
 
   @override
-  Future<PickedImage?> pick() async {
+  Future<PickedImage?> pick({String? label}) async {
     final picked = await _platform.getImageFromSource(
       source: ImageSource.gallery,
       options: const ImagePickerOptions(requestFullMetadata: false),

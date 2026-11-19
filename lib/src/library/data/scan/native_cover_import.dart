@@ -127,7 +127,7 @@ CoverPreview coverPreviewOf(CoverPreviewDto dto, String source) {
   final previewPath = dto.previewPath;
   if (error != null) {
     final f = failureOf(error);
-    if (f.transient || f.kind == 'permissionDenied') {
+    if (f.transient || f.kind == 'permissionDenied' || f.kind == 'notFound') {
       throw FileSystemException('cover preview failed (${f.kind})', source);
     }
     throw FormatException('cannot use as a cover (${f.kind}): $source');

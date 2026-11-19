@@ -132,6 +132,38 @@ void main() {
     },
   );
 
+  test('the dialog label goes to the picker', () async {
+    final c = open();
+    final ctl = await opened(c);
+    await ctl.pick(dialogLabel: 'Ảnh');
+    expect(picker.lastLabel, 'Ảnh');
+  });
+
+  test(
+    'closing while a superseded pick is deleted drops the new image too',
+    () async {
+      final c = open();
+      final ctl = await opened(c);
+      cover.previewGate = Completer<void>();
+      final first = pickedFile(dir, 'first.jpg');
+      picker.next = first;
+      final firstDone = ctl.pick();
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(stateOf(c).reading, isTrue);
+
+      final second = pickedFile(dir, 'second.jpg');
+      final secondDone = ctl.drop(second); // awaits the delete of `first`
+      c.dispose(); // the dialog closes during that delete
+      await secondDone; // must not throw
+      cover.previewGate!.complete();
+      await firstDone;
+
+      expect(second.file.existsSync(), isFalse);
+      expect(first.file.existsSync(), isFalse);
+    },
+  );
+
   test('a cancelled picker changes nothing', () async {
     final c = open();
     final ctl = await opened(c);

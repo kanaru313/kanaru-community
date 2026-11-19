@@ -23,6 +23,20 @@ void main() {
     expect(group.mimeTypes, ['image/jpeg', 'image/png', 'image/webp']);
   });
 
+  test('a label given to pick wins over the default one', () async {
+    List<XTypeGroup>? groups;
+    final picker = LinuxImageFilePicker(
+      openFile: ({acceptedTypeGroups = const []}) async {
+        groups = acceptedTypeGroups;
+        return null;
+      },
+    );
+    await picker.pick(label: 'Ảnh');
+    expect(groups!.single.label, 'Ảnh');
+    await picker.pick();
+    expect(groups!.single.label, 'Images');
+  });
+
   test('cancel returns null', () async {
     final picker = LinuxImageFilePicker(
       openFile: ({acceptedTypeGroups = const []}) async => null,

@@ -485,8 +485,8 @@ State of the cover dialog lives in `library/state/covers/` (no widgets):
   with the dialog. It holds the chosen row, the picked image (reading, then ready with
   its upright size), the pan offset (`cropFor`: centred by default, clamped, `null` for a
   square image), `saving`, a one-shot `error`, and `changed` (false while reading or
-  saving). A newer pick or drop replaces the earlier one and deletes its temp copy and
-  preview; a result that arrives after the dialog closed is deleted. Dispose deletes only
+  saving). A newer pick or drop replaces it once the new image is read; on failure the earlier
+  pick is back; a result that arrives after the dialog closed is deleted. Dispose deletes only
   files the controller still owns: a file the user picked in place (`temporary: false`)
   is never deleted, a save or a draft takes ownership away.
 - Save mode: `save()` starts a `CoverSaveJob`, which holds the root messenger, the texts

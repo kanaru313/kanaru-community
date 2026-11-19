@@ -98,10 +98,12 @@ class FakePicker implements ImageFilePicker {
   Object? error;
   Completer<void>? gate;
   int calls = 0;
+  String? lastLabel;
 
   @override
-  Future<PickedImage?> pick() async {
+  Future<PickedImage?> pick({String? label}) async {
     calls++;
+    lastLabel = label;
     await gate?.future;
     if (error != null) throw error!;
     return next;

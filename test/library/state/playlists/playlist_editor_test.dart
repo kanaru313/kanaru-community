@@ -61,16 +61,6 @@ class _Covers implements CustomCoverController {
   Object? error;
 
   @override
-  Future<void> importCover(
-    CustomCoverKind kind,
-    String itemKey,
-    File source,
-  ) async {
-    log.add('import ${kind.name} $itemKey ${source.path}');
-    if (error != null) throw error!;
-  }
-
-  @override
   Future<void> removeCover(CustomCoverKind kind, String itemKey) async {
     log.add('remove ${kind.name} $itemKey');
     if (error != null) throw error!;

@@ -20,7 +20,7 @@ class LinuxImageFilePicker implements ImageFilePicker {
   LinuxImageFilePicker({this.label = 'Images', OpenFileFn? openFile})
     : _open = openFile ?? _defaultOpenFile;
 
-  /// Name of the filter in the dialog (the UI passes a localized one).
+  /// Name of the filter when [pick] gets no localized one.
   final String label;
   final OpenFileFn _open;
 
@@ -28,11 +28,11 @@ class LinuxImageFilePicker implements ImageFilePicker {
   static const _extensions = ['jpg', 'jpeg', 'png', 'webp'];
 
   @override
-  Future<PickedImage?> pick() async {
+  Future<PickedImage?> pick({String? label}) async {
     final picked = await _open(
       acceptedTypeGroups: [
         XTypeGroup(
-          label: label,
+          label: label ?? this.label,
           extensions: [
             ..._extensions,
             ..._extensions.map((e) => e.toUpperCase()),

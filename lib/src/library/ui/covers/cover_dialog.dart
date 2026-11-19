@@ -115,7 +115,7 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
             itemKey: widget.itemKey,
             state: s,
             onSelect: ctl.select,
-            onPick: ctl.pick,
+            onPick: () => ctl.pick(dialogLabel: widget.texts.linuxDialogLabel),
           ),
           const KGap(KSpace.x2),
         ],

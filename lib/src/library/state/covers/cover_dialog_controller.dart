@@ -105,14 +105,15 @@ class CoverDialogController extends Notifier<CoverDialogState> {
 
   /// Opens the platform picker and reads the image. A cancelled picker does
   /// nothing; a failure shows as [CoverDialogState.error] and leaves no row.
-  Future<void> pick() async {
+  /// [dialogLabel] names the image filter of the Linux file dialog.
+  Future<void> pick({String? dialogLabel}) async {
     if (state.saving || _picking) return;
     _picking = true;
     PickedImage? image;
     try {
       // A PlatformException (or anything else) from the picker is an error
       // value for the dialog, never thrown to the caller.
-      image = await ref.read(imageFilePickerProvider).pick();
+      image = await ref.read(imageFilePickerProvider).pick(label: dialogLabel);
     } on Object catch (e, st) {
       _log.warning('image picker failed', e, st);
       _fail(e);
@@ -144,6 +145,12 @@ class CoverDialogController extends Notifier<CoverDialogState> {
     _owned = null;
     if (owned != null && !identical(owned, kept)) {
       await deleteTempFiles(owned.ownedFiles);
+      if (!ref.mounted) {
+        // The dialog closed while the superseded pick was deleted: onDispose
+        // is done, so the new image must go here.
+        await _deleteIfTemp(image);
+        return;
+      }
     }
     final replaced = identical(owned, kept) ? owned : null;
     _replaced = replaced;

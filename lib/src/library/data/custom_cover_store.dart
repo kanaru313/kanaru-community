@@ -105,16 +105,6 @@ class CustomCoverStore implements CustomCoverController {
   }
 
   @override
-  Future<void> importCover(
-    CustomCoverKind kind,
-    String itemKey,
-    File source,
-  ) async {
-    final change = await changeCover(kind, itemKey, CoverChoice.file(source));
-    await change.release();
-  }
-
-  @override
   Future<CoverChange> changeCover(
     CustomCoverKind kind,
     String itemKey,
@@ -267,12 +257,13 @@ class CustomCoverStore implements CustomCoverController {
 
   /// Permanent failures (undecodable, unsupported, too large, missing file,
   /// a native panic) are a [FormatException]; transient ones (I/O, failing to
-  /// write under the data folder) and `permissionDenied` are a
+  /// write under the data folder), `permissionDenied` and `notFound` are a
   /// [FileSystemException].
   Exception _failureOf(CoverImportResult r, File source) {
     final f = r.failure;
     final what = f == null ? 'no key' : f.kind;
-    if (f != null && (f.transient || f.kind == 'permissionDenied')) {
+    if (f != null &&
+        (f.transient || f.kind == 'permissionDenied' || f.kind == 'notFound')) {
       return FileSystemException('cover import failed ($what)', source.path);
     }
     return FormatException('cannot use as a cover ($what): ${source.path}');

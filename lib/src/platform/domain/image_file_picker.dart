@@ -30,5 +30,7 @@ class PickedImage {
 abstract interface class ImageFilePicker {
   /// Opens the platform picker; null when the user cancels. No permission is
   /// requested. Bytes are returned as chosen (no resize, no re-encode).
-  Future<PickedImage?> pick();
+  /// [label] names the image filter of a desktop file dialog (localized by
+  /// the caller); platforms without such a dialog ignore it.
+  Future<PickedImage?> pick({String? label});
 }
