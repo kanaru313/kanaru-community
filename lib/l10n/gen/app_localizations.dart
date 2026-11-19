@@ -4403,6 +4403,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'“{name}” is no longer excluded · rescanning'**
   String settingsLibraryExclusionRemoved(String name);
+
+  /// No description provided for @settingsLibraryArtistSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Split artists'**
+  String get settingsLibraryArtistSplit;
+
+  /// No description provided for @settingsLibrarySeparatorCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 separator} other{{count} separators}}'**
+  String settingsLibrarySeparatorCount(int count);
+
+  /// No description provided for @settingsArtistSplitIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'One song, several artists: Kanaru splits the names at these marks.'**
+  String get settingsArtistSplitIntro;
+
+  /// No description provided for @settingsArtistSplitExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Example'**
+  String get settingsArtistSplitExample;
+
+  /// No description provided for @settingsArtistSplitExampleNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The default list has no , or & because many band names contain them. To split on them, add them here, then add those band names to Keep whole.'**
+  String get settingsArtistSplitExampleNote;
+
+  /// No description provided for @settingsArtistSplitSeparators.
+  ///
+  /// In en, this message translates to:
+  /// **'Separators'**
+  String get settingsArtistSplitSeparators;
+
+  /// No description provided for @settingsArtistSplitSeparatorsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A space shows as ␣. Changes apply now; the library updates in the background.'**
+  String get settingsArtistSplitSeparatorsHint;
+
+  /// No description provided for @settingsArtistSplitKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep whole'**
+  String get settingsArtistSplitKeep;
+
+  /// No description provided for @settingsArtistSplitKeepHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Names that stay one artist even when they contain a separator.'**
+  String get settingsArtistSplitKeepHint;
+
+  /// No description provided for @settingsArtistSplitSeparatorInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a separator, e.g. “x”'**
+  String get settingsArtistSplitSeparatorInput;
+
+  /// No description provided for @settingsArtistSplitKeepInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist name, e.g. “Hồ Ngọc Hà / Noo”'**
+  String get settingsArtistSplitKeepInput;
+
+  /// No description provided for @settingsArtistSplitAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get settingsArtistSplitAdd;
+
+  /// No description provided for @settingsArtistSplitRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {value}'**
+  String settingsArtistSplitRemove(String value);
+
+  /// No description provided for @settingsArtistSplitNoSeparators.
+  ///
+  /// In en, this message translates to:
+  /// **'No separators: artist names stay as they are.'**
+  String get settingsArtistSplitNoSeparators;
+
+  /// No description provided for @settingsArtistSplitErrEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing typed'**
+  String get settingsArtistSplitErrEmpty;
+
+  /// No description provided for @settingsArtistSplitErrDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in the list'**
+  String get settingsArtistSplitErrDuplicate;
+
+  /// No description provided for @settingsArtistSplitErrTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {max} characters'**
+  String settingsArtistSplitErrTooLong(int max);
+
+  /// No description provided for @settingsArtistSplitErrFull.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {max} entries'**
+  String settingsArtistSplitErrFull(int max);
+
+  /// No description provided for @settingsArtistSplitReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore defaults'**
+  String get settingsArtistSplitReset;
+
+  /// No description provided for @settingsArtistSplitResetIsDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Already the default'**
+  String get settingsArtistSplitResetIsDefault;
+
+  /// No description provided for @settingsArtistSplitResetTo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 separator} other{{count} separators}}, “{names}”'**
+  String settingsArtistSplitResetTo(int count, String names);
+
+  /// No description provided for @settingsArtistSplitResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore the default separators?'**
+  String get settingsArtistSplitResetTitle;
+
+  /// No description provided for @settingsArtistSplitResetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The separators and the kept names go back to how they were at install. The library updates in the background.'**
+  String get settingsArtistSplitResetBody;
+
+  /// No description provided for @settingsArtistSplitResetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get settingsArtistSplitResetConfirm;
+
+  /// No description provided for @settingsArtistSplitAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added “{value}”'**
+  String settingsArtistSplitAdded(String value);
+
+  /// No description provided for @settingsArtistSplitAddedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Added “{value}” · add band names that contain it to Keep whole'**
+  String settingsArtistSplitAddedGroup(String value);
+
+  /// No description provided for @settingsArtistSplitRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed “{value}”'**
+  String settingsArtistSplitRemoved(String value);
+
+  /// No description provided for @settingsArtistSplitRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Defaults restored'**
+  String get settingsArtistSplitRestored;
+
+  /// No description provided for @settingsLibraryLanguageSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Language source'**
+  String get settingsLibraryLanguageSource;
+
+  /// No description provided for @settingsLibraryLanguageSourceCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'How Kanaru decides which language a song is in (Language tab). The library updates in the background.'**
+  String get settingsLibraryLanguageSourceCaption;
+
+  /// No description provided for @settingsLibraryLanguageBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag, then detection'**
+  String get settingsLibraryLanguageBoth;
+
+  /// No description provided for @settingsLibraryLanguageBothDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the file\'s language tag, else guess from the title and lyrics'**
+  String get settingsLibraryLanguageBothDesc;
+
+  /// No description provided for @settingsLibraryLanguageTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag only'**
+  String get settingsLibraryLanguageTag;
+
+  /// No description provided for @settingsLibraryLanguageTagDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs with no tag go to “Unknown”'**
+  String get settingsLibraryLanguageTagDesc;
+
+  /// No description provided for @settingsLibraryLanguageDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Detection only'**
+  String get settingsLibraryLanguageDetected;
+
+  /// No description provided for @settingsLibraryLanguageDetectedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore the file\'s language tag'**
+  String get settingsLibraryLanguageDetectedDesc;
 }
 
 class _AppLocalizationsDelegate

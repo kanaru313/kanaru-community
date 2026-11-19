@@ -42,6 +42,9 @@ abstract final class KIcons {
   static const IconData history = FluentIcons.history_24_regular;
   static const IconData mostPlayed = FluentIcons.data_histogram_24_regular;
   static const IconData rescan = FluentIcons.arrow_sync_24_regular;
+
+  /// Restore defaults (not [history], which means listening history).
+  static const IconData reset = FluentIcons.arrow_reset_24_regular;
   static const IconData keymap = FluentIcons.keyboard_24_regular;
   static const IconData ai = FluentIcons.sparkle_24_regular;
   static const IconData comingSoon = FluentIcons.clock_24_regular;

@@ -1,10 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../library/state/browse/list_prefs_providers.dart';
+import '../../../../library/state/scan/read_rules_settings.dart';
+import '../../settings_routes.dart';
 import '../soon_row.dart';
+import 'language_source_row.dart';
 
 /// Block "Organise": how the library is arranged.
 class OrganiseBlock extends ConsumerWidget {
@@ -14,9 +18,17 @@ class OrganiseBlock extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final compact = ref.watch(compactFoldersProvider);
+    final separators = ref.watch(artistSeparatorsProvider);
     return SetupSection(
       title: Text(l10n.settingsLibraryBlockOrganise),
       children: [
+        SetupValueRow(
+          icon: KIcons.artistsMany,
+          title: Text(l10n.settingsLibraryArtistSplit),
+          value: Text(l10n.settingsLibrarySeparatorCount(separators.length)),
+          onTap: () => context.push(SettingsPaths.artistSplit),
+        ),
+        const LanguageSourceRow(),
         KSwitchRow(
           leading: const Icon(KIcons.folders),
           title: Text(l10n.settingsLibraryMergeFolders),
@@ -25,8 +37,6 @@ class OrganiseBlock extends ConsumerWidget {
           value: compact,
           onChanged: (v) => ref.read(compactFoldersProvider.notifier).set(v),
         ),
-        // The artist split and language source rows go here, before the
-        // "coming soon" rows (those stay last in the block).
         SoonRow(
           icon: KIcons.albums,
           title: Text(l10n.settingsLibraryAlbumGrouping),

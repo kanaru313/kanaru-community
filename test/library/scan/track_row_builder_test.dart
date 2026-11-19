@@ -4,6 +4,7 @@ import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/library/data/scan/track_row_builder.dart';
 import 'package:kanaru/src/library/domain/scan/lrc_match.dart';
 import 'package:kanaru/src/library/domain/scan/native_failure.dart';
+import 'package:kanaru/src/library/domain/scan/read_rules.dart';
 import 'package:kanaru/src/library/domain/scan/scan_diff.dart';
 import 'package:kanaru/src/library/domain/scan/scan_folder.dart';
 import 'package:kanaru/src/library/domain/scan/scan_versions.dart';
@@ -30,7 +31,9 @@ BuiltTrack _build(
   StoredTrackRow? stored,
   LrcMatch? lrc,
   ListedFile file = _file,
+  LibraryReadRules? readRules,
 }) => buildTrackRow(
+  readRules: readRules,
   folder: _folder,
   file: file,
   read: read,
@@ -174,6 +177,45 @@ void main() {
     final none = _build(_ok(const TagFields(title: 'T', languageTag: 'und')));
     expect(_v(none.row.language), isNull);
     expect(_v(none.row.languageDetected), 0);
+  });
+
+  test('language source: tag only, detected only', () {
+    const both = TagFields(
+      title: 'T',
+      languageTag: 'vi',
+      detectedLanguage: 'eng',
+    );
+    const onlyDetected = TagFields(title: 'T', detectedLanguage: 'zho');
+    const onlyTag = TagFields(title: 'T', languageTag: 'vi');
+    LibraryReadRules rules(LanguageSource s) =>
+        LibraryReadRules(languageSource: s);
+
+    final tagOnly = rules(LanguageSource.tagOnly);
+    expect(_v(_build(_ok(both), readRules: tagOnly).row.language), 'vie');
+    final noTag = _build(_ok(onlyDetected), readRules: tagOnly);
+    expect(_v(noTag.row.language), isNull);
+    expect(_v(noTag.row.languageDetected), 0);
+
+    // "Detection only" is not available: it never blanks a tagged file and
+    // behaves as the default (tag, else detected).
+    final detectedOnly = rules(LanguageSource.detectedOnly);
+    final d = _build(_ok(onlyTag), readRules: detectedOnly);
+    expect(_v(d.row.language), 'vie');
+    expect(_v(d.row.languageDetected), 0);
+    final detected = _build(_ok(onlyDetected), readRules: detectedOnly);
+    expect(_v(detected.row.language), 'zho');
+    expect(_v(detected.row.languageDetected), 1);
+  });
+
+  test('artist rules from the read rules split and key the row', () {
+    final b = _build(
+      _ok(const TagFields(title: 'T', artists: ['A, B'], album: 'X')),
+      readRules: LibraryReadRules(separators: [',']),
+    );
+    expect(b.artists.map((a) => a.name), ['A', 'B']);
+    expect(_v(b.row.albumArtistKey), isNotNull);
+    final plain = _build(_ok(const TagFields(title: 'T', artists: ['A, B'])));
+    expect(plain.artists.map((a) => a.name), ['A, B']);
   });
 
   group('cover_scan_version', () {

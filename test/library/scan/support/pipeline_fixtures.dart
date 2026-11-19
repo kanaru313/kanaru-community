@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/library/data/scan/native_tag_reader.dart';
 import 'package:kanaru/src/library/data/scan/scan_pipeline.dart';
+import 'package:kanaru/src/library/domain/scan/read_rules.dart';
 import 'package:kanaru/src/library/domain/scan/scan_rules.dart';
 import 'package:kanaru/src/library/domain/scan/tag_read.dart';
 import 'package:kanaru/src/library/domain/scan_status.dart';
@@ -119,6 +120,10 @@ ScanPipelineDeps pipelineDeps(
   bool skipShort = true,
   ScanRules? scanRules,
   Duration tagTimeout = const Duration(seconds: 5),
+  LibraryReadRules? readRules,
+  Map<String, String> readRulesApplied = const {},
+  Future<void> Function(String sourceUid, String fingerprint)?
+  onReadRulesApplied,
 }) => ScanPipelineDeps(
   db: db,
   source: LocalFolderSource(catalog, readMounts: () => {'/'}),
@@ -129,4 +134,7 @@ ScanPipelineDeps pipelineDeps(
   rules: scanRules ?? ScanRules(minDurationMs: skipShort ? 30000 : 0),
   now: () => scanNow,
   tagTimeout: tagTimeout,
+  readRules: readRules,
+  readRulesApplied: readRulesApplied,
+  onReadRulesApplied: onReadRulesApplied,
 );

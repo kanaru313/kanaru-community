@@ -89,6 +89,7 @@ void queueTagResult(
         now: deps.now(),
         lrc: item.lrc,
         stored: stored,
+        readRules: deps.readRules,
       ),
     ),
   );

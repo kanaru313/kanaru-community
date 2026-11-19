@@ -2717,4 +2717,138 @@ class AppLocalizationsVi extends AppLocalizations {
   String settingsLibraryExclusionRemoved(String name) {
     return 'Thôi loại trừ “$name” · đang quét lại';
   }
+
+  @override
+  String get settingsLibraryArtistSplit => 'Tách nghệ sĩ';
+
+  @override
+  String settingsLibrarySeparatorCount(int count) {
+    return '$count dấu tách';
+  }
+
+  @override
+  String get settingsArtistSplitIntro =>
+      'Một bài nhiều nghệ sĩ: Kanaru tách tên theo các dấu này.';
+
+  @override
+  String get settingsArtistSplitExample => 'Ví dụ';
+
+  @override
+  String get settingsArtistSplitExampleNote =>
+      'Danh sách mặc định không có , và & vì nhiều tên nhóm chứa chúng. Muốn tách theo chúng thì thêm vào đây, rồi thêm các tên nhóm đó vào Không tách.';
+
+  @override
+  String get settingsArtistSplitSeparators => 'Dấu tách';
+
+  @override
+  String get settingsArtistSplitSeparatorsHint =>
+      'Dấu cách hiện là ␣. Thay đổi áp dụng ngay, thư viện cập nhật ở nền.';
+
+  @override
+  String get settingsArtistSplitKeep => 'Không tách';
+
+  @override
+  String get settingsArtistSplitKeepHint =>
+      'Tên giữ nguyên là một nghệ sĩ dù có chứa dấu tách.';
+
+  @override
+  String get settingsArtistSplitSeparatorInput => 'Thêm dấu tách, vd. “x”';
+
+  @override
+  String get settingsArtistSplitKeepInput =>
+      'Tên nghệ sĩ, vd. “Hồ Ngọc Hà / Noo”';
+
+  @override
+  String get settingsArtistSplitAdd => 'Thêm';
+
+  @override
+  String settingsArtistSplitRemove(String value) {
+    return 'Bỏ $value';
+  }
+
+  @override
+  String get settingsArtistSplitNoSeparators =>
+      'Không có dấu tách nào: tên nghệ sĩ giữ nguyên.';
+
+  @override
+  String get settingsArtistSplitErrEmpty => 'Chưa nhập gì';
+
+  @override
+  String get settingsArtistSplitErrDuplicate => 'Đã có trong danh sách';
+
+  @override
+  String settingsArtistSplitErrTooLong(int max) {
+    return 'Tối đa $max ký tự';
+  }
+
+  @override
+  String settingsArtistSplitErrFull(int max) {
+    return 'Tối đa $max mục';
+  }
+
+  @override
+  String get settingsArtistSplitReset => 'Khôi phục mặc định';
+
+  @override
+  String get settingsArtistSplitResetIsDefault => 'Đang là mặc định';
+
+  @override
+  String settingsArtistSplitResetTo(int count, String names) {
+    return '$count dấu tách, “$names”';
+  }
+
+  @override
+  String get settingsArtistSplitResetTitle => 'Khôi phục dấu tách mặc định?';
+
+  @override
+  String get settingsArtistSplitResetBody =>
+      'Danh sách dấu tách và tên không tách về như lúc cài. Thư viện cập nhật ở nền.';
+
+  @override
+  String get settingsArtistSplitResetConfirm => 'Khôi phục';
+
+  @override
+  String settingsArtistSplitAdded(String value) {
+    return 'Đã thêm “$value”';
+  }
+
+  @override
+  String settingsArtistSplitAddedGroup(String value) {
+    return 'Đã thêm “$value” · thêm tên nhóm có dấu này vào Không tách';
+  }
+
+  @override
+  String settingsArtistSplitRemoved(String value) {
+    return 'Đã bỏ “$value”';
+  }
+
+  @override
+  String get settingsArtistSplitRestored => 'Đã khôi phục mặc định';
+
+  @override
+  String get settingsLibraryLanguageSource => 'Nguồn ngôn ngữ';
+
+  @override
+  String get settingsLibraryLanguageSourceCaption =>
+      'Cách Kanaru biết bài hát thuộc ngôn ngữ nào (tab Ngôn ngữ). Thư viện cập nhật ở nền.';
+
+  @override
+  String get settingsLibraryLanguageBoth => 'Tag, rồi tự nhận diện';
+
+  @override
+  String get settingsLibraryLanguageBothDesc =>
+      'Dùng tag ngôn ngữ nếu tệp có, không có thì đoán từ tên bài và lời';
+
+  @override
+  String get settingsLibraryLanguageTag => 'Chỉ tag';
+
+  @override
+  String get settingsLibraryLanguageTagDesc => 'Bài không có tag vào “Chưa rõ”';
+
+  @override
+  String get settingsLibraryLanguageDetected => 'Chỉ tự nhận diện';
+
+  @override
+  String get settingsLibraryLanguageDetectedDesc =>
+      'Bỏ qua tag ngôn ngữ của tệp';
 }

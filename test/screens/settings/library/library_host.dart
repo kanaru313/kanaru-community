@@ -27,7 +27,7 @@ class LibraryHarness {
   final SettingsHarness settings;
   final AppDatabase db;
   final FakeCatalog catalog;
-  final CountingScanner scanner;
+  final FullCountingScanner scanner;
   final StreamController<ScanStatus> status;
 
   /// Publishes a scan status, as the scanner would.
@@ -35,6 +35,22 @@ class LibraryHarness {
     status.add(value);
     await tester.pump();
     await tester.pump();
+  }
+}
+
+/// A scanner that tells plain re-scans from full ones.
+class FullCountingScanner extends CountingScanner {
+  int fullRescans = 0;
+  int plainRescans = 0;
+
+  @override
+  Future<void> rescan({bool full = false}) {
+    if (full) {
+      fullRescans++;
+    } else {
+      plainRescans++;
+    }
+    return super.rescan(full: full);
   }
 }
 
@@ -53,7 +69,7 @@ Future<LibraryHarness> openLibrary(
   final db = openTestDb();
   addTearDown(db.close);
   final catalog = FakeCatalog(android: android);
-  final scanner = CountingScanner();
+  final scanner = FullCountingScanner();
   final status = StreamController<ScanStatus>.broadcast();
   addTearDown(status.close);
   final perm =

@@ -1990,5 +1990,100 @@
         "type": "String"
       }
     }
-  }
+  },
+  "settingsLibraryArtistSplit": "Split artists",
+  "settingsLibrarySeparatorCount": "{count, plural, =1{1 separator} other{{count} separators}}",
+  "@settingsLibrarySeparatorCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArtistSplitIntro": "One song, several artists: Kanaru splits the names at these marks.",
+  "settingsArtistSplitExample": "Example",
+  "settingsArtistSplitExampleNote": "The default list has no , or & because many band names contain them. To split on them, add them here, then add those band names to Keep whole.",
+  "settingsArtistSplitSeparators": "Separators",
+  "settingsArtistSplitSeparatorsHint": "A space shows as ␣. Changes apply now; the library updates in the background.",
+  "settingsArtistSplitKeep": "Keep whole",
+  "settingsArtistSplitKeepHint": "Names that stay one artist even when they contain a separator.",
+  "settingsArtistSplitSeparatorInput": "Add a separator, e.g. “x”",
+  "settingsArtistSplitKeepInput": "Artist name, e.g. “Hồ Ngọc Hà / Noo”",
+  "settingsArtistSplitAdd": "Add",
+  "settingsArtistSplitRemove": "Remove {value}",
+  "@settingsArtistSplitRemove": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitNoSeparators": "No separators: artist names stay as they are.",
+  "settingsArtistSplitErrEmpty": "Nothing typed",
+  "settingsArtistSplitErrDuplicate": "Already in the list",
+  "settingsArtistSplitErrTooLong": "At most {max} characters",
+  "@settingsArtistSplitErrTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArtistSplitErrFull": "At most {max} entries",
+  "@settingsArtistSplitErrFull": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArtistSplitReset": "Restore defaults",
+  "settingsArtistSplitResetIsDefault": "Already the default",
+  "settingsArtistSplitResetTo": "{count, plural, =1{1 separator} other{{count} separators}}, “{names}”",
+  "@settingsArtistSplitResetTo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitResetTitle": "Restore the default separators?",
+  "settingsArtistSplitResetBody": "The separators and the kept names go back to how they were at install. The library updates in the background.",
+  "settingsArtistSplitResetConfirm": "Restore",
+  "settingsArtistSplitAdded": "Added “{value}”",
+  "@settingsArtistSplitAdded": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitAddedGroup": "Added “{value}” · add band names that contain it to Keep whole",
+  "@settingsArtistSplitAddedGroup": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitRemoved": "Removed “{value}”",
+  "@settingsArtistSplitRemoved": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitRestored": "Defaults restored",
+  "settingsLibraryLanguageSource": "Language source",
+  "settingsLibraryLanguageSourceCaption": "How Kanaru decides which language a song is in (Language tab). The library updates in the background.",
+  "settingsLibraryLanguageBoth": "Tag, then detection",
+  "settingsLibraryLanguageBothDesc": "Use the file's language tag, else guess from the title and lyrics",
+  "settingsLibraryLanguageTag": "Tag only",
+  "settingsLibraryLanguageTagDesc": "Songs with no tag go to “Unknown”",
+  "settingsLibraryLanguageDetected": "Detection only",
+  "settingsLibraryLanguageDetectedDesc": "Ignore the file's language tag"
 }

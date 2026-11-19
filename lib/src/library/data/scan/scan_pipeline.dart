@@ -2,6 +2,7 @@ import 'package:logging/logging.dart';
 
 import '../../../database/database.dart';
 import '../../../platform/domain/media_permissions.dart';
+import '../../domain/scan/read_rules.dart';
 import '../../domain/scan/scan_folder.dart';
 import '../../domain/scan_status.dart';
 import 'library_counts.dart';
@@ -72,6 +73,7 @@ Future<ScanOutcome> runScanPass(
           out.failureKind ??= 'native_timeout';
         }
         out.failureKind ??= result.failureKind;
+        if (result.readEveryRow) await _noteReadRulesApplied(d, folder);
         if (result.finished) {
           finished.add(folder.sourceId);
           doneBefore += folderTotal;
@@ -107,6 +109,11 @@ Future<FolderTagResult> _scanFolder(
   // Built before the listing: it remembers the mounts the folder sat on.
   final presence = d.source.presenceCheck((root: folder.root));
   final rules = d.rules;
+  // A folder last read with other read rules is read in full again.
+  final appliedFingerprint =
+      d.readRulesApplied[folder.sourceUid] ??
+      LibraryReadRules.defaults.fingerprint;
+  final readInFull = full || appliedFingerprint != d.readRules.fingerprint;
   // Format and size rules run here, after the listing and in one place, so
   // both platforms share them and `ruleOut` keeps the empty-root guard.
   final listing = rules.applyTo(
@@ -131,7 +138,23 @@ Future<FolderTagResult> _scanFolder(
       shortMemo: session.shortMemo,
       yielder: d.yielder,
       rootStillThere: presence,
+      readRules: d.readRules,
     ),
-    full: full,
+    full: readInFull,
   );
+}
+
+/// Tells the caller that [folder] was read with this pass's read rules. A
+/// failed write is only logged: the next pass reads the folder again.
+Future<void> _noteReadRulesApplied(
+  ScanPipelineDeps d,
+  ScanFolder folder,
+) async {
+  final note = d.onReadRulesApplied;
+  if (note == null) return;
+  try {
+    await note(folder.sourceUid, d.readRules.fingerprint);
+  } on Object catch (e, st) {
+    _log.warning('${folder.root}: could not record the read rules', e, st);
+  }
 }

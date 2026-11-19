@@ -77,7 +77,8 @@ Future<FolderTagResult> _runTagPass(
       : diffAgainstStored(listing, stored, full, deps.skipShorterThanMs);
   report
     ..unchanged = diff.unchanged
-    ..rootSuspect = diff.rootSuspect;
+    ..rootSuspect = diff.rootSuspect
+    ..uncertainKept = diff.uncertainKept;
   if (diff.rootSuspect) {
     _log.warning('${folder.root}: no files listed but rows exist; kept');
   }

@@ -3065,4 +3065,151 @@ class AppLocalizationsEn extends AppLocalizations {
   String settingsLibraryExclusionRemoved(String name) {
     return '“$name” is no longer excluded · rescanning';
   }
+
+  @override
+  String get settingsLibraryArtistSplit => 'Split artists';
+
+  @override
+  String settingsLibrarySeparatorCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count separators',
+      one: '1 separator',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsArtistSplitIntro =>
+      'One song, several artists: Kanaru splits the names at these marks.';
+
+  @override
+  String get settingsArtistSplitExample => 'Example';
+
+  @override
+  String get settingsArtistSplitExampleNote =>
+      'The default list has no , or & because many band names contain them. To split on them, add them here, then add those band names to Keep whole.';
+
+  @override
+  String get settingsArtistSplitSeparators => 'Separators';
+
+  @override
+  String get settingsArtistSplitSeparatorsHint =>
+      'A space shows as ␣. Changes apply now; the library updates in the background.';
+
+  @override
+  String get settingsArtistSplitKeep => 'Keep whole';
+
+  @override
+  String get settingsArtistSplitKeepHint =>
+      'Names that stay one artist even when they contain a separator.';
+
+  @override
+  String get settingsArtistSplitSeparatorInput => 'Add a separator, e.g. “x”';
+
+  @override
+  String get settingsArtistSplitKeepInput =>
+      'Artist name, e.g. “Hồ Ngọc Hà / Noo”';
+
+  @override
+  String get settingsArtistSplitAdd => 'Add';
+
+  @override
+  String settingsArtistSplitRemove(String value) {
+    return 'Remove $value';
+  }
+
+  @override
+  String get settingsArtistSplitNoSeparators =>
+      'No separators: artist names stay as they are.';
+
+  @override
+  String get settingsArtistSplitErrEmpty => 'Nothing typed';
+
+  @override
+  String get settingsArtistSplitErrDuplicate => 'Already in the list';
+
+  @override
+  String settingsArtistSplitErrTooLong(int max) {
+    return 'At most $max characters';
+  }
+
+  @override
+  String settingsArtistSplitErrFull(int max) {
+    return 'At most $max entries';
+  }
+
+  @override
+  String get settingsArtistSplitReset => 'Restore defaults';
+
+  @override
+  String get settingsArtistSplitResetIsDefault => 'Already the default';
+
+  @override
+  String settingsArtistSplitResetTo(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count separators',
+      one: '1 separator',
+    );
+    return '$_temp0, “$names”';
+  }
+
+  @override
+  String get settingsArtistSplitResetTitle => 'Restore the default separators?';
+
+  @override
+  String get settingsArtistSplitResetBody =>
+      'The separators and the kept names go back to how they were at install. The library updates in the background.';
+
+  @override
+  String get settingsArtistSplitResetConfirm => 'Restore';
+
+  @override
+  String settingsArtistSplitAdded(String value) {
+    return 'Added “$value”';
+  }
+
+  @override
+  String settingsArtistSplitAddedGroup(String value) {
+    return 'Added “$value” · add band names that contain it to Keep whole';
+  }
+
+  @override
+  String settingsArtistSplitRemoved(String value) {
+    return 'Removed “$value”';
+  }
+
+  @override
+  String get settingsArtistSplitRestored => 'Defaults restored';
+
+  @override
+  String get settingsLibraryLanguageSource => 'Language source';
+
+  @override
+  String get settingsLibraryLanguageSourceCaption =>
+      'How Kanaru decides which language a song is in (Language tab). The library updates in the background.';
+
+  @override
+  String get settingsLibraryLanguageBoth => 'Tag, then detection';
+
+  @override
+  String get settingsLibraryLanguageBothDesc =>
+      'Use the file\'s language tag, else guess from the title and lyrics';
+
+  @override
+  String get settingsLibraryLanguageTag => 'Tag only';
+
+  @override
+  String get settingsLibraryLanguageTagDesc =>
+      'Songs with no tag go to “Unknown”';
+
+  @override
+  String get settingsLibraryLanguageDetected => 'Detection only';
+
+  @override
+  String get settingsLibraryLanguageDetectedDesc =>
+      'Ignore the file\'s language tag';
 }

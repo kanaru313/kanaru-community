@@ -14,6 +14,7 @@ import '../../data/scan/native_tag_reader.dart';
 import '../../data/scan/scan_pipeline.dart';
 import '../../data/scan/track_gc_runner.dart';
 import 'scan_controller.dart';
+import 'read_rules_settings.dart';
 import 'scan_settings.dart';
 
 /// Reads a boolean setting from the store at call time, falling back to the
@@ -46,6 +47,13 @@ final scanControllerProvider = Provider<ScanController>((ref) {
     cacheDir: paths.cacheDir.path,
     rules: ref.read(currentScanRulesProvider),
     now: now,
+    readRules: ref.read(currentReadRulesProvider),
+    readRulesApplied: readAppliedFingerprints(ref.read(settingsStoreProvider)),
+    onReadRulesApplied: (uid, fingerprint) => recordReadRulesApplied(
+      ref.read(settingsStoreProvider),
+      uid,
+      fingerprint,
+    ),
   );
   final controller = ScanController(
     runPass: (session, hooks, {required full}) =>

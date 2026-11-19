@@ -70,6 +70,7 @@ class ScanDiff {
     this.missingCandidates = const [],
     this.shortDropped = const [],
     this.rootSuspect = false,
+    this.uncertainKept = 0,
   });
 
   final List<ScanRead> toRead;
@@ -87,6 +88,11 @@ class ScanDiff {
   /// The listing is reachable but empty although rows exist, and no filter of
   /// the user explains it: no row may be marked missing.
   final bool rootSuspect;
+
+  /// Stored `present` rows that are not listed but kept: they lie under a
+  /// folder that could not be listed or could not be stat'ed. They were not
+  /// read this pass.
+  final int uncertainKept;
 }
 
 bool _under(String locator, List<String> prefixes) {
@@ -166,18 +172,23 @@ ScanDiff diffScan(
       rootSuspect: true,
     );
   }
-  final candidates = <int>[
-    for (final r in present)
-      if (!listed.contains(r.locator) &&
-          !listing.unstattable.contains(r.locator) &&
-          !_under(r.locator, listing.uncertainPrefixes))
-        r.id,
-  ];
+  final candidates = <int>[];
+  var uncertainKept = 0;
+  for (final r in present) {
+    if (listed.contains(r.locator)) continue;
+    if (listing.unstattable.contains(r.locator) ||
+        _under(r.locator, listing.uncertainPrefixes)) {
+      uncertainKept++;
+    } else {
+      candidates.add(r.id);
+    }
+  }
   return ScanDiff(
     toRead: toRead,
     unchanged: unchanged,
     lrcUpdates: lrcUpdates,
     missingCandidates: candidates,
     shortDropped: shortDropped,
+    uncertainKept: uncertainKept,
   );
 }

@@ -1,5 +1,6 @@
 import '../../../database/database.dart';
 import '../../../storage/domain/local_folder_listing.dart';
+import '../../domain/scan/read_rules.dart';
 import '../../domain/scan/scan_report.dart';
 import 'native_tag_reader.dart';
 import 'scan_yield.dart';
@@ -61,7 +62,9 @@ class TagPassDeps {
     ScanYield? yielder,
     this.isolateDiffAbove = 5000,
     required this.rootStillThere,
-  }) : shouldStop = shouldStop ?? (() => false),
+    LibraryReadRules? readRules,
+  }) : readRules = readRules ?? LibraryReadRules.defaults,
+       shouldStop = shouldStop ?? (() => false),
        shortMemo = shortMemo ?? ShortFileMemo(),
        yielder = yielder ?? ScanYield();
 
@@ -93,6 +96,9 @@ class TagPassDeps {
   /// leaves an empty mount-point folder) means nothing is marked; mounts
   /// nested in the folder that vanished protect just their own files.
   final Future<RootPresence> Function() rootStillThere;
+
+  /// How tags become rows (artist split, language source).
+  final LibraryReadRules readRules;
 }
 
 /// How a folder's tag pass ended.
@@ -124,4 +130,20 @@ class FolderTagResult {
   /// `native_unavailable` when the native call threw instead of answering,
   /// `io` when the database failed for every row of a batch.
   String? failureKind;
+
+  /// Every row of the folder was read with this pass's rules: the pass
+  /// finished and kept no row unread (suspect or unlistable folders, lost
+  /// mounts, transient read errors, failed writes). Only then may the read
+  /// rules be recorded as applied to the folder. Permanent errors on
+  /// unchanged files do not count: those files cannot be read anyway.
+  bool get readEveryRow =>
+      finished &&
+      failureKind == null &&
+      !nativeStuck &&
+      !report.unreachable &&
+      !report.rootSuspect &&
+      report.uncertainKept == 0 &&
+      report.keptUnderLostMount == 0 &&
+      report.transientSkipped == 0 &&
+      report.writeFailed == 0;
 }

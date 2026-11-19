@@ -1,6 +1,7 @@
 import '../../../database/database.dart';
 import '../../../platform/domain/media_permissions.dart';
 import '../../../storage/data/local_folder_source.dart';
+import '../../domain/scan/read_rules.dart';
 import '../../domain/scan/scan_rules.dart';
 import '../../domain/scan_status.dart';
 import 'library_counts.dart';
@@ -24,7 +25,11 @@ class ScanPipelineDeps {
     ScanYield? yielder,
     this.tagTimeout = const Duration(seconds: 90),
     this.coverTimeout = const Duration(seconds: 60),
-  }) : yielder = yielder ?? ScanYield();
+    LibraryReadRules? readRules,
+    this.readRulesApplied = const {},
+    this.onReadRulesApplied,
+  }) : yielder = yielder ?? ScanYield(),
+       readRules = readRules ?? LibraryReadRules.defaults;
 
   final AppDatabase db;
   final LocalFolderSource source;
@@ -37,6 +42,21 @@ class ScanPipelineDeps {
 
   /// The scan rules, read once when the pass starts.
   final ScanRules rules;
+
+  /// How tags become rows, read once when the pass starts.
+  final LibraryReadRules readRules;
+
+  /// Fingerprint of the read rules each music folder was last read with,
+  /// by source uid, read once when the pass starts. A folder with no entry
+  /// counts as read with the default rules, so a first run or an upgrade
+  /// never re-reads.
+  final Map<String, String> readRulesApplied;
+
+  /// Called after a folder's tag pass finished, with its source uid and the
+  /// fingerprint of the rules this pass used (not of the settings now).
+  /// Never called for an unreachable, stopped or failed folder.
+  final Future<void> Function(String sourceUid, String fingerprint)?
+  onReadRulesApplied;
 
   /// Milliseconds since the epoch.
   final int Function() now;

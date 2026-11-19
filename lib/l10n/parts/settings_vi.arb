@@ -323,5 +323,100 @@
         "type": "String"
       }
     }
-  }
+  },
+  "settingsLibraryArtistSplit": "Tách nghệ sĩ",
+  "settingsLibrarySeparatorCount": "{count} dấu tách",
+  "@settingsLibrarySeparatorCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArtistSplitIntro": "Một bài nhiều nghệ sĩ: Kanaru tách tên theo các dấu này.",
+  "settingsArtistSplitExample": "Ví dụ",
+  "settingsArtistSplitExampleNote": "Danh sách mặc định không có , và & vì nhiều tên nhóm chứa chúng. Muốn tách theo chúng thì thêm vào đây, rồi thêm các tên nhóm đó vào Không tách.",
+  "settingsArtistSplitSeparators": "Dấu tách",
+  "settingsArtistSplitSeparatorsHint": "Dấu cách hiện là ␣. Thay đổi áp dụng ngay, thư viện cập nhật ở nền.",
+  "settingsArtistSplitKeep": "Không tách",
+  "settingsArtistSplitKeepHint": "Tên giữ nguyên là một nghệ sĩ dù có chứa dấu tách.",
+  "settingsArtistSplitSeparatorInput": "Thêm dấu tách, vd. “x”",
+  "settingsArtistSplitKeepInput": "Tên nghệ sĩ, vd. “Hồ Ngọc Hà / Noo”",
+  "settingsArtistSplitAdd": "Thêm",
+  "settingsArtistSplitRemove": "Bỏ {value}",
+  "@settingsArtistSplitRemove": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitNoSeparators": "Không có dấu tách nào: tên nghệ sĩ giữ nguyên.",
+  "settingsArtistSplitErrEmpty": "Chưa nhập gì",
+  "settingsArtistSplitErrDuplicate": "Đã có trong danh sách",
+  "settingsArtistSplitErrTooLong": "Tối đa {max} ký tự",
+  "@settingsArtistSplitErrTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArtistSplitErrFull": "Tối đa {max} mục",
+  "@settingsArtistSplitErrFull": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArtistSplitReset": "Khôi phục mặc định",
+  "settingsArtistSplitResetIsDefault": "Đang là mặc định",
+  "settingsArtistSplitResetTo": "{count} dấu tách, “{names}”",
+  "@settingsArtistSplitResetTo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitResetTitle": "Khôi phục dấu tách mặc định?",
+  "settingsArtistSplitResetBody": "Danh sách dấu tách và tên không tách về như lúc cài. Thư viện cập nhật ở nền.",
+  "settingsArtistSplitResetConfirm": "Khôi phục",
+  "settingsArtistSplitAdded": "Đã thêm “{value}”",
+  "@settingsArtistSplitAdded": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitAddedGroup": "Đã thêm “{value}” · thêm tên nhóm có dấu này vào Không tách",
+  "@settingsArtistSplitAddedGroup": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitRemoved": "Đã bỏ “{value}”",
+  "@settingsArtistSplitRemoved": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitRestored": "Đã khôi phục mặc định",
+  "settingsLibraryLanguageSource": "Nguồn ngôn ngữ",
+  "settingsLibraryLanguageSourceCaption": "Cách Kanaru biết bài hát thuộc ngôn ngữ nào (tab Ngôn ngữ). Thư viện cập nhật ở nền.",
+  "settingsLibraryLanguageBoth": "Tag, rồi tự nhận diện",
+  "settingsLibraryLanguageBothDesc": "Dùng tag ngôn ngữ nếu tệp có, không có thì đoán từ tên bài và lời",
+  "settingsLibraryLanguageTag": "Chỉ tag",
+  "settingsLibraryLanguageTagDesc": "Bài không có tag vào “Chưa rõ”",
+  "settingsLibraryLanguageDetected": "Chỉ tự nhận diện",
+  "settingsLibraryLanguageDetectedDesc": "Bỏ qua tag ngôn ngữ của tệp"
 }

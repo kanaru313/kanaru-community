@@ -1384,7 +1384,13 @@ scan line only after a `ScanFinished` this session, `ProgressNoticeCard` while
 tags and covers are read), the permission card on Android, the three first-run
 blocks (`MusicFoldersSection`, `ExclusionsSection`, `LibraryTabsSection`) in
 `SetupMode.settings`, then Scan (`ScanRulesBlock`), Organise
-(`OrganiseBlock`) and Removed (coming soon).
+(`OrganiseBlock`) and Removed (coming soon). Organise holds the Split artists row
+("7 separators", opens `/settings/library/artist-split`: separators and kept names in a
+`KChipEditor`, a live example, a confirmed restore), the Language source picker ("Detection
+only" is dimmed, "Coming soon"), the
+folder-merge switch and the "coming soon" album grouping row. Their changes start a scan
+that re-reads the folders read with other rules (see "Read rules" in
+`system-architecture-library-scan.md`).
 
 `SetupMode.settings` differs from first run in: the caption sits behind the
 section ⓘ (first run keeps it visible; the state line, such as the missing

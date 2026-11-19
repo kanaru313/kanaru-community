@@ -4,6 +4,7 @@
 /// in this folder and export them here.
 library;
 
+export 'chip_editor.dart';
 export 'k_switch_row.dart';
 export 'multi_selection_sheet.dart';
 export 'permission_card.dart';
