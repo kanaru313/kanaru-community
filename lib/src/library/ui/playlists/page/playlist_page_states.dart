@@ -109,6 +109,11 @@ class PlaylistEmptyState extends StatelessWidget {
         message: favorites
             ? l10n.playlistFavoritesEmptyMessage
             : l10n.playlistEmptyMessage,
+        // Same filled heart as the favourite toggle, in the accent colour.
+        messageIcon: favorites ? KIcons.heartFilled : null,
+        messageIconLabel: favorites
+            ? l10n.playlistFavoritesEmptyIconLabel
+            : null,
       ),
     );
   }

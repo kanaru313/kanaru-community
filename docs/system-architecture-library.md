@@ -227,12 +227,12 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   Most played, still coming soon, would match `:uid` and show "not found").
 - **Seeds** (the placeholder body is replaced by the owner lane, the
   declaration stays): `PlaylistsPage`, `PlaylistPage({uid})` (playlist screens),
-  `m3uAvailable` / `importM3u` / `exportM3u` / `M3uImportProgressSliver` in
-  `m3u/m3u_entry_points.dart` (M3U lane; the playlist screens render their M3U
-  entry points dimmed while `m3uAvailable` is false), `pickCustomCover(context,
-  kind, itemKey)` in `covers/pick_custom_cover.dart` (custom-cover picker lane).
-  All show the "coming soon" snack bar or nothing. `showAddToPlaylist` was a seed
-  and is now the real flow: see "Add to playlist" below.
+  `pickCustomCover(context, kind, itemKey)` in `covers/pick_custom_cover.dart`
+  (custom-cover picker lane). They show the "coming soon" snack bar or nothing.
+  `showAddToPlaylist` and the M3U entry points (`m3uAvailable` / `importM3u` /
+  `exportM3u` / `M3uImportProgressSliver` in `m3u/m3u_entry_points.dart`) were
+  seeds and are now real: see "Add to playlist" and "M3U import and export"
+  below.
 - **`PlaylistCover({uid, autoCoverKeys, dimension, radius, automaticOnly})`**:
   Favorites is a heart tile (icon at 0.42 of the side on `primaryContainer`; it has no custom cover). Others
   show the custom cover when there is one, else the automatic one: 2 to 4 keys
@@ -403,20 +403,21 @@ list page, the playlist page and their behaviour:
   (`playlist_menu_actions.dart`) route a removal through the page controller
   when the page is open, else the store, then show the Undo toast; a gone
   playlist toasts `libraryNotFoundMessage`, a throw `playlistSaveFailed` (a
-  cancelled page write stays silent). M3U rows call `exportM3u` and stay dimmed
-  while `m3uAvailable` is false.
+  cancelled page write stays silent). M3U rows call `exportM3u`, live wherever
+  `m3uAvailable` (a document picker exists: Linux, Android).
 - **List page** (`playlists_page.dart`, `list/`): `PlaylistsPage` shows the
   playlists as a grid or a list (`list_view_prefs`), sorted by `SortOrder` on
   `BrowseList.playlists`, with a filter field (`PlaylistFilterState`, the same
   one the playlist page uses; own Back / Esc layer). The FAB menu holds "New
-  playlist" and the M3U import entries; `NewPlaylistShortcut` (Ctrl+N / Cmd+N)
+  playlist" and the M3U import entry (live; the empty state has the same
+  button); `NewPlaylistShortcut` (Ctrl+N / Cmd+N)
   is a global key handler that runs only while the page is on screen: no dialog
   or sheet above, not in a hidden tab (`TickerMode`), no text field focused. The
   mobile hub (`playlists_hub.dart`) holds the shortcut tiles Favorites, History,
   Most played, Queue (from the registry's nav items) and Stats (Pro, coming
   soon), above "Playlist của bạn" and the playlists. The list listens for Back
-  only while it is the current, visible route. `M3uImportProgressSliver` (m3u
-  seed) sits at the top of the slivers. The page builds nothing until it is
+  only while it is the current, visible route. `M3uImportProgressSliver` (the
+  M3U progress card) sits at the top of the slivers. The page builds nothing until it is
   first shown (`TickerMode` latch, one-way), so a hidden tab root under a deep
   link starts no query.
 - **Playlist / Favorites page** (`playlist_page.dart`, `page/`): one template on
@@ -478,6 +479,105 @@ list page, the playlist page and their behaviour:
   `plScreens`); every other string reuses the `playlist*` / `library*` keys.
 - Known gap: the dialogs use `AlertDialog` inside `showKDialog` because
   `kanaru_ui` has no form-dialog frame yet (only `confirmAction`).
+
+## M3U import and export
+
+Playlists to and from `.m3u` / `.m3u8` files. Entry points
+(`library/ui/m3u/m3u_entry_points.dart`): `m3uAvailable` is
+`documentPickerSupported` (the same check `documentPickerProvider` uses, true on
+Linux and Android), `importM3u(context)` runs `runM3uImport`,
+`exportM3u(context, uid, relative:)` runs `runM3uExport`, and
+`M3uImportProgressSliver` is the first sliver of the playlists page.
+
+- **Layers.** Pure parsing and writing in `storage/domain/m3u/` (decode, line
+  forms, parse, relative paths, write, limits). `storage/data/m3u/`: file
+  system probe, reader (parse on a worker isolate), line resolver, document
+  filter. `library/data/m3u/`: `M3uImportService`, `M3uExportService`, the
+  track matcher, scan rules, result types. `library/state/m3u/`: service
+  providers, busy guards (import and export separate, a second start is
+  ignored), the progress notifier. `library/ui/m3u/`: the two flows, the report
+  dialog, the progress card.
+- **Document picker** (`platform/`: `domain/document_picker.dart`,
+  `data/document_picker_{linux,android,unsupported}.dart`,
+  `state/document_picker_provider.dart`). One document at a time, no storage
+  permission and no persisted grant. Linux: `file_selector`, the document is a
+  path. Android: Storage Access Framework over the `kanaru/documents` channel;
+  the handle is a content URI, and `localPath` is set only for providers whose
+  ids map to a path (primary / SD volumes, raw Downloads), else null. A second
+  dialog while one is open fails `busy` and the tap is ignored; a cancelled
+  dialog returns null and shows nothing. The open dialog widens the MIME list
+  (providers misreport playlists) and the flow checks the name.
+- **Import flow.** Dialog, then a playlist named after the file (one `.m3u` /
+  `.m3u8` dropped, unsafe characters as spaces, 100 graphemes), then a toast and
+  the playlist page when every line is usable, else a report dialog on the
+  current page. A failure is a toast and nothing is created. Work after the
+  dialog uses objects captured at the start (the page may be gone). The progress
+  card shows after the import has run for one second ("FILE · N / M lines");
+  it is cleared before the toast or report.
+- **Reading.** At most 16 MiB, 4096 raw bytes per line, 50 000 path lines (the
+  rest dropped and reported). Strict UTF-8 per line, Windows-1252 for a line
+  that is not UTF-8; UTF-8 BOM, `\r\n`, `\n` and lone `\r` ends. `#EXTINF` title,
+  artist and duration are kept for placeholders. URLs, bad `file:` URIs, drive
+  letters, NUL and over-long lines are reported, not imported.
+- **Root matching.** A line is an absolute path, a `file:` URI path, or relative
+  to the folder of the M3U file (a Windows `Rock\a.mp3` is tried as `Rock/a.mp3`
+  after the literal). Paths are canonicalised, only audio files are statted
+  (each stat has a timeout: a stalled mount counts as not found), then matched
+  to the longest live music folder containing the path; the locator is the path
+  below that root. A relative line needs a known base folder: a file with no
+  `localPath` (Android Downloads `msf:`) reports those lines as "no base folder".
+  A line outside every live folder is reported and **not imported**.
+- **Library rows.** A line whose file has a `tracks` row (any status,
+  `missing` included) is linked to that row. An existing file under a live folder
+  with no row yet gets a placeholder through `createImportedPlaylist` (see
+  `system-architecture-database.md`) so the entry keeps its place; the next scan
+  revives it. On Android shared storage an existing row is also found
+  case-insensitively (one unique hit); a placeholder keeps the M3U's spelling. When placeholders were
+  created, the import asks for a quiet rescan afterwards (a failure only logs).
+- **Not scanned.** Lines the scanners would never list are not imported, so no
+  placeholder stays grey forever. The rules mirror the scanners
+  (`m3u_scan_rules.dart`): a folder below the root skipped by
+  `isSkippedFolderName`, a dot-file name, `<volume>/Android/**` (Android only,
+  unless the root itself is there), and a known duration below the short-track
+  threshold while "Skip short songs" is on. They form their own report group.
+- **Android index check.** The Android scan lists audio through MediaStore only,
+  so a file on disk that MediaStore hides from the app (a pending row owned by
+  another app, as left by `adb push`; or not indexed yet) would become a
+  placeholder no scan revives. Before creating placeholders on Android the
+  matcher asks `M3uIndexCheck` (`m3u_index_check.dart`, backed by
+  `LocalAudioCatalog.listAudio`, injected into `M3uImportService.indexCheck`)
+  what the scanner would list. It only lists, never starts a media scan: one
+  listing per folder (a folder below another listed folder is covered by it; a
+  volume root is never listed), without the short filter, all under one 20 s
+  budget. Verdicts: listed (placeholder, using the listing's letter case as the
+  locator so the scan revives it), listed but shorter than the threshold while
+  "Skip short songs" is on (`notScanned` group), not listed (`notIndexed`
+  group: no placeholder; the text points to Settings › Library › Music folders
+  › Add folder › "Không thấy thư mục của bạn? Quét lại" / "Can't see your folder? Rescan", then import again). A listing that fails, throws,
+  is unreachable or runs out of budget gives no verdict: those files keep the
+  placeholder, as before. The first verdicts are reused if the match is retried.
+  When no line is usable and some are `notIndexed`, the toast is
+  `m3uImportNotIndexed` instead of "nothing found". Linux has no check: its
+  scan walks the file system the resolver already stat'ed. Known gap: folders
+  the user excluded from the scan are not mirrored (on both platforms).
+- **Export.** The save dialog suggests `<name>.m3u8` (unsafe characters and
+  path separators replaced, 100 graphemes). An existing target asks "Replace?"
+  first. Playlists offer absolute and relative paths, Favorites absolute only.
+  Relative paths need a known folder of the target file ("folder unknown" toast
+  otherwise). Entries whose file is unknown are skipped and counted in the toast.
+  Toast counts are distinct songs (a repeated song counts once); "lines" counts
+  stay line counts. The report row "not in your library" is distinct songs too.
+  A failed write discards the target.
+- **Known limits.** On Linux a short track without `#EXTINF` duration becomes
+  a placeholder that no scan revives: it stays "not in your library" until
+  removed (Android takes the duration from the listing). On Android a file that exists but that
+  MediaStore does not show to the app is never given a placeholder (see "Android
+  index check"). A file in a `.nomedia` folder never
+  revives (MediaProvider skips it). On Android shared storage the lookup of existing rows is
+  case-insensitive and a new placeholder takes the listing's spelling. On Linux a differently
+  cased path is a different file. A stalled mount counts its lines as not found.
+- l10n part `m3u` (`lib/l10n/parts/m3u_{en,vi}.arb`, prefix `m3u`), plus the
+  `playlistM3u*` keys of the playlist part.
 
 ## Library tabs
 

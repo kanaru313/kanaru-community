@@ -329,14 +329,13 @@ void main() {
       expect(find.text(l10n.playlistCreateTitle), findsWidgets);
     });
 
-    pageTest('import is inert and Smart playlist is Pro-locked', (t) async {
+    pageTest('import is tappable and Smart playlist is Pro-locked', (t) async {
       final handle = t.ensureSemantics();
       await pumpPlaylistsPage(t);
       final l10n = pageL10n(t);
       await t.tap(_fabOpen(t));
       await settlePage(t);
-      expect(m3uAvailable, isFalse);
-      expect(canTap(t, find.text(l10n.playlistFabImport)), isFalse);
+      expect(canTap(t, find.text(l10n.playlistFabImport)), isTrue);
       expect(canTap(t, find.text(l10n.playlistFabSmart)), isFalse);
       handle.dispose();
     });

@@ -1663,9 +1663,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistImportM3uAction => 'Import M3U file…';
 
   @override
-  String get playlistFavoritesSubtitle => 'Songs you ♥';
-
-  @override
   String get playlistHubStats => 'Stats';
 
   @override
@@ -1719,7 +1716,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistFavoritesEmptyTitle => 'No favorites yet';
 
   @override
-  String get playlistFavoritesEmptyMessage => 'Tap ♥ on a song to add it here.';
+  String get playlistFavoritesEmptyMessage =>
+      'Tap [icon] on a song to add it here.';
+
+  @override
+  String get playlistFavoritesEmptyIconLabel => 'favorite';
 
   @override
   String get playlistNotFoundTitle => 'Playlist not found';
@@ -2170,10 +2171,11 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count songs are',
-      one: '1 song is',
+      other:
+          '$count songs are not in your library yet: they appear after the next library scan.',
+      one: '1 song is not in your library yet: it appears after the next library scan.',
     );
-    return '$_temp0 not in your library yet: they show once their folder is added.';
+    return '$_temp0';
   }
 
   @override
@@ -2405,6 +2407,88 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get plAddNotConfirmed =>
       'Couldn\'t confirm the songs were added. Check the playlist.';
+
+  @override
+  String m3uImportProgressTitle(String file) {
+    return 'Importing $file';
+  }
+
+  @override
+  String m3uImportProgressLines(int done, int total) {
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$doneString / $totalString lines';
+  }
+
+  @override
+  String get m3uImportFailed => 'Couldn\'t import the file.';
+
+  @override
+  String m3uReportTruncated(int max) {
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String maxString = maxNumberFormat.format(max);
+
+    return 'The file has more lines than the limit, so only the first $maxString were read.';
+  }
+
+  @override
+  String m3uExportedSkipped(int count, String file, int skipped) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+    final intl.NumberFormat skippedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String skippedString = skippedNumberFormat.format(skipped);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString songs',
+      one: '1 song',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      skipped,
+      locale: localeName,
+      other: '$skippedString skipped (no file on this device)',
+      one: '1 skipped (no file on this device)',
+    );
+    return 'Saved $_temp0 to $file, $_temp1';
+  }
+
+  @override
+  String get m3uExportFolderUnknown =>
+      'Couldn\'t write relative paths: the folder of this file is unknown. Save it in internal storage, or export with absolute paths.';
+
+  @override
+  String get m3uExportReplace => 'Replace';
+
+  @override
+  String m3uReportNotIndexed(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$countString lines are files that are on this device but not in Android\'s media index, so the library cannot see them',
+      one: '1 line is a file that is on this device but not in Android\'s media index, so the library cannot see it',
+    );
+    return '$_temp0. Go to Settings › Library › Music folders › Add folder, tap “Can\'t see your folder? Rescan”, then import again:';
+  }
+
+  @override
+  String get m3uImportNotIndexed =>
+      'Android\'s media index does not list the music files of this playlist yet, so the library cannot see them. Go to Settings › Library › Music folders › Add folder, tap “Can\'t see your folder? Rescan”, then import again. Nothing was imported.';
 
   @override
   String get settingsAbout => 'About';

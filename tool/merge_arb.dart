@@ -47,7 +47,7 @@ Map<String, String> mergeArbParts(Directory l10nDir) {
   if (!partsDir.existsSync()) {
     throw ArbMergeException('missing folder ${partsDir.path}');
   }
-  final pattern = RegExp(r'^([a-z]+)_([a-zA-Z]+(?:_[a-zA-Z]+)?)\.arb$');
+  final pattern = RegExp(r'^([a-z0-9]+)_([a-zA-Z]+(?:_[a-zA-Z]+)?)\.arb$');
   final files = <String, Map<String, File>>{}; // locale -> part -> file
   for (final entity in partsDir.listSync().whereType<File>()) {
     final name = entity.uri.pathSegments.last;

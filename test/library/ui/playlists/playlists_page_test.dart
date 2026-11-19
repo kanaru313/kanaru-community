@@ -143,12 +143,12 @@ void main() {
       expect(find.text(l10n.playlistsEmptyTitle), findsOneWidget);
       expect(find.text(l10n.playlistsEmptyMessage), findsOneWidget);
       expect(find.text(l10n.playlistCreateAction), findsOneWidget);
-      // M3U import is not available yet: its button is inert.
+      // M3U import works where a document picker exists: its button is live.
       final import = find.widgetWithText(
         OutlinedButton,
         l10n.playlistImportM3uAction,
       );
-      expect(t.widget<OutlinedButton>(import).onPressed, isNull);
+      expect(t.widget<OutlinedButton>(import).onPressed, isNotNull);
       expect(find.byTooltip(l10n.libraryFilter), findsNothing);
       expect(byIconButton(l10n.libraryFilter), findsNothing);
       expect(h.store.createCalls, 0);

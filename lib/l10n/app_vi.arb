@@ -1045,7 +1045,6 @@
   "playlistsEmptyMessage": "Tạo playlist để giữ bài theo thứ tự của riêng bạn, hoặc nhập một tệp M3U.",
   "playlistCreateAction": "Tạo playlist",
   "playlistImportM3uAction": "Nhập tệp M3U…",
-  "playlistFavoritesSubtitle": "Bài bạn bấm ♥",
   "playlistHubStats": "Thống kê",
   "playlistFabOpen": "Tạo",
   "playlistFabClose": "Đóng",
@@ -1074,7 +1073,8 @@
   "playlistEmptyTitle": "Playlist trống",
   "playlistEmptyMessage": "Thêm bài từ menu của bất kỳ bài, album hay nghệ sĩ nào (Thêm vào playlist…), hoặc chọn nhiều bài rồi thêm một lần.",
   "playlistFavoritesEmptyTitle": "Chưa có bài yêu thích",
-  "playlistFavoritesEmptyMessage": "Bấm ♥ trên một bài để thêm vào đây.",
+  "playlistFavoritesEmptyMessage": "Bấm [icon] trên một bài để thêm vào đây.",
+  "playlistFavoritesEmptyIconLabel": "yêu thích",
   "playlistNotFoundTitle": "Không tìm thấy playlist",
   "playlistNotFoundMessage": "Có thể nó đã bị xoá.",
   "playlistSaveFailed": "Không lưu được playlist",
@@ -1373,7 +1373,7 @@
       }
     }
   },
-  "playlistM3uReportNotInLibrary": "{count} bài chưa có trong thư viện: hiện ra khi thư mục của chúng được thêm.",
+  "playlistM3uReportNotInLibrary": "{count} bài chưa có trong thư viện: sẽ hiện ra sau lần quét thư viện tới.",
   "@playlistM3uReportNotInLibrary": {
     "placeholders": {
       "count": {
@@ -1589,6 +1589,69 @@
   "@plAddNotConfirmed": {
     "description": "Toast: the write did not answer in time."
   },
+  "m3uImportProgressTitle": "Đang nhập {file}",
+  "@m3uImportProgressTitle": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "m3uImportProgressLines": "{done} / {total} dòng",
+  "@m3uImportProgressLines": {
+    "placeholders": {
+      "done": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "m3uImportFailed": "Không nhập được tệp.",
+  "@m3uImportFailed": {},
+  "m3uReportTruncated": "Tệp có nhiều dòng hơn giới hạn, nên chỉ đọc {max} dòng đầu.",
+  "@m3uReportTruncated": {
+    "placeholders": {
+      "max": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "m3uExportedSkipped": "Đã lưu {count} bài vào {file}, bỏ qua {skipped} bài không có tệp trong máy",
+  "@m3uExportedSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "file": {
+        "type": "String"
+      },
+      "skipped": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "m3uExportFolderUnknown": "Không ghi được đường dẫn tương đối vì không biết thư mục của tệp. Lưu tệp vào bộ nhớ trong, hoặc xuất với đường dẫn tuyệt đối.",
+  "@m3uExportFolderUnknown": {},
+  "m3uExportReplace": "Thay thế",
+  "@m3uExportReplace": {},
+  "m3uReportNotIndexed": "{count} dòng là tệp có trong máy nhưng Android chưa đưa vào kho nhạc nên thư viện không thấy. Vào Cài đặt › Thư viện › Thư mục nhạc › Thêm thư mục, bấm “Không thấy thư mục của bạn? Quét lại”, rồi nhập lại:",
+  "@m3uReportNotIndexed": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "m3uImportNotIndexed": "Android chưa đưa các tệp nhạc của playlist này vào kho nhạc nên thư viện không thấy. Vào Cài đặt › Thư viện › Thư mục nhạc › Thêm thư mục, bấm “Không thấy thư mục của bạn? Quét lại”, rồi nhập lại. Chưa nhập gì.",
+  "@m3uImportNotIndexed": {},
   "settingsAbout": "Giới thiệu",
   "settingsNativeVersions": "Thư viện native",
   "settingsSaveFailed": "Không lưu được cài đặt. Thay đổi chỉ giữ tới khi đóng app.",

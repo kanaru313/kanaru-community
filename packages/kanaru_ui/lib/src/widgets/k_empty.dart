@@ -9,13 +9,28 @@ class KEmpty extends StatelessWidget {
     super.key,
     required this.icon,
     required this.message,
+    this.messageIcon,
+    this.messageIconLabel,
     this.title,
     this.action,
     this.actions = const [],
   }) : assert(actions.length <= 2, 'at most two actions');
 
   final IconData icon;
+
+  /// One sentence. When [messageIcon] is set, the first [iconToken] in it is
+  /// replaced by that icon, drawn inline in the theme's accent colour (a
+  /// text glyph like a heart would come from the emoji font instead).
   final String message;
+
+  /// Icon drawn where [iconToken] stands in [message].
+  final IconData? messageIcon;
+
+  /// Spoken in place of the icon; the sentence reads as one text.
+  final String? messageIconLabel;
+
+  /// Placeholder for [messageIcon] inside [message].
+  static const iconToken = '[icon]';
 
   /// Bold line above [message].
   final String? title;
@@ -57,12 +72,7 @@ class KEmpty extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium,
             ),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge
-                ?.copyWith(color: scheme.onSurfaceVariant),
-          ),
+          _message(context, scheme),
           ?action,
           if (actions.isNotEmpty)
             Wrap(
@@ -72,6 +82,39 @@ class KEmpty extends StatelessWidget {
               children: actions,
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _message(BuildContext context, ColorScheme scheme) {
+    final style = Theme.of(context).textTheme.bodyLarge
+        ?.copyWith(color: scheme.onSurfaceVariant);
+    final at = message.indexOf(iconToken);
+    if (messageIcon == null || at < 0) {
+      return Text(message, textAlign: TextAlign.center, style: style);
+    }
+    final before = message.substring(0, at);
+    final after = message.substring(at + iconToken.length);
+    return Semantics(
+      label: '$before${messageIconLabel ?? ''}$after',
+      excludeSemantics: true,
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(text: before),
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Icon(
+                messageIcon,
+                size: (style?.fontSize ?? 16) * 1.25,
+                color: scheme.primary,
+              ),
+            ),
+            TextSpan(text: after),
+          ],
+        ),
+        textAlign: TextAlign.center,
+        style: style,
       ),
     );
   }

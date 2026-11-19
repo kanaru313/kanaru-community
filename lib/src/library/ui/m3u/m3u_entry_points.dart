@@ -1,33 +1,31 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../l10n/gen/app_localizations.dart';
+import '../../../platform/state/document_picker_provider.dart';
+import 'm3u_export_flow.dart';
+import 'm3u_import_flow.dart';
+import 'm3u_import_progress_card.dart';
 
-/// Whether M3U import and export work. Entry points stay dimmed while false.
-bool get m3uAvailable => false;
+/// Whether M3U import and export work: true where a document picker exists
+/// (the same answer `documentPickerProvider` uses).
+bool get m3uAvailable => documentPickerSupported;
 
-/// Starts an M3U import. Placeholder until the import flow replaces the body.
-Future<void> importM3u(BuildContext context) async {
-  showAppSnackBar(context, AppLocalizations.of(context).appComingSoon);
-}
+/// Starts an M3U import (system file dialog, then toast or report).
+Future<void> importM3u(BuildContext context) => runM3uImport(context);
 
-/// Exports playlist [uid] as M3U ([relative] paths or absolute). Placeholder
-/// until the export flow replaces the body.
+/// Exports playlist [uid] as M3U ([relative] paths or absolute).
 Future<void> exportM3u(
   BuildContext context,
   String uid, {
   required bool relative,
-}) async {
-  showAppSnackBar(context, AppLocalizations.of(context).appComingSoon);
-}
+}) => runM3uExport(context, uid, relative: relative);
 
 /// Progress of a running M3U import, the first sliver of the playlists list.
-/// Draws nothing until the import flow fills it.
+/// Draws nothing while no import has run for more than a second.
 class M3uImportProgressSliver extends ConsumerWidget {
   const M3uImportProgressSliver({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) =>
-      const SliverToBoxAdapter(child: SizedBox.shrink());
+      const SliverToBoxAdapter(child: M3uImportProgressCard());
 }

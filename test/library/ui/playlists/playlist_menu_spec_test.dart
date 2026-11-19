@@ -265,10 +265,10 @@ void main() {
     });
 
     test(
-      'M3U rows are dimmed until the export exists and dim at 0 songs',
+      'M3U rows are live (not "coming soon") with the export hint',
       () async {
         final spec = _playlist(await playlist());
-        expect(rowOf(spec, MenuItemId.playlistExportM3u).soon, isTrue);
+        expect(rowOf(spec, MenuItemId.playlistExportM3u).soon, isFalse);
         expect(
           rowOf(spec, MenuItemId.playlistExportM3u).subtitle,
           enL10n.playlistMenuExportM3uHint,

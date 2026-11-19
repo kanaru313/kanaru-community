@@ -11,7 +11,8 @@ import 'package:kanaru/src/shell/state/mobile_sidebar_state.dart';
 import 'package:kanaru/src/shell/ui/mobile_sidebar.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
-import 'package:kanaru/src/library/ui/m3u/m3u_entry_points.dart';
+import 'package:kanaru/src/library/ui/m3u/m3u_entry_points.dart'
+    show M3uImportProgressSliver;
 import 'package:flutter/rendering.dart' show RenderSliver;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -232,7 +233,9 @@ void main() {
     expect(playlistDisplayName(l10n, summary('p1', 'Road trip')), 'Road trip');
   });
 
-  testWidgets('the import progress seed draws nothing', (tester) async {
+  testWidgets('the import progress sliver draws nothing while no import runs', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MaterialApp(
@@ -246,6 +249,5 @@ void main() {
       find.byType(M3uImportProgressSliver, skipOffstage: false),
     );
     expect(sliver.geometry!.scrollExtent, 0);
-    expect(m3uAvailable, isFalse);
   });
 }

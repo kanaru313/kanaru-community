@@ -2630,12 +2630,6 @@ abstract class AppLocalizations {
   /// **'Import M3U file…'**
   String get playlistImportM3uAction;
 
-  /// No description provided for @playlistFavoritesSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Songs you ♥'**
-  String get playlistFavoritesSubtitle;
-
   /// No description provided for @playlistHubStats.
   ///
   /// In en, this message translates to:
@@ -2723,8 +2717,14 @@ abstract class AppLocalizations {
   /// No description provided for @playlistFavoritesEmptyMessage.
   ///
   /// In en, this message translates to:
-  /// **'Tap ♥ on a song to add it here.'**
+  /// **'Tap [icon] on a song to add it here.'**
   String get playlistFavoritesEmptyMessage;
+
+  /// No description provided for @playlistFavoritesEmptyIconLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'favorite'**
+  String get playlistFavoritesEmptyIconLabel;
 
   /// No description provided for @playlistNotFoundTitle.
   ///
@@ -3297,7 +3297,7 @@ abstract class AppLocalizations {
   /// No description provided for @playlistM3uReportNotInLibrary.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 song is} other{{count} songs are}} not in your library yet: they show once their folder is added.'**
+  /// **'{count, plural, =1{1 song is not in your library yet: it appears after the next library scan.} other{{count} songs are not in your library yet: they appear after the next library scan.}}'**
   String playlistM3uReportNotInLibrary(int count);
 
   /// No description provided for @playlistM3uReportUnresolved.
@@ -3533,6 +3533,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t confirm the songs were added. Check the playlist.'**
   String get plAddNotConfirmed;
+
+  /// Title of the card shown on the playlists page while an M3U file is imported.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing {file}'**
+  String m3uImportProgressTitle(String file);
+
+  /// Subtitle of the M3U import card: lines read so far out of all lines.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} / {total} lines'**
+  String m3uImportProgressLines(int done, int total);
+
+  /// Toast: an M3U import failed for an unexpected reason. Nothing was created.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t import the file.'**
+  String get m3uImportFailed;
+
+  /// Note at the end of the M3U import report when the file was cut.
+  ///
+  /// In en, this message translates to:
+  /// **'The file has more lines than the limit, so only the first {max} were read.'**
+  String m3uReportTruncated(int max);
+
+  /// Export toast when some songs were left out of the M3U file.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {count, plural, =1{1 song} other{{count} songs}} to {file}, {skipped, plural, =1{1 skipped (no file on this device)} other{{skipped} skipped (no file on this device)}}'**
+  String m3uExportedSkipped(int count, String file, int skipped);
+
+  /// Toast: a relative-path export was refused because the chosen location has no known folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t write relative paths: the folder of this file is unknown. Save it in internal storage, or export with absolute paths.'**
+  String get m3uExportFolderUnknown;
+
+  /// Confirm button when the chosen M3U file already exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get m3uExportReplace;
+
+  /// M3U import report (Android): lines naming files that exist but are not in MediaStore, so no placeholder was created.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 line is a file that is on this device but not in Android\'s media index, so the library cannot see it} other{{count} lines are files that are on this device but not in Android\'s media index, so the library cannot see them}}. Go to Settings › Library › Music folders › Add folder, tap “Can\'t see your folder? Rescan”, then import again:'**
+  String m3uReportNotIndexed(int count);
+
+  /// Toast: an M3U import created nothing because every usable line is a file Android has not indexed.
+  ///
+  /// In en, this message translates to:
+  /// **'Android\'s media index does not list the music files of this playlist yet, so the library cannot see them. Go to Settings › Library › Music folders › Add folder, tap “Can\'t see your folder? Rescan”, then import again. Nothing was imported.'**
+  String get m3uImportNotIndexed;
 
   /// No description provided for @settingsAbout.
   ///

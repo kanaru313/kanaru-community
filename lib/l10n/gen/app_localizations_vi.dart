@@ -1543,9 +1543,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playlistImportM3uAction => 'Nhập tệp M3U…';
 
   @override
-  String get playlistFavoritesSubtitle => 'Bài bạn bấm ♥';
-
-  @override
   String get playlistHubStats => 'Thống kê';
 
   @override
@@ -1594,7 +1591,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get playlistFavoritesEmptyMessage =>
-      'Bấm ♥ trên một bài để thêm vào đây.';
+      'Bấm [icon] trên một bài để thêm vào đây.';
+
+  @override
+  String get playlistFavoritesEmptyIconLabel => 'yêu thích';
 
   @override
   String get playlistNotFoundTitle => 'Không tìm thấy playlist';
@@ -1951,7 +1951,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String playlistM3uReportNotInLibrary(int count) {
-    return '$count bài chưa có trong thư viện: hiện ra khi thư mục của chúng được thêm.';
+    return '$count bài chưa có trong thư viện: sẽ hiện ra sau lần quét thư viện tới.';
   }
 
   @override
@@ -2141,6 +2141,69 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get plAddNotConfirmed =>
       'Chưa xác nhận được việc thêm bài. Hãy xem lại playlist.';
+
+  @override
+  String m3uImportProgressTitle(String file) {
+    return 'Đang nhập $file';
+  }
+
+  @override
+  String m3uImportProgressLines(int done, int total) {
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$doneString / $totalString dòng';
+  }
+
+  @override
+  String get m3uImportFailed => 'Không nhập được tệp.';
+
+  @override
+  String m3uReportTruncated(int max) {
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String maxString = maxNumberFormat.format(max);
+
+    return 'Tệp có nhiều dòng hơn giới hạn, nên chỉ đọc $maxString dòng đầu.';
+  }
+
+  @override
+  String m3uExportedSkipped(int count, String file, int skipped) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+    final intl.NumberFormat skippedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String skippedString = skippedNumberFormat.format(skipped);
+
+    return 'Đã lưu $countString bài vào $file, bỏ qua $skippedString bài không có tệp trong máy';
+  }
+
+  @override
+  String get m3uExportFolderUnknown =>
+      'Không ghi được đường dẫn tương đối vì không biết thư mục của tệp. Lưu tệp vào bộ nhớ trong, hoặc xuất với đường dẫn tuyệt đối.';
+
+  @override
+  String get m3uExportReplace => 'Thay thế';
+
+  @override
+  String m3uReportNotIndexed(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString dòng là tệp có trong máy nhưng Android chưa đưa vào kho nhạc nên thư viện không thấy. Vào Cài đặt › Thư viện › Thư mục nhạc › Thêm thư mục, bấm “Không thấy thư mục của bạn? Quét lại”, rồi nhập lại:';
+  }
+
+  @override
+  String get m3uImportNotIndexed =>
+      'Android chưa đưa các tệp nhạc của playlist này vào kho nhạc nên thư viện không thấy. Vào Cài đặt › Thư viện › Thư mục nhạc › Thêm thư mục, bấm “Không thấy thư mục của bạn? Quét lại”, rồi nhập lại. Chưa nhập gì.';
 
   @override
   String get settingsAbout => 'Giới thiệu';
