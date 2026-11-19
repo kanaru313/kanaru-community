@@ -86,10 +86,10 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('a shelf is capped at 10 on mobile and 8 on desktop', (
+  testWidgets('a shelf lists every item and builds its cards lazily', (
     tester,
   ) async {
-    for (final (width, cap) in [(390.0, 10), (1280.0, 8)]) {
+    for (final width in [390.0, 1280.0]) {
       final h = await pumpLibrary(
         tester,
         initial: '/library/songs',
@@ -125,9 +125,12 @@ void main() {
                   1) ~/
               2,
       ];
-      expect(counts, [cap, cap]);
-      // The head shows the full count, not the cards of the row.
+      expect(counts, [12, 12]);
       expect(find.text('12'), findsNWidgets(2));
+      // Only the cards in view are built, not all twelve.
+      if (width == 390.0) {
+        expect(tester.widgetList(find.byType(ArtistCard)).length, lessThan(12));
+      }
       await unmountApp(tester);
     }
   });

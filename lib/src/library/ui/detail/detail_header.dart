@@ -200,13 +200,8 @@ class DetailActions extends ConsumerWidget {
   }
 }
 
-/// Number of cards a genre or language shelf shows on this shell.
-int shelfCap(BuildContext context) =>
-    FormFactor.of(context) == FormFactor.desktop ? 8 : 10;
-
 /// Collapsible block of album cards; the grid button opens [onSeeAll].
-/// [kind] (a [ShelfBlockKind]) keys the remembered collapsed state; [total]
-/// is the number shown on the head when [albums] is only the first cards.
+/// [kind] (a [ShelfBlockKind]) keys the remembered collapsed state.
 class AlbumShelf extends StatelessWidget {
   const AlbumShelf({
     super.key,
@@ -215,7 +210,6 @@ class AlbumShelf extends StatelessWidget {
     required this.albums,
     required this.onSeeAll,
     this.icon = KIcons.album,
-    this.total,
     this.origin = const MenuOrigin.list(),
   });
 
@@ -223,7 +217,6 @@ class AlbumShelf extends StatelessWidget {
   final String kind;
   final IconData icon;
   final List<AlbumSummary> albums;
-  final int? total;
   final VoidCallback onSeeAll;
 
   /// The page the shelf is on, so a card's menu never links back to it.
@@ -234,7 +227,6 @@ class AlbumShelf extends StatelessWidget {
     title: title,
     kind: kind,
     icon: icon,
-    total: total ?? albums.length,
     count: albums.length,
     onSeeAll: onSeeAll,
     card: (i) => AlbumCard(album: albums[i], origin: origin),
@@ -250,14 +242,12 @@ class ArtistShelf extends StatelessWidget {
     required this.onSeeAll,
     this.kind = ShelfBlockKind.artists,
     this.icon = KIcons.artists,
-    this.total,
   });
 
   final String title;
   final String kind;
   final IconData icon;
   final List<ArtistSummary> artists;
-  final int? total;
   final VoidCallback onSeeAll;
 
   @override
@@ -265,7 +255,6 @@ class ArtistShelf extends StatelessWidget {
     title: title,
     kind: kind,
     icon: icon,
-    total: total ?? artists.length,
     count: artists.length,
     onSeeAll: onSeeAll,
     card: (i) => ArtistCard(artist: artists[i]),
@@ -277,7 +266,6 @@ class _Shelf extends ConsumerWidget {
     required this.title,
     required this.kind,
     required this.icon,
-    required this.total,
     required this.count,
     required this.onSeeAll,
     required this.card,
@@ -287,8 +275,7 @@ class _Shelf extends ConsumerWidget {
   final String kind;
   final IconData icon;
 
-  /// Number on the head; [count] is how many cards the row builds.
-  final int total;
+  /// Number of cards; the head shows it too.
   final int count;
   final VoidCallback onSeeAll;
   final Widget Function(int index) card;
@@ -304,7 +291,7 @@ class _Shelf extends ConsumerWidget {
     return KShelfBlock(
       title: title,
       icon: icon,
-      count: total,
+      count: count,
       collapsed: collapsed,
       onToggle: () =>
           ref.read(shelfBlockCollapsedProvider.notifier).set(kind, !collapsed),

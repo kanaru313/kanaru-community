@@ -1,7 +1,7 @@
 import 'browse_items.dart';
 
 /// Artists and albums inside a genre or language, for the shelves of its
-/// detail page. The page shows a shelf only from two items up and caps it.
+/// detail page. The page shows a shelf only from two items up, with every item.
 class GroupShelves {
   const GroupShelves({required this.artists, required this.albums});
 
