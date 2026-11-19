@@ -11,6 +11,7 @@ KCheckMark _mark(WidgetTester tester) =>
     tester.widget<KCheckMark>(find.byType(KCheckMark));
 
 void main() {
+  tintFadeTests();
   for (final (name, brightness, scale) in hostVariants) {
     testWidgets('text rows: mark at the start, ring when off ($name)', (
       tester,
@@ -503,4 +504,58 @@ void main() {
     expect(tester.getSemantics(find.byType(SelectionRow)).hint, isEmpty);
     handle.dispose();
   });
+}
+
+/// Tint colour currently painted behind the row (the ShapeDecoration fill).
+Color? _tint(WidgetTester tester) {
+  for (final box in tester.widgetList<DecoratedBox>(
+    find.descendant(
+      of: find.byType(SelectionRow),
+      matching: find.byType(DecoratedBox),
+    ),
+  )) {
+    final d = box.decoration;
+    if (d is ShapeDecoration) return d.color;
+  }
+  return null;
+}
+
+void _expectSameHue(Color c, Color container) {
+  expect(
+    (c.r - container.r).abs() +
+        (c.g - container.g).abs() +
+        (c.b - container.b).abs(),
+    lessThan(0.01),
+    reason: 'tint must fade alpha only, not drift towards grey / black',
+  );
+}
+
+void tintFadeTests() {
+  for (final selectNext in [false, true]) {
+    testWidgets(
+      'tint ${selectNext ? 'select' : 'deselect'} keeps the container hue',
+      (tester) async {
+        useWindow(tester, const Size(400, 800));
+        Widget row(bool sel) => host(
+          SelectionRow(
+            title: const Text('A'),
+            leading: const SizedBox(width: 24, height: 24),
+            selected: sel,
+            alikeOptions: true,
+            onTap: () {},
+          ),
+        );
+        await tester.pumpWidget(row(!selectNext));
+        final container = Theme.of(tester.element(find.byType(SelectionRow)))
+            .colorScheme
+            .secondaryContainer;
+        await tester.pumpWidget(row(selectNext));
+        await tester.pump(KMotion.fast ~/ 2);
+        final mid = _tint(tester)!;
+        expect(mid.a, greaterThan(0));
+        expect(mid.a, lessThan(container.a));
+        _expectSameHue(mid, container);
+      },
+    );
+  }
 }

@@ -123,7 +123,9 @@ class SelectionRow extends StatelessWidget {
                   shape: KShape.of(KRadius.md),
                   color: selected
                       ? scheme.secondaryContainer
-                      : const Color(0x00000000),
+                      // Same hue at alpha 0: lerping to black (0x00000000)
+                      // would pass through a grey on the way out.
+                      : scheme.secondaryContainer.withValues(alpha: 0),
                 ),
               ),
             ),
