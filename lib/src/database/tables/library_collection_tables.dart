@@ -12,7 +12,12 @@ abstract final class PlaylistKind {
   /// A mood playlist, unique by `name_key`.
   static const mood = 'mood';
 
-  static const Set<String> values = {favorites, mood};
+  /// A saved queue: a queue the user replaced or cleared, kept automatically
+  /// (at most 20). Always has `saved_at`; never listed as a playlist, never
+  /// synced. Its entries keep `missing` tracks out of the orphan GC.
+  static const queue = 'queue';
+
+  static const Set<String> values = {favorites, mood, queue};
 }
 
 /// Values of `saved_items.kind`. The column has no CHECK.
@@ -72,6 +77,17 @@ class Playlists extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
   IntColumn get deletedAt => integer().nullable()();
+
+  /// Saved queues only (`kind = 'queue'`): epoch ms of the save or of the last
+  /// time it was played again. Orders the saved queues, newest first.
+  IntColumn get savedAt => integer().nullable()();
+
+  /// Saved queues only: `PlayContextKind` name of what the queue was playing
+  /// from, its reference and its display label at that time. All null when
+  /// unknown.
+  TextColumn get contextKind => text().nullable()();
+  TextColumn get contextRef => text().nullable()();
+  TextColumn get contextLabel => text().nullable()();
 }
 
 /// One track in a playlist. Favorites entries have a deterministic uid; all

@@ -45,11 +45,17 @@ final sortedPlaylistsProvider = Provider<AsyncValue<List<PlaylistSummary>>>((
       .whenData((list) => sortPlaylists(list, sort));
 });
 
-/// One playlist as stored: null when it does not exist (also after delete).
+/// One playlist as stored: null when it does not exist (also after delete) or
+/// is a saved queue.
 /// A page shows `playlistPageProvider` instead, which adds pending edits.
 final playlistDetailProvider = StreamProvider.autoDispose
     .family<PlaylistDetail?, String>(
-      (ref, uid) => ref.watch(playlistStoreProvider).watchPlaylist(uid),
+      (ref, uid) => ref
+          .watch(playlistStoreProvider)
+          .watchPlaylist(uid)
+          // A saved queue has its own page; `/playlists/<its uid>` is "not
+          // found" (`loadPlaylist` still reads it for M3U export).
+          .map((d) => d?.summary.savedQueue == null ? d : null),
     );
 
 /// Track ids with value equality, so it can key a family.

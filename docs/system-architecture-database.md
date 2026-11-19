@@ -554,7 +554,7 @@ Owner: library. File: `tables/library_collection_tables.dart`. Sync: synced (`pl
 | `uid` | TEXT | NOT NULL | | UNIQUE. `favorites` for Favorites, ULID otherwise. |
 | `name` | TEXT | NOT NULL | | |
 | `name_key` | TEXT | NULL | | Mood playlists: lower case, collapsed spaces, NFC, accents kept. |
-| `kind` | TEXT | NULL | | `PlaylistKind`: `favorites`, `mood`. NULL = normal or imported. No CHECK. |
+| `kind` | TEXT | NULL | | `PlaylistKind`: `favorites`, `mood`, `queue`. NULL = normal or imported. No CHECK. |
 | `description` | TEXT | NOT NULL | `''` | |
 | `origin_source_id` | INTEGER | NULL | | FK `sources.id` RESTRICT. Set for imported playlists. |
 | `origin_locator` | TEXT | NULL | | Imported playlist locator. |
@@ -562,6 +562,10 @@ Owner: library. File: `tables/library_collection_tables.dart`. Sync: synced (`pl
 | `created_at` | INTEGER | NOT NULL | | |
 | `updated_at` | INTEGER | NOT NULL | | |
 | `deleted_at` | INTEGER | NULL | | Tombstone. |
+| `saved_at` | INTEGER | NULL | | Only `kind = 'queue'` (always set there): epoch ms of the save or of the last time it was played again; orders the saved queues, newest first. |
+| `context_kind` | TEXT | NULL | | Only `queue`: `PlayContextKind` name of what the queue played from. |
+| `context_ref` | TEXT | NULL | | Only `queue`: reference of that context. |
+| `context_label` | TEXT | NULL | | Only `queue`: display label of the context at save time. |
 
 Partial unique indexes (live rows only):
 
@@ -573,7 +577,16 @@ Partial unique indexes (live rows only):
 
 Plain index `playlists_origin_source` on `(origin_source_id)` serves the foreign key check (a partial index cannot). Mood rows must always set `name_key`: NULLs are distinct, so a NULL bypasses `playlists_mood_name_unique`.
 
-Renaming a mood changes `name` and `name_key` only. Its uid stays. Constants: `PlaylistKind` (`favorites`, `mood`), `SavedItemKind` (`album`, `artist`, `playlist_remote`). Uids: `favoritesPlaylistUid`, `favoriteEntryUid(playlistUid, trackUid)`, `savedItemUid(sourceUid, kind, remoteId)` in `row_uids.dart`.
+**Saved queues** (`kind = 'queue'`, `saved_queue_store.dart`): a queue the user replaced or cleared, kept automatically as a `playlists` row (`name` is the fixed `Queue`, never shown) with its entries in `playlist_entries` (played order, repeats kept). `recordSavedQueue` runs in one transaction:
+1. keeps only ids of local tracks that are `present` or `missing` (an id the GC already removed drops out silently);
+2. skips fewer than 2 tracks;
+3. with shuffle on the caller also passes `userOrderIds` (the order before shuffling), filtered the same way; it is used only when it has as many ids as the play order (otherwise ignored);
+4. moves a saved queue to the front, keeping its stored entries, when one of the (at most 20) queue rows holds the same playable ids in the play order or in the user order, so replaying a saved queue shuffled never makes a near copy. Only `present` tracks count, on both sides (stored entries and incoming ids): a stored `missing` track, or one that went `hidden` after the save, does not stop the match, and a queue replayed without its missing tracks still finds its row. With fewer than two `present` ids left in the incoming queue, the full saveable ids (`present` + `missing`) are compared against every stored entry instead, so such a queue still touches its row. Saving still keeps `present` + `missing`. Several match: the newest, `saved_at DESC, id DESC`; candidates are prefiltered by playable entry count, then the ordered ids are compared as one JSON array;
+5. else inserts and prunes to the newest 20 (`savedQueueLimit`).
+
+`saved_at = MAX(now, newest saved_at + 1)`, so a clock that stepped back cannot prune the row just written. The entries are ordinary rows and `track_id` is `RESTRICT`, so a saved queue keeps its `missing` tracks out of the orphan GC until it is pruned or deleted (bounded by the limit). Saved queues are per device: **a future sync must skip `kind = 'queue'`**. They are hard-deleted (no tombstone), and every user playlist read filters them out (`kind IS NULL OR 'favorites'`) except `loadDetail` and the M3U export, which read any playlist by uid (see the library doc).
+
+Renaming a mood changes `name` and `name_key` only. Its uid stays. Constants: `PlaylistKind` (`favorites`, `mood`, `queue`), `SavedItemKind` (`album`, `artist`, `playlist_remote`). Uids: `favoritesPlaylistUid`, `favoriteEntryUid(playlistUid, trackUid)`, `savedItemUid(sourceUid, kind, remoteId)` in `row_uids.dart`.
 
 #### playlist_entries
 

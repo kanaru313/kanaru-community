@@ -10,6 +10,7 @@ export 'folder_range.dart';
 export 'fts_query.dart';
 export 'play_stats_bulk.dart' show runPlayStatsBulk;
 export 'queue_store.dart';
+export 'saved_queue_store.dart';
 export 'row_uids.dart';
 export 'tombstone_upsert.dart';
 export 'tables.dart';

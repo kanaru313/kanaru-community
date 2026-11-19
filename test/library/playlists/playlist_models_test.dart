@@ -3,7 +3,10 @@ import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/media/domain/track_info.dart';
 
-PlaylistSummary summary({List<String> covers = const ['a']}) => PlaylistSummary(
+PlaylistSummary summary({
+  List<String> covers = const ['a'],
+  SavedQueueInfo? savedQueue,
+}) => PlaylistSummary(
   uid: 'u',
   name: 'n',
   description: '',
@@ -13,6 +16,7 @@ PlaylistSummary summary({List<String> covers = const ['a']}) => PlaylistSummary(
   createdAt: 1,
   updatedAt: 2,
   autoCoverKeys: covers,
+  savedQueue: savedQueue,
 );
 
 PlaylistEntryView entry(String uid, int id, TrackAvailability s) =>
@@ -22,6 +26,26 @@ PlaylistEntryView entry(String uid, int id, TrackAvailability s) =>
     );
 
 void main() {
+  test('summary equality includes the saved queue info', () {
+    const a = SavedQueueInfo(savedAt: 5, contextKind: 'album');
+    expect(summary(savedQueue: a), summary(savedQueue: a));
+    expect(
+      summary(savedQueue: a).hashCode,
+      summary(
+        savedQueue: const SavedQueueInfo(savedAt: 5, contextKind: 'album'),
+      ).hashCode,
+    );
+    expect(
+      summary(savedQueue: a),
+      isNot(
+        summary(
+          savedQueue: const SavedQueueInfo(savedAt: 6, contextKind: 'album'),
+        ),
+      ),
+    );
+    expect(summary(savedQueue: a), isNot(summary()));
+  });
+
   test('summaries compare element-wise', () {
     expect(summary(), summary());
     expect(summary().hashCode, summary().hashCode);
