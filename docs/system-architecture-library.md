@@ -221,8 +221,8 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
 - **Routes** (`playlist_registration.dart`, called from `LibraryExtension`):
   nav items `playlists` (210, mobile 30) and `favorites` (220, `parentId:
   'playlists'`, not a tab); route `/playlists` (`PlaylistsPage`) with the child
-  `favorites` first, then `:uid`, both through `libraryDetailPage` (the detail
-  transition, public in `library_routes.dart`). A static child always goes
+  `favorites` first, then `:uid`, both through `KDetailPage` (`kanaru_ui`: the
+  detail transition and surface ground). A static child always goes
   before `:uid`, so a fixed name is never read as a playlist id (History and
   Most played, still coming soon, would match `:uid` and show "not found").
 - **Seeds** (the placeholder body is replaced by the owner lane, the
@@ -1021,7 +1021,11 @@ the `TrackId` anchor of this provider, because a track can be queued twice.
   visible one) **only when `state.uri.path == '/library'`**. go_router runs the
   redirect of every route in a matched chain, parents included, so an unguarded
   redirect would rewrite every `/library/...` location. It reads Riverpod with
-  `ProviderScope.containerOf(context, listen: false)`.
+  `ProviderScope.containerOf(context, listen: false)`. The detail routes are
+  nested under it too (relative paths, `KDetailPage`). The Library nav item
+  declares `isRootPath` (the six lists); Android Back is ended by `MobileShell`
+  for every tab (list root to Home, a detail opened with `go` to the last list,
+  Home exits), not by the route shape.
 - `openLibraryPage(context, location)` is `context.push`: every open of a
   detail, see-all or folder page from another page uses it, so Back steps one
   page at a time. Switching list (sub-tab tap, swipe, sidebar) is `go`; folder

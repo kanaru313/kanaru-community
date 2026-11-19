@@ -629,7 +629,7 @@ Rules:
   a dialog, sheet or popup menu route disables both, and the mouse buttons too. A `MenuAnchor` menu that
   has not taken focus is not detected for the mouse buttons.
 - `MobilePushLayout` starts where `mobileSidebarOpenProvider` is (the state outlives the shell across the 1200 dp swap). While `covered`, the left region is also `ExcludeFocus` and Ctrl+F/K do nothing. Only the mini player body takes the long press; it also exposes "open Now Playing" and "queue" as custom semantics actions.
-- Mobile Back order: sidebar, top layer, child page, tab root to Home (`MobileShell` listener), then exit.
+- Mobile Back order (`MobileShell` listener, one place for every tab): sidebar, top layer (popover, filter, pushed page, Folders level: the branch navigator's `maybePop`), then in a tab other than Home: at a root (`NavItem.atRoot`; Library declares its six list pages) to Home, inside the tab with nothing to pop (a detail opened with `go`) to the tab's own page (Library redirects to its last list); at Home the shell calls `SystemNavigator.pop`. It exits itself because a hidden branch with a pushed page keeps go_router's `PopScope(canPop: false)`, which would swallow Back at Home. The shell's `PopScope` claims Back (predictive back) in the same non-Home cases.
 - Widget tests that run controller commands from a widget callback must alternate real delays and pumps
   (`UiHost.tap` runs the tap in the real zone and settles; `UiHost.letStreamsArrive` alternates for streams); the controller keeps the zone it was built in.
 

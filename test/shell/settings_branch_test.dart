@@ -183,6 +183,20 @@ void main() {
     });
 
     testWidgets('Back goes sub-page, Settings root, Home', (tester) async {
+      var exits = 0;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'SystemNavigator.pop') exits++;
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
       final c = await pumpKanaruApp(tester, width: mobileW, height: mobileH);
       await tester.tap(byIconButton('Settings'));
       await tester.pumpAndSettle();
@@ -195,8 +209,10 @@ void main() {
       expect(await _back(tester), isTrue);
       expect(_location(c), '/');
       expect(find.byType(NavigationBar), findsOneWidget);
-      // On Home Back is left to the system.
-      expect(await _back(tester), isFalse);
+      // On Home the shell exits the app.
+      expect(exits, 0);
+      expect(await _back(tester), isTrue);
+      expect(exits, 1);
     });
 
     testWidgets(
