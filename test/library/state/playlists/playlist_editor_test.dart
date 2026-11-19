@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/domain/covers/cover_choice.dart';
+import 'package:kanaru/src/library/domain/covers/cover_preview.dart';
 import 'package:kanaru/src/library/domain/custom_cover_controller.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_store.dart';
@@ -26,19 +28,37 @@ class _Store implements PlaylistStore {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _Covers implements CustomCoverController {
-  final log = <String>[];
-  Object? error;
+class _Change implements CoverChange {
+  _Change(this.log);
+  final List<String> log;
 
   @override
-  Future<void> importCover(
+  String? get previousKey => null;
+  @override
+  String? get currentKey => null;
+  @override
+  Future<bool> undo() async => false;
+  @override
+  Future<void> release() async => log.add('release');
+}
+
+class _Covers implements CustomCoverController {
+  @override
+  Future<CoverChange> changeCover(
     CustomCoverKind kind,
     String itemKey,
-    File source,
+    CoverChoice choice,
   ) async {
-    log.add('import ${kind.name} $itemKey ${source.path}');
+    log.add('change ${kind.name} $itemKey ${(choice as FileCover).image.path}');
     if (error != null) throw error!;
+    return _Change(log);
   }
+
+  @override
+  Future<CoverPreview> previewCover(File source) => throw UnimplementedError();
+
+  final log = <String>[];
+  Object? error;
 
   @override
   Future<void> removeCover(CustomCoverKind kind, String itemKey) async {
@@ -79,20 +99,17 @@ void main() {
     expect(covers.log, ['remove playlist p']);
   });
 
-  test(
-    'file imports the image; unchanged text still applies the cover',
-    () async {
-      store.result = PlaylistUpdate.unchanged;
-      final r = await editor.save(
-        'p',
-        name: 'N',
-        description: '',
-        cover: PlaylistCoverEdit.file(File('/x/a.png')),
-      );
-      expect(r.text, PlaylistUpdate.unchanged);
-      expect(covers.log, ['import playlist p /x/a.png']);
-    },
-  );
+  test('choice changes the cover and releases it; unchanged text still applies the cover', () async {
+    store.result = PlaylistUpdate.unchanged;
+    final r = await editor.save(
+      'p',
+      name: 'N',
+      description: '',
+      cover: PlaylistCoverEdit.choice(CoverChoice.file(File('/x/a.png'))),
+    );
+    expect(r.text, PlaylistUpdate.unchanged);
+    expect(covers.log, ['change playlist p /x/a.png', 'release']);
+  });
 
   test('a playlist that is gone skips the cover', () async {
     store.result = PlaylistUpdate.gone;
@@ -112,7 +129,7 @@ void main() {
       'p',
       name: 'N',
       description: '',
-      cover: PlaylistCoverEdit.file(File('/x/a.png')),
+      cover: PlaylistCoverEdit.choice(CoverChoice.file(File('/x/a.png'))),
     );
     expect(
       r,

@@ -159,10 +159,9 @@ void main() {
     expect(find.text('1 song · has 1 / 3'), findsNWidgets(3));
 
     final one = await _content(tester, s, tracks: [s.tracks.first]);
-    final hint = one.options.first.subtitle! as Text;
-    expect(hint.data, '1 song · has this song');
+    expect(one.options.first.mediaLine2, '1 song · has this song');
     final none = await _content(tester, s, tracks: [s.tracks.last]);
-    expect((none.options.first.subtitle! as Text).data, '1 song');
+    expect(none.options.first.mediaLine2, '1 song');
   });
 
   testWidgets('empty source label shows the selection size', (tester) async {
@@ -413,7 +412,11 @@ void main() {
         await openIt(tester);
         // A pending row with a long name and the badge.
         // At large text the header and footer leave a short list: scroll.
-        await tester.ensureVisible(find.text(c.l10n.playlistPickerNew));
+        await tester.scrollUntilVisible(
+          find.text(c.l10n.playlistPickerNew),
+          100,
+          scrollable: find.byType(Scrollable).last,
+        );
         await tester.pumpAndSettle();
         await tester.tap(find.text(c.l10n.playlistPickerNew));
         await tester.pumpAndSettle();

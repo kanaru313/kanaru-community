@@ -8,6 +8,7 @@ import 'anchored_panel_layout.dart';
 import 'k_sheet.dart';
 import 'multi_selection_body.dart';
 import 'selection_picker.dart';
+import 'k_row_edges.dart';
 
 export 'multi_selection_body.dart' show MultiSelectionAction;
 
@@ -129,15 +130,18 @@ Future<Set<T>?> showMultiSelectionPicker<T>(
   return showDialog<Set<T>>(
     context: context,
     animationStyle: KMotion.routeAnimationStyle(context),
-    builder: (_) => Dialog(
-      shape: KShape.of(KRadius.xl, continuous: true),
-      clipBehavior: Clip.antiAlias,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: KLayout.dialog,
-          maxHeight: _dialogMaxHeight,
+    builder: (_) => KRowEdgesScope(
+      edges: KRowEdges.inset,
+      child: Dialog(
+        shape: KShape.of(KRadius.xl, continuous: true),
+        clipBehavior: Clip.antiAlias,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: KLayout.dialog,
+            maxHeight: _dialogMaxHeight,
+          ),
+          child: body(sheet: false),
         ),
-        child: body(sheet: false),
       ),
     ),
   );

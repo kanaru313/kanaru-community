@@ -1,6 +1,8 @@
 //! Cache keys and relative paths of cover files. The format is the one Dart
 //! checks with `isCoverKey` and builds with `coverRelativePath`.
 
+use super::crop::CropRect;
+
 /// The two sizes written for every cover.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CoverSize {
@@ -24,6 +26,26 @@ impl CoverSize {
 /// their first two digits.
 pub fn cover_key(original: &[u8]) -> String {
     let hash = blake3::hash(original).to_hex();
+    let name = &hash.as_str()[..32];
+    format!("{}/{}", &name[..2], name)
+}
+
+/// The key of a cover cut out of `original`: [`cover_key`] when `crop` is
+/// `None`, otherwise the same hash taken over the bytes, `b"crop:"` and the
+/// crop's `left`, `top` and `side` as little-endian `u32`. The same image with
+/// the same crop always gets the same key. `crop` must be normalised (see
+/// `crop::normalise`): a crop of a whole square picture is `None`.
+pub fn cover_key_for(original: &[u8], crop: Option<CropRect>) -> String {
+    let Some(crop) = crop else {
+        return cover_key(original);
+    };
+    let mut hasher = blake3::Hasher::new();
+    hasher.update(original);
+    hasher.update(b"crop:");
+    for part in [crop.left, crop.top, crop.side] {
+        hasher.update(&part.to_le_bytes());
+    }
+    let hash = hasher.finalize().to_hex();
     let name = &hash.as_str()[..32];
     format!("{}/{}", &name[..2], name)
 }
@@ -65,6 +87,26 @@ mod tests {
             key,
             format!("{}/{}", &full.as_str()[..2], &full.as_str()[..32])
         );
+    }
+
+    #[test]
+    fn a_crop_changes_the_key_and_is_deterministic() {
+        let crop = |left, top, side| Some(CropRect { left, top, side });
+        assert_eq!(cover_key_for(b"img", None), cover_key(b"img"));
+        let key = cover_key_for(b"img", crop(1, 2, 3));
+        assert!(is_cover_key(&key), "{key}");
+        assert_eq!(key, cover_key_for(b"img", crop(1, 2, 3)));
+        assert_ne!(key, cover_key(b"img"));
+        for other in [crop(2, 1, 3), crop(1, 2, 4), crop(0, 2, 3)] {
+            assert_ne!(key, cover_key_for(b"img", other));
+        }
+        assert_ne!(key, cover_key_for(b"imh", crop(1, 2, 3)));
+        let mut hasher = blake3::Hasher::new();
+        hasher.update(b"img");
+        hasher.update(b"crop:");
+        hasher.update(&[1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0]);
+        let hash = hasher.finalize().to_hex();
+        assert!(key.ends_with(&hash.as_str()[..32]));
     }
 
     #[test]

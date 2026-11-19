@@ -29,6 +29,10 @@ MenuSpec _menu({
 );
 
 void main() {
+  test('a folder menu has no cover button', () {
+    expect(_menu().header.action, isNull);
+  });
+
   test('add to playlist takes the same ids as Play and the folder name', () {
     final spec = _menu();
     expect(

@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens/k_space.dart';
+import 'k_row_edges.dart';
 import 'multi_selection_model.dart';
 import 'multi_selection_parts.dart';
 import 'selection_row.dart';
@@ -27,7 +28,7 @@ Widget buildMultiEntry<T>(
   final entry = view.entries[index];
   switch (entry.kind) {
     case MultiKind.banner:
-      return banner!;
+      return _inset(context, banner!);
     case MultiKind.selectAll:
       final picked = view.picks.length;
       final total = view.enabledValues.length;
@@ -64,10 +65,24 @@ Widget buildMultiEntry<T>(
         child: emptyNote,
       );
     case MultiKind.footer:
-      return listFooter!;
+      return _inset(context, listFooter!);
     case MultiKind.option:
       final o = entry.option!;
       final locked = view.isLocked(o.value);
+      if (o.mediaTitle != null) {
+        return SelectionRow.media(
+          multi: true,
+          mediaTitle: o.mediaTitle!,
+          mediaLine2: o.mediaLine2,
+          mediaTag: o.mediaTag,
+          circleCover: o.circleCover,
+          cover: o.leading!,
+          hint: o.hint,
+          enabled: o.enabled && !locked,
+          selected: view.chosen.contains(o.value),
+          onTap: busy ? null : () => onToggle(o.value),
+        );
+      }
       return SelectionRow(
         dense: dense,
         multi: true,
@@ -101,6 +116,15 @@ Widget _withNote(Widget? subtitle, String note) {
           ),
         );
 }
+
+/// Keeps caller content that is not a row (banner, list footer) off the edges
+/// of its host, on the same axis as the row tints.
+Widget _inset(BuildContext context, Widget child) => Padding(
+  padding: EdgeInsets.symmetric(
+    horizontal: KRowEdgesScope.maybeOf(context).axisInset,
+  ),
+  child: child,
+);
 
 /// Runs [confirm] and says whether it answered true in time. Past [limit]
 /// (null = no limit) the answer is false and a late result is ignored; an

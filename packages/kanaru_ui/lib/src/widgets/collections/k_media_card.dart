@@ -72,6 +72,8 @@ class KMediaCard extends StatefulWidget {
     this.currentLabel,
     this.selected = false,
     this.selecting = false,
+    this.coverMark = true,
+    this.announceSelected = true,
     this.dimmed = false,
     this.missing = false,
     this.editing = false,
@@ -141,6 +143,15 @@ class KMediaCard extends StatefulWidget {
 
   /// A multi-select is active: unselected covers show the ring mark.
   final bool selecting;
+
+  /// Draws the selection mark (disc + tick, ring) over the cover. Only the
+  /// multi-select of items uses it; pickers say `false` and mark the choice
+  /// with the tint and a plain tick in [trailing].
+  final bool coverMark;
+
+  /// Exposes [selected] to screen readers. A multi-choice picker says `false`
+  /// and reports its tick as `checked` on the row instead.
+  final bool announceSelected;
 
   /// Unavailable item: dimmed, still tappable.
   final bool dimmed;
@@ -222,7 +233,9 @@ class _KMediaCardState extends State<KMediaCard> {
         : widget.filled
         ? KRowColors.fill(Theme.of(context).brightness)
         : flat
-        ? Colors.transparent
+        // Same hue at alpha 0, so selecting fades the tint in without a grey
+        // pass (lerping from 0x00000000 would go through grey).
+        ? scheme.secondaryContainer.withValues(alpha: 0)
         : scheme.surfaceContainerLow;
     final ink = widget.current
         ? scheme.onPrimaryContainer
@@ -269,7 +282,9 @@ class _KMediaCardState extends State<KMediaCard> {
                   child: Center(child: leading),
                 ),
                 // A dimmed card draws its mark outside the dim, below.
-                if (_everActive && !(_dim && widget.selected))
+                if (widget.coverMark &&
+                    _everActive &&
+                    !(_dim && widget.selected))
                   Positioned.fill(
                     child: KMediaCardCoverCheck(
                       circle: widget.circleLeading,
@@ -338,7 +353,8 @@ class _KMediaCardState extends State<KMediaCard> {
 
     // The check of a dimmed, selected card stays fully opaque: it is drawn
     // over the dimmed card, on the cover's spot.
-    final markOutsideDim = _dim && widget.selected && leading != null;
+    final markOutsideDim =
+        widget.coverMark && _dim && widget.selected && leading != null;
     Widget card(Widget dimmedCard) => Stack(
       fit: StackFit.passthrough,
       children: [
@@ -377,7 +393,7 @@ class _KMediaCardState extends State<KMediaCard> {
       child: ExcludeSemantics(
         excluding: widget.loading,
         child: Semantics(
-          selected: widget.selected,
+          selected: widget.announceSelected ? widget.selected : null,
           value: widget.current ? widget.currentLabel : null,
           child: card(
             KMediaCardFrame(

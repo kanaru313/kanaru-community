@@ -10,6 +10,7 @@ import 'k_gap.dart';
 import 'k_sheet.dart';
 import 'picker_footer.dart';
 import 'selection_row.dart';
+import 'k_row_edges.dart';
 
 /// One option of [showSelectionPicker].
 class SelectionOption<T> {
@@ -21,7 +22,32 @@ class SelectionOption<T> {
     this.enabled = true,
     this.filterText,
     this.hint,
-  });
+  }) : mediaTitle = null,
+       mediaLine2 = null,
+       mediaTag = null,
+       circleCover = false;
+
+  /// An option with a cover: shown as the library's media row (see
+  /// [SelectionRow.media]). [title] and [leading] are derived from the strings
+  /// and [cover].
+  SelectionOption.media({
+    required this.value,
+    required String this.mediaTitle,
+    required Widget cover,
+    this.mediaLine2,
+    this.mediaTag,
+    this.circleCover = false,
+    this.enabled = true,
+    this.filterText,
+    this.hint,
+  }) : title = Text(mediaTitle),
+       subtitle = null,
+       leading = cover;
+
+  final String? mediaTitle;
+  final String? mediaLine2;
+  final String? mediaTag;
+  final bool circleCover;
 
   final T value;
   final Widget title;
@@ -101,12 +127,15 @@ Future<T?> showSelectionPicker<T>(
     return showDialog<T>(
       context: context,
       animationStyle: KMotion.routeAnimationStyle(context),
-      builder: (context) => Dialog(
-        shape: KShape.of(KRadius.xl, continuous: true),
-        clipBehavior: Clip.antiAlias,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: KLayout.dialog),
-          child: body(context),
+      builder: (context) => KRowEdgesScope(
+        edges: KRowEdges.inset,
+        child: Dialog(
+          shape: KShape.of(KRadius.xl, continuous: true),
+          clipBehavior: Clip.antiAlias,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: KLayout.dialog),
+            child: body(context),
+          ),
         ),
       ),
     );
@@ -118,21 +147,24 @@ Future<T?> showSelectionPicker<T>(
     // SafeArea would shift it by the insets.
     useSafeArea: false,
     barrierColor: const Color(0x00000000),
-    builder: (context) => CustomSingleChildLayout(
-      delegate: AnchoredPanelLayout(rect, align: anchorAlign),
-      child: Material(
-        elevation: 3,
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        shape: KShape.of(KRadius.lg, continuous: true),
-        clipBehavior: Clip.antiAlias,
-        // Same size as the sort dropdown: width follows the content between
-        // the dropdown limits, rows are dense.
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            minWidth: KLayout.anchoredPickerMinWidth,
-            maxWidth: KLayout.anchoredPickerMaxWidth,
+    builder: (context) => KRowEdgesScope(
+      edges: KRowEdges.inset,
+      child: CustomSingleChildLayout(
+        delegate: AnchoredPanelLayout(rect, align: anchorAlign),
+        child: Material(
+          elevation: 3,
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          shape: KShape.of(KRadius.lg, continuous: true),
+          clipBehavior: Clip.antiAlias,
+          // Same size as the sort dropdown: width follows the content between
+          // the dropdown limits, rows are dense.
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: KLayout.anchoredPickerMinWidth,
+              maxWidth: KLayout.anchoredPickerMaxWidth,
+            ),
+            child: IntrinsicWidth(child: body(context, compact: true)),
           ),
-          child: IntrinsicWidth(child: body(context, compact: true)),
         ),
       ),
     ),
@@ -234,7 +266,7 @@ class _PickerBodyState<T> extends State<_PickerBody<T>> {
               // A plain scroll view (a viewport has no intrinsic width) so the
               // panel can size to its content, as the sort dropdown does.
               ? SingleChildScrollView(
-                  padding: const EdgeInsets.all(KSpace.x2),
+                  padding: const EdgeInsets.symmetric(vertical: KSpace.x2),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [for (final o in widget.options) _row(o)],
@@ -242,9 +274,12 @@ class _PickerBodyState<T> extends State<_PickerBody<T>> {
                 )
               : ListView.separated(
                   shrinkWrap: true,
-                  padding: const EdgeInsets.all(KSpace.x2),
+                  padding: const EdgeInsets.symmetric(vertical: KSpace.x2),
                   itemCount: widget.options.length,
-                  separatorBuilder: (_, _) => const KGap(KSpace.x1),
+                  separatorBuilder: (_, i) =>
+                      widget.options[i].mediaTitle != null
+                      ? const SizedBox.shrink()
+                      : const KGap(KSpace.x1),
                   itemBuilder: (context, i) => _row(widget.options[i]),
                 ),
         ),
@@ -253,7 +288,24 @@ class _PickerBodyState<T> extends State<_PickerBody<T>> {
     );
   }
 
-  Widget _row(SelectionOption<T> o) => SelectionRow(
+  Widget _row(SelectionOption<T> o) => o.mediaTitle != null
+      ? SelectionRow.media(
+          mediaTitle: o.mediaTitle!,
+          mediaLine2: o.mediaLine2,
+          mediaTag: o.mediaTag,
+          circleCover: o.circleCover,
+          cover: o.leading!,
+          alikeOptions: true,
+          hint: o.hint,
+          enabled: o.enabled && !_busy,
+          selected: o.value == (widget.footer ? _pending : widget.selected),
+          onTap: widget.footer
+              ? () => setState(() => _pending = o.value)
+              : () => _pick(o.value),
+        )
+      : _textRow(o);
+
+  Widget _textRow(SelectionOption<T> o) => SelectionRow(
     dense: widget.compact,
     title: o.title,
     subtitle: o.subtitle,

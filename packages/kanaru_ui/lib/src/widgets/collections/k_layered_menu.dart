@@ -8,6 +8,7 @@ import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
 import '../k_icon_button.dart';
+import '../k_row_edges.dart';
 import 'k_menu_row.dart';
 
 export 'k_menu_row.dart'
@@ -64,7 +65,8 @@ Future<void> showKLayeredMenu(
         continuous: true,
       ),
       constraints: BoxConstraints(maxHeight: height),
-      builder: body,
+      builder: (context) =>
+          KRowEdgesScope(edges: KRowEdges.fullBleed, child: body(context)),
     );
   }
   return showDialog<void>(
@@ -72,15 +74,18 @@ Future<void> showKLayeredMenu(
     animationStyle: KMotion.routeAnimationStyle(context),
     useRootNavigator: true,
     barrierColor: const Color(0x73000000), // 45 %
-    builder: (context) => Dialog(
-      shape: KShape.of(KRadius.xl, continuous: true),
-      clipBehavior: Clip.antiAlias,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: KLayeredMenu.desktopWidth,
-          maxHeight: KLayeredMenu.desktopMaxHeight,
+    builder: (context) => KRowEdgesScope(
+      edges: KRowEdges.inset,
+      child: Dialog(
+        shape: KShape.of(KRadius.xl, continuous: true),
+        clipBehavior: Clip.antiAlias,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: KLayeredMenu.desktopWidth,
+            maxHeight: KLayeredMenu.desktopMaxHeight,
+          ),
+          child: body(context),
         ),
-        child: body(context),
       ),
     ),
   );

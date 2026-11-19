@@ -232,9 +232,12 @@ class _MultiSelectionBodyState<T> extends State<MultiSelectionBody<T>> {
     final scheme = Theme.of(context).colorScheme;
     final rows = ListView.separated(
       shrinkWrap: !widget.fillHeight,
-      padding: const EdgeInsets.all(KSpace.x2),
+      padding: const EdgeInsets.symmetric(vertical: KSpace.x2),
       itemCount: view.entries.length,
-      separatorBuilder: (_, _) => const KGap(KSpace.x1),
+      // A media row carries its own gap below.
+      separatorBuilder: (_, i) => view.entries[i].option?.mediaTitle != null
+          ? const SizedBox.shrink()
+          : const KGap(KSpace.x1),
       itemBuilder: (context, i) => buildMultiEntry<T>(
         context,
         view: view,

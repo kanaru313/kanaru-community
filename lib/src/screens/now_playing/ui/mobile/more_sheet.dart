@@ -35,15 +35,16 @@ class NowPlayingMoreSheet extends ConsumerWidget {
     ].join(' · ');
     return ListView(
       shrinkWrap: true,
-      padding: const EdgeInsets.fromLTRB(
-        KSpace.x4,
-        KSpace.x2,
-        KSpace.x4,
-        KSpace.x4,
-      ),
+      // Rows follow the host (full-bleed in the sheet): no side padding here.
+      padding: const EdgeInsets.only(top: KSpace.x2, bottom: KSpace.x4),
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: KSpace.x3),
+          padding: const EdgeInsets.fromLTRB(
+            KSpace.x4,
+            0,
+            KSpace.x4,
+            KSpace.x3,
+          ),
           child: Row(
             spacing: KSpace.x3,
             children: [

@@ -5,10 +5,12 @@
 
 pub mod cache;
 pub mod colors;
+pub mod crop;
 pub mod decode_limits;
 pub mod gate;
 pub mod jpeg_header;
 pub mod key;
+pub mod preview;
 pub mod sources;
 pub mod thumbnail;
 pub mod webp_exif;
@@ -19,6 +21,8 @@ use std::path::Path;
 use crate::{Cancel, MediaError};
 
 pub use colors::CoverColors;
+pub use crop::CropRect;
+pub use preview::{prepare_preview, CoverPreview, PREVIEW_PREFIX};
 pub use sources::FolderMemo;
 
 /// What `make_cover` found for one audio file.
@@ -172,18 +176,20 @@ fn store(bytes: &[u8], cache_dir: &Path) -> Result<Option<CoverOutcome>, CoverEr
     let Some(header) = sources::validate_header(bytes) else {
         return Ok(None);
     };
-    store_valid(bytes, header, cache_dir, false)
+    store_valid(bytes, header, None, cache_dir, false)
 }
 
 /// [`store`] for bytes whose header passed. `force` makes the files even when
-/// both exist. `None` when the image does not decode.
+/// both exist. `crop` is a normalised upright crop (see `crop::normalise`).
+/// `None` when the image does not decode.
 fn store_valid(
     bytes: &[u8],
     header: sources::ImageHeader,
+    crop: Option<CropRect>,
     cache_dir: &Path,
     force: bool,
 ) -> Result<Option<CoverOutcome>, CoverError> {
-    let key = key::cover_key(bytes);
+    let key = key::cover_key_for(bytes, crop);
     if !force && cache::both_exist(cache_dir, &key) {
         return Ok(Some(CoverOutcome::Found {
             key,
@@ -191,7 +197,7 @@ fn store_valid(
             colors: None,
         }));
     }
-    let Some(jpegs) = thumbnail::make_jpegs(bytes, header.format, header.pixels()) else {
+    let Some(jpegs) = thumbnail::make_jpegs(bytes, header, crop) else {
         return Ok(None);
     };
     cache::write_both(cache_dir, &key, &jpegs.thumb, &jpegs.full).map_err(CoverError::Cache)?;
@@ -230,15 +236,33 @@ pub fn import_cover(
     cache_dir: &Path,
     cancel: &Cancel,
 ) -> Result<ImportedCover, CoverError> {
+    import_cover_cropped(path, open, cache_dir, None, cancel)
+}
+
+/// [`import_cover`] of just the square `crop` (pixels of the upright
+/// original; `None` is the whole picture). The key follows `key::cover_key_for`;
+/// a crop that covers the whole of a square picture is the same cover as
+/// `None`. A crop with side 0 or outside the picture is `Unsupported`
+/// (permanent) and nothing is written.
+pub fn import_cover_cropped(
+    path: &Path,
+    open: &dyn Fn(&Path) -> Result<File, MediaError>,
+    cache_dir: &Path,
+    crop: Option<CropRect>,
+    cancel: &Cancel,
+) -> Result<ImportedCover, CoverError> {
     cancel.check()?;
     let bytes = sources::read_image_file(path, open)?;
     cancel.check()?;
     let header = sources::check_header(&bytes)?;
+    let orientation = thumbnail::exif_orientation(&bytes, header.format);
+    let upright = crop::upright_size(orientation, header.width, header.height);
+    let crop = crop::normalise(crop, upright)?;
     // Always written again: the import is one user action, and a damaged file
     // under the output folder (which nothing clears) is repaired by choosing
     // the same image again.
     let Some(CoverOutcome::Found { key, colors, .. }) =
-        store_valid(&bytes, header, cache_dir, true)?
+        store_valid(&bytes, header, crop, cache_dir, true)?
     else {
         return Err(MediaError::Corrupt("image does not decode".into()).into());
     };

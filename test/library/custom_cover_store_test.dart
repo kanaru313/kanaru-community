@@ -8,6 +8,7 @@ import 'package:sqlite3/sqlite3.dart' show SqliteException;
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/library/data/custom_cover_store.dart';
 import 'package:kanaru/src/library/data/scan/native_cover_import.dart';
+import 'package:kanaru/src/library/domain/covers/cover_choice.dart';
 import 'package:kanaru/src/library/domain/scan/native_failure.dart';
 import 'package:kanaru/src/library/state/custom_cover_providers.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
@@ -18,12 +19,24 @@ import 'package:kanaru/src/platform/state/platform_providers.dart';
 
 import '../database/support/test_db.dart';
 
+/// Imports [source] as the cover and releases the change at once.
+extension on CustomCoverStore {
+  Future<void> importCover(
+    CustomCoverKind kind,
+    String itemKey,
+    File source,
+  ) async {
+    final change = await changeCover(kind, itemKey, CoverChoice.file(source));
+    await change.release();
+  }
+}
+
 class _Paths implements AppPaths {
   _Paths(this.dataDir);
   @override
   final Directory dataDir;
   @override
-  Directory get cacheDir => throw UnimplementedError();
+  Directory get cacheDir => Directory('${dataDir.path}/../cache');
   @override
   Directory get configDir => throw UnimplementedError();
 }
@@ -52,6 +65,7 @@ class _FakeImporter implements CoverImporter {
   Future<CoverImportResult> import({
     required String path,
     required String outDir,
+    CoverCrop? crop,
   }) async {
     calls++;
     await hang?.future;
@@ -108,6 +122,7 @@ void main() {
       CustomCoverStore(
         db,
         Directory('${root.path}/data'),
+        previewDir: Directory('${root.path}/preview'),
         importer: importer,
         gcMinAge: gcMinAge,
       );
@@ -227,15 +242,16 @@ void main() {
         store.importCover(CustomCoverKind.album, _album, source('t', [1, 2])),
         throwsFormatException,
       );
+      // A missing file is a read problem (the file went away), not a format.
       await expectLater(
         store.importCover(
           CustomCoverKind.album,
           _album,
           File('${root.path}/missing.png'),
         ),
-        throwsFormatException,
+        throwsA(isA<FileSystemException>()),
       );
-      for (final kind in ['corrupt', 'unsupported', 'tooLarge', 'notFound']) {
+      for (final kind in ['corrupt', 'unsupported', 'tooLarge']) {
         importer.forced = NativeFailure(kind: kind, transient: false);
         await expectLater(
           store.importCover(
@@ -287,6 +303,7 @@ void main() {
     CustomCoverStore stalledStore() => CustomCoverStore(
       db,
       Directory('${root.path}/data'),
+      previewDir: Directory('${root.path}/preview'),
       importer: importer,
       gcMinAge: const Duration(hours: 1), // the GC cannot be what cleans up
       importTimeout: const Duration(milliseconds: 50),

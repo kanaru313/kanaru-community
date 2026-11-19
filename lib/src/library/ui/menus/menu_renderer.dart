@@ -34,12 +34,26 @@ KMenuPage renderMenu(
   }
 
   final header = spec.header;
+  var overRunning = false;
   return KMenuPage(
     header: MenuHeaderView(
       header: header,
       onAction: header.action == null
           ? null
           : () => runner.run(header.action!.action),
+      onActionOver: switch (header.action?.action) {
+        // One dialog at a time: a second tap while it is open does nothing.
+        final RunOverAction over => () async {
+          if (overRunning) return false;
+          overRunning = true;
+          try {
+            return await runner.runOver(over);
+          } finally {
+            overRunning = false;
+          }
+        },
+        _ => null,
+      },
     ),
     headerOpens: pageOf(header.infoPage),
     groups: _groups(spec.groups, pageOf, l10n, runner),
@@ -89,6 +103,12 @@ KMenuRow _row(
   MenuActionRunner runner,
 ) {
   final action = item.action;
+  // Over-the-menu actions are header-only until KLayeredMenu rows support
+  // them; on a row the menu would close first, the opposite of the intent.
+  assert(
+    action is! RunOverAction,
+    'MenuAction.runOver is only supported on the menu header',
+  );
   final trailing = item.trailing;
   final cover = item.cover;
   return KMenuRow(

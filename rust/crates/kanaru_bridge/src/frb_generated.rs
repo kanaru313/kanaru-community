@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 463671853;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1980999109;
 
 // Section: executor
 
@@ -323,11 +323,16 @@ fn wire__crate__api__covers__import_cover_file_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_path = <String>::sse_decode(&mut deserializer);
             let api_out_dir = <String>::sse_decode(&mut deserializer);
+            let api_crop =
+                <Option<crate::api::covers::CoverCropDto>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
-                    let output_ok =
-                        Ok::<_, ()>(crate::api::covers::import_cover_file(api_path, api_out_dir))?;
+                    let output_ok = Ok::<_, ()>(crate::api::covers::import_cover_file(
+                        api_path,
+                        api_out_dir,
+                        api_crop,
+                    ))?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -430,6 +435,43 @@ fn wire__crate__api__plugin_stream__plugin_job_events_impl(
                 })?;
                 std::result::Result::Ok(output_ok)
             })())
+        },
+    )
+}
+fn wire__crate__api__covers__prepare_cover_preview_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "prepare_cover_preview",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_path = <String>::sse_decode(&mut deserializer);
+            let api_out_dir = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::covers::prepare_cover_preview(
+                        api_path,
+                        api_out_dir,
+                    ))?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
         },
     )
 }
@@ -787,6 +829,20 @@ impl SseDecode for crate::api::covers::CoverColorsResultDto {
     }
 }
 
+impl SseDecode for crate::api::covers::CoverCropDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_left = <u32>::sse_decode(deserializer);
+        let mut var_top = <u32>::sse_decode(deserializer);
+        let mut var_side = <u32>::sse_decode(deserializer);
+        return crate::api::covers::CoverCropDto {
+            left: var_left,
+            top: var_top,
+            side: var_side,
+        };
+    }
+}
+
 impl SseDecode for crate::api::covers::CoverImportDto {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -796,6 +852,22 @@ impl SseDecode for crate::api::covers::CoverImportDto {
         return crate::api::covers::CoverImportDto {
             key: var_key,
             colors: var_colors,
+            error: var_error,
+        };
+    }
+}
+
+impl SseDecode for crate::api::covers::CoverPreviewDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_previewPath = <Option<String>>::sse_decode(deserializer);
+        let mut var_width = <u32>::sse_decode(deserializer);
+        let mut var_height = <u32>::sse_decode(deserializer);
+        let mut var_error = <Option<crate::api::error::NativeError>>::sse_decode(deserializer);
+        return crate::api::covers::CoverPreviewDto {
+            preview_path: var_previewPath,
+            width: var_width,
+            height: var_height,
             error: var_error,
         };
     }
@@ -1065,6 +1137,17 @@ impl SseDecode for Option<crate::api::covers::CoverColorsDto> {
             return Some(<crate::api::covers::CoverColorsDto>::sse_decode(
                 deserializer,
             ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::api::covers::CoverCropDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::covers::CoverCropDto>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -1639,22 +1722,25 @@ fn pde_ffi_dispatcher_primary_impl(
         8 => wire__crate__api__covers__import_cover_file_impl(port, ptr, rust_vec_len, data_len),
         9 => wire__crate__api__native_info__init_app_impl(port, ptr, rust_vec_len, data_len),
         12 => {
+            wire__crate__api__covers__prepare_cover_preview_impl(port, ptr, rust_vec_len, data_len)
+        }
+        13 => {
             wire__crate__api__lyrics__read_embedded_lyrics_impl(port, ptr, rust_vec_len, data_len)
         }
-        13 => wire__crate__api__tags__read_tags_batch_impl(port, ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__plugin_runtime__run_plugin_script_impl(
+        14 => wire__crate__api__tags__read_tags_batch_impl(port, ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__plugin_runtime__run_plugin_script_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        16 => wire__crate__api__plugin_stream__run_plugin_stream_script_impl(
+        17 => wire__crate__api__plugin_stream__run_plugin_stream_script_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        17 => wire__crate__api__waveform__waveform_levels_impl(port, ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__waveform__waveform_levels_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1673,7 +1759,7 @@ fn pde_ffi_dispatcher_sync_impl(
         4 => wire__crate__api__plugin_runtime__cancel_plugin_job_impl(ptr, rust_vec_len, data_len),
         10 => wire__crate__api__native_info__native_versions_impl(ptr, rust_vec_len, data_len),
         11 => wire__crate__api__plugin_stream__plugin_job_events_impl(ptr, rust_vec_len, data_len),
-        14 => {
+        15 => {
             wire__crate__api__plugin_runtime__reset_plugin_runtime_impl(ptr, rust_vec_len, data_len)
         }
         _ => unreachable!(),
@@ -1741,6 +1827,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::covers::CoverColorsResultDto>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::covers::CoverCropDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.left.into_into_dart().into_dart(),
+            self.top.into_into_dart().into_dart(),
+            self.side.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::covers::CoverCropDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::covers::CoverCropDto>
+    for crate::api::covers::CoverCropDto
+{
+    fn into_into_dart(self) -> crate::api::covers::CoverCropDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::covers::CoverImportDto {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -1759,6 +1867,29 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::covers::CoverImportDto>
     for crate::api::covers::CoverImportDto
 {
     fn into_into_dart(self) -> crate::api::covers::CoverImportDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::covers::CoverPreviewDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.preview_path.into_into_dart().into_dart(),
+            self.width.into_into_dart().into_dart(),
+            self.height.into_into_dart().into_dart(),
+            self.error.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::covers::CoverPreviewDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::covers::CoverPreviewDto>
+    for crate::api::covers::CoverPreviewDto
+{
+    fn into_into_dart(self) -> crate::api::covers::CoverPreviewDto {
         self
     }
 }
@@ -2471,11 +2602,30 @@ impl SseEncode for crate::api::covers::CoverColorsResultDto {
     }
 }
 
+impl SseEncode for crate::api::covers::CoverCropDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.left, serializer);
+        <u32>::sse_encode(self.top, serializer);
+        <u32>::sse_encode(self.side, serializer);
+    }
+}
+
 impl SseEncode for crate::api::covers::CoverImportDto {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Option<String>>::sse_encode(self.key, serializer);
         <Option<crate::api::covers::CoverColorsDto>>::sse_encode(self.colors, serializer);
+        <Option<crate::api::error::NativeError>>::sse_encode(self.error, serializer);
+    }
+}
+
+impl SseEncode for crate::api::covers::CoverPreviewDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.preview_path, serializer);
+        <u32>::sse_encode(self.width, serializer);
+        <u32>::sse_encode(self.height, serializer);
         <Option<crate::api::error::NativeError>>::sse_encode(self.error, serializer);
     }
 }
@@ -2699,6 +2849,16 @@ impl SseEncode for Option<crate::api::covers::CoverColorsDto> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <crate::api::covers::CoverColorsDto>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::api::covers::CoverCropDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::covers::CoverCropDto>::sse_encode(value, serializer);
         }
     }
 }

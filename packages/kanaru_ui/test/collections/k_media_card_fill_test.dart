@@ -126,7 +126,7 @@ void main() {
       await tester.pumpWidget(
         host(_card(style: KMediaCardStyle.flat, filled: false)),
       );
-      expect(_material(tester).color, Colors.transparent);
+      expect(_material(tester).color!.a, 0, reason: 'fully transparent');
       await tester.pumpWidget(host(_card(filled: false)));
       expect(_material(tester).color, scheme.surfaceContainerLow);
     });

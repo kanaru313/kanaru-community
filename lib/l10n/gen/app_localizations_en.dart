@@ -2497,6 +2497,142 @@ class AppLocalizationsEn extends AppLocalizations {
       'Android\'s media index does not list the music files of this playlist yet, so the library cannot see them. Go to Settings › Library › Music folders › Add folder, tap “Can\'t see your folder? Rescan”, then import again. Nothing was imported.';
 
   @override
+  String get coverDialogTitle => 'Cover';
+
+  @override
+  String get coverEditAlbumTooltip => 'Edit album cover';
+
+  @override
+  String get coverEditArtistTooltip => 'Set artist image';
+
+  @override
+  String get coverAutoTitle => 'Automatic';
+
+  @override
+  String get coverAutoSubtitleAlbum => 'Cover in the music file';
+
+  @override
+  String get coverAutoSubtitleArtist => 'First album cover';
+
+  @override
+  String get coverAutoSubtitlePlaylist => 'Made from the first 4 album covers';
+
+  @override
+  String get coverCurrentTitle => 'Current image';
+
+  @override
+  String get coverCurrentSubtitle => 'Chosen earlier';
+
+  @override
+  String get coverGroupArtistAlbums => 'Covers of the artist\'s albums';
+
+  @override
+  String get coverGroupPlaylistAlbums => 'Album covers in the playlist';
+
+  @override
+  String coverMoreAlbums(int count) {
+    return 'Show $count more albums';
+  }
+
+  @override
+  String get coverAlbumSubtitle => 'Album cover';
+
+  @override
+  String coverAlbumSubtitleYear(int year) {
+    return 'Album cover · $year';
+  }
+
+  @override
+  String get coverPickMobile => 'Choose image…';
+
+  @override
+  String get coverPickDesktop => 'Choose image from device…';
+
+  @override
+  String get coverPickedReading => 'Reading image…';
+
+  @override
+  String coverPickedSubtitle(int width, int height) {
+    return 'From device · $width × $height';
+  }
+
+  @override
+  String get coverPickedGeneratedName => 'Image from device';
+
+  @override
+  String get coverPanHint =>
+      'Drag the image to choose the visible part (the image is cropped square)';
+
+  @override
+  String coverSmallImage(int width, int height) {
+    return 'Small image ($width × $height px): it may look blurry in Now Playing and on the detail page. You can still save it.';
+  }
+
+  @override
+  String get coverHintResetAlbum =>
+      'Save: drops your image and uses the cover in the music file again';
+
+  @override
+  String get coverHintResetArtist =>
+      'Save: drops your image and uses the automatic image again';
+
+  @override
+  String get coverHintResetPlaylist =>
+      'Save: drops your image and uses the automatic cover again';
+
+  @override
+  String get coverHintCopied =>
+      'The image is copied into Kanaru\'s data; the original file and tags are unchanged';
+
+  @override
+  String get coverScopeAlbum => 'Applies to the album everywhere';
+
+  @override
+  String get coverScopeArtist => 'The artist\'s image everywhere';
+
+  @override
+  String get coverScopePlaylist => 'This playlist only';
+
+  @override
+  String get coverScopeForm =>
+      'Saved with the other changes when you tap Save in Edit playlist';
+
+  @override
+  String get coverCancel => 'Cancel';
+
+  @override
+  String get coverSave => 'Save';
+
+  @override
+  String get coverChoose => 'Choose';
+
+  @override
+  String get coverDropHere => 'Drop the image here';
+
+  @override
+  String get coverChanged => 'Cover changed';
+
+  @override
+  String get coverResetDone => 'Automatic cover restored';
+
+  @override
+  String get coverUndo => 'Undo';
+
+  @override
+  String get coverUndoFailed => 'Couldn\'t undo';
+
+  @override
+  String get coverErrorFormat =>
+      'This image can\'t be used (only JPEG, PNG and WebP are supported)';
+
+  @override
+  String get coverErrorRead =>
+      'Couldn\'t read the image file. Try again later.';
+
+  @override
+  String get coverLinuxDialogLabel => 'Images';
+
+  @override
   String get settingsAbout => 'About';
 
   @override

@@ -1,7 +1,37 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../../domain/playlists/playlist_text_rules.dart';
+import '../../../state/covers/cover_draft.dart';
 import '../../../state/playlists/playlist_editor.dart';
+
+/// The cover change a form has staged; nothing is written until Save.
+sealed class FormCoverEdit {
+  const FormCoverEdit();
+
+  /// Leave the cover as it is.
+  const factory FormCoverEdit.keep() = KeepFormCover;
+
+  /// Drop the custom cover.
+  const factory FormCoverEdit.automatic() = AutomaticFormCover;
+
+  /// The image or cover the user picked in the dialog (form mode).
+  const factory FormCoverEdit.choice(CoverDraft draft) = ChoiceFormCover;
+}
+
+class KeepFormCover extends FormCoverEdit {
+  const KeepFormCover();
+}
+
+class AutomaticFormCover extends FormCoverEdit {
+  const AutomaticFormCover();
+}
+
+class ChoiceFormCover extends FormCoverEdit {
+  const ChoiceFormCover(this.draft);
+  final CoverDraft draft;
+}
 
 /// What the Create, Duplicate and Edit forms edit: the name, the description
 /// and a staged cover change, plus whether the whole form can be saved.
@@ -29,8 +59,25 @@ class PlaylistFormModel {
   /// True while the name is acceptable and the description is not too long.
   late final ValueNotifier<bool> valid;
 
-  /// True once the user chose "automatic cover" for the Edit form.
-  final automaticCover = ValueNotifier<bool>(false);
+  /// The staged cover change of the Edit form.
+  final coverEdit = ValueNotifier<FormCoverEdit>(const FormCoverEdit.keep());
+
+  /// Stages [next]. The temp files of a staged draft that [next] replaces are
+  /// deleted (kept when [next] is made from the same picked image).
+  void stageCover(FormCoverEdit next) {
+    final old = coverEdit.value;
+    if (old is ChoiceFormCover) {
+      unawaited(
+        next is ChoiceFormCover
+            ? old.draft.discardUnlessSharedWith(next.draft)
+            : old.draft.discard(),
+      );
+    }
+    coverEdit.value = next;
+  }
+
+  /// True when Save has a cover to write.
+  bool get coverChanged => coverEdit.value is! KeepFormCover;
 
   /// True while a save runs: the form's fields and buttons are disabled.
   final saving = ValueNotifier<bool>(false);
@@ -40,9 +87,14 @@ class PlaylistFormModel {
       cleanPlaylistDescription(descriptionController.text);
 
   /// Cover change to hand to `PlaylistEditor.save`.
-  PlaylistCoverEdit get cover => automaticCover.value
-      ? const PlaylistCoverEdit.automatic()
-      : const PlaylistCoverEdit.keep();
+  PlaylistCoverEdit get cover => switch (coverEdit.value) {
+    KeepFormCover() => const PlaylistCoverEdit.keep(),
+    AutomaticFormCover() => const PlaylistCoverEdit.automatic(),
+    ChoiceFormCover(:final draft) =>
+      draft.choice == null
+          ? const PlaylistCoverEdit.keep()
+          : PlaylistCoverEdit.choice(draft.choice!),
+  };
 
   bool _isValid() =>
       checkPlaylistName(nameController.text) == null &&
@@ -61,7 +113,10 @@ class PlaylistFormModel {
       ..removeListener(_revalidate)
       ..dispose();
     valid.dispose();
-    automaticCover.dispose();
+    // Cancel, close or after Save: the draft's temp files are no longer needed.
+    final staged = coverEdit.value;
+    if (staged is ChoiceFormCover) unawaited(staged.draft.discard());
+    coverEdit.dispose();
     saving.dispose();
   }
 }

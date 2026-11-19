@@ -123,6 +123,10 @@ class MenuActionRunner {
         await _guard('running a menu action', _l10n.libraryActionFailed, () {
           return run(_context);
         });
+      case RunOverAction():
+        // Reached only when a row (not a header) carries it: the menu has
+        // closed, so there is nothing left to keep open.
+        await runOver(action);
       case AddToPlaylistAction(:final request):
         await _guard('adding to a playlist', _l10n.playlistAddFailed, () {
           return showAddToPlaylist(_context, request);
@@ -144,6 +148,17 @@ class MenuActionRunner {
             shuffle: shuffle,
           );
         });
+    }
+  }
+
+  /// Runs an action that opens over the open menu. True when it finished its
+  /// job (the caller closes the menu); a failure is logged, toasted and false.
+  Future<bool> runOver(RunOverAction action) async {
+    try {
+      return await action.run(_context);
+    } on Object catch (e, s) {
+      _fail('running a menu action', _l10n.libraryActionFailed, e, s);
+      return false;
     }
   }
 

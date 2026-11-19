@@ -2212,6 +2212,139 @@ class AppLocalizationsVi extends AppLocalizations {
       'Android chưa đưa các tệp nhạc của playlist này vào kho nhạc nên thư viện không thấy. Vào Cài đặt › Thư viện › Thư mục nhạc › Thêm thư mục, bấm “Không thấy thư mục của bạn? Quét lại”, rồi nhập lại. Chưa nhập gì.';
 
   @override
+  String get coverDialogTitle => 'Ảnh bìa';
+
+  @override
+  String get coverEditAlbumTooltip => 'Sửa ảnh bìa album';
+
+  @override
+  String get coverEditArtistTooltip => 'Đặt ảnh nghệ sĩ';
+
+  @override
+  String get coverAutoTitle => 'Tự động';
+
+  @override
+  String get coverAutoSubtitleAlbum => 'Bìa trong tệp nhạc';
+
+  @override
+  String get coverAutoSubtitleArtist => 'Bìa album đầu tiên';
+
+  @override
+  String get coverAutoSubtitlePlaylist => 'Ghép bìa 4 album đầu';
+
+  @override
+  String get coverCurrentTitle => 'Ảnh đang dùng';
+
+  @override
+  String get coverCurrentSubtitle => 'Đã chọn trước đây';
+
+  @override
+  String get coverGroupArtistAlbums => 'Bìa album của nghệ sĩ';
+
+  @override
+  String get coverGroupPlaylistAlbums => 'Bìa album trong playlist';
+
+  @override
+  String coverMoreAlbums(int count) {
+    return 'Xem thêm $count album';
+  }
+
+  @override
+  String get coverAlbumSubtitle => 'Bìa album';
+
+  @override
+  String coverAlbumSubtitleYear(int year) {
+    return 'Bìa album · $year';
+  }
+
+  @override
+  String get coverPickMobile => 'Chọn ảnh…';
+
+  @override
+  String get coverPickDesktop => 'Chọn ảnh từ máy…';
+
+  @override
+  String get coverPickedReading => 'Đang đọc ảnh…';
+
+  @override
+  String coverPickedSubtitle(int width, int height) {
+    return 'Từ máy · $width × $height';
+  }
+
+  @override
+  String get coverPickedGeneratedName => 'Ảnh từ máy';
+
+  @override
+  String get coverPanHint => 'Kéo ảnh để chọn phần hiện (ảnh được cắt vuông)';
+
+  @override
+  String coverSmallImage(int width, int height) {
+    return 'Ảnh nhỏ ($width × $height px): có thể bị mờ ở Now Playing và trang chi tiết. Vẫn lưu được.';
+  }
+
+  @override
+  String get coverHintResetAlbum =>
+      'Lưu: bỏ ảnh riêng, dùng lại bìa trong tệp nhạc';
+
+  @override
+  String get coverHintResetArtist => 'Lưu: bỏ ảnh riêng, dùng lại ảnh tự động';
+
+  @override
+  String get coverHintResetPlaylist =>
+      'Lưu: bỏ ảnh riêng, dùng lại bìa tự động';
+
+  @override
+  String get coverHintCopied =>
+      'Ảnh được chép vào dữ liệu của Kanaru; tệp gốc và tag không đổi';
+
+  @override
+  String get coverScopeAlbum => 'Áp dụng cho album ở mọi nơi';
+
+  @override
+  String get coverScopeArtist => 'Ảnh của nghệ sĩ ở mọi nơi';
+
+  @override
+  String get coverScopePlaylist => 'Chỉ playlist này';
+
+  @override
+  String get coverScopeForm =>
+      'Lưu cùng các thay đổi khác khi bấm Lưu ở Sửa playlist';
+
+  @override
+  String get coverCancel => 'Huỷ';
+
+  @override
+  String get coverSave => 'Lưu';
+
+  @override
+  String get coverChoose => 'Chọn';
+
+  @override
+  String get coverDropHere => 'Thả ảnh vào đây';
+
+  @override
+  String get coverChanged => 'Đã đổi ảnh bìa';
+
+  @override
+  String get coverResetDone => 'Đã dùng lại bìa tự động';
+
+  @override
+  String get coverUndo => 'Hoàn tác';
+
+  @override
+  String get coverUndoFailed => 'Không hoàn tác được';
+
+  @override
+  String get coverErrorFormat =>
+      'Không dùng được ảnh này (chỉ hỗ trợ JPEG, PNG, WebP)';
+
+  @override
+  String get coverErrorRead => 'Không đọc được tệp ảnh. Thử lại sau.';
+
+  @override
+  String get coverLinuxDialogLabel => 'Ảnh';
+
+  @override
   String get settingsAbout => 'Giới thiệu';
 
   @override
