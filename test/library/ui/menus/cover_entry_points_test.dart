@@ -28,8 +28,8 @@ import 'menu_fakes.dart';
 import 'menu_fixtures.dart';
 import 'menu_pump.dart';
 
-/// The header button of an album or artist menu closes the menu and opens the
-/// cover dialog.
+/// The header button of an album or artist menu opens the cover dialog over
+/// the menu (the menu stays open underneath).
 void main() {
   late Directory dir;
 
@@ -91,7 +91,7 @@ void main() {
     expect(find.byType(MenuHeaderView), findsOneWidget);
     await tester.tap(byIconButton(tooltip));
     await pumpMenu(tester);
-    expect(find.byType(MenuHeaderView), findsNothing);
+    expect(find.byType(MenuHeaderView), findsOneWidget);
     expect(find.byType(CoverDialog), findsOneWidget);
   }
 

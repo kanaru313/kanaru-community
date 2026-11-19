@@ -254,7 +254,11 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   re-exports `menu_actions.dart` (`MenuAction` and its cases). `MenuAction.run`
   = `RunAction`: runs the caller's function with the root navigator's context
   once the menu closed; a failure is logged and shown as the `libraryActionFailed`
-  toast. `MenuSpec.origin` (kept for rows that depend on the page; `copyWith`
+  toast. `MenuAction.runOver(Future<bool> Function(ctx))` (`RunOverAction`) is the
+  header-action variant for a dialog that opens OVER the menu: the menu stays open
+  underneath (outside tap / Esc / Back / Cancel pop only the dialog) and closes too
+  only when the callback returns true (a saved cover); every other action closes the
+  menu first. `MenuSpec.origin` (kept for rows that depend on the page; `copyWith`
   replaces the groups), `MenuOrigin.playlist(uid)` (`PlaylistOrigin`),
   `MenuItemSpec.hint` (the row's accessible description, never the subtitle),
   `MenuImage.playlist` with `MenuHeader.autoCoverKeys`, `note` (third line, one

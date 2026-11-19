@@ -92,7 +92,7 @@ MenuSpec buildAlbumMenu(AlbumMenuData data, MenuOrigin origin, MenuEnv env) {
       action: MenuTrailingSpec(
         icon: KIcons.imageEdit,
         tooltip: l10n.coverEditAlbumTooltip,
-        action: MenuAction.run(
+        action: MenuAction.runOver(
           (ctx) =>
               pickCustomCover(ctx, CustomCoverKind.album, data.key.encode()),
         ),

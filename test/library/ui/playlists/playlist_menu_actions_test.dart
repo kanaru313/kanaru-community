@@ -514,7 +514,7 @@ void main() {
         () => h.fixture.repo.createPlaylist(name: 'Other', tracks: const []),
       );
       final spec = await specOf(t, h, src.uid);
-      final cover = spec.header.action!.action as RunAction;
+      final cover = spec.header.action!.action as RunOverAction;
       // The dialog future ends when it closes: not awaited.
       unawaited(h.launch(t, (c) => cover.run(c)));
       // Bounded pumps: the dialog may keep a progress animation running.

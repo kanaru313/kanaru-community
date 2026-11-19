@@ -60,7 +60,7 @@ MenuHeader playlistMenuHeader(
         : MenuTrailingSpec(
             icon: KIcons.imageEdit,
             tooltip: l10n.playlistMenuChangeCover,
-            action: MenuAction.run(
+            action: MenuAction.runOver(
               (ctx) =>
                   pickCustomCover(ctx, CustomCoverKind.playlist, summary.uid),
             ),

@@ -124,7 +124,7 @@ MenuSpec buildArtistMenu(ArtistMenuData data, MenuOrigin origin, MenuEnv env) {
       action: MenuTrailingSpec(
         icon: KIcons.imageEdit,
         tooltip: l10n.coverEditArtistTooltip,
-        action: MenuAction.run(
+        action: MenuAction.runOver(
           (ctx) =>
               pickCustomCover(ctx, CustomCoverKind.artist, data.key.encode()),
         ),
