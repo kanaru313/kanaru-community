@@ -8,7 +8,10 @@ class NoopMediaControls implements MediaControls {
   Future<void> start() async {}
 
   @override
-  Future<void> update(MediaControlsItem? item, MediaControlsState state) async {}
+  Future<void> update(
+    MediaControlsItem? item,
+    MediaControlsState state,
+  ) async {}
 
   @override
   void updatePosition(Duration position) {}
@@ -24,6 +27,9 @@ class NoopMediaControls implements MediaControls {
 
   @override
   Future<void> deactivate() async {}
+
+  @override
+  void cancelPendingResume() {}
 
   @override
   Future<void> dispose() async {}

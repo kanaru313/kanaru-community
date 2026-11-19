@@ -10,6 +10,7 @@
 - Queue model, persistence, playable resolver, play log writer, settings keys: this file.
 - Restore, position saves, listens and the exit flush: this file.
 - Media controls (MPRIS, `audio_service`) and audio focus: this file.
+- Sleep timer (modes, ranges, policy seam, wall clock): this file, section Sleep timer.
 - Waveform (Rust decode, cache, loader, seek bar): this file, section Waveform.
 - Android notification icon: `android/app/src/main/res/drawable/ic_stat_kanaru.xml` is the monochrome (white) status-bar icon. `AudioServiceConfig.androidNotificationIcon` must be `'drawable/ic_stat_kanaru'`; the launcher icon is coloured and shows as a grey square in the status bar.
 
@@ -392,6 +393,53 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
 - **Debug bound:** `playTracks` with 20 000 entries stays under 2 s in debug (test). The profile-mode
   budget (150 ms of UI-isolate work) is not measured yet.
 
+## Sleep timer
+
+`playback/state/sleep_timer_provider.dart`: `sleepTimerProvider` (`NotifierProvider<SleepTimer,
+SleepTimerState>`). Session only: nothing is saved, a restart or kill loses it. No UI reads it yet.
+
+- **Gate:** `build()` returns off and touches nothing until `playerCreatedProvider` is true; then it
+  watches `playerControllerProvider` (a new controller rebuilds it, off) and subscribes `trackEnds`.
+  Before the player exists every `start*` is ignored. `onDispose` removes the policy, ends the fade,
+  cancels the ticker, the lifecycle listener, the `trackEnds` subscription and the album requests. Every
+  fire-and-forget call goes through `_send`, which logs a failure (warning, type).
+- **State** (`domain/sleep_timer_state.dart`): `mode` (`minutes`, `tracks`, `endOfTrack`, `endOfAlbum`,
+  `endOfQueue`; null = off), `remaining` (whole seconds, rounded up), `endsAt` (wall `DateTime`, minutes
+  only, null while held), `countingPaused`, `tracksLeft`; immutable with `==`. `canSubtract(m)` needs
+  more than `m` minutes left.
+- **Ranges** (clamped in the notifier): `startMinutes` 1 to 720, `startTracks` 1 to 20, `addMinutes`
+  stays within 720 and a subtraction is refused unless `canSubtract`, `addTracks` stays within 20 and is
+  refused below 1. Only the running mode's `add*` acts. Starting a mode replaces the running one;
+  `cancel()` undoes all (policy removed, fade ended, ticker and album requests dropped).
+- **Minutes, wall clock:** the deadline is `controller.nowMs + n * 60 000` (the controller's clock,
+  epoch ms). A ticker from `sleepTickerProvider` (250 ms) recomputes `remaining = ceil((deadline - now)
+  / 1 s)`, also while playback is paused; `AppLifecycleListener.onResume` runs one tick at once, so a
+  device that slept catches up. With 10 s or less left and playing, once per arm: `fadeOutForSleep(left)`.
+  A tick that finds the deadline gone while playing with no fade run for this arm (the device slept, or
+  the window was skipped) starts a 10 s fade and moves the deadline 10 s on, then pauses. A fade the
+  user interrupted (pause, play, seek, volume) is not started again: the timer calls `sleepPause()` at
+  zero. Gone while paused: `endSleepFade()` and off, no pause. Time added above 10 s during a fade ends
+  the fade and arms it again. A wall-clock jump (NTP, manual change) moves the stop by the same amount.
+  `pauseCounting()` stores the time left, drops the deadline and ends a fade; `resumeCounting()` sets a
+  new deadline from it.
+- **Track modes** install a `SleepStopPolicy` (`domain/sleep_policies.dart`) with
+  `setSleepStopPolicy`; the player asks it in its chain, at the moment it picks the next entry:
+  `EndOfTrackPolicy` always stops; `EndOfQueuePolicy` stops at the last entry whatever repeat says;
+  `TracksPolicy(left)` stops when `left <= 1` and `trackEnded()` counts one off (`addTracks` changes it
+  and calls `sleepPolicyChanged()`); `EndOfAlbumPolicy` compares the album key of the current and the
+  next entry in play order (`neighboursOf`: repeat one is ignored, a reshuffled pass end or no neighbour
+  stops). A key not known yet stops, and a track without an album key is an album of its own (stops).
+- **Album keys** (`sleep_timer_album.dart`, `SleepAlbumKeys`): read from `queueRowInfosProvider` first;
+  misses go to `queueRowInfoLoaderProvider` for the current, next and following entry (one query),
+  into a map of the last 32 answers guarded by a generation number. An answer calls
+  `sleepPolicyChanged()`, so the player decides again; a failure is logged and the keys stay unknown
+  (stop, not asked again until a `queueTracksChangedProvider` event clears the map). The request runs
+  in the zone the keys were made in, because the policy is asked inside the player's chain.
+- **`trackEnds`:** `sleepStop` or `queueEnded` in a track mode turns the state off; a natural end that
+  did not stop in the tracks mode updates `tracksLeft` from the policy.
+- **Every end of a sleep** (pause at zero, expiry while paused, `TrackEnd(sleepStop)`) calls
+  `mediaSessionBridgeProvider.cancelPendingResume()`.
+
 ## Repeat
 
 Ported from the old app (`core/player/repeat_mode.dart`, `player_settings_commands.dart`,
@@ -534,7 +582,7 @@ to the track of the entry whose token the accumulator was made for.
 ## Media controls
 
 `platform/domain/media_controls.dart` (pure): `MediaControls` with `start`, `update(item, state)`,
-`updatePosition`, `seeked`, `commands`, `activate`, `deactivate`, `dispose`; `MediaControlsItem`
+`updatePosition`, `seeked`, `commands`, `activate`, `deactivate`, `cancelPendingResume`, `dispose`; `MediaControlsItem`
 (id = queue entry id, title, artists, album, duration, `file:` art), `MediaControlsState` (equality
 ignores the position) and the sealed `MediaCommand` (`Play`, `Pause`, `PlayPause`, `Stop`, `Next`,
 `Previous`, `Seek(offset)`, `SetPosition(id, position)`, `SetShuffle`, `SetRepeat`, `SetVolume`).
@@ -559,6 +607,10 @@ signalled.
   an entry that is no longer current). A request that came before the controller existed is held by the
   platform's command buffer (Android) and arrives after the attach.
 - Focus: `activate()` asks the controls with a 2 s timeout (timeout = denied); `deactivate()` on stop.
+- `cancelPendingResume()` (controls, forwarded by the bridge, which logs a failure): drops the resume
+  the system would send after an interruption that paused playback; a no-op where there is none
+  (MPRIS, the no-op controls, Android with nothing pending). The sleep timer calls it at every end of
+  a sleep, so a call that interrupted playback just before cannot start it again.
 - `mediaSessionBridgeProvider` builds it; `playbackFocusProvider` is the bridge; `mediaControlsProvider`
   picks the implementation (MPRIS on Linux, the audio service on Android after its startup hook, a no-op
   elsewhere and under `flutter test`).
@@ -608,8 +660,8 @@ runs over a wrapping base only ends the count. Same mapping as the old app.
 - **Audio focus:** `activate()` = `setActive(true)`, before every transition to playing (denied: stay
   paused with a `FocusDenied` notice); `deactivate()` on stop. Becoming noisy pauses. An interruption
   that asks for a pause pauses and remembers it only if playback was running; its end with "resume"
-  plays again. A user pause before or during the interruption is never undone. Ducking is left to
-  the system.
+  plays again. A user pause before or during the interruption is never undone. `cancelPendingResume()`
+  clears that memory, so the end plays nothing. Ducking is left to the system.
 - Commands that arrive before anyone listens are held (the last, if younger than 10 s) and replayed to
   the first listener (`CommandBuffer`).
 - Not covered by tests, checked on the phone later: the notification on Android 13, lock screen,

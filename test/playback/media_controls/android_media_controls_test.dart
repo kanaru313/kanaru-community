@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/platform/data/media_controls/noop_media_controls.dart';
 import 'package:kanaru/src/platform/data/media_controls/android_audio_session_port.dart';
 import 'package:kanaru/src/platform/data/media_controls/android_media_controls.dart';
 import 'package:kanaru/src/platform/data/media_controls/android_media_handler.dart';
@@ -275,6 +276,32 @@ void main() {
       session.interruption.add(end(AudioInterruptionType.duck));
       await pumpEventQueue();
       expect(seen, isEmpty);
+    });
+
+    test('a cancelled pending resume is not sent when the interruption ends', () async {
+      await controls.update(_item, state());
+      session.interruption.add(begin());
+      await pumpEventQueue();
+      await controls.update(_item, state(playing: false));
+      controls.cancelPendingResume();
+      session.interruption.add(end());
+      await pumpEventQueue();
+      expect(seen.map((c) => c.runtimeType), [Pause]);
+    });
+
+    test('cancelling with no interruption pending does nothing', () async {
+      await controls.update(_item, state());
+      controls.cancelPendingResume();
+      session.interruption.add(begin());
+      await pumpEventQueue();
+      await controls.update(_item, state(playing: false));
+      session.interruption.add(end());
+      await pumpEventQueue();
+      expect(seen.map((c) => c.runtimeType), [Pause, Play]);
+    });
+
+    test('the no-op controls accept a cancel', () {
+      expect(const NoopMediaControls().cancelPendingResume, returnsNormally);
     });
 
     test('playing again by hand cancels the resume', () async {

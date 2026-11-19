@@ -137,6 +137,9 @@ class AndroidMediaControls implements MediaControls {
   }
 
   @override
+  void cancelPendingResume() => _resumeAfterInterruption = false;
+
+  @override
   Future<void> deactivate() async {
     _resumeAfterInterruption = false;
     try {
