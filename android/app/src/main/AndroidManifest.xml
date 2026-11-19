@@ -17,10 +17,18 @@
         android:fullBackupContent="@xml/backup_rules"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- singleTask, not singleTop: the SAF picker can sit on top of
+             MainActivity in the same task. A notification (audio_service
+             content intent) or launcher tap must then reuse the existing
+             MainActivity: it clears the activities above it (an open system
+             picker ends as a cancel) and calls onNewIntent. Recents returns to
+             the picker instead. With singleTop the system stacked a second
+             MainActivity that took the shared Flutter engine and left the first
+             one detached (white screen). -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:enableOnBackInvokedCallback="true"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"

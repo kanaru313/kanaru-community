@@ -69,8 +69,8 @@ object DocumentChannel {
         // A dialog whose owner was destroyed may still deliver its result to
         // this restored activity, in the same main-looper message as its
         // creation. Give it a moment, then answer null so Dart never waits
-        // forever. A second live instance on top of the picker is not an
-        // orphan: its owner is alive and keeps its request.
+        // forever. An owner that is still alive keeps its request (MainActivity is
+        // singleTask, so a second live instance is not expected).
         val orphan = pending
         if (orphan != null && restored && orphan.ownerGone()) {
             main.postDelayed({
