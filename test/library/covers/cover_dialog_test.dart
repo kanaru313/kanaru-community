@@ -335,6 +335,33 @@ void main() {
       );
     });
 
+    testWidgets(
+      'head padding follows the host: 24 dp above the title in a '
+      'sheet turned into a dialog (mobile shell, 800 wide), none in a sheet',
+      (tester) async {
+        double titleGap() =>
+            tester.getRect(find.text('Ảnh bìa')).top -
+            tester.getRect(find.byType(CoverDialog)).top;
+
+        await open(tester, size: const Size(800, 1280));
+        expect(
+          FormFactor.of(tester.element(find.byType(CoverDialog))),
+          FormFactor.mobile,
+        );
+        final asDialog = titleGap();
+        expect(asDialog, greaterThanOrEqualTo(KSpace.x6));
+        await tester.tapAt(const Offset(2, 2));
+        await tester.pumpAndSettle();
+
+        await open(tester, size: const Size(360, 800));
+        expect(
+          titleGap(),
+          lessThan(asDialog),
+          reason: 'a real sheet has the grip above, no extra padding',
+        );
+      },
+    );
+
     testWidgets('header: tonal pick button right of the titles, centred on '
         'them; the 36 dp Xem thêm is a text button', (tester) async {
       final many = [for (var i = 0; i < 8; i++) suggestion('Album $i')];

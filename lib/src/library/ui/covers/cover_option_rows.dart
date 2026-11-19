@@ -9,8 +9,8 @@ import '../../state/covers/cover_dialog_options.dart';
 import '../../state/covers/cover_dialog_state.dart';
 import '../../state/covers/cover_draft.dart';
 import '../../state/custom_cover_providers.dart';
-import 'cover_art.dart';
 import '../songs/song_row_placeholder.dart';
+import 'cover_art.dart';
 import 'cover_row_parts.dart';
 
 /// Side of the row thumbs.
