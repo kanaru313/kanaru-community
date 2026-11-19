@@ -78,8 +78,8 @@ void main() {
   // the cover dialog a centred dialog.
   for (final width in [1400.0, 1000.0]) {
     for (final how in ['outside click', 'Esc']) {
-      testWidgets('$width wide, artist page: the header button closes the '
-          'menu, then $how closes only the cover dialog', (tester) async {
+      testWidgets('$width wide, artist page: the cover dialog opens over '
+          'the menu; $how closes only the dialog', (tester) async {
         final c = await pumpKanaruApp(
           tester,
           width: width,
@@ -115,7 +115,7 @@ void main() {
         await click(tester.getCenter(byAnyIconButton('Set artist image')));
         await _settle(tester);
         expect(find.byType(CoverDialog), findsOneWidget);
-        expect(find.byType(MenuHeaderView), findsNothing);
+        expect(find.byType(MenuHeaderView), findsOneWidget);
 
         if (how == 'Esc') {
           await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -124,11 +124,60 @@ void main() {
         }
         await _settle(tester);
         expect(find.byType(CoverDialog), findsNothing);
-        expect(find.byType(MenuHeaderView), findsNothing);
+        expect(find.byType(MenuHeaderView), findsOneWidget);
         expect(router.routerDelegate.currentConfiguration.uri.path, page);
+        // The menu still works: its cover button opens the dialog again.
+        await click(tester.getCenter(byAnyIconButton('Set artist image')));
+        await _settle(tester);
+        expect(find.byType(CoverDialog), findsOneWidget);
         await _closeApp(tester);
       });
     }
+  }
+
+  // A successful Lưu closes the dialog and the menu under it. 390 is the
+  // phone sheet, 1400 the desktop dialog.
+  for (final width in [1400.0, 390.0]) {
+    testWidgets('$width wide, artist page: Save closes the cover dialog and '
+        'the menu', (tester) async {
+      final cover = FakeCoverController(dir);
+      final picker = FakePicker();
+      final c = await pumpKanaruApp(
+        tester,
+        width: width,
+        height: 900,
+        overrides: [
+          customCoverControllerProvider.overrideWithValue(cover),
+          imageFilePickerProvider.overrideWithValue(picker),
+        ],
+      );
+      await seedArtist(tester, c);
+      final router = GoRouter.of(tester.element(find.byType(Scaffold).first));
+      router.go(LibraryLocations.artist(ArtistKey(groupKey('164'))));
+      await _settle(tester);
+      final page = router.routerDelegate.currentConfiguration.uri.path;
+
+      await tester.tap(byAnyIconButton('More options').first);
+      await _settle(tester);
+      await tester.tap(byAnyIconButton('Set artist image'));
+      await _settle(tester);
+      expect(find.byType(CoverDialog), findsOneWidget);
+      expect(find.byType(MenuHeaderView), findsOneWidget);
+
+      picker.next = pickedFile(dir, 'artist.png');
+      await tester.tap(find.textContaining('Choose image'));
+      await tester.pump();
+      await _settle(tester);
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pump();
+      await _settle(tester);
+
+      expect(cover.changes, hasLength(1));
+      expect(find.byType(CoverDialog), findsNothing);
+      expect(find.byType(MenuHeaderView), findsNothing);
+      expect(router.routerDelegate.currentConfiguration.uri.path, page);
+      await _closeApp(tester);
+    });
   }
 
   testWidgets('phone, playlist menu: a pick made while the app went to the '

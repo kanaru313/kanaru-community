@@ -29,40 +29,64 @@ class CoverFrameArt extends StatelessWidget {
   Widget get _skeleton =>
       KCover.loading(size: frame, radius: BorderRadius.zero);
 
+  /// The automatic cover, always under the picture: while a file decodes (or
+  /// fails to) this shows, so the frame is never blank between two choices.
+  Widget _base(CoverDialogOptions options) => AutomaticCoverArt(
+    kind: kind,
+    itemKey: itemKey,
+    options: options,
+    dimension: frame,
+    radius: BorderRadius.zero,
+  );
+
   @override
   Widget build(BuildContext context) {
     final options = state.options.value;
     final id = state.selectedId;
     if (options == null || id == null) return _skeleton;
+    final preview = state.picked?.preview;
+    // One picture widget for every file choice (same slot, same type), so a
+    // change of file is gapless.
+    final Widget? top;
     if (id == CoverRowIds.picked) {
-      final preview = state.picked?.preview;
-      if (preview == null) return _skeleton;
-      return PannedCoverImage(
-        file: preview.file,
-        width: preview.width,
-        height: preview.height,
-        offset: state.offset,
-        dimension: frame,
-        errorBuilder: (_, _, _) => _skeleton,
-      );
+      top = preview == null
+          ? null
+          : PannedCoverImage(
+              file: preview.file,
+              width: preview.width,
+              height: preview.height,
+              offset: state.offset,
+              dimension: frame,
+              errorBuilder: _hidden,
+            );
+    } else {
+      // Current cover and suggestions: what is saved is the file itself,
+      // centred, never the pan of the picked image.
+      final File? file = id == CoverRowIds.current
+          ? options.current?.thumb
+          : state.selectedSuggestion?.thumb;
+      top = file == null
+          ? null
+          : PannedCoverImage(
+              file: file,
+              dimension: frame,
+              errorBuilder: _hidden,
+            );
     }
-    final File? file = id == CoverRowIds.current
-        ? options.current?.thumb
-        : state.selectedSuggestion?.thumb;
-    if (file != null) {
-      return FileCoverArt(
-        file: file,
-        seed: itemKey,
-        dimension: frame,
-        radius: BorderRadius.zero,
-      );
-    }
-    return AutomaticCoverArt(
-      kind: kind,
-      itemKey: itemKey,
-      options: options,
-      dimension: frame,
-      radius: BorderRadius.zero,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Picked image still being read: skeleton, as before.
+        if (id == CoverRowIds.picked && preview == null)
+          _skeleton
+        else
+          _base(options),
+        top ?? const SizedBox.shrink(),
+      ],
     );
   }
+
+  /// Unreadable file: the cover underneath shows.
+  static Widget _hidden(BuildContext _, Object _, StackTrace? _) =>
+      const SizedBox.shrink();
 }

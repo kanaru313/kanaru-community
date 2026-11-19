@@ -9,12 +9,24 @@ import 'cover_dialog.dart';
 
 /// Opens the "Ảnh bìa" dialog for the item [itemKey] of [kind] in save mode:
 /// Lưu changes the cover everywhere and shows an undo snack bar.
-Future<void> pickCustomCover(
+///
+/// Resolves to true only when the dialog closed itself after Lưu saved. Huỷ,
+/// outside tap, Esc and Back give false. It is the dialog route's result, not
+/// the save job's: the job may outlive the dialog, but the dialog only closes
+/// with true once its own save succeeded.
+Future<bool> pickCustomCover(
   BuildContext context,
   CustomCoverKind kind,
   String itemKey,
 ) async {
-  await _open(context, kind, itemKey, formMode: false, draft: null);
+  final result = await _open(
+    context,
+    kind,
+    itemKey,
+    formMode: false,
+    draft: null,
+  );
+  return result == true;
 }
 
 /// Opens the dialog in form mode (Sửa playlist): Chọn returns the
@@ -26,9 +38,19 @@ Future<CoverDraft?> pickCoverForForm(
   CustomCoverKind kind,
   String itemKey, {
   CoverDraft? draft,
-}) => _open(context, kind, itemKey, formMode: true, draft: draft);
+}) async {
+  final result = await _open(
+    context,
+    kind,
+    itemKey,
+    formMode: true,
+    draft: draft,
+  );
+  return result is CoverDraft ? result : null;
+}
 
-Future<CoverDraft?> _open(
+/// Route result: a [CoverDraft] (form mode), true (saved) or null.
+Future<Object?> _open(
   BuildContext context,
   CustomCoverKind kind,
   String itemKey, {
@@ -48,7 +70,7 @@ Future<CoverDraft?> _open(
     draft: draft,
   );
   if (FormFactor.of(context) == FormFactor.mobile) {
-    return showKSheet<CoverDraft?>(
+    return showKSheet<Object?>(
       context,
       fixedHeight: true,
       maxHeightFraction: 0.94,
@@ -56,7 +78,7 @@ Future<CoverDraft?> _open(
       builder: (_) => dialog(fixedHeight: true),
     );
   }
-  return showKDialog<CoverDraft?>(
+  return showKDialog<Object?>(
     context,
     maxWidth: KLayout.dialogWide,
     // Height: at most 760 and, through the Dialog's own inset, the window's

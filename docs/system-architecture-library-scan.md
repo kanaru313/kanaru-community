@@ -504,7 +504,8 @@ State of the cover dialog lives in `library/state/covers/` (no widgets):
   and calls `discard()`. Reopening the dialog with the draft restores its row and pan.
 - Entry points: the header button of the album menu ("Sửa ảnh bìa album", also on the
   album page's own menu), of the artist menu ("Đặt ảnh nghệ sĩ") and of a playlist menu
-  (Favorites has none) closes the menu, then calls `pickCustomCover`. Edit playlist's
+  (Favorites has none) opens the dialog over the menu (`MenuAction.runOver` returning
+  `pickCustomCover`'s saved flag): Cancel / Esc / outside tap return to the menu, a saved cover closes both. Edit playlist's
   "Đổi ảnh bìa…" calls `pickCoverForForm`: the form keeps one `coverEdit` (keep,
   automatic or a `CoverDraft`), Save sends a draft as `PlaylistCoverEdit.choice`
   (applied even when the name is unchanged), and Cancel or close deletes the draft's

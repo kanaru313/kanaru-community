@@ -60,11 +60,16 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
 
   Future<void> _confirm() async {
     final navigator = Navigator.of(context);
+    // This dialog's own route: when the user closed the dialog while the work
+    // ran, `navigator.pop` would pop the page under it (the menu, the Edit
+    // playlist dialog) instead.
+    final route = ModalRoute.of(context);
+    bool stillOpen() => mounted && (route?.isCurrent ?? false);
     final ctl = _ctl;
     if (widget.formMode) {
       final draft = await ctl.toDraft();
       if (draft == null) return;
-      if (mounted) {
+      if (stillOpen()) {
         navigator.pop(draft);
       } else {
         // Closed meanwhile: nobody will hold the draft's temp files.
@@ -77,7 +82,7 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
       openMessenger: () => _inner.currentState,
       texts: widget.texts,
     );
-    if (saved && mounted) navigator.pop();
+    if (saved && stillOpen()) navigator.pop(true);
   }
 
   @override
@@ -94,6 +99,7 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
     });
     final ctl = _ctl;
     final picked = s.chosenPicked?.preview;
+    final inset = FormFactor.of(context) == FormFactor.mobile ? 0.0 : KSpace.x2;
     // Slivers: the album rows are built lazily. The desktop dialog fits its
     // content (shrink-wrapped) until the list is expanded, then it fills the
     // room it has and scrolls.
@@ -123,15 +129,20 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
             ],
           ),
         ),
-        CoverOptionRows(
-          kind: widget.kind,
-          itemKey: widget.itemKey,
-          state: s,
-          suggestionsExpanded: _suggestionsExpanded,
-          onToggleSuggestions: () =>
-              setState(() => _suggestionsExpanded = !_suggestionsExpanded),
-          onSelect: ctl.select,
-          onPick: () => ctl.pick(dialogLabel: widget.texts.linuxDialogLabel),
+        // Desktop dialog: rows inset like the other pickers' lists (the
+        // tint keeps clear of the dialog edge); a bottom sheet runs full-bleed.
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: inset),
+          sliver: CoverOptionRows(
+            kind: widget.kind,
+            itemKey: widget.itemKey,
+            state: s,
+            suggestionsExpanded: _suggestionsExpanded,
+            onToggleSuggestions: () =>
+                setState(() => _suggestionsExpanded = !_suggestionsExpanded),
+            onSelect: ctl.select,
+            onPick: () => ctl.pick(dialogLabel: widget.texts.linuxDialogLabel),
+          ),
         ),
         const SliverToBoxAdapter(child: KGap(KSpace.x2)),
       ],
@@ -145,13 +156,16 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
           Expanded(child: body)
         else
           Flexible(child: body),
-        CoverDialogFooter(
-          kind: widget.kind,
-          formMode: widget.formMode,
-          enabled: s.changed,
-          saving: s.saving,
-          onCancel: () => Navigator.of(context).pop(),
-          onConfirm: _confirm,
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: inset),
+          child: CoverDialogFooter(
+            kind: widget.kind,
+            formMode: widget.formMode,
+            enabled: s.changed,
+            saving: s.saving,
+            onCancel: () => Navigator.of(context).pop(),
+            onConfirm: _confirm,
+          ),
         ),
       ],
     );
