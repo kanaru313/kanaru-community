@@ -31,6 +31,9 @@ void registerLibraryBrowse(ExtensionRegistry registry) {
       mobileOrder: 20,
       // The six lists below replace it in the sidebar; mobile keeps the tab.
       sidebar: false,
+      // `/library` only redirects; the list pages are the tab's roots.
+      isRootPath: (path) =>
+          LibraryTab.values.any((t) => path == LibraryLocations.list(t)),
     ),
   );
   // Children after their parent (the registry requires it). They are always

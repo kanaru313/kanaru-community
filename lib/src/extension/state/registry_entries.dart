@@ -19,6 +19,7 @@ class NavItem {
     int? mobileOrder,
     this.comingSoon = false,
     this.onSelect,
+    this.isRootPath,
   }) : mobileOrder = mobileOrder ?? order;
 
   final String id;
@@ -62,6 +63,20 @@ class NavItem {
   /// Runs instead of navigating to [path] (for example Queue opens the Now
   /// Playing queue tab). An item with [onSelect] needs no route at [path].
   final void Function(BuildContext context)? onSelect;
+
+  /// Extra root pages of the tab, for a tab whose [path] only redirects to a
+  /// child list page (Library: `/library` -> `/library/songs`). Null means
+  /// the root is [path] itself.
+  ///
+  /// A tab whose [path] only redirects to a child page must set this, covering
+  /// every page the redirect can land on. Otherwise mobile Back inside that
+  /// tab goes to the tab path, which redirects back, and Back does nothing.
+  final bool Function(String path)? isRootPath;
+
+  /// Whether [path] (a location path, no query) is a root page of this tab:
+  /// the place where Back leaves the tab instead of going to a previous page.
+  bool atRoot(String path) =>
+      path == this.path || (isRootPath?.call(path) ?? false);
 
   /// Whether this item is a shell tab with its own branch: not pushed, not a
   /// child of another item, and one that navigates.
