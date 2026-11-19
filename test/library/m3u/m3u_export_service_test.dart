@@ -114,6 +114,16 @@ void main() {
     expect(env.picker.lastText, isNot(contains('c.flac')));
   });
 
+  test('written and skipped count distinct songs, repeats once', () async {
+    final a = await addTrack(env.db, env.source, locator: 'a.mp3');
+    final cue = await addTrack(env.db, env.source, locator: 'c.flac#2');
+    final uid = await playlist([a, a, cue, cue, a]);
+    final res = ok(
+      await service().exportPlaylist(uid, target(), relative: false),
+    );
+    expect((res.written, res.skipped), (1, 1));
+  });
+
   test('removed entries are left out, order kept', () async {
     final a = await addTrack(env.db, env.source, locator: 'a.mp3', title: 'A');
     final b = await addTrack(env.db, env.source, locator: 'b.mp3', title: 'B');

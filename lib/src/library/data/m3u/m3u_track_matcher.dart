@@ -58,7 +58,8 @@ Future<M3uMatch> matchM3uLines(
 
   final entries = <ImportedEntry>[];
   final problems = <M3uProblemLine>[];
-  var outside = 0, notScanned = 0, notPresent = 0;
+  var outside = 0, notScanned = 0;
+  final notPresent = <int>{};
   void problem(M3uResolvedLine l, M3uProblemKind kind) {
     problems.add(
       M3uProblemLine(line: l.entry.line, text: l.entry.text, kind: kind),
@@ -83,7 +84,7 @@ Future<M3uMatch> matchM3uLines(
     final row = p.locator.isEmpty ? null : known.find(p);
     if (row != null) {
       entries.add(ImportedTrack(TrackId(row.id)));
-      if (row.status != TrackStatus.present) notPresent++;
+      if (row.status != TrackStatus.present) notPresent.add(row.id);
     } else if (l.path == null || p.locator.isEmpty) {
       problem(l, M3uProblemKind.unresolved);
     } else if (!scannerWouldList(
@@ -113,7 +114,7 @@ Future<M3uMatch> matchM3uLines(
     problems: problems,
     outsideFolders: outside,
     notScanned: notScanned,
-    notPresent: notPresent,
+    notPresent: notPresent.length,
     totalLines: lines.length,
     truncated: truncated,
   );

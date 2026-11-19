@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 
 M3uImportResult _result({
   int added = 8,
+  int? songsAdded,
   int total = 10,
   int notInLibrary = 0,
   List<M3uProblemLine> problems = const [],
@@ -16,6 +17,7 @@ M3uImportResult _result({
   name: 'Road',
   fileName: 'Road.m3u8',
   added: added,
+  songsAdded: songsAdded ?? added,
   totalLines: total,
   notInLibrary: notInLibrary,
   outsideFolders: problems
@@ -93,6 +95,30 @@ void main() {
     expect(find.text(l10n.playlistM3uOpenPlaylist), findsOneWidget);
     expect(find.text(l10n.playlistM3uReportNotInLibrary(0)), findsNothing);
     expect(find.textContaining('Line '), findsNothing);
+  });
+
+  testWidgets('not-in-library wording points at the next library scan', (
+    t,
+  ) async {
+    await _pump(t, _result(notInLibrary: 2));
+    expect(
+      find.text(
+        '2 songs are not in your library yet: they appear after the next '
+        'library scan.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('not-in-library wording, singular', (t) async {
+    await _pump(t, _result(notInLibrary: 1));
+    expect(
+      find.text(
+        '1 song is not in your library yet: it appears after the next '
+        'library scan.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('not-in-library group has no lines', (t) async {

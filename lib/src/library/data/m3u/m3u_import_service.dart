@@ -105,9 +105,10 @@ class M3uImportService {
         fileName: read.fileName,
         added: created.entryCount,
         totalLines: found.totalLines,
-        // Per entry, repeats included.
+        songsAdded: _distinctSongs(found.entries),
+        // Distinct songs: a repeated line counts once.
         notInLibrary:
-            found.entries.whereType<ImportedMissing>().length +
+            _distinctSongs(found.entries.whereType<ImportedMissing>()) +
             found.notPresent,
         outsideFolders: found.outsideFolders,
         notScanned: found.notScanned,
@@ -116,6 +117,15 @@ class M3uImportService {
       ),
     );
   }
+
+  /// Songs by identity: the track id, or (source, locator) of a placeholder.
+  static int _distinctSongs(Iterable<ImportedEntry> entries) => {
+    for (final e in entries)
+      switch (e) {
+        ImportedTrack() => 't${e.id.value}',
+        ImportedMissing() => 'm${e.sourceId}\u0000${e.locator}',
+      },
+  }.length;
 
   Future<ImportedPlaylist> _create(String name, M3uMatch m) =>
       _store.createImportedPlaylist(name: name, entries: m.entries);

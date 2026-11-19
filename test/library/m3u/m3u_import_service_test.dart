@@ -159,25 +159,29 @@ void main() {
     },
   );
 
-  test('notInLibrary counts entries, repeats included', () async {
-    await addTrack(
-      env.db,
-      env.source,
-      locator: 'gone.mp3',
-      status: TrackStatus.missing,
-    );
-    env.file('new.mp3');
-    env.file('gone.mp3');
-    final m = env.music;
-    final r = ok(
-      await env.service().importDocument(
-        env.list('$m/new.mp3\n$m/new.mp3\n$m/gone.mp3\n$m/gone.mp3\n'),
-        fallbackName: 'x',
-      ),
-    );
-    expect(r.added, 4);
-    expect(r.notInLibrary, 4);
-  });
+  test(
+    'notInLibrary and songsAdded count distinct songs, repeats once',
+    () async {
+      await addTrack(
+        env.db,
+        env.source,
+        locator: 'gone.mp3',
+        status: TrackStatus.missing,
+      );
+      env.file('new.mp3');
+      env.file('gone.mp3');
+      final m = env.music;
+      final r = ok(
+        await env.service().importDocument(
+          env.list('$m/new.mp3\n$m/new.mp3\n$m/gone.mp3\n$m/gone.mp3\n'),
+          fallbackName: 'x',
+        ),
+      );
+      expect(r.added, 4);
+      expect(r.songsAdded, 2);
+      expect(r.notInLibrary, 2);
+    },
+  );
 
   test('a parse error propagates and nothing is written', () async {
     env.file('a.mp3');

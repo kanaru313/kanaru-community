@@ -545,6 +545,8 @@ Linux and Android), `importM3u(context)` runs `runM3uImport`,
   first. Playlists offer absolute and relative paths, Favorites absolute only.
   Relative paths need a known folder of the target file ("folder unknown" toast
   otherwise). Entries whose file is unknown are skipped and counted in the toast.
+  Toast counts are distinct songs (a repeated song counts once); "lines" counts
+  stay line counts. The report row "not in your library" is distinct songs too.
   A failed write discards the target.
 - **Known limits.** A short track without `#EXTINF` duration becomes a
   placeholder that no scan revives: it stays "not in your library" until

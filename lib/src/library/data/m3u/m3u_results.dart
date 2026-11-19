@@ -39,7 +39,7 @@ class M3uMatch {
   final int outsideFolders;
   final int notScanned;
 
-  /// Entries that point at an existing track whose file is not present now.
+  /// Distinct existing tracks whose file is not present now.
   final int notPresent;
   final int totalLines;
   final bool truncated;
@@ -79,6 +79,7 @@ class M3uImportResult {
     required this.name,
     required this.fileName,
     required this.added,
+    required this.songsAdded,
     required this.totalLines,
     required this.notInLibrary,
     required this.outsideFolders,
@@ -90,10 +91,15 @@ class M3uImportResult {
   final String playlistUid;
   final String name;
   final String fileName;
+
+  /// Entries created (one per usable line, repeats included).
   final int added;
+
+  /// Distinct songs among them: what "N songs" shows.
+  final int songsAdded;
   final int totalLines;
 
-  /// Placeholders created plus entries whose track is not present.
+  /// Distinct songs that are placeholders or whose track is not present.
   final int notInLibrary;
   final int outsideFolders;
   final int notScanned;
@@ -107,6 +113,7 @@ class M3uImportResult {
 
 enum M3uExportError { playlistGone, folderUnknown, writeFailed }
 
+/// [written] and [skipped] count distinct songs (repeats once).
 class M3uExportResult {
   const M3uExportResult({required this.written, required this.skipped});
 

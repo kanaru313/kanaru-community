@@ -1373,7 +1373,7 @@
       }
     }
   },
-  "playlistM3uReportNotInLibrary": "{count} bài chưa có trong thư viện: hiện ra khi thư mục của chúng được thêm.",
+  "playlistM3uReportNotInLibrary": "{count} bài chưa có trong thư viện: sẽ hiện ra sau lần quét thư viện tới.",
   "@playlistM3uReportNotInLibrary": {
     "placeholders": {
       "count": {

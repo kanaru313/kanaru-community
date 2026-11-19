@@ -92,6 +92,21 @@ void main() {
     noProgressLeft(h);
   });
 
+  flowTest('toast counts distinct songs: 5 lines, 3 songs', (t) async {
+    final h = await M3uFlowHarness.pump(t);
+    for (final f in ['a.mp3', 'b.mp3', 'c.mp3']) {
+      await _songIn(t, h, f);
+    }
+    final m = h.env.music;
+    _pick(h, '$m/a.mp3\n$m/b.mp3\n$m/a.mp3\n$m/c.mp3\n$m/b.mp3\n');
+    final flow = h.start(t, runM3uImport);
+    await h.untilDone(t, flow);
+    await _settleToast(t);
+    expect(find.text(h.l10n(t).playlistM3uImported(3, 'Road')), findsOneWidget);
+    expect(find.textContaining('Imported 3 songs'), findsOneWidget);
+    expect(find.textContaining('5 songs'), findsNothing);
+  });
+
   group('some lines unusable', () {
     Future<M3uFlowHarness> mixed(WidgetTester t) async {
       final h = await M3uFlowHarness.pump(t);

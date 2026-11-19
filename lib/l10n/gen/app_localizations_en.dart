@@ -2171,10 +2171,11 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count songs are',
-      one: '1 song is',
+      other:
+          '$count songs are not in your library yet: they appear after the next library scan.',
+      one: '1 song is not in your library yet: it appears after the next library scan.',
     );
-    return '$_temp0 not in your library yet: they show once their folder is added.';
+    return '$_temp0';
   }
 
   @override

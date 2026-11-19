@@ -120,7 +120,7 @@ Future<void> _showOutcome(
   final location = LibraryLocations.playlist(r.playlistUid);
   if (r.clean) {
     router.push<void>(location).ignore();
-    _toast(messenger, l10n.playlistM3uImported(r.added, r.name));
+    _toast(messenger, l10n.playlistM3uImported(r.songsAdded, r.name));
     return;
   }
   final open = await showM3uImportReport(root, r);

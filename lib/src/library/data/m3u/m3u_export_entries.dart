@@ -8,12 +8,15 @@ final _cueLocator = RegExp(r'#\d+$');
 /// One playlist entry as the exporter needs it.
 class M3uExportEntry {
   const M3uExportEntry({
+    required this.trackId,
     required this.root,
     required this.locator,
     required this.title,
     this.artist,
     this.durationMs,
   });
+
+  final int trackId;
 
   /// Local root of the track's source; null for a remote or plugin source.
   final String? root;
@@ -51,7 +54,7 @@ Future<List<M3uExportEntry>?> loadM3uExportEntries(
   }
   final rows = await db
       .customSelect(
-        'SELECT m.root AS root, t.locator, t.title, t.artist, t.duration_ms '
+        'SELECT t.id AS id, m.root AS root, t.locator, t.title, t.artist, t.duration_ms '
         'FROM playlist_entries e JOIN tracks t ON t.id = e.track_id '
         'LEFT JOIN source_mounts m ON m.source_id = t.source_id '
         'WHERE e.playlist_id = ? AND e.deleted_at IS NULL '
@@ -62,6 +65,7 @@ Future<List<M3uExportEntry>?> loadM3uExportEntries(
   return [
     for (final r in rows)
       M3uExportEntry(
+        trackId: r.read<int>('id'),
         root: r.readNullable<String>('root'),
         locator: r.read<String>('locator'),
         title: r.read<String>('title'),

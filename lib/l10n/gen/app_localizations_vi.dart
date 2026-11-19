@@ -1951,7 +1951,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String playlistM3uReportNotInLibrary(int count) {
-    return '$count bài chưa có trong thư viện: hiện ra khi thư mục của chúng được thêm.';
+    return '$count bài chưa có trong thư viện: sẽ hiện ra sau lần quét thư viện tới.';
   }
 
   @override

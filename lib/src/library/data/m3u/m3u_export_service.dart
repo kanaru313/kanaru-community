@@ -54,21 +54,25 @@ class M3uExportService {
       dir = await _canonicalize(p.posix.dirname(local));
     }
     final items = <M3uWriteItem>[];
-    var noFile = 0;
+    final noFile = <int>{}, writtenIds = <int>{}, badIds = <int>{};
     for (final e in entries) {
       final path = e.absolutePath;
       if (path == null) {
-        noFile++;
+        noFile.add(e.trackId);
         continue;
       }
-      items.add(
-        M3uWriteItem(
-          path: dir == null ? path : relativeM3uPath(dir, path),
-          title: e.title,
-          artist: e.artist,
-          durationMs: e.durationMs,
-        ),
+      final item = M3uWriteItem(
+        path: dir == null ? path : relativeM3uPath(dir, path),
+        title: e.title,
+        artist: e.artist,
+        durationMs: e.durationMs,
       );
+      items.add(item);
+      // The writer's verdict depends on the item alone, so test it per song.
+      if (writtenIds.contains(e.trackId) || badIds.contains(e.trackId)) {
+        continue;
+      }
+      (writeM3u([item]).skipped == 0 ? writtenIds : badIds).add(e.trackId);
     }
     final written = writeM3u(items);
     final wrote = await _picker.write(
@@ -78,8 +82,8 @@ class M3uExportService {
     if (wrote is Err) return _fail(target, M3uExportError.writeFailed);
     return Ok(
       M3uExportResult(
-        written: items.length - written.skipped,
-        skipped: noFile + written.skipped,
+        written: writtenIds.length,
+        skipped: noFile.length + badIds.length,
       ),
     );
   }

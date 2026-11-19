@@ -3297,7 +3297,7 @@ abstract class AppLocalizations {
   /// No description provided for @playlistM3uReportNotInLibrary.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 song is} other{{count} songs are}} not in your library yet: they show once their folder is added.'**
+  /// **'{count, plural, =1{1 song is not in your library yet: it appears after the next library scan.} other{{count} songs are not in your library yet: they appear after the next library scan.}}'**
   String playlistM3uReportNotInLibrary(int count);
 
   /// No description provided for @playlistM3uReportUnresolved.
