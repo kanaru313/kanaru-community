@@ -19,7 +19,7 @@ import 'dashed_outline.dart';
 /// under the field. [onRemove] removes one value at once.
 ///
 /// [display] turns a stored value into its label (a space shown as `␣`);
-/// labels are monospaced. With no [values] the [emptyNote] shows instead.
+/// chip labels are monospaced (the input is not). With no [values] the [emptyNote] shows instead.
 class KChipEditor extends StatefulWidget {
   const KChipEditor({
     super.key,
@@ -148,7 +148,9 @@ class _KChipEditorState extends State<KChipEditor> {
               child: TextField(
                 controller: _controller,
                 focusNode: _focus,
-                style: mono,
+                // Field font (not mono) at bodyMedium so a long hint fits the
+                // row beside the add button on a 411 dp phone.
+                style: Theme.of(context).textTheme.bodyMedium,
                 maxLines: 1,
                 // Control characters never reach the list (the entry check
                 // would strip them anyway).
@@ -157,6 +159,7 @@ class _KChipEditorState extends State<KChipEditor> {
                 ],
                 decoration: InputDecoration(
                   hintText: widget.inputHint,
+                  hintStyle: Theme.of(context).textTheme.bodyMedium,
                   errorText: _error,
                   isDense: true,
                 ),

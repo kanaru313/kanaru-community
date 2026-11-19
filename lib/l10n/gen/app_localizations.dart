@@ -4473,7 +4473,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsArtistSplitSeparatorInput.
   ///
   /// In en, this message translates to:
-  /// **'Add a separator, e.g. “x”'**
+  /// **'Add a separator, e.g. “ x ”'**
   String get settingsArtistSplitSeparatorInput;
 
   /// No description provided for @settingsArtistSplitKeepInput.
@@ -4593,7 +4593,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsLibraryLanguageSourceCaption.
   ///
   /// In en, this message translates to:
-  /// **'How Kanaru decides which language a song is in (Language tab). The library updates in the background.'**
+  /// **'How Kanaru decides which language a song is in (Language tab).'**
   String get settingsLibraryLanguageSourceCaption;
 
   /// No description provided for @settingsLibraryLanguageBoth.

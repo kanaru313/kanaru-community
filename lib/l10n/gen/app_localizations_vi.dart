@@ -2759,7 +2759,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tên giữ nguyên là một nghệ sĩ dù có chứa dấu tách.';
 
   @override
-  String get settingsArtistSplitSeparatorInput => 'Thêm dấu tách, vd. “x”';
+  String get settingsArtistSplitSeparatorInput => 'Thêm dấu tách, vd. “ x ”';
 
   @override
   String get settingsArtistSplitKeepInput =>
@@ -2837,7 +2837,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsLibraryLanguageSourceCaption =>
-      'Cách Kanaru biết bài hát thuộc ngôn ngữ nào (tab Ngôn ngữ). Thư viện cập nhật ở nền.';
+      'Cách Kanaru biết bài hát thuộc ngôn ngữ nào (tab Ngôn ngữ).';
 
   @override
   String get settingsLibraryLanguageBoth => 'Tag, rồi tự nhận diện';

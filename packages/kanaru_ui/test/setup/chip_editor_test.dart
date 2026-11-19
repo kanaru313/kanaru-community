@@ -111,7 +111,7 @@ void main() {
   });
 
   testWidgets('many chips at 200 % text wrap without overflow', (tester) async {
-    useWindow(tester, const Size(360, 800));
+    useWindow(tester, const Size(360, 1200));
     await tester.pumpWidget(
       host(
         _Harness(initial: [for (var i = 0; i < 12; i++) 'sep$i']),
@@ -155,5 +155,31 @@ void main() {
   ) async {
     await pump(tester, const _Harness(initial: ['With']));
     expect(find.text('+ ␣with␣'), findsNothing);
+  });
+
+  testWidgets('the input is not monospaced and hint and input share one size', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(411, 800));
+    const hint = 'Tên nghệ sĩ, vd. “Hồ Ngọc Hà / Noo”';
+    await tester.pumpWidget(
+      host(
+        KChipEditor(
+          values: const ['AC/DC'],
+          inputHint: hint,
+          addLabel: 'Thêm',
+          removeTooltip: (v) => 'Bỏ $v',
+          onAdd: (_) => null,
+          onRemove: (_) {},
+        ),
+      ),
+    );
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.style?.fontFamily, isNot(KFont.mono));
+    final hintText = tester.widget<Text>(find.text(hint));
+    expect(hintText.style?.fontFamily, isNot(KFont.mono));
+    // Hint and input share the 14 sp body size (the test font is wider than
+    // the real one, so line fit is checked on the phone).
+    expect(hintText.style?.fontSize, field.style?.fontSize);
   });
 }

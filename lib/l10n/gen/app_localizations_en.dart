@@ -3113,7 +3113,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Names that stay one artist even when they contain a separator.';
 
   @override
-  String get settingsArtistSplitSeparatorInput => 'Add a separator, e.g. “x”';
+  String get settingsArtistSplitSeparatorInput => 'Add a separator, e.g. “ x ”';
 
   @override
   String get settingsArtistSplitKeepInput =>
@@ -3197,7 +3197,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsLibraryLanguageSourceCaption =>
-      'How Kanaru decides which language a song is in (Language tab). The library updates in the background.';
+      'How Kanaru decides which language a song is in (Language tab).';
 
   @override
   String get settingsLibraryLanguageBoth => 'Tag, then detection';

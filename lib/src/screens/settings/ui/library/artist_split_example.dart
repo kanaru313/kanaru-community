@@ -71,10 +71,11 @@ class ArtistSplitExampleCard extends StatelessWidget {
               ],
             ),
             const KGap(KSpace.x3),
-            Text(
-              l10n.settingsArtistSplitExampleNote,
-              style: textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
+            Text.rich(
+              _noteWithCode(
+                l10n.settingsArtistSplitExampleNote,
+                textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                scheme,
               ),
             ),
           ],
@@ -82,6 +83,32 @@ class ArtistSplitExampleCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// [note] with each standalone `,` or `&` (a token between spaces) shown as
+/// code: monospace on the same highlight as the separators in the example.
+TextSpan _noteWithCode(String note, TextStyle? style, ColorScheme scheme) {
+  final token = RegExp(r'(?<=\s)[,&](?=\s)');
+  final children = <InlineSpan>[];
+  var from = 0;
+  for (final m in token.allMatches(note)) {
+    children.add(TextSpan(text: note.substring(from, m.start)));
+    children.add(
+      TextSpan(
+        text: m.group(0),
+        style: TextStyle(
+          fontFamily: KFont.mono,
+          fontFamilyFallback: KFont.monoFallback,
+          color: scheme.primary,
+          fontWeight: FontWeight.w700,
+          backgroundColor: scheme.primary.withValues(alpha: 0.18),
+        ),
+      ),
+    );
+    from = m.end;
+  }
+  children.add(TextSpan(text: note.substring(from)));
+  return TextSpan(style: style, children: children);
 }
 
 /// A separator the rules would split at, highlighted in the example line.
