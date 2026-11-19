@@ -177,18 +177,28 @@
       }
     }
   },
-  "settingsLibraryCounts": "{tracks, plural, =1{1 song} other{{tracks} songs}} · {albums, plural, =1{1 album} other{{albums} albums}} · {artists, plural, =1{1 artist} other{{artists} artists}}",
-  "@settingsLibraryCounts": {
+  "settingsLibraryTracksCount": "{count, plural, =1{1 song} other{{count} songs}}",
+  "@settingsLibraryTracksCount": {
     "placeholders": {
-      "tracks": {
+      "count": {
         "type": "int",
         "format": "decimalPattern"
-      },
-      "albums": {
+      }
+    }
+  },
+  "settingsLibraryAlbumsCount": "{count, plural, =1{1 album} other{{count} albums}}",
+  "@settingsLibraryAlbumsCount": {
+    "placeholders": {
+      "count": {
         "type": "int",
         "format": "decimalPattern"
-      },
-      "artists": {
+      }
+    }
+  },
+  "settingsLibraryArtistsCount": "{count, plural, =1{1 artist} other{{count} artists}}",
+  "@settingsLibraryArtistsCount": {
+    "placeholders": {
+      "count": {
         "type": "int",
         "format": "decimalPattern"
       }

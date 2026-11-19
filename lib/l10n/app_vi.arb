@@ -31,7 +31,8 @@
   "scanSetupPermissionImagesSubtitle": "Chỉ để đọc ảnh bìa (cover.jpg) trong thư mục nhạc. Kanaru không xem ảnh hay video của bạn.",
   "scanSetupPermissionAllowedLabel": "Đã cấp",
   "scanSetupPermissionMissingLabel": "Chưa cấp",
-  "scanSetupPermissionsGranted": "Đã cấp đủ quyền · Nhạc và âm thanh · Ảnh và video",
+  "scanSetupPermissionsGranted": "Đã cấp đủ quyền",
+  "scanSetupPermissionsGrantedDesc": "Nhạc và âm thanh · Ảnh và video",
   "scanSetupGrant": "Cấp quyền",
   "scanSetupGrantMissing": "Cấp quyền còn thiếu",
   "scanSetupOpenAppSettings": "Mở cài đặt ứng dụng",
@@ -1831,18 +1832,28 @@
       }
     }
   },
-  "settingsLibraryCounts": "{tracks} bài · {albums} album · {artists} nghệ sĩ",
-  "@settingsLibraryCounts": {
+  "settingsLibraryTracksCount": "{count, plural, other{{count} bài}}",
+  "@settingsLibraryTracksCount": {
     "placeholders": {
-      "tracks": {
+      "count": {
         "type": "int",
         "format": "decimalPattern"
-      },
-      "albums": {
+      }
+    }
+  },
+  "settingsLibraryAlbumsCount": "{count, plural, other{{count} album}}",
+  "@settingsLibraryAlbumsCount": {
+    "placeholders": {
+      "count": {
         "type": "int",
         "format": "decimalPattern"
-      },
-      "artists": {
+      }
+    }
+  },
+  "settingsLibraryArtistsCount": "{count, plural, other{{count} nghệ sĩ}}",
+  "@settingsLibraryArtistsCount": {
+    "placeholders": {
+      "count": {
         "type": "int",
         "format": "decimalPattern"
       }

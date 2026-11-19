@@ -106,7 +106,8 @@ class _PermissionsSectionState extends ConsumerState<PermissionsSection> {
     return PermissionCard(
       collapsed: state.allGranted,
       attention: widget.mode == SetupMode.settings && !audioOk,
-      collapsedLabel: Text(l10n.scanSetupPermissionsGranted),
+      collapsedTitle: Text(l10n.scanSetupPermissionsGranted),
+      collapsedSubtitle: Text(l10n.scanSetupPermissionsGrantedDesc),
       rows: [
         row(
           KIcons.musicFile,

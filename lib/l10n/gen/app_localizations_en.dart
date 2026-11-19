@@ -103,8 +103,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanSetupPermissionMissingLabel => 'Not allowed';
 
   @override
-  String get scanSetupPermissionsGranted =>
-      'All permissions allowed · Music and audio · Photos and videos';
+  String get scanSetupPermissionsGranted => 'All permissions allowed';
+
+  @override
+  String get scanSetupPermissionsGrantedDesc =>
+      'Music and audio · Photos and videos';
 
   @override
   String get scanSetupGrant => 'Allow';
@@ -2838,36 +2841,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String settingsLibraryCounts(int tracks, int albums, int artists) {
-    final intl.NumberFormat tracksNumberFormat =
+  String settingsLibraryTracksCount(int count) {
+    final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
-    final String tracksString = tracksNumberFormat.format(tracks);
-    final intl.NumberFormat albumsNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String albumsString = albumsNumberFormat.format(albums);
-    final intl.NumberFormat artistsNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String artistsString = artistsNumberFormat.format(artists);
+    final String countString = countNumberFormat.format(count);
 
     String _temp0 = intl.Intl.pluralLogic(
-      tracks,
+      count,
       locale: localeName,
-      other: '$tracksString songs',
+      other: '$countString songs',
       one: '1 song',
     );
-    String _temp1 = intl.Intl.pluralLogic(
-      albums,
+    return '$_temp0';
+  }
+
+  @override
+  String settingsLibraryAlbumsCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
       locale: localeName,
-      other: '$albumsString albums',
+      other: '$countString albums',
       one: '1 album',
     );
-    String _temp2 = intl.Intl.pluralLogic(
-      artists,
+    return '$_temp0';
+  }
+
+  @override
+  String settingsLibraryArtistsCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
       locale: localeName,
-      other: '$artistsString artists',
+      other: '$countString artists',
       one: '1 artist',
     );
-    return '$_temp0 · $_temp1 · $_temp2';
+    return '$_temp0';
   }
 
   @override

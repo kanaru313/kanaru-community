@@ -103,8 +103,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get scanSetupPermissionMissingLabel => 'Chưa cấp';
 
   @override
-  String get scanSetupPermissionsGranted =>
-      'Đã cấp đủ quyền · Nhạc và âm thanh · Ảnh và video';
+  String get scanSetupPermissionsGranted => 'Đã cấp đủ quyền';
+
+  @override
+  String get scanSetupPermissionsGrantedDesc =>
+      'Nhạc và âm thanh · Ảnh và video';
 
   @override
   String get scanSetupGrant => 'Cấp quyền';
@@ -2533,18 +2536,45 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String settingsLibraryCounts(int tracks, int albums, int artists) {
-    final intl.NumberFormat tracksNumberFormat =
+  String settingsLibraryTracksCount(int count) {
+    final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
-    final String tracksString = tracksNumberFormat.format(tracks);
-    final intl.NumberFormat albumsNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String albumsString = albumsNumberFormat.format(albums);
-    final intl.NumberFormat artistsNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String artistsString = artistsNumberFormat.format(artists);
+    final String countString = countNumberFormat.format(count);
 
-    return '$tracksString bài · $albumsString album · $artistsString nghệ sĩ';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString bài',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsLibraryAlbumsCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString album',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsLibraryArtistsCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString nghệ sĩ',
+    );
+    return '$_temp0';
   }
 
   @override

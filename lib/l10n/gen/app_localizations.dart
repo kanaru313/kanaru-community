@@ -281,8 +281,14 @@ abstract class AppLocalizations {
   /// No description provided for @scanSetupPermissionsGranted.
   ///
   /// In en, this message translates to:
-  /// **'All permissions allowed · Music and audio · Photos and videos'**
+  /// **'All permissions allowed'**
   String get scanSetupPermissionsGranted;
+
+  /// No description provided for @scanSetupPermissionsGrantedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Music and audio · Photos and videos'**
+  String get scanSetupPermissionsGrantedDesc;
 
   /// No description provided for @scanSetupGrant.
   ///
@@ -4164,11 +4170,23 @@ abstract class AppLocalizations {
   /// **'About {section}'**
   String settingsSectionHintTooltip(String section);
 
-  /// No description provided for @settingsLibraryCounts.
+  /// No description provided for @settingsLibraryTracksCount.
   ///
   /// In en, this message translates to:
-  /// **'{tracks, plural, =1{1 song} other{{tracks} songs}} · {albums, plural, =1{1 album} other{{albums} albums}} · {artists, plural, =1{1 artist} other{{artists} artists}}'**
-  String settingsLibraryCounts(int tracks, int albums, int artists);
+  /// **'{count, plural, =1{1 song} other{{count} songs}}'**
+  String settingsLibraryTracksCount(int count);
+
+  /// No description provided for @settingsLibraryAlbumsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 album} other{{count} albums}}'**
+  String settingsLibraryAlbumsCount(int count);
+
+  /// No description provided for @settingsLibraryArtistsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 artist} other{{count} artists}}'**
+  String settingsLibraryArtistsCount(int count);
 
   /// No description provided for @settingsLibraryLastScan.
   ///

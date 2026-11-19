@@ -43,16 +43,18 @@ class LibraryOverviewCard extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      counts == null
-                          ? '—'
-                          : l10n.settingsLibraryCounts(
-                              counts.tracks,
-                              counts.albums,
-                              counts.artists,
-                            ),
-                      style: textTheme.titleSmall,
-                    ),
+                    // One line per count; a single "—" until the counts load.
+                    for (final line
+                        in counts == null
+                            ? const ['—']
+                            : [
+                                l10n.settingsLibraryTracksCount(counts.tracks),
+                                l10n.settingsLibraryAlbumsCount(counts.albums),
+                                l10n.settingsLibraryArtistsCount(
+                                  counts.artists,
+                                ),
+                              ])
+                      Text(line, style: textTheme.titleMedium),
                     if (last != null)
                       Text(
                         l10n.settingsLibraryLastScan(

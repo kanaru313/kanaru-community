@@ -77,14 +77,10 @@ void main() {
       expect(find.byIcon(KIcons.check), findsOneWidget);
     });
 
-    testWidgets('both granted: collapses to one line', (tester) async {
+    testWidgets('both granted: collapses to a two-line row', (tester) async {
       await pumpFirstRun(tester, android: true, permission: _p(_ok, _ok));
-      expect(
-        find.text(
-          'All permissions allowed · Music and audio · Photos and videos',
-        ),
-        findsOneWidget,
-      );
+      expect(find.text('All permissions allowed'), findsOneWidget);
+      expect(find.text('Music and audio · Photos and videos'), findsOneWidget);
       expect(find.text('Allow'), findsNothing);
     });
 
@@ -115,12 +111,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(h.fake.requests, ['audio', 'images']);
       expect(find.text('Allow'), findsNothing);
-      expect(
-        find.text(
-          'All permissions allowed · Music and audio · Photos and videos',
-        ),
-        findsOneWidget,
-      );
+      expect(find.text('All permissions allowed'), findsOneWidget);
+      expect(find.text('Music and audio · Photos and videos'), findsOneWidget);
     });
 
     testWidgets('music denied once explains why; photos are not asked', (

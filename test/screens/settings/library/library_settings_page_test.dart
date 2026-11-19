@@ -17,14 +17,13 @@ SelectionRow _option(WidgetTester tester, String title) =>
 
 void main() {
   group('overview', () {
-    testWidgets('shows the counts; no last-scan line before a scan', (
+    testWidgets('shows one line per count; no last-scan line before a scan', (
       tester,
     ) async {
       await openLibrary(tester);
-      expect(
-        find.text('2,418 songs · 186 albums · 142 artists'),
-        findsOneWidget,
-      );
+      expect(find.text('2,418 songs'), findsOneWidget);
+      expect(find.text('186 albums'), findsOneWidget);
+      expect(find.text('142 artists'), findsOneWidget);
       expect(find.textContaining('Last scan'), findsNothing);
       expect(find.text('Rescan'), findsOneWidget);
     });
