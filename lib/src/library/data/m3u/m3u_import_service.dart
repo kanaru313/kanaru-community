@@ -14,6 +14,7 @@ import '../../domain/playlists/playlist_import.dart';
 import '../../domain/playlists/playlist_store.dart';
 import '../../domain/scan_status.dart';
 import '../scan/scan_folders.dart';
+import 'm3u_index_check.dart';
 import 'm3u_results.dart';
 import 'm3u_scan_rules.dart';
 import 'm3u_track_matcher.dart';
@@ -33,6 +34,7 @@ class M3uImportService {
     this._short, {
     this.parseFile = parseM3u,
     required this.androidStorage,
+    this.indexCheck,
   });
 
   final AppDatabase _db;
@@ -47,6 +49,10 @@ class M3uImportService {
 
   /// Android shared storage: case-insensitive, `<volume>/Android` is app data.
   final bool androidStorage;
+
+  /// Android: which files the scanner's index cannot see. Null on Linux,
+  /// where the scan walks the file system the resolver already stat'ed.
+  final M3uIndexCheck? indexCheck;
 
   Future<Result<M3uImportResult, M3uImportError>> importDocument(
     PickedDocument doc, {
@@ -74,12 +80,30 @@ class M3uImportService {
       canonicalize: _canonicalize,
       onProgress: report,
     );
+    // One listing per import: a retried match reuses the verdicts.
+    final asked = <String>{};
+    final verdicts = <String, M3uIndexVerdict>{};
+    final inner = androidStorage ? indexCheck : null;
+    final M3uIndexCheck? check = inner == null
+        ? null
+        : (paths) async {
+            final fresh = [
+              for (final p in paths)
+                if (!asked.contains(p)) p,
+            ];
+            if (fresh.isNotEmpty) {
+              asked.addAll(fresh);
+              verdicts.addAll(await inner(fresh));
+            }
+            return {for (final p in paths) p: ?verdicts[p]};
+          };
     Future<M3uMatch> match([bool fresh = false]) => matchM3uLines(
       _db,
       resolved,
       folders: fresh ? null : folders,
       short: _short,
       androidStorage: androidStorage,
+      indexCheck: check,
       truncated: read.parse.truncated,
     );
 
@@ -112,6 +136,7 @@ class M3uImportService {
             found.notPresent,
         outsideFolders: found.outsideFolders,
         notScanned: found.notScanned,
+        notIndexed: found.notIndexed,
         problems: found.problems,
         truncated: found.truncated,
       ),
@@ -159,8 +184,10 @@ class M3uImportService {
   /// file: when such files were found only outside the music folders (and
   /// none inside), the user is told to add that folder; URL, typo and
   /// no-base lines do not hide that hint.
-  static M3uImportError _refusal(M3uMatch m) =>
-      m.outsideFolders > 0 && m.notScanned == 0
-      ? M3uImportError.allOutsideFolders
-      : M3uImportError.nothingFound;
+  static M3uImportError _refusal(M3uMatch m) {
+    if (m.notIndexed > 0) return M3uImportError.notIndexed;
+    return m.outsideFolders > 0 && m.notScanned == 0
+        ? M3uImportError.allOutsideFolders
+        : M3uImportError.nothingFound;
+  }
 }

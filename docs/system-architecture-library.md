@@ -540,6 +540,26 @@ Linux and Android), `importM3u(context)` runs `runM3uImport`,
   `isSkippedFolderName`, a dot-file name, `<volume>/Android/**` (Android only,
   unless the root itself is there), and a known duration below the short-track
   threshold while "Skip short songs" is on. They form their own report group.
+- **Android index check.** The Android scan lists audio through MediaStore only,
+  so a file on disk that MediaStore hides from the app (a pending row owned by
+  another app, as left by `adb push`; or not indexed yet) would become a
+  placeholder no scan revives. Before creating placeholders on Android the
+  matcher asks `M3uIndexCheck` (`m3u_index_check.dart`, backed by
+  `LocalAudioCatalog.listAudio`, injected into `M3uImportService.indexCheck`)
+  what the scanner would list. It only lists, never starts a media scan: one
+  listing per folder (a folder below another listed folder is covered by it; a
+  volume root is never listed), without the short filter, all under one 20 s
+  budget. Verdicts: listed (placeholder, using the listing's letter case as the
+  locator so the scan revives it), listed but shorter than the threshold while
+  "Skip short songs" is on (`notScanned` group), not listed (`notIndexed`
+  group: no placeholder; the text points to Settings › Library › Music folders
+  › Add folder › "Không thấy thư mục của bạn? Quét lại" / "Can't see your folder? Rescan", then import again). A listing that fails, throws,
+  is unreachable or runs out of budget gives no verdict: those files keep the
+  placeholder, as before. The first verdicts are reused if the match is retried.
+  When no line is usable and some are `notIndexed`, the toast is
+  `m3uImportNotIndexed` instead of "nothing found". Linux has no check: its
+  scan walks the file system the resolver already stat'ed. Known gap: folders
+  the user excluded from the scan are not mirrored (on both platforms).
 - **Export.** The save dialog suggests `<name>.m3u8` (unsafe characters and
   path separators replaced, 100 graphemes). An existing target asks "Replace?"
   first. Playlists offer absolute and relative paths, Favorites absolute only.
@@ -548,16 +568,13 @@ Linux and Android), `importM3u(context)` runs `runM3uImport`,
   Toast counts are distinct songs (a repeated song counts once); "lines" counts
   stay line counts. The report row "not in your library" is distinct songs too.
   A failed write discards the target.
-- **Known limits.** A short track without `#EXTINF` duration becomes a
-  placeholder that no scan revives: it stays "not in your library" until
-  removed. On Android a file MediaStore has not indexed yet gets a placeholder
-  the requested rescan cannot revive (the Android scan lists MediaStore rows
-  only); it revives after the user's "Quét lại" (see
-  [system-architecture-library-scan.md](./system-architecture-library-scan.md)
-  § First run › The screen) or once the system indexes it. A file in a `.nomedia` folder never
-  revives (MediaProvider skips it). On Android shared storage only the lookup of existing rows is
-  case-insensitive; a placeholder keeps the M3U's spelling, so a line whose case
-  differs from a file with no row yet never revives. On Linux a differently
+- **Known limits.** On Linux a short track without `#EXTINF` duration becomes
+  a placeholder that no scan revives: it stays "not in your library" until
+  removed (Android takes the duration from the listing). On Android a file that exists but that
+  MediaStore does not show to the app is never given a placeholder (see "Android
+  index check"). A file in a `.nomedia` folder never
+  revives (MediaProvider skips it). On Android shared storage the lookup of existing rows is
+  case-insensitive and a new placeholder takes the listing's spelling. On Linux a differently
   cased path is a different file. A stalled mount counts its lines as not found.
 - l10n part `m3u` (`lib/l10n/parts/m3u_{en,vi}.arb`, prefix `m3u`), plus the
   `playlistM3u*` keys of the playlist part.

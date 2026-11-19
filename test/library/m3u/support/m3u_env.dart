@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/library/data/m3u/m3u_import_service.dart';
+import 'package:kanaru/src/library/data/m3u/m3u_index_check.dart';
 import 'package:kanaru/src/library/data/m3u/m3u_scan_rules.dart';
 import 'package:kanaru/src/library/data/playlists/playlist_repository.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_store.dart';
@@ -62,6 +63,7 @@ class M3uEnv {
     PlaylistStore? store,
     ShortTrackRule short = const ShortTrackRule.off(),
     bool androidStorage = false,
+    M3uIndexCheck? indexCheck,
   }) => M3uImportService(
     db,
     store ?? repo,
@@ -70,5 +72,6 @@ class M3uEnv {
     scans,
     short,
     androidStorage: androidStorage,
+    indexCheck: indexCheck,
   );
 }

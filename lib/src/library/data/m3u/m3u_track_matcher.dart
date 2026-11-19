@@ -10,6 +10,7 @@ import '../../domain/scan/scan_folder.dart';
 import '../scan/scan_folders.dart';
 import '../scan/track_row_builder.dart' show stemOf;
 import '../../../media/domain/track_id.dart';
+import 'm3u_index_check.dart';
 import 'm3u_results.dart';
 import 'm3u_scan_rules.dart';
 
@@ -20,6 +21,8 @@ typedef _Row = ({int id, String status});
 /// [folders] defaults to a fresh `liveScanFolders` read; [androidStorage]
 /// (Android shared storage: case-insensitive, `<volume>/Android` is app data)
 /// turns on the case-insensitive fallback lookup and the app-data rule.
+/// [indexCheck] (Android) turns would-be placeholders the platform scanner
+/// cannot list into `notIndexed` problems.
 Future<M3uMatch> matchM3uLines(
   AppDatabase db,
   List<M3uResolvedLine> lines, {
@@ -27,6 +30,7 @@ Future<M3uMatch> matchM3uLines(
   ShortTrackRule short = const ShortTrackRule.off(),
   bool truncated = false,
   required bool androidStorage,
+  M3uIndexCheck? indexCheck,
 }) async {
   final roots = [
     for (final f in folders ?? await liveScanFolders(db))
@@ -56,9 +60,11 @@ Future<M3uMatch> matchM3uLines(
       if (p != null && p.locator.isNotEmpty) p,
   ]);
 
-  final entries = <ImportedEntry>[];
+  final entries = <ImportedEntry?>[];
+  // Would-be placeholders: entry index, line, absolute path.
+  final candidates = <({int at, M3uResolvedLine line, String path})>[];
   final problems = <M3uProblemLine>[];
-  var outside = 0, notScanned = 0;
+  var outside = 0, notScanned = 0, notIndexed = 0;
   final notPresent = <int>{};
   void problem(M3uResolvedLine l, M3uProblemKind kind) {
     problems.add(
@@ -66,6 +72,7 @@ Future<M3uMatch> matchM3uLines(
     );
     if (kind == M3uProblemKind.outsideFolders) outside++;
     if (kind == M3uProblemKind.notScanned) notScanned++;
+    if (kind == M3uProblemKind.notIndexed) notIndexed++;
   }
 
   for (var i = 0; i < lines.length; i++) {
@@ -98,6 +105,9 @@ Future<M3uMatch> matchM3uLines(
     } else {
       final info = l.entry.extinf;
       final title = info?.title?.trim() ?? '';
+      if (indexCheck != null) {
+        candidates.add((at: entries.length, line: l, path: l.path!));
+      }
       entries.add(
         ImportedMissing(
           sourceId: p.sourceId,
@@ -109,11 +119,46 @@ Future<M3uMatch> matchM3uLines(
       );
     }
   }
+  if (candidates.isNotEmpty) {
+    final verdicts = await indexCheck!(
+      {for (final c in candidates) c.path}.toList(),
+    );
+    for (final c in candidates) {
+      final v = verdicts[c.path];
+      if (v == null || v.state == M3uIndexState.listed) {
+        // Unknown (check failed): keep the placeholder. Listed: use the
+        // listing's spelling so the scan, which stores it, revives the row.
+        final listed = v?.listedPath;
+        final old = entries[c.at]! as ImportedMissing;
+        if (listed != null &&
+            listed != c.path &&
+            listed.length == c.path.length) {
+          entries[c.at] = ImportedMissing(
+            sourceId: old.sourceId,
+            locator: listed.substring(listed.length - old.locator.length),
+            title: old.title,
+            artist: old.artist,
+            durationMs: old.durationMs,
+          );
+        }
+        continue;
+      }
+      entries[c.at] = null;
+      problem(
+        c.line,
+        v.state == M3uIndexState.short
+            ? M3uProblemKind.notScanned
+            : M3uProblemKind.notIndexed,
+      );
+    }
+    problems.sort((a, b) => a.line.compareTo(b.line));
+  }
   return M3uMatch(
-    entries: entries,
+    entries: [for (final e in entries) ?e],
     problems: problems,
     outsideFolders: outside,
     notScanned: notScanned,
+    notIndexed: notIndexed,
     notPresent: notPresent.length,
     totalLines: lines.length,
     truncated: truncated,

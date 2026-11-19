@@ -108,6 +108,7 @@ String _errorText(AppLocalizations l10n, M3uImportError error) =>
       M3uImportError.unreadable => l10n.playlistM3uReadFailed,
       M3uImportError.nothingFound => l10n.playlistM3uNothingFound,
       M3uImportError.allOutsideFolders => l10n.playlistM3uAllOutside,
+      M3uImportError.notIndexed => l10n.m3uImportNotIndexed,
     };
 
 Future<void> _showOutcome(

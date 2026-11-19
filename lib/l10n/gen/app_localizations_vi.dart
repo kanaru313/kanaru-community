@@ -2193,6 +2193,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get m3uExportReplace => 'Thay thế';
 
   @override
+  String m3uReportNotIndexed(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString dòng là tệp có trong máy nhưng Android chưa đưa vào kho nhạc nên thư viện không thấy. Vào Cài đặt › Thư viện › Thư mục nhạc › Thêm thư mục, bấm “Không thấy thư mục của bạn? Quét lại”, rồi nhập lại:';
+  }
+
+  @override
+  String get m3uImportNotIndexed =>
+      'Android chưa đưa các tệp nhạc của playlist này vào kho nhạc nên thư viện không thấy. Vào Cài đặt › Thư viện › Thư mục nhạc › Thêm thư mục, bấm “Không thấy thư mục của bạn? Quét lại”, rồi nhập lại. Chưa nhập gì.';
+
+  @override
   String get settingsAbout => 'Giới thiệu';
 
   @override

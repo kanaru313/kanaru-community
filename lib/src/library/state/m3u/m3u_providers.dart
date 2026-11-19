@@ -7,23 +7,29 @@ import '../../../platform/state/document_picker_provider.dart';
 import '../../../platform/state/local_audio_catalog_provider.dart';
 import '../../data/m3u/m3u_export_service.dart';
 import '../../data/m3u/m3u_import_service.dart';
+import '../../data/m3u/m3u_index_check.dart';
 import '../../data/m3u/m3u_scan_rules.dart';
 import '../playlists/playlist_providers.dart';
 import '../scan/scan_settings.dart';
 import '../scan_providers.dart';
 
 /// Reads an M3U file and creates the playlist. Tests override it.
-final m3uImportServiceProvider = Provider<M3uImportService>(
-  (ref) => M3uImportService(
+final m3uImportServiceProvider = Provider<M3uImportService>((ref) {
+  final catalog = ref.watch(localAudioCatalogProvider);
+  final short = ShortTrackRule(enabled: ref.watch(skipShortTracksProvider));
+  return M3uImportService(
     ref.watch(appDatabaseProvider),
     ref.watch(playlistStoreProvider),
     ref.watch(documentPickerProvider),
-    ref.watch(localAudioCatalogProvider).canonicalize,
+    catalog.canonicalize,
     ref.watch(libraryScanCommandsProvider),
-    ShortTrackRule(enabled: ref.watch(skipShortTracksProvider)),
+    short,
     androidStorage: Platform.isAndroid,
-  ),
-);
+    indexCheck: Platform.isAndroid
+        ? catalogIndexCheck(catalog, short: short)
+        : null,
+  );
+});
 
 /// Writes a playlist to an M3U file. Tests override it.
 final m3uExportServiceProvider = Provider<M3uExportService>(

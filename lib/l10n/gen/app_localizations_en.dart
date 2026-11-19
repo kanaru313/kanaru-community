@@ -2471,6 +2471,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get m3uExportReplace => 'Replace';
 
   @override
+  String m3uReportNotIndexed(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$countString lines are files that are on this device but not in Android\'s media index, so the library cannot see them',
+      one: '1 line is a file that is on this device but not in Android\'s media index, so the library cannot see it',
+    );
+    return '$_temp0. Go to Settings › Library › Music folders › Add folder, tap “Can\'t see your folder? Rescan”, then import again:';
+  }
+
+  @override
+  String get m3uImportNotIndexed =>
+      'Android\'s media index does not list the music files of this playlist yet, so the library cannot see them. Go to Settings › Library › Music folders › Add folder, tap “Can\'t see your folder? Rescan”, then import again. Nothing was imported.';
+
+  @override
   String get settingsAbout => 'About';
 
   @override

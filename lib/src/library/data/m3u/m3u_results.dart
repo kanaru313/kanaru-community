@@ -2,8 +2,15 @@ import '../../domain/playlists/playlist_import.dart';
 
 /// Why a line of an M3U file did not become a playlist entry. The report
 /// groups lines by kind: [unresolved] and [outsideFolders] share one group,
-/// [notScanned] and [noBaseFolder] each have their own.
-enum M3uProblemKind { unresolved, outsideFolders, notScanned, noBaseFolder }
+/// [notScanned], [notIndexed] (Android: the file exists but MediaStore does
+/// not show it to the app) and [noBaseFolder] each have their own.
+enum M3uProblemKind {
+  unresolved,
+  outsideFolders,
+  notScanned,
+  notIndexed,
+  noBaseFolder,
+}
 
 /// One unusable path line.
 class M3uProblemLine {
@@ -26,6 +33,7 @@ class M3uMatch {
     required this.problems,
     required this.outsideFolders,
     required this.notScanned,
+    required this.notIndexed,
     required this.notPresent,
     required this.totalLines,
     required this.truncated,
@@ -38,6 +46,7 @@ class M3uMatch {
   final List<M3uProblemLine> problems;
   final int outsideFolders;
   final int notScanned;
+  final int notIndexed;
 
   /// Distinct existing tracks whose file is not present now.
   final int notPresent;
@@ -57,6 +66,10 @@ enum M3uImportError {
 
   /// Every unusable line lay outside the music folders and none was usable.
   allOutsideFolders,
+
+  /// Android: files inside the music folders exist but the system media index
+  /// does not list them, and no other line was usable.
+  notIndexed,
 }
 
 /// Reading and matching progress. [total] is null while the file is read.
@@ -84,6 +97,7 @@ class M3uImportResult {
     required this.notInLibrary,
     required this.outsideFolders,
     required this.notScanned,
+    required this.notIndexed,
     required this.problems,
     required this.truncated,
   });
@@ -103,12 +117,17 @@ class M3uImportResult {
   final int notInLibrary;
   final int outsideFolders;
   final int notScanned;
+  final int notIndexed;
   final List<M3uProblemLine> problems;
   final bool truncated;
 
   /// Nothing to report: the UI shows a short confirmation only.
   bool get clean =>
-      problems.isEmpty && outsideFolders == 0 && notScanned == 0 && !truncated;
+      problems.isEmpty &&
+      outsideFolders == 0 &&
+      notScanned == 0 &&
+      notIndexed == 0 &&
+      !truncated;
 }
 
 enum M3uExportError { playlistGone, folderUnknown, writeFailed }

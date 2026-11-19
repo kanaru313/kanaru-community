@@ -27,7 +27,7 @@ Future<bool> showM3uImportReport(
 
 /// "Playlist imported": what was added and why some lines were not. Groups:
 /// songs not in the library yet; unusable lines (not found, not music,
-/// outside the music folders); lines the scan skips; relative lines with no
+/// outside the music folders); lines the scan skips; (Android) files MediaStore does not show; relative lines with no
 /// base folder. Each group's text says why (no help icon). Empty groups are
 /// not drawn. Pops `true` for "Open playlist", `false` for "Close".
 class M3uImportReportDialog extends StatelessWidget {
@@ -45,6 +45,7 @@ class M3uImportReportDialog extends StatelessWidget {
       M3uProblemKind.outsideFolders,
     });
     final skipped = _linesOf(const {M3uProblemKind.notScanned});
+    final notIndexed = _linesOf(const {M3uProblemKind.notIndexed});
     final noBase = _linesOf(const {M3uProblemKind.noBaseFolder});
     return AlertDialog(
       title: Text(l10n.playlistM3uReportTitle),
@@ -80,6 +81,12 @@ class M3uImportReportDialog extends StatelessWidget {
                   icon: KIcons.hideFromLibrary,
                   text: l10n.playlistM3uReportSkipped(skipped.length),
                   lines: skipped,
+                ),
+              if (notIndexed.isNotEmpty)
+                _Group(
+                  icon: KIcons.hideFromLibrary,
+                  text: l10n.m3uReportNotIndexed(notIndexed.length),
+                  lines: notIndexed,
                 ),
               if (noBase.isNotEmpty)
                 _Group(

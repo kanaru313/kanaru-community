@@ -3576,6 +3576,18 @@ abstract class AppLocalizations {
   /// **'Replace'**
   String get m3uExportReplace;
 
+  /// M3U import report (Android): lines naming files that exist but are not in MediaStore, so no placeholder was created.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 line is a file that is on this device but not in Android\'s media index, so the library cannot see it} other{{count} lines are files that are on this device but not in Android\'s media index, so the library cannot see them}}. Go to Settings › Library › Music folders › Add folder, tap “Can\'t see your folder? Rescan”, then import again:'**
+  String m3uReportNotIndexed(int count);
+
+  /// Toast: an M3U import created nothing because every usable line is a file Android has not indexed.
+  ///
+  /// In en, this message translates to:
+  /// **'Android\'s media index does not list the music files of this playlist yet, so the library cannot see them. Go to Settings › Library › Music folders › Add folder, tap “Can\'t see your folder? Rescan”, then import again. Nothing was imported.'**
+  String get m3uImportNotIndexed;
+
   /// No description provided for @settingsAbout.
   ///
   /// In en, this message translates to:

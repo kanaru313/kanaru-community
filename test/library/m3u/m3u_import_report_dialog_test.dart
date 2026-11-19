@@ -24,6 +24,7 @@ M3uImportResult _result({
       .where((p) => p.kind == M3uProblemKind.outsideFolders)
       .length,
   notScanned: problems.where((p) => p.kind == M3uProblemKind.notScanned).length,
+  notIndexed: problems.where((p) => p.kind == M3uProblemKind.notIndexed).length,
   problems: problems,
   truncated: truncated,
 );
@@ -95,6 +96,23 @@ void main() {
     expect(find.text(l10n.playlistM3uOpenPlaylist), findsOneWidget);
     expect(find.text(l10n.playlistM3uReportNotInLibrary(0)), findsNothing);
     expect(find.textContaining('Line '), findsNothing);
+  });
+
+  testWidgets('not-indexed group: reason text, five lines, rest counted', (
+    t,
+  ) async {
+    await _pump(t, _result(problems: _lines(M3uProblemKind.notIndexed, 7)));
+    expect(find.text(l10n.m3uReportNotIndexed(7)), findsOneWidget);
+    expect(find.textContaining("Android's media index"), findsOneWidget);
+    expect(
+      find.text(l10n.playlistM3uReportLine(1, 'notIndexed-0.mp3')),
+      findsOneWidget,
+    );
+    expect(
+      find.text(l10n.playlistM3uReportLine(6, 'notIndexed-5.mp3')),
+      findsNothing,
+    );
+    expect(find.text(l10n.playlistM3uReportMore(2)), findsOneWidget);
   });
 
   testWidgets('not-in-library wording points at the next library scan', (

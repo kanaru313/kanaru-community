@@ -50,5 +50,16 @@
   "m3uExportFolderUnknown": "Không ghi được đường dẫn tương đối vì không biết thư mục của tệp. Lưu tệp vào bộ nhớ trong, hoặc xuất với đường dẫn tuyệt đối.",
   "@m3uExportFolderUnknown": {},
   "m3uExportReplace": "Thay thế",
-  "@m3uExportReplace": {}
+  "@m3uExportReplace": {},
+  "m3uReportNotIndexed": "{count} dòng là tệp có trong máy nhưng Android chưa đưa vào kho nhạc nên thư viện không thấy. Vào Cài đặt › Thư viện › Thư mục nhạc › Thêm thư mục, bấm “Không thấy thư mục của bạn? Quét lại”, rồi nhập lại:",
+  "@m3uReportNotIndexed": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "m3uImportNotIndexed": "Android chưa đưa các tệp nhạc của playlist này vào kho nhạc nên thư viện không thấy. Vào Cài đặt › Thư viện › Thư mục nhạc › Thêm thư mục, bấm “Không thấy thư mục của bạn? Quét lại”, rồi nhập lại. Chưa nhập gì.",
+  "@m3uImportNotIndexed": {}
 }
