@@ -527,11 +527,12 @@ Linux and Android), `importM3u(context)` runs `runM3uImport`,
   below that root. A relative line needs a known base folder: a file with no
   `localPath` (Android Downloads `msf:`) reports those lines as "no base folder".
   A line outside every live folder is reported and **not imported**.
-- **Library rows.** A file with a `tracks` row is linked to it. A file under a
-  live folder without a row (or whose row is `missing`) gets a placeholder
-  through `createImportedPlaylist` (see `system-architecture-database.md`) so the
-  entry keeps its place; the next scan revives it. Placeholder spelling is
-  looked up case-insensitively on Android shared storage. When placeholders were
+- **Library rows.** A line whose file has a `tracks` row (any status,
+  `missing` included) is linked to that row. An existing file under a live folder
+  with no row yet gets a placeholder through `createImportedPlaylist` (see
+  `system-architecture-database.md`) so the entry keeps its place; the next scan
+  revives it. On Android shared storage an existing row is also found
+  case-insensitively (one unique hit); a placeholder keeps the M3U's spelling. When placeholders were
   created, the import asks for a quiet rescan afterwards (a failure only logs).
 - **Not scanned.** Lines the scanners would never list are not imported, so no
   placeholder stays grey forever. The rules mirror the scanners
@@ -551,9 +552,10 @@ Linux and Android), `importM3u(context)` runs `runM3uImport`,
   the requested rescan cannot revive (the Android scan lists MediaStore rows
   only); it revives after the user's "Quét lại" (see
   [system-architecture-library-scan.md](./system-architecture-library-scan.md)
-  § Quét lại) or once the system indexes it. A file in a `.nomedia` folder never
-  revives (MediaProvider skips it). Placeholder spelling is matched
-  case-insensitively on Android shared storage only; on Linux a differently
+  § First run › The screen) or once the system indexes it. A file in a `.nomedia` folder never
+  revives (MediaProvider skips it). On Android shared storage only the lookup of existing rows is
+  case-insensitive; a placeholder keeps the M3U's spelling, so a line whose case
+  differs from a file with no row yet never revives. On Linux a differently
   cased path is a different file. A stalled mount counts its lines as not found.
 - l10n part `m3u` (`lib/l10n/parts/m3u_{en,vi}.arb`, prefix `m3u`), plus the
   `playlistM3u*` keys of the playlist part.

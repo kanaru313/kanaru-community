@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/extension/state/extension_providers.dart';
@@ -89,12 +90,10 @@ Future<_Page> _pumpPage(WidgetTester t) async {
     await addTrack(h.fixture.db, source, locator: 'a.mp3');
     await addTrack(h.fixture.db, source, locator: 'b.mp3');
   });
-  unawaited_(h.router.push<void>('/playlists'));
+  unawaited(h.router.push<void>('/playlists'));
   await settlePage(t);
   return _Page(h, picker, tmp);
 }
-
-void unawaited_(Future<void> f) => f.ignore();
 
 void _pickList(_Page p, String text, {String name = 'Road trip.m3u'}) {
   final path = '${p.lists}/$name';
@@ -169,7 +168,8 @@ void main() {
       find.text(l10n.m3uImportProgressTitle('Road trip.m3u')),
       findsOneWidget,
     );
-    // Lines counted so far, as the importer reports them.
+    // The importer reports no total while the read is gated (the total comes
+    // from the resolver, after the read), so the progress state is driven here.
     p.h.container
         .read(m3uImportProgressProvider.notifier)
         .update(
@@ -177,10 +177,11 @@ void main() {
         );
     await t.pump();
     expect(find.text(l10n.m3uImportProgressLines(2, 5)), findsOneWidget);
-    // The card is the first thing on the page, above the playlists.
+    // The card is the first sliver: its top is the scroll view's top, so it
+    // sits above the hub, the list bar and every playlist row.
     expect(
       t.getTopLeft(find.byType(M3uImportProgressCard)).dy,
-      lessThan(t.getTopLeft(find.byType(PlaylistsPage)).dy + 400),
+      t.getTopLeft(find.byType(CustomScrollView)).dy,
     );
 
     gate.complete();

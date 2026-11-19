@@ -125,7 +125,6 @@ object DocumentChannel {
     private fun handle(context: Context, call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "open" -> {
-                @Suppress("UNCHECKED_CAST")
                 val mimes = (call.argument<List<String>>("mimeTypes") ?: emptyList()).distinct()
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)

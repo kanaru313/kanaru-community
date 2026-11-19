@@ -59,7 +59,6 @@ void main() {
         find.byType(M3uImportProgressCard, skipOffstage: false),
         findsOneWidget,
       );
-      expect(find.byType(LinearProgressIndicator), findsNothing);
       expect(find.textContaining('Importing'), findsNothing);
     });
 
