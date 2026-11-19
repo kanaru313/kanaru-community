@@ -93,7 +93,7 @@ class _CoverPreviewFrameState extends State<CoverPreviewFrame> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final frame = FormFactor.of(context) == FormFactor.mobile ? 184.0 : 216.0;
+    final frame = kHostIsSheet(context) ? 184.0 : 216.0;
     final pan = _s.panPossible;
     final radius = _circle
         ? BorderRadius.circular(frame / 2)

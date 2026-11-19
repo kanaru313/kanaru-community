@@ -22,27 +22,27 @@ class CoverDialogHead extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final mobile = FormFactor.of(context) == FormFactor.mobile;
+    // Sheet or dialog form is the host's (a sheet turns into a dialog from
+    // 600 dp), the button label follows the shell.
+    final sheet = kHostIsSheet(context);
     return Padding(
       // Desktop: 24 above the title. Mobile: the sheet's grip already sits
       // above. 4 below on both.
       padding: EdgeInsets.fromLTRB(
         KSpace.x6,
-        mobile ? 0 : KSpace.x6,
+        sheet ? 0 : KSpace.x6,
         KSpace.x6,
         KSpace.x1,
       ),
       child: Row(
         // The button is centred on the title block (title + item name).
         crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Loose flex 2 : 3 instead of Expanded: at large text neither the
-          // title nor the button is squeezed to nothing (the label
-          // ellipsizes, the title wraps), and the button stays on the right.
-          Flexible(flex: 2, child: _titles(context, theme)),
+          // The titles take the rest of the row; the button shrink-wraps and
+          // only its label ellipsizes when the row is too narrow.
+          Expanded(child: _titles(context, theme)),
           const KGap(KSpace.x3),
           Flexible(
-            flex: 3,
             child: FilledButton.tonalIcon(
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: KSpace.x6),

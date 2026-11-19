@@ -11,8 +11,9 @@ import '../playlist_common/playlist_cover.dart';
 /// Corner radius of the 48 dp row thumbs of the cover dialog.
 const BorderRadius coverThumbRadius = KMediaCard.coverRadius;
 
-/// Corner radius of the square preview frame (like the app's covers).
-const BorderRadius coverFrameRadius = BorderRadius.all(Radius.circular(14));
+/// Corner radius of the square preview frame: the app's cover radius
+/// (`KCover`, `KMediaCard` big covers, playlist covers).
+const BorderRadius coverFrameRadius = KRadius.sm;
 
 /// The automatic cover of the item, drawn at [dimension]: the song cover of an
 /// album or artist (letter-less placeholder when none), the 1 to 4 cover

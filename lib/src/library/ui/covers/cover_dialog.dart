@@ -3,6 +3,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../state/covers/cover_dialog_controller.dart';
+import '../../state/covers/cover_dialog_options.dart';
 import '../../state/covers/cover_draft.dart';
 import '../../state/covers/cover_texts.dart';
 import '../../state/custom_cover_providers.dart';
@@ -139,6 +140,12 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
           onToggleSuggestions: () =>
               setState(() => _suggestionsExpanded = !_suggestionsExpanded),
           onSelect: ctl.select,
+          onRetry: () => ref.invalidate(
+            coverDialogOptionsProvider((
+              kind: widget.kind,
+              itemKey: widget.itemKey,
+            )),
+          ),
         ),
         const SliverToBoxAdapter(child: KGap(KSpace.x2)),
       ],

@@ -10,6 +10,7 @@ import '../../state/covers/cover_dialog_state.dart';
 import '../../state/covers/cover_draft.dart';
 import '../../state/custom_cover_providers.dart';
 import 'cover_art.dart';
+import '../songs/song_row_placeholder.dart';
 import 'cover_row_parts.dart';
 
 /// Side of the row thumbs.
@@ -18,6 +19,9 @@ const double _thumb = KMediaCard.coverSize;
 
 /// Album suggestion rows shown before "Xem thêm".
 const int coverCollapsedSuggestionRows = 4;
+
+/// Skeleton rows shown while the options are read.
+const int coverLoadingRows = 3;
 
 /// The choices of the cover dialog as one sliver: Automatic, the current
 /// custom image, the picked image, the album suggestions and the
@@ -34,6 +38,7 @@ class CoverOptionRows extends StatelessWidget {
     required this.suggestionsExpanded,
     required this.onToggleSuggestions,
     required this.onSelect,
+    required this.onRetry,
   });
 
   final CustomCoverKind kind;
@@ -43,6 +48,9 @@ class CoverOptionRows extends StatelessWidget {
   final VoidCallback onToggleSuggestions;
   final ValueChanged<String> onSelect;
 
+  /// Reads the options again after they failed to load.
+  final VoidCallback onRetry;
+
   bool get _round => kind == CustomCoverKind.artist;
 
   @override
@@ -50,24 +58,21 @@ class CoverOptionRows extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final options = state.options.value;
     if (options == null) {
+      // Same states as the library lists: skeleton rows while reading, the
+      // inline "could not load" row with Retry when it failed.
       if (state.options.hasError) {
-        return SliverToBoxAdapter(child: CoverMessage(l10n.coverErrorRead));
+        return SliverToBoxAdapter(
+          child: SongRowFailed(
+            extent: KMediaCard.extentOf(MediaQuery.textScalerOf(context)),
+            onRetry: onRetry,
+          ),
+        );
       }
       return SliverToBoxAdapter(
         child: Column(
           children: [
-            for (var i = 0; i < 3; i++)
-              Padding(
-                padding: const EdgeInsets.all(KSpace.x3),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: KCover.loading(
-                    size: _thumb,
-                    radius: coverThumbRadius,
-                    circle: _round,
-                  ),
-                ),
-              ),
+            for (var i = 0; i < coverLoadingRows; i++)
+              const KMediaCard(title: '', loading: true, filled: false),
           ],
         ),
       );
@@ -133,7 +138,7 @@ class CoverOptionRows extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: KSpace.x4),
                 child: TextButton(
                   style: TextButton.styleFrom(
-                    minimumSize: const Size(0, 36),
+                    minimumSize: const Size(0, KLayout.compactButton),
                     padding: const EdgeInsets.symmetric(horizontal: KSpace.x3),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
