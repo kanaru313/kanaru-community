@@ -217,5 +217,10 @@ abstract interface class MediaControls {
   /// Gives audio focus back (stop).
   Future<void> deactivate();
 
+  /// Drops a resume the system would send after an interruption (a call, a
+  /// notification) that paused playback, so a pause the app chose for itself
+  /// stays. No-op where there is none.
+  void cancelPendingResume();
+
   Future<void> dispose();
 }

@@ -55,6 +55,9 @@ class Harness {
   int engineCreations = 0;
   int now = 1000;
 
+  /// The sleep fade's tick factory; a test fires the ticks by hand.
+  final ticker = ManualTicker();
+
   /// The recorder's monotonic clock; tests advance it with the ticks.
   Duration mono = Duration.zero;
 
@@ -111,6 +114,7 @@ class Harness {
         monotonic: () => mono,
       ),
       clock: () => now,
+      periodic: ticker.call,
       random: Random(7),
       focusTimeout: _focusTimeout,
     );
@@ -172,4 +176,40 @@ class CountingResolver implements PlayableResolver {
     calls++;
     return inner.resolve(ids);
   }
+}
+
+/// A tick factory with no real time: [fire] runs the callback of every timer
+/// that is still active.
+class ManualTicker {
+  final List<_ManualTimer> _timers = [];
+
+  /// Timers made and not cancelled.
+  int get active => _timers.where((t) => t.isActive).length;
+
+  Timer call(Duration interval, void Function() onTick) {
+    final timer = _ManualTimer(onTick);
+    _timers.add(timer);
+    return timer;
+  }
+
+  void fire() {
+    for (final t in List.of(_timers)) {
+      if (t.isActive) t.onTick();
+    }
+  }
+}
+
+class _ManualTimer implements Timer {
+  _ManualTimer(this.onTick);
+  final void Function() onTick;
+  bool _active = true;
+
+  @override
+  bool get isActive => _active;
+
+  @override
+  int get tick => 0;
+
+  @override
+  void cancel() => _active = false;
 }

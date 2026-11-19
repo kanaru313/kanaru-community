@@ -17,6 +17,13 @@ class FakeAudioEngine implements AudioEngine {
   /// Holds `seek` open, so a test can emit ticks while a seek is in flight.
   Future<void>? seekGate;
 
+  /// Hold `pause` / `setVolume` open (the call is recorded first).
+  Future<void>? pauseGate;
+  Future<void>? volumeGate;
+
+  /// When set, `pause` throws it after recording the call.
+  Object? pauseError;
+
   /// When set, `load` throws it after recording the call, the way an engine
   /// whose open fails does; the failure is reported through the same guard
   /// the real engine uses.
@@ -62,7 +69,12 @@ class FakeAudioEngine implements AudioEngine {
   Future<void> play() async => commands.add('play');
 
   @override
-  Future<void> pause() async => commands.add('pause');
+  Future<void> pause() async {
+    commands.add('pause');
+    await pauseGate;
+    final error = pauseError;
+    if (error != null) throw error;
+  }
 
   @override
   Future<void> stop() async => commands.add('stop');
@@ -74,8 +86,10 @@ class FakeAudioEngine implements AudioEngine {
   }
 
   @override
-  Future<void> setVolume(double volume0to100) async =>
-      commands.add('volume:${volume0to100.round()}');
+  Future<void> setVolume(double volume0to100) async {
+    commands.add('volume:${volume0to100.round()}');
+    await volumeGate;
+  }
 
   @override
   Stream<EngineEvent> get events => _events.stream;

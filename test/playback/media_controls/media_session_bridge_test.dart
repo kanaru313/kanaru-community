@@ -56,8 +56,18 @@ class FakeControls implements MediaControls {
   @override
   Future<void> deactivate() async => log.add('deactivate');
 
+  int cancelledResumes = 0;
+
+  @override
+  void cancelPendingResume() => cancelledResumes++;
+
   @override
   Future<void> dispose() async {}
+}
+
+class _ThrowingControls extends FakeControls {
+  @override
+  void cancelPendingResume() => throw StateError('no session');
 }
 
 const _coverKey = 'ab/0123456789abcdef0123456789abcdef';
@@ -517,6 +527,23 @@ void main() {
       controls.hang = true;
       expect(await bridge.activate(), isFalse);
     });
+  });
+
+  test('cancelPendingResume is forwarded to the controls', () async {
+    await make();
+    bridge.cancelPendingResume();
+    expect(controls.cancelledResumes, 1);
+  });
+
+  test('a controls failure on cancelPendingResume is logged, not thrown', () async {
+    await make();
+    final failing = MediaSessionBridge(
+      controls: _ThrowingControls(),
+      infoOf: (_) async => null,
+      artPathOf: (_) => null,
+    );
+    addTearDown(failing.dispose);
+    expect(failing.cancelPendingResume, returnsNormally);
   });
 
   test('dispose stops following the player', () async {

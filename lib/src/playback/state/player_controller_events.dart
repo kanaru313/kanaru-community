@@ -26,6 +26,7 @@ extension _Events on PlayerController {
         break;
     }
     _publish();
+    _flushTrackEnds();
   }
 
   /// The engine finished the current entry C and moved on to [token]'s
@@ -40,8 +41,13 @@ extension _Events on PlayerController {
     final follows = nextIndex(_queue, auto: true, loops: _repeatTimes);
     if (index >= 0 && (token == _handedNext || index == follows)) {
       final skip = token == _handedNext ? _handedSkip : null;
-      // The same entry again: a loop of a counted repeat uses one play up.
-      if (index == _queue.current && _repeatTimes > 0) {
+      final endedId = _loaded?.entryId;
+      // Decided with the queue and count before this move.
+      final sleep = _sleepStopNow(_queue);
+      if (sleep) {
+        _dropRepeatTimes();
+      } else if (index == _queue.current && _repeatTimes > 0) {
+        // The same entry again: a loop of a counted repeat uses one play up.
         _repeatTimes--;
         _write(repeatCountSetting.key, _repeatTimes);
       }
@@ -55,6 +61,11 @@ extension _Events on PlayerController {
       _position = Duration.zero;
       _startAt = Duration.zero;
       _saveNow();
+      // The sleep bookkeeping comes first: the title lookup below reads the
+      // database and must not be able to lose the stop.
+      _naturalEnd(endedId, sleep: sleep, queueEnded: false);
+      // The engine already started the next entry: rest at its start.
+      if (sleep) await _restAtStart();
       if (skip != null) {
         _notice(
           TrackSkipped(
@@ -66,6 +77,8 @@ extension _Events on PlayerController {
       }
       return;
     }
+    final endedId = _loaded?.entryId;
+    final sleep = _sleepStopNow(_queue);
     _generation++;
     _handedNext = null;
     _handedSkip = null;
@@ -82,9 +95,12 @@ extension _Events on PlayerController {
       _finishQueue();
       // Stay at the end: a reload of C (paused) must not start at 0.
       _startAt = _position;
+      _naturalEnd(endedId, sleep: sleep, queueEnded: true);
       return;
     }
+    _naturalEnd(endedId, sleep: sleep, queueEnded: false);
     _jump(go, user: false);
+    if (sleep) _intent = PlayIntent.paused;
   }
 
   Future<void> _onFailed(EngineToken token) async {
@@ -137,7 +153,10 @@ extension _Events on PlayerController {
   }
 
   Future<void> _onEnded() async {
+    final endedId = _loaded?.entryId;
+    final sleep = _sleepEndsNow(endedId);
     final i = await _stepIndex(auto: true);
+    _naturalEnd(endedId, sleep: sleep, queueEnded: i == null);
     if (i == null) {
       // Paused at the end: a song added later waits, paused. The engine is
       // told, so a late hand-over does not start playing by itself.
@@ -146,6 +165,8 @@ extension _Events on PlayerController {
       return;
     }
     _jump(i, user: false);
+    // A sleep stop: the next entry loads paused at its start.
+    if (sleep) _intent = PlayIntent.paused;
   }
 
   void _finishQueue() {

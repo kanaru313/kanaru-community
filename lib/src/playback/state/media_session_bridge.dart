@@ -391,6 +391,16 @@ class MediaSessionBridge implements PlaybackFocus {
     }
   }
 
+  /// Drops the resume the system would send after an interruption that
+  /// paused playback (the sleep timer ended it, so it must stay paused).
+  void cancelPendingResume() {
+    try {
+      controls.cancelPendingResume();
+    } on Object catch (e) {
+      _log.warning('cancel pending resume: $e');
+    }
+  }
+
   /// Stops following the player. The controls are owned by their provider.
   void dispose() {
     if (_disposed) return;
