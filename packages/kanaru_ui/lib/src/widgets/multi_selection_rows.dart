@@ -63,6 +63,20 @@ Widget buildMultiEntry<T>(
       return listFooter!;
     case MultiKind.option:
       final o = entry.option!;
+      if (o.mediaTitle != null) {
+        return SelectionRow.media(
+          multi: true,
+          mediaTitle: o.mediaTitle!,
+          mediaLine2: o.mediaLine2,
+          mediaTag: o.mediaTag,
+          circleCover: o.circleCover,
+          cover: o.leading!,
+          hint: o.hint,
+          enabled: o.enabled,
+          selected: view.chosen.contains(o.value),
+          onTap: busy ? null : () => onToggle(o.value),
+        );
+      }
       return SelectionRow(
         multi: true,
         title: o.title,

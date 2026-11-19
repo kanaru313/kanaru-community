@@ -278,4 +278,30 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  testWidgets('showKDialog hosts rows inset', (tester) async {
+    useWindow(tester, const Size(700, 800));
+    KRowEdges? seen;
+    await tester.pumpWidget(
+      host(
+        Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showKDialog<void>(
+              context,
+              builder: (_) => Builder(
+                builder: (context) {
+                  seen = KRowEdgesScope.maybeOf(context);
+                  return const Text('content');
+                },
+              ),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(seen, KRowEdges.inset);
+  });
 }

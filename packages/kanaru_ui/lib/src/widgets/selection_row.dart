@@ -6,7 +6,9 @@ import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 import 'k_check_mark.dart';
+import 'collections/k_media_card.dart';
 import 'k_gap.dart';
+import 'k_row_edges.dart';
 
 /// One option of a choice list, tonal rounded fill and bold title when
 /// selected. No radio buttons.
@@ -16,7 +18,9 @@ import 'k_gap.dart';
 /// choice; with [multi] a [KCheckMarkStyle.plain] tick in a 24 slot on the
 /// right (empty when unchosen, so titles keep their width). A single-choice
 /// icon row of [alikeOptions] (pictures that look alike) gets that same plain
-/// tick, because tint alone does not show the choice. [multi] rows expose
+/// tick, because tint alone does not show the choice. The tint's edges follow
+/// the host's [KRowEdges]: square and full width in a bottom sheet, rounded
+/// and inset [KSpace.x2] elsewhere (see [KRowEdgesScope]). [multi] rows expose
 /// checkbox semantics, others radio-group semantics.
 class SelectionRow extends StatelessWidget {
   const SelectionRow({
@@ -34,7 +38,44 @@ class SelectionRow extends StatelessWidget {
     this.autofocus = false,
     this.hint,
     this.onTap,
-  });
+  }) : mediaTitle = null,
+       mediaLine2 = null,
+       mediaTag = null,
+       circleCover = false;
+
+  /// A row with a cover (song, album, artist, playlist, image): the library's
+  /// [KMediaCard] row (size, cover, text styles, padding, gap below) with the
+  /// selection on top, so a change to library rows changes pickers too. Single
+  /// choice of [alikeOptions] covers and [multi] rows get the plain tick on
+  /// the right, like icon rows. [cover] is the 56 dp cover widget.
+  const SelectionRow.media({
+    super.key,
+    required String this.mediaTitle,
+    required Widget cover,
+    required this.selected,
+    this.mediaLine2,
+    this.mediaTag,
+    this.circleCover = false,
+    this.enabled = true,
+    this.multi = false,
+    this.partial = false,
+    this.alikeOptions = false,
+    this.autofocus = false,
+    this.hint,
+    this.onTap,
+  }) : title = const SizedBox.shrink(),
+       subtitle = null,
+       leading = cover,
+       plainMark = false,
+       dense = false;
+
+  /// Set only by [SelectionRow.media]: the card's title, second line and tag.
+  final String? mediaTitle;
+  final String? mediaLine2;
+  final String? mediaTag;
+
+  /// The cover is round (artists).
+  final bool circleCover;
 
   final Widget title;
   final Widget? subtitle;
@@ -78,6 +119,54 @@ class SelectionRow extends StatelessWidget {
 
   static const double _checkSlot = 24;
 
+  Widget _buildMedia(BuildContext context, KRowEdges? edges) {
+    final mixed = multi && partial;
+    final showTick = multi || alikeOptions;
+    return Semantics(
+      enabled: enabled,
+      hint: hint,
+      inMutuallyExclusiveGroup: multi ? null : true,
+      checked: multi && !mixed ? selected : null,
+      mixed: mixed ? true : null,
+      child: Padding(
+        // A card's list supplies the outer side space; a flat row has none.
+        padding: EdgeInsets.symmetric(horizontal: edges.sideGap),
+        child: Opacity(
+          opacity: enabled ? 1 : 0.5,
+          child: KMediaCard(
+            title: mediaTitle!,
+            titleLabel: mediaTag,
+            line2: mediaLine2,
+            leading: leading,
+            circleLeading: circleCover,
+            selected: selected,
+            filled: false,
+            style: switch (edges) {
+              KRowEdges.fullBleed => KMediaCardStyle.flat,
+              KRowEdges.inset => KMediaCardStyle.card,
+              null => KMediaCardStyle.auto,
+            },
+            trailing: showTick
+                ? Padding(
+                    padding: const EdgeInsets.only(right: KSpace.x2),
+                    child: KCheckMark(
+                      size: _checkSlot,
+                      state: mixed
+                          ? KCheckState.partial
+                          : selected
+                          ? KCheckState.on
+                          : KCheckState.off,
+                      style: KCheckMarkStyle.plain,
+                    ),
+                  )
+                : null,
+            onTap: enabled ? onTap : null,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -93,6 +182,9 @@ class SelectionRow extends StatelessWidget {
     final gap = dense ? KSpace.x3 : KSpace.x4;
     final bodyStyle = dense ? textTheme.bodyMedium : textTheme.bodyLarge;
     final active = enabled && onTap != null;
+    final edges = KRowEdgesScope.maybeOf(context);
+    if (mediaTitle != null) return _buildMedia(context, edges);
+    final corners = edges.corners(KRadius.md);
     final iconLayout = leading != null || plainMark;
     final mixed = multi && partial;
     final state = mixed
@@ -110,93 +202,102 @@ class SelectionRow extends StatelessWidget {
       mixed: mixed ? true : null,
       child: Opacity(
         opacity: enabled ? 1 : 0.5,
-        child: Stack(
-          children: [
-            // Tint on the visible shape only; ink and focus use the same
-            // inset shape, taps use the whole row.
-            Positioned.fill(
-              top: band,
-              bottom: band,
-              child: AnimatedContainer(
-                duration: KMotion.fast,
-                decoration: ShapeDecoration(
-                  shape: KShape.of(KRadius.md),
-                  color: selected
-                      ? scheme.secondaryContainer
-                      // Same hue at alpha 0: lerping to black (0x00000000)
-                      // would pass through a grey on the way out.
-                      : scheme.secondaryContainer.withValues(alpha: 0),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: edges.sideGap),
+          child: Stack(
+            children: [
+              // Tint on the visible shape only; ink and focus use the same
+              // inset shape, taps use the whole row.
+              Positioned.fill(
+                top: band,
+                bottom: band,
+                child: AnimatedContainer(
+                  duration: KMotion.fast,
+                  decoration: ShapeDecoration(
+                    shape: KShape.of(corners),
+                    color: selected
+                        ? scheme.secondaryContainer
+                        // Same hue at alpha 0: lerping to black (0x00000000)
+                        // would pass through a grey on the way out.
+                        : scheme.secondaryContainer.withValues(alpha: 0),
+                  ),
                 ),
               ),
-            ),
-            Material(
-              type: MaterialType.transparency,
-              child: InkWell(
-                customBorder: _InsetShape(KShape.of(KRadius.md), band),
-                // M3 state layers (8 % hover, 10 % press/focus of onSurface),
-                // as the mockups draw them; the theme default (4 %) is too
-                // faint to see on surfaceContainerHighest menus.
-                hoverColor: scheme.onSurface.withValues(alpha: 0.08),
-                focusColor: scheme.onSurface.withValues(alpha: 0.10),
-                highlightColor: scheme.onSurface.withValues(alpha: 0.10),
-                autofocus: autofocus,
-                onTap: active ? onTap : null,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: minHeight),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: dense ? KSpace.x3 : KSpace.x4,
-                      vertical: KSpace.x2,
-                    ),
-                    child: Row(
-                      children: [
-                        if (!iconLayout) ...[
-                          KCheckMark(size: _checkSlot, state: state),
-                          const KGap(KSpace.x3),
-                        ] else if (leading != null) ...[
-                          IconTheme.merge(
-                            data: IconThemeData(color: scheme.onSurfaceVariant),
-                            child: leading!,
-                          ),
-                          KGap(gap),
-                        ],
-                        Expanded(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              DefaultTextStyle.merge(
-                                style: bodyStyle?.copyWith(
-                                  fontWeight: selected ? FontWeight.w700 : null,
-                                ),
-                                child: title,
+              Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  customBorder: _InsetShape(KShape.of(corners), band),
+                  // M3 state layers (8 % hover, 10 % press/focus of onSurface),
+                  // as the mockups draw them; the theme default (4 %) is too
+                  // faint to see on surfaceContainerHighest menus.
+                  hoverColor: scheme.onSurface.withValues(alpha: 0.08),
+                  focusColor: scheme.onSurface.withValues(alpha: 0.10),
+                  highlightColor: scheme.onSurface.withValues(alpha: 0.10),
+                  autofocus: autofocus,
+                  onTap: active ? onTap : null,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: minHeight),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal:
+                            (dense ? KSpace.x3 : KSpace.x4) +
+                            edges.contentExtra,
+                        vertical: KSpace.x2,
+                      ),
+                      child: Row(
+                        children: [
+                          if (!iconLayout) ...[
+                            KCheckMark(size: _checkSlot, state: state),
+                            const KGap(KSpace.x3),
+                          ] else if (leading != null) ...[
+                            IconTheme.merge(
+                              data: IconThemeData(
+                                color: scheme.onSurfaceVariant,
                               ),
-                              if (subtitle != null)
+                              child: leading!,
+                            ),
+                            KGap(gap),
+                          ],
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 DefaultTextStyle.merge(
-                                  style: textTheme.bodySmall?.copyWith(
-                                    color: scheme.onSurfaceVariant,
+                                  style: bodyStyle?.copyWith(
+                                    fontWeight: selected
+                                        ? FontWeight.w700
+                                        : null,
                                   ),
-                                  child: subtitle!,
+                                  child: title,
                                 ),
-                            ],
+                                if (subtitle != null)
+                                  DefaultTextStyle.merge(
+                                    style: textTheme.bodySmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                    child: subtitle!,
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                        if (iconLayout &&
-                            (multi || (alikeOptions && leading != null))) ...[
-                          const KGap(KSpace.x3),
-                          KCheckMark(
-                            size: _checkSlot,
-                            state: state,
-                            style: KCheckMarkStyle.plain,
-                          ),
+                          if (iconLayout &&
+                              (multi || (alikeOptions && leading != null))) ...[
+                            const KGap(KSpace.x3),
+                            KCheckMark(
+                              size: _checkSlot,
+                              state: state,
+                              style: KCheckMarkStyle.plain,
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -6,6 +6,7 @@ import '../tokens/k_layout.dart';
 import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
+import 'k_row_edges.dart';
 
 /// Modal container: bottom sheet below [KBreakpoints.compactSheet], centred
 /// dialog with the same content from there up.
@@ -13,6 +14,8 @@ import '../tokens/k_space.dart';
 /// The sheet has rounded top corners, a grip, a scrim, closes on Back
 /// (including predictive back) and on dragging down. [fixedHeight] makes it
 /// [maxHeightFraction] of the screen instead of fitting its content.
+/// Rows inside follow the surface: [KRowEdges.fullBleed] in the sheet,
+/// [KRowEdges.inset] in the dialog (see [KRowEdgesScope]).
 /// [useRootNavigator] shows it above every nested navigator (for example over
 /// the shell's bottom bar and mini player).
 Future<T?> showKSheet<T>(
@@ -29,16 +32,19 @@ Future<T?> showKSheet<T>(
       context: context,
       animationStyle: KMotion.routeAnimationStyle(context),
       useRootNavigator: useRootNavigator,
-      builder: (context) => Dialog(
-        shape: KShape.of(KRadius.xl, continuous: true),
-        clipBehavior: Clip.antiAlias,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: KLayout.sheet,
-            maxHeight: size.height * maxHeightFraction,
-            minHeight: fixedHeight ? size.height * maxHeightFraction : 0,
+      builder: (context) => KRowEdgesScope(
+        edges: KRowEdges.inset,
+        child: Dialog(
+          shape: KShape.of(KRadius.xl, continuous: true),
+          clipBehavior: Clip.antiAlias,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: KLayout.sheet,
+              maxHeight: size.height * maxHeightFraction,
+              minHeight: fixedHeight ? size.height * maxHeightFraction : 0,
+            ),
+            child: builder(context),
           ),
-          child: builder(context),
         ),
       ),
     );
@@ -61,14 +67,17 @@ Future<T?> showKSheet<T>(
       // The keyboard shrinks the room the content may use.
       final keyboard = MediaQuery.viewInsetsOf(context).bottom;
       final available = math.min(maxHeight, size.height - keyboard);
-      return Padding(
-        padding: EdgeInsets.only(bottom: keyboard + KSpace.x2),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: available,
-            minHeight: fixedHeight ? available : 0,
+      return KRowEdgesScope(
+        edges: KRowEdges.fullBleed,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: keyboard + KSpace.x2),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: available,
+              minHeight: fixedHeight ? available : 0,
+            ),
+            child: builder(context),
           ),
-          child: builder(context),
         ),
       );
     },

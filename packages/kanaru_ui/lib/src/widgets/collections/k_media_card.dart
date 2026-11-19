@@ -222,7 +222,9 @@ class _KMediaCardState extends State<KMediaCard> {
         : widget.filled
         ? KRowColors.fill(Theme.of(context).brightness)
         : flat
-        ? Colors.transparent
+        // Same hue at alpha 0, so selecting fades the tint in without a grey
+        // pass (lerping from 0x00000000 would go through grey).
+        ? scheme.secondaryContainer.withValues(alpha: 0)
         : scheme.surfaceContainerLow;
     final ink = widget.current
         ? scheme.onPrimaryContainer

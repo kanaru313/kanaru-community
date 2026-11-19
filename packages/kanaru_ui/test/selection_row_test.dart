@@ -504,6 +504,64 @@ void main() {
     expect(tester.getSemantics(find.byType(SelectionRow)).hint, isEmpty);
     handle.dispose();
   });
+
+  for (final (edges, label) in [
+    (KRowEdges.fullBleed, 'full-bleed'),
+    (KRowEdges.inset, 'inset'),
+  ]) {
+    testWidgets('tint edges under a $label host', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          KRowEdgesScope(
+            edges: edges,
+            child: const SelectionRow(title: Text('A'), selected: true),
+          ),
+        ),
+      );
+      final tint = find.descendant(
+        of: find.byType(SelectionRow),
+        matching: find.byType(AnimatedContainer),
+      );
+      final rect = tester.getRect(tint);
+      final shape =
+          (tester.widget<AnimatedContainer>(tint).decoration!
+                      as ShapeDecoration)
+                  .shape
+              as RoundedRectangleBorder;
+      final radius = shape.borderRadius as BorderRadius;
+      if (edges == KRowEdges.fullBleed) {
+        expect(rect.left, 0);
+        expect(rect.right, 400);
+        expect(radius, BorderRadius.zero);
+      } else {
+        expect(rect.left, greaterThanOrEqualTo(KSpace.x2));
+        expect(400 - rect.right, greaterThanOrEqualTo(KSpace.x2));
+        expect(radius.topLeft.x, greaterThan(0));
+      }
+    });
+  }
+
+  testWidgets('content lines up at 24 dp in both modes', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    final lefts = <double>[];
+    for (final edges in KRowEdges.values) {
+      await tester.pumpWidget(
+        host(
+          KRowEdgesScope(
+            edges: edges,
+            child: const SelectionRow(
+              title: Text('A'),
+              selected: false,
+              leading: Icon(Icons.add),
+            ),
+          ),
+        ),
+      );
+      lefts.add(tester.getTopLeft(find.byIcon(Icons.add)).dx);
+    }
+    expect(lefts, [24, 24]);
+  });
 }
 
 /// Tint colour currently painted behind the row (the ShapeDecoration fill).

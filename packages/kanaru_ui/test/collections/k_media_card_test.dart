@@ -766,7 +766,7 @@ void main() {
       expect(radius(tester), 0);
       expect(fill(tester), KRowColors.fill(Brightness.light));
       await tester.pumpWidget(host(_card(filled: false)));
-      expect(fill(tester), Colors.transparent);
+      expect(fill(tester)!.a, 0, reason: 'fully transparent');
     });
 
     testWidgets('mobile auto paints the gradient full width when current', (

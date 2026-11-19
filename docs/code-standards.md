@@ -24,6 +24,11 @@ enforced by the gate. This file covers the rest.
 - Widgets and layout tokens come from `kanaru_ui` (`KSpace`, `KRadius`,
   `KShape`, `KLayout`, `KMotion`); no width-based switching outside
   `kanaru_ui` and `shell/`.
+- Row tint edges: hosts (`showKSheet`, `showKDialog`, pickers, menus) provide
+  `KRowEdgesScope` (`fullBleed` = square, full width in bottom sheets; `inset`
+  = rounded, 8 dp from both edges elsewhere); `SelectionRow`, `KListRow`,
+  `KMenuRow` read it. Call sites never pad or round a row tint. Cover options
+  use `SelectionRow.media` (the library `KMediaCard` row).
 - Icon buttons are `KIconButton` (`kanaru_ui`): the icon plus its own
   `padding` (default horizontal `KSpace.x2`), no disc and no 48 dp box.
   Material `IconButton` stays only for the filled and tonal variants

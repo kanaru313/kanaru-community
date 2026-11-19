@@ -9,6 +9,7 @@ import '../../tokens/k_space.dart';
 import '../k_chip.dart';
 import '../k_gap.dart';
 import '../k_icon_button.dart';
+import '../k_row_edges.dart';
 import '../pro_badge.dart';
 
 /// Icon button at the end of a [KMenuRow] (for example "open in file manager").
@@ -171,6 +172,7 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
         ? () => setState(() => _expanded = !_expanded)
         : () => widget.onActivate(row.onTap ?? () {});
     final trailing = row.trailing;
+    final edges = KRowEdgesScope.maybeOf(context);
     return Opacity(
       opacity: row.active ? 1 : 0.5,
       child: Column(
@@ -180,82 +182,85 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
             button: true,
             enabled: row.active,
             hint: row.hint,
-            child: InkWell(
-              autofocus: widget.autofocus,
-              borderRadius: KRadius.sm,
-              onTap: tap,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: mobile
-                      ? KLayout.minTarget + KSpace.x1
-                      : KLayout.minTarget,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: KSpace.x4,
-                    vertical: KSpace.x2,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: edges.sideGap),
+              child: InkWell(
+                autofocus: widget.autofocus,
+                borderRadius: edges.corners(KRadius.sm),
+                onTap: tap,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: mobile
+                        ? KLayout.minTarget + KSpace.x1
+                        : KLayout.minTarget,
                   ),
-                  child: Row(
-                    children: [
-                      if (row.leading != null) ...[
-                        row.leading!,
-                        const KGap(KSpace.x4),
-                      ] else if (row.icon != null) ...[
-                        Icon(row.icon, size: KIconSize.sm, color: soft),
-                        const KGap(KSpace.x4),
-                      ],
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              row.title,
-                              style: textTheme.bodyLarge?.copyWith(
-                                color: color,
-                              ),
-                            ),
-                            if (row.subtitle != null)
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: KSpace.x4 + edges.contentExtra,
+                      vertical: KSpace.x2,
+                    ),
+                    child: Row(
+                      children: [
+                        if (row.leading != null) ...[
+                          row.leading!,
+                          const KGap(KSpace.x4),
+                        ] else if (row.icon != null) ...[
+                          Icon(row.icon, size: KIconSize.sm, color: soft),
+                          const KGap(KSpace.x4),
+                        ],
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                row.subtitle!,
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: soft,
+                                row.title,
+                                style: textTheme.bodyLarge?.copyWith(
+                                  color: color,
                                 ),
                               ),
-                          ],
+                              if (row.subtitle != null)
+                                Text(
+                                  row.subtitle!,
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: soft,
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                      if (row.proLabel != null) ...[
-                        const KGap(KSpace.x2),
-                        ProBadge(label: row.proLabel!),
+                        if (row.proLabel != null) ...[
+                          const KGap(KSpace.x2),
+                          ProBadge(label: row.proLabel!),
+                        ],
+                        if (row.soonLabel != null) ...[
+                          const KGap(KSpace.x2),
+                          Text(
+                            row.soonLabel!,
+                            style: textTheme.labelSmall?.copyWith(color: soft),
+                          ),
+                        ],
+                        if (trailing != null) ...[
+                          const KGap(KSpace.x1),
+                          // The button is its own semantics node, not merged into
+                          // the row's.
+                          KIconButton(
+                            tooltip: trailing.tooltip,
+                            icon: trailing.icon,
+                            onPressed: row.active
+                                ? () => widget.onActivate(trailing.onPressed)
+                                : null,
+                          ),
+                        ],
+                        if (row.opens != null)
+                          Icon(KIcons.chevronRight, color: soft),
+                        if (foldable)
+                          Icon(
+                            _expanded ? KIcons.expand : KIcons.collapse,
+                            color: soft,
+                          ),
                       ],
-                      if (row.soonLabel != null) ...[
-                        const KGap(KSpace.x2),
-                        Text(
-                          row.soonLabel!,
-                          style: textTheme.labelSmall?.copyWith(color: soft),
-                        ),
-                      ],
-                      if (trailing != null) ...[
-                        const KGap(KSpace.x1),
-                        // The button is its own semantics node, not merged into
-                        // the row's.
-                        KIconButton(
-                          tooltip: trailing.tooltip,
-                          icon: trailing.icon,
-                          onPressed: row.active
-                              ? () => widget.onActivate(trailing.onPressed)
-                              : null,
-                        ),
-                      ],
-                      if (row.opens != null)
-                        Icon(KIcons.chevronRight, color: soft),
-                      if (foldable)
-                        Icon(
-                          _expanded ? KIcons.expand : KIcons.collapse,
-                          color: soft,
-                        ),
-                    ],
+                    ),
                   ),
                 ),
               ),
