@@ -2230,9 +2230,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get coverGroupPlaylistAlbums => 'Bìa album trong playlist';
 
   @override
-  String get coverGroupOther => 'Ảnh khác';
-
-  @override
   String coverMoreAlbums(int count) {
     return 'Xem thêm $count album';
   }

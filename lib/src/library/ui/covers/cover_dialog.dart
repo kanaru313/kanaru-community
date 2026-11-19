@@ -99,7 +99,6 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
     });
     final ctl = _ctl;
     final picked = s.chosenPicked?.preview;
-    final inset = FormFactor.of(context) == FormFactor.mobile ? 0.0 : KSpace.x2;
     // Slivers: the album rows are built lazily. The desktop dialog fits its
     // content (shrink-wrapped) until the list is expanded, then it fills the
     // room it has and scrolls.
@@ -110,7 +109,7 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const KGap(KSpace.x2),
+              const KGap(KSpace.x3),
               Center(
                 child: CoverPreviewFrame(
                   kind: widget.kind,
@@ -121,28 +120,25 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
                 ),
               ),
               CoverHintLine(kind: widget.kind, state: s),
+              // The preview block's 8 dp bottom padding.
+              const KGap(KSpace.x2),
               if (picked != null &&
                   (picked.width < smallCoverSide ||
                       picked.height < smallCoverSide))
                 CoverSmallImageCard(width: picked.width, height: picked.height),
-              const KGap(KSpace.x2),
             ],
           ),
         ),
-        // Desktop dialog: rows inset like the other pickers' lists (the
-        // tint keeps clear of the dialog edge); a bottom sheet runs full-bleed.
-        SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: inset),
-          sliver: CoverOptionRows(
-            kind: widget.kind,
-            itemKey: widget.itemKey,
-            state: s,
-            suggestionsExpanded: _suggestionsExpanded,
-            onToggleSuggestions: () =>
-                setState(() => _suggestionsExpanded = !_suggestionsExpanded),
-            onSelect: ctl.select,
-            onPick: () => ctl.pick(dialogLabel: widget.texts.linuxDialogLabel),
-          ),
+        // Row edges (full-bleed in the sheet, inset in the dialog) come from
+        // the host (showKSheet).
+        CoverOptionRows(
+          kind: widget.kind,
+          itemKey: widget.itemKey,
+          state: s,
+          suggestionsExpanded: _suggestionsExpanded,
+          onToggleSuggestions: () =>
+              setState(() => _suggestionsExpanded = !_suggestionsExpanded),
+          onSelect: ctl.select,
         ),
         const SliverToBoxAdapter(child: KGap(KSpace.x2)),
       ],
@@ -151,21 +147,23 @@ class _CoverDialogState extends ConsumerState<CoverDialog> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        CoverDialogHead(itemName: s.options.value?.itemName ?? ''),
+        CoverDialogHead(
+          itemName: s.options.value?.itemName ?? '',
+          onPick: s.saving
+              ? null
+              : () => ctl.pick(dialogLabel: widget.texts.linuxDialogLabel),
+        ),
         if (widget.fixedHeight)
           Expanded(child: body)
         else
           Flexible(child: body),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: inset),
-          child: CoverDialogFooter(
-            kind: widget.kind,
-            formMode: widget.formMode,
-            enabled: s.changed,
-            saving: s.saving,
-            onCancel: () => Navigator.of(context).pop(),
-            onConfirm: _confirm,
-          ),
+        CoverDialogFooter(
+          kind: widget.kind,
+          formMode: widget.formMode,
+          enabled: s.changed,
+          saving: s.saving,
+          onCancel: () => Navigator.of(context).pop(),
+          onConfirm: _confirm,
         ),
       ],
     );

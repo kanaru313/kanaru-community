@@ -2515,9 +2515,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coverGroupPlaylistAlbums => 'Album covers in the playlist';
 
   @override
-  String get coverGroupOther => 'Other images';
-
-  @override
   String coverMoreAlbums(int count) {
     return 'Show $count more albums';
   }

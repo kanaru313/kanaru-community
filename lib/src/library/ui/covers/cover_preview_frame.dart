@@ -11,6 +11,9 @@ import 'cover_art.dart';
 import 'cover_frame_art.dart';
 import 'cover_frame_overlays.dart';
 
+/// Gap between the frame and its dashed drop outline.
+const double _dropOffset = KSpace.x1;
+
 /// Share of the pan room one arrow key press moves.
 const double _arrowStep = 0.05;
 
@@ -124,6 +127,7 @@ class _CoverPreviewFrameState extends State<CoverPreviewFrame> {
     content = ClipRRect(borderRadius: radius, child: content);
     if (_hover) {
       content = Stack(
+        clipBehavior: Clip.none,
         children: [
           ClipRRect(
             borderRadius: radius,
@@ -138,12 +142,17 @@ class _CoverPreviewFrameState extends State<CoverPreviewFrame> {
               ],
             ),
           ),
-          Positioned.fill(
+          // Outline 2 dp, drawn 4 dp outside the frame (mockup `.drop`).
+          Positioned(
+            left: -_dropOffset,
+            top: -_dropOffset,
+            right: -_dropOffset,
+            bottom: -_dropOffset,
             child: IgnorePointer(
               child: CustomPaint(
                 painter: CoverDashedBorderPainter(
                   color: scheme.primary,
-                  radius: coverFrameRadius.topLeft.x,
+                  radius: coverFrameRadius.topLeft.x + _dropOffset,
                   circle: _circle,
                 ),
               ),

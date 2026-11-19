@@ -6,6 +6,9 @@ import '../../state/covers/cover_dialog_options.dart';
 import '../../state/covers/cover_dialog_state.dart';
 import '../../state/custom_cover_providers.dart';
 
+/// Widest the hint grows (the mockup's `.cvhint`); no layout token.
+const double _maxWidth = 340;
+
 /// The visible line under the preview: how to pan, what saving the automatic
 /// cover does, or that an image is copied into Kanaru's data.
 class CoverHintLine extends StatelessWidget {
@@ -33,31 +36,34 @@ class CoverHintLine extends StatelessWidget {
     if (text == null) return const SizedBox.shrink();
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(KSpace.x6, KSpace.x3, KSpace.x6, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (state.panPossible) ...[
-            Padding(
-              padding: const EdgeInsets.only(top: 1),
-              child: Icon(
-                KIcons.pan,
-                size: KIconSize.xs,
-                color: scheme.onSurfaceVariant,
+      // 8 under the frame, 16 at the sides, at most 340 wide, centred.
+      padding: const EdgeInsets.fromLTRB(KSpace.x4, KSpace.x2, KSpace.x4, 0),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _maxWidth),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (state.panPossible) ...[
+                Icon(
+                  KIcons.pan,
+                  size: KIconSize.xs,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const KGap(KSpace.x1),
+              ],
+              Flexible(
+                child: Text(
+                  text,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
               ),
-            ),
-            const KGap(KSpace.x1),
-          ],
-          Flexible(
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

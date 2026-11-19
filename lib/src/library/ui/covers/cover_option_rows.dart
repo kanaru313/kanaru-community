@@ -13,7 +13,8 @@ import 'cover_art.dart';
 import 'cover_row_parts.dart';
 
 /// Side of the row thumbs.
-const double _thumb = 48;
+/// The library row's cover, so a picker row is the same size.
+const double _thumb = KMediaCard.coverSize;
 
 /// Album suggestion rows shown before "Xem thêm".
 const int coverCollapsedSuggestionRows = 4;
@@ -33,7 +34,6 @@ class CoverOptionRows extends StatelessWidget {
     required this.suggestionsExpanded,
     required this.onToggleSuggestions,
     required this.onSelect,
-    required this.onPick,
   });
 
   final CustomCoverKind kind;
@@ -42,7 +42,6 @@ class CoverOptionRows extends StatelessWidget {
   final bool suggestionsExpanded;
   final VoidCallback onToggleSuggestions;
   final ValueChanged<String> onSelect;
-  final VoidCallback onPick;
 
   bool get _round => kind == CustomCoverKind.artist;
 
@@ -91,7 +90,7 @@ class CoverOptionRows extends StatelessWidget {
             children: [
               _row(
                 CoverRowIds.automatic,
-                title: CoverText(l10n.coverAutoTitle),
+                title: l10n.coverAutoTitle,
                 art: AutomaticCoverArt(
                   kind: kind,
                   itemKey: itemKey,
@@ -103,7 +102,7 @@ class CoverOptionRows extends StatelessWidget {
               if (options.current != null)
                 _row(
                   CoverRowIds.current,
-                  title: CoverText(l10n.coverCurrentTitle),
+                  title: l10n.coverCurrentTitle,
                   subtitle: l10n.coverCurrentSubtitle,
                   art: _file(options.current!.thumb, itemKey),
                 ),
@@ -118,7 +117,7 @@ class CoverOptionRows extends StatelessWidget {
             final s = suggestions[i];
             return _row(
               s.rowId,
-              title: CoverText(s.title),
+              title: s.title,
               subtitle: s.year == null
                   ? l10n.coverAlbumSubtitle
                   : l10n.coverAlbumSubtitleYear(s.year!),
@@ -128,37 +127,26 @@ class CoverOptionRows extends StatelessWidget {
         ),
         if (more > 0)
           SliverToBoxAdapter(
-            child: KListRow(
-              title: Text(
-                suggestionsExpanded
-                    ? l10n.libraryShowLess
-                    : l10n.coverMoreAlbums(more),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: KSpace.x4),
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(horizontal: KSpace.x3),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: onToggleSuggestions,
+                  child: Text(
+                    suggestionsExpanded
+                        ? l10n.libraryShowLess
+                        : l10n.coverMoreAlbums(more),
+                  ),
+                ),
               ),
-              trailing: Icon(
-                suggestionsExpanded ? KIcons.collapse : KIcons.expand,
-                size: KIconSize.md,
-              ),
-              onTap: onToggleSuggestions,
             ),
           ),
-        SliverToBoxAdapter(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              CoverGroupTitle(l10n.coverGroupOther),
-              KListRow(
-                leading: const Icon(KIcons.imageAdd, size: KIconSize.md),
-                title: Text(
-                  FormFactor.of(context) == FormFactor.mobile
-                      ? l10n.coverPickMobile
-                      : l10n.coverPickDesktop,
-                ),
-                enabled: !state.saving,
-                onTap: onPick,
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -166,11 +154,9 @@ class CoverOptionRows extends StatelessWidget {
   Widget _pickedRow(AppLocalizations l10n, CoverPicked picked) => _row(
     CoverRowIds.picked,
     enabled: !picked.reading,
-    title: CoverText(
-      picked.image.nameIsGenerated
-          ? l10n.coverPickedGeneratedName
-          : picked.image.name,
-    ),
+    title: picked.image.nameIsGenerated
+        ? l10n.coverPickedGeneratedName
+        : picked.image.name,
     subtitle: picked.preview == null
         ? l10n.coverPickedReading
         : l10n.coverPickedSubtitle(
@@ -200,17 +186,18 @@ class CoverOptionRows extends StatelessWidget {
 
   Widget _row(
     String id, {
-    required Widget title,
+    required String title,
     String? subtitle,
     required Widget art,
     bool enabled = true,
-  }) => SelectionRow(
+  }) => SelectionRow.media(
     selected: state.selectedId == id,
     enabled: enabled,
     alikeOptions: true,
-    leading: art,
-    title: title,
-    subtitle: subtitle == null ? null : CoverText(subtitle),
+    cover: art,
+    circleCover: _round,
+    mediaTitle: title,
+    mediaLine2: subtitle,
     onTap: state.saving ? null : () => onSelect(id),
   );
 }

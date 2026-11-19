@@ -1684,10 +1684,6 @@
   "@coverGroupPlaylistAlbums": {
     "description": "Group title of the album suggestions for a playlist."
   },
-  "coverGroupOther": "Ảnh khác",
-  "@coverGroupOther": {
-    "description": "Group title of the pick-from-device row."
-  },
   "coverMoreAlbums": "Xem thêm {count} album",
   "@coverMoreAlbums": {
     "description": "Row that shows the remaining album suggestions.",

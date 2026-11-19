@@ -98,6 +98,10 @@ void main() {
 
   Finder row(String title) => find.widgetWithText(SelectionRow, title);
 
+  /// The media card inside a row: its box is the visible tint.
+  Finder card(String title) =>
+      find.descendant(of: row(title), matching: find.byType(KMediaCard));
+
   Future<void> pickImage(WidgetTester tester) async {
     final image = pickedFile(dir, 'IMG.jpg');
     cover.sizes[image.file.path] = (w: 3024, h: 4032);
@@ -116,11 +120,12 @@ void main() {
 
   /// The fill painted behind [title]'s row.
   Color tint(WidgetTester tester, String title) {
-    for (final box in tester.widgetList<DecoratedBox>(
-      find.descendant(of: row(title), matching: find.byType(DecoratedBox)),
+    // The media row's frame is a Material whose colour is the tint.
+    for (final m in tester.widgetList<Material>(
+      find.descendant(of: row(title), matching: find.byType(Material)),
     )) {
-      final d = box.decoration;
-      if (d is ShapeDecoration) return d.color!;
+      final c = m.color;
+      if (c != null && c != Colors.transparent) return c;
     }
     fail('no tint under $title');
   }
@@ -294,12 +299,13 @@ void main() {
       ),
     );
     expect(
-      tester.getRect(row('Tự động')).left - dialog.left,
+      tester.getRect(card('Tự động')).left - dialog.left,
       KSpace.x2,
       reason: 'rows are inset so the tint clears the dialog edge',
     );
-    expect(dialog.right - tester.getRect(row('Tự động')).right, KSpace.x2);
-    // Row content lines up with the 24 dp head padding.
+    expect(dialog.right - tester.getRect(card('Tự động')).right, KSpace.x2);
+    // The library row's own 8 dp side padding sits inside the 8 dp inset
+    // (the cover is 16 dp from the edge, not 24: same row as the library).
     expect(
       tester
               .getRect(
@@ -310,7 +316,7 @@ void main() {
               )
               .left -
           dialog.left,
-      KSpace.x6,
+      KSpace.x2 + KMediaCard.sidePadding,
     );
     expect(
       tester.getRect(find.text('Ảnh của nghệ sĩ ở mọi nơi')).left - dialog.left,
@@ -320,7 +326,7 @@ void main() {
 
   testWidgets('mobile sheet rows run to the screen edges', (tester) async {
     await open(tester, size: const Size(360, 800));
-    final r = tester.getRect(row('Tự động'));
+    final r = tester.getRect(card('Tự động'));
     expect((r.left, r.right), (0, 360));
   });
 }

@@ -21,24 +21,28 @@ class CoverSmallImageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final style = Theme.of(context).textTheme.bodySmall
+    final style = Theme.of(context).textTheme.bodyMedium
         ?.copyWith(color: scheme.onTertiaryContainer);
     return Padding(
+      // 4 above (after the preview's 8), 16 at the sides, 8 below.
       padding: const EdgeInsets.fromLTRB(
         KSpace.x4,
-        KSpace.x3,
-        KSpace.x4,
         KSpace.x1,
+        KSpace.x4,
+        KSpace.x2,
       ),
       child: Semantics(
         liveRegion: true,
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: scheme.tertiaryContainer,
-            borderRadius: KRadius.sm,
+            borderRadius: KRadius.md,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(KSpace.x3),
+            padding: const EdgeInsets.symmetric(
+              horizontal: KSpace.x4,
+              vertical: KSpace.x3,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

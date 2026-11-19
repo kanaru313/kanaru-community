@@ -3636,12 +3636,6 @@ abstract class AppLocalizations {
   /// **'Album covers in the playlist'**
   String get coverGroupPlaylistAlbums;
 
-  /// Group title of the pick-from-device row.
-  ///
-  /// In en, this message translates to:
-  /// **'Other images'**
-  String get coverGroupOther;
-
   /// Row that shows the remaining album suggestions.
   ///
   /// In en, this message translates to:

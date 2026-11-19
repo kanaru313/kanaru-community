@@ -264,7 +264,7 @@ void main() {
       final many = [for (var i = 0; i < 40; i++) suggestion('Album $i')];
       await open(tester, opts: options(suggestions: many));
       expect(find.text('Album 0'), findsOneWidget);
-      expect(find.text('Album 3'), findsOneWidget);
+      expect(find.text('Album 3', skipOffstage: false), findsOneWidget);
       expect(find.text('Album 4'), findsNothing);
       await tester.scrollUntilVisible(
         find.text('Xem thêm 36 album'),
@@ -308,7 +308,7 @@ void main() {
       await tester.tap(find.text('Thu gọn'));
       await tester.pumpAndSettle();
       expect(find.text('Album 39'), findsNothing);
-      expect(find.text('Album 3'), findsOneWidget);
+      expect(find.text('Album 3', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('desktop dialog is 620 wide: frame centred at its size, footer '
@@ -334,6 +334,68 @@ void main() {
         lessThan(30),
       );
     });
+
+    testWidgets('header: tonal pick button right of the titles, centred on '
+        'them; the 36 dp Xem thêm is a text button', (tester) async {
+      final many = [for (var i = 0; i < 8; i++) suggestion('Album $i')];
+      await open(
+        tester,
+        size: const Size(1280, 800),
+        opts: options(suggestions: many),
+      );
+      final pick = find.ancestor(
+        of: find.text('Chọn ảnh từ máy…'),
+        matching: find.byWidgetPredicate((w) => w is FilledButton),
+      );
+      expect(pick, findsOneWidget);
+      final title = tester.getRect(find.text('Ảnh bìa'));
+      final btn = tester.getRect(pick);
+      expect(btn.left, greaterThan(title.right));
+      final head = Rect.fromLTRB(
+        title.left,
+        title.top,
+        title.right,
+        tester.getRect(find.text('Mix')).bottom,
+      );
+      expect(btn.center.dy, closeTo(head.center.dy, 1));
+      final more = find.ancestor(
+        of: find.text('Xem thêm 4 album'),
+        matching: find.byType(TextButton),
+      );
+      await tester.scrollUntilVisible(
+        more,
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(CoverDialog),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      expect(tester.getSize(more).height, 36);
+    });
+
+    for (final (name, size) in [
+      ('mobile', const Size(360, 800)),
+      ('desktop', const Size(1280, 800)),
+    ]) {
+      testWidgets('option rows are spaced like library rows ($name)', (
+        tester,
+      ) async {
+        await open(
+          tester,
+          size: size,
+          opts: options(suggestions: [suggestion('A1'), suggestion('A2')]),
+        );
+        final a = tester.getRect(find.widgetWithText(SelectionRow, 'A1'));
+        final b = tester.getRect(find.widgetWithText(SelectionRow, 'A2'));
+        expect(
+          b.top - a.top,
+          KMediaCard.extentOf(const TextScaler.linear(1)),
+          reason: 'one library row plus KMediaCard.gap',
+        );
+      });
+    }
 
     testWidgets('4 albums or fewer have no Xem thêm row', (tester) async {
       await open(
@@ -705,10 +767,14 @@ void main() {
       await flushIo(tester);
     });
 
-    testWidgets('Tab goes frame, rows, Chọn ảnh, Huỷ, Lưu', (tester) async {
+    testWidgets('Tab goes Chọn ảnh (header), frame, rows, Huỷ, Lưu', (
+      tester,
+    ) async {
       await open(tester);
-      await pickImage(tester);
-      await tester.tap(find.byType(CoverPreviewFrame));
+      // A changed choice enables Lưu; then focus restarts from the top.
+      await tester.tap(find.text('Alpha'));
+      await tester.pump();
+      FocusManager.instance.primaryFocus?.unfocus();
       await tester.pump();
       String? focusedText() {
         final ctx = FocusManager.instance.primaryFocus?.context;
@@ -737,7 +803,7 @@ void main() {
       final pick = stops.indexWhere((t) => t?.startsWith('Chọn ảnh') ?? false);
       final cancel = stops.indexOf('Huỷ');
       final save = stops.indexOf('Lưu');
-      expect(pick, greaterThan(0));
+      expect(pick, 0, reason: 'the header button comes first');
       expect(cancel, greaterThan(pick));
       expect(save, greaterThan(cancel));
     });

@@ -9,7 +9,7 @@ import '../../state/custom_cover_providers.dart';
 import '../playlist_common/playlist_cover.dart';
 
 /// Corner radius of the 48 dp row thumbs of the cover dialog.
-const BorderRadius coverThumbRadius = BorderRadius.all(Radius.circular(10));
+const BorderRadius coverThumbRadius = KMediaCard.coverRadius;
 
 /// Corner radius of the square preview frame (like the app's covers).
 const BorderRadius coverFrameRadius = BorderRadius.all(Radius.circular(14));

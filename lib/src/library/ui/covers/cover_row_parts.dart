@@ -1,17 +1,7 @@
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// Up to two lines, then an ellipsis (long names, 200 % text).
-class CoverText extends StatelessWidget {
-  const CoverText(this.text, {super.key});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) =>
-      Text(text, maxLines: 2, overflow: TextOverflow.ellipsis);
-}
-
+/// Group title over the suggestion rows (14 / 700, `onSurfaceVariant`).
 class CoverGroupTitle extends StatelessWidget {
   const CoverGroupTitle(this.text, {super.key});
 
@@ -20,9 +10,9 @@ class CoverGroupTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(
-      KSpace.x4,
-      KSpace.x4,
-      KSpace.x4,
+      KSpace.x6,
+      KSpace.x3,
+      KSpace.x6,
       KSpace.x1,
     ),
     child: Semantics(
