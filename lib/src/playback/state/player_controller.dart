@@ -19,6 +19,7 @@ import '../domain/track_title_lookup.dart';
 import '../domain/playback_notice.dart';
 import '../domain/playback_settings.dart';
 import '../domain/playback_views.dart';
+import '../domain/sleep_stop_policy.dart';
 import '../domain/queue_logic.dart' hide remove, move, undo, enqueue;
 import '../domain/queue_logic.dart' as q show remove, move, undo, enqueue;
 import 'command_chain.dart';
@@ -30,6 +31,7 @@ import 'session_restore.dart';
 part 'player_controller_events.dart';
 part 'player_controller_reconcile.dart';
 part 'player_controller_session.dart';
+part 'player_controller_sleep.dart';
 
 final _log = Logger('PlayerController');
 
@@ -165,6 +167,14 @@ class PlayerController implements PlaybackCommands {
   final _seekCtrl = StreamController<Duration>.broadcast();
   final _noticeCtrl = StreamController<PlaybackNotice>.broadcast();
   final _clearedCtrl = StreamController<ClearedQueue>.broadcast();
+  final _trackEndsCtrl = StreamController<TrackEnd>.broadcast();
+
+  // The sleep stop policy (see player_controller_sleep.dart). [_withheldFor]
+  // is the entry the reconcile last kept the next back for; the entry id is
+  // used because a reload has no token yet when that is decided.
+  SleepStopPolicy? _policy;
+  int? _withheldFor;
+  final List<TrackEnd> _pendingEnds = [];
 
   /// What is loaded, with the latest value for a late listener.
   Stream<NowPlaying> get nowPlaying => _now.stream;
@@ -174,6 +184,26 @@ class PlayerController implements PlaybackCommands {
 
   /// The queue each time [clearQueue] emptied it, for saved-queue history.
   Stream<ClearedQueue> get queueCleared => _clearedCtrl.stream;
+
+  /// Each entry the engine finished by itself, after the state it left
+  /// behind was published. Never for failures, skips, jumps or seeks.
+  Stream<TrackEnd> get trackEnds => _trackEndsCtrl.stream;
+
+  /// Installs (or, with null, removes) the stop policy. The controller drops
+  /// it when it consumes a stop and on [clearQueue]; the owner of the policy
+  /// decides otherwise. Does nothing after [dispose].
+  Future<void> setSleepStopPolicy(SleepStopPolicy? policy) {
+    if (_disposed) return Future.value();
+    return _cmd(() async {
+      _policy = policy;
+      _withheldFor = null;
+    });
+  }
+
+  /// The policy's answer may have changed: decide the next entry again.
+  /// Does nothing after [dispose].
+  Future<void> sleepPolicyChanged() =>
+      _disposed ? Future.value() : _cmd(() async {});
 
   /// Play, pause or stop, and the volume.
   Stream<TransportView> get transport => _transport.stream;
@@ -705,6 +735,8 @@ class PlayerController implements PlaybackCommands {
     await _repo.replace(const [], _nowMs());
     _queue = QueueState(shuffled: _queue.shuffled, repeat: _queue.repeat);
     _context = null;
+    _policy = null;
+    _withheldFor = null;
     _intent = PlayIntent.stopped;
     _undo = null;
     _resetPlayback();
@@ -784,5 +816,6 @@ class PlayerController implements PlaybackCommands {
     await _seekCtrl.close();
     await _noticeCtrl.close();
     await _clearedCtrl.close();
+    await _trackEndsCtrl.close();
   }
 }

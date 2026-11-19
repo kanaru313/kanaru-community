@@ -339,6 +339,22 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
   action resets the counter. `Ended` with repeat off pauses the engine and the intent at the end of the
   last entry (the entry stays current; Play starts it over; an entry added later waits paused). A seek
   back from the end makes a second `Ended` possible.
+- **Stop policy and `TrackEnd`:** `domain/sleep_stop_policy.dart` holds `SleepStopPolicy`
+  (`stopsAfterCurrent(queue, repeatTimes)`, `trackEnded()`) and the `TrackEnd` value. The owner installs a
+  policy with `setSleepStopPolicy` (null removes it) and calls `sleepPolicyChanged` when its answer may
+  have changed; both are chain commands (dirty, then reconcile) and do nothing after `dispose`. The
+  answer is read synchronously in `_nextCandidate`, with the queue as it is at that moment: while it says
+  stop, no next is handed over (a queue edit, repeat or shuffle change in the same burst cannot leave a
+  stale next). A policy that throws counts as stop. Stopping: at `Ended` the next entry loads paused at 0
+  (repeat one: the same entry; repeat all: the first; reshuffled: the new pass, saved, shuffle on; no next:
+  the usual queue end); in an `Advanced` race the engine already started the next entry, so the
+  controller follows it, pauses and seeks to 0, and a counted repeat is dropped, not decremented. A stop
+  consumes the policy; `clearQueue` drops it; `playTracks`, `stop` and edits keep it. `trackEnded()` runs
+  inside the chain, before the reconcile, for every natural end that is not a stop.
+- **`trackEnds`** (`Stream<TrackEnd>`, async broadcast, closed on dispose): one event per entry the
+  engine finished by itself (accepted or replaced advance, a loop, `Ended` with or without a next;
+  `queueEnded` when nothing followed; `sleepStop` when the policy stopped it), emitted after the
+  handler's publish. Never for failures, next, previous, jumps, seeks or plays.
 - **Intent** (`PlayIntent`: playing, paused, stopped) is the only source of play/pause. Stop empties
   the engine and gives focus back; the entry stays.
 - **Audio focus:** every transition to playing awaits `PlaybackFocus.activate()` (2 s timeout = denied).
