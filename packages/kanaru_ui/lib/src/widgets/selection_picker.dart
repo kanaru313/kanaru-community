@@ -78,7 +78,7 @@ Future<T?> showSelectionPicker<T>(
     (confirmLabel == null) == (cancelLabel == null),
     'confirmLabel and cancelLabel go together',
   );
-  Widget body(BuildContext _) => _PickerBody<T>(
+  Widget body(BuildContext _, {bool compact = false}) => _PickerBody<T>(
     options: options,
     selected: selected,
     title: title,
@@ -86,6 +86,7 @@ Future<T?> showSelectionPicker<T>(
     confirm: confirm,
     confirmLabel: confirmLabel,
     cancelLabel: cancelLabel,
+    compact: compact,
   );
 
   final centred = presentation == SelectionPickerPresentation.dialog;
@@ -124,9 +125,14 @@ Future<T?> showSelectionPicker<T>(
         color: Theme.of(context).colorScheme.surfaceContainerHigh,
         shape: KShape.of(KRadius.lg, continuous: true),
         clipBehavior: Clip.antiAlias,
+        // Same size as the sort dropdown: width follows the content between
+        // the dropdown limits, rows are dense.
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: KLayout.dialog),
-          child: body(context),
+          constraints: const BoxConstraints(
+            minWidth: KLayout.anchoredPickerMinWidth,
+            maxWidth: KLayout.anchoredPickerMaxWidth,
+          ),
+          child: IntrinsicWidth(child: body(context, compact: true)),
         ),
       ),
     ),
@@ -142,6 +148,7 @@ class _PickerBody<T> extends StatefulWidget {
     required this.confirm,
     required this.confirmLabel,
     required this.cancelLabel,
+    required this.compact,
   });
 
   final List<SelectionOption<T>> options;
@@ -151,6 +158,10 @@ class _PickerBody<T> extends StatefulWidget {
   final Future<bool> Function(T value)? confirm;
   final String? confirmLabel;
   final String? cancelLabel;
+
+  /// Anchored desktop panel: dense rows, `titleSmall`, no gaps (the sort
+  /// dropdown's size). Sheets and dialogs keep the 48 dp rows.
+  final bool compact;
 
   bool get footer => confirmLabel != null && cancelLabel != null;
 
@@ -197,43 +208,62 @@ class _PickerBodyState<T> extends State<_PickerBody<T>> {
               KSpace.x2,
             ),
             child: DefaultTextStyle.merge(
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style:
+                  (widget.compact
+                          ? textTheme.titleSmall
+                          : textTheme.titleMedium)
+                      ?.copyWith(fontWeight: FontWeight.w700),
               child: widget.title!,
             ),
           ),
         if (widget.header != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
-            child: widget.header,
+            // Caption of the compact panel: bodySmall, as the mockup draws it.
+            child: widget.compact
+                ? DefaultTextStyle.merge(
+                    style: textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    child: widget.header!,
+                  )
+                : widget.header,
           ),
         Flexible(
-          child: ListView.separated(
-            shrinkWrap: true,
-            padding: const EdgeInsets.all(KSpace.x2),
-            itemCount: widget.options.length,
-            separatorBuilder: (_, _) => const KGap(KSpace.x1),
-            itemBuilder: (context, i) {
-              final o = widget.options[i];
-              return SelectionRow(
-                title: o.title,
-                subtitle: o.subtitle,
-                leading: o.leading,
-                enabled: o.enabled && !_busy,
-                selected:
-                    o.value == (widget.footer ? _pending : widget.selected),
-                onTap: widget.footer
-                    ? () => setState(() => _pending = o.value)
-                    : () => _pick(o.value),
-              );
-            },
-          ),
+          child: widget.compact
+              // A plain scroll view (a viewport has no intrinsic width) so the
+              // panel can size to its content, as the sort dropdown does.
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.all(KSpace.x2),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [for (final o in widget.options) _row(o)],
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.all(KSpace.x2),
+                  itemCount: widget.options.length,
+                  separatorBuilder: (_, _) => const KGap(KSpace.x1),
+                  itemBuilder: (context, i) => _row(widget.options[i]),
+                ),
         ),
         if (widget.footer) _footer(context),
       ],
     );
   }
+
+  Widget _row(SelectionOption<T> o) => SelectionRow(
+    dense: widget.compact,
+    title: o.title,
+    subtitle: o.subtitle,
+    leading: o.leading,
+    enabled: o.enabled && !_busy,
+    selected: o.value == (widget.footer ? _pending : widget.selected),
+    onTap: widget.footer
+        ? () => setState(() => _pending = o.value)
+        : () => _pick(o.value),
+  );
 
   Widget _footer(BuildContext context) {
     final pending = _pending;

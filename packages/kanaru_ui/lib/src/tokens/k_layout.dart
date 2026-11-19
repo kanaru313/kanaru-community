@@ -21,6 +21,11 @@ abstract final class KLayout {
   static const double dropdownMaxWidth = 280;
   static const double dropdownMaxHeight = 360;
 
+  /// Anchored desktop `SelectionPicker` panel: width follows the content
+  /// between these two.
+  static const double anchoredPickerMinWidth = 200;
+  static const double anchoredPickerMaxWidth = 360;
+
   /// Dropdown item row (dense `SelectionRow`), both shells: the hit area is
   /// [dropdownRowHeight] tall, the visible tint / hover / focus shape is
   /// [dropdownRowVisible] tall and centred (a transparent band above and below

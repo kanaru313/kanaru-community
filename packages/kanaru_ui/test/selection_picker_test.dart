@@ -153,6 +153,164 @@ void main() {
     expect(await result, 1);
   });
 
+  group('anchored desktop panel has the sort dropdown size', () {
+    double fontOf(WidgetTester tester, String text) => tester
+        .widget<DefaultTextStyle>(
+          find
+              .ancestor(
+                of: find.text(text),
+                matching: find.byType(DefaultTextStyle),
+              )
+              .first,
+        )
+        .style
+        .fontSize!;
+
+    Future<void> openWith(
+      WidgetTester tester,
+      List<SelectionOption<int>> options,
+      Size window, {
+      Widget? header,
+      bool footer = false,
+    }) async {
+      useWindow(tester, window);
+      final anchor = GlobalKey();
+      await tester.pumpWidget(
+        host(
+          Align(
+            alignment: Alignment.topLeft,
+            child: Builder(
+              builder: (context) => TextButton(
+                key: anchor,
+                onPressed: () => showSelectionPicker<int>(
+                  context,
+                  options: options,
+                  selected: 1,
+                  title: const Text('Pick'),
+                  header: header,
+                  confirmLabel: footer ? 'OK' : null,
+                  cancelLabel: footer ? 'Cancel' : null,
+                  anchor: anchor,
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('rows 40 tall, bodyMedium, title titleSmall, no gap', (
+      tester,
+    ) async {
+      await openWith(tester, _options, const Size(1400, 900));
+      final text = Theme.of(tester.element(find.text('One'))).textTheme;
+      final rows = find.byType(SelectionRow);
+      expect(tester.getSize(rows.first).height, KLayout.dropdownRowHeight);
+      expect(
+        tester.getTopLeft(rows.last).dy - tester.getBottomLeft(rows.first).dy,
+        0,
+      );
+      expect(fontOf(tester, 'Two'), text.bodyMedium!.fontSize);
+      expect(fontOf(tester, 'Pick'), text.titleSmall!.fontSize);
+    });
+
+    testWidgets('anchored with a footer renders, buttons visible, 200..360', (
+      tester,
+    ) async {
+      await openWith(tester, _options, const Size(1400, 900), footer: true);
+      expect(tester.takeException(), isNull);
+      expect(find.text('OK'), findsOneWidget);
+      expect(find.text('Cancel'), findsOneWidget);
+      final panel = tester.getSize(
+        find
+            .ancestor(of: find.text('OK'), matching: find.byType(Material))
+            .last,
+      );
+      expect(panel.width, inInclusiveRange(200, 360));
+    });
+
+    testWidgets('50 options stay inside the window and scroll', (tester) async {
+      const window = Size(1400, 600);
+      await openWith(tester, [
+        for (var i = 1; i <= 50; i++)
+          SelectionOption<int>(value: i, title: Text('Option $i')),
+      ], window);
+      expect(tester.takeException(), isNull);
+      final scroll = find.byType(SingleChildScrollView);
+      expect(
+        tester.getSize(scroll).height,
+        lessThanOrEqualTo(window.height - 2 * KSpace.x4),
+      );
+      await tester.dragUntilVisible(
+        find.text('Option 50'),
+        scroll,
+        const Offset(0, -200),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Option 50').hitTestable(), findsOneWidget);
+    });
+
+    testWidgets('caption is bodySmall', (tester) async {
+      await openWith(
+        tester,
+        _options,
+        const Size(1400, 900),
+        header: const Text('Caption'),
+      );
+      final text = Theme.of(tester.element(find.text('One'))).textTheme;
+      expect(fontOf(tester, 'Caption'), text.bodySmall!.fontSize);
+    });
+
+    testWidgets('width follows content, clamped to 200..360', (tester) async {
+      await openWith(tester, _options, const Size(1400, 900));
+      final panel = find.ancestor(
+        of: find.byType(SelectionRow).first,
+        matching: find.byType(Material),
+      );
+      expect(tester.getSize(panel.first).width, KLayout.anchoredPickerMinWidth);
+      await tester.tapAt(const Offset(900, 600));
+      await tester.pumpAndSettle();
+      await openWith(tester, [
+        SelectionOption<int>(value: 1, title: Text('Long ' * 40)),
+        const SelectionOption<int>(value: 2, title: Text('Two')),
+      ], const Size(1400, 900));
+      expect(
+        tester
+            .getSize(
+              find
+                  .ancestor(
+                    of: find.byType(SelectionRow).first,
+                    matching: find.byType(Material),
+                  )
+                  .first,
+            )
+            .width,
+        KLayout.anchoredPickerMaxWidth,
+      );
+    });
+
+    testWidgets('mobile sheet keeps 48 dp rows and bodyLarge', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      late Future<int?> result;
+      await tester.pumpWidget(host(_opener((f) => result = f)));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      final text = Theme.of(tester.element(find.text('One'))).textTheme;
+      expect(
+        tester.getSize(find.byType(SelectionRow).first).height,
+        greaterThanOrEqualTo(48),
+      );
+      expect(fontOf(tester, 'One'), text.bodyLarge!.fontSize);
+      expect(fontOf(tester, 'Pick'), text.titleMedium!.fontSize);
+      await tester.tap(find.text('One'));
+      await tester.pumpAndSettle();
+      expect(await result, 1);
+    });
+  });
+
   testWidgets('desktop without anchor opens a dialog; Back dismisses to null', (
     tester,
   ) async {
