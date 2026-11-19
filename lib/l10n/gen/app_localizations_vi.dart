@@ -2251,10 +2251,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsAppearanceTextSize => 'Cỡ chữ';
 
   @override
-  String get settingsAppearanceTextSizeCaption =>
-      'Cỡ chữ của cả app, nhân với cỡ chữ của hệ thống.';
-
-  @override
   String get settingsAppearanceDisplayTitle => 'Hiển thị';
 
   @override

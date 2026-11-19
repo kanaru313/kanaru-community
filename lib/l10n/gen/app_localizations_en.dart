@@ -2520,10 +2520,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAppearanceTextSize => 'Text size';
 
   @override
-  String get settingsAppearanceTextSizeCaption =>
-      'Text size of the whole app, multiplied by the system text size.';
-
-  @override
   String get settingsAppearanceDisplayTitle => 'Display';
 
   @override

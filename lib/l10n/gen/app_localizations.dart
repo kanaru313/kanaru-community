@@ -3738,12 +3738,6 @@ abstract class AppLocalizations {
   /// **'Text size'**
   String get settingsAppearanceTextSize;
 
-  /// No description provided for @settingsAppearanceTextSizeCaption.
-  ///
-  /// In en, this message translates to:
-  /// **'Text size of the whole app, multiplied by the system text size.'**
-  String get settingsAppearanceTextSizeCaption;
-
   /// No description provided for @settingsAppearanceDisplayTitle.
   ///
   /// In en, this message translates to:

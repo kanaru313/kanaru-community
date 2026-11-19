@@ -112,13 +112,14 @@ void main() {
     );
     await tester.tap(find.text('Text size'));
     await tester.pumpAndSettle();
-    // The caption sits under the picker title.
+    // The picker has no caption; the default step carries its own subtitle.
     expect(
       find.text(
         'Text size of the whole app, multiplied by the system text size.',
       ),
-      findsOneWidget,
+      findsNothing,
     );
+    expect(find.text('Default'), findsOneWidget);
     await tester.tap(find.text('125 %'));
     await tester.pumpAndSettle();
     expect(h.store.read('app.text_scale'), 125);

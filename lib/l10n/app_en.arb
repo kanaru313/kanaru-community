@@ -1623,7 +1623,6 @@
   "settingsAppearanceTextTitle": "Text",
   "settingsAppearanceFont": "Font",
   "settingsAppearanceTextSize": "Text size",
-  "settingsAppearanceTextSizeCaption": "Text size of the whole app, multiplied by the system text size.",
   "settingsAppearanceDisplayTitle": "Display",
   "settingsAppearanceSeekBar": "Seek bar",
   "settingsAppearanceWindowFrame": "System window frame",

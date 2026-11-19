@@ -40,7 +40,6 @@ class _AppearanceSettingsPageState
       anchor: _textSizeKey,
       anchorAlign: KAnchorAlign.end,
       title: Text(l10n.settingsAppearanceTextSize),
-      header: Text(l10n.settingsAppearanceTextSizeCaption),
       selected: current,
       options: [
         for (final step in textScaleSteps)
