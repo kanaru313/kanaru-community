@@ -378,6 +378,11 @@ void main() {
       final title = tester.getRect(find.text('Ảnh bìa'));
       final btn = tester.getRect(pick);
       expect(btn.left, greaterThan(title.right));
+      expect(
+        btn.right,
+        closeTo(tester.getRect(find.byType(CoverDialog)).right - KSpace.x6, 1),
+        reason: 'the button ends at the header padding, not mid-row',
+      );
       final head = Rect.fromLTRB(
         title.left,
         title.top,

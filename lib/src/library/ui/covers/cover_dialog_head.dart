@@ -35,12 +35,14 @@ class CoverDialogHead extends StatelessWidget {
         KSpace.x1,
       ),
       child: Row(
-        // The button is centred on the title block (title + item name).
+        // Titles at the left, the button at the right edge (space between);
+        // the button is centred on the title block (title + item name).
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // The titles take the rest of the row; the button shrink-wraps and
-          // only its label ellipsizes when the row is too narrow.
-          Expanded(child: _titles(context, theme)),
+          // Both shrink-wrap; when the row is narrow they share it and only
+          // the button label ellipsizes.
+          Flexible(child: _titles(context, theme)),
           const KGap(KSpace.x3),
           Flexible(
             child: FilledButton.tonalIcon(
