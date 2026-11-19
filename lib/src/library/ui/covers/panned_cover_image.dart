@@ -70,8 +70,10 @@ class PannedCoverImage extends StatelessWidget {
       // A new file keeps showing the old picture until it has decoded.
       gaplessPlayback: true,
       errorBuilder: errorBuilder,
+      // Always the same stateful wrapper (a cached first picture counts as
+      // shown), so a later switch to an uncached file never starts from 0.
       frameBuilder: (context, child, frame, sync) =>
-          sync ? child : _FirstFrameFade(shown: frame != null, child: child),
+          _FirstFrameFade(shown: sync || frame != null, child: child),
     );
   }
 }

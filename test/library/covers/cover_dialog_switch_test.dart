@@ -217,6 +217,32 @@ void main() {
     expect(frameImage(tester).raw?.image, isNotNull);
   });
 
+  testWidgets('a cached first image then an uncached one never dims', (
+    tester,
+  ) async {
+    await open(tester, size: const Size(360, 800));
+    // Warm the image cache with Alpha, then drop back to the automatic cover.
+    await tester.tap(row('Alpha'));
+    for (var i = 0; i < 40; i++) {
+      await decode(tester);
+    }
+    await tester.tap(row('Tự động'));
+    await tester.pumpAndSettle();
+    // Alpha again: now it loads synchronously from the cache.
+    await tester.tap(row('Alpha'));
+    await tester.pump();
+    expect(frameImage(tester).raw?.image, isNotNull, reason: 'cached: sync');
+    expect(frameImage(tester).opacity, 1);
+
+    await tester.tap(row('Beta'));
+    for (var t = 0; t < 20; t++) {
+      final f = frameImage(tester);
+      expect(f.raw?.image, isNotNull, reason: 'no image at frame $t');
+      expect(f.opacity, 1, reason: 'dimmed at frame $t');
+      await decode(tester);
+    }
+  });
+
   testWidgets('a suggestion shows centred, not at the picked image pan', (
     tester,
   ) async {
