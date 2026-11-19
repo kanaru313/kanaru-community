@@ -5,7 +5,6 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../../extension/state/extension_registry.dart';
 import '../../../extension/state/registry_entries.dart';
 import '../../domain/playlists/playlist_ids.dart';
-import '../browse/library_routes.dart';
 import '../library_locations.dart';
 import '../playlists/playlist_page.dart';
 import '../playlists/playlists_page.dart';
@@ -47,16 +46,16 @@ void registerPlaylists(ExtensionRegistry registry) {
         routes: [
           GoRoute(
             path: PlaylistUids.favorites,
-            pageBuilder: (context, state) => libraryDetailPage(
-              state,
-              const PlaylistPage(uid: PlaylistUids.favorites),
+            pageBuilder: (context, state) => KDetailPage(
+              key: state.pageKey,
+              child: const PlaylistPage(uid: PlaylistUids.favorites),
             ),
           ),
           GoRoute(
             path: ':uid',
-            pageBuilder: (context, state) => libraryDetailPage(
-              state,
-              PlaylistPage(uid: state.pathParameters['uid']!),
+            pageBuilder: (context, state) => KDetailPage(
+              key: state.pageKey,
+              child: PlaylistPage(uid: state.pathParameters['uid']!),
             ),
           ),
         ],

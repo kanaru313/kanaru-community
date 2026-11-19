@@ -10,12 +10,12 @@ import 'package:kanaru/src/database/custom_covers_store.dart';
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/state/custom_cover_providers.dart';
-import 'package:kanaru/src/library/ui/browse/library_routes.dart';
 import 'package:kanaru/src/library/state/playlists/playlist_providers.dart';
 import 'package:kanaru/src/platform/domain/app_paths.dart';
 import 'package:kanaru/src/platform/domain/settings_store.dart';
 import 'package:kanaru/src/platform/state/platform_providers.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
+import 'package:kanaru_ui/kanaru_ui.dart' show KDetailPage;
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../support/fake_cover_importer.dart';
@@ -126,11 +126,11 @@ class PlaylistUiHarness {
         ),
         GoRoute(
           path: '/playlists/:uid',
-          // The real detail transition: its 240 ms exit is what the delete
-          // flow has to wait for.
-          pageBuilder: (context, state) => libraryDetailPage(
-            state,
-            pageBuilder == null
+          // The real detail transition: its exit (`KMotion.pageOut`) is what
+          // the delete flow has to wait for.
+          pageBuilder: (context, state) => KDetailPage(
+            key: state.pageKey,
+            child: pageBuilder == null
                 ? Scaffold(body: Text('PAGE ${state.pathParameters['uid']}'))
                 : pageBuilder(context, state.pathParameters['uid']!),
           ),
