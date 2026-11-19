@@ -163,16 +163,7 @@ class _Header extends StatelessWidget {
     return Column(
       children: [
         const KGap(KSpace.x4),
-        DecoratedBox(
-          decoration: ShapeDecoration(
-            shape: KShape.of(KRadius.lg),
-            color: scheme.primary,
-          ),
-          child: SizedBox.square(
-            dimension: KSpace.x10,
-            child: Icon(KIcons.appLogo, size: KIconSize.xl, color: scheme.onPrimary),
-          ),
-        ),
+        const KanaruLogo(size: KSpace.x10),
         const KGap(KSpace.x4),
         Semantics(
           header: true,

@@ -29,9 +29,13 @@ class ListenObservation {
 }
 
 class _Listen {
-  _Listen(this.observation);
+  _Listen(this.observation, this.rule, this.ruleReadAt);
 
   ListenObservation observation;
+
+  /// The rule this listen is judged by, and the clock of the last read.
+  ListenRule rule;
+  Duration ruleReadAt;
   final acc = ListenAccumulator();
   int? rowId;
 
@@ -50,14 +54,23 @@ class _Listen {
 /// on pause, on a load change and on [flush]. Writes go through the
 /// recorder's own chain and are never awaited by the player's commands; a
 /// failed write is logged.
+///
+/// The rule and the history switch are read from the settings, never held
+/// past the next check: [rule] at most once a second while a listen is
+/// open, [historyEnabled] when a row would be inserted. Switching history
+/// off only stops new rows; a row already written keeps being updated.
 class ListenRecorder {
   ListenRecorder({
     required this._writer,
     required this._deviceId,
+    ListenRule Function()? rule,
+    bool Function()? historyEnabled,
     int Function()? wallClock,
     Duration Function()? monotonic,
     this.checkpoint = const Duration(seconds: 10),
-  }) : _wall = wallClock ?? (() => DateTime.now().millisecondsSinceEpoch),
+  }) : _rule = rule ?? (() => ListenRule.standard),
+       _history = historyEnabled ?? (() => true),
+       _wall = wallClock ?? (() => DateTime.now().millisecondsSinceEpoch),
        _mono = monotonic ?? _stopwatchClock();
 
   static Duration Function() _stopwatchClock() {
@@ -67,6 +80,8 @@ class ListenRecorder {
 
   final PlayLogWriter _writer;
   final String Function() _deviceId;
+  final ListenRule Function() _rule;
+  final bool Function() _history;
   final int Function() _wall;
   final Duration Function() _mono;
   final Duration checkpoint;
@@ -86,7 +101,8 @@ class ListenRecorder {
     var current = active;
     if (current == null || current.observation.token != o.token) {
       if (current != null) _finish(current);
-      current = _active = _Listen(o);
+      final now = _mono();
+      current = _active = _Listen(o, _rule(), now);
     }
     current.observation = o;
     final wasPlaying = current.acc.playing;
@@ -101,7 +117,7 @@ class ListenRecorder {
     final acc = current.acc;
     final hasRow = current.queuedMs >= 0;
     if (!hasRow) {
-      if (acc.qualifies) _persist(current);
+      if (_wouldInsert(current, refresh: true)) _persist(current);
       return;
     }
     final due =
@@ -112,7 +128,21 @@ class ListenRecorder {
 
   void _finish(_Listen listen) {
     _active = null;
-    if (listen.acc.qualifies || listen.queuedMs >= 0) _persist(listen);
+    if (listen.queuedMs >= 0 || _wouldInsert(listen, refresh: true)) {
+      _persist(listen);
+    }
+  }
+
+  /// Whether a row has to be inserted for [listen] now: it qualifies under
+  /// the current rule and history is on. [refresh] re-reads the rule when the
+  /// last read is a second old or more; the clock is the recorder's own.
+  bool _wouldInsert(_Listen listen, {required bool refresh}) {
+    final now = _mono();
+    if (refresh && now - listen.ruleReadAt >= const Duration(seconds: 1)) {
+      listen.rule = _rule();
+      listen.ruleReadAt = now;
+    }
+    return listen.acc.qualifiesUnder(listen.rule) && _history();
   }
 
   /// Queues the insert (first time) or the update of the listen's row with
@@ -150,7 +180,8 @@ class ListenRecorder {
   /// Never waits on the player's commands.
   Future<void> flush() async {
     final active = _active;
-    if (active != null && (active.acc.qualifies || active.queuedMs >= 0)) {
+    if (active != null &&
+        (active.queuedMs >= 0 || _wouldInsert(active, refresh: true))) {
       _persist(active);
     }
     await _chain.whenIdle();

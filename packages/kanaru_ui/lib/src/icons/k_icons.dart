@@ -21,7 +21,6 @@ abstract final class KIcons {
   static const IconData back = FluentIcons.arrow_left_24_regular;
   static const IconData forward = FluentIcons.arrow_right_24_regular;
   static const IconData sidebarToggle = FluentIcons.navigation_24_regular;
-  static const IconData appLogo = FluentIcons.music_note_2_24_filled;
 
   // Generic glyphs, used by tests and placeholders.
   static const IconData placeholder = FluentIcons.circle_24_filled;
@@ -163,4 +162,27 @@ abstract final class KIcons {
   static const IconData sortName = FluentIcons.text_sort_ascending_24_regular;
   static const IconData stats = FluentIcons.data_trending_24_regular;
   static const IconData linkOff = FluentIcons.link_dismiss_24_regular;
+
+  // Settings rows (glyphs of mockups/_settings.js, named by meaning).
+  static const IconData appearance = FluentIcons.paint_brush_24_regular;
+  static const IconData integrations = FluentIcons.plug_connected_24_regular;
+  static const IconData dataStorage = FluentIcons.database_24_regular;
+  static const IconData proEdition = FluentIcons.diamond_24_regular;
+  static const IconData pureBlack = FluentIcons.dark_theme_24_regular;
+  static const IconData motion = FluentIcons.sparkle_24_regular;
+  static const IconData font = FluentIcons.text_font_24_regular;
+  static const IconData textSize = FluentIcons.text_font_size_24_regular;
+  static const IconData seekBar = FluentIcons.data_bar_vertical_24_regular;
+  static const IconData windowFrame = FluentIcons.window_24_regular;
+  static const IconData gapless = FluentIcons.arrow_right_24_regular;
+  static const IconData fadeIn = FluentIcons.speaker_2_24_regular;
+  static const IconData fadeOut = FluentIcons.speaker_1_24_regular;
+  static const IconData previousButton = FluentIcons.previous_24_regular;
+  static const IconData crossfade = FluentIcons.arrow_swap_24_regular;
+  static const IconData outputDevice = FluentIcons.headphones_24_regular;
+  static const IconData replayGain = FluentIcons.options_24_regular;
+  static const IconData preamp = FluentIcons.add_circle_24_regular;
+  static const IconData clipping = FluentIcons.shield_24_regular;
+  static const IconData license = FluentIcons.scales_24_regular;
+  static const IconData openSourceLicenses = FluentIcons.book_open_24_regular;
 }

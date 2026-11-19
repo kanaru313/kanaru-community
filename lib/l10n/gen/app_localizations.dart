@@ -3599,6 +3599,558 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Native libraries'**
   String get settingsNativeVersions;
+
+  /// No description provided for @settingsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save settings. Changes last until the app closes.'**
+  String get settingsSaveFailed;
+
+  /// No description provided for @settingsRootAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsRootAppearance;
+
+  /// No description provided for @settingsRootAppearanceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme, language, colors, text, seek bar'**
+  String get settingsRootAppearanceDesc;
+
+  /// No description provided for @settingsRootLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get settingsRootLibrary;
+
+  /// No description provided for @settingsRootLibraryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Music folders, scan, tabs, artist split'**
+  String get settingsRootLibraryDesc;
+
+  /// No description provided for @settingsRootLibraryMissingPermission.
+  ///
+  /// In en, this message translates to:
+  /// **' · music permission missing'**
+  String get settingsRootLibraryMissingPermission;
+
+  /// No description provided for @settingsRootPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback'**
+  String get settingsRootPlayback;
+
+  /// No description provided for @settingsRootPlaybackDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Gapless, sound, ReplayGain, listening history'**
+  String get settingsRootPlaybackDesc;
+
+  /// No description provided for @settingsRootLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get settingsRootLyrics;
+
+  /// No description provided for @settingsRootLyricsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Display, search and save, sources, translation'**
+  String get settingsRootLyricsDesc;
+
+  /// No description provided for @settingsRootPlugins.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins'**
+  String get settingsRootPlugins;
+
+  /// No description provided for @settingsRootPluginsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed plugins, plugin store, updates'**
+  String get settingsRootPluginsDesc;
+
+  /// No description provided for @settingsRootAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI chat'**
+  String get settingsRootAi;
+
+  /// No description provided for @settingsRootAiDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AI services, permissions, tools, skills, history'**
+  String get settingsRootAiDesc;
+
+  /// No description provided for @settingsRootIntegrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations'**
+  String get settingsRootIntegrations;
+
+  /// No description provided for @settingsRootIntegrationsDescDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP server, web server on the local network'**
+  String get settingsRootIntegrationsDescDesktop;
+
+  /// No description provided for @settingsRootIntegrationsDescMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Web server on the local network'**
+  String get settingsRootIntegrationsDescMobile;
+
+  /// No description provided for @settingsRootData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data and storage'**
+  String get settingsRootData;
+
+  /// No description provided for @settingsRootDataDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache, backup'**
+  String get settingsRootDataDesc;
+
+  /// No description provided for @settingsRootAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get settingsRootAdvanced;
+
+  /// No description provided for @settingsRootAdvancedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs, privacy, reset'**
+  String get settingsRootAdvancedDesc;
+
+  /// No description provided for @settingsRootPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru Pro'**
+  String get settingsRootPro;
+
+  /// No description provided for @settingsRootProFreeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time purchase · sync, many sources, advanced stats…'**
+  String get settingsRootProFreeDesc;
+
+  /// No description provided for @settingsRootProActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Activated · thank you'**
+  String get settingsRootProActive;
+
+  /// No description provided for @settingsRootAboutDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'License, native libraries'**
+  String get settingsRootAboutDesc;
+
+  /// No description provided for @settingsAppearanceColorMotionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Color and motion'**
+  String get settingsAppearanceColorMotionTitle;
+
+  /// No description provided for @settingsAppearancePureBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'Pure black'**
+  String get settingsAppearancePureBlack;
+
+  /// No description provided for @settingsAppearancePureBlackNeedsDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark theme only'**
+  String get settingsAppearancePureBlackNeedsDark;
+
+  /// No description provided for @settingsAppearanceMotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Animations'**
+  String get settingsAppearanceMotion;
+
+  /// No description provided for @settingsAppearanceTextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get settingsAppearanceTextTitle;
+
+  /// No description provided for @settingsAppearanceFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Font'**
+  String get settingsAppearanceFont;
+
+  /// No description provided for @settingsAppearanceTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get settingsAppearanceTextSize;
+
+  /// No description provided for @settingsAppearanceDisplayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display'**
+  String get settingsAppearanceDisplayTitle;
+
+  /// No description provided for @settingsAppearanceSeekBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Seek bar'**
+  String get settingsAppearanceSeekBar;
+
+  /// No description provided for @settingsAppearanceWindowFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'System window frame'**
+  String get settingsAppearanceWindowFrame;
+
+  /// No description provided for @settingsSeekBarCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Used in Now Playing and the lyrics screen.'**
+  String get settingsSeekBarCaption;
+
+  /// No description provided for @settingsSeekBarWaveform.
+  ///
+  /// In en, this message translates to:
+  /// **'Waveform'**
+  String get settingsSeekBarWaveform;
+
+  /// No description provided for @settingsSeekBarWaveformCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Local files and some plugins. Tracks without a waveform use the flat bar.'**
+  String get settingsSeekBarWaveformCaption;
+
+  /// No description provided for @settingsSeekBarFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'Flat bar'**
+  String get settingsSeekBarFlat;
+
+  /// No description provided for @settingsSeekBarFlatCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Every track'**
+  String get settingsSeekBarFlatCaption;
+
+  /// No description provided for @settingsAboutEditionFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free edition'**
+  String get settingsAboutEditionFree;
+
+  /// No description provided for @settingsAboutEditionPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru Pro'**
+  String get settingsAboutEditionPro;
+
+  /// No description provided for @settingsAboutLicenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Open source licenses'**
+  String get settingsAboutLicenses;
+
+  /// No description provided for @settingsPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} %'**
+  String settingsPercent(int percent);
+
+  /// No description provided for @settingsAboutLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get settingsAboutLicense;
+
+  /// No description provided for @settingsPlaybackBlockPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback'**
+  String get settingsPlaybackBlockPlay;
+
+  /// No description provided for @settingsPlaybackBlockSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get settingsPlaybackBlockSound;
+
+  /// No description provided for @settingsPlaybackBlockHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening history'**
+  String get settingsPlaybackBlockHistory;
+
+  /// No description provided for @settingsPlaybackGapless.
+  ///
+  /// In en, this message translates to:
+  /// **'Gapless playback'**
+  String get settingsPlaybackGapless;
+
+  /// No description provided for @settingsPlaybackGaplessDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies from the next track'**
+  String get settingsPlaybackGaplessDesc;
+
+  /// No description provided for @settingsPlaybackFadeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Fade in when playing'**
+  String get settingsPlaybackFadeIn;
+
+  /// No description provided for @settingsPlaybackFadeOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Fade out when pausing'**
+  String get settingsPlaybackFadeOut;
+
+  /// No description provided for @settingsPlaybackCrossfade.
+  ///
+  /// In en, this message translates to:
+  /// **'Crossfade'**
+  String get settingsPlaybackCrossfade;
+
+  /// No description provided for @settingsPlaybackCrossfadeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Crossfade: the old track fades out while the new one fades in.'**
+  String get settingsPlaybackCrossfadeDesc;
+
+  /// No description provided for @settingsPlaybackOutputDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Output device'**
+  String get settingsPlaybackOutputDevice;
+
+  /// No description provided for @settingsPlaybackReplayGain.
+  ///
+  /// In en, this message translates to:
+  /// **'ReplayGain'**
+  String get settingsPlaybackReplayGain;
+
+  /// No description provided for @settingsPlaybackPreamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Preamp'**
+  String get settingsPlaybackPreamp;
+
+  /// No description provided for @settingsPlaybackClipping.
+  ///
+  /// In en, this message translates to:
+  /// **'Prevent clipping'**
+  String get settingsPlaybackClipping;
+
+  /// No description provided for @settingsPlaybackClippingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowers the level when the preamp would distort the sound.'**
+  String get settingsPlaybackClippingDesc;
+
+  /// No description provided for @settingsPlaybackOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get settingsPlaybackOff;
+
+  /// No description provided for @settingsPlaybackAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get settingsPlaybackAuto;
+
+  /// No description provided for @settingsPlaybackPreviousButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous button'**
+  String get settingsPlaybackPreviousButton;
+
+  /// No description provided for @settingsPlaybackPreviousAlways.
+  ///
+  /// In en, this message translates to:
+  /// **'Always go to the previous track'**
+  String get settingsPlaybackPreviousAlways;
+
+  /// No description provided for @settingsPlaybackPreviousAlwaysDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get settingsPlaybackPreviousAlwaysDesc;
+
+  /// No description provided for @settingsPlaybackPreviousRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart after 3 seconds'**
+  String get settingsPlaybackPreviousRestart;
+
+  /// No description provided for @settingsPlaybackPreviousRestartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Within the first 3 seconds it goes to the previous track.'**
+  String get settingsPlaybackPreviousRestartDesc;
+
+  /// No description provided for @settingsPlaybackHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Record listening history'**
+  String get settingsPlaybackHistory;
+
+  /// No description provided for @settingsPlaybackHistoryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Used by History, Most played and Continue listening.'**
+  String get settingsPlaybackHistoryDesc;
+
+  /// No description provided for @settingsPlaybackHistoryOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off · what was recorded stays'**
+  String get settingsPlaybackHistoryOff;
+
+  /// No description provided for @settingsPlaybackListenRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Count a listen after'**
+  String get settingsPlaybackListenRule;
+
+  /// No description provided for @settingsPlaybackListenCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'A track counts as a listen when it reaches whichever comes first. Default: 4 minutes or 50 %.'**
+  String get settingsPlaybackListenCaption;
+
+  /// No description provided for @settingsPlaybackListenNeedsHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Record listening history to use this'**
+  String get settingsPlaybackListenNeedsHistory;
+
+  /// No description provided for @settingsPlaybackListenNoTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Not used'**
+  String get settingsPlaybackListenNoTime;
+
+  /// No description provided for @settingsPlaybackListenEndLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole track'**
+  String get settingsPlaybackListenEndLabel;
+
+  /// No description provided for @settingsPlaybackListenTimeLive.
+  ///
+  /// In en, this message translates to:
+  /// **'After {duration} of listening'**
+  String settingsPlaybackListenTimeLive(String duration);
+
+  /// No description provided for @settingsPlaybackListenNoTimeLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Not counted by time'**
+  String get settingsPlaybackListenNoTimeLive;
+
+  /// No description provided for @settingsPlaybackListenPercentLive.
+  ///
+  /// In en, this message translates to:
+  /// **'or after {percent} % of the track'**
+  String settingsPlaybackListenPercentLive(int percent);
+
+  /// No description provided for @settingsPlaybackListenEndLive.
+  ///
+  /// In en, this message translates to:
+  /// **'or after the whole track'**
+  String get settingsPlaybackListenEndLive;
+
+  /// No description provided for @settingsPlaybackListenTimeOrPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} or {percent} %'**
+  String settingsPlaybackListenTimeOrPercent(String duration, int percent);
+
+  /// No description provided for @settingsPlaybackListenTimeOrEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} or the whole track'**
+  String settingsPlaybackListenTimeOrEnd(String duration);
+
+  /// No description provided for @settingsPlaybackListenEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen to the end'**
+  String get settingsPlaybackListenEnd;
+
+  /// No description provided for @settingsPlaybackListenPercentOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} % of the track'**
+  String settingsPlaybackListenPercentOnly(int percent);
+
+  /// No description provided for @settingsDurationSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds, plural, =1{1 second} other{{seconds} seconds}}'**
+  String settingsDurationSeconds(int seconds);
+
+  /// No description provided for @settingsDurationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =1{1 minute} other{{minutes} minutes}}'**
+  String settingsDurationMinutes(int minutes);
+
+  /// No description provided for @settingsDurationMinutesSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min {seconds} s'**
+  String settingsDurationMinutesSeconds(int minutes, int seconds);
+
+  /// No description provided for @settingsPlaybackPreampValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{db} dB'**
+  String settingsPlaybackPreampValue(int db);
+
+  /// No description provided for @settingsAppearancePureBlackDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A fully black background in the Dark theme, good for OLED screens.'**
+  String get settingsAppearancePureBlackDesc;
+
+  /// No description provided for @settingsAppearanceMotionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: pages and sheets appear at once, without sliding.'**
+  String get settingsAppearanceMotionDesc;
+
+  /// No description provided for @settingsAppearanceWindowFrameDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the system title bar and window border instead of the Kanaru bar.'**
+  String get settingsAppearanceWindowFrameDesc;
+
+  /// No description provided for @settingsAppearanceWindowFrameApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies after Kanaru is reopened'**
+  String get settingsAppearanceWindowFrameApply;
+
+  /// No description provided for @settingsAppearanceTextSizeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get settingsAppearanceTextSizeDefault;
+
+  /// No description provided for @settingsPlaybackNeedsReplayGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on ReplayGain to use this'**
+  String get settingsPlaybackNeedsReplayGain;
 }
 
 class _AppLocalizationsDelegate

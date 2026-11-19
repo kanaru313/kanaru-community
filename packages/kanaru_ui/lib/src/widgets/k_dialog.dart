@@ -2,8 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../icons/k_icons.dart';
-import '../tokens/k_layout.dart';
 import '../tokens/k_icon_size.dart';
+import '../tokens/k_layout.dart';
+import '../tokens/k_motion.dart';
 import 'k_icon_button.dart';
 
 /// Centred dialog using the theme's soft shape, capped at [maxWidth]
@@ -15,6 +16,7 @@ Future<T?> showKDialog<T>(
 }) {
   return showDialog<T>(
     context: context,
+    animationStyle: KMotion.routeAnimationStyle(context),
     // Center loosens the route's tight screen constraints, so the cap holds.
     builder: (context) => Center(
       child: ConstrainedBox(

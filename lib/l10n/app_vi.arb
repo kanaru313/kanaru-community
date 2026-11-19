@@ -1653,5 +1653,173 @@
   "m3uImportNotIndexed": "Android chưa đưa các tệp nhạc của playlist này vào kho nhạc nên thư viện không thấy. Vào Cài đặt › Thư viện › Thư mục nhạc › Thêm thư mục, bấm “Không thấy thư mục của bạn? Quét lại”, rồi nhập lại. Chưa nhập gì.",
   "@m3uImportNotIndexed": {},
   "settingsAbout": "Giới thiệu",
-  "settingsNativeVersions": "Thư viện native"
+  "settingsNativeVersions": "Thư viện native",
+  "settingsSaveFailed": "Không lưu được cài đặt. Thay đổi chỉ giữ tới khi đóng app.",
+  "settingsRootAppearance": "Giao diện",
+  "settingsRootAppearanceDesc": "Chủ đề, ngôn ngữ, màu, chữ, thanh tua",
+  "settingsRootLibrary": "Thư viện",
+  "settingsRootLibraryDesc": "Thư mục nhạc, quét, tab, tách nghệ sĩ",
+  "settingsRootLibraryMissingPermission": " · thiếu quyền nhạc",
+  "settingsRootPlayback": "Phát nhạc",
+  "settingsRootPlaybackDesc": "Liền mạch, âm thanh, ReplayGain, lịch sử nghe",
+  "settingsRootLyrics": "Lời bài",
+  "settingsRootLyricsDesc": "Hiển thị lời, tìm và lưu lời, nguồn lời, dịch",
+  "settingsRootPlugins": "Plugin",
+  "settingsRootPluginsDesc": "Plugin đã cài, kho plugin, cập nhật",
+  "settingsRootAi": "Trò chuyện AI",
+  "settingsRootAiDesc": "Dịch vụ AI, quyền, công cụ, skill, lịch sử",
+  "settingsRootIntegrations": "Tích hợp",
+  "settingsRootIntegrationsDescDesktop": "Máy chủ MCP, web server trong mạng LAN",
+  "settingsRootIntegrationsDescMobile": "Web server trong mạng LAN",
+  "settingsRootData": "Dữ liệu và bộ nhớ",
+  "settingsRootDataDesc": "Bộ nhớ đệm, sao lưu",
+  "settingsRootAdvanced": "Nâng cao",
+  "settingsRootAdvancedDesc": "Nhật ký, quyền riêng tư, đặt lại",
+  "settingsRootPro": "Kanaru Pro",
+  "settingsRootProFreeDesc": "Mua một lần · đồng bộ, nhiều nguồn, thống kê nâng cao…",
+  "settingsRootProActive": "Đã kích hoạt · cảm ơn bạn",
+  "settingsRootAboutDesc": "Giấy phép, thư viện native",
+  "settingsAppearanceColorMotionTitle": "Màu và chuyển động",
+  "settingsAppearancePureBlack": "Nền đen tuyền",
+  "settingsAppearancePureBlackNeedsDark": "Chỉ dùng với chủ đề Tối",
+  "settingsAppearanceMotion": "Hiệu ứng chuyển động",
+  "settingsAppearanceTextTitle": "Chữ",
+  "settingsAppearanceFont": "Phông chữ",
+  "settingsAppearanceTextSize": "Cỡ chữ",
+  "settingsAppearanceDisplayTitle": "Hiển thị",
+  "settingsAppearanceSeekBar": "Thanh tua",
+  "settingsAppearanceWindowFrame": "Khung cửa sổ của hệ thống",
+  "settingsSeekBarCaption": "Dùng ở Now Playing và màn lời.",
+  "settingsSeekBarWaveform": "Dạng sóng",
+  "settingsSeekBarWaveformCaption": "Tệp trong máy và một số plugin. Bài không có dạng sóng dùng thanh phẳng.",
+  "settingsSeekBarFlat": "Thanh phẳng",
+  "settingsSeekBarFlatCaption": "Mọi bài",
+  "settingsAboutEditionFree": "Bản miễn phí",
+  "settingsAboutEditionPro": "Kanaru Pro",
+  "settingsAboutLicenses": "Giấy phép mã nguồn mở",
+  "settingsPercent": "{percent} %",
+  "@settingsPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsAboutLicense": "Giấy phép",
+  "settingsPlaybackBlockPlay": "Phát",
+  "settingsPlaybackBlockSound": "Âm thanh",
+  "settingsPlaybackBlockHistory": "Lịch sử nghe",
+  "settingsPlaybackGapless": "Phát liền mạch",
+  "settingsPlaybackGaplessDesc": "Áp dụng từ bài sau",
+  "settingsPlaybackFadeIn": "Tăng dần âm lượng khi phát",
+  "settingsPlaybackFadeOut": "Giảm dần âm lượng khi tạm dừng",
+  "settingsPlaybackCrossfade": "Chuyển bài mờ dần",
+  "settingsPlaybackCrossfadeDesc": "Crossfade: bài cũ nhỏ dần trong khi bài mới to dần.",
+  "settingsPlaybackOutputDevice": "Thiết bị đầu ra",
+  "settingsPlaybackReplayGain": "ReplayGain",
+  "settingsPlaybackPreamp": "Tăng thêm",
+  "settingsPlaybackClipping": "Chống méo tiếng",
+  "settingsPlaybackClippingDesc": "Giảm mức khi tăng thêm làm vỡ tiếng.",
+  "settingsPlaybackOff": "Tắt",
+  "settingsPlaybackAuto": "Tự động",
+  "settingsPlaybackPreviousButton": "Nút Bài trước",
+  "settingsPlaybackPreviousAlways": "Luôn về bài trước",
+  "settingsPlaybackPreviousAlwaysDesc": "Mặc định",
+  "settingsPlaybackPreviousRestart": "Quá 3 giây thì về đầu bài",
+  "settingsPlaybackPreviousRestartDesc": "Bấm trong 3 giây đầu bài thì về bài trước",
+  "settingsPlaybackHistory": "Ghi lịch sử nghe",
+  "settingsPlaybackHistoryDesc": "Dùng cho Lịch sử, Phát nhiều nhất, Nghe tiếp.",
+  "settingsPlaybackHistoryOff": "Đang tắt · lịch sử đã ghi vẫn giữ",
+  "settingsPlaybackListenRule": "Tính một lượt nghe sau",
+  "settingsPlaybackListenCaption": "Bài được tính một lượt nghe khi tới mốc nào trước. Mặc định 4 phút hoặc 50 %.",
+  "settingsPlaybackListenNeedsHistory": "Bật Ghi lịch sử nghe để dùng",
+  "settingsPlaybackListenNoTime": "Không dùng",
+  "settingsPlaybackListenEndLabel": "Hết bài",
+  "settingsPlaybackListenTimeLive": "Sau {duration} nghe",
+  "@settingsPlaybackListenTimeLive": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlaybackListenNoTimeLive": "Không tính theo thời gian",
+  "settingsPlaybackListenPercentLive": "hoặc khi nghe {percent} % bài",
+  "@settingsPlaybackListenPercentLive": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlaybackListenEndLive": "hoặc khi nghe hết bài",
+  "settingsPlaybackListenTimeOrPercent": "{duration} hoặc {percent} %",
+  "@settingsPlaybackListenTimeOrPercent": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlaybackListenTimeOrEnd": "{duration} hoặc hết bài",
+  "@settingsPlaybackListenTimeOrEnd": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlaybackListenEnd": "Nghe hết bài",
+  "settingsPlaybackListenPercentOnly": "{percent} % bài",
+  "@settingsPlaybackListenPercentOnly": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDurationSeconds": "{seconds} giây",
+  "@settingsDurationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDurationMinutes": "{minutes} phút",
+  "@settingsDurationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDurationMinutesSeconds": "{minutes} phút {seconds} giây",
+  "@settingsDurationMinutesSeconds": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlaybackPreampValue": "{db} dB",
+  "@settingsPlaybackPreampValue": {
+    "placeholders": {
+      "db": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsAppearancePureBlackDesc": "Nền đen hẳn khi chủ đề Tối, hợp với màn OLED.",
+  "settingsAppearanceMotionDesc": "Tắt thì trang và sheet hiện ngay, không trượt.",
+  "settingsAppearanceWindowFrameDesc": "Dùng thanh tiêu đề và viền cửa sổ của hệ thống thay cho thanh của Kanaru.",
+  "settingsAppearanceWindowFrameApply": "Áp dụng sau khi mở lại Kanaru",
+  "settingsAppearanceTextSizeDefault": "Mặc định",
+  "settingsPlaybackNeedsReplayGain": "Bật ReplayGain để dùng"
 }

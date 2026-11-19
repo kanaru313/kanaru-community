@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens/k_layout.dart';
+import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 
@@ -26,6 +27,7 @@ Future<T?> showKSheet<T>(
   if (size.width >= KBreakpoints.compactSheet) {
     return showDialog<T>(
       context: context,
+      animationStyle: KMotion.routeAnimationStyle(context),
       useRootNavigator: useRootNavigator,
       builder: (context) => Dialog(
         shape: KShape.of(KRadius.xl, continuous: true),
@@ -44,6 +46,7 @@ Future<T?> showKSheet<T>(
   final maxHeight = size.height * maxHeightFraction;
   return showModalBottomSheet<T>(
     context: context,
+    sheetAnimationStyle: KMotion.routeAnimationStyle(context),
     useRootNavigator: useRootNavigator,
     isScrollControlled: true,
     useSafeArea: true,

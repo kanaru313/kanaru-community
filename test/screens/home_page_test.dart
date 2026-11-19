@@ -9,7 +9,7 @@ import 'package:kanaru/src/library/state/scan/scan_controller.dart';
 import 'package:kanaru/src/library/state/scan/scan_startup.dart';
 import 'package:kanaru/src/library/state/scan_providers.dart';
 import 'package:kanaru/src/screens/ui/home_page.dart';
-import 'package:kanaru/src/screens/ui/settings_page.dart';
+import 'package:kanaru/src/screens/settings/ui/root/settings_root_page.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -130,7 +130,7 @@ void main() {
       expect(action, findsOneWidget);
       await tester.tap(action);
       await tester.pumpAndSettle();
-      expect(find.byType(SettingsPage), findsOneWidget);
+      expect(find.byType(SettingsRootPage), findsOneWidget);
     });
 
     testWidgets('desktop Home leaves it to the sidebar', (tester) async {

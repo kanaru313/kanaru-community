@@ -88,11 +88,7 @@ class DesktopTopBar extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: KSpace.x2,
                   children: [
-                    Icon(
-                      KIcons.appLogo,
-                      size: KIconSize.sm,
-                      color: scheme.primary,
-                    ),
+                    const KanaruLogo(size: KIconSize.md),
                     Text(
                       'Kanaru',
                       style: Theme.of(context).textTheme.titleSmall,

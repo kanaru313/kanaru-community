@@ -300,7 +300,7 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
 ## Player controller
 
 `state/player_controller.dart` implements `PlaybackCommands` and adds transport (`play`, `pause`,
-`playPause`, `stop`, `next`, `previous`, `playEntry`, `seek`, `seekRelative`, `setVolume`,
+`playPause`, `stop`, `next`, `previous`, `previousPressed`, `playEntry`, `seek`, `seekRelative`, `setVolume`,
 `setShuffle`, `reshuffleUpcoming`, `setRepeat`, `setRepeatTimes`) and queue edits (`remove`,
 `cleanup`, `undo`, `move`) and `clearQueue`.
 
@@ -398,14 +398,20 @@ current entry plays that many more times, then the base mode goes on.
   added.
 - **Previous** at the first entry goes to the last entry under `all` and back to 0 (with the
   "first track" notice) in every other mode; see `previousIndex`.
+- **Previous: buttons vs gestures.** `previous()` is always the previous entry. `previousPressed()` is
+  for button presses (`PreviousButton`, the media session `Previous()` command: MPRIS, notification,
+  media keys): with the setting `playback.previous_button = restartAfter3s` and the position past 3 s
+  it seeks to 0 (no notice), otherwise it is `previous()`. The policy and the position are read when
+  the command runs. Swipes (Now Playing cover, mini-player carousel and its semantics action) keep
+  `previous()`: they animate to the previous card.
 
 ## Settings keys
 
 Pure `Setting<T>` constants in `playback/domain/playback_settings.dart`; one top-level
 `settingNotifierProvider` per key a widget watches in `playback/state/playback_settings_providers.dart`
 (`shuffleSettingProvider`, `repeatSettingProvider`, `volumeSettingProvider`).
-The UI only reads them. (`shell.right_panel` is the shell's own key, see UI: widgets and shell.) Every change goes through a player controller command, which writes
-`SettingsStore` (single writer). A bad stored value reads as the default.
+The UI only reads the queue, shuffle, repeat and volume keys. (`shell.right_panel` is the shell's own key, see UI: widgets and shell.) Their changes go through a player controller command, which writes
+`SettingsStore` (single writer). The last four keys below are preferences the Settings page writes itself through `SettingNotifier`; the player reads them from the store when it needs them. A bad stored value reads as the default.
 
 | Key | Setting | Holds |
 |---|---|---|
@@ -418,6 +424,10 @@ The UI only reads them. (`shell.right_panel` is the shell's own key, see UI: wid
 | `playback.context` | `contextSetting` | `{kind, ref, label}` of the `PlayContext`; an unknown kind reads as `queue` |
 | `playback.volume` | `volumeSetting` | 0-100 (default 100; out of range is clamped) |
 | `playback.volume_before_mute` | `volumeBeforeMuteSetting` | Level 1-100 to restore on unmute when muted (null otherwise) |
+| `playback.seek_bar_style` | `seekBarStyleSetting` | `'waveform'` (default) or `'flat'`; written by the Settings page |
+| `playback.previous_button` | `previousButtonSetting` | `'alwaysPrevious'` (default) or `'restartAfter3s'`; read by `previousPressed()` when it runs |
+| `playback.listen_rule` | `listenRuleSetting` | `{afterMs, percent}` (default 240000 / 50; snapped to the stops; a non-map, missing or non-finite number reads as the default) |
+| `playback.history_enabled` | `historyEnabledSetting` | Bool, default on; off stops new `play_log` rows |
 
 ## Restore
 
@@ -456,8 +466,14 @@ The controller's position follows engine ticks only while playing (a paused open
 - Time counts between two playing samples whose position moved forward; a position jump beyond the
   clock by more than 1 s (a seek) counts only the clock time. The track length is locked at the first
   value seen (gapless reports the next track's length at the end).
-- A listen counts when the track is longer than 30 s and was heard for half of it, at most 4 min
-  (kept below the length minus 1 s). `played_at` is the wall time of the load's first playing sample.
+- A listen counts when the track is longer than 30 s and was heard for the earlier of `afterMs` and
+  `percent` of its length (kept below the length minus 1 s). The rule is `playback.listen_rule`
+  (`ListenRule`, default 4 min or 50 %; `afterMs` 0 = no time rule; unknown length needs `afterMs`, or
+  4 min without one). The recorder reads it from the store at listen start and at most once a second
+  after, so a change applies to the next check of the open listen. `played_at` is the wall time of the load's first playing sample.
+- `playback.history_enabled` (default on): off stops new rows only; rows already written, and the
+  update of a row already inserted for the open listen, are kept. Turning it on mid-track inserts one
+  row once the listen counts.
 - The row is inserted when the listen counts; `listened_ms` is updated every 10 s of listening, on
   pause, when the load changes (final value) and on flush. `context_kind`/`context_ref` come from the
   `PlayContext`, `device_id` from `deviceIdProvider` (read when a row is written).
@@ -778,6 +794,8 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
 ## Waveform
 
 Levels for the Now Playing seek bar on both shells. The mini player and the player bar keep the flat `KSeekBar`.
+
+**Style setting.** `playback.seek_bar_style` (`playback/domain/seek_bar_style.dart`, `SeekBarStyle.waveform` default | `flat`, `seekBarStyleProvider`), chosen on Settings > Appearance > Seek bar. `PlaybackWaveformSeekBar` watches `waveformProvider` only in the waveform style; in the flat style it does not, so no decode job starts, and it passes `levels: null` (the flat track).
 
 **Decode** (`rust/crates/kanaru_media/src/waveform/`, no FFI). `compute(source, ext_hint, cancel) -> Waveform { levels, duration_ms }`
 with symphonia 0.6 (`next_packet() -> Result<Option<Packet>>`), codecs of the Cargo features: MP3, FLAC, Ogg Vorbis, AAC and
