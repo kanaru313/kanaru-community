@@ -714,7 +714,7 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
   mockup shows).
 - `groupShelves(db, scope)` (genre or language): artists, most tracks first,
   and albums, newest first, counted inside the scope. The page shows a shelf
-  from two items up and caps it.
+  from two items up and lists every item (the row builds cards lazily).
 - `groupTotals(db, scope)`: tracks and duration. The artist
   page reads it too (`groupTotalsProvider(playScope)`) for its third line.
 - The providers are throttled streams (`artistAlbumsProvider`,
@@ -1160,7 +1160,7 @@ routes in `ui/browse/library_routes.dart`.
 - Genre / language: `KColorBanner` (colour from the name, the name as the
   headline, one line `N songs · length`; the unknown language adds a first
   line "No language tag"), artist block and album block (`KShelfBlock`) from two items up,
-  the row capped at 10 (mobile shell) or 8 (desktop) cards while the head shows the full count, then the songs (`detailSongs`,
+  every item in the row (a lazy horizontal list), the head showing the count, then the songs (`detailSongs`,
   most played first). The unknown language page has its note under the banner
   as a `KDetailDescription` (three lines, "Show more" / "Show less"); which
   pages are open is kept for the session in `detailDescriptionExpandedProvider`

@@ -210,14 +210,12 @@ class GroupPage extends ConsumerWidget {
     GroupShelves? shelves,
   ) {
     if (shelves == null) return const [];
-    final cap = shelfCap(context);
     return [
       if (shelves.artists.length >= 2)
         SliverToBoxAdapter(
           child: ArtistShelf(
             title: l10n.libraryTabArtists,
-            artists: shelves.artists.take(cap).toList(),
-            total: shelves.artists.length,
+            artists: shelves.artists,
             onSeeAll: () =>
                 openLibraryPage(context, SeeAllLocations.groupArtists(target)),
           ),
@@ -227,8 +225,7 @@ class GroupPage extends ConsumerWidget {
           child: AlbumShelf(
             title: l10n.libraryTabAlbums,
             kind: ShelfBlockKind.albums,
-            albums: shelves.albums.take(cap).toList(),
-            total: shelves.albums.length,
+            albums: shelves.albums,
             onSeeAll: () =>
                 openLibraryPage(context, SeeAllLocations.groupAlbums(target)),
           ),
