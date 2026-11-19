@@ -1,4 +1,6 @@
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 
 import 'ui/about/about_settings_page.dart';
 import 'ui/appearance/appearance_settings_page.dart';
@@ -23,12 +25,25 @@ GoRoute buildSettingsRoute() => GoRoute(
   routes: [
     GoRoute(
       path: 'appearance',
-      builder: (_, _) => const AppearanceSettingsPage(),
+      pageBuilder: (_, s) => _page(s, const AppearanceSettingsPage()),
       routes: [
-        GoRoute(path: 'seek-bar', builder: (_, _) => const SeekBarStylePage()),
+        GoRoute(
+          path: 'seek-bar',
+          pageBuilder: (_, s) => _page(s, const SeekBarStylePage()),
+        ),
       ],
     ),
-    GoRoute(path: 'playback', builder: (_, _) => const PlaybackSettingsPage()),
-    GoRoute(path: 'about', builder: (_, _) => const AboutSettingsPage()),
+    GoRoute(
+      path: 'playback',
+      pageBuilder: (_, s) => _page(s, const PlaybackSettingsPage()),
+    ),
+    GoRoute(
+      path: 'about',
+      pageBuilder: (_, s) => _page(s, const AboutSettingsPage()),
+    ),
   ],
 );
+
+/// Sub-pages share the transition of the library detail pages.
+Page<void> _page(GoRouterState state, Widget child) =>
+    KDetailPage(key: state.pageKey, child: child);

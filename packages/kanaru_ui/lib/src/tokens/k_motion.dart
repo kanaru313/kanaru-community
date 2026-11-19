@@ -7,6 +7,10 @@ abstract final class KMotion {
   static const Duration normal = Duration(milliseconds: 250);
   static const Duration slow = Duration(milliseconds: 400);
 
+  /// A detail / sub-page (`KDetailPage`) coming in and going out.
+  static const Duration pageIn = Duration(milliseconds: 280);
+  static const Duration pageOut = Duration(milliseconds: 240);
+
   /// Delay between consecutive items of a staggered entrance (`KFabMenu`).
   static const Duration stagger = Duration(milliseconds: 50);
 

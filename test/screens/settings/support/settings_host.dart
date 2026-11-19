@@ -48,6 +48,7 @@ Future<SettingsHarness> pumpSettings(
   MediaPermissionState permission = const MediaPermissionState.notApplicable(),
   ExtensionRegistry? registry,
   List<Override> overrides = const [],
+  ThemeData? theme,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -77,7 +78,7 @@ Future<SettingsHarness> pumpSettings(
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp.router(
-        theme: buildKanaruTheme(brightness: Brightness.light),
+        theme: theme ?? buildKanaruTheme(brightness: Brightness.light),
         darkTheme: buildKanaruTheme(brightness: Brightness.dark),
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
