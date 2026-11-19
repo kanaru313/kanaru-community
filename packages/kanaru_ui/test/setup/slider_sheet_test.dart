@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
-import 'package:kanaru_ui/src/widgets/k_focus_ring.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../support/finders.dart';

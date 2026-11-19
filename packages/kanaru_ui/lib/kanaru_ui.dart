@@ -24,6 +24,7 @@ export 'src/widgets/k_detail_page.dart';
 export 'src/widgets/k_detail_title.dart' show KDetailTitleHost;
 export 'src/widgets/k_dialog.dart';
 export 'src/widgets/k_drag_handle.dart';
+export 'src/widgets/k_focus_ring.dart';
 export 'src/widgets/k_empty.dart';
 export 'src/widgets/k_empty_page.dart';
 export 'src/widgets/k_equalizer_icon.dart';
