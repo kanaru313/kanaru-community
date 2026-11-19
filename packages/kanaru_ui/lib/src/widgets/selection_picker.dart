@@ -2,8 +2,10 @@ import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
 import '../tokens/k_layout.dart';
+import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
+import 'anchored_panel_layout.dart';
 import 'k_gap.dart';
 import 'k_sheet.dart';
 import 'picker_footer.dart';
@@ -48,7 +50,9 @@ enum SelectionPickerPresentation {
 
 /// Single-choice picker. Mobile: sheet ([showKSheet]). Desktop: a panel
 /// anchored under [anchor] when given, otherwise a centred dialog
-/// ([presentation] `dialog` forces the dialog on both shells).
+/// ([presentation] `dialog` forces the dialog on both shells). [anchorAlign]
+/// picks which edge of the panel lines up with the anchor (`end` for panels
+/// opened from a Settings or first-run row).
 ///
 /// [header] sits above the options and stays put while they scroll.
 /// With [confirmLabel] and [cancelLabel] a tap only selects the row and the
@@ -68,12 +72,13 @@ Future<T?> showSelectionPicker<T>(
   String? confirmLabel,
   String? cancelLabel,
   SelectionPickerPresentation presentation = SelectionPickerPresentation.auto,
+  KAnchorAlign anchorAlign = KAnchorAlign.start,
 }) {
   assert(
     (confirmLabel == null) == (cancelLabel == null),
     'confirmLabel and cancelLabel go together',
   );
-  Widget body(BuildContext _) => _PickerBody<T>(
+  Widget body(BuildContext _, {bool compact = false}) => _PickerBody<T>(
     options: options,
     selected: selected,
     title: title,
@@ -81,6 +86,7 @@ Future<T?> showSelectionPicker<T>(
     confirm: confirm,
     confirmLabel: confirmLabel,
     cancelLabel: cancelLabel,
+    compact: compact,
   );
 
   final centred = presentation == SelectionPickerPresentation.dialog;
@@ -94,6 +100,7 @@ Future<T?> showSelectionPicker<T>(
   if (rect == null) {
     return showDialog<T>(
       context: context,
+      animationStyle: KMotion.routeAnimationStyle(context),
       builder: (context) => Dialog(
         shape: KShape.of(KRadius.xl, continuous: true),
         clipBehavior: Clip.antiAlias,
@@ -106,59 +113,30 @@ Future<T?> showSelectionPicker<T>(
   }
   return showDialog<T>(
     context: context,
+    animationStyle: KMotion.routeAnimationStyle(context),
     // The panel position is computed in global coordinates; the route's
     // SafeArea would shift it by the insets.
     useSafeArea: false,
     barrierColor: const Color(0x00000000),
     builder: (context) => CustomSingleChildLayout(
-      delegate: _AnchoredLayout(rect),
+      delegate: AnchoredPanelLayout(rect, align: anchorAlign),
       child: Material(
         elevation: 3,
         color: Theme.of(context).colorScheme.surfaceContainerHigh,
         shape: KShape.of(KRadius.lg, continuous: true),
         clipBehavior: Clip.antiAlias,
+        // Same size as the sort dropdown: width follows the content between
+        // the dropdown limits, rows are dense.
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: KLayout.dialog),
-          child: body(context),
+          constraints: const BoxConstraints(
+            minWidth: KLayout.anchoredPickerMinWidth,
+            maxWidth: KLayout.anchoredPickerMaxWidth,
+          ),
+          child: IntrinsicWidth(child: body(context, compact: true)),
         ),
       ),
     ),
   );
-}
-
-/// Places the panel under the anchor, left edges aligned, clamped to the
-/// screen; flips above the anchor when there is no room below.
-class _AnchoredLayout extends SingleChildLayoutDelegate {
-  _AnchoredLayout(this.anchor);
-
-  final Rect anchor;
-
-  @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
-      BoxConstraints(
-        maxWidth: constraints.maxWidth - 2 * KSpace.x4,
-        maxHeight: constraints.maxHeight - 2 * KSpace.x4,
-      );
-
-  @override
-  Offset getPositionForChild(Size size, Size childSize) {
-    final x = anchor.left.clamp(
-      KSpace.x4,
-      (size.width - childSize.width - KSpace.x4).clamp(KSpace.x4, size.width),
-    );
-    final below = anchor.bottom + KSpace.x1;
-    final y = below + childSize.height <= size.height - KSpace.x4
-        ? below
-        : (anchor.top - KSpace.x1 - childSize.height).clamp(
-            KSpace.x4,
-            size.height,
-          );
-    return Offset(x, y);
-  }
-
-  @override
-  bool shouldRelayout(_AnchoredLayout oldDelegate) =>
-      anchor != oldDelegate.anchor;
 }
 
 class _PickerBody<T> extends StatefulWidget {
@@ -170,6 +148,7 @@ class _PickerBody<T> extends StatefulWidget {
     required this.confirm,
     required this.confirmLabel,
     required this.cancelLabel,
+    required this.compact,
   });
 
   final List<SelectionOption<T>> options;
@@ -179,6 +158,10 @@ class _PickerBody<T> extends StatefulWidget {
   final Future<bool> Function(T value)? confirm;
   final String? confirmLabel;
   final String? cancelLabel;
+
+  /// Anchored desktop panel: dense rows, `titleSmall`, no gaps (the sort
+  /// dropdown's size). Sheets and dialogs keep the 48 dp rows.
+  final bool compact;
 
   bool get footer => confirmLabel != null && cancelLabel != null;
 
@@ -225,43 +208,62 @@ class _PickerBodyState<T> extends State<_PickerBody<T>> {
               KSpace.x2,
             ),
             child: DefaultTextStyle.merge(
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style:
+                  (widget.compact
+                          ? textTheme.titleSmall
+                          : textTheme.titleMedium)
+                      ?.copyWith(fontWeight: FontWeight.w700),
               child: widget.title!,
             ),
           ),
         if (widget.header != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
-            child: widget.header,
+            // Caption of the compact panel: bodySmall, as the mockup draws it.
+            child: widget.compact
+                ? DefaultTextStyle.merge(
+                    style: textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    child: widget.header!,
+                  )
+                : widget.header,
           ),
         Flexible(
-          child: ListView.separated(
-            shrinkWrap: true,
-            padding: const EdgeInsets.all(KSpace.x2),
-            itemCount: widget.options.length,
-            separatorBuilder: (_, _) => const KGap(KSpace.x1),
-            itemBuilder: (context, i) {
-              final o = widget.options[i];
-              return SelectionRow(
-                title: o.title,
-                subtitle: o.subtitle,
-                leading: o.leading,
-                enabled: o.enabled && !_busy,
-                selected:
-                    o.value == (widget.footer ? _pending : widget.selected),
-                onTap: widget.footer
-                    ? () => setState(() => _pending = o.value)
-                    : () => _pick(o.value),
-              );
-            },
-          ),
+          child: widget.compact
+              // A plain scroll view (a viewport has no intrinsic width) so the
+              // panel can size to its content, as the sort dropdown does.
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.all(KSpace.x2),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [for (final o in widget.options) _row(o)],
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.all(KSpace.x2),
+                  itemCount: widget.options.length,
+                  separatorBuilder: (_, _) => const KGap(KSpace.x1),
+                  itemBuilder: (context, i) => _row(widget.options[i]),
+                ),
         ),
         if (widget.footer) _footer(context),
       ],
     );
   }
+
+  Widget _row(SelectionOption<T> o) => SelectionRow(
+    dense: widget.compact,
+    title: o.title,
+    subtitle: o.subtitle,
+    leading: o.leading,
+    enabled: o.enabled && !_busy,
+    selected: o.value == (widget.footer ? _pending : widget.selected),
+    onTap: widget.footer
+        ? () => setState(() => _pending = o.value)
+        : () => _pick(o.value),
+  );
 
   Widget _footer(BuildContext context) {
     final pending = _pending;

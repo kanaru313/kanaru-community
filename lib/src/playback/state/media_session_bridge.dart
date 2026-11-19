@@ -348,7 +348,7 @@ class MediaSessionBridge implements PlaybackFocus {
       case Next():
         run = controller.next();
       case Previous():
-        run = controller.previous();
+        run = controller.previousPressed();
       case Seek(:final offset):
         run = controller.seekRelative(offset);
       case SetPosition(:final id, :final position):

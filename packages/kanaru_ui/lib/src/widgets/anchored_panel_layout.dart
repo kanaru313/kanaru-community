@@ -2,13 +2,24 @@ import 'package:material_ui/material_ui.dart';
 
 import '../tokens/k_space.dart';
 
-/// Places a panel under [anchor] (left edges aligned), clamped to the screen
-/// and flipped above the anchor when there is no room below. Used by the
-/// desktop popovers and panels that open from a row or an icon.
+/// Which edge of an anchored panel lines up with its anchor.
+enum KAnchorAlign {
+  /// Left edges aligned (the default of every anchored panel).
+  start,
+
+  /// Right edges aligned: panels opened from a Settings or first-run row.
+  end,
+}
+
+/// Places a panel under [anchor] ([align]: left or right edges aligned),
+/// clamped to the screen and flipped above the anchor when there is no room
+/// below. Used by the desktop popovers and panels that open from a row or an
+/// icon.
 class AnchoredPanelLayout extends SingleChildLayoutDelegate {
-  AnchoredPanelLayout(this.anchor);
+  AnchoredPanelLayout(this.anchor, {this.align = KAnchorAlign.start});
 
   final Rect anchor;
+  final KAnchorAlign align;
 
   /// Global rect of the box behind [key], or null when it is not on screen.
   static Rect? rectOf(GlobalKey? key) {
@@ -27,7 +38,11 @@ class AnchoredPanelLayout extends SingleChildLayoutDelegate {
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {
-    final x = anchor.left.clamp(
+    final wanted = switch (align) {
+      KAnchorAlign.start => anchor.left,
+      KAnchorAlign.end => anchor.right - childSize.width,
+    };
+    final x = wanted.clamp(
       KSpace.x4,
       (size.width - childSize.width - KSpace.x4).clamp(KSpace.x4, size.width),
     );
@@ -43,5 +58,5 @@ class AnchoredPanelLayout extends SingleChildLayoutDelegate {
 
   @override
   bool shouldRelayout(AnchoredPanelLayout oldDelegate) =>
-      anchor != oldDelegate.anchor;
+      anchor != oldDelegate.anchor || align != oldDelegate.align;
 }

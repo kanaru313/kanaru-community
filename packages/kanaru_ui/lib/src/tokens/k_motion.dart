@@ -7,6 +7,10 @@ abstract final class KMotion {
   static const Duration normal = Duration(milliseconds: 250);
   static const Duration slow = Duration(milliseconds: 400);
 
+  /// A detail / sub-page (`KDetailPage`) coming in and going out.
+  static const Duration pageIn = Duration(milliseconds: 280);
+  static const Duration pageOut = Duration(milliseconds: 240);
+
   /// Delay between consecutive items of a staggered entrance (`KFabMenu`).
   static const Duration stagger = Duration(milliseconds: 50);
 
@@ -23,6 +27,14 @@ abstract final class KMotion {
 
   /// `KCheckMark` on -> off: tick retracts, disc shrinks. Quicker than on.
   static const Duration checkOff = Duration(milliseconds: 220);
+
+  /// Animation style for a route a helper opens (dialog, sheet, popover):
+  /// none when the platform or the app turns animations off, else null (the
+  /// route's own default). Flutter routes do not read `disableAnimations`.
+  static AnimationStyle? routeAnimationStyle(BuildContext context) =>
+      MediaQuery.disableAnimationsOf(context)
+      ? AnimationStyle.noAnimation
+      : null;
 }
 
 /// Spring tokens (04 §3.5): snappy = select/press, gentle = sheets/pages,

@@ -54,6 +54,7 @@ Future<void> showKLayeredMenu(
     final height = MediaQuery.sizeOf(context).height * 0.85;
     return showModalBottomSheet<void>(
       context: context,
+      sheetAnimationStyle: KMotion.routeAnimationStyle(context),
       useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
@@ -68,6 +69,7 @@ Future<void> showKLayeredMenu(
   }
   return showDialog<void>(
     context: context,
+    animationStyle: KMotion.routeAnimationStyle(context),
     useRootNavigator: true,
     barrierColor: const Color(0x73000000), // 45 %
     builder: (context) => Dialog(

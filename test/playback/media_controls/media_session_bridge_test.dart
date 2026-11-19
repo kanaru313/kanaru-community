@@ -7,6 +7,7 @@ import 'package:kanaru/src/playback/data/queue_repository.dart';
 import 'package:kanaru/src/playback/data/track_info_rows.dart';
 import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
+import 'package:kanaru/src/playback/domain/playback_settings.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/media_session_bridge.dart';
 
@@ -438,6 +439,24 @@ void main() {
       expect(h.c.queueState.shuffled, isTrue);
       expect(h.c.queueState.repeat, RepeatMode.one);
       expect(h.engine.commands, contains('volume:25'));
+    });
+
+    test('Previous follows the previous button policy', () async {
+      await make();
+      await h.settings.write(
+        previousButtonSetting.key,
+        previousButtonSetting.encode(PreviousButtonPolicy.restartAfter3s),
+      );
+      await h.play(start: 1);
+      await settleAll();
+      h.engine.emit(EngineLoaded(h.loadedToken, const Duration(minutes: 3)));
+      await settleAll();
+      h.engine.tickPosition(const Duration(seconds: 10));
+      await settleAll();
+      controls.commandCtrl.add(const Previous());
+      await settleAll();
+      expect(h.c.queueState.current, 1, reason: 'restart, not previous');
+      expect(h.engine.commands.last, startsWith('seek:0'));
     });
 
     test('parallel Next and Stop go through the chain: ends stopped', () async {

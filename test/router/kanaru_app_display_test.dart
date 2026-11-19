@@ -40,6 +40,41 @@ void main() {
     expect(MediaQuery.disableAnimationsOf(_appContext(tester)), isTrue);
   });
 
+  testWidgets('motion off: a pushed and a popped page finish in one frame', (
+    tester,
+  ) async {
+    final c = await pumpKanaruApp(tester);
+    await c.read(appMotionProvider.notifier).set(false);
+    await tester.pumpAndSettle();
+    final navigator = Navigator.of(_appContext(tester));
+    navigator.push(
+      MaterialPageRoute<void>(builder: (_) => const Text('pushed page')),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('pushed page'), findsOneWidget);
+    navigator.pop();
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('pushed page'), findsNothing);
+  });
+
+  testWidgets('motion on: a pushed page is still animating after one frame', (
+    tester,
+  ) async {
+    await pumpKanaruApp(tester);
+    final navigator = Navigator.of(_appContext(tester));
+    final route = MaterialPageRoute<void>(
+      builder: (_) => const Text('pushed page'),
+    );
+    navigator.push(route);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 20));
+    expect(route.animation!.isCompleted, isFalse);
+    await tester.pumpAndSettle();
+    expect(route.animation!.isCompleted, isTrue);
+  });
+
   testWidgets('a system request to disable animations wins over motion on', (
     tester,
   ) async {

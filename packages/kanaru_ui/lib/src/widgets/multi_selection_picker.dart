@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
 import '../tokens/k_layout.dart';
+import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import 'k_sheet.dart';
 import 'multi_selection_body.dart';
@@ -81,6 +82,7 @@ Future<Set<T>?> showMultiSelectionPicker<T>(
   }
   return showDialog<Set<T>>(
     context: context,
+    animationStyle: KMotion.routeAnimationStyle(context),
     builder: (_) => Dialog(
       shape: KShape.of(KRadius.xl, continuous: true),
       clipBehavior: Clip.antiAlias,

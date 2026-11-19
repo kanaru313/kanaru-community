@@ -1590,5 +1590,173 @@
     "description": "Toast: the write did not answer in time."
   },
   "settingsAbout": "About",
-  "settingsNativeVersions": "Native libraries"
+  "settingsNativeVersions": "Native libraries",
+  "settingsSaveFailed": "Couldn't save settings. Changes last until the app closes.",
+  "settingsRootAppearance": "Appearance",
+  "settingsRootAppearanceDesc": "Theme, language, colors, text, seek bar",
+  "settingsRootLibrary": "Library",
+  "settingsRootLibraryDesc": "Music folders, scan, tabs, artist split",
+  "settingsRootLibraryMissingPermission": " · music permission missing",
+  "settingsRootPlayback": "Playback",
+  "settingsRootPlaybackDesc": "Gapless, sound, ReplayGain, listening history",
+  "settingsRootLyrics": "Lyrics",
+  "settingsRootLyricsDesc": "Display, search and save, sources, translation",
+  "settingsRootPlugins": "Plugins",
+  "settingsRootPluginsDesc": "Installed plugins, plugin store, updates",
+  "settingsRootAi": "AI chat",
+  "settingsRootAiDesc": "AI services, permissions, tools, skills, history",
+  "settingsRootIntegrations": "Integrations",
+  "settingsRootIntegrationsDescDesktop": "MCP server, web server on the local network",
+  "settingsRootIntegrationsDescMobile": "Web server on the local network",
+  "settingsRootData": "Data and storage",
+  "settingsRootDataDesc": "Cache, backup",
+  "settingsRootAdvanced": "Advanced",
+  "settingsRootAdvancedDesc": "Logs, privacy, reset",
+  "settingsRootPro": "Kanaru Pro",
+  "settingsRootProFreeDesc": "One-time purchase · sync, many sources, advanced stats…",
+  "settingsRootProActive": "Activated · thank you",
+  "settingsRootAboutDesc": "License, native libraries",
+  "settingsAppearanceColorMotionTitle": "Color and motion",
+  "settingsAppearancePureBlack": "Pure black",
+  "settingsAppearancePureBlackNeedsDark": "Dark theme only",
+  "settingsAppearanceMotion": "Animations",
+  "settingsAppearanceTextTitle": "Text",
+  "settingsAppearanceFont": "Font",
+  "settingsAppearanceTextSize": "Text size",
+  "settingsAppearanceDisplayTitle": "Display",
+  "settingsAppearanceSeekBar": "Seek bar",
+  "settingsAppearanceWindowFrame": "System window frame",
+  "settingsSeekBarCaption": "Used in Now Playing and the lyrics screen.",
+  "settingsSeekBarWaveform": "Waveform",
+  "settingsSeekBarWaveformCaption": "Local files and some plugins. Tracks without a waveform use the flat bar.",
+  "settingsSeekBarFlat": "Flat bar",
+  "settingsSeekBarFlatCaption": "Every track",
+  "settingsAboutEditionFree": "Free edition",
+  "settingsAboutEditionPro": "Kanaru Pro",
+  "settingsAboutLicenses": "Open source licenses",
+  "settingsPercent": "{percent} %",
+  "@settingsPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsAboutLicense": "License",
+  "settingsPlaybackBlockPlay": "Playback",
+  "settingsPlaybackBlockSound": "Sound",
+  "settingsPlaybackBlockHistory": "Listening history",
+  "settingsPlaybackGapless": "Gapless playback",
+  "settingsPlaybackGaplessDesc": "Applies from the next track",
+  "settingsPlaybackFadeIn": "Fade in when playing",
+  "settingsPlaybackFadeOut": "Fade out when pausing",
+  "settingsPlaybackCrossfade": "Crossfade",
+  "settingsPlaybackCrossfadeDesc": "Crossfade: the old track fades out while the new one fades in.",
+  "settingsPlaybackOutputDevice": "Output device",
+  "settingsPlaybackReplayGain": "ReplayGain",
+  "settingsPlaybackPreamp": "Preamp",
+  "settingsPlaybackClipping": "Prevent clipping",
+  "settingsPlaybackClippingDesc": "Lowers the level when the preamp would distort the sound.",
+  "settingsPlaybackOff": "Off",
+  "settingsPlaybackAuto": "Automatic",
+  "settingsPlaybackPreviousButton": "Previous button",
+  "settingsPlaybackPreviousAlways": "Always go to the previous track",
+  "settingsPlaybackPreviousAlwaysDesc": "Default",
+  "settingsPlaybackPreviousRestart": "Restart after 3 seconds",
+  "settingsPlaybackPreviousRestartDesc": "Within the first 3 seconds it goes to the previous track.",
+  "settingsPlaybackHistory": "Record listening history",
+  "settingsPlaybackHistoryDesc": "Used by History, Most played and Continue listening.",
+  "settingsPlaybackHistoryOff": "Off · what was recorded stays",
+  "settingsPlaybackListenRule": "Count a listen after",
+  "settingsPlaybackListenCaption": "A track counts as a listen when it reaches whichever comes first. Default: 4 minutes or 50 %.",
+  "settingsPlaybackListenNeedsHistory": "Turn on Record listening history to use this",
+  "settingsPlaybackListenNoTime": "Not used",
+  "settingsPlaybackListenEndLabel": "Whole track",
+  "settingsPlaybackListenTimeLive": "After {duration} of listening",
+  "@settingsPlaybackListenTimeLive": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlaybackListenNoTimeLive": "Not counted by time",
+  "settingsPlaybackListenPercentLive": "or after {percent} % of the track",
+  "@settingsPlaybackListenPercentLive": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlaybackListenEndLive": "or after the whole track",
+  "settingsPlaybackListenTimeOrPercent": "{duration} or {percent} %",
+  "@settingsPlaybackListenTimeOrPercent": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlaybackListenTimeOrEnd": "{duration} or the whole track",
+  "@settingsPlaybackListenTimeOrEnd": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPlaybackListenEnd": "Listen to the end",
+  "settingsPlaybackListenPercentOnly": "{percent} % of the track",
+  "@settingsPlaybackListenPercentOnly": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDurationSeconds": "{seconds, plural, =1{1 second} other{{seconds} seconds}}",
+  "@settingsDurationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDurationMinutes": "{minutes, plural, =1{1 minute} other{{minutes} minutes}}",
+  "@settingsDurationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDurationMinutesSeconds": "{minutes} min {seconds} s",
+  "@settingsDurationMinutesSeconds": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPlaybackPreampValue": "{db} dB",
+  "@settingsPlaybackPreampValue": {
+    "placeholders": {
+      "db": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsAppearancePureBlackDesc": "A fully black background in the Dark theme, good for OLED screens.",
+  "settingsAppearanceMotionDesc": "Off: pages and sheets appear at once, without sliding.",
+  "settingsAppearanceWindowFrameDesc": "Use the system title bar and window border instead of the Kanaru bar.",
+  "settingsAppearanceWindowFrameApply": "Applies after Kanaru is reopened",
+  "settingsAppearanceTextSizeDefault": "Default",
+  "settingsPlaybackNeedsReplayGain": "Turn on ReplayGain to use this"
 }

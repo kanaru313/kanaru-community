@@ -4,6 +4,7 @@ import 'package:kanaru/src/media/domain/play_context.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/data/play_log_writer.dart';
 import 'package:kanaru/src/playback/domain/audio_engine.dart';
+import 'package:kanaru/src/playback/domain/listen_accumulator.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/listen_recorder.dart';
 
@@ -170,6 +171,116 @@ void main() {
       await r.flush();
       expect(await rows(), hasLength(1));
       expect((await rows()).single['listened_ms'], 70000);
+    });
+
+    group('rule and history', () {
+      var rule = ListenRule.standard;
+      var history = true;
+      late ListenRecorder custom;
+
+      setUp(() {
+        rule = ListenRule.standard;
+        history = true;
+        custom = ListenRecorder(
+          writer: PlayLogWriter(db),
+          deviceId: () => 'dev-1',
+          rule: () => rule,
+          historyEnabled: () => history,
+          wallClock: () => now,
+          monotonic: () => mono,
+        );
+      });
+
+      void feed(int gen, int from, int to) {
+        for (var p = from; p <= to; p++) {
+          mono = secs(p);
+          now = 1000 + p * 1000;
+          custom.observe(obs(gen, p));
+        }
+      }
+
+      test('the rule is read at most once a second while a listen runs', () async {
+        var reads = 0;
+        final counting = ListenRecorder(
+          writer: PlayLogWriter(db),
+          deviceId: () => 'dev-1',
+          rule: () {
+            reads++;
+            return ListenRule.standard;
+          },
+          wallClock: () => now,
+          monotonic: () => mono,
+        );
+        for (var ms = 0; ms <= 10000; ms += 100) {
+          mono = Duration(milliseconds: ms);
+          now = 1000 + ms;
+          counting.observe(
+            ListenObservation(
+              token: token(1),
+              trackId: track,
+              context: ctx,
+              position: Duration(milliseconds: ms),
+              length: secs(100),
+              playing: true,
+            ),
+          );
+        }
+        expect(reads, lessThanOrEqualTo(11), reason: '101 observations');
+        expect(reads, greaterThan(1), reason: 'refreshed, not read once');
+      });
+
+      test('a shorter rule records earlier', () async {
+        rule = const ListenRule(afterMs: 20000, percent: 50);
+        feed(1, 0, 20);
+        await custom.flush();
+        expect((await rows()).single['listened_ms'], 20000);
+      });
+
+      test('a rule changed mid-listen applies at the next check', () async {
+        feed(1, 0, 30);
+        await custom.flush();
+        expect(await rows(), isEmpty);
+        rule = const ListenRule(afterMs: 0, percent: 20);
+        feed(1, 31, 33);
+        await custom.flush();
+        expect(await rows(), hasLength(1));
+      });
+
+      test('history off inserts nothing and deletes nothing', () async {
+        feed(1, 0, 50);
+        await custom.flush();
+        expect(await rows(), hasLength(1));
+        history = false;
+        feed(2, 0, 60);
+        await custom.close();
+        final r = await rows();
+        expect(r, hasLength(1), reason: 'the second listen is not recorded');
+        expect(r.single['listened_ms'], 50000);
+      });
+
+      test('an open row keeps being updated after history goes off', () async {
+        feed(1, 0, 50);
+        await pumpEventQueue();
+        history = false;
+        feed(1, 51, 70);
+        await custom.flush();
+        final r = await rows();
+        expect(r, hasLength(1));
+        expect(r.single['listened_ms'], 70000);
+      });
+
+      test('history turned on mid-track inserts once', () async {
+        history = false;
+        feed(1, 0, 60);
+        await custom.flush();
+        expect(await rows(), isEmpty);
+        history = true;
+        feed(1, 61, 80);
+        await custom.flush();
+        final r = await rows();
+        expect(r, hasLength(1));
+        expect(r.single['listened_ms'], 80000);
+      });
     });
 
     test('after close nothing is recorded', () async {

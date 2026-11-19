@@ -188,6 +188,50 @@ void main() {
     );
   });
 
+  testWidgets('desktop: anchorAlign end right-aligns the panel to the row', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(1400, 900));
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      host(
+        Builder(
+          builder: (context) => Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              width: 600,
+              child: Align(
+                alignment: Alignment.topRight,
+                child: TextButton(
+                  key: key,
+                  onPressed: () => showSliderSheet(
+                    context,
+                    title: const Text('T'),
+                    sliders: [_spec([])],
+                    anchor: key,
+                    anchorAlign: KAnchorAlign.end,
+                  ),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    final panel = tester.getRect(
+      find
+          .descendant(
+            of: find.byType(CustomSingleChildLayout),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
+    expect(panel.right, closeTo(tester.getRect(find.byKey(key)).right, 1));
+  });
+
   testWidgets('200 % text with long Vietnamese labels does not overflow', (
     tester,
   ) async {

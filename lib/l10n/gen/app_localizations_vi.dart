@@ -2147,4 +2147,317 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsNativeVersions => 'Thư viện native';
+
+  @override
+  String get settingsSaveFailed =>
+      'Không lưu được cài đặt. Thay đổi chỉ giữ tới khi đóng app.';
+
+  @override
+  String get settingsRootAppearance => 'Giao diện';
+
+  @override
+  String get settingsRootAppearanceDesc =>
+      'Chủ đề, ngôn ngữ, màu, chữ, thanh tua';
+
+  @override
+  String get settingsRootLibrary => 'Thư viện';
+
+  @override
+  String get settingsRootLibraryDesc => 'Thư mục nhạc, quét, tab, tách nghệ sĩ';
+
+  @override
+  String get settingsRootLibraryMissingPermission => ' · thiếu quyền nhạc';
+
+  @override
+  String get settingsRootPlayback => 'Phát nhạc';
+
+  @override
+  String get settingsRootPlaybackDesc =>
+      'Liền mạch, âm thanh, ReplayGain, lịch sử nghe';
+
+  @override
+  String get settingsRootLyrics => 'Lời bài';
+
+  @override
+  String get settingsRootLyricsDesc =>
+      'Hiển thị lời, tìm và lưu lời, nguồn lời, dịch';
+
+  @override
+  String get settingsRootPlugins => 'Plugin';
+
+  @override
+  String get settingsRootPluginsDesc => 'Plugin đã cài, kho plugin, cập nhật';
+
+  @override
+  String get settingsRootAi => 'Trò chuyện AI';
+
+  @override
+  String get settingsRootAiDesc => 'Dịch vụ AI, quyền, công cụ, skill, lịch sử';
+
+  @override
+  String get settingsRootIntegrations => 'Tích hợp';
+
+  @override
+  String get settingsRootIntegrationsDescDesktop =>
+      'Máy chủ MCP, web server trong mạng LAN';
+
+  @override
+  String get settingsRootIntegrationsDescMobile => 'Web server trong mạng LAN';
+
+  @override
+  String get settingsRootData => 'Dữ liệu và bộ nhớ';
+
+  @override
+  String get settingsRootDataDesc => 'Bộ nhớ đệm, sao lưu';
+
+  @override
+  String get settingsRootAdvanced => 'Nâng cao';
+
+  @override
+  String get settingsRootAdvancedDesc => 'Nhật ký, quyền riêng tư, đặt lại';
+
+  @override
+  String get settingsRootPro => 'Kanaru Pro';
+
+  @override
+  String get settingsRootProFreeDesc =>
+      'Mua một lần · đồng bộ, nhiều nguồn, thống kê nâng cao…';
+
+  @override
+  String get settingsRootProActive => 'Đã kích hoạt · cảm ơn bạn';
+
+  @override
+  String get settingsRootAboutDesc => 'Giấy phép, thư viện native';
+
+  @override
+  String get settingsAppearanceColorMotionTitle => 'Màu và chuyển động';
+
+  @override
+  String get settingsAppearancePureBlack => 'Nền đen tuyền';
+
+  @override
+  String get settingsAppearancePureBlackNeedsDark => 'Chỉ dùng với chủ đề Tối';
+
+  @override
+  String get settingsAppearanceMotion => 'Hiệu ứng chuyển động';
+
+  @override
+  String get settingsAppearanceTextTitle => 'Chữ';
+
+  @override
+  String get settingsAppearanceFont => 'Phông chữ';
+
+  @override
+  String get settingsAppearanceTextSize => 'Cỡ chữ';
+
+  @override
+  String get settingsAppearanceDisplayTitle => 'Hiển thị';
+
+  @override
+  String get settingsAppearanceSeekBar => 'Thanh tua';
+
+  @override
+  String get settingsAppearanceWindowFrame => 'Khung cửa sổ của hệ thống';
+
+  @override
+  String get settingsSeekBarCaption => 'Dùng ở Now Playing và màn lời.';
+
+  @override
+  String get settingsSeekBarWaveform => 'Dạng sóng';
+
+  @override
+  String get settingsSeekBarWaveformCaption =>
+      'Tệp trong máy và một số plugin. Bài không có dạng sóng dùng thanh phẳng.';
+
+  @override
+  String get settingsSeekBarFlat => 'Thanh phẳng';
+
+  @override
+  String get settingsSeekBarFlatCaption => 'Mọi bài';
+
+  @override
+  String get settingsAboutEditionFree => 'Bản miễn phí';
+
+  @override
+  String get settingsAboutEditionPro => 'Kanaru Pro';
+
+  @override
+  String get settingsAboutLicenses => 'Giấy phép mã nguồn mở';
+
+  @override
+  String settingsPercent(int percent) {
+    return '$percent %';
+  }
+
+  @override
+  String get settingsAboutLicense => 'Giấy phép';
+
+  @override
+  String get settingsPlaybackBlockPlay => 'Phát';
+
+  @override
+  String get settingsPlaybackBlockSound => 'Âm thanh';
+
+  @override
+  String get settingsPlaybackBlockHistory => 'Lịch sử nghe';
+
+  @override
+  String get settingsPlaybackGapless => 'Phát liền mạch';
+
+  @override
+  String get settingsPlaybackGaplessDesc => 'Áp dụng từ bài sau';
+
+  @override
+  String get settingsPlaybackFadeIn => 'Tăng dần âm lượng khi phát';
+
+  @override
+  String get settingsPlaybackFadeOut => 'Giảm dần âm lượng khi tạm dừng';
+
+  @override
+  String get settingsPlaybackCrossfade => 'Chuyển bài mờ dần';
+
+  @override
+  String get settingsPlaybackCrossfadeDesc =>
+      'Crossfade: bài cũ nhỏ dần trong khi bài mới to dần.';
+
+  @override
+  String get settingsPlaybackOutputDevice => 'Thiết bị đầu ra';
+
+  @override
+  String get settingsPlaybackReplayGain => 'ReplayGain';
+
+  @override
+  String get settingsPlaybackPreamp => 'Tăng thêm';
+
+  @override
+  String get settingsPlaybackClipping => 'Chống méo tiếng';
+
+  @override
+  String get settingsPlaybackClippingDesc =>
+      'Giảm mức khi tăng thêm làm vỡ tiếng.';
+
+  @override
+  String get settingsPlaybackOff => 'Tắt';
+
+  @override
+  String get settingsPlaybackAuto => 'Tự động';
+
+  @override
+  String get settingsPlaybackPreviousButton => 'Nút Bài trước';
+
+  @override
+  String get settingsPlaybackPreviousAlways => 'Luôn về bài trước';
+
+  @override
+  String get settingsPlaybackPreviousAlwaysDesc => 'Mặc định';
+
+  @override
+  String get settingsPlaybackPreviousRestart => 'Quá 3 giây thì về đầu bài';
+
+  @override
+  String get settingsPlaybackPreviousRestartDesc =>
+      'Bấm trong 3 giây đầu bài thì về bài trước';
+
+  @override
+  String get settingsPlaybackHistory => 'Ghi lịch sử nghe';
+
+  @override
+  String get settingsPlaybackHistoryDesc =>
+      'Dùng cho Lịch sử, Phát nhiều nhất, Nghe tiếp.';
+
+  @override
+  String get settingsPlaybackHistoryOff => 'Đang tắt · lịch sử đã ghi vẫn giữ';
+
+  @override
+  String get settingsPlaybackListenRule => 'Tính một lượt nghe sau';
+
+  @override
+  String get settingsPlaybackListenCaption =>
+      'Bài được tính một lượt nghe khi tới mốc nào trước. Mặc định 4 phút hoặc 50 %.';
+
+  @override
+  String get settingsPlaybackListenNeedsHistory =>
+      'Bật Ghi lịch sử nghe để dùng';
+
+  @override
+  String get settingsPlaybackListenNoTime => 'Không dùng';
+
+  @override
+  String get settingsPlaybackListenEndLabel => 'Hết bài';
+
+  @override
+  String settingsPlaybackListenTimeLive(String duration) {
+    return 'Sau $duration nghe';
+  }
+
+  @override
+  String get settingsPlaybackListenNoTimeLive => 'Không tính theo thời gian';
+
+  @override
+  String settingsPlaybackListenPercentLive(int percent) {
+    return 'hoặc khi nghe $percent % bài';
+  }
+
+  @override
+  String get settingsPlaybackListenEndLive => 'hoặc khi nghe hết bài';
+
+  @override
+  String settingsPlaybackListenTimeOrPercent(String duration, int percent) {
+    return '$duration hoặc $percent %';
+  }
+
+  @override
+  String settingsPlaybackListenTimeOrEnd(String duration) {
+    return '$duration hoặc hết bài';
+  }
+
+  @override
+  String get settingsPlaybackListenEnd => 'Nghe hết bài';
+
+  @override
+  String settingsPlaybackListenPercentOnly(int percent) {
+    return '$percent % bài';
+  }
+
+  @override
+  String settingsDurationSeconds(int seconds) {
+    return '$seconds giây';
+  }
+
+  @override
+  String settingsDurationMinutes(int minutes) {
+    return '$minutes phút';
+  }
+
+  @override
+  String settingsDurationMinutesSeconds(int minutes, int seconds) {
+    return '$minutes phút $seconds giây';
+  }
+
+  @override
+  String settingsPlaybackPreampValue(int db) {
+    return '$db dB';
+  }
+
+  @override
+  String get settingsAppearancePureBlackDesc =>
+      'Nền đen hẳn khi chủ đề Tối, hợp với màn OLED.';
+
+  @override
+  String get settingsAppearanceMotionDesc =>
+      'Tắt thì trang và sheet hiện ngay, không trượt.';
+
+  @override
+  String get settingsAppearanceWindowFrameDesc =>
+      'Dùng thanh tiêu đề và viền cửa sổ của hệ thống thay cho thanh của Kanaru.';
+
+  @override
+  String get settingsAppearanceWindowFrameApply =>
+      'Áp dụng sau khi mở lại Kanaru';
+
+  @override
+  String get settingsAppearanceTextSizeDefault => 'Mặc định';
+
+  @override
+  String get settingsPlaybackNeedsReplayGain => 'Bật ReplayGain để dùng';
 }

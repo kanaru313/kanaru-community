@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/playback_notice.dart';
+import 'package:kanaru/src/playback/domain/playback_settings.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/ui/flight_source.dart';
 import 'package:kanaru/src/playback/ui/mini_carousel_math.dart';
@@ -132,6 +134,23 @@ void main() {
     testWidgets('right goes to the previous entry', (tester) async {
       final host = await pumpWithPlayer(tester, _player([]));
       await host.run(tester, host.h.c.next);
+      await host.letStreamsArrive(tester);
+      await _swipe(tester, host, _width(tester) * 0.4);
+      expect(_current(host), 0);
+    });
+
+    testWidgets('right goes to the previous entry past 3 s with the restart '
+        'policy: a swipe ignores it', (tester) async {
+      final host = await pumpWithPlayer(tester, _player([]));
+      await host.h.settings.write(
+        previousButtonSetting.key,
+        previousButtonSetting.encode(PreviousButtonPolicy.restartAfter3s),
+      );
+      await host.run(tester, host.h.c.next);
+      await host.letStreamsArrive(tester);
+      host.h.engine
+        ..emit(EngineLoaded(host.h.loadedToken, const Duration(minutes: 3)))
+        ..tickPosition(const Duration(seconds: 10));
       await host.letStreamsArrive(tester);
       await _swipe(tester, host, _width(tester) * 0.4);
       expect(_current(host), 0);

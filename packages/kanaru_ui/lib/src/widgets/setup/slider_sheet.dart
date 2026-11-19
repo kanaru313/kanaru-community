@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../layout/form_factor.dart';
 import '../../tokens/k_layout.dart';
+import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../anchored_panel_layout.dart';
@@ -58,6 +59,7 @@ Future<void> showSliderSheet(
   Widget? caption,
   required List<KSliderSpec> sliders,
   GlobalKey? anchor,
+  KAnchorAlign anchorAlign = KAnchorAlign.start,
 }) {
   assert(
     sliders.isNotEmpty && sliders.length <= 2,
@@ -72,6 +74,7 @@ Future<void> showSliderSheet(
   if (rect == null) {
     return showDialog<void>(
       context: context,
+      animationStyle: KMotion.routeAnimationStyle(context),
       builder: (context) => Dialog(
         shape: KShape.of(KRadius.xl, continuous: true),
         clipBehavior: Clip.antiAlias,
@@ -84,10 +87,11 @@ Future<void> showSliderSheet(
   }
   return showDialog<void>(
     context: context,
+    animationStyle: KMotion.routeAnimationStyle(context),
     useSafeArea: false,
     barrierColor: const Color(0x00000000),
     builder: (context) => CustomSingleChildLayout(
-      delegate: AnchoredPanelLayout(rect),
+      delegate: AnchoredPanelLayout(rect, align: anchorAlign),
       child: Material(
         elevation: 3,
         color: Theme.of(context).colorScheme.surfaceContainerHigh,

@@ -23,8 +23,9 @@ class NextButton extends ConsumerWidget {
   );
 }
 
-/// Previous track (always the previous one; at the first it restarts and
-/// the controller raises the "first track" notice).
+/// Previous track, as the "previous button" setting says: the previous one,
+/// or a restart after the first seconds. At the first track it restarts and
+/// the controller raises the "first track" notice.
 class PreviousButton extends ConsumerWidget {
   const PreviousButton({super.key, this.iconSize});
 
@@ -35,7 +36,7 @@ class PreviousButton extends ConsumerWidget {
     icon: KIcons.skipPrevious,
     size: iconSize ?? KIconSize.md,
     tooltip: AppLocalizations.of(context).playbackPrevious,
-    onPressed: () => ref.read(playerControllerProvider).previous(),
+    onPressed: () => ref.read(playerControllerProvider).previousPressed(),
   );
 }
 

@@ -151,8 +151,7 @@ void main() {
       await _pump(tester, 360, builtIns: true);
       await tester.tap(_byTooltip('Settings'));
       await tester.pumpAndSettle();
-      expect(find.text('Native libraries'), findsOneWidget);
-      expect(find.text('bridge test'), findsOneWidget);
+      expect(find.text('Appearance'), findsOneWidget);
       expect(find.byType(NavigationBar), findsNothing);
       await tester.tap(_byTooltip('Back'));
       await tester.pumpAndSettle();
@@ -165,12 +164,12 @@ void main() {
       await _pump(tester, 360, builtIns: true);
       await tester.tap(_byTooltip('Settings'));
       await tester.pumpAndSettle();
-      expect(find.text('Native libraries'), findsOneWidget);
+      expect(find.text('Appearance'), findsOneWidget);
 
       final handled = await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(handled, isTrue);
-      expect(find.text('Native libraries'), findsNothing);
+      expect(find.text('Appearance'), findsNothing);
       expect(find.byType(NavigationBar), findsOneWidget);
       expect(_byTooltip('Settings'), findsOneWidget);
     });
@@ -181,10 +180,10 @@ void main() {
       await _pump(tester, 1280, builtIns: true);
       await tester.tap(find.text('Settings'));
       await tester.pumpAndSettle();
-      expect(find.text('Native libraries'), findsOneWidget);
+      expect(find.text('Appearance'), findsOneWidget);
       await tester.tap(_byTooltip('Back'));
       await tester.pumpAndSettle();
-      expect(find.text('Native libraries'), findsNothing);
+      expect(find.text('Appearance'), findsNothing);
       expect(find.byKey(const ValueKey('sidebar')), findsOneWidget);
     });
   });

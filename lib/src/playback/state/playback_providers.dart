@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 
 import '../../media/domain/track_id.dart';
 import '../../platform/state/device_id_provider.dart';
@@ -6,10 +8,14 @@ import '../../platform/state/settings_providers.dart';
 import '../domain/now_playing.dart';
 import '../domain/playback_commands.dart';
 import '../domain/playback_focus.dart';
+import '../../platform/domain/settings_store.dart';
+import '../domain/listen_accumulator.dart';
+import '../domain/playback_settings.dart';
 import 'audio_engine_provider.dart';
 import 'listen_recorder.dart';
 import 'player_controller.dart';
 import 'player_ready.dart';
+import 'session_restore.dart' show readSetting;
 import 'playback_data_providers.dart';
 
 /// The player. Created by [nowPlayingProvider] and by commands, never while a
@@ -20,10 +26,11 @@ import 'playback_data_providers.dart';
 /// queue and the engine. Focus is asked through a live link to the current
 /// provider value, and the media bridge is attached again if it is rebuilt.
 final playerControllerProvider = Provider<PlayerController>((ref) {
+  final store = ref.read(settingsStoreProvider);
   final controller = PlayerController(
     repo: ref.read(queueRepositoryProvider),
     resolver: ref.read(playableResolverProvider),
-    settings: ref.read(settingsStoreProvider),
+    settings: store,
     engineFactory: ref.read(audioEngineFactoryProvider),
     focus: _LiveFocus(ref),
     titles: ref.read(trackTitleLookupProvider),
@@ -32,6 +39,9 @@ final playerControllerProvider = Provider<PlayerController>((ref) {
       // Read when a listen is written, so a container without a device id
       // (a bare test) can still build the player.
       deviceId: () => ref.read(deviceIdProvider),
+      // Read at each check, so a change applies to the next one.
+      rule: () => readListenRule(store),
+      historyEnabled: () => readSetting(store, historyEnabledSetting),
     ),
   );
   ref.onDispose(controller.dispose);
@@ -90,3 +100,22 @@ final isPlayingProvider = Provider<bool>(
   (ref) =>
       ref.watch(nowPlayingProvider.select((n) => n.value?.playing ?? false)),
 );
+
+Object? _warnedListenRule;
+
+/// The stored listen rule. A bad value reads as the default and is logged
+/// once per distinct value, not at every check of every listen.
+@visibleForTesting
+ListenRule readListenRule(SettingsStore store) {
+  final raw = store.read(listenRuleSetting.key);
+  if (raw == null) return listenRuleSetting.defaultValue;
+  try {
+    return listenRuleSetting.decode(raw);
+  } on Object catch (e) {
+    if (_warnedListenRule != raw) {
+      _warnedListenRule = raw;
+      Logger('playback').warning('bad listen rule, using the default: $e');
+    }
+    return listenRuleSetting.defaultValue;
+  }
+}
