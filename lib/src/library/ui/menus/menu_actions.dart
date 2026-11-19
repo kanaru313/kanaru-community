@@ -51,6 +51,15 @@ sealed class MenuAction {
   const factory MenuAction.run(
     Future<void> Function(BuildContext context) run,
   ) = RunAction;
+
+  /// Like [run], but for a dialog that opens OVER the menu: the menu stays
+  /// open underneath, and [run] reports whether it finished its job
+  /// (true = the menu closes too; false = back to the menu). Only a header
+  /// action ([MenuHeader.action]) honours it; elsewhere it behaves as [run]
+  /// after the menu has closed.
+  const factory MenuAction.runOver(
+    Future<bool> Function(BuildContext context) run,
+  ) = RunOverAction;
 }
 
 class GoAction extends MenuAction {
@@ -168,6 +177,19 @@ class RunAction extends MenuAction {
 
   @override
   bool operator ==(Object other) => other is RunAction && other.run == run;
+
+  @override
+  int get hashCode => run.hashCode;
+}
+
+/// An action that opens over the menu and decides whether the menu closes.
+/// Compared by identity of [run].
+class RunOverAction extends MenuAction {
+  const RunOverAction(this.run);
+  final Future<bool> Function(BuildContext context) run;
+
+  @override
+  bool operator ==(Object other) => other is RunOverAction && other.run == run;
 
   @override
   int get hashCode => run.hashCode;

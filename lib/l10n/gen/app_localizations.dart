@@ -3588,6 +3588,246 @@ abstract class AppLocalizations {
   /// **'Android\'s media index does not list the music files of this playlist yet, so the library cannot see them. Go to Settings › Library › Music folders › Add folder, tap “Can\'t see your folder? Rescan”, then import again. Nothing was imported.'**
   String get m3uImportNotIndexed;
 
+  /// Title of the cover dialog (album, artist, playlist).
+  ///
+  /// In en, this message translates to:
+  /// **'Cover'**
+  String get coverDialogTitle;
+
+  /// Tooltip of the cover button in an album menu header.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit album cover'**
+  String get coverEditAlbumTooltip;
+
+  /// Tooltip of the cover button in an artist menu header.
+  ///
+  /// In en, this message translates to:
+  /// **'Set artist image'**
+  String get coverEditArtistTooltip;
+
+  /// Row that picks the automatic cover.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get coverAutoTitle;
+
+  /// Subtitle of the automatic cover row (album).
+  ///
+  /// In en, this message translates to:
+  /// **'Cover in the music file'**
+  String get coverAutoSubtitleAlbum;
+
+  /// Subtitle of the automatic cover row (artist).
+  ///
+  /// In en, this message translates to:
+  /// **'First album cover'**
+  String get coverAutoSubtitleArtist;
+
+  /// Subtitle of the automatic cover row (playlist).
+  ///
+  /// In en, this message translates to:
+  /// **'Made from the first 4 album covers'**
+  String get coverAutoSubtitlePlaylist;
+
+  /// Row of the custom cover the item has now.
+  ///
+  /// In en, this message translates to:
+  /// **'Current image'**
+  String get coverCurrentTitle;
+
+  /// Subtitle of the current custom cover row.
+  ///
+  /// In en, this message translates to:
+  /// **'Chosen earlier'**
+  String get coverCurrentSubtitle;
+
+  /// Group title of the album suggestions for an artist.
+  ///
+  /// In en, this message translates to:
+  /// **'Covers of the artist\'s albums'**
+  String get coverGroupArtistAlbums;
+
+  /// Group title of the album suggestions for a playlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Album covers in the playlist'**
+  String get coverGroupPlaylistAlbums;
+
+  /// Row that shows the remaining album suggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {count} more albums'**
+  String coverMoreAlbums(int count);
+
+  /// Subtitle of an album suggestion without a year.
+  ///
+  /// In en, this message translates to:
+  /// **'Album cover'**
+  String get coverAlbumSubtitle;
+
+  /// Subtitle of an album suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Album cover · {year}'**
+  String coverAlbumSubtitleYear(int year);
+
+  /// Action row that opens the photo picker (mobile).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose image…'**
+  String get coverPickMobile;
+
+  /// Action row that opens the file dialog (desktop).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose image from device…'**
+  String get coverPickDesktop;
+
+  /// Subtitle of the picked-image row while its preview is prepared.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading image…'**
+  String get coverPickedReading;
+
+  /// Subtitle of the picked-image row; size of the upright original.
+  ///
+  /// In en, this message translates to:
+  /// **'From device · {width} × {height}'**
+  String coverPickedSubtitle(int width, int height);
+
+  /// Title of the picked-image row when the picker gave no real file name.
+  ///
+  /// In en, this message translates to:
+  /// **'Image from device'**
+  String get coverPickedGeneratedName;
+
+  /// Hint under the preview of a non-square picked image.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the image to choose the visible part (the image is cropped square)'**
+  String get coverPanHint;
+
+  /// Warning card for a picked image with a short side under 500 px.
+  ///
+  /// In en, this message translates to:
+  /// **'Small image ({width} × {height} px): it may look blurry in Now Playing and on the detail page. You can still save it.'**
+  String coverSmallImage(int width, int height);
+
+  /// Hint under the preview: automatic chosen while a custom cover exists (album).
+  ///
+  /// In en, this message translates to:
+  /// **'Save: drops your image and uses the cover in the music file again'**
+  String get coverHintResetAlbum;
+
+  /// Hint under the preview: automatic chosen while a custom cover exists (artist).
+  ///
+  /// In en, this message translates to:
+  /// **'Save: drops your image and uses the automatic image again'**
+  String get coverHintResetArtist;
+
+  /// Hint under the preview: automatic chosen while a custom cover exists (playlist).
+  ///
+  /// In en, this message translates to:
+  /// **'Save: drops your image and uses the automatic cover again'**
+  String get coverHintResetPlaylist;
+
+  /// Hint under the preview when an image is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'The image is copied into Kanaru\'s data; the original file and tags are unchanged'**
+  String get coverHintCopied;
+
+  /// Footer scope of the album cover dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to the album everywhere'**
+  String get coverScopeAlbum;
+
+  /// Footer scope of the artist cover dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'The artist\'s image everywhere'**
+  String get coverScopeArtist;
+
+  /// Footer scope of the playlist cover dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'This playlist only'**
+  String get coverScopePlaylist;
+
+  /// Footer scope when the dialog is opened from the playlist edit form.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved with the other changes when you tap Save in Edit playlist'**
+  String get coverScopeForm;
+
+  /// Cancel button of the cover dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get coverCancel;
+
+  /// Save button of the cover dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get coverSave;
+
+  /// Confirm button of the cover dialog opened from the playlist edit form.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get coverChoose;
+
+  /// Overlay on the preview while a file is dragged over it (desktop).
+  ///
+  /// In en, this message translates to:
+  /// **'Drop the image here'**
+  String get coverDropHere;
+
+  /// Snack bar after a custom cover was saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover changed'**
+  String get coverChanged;
+
+  /// Snack bar after the custom cover was removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic cover restored'**
+  String get coverResetDone;
+
+  /// Action of the cover snack bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get coverUndo;
+
+  /// Snack bar when undoing a cover change failed or is no longer possible.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t undo'**
+  String get coverUndoFailed;
+
+  /// Error: the image is undecodable or an unsupported format.
+  ///
+  /// In en, this message translates to:
+  /// **'This image can\'t be used (only JPEG, PNG and WebP are supported)'**
+  String get coverErrorFormat;
+
+  /// Error: read/write problem, timeout or any other failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the image file. Try again later.'**
+  String get coverErrorRead;
+
+  /// Filter label of the Linux file dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get coverLinuxDialogLabel;
+
   /// No description provided for @settingsAbout.
   ///
   /// In en, this message translates to:

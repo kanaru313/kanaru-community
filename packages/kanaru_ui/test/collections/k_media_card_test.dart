@@ -766,7 +766,7 @@ void main() {
       expect(radius(tester), 0);
       expect(fill(tester), KRowColors.fill(Brightness.light));
       await tester.pumpWidget(host(_card(filled: false)));
-      expect(fill(tester), Colors.transparent);
+      expect(fill(tester)!.a, 0, reason: 'fully transparent');
     });
 
     testWidgets('mobile auto paints the gradient full width when current', (
@@ -1555,6 +1555,22 @@ void main() {
         host(_card(missing: true), brightness: Brightness.dark, textScale: 2),
       );
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a title alone is centred on the cover, with lines it sits on '
+        'top', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(_card(full: false)));
+      final cover = tester.getRect(find.byKey(const Key('cover')));
+      expect(
+        tester.getRect(find.text('Title')).center.dy,
+        closeTo(cover.center.dy, 1),
+      );
+      await tester.pumpWidget(host(_card()));
+      expect(
+        tester.getRect(find.text('Title')).center.dy,
+        lessThan(cover.center.dy - 6),
+      );
     });
   });
 }

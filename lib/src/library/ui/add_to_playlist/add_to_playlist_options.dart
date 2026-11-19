@@ -169,29 +169,23 @@ class AddToPlaylistPickerContent {
     if (name == null) return null;
     final key = pendingKey(++_typed);
     pendingNames[key] = name;
-    return SelectionOption<String>(
+    return SelectionOption<String>.media(
       value: key,
-      leading: KCover(
+      cover: KCover(
         image: null,
         size: _tile,
+        radius: KMediaCard.coverRadius,
         placeholderSeed: key,
         placeholderIcon: KIcons.playlists,
       ),
-      title: Row(
-        children: [
-          Flexible(
-            child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ),
-          const SizedBox(width: KSpace.x2),
-          ProBadge(label: l10n.playlistPickerNewBadge),
-        ],
-      ),
-      subtitle: Text(l10n.playlistPickerNewHint),
+      mediaTitle: name,
+      mediaTag: l10n.playlistPickerNewBadge,
+      mediaLine2: l10n.playlistPickerNewHint,
       filterText: name,
     );
   }
 
-  static const double _tile = 44;
+  static const double _tile = KMediaCard.coverSize;
 
   SelectionOption<String> _option(PlaylistRow row) {
     final s = row.summary;
@@ -202,19 +196,15 @@ class AddToPlaylistPickerContent {
       HasSomeHint(:final has, :final of) =>
         ' · ${l10n.playlistPickerHasSome(has, of)}',
     };
-    return SelectionOption<String>(
+    return SelectionOption<String>.media(
       value: s.uid,
-      leading: PlaylistCover(
+      cover: PlaylistCover(
         uid: s.uid,
         autoCoverKeys: s.autoCoverKeys,
         dimension: _tile,
       ),
-      title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(
-        '${l10n.playlistTrackCount(s.trackCount)}$hint',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      mediaTitle: name,
+      mediaLine2: '${l10n.playlistTrackCount(s.trackCount)}$hint',
       filterText: name,
       hint: row.favorites ? l10n.playlistPickerFavoritesHint : null,
     );

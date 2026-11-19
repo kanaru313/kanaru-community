@@ -6,6 +6,7 @@ import '../tokens/k_icon_size.dart';
 import '../tokens/k_layout.dart';
 import '../tokens/k_motion.dart';
 import 'k_icon_button.dart';
+import 'k_row_edges.dart';
 
 /// Centred dialog using the theme's soft shape, capped at [maxWidth]
 /// ([KLayout.dialog]; [KLayout.dialogWide] for the wide ones).
@@ -18,10 +19,13 @@ Future<T?> showKDialog<T>(
     context: context,
     animationStyle: KMotion.routeAnimationStyle(context),
     // Center loosens the route's tight screen constraints, so the cap holds.
-    builder: (context) => Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: builder(context),
+    builder: (context) => KRowEdgesScope(
+      edges: KRowEdges.inset,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: builder(context),
+        ),
       ),
     ),
   );

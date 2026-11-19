@@ -68,7 +68,7 @@ fn write_atomic(dest: &Path, data: &[u8]) -> io::Result<()> {
 }
 
 /// `.kanaru-tmp-<hex>`: unique per process, call and moment.
-fn temp_name() -> String {
+pub(super) fn temp_name() -> String {
     static NEXT: AtomicU64 = AtomicU64::new(0);
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)

@@ -43,7 +43,18 @@ pub(crate) struct ScaledPlan<'a> {
 /// is over [`SCALED_DECODE_ABOVE`], gray or YCbCr (or RGB; CMYK and YCCK take
 /// the full path), whose decode needs no more than [`MAX_DECODE_BYTES`] (see
 /// [`progressive_coefficient_bytes`]). Only headers are read.
-pub(crate) fn scaled_plan(bytes: &[u8], format: ImageFormat) -> Option<ScaledPlan<'_>> {
+///
+/// With `crop_side` (side of the crop in stored pixels) the scale is chosen
+/// so the crop stays at least [`FULL_SIDE`] pixels across (all of it when it
+/// is smaller), not the whole picture. When that scale would break the memory
+/// cap, `degrade` (for a crop only) steps to coarser scales until it fits, so
+/// the crop may come out smaller than that; otherwise the plan is refused.
+pub(crate) fn scaled_plan(
+    bytes: &[u8],
+    format: ImageFormat,
+    crop_side: Option<u32>,
+    degrade: bool,
+) -> Option<ScaledPlan<'_>> {
     if format != ImageFormat::Jpeg {
         return None;
     }
@@ -53,14 +64,36 @@ pub(crate) fn scaled_plan(bytes: &[u8], format: ImageFormat) -> Option<ScaledPla
         return None;
     }
     let mut decoder = jpeg_decoder::Decoder::new(Cursor::new(bytes));
-    let side = u16::try_from(FULL_SIDE).ok()?;
-    let (width, height) = decoder.scale(side, side).ok()?;
-    let output = u64::from(width) * u64::from(height) * header.sampling.len() as u64;
-    // The output is held about twice: component planes, then the
-    // interleaved pixels.
-    if progressive_coefficient_bytes(&header) + 2 * output > MAX_DECODE_BYTES {
-        return None;
-    }
+    let (want_width, want_height) = match crop_side.filter(|&side| side > 0) {
+        // The decoder scales by the smallest factor that reaches the request
+        // on either axis: ask for the width the whole frame needs for the
+        // crop to be `target` wide, and make the height unreachable.
+        Some(side) => {
+            let target = side.min(FULL_SIDE);
+            let width = (u64::from(header.width) * u64::from(target)).div_ceil(u64::from(side));
+            (u16::try_from(width).unwrap_or(u16::MAX), u16::MAX)
+        }
+        None => {
+            let side = u16::try_from(FULL_SIDE).ok()?;
+            (side, side)
+        }
+    };
+    let mut request = want_width;
+    let (width, height, output) = loop {
+        let (width, height) = decoder.scale(request, want_height).ok()?;
+        let output = u64::from(width) * u64::from(height) * header.sampling.len() as u64;
+        // The output is held about twice: component planes, then the
+        // interleaved pixels.
+        if progressive_coefficient_bytes(&header) + 2 * output <= MAX_DECODE_BYTES {
+            break (width, height, output);
+        }
+        // When asked, give up resolution rather than the cover: try the next
+        // coarser scale, down to 1/8.
+        if !degrade || crop_side.is_none() || u32::from(width) * 8 <= u32::from(header.width) {
+            return None;
+        }
+        request = width.div_ceil(2);
+    };
     Some(ScaledPlan {
         decoder,
         width,
@@ -204,14 +237,47 @@ mod tests {
     #[test]
     fn scaled_decode_applies_to_large_baseline_jpeg_only() {
         use jpeg_encoder::ColorType::{Cmyk, Rgb};
-        assert!(scaled_plan(&jpeg(2048, Rgb, false), ImageFormat::Jpeg).is_some());
-        assert!(scaled_plan(&jpeg(1024, Rgb, false), ImageFormat::Jpeg).is_none());
-        assert!(scaled_plan(&jpeg(2048, Cmyk, false), ImageFormat::Jpeg).is_none());
-        assert!(scaled_plan(&jpeg(2048, Rgb, false), ImageFormat::Png).is_none());
+        assert!(scaled_plan(&jpeg(2048, Rgb, false), ImageFormat::Jpeg, None, false).is_some());
+        assert!(scaled_plan(&jpeg(1024, Rgb, false), ImageFormat::Jpeg, None, false).is_none());
+        assert!(scaled_plan(&jpeg(2048, Cmyk, false), ImageFormat::Jpeg, None, false).is_none());
+        assert!(scaled_plan(&jpeg(2048, Rgb, false), ImageFormat::Png, None, false).is_none());
         let bytes = jpeg(4096, Rgb, false);
-        let plan = scaled_plan(&bytes, ImageFormat::Jpeg).expect("plan");
+        let plan = scaled_plan(&bytes, ImageFormat::Jpeg, None, false).expect("plan");
         assert_eq!((plan.width, plan.height), (1024, 1024));
         assert_eq!(plan.output, 1024 * 1024 * 3);
+    }
+
+    #[test]
+    fn a_crop_sets_the_scale_not_the_whole_picture() {
+        use jpeg_encoder::ColorType::Rgb;
+        let bytes = jpeg(3000, Rgb, false);
+        let size = |crop| {
+            let plan = scaled_plan(&bytes, ImageFormat::Jpeg, crop, false).expect("plan");
+            (plan.width, plan.height)
+        };
+        // The whole frame needs only 1/2 to reach 1024 across.
+        assert_eq!(size(Some(3000)), (1500, 1500));
+        assert_eq!(size(Some(2200)), (1500, 1500));
+        // 1500 stored pixels need the frame at its own size to reach 1024.
+        assert_eq!(size(Some(1500)), (3000, 3000));
+        // A small crop is still decoded at its own size.
+        assert_eq!(size(Some(300)), (3000, 3000));
+        assert_eq!(size(None), (1500, 1500));
+    }
+
+    #[test]
+    fn a_crop_steps_to_a_coarser_scale_when_its_own_breaks_the_cap() {
+        // 12000 x 4000 with a 4000 px crop needs 1/2 (6000 x 2000, twice 36
+        // MB over the cap), so it settles for 1/4.
+        let mut bytes = jpeg(16, jpeg_encoder::ColorType::Rgb, false);
+        let at = bytes.windows(2).position(|w| w == [0xFF, 0xC0]).unwrap();
+        bytes[at + 5..at + 7].copy_from_slice(&4000u16.to_be_bytes());
+        bytes[at + 7..at + 9].copy_from_slice(&12000u16.to_be_bytes());
+        assert!(scaled_plan(&bytes, ImageFormat::Jpeg, Some(4000), false).is_none());
+        let plan = scaled_plan(&bytes, ImageFormat::Jpeg, Some(4000), true).expect("coarser plan");
+        assert_eq!((plan.width, plan.height), (3000, 1000));
+        // The same picture without a crop was never planned at 1/2.
+        assert!(scaled_plan(&bytes, ImageFormat::Jpeg, None, false).is_some());
     }
 
     #[test]

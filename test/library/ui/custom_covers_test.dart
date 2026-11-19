@@ -67,7 +67,8 @@ Future<void> _choose(
   final src = File('${dir.path}/pick.png')..writeAsBytesSync(_png);
   final done = h.container
       .read(customCoverControllerProvider)
-      .importCover(kind, itemKey, src);
+      .changeCover(kind, itemKey, CoverChoice.file(src))
+      .then((change) => change.release());
   var finished = false;
   unawaited(done.whenComplete(() => finished = true));
   for (var i = 0; i < 20 && !finished; i++) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -10,12 +12,21 @@ import 'menu_model.dart';
 /// The top of a menu: picture, name and a line under it. The picture is 56
 /// on the mobile shell and 64 on desktop.
 class MenuHeaderView extends StatelessWidget {
-  const MenuHeaderView({super.key, required this.header, this.onAction});
+  const MenuHeaderView({
+    super.key,
+    required this.header,
+    this.onAction,
+    this.onActionOver,
+  });
 
   final MenuHeader header;
 
   /// Runs the header's [MenuHeader.action] (the renderer owns the runner).
   final VoidCallback? onAction;
+
+  /// Runs a [RunOverAction] header action with the menu still open; true
+  /// closes the menu afterwards. Null falls back to [onAction].
+  final Future<bool> Function()? onActionOver;
 
   @override
   Widget build(BuildContext context) {
@@ -66,17 +77,34 @@ class MenuHeaderView extends StatelessWidget {
             KIconButton(
               icon: header.action!.icon,
               tooltip: header.action!.tooltip,
-              // Closes the menu first, like a row, then runs the action.
-              onPressed: onAction == null
-                  ? null
-                  : () {
-                      Navigator.of(context).pop();
-                      onAction!();
-                    },
+              onPressed: _pressed(context),
             ),
         ],
       ),
     );
+  }
+
+  /// A [RunOverAction] runs over the open menu (the menu closes only when it
+  /// reports done); any other action closes the menu first, like a row.
+  VoidCallback? _pressed(BuildContext context) {
+    if (header.action?.action is RunOverAction && onActionOver != null) {
+      return () => unawaited(_runOver(context));
+    }
+    if (onAction == null) return null;
+    return () {
+      Navigator.of(context).pop();
+      onAction!();
+    };
+  }
+
+  Future<void> _runOver(BuildContext context) async {
+    final route = ModalRoute.of(context);
+    final done = await onActionOver!();
+    // Only this menu's own route: a menu already closing must not pop the
+    // page under it.
+    if (done && context.mounted && (route?.isCurrent ?? false)) {
+      Navigator.of(context).pop();
+    }
   }
 
   Widget _image(BuildContext context, double side) {

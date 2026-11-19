@@ -29,6 +29,11 @@ MenuSpec _menu(
 );
 
 void main() {
+  test('a genre or language menu has no cover button', () {
+    expect(_menu(GroupMenuKind.genre).header.action, isNull);
+    expect(_menu(GroupMenuKind.language).header.action, isNull);
+  });
+
   test('add to playlist takes the genre and language ids and names', () {
     expect(
       rowOf(_menu(GroupMenuKind.genre), MenuItemId.playlist).action,

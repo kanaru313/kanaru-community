@@ -385,12 +385,19 @@ covers), exactly like the song-cover pass, under a caller-given folder:
 
 ```dart
 // lib/src/rust/api/covers.dart (generated)
-Future<CoverImportDto> importCoverFile({required String path, required String outDir});
+Future<CoverImportDto> importCoverFile({required String path, required String outDir, CoverCropDto? crop});
 // CoverImportDto { String? key, CoverColorsDto? colors, NativeError? error }
+// CoverCropDto { int left, top, side }  // u32, upright pixels of the original
+Future<CoverPreviewDto> prepareCoverPreview({required String path, required String outDir});
+// CoverPreviewDto { String? previewPath, int width, height, NativeError? error }
 ```
 
 Dart wrapper: `lib/src/library/data/scan/native_cover_import.dart`
-(`CoverImporter.import(path:, outDir:) -> CoverImportResult`, `RustCoverImporter`).
+(`CoverImporter.import(path:, outDir:, crop:) -> CoverImportResult`,
+`RustCoverImporter`; `CoverPreviewer.prepare(path:, outDir:) -> CoverPreview`,
+`RustCoverPreviewer`, `coverPreviewerProvider`). `CoverCrop` lives in
+`library/domain/covers/cover_choice.dart`, `CoverPreview` in
+`library/domain/covers/cover_preview.dart`.
 
 - `path`: any JPEG, PNG or WebP; the format is sniffed from the content, so the
   name may have any extension or none. Opened through `open_source` (regular files
@@ -410,12 +417,104 @@ Dart wrapper: `lib/src/library/data/scan/native_cover_import.dart`
   exceptions: permanent = `FormatException`, transient, `permissionDenied` and a 60 s
   timeout = `FileSystemException`. The scan controller waits at most 30 s for the
   store's GC (`coverGcTimeout`), so a stuck import never holds the scan loop.
-- `colors`: seed and palette as in Cover colours; null (with `key` set) for a
-  near-gray image (chroma below 5).
+- Changes and undo: `CustomCoverController.changeCover(kind, itemKey, CoverChoice)`
+  (`CoverChoice.automatic()` or `.file(image, crop:)`) runs in the store's serial
+  queue and returns a `CoverChange { previousKey, currentKey, undo(), release() }`.
+  While a change is unreleased its `previousKey` is pinned (a count per key in the
+  store); every delete path (replace, remove, a late timed-out import, the GC)
+  skips a pinned key, so the old files survive for the undo. `undo()` is a
+  compare-and-set: the item must still hold `currentKey`, else it returns false.
+  It restores `previousKey` (or clears the row), then deletes `currentKey`'s files
+  if nothing references or pins them. A database error (a playlist deleted
+  meanwhile: the trigger aborts the write) returns false, never throws. `undo()`
+  and `release()` both end the pin; `release()` is idempotent and deletes the old
+  files when nothing references or pins them. `importCover` / `removeCover` are
+  `changeCover` plus an immediate `release()`. A change never released (process
+  killed) leaves files the GC removes after its age window. `previewCover(File)`
+  delegates to `prepare_cover_preview` with the preview folder `<cache>/cover-preview` (`coverPreviewDirProvider`; a required constructor argument of `CustomCoverStore`, no fallback folder; the startup sweep below removes its leftovers).
+- Crop: `crop` is a square (`left`, `top`, `side`) in pixels of the **upright**
+  original (after the EXIF turn; what `prepare_cover_preview` shows). `null` keeps
+  the whole image with its aspect ratio: the output is byte-identical to a call
+  without a crop. With a crop the square is cut from the decoded picture before
+  the shrink: `thumb` at most 256 px, `full` at most `min(1024, side)`, always square.
+  The crop is mapped back to the stored orientation (EXIF 1 to 8, `covers/crop.rs`)
+  and, for a large JPEG, to the scaled decode, whose scale is chosen from the crop
+  side (the crop stays at least 1024 px across, or the whole of it when smaller),
+  not from the longest side. A crop never takes the passthrough shortcut.
+- Key rule: a crop that covers the whole of a square image (`left = top = 0`,
+  `side = width = height`) is normalised to no crop and keeps the key of the bytes,
+  so existing keys stay valid. Any other crop has the key
+  `blake3(bytes || "crop:" || left || top || side)` (the three as little-endian
+  `u32`), first 16 bytes as hex like any key. The same image with the same crop is
+  always the same key. A crop with side 0 or outside the upright image is
+  `unsupported` (permanent) and writes nothing.
+- Preview: `prepare_cover_preview` reads the whole file with the same limits as the
+  import (full read up to 32 MiB, content sniffed, decode cap, gate; not a
+  header-only probe), decodes once (scaled for a large JPEG), turns it upright, fits
+  the long side to 1024 px and writes a JPEG q85 to
+  `<outDir>/.kanaru-tmp-preview-<unique>.jpg` (`outDir` absolute, created when
+  missing). `width` and `height` are the upright size of the original, the space of
+  `CoverCropDto`; the file is only the picture to show. The caller deletes the file;
+  names with the prefix `.kanaru-tmp-preview-` (Dart: `coverPreviewPrefix`) in that
+  folder are leftovers once no dialog is open and are safe to sweep. Errors and
+  mapping to Dart exceptions are those of the import. Both calls run on the
+  background pool, not the two-thread interactive pool, so a stalled read cannot
+  starve imports; Dart wraps them in the 60 s limit.
+- `colors`: seed and palette as in Cover colours, taken from the stored `thumb`
+  (so of the crop when there is one); null (with `key` set) for a near-gray image
+  (chroma below 5).
 - Errors: transient for I/O (`io`) and for failing to write under `outDir`
   (detail starts with `cover cache`); permanent for `corrupt` (does not decode),
-  `unsupported` (another format, a special file, a relative `outDir`), `tooLarge`
-  and `notFound`.
+  `unsupported` (another format, a special file, a relative `outDir`, a bad crop),
+  `tooLarge` and `notFound`.
+
+### Cover dialog state
+
+State of the cover dialog lives in `library/state/covers/` (no widgets):
+
+- Strings: `lib/l10n/parts/covers_{en,vi}.arb` (prefix `cover`, part `covers` in
+  `tool/merge_arb.dart`). `CoverTexts.of(l10n)` copies the words the save job needs, so
+  the job holds no `BuildContext`.
+- Options: `coverDialogOptionsProvider((kind, itemKey))` reads once what the rows show:
+  the automatic cover keys, the item's current custom cover (thumb + full files) and the
+  suggestions. Artist: own albums, then albums it appears in, only with a cover, at most 4.
+  Playlist: `albumCoverCandidates` (distinct albums in track order, skipping tracks without
+  an album or cover), every album (no cap; the reads of the albums' own covers run in
+  parallel). Album: none. A suggestion's file is the album's shown cover
+  (its custom cover first, else the song cover), so a pick copies what the user sees.
+- UI: `CoverDialog` is a `CustomScrollView`; `CoverOptionRows` is one sliver group whose
+  album suggestions are a lazy `SliverList` (rows and thumbs are built near the viewport),
+  4 rows until "Xem thêm N album" expands them. The footer is the shared `PickerFooter`
+  (scope note left, buttons right). The desktop dialog is `KLayout.dialogWide` (620) wide.
+- Controller: `coverDialogControllerProvider((kind, itemKey, draft))` is auto-disposed
+  with the dialog. It holds the chosen row, the picked image (reading, then ready with
+  its upright size), the pan offset (`cropFor`: centred by default, clamped, `null` for a
+  square image), `saving`, a one-shot `error`, and `changed` (false while reading or
+  saving). A newer pick or drop replaces it once the new image is read; on failure the earlier
+  pick is back; a result that arrives after the dialog closed is deleted. Dispose deletes only
+  files the controller still owns: a file the user picked in place (`temporary: false`)
+  is never deleted, a save or a draft takes ownership away.
+- Save mode: `save()` starts a `CoverSaveJob`, which holds the root messenger, the texts
+  and the temp files, so closing the dialog does not stop it. Success: SnackBar with Undo
+  (undo returning false or throwing shows "can't undo"; closing without Undo releases the
+  change). Failure: SnackBar with the error text; the temp files are kept only while the
+  dialog is still open, for a retry.
+- Form mode (Edit playlist): `toDraft()` returns a `CoverDraft` (choice, row, display
+  file, picked image, offset) with nothing written; the form owns the draft's temp files
+  and calls `discard()`. Reopening the dialog with the draft restores its row and pan.
+- Entry points: the header button of the album menu ("Sửa ảnh bìa album", also on the
+  album page's own menu), of the artist menu ("Đặt ảnh nghệ sĩ") and of a playlist menu
+  (Favorites has none) opens the dialog over the menu (`MenuAction.runOver` returning
+  `pickCustomCover`'s saved flag): Cancel / Esc / outside tap return to the menu, a saved cover closes both. Edit playlist's
+  "Đổi ảnh bìa…" calls `pickCoverForForm`: the form keeps one `coverEdit` (keep,
+  automatic or a `CoverDraft`), Save sends a draft as `PlaylistCoverEdit.choice`
+  (applied even when the name is unchanged), and Cancel or close deletes the draft's
+  temp files. A staged draft wins over a cover that changed meanwhile. No other entry:
+  the detail hero, songs, genres, languages, folders and the selection menu have none.
+- Startup sweep: `coverLeftoversSweepProvider`, started in the background from
+  `scanStartupWorkProvider` (after the first frame), runs the image picker's
+  `cleanImagePickerLeftovers()` and deletes `.kanaru-tmp-preview-*` files older than
+  one hour in the preview folder. Failures are logged, never thrown.
 
 ## Pass versions and errors
 

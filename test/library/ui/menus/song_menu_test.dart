@@ -37,6 +37,10 @@ MenuSpec _menu({
 );
 
 void main() {
+  test('a song menu has no cover button', () {
+    expect(_menu().header.action, isNull);
+  });
+
   test('add to playlist takes the song and its title', () {
     expect(
       rowOf(_menu(), MenuItemId.playlist).action,

@@ -41,6 +41,10 @@ MenuSpec _menu({
 );
 
 void main() {
+  test('the header has the set-image button', () {
+    expect(_menu().header.action?.tooltip, 'Set artist image');
+  });
+
   test('add to playlist takes the artist ids and name', () {
     expect(
       rowOf(_menu(), MenuItemId.playlist).action,

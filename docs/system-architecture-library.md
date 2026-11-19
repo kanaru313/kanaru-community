@@ -211,7 +211,7 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   state updates stop).
 - **`PlaylistEditor.save(uid, name:, description:, cover:)`**: name and
   description in one transaction (`ArgumentError` for an invalid value), then
-  the cover (`PlaylistCoverEdit.keep` / `automatic` / `file`). A cover failure
+  the cover (`PlaylistCoverEdit.keep` / `automatic` / `choice(CoverChoice)`; a choice goes through `changeCover` and is released at once, the form has no undo). A cover failure
   is reported in the result (`coverFailed`) and the text stays saved.
 
 ### Playlist UI glue
@@ -226,13 +226,14 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   before `:uid`, so a fixed name is never read as a playlist id (History and
   Most played, still coming soon, would match `:uid` and show "not found").
 - **Seeds** (the placeholder body is replaced by the owner lane, the
-  declaration stays): `PlaylistsPage`, `PlaylistPage({uid})` (playlist screens),
-  `pickCustomCover(context, kind, itemKey)` in `covers/pick_custom_cover.dart`
-  (custom-cover picker lane). They show the "coming soon" snack bar or nothing.
-  `showAddToPlaylist` and the M3U entry points (`m3uAvailable` / `importM3u` /
-  `exportM3u` / `M3uImportProgressSliver` in `m3u/m3u_entry_points.dart`) were
-  seeds and are now real: see "Add to playlist" and "M3U import and export"
-  below.
+  declaration stays): `PlaylistsPage`, `PlaylistPage({uid})` (playlist screens)
+  were seeds (placeholder bodies replaced by
+  their owner lane). `pickCustomCover(context, kind, itemKey)` in
+  `covers/pick_custom_cover.dart` was a seed and is now the real cover dialog (see
+  "Cover dialog state" in the scan doc). `showAddToPlaylist` and the M3U entry
+  points (`m3uAvailable` / `importM3u` / `exportM3u` / `M3uImportProgressSliver` in
+  `m3u/m3u_entry_points.dart`) were seeds and are now real: see "Add to playlist"
+  and "M3U import and export" below.
 - **`PlaylistCover({uid, autoCoverKeys, dimension, radius, automaticOnly})`**:
   Favorites is a heart tile (icon at 0.42 of the side on `primaryContainer`; it has no custom cover). Others
   show the custom cover when there is one, else the automatic one: 2 to 4 keys
@@ -253,7 +254,11 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   re-exports `menu_actions.dart` (`MenuAction` and its cases). `MenuAction.run`
   = `RunAction`: runs the caller's function with the root navigator's context
   once the menu closed; a failure is logged and shown as the `libraryActionFailed`
-  toast. `MenuSpec.origin` (kept for rows that depend on the page; `copyWith`
+  toast. `MenuAction.runOver(Future<bool> Function(ctx))` (`RunOverAction`) is the
+  header-action variant for a dialog that opens OVER the menu: the menu stays open
+  underneath (outside tap / Esc / Back / Cancel pop only the dialog) and closes too
+  only when the callback returns true (a saved cover); every other action closes the
+  menu first. `MenuSpec.origin` (kept for rows that depend on the page; `copyWith`
   replaces the groups), `MenuOrigin.playlist(uid)` (`PlaylistOrigin`),
   `MenuItemSpec.hint` (the row's accessible description, never the subtitle),
   `MenuImage.playlist` with `MenuHeader.autoCoverKeys`, `note` (third line, one

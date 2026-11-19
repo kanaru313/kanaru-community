@@ -11,6 +11,7 @@ import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../selection_row.dart';
 import 'k_sort_pick.dart';
+import '../k_row_edges.dart';
 
 export 'k_sort_pick.dart';
 
@@ -49,18 +50,21 @@ Future<KSortPick<T>?> showKSortPopover<T>(
     // The panel position is in global coordinates; a SafeArea would shift it.
     useSafeArea: false,
     barrierColor: const Color(0x00000000),
-    builder: (context) => CustomSingleChildLayout(
-      delegate: _PopoverLayout(rect),
-      child: Material(
-        elevation: 3,
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        shape: KShape.of(KRadius.lg, continuous: true),
-        clipBehavior: Clip.antiAlias,
-        child: IntrinsicWidth(
-          child: _PopoverBody<T>(
-            criteria: criteria,
-            selected: selected,
-            advancedLabel: advancedLabel,
+    builder: (context) => KRowEdgesScope(
+      edges: KRowEdges.inset,
+      child: CustomSingleChildLayout(
+        delegate: _PopoverLayout(rect),
+        child: Material(
+          elevation: 3,
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          shape: KShape.of(KRadius.lg, continuous: true),
+          clipBehavior: Clip.antiAlias,
+          child: IntrinsicWidth(
+            child: _PopoverBody<T>(
+              criteria: criteria,
+              selected: selected,
+              advancedLabel: advancedLabel,
+            ),
           ),
         ),
       ),
@@ -152,12 +156,7 @@ class _PopoverBody<T> extends StatelessWidget {
         children: [
           if (advancedLabel != null) ...[
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                KSpace.x2,
-                KSpace.x2,
-                KSpace.x2,
-                0,
-              ),
+              padding: const EdgeInsets.only(top: KSpace.x2),
               child: SelectionRow(
                 dense: true,
                 autofocus: !hasSelected,
@@ -183,11 +182,9 @@ class _PopoverBody<T> extends StatelessWidget {
           // its content: a viewport has no intrinsic width.
           Flexible(
             child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                KSpace.x2,
-                advancedLabel == null ? KSpace.x2 : 0,
-                KSpace.x2,
-                KSpace.x2,
+              padding: EdgeInsets.only(
+                top: advancedLabel == null ? KSpace.x2 : 0,
+                bottom: KSpace.x2,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

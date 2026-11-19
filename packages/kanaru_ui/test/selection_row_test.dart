@@ -11,6 +11,7 @@ KCheckMark _mark(WidgetTester tester) =>
     tester.widget<KCheckMark>(find.byType(KCheckMark));
 
 void main() {
+  tintFadeTests();
   for (final (name, brightness, scale) in hostVariants) {
     testWidgets('text rows: mark at the start, ring when off ($name)', (
       tester,
@@ -195,6 +196,84 @@ void main() {
         label: 'B',
       ),
     );
+  });
+
+  testWidgets('media row: one mark only, the plain tick, no cover mark', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        const SelectionRow.media(
+          cover: SizedBox.square(dimension: 56),
+          mediaTitle: 'A',
+          alikeOptions: true,
+          selected: true,
+        ),
+      ),
+    );
+    expect(
+      find.byWidgetPredicate(
+        (w) => w.runtimeType.toString() == 'KMediaCardCoverCheck',
+      ),
+      findsNothing,
+    );
+    expect(find.byType(KCheckMark), findsOneWidget);
+    expect(byCheckState(KCheckState.on), findsOneWidget);
+    expect(
+      tester.getSemantics(find.text('A')),
+      isSemantics(
+        isSelected: true,
+        hasSelectedState: true,
+        isInMutuallyExclusiveGroup: true,
+        label: 'A',
+      ),
+    );
+  });
+
+  testWidgets('multi media row: checked, not selected (like text rows)', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    final handle = tester.ensureSemantics();
+    Future<SemanticsNode> node(bool selected) async {
+      await tester.pumpWidget(
+        host(
+          SelectionRow.media(
+            cover: const SizedBox.square(dimension: 56),
+            mediaTitle: 'A',
+            multi: true,
+            selected: selected,
+            onTap: () {},
+          ),
+        ),
+      );
+      return tester.getSemantics(find.text('A'));
+    }
+
+    expect(
+      await node(true),
+      isSemantics(
+        label: 'A',
+        hasCheckedState: true,
+        isChecked: true,
+        hasSelectedState: false,
+        hasTapAction: true,
+        isFocusable: true,
+      ),
+    );
+    expect(
+      await node(false),
+      isSemantics(
+        label: 'A',
+        hasCheckedState: true,
+        isChecked: false,
+        hasSelectedState: false,
+        hasTapAction: true,
+        isFocusable: true,
+      ),
+    );
+    handle.dispose();
   });
 
   testWidgets('alikeOptions on a text row behaves as before', (tester) async {
@@ -503,4 +582,116 @@ void main() {
     expect(tester.getSemantics(find.byType(SelectionRow)).hint, isEmpty);
     handle.dispose();
   });
+
+  for (final (edges, label) in [
+    (KRowEdges.fullBleed, 'full-bleed'),
+    (KRowEdges.inset, 'inset'),
+  ]) {
+    testWidgets('tint edges under a $label host', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          KRowEdgesScope(
+            edges: edges,
+            child: const SelectionRow(title: Text('A'), selected: true),
+          ),
+        ),
+      );
+      final tint = find.descendant(
+        of: find.byType(SelectionRow),
+        matching: find.byType(AnimatedContainer),
+      );
+      final rect = tester.getRect(tint);
+      final shape =
+          (tester.widget<AnimatedContainer>(tint).decoration!
+                      as ShapeDecoration)
+                  .shape
+              as RoundedRectangleBorder;
+      final radius = shape.borderRadius as BorderRadius;
+      if (edges == KRowEdges.fullBleed) {
+        expect(rect.left, 0);
+        expect(rect.right, 400);
+        expect(radius, BorderRadius.zero);
+      } else {
+        expect(rect.left, greaterThanOrEqualTo(KSpace.x2));
+        expect(400 - rect.right, greaterThanOrEqualTo(KSpace.x2));
+        expect(radius.topLeft.x, greaterThan(0));
+      }
+    });
+  }
+
+  testWidgets('content lines up at 24 dp in both modes', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    final lefts = <double>[];
+    for (final edges in KRowEdges.values) {
+      await tester.pumpWidget(
+        host(
+          KRowEdgesScope(
+            edges: edges,
+            child: const SelectionRow(
+              title: Text('A'),
+              selected: false,
+              leading: Icon(Icons.add),
+            ),
+          ),
+        ),
+      );
+      lefts.add(tester.getTopLeft(find.byIcon(Icons.add)).dx);
+    }
+    expect(lefts, [24, 24]);
+  });
+}
+
+/// Tint colour currently painted behind the row (the ShapeDecoration fill).
+Color? _tint(WidgetTester tester) {
+  for (final box in tester.widgetList<DecoratedBox>(
+    find.descendant(
+      of: find.byType(SelectionRow),
+      matching: find.byType(DecoratedBox),
+    ),
+  )) {
+    final d = box.decoration;
+    if (d is ShapeDecoration) return d.color;
+  }
+  return null;
+}
+
+void _expectSameHue(Color c, Color container) {
+  expect(
+    (c.r - container.r).abs() +
+        (c.g - container.g).abs() +
+        (c.b - container.b).abs(),
+    lessThan(0.01),
+    reason: 'tint must fade alpha only, not drift towards grey / black',
+  );
+}
+
+void tintFadeTests() {
+  for (final selectNext in [false, true]) {
+    testWidgets(
+      'tint ${selectNext ? 'select' : 'deselect'} keeps the container hue',
+      (tester) async {
+        useWindow(tester, const Size(400, 800));
+        Widget row(bool sel) => host(
+          SelectionRow(
+            title: const Text('A'),
+            leading: const SizedBox(width: 24, height: 24),
+            selected: sel,
+            alikeOptions: true,
+            onTap: () {},
+          ),
+        );
+        await tester.pumpWidget(row(!selectNext));
+        final container = Theme.of(tester.element(find.byType(SelectionRow)))
+            .colorScheme
+            .secondaryContainer;
+        await tester.pumpWidget(row(selectNext));
+        await tester.pump(KMotion.fast ~/ 2);
+        final mid = _tint(tester)!;
+        expect(mid.a, greaterThan(0));
+        expect(mid.a, lessThan(container.a));
+        _expectSameHue(mid, container);
+      },
+    );
+  }
 }

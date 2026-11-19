@@ -1,0 +1,188 @@
+{
+  "coverDialogTitle": "Cover",
+  "@coverDialogTitle": {
+    "description": "Title of the cover dialog (album, artist, playlist)."
+  },
+  "coverEditAlbumTooltip": "Edit album cover",
+  "@coverEditAlbumTooltip": {
+    "description": "Tooltip of the cover button in an album menu header."
+  },
+  "coverEditArtistTooltip": "Set artist image",
+  "@coverEditArtistTooltip": {
+    "description": "Tooltip of the cover button in an artist menu header."
+  },
+  "coverAutoTitle": "Automatic",
+  "@coverAutoTitle": {
+    "description": "Row that picks the automatic cover."
+  },
+  "coverAutoSubtitleAlbum": "Cover in the music file",
+  "@coverAutoSubtitleAlbum": {
+    "description": "Subtitle of the automatic cover row (album)."
+  },
+  "coverAutoSubtitleArtist": "First album cover",
+  "@coverAutoSubtitleArtist": {
+    "description": "Subtitle of the automatic cover row (artist)."
+  },
+  "coverAutoSubtitlePlaylist": "Made from the first 4 album covers",
+  "@coverAutoSubtitlePlaylist": {
+    "description": "Subtitle of the automatic cover row (playlist)."
+  },
+  "coverCurrentTitle": "Current image",
+  "@coverCurrentTitle": {
+    "description": "Row of the custom cover the item has now."
+  },
+  "coverCurrentSubtitle": "Chosen earlier",
+  "@coverCurrentSubtitle": {
+    "description": "Subtitle of the current custom cover row."
+  },
+  "coverGroupArtistAlbums": "Covers of the artist's albums",
+  "@coverGroupArtistAlbums": {
+    "description": "Group title of the album suggestions for an artist."
+  },
+  "coverGroupPlaylistAlbums": "Album covers in the playlist",
+  "@coverGroupPlaylistAlbums": {
+    "description": "Group title of the album suggestions for a playlist."
+  },
+  "coverMoreAlbums": "Show {count} more albums",
+  "@coverMoreAlbums": {
+    "description": "Row that shows the remaining album suggestions.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coverAlbumSubtitle": "Album cover",
+  "@coverAlbumSubtitle": {
+    "description": "Subtitle of an album suggestion without a year."
+  },
+  "coverAlbumSubtitleYear": "Album cover · {year}",
+  "@coverAlbumSubtitleYear": {
+    "description": "Subtitle of an album suggestion.",
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "coverPickMobile": "Choose image…",
+  "@coverPickMobile": {
+    "description": "Action row that opens the photo picker (mobile)."
+  },
+  "coverPickDesktop": "Choose image from device…",
+  "@coverPickDesktop": {
+    "description": "Action row that opens the file dialog (desktop)."
+  },
+  "coverPickedReading": "Reading image…",
+  "@coverPickedReading": {
+    "description": "Subtitle of the picked-image row while its preview is prepared."
+  },
+  "coverPickedSubtitle": "From device · {width} × {height}",
+  "@coverPickedSubtitle": {
+    "description": "Subtitle of the picked-image row; size of the upright original.",
+    "placeholders": {
+      "width": {
+        "type": "int"
+      },
+      "height": {
+        "type": "int"
+      }
+    }
+  },
+  "coverPickedGeneratedName": "Image from device",
+  "@coverPickedGeneratedName": {
+    "description": "Title of the picked-image row when the picker gave no real file name."
+  },
+  "coverPanHint": "Drag the image to choose the visible part (the image is cropped square)",
+  "@coverPanHint": {
+    "description": "Hint under the preview of a non-square picked image."
+  },
+  "coverSmallImage": "Small image ({width} × {height} px): it may look blurry in Now Playing and on the detail page. You can still save it.",
+  "@coverSmallImage": {
+    "description": "Warning card for a picked image with a short side under 500 px.",
+    "placeholders": {
+      "width": {
+        "type": "int"
+      },
+      "height": {
+        "type": "int"
+      }
+    }
+  },
+  "coverHintResetAlbum": "Save: drops your image and uses the cover in the music file again",
+  "@coverHintResetAlbum": {
+    "description": "Hint under the preview: automatic chosen while a custom cover exists (album)."
+  },
+  "coverHintResetArtist": "Save: drops your image and uses the automatic image again",
+  "@coverHintResetArtist": {
+    "description": "Hint under the preview: automatic chosen while a custom cover exists (artist)."
+  },
+  "coverHintResetPlaylist": "Save: drops your image and uses the automatic cover again",
+  "@coverHintResetPlaylist": {
+    "description": "Hint under the preview: automatic chosen while a custom cover exists (playlist)."
+  },
+  "coverHintCopied": "The image is copied into Kanaru's data; the original file and tags are unchanged",
+  "@coverHintCopied": {
+    "description": "Hint under the preview when an image is chosen."
+  },
+  "coverScopeAlbum": "Applies to the album everywhere",
+  "@coverScopeAlbum": {
+    "description": "Footer scope of the album cover dialog."
+  },
+  "coverScopeArtist": "The artist's image everywhere",
+  "@coverScopeArtist": {
+    "description": "Footer scope of the artist cover dialog."
+  },
+  "coverScopePlaylist": "This playlist only",
+  "@coverScopePlaylist": {
+    "description": "Footer scope of the playlist cover dialog."
+  },
+  "coverScopeForm": "Saved with the other changes when you tap Save in Edit playlist",
+  "@coverScopeForm": {
+    "description": "Footer scope when the dialog is opened from the playlist edit form."
+  },
+  "coverCancel": "Cancel",
+  "@coverCancel": {
+    "description": "Cancel button of the cover dialog."
+  },
+  "coverSave": "Save",
+  "@coverSave": {
+    "description": "Save button of the cover dialog."
+  },
+  "coverChoose": "Choose",
+  "@coverChoose": {
+    "description": "Confirm button of the cover dialog opened from the playlist edit form."
+  },
+  "coverDropHere": "Drop the image here",
+  "@coverDropHere": {
+    "description": "Overlay on the preview while a file is dragged over it (desktop)."
+  },
+  "coverChanged": "Cover changed",
+  "@coverChanged": {
+    "description": "Snack bar after a custom cover was saved."
+  },
+  "coverResetDone": "Automatic cover restored",
+  "@coverResetDone": {
+    "description": "Snack bar after the custom cover was removed."
+  },
+  "coverUndo": "Undo",
+  "@coverUndo": {
+    "description": "Action of the cover snack bar."
+  },
+  "coverUndoFailed": "Couldn't undo",
+  "@coverUndoFailed": {
+    "description": "Snack bar when undoing a cover change failed or is no longer possible."
+  },
+  "coverErrorFormat": "This image can't be used (only JPEG, PNG and WebP are supported)",
+  "@coverErrorFormat": {
+    "description": "Error: the image is undecodable or an unsupported format."
+  },
+  "coverErrorRead": "Couldn't read the image file. Try again later.",
+  "@coverErrorRead": {
+    "description": "Error: read/write problem, timeout or any other failure."
+  },
+  "coverLinuxDialogLabel": "Images",
+  "@coverLinuxDialogLabel": {
+    "description": "Filter label of the Linux file dialog."
+  }
+}

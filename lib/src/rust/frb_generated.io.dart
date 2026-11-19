@@ -81,6 +81,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CoverColorsDto dco_decode_box_autoadd_cover_colors_dto(dynamic raw);
 
   @protected
+  CoverCropDto dco_decode_box_autoadd_cover_crop_dto(dynamic raw);
+
+  @protected
   EmbeddedLyricsDto dco_decode_box_autoadd_embedded_lyrics_dto(dynamic raw);
 
   @protected
@@ -123,7 +126,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CoverColorsResultDto dco_decode_cover_colors_result_dto(dynamic raw);
 
   @protected
+  CoverCropDto dco_decode_cover_crop_dto(dynamic raw);
+
+  @protected
   CoverImportDto dco_decode_cover_import_dto(dynamic raw);
+
+  @protected
+  CoverPreviewDto dco_decode_cover_preview_dto(dynamic raw);
 
   @protected
   CoverRequestDto dco_decode_cover_request_dto(dynamic raw);
@@ -189,6 +198,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CoverColorsDto? dco_decode_opt_box_autoadd_cover_colors_dto(dynamic raw);
+
+  @protected
+  CoverCropDto? dco_decode_opt_box_autoadd_cover_crop_dto(dynamic raw);
 
   @protected
   EmbeddedLyricsDto? dco_decode_opt_box_autoadd_embedded_lyrics_dto(
@@ -347,6 +359,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CoverCropDto sse_decode_box_autoadd_cover_crop_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   EmbeddedLyricsDto sse_decode_box_autoadd_embedded_lyrics_dto(
     SseDeserializer deserializer,
   );
@@ -407,7 +424,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CoverCropDto sse_decode_cover_crop_dto(SseDeserializer deserializer);
+
+  @protected
   CoverImportDto sse_decode_cover_import_dto(SseDeserializer deserializer);
+
+  @protected
+  CoverPreviewDto sse_decode_cover_preview_dto(SseDeserializer deserializer);
 
   @protected
   CoverRequestDto sse_decode_cover_request_dto(SseDeserializer deserializer);
@@ -485,6 +508,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CoverColorsDto? sse_decode_opt_box_autoadd_cover_colors_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CoverCropDto? sse_decode_opt_box_autoadd_cover_crop_dto(
     SseDeserializer deserializer,
   );
 
@@ -699,6 +727,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_cover_crop_dto(
+    CoverCropDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_embedded_lyrics_dto(
     EmbeddedLyricsDto self,
     SseSerializer serializer,
@@ -777,8 +811,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_cover_crop_dto(CoverCropDto self, SseSerializer serializer);
+
+  @protected
   void sse_encode_cover_import_dto(
     CoverImportDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_cover_preview_dto(
+    CoverPreviewDto self,
     SseSerializer serializer,
   );
 
@@ -887,6 +930,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_cover_colors_dto(
     CoverColorsDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_cover_crop_dto(
+    CoverCropDto? self,
     SseSerializer serializer,
   );
 

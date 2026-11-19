@@ -7,6 +7,7 @@ import '../tokens/k_layout.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 import 'k_gap.dart';
+import 'k_row_edges.dart';
 import 'selection_picker.dart';
 
 /// Top row of a multi picker, e.g. "Playlist mới…". Not a choice: it has no
@@ -45,50 +46,54 @@ class MultiSelectionActionRow<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final mobile = FormFactor.of(context) == FormFactor.mobile;
+    final edges = KRowEdgesScope.maybeOf(context);
     return Semantics(
       button: true,
       enabled: onTap != null,
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          customBorder: KShape.of(KRadius.md),
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: mobile
-                  ? KLayout.minTarget + KSpace.x2
-                  : KLayout.minTarget,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: KSpace.x4,
-                vertical: KSpace.x2,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: edges.sideGap),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            customBorder: KShape.of(edges.corners(KRadius.md)),
+            onTap: onTap,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: mobile
+                    ? KLayout.minTarget + KSpace.x2
+                    : KLayout.minTarget,
               ),
-              child: Row(
-                children: [
-                  action.leading ??
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: scheme.secondaryContainer,
-                          borderRadius: KRadius.xs,
-                        ),
-                        child: SizedBox.square(
-                          dimension: _tile,
-                          child: Icon(
-                            KIcons.add,
-                            size: KIconSize.md,
-                            color: scheme.onSecondaryContainer,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: KSpace.x4 + edges.contentExtra,
+                  vertical: KSpace.x2,
+                ),
+                child: Row(
+                  children: [
+                    action.leading ??
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: scheme.secondaryContainer,
+                            borderRadius: KRadius.xs,
+                          ),
+                          child: SizedBox.square(
+                            dimension: _tile,
+                            child: Icon(
+                              KIcons.add,
+                              size: KIconSize.md,
+                              color: scheme.onSecondaryContainer,
+                            ),
                           ),
                         ),
+                    const KGap(KSpace.x4),
+                    Expanded(
+                      child: DefaultTextStyle.merge(
+                        style: Theme.of(context).textTheme.bodyLarge,
+                        child: action.title,
                       ),
-                  const KGap(KSpace.x4),
-                  Expanded(
-                    child: DefaultTextStyle.merge(
-                      style: Theme.of(context).textTheme.bodyLarge,
-                      child: action.title,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
