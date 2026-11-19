@@ -34,7 +34,7 @@ class SettingsRootPage extends ConsumerWidget {
         SettingsBlock(
           children: [
             SetupValueRow(
-              icon: KIcons.theme,
+              icon: KIcons.appearance,
               title: Text(l10n.settingsRootAppearance),
               value: Text(l10n.settingsRootAppearanceDesc),
               onTap: () => context.push(SettingsPaths.appearance),
@@ -76,7 +76,7 @@ class SettingsRootPage extends ConsumerWidget {
               desc: l10n.settingsRootAiDesc,
             ),
             SoonRow(
-              icon: KIcons.bolt,
+              icon: KIcons.integrations,
               title: Text(l10n.settingsRootIntegrations),
               desc: desktop
                   ? l10n.settingsRootIntegrationsDescDesktop
@@ -87,7 +87,7 @@ class SettingsRootPage extends ConsumerWidget {
         SettingsBlock(
           children: [
             SoonRow(
-              icon: KIcons.sdCard,
+              icon: KIcons.dataStorage,
               title: Text(l10n.settingsRootData),
               desc: l10n.settingsRootDataDesc,
             ),
@@ -119,7 +119,7 @@ class SettingsRootPage extends ConsumerWidget {
   Widget _proRow(AppLocalizations l10n, AppEdition edition) {
     return switch (edition) {
       AppEdition.free => SoonRow(
-        icon: KIcons.boltSelected,
+        icon: KIcons.proEdition,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -131,7 +131,7 @@ class SettingsRootPage extends ConsumerWidget {
         desc: l10n.settingsRootProFreeDesc,
       ),
       AppEdition.pro => SetupValueRow(
-        icon: KIcons.boltSelected,
+        icon: KIcons.proEdition,
         title: Text(l10n.settingsRootPro),
         value: Text(l10n.settingsRootProActive),
         onTap: null,

@@ -33,12 +33,12 @@ class AboutSettingsPage extends ConsumerWidget {
         SettingsBlock(
           children: [
             KListRow(
-              leading: const Icon(KIcons.info),
+              leading: const Icon(KIcons.license),
               title: Text(l10n.settingsAboutLicense),
               subtitle: const Text(kanaruLicenseId),
             ),
             KListRow(
-              leading: const Icon(KIcons.openInNew),
+              leading: const Icon(KIcons.openSourceLicenses),
               title: Text(l10n.settingsAboutLicenses),
               trailing: const Icon(KIcons.chevronRight),
               onTap: () =>
