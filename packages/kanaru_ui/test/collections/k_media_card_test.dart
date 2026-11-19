@@ -1556,5 +1556,21 @@ void main() {
       );
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('a title alone is centred on the cover, with lines it sits on '
+        'top', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(_card(full: false)));
+      final cover = tester.getRect(find.byKey(const Key('cover')));
+      expect(
+        tester.getRect(find.text('Title')).center.dy,
+        closeTo(cover.center.dy, 1),
+      );
+      await tester.pumpWidget(host(_card()));
+      expect(
+        tester.getRect(find.text('Title')).center.dy,
+        lessThan(cover.center.dy - 6),
+      );
+    });
   });
 }

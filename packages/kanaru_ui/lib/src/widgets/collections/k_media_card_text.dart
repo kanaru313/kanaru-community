@@ -130,44 +130,59 @@ class KMediaCardText extends StatelessWidget {
         KMediaCardMetrics.line(scaler, KMediaCardMetrics.titleSize) +
         KMediaCardMetrics.line(scaler, KMediaCardMetrics.lineSize);
 
+    final titleRow = Row(
+      children: [
+        Flexible(
+          child: titleLines == 2
+              ? SizedBox(
+                  height: twoLineHeight,
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: titleStyle?.copyWith(
+                        fontSize: KMediaCardMetrics.titleSize,
+                        color: ink,
+                        height:
+                            twoLineHeight /
+                            (2 * scaler.scale(KMediaCardMetrics.titleSize)),
+                      ),
+                    ),
+                  ),
+                )
+              : line(title, KMediaCardMetrics.titleSize, titleStyle, ink),
+        ),
+        if (titleLabel != null) ...[
+          const KGap(KSpace.x2),
+          Text(
+            titleLabel!,
+            maxLines: 1,
+            style: textTheme.labelSmall?.copyWith(color: soft),
+          ),
+        ],
+      ],
+    );
+    // A row of one line only (no second or third line) centres its title on
+    // the height of a full three-line block, like the cover beside it.
+    if (titleLines != 2 && line2 == null && line3 == null) {
+      return SizedBox(
+        height:
+            KMediaCardMetrics.line(scaler, KMediaCardMetrics.titleSize) +
+            2 * KMediaCardMetrics.line(scaler, KMediaCardMetrics.lineSize),
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: titleRow,
+        ),
+      );
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Flexible(
-              child: titleLines == 2
-                  ? SizedBox(
-                      height: twoLineHeight,
-                      child: Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                          title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: titleStyle?.copyWith(
-                            fontSize: KMediaCardMetrics.titleSize,
-                            color: ink,
-                            height:
-                                twoLineHeight /
-                                (2 * scaler.scale(KMediaCardMetrics.titleSize)),
-                          ),
-                        ),
-                      ),
-                    )
-                  : line(title, KMediaCardMetrics.titleSize, titleStyle, ink),
-            ),
-            if (titleLabel != null) ...[
-              const KGap(KSpace.x2),
-              Text(
-                titleLabel!,
-                maxLines: 1,
-                style: textTheme.labelSmall?.copyWith(color: soft),
-              ),
-            ],
-          ],
-        ),
+        titleRow,
         if (titleLines != 2)
           line(line2, KMediaCardMetrics.lineSize, lineStyle, soft),
         line(line3, KMediaCardMetrics.lineSize, lineStyle, line3Color ?? soft),
