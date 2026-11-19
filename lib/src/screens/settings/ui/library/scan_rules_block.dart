@@ -177,7 +177,15 @@ class _ScanRulesBlockState extends ConsumerState<ScanRulesBlock> {
           ),
           onTap: () => _pickFormats(l10n, formats),
         ),
-        // The "merge same-named files" switch goes here (duplicate hiding).
+        // Applies at once (display only), so no "applies at the next scan".
+        KSwitchRow(
+          leading: const Icon(KIcons.removeDuplicates),
+          title: Text(l10n.settingsLibraryDedupName),
+          subtitle: Text(l10n.settingsLibraryDedupNameDesc),
+          switchLabel: l10n.settingsLibraryDedupName,
+          value: ref.watch(dedupByFileNameProvider),
+          onChanged: (v) => ref.read(dedupByFileNameProvider.notifier).set(v),
+        ),
         if (linux)
           KSwitchRow(
             leading: const Icon(KIcons.noMedia),

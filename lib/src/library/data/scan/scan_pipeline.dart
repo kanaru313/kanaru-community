@@ -64,6 +64,11 @@ Future<ScanOutcome> runScanPass(
           );
         });
         out.added += result.report.added;
+        final r = result.report;
+        if (r.added + r.updated + r.missingMarked > 0) {
+          // A copy that went missing may have been the shown one.
+          await _applyDuplicateHiding(d, hooks);
+        }
         if (result.nativeStuck) {
           session.stuck.add(folder.root);
           final pending = result.pendingNative;
@@ -84,6 +89,7 @@ Future<ScanOutcome> runScanPass(
         out.failureKind ??= 'io';
       }
     }
+    await _applyDuplicateHiding(d, hooks);
     if (hooks.shouldStop()) return out..stopped = true;
     if (finished.isNotEmpty) {
       await runCoverPhase(d, session, hooks, out, perms, finished);
@@ -95,6 +101,18 @@ Future<ScanOutcome> runScanPass(
     out.failureKind ??= 'io';
   }
   return out;
+}
+
+/// Rows were added, changed or removed: show one copy per file name again
+/// (a no-op while the setting is off). Skipped when the app is closing.
+Future<void> _applyDuplicateHiding(ScanPipelineDeps d, ScanHooks hooks) async {
+  final apply = d.applyDuplicateHiding;
+  if (apply == null || hooks.shouldStop()) return;
+  try {
+    await apply();
+  } on Object catch (e, st) {
+    _log.warning('duplicate hiding failed', e, st);
+  }
 }
 
 Future<FolderTagResult> _scanFolder(

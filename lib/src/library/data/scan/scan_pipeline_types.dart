@@ -28,6 +28,7 @@ class ScanPipelineDeps {
     LibraryReadRules? readRules,
     this.readRulesApplied = const {},
     this.onReadRulesApplied,
+    this.applyDuplicateHiding,
   }) : yielder = yielder ?? ScanYield(),
        readRules = readRules ?? LibraryReadRules.defaults;
 
@@ -57,6 +58,11 @@ class ScanPipelineDeps {
   /// Never called for an unreachable, stopped or failed folder.
   final Future<void> Function(String sourceUid, String fingerprint)?
   onReadRulesApplied;
+
+  /// Recomputes duplicate hiding from the current setting. Called once at the
+  /// end of every pass that touched folders, completed or stopped, before the
+  /// library counts. A failure is logged and does not fail the pass.
+  final Future<void> Function()? applyDuplicateHiding;
 
   /// Milliseconds since the epoch.
   final int Function() now;

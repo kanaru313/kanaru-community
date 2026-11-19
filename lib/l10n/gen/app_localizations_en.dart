@@ -2961,6 +2961,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get settingsLibraryDedupName => 'Merge tracks with the same file name';
+
+  @override
+  String get settingsLibraryDedupNameDesc =>
+      'Files with the same name in different folders show as one track, the highest quality copy. Files are not deleted.';
+
+  @override
   String get settingsLibraryNomedia => 'Skip folders with a .nomedia file';
 
   @override

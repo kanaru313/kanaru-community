@@ -52,6 +52,10 @@ abstract final class TrackStatus {
   'CREATE INDEX tracks_genre_key ON tracks (genre_key) '
   "WHERE status = 'present'",
 )
+@TableIndex.sql(
+  'CREATE INDEX tracks_name_key ON tracks (name_key) '
+  "WHERE status = 'present'",
+)
 class Tracks extends Table {
   // Identity
   IntColumn get id => integer().autoIncrement()();
@@ -134,6 +138,21 @@ class Tracks extends Table {
 
   /// Error kind of the last failed pass; NULL = ok.
   TextColumn get scanError => text().nullable()();
+
+  // Duplicate hiding
+  /// `groupKey` of the file name without folder and extension, written with
+  /// the row by the scanner on every read; NULL = never merges, '' for an
+  /// empty name.
+  TextColumn get nameKey => text().nullable()();
+
+  /// Written by `applyDuplicateHiding` only. 1 = another present copy with the same `name_key` is shown instead (the
+  /// user switched on "merge tracks with the same file name"). Library views
+  /// skip such rows; playlists and the queue still resolve them.
+  IntColumn get dupHidden => integer()
+      .withDefault(const Constant(0))
+      // A drift column check refers to its own column.
+      // ignore: recursive_getters
+      .check(dupHidden.isIn(const [0, 1]))();
 
   // User (last write wins per field; survive every snapshot upsert)
   IntColumn get rating =>

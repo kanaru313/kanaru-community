@@ -1922,6 +1922,8 @@
       }
     }
   },
+  "settingsLibraryDedupName": "Merge tracks with the same file name",
+  "settingsLibraryDedupNameDesc": "Files with the same name in different folders show as one track, the highest quality copy. Files are not deleted.",
   "settingsLibraryNomedia": "Skip folders with a .nomedia file",
   "settingsLibraryNomediaDesc": "Like Android: a folder with .nomedia is not scanned.",
   "settingsLibraryWatch": "Update when folders change",

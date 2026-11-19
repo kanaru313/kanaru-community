@@ -148,7 +148,8 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 
 ### Library reads and search
 
-- Library views read `status = 'present'` only. The SQL form is `visibleTrackWhere(alias)`, the typed form is `isVisibleTrack(tracks)`. Both must agree (a test checks it).
+- Library views read `status = 'present' AND dup_hidden = 0` only. The SQL form is `visibleTrackWhere(alias)`, the typed form is `isVisibleTrack(tracks)`. Both must agree (a test checks it).
+- Duplicate hiding: `applyDuplicateHiding(db, enabled:, rules:)` (`track_duplicates.dart`, not exported by `database.dart`; import the file) runs in one transaction. When enabled it sets `dup_hidden = 1` on every present row ranked below the first of its `name_key` (written with the row by the scanner; rows with a NULL key never merge); when disabled it shows every hidden row again. Only rows whose value changes are written, and `tracks` streams are notified only when at least one row changed. Ranking: lossless first (`codec`, or the extension of `rel_path` when the codec is NULL), higher `bitrate` (NULL last), music folder listed first (`source_mounts.root`, then source id, as the scan lists folders), lower `id`. Only `present` rows take part. Nothing is deleted or marked missing. The lossless sets come from the library layer because `database` cannot import it. Known gap: Favorites lists read `playlist_entries` without the predicate and still show hidden copies (playlist code owns it).
 - History, playlists and Pro views show any referenced row through its snapshot. Whether it can be played comes from the playback resolver, not from `status`.
 - Search: the MATCH input goes only through `ftsPrefixQuery(input)`. It splits on whitespace, wraps each token in double quotes (inner `"` doubled) and appends `*`. Example: `ab "cd` becomes `"ab"* """cd"*`. Empty input means no MATCH clause.
 
@@ -319,6 +320,8 @@ UNIQUE `(source_id, locator)`: the scanner's natural key, and the conflict targe
 | `track_no`, `track_total`, `disc_no`, `disc_total`, `year` | INTEGER | NULL | | |
 | `duration_ms`, `bitrate`, `sample_rate`, `bit_depth`, `channels` | INTEGER | NULL | | |
 | `codec` | TEXT | NULL | | Format the decoder reported (`FLAC`, `MP3`), written by the scanner. NULL = derive the format from the extension of `rel_path`. |
+| `name_key` | TEXT | NULL | | `groupKey(file name without extension)`, '' for an empty name. Written by the scanner row builder on every read (snapshot upsert column), so a full re-read after a key change rewrites it. NULL = never merges. |
+| `dup_hidden` | INTEGER | NOT NULL | 0 | CHECK in (0, 1). 1 = another present copy with the same `name_key` is shown instead (setting `library.dedup_by_file_name`). Written by `applyDuplicateHiding` only; library views skip such rows, playlists, queue and playback do not. |
 
 #### tracks: scan state (written by the scanner passes)
 
@@ -367,6 +370,7 @@ User columns survive every snapshot upsert.
 | `tracks_keys_version` | `(keys_version) WHERE status = 'present'` | Scanner: rows with old keys. |
 | `tracks_cover_version` | `(cover_scan_version) WHERE status = 'present'` | Scanner: rows with an old cover pass. |
 | `tracks_genre_key` | `(genre_key) WHERE status = 'present'` | Genres list. |
+| `tracks_name_key` | `(name_key) WHERE status = 'present'` | Finds names held by two or more present rows in `applyDuplicateHiding`. |
 
 The UNIQUE `(source_id, locator)` also creates an implicit index.
 
@@ -641,7 +645,7 @@ Dart API of the coded groups. `lib/src/database/database.dart` is the barrel; th
 | queue | `readQueue(db, {shuffled})`, `replaceQueue(db, trackIds, now)` |
 | source lifecycle | `removeSource(db, sourceId, now)`, `setMountEnabled(db, sourceId, enabled, now)`, `reviveSource(db, sourceId, now, {name, account, configJson, credentialRef})`, `unhideTracks(db, sourceId, now, {locatorFrom, locatorTo})` |
 | play stats | `runPlayStatsBulk(db, write)` |
-| reads | `visibleTrackWhere(alias)`, `isVisibleTrack(tracks)`, `ftsPrefixQuery(input)` (null for empty input) |
+| reads | `visibleTrackWhere(alias)`, `isVisibleTrack(tracks)`, `applyDuplicateHiding(db, {enabled, rules})` (`track_duplicates.dart`), `ftsPrefixQuery(input)` (null for empty input) |
 | maintenance | `collectOrphanTracks(db, now:)`; `verifyDevSchema`, `dumpSchema` (`schema_guard.dart`, not exported) |
 
 Database helpers live in `lib/src/database/`. `database.dart` exports the tables (`Sources`, `SourceMounts`, `ExcludedFolders`, `Tracks`, `TrackDetails`, `TrackArtists`, `CoverColors`, `CustomCovers`, `PlayLog`, `PlayStats`, `QueueEntries`, `Playlists`, `PlaylistEntries`, `SavedItems`, `ExtensionSchema`) and the helpers above. It does not export the `play_stats_ctl` type (the generated `playStatsCtl` getter on `AppDatabase` is internal) and exports only `runPlayStatsBulk` from the bulk file.

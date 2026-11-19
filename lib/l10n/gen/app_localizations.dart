@@ -4272,6 +4272,18 @@ abstract class AppLocalizations {
   /// **'{n} / {total}'**
   String settingsCountOfTotal(int n, int total);
 
+  /// No description provided for @settingsLibraryDedupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge tracks with the same file name'**
+  String get settingsLibraryDedupName;
+
+  /// No description provided for @settingsLibraryDedupNameDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Files with the same name in different folders show as one track, the highest quality copy. Files are not deleted.'**
+  String get settingsLibraryDedupNameDesc;
+
   /// No description provided for @settingsLibraryNomedia.
   ///
   /// In en, this message translates to:

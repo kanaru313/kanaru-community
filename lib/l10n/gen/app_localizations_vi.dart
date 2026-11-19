@@ -2626,6 +2626,13 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get settingsLibraryDedupName => 'Gộp bài trùng tên tệp';
+
+  @override
+  String get settingsLibraryDedupNameDesc =>
+      'Tệp cùng tên ở các thư mục khác nhau chỉ hiện một bài, bản chất lượng cao nhất. Tệp không bị xoá.';
+
+  @override
   String get settingsLibraryNomedia => 'Bỏ qua thư mục có tệp .nomedia';
 
   @override

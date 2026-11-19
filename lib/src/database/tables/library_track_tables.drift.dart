@@ -59,6 +59,8 @@ typedef $$TracksTableCreateCompanionBuilder = i1.TracksCompanion Function({
   i0.Value<int> coverScanVersion,
   i0.Value<int> lyricsVersion,
   i0.Value<String?> scanError,
+  i0.Value<String?> nameKey,
+  i0.Value<int> dupHidden,
   i0.Value<int?> rating,
   i0.Value<int?> ratingUpdatedAt,
   i0.Value<int> lyricsOffsetMs,
@@ -118,6 +120,8 @@ typedef $$TracksTableUpdateCompanionBuilder = i1.TracksCompanion Function({
   i0.Value<int> coverScanVersion,
   i0.Value<int> lyricsVersion,
   i0.Value<String?> scanError,
+  i0.Value<String?> nameKey,
+  i0.Value<int> dupHidden,
   i0.Value<int?> rating,
   i0.Value<int?> ratingUpdatedAt,
   i0.Value<int> lyricsOffsetMs,
@@ -446,6 +450,16 @@ class $$TracksTableFilterComposer
 
   i0.ColumnFilters<String> get scanError => $composableBuilder(
     column: $table.scanError,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<String> get nameKey => $composableBuilder(
+    column: $table.nameKey,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<int> get dupHidden => $composableBuilder(
+    column: $table.dupHidden,
     builder: (column) => i0.ColumnFilters(column),
   );
 
@@ -818,6 +832,16 @@ class $$TracksTableOrderingComposer
     builder: (column) => i0.ColumnOrderings(column),
   );
 
+  i0.ColumnOrderings<String> get nameKey => $composableBuilder(
+    column: $table.nameKey,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<int> get dupHidden => $composableBuilder(
+    column: $table.dupHidden,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
   i0.ColumnOrderings<int> get rating => $composableBuilder(
     column: $table.rating,
     builder: (column) => i0.ColumnOrderings(column),
@@ -1073,6 +1097,12 @@ class $$TracksTableAnnotationComposer
   i0.GeneratedColumn<String> get scanError =>
       $composableBuilder(column: $table.scanError, builder: (column) => column);
 
+  i0.GeneratedColumn<String> get nameKey =>
+      $composableBuilder(column: $table.nameKey, builder: (column) => column);
+
+  i0.GeneratedColumn<int> get dupHidden =>
+      $composableBuilder(column: $table.dupHidden, builder: (column) => column);
+
   i0.GeneratedColumn<int> get rating =>
       $composableBuilder(column: $table.rating, builder: (column) => column);
 
@@ -1266,6 +1296,8 @@ class $$TracksTableTableManager
                 i0.Value<int> coverScanVersion = const i0.Value.absent(),
                 i0.Value<int> lyricsVersion = const i0.Value.absent(),
                 i0.Value<String?> scanError = const i0.Value.absent(),
+                i0.Value<String?> nameKey = const i0.Value.absent(),
+                i0.Value<int> dupHidden = const i0.Value.absent(),
                 i0.Value<int?> rating = const i0.Value.absent(),
                 i0.Value<int?> ratingUpdatedAt = const i0.Value.absent(),
                 i0.Value<int> lyricsOffsetMs = const i0.Value.absent(),
@@ -1324,6 +1356,8 @@ class $$TracksTableTableManager
                 coverScanVersion: coverScanVersion,
                 lyricsVersion: lyricsVersion,
                 scanError: scanError,
+                nameKey: nameKey,
+                dupHidden: dupHidden,
                 rating: rating,
                 ratingUpdatedAt: ratingUpdatedAt,
                 lyricsOffsetMs: lyricsOffsetMs,
@@ -1384,6 +1418,8 @@ class $$TracksTableTableManager
                 i0.Value<int> coverScanVersion = const i0.Value.absent(),
                 i0.Value<int> lyricsVersion = const i0.Value.absent(),
                 i0.Value<String?> scanError = const i0.Value.absent(),
+                i0.Value<String?> nameKey = const i0.Value.absent(),
+                i0.Value<int> dupHidden = const i0.Value.absent(),
                 i0.Value<int?> rating = const i0.Value.absent(),
                 i0.Value<int?> ratingUpdatedAt = const i0.Value.absent(),
                 i0.Value<int> lyricsOffsetMs = const i0.Value.absent(),
@@ -1442,6 +1478,8 @@ class $$TracksTableTableManager
                 coverScanVersion: coverScanVersion,
                 lyricsVersion: lyricsVersion,
                 scanError: scanError,
+                nameKey: nameKey,
+                dupHidden: dupHidden,
                 rating: rating,
                 ratingUpdatedAt: ratingUpdatedAt,
                 lyricsOffsetMs: lyricsOffsetMs,
@@ -2793,6 +2831,30 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
     type: i0.DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const i0.VerificationMeta _nameKeyMeta = const i0.VerificationMeta(
+    'nameKey',
+  );
+  @override
+  late final i0.GeneratedColumn<String> nameKey = i0.GeneratedColumn<String>(
+    'name_key',
+    aliasedName,
+    true,
+    type: i0.DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const i0.VerificationMeta _dupHiddenMeta = const i0.VerificationMeta(
+    'dupHidden',
+  );
+  @override
+  late final i0.GeneratedColumn<int> dupHidden = i0.GeneratedColumn<int>(
+    'dup_hidden',
+    aliasedName,
+    false,
+    check: () => dupHidden.isIn(const [0, 1]),
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const i3.Constant(0),
+  );
   static const i0.VerificationMeta _ratingMeta = const i0.VerificationMeta(
     'rating',
   );
@@ -2935,6 +2997,8 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
     coverScanVersion,
     lyricsVersion,
     scanError,
+    nameKey,
+    dupHidden,
     rating,
     ratingUpdatedAt,
     lyricsOffsetMs,
@@ -3299,6 +3363,18 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
         scanError.isAcceptableOrUnknown(data['scan_error']!, _scanErrorMeta),
       );
     }
+    if (data.containsKey('name_key')) {
+      context.handle(
+        _nameKeyMeta,
+        nameKey.isAcceptableOrUnknown(data['name_key']!, _nameKeyMeta),
+      );
+    }
+    if (data.containsKey('dup_hidden')) {
+      context.handle(
+        _dupHiddenMeta,
+        dupHidden.isAcceptableOrUnknown(data['dup_hidden']!, _dupHiddenMeta),
+      );
+    }
     if (data.containsKey('rating')) {
       context.handle(
         _ratingMeta,
@@ -3572,6 +3648,14 @@ class $TracksTable extends i2.Tracks with i0.TableInfo<$TracksTable, i1.Track> {
         i0.DriftSqlType.string,
         data['${effectivePrefix}scan_error'],
       ),
+      nameKey: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}name_key'],
+      ),
+      dupHidden: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}dup_hidden'],
+      )!,
       rating: attachedDatabase.typeMapping.read(
         i0.DriftSqlType.int,
         data['${effectivePrefix}rating'],
@@ -3686,6 +3770,16 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
 
   /// Error kind of the last failed pass; NULL = ok.
   final String? scanError;
+
+  /// `groupKey` of the file name without folder and extension; NULL until the
+  /// duplicate pass computes it, '' for an empty name. Derived from `locator`,
+  /// which never changes, so it is filled once per row.
+  final String? nameKey;
+
+  /// 1 = another present copy with the same `name_key` is shown instead (the
+  /// user switched on "merge tracks with the same file name"). Library views
+  /// skip such rows; playlists and the queue still resolve them.
+  final int dupHidden;
   final int? rating;
   final int? ratingUpdatedAt;
   final int lyricsOffsetMs;
@@ -3746,6 +3840,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     required this.coverScanVersion,
     required this.lyricsVersion,
     this.scanError,
+    this.nameKey,
+    required this.dupHidden,
     this.rating,
     this.ratingUpdatedAt,
     required this.lyricsOffsetMs,
@@ -3879,6 +3975,10 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     if (!nullToAbsent || scanError != null) {
       map['scan_error'] = i0.Variable<String>(scanError);
     }
+    if (!nullToAbsent || nameKey != null) {
+      map['name_key'] = i0.Variable<String>(nameKey);
+    }
+    map['dup_hidden'] = i0.Variable<int>(dupHidden);
     if (!nullToAbsent || rating != null) {
       map['rating'] = i0.Variable<int>(rating);
     }
@@ -4021,6 +4121,10 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
       scanError: scanError == null && nullToAbsent
           ? const i0.Value.absent()
           : i0.Value(scanError),
+      nameKey: nameKey == null && nullToAbsent
+          ? const i0.Value.absent()
+          : i0.Value(nameKey),
+      dupHidden: i0.Value(dupHidden),
       rating: rating == null && nullToAbsent
           ? const i0.Value.absent()
           : i0.Value(rating),
@@ -4099,6 +4203,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
       coverScanVersion: serializer.fromJson<int>(json['coverScanVersion']),
       lyricsVersion: serializer.fromJson<int>(json['lyricsVersion']),
       scanError: serializer.fromJson<String?>(json['scanError']),
+      nameKey: serializer.fromJson<String?>(json['nameKey']),
+      dupHidden: serializer.fromJson<int>(json['dupHidden']),
       rating: serializer.fromJson<int?>(json['rating']),
       ratingUpdatedAt: serializer.fromJson<int?>(json['ratingUpdatedAt']),
       lyricsOffsetMs: serializer.fromJson<int>(json['lyricsOffsetMs']),
@@ -4164,6 +4270,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
       'coverScanVersion': serializer.toJson<int>(coverScanVersion),
       'lyricsVersion': serializer.toJson<int>(lyricsVersion),
       'scanError': serializer.toJson<String?>(scanError),
+      'nameKey': serializer.toJson<String?>(nameKey),
+      'dupHidden': serializer.toJson<int>(dupHidden),
       'rating': serializer.toJson<int?>(rating),
       'ratingUpdatedAt': serializer.toJson<int?>(ratingUpdatedAt),
       'lyricsOffsetMs': serializer.toJson<int>(lyricsOffsetMs),
@@ -4225,6 +4333,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     int? coverScanVersion,
     int? lyricsVersion,
     i0.Value<String?> scanError = const i0.Value.absent(),
+    i0.Value<String?> nameKey = const i0.Value.absent(),
+    int? dupHidden,
     i0.Value<int?> rating = const i0.Value.absent(),
     i0.Value<int?> ratingUpdatedAt = const i0.Value.absent(),
     int? lyricsOffsetMs,
@@ -4291,6 +4401,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     coverScanVersion: coverScanVersion ?? this.coverScanVersion,
     lyricsVersion: lyricsVersion ?? this.lyricsVersion,
     scanError: scanError.present ? scanError.value : this.scanError,
+    nameKey: nameKey.present ? nameKey.value : this.nameKey,
+    dupHidden: dupHidden ?? this.dupHidden,
     rating: rating.present ? rating.value : this.rating,
     ratingUpdatedAt: ratingUpdatedAt.present
         ? ratingUpdatedAt.value
@@ -4391,6 +4503,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
           ? data.lyricsVersion.value
           : this.lyricsVersion,
       scanError: data.scanError.present ? data.scanError.value : this.scanError,
+      nameKey: data.nameKey.present ? data.nameKey.value : this.nameKey,
+      dupHidden: data.dupHidden.present ? data.dupHidden.value : this.dupHidden,
       rating: data.rating.present ? data.rating.value : this.rating,
       ratingUpdatedAt: data.ratingUpdatedAt.present
           ? data.ratingUpdatedAt.value
@@ -4462,6 +4576,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
           ..write('coverScanVersion: $coverScanVersion, ')
           ..write('lyricsVersion: $lyricsVersion, ')
           ..write('scanError: $scanError, ')
+          ..write('nameKey: $nameKey, ')
+          ..write('dupHidden: $dupHidden, ')
           ..write('rating: $rating, ')
           ..write('ratingUpdatedAt: $ratingUpdatedAt, ')
           ..write('lyricsOffsetMs: $lyricsOffsetMs, ')
@@ -4525,6 +4641,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
     coverScanVersion,
     lyricsVersion,
     scanError,
+    nameKey,
+    dupHidden,
     rating,
     ratingUpdatedAt,
     lyricsOffsetMs,
@@ -4587,6 +4705,8 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
           other.coverScanVersion == this.coverScanVersion &&
           other.lyricsVersion == this.lyricsVersion &&
           other.scanError == this.scanError &&
+          other.nameKey == this.nameKey &&
+          other.dupHidden == this.dupHidden &&
           other.rating == this.rating &&
           other.ratingUpdatedAt == this.ratingUpdatedAt &&
           other.lyricsOffsetMs == this.lyricsOffsetMs &&
@@ -4647,6 +4767,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
   final i0.Value<int> coverScanVersion;
   final i0.Value<int> lyricsVersion;
   final i0.Value<String?> scanError;
+  final i0.Value<String?> nameKey;
+  final i0.Value<int> dupHidden;
   final i0.Value<int?> rating;
   final i0.Value<int?> ratingUpdatedAt;
   final i0.Value<int> lyricsOffsetMs;
@@ -4705,6 +4827,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     this.coverScanVersion = const i0.Value.absent(),
     this.lyricsVersion = const i0.Value.absent(),
     this.scanError = const i0.Value.absent(),
+    this.nameKey = const i0.Value.absent(),
+    this.dupHidden = const i0.Value.absent(),
     this.rating = const i0.Value.absent(),
     this.ratingUpdatedAt = const i0.Value.absent(),
     this.lyricsOffsetMs = const i0.Value.absent(),
@@ -4764,6 +4888,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     this.coverScanVersion = const i0.Value.absent(),
     this.lyricsVersion = const i0.Value.absent(),
     this.scanError = const i0.Value.absent(),
+    this.nameKey = const i0.Value.absent(),
+    this.dupHidden = const i0.Value.absent(),
     this.rating = const i0.Value.absent(),
     this.ratingUpdatedAt = const i0.Value.absent(),
     this.lyricsOffsetMs = const i0.Value.absent(),
@@ -4829,6 +4955,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     i0.Expression<int>? coverScanVersion,
     i0.Expression<int>? lyricsVersion,
     i0.Expression<String>? scanError,
+    i0.Expression<String>? nameKey,
+    i0.Expression<int>? dupHidden,
     i0.Expression<int>? rating,
     i0.Expression<int>? ratingUpdatedAt,
     i0.Expression<int>? lyricsOffsetMs,
@@ -4889,6 +5017,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
       if (coverScanVersion != null) 'cover_scan_version': coverScanVersion,
       if (lyricsVersion != null) 'lyrics_version': lyricsVersion,
       if (scanError != null) 'scan_error': scanError,
+      if (nameKey != null) 'name_key': nameKey,
+      if (dupHidden != null) 'dup_hidden': dupHidden,
       if (rating != null) 'rating': rating,
       if (ratingUpdatedAt != null) 'rating_updated_at': ratingUpdatedAt,
       if (lyricsOffsetMs != null) 'lyrics_offset_ms': lyricsOffsetMs,
@@ -4951,6 +5081,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     i0.Value<int>? coverScanVersion,
     i0.Value<int>? lyricsVersion,
     i0.Value<String?>? scanError,
+    i0.Value<String?>? nameKey,
+    i0.Value<int>? dupHidden,
     i0.Value<int?>? rating,
     i0.Value<int?>? ratingUpdatedAt,
     i0.Value<int>? lyricsOffsetMs,
@@ -5010,6 +5142,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
       coverScanVersion: coverScanVersion ?? this.coverScanVersion,
       lyricsVersion: lyricsVersion ?? this.lyricsVersion,
       scanError: scanError ?? this.scanError,
+      nameKey: nameKey ?? this.nameKey,
+      dupHidden: dupHidden ?? this.dupHidden,
       rating: rating ?? this.rating,
       ratingUpdatedAt: ratingUpdatedAt ?? this.ratingUpdatedAt,
       lyricsOffsetMs: lyricsOffsetMs ?? this.lyricsOffsetMs,
@@ -5174,6 +5308,12 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
     if (scanError.present) {
       map['scan_error'] = i0.Variable<String>(scanError.value);
     }
+    if (nameKey.present) {
+      map['name_key'] = i0.Variable<String>(nameKey.value);
+    }
+    if (dupHidden.present) {
+      map['dup_hidden'] = i0.Variable<int>(dupHidden.value);
+    }
     if (rating.present) {
       map['rating'] = i0.Variable<int>(rating.value);
     }
@@ -5255,6 +5395,8 @@ class TracksCompanion extends i0.UpdateCompanion<i1.Track> {
           ..write('coverScanVersion: $coverScanVersion, ')
           ..write('lyricsVersion: $lyricsVersion, ')
           ..write('scanError: $scanError, ')
+          ..write('nameKey: $nameKey, ')
+          ..write('dupHidden: $dupHidden, ')
           ..write('rating: $rating, ')
           ..write('ratingUpdatedAt: $ratingUpdatedAt, ')
           ..write('lyricsOffsetMs: $lyricsOffsetMs, ')
@@ -5307,6 +5449,10 @@ i0.Index get tracksCoverVersion => i0.Index(
 i0.Index get tracksGenreKey => i0.Index(
   'tracks_genre_key',
   'CREATE INDEX tracks_genre_key ON tracks (genre_key) WHERE status = \'present\'',
+);
+i0.Index get tracksNameKey => i0.Index(
+  'tracks_name_key',
+  'CREATE INDEX tracks_name_key ON tracks (name_key) WHERE status = \'present\'',
 );
 
 class $TrackDetailsTable extends i2.TrackDetails

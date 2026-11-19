@@ -46,3 +46,11 @@ final Set<String> allGroupExtensions = extensionsOfGroups(allFormatGroupIds);
 const Set<String> losslessExtensions = {
   'flac', 'alac', 'wav', 'aif', 'aiff', 'ape', 'wv', 'dsf', 'dff', //
 };
+
+/// Lower-case `tracks.codec` values (the names the tag reader reports) that
+/// are lossless. `MP4` is absent on purpose: the reader reports it for AAC
+/// and ALAC alike, so an `.m4a` file counts as lossy unless a codec says
+/// otherwise.
+const Set<String> losslessCodecs = {
+  'flac', 'alac', 'wav', 'aiff', 'ape', 'wavpack', //
+};

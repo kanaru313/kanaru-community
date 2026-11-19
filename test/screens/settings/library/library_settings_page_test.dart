@@ -262,6 +262,18 @@ void main() {
       expect(find.text('Applies at the next scan'), findsOneWidget);
     });
 
+    testWidgets('same-file-name row writes its key and applies at once', (
+      tester,
+    ) async {
+      final h = await openLibrary(tester);
+      expect(h.settings.store.read('library.dedup_by_file_name'), isNull);
+      await tester.tap(find.text('Merge tracks with the same file name'));
+      await tester.pumpAndSettle();
+      expect(h.settings.store.read('library.dedup_by_file_name'), true);
+      expect(find.text('Applies at the next scan'), findsNothing);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
     testWidgets('.nomedia row is absent on Android', (tester) async {
       await openLibrary(tester, android: true);
       expect(find.text('Skip folders with a .nomedia file'), findsNothing);

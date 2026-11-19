@@ -29,6 +29,7 @@ class MusicFolderEditor {
     required this.markDefaultsApplied,
     required this.onChanged,
     required this.isDirectory,
+    this.applyDuplicateHiding,
     int Function()? now,
   }) : _now = now ?? (() => DateTime.now().millisecondsSinceEpoch);
 
@@ -45,6 +46,19 @@ class MusicFolderEditor {
   /// Called after every edit that reached the database.
   final void Function() onChanged;
   final int Function() _now;
+
+  /// Recomputes duplicate hiding. Called after an edit that hides or shows
+  /// rows (remove, exclude, include), so the other copy of a song whose shown
+  /// copy just left appears without waiting for a scan. A failure is logged.
+  final Future<void> Function()? applyDuplicateHiding;
+
+  Future<void> _rehide() async {
+    try {
+      await applyDuplicateHiding?.call();
+    } on Object catch (e, st) {
+      _log.warning('duplicate hiding failed', e, st);
+    }
+  }
 
   /// Whether a path is an existing folder (checked for picked paths only).
   final Future<bool> Function(String path) isDirectory;
@@ -101,6 +115,7 @@ class MusicFolderEditor {
   Future<bool> removeFolder(MusicFolder folder) async {
     try {
       await removeLocalSource(db, folder.sourceId, _now());
+      await _rehide();
       onChanged();
       return true;
     } on Object catch (e, st) {
@@ -133,6 +148,7 @@ class MusicFolderEditor {
         return ExcludeFolderResult.alreadyExcluded;
       }
       await exclusions.exclude(folder, key, displayPath: path);
+      await _rehide();
       onChanged();
       return ExcludeFolderResult.excluded;
     } on Object catch (e, st) {
@@ -175,6 +191,7 @@ class MusicFolderEditor {
   Future<bool> includeFolder(MusicFolder folder, String folderKey) async {
     try {
       await exclusions.include(folder, folderKey);
+      await _rehide();
       onChanged();
       return true;
     } on Object catch (e, st) {

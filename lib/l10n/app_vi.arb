@@ -1909,6 +1909,8 @@
       }
     }
   },
+  "settingsLibraryDedupName": "Gộp bài trùng tên tệp",
+  "settingsLibraryDedupNameDesc": "Tệp cùng tên ở các thư mục khác nhau chỉ hiện một bài, bản chất lượng cao nhất. Tệp không bị xoá.",
   "settingsLibraryNomedia": "Bỏ qua thư mục có tệp .nomedia",
   "settingsLibraryNomediaDesc": "Như Android: thư mục có .nomedia không được quét.",
   "settingsLibraryWatch": "Tự cập nhật khi thư mục thay đổi",

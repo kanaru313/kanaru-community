@@ -112,6 +112,7 @@ void main() {
         'tracks_keys_version',
         'tracks_cover_version',
         'tracks_genre_key',
+        'tracks_name_key',
         'track_artists_track',
         'queue_entries_track',
         'queue_entries_order',

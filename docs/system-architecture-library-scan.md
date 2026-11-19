@@ -808,6 +808,7 @@ Declared in `lib/src/library/state/scan/scan_settings.dart`.
 | `library.min_size_bytes` | 0 | Files smaller than this are not stored. Stops: 0, 100 KB to 1 MB by 100 KB, 1.5 to 10 MB by 0.5 MB (decimal: 1 KB = 1000 B, as Android and Linux file managers show sizes); any int snaps to the nearest stop, non-int: 0. |
 | `library.format_groups` | all | List of format group ids that are scanned. Unknown ids dropped; missing, damaged or empty: all groups. |
 | `library.respect_nomedia` | false | Linux only: skip folders holding a `.nomedia` file. |
+| `library.dedup_by_file_name` | false | Tracks with the same file name (no extension, `groupKey`, accents kept) in different folders show as one, the best copy (see "Duplicate hiding"). Display only; applies at once. `dedupByFileNameProvider`. |
 | `library.artist_separators` | `;` `/` `feat.` `feat` `ft.` `ft` `featuring` | Artist separators, in stored order (`artistSeparatorsProvider`, `read_rules_settings.dart`). Entries go through `cleanSeparator`: no control characters, trimmed, 1 to 64 characters, no repeat (any case), at most 64. A damaged list (not strings, or an entry the check refuses): the default list as a whole; an empty list is valid (no splitting). |
 | `library.artist_keep_whole` | `AC/DC` | Names that stay one artist (`cleanKeepWhole`, same rules and fallback). |
 | `library.language_source` | `tagThenDetected` | `tagThenDetected` / `tagOnly` / `detectedOnly` (`enumByName`; unknown: default; `detectedOnly` decodes to the default until Rust can detect on request). |
@@ -844,6 +845,35 @@ Settings (`scan_settings.dart`) become one `ScanRules` per pass:
   oga, opus) · wav · aiff · ape · wavpack · dsd; a test checks their union equals
   `audioExtensions`. `losslessExtensions` is the extension set for lossless features;
   `.m4a` is not in it (AAC or ALAC: the codec decides where known).
+
+## Duplicate hiding
+
+`database/track_duplicates.dart` `applyDuplicateHiding` sets `tracks.dup_hidden`
+(ranking in `docs/system-architecture-database.md`, "Library reads and search").
+`library/state/scan/duplicate_hiding.dart` wraps it in `DuplicateHiding`, which
+runs one call at a time and reads the setting when each call starts, so the last
+call always applies the newest value. Callers:
+
+- `scanControllerProvider` registers `listenDuplicateHiding`: a change of
+  `library.dedup_by_file_name` recomputes at once, no scan.
+- `runScanPass` calls `ScanPipelineDeps.applyDuplicateHiding` after each folder
+  whose tag pass added, updated or marked rows, and once after the folder loop,
+  before the cover phase and the library counts, so new, missing and revived
+  copies are reflected and the counts follow. Skipped when the app is closing.
+  A failure is logged and does not fail the pass. A toggle during a pass is not
+  lost: the next call reads the setting then.
+- `MusicFolderEditor` (`removeFolder`, `excludeFolder`, `includeFolder`) calls it
+  right after the write, so the other copy of a song whose shown copy just
+  left appears without a scan.
+
+The key (`tracks.name_key = groupKey(stem of locator)`) is written by
+`buildTrackRow` with every read. Known gap: Favorites lists still show hidden
+copies (playlist code owns it).
+
+Lossless = `codec` in `losslessCodecs` (`FLAC`, `ALAC`, `WAV`, `AIFF`, `APE`,
+`WavPack`; `MP4` is lossy because it covers AAC too) or, when the codec is NULL,
+the extension in `losslessExtensions`. Known limit: only the file name is
+compared, so unrelated songs both called `01.mp3` merge while the setting is on.
 
 ## Read rules
 

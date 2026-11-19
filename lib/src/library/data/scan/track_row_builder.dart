@@ -123,6 +123,8 @@ BuiltTrack buildTrackRow({
     mtimeMs: Value(transientNew ? null : file.mtimeMs),
     sizeBytes: Value(transientNew ? null : file.sizeBytes),
     songKey: Value(songKey(title: title, artists: names)),
+    // Same-song key of duplicate hiding; rewritten on every read.
+    nameKey: Value(groupKey(stemOf(locator))),
     title: Value(title),
     titleSort: Value(sortForm(_blank(f?.titleSort) ?? title)),
     titleSearch: Value(searchForm(title)),

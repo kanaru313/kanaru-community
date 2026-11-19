@@ -81,6 +81,17 @@ final Setting<bool> respectNomediaSetting = Setting(
   encode: (v) => v,
 );
 
+/// `library.dedup_by_file_name`: tracks with the same file name (without
+/// extension) in different folders show as one, the best quality copy. Files
+/// are never deleted; off shows every copy again.
+final Setting<bool> dedupByFileNameSetting = Setting(
+  'library.dedup_by_file_name',
+  false,
+  decode: _bool,
+  encode: (v) => v,
+);
+
+final dedupByFileNameProvider = settingNotifierProvider(dedupByFileNameSetting);
 final minSizeBytesProvider = settingNotifierProvider(minSizeBytesSetting);
 final formatGroupsProvider = settingNotifierProvider(formatGroupsSetting);
 final respectNomediaProvider = settingNotifierProvider(respectNomediaSetting);

@@ -78,6 +78,7 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
     i3.tracksKeysVersion,
     i3.tracksCoverVersion,
     i3.tracksGenreKey,
+    i3.tracksNameKey,
     i3.trackArtistsTrack,
     sourceMounts,
     excludedFolders,

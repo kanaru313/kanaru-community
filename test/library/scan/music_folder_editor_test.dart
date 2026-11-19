@@ -3,10 +3,12 @@ import 'package:drift/drift.dart'
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
+import 'package:kanaru/src/database/track_duplicates.dart';
 import 'package:kanaru/src/library/data/folder_exclusion_repository.dart';
 import 'package:kanaru/src/library/data/scan/scan_folders.dart';
 import 'package:kanaru/src/library/domain/music_folder.dart';
 import 'package:kanaru/src/library/domain/scan_status.dart';
+import 'package:kanaru/src/library/state/scan/duplicate_hiding.dart';
 import 'package:kanaru/src/library/state/scan/music_folder_editor.dart';
 import 'package:kanaru/src/library/state/scan/music_folder_editor_defaults.dart';
 import 'package:kanaru/src/library/state/scan/music_folder_editor_lists.dart';
@@ -116,6 +118,8 @@ void main() {
       onChanged: () => changes++,
       now: () => 1000,
       isDirectory: (p) async => directories.contains(p),
+      applyDuplicateHiding: () =>
+          applyDuplicateHiding(db, enabled: true, rules: libraryDuplicateRules),
     );
   }
 
@@ -284,6 +288,36 @@ void main() {
       await editor.removeFolder(f);
       expect(await excludedFolderKeys(db, f.sourceId), isEmpty);
     });
+
+    test(
+      'removing the folder of the shown copy shows the other copy',
+      () async {
+        await editor.addFolder('/music');
+        await editor.addFolder('/home/u/Music');
+        final shown = await chosen('/music');
+        final other = await chosen('/home/u/Music');
+        final flac = await addTrack(db, shown.sourceId, locator: 'Song.flac');
+        final mp3 = await addTrack(db, other.sourceId, locator: 'Song.mp3');
+        await db.customStatement("UPDATE tracks SET name_key = 'song'");
+        await applyDuplicateHiding(
+          db,
+          enabled: true,
+          rules: libraryDuplicateRules,
+        );
+        Future<Set<int>> visible() async => {
+          for (final r
+              in await db
+                  .customSelect(
+                    'SELECT t.id FROM tracks t WHERE ${visibleTrackWhere('t')}',
+                  )
+                  .get())
+            r.read<int>('id'),
+        };
+        expect(await visible(), {flac});
+        expect(await editor.removeFolder(shown), isTrue);
+        expect(await visible(), {mp3});
+      },
+    );
 
     test('include undoes it', () async {
       await editor.addFolder('/music');
