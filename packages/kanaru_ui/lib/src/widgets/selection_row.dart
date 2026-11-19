@@ -140,6 +140,8 @@ class SelectionRow extends StatelessWidget {
             leading: leading,
             circleLeading: circleCover,
             selected: selected,
+            coverMark: false,
+            announceSelected: !multi,
             filled: false,
             style: switch (edges) {
               KRowEdges.fullBleed => KMediaCardStyle.flat,

@@ -33,6 +33,9 @@ abstract final class KLayout {
   static const double dropdownRowHeight = 40;
   static const double dropdownRowVisible = 36;
 
+  /// Height of a compact text button placed inside content (e.g. "Xem thêm").
+  static const double compactButton = 36;
+
   /// Minimum touch target of rows, text buttons, chips and headers: 48 on
   /// touch, 40 with a mouse. Icon buttons are exempt: they are the icon plus
   /// their own padding (`KIconButton`), and header heights stay on this value.

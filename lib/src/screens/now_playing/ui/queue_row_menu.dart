@@ -237,11 +237,17 @@ class _SheetMenu extends StatelessWidget {
     final focused = _firstEnabled(groups, viaKeyboard);
     return ListView(
       shrinkWrap: true,
-      padding: const EdgeInsets.all(KSpace.x4),
+      // Rows follow the host (full-bleed in the sheet): no side padding here.
+      padding: const EdgeInsets.symmetric(vertical: KSpace.x4),
       children: [
         if (title != null)
           Padding(
-            padding: const EdgeInsets.only(bottom: KSpace.x3),
+            padding: const EdgeInsets.fromLTRB(
+              KSpace.x4,
+              0,
+              KSpace.x4,
+              KSpace.x3,
+            ),
             child: Text(
               title!,
               maxLines: 1,

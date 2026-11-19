@@ -198,6 +198,84 @@ void main() {
     );
   });
 
+  testWidgets('media row: one mark only, the plain tick, no cover mark', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        const SelectionRow.media(
+          cover: SizedBox.square(dimension: 56),
+          mediaTitle: 'A',
+          alikeOptions: true,
+          selected: true,
+        ),
+      ),
+    );
+    expect(
+      find.byWidgetPredicate(
+        (w) => w.runtimeType.toString() == 'KMediaCardCoverCheck',
+      ),
+      findsNothing,
+    );
+    expect(find.byType(KCheckMark), findsOneWidget);
+    expect(byCheckState(KCheckState.on), findsOneWidget);
+    expect(
+      tester.getSemantics(find.text('A')),
+      isSemantics(
+        isSelected: true,
+        hasSelectedState: true,
+        isInMutuallyExclusiveGroup: true,
+        label: 'A',
+      ),
+    );
+  });
+
+  testWidgets('multi media row: checked, not selected (like text rows)', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    final handle = tester.ensureSemantics();
+    Future<SemanticsNode> node(bool selected) async {
+      await tester.pumpWidget(
+        host(
+          SelectionRow.media(
+            cover: const SizedBox.square(dimension: 56),
+            mediaTitle: 'A',
+            multi: true,
+            selected: selected,
+            onTap: () {},
+          ),
+        ),
+      );
+      return tester.getSemantics(find.text('A'));
+    }
+
+    expect(
+      await node(true),
+      isSemantics(
+        label: 'A',
+        hasCheckedState: true,
+        isChecked: true,
+        hasSelectedState: false,
+        hasTapAction: true,
+        isFocusable: true,
+      ),
+    );
+    expect(
+      await node(false),
+      isSemantics(
+        label: 'A',
+        hasCheckedState: true,
+        isChecked: false,
+        hasSelectedState: false,
+        hasTapAction: true,
+        isFocusable: true,
+      ),
+    );
+    handle.dispose();
+  });
+
   testWidgets('alikeOptions on a text row behaves as before', (tester) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(

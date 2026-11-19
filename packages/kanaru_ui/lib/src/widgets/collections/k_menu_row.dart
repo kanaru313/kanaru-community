@@ -196,7 +196,7 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
                   ),
                   child: Padding(
                     padding: EdgeInsets.symmetric(
-                      horizontal: KSpace.x4 + edges.contentExtra,
+                      horizontal: edges.axisInset,
                       vertical: KSpace.x2,
                     ),
                     child: Row(

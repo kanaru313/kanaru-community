@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../layout/form_factor.dart';
 import '../tokens/k_space.dart';
+import 'k_row_edges.dart';
 
 /// Fixed footer of a picker. With a [note]: one row, vertically centred, the
 /// note (`bodySmall`) taking the remaining width on the left and the [buttons]
@@ -46,14 +46,19 @@ class PickerFooter extends StatelessWidget {
       child: Padding(
         // Mobile sheet: compact band. Dialogs / panels: the mockup's
         // `.cvacts` band (12 top, 24 sides, 16 bottom).
-        padding: FormFactor.of(context) == FormFactor.mobile
+        padding: kHostIsSheet(context)
             ? const EdgeInsets.fromLTRB(
                 KSpace.x4,
                 KSpace.x2,
                 KSpace.x4,
                 KSpace.x1,
               )
-            : const EdgeInsets.fromLTRB(KSpace.x6, 12, KSpace.x6, KSpace.x4),
+            : const EdgeInsets.fromLTRB(
+                KSpace.x6,
+                KSpace.x3,
+                KSpace.x6,
+                KSpace.x4,
+              ),
         child: note == null
             ? wrap
             : LayoutBuilder(
