@@ -3,15 +3,20 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/custom_covers_store.dart';
+import 'package:kanaru/src/library/domain/covers/cover_choice.dart';
 import 'package:kanaru/src/library/domain/covers/cover_preview.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_ids.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
+import 'package:kanaru/src/library/state/covers/cover_dialog_options.dart';
 import 'package:kanaru/src/library/state/custom_cover_providers.dart';
 import 'package:kanaru/src/library/ui/playlist_common/playlist_cover.dart';
 import 'package:kanaru/src/library/ui/playlists/dialogs/edit_playlist_dialog.dart';
+import 'package:kanaru/src/platform/domain/image_file_picker.dart';
+import 'package:kanaru/src/platform/state/image_file_picker_provider.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/icon_button_finders.dart';
+import '../../covers/cover_test_support.dart';
 import 'support/playlist_ui_harness.dart';
 
 Finder _name() => find.byType(TextField).at(0);
@@ -363,15 +368,120 @@ void main() {
     expect((await _stored(t, h, src.uid)).name, 'Renamed');
   });
 
-  uiTest('Change cover… calls the picker', (t) async {
-    final h = await PlaylistUiHarness.pump(t);
-    final l10n = h.l10n(t);
-    final src = await seedPlaylist(t, h);
-    await _open(t, h, src);
-    await t.tap(find.text(l10n.playlistCoverChoose));
-    await t.pump();
-    // The seed picker shows its coming-soon notice.
-    expect(find.text(l10n.appComingSoon), findsOneWidget);
+  group('staged image', () {
+    late Directory dir;
+    late FakeCoverController covers;
+    late FakePicker picker;
+
+    setUp(() {
+      dir = Directory.systemTemp.createTempSync('kanaru_edit_cover_');
+      covers = FakeCoverController(dir);
+      picker = FakePicker();
+    });
+    tearDown(() => dir.deleteSync(recursive: true));
+
+    Future<PlaylistUiHarness> pumpHarness(WidgetTester t) =>
+        PlaylistUiHarness.pump(
+          t,
+          overrides: [
+            coverDialogOptionsProvider.overrideWith(
+              (ref, i) async => const CoverDialogOptions(
+                itemName: 'Mix',
+                automaticCoverKeys: [],
+                current: null,
+                suggestions: [],
+              ),
+            ),
+            customCoverControllerProvider.overrideWithValue(covers),
+            imageFilePickerProvider.overrideWithValue(picker),
+          ],
+        );
+
+    /// Lets the real file work of the dialog finish: it ignores the fake clock.
+    Future<void> flushIo(WidgetTester t) async {
+      for (var i = 0; i < 5; i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await t.pump();
+      }
+      await t.pumpAndSettle();
+    }
+
+    /// Change cover… > pick an image > Choose; returns the picked file.
+    Future<PickedImage> stageImage(WidgetTester t, PlaylistUiHarness h) async {
+      final l10n = h.l10n(t);
+      await t.tap(find.text(l10n.playlistCoverChoose));
+      await t.pumpAndSettle();
+      final image = pickedFile(dir, 'staged.jpg');
+      picker.next = image;
+      await t.tap(find.text(l10n.coverPickMobile));
+      await t.pump();
+      await flushIo(t);
+      await t.tap(find.widgetWithText(FilledButton, l10n.coverChoose));
+      await t.pump();
+      await flushIo(t);
+      return image;
+    }
+
+    uiTest('a staged image with the name unchanged still saves', (t) async {
+      final h = await pumpHarness(t);
+      final l10n = h.l10n(t);
+      final src = await seedPlaylist(t, h);
+      await _open(t, h, src);
+      final image = await stageImage(t, h);
+      // Staged only: nothing is written before Save.
+      expect(covers.changes, isEmpty);
+      await _tapSave(t, h);
+      await eventually(
+        t,
+        () => find.text(l10n.playlistSaved).evaluate().isNotEmpty,
+        what: 'saved toast',
+      );
+      final change = covers.changes.single;
+      expect(change.kind, CustomCoverKind.playlist);
+      expect(change.key, src.uid);
+      final choice = change.choice as FileCover;
+      expect(choice.crop, isNotNull);
+      expect(choice.image.path, image.file.path);
+      expect(covers.change.releases, 1);
+    });
+
+    uiTest('Cancel writes nothing and deletes the temporary files', (t) async {
+      final h = await pumpHarness(t);
+      final l10n = h.l10n(t);
+      final src = await seedPlaylist(t, h);
+      await _open(t, h, src);
+      final image = await stageImage(t, h);
+      expect(image.file.existsSync(), isTrue);
+      await t.tap(byIconButton(l10n.playlistClose));
+      await t.pumpAndSettle();
+      await flushIo(t);
+      expect(covers.changes, isEmpty);
+      expect(h.store.updateCalls, 0);
+      expect(image.file.existsSync(), isFalse);
+      expect(covers.previews.single.existsSync(), isFalse);
+    });
+
+    uiTest('a cover failure keeps the saved name and says so', (t) async {
+      final h = await pumpHarness(t);
+      final l10n = h.l10n(t);
+      final src = await seedPlaylist(t, h);
+      covers.changeError = const FileSystemException('disk gone');
+      await _open(t, h, src);
+      await stageImage(t, h);
+      await t.enterText(_name(), 'Renamed');
+      await t.pump();
+      await _tapSave(t, h);
+      await eventually(
+        t,
+        () => find.text(l10n.plScreensCoverFailed).evaluate().isNotEmpty,
+        what: 'cover toast',
+      );
+      await t.pumpAndSettle();
+      expect(find.text(l10n.playlistEditTitle), findsNothing);
+      expect((await _stored(t, h, src.uid)).name, 'Renamed');
+    });
   });
 
   uiTest('mobile Save closes its own route, not one opened above it', (

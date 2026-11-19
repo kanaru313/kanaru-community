@@ -28,6 +28,12 @@ MenuSpec _menu({
 }
 
 void main() {
+  test('the header has the edit-cover button, also on the album page', () {
+    for (final origin in [const MenuOrigin.list(), const MenuOrigin.own()]) {
+      expect(_menu(origin: origin).header.action?.tooltip, 'Edit album cover');
+    }
+  });
+
   test('add to playlist takes the album ids and says where they come from', () {
     final spec = _menu();
     expect(

@@ -28,13 +28,31 @@ class _Store implements PlaylistStore {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _Change implements CoverChange {
+  _Change(this.log);
+  final List<String> log;
+
+  @override
+  String? get previousKey => null;
+  @override
+  String? get currentKey => null;
+  @override
+  Future<bool> undo() async => false;
+  @override
+  Future<void> release() async => log.add('release');
+}
+
 class _Covers implements CustomCoverController {
   @override
   Future<CoverChange> changeCover(
     CustomCoverKind kind,
     String itemKey,
     CoverChoice choice,
-  ) => throw UnimplementedError();
+  ) async {
+    log.add('change ${kind.name} $itemKey ${(choice as FileCover).image.path}');
+    if (error != null) throw error!;
+    return _Change(log);
+  }
 
   @override
   Future<CoverPreview> previewCover(File source) => throw UnimplementedError();
@@ -91,20 +109,17 @@ void main() {
     expect(covers.log, ['remove playlist p']);
   });
 
-  test(
-    'file imports the image; unchanged text still applies the cover',
-    () async {
-      store.result = PlaylistUpdate.unchanged;
-      final r = await editor.save(
-        'p',
-        name: 'N',
-        description: '',
-        cover: PlaylistCoverEdit.file(File('/x/a.png')),
-      );
-      expect(r.text, PlaylistUpdate.unchanged);
-      expect(covers.log, ['import playlist p /x/a.png']);
-    },
-  );
+  test('choice changes the cover and releases it; unchanged text still applies the cover', () async {
+    store.result = PlaylistUpdate.unchanged;
+    final r = await editor.save(
+      'p',
+      name: 'N',
+      description: '',
+      cover: PlaylistCoverEdit.choice(CoverChoice.file(File('/x/a.png'))),
+    );
+    expect(r.text, PlaylistUpdate.unchanged);
+    expect(covers.log, ['change playlist p /x/a.png', 'release']);
+  });
 
   test('a playlist that is gone skips the cover', () async {
     store.result = PlaylistUpdate.gone;
@@ -124,7 +139,7 @@ void main() {
       'p',
       name: 'N',
       description: '',
-      cover: PlaylistCoverEdit.file(File('/x/a.png')),
+      cover: PlaylistCoverEdit.choice(CoverChoice.file(File('/x/a.png'))),
     );
     expect(
       r,

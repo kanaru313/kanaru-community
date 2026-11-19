@@ -32,7 +32,7 @@ class PlaylistEditSave {
   Future<bool> run(PlaylistFormModel form) async {
     final name = form.cleanName;
     final description = form.cleanDescription;
-    final coverChanged = form.automaticCover.value;
+    final coverChanged = form.coverChanged;
     if (!coverChanged &&
         name == summary.name &&
         description == summary.description) {

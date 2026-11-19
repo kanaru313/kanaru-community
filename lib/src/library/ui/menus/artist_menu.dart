@@ -6,6 +6,8 @@ import '../../../media/domain/track_id.dart';
 import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/menu_targets.dart';
 import '../browse/library_labels.dart';
+import '../../state/custom_cover_providers.dart' show CustomCoverKind;
+import '../covers/pick_custom_cover.dart';
 import '../library_locations.dart';
 import 'link_rows.dart';
 import 'menu_items.dart';
@@ -119,6 +121,14 @@ MenuSpec buildArtistMenu(ArtistMenuData data, MenuOrigin origin, MenuEnv env) {
       itemKey: artist.key,
       coverKey: artist.coverKey,
       seed: artist.name,
+      action: MenuTrailingSpec(
+        icon: KIcons.imageEdit,
+        tooltip: l10n.coverEditArtistTooltip,
+        action: MenuAction.run(
+          (ctx) =>
+              pickCustomCover(ctx, CustomCoverKind.artist, data.key.encode()),
+        ),
+      ),
     ),
     groups: withAdvanced(
       [

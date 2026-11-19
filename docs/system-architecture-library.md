@@ -211,7 +211,7 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   state updates stop).
 - **`PlaylistEditor.save(uid, name:, description:, cover:)`**: name and
   description in one transaction (`ArgumentError` for an invalid value), then
-  the cover (`PlaylistCoverEdit.keep` / `automatic` / `file`). A cover failure
+  the cover (`PlaylistCoverEdit.keep` / `automatic` / `choice(CoverChoice)`; a choice goes through `changeCover` and is released at once, the form has no undo). A cover failure
   is reported in the result (`coverFailed`) and the text stays saved.
 
 ### Playlist UI glue
@@ -226,13 +226,14 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   before `:uid`, so a fixed name is never read as a playlist id (History and
   Most played, still coming soon, would match `:uid` and show "not found").
 - **Seeds** (the placeholder body is replaced by the owner lane, the
-  declaration stays): `PlaylistsPage`, `PlaylistPage({uid})` (playlist screens),
-  `pickCustomCover(context, kind, itemKey)` in `covers/pick_custom_cover.dart`
-  (custom-cover picker lane). They show the "coming soon" snack bar or nothing.
-  `showAddToPlaylist` and the M3U entry points (`m3uAvailable` / `importM3u` /
-  `exportM3u` / `M3uImportProgressSliver` in `m3u/m3u_entry_points.dart`) were
-  seeds and are now real: see "Add to playlist" and "M3U import and export"
-  below.
+  declaration stays): `PlaylistsPage`, `PlaylistPage({uid})` (playlist screens)
+  were seeds (placeholder bodies replaced by
+  their owner lane). `pickCustomCover(context, kind, itemKey)` in
+  `covers/pick_custom_cover.dart` was a seed and is now the real cover dialog (see
+  "Cover dialog state" in the scan doc). `showAddToPlaylist` and the M3U entry
+  points (`m3uAvailable` / `importM3u` / `exportM3u` / `M3uImportProgressSliver` in
+  `m3u/m3u_entry_points.dart`) were seeds and are now real: see "Add to playlist"
+  and "M3U import and export" below.
 - **`PlaylistCover({uid, autoCoverKeys, dimension, radius, automaticOnly})`**:
   Favorites is a heart tile (icon at 0.42 of the side on `primaryContainer`; it has no custom cover). Others
   show the custom cover when there is one, else the automatic one: 2 to 4 keys

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:logging/logging.dart';
+import 'package:kanaru/src/library/state/covers/cover_dialog_options.dart';
+import 'package:kanaru/src/library/ui/covers/cover_dialog.dart';
 import 'package:kanaru/src/database/database.dart' show TrackStatus;
 import 'package:kanaru/src/library/domain/playlists/playlist_ids.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
@@ -491,9 +493,21 @@ void main() {
       expect(find.text(l10n.appComingSoon), findsNothing);
     });
 
-    uiTest('the head cover button is still soft and Add to playlist opens the '
-        'picker without this playlist', (t) async {
-      final h = await PlaylistUiHarness.pump(t);
+    uiTest('the head cover button opens the cover dialog and Add to playlist '
+        'opens the picker without this playlist', (t) async {
+      final h = await PlaylistUiHarness.pump(
+        t,
+        overrides: [
+          coverDialogOptionsProvider.overrideWith(
+            (ref, i) async => const CoverDialogOptions(
+              itemName: 'Src',
+              automaticCoverKeys: [],
+              current: null,
+              suggestions: [],
+            ),
+          ),
+        ],
+      );
       final l10n = h.l10n(t);
       final src = await _seed(t, h, 'Src');
       await t.runAsync(
@@ -501,10 +515,21 @@ void main() {
       );
       final spec = await specOf(t, h, src.uid);
       final cover = spec.header.action!.action as RunAction;
-      await h.launch(t, (c) => cover.run(c));
-      await t.pump();
-      expect(find.text(l10n.appComingSoon), findsOneWidget);
-      await t.pump(const Duration(seconds: 6));
+      // The dialog future ends when it closes: not awaited.
+      unawaited(h.launch(t, (c) => cover.run(c)));
+      // Bounded pumps: the dialog may keep a progress animation running.
+      for (var i = 0; i < 20; i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 25)),
+        );
+        await t.pump(const Duration(milliseconds: 100));
+      }
+      expect(find.byType(CoverDialog), findsOneWidget);
+      await t.tap(find.text(l10n.coverCancel));
+      for (var i = 0; i < 10; i++) {
+        await t.pump(const Duration(milliseconds: 100));
+      }
+      expect(find.byType(CoverDialog), findsNothing);
 
       unawaited(runRow(t, h, spec, MenuItemId.playlist));
       for (var i = 0; i < 40; i++) {

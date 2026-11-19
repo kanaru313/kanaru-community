@@ -497,6 +497,14 @@ State of the cover dialog lives in `library/state/covers/` (no widgets):
 - Form mode (Edit playlist): `toDraft()` returns a `CoverDraft` (choice, row, display
   file, picked image, offset) with nothing written; the form owns the draft's temp files
   and calls `discard()`. Reopening the dialog with the draft restores its row and pan.
+- Entry points: the header button of the album menu ("Sửa ảnh bìa album", also on the
+  album page's own menu), of the artist menu ("Đặt ảnh nghệ sĩ") and of a playlist menu
+  (Favorites has none) closes the menu, then calls `pickCustomCover`. Edit playlist's
+  "Đổi ảnh bìa…" calls `pickCoverForForm`: the form keeps one `coverEdit` (keep,
+  automatic or a `CoverDraft`), Save sends a draft as `PlaylistCoverEdit.choice`
+  (applied even when the name is unchanged), and Cancel or close deletes the draft's
+  temp files. A staged draft wins over a cover that changed meanwhile. No other entry:
+  the detail hero, songs, genres, languages, folders and the selection menu have none.
 - Startup sweep: `coverLeftoversSweepProvider`, started in the background from
   `scanStartupWorkProvider` (after the first frame), runs the image picker's
   `cleanImagePickerLeftovers()` and deletes `.kanaru-tmp-preview-*` files older than

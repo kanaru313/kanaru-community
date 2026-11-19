@@ -90,7 +90,7 @@ class _EditBody extends StatelessWidget {
   Widget _layout(bool enabled) {
     final cover = PlaylistCoverEditor(
       summary: summary,
-      automaticCover: form.automaticCover,
+      form: form,
       dimension: coverSize,
       enabled: enabled,
     );

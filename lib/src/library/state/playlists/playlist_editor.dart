@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
@@ -18,8 +16,8 @@ sealed class PlaylistCoverEdit {
   /// Drop the custom cover; the automatic one shows again.
   const factory PlaylistCoverEdit.automatic() = _Automatic;
 
-  /// Use [image] (a readable local JPEG, PNG or WebP) as the cover.
-  const factory PlaylistCoverEdit.file(File image) = _FileCover;
+  /// Apply [choice] (an image, whole or cropped) as the cover.
+  const factory PlaylistCoverEdit.choice(CoverChoice choice) = _ChoiceCover;
 }
 
 final class _Keep implements PlaylistCoverEdit {
@@ -30,9 +28,9 @@ final class _Automatic implements PlaylistCoverEdit {
   const _Automatic();
 }
 
-final class _FileCover implements PlaylistCoverEdit {
-  const _FileCover(this.image);
-  final File image;
+final class _ChoiceCover implements PlaylistCoverEdit {
+  const _ChoiceCover(this.choice);
+  final CoverChoice choice;
 }
 
 /// [text] is the outcome of the name and description write; [coverFailed]
@@ -82,8 +80,14 @@ class PlaylistEditor {
       switch (cover) {
         case _Automatic():
           await _covers.removeCover(CustomCoverKind.playlist, uid);
-        case _FileCover(:final image):
-          await _covers.importCover(CustomCoverKind.playlist, uid, image);
+        case _ChoiceCover(:final choice):
+          // The form has no undo: let go of the old cover's files at once.
+          final change = await _covers.changeCover(
+            CustomCoverKind.playlist,
+            uid,
+            choice,
+          );
+          await change.release();
         case _Keep():
           break;
       }
