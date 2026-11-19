@@ -28,18 +28,28 @@ PlaylistSummary _emptyFavorites() => PlaylistSummary(
 /// Summary query: counts and durations walk the `playlist_entries_order`
 /// index (O(entries) per playlist); cover candidates come from a per-playlist
 /// `LIMIT` subquery that stops after 64 entries with a cover (it may pass
-/// cover-less ones first). The aggregate `ORDER BY` needs SQLite 3.44. The
+/// cover-less ones first). Favorites (`kind = 'favorites'`) skips copies hidden
+/// by duplicate hiding (`dup_hidden = 1`); regular playlists keep them. The
+/// aggregate `ORDER BY` needs SQLite 3.44. The
 /// `sqlite3` package bundles a precompiled SQLite (3.54.x) on Android and
 /// Linux. Never switch to the system SQLite: Android 11-13 ships 3.32, which
 /// has no aggregate `ORDER BY`.
 const summarySql =
     '''
 SELECT p.uid, p.name, p.description, p.kind, p.created_at, p.updated_at,
-  (SELECT COUNT(DISTINCT e.track_id) FROM playlist_entries e
-    WHERE e.playlist_id = p.id AND e.deleted_at IS NULL) AS cnt,
+  CASE WHEN p.kind IS 'favorites' THEN
+    (SELECT COUNT(DISTINCT e.track_id) FROM playlist_entries e
+      JOIN tracks t ON t.id = e.track_id
+      WHERE e.playlist_id = p.id AND e.deleted_at IS NULL
+        AND t.dup_hidden = 0)
+  ELSE
+    (SELECT COUNT(DISTINCT e.track_id) FROM playlist_entries e
+      WHERE e.playlist_id = p.id AND e.deleted_at IS NULL)
+  END AS cnt,
   (SELECT COALESCE(SUM(t.duration_ms), 0) FROM tracks t WHERE t.id IN
     (SELECT e.track_id FROM playlist_entries e
-      WHERE e.playlist_id = p.id AND e.deleted_at IS NULL)) AS dur,
+      WHERE e.playlist_id = p.id AND e.deleted_at IS NULL)
+      AND (p.kind IS NOT 'favorites' OR t.dup_hidden = 0)) AS dur,
   (SELECT json_group_array(json_array(x.cover_key, x.grp)
             ORDER BY x.sk, x.eu) FROM
     (SELECT t.cover_key AS cover_key,
@@ -48,6 +58,7 @@ SELECT p.uid, p.name, p.description, p.kind, p.created_at, p.updated_at,
      FROM playlist_entries e JOIN tracks t ON t.id = e.track_id
      WHERE e.playlist_id = p.id AND e.deleted_at IS NULL
        AND t.cover_key IS NOT NULL
+       AND (p.kind IS NOT 'favorites' OR t.dup_hidden = 0)
      ORDER BY e.sort_key, e.uid LIMIT $_coverCandidates) x) AS covers
 FROM playlists p
 WHERE p.deleted_at IS NULL AND (p.kind IS NULL OR p.kind = 'favorites')
@@ -106,10 +117,20 @@ Future<PlaylistDetail?> loadDetail(AppDatabase db, String uid) =>
       final p = rows.single;
       final entryRows = await db
           .customSelect(
-            'SELECT uid, track_id FROM playlist_entries '
-            'WHERE playlist_id = ? AND deleted_at IS NULL '
-            'ORDER BY sort_key, uid',
-            variables: [Variable.withInt(p.read<int>('id'))],
+            'SELECT e.uid AS uid, e.track_id AS track_id '
+            'FROM playlist_entries e JOIN tracks t ON t.id = e.track_id '
+            'WHERE e.playlist_id = ? AND e.deleted_at IS NULL '
+            // Favorites follows duplicate hiding; other playlists keep copies.
+            'AND (? = 0 OR t.dup_hidden = 0) '
+            'ORDER BY e.sort_key, e.uid',
+            variables: [
+              Variable.withInt(p.read<int>('id')),
+              Variable.withInt(
+                p.readNullable<String>('kind') == PlaylistKind.favorites
+                    ? 1
+                    : 0,
+              ),
+            ],
           )
           .get();
       final infos = await loadTrackInfos(db, [

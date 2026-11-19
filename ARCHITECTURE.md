@@ -135,6 +135,9 @@ files. Each file is one of two kinds:
 
 Exceptions recorded by the Settings lane (library settings, PR L):
 
+- `library/data/playlists/playlist_reads.dart`: favorites read path (list,
+  count, duration, cover skip `dup_hidden = 1`), controller exception. No
+  other playlist file changes.
 - `library/domain/scan/**` is the lane-A seeded folder; lane L now owns it
   (`scan_rules.dart`, `scan_rule_values.dart`, `format_groups.dart`, the
   `scan_diff.dart` edits). `library/domain/scan_status.dart` stays frozen.
