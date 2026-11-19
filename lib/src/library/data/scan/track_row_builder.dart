@@ -6,6 +6,7 @@ import '../../../storage/domain/local_folder_listing.dart';
 import '../../domain/scan/artist_split.dart';
 import '../../domain/scan/lrc_match.dart';
 import '../../domain/scan/native_failure.dart';
+import '../../domain/scan/read_rules.dart';
 import '../../domain/scan/scan_diff.dart';
 import '../../domain/scan/scan_folder.dart';
 import '../../domain/scan/scan_versions.dart';
@@ -72,7 +73,10 @@ BuiltTrack buildTrackRow({
   required int now,
   LrcMatch? lrc,
   StoredTrackRow? stored,
+  LibraryReadRules? readRules,
 }) {
+  final rules = readRules ?? LibraryReadRules.defaults;
+  final splitRules = rules.artistSplit;
   final error = read.error;
   if (error != null && error.transient && stored != null) {
     throw ArgumentError('a transient error on an existing row is not written');
@@ -85,7 +89,9 @@ BuiltTrack buildTrackRow({
   final rawArtists = [
     for (final a in f?.artists ?? const <String>[]) ?_blank(a),
   ];
-  final names = [for (final a in artistsForRow(rawArtists)) a.name];
+  final names = [
+    for (final a in artistsForRow(rawArtists, rules: splitRules)) a.name,
+  ];
   final albumArtist = _joined(f?.albumArtists ?? const []);
   final albumText = _blank(f?.album);
   final albumKey = albumText == null
@@ -98,7 +104,13 @@ BuiltTrack buildTrackRow({
   final albumArtistForSearch =
       albumArtist ?? (names.isEmpty ? null : names.first);
   final tagLanguage = languageKey(f?.languageTag);
-  final language = tagLanguage ?? languageKey(f?.detectedLanguage);
+  final detectedLanguage = languageKey(f?.detectedLanguage);
+  // `detectedOnly` is never applied: the reader detects a language only for
+  // files without a language tag, so it would blank every tagged file. It
+  // behaves as the default until the reader can detect on request.
+  final tagOnly = rules.languageSource == LanguageSource.tagOnly;
+  final language = tagOnly ? tagLanguage : tagLanguage ?? detectedLanguage;
+  final languageFromTag = tagLanguage != null;
   final revision = revisionOf(file.mtimeMs, file.sizeBytes);
   final resetCovers = stored == null || stored.revision != revision;
 
@@ -111,6 +123,8 @@ BuiltTrack buildTrackRow({
     mtimeMs: Value(transientNew ? null : file.mtimeMs),
     sizeBytes: Value(transientNew ? null : file.sizeBytes),
     songKey: Value(songKey(title: title, artists: names)),
+    // Same-song key of duplicate hiding; rewritten on every read.
+    nameKey: Value(groupKey(stemOf(locator))),
     title: Value(title),
     titleSort: Value(sortForm(_blank(f?.titleSort) ?? title)),
     titleSearch: Value(searchForm(title)),
@@ -129,7 +143,7 @@ BuiltTrack buildTrackRow({
     ),
     genreSearch: Value(genre == null ? null : searchForm(genre)),
     genreKey: Value(genre == null ? null : genreKey),
-    languageDetected: Value(tagLanguage == null && language != null ? 1 : 0),
+    languageDetected: Value(!languageFromTag && language != null ? 1 : 0),
     albumArtistKey: Value(albumKey?.artistKey),
     albumTitleKey: Value(albumKey?.titleKey),
     trackNo: Value(f?.trackNo),
@@ -156,7 +170,7 @@ BuiltTrack buildTrackRow({
       comment != null || lrc != null || (stored?.hasDetails ?? false);
   return BuiltTrack(
     row: row,
-    artists: artistsForRow(rawArtists),
+    artists: artistsForRow(rawArtists, rules: splitRules),
     details: writeDetails
         ? DetailsPatch(
             comment: Value(comment),

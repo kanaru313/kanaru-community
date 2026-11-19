@@ -19,12 +19,20 @@ import 'folder_actions.dart';
 import 'folder_sheet_states.dart' show refreshSeenFrom;
 import 'no_music_card_note.dart';
 import 'section_states.dart';
+import 'setup_mode.dart';
 
 final _log = Logger('screens.first_run');
 
 /// The folders Kanaru scans: rows with a remove cross, then "Add folder".
+///
+/// In [SetupMode.settings] an edit rescans in the background, removing asks
+/// first and the last folder cannot be removed. The Android estimate and the
+/// per-folder counts are read only while the section is shown (the Settings
+/// branch stays mounted behind other tabs and must not query MediaStore).
 class MusicFoldersSection extends ConsumerStatefulWidget {
-  const MusicFoldersSection({super.key});
+  const MusicFoldersSection({super.key, this.mode = SetupMode.firstRun});
+
+  final SetupMode mode;
 
   @override
   ConsumerState<MusicFoldersSection> createState() =>
@@ -46,16 +54,20 @@ class _MusicFoldersSectionState extends ConsumerState<MusicFoldersSection> {
   Future<void> _add() async {
     setState(() => _busy = true);
     try {
-      await addMusicFolders(context, ref);
+      await addMusicFolders(context, ref, mode: widget.mode);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  Future<void> _remove(MusicFolder folder) async {
+  Future<void> _remove(MusicFolder folder, int? songs) async {
     final l10n = AppLocalizations.of(context);
     setState(() => _busy = true);
     try {
+      if (widget.mode == SetupMode.settings) {
+        await removeMusicFolderChecked(context, ref, folder, songs: songs);
+        return;
+      }
       final ok = await ref.read(musicFolderEditorProvider).removeFolder(folder);
       if (!ok && mounted) showAppSnackBar(context, l10n.scanSetupWriteFailed);
     } finally {
@@ -73,13 +85,22 @@ class _MusicFoldersSectionState extends ConsumerState<MusicFoldersSection> {
         permission != null &&
         permission.applies &&
         permission.audio != MediaPermissionStatus.granted;
-    final total = ref.watch(estimatedTrackCountProvider).value;
-    final hint = total != null && total > 0
-        ? l10n.scanSetupFoldersHintCount(total)
-        : l10n.scanSetupFoldersHint;
-    return SetupSection(
-      title: Text(l10n.scanSetupFoldersTitle),
-      subtitle: Text(blocked ? l10n.scanSetupFoldersNeedPermission : hint),
+    final shown = TickerMode.valuesOf(context).enabled;
+    final total = shown ? ref.watch(estimatedTrackCountProvider).value : null;
+    final estimate = total != null && total > 0 ? total : null;
+    final settings = widget.mode == SetupMode.settings;
+    return captionedSection(
+      context,
+      mode: widget.mode,
+      title: l10n.scanSetupFoldersTitle,
+      caption: !settings && estimate != null
+          ? l10n.scanSetupFoldersHintCount(estimate)
+          : l10n.scanSetupFoldersHint,
+      state: blocked
+          ? l10n.scanSetupFoldersNeedPermission
+          : settings && estimate != null
+          ? l10n.settingsLibraryFoldersEstimate(estimate)
+          : null,
       children: blocked
           ? const [SetupNote(child: Text('—'))]
           : _rows(
@@ -89,6 +110,7 @@ class _MusicFoldersSectionState extends ConsumerState<MusicFoldersSection> {
                   permission != null &&
                   permission.applies &&
                   permission.audio == MediaPermissionStatus.granted,
+              shown: shown,
             ),
     );
   }
@@ -97,6 +119,7 @@ class _MusicFoldersSectionState extends ConsumerState<MusicFoldersSection> {
     AppLocalizations l10n,
     bool android, {
     required bool audioGranted,
+    required bool shown,
   }) {
     final folders = ref.watch(musicFoldersProvider);
     // Android is indexing: the card and the sheet share one run.
@@ -115,7 +138,7 @@ class _MusicFoldersSectionState extends ConsumerState<MusicFoldersSection> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (list.isEmpty) _emptyNote(l10n, android, audioGranted),
-            for (final folder in list) _row(l10n, folder),
+            for (final folder in list) _row(l10n, folder, shown),
           ],
         ),
       ),
@@ -143,10 +166,11 @@ class _MusicFoldersSectionState extends ConsumerState<MusicFoldersSection> {
     );
   }
 
-  Widget _row(AppLocalizations l10n, MusicFolder folder) {
+  Widget _row(AppLocalizations l10n, MusicFolder folder, bool shown) {
     final volumes = ref.watch(displayVolumesProvider).value;
     final suggested = ref.watch(suggestedFolderProvider).value;
-    final count = ref.watch(folderCountsProvider).value?[folder.root];
+    final counts = shown ? ref.watch(folderCountsProvider).value : null;
+    final count = counts?[folder.root];
     return SetupPathRow(
       key: ValueKey(folder.sourceId),
       icon: KIcons.folders,
@@ -161,7 +185,7 @@ class _MusicFoldersSectionState extends ConsumerState<MusicFoldersSection> {
           ? Text(l10n.scanSetupFolderSuggested)
           : null,
       removeTooltip: l10n.scanSetupFolderRemove(folder.name),
-      onRemove: _busy ? null : () => _remove(folder),
+      onRemove: _busy ? null : () => _remove(folder, count),
     );
   }
 }

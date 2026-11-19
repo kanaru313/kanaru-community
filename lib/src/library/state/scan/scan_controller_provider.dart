@@ -13,7 +13,9 @@ import '../../data/scan/native_cover_maker.dart';
 import '../../data/scan/native_tag_reader.dart';
 import '../../data/scan/scan_pipeline.dart';
 import '../../data/scan/track_gc_runner.dart';
+import 'duplicate_hiding.dart';
 import 'scan_controller.dart';
+import 'read_rules_settings.dart';
 import 'scan_settings.dart';
 
 /// Reads a boolean setting from the store at call time, falling back to the
@@ -37,6 +39,8 @@ final scanControllerProvider = Provider<ScanController>((ref) {
   final db = ref.watch(appDatabaseProvider);
   final paths = ref.watch(appPathsProvider);
   int now() => DateTime.now().millisecondsSinceEpoch;
+  final hiding = ref.watch(duplicateHidingProvider);
+  listenDuplicateHiding(ref, hiding);
   ScanPipelineDeps deps() => ScanPipelineDeps(
     db: db,
     source: ref.read(localFolderSourceProvider),
@@ -44,8 +48,16 @@ final scanControllerProvider = Provider<ScanController>((ref) {
     reader: const RustTagReader(),
     maker: const RustCoverMaker(),
     cacheDir: paths.cacheDir.path,
-    skipShortTracks: _flag(ref, skipShortTracksSetting),
+    rules: ref.read(currentScanRulesProvider),
     now: now,
+    readRules: ref.read(currentReadRulesProvider),
+    readRulesApplied: readAppliedFingerprints(ref.read(settingsStoreProvider)),
+    applyDuplicateHiding: hiding.apply,
+    onReadRulesApplied: (uid, fingerprint) => recordReadRulesApplied(
+      ref.read(settingsStoreProvider),
+      uid,
+      fingerprint,
+    ),
   );
   final controller = ScanController(
     runPass: (session, hooks, {required full}) =>

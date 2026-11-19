@@ -11,7 +11,8 @@ PermissionCard _card({
   VoidCallback? onAction,
 }) => PermissionCard(
   collapsed: collapsed,
-  collapsedLabel: const Text('Everything allowed'),
+  collapsedTitle: const Text('Everything allowed'),
+  collapsedSubtitle: const Text('Music and audio · Photos and videos'),
   rows: [
     PermissionRowData(
       icon: KIcons.musicFile,
@@ -86,6 +87,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Everything allowed'), findsOneWidget);
+    expect(find.text('Music and audio · Photos and videos'), findsOneWidget);
     expect(find.text('Allow'), findsNothing);
     expect(find.text('Music and audio'), findsNothing);
     expect(find.byIcon(KIcons.check), findsOneWidget);
@@ -99,7 +101,7 @@ void main() {
     expect(taps, 1);
   });
 
-  test('a collapsed card needs its line', () {
+  test('a collapsed card needs its title and description', () {
     expect(
       () => PermissionCard(
         rows: const [],
@@ -108,5 +110,38 @@ void main() {
       ),
       throwsAssertionError,
     );
+  });
+
+  testWidgets('attention tints the card toward the error container', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(360, 800));
+    Future<Color?> pumpColor(bool attention) async {
+      await tester.pumpWidget(
+        host(
+          SingleChildScrollView(
+            child: PermissionCard(
+              attention: attention,
+              rows: const [],
+              action: const SizedBox(),
+            ),
+          ),
+        ),
+      );
+      return tester
+          .widget<Material>(
+            find
+                .descendant(
+                  of: find.byType(PermissionCard),
+                  matching: find.byType(Material),
+                )
+                .first,
+          )
+          .color;
+    }
+
+    final plain = await pumpColor(false);
+    final tinted = await pumpColor(true);
+    expect(tinted, isNot(plain));
   });
 }

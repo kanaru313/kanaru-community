@@ -103,8 +103,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get scanSetupPermissionMissingLabel => 'Chưa cấp';
 
   @override
-  String get scanSetupPermissionsGranted =>
-      'Đã cấp đủ quyền · Nhạc và âm thanh · Ảnh và video';
+  String get scanSetupPermissionsGranted => 'Đã cấp đủ quyền';
+
+  @override
+  String get scanSetupPermissionsGrantedDesc =>
+      'Nhạc và âm thanh · Ảnh và video';
 
   @override
   String get scanSetupGrant => 'Cấp quyền';
@@ -448,6 +451,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get scanHomeNoTracks => 'Không tìm thấy bài nào';
+
+  @override
+  String get scanHomeChangeFolders => 'Đổi thư mục';
 
   @override
   String get playbackCover => 'Ảnh bìa';
@@ -1333,7 +1339,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get libraryMenuExcludeNote =>
-      'Giữ nguyên tệp; bỏ loại trong Cài đặt › Thư viện › Thư mục';
+      'Giữ nguyên tệp; bỏ loại trong Cài đặt › Thư viện › Loại trừ';
 
   @override
   String get libraryMenuIncludesSubfolders => 'Gồm thư mục con';
@@ -2656,4 +2662,363 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsPlaybackNeedsReplayGain => 'Bật ReplayGain để dùng';
+
+  @override
+  String settingsSectionHintTooltip(String section) {
+    return 'Giải thích $section';
+  }
+
+  @override
+  String settingsLibraryTracksCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString bài',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsLibraryAlbumsCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString album',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsLibraryArtistsCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString nghệ sĩ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsLibraryLastScan(String time, int added) {
+    return 'Quét lần cuối $time · thêm $added bài';
+  }
+
+  @override
+  String get settingsLibraryBlockScan => 'Quét';
+
+  @override
+  String get settingsLibraryBlockOrganise => 'Sắp xếp';
+
+  @override
+  String get settingsLibraryBlockRemoved => 'Đã loại';
+
+  @override
+  String settingsLibraryFoldersEstimate(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Khoảng $countString bài';
+  }
+
+  @override
+  String get settingsLibraryMinDuration => 'Bỏ qua tệp ngắn hơn';
+
+  @override
+  String get settingsLibraryMinDurationCaption =>
+      'Nhạc chuông, âm báo, đoạn ghi âm ngắn. Áp dụng ở lần quét sau.';
+
+  @override
+  String get settingsLibraryMinSize => 'Bỏ qua tệp nhỏ hơn';
+
+  @override
+  String get settingsLibraryMinSizeCaption =>
+      'Tính theo dung lượng tệp. Áp dụng ở lần quét sau.';
+
+  @override
+  String settingsLibrarySizeKb(int kb) {
+    final intl.NumberFormat kbNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String kbString = kbNumberFormat.format(kb);
+
+    return '$kbString KB';
+  }
+
+  @override
+  String settingsLibrarySizeMb(double mb) {
+    final intl.NumberFormat mbNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String mbString = mbNumberFormat.format(mb);
+
+    return '$mbString MB';
+  }
+
+  @override
+  String get settingsLibraryFormats => 'Định dạng được quét';
+
+  @override
+  String get settingsLibraryFormatsCaption =>
+      'Bỏ chọn để không quét định dạng đó. Cần giữ ít nhất một.';
+
+  @override
+  String get settingsLibraryFormatsKeepOne => 'cần giữ ít nhất một';
+
+  @override
+  String get settingsLibraryFormatsAll => 'Tất cả';
+
+  @override
+  String get settingsLibraryFormatsSelectAll => 'Chọn tất cả';
+
+  @override
+  String settingsCountOfTotal(int n, int total) {
+    return '$n / $total';
+  }
+
+  @override
+  String get settingsLibraryDedupName => 'Gộp bài trùng tên tệp';
+
+  @override
+  String get settingsLibraryDedupNameDesc =>
+      'Tệp cùng tên ở các thư mục khác nhau chỉ hiện một bài, bản chất lượng cao nhất. Tệp không bị xoá.';
+
+  @override
+  String get settingsLibraryNomedia => 'Bỏ qua thư mục có tệp .nomedia';
+
+  @override
+  String get settingsLibraryNomediaDesc =>
+      'Như Android: thư mục có .nomedia không được quét.';
+
+  @override
+  String get settingsLibraryWatch => 'Tự cập nhật khi thư mục thay đổi';
+
+  @override
+  String get settingsLibraryWatchDesc =>
+      'Thấy tệp mới ngay, không cần quét lại.';
+
+  @override
+  String get settingsLibraryRulesApplyLater => 'Áp dụng ở lần quét sau';
+
+  @override
+  String get settingsLibraryRescanning => 'Đang quét lại thư viện ở nền';
+
+  @override
+  String get settingsLibraryMergeFolders =>
+      'Gộp thư mục chỉ có một thư mục con';
+
+  @override
+  String get settingsLibraryMergeFoldersDesc =>
+      'Tab Thư mục: đi thẳng xuống thư mục con duy nhất.';
+
+  @override
+  String get settingsLibraryAlbumGrouping => 'Nhóm album theo';
+
+  @override
+  String get settingsLibraryRemoved => 'Đã loại khỏi thư viện';
+
+  @override
+  String get settingsLibraryTabsHintMobile =>
+      'Bật tab muốn hiện, kéo để sắp xếp. Ít nhất 1 tab. Tab là hàng tab con ở đầu Thư viện.';
+
+  @override
+  String get settingsLibraryTabsHintDesktop =>
+      'Bật tab muốn hiện, kéo để sắp xếp. Ít nhất 1 tab. Tab là các mục Thư viện ở thanh bên.';
+
+  @override
+  String settingsLibraryRemoveFolderTitle(String name) {
+    return 'Bỏ thư mục “$name”?';
+  }
+
+  @override
+  String get settingsLibraryRemoveFolderBody =>
+      'Các bài trong thư mục này sẽ rời thư viện (playlist giữ chỗ, đánh dấu mất tệp).\n\nTệp trong máy không bị xoá.';
+
+  @override
+  String settingsLibraryRemoveFolderBodyCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString bài trong thư mục này sẽ rời thư viện (playlist giữ chỗ, đánh dấu mất tệp).\n\nTệp trong máy không bị xoá.';
+  }
+
+  @override
+  String get settingsLibraryRemoveFolderConfirm => 'Bỏ thư mục';
+
+  @override
+  String settingsLibraryFolderRemoved(String name) {
+    return 'Đã bỏ “$name”';
+  }
+
+  @override
+  String settingsLibraryFolderRemovedCount(String name, int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Đã bỏ “$name” · $countString bài rời thư viện';
+  }
+
+  @override
+  String get settingsLibraryLastFolderTitle => 'Không bỏ được thư mục cuối';
+
+  @override
+  String settingsLibraryLastFolderBody(String name) {
+    return 'Thư viện cần ít nhất một thư mục nhạc. Thêm thư mục khác trước, rồi bỏ “$name”.';
+  }
+
+  @override
+  String get settingsLibraryGotIt => 'Đã hiểu';
+
+  @override
+  String settingsLibraryExclusionRemoved(String name) {
+    return 'Thôi loại trừ “$name” · đang quét lại';
+  }
+
+  @override
+  String get settingsLibraryArtistSplit => 'Tách nghệ sĩ';
+
+  @override
+  String settingsLibrarySeparatorCount(int count) {
+    return '$count dấu tách';
+  }
+
+  @override
+  String get settingsArtistSplitIntro =>
+      'Một bài nhiều nghệ sĩ: Kanaru tách tên theo các dấu này.';
+
+  @override
+  String get settingsArtistSplitExample => 'Ví dụ';
+
+  @override
+  String get settingsArtistSplitExampleNote =>
+      'Danh sách mặc định không có , và & vì nhiều tên nhóm chứa chúng. Muốn tách theo chúng thì thêm vào đây, rồi thêm các tên nhóm đó vào Không tách.';
+
+  @override
+  String get settingsArtistSplitSeparators => 'Dấu tách';
+
+  @override
+  String get settingsArtistSplitSeparatorsHint =>
+      'Dấu cách hiện là ␣. Thay đổi áp dụng ngay, thư viện cập nhật ở nền.';
+
+  @override
+  String get settingsArtistSplitKeep => 'Không tách';
+
+  @override
+  String get settingsArtistSplitKeepHint =>
+      'Tên giữ nguyên là một nghệ sĩ dù có chứa dấu tách.';
+
+  @override
+  String get settingsArtistSplitSeparatorInput => 'Thêm dấu tách, vd. “ x ”';
+
+  @override
+  String get settingsArtistSplitKeepInput =>
+      'Tên nghệ sĩ, vd. “Hồ Ngọc Hà / Noo”';
+
+  @override
+  String get settingsArtistSplitAdd => 'Thêm';
+
+  @override
+  String settingsArtistSplitRemove(String value) {
+    return 'Bỏ $value';
+  }
+
+  @override
+  String get settingsArtistSplitNoSeparators =>
+      'Không có dấu tách nào: tên nghệ sĩ giữ nguyên.';
+
+  @override
+  String get settingsArtistSplitErrEmpty => 'Chưa nhập gì';
+
+  @override
+  String get settingsArtistSplitErrDuplicate => 'Đã có trong danh sách';
+
+  @override
+  String settingsArtistSplitErrTooLong(int max) {
+    return 'Tối đa $max ký tự';
+  }
+
+  @override
+  String settingsArtistSplitErrFull(int max) {
+    return 'Tối đa $max mục';
+  }
+
+  @override
+  String get settingsArtistSplitReset => 'Khôi phục mặc định';
+
+  @override
+  String get settingsArtistSplitResetIsDefault => 'Đang là mặc định';
+
+  @override
+  String settingsArtistSplitResetTo(int count, String names) {
+    return '$count dấu tách, “$names”';
+  }
+
+  @override
+  String get settingsArtistSplitResetTitle => 'Khôi phục dấu tách mặc định?';
+
+  @override
+  String get settingsArtistSplitResetBody =>
+      'Danh sách dấu tách và tên không tách về như lúc cài. Thư viện cập nhật ở nền.';
+
+  @override
+  String get settingsArtistSplitResetConfirm => 'Khôi phục';
+
+  @override
+  String settingsArtistSplitAdded(String value) {
+    return 'Đã thêm “$value”';
+  }
+
+  @override
+  String settingsArtistSplitAddedGroup(String value) {
+    return 'Đã thêm “$value” · thêm tên nhóm có dấu này vào Không tách';
+  }
+
+  @override
+  String settingsArtistSplitRemoved(String value) {
+    return 'Đã bỏ “$value”';
+  }
+
+  @override
+  String get settingsArtistSplitRestored => 'Đã khôi phục mặc định';
+
+  @override
+  String get settingsLibraryLanguageSource => 'Nguồn ngôn ngữ';
+
+  @override
+  String get settingsLibraryLanguageSourceCaption =>
+      'Cách Kanaru biết bài hát thuộc ngôn ngữ nào (tab Ngôn ngữ).';
+
+  @override
+  String get settingsLibraryLanguageBoth => 'Tag, rồi tự nhận diện';
+
+  @override
+  String get settingsLibraryLanguageBothDesc =>
+      'Dùng tag ngôn ngữ nếu tệp có, không có thì đoán từ tên bài và lời';
+
+  @override
+  String get settingsLibraryLanguageTag => 'Chỉ tag';
+
+  @override
+  String get settingsLibraryLanguageTagDesc => 'Bài không có tag vào “Chưa rõ”';
+
+  @override
+  String get settingsLibraryLanguageDetected => 'Chỉ tự nhận diện';
+
+  @override
+  String get settingsLibraryLanguageDetectedDesc =>
+      'Bỏ qua tag ngôn ngữ của tệp';
 }

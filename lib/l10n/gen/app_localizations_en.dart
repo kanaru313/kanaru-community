@@ -103,8 +103,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanSetupPermissionMissingLabel => 'Not allowed';
 
   @override
-  String get scanSetupPermissionsGranted =>
-      'All permissions allowed · Music and audio · Photos and videos';
+  String get scanSetupPermissionsGranted => 'All permissions allowed';
+
+  @override
+  String get scanSetupPermissionsGrantedDesc =>
+      'Music and audio · Photos and videos';
 
   @override
   String get scanSetupGrant => 'Allow';
@@ -485,6 +488,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanHomeNoTracks => 'No songs found';
+
+  @override
+  String get scanHomeChangeFolders => 'Change folders';
 
   @override
   String get playbackCover => 'Cover art';
@@ -1444,7 +1450,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryMenuExcludeNote =>
-      'Keeps the files; undo in Settings › Library › Folders';
+      'Keeps the files; undo in Settings › Library › Exclusions';
 
   @override
   String get libraryMenuIncludesSubfolders => 'Includes subfolders';
@@ -2964,4 +2970,404 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsPlaybackNeedsReplayGain =>
       'Turn on ReplayGain to use this';
+
+  @override
+  String settingsSectionHintTooltip(String section) {
+    return 'About $section';
+  }
+
+  @override
+  String settingsLibraryTracksCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString songs',
+      one: '1 song',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsLibraryAlbumsCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString albums',
+      one: '1 album',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsLibraryArtistsCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString artists',
+      one: '1 artist',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String settingsLibraryLastScan(String time, int added) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added songs added',
+      one: '1 song added',
+    );
+    return 'Last scan $time · $_temp0';
+  }
+
+  @override
+  String get settingsLibraryBlockScan => 'Scan';
+
+  @override
+  String get settingsLibraryBlockOrganise => 'Organise';
+
+  @override
+  String get settingsLibraryBlockRemoved => 'Removed';
+
+  @override
+  String settingsLibraryFoldersEstimate(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString songs',
+      one: '1 song',
+    );
+    return 'About $_temp0';
+  }
+
+  @override
+  String get settingsLibraryMinDuration => 'Skip files shorter than';
+
+  @override
+  String get settingsLibraryMinDurationCaption =>
+      'Ringtones, alerts and short recordings. Applies at the next scan.';
+
+  @override
+  String get settingsLibraryMinSize => 'Skip files smaller than';
+
+  @override
+  String get settingsLibraryMinSizeCaption =>
+      'Measured by file size. Applies at the next scan.';
+
+  @override
+  String settingsLibrarySizeKb(int kb) {
+    final intl.NumberFormat kbNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String kbString = kbNumberFormat.format(kb);
+
+    return '$kbString KB';
+  }
+
+  @override
+  String settingsLibrarySizeMb(double mb) {
+    final intl.NumberFormat mbNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String mbString = mbNumberFormat.format(mb);
+
+    return '$mbString MB';
+  }
+
+  @override
+  String get settingsLibraryFormats => 'Scanned formats';
+
+  @override
+  String get settingsLibraryFormatsCaption =>
+      'Untick a format to skip it when scanning. Keep at least one.';
+
+  @override
+  String get settingsLibraryFormatsKeepOne => 'keep at least one';
+
+  @override
+  String get settingsLibraryFormatsAll => 'All';
+
+  @override
+  String get settingsLibraryFormatsSelectAll => 'Select all';
+
+  @override
+  String settingsCountOfTotal(int n, int total) {
+    return '$n / $total';
+  }
+
+  @override
+  String get settingsLibraryDedupName => 'Merge tracks with the same file name';
+
+  @override
+  String get settingsLibraryDedupNameDesc =>
+      'Files with the same name in different folders show as one track, the highest quality copy. Files are not deleted.';
+
+  @override
+  String get settingsLibraryNomedia => 'Skip folders with a .nomedia file';
+
+  @override
+  String get settingsLibraryNomediaDesc =>
+      'Like Android: a folder with .nomedia is not scanned.';
+
+  @override
+  String get settingsLibraryWatch => 'Update when folders change';
+
+  @override
+  String get settingsLibraryWatchDesc =>
+      'See new files at once, no rescan needed.';
+
+  @override
+  String get settingsLibraryRulesApplyLater => 'Applies at the next scan';
+
+  @override
+  String get settingsLibraryRescanning =>
+      'Rescanning the library in the background';
+
+  @override
+  String get settingsLibraryMergeFolders =>
+      'Merge folders with a single subfolder';
+
+  @override
+  String get settingsLibraryMergeFoldersDesc =>
+      'Folders tab: go straight into the only subfolder.';
+
+  @override
+  String get settingsLibraryAlbumGrouping => 'Group albums by';
+
+  @override
+  String get settingsLibraryRemoved => 'Removed from library';
+
+  @override
+  String get settingsLibraryTabsHintMobile =>
+      'Turn on the tabs you want, drag to reorder. At least one tab stays on. Tabs are the sub-tab row at the top of Library.';
+
+  @override
+  String get settingsLibraryTabsHintDesktop =>
+      'Turn on the tabs you want, drag to reorder. At least one tab stays on. Tabs are the Library items in the sidebar.';
+
+  @override
+  String settingsLibraryRemoveFolderTitle(String name) {
+    return 'Remove “$name”?';
+  }
+
+  @override
+  String get settingsLibraryRemoveFolderBody =>
+      'The songs in this folder leave the library (playlists keep their place and mark them as missing).\n\nFiles on your device are not deleted.';
+
+  @override
+  String settingsLibraryRemoveFolderBodyCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString songs',
+      one: '1 song',
+    );
+    return '$_temp0 in this folder leave the library (playlists keep their place and mark them as missing).\n\nFiles on your device are not deleted.';
+  }
+
+  @override
+  String get settingsLibraryRemoveFolderConfirm => 'Remove folder';
+
+  @override
+  String settingsLibraryFolderRemoved(String name) {
+    return 'Removed “$name”';
+  }
+
+  @override
+  String settingsLibraryFolderRemovedCount(String name, int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString songs',
+      one: '1 song',
+    );
+    return 'Removed “$name” · $_temp0 left the library';
+  }
+
+  @override
+  String get settingsLibraryLastFolderTitle => 'Cannot remove the last folder';
+
+  @override
+  String settingsLibraryLastFolderBody(String name) {
+    return 'The library needs at least one music folder. Add another folder first, then remove “$name”.';
+  }
+
+  @override
+  String get settingsLibraryGotIt => 'Got it';
+
+  @override
+  String settingsLibraryExclusionRemoved(String name) {
+    return '“$name” is no longer excluded · rescanning';
+  }
+
+  @override
+  String get settingsLibraryArtistSplit => 'Split artists';
+
+  @override
+  String settingsLibrarySeparatorCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count separators',
+      one: '1 separator',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsArtistSplitIntro =>
+      'One song, several artists: Kanaru splits the names at these marks.';
+
+  @override
+  String get settingsArtistSplitExample => 'Example';
+
+  @override
+  String get settingsArtistSplitExampleNote =>
+      'The default list has no , or & because many band names contain them. To split on them, add them here, then add those band names to Keep whole.';
+
+  @override
+  String get settingsArtistSplitSeparators => 'Separators';
+
+  @override
+  String get settingsArtistSplitSeparatorsHint =>
+      'A space shows as ␣. Changes apply now; the library updates in the background.';
+
+  @override
+  String get settingsArtistSplitKeep => 'Keep whole';
+
+  @override
+  String get settingsArtistSplitKeepHint =>
+      'Names that stay one artist even when they contain a separator.';
+
+  @override
+  String get settingsArtistSplitSeparatorInput => 'Add a separator, e.g. “ x ”';
+
+  @override
+  String get settingsArtistSplitKeepInput =>
+      'Artist name, e.g. “Hồ Ngọc Hà / Noo”';
+
+  @override
+  String get settingsArtistSplitAdd => 'Add';
+
+  @override
+  String settingsArtistSplitRemove(String value) {
+    return 'Remove $value';
+  }
+
+  @override
+  String get settingsArtistSplitNoSeparators =>
+      'No separators: artist names stay as they are.';
+
+  @override
+  String get settingsArtistSplitErrEmpty => 'Nothing typed';
+
+  @override
+  String get settingsArtistSplitErrDuplicate => 'Already in the list';
+
+  @override
+  String settingsArtistSplitErrTooLong(int max) {
+    return 'At most $max characters';
+  }
+
+  @override
+  String settingsArtistSplitErrFull(int max) {
+    return 'At most $max entries';
+  }
+
+  @override
+  String get settingsArtistSplitReset => 'Restore defaults';
+
+  @override
+  String get settingsArtistSplitResetIsDefault => 'Already the default';
+
+  @override
+  String settingsArtistSplitResetTo(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count separators',
+      one: '1 separator',
+    );
+    return '$_temp0, “$names”';
+  }
+
+  @override
+  String get settingsArtistSplitResetTitle => 'Restore the default separators?';
+
+  @override
+  String get settingsArtistSplitResetBody =>
+      'The separators and the kept names go back to how they were at install. The library updates in the background.';
+
+  @override
+  String get settingsArtistSplitResetConfirm => 'Restore';
+
+  @override
+  String settingsArtistSplitAdded(String value) {
+    return 'Added “$value”';
+  }
+
+  @override
+  String settingsArtistSplitAddedGroup(String value) {
+    return 'Added “$value” · add band names that contain it to Keep whole';
+  }
+
+  @override
+  String settingsArtistSplitRemoved(String value) {
+    return 'Removed “$value”';
+  }
+
+  @override
+  String get settingsArtistSplitRestored => 'Defaults restored';
+
+  @override
+  String get settingsLibraryLanguageSource => 'Language source';
+
+  @override
+  String get settingsLibraryLanguageSourceCaption =>
+      'How Kanaru decides which language a song is in (Language tab).';
+
+  @override
+  String get settingsLibraryLanguageBoth => 'Tag, then detection';
+
+  @override
+  String get settingsLibraryLanguageBothDesc =>
+      'Use the file\'s language tag, else guess from the title and lyrics';
+
+  @override
+  String get settingsLibraryLanguageTag => 'Tag only';
+
+  @override
+  String get settingsLibraryLanguageTagDesc =>
+      'Songs with no tag go to “Unknown”';
+
+  @override
+  String get settingsLibraryLanguageDetected => 'Detection only';
+
+  @override
+  String get settingsLibraryLanguageDetectedDesc =>
+      'Ignore the file\'s language tag';
 }

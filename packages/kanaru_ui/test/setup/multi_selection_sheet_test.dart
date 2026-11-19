@@ -485,4 +485,158 @@ void main() {
       );
     });
   });
+
+  group('minimum selected', () {
+    Future<void> open(
+      WidgetTester tester, {
+      Set<String> initial = const {'a'},
+      int minSelected = 1,
+      void Function(Set<String>?)? onResult,
+    }) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () async => (onResult ?? (_) {})(
+                await showMultiSelectionSheet<String>(
+                  context,
+                  options: const [
+                    SelectionOption(value: 'a', title: Text('A')),
+                    SelectionOption(
+                      value: 'b',
+                      title: Text('B'),
+                      subtitle: Text('b detail'),
+                    ),
+                    SelectionOption(value: 'c', title: Text('C')),
+                  ],
+                  initial: initial,
+                  title: const Text('Formats'),
+                  confirmLabel: (n) => 'Save $n',
+                  cancelLabel: 'Cancel',
+                  selectAllLabel: 'Select all',
+                  selectedCountLabel: (n, t) => '$n / $t',
+                  minSelected: minSelected,
+                  minSelectedNote: 'Keep at least one',
+                ),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+    }
+
+    SelectionRow row(WidgetTester tester, String title) =>
+        tester.widget<SelectionRow>(
+          find.ancestor(
+            of: find.text(title),
+            matching: find.byType(SelectionRow),
+          ),
+        );
+
+    testWidgets('the last chosen row is locked and says why', (tester) async {
+      await open(tester);
+      expect(row(tester, 'A').enabled, isFalse);
+      expect(row(tester, 'A').selected, isTrue);
+      expect(find.text('Keep at least one'), findsOneWidget);
+      await tester.tap(find.text('A'));
+      await tester.pump();
+      expect(find.text('1 / 3'), findsOneWidget);
+      expect(row(tester, 'A').selected, isTrue);
+    });
+
+    testWidgets('a second pick unlocks every row, the note goes', (
+      tester,
+    ) async {
+      await open(tester);
+      await tester.tap(find.text('B'));
+      await tester.pump();
+      expect(row(tester, 'A').enabled, isTrue);
+      expect(row(tester, 'B').enabled, isTrue);
+      expect(find.text('Keep at least one'), findsNothing);
+      // The note keeps the row's own subtitle when it locks again.
+      await tester.tap(find.text('A'));
+      await tester.pump();
+      expect(row(tester, 'B').enabled, isFalse);
+      expect(find.text('b detail · Keep at least one'), findsOneWidget);
+    });
+
+    testWidgets('select all is off only once everything is chosen', (
+      tester,
+    ) async {
+      await open(tester);
+      expect(row(tester, 'Select all').enabled, isTrue);
+      await tester.tap(find.text('Select all'));
+      await tester.pump();
+      expect(find.text('3 / 3'), findsOneWidget);
+      expect(row(tester, 'Select all').enabled, isFalse);
+      await tester.tap(find.text('Select all'));
+      await tester.pump();
+      expect(find.text('3 / 3'), findsOneWidget);
+    });
+
+    testWidgets('without a minimum nothing locks (default)', (tester) async {
+      await open(tester, minSelected: 0);
+      expect(row(tester, 'A').enabled, isTrue);
+      await tester.tap(find.text('A'));
+      await tester.pump();
+      expect(find.text('0 / 3'), findsOneWidget);
+    });
+
+    testWidgets('confirm returns the kept picks', (tester) async {
+      Set<String>? result;
+      await open(tester, onResult: (r) => result = r);
+      await tester.tap(find.text('C'));
+      await tester.pump();
+      await tester.tap(find.text('Save 2'));
+      await tester.pumpAndSettle();
+      expect(result, {'a', 'c'});
+    });
+  });
+
+  group('live mode', () {
+    testWidgets('reports each tap and has no footer buttons', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      final seen = <Set<String>>[];
+      await tester.pumpWidget(
+        host(
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showMultiSelectionSheet<String>(
+                context,
+                options: const [
+                  SelectionOption(value: 'a', title: Text('A')),
+                  SelectionOption(value: 'b', title: Text('B')),
+                ],
+                initial: const {'a'},
+                title: const Text('Formats'),
+                minSelected: 1,
+                minSelectedNote: 'Keep at least one',
+                onChanged: seen.add,
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(find.text('Cancel'), findsNothing);
+      expect(find.byType(FilledButton), findsNothing);
+      // The locked last row ignores a tap and reports nothing.
+      await tester.tap(find.text('A'));
+      await tester.pump();
+      await tester.tap(find.text('B'));
+      await tester.pump();
+      await tester.tap(find.text('B'));
+      await tester.pump();
+      expect(seen, [
+        {'a', 'b'},
+        {'a'},
+      ]);
+    });
+  });
 }

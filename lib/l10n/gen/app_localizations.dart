@@ -281,8 +281,14 @@ abstract class AppLocalizations {
   /// No description provided for @scanSetupPermissionsGranted.
   ///
   /// In en, this message translates to:
-  /// **'All permissions allowed · Music and audio · Photos and videos'**
+  /// **'All permissions allowed'**
   String get scanSetupPermissionsGranted;
+
+  /// No description provided for @scanSetupPermissionsGrantedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Music and audio · Photos and videos'**
+  String get scanSetupPermissionsGrantedDesc;
 
   /// No description provided for @scanSetupGrant.
   ///
@@ -811,6 +817,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No songs found'**
   String get scanHomeNoTracks;
+
+  /// No description provided for @scanHomeChangeFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Change folders'**
+  String get scanHomeChangeFolders;
 
   /// No description provided for @playbackCover.
   ///
@@ -2291,7 +2303,7 @@ abstract class AppLocalizations {
   /// No description provided for @libraryMenuExcludeNote.
   ///
   /// In en, this message translates to:
-  /// **'Keeps the files; undo in Settings › Library › Folders'**
+  /// **'Keeps the files; undo in Settings › Library › Exclusions'**
   String get libraryMenuExcludeNote;
 
   /// No description provided for @libraryMenuIncludesSubfolders.
@@ -4391,6 +4403,492 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn on ReplayGain to use this'**
   String get settingsPlaybackNeedsReplayGain;
+
+  /// No description provided for @settingsSectionHintTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'About {section}'**
+  String settingsSectionHintTooltip(String section);
+
+  /// No description provided for @settingsLibraryTracksCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}}'**
+  String settingsLibraryTracksCount(int count);
+
+  /// No description provided for @settingsLibraryAlbumsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 album} other{{count} albums}}'**
+  String settingsLibraryAlbumsCount(int count);
+
+  /// No description provided for @settingsLibraryArtistsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 artist} other{{count} artists}}'**
+  String settingsLibraryArtistsCount(int count);
+
+  /// No description provided for @settingsLibraryLastScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Last scan {time} · {added, plural, =1{1 song added} other{{added} songs added}}'**
+  String settingsLibraryLastScan(String time, int added);
+
+  /// No description provided for @settingsLibraryBlockScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get settingsLibraryBlockScan;
+
+  /// No description provided for @settingsLibraryBlockOrganise.
+  ///
+  /// In en, this message translates to:
+  /// **'Organise'**
+  String get settingsLibraryBlockOrganise;
+
+  /// No description provided for @settingsLibraryBlockRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed'**
+  String get settingsLibraryBlockRemoved;
+
+  /// No description provided for @settingsLibraryFoldersEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'About {count, plural, =1{1 song} other{{count} songs}}'**
+  String settingsLibraryFoldersEstimate(int count);
+
+  /// No description provided for @settingsLibraryMinDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip files shorter than'**
+  String get settingsLibraryMinDuration;
+
+  /// No description provided for @settingsLibraryMinDurationCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Ringtones, alerts and short recordings. Applies at the next scan.'**
+  String get settingsLibraryMinDurationCaption;
+
+  /// No description provided for @settingsLibraryMinSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip files smaller than'**
+  String get settingsLibraryMinSize;
+
+  /// No description provided for @settingsLibraryMinSizeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Measured by file size. Applies at the next scan.'**
+  String get settingsLibraryMinSizeCaption;
+
+  /// No description provided for @settingsLibrarySizeKb.
+  ///
+  /// In en, this message translates to:
+  /// **'{kb} KB'**
+  String settingsLibrarySizeKb(int kb);
+
+  /// No description provided for @settingsLibrarySizeMb.
+  ///
+  /// In en, this message translates to:
+  /// **'{mb} MB'**
+  String settingsLibrarySizeMb(double mb);
+
+  /// No description provided for @settingsLibraryFormats.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned formats'**
+  String get settingsLibraryFormats;
+
+  /// No description provided for @settingsLibraryFormatsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Untick a format to skip it when scanning. Keep at least one.'**
+  String get settingsLibraryFormatsCaption;
+
+  /// No description provided for @settingsLibraryFormatsKeepOne.
+  ///
+  /// In en, this message translates to:
+  /// **'keep at least one'**
+  String get settingsLibraryFormatsKeepOne;
+
+  /// No description provided for @settingsLibraryFormatsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get settingsLibraryFormatsAll;
+
+  /// No description provided for @settingsLibraryFormatsSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get settingsLibraryFormatsSelectAll;
+
+  /// No description provided for @settingsCountOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} / {total}'**
+  String settingsCountOfTotal(int n, int total);
+
+  /// No description provided for @settingsLibraryDedupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge tracks with the same file name'**
+  String get settingsLibraryDedupName;
+
+  /// No description provided for @settingsLibraryDedupNameDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Files with the same name in different folders show as one track, the highest quality copy. Files are not deleted.'**
+  String get settingsLibraryDedupNameDesc;
+
+  /// No description provided for @settingsLibraryNomedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip folders with a .nomedia file'**
+  String get settingsLibraryNomedia;
+
+  /// No description provided for @settingsLibraryNomediaDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Like Android: a folder with .nomedia is not scanned.'**
+  String get settingsLibraryNomediaDesc;
+
+  /// No description provided for @settingsLibraryWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Update when folders change'**
+  String get settingsLibraryWatch;
+
+  /// No description provided for @settingsLibraryWatchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'See new files at once, no rescan needed.'**
+  String get settingsLibraryWatchDesc;
+
+  /// No description provided for @settingsLibraryRulesApplyLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies at the next scan'**
+  String get settingsLibraryRulesApplyLater;
+
+  /// No description provided for @settingsLibraryRescanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescanning the library in the background'**
+  String get settingsLibraryRescanning;
+
+  /// No description provided for @settingsLibraryMergeFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge folders with a single subfolder'**
+  String get settingsLibraryMergeFolders;
+
+  /// No description provided for @settingsLibraryMergeFoldersDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders tab: go straight into the only subfolder.'**
+  String get settingsLibraryMergeFoldersDesc;
+
+  /// No description provided for @settingsLibraryAlbumGrouping.
+  ///
+  /// In en, this message translates to:
+  /// **'Group albums by'**
+  String get settingsLibraryAlbumGrouping;
+
+  /// No description provided for @settingsLibraryRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from library'**
+  String get settingsLibraryRemoved;
+
+  /// No description provided for @settingsLibraryTabsHintMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on the tabs you want, drag to reorder. At least one tab stays on. Tabs are the sub-tab row at the top of Library.'**
+  String get settingsLibraryTabsHintMobile;
+
+  /// No description provided for @settingsLibraryTabsHintDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on the tabs you want, drag to reorder. At least one tab stays on. Tabs are the Library items in the sidebar.'**
+  String get settingsLibraryTabsHintDesktop;
+
+  /// No description provided for @settingsLibraryRemoveFolderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove “{name}”?'**
+  String settingsLibraryRemoveFolderTitle(String name);
+
+  /// No description provided for @settingsLibraryRemoveFolderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The songs in this folder leave the library (playlists keep their place and mark them as missing).\n\nFiles on your device are not deleted.'**
+  String get settingsLibraryRemoveFolderBody;
+
+  /// No description provided for @settingsLibraryRemoveFolderBodyCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} in this folder leave the library (playlists keep their place and mark them as missing).\n\nFiles on your device are not deleted.'**
+  String settingsLibraryRemoveFolderBodyCount(int count);
+
+  /// No description provided for @settingsLibraryRemoveFolderConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove folder'**
+  String get settingsLibraryRemoveFolderConfirm;
+
+  /// No description provided for @settingsLibraryFolderRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed “{name}”'**
+  String settingsLibraryFolderRemoved(String name);
+
+  /// No description provided for @settingsLibraryFolderRemovedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed “{name}” · {count, plural, =1{1 song} other{{count} songs}} left the library'**
+  String settingsLibraryFolderRemovedCount(String name, int count);
+
+  /// No description provided for @settingsLibraryLastFolderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot remove the last folder'**
+  String get settingsLibraryLastFolderTitle;
+
+  /// No description provided for @settingsLibraryLastFolderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The library needs at least one music folder. Add another folder first, then remove “{name}”.'**
+  String settingsLibraryLastFolderBody(String name);
+
+  /// No description provided for @settingsLibraryGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get settingsLibraryGotIt;
+
+  /// No description provided for @settingsLibraryExclusionRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” is no longer excluded · rescanning'**
+  String settingsLibraryExclusionRemoved(String name);
+
+  /// No description provided for @settingsLibraryArtistSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Split artists'**
+  String get settingsLibraryArtistSplit;
+
+  /// No description provided for @settingsLibrarySeparatorCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 separator} other{{count} separators}}'**
+  String settingsLibrarySeparatorCount(int count);
+
+  /// No description provided for @settingsArtistSplitIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'One song, several artists: Kanaru splits the names at these marks.'**
+  String get settingsArtistSplitIntro;
+
+  /// No description provided for @settingsArtistSplitExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Example'**
+  String get settingsArtistSplitExample;
+
+  /// No description provided for @settingsArtistSplitExampleNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The default list has no , or & because many band names contain them. To split on them, add them here, then add those band names to Keep whole.'**
+  String get settingsArtistSplitExampleNote;
+
+  /// No description provided for @settingsArtistSplitSeparators.
+  ///
+  /// In en, this message translates to:
+  /// **'Separators'**
+  String get settingsArtistSplitSeparators;
+
+  /// No description provided for @settingsArtistSplitSeparatorsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A space shows as ␣. Changes apply now; the library updates in the background.'**
+  String get settingsArtistSplitSeparatorsHint;
+
+  /// No description provided for @settingsArtistSplitKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep whole'**
+  String get settingsArtistSplitKeep;
+
+  /// No description provided for @settingsArtistSplitKeepHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Names that stay one artist even when they contain a separator.'**
+  String get settingsArtistSplitKeepHint;
+
+  /// No description provided for @settingsArtistSplitSeparatorInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a separator, e.g. “ x ”'**
+  String get settingsArtistSplitSeparatorInput;
+
+  /// No description provided for @settingsArtistSplitKeepInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist name, e.g. “Hồ Ngọc Hà / Noo”'**
+  String get settingsArtistSplitKeepInput;
+
+  /// No description provided for @settingsArtistSplitAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get settingsArtistSplitAdd;
+
+  /// No description provided for @settingsArtistSplitRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {value}'**
+  String settingsArtistSplitRemove(String value);
+
+  /// No description provided for @settingsArtistSplitNoSeparators.
+  ///
+  /// In en, this message translates to:
+  /// **'No separators: artist names stay as they are.'**
+  String get settingsArtistSplitNoSeparators;
+
+  /// No description provided for @settingsArtistSplitErrEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing typed'**
+  String get settingsArtistSplitErrEmpty;
+
+  /// No description provided for @settingsArtistSplitErrDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in the list'**
+  String get settingsArtistSplitErrDuplicate;
+
+  /// No description provided for @settingsArtistSplitErrTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {max} characters'**
+  String settingsArtistSplitErrTooLong(int max);
+
+  /// No description provided for @settingsArtistSplitErrFull.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {max} entries'**
+  String settingsArtistSplitErrFull(int max);
+
+  /// No description provided for @settingsArtistSplitReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore defaults'**
+  String get settingsArtistSplitReset;
+
+  /// No description provided for @settingsArtistSplitResetIsDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Already the default'**
+  String get settingsArtistSplitResetIsDefault;
+
+  /// No description provided for @settingsArtistSplitResetTo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 separator} other{{count} separators}}, “{names}”'**
+  String settingsArtistSplitResetTo(int count, String names);
+
+  /// No description provided for @settingsArtistSplitResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore the default separators?'**
+  String get settingsArtistSplitResetTitle;
+
+  /// No description provided for @settingsArtistSplitResetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The separators and the kept names go back to how they were at install. The library updates in the background.'**
+  String get settingsArtistSplitResetBody;
+
+  /// No description provided for @settingsArtistSplitResetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get settingsArtistSplitResetConfirm;
+
+  /// No description provided for @settingsArtistSplitAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added “{value}”'**
+  String settingsArtistSplitAdded(String value);
+
+  /// No description provided for @settingsArtistSplitAddedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Added “{value}” · add band names that contain it to Keep whole'**
+  String settingsArtistSplitAddedGroup(String value);
+
+  /// No description provided for @settingsArtistSplitRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed “{value}”'**
+  String settingsArtistSplitRemoved(String value);
+
+  /// No description provided for @settingsArtistSplitRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Defaults restored'**
+  String get settingsArtistSplitRestored;
+
+  /// No description provided for @settingsLibraryLanguageSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Language source'**
+  String get settingsLibraryLanguageSource;
+
+  /// No description provided for @settingsLibraryLanguageSourceCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'How Kanaru decides which language a song is in (Language tab).'**
+  String get settingsLibraryLanguageSourceCaption;
+
+  /// No description provided for @settingsLibraryLanguageBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag, then detection'**
+  String get settingsLibraryLanguageBoth;
+
+  /// No description provided for @settingsLibraryLanguageBothDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the file\'s language tag, else guess from the title and lyrics'**
+  String get settingsLibraryLanguageBothDesc;
+
+  /// No description provided for @settingsLibraryLanguageTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag only'**
+  String get settingsLibraryLanguageTag;
+
+  /// No description provided for @settingsLibraryLanguageTagDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs with no tag go to “Unknown”'**
+  String get settingsLibraryLanguageTagDesc;
+
+  /// No description provided for @settingsLibraryLanguageDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Detection only'**
+  String get settingsLibraryLanguageDetected;
+
+  /// No description provided for @settingsLibraryLanguageDetectedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore the file\'s language tag'**
+  String get settingsLibraryLanguageDetectedDesc;
 }
 
 class _AppLocalizationsDelegate

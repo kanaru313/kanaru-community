@@ -7,6 +7,7 @@ import '../../../platform/state/storage_volumes_provider.dart';
 import '../../data/scan/directory_check.dart';
 import '../../data/scan/exclusion_entries.dart';
 import '../folder_exclusion_providers.dart';
+import 'duplicate_hiding.dart';
 import 'music_folder_editor.dart';
 import 'scan_settings.dart';
 
@@ -35,6 +36,7 @@ final musicFolderEditorProvider = Provider<MusicFolderEditor>((ref) {
         ref.read(setupDefaultsAppliedProvider.notifier).set(true),
     onChanged: () => ref.read(folderEditsProvider.notifier).bump(),
     isDirectory: directoryExists,
+    applyDuplicateHiding: ref.read(duplicateHidingProvider).apply,
   );
 });
 

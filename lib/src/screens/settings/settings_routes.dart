@@ -5,15 +5,19 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'ui/about/about_settings_page.dart';
 import 'ui/appearance/appearance_settings_page.dart';
 import 'ui/appearance/seek_bar_style_page.dart';
+import 'ui/library/artist_split_page.dart';
+import 'ui/library/library_settings_page.dart';
 import 'ui/playback/playback_settings_page.dart';
 import 'ui/root/settings_root_page.dart';
 
 /// Locations of the Settings pages. A page's header back arrow leads to its
-/// parent: [seekBar] to [appearance], every other page to [root].
+/// parent: [seekBar] to [appearance], every other page to [root]; [artistSplit] to [library].
 abstract final class SettingsPaths {
   static const root = '/settings';
   static const appearance = '/settings/appearance';
   static const seekBar = '/settings/appearance/seek-bar';
+  static const library = '/settings/library';
+  static const artistSplit = '/settings/library/artist-split';
   static const playback = '/settings/playback';
   static const about = '/settings/about';
 }
@@ -30,6 +34,16 @@ GoRoute buildSettingsRoute() => GoRoute(
         GoRoute(
           path: 'seek-bar',
           pageBuilder: (_, s) => _page(s, const SeekBarStylePage()),
+        ),
+      ],
+    ),
+    GoRoute(
+      path: 'library',
+      pageBuilder: (_, s) => _page(s, const LibrarySettingsPage()),
+      routes: [
+        GoRoute(
+          path: 'artist-split',
+          pageBuilder: (_, s) => _page(s, const ArtistSplitPage()),
         ),
       ],
     ),

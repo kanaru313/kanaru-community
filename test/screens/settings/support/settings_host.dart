@@ -49,6 +49,19 @@ Future<SettingsHarness> pumpSettings(
   ExtensionRegistry? registry,
   List<Override> overrides = const [],
   ThemeData? theme,
+
+  /// False when [overrides] bring their own `mediaPermissionsProvider`.
+  bool fakePermissions = true,
+
+  /// Puts a [Scaffold] under the router, as the shells do (snack bars need
+  /// one).
+  bool scaffold = false,
+
+  /// The page at `/`, for tests that start elsewhere and navigate.
+  Widget home = const SizedBox.shrink(),
+
+  /// Platform asks for reduced motion.
+  bool reduceMotion = false,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -61,7 +74,10 @@ Future<SettingsHarness> pumpSettings(
       extensionRegistryProvider.overrideWithValue(
         registry ?? ExtensionRegistry(),
       ),
-      mediaPermissionsProvider.overrideWithValue(_FakePermissions(permission)),
+      if (fakePermissions)
+        mediaPermissionsProvider.overrideWithValue(
+          _FakePermissions(permission),
+        ),
       ...overrides,
     ],
   );
@@ -69,7 +85,7 @@ Future<SettingsHarness> pumpSettings(
   final router = GoRouter(
     initialLocation: location,
     routes: [
-      GoRoute(path: '/', builder: (_, _) => const SizedBox.shrink()),
+      GoRoute(path: '/', builder: (_, _) => home),
       buildSettingsRoute(),
     ],
   );
@@ -84,9 +100,11 @@ Future<SettingsHarness> pumpSettings(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(textScale)),
-          child: child!,
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(textScale),
+            disableAnimations: reduceMotion,
+          ),
+          child: scaffold ? Scaffold(body: child) : child!,
         ),
         routerConfig: router,
       ),

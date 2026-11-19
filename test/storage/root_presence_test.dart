@@ -16,11 +16,12 @@ class _Catalog implements LocalAudioCatalog {
     required String root,
     required Set<String> excludedKeys,
     int skipShorterThanMs = 0,
+    bool respectNomedia = false,
   }) async =>
       reachable ? const AudioListing() : const AudioListing.unreachable();
 
   @override
-  Future<AudioFoldersResult> audioFolders() async =>
+  Future<AudioFoldersResult> audioFolders({int minDurationMs = 30000}) async =>
       const AudioFoldersListed([]);
 
   @override

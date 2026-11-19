@@ -168,5 +168,267 @@
   "settingsAppearanceWindowFrameDesc": "Use the system title bar and window border instead of the Kanaru bar.",
   "settingsAppearanceWindowFrameApply": "Applies after Kanaru is reopened",
   "settingsAppearanceTextSizeDefault": "Default",
-  "settingsPlaybackNeedsReplayGain": "Turn on ReplayGain to use this"
+  "settingsPlaybackNeedsReplayGain": "Turn on ReplayGain to use this",
+  "settingsSectionHintTooltip": "About {section}",
+  "@settingsSectionHintTooltip": {
+    "placeholders": {
+      "section": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryTracksCount": "{count, plural, =1{1 song} other{{count} songs}}",
+  "@settingsLibraryTracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryAlbumsCount": "{count, plural, =1{1 album} other{{count} albums}}",
+  "@settingsLibraryAlbumsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryArtistsCount": "{count, plural, =1{1 artist} other{{count} artists}}",
+  "@settingsLibraryArtistsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryLastScan": "Last scan {time} · {added, plural, =1{1 song added} other{{added} songs added}}",
+  "@settingsLibraryLastScan": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "added": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsLibraryBlockScan": "Scan",
+  "settingsLibraryBlockOrganise": "Organise",
+  "settingsLibraryBlockRemoved": "Removed",
+  "settingsLibraryFoldersEstimate": "About {count, plural, =1{1 song} other{{count} songs}}",
+  "@settingsLibraryFoldersEstimate": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryMinDuration": "Skip files shorter than",
+  "settingsLibraryMinDurationCaption": "Ringtones, alerts and short recordings. Applies at the next scan.",
+  "settingsLibraryMinSize": "Skip files smaller than",
+  "settingsLibraryMinSizeCaption": "Measured by file size. Applies at the next scan.",
+  "settingsLibrarySizeKb": "{kb} KB",
+  "@settingsLibrarySizeKb": {
+    "placeholders": {
+      "kb": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibrarySizeMb": "{mb} MB",
+  "@settingsLibrarySizeMb": {
+    "placeholders": {
+      "mb": {
+        "type": "double",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryFormats": "Scanned formats",
+  "settingsLibraryFormatsCaption": "Untick a format to skip it when scanning. Keep at least one.",
+  "settingsLibraryFormatsKeepOne": "keep at least one",
+  "settingsLibraryFormatsAll": "All",
+  "settingsLibraryFormatsSelectAll": "Select all",
+  "settingsCountOfTotal": "{n} / {total}",
+  "@settingsCountOfTotal": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsLibraryDedupName": "Merge tracks with the same file name",
+  "settingsLibraryDedupNameDesc": "Files with the same name in different folders show as one track, the highest quality copy. Files are not deleted.",
+  "settingsLibraryNomedia": "Skip folders with a .nomedia file",
+  "settingsLibraryNomediaDesc": "Like Android: a folder with .nomedia is not scanned.",
+  "settingsLibraryWatch": "Update when folders change",
+  "settingsLibraryWatchDesc": "See new files at once, no rescan needed.",
+  "settingsLibraryRulesApplyLater": "Applies at the next scan",
+  "settingsLibraryRescanning": "Rescanning the library in the background",
+  "settingsLibraryMergeFolders": "Merge folders with a single subfolder",
+  "settingsLibraryMergeFoldersDesc": "Folders tab: go straight into the only subfolder.",
+  "settingsLibraryAlbumGrouping": "Group albums by",
+  "settingsLibraryRemoved": "Removed from library",
+  "settingsLibraryTabsHintMobile": "Turn on the tabs you want, drag to reorder. At least one tab stays on. Tabs are the sub-tab row at the top of Library.",
+  "settingsLibraryTabsHintDesktop": "Turn on the tabs you want, drag to reorder. At least one tab stays on. Tabs are the Library items in the sidebar.",
+  "settingsLibraryRemoveFolderTitle": "Remove “{name}”?",
+  "@settingsLibraryRemoveFolderTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryRemoveFolderBody": "The songs in this folder leave the library (playlists keep their place and mark them as missing).\n\nFiles on your device are not deleted.",
+  "settingsLibraryRemoveFolderBodyCount": "{count, plural, =1{1 song} other{{count} songs}} in this folder leave the library (playlists keep their place and mark them as missing).\n\nFiles on your device are not deleted.",
+  "@settingsLibraryRemoveFolderBodyCount": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryRemoveFolderConfirm": "Remove folder",
+  "settingsLibraryFolderRemoved": "Removed “{name}”",
+  "@settingsLibraryFolderRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryFolderRemovedCount": "Removed “{name}” · {count, plural, =1{1 song} other{{count} songs}} left the library",
+  "@settingsLibraryFolderRemovedCount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryLastFolderTitle": "Cannot remove the last folder",
+  "settingsLibraryLastFolderBody": "The library needs at least one music folder. Add another folder first, then remove “{name}”.",
+  "@settingsLibraryLastFolderBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryGotIt": "Got it",
+  "settingsLibraryExclusionRemoved": "“{name}” is no longer excluded · rescanning",
+  "@settingsLibraryExclusionRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryArtistSplit": "Split artists",
+  "settingsLibrarySeparatorCount": "{count, plural, =1{1 separator} other{{count} separators}}",
+  "@settingsLibrarySeparatorCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArtistSplitIntro": "One song, several artists: Kanaru splits the names at these marks.",
+  "settingsArtistSplitExample": "Example",
+  "settingsArtistSplitExampleNote": "The default list has no , or & because many band names contain them. To split on them, add them here, then add those band names to Keep whole.",
+  "settingsArtistSplitSeparators": "Separators",
+  "settingsArtistSplitSeparatorsHint": "A space shows as ␣. Changes apply now; the library updates in the background.",
+  "settingsArtistSplitKeep": "Keep whole",
+  "settingsArtistSplitKeepHint": "Names that stay one artist even when they contain a separator.",
+  "settingsArtistSplitSeparatorInput": "Add a separator, e.g. “ x ”",
+  "settingsArtistSplitKeepInput": "Artist name, e.g. “Hồ Ngọc Hà / Noo”",
+  "settingsArtistSplitAdd": "Add",
+  "settingsArtistSplitRemove": "Remove {value}",
+  "@settingsArtistSplitRemove": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitNoSeparators": "No separators: artist names stay as they are.",
+  "settingsArtistSplitErrEmpty": "Nothing typed",
+  "settingsArtistSplitErrDuplicate": "Already in the list",
+  "settingsArtistSplitErrTooLong": "At most {max} characters",
+  "@settingsArtistSplitErrTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArtistSplitErrFull": "At most {max} entries",
+  "@settingsArtistSplitErrFull": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArtistSplitReset": "Restore defaults",
+  "settingsArtistSplitResetIsDefault": "Already the default",
+  "settingsArtistSplitResetTo": "{count, plural, =1{1 separator} other{{count} separators}}, “{names}”",
+  "@settingsArtistSplitResetTo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitResetTitle": "Restore the default separators?",
+  "settingsArtistSplitResetBody": "The separators and the kept names go back to how they were at install. The library updates in the background.",
+  "settingsArtistSplitResetConfirm": "Restore",
+  "settingsArtistSplitAdded": "Added “{value}”",
+  "@settingsArtistSplitAdded": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitAddedGroup": "Added “{value}” · add band names that contain it to Keep whole",
+  "@settingsArtistSplitAddedGroup": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitRemoved": "Removed “{value}”",
+  "@settingsArtistSplitRemoved": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitRestored": "Defaults restored",
+  "settingsLibraryLanguageSource": "Language source",
+  "settingsLibraryLanguageSourceCaption": "How Kanaru decides which language a song is in (Language tab).",
+  "settingsLibraryLanguageBoth": "Tag, then detection",
+  "settingsLibraryLanguageBothDesc": "Use the file's language tag, else guess from the title and lyrics",
+  "settingsLibraryLanguageTag": "Tag only",
+  "settingsLibraryLanguageTagDesc": "Songs with no tag go to “Unknown”",
+  "settingsLibraryLanguageDetected": "Detection only",
+  "settingsLibraryLanguageDetectedDesc": "Ignore the file's language tag"
 }

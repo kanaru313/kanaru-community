@@ -24,7 +24,7 @@ Future<List<StoredTrackRow>> storedRowsOf(
     final page = await db
         .customSelect(
           'SELECT t.id, t.locator, t.mtime_ms, t.size_bytes, t.revision, '
-          't.tags_version, t.keys_version, t.status, d.lrc_locator, '
+          't.tags_version, t.keys_version, t.status, t.duration_ms, d.lrc_locator, '
           'd.lrc_revision, d.track_id IS NOT NULL AS has_details '
           'FROM tracks t LEFT JOIN track_details d ON d.track_id = t.id '
           "WHERE t.source_id = ?1 AND t.status IN ('present', 'missing') "
@@ -49,6 +49,7 @@ Future<List<StoredTrackRow>> storedRowsOf(
           tagsVersion: r.read<int>('tags_version'),
           keysVersion: r.read<int>('keys_version'),
           status: r.read<String>('status'),
+          durationMs: r.readNullable<int>('duration_ms'),
           lrcLocator: r.readNullable<String>('lrc_locator'),
           lrcRevision: r.readNullable<String>('lrc_revision'),
           hasDetails: r.read<bool>('has_details'),

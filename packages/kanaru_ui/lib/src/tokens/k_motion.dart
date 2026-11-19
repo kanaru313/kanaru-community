@@ -11,6 +11,14 @@ abstract final class KMotion {
   static const Duration pageIn = Duration(milliseconds: 280);
   static const Duration pageOut = Duration(milliseconds: 240);
 
+  /// Wait after a page opens before it scrolls to a block it was asked to
+  /// show (layout and the route transition have settled).
+  static const Duration focusSettle = Duration(milliseconds: 300);
+
+  /// One pulse of a block's border after a deep link: held for the first
+  /// 60 % of this time, then fades out.
+  static const Duration focusPulse = Duration(milliseconds: 2000);
+
   /// Delay between consecutive items of a staggered entrance (`KFabMenu`).
   static const Duration stagger = Duration(milliseconds: 50);
 

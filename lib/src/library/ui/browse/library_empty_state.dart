@@ -1,15 +1,18 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../state/library_settings_focus.dart';
+import '../library_settings_links.dart';
 
 /// Shown instead of every list when the library holds no visible track.
-/// "Chọn thư mục nhạc" is dimmed until Settings › Library › Folders exists.
-class LibraryEmptyState extends StatelessWidget {
+/// "Chọn thư mục nhạc" opens Settings › Library at the music folders.
+class LibraryEmptyState extends ConsumerWidget {
   const LibraryEmptyState({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -22,7 +25,7 @@ class LibraryEmptyState extends StatelessWidget {
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(KSpace.x6),
-              child: _content(context, l10n, scheme, textTheme),
+              child: _content(context, ref, l10n, scheme, textTheme),
             ),
           ),
         ),
@@ -32,6 +35,7 @@ class LibraryEmptyState extends StatelessWidget {
 
   Widget _content(
     BuildContext context,
+    WidgetRef ref,
     AppLocalizations l10n,
     ColorScheme scheme,
     TextTheme textTheme,
@@ -53,12 +57,13 @@ class LibraryEmptyState extends StatelessWidget {
           style: textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
         ),
         const KGap(KSpace.x4),
-        Tooltip(
-          message: l10n.appComingSoon,
-          child: FilledButton.tonal(
-            onPressed: null,
-            child: Text(l10n.libraryChooseFolders),
+        FilledButton.tonal(
+          onPressed: () => openLibrarySettings(
+            context,
+            ref,
+            focus: LibrarySettingsAnchor.folders,
           ),
+          child: Text(l10n.libraryChooseFolders),
         ),
       ],
     );

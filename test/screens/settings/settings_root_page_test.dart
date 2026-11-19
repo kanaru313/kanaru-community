@@ -6,6 +6,7 @@ import 'package:kanaru/src/platform/domain/media_permissions.dart';
 import 'package:kanaru/src/platform/state/settings_save_status_provider.dart';
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
 import 'package:kanaru/src/screens/settings/state/app_edition.dart';
+import 'package:material_ui/material_ui.dart' show Theme;
 
 import '../../support/icon_button_finders.dart';
 import 'support/settings_host.dart';
@@ -40,8 +41,8 @@ void main() {
     ]) {
       expect(find.text(name), findsOneWidget, reason: name);
     }
-    // Appearance, Playback and About are built here; the rest wait.
-    expect(find.text('Coming soon'), findsNWidgets(8));
+    // Appearance, Library, Playback and About are built here; the rest wait.
+    expect(find.text('Coming soon'), findsNWidgets(7));
   });
 
   testWidgets('the Playback row opens its page', (tester) async {
@@ -72,6 +73,26 @@ void main() {
         permission: missing,
       );
       expect(find.textContaining('music permission missing'), findsOneWidget);
+      // The suffix alone is painted as an error.
+      final errorColor = Theme.of(tester.element(find.text('Library')))
+          .colorScheme
+          .error;
+      final colors = <String, Color?>{};
+      final rich = tester.widget<RichText>(
+        find
+            .descendant(
+              of: find.textContaining('music permission missing'),
+              matching: find.byType(RichText),
+            )
+            .first,
+      );
+      rich.text.visitChildren((span) {
+        if (span is TextSpan && span.text != null) {
+          colors[span.text!] = span.style?.color;
+        }
+        return true;
+      });
+      expect(colors[' · music permission missing'], errorColor);
     });
 
     testWidgets('granted', (tester) async {
@@ -105,7 +126,7 @@ void main() {
       expect(find.text('Activated · thank you'), findsOneWidget);
       expect(find.text('PRO'), findsNothing);
       // The Pro row is no longer one of the coming-soon rows.
-      expect(find.text('Coming soon'), findsNWidgets(7));
+      expect(find.text('Coming soon'), findsNWidgets(6));
     });
   });
 

@@ -31,7 +31,8 @@
   "scanSetupPermissionImagesSubtitle": "Chỉ để đọc ảnh bìa (cover.jpg) trong thư mục nhạc. Kanaru không xem ảnh hay video của bạn.",
   "scanSetupPermissionAllowedLabel": "Đã cấp",
   "scanSetupPermissionMissingLabel": "Chưa cấp",
-  "scanSetupPermissionsGranted": "Đã cấp đủ quyền · Nhạc và âm thanh · Ảnh và video",
+  "scanSetupPermissionsGranted": "Đã cấp đủ quyền",
+  "scanSetupPermissionsGrantedDesc": "Nhạc và âm thanh · Ảnh và video",
   "scanSetupGrant": "Cấp quyền",
   "scanSetupGrantMissing": "Cấp quyền còn thiếu",
   "scanSetupOpenAppSettings": "Mở cài đặt ứng dụng",
@@ -260,6 +261,7 @@
     }
   },
   "scanHomeNoTracks": "Không tìm thấy bài nào",
+  "scanHomeChangeFolders": "Đổi thư mục",
   "playbackCover": "Ảnh bìa",
   "playbackNavQueue": "Hàng đợi",
   "playbackPlay": "Phát",
@@ -911,7 +913,7 @@
   "libraryMenuLanguageDetectionNote": "Cài đặt › Thư viện",
   "libraryMenuCopyPath": "Sao chép đường dẫn",
   "libraryMenuExclude": "Loại trừ khỏi thư viện",
-  "libraryMenuExcludeNote": "Giữ nguyên tệp; bỏ loại trong Cài đặt › Thư viện › Thư mục",
+  "libraryMenuExcludeNote": "Giữ nguyên tệp; bỏ loại trong Cài đặt › Thư viện › Loại trừ",
   "libraryMenuIncludesSubfolders": "Gồm thư mục con",
   "libraryMenuPlayDirect": "Chỉ phát bài trong thư mục này",
   "libraryMenuPlayDirectNote": "{count, plural, other{{count} bài}}, không gồm thư mục con",
@@ -2007,5 +2009,267 @@
   "settingsAppearanceWindowFrameDesc": "Dùng thanh tiêu đề và viền cửa sổ của hệ thống thay cho thanh của Kanaru.",
   "settingsAppearanceWindowFrameApply": "Áp dụng sau khi mở lại Kanaru",
   "settingsAppearanceTextSizeDefault": "Mặc định",
-  "settingsPlaybackNeedsReplayGain": "Bật ReplayGain để dùng"
+  "settingsPlaybackNeedsReplayGain": "Bật ReplayGain để dùng",
+  "settingsSectionHintTooltip": "Giải thích {section}",
+  "@settingsSectionHintTooltip": {
+    "placeholders": {
+      "section": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryTracksCount": "{count, plural, other{{count} bài}}",
+  "@settingsLibraryTracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryAlbumsCount": "{count, plural, other{{count} album}}",
+  "@settingsLibraryAlbumsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryArtistsCount": "{count, plural, other{{count} nghệ sĩ}}",
+  "@settingsLibraryArtistsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryLastScan": "Quét lần cuối {time} · thêm {added} bài",
+  "@settingsLibraryLastScan": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "added": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsLibraryBlockScan": "Quét",
+  "settingsLibraryBlockOrganise": "Sắp xếp",
+  "settingsLibraryBlockRemoved": "Đã loại",
+  "settingsLibraryFoldersEstimate": "Khoảng {count} bài",
+  "@settingsLibraryFoldersEstimate": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryMinDuration": "Bỏ qua tệp ngắn hơn",
+  "settingsLibraryMinDurationCaption": "Nhạc chuông, âm báo, đoạn ghi âm ngắn. Áp dụng ở lần quét sau.",
+  "settingsLibraryMinSize": "Bỏ qua tệp nhỏ hơn",
+  "settingsLibraryMinSizeCaption": "Tính theo dung lượng tệp. Áp dụng ở lần quét sau.",
+  "settingsLibrarySizeKb": "{kb} KB",
+  "@settingsLibrarySizeKb": {
+    "placeholders": {
+      "kb": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibrarySizeMb": "{mb} MB",
+  "@settingsLibrarySizeMb": {
+    "placeholders": {
+      "mb": {
+        "type": "double",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryFormats": "Định dạng được quét",
+  "settingsLibraryFormatsCaption": "Bỏ chọn để không quét định dạng đó. Cần giữ ít nhất một.",
+  "settingsLibraryFormatsKeepOne": "cần giữ ít nhất một",
+  "settingsLibraryFormatsAll": "Tất cả",
+  "settingsLibraryFormatsSelectAll": "Chọn tất cả",
+  "settingsCountOfTotal": "{n} / {total}",
+  "@settingsCountOfTotal": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsLibraryDedupName": "Gộp bài trùng tên tệp",
+  "settingsLibraryDedupNameDesc": "Tệp cùng tên ở các thư mục khác nhau chỉ hiện một bài, bản chất lượng cao nhất. Tệp không bị xoá.",
+  "settingsLibraryNomedia": "Bỏ qua thư mục có tệp .nomedia",
+  "settingsLibraryNomediaDesc": "Như Android: thư mục có .nomedia không được quét.",
+  "settingsLibraryWatch": "Tự cập nhật khi thư mục thay đổi",
+  "settingsLibraryWatchDesc": "Thấy tệp mới ngay, không cần quét lại.",
+  "settingsLibraryRulesApplyLater": "Áp dụng ở lần quét sau",
+  "settingsLibraryRescanning": "Đang quét lại thư viện ở nền",
+  "settingsLibraryMergeFolders": "Gộp thư mục chỉ có một thư mục con",
+  "settingsLibraryMergeFoldersDesc": "Tab Thư mục: đi thẳng xuống thư mục con duy nhất.",
+  "settingsLibraryAlbumGrouping": "Nhóm album theo",
+  "settingsLibraryRemoved": "Đã loại khỏi thư viện",
+  "settingsLibraryTabsHintMobile": "Bật tab muốn hiện, kéo để sắp xếp. Ít nhất 1 tab. Tab là hàng tab con ở đầu Thư viện.",
+  "settingsLibraryTabsHintDesktop": "Bật tab muốn hiện, kéo để sắp xếp. Ít nhất 1 tab. Tab là các mục Thư viện ở thanh bên.",
+  "settingsLibraryRemoveFolderTitle": "Bỏ thư mục “{name}”?",
+  "@settingsLibraryRemoveFolderTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryRemoveFolderBody": "Các bài trong thư mục này sẽ rời thư viện (playlist giữ chỗ, đánh dấu mất tệp).\n\nTệp trong máy không bị xoá.",
+  "settingsLibraryRemoveFolderBodyCount": "{count} bài trong thư mục này sẽ rời thư viện (playlist giữ chỗ, đánh dấu mất tệp).\n\nTệp trong máy không bị xoá.",
+  "@settingsLibraryRemoveFolderBodyCount": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryRemoveFolderConfirm": "Bỏ thư mục",
+  "settingsLibraryFolderRemoved": "Đã bỏ “{name}”",
+  "@settingsLibraryFolderRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryFolderRemovedCount": "Đã bỏ “{name}” · {count} bài rời thư viện",
+  "@settingsLibraryFolderRemovedCount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryLastFolderTitle": "Không bỏ được thư mục cuối",
+  "settingsLibraryLastFolderBody": "Thư viện cần ít nhất một thư mục nhạc. Thêm thư mục khác trước, rồi bỏ “{name}”.",
+  "@settingsLibraryLastFolderBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryGotIt": "Đã hiểu",
+  "settingsLibraryExclusionRemoved": "Thôi loại trừ “{name}” · đang quét lại",
+  "@settingsLibraryExclusionRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryArtistSplit": "Tách nghệ sĩ",
+  "settingsLibrarySeparatorCount": "{count} dấu tách",
+  "@settingsLibrarySeparatorCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArtistSplitIntro": "Một bài nhiều nghệ sĩ: Kanaru tách tên theo các dấu này.",
+  "settingsArtistSplitExample": "Ví dụ",
+  "settingsArtistSplitExampleNote": "Danh sách mặc định không có , và & vì nhiều tên nhóm chứa chúng. Muốn tách theo chúng thì thêm vào đây, rồi thêm các tên nhóm đó vào Không tách.",
+  "settingsArtistSplitSeparators": "Dấu tách",
+  "settingsArtistSplitSeparatorsHint": "Dấu cách hiện là ␣. Thay đổi áp dụng ngay, thư viện cập nhật ở nền.",
+  "settingsArtistSplitKeep": "Không tách",
+  "settingsArtistSplitKeepHint": "Tên giữ nguyên là một nghệ sĩ dù có chứa dấu tách.",
+  "settingsArtistSplitSeparatorInput": "Thêm dấu tách, vd. “ x ”",
+  "settingsArtistSplitKeepInput": "Tên nghệ sĩ, vd. “Hồ Ngọc Hà / Noo”",
+  "settingsArtistSplitAdd": "Thêm",
+  "settingsArtistSplitRemove": "Bỏ {value}",
+  "@settingsArtistSplitRemove": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitNoSeparators": "Không có dấu tách nào: tên nghệ sĩ giữ nguyên.",
+  "settingsArtistSplitErrEmpty": "Chưa nhập gì",
+  "settingsArtistSplitErrDuplicate": "Đã có trong danh sách",
+  "settingsArtistSplitErrTooLong": "Tối đa {max} ký tự",
+  "@settingsArtistSplitErrTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArtistSplitErrFull": "Tối đa {max} mục",
+  "@settingsArtistSplitErrFull": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsArtistSplitReset": "Khôi phục mặc định",
+  "settingsArtistSplitResetIsDefault": "Đang là mặc định",
+  "settingsArtistSplitResetTo": "{count} dấu tách, “{names}”",
+  "@settingsArtistSplitResetTo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitResetTitle": "Khôi phục dấu tách mặc định?",
+  "settingsArtistSplitResetBody": "Danh sách dấu tách và tên không tách về như lúc cài. Thư viện cập nhật ở nền.",
+  "settingsArtistSplitResetConfirm": "Khôi phục",
+  "settingsArtistSplitAdded": "Đã thêm “{value}”",
+  "@settingsArtistSplitAdded": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitAddedGroup": "Đã thêm “{value}” · thêm tên nhóm có dấu này vào Không tách",
+  "@settingsArtistSplitAddedGroup": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitRemoved": "Đã bỏ “{value}”",
+  "@settingsArtistSplitRemoved": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsArtistSplitRestored": "Đã khôi phục mặc định",
+  "settingsLibraryLanguageSource": "Nguồn ngôn ngữ",
+  "settingsLibraryLanguageSourceCaption": "Cách Kanaru biết bài hát thuộc ngôn ngữ nào (tab Ngôn ngữ).",
+  "settingsLibraryLanguageBoth": "Tag, rồi tự nhận diện",
+  "settingsLibraryLanguageBothDesc": "Dùng tag ngôn ngữ nếu tệp có, không có thì đoán từ tên bài và lời",
+  "settingsLibraryLanguageTag": "Chỉ tag",
+  "settingsLibraryLanguageTagDesc": "Bài không có tag vào “Chưa rõ”",
+  "settingsLibraryLanguageDetected": "Chỉ tự nhận diện",
+  "settingsLibraryLanguageDetectedDesc": "Bỏ qua tag ngôn ngữ của tệp"
 }

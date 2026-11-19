@@ -46,10 +46,10 @@ void main() {
     expect(find.text('Library is empty'), findsOneWidget);
     expect(find.text('No songs in the chosen folders.'), findsOneWidget);
     expect(find.byType(KListSortFilterBar), findsNothing);
-    // Dimmed until the settings screen for folders exists.
+    // The button opens Settings › Library at the music folders.
     final button = tester.widget<FilledButton>(find.byType(FilledButton));
-    expect(button.onPressed, isNull);
-    expect(find.byTooltip('Coming soon'), findsOneWidget);
+    expect(button.onPressed, isNotNull);
+    expect(find.byTooltip('Coming soon'), findsNothing);
     await unmountApp(tester);
   });
 

@@ -15,10 +15,14 @@ import '../../../platform/state/local_audio_catalog_provider.dart';
 import '../../../platform/state/media_permissions_provider.dart';
 import 'folder_actions.dart';
 import 'section_states.dart';
+import 'setup_mode.dart';
 
-/// Sub-folders of the music folders that scans skip.
+/// Sub-folders of the music folders that scans skip. In [SetupMode.settings]
+/// an edit rescans in the background and says so.
 class ExclusionsSection extends ConsumerStatefulWidget {
-  const ExclusionsSection({super.key});
+  const ExclusionsSection({super.key, this.mode = SetupMode.firstRun});
+
+  final SetupMode mode;
 
   @override
   ConsumerState<ExclusionsSection> createState() => _ExclusionsSectionState();
@@ -30,20 +34,29 @@ class _ExclusionsSectionState extends ConsumerState<ExclusionsSection> {
   Future<void> _add() async {
     setState(() => _busy = true);
     try {
-      await addExclusions(context, ref);
+      await addExclusions(context, ref, mode: widget.mode);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  Future<void> _remove(MusicFolder folder, String key) async {
+  Future<void> _remove(MusicFolder folder, String key, String name) async {
     final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _busy = true);
     try {
       final ok = await ref
           .read(musicFolderEditorProvider)
           .includeFolder(folder, key);
-      if (!ok && mounted) showAppSnackBar(context, l10n.scanSetupWriteFailed);
+      if (!ok) {
+        showAppSnackBarOn(messenger, l10n.scanSetupWriteFailed);
+      } else if (widget.mode == SetupMode.settings) {
+        // Undoing an exclusion already asked for the rescan.
+        showAppSnackBarOn(
+          messenger,
+          l10n.settingsLibraryExclusionRemoved(name),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -62,13 +75,12 @@ class _ExclusionsSectionState extends ConsumerState<ExclusionsSection> {
         FolderChoice.mediaStoreSheet;
     final folders = ref.watch(musicFoldersProvider).value ?? const [];
     final entries = ref.watch(exclusionEntriesProvider);
-    return SetupSection(
-      title: Text(l10n.scanSetupExclusionsTitle),
-      subtitle: Text(
-        blocked
-            ? l10n.scanSetupFoldersNeedPermission
-            : l10n.scanSetupExclusionsHint,
-      ),
+    return captionedSection(
+      context,
+      mode: widget.mode,
+      title: l10n.scanSetupExclusionsTitle,
+      caption: l10n.scanSetupExclusionsHint,
+      state: blocked ? l10n.scanSetupFoldersNeedPermission : null,
       children: blocked
           ? const [SetupNote(child: Text('—'))]
           : [
@@ -115,7 +127,9 @@ class _ExclusionsSectionState extends ConsumerState<ExclusionsSection> {
     List<MusicFolder> folders,
   ) {
     final volumes = ref.watch(displayVolumesProvider).value;
-    final count = ref.watch(folderCountsProvider).value?[path];
+    final shown = TickerMode.valuesOf(context).enabled;
+    final counts = shown ? ref.watch(folderCountsProvider).value : null;
+    final count = counts?[path];
     final owner = folders.where((f) => f.sourceId == sourceId).firstOrNull;
     final name = baseName(path);
     return SetupPathRow(
@@ -127,7 +141,7 @@ class _ExclusionsSectionState extends ConsumerState<ExclusionsSection> {
       ),
       count: count == null ? null : Text(l10n.scanSetupFolderSongs(count)),
       removeTooltip: l10n.scanSetupFolderRemove(name),
-      onRemove: _busy || owner == null ? null : () => _remove(owner, key),
+      onRemove: _busy || owner == null ? null : () => _remove(owner, key, name),
     );
   }
 }

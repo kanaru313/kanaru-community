@@ -436,7 +436,7 @@
   "libraryMenuLanguageDetectionNote": "Settings › Library",
   "libraryMenuCopyPath": "Copy path",
   "libraryMenuExclude": "Exclude from library",
-  "libraryMenuExcludeNote": "Keeps the files; undo in Settings › Library › Folders",
+  "libraryMenuExcludeNote": "Keeps the files; undo in Settings › Library › Exclusions",
   "libraryMenuIncludesSubfolders": "Includes subfolders",
   "libraryMenuPlayDirect": "Play only songs in this folder",
   "libraryMenuPlayDirectNote": "{count, plural, =1{1 song} other{{count} songs}}, without subfolders",

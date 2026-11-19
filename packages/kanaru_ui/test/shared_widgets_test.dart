@@ -46,6 +46,19 @@ void main() {
     expect(taps, 1);
   });
 
+  testWidgets('KChip.static is a plain pill: no button, no selected', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(host(const KChip.static(label: Text('v'))));
+    expect(find.ancestor(of: find.text('v'), matching: find.byType(InkWell)), findsNothing);
+    expect(
+      find.byWidgetPredicate((w) => w is Semantics && (w.properties.button == true || w.properties.selected == true)),
+      findsNothing,
+    );
+    semantics.dispose();
+  });
+
   testWidgets('confirmAction: confirm true, cancel false, scrim false', (tester) async {
     late Future<bool> result;
     await tester.pumpWidget(host(Builder(

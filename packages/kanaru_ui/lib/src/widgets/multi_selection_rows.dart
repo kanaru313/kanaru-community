@@ -17,8 +17,10 @@ Widget buildMultiEntry<T>(
   required ValueChanged<T> onToggle,
   required VoidCallback onToggleAll,
   required VoidCallback onAction,
+  bool dense = false,
   String? selectAllLabel,
   String Function(int n, int total)? selectedCountLabel,
+  String? minSelectedNote,
   Widget? banner,
   Widget? emptyNote,
   Widget? listFooter,
@@ -31,6 +33,7 @@ Widget buildMultiEntry<T>(
       final picked = view.picks.length;
       final total = view.enabledValues.length;
       return SelectionRow(
+        dense: dense,
         multi: true,
         // Icon options: plain tick on the right (no leading slot); text
         // options: mark at the start.
@@ -41,6 +44,7 @@ Widget buildMultiEntry<T>(
             : Text(selectedCountLabel(picked, total)),
         selected: picked > 0,
         partial: picked > 0 && picked < total,
+        enabled: !view.selectAllLocked,
         onTap: busy ? null : onToggleAll,
       );
     case MultiKind.divider:
@@ -64,6 +68,7 @@ Widget buildMultiEntry<T>(
       return _inset(context, listFooter!);
     case MultiKind.option:
       final o = entry.option!;
+      final locked = view.isLocked(o.value);
       if (o.mediaTitle != null) {
         return SelectionRow.media(
           multi: true,
@@ -73,22 +78,43 @@ Widget buildMultiEntry<T>(
           circleCover: o.circleCover,
           cover: o.leading!,
           hint: o.hint,
-          enabled: o.enabled,
+          enabled: o.enabled && !locked,
           selected: view.chosen.contains(o.value),
           onTap: busy ? null : () => onToggle(o.value),
         );
       }
       return SelectionRow(
+        dense: dense,
         multi: true,
         title: o.title,
-        subtitle: o.subtitle,
+        subtitle: locked && minSelectedNote != null
+            ? _withNote(o.subtitle, minSelectedNote)
+            : o.subtitle,
         leading: o.leading,
         hint: o.hint,
-        enabled: o.enabled,
+        enabled: o.enabled && !locked,
         selected: view.chosen.contains(o.value),
         onTap: busy ? null : () => onToggle(o.value),
       );
   }
+}
+
+/// [subtitle] with [note] after it on the same line ("mp3, mp2 · note"; just
+/// [note] when there is no subtitle).
+Widget _withNote(Widget? subtitle, String note) {
+  if (subtitle is Text && subtitle.data != null) {
+    return Text('${subtitle.data} · $note');
+  }
+  return subtitle == null
+      ? Text(note)
+      : Text.rich(
+          TextSpan(
+            children: [
+              WidgetSpan(child: subtitle),
+              TextSpan(text: ' · $note'),
+            ],
+          ),
+        );
 }
 
 /// Keeps caller content that is not a row (banner, list footer) off the edges

@@ -37,7 +37,6 @@ void main() {
   MediaStoreAudioCatalog catalog({
     bool exists = true,
     Future<String> Function(String)? resolve,
-    int firstRunMin = 30000,
     Duration timeout = const Duration(seconds: 5),
     Duration foldersTimeout = const Duration(seconds: 5),
     Duration refreshTimeout = const Duration(seconds: 5),
@@ -46,7 +45,6 @@ void main() {
     MediaStoreChannelClient(),
     rootExists: (_) async => exists,
     resolveLinks: resolve,
-    firstRunMinDurationMs: firstRunMin,
     timeout: timeout,
     foldersTimeout: foldersTimeout,
     refreshTimeout: refreshTimeout,
@@ -419,9 +417,9 @@ void main() {
       expect(args['extensions'], isNot(contains('amr')));
     });
 
-    test('a zero first-run minimum turns the duration filter off', () async {
+    test('the minimum duration of the call is sent to MediaStore', () async {
       folders({'$_music/A': 1});
-      await catalog(firstRunMin: 0).audioFolders();
+      await catalog().audioFolders(minDurationMs: 0);
       expect((calls.single.arguments as Map)['minDurationMs'], 0);
     });
 

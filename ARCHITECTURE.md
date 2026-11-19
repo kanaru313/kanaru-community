@@ -133,6 +133,39 @@ files. Each file is one of two kinds:
 | Rust | `kanaru_media` `error`, `cancel`, `limits`; `kanaru_bridge` `error`, `guard`, `pools`, `os`, `source`, `api/error.rs`; manifests | `kanaru_media` `tags/` and `covers/` (A), `waveform/` (B), `kanaru_bridge` `api/{tags,covers}.rs` (A), `api/waveform.rs` (B) |
 | l10n | `lib/l10n/parts/app_*.arb`, `l10n.yaml`, `tool/**`, `playlist_*.arb` | `scan_*.arb` (A), `playback_*.arb` (B), `library_*.arb` (C), `settings_*.arb` (Settings lane), spare parts `plscreens_*`, `pladd_*`, `m3u_*` |
 
+Exceptions recorded by the Settings lane (library settings, PR L):
+
+- `library/data/playlists/playlist_reads.dart`: favorites read path (list,
+  count, duration, cover skip `dup_hidden = 1`), controller exception. No
+  other playlist file changes.
+- `library/domain/scan/**` is the lane-A seeded folder; lane L now owns it
+  (`scan_rules.dart`, `scan_rule_values.dart`, `format_groups.dart`, the
+  `scan_diff.dart` edits). `library/domain/scan_status.dart` stays frozen.
+- `storage/data/local_folder_source.dart` and
+  `storage/domain/local_folder_listing.dart`: L adds the `respectNomedia`
+  forward and the `ruleOut` counter. No other `storage/` file changes.
+- `kanaru_ui`: `minSelected` / `minSelectedNote` and the live `onChanged`
+  mode on the multi-select body, sheet and picker (labels optional in live
+  mode; `showMultiSelectionPicker(anchor:, anchorAlign:)` opens a fixed-width
+  panel under the row on desktop, the sheet on mobile); `PermissionCard.attention`;
+  `ProgressNoticeCard.action`; `KMotion.focusSettle` / `focusPulse`; the
+  scan-rule `KIcons`.
+- `database/**` (frozen): L edits `tables/library_track_tables.dart`
+  (`tracks.name_key`, `tracks.dup_hidden`, index `tracks_name_key`; schema v1 in
+  place, no migration), `track_visibility.dart` (`dup_hidden = 0`),
+  `track_snapshot.dart` (`name_key` joins the snapshot columns, so the upsert
+  writes it with the row; `trackDuplicateColumns` = `dup_hidden`, which the
+  upsert never writes) and adds `track_duplicates.dart`
+  (`applyDuplicateHiding`). Outside the three planned files: `track_snapshot.dart`,
+  `test/database/track_snapshot_test.dart`, `test/database/schema_shape_test.dart`
+  and the generated `test/database/support/pro_like_database.drift.dart`.
+  Generated `*.drift.dart` regenerate on rebase, never hand-merged.
+- New library files for the Settings link: `library/state/library_settings_focus.dart`,
+  `library/ui/library_settings_links.dart`, `library/state/scan/library_counts_provider.dart`.
+- `library/state/scan/music_folder_editor_provider.dart`: passes the shared
+  duplicate-hiding runner to `MusicFolderEditor`, so removing, excluding or
+  including a folder recomputes hidden duplicates at once.
+
 Generated files (`lib/src/rust/`, `frb_generated.rs`, `lib/l10n/app_*.arb`,
 `lib/l10n/gen/`) are never hand-merged: on a conflict take either side and
 regenerate.

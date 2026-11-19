@@ -121,13 +121,15 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
   `O_NONBLOCK` and checks the type on the open handle, so a FIFO or a socket
   never blocks a scan.
 - Network roots get a per-root timeout, and a failing root cannot stop the others.
-- Short files: the "skip files under 30 seconds" setting (`library.skip_short_tracks`,
-  on by default) has no UI yet.
+- Scan rules (`ScanRules`, `library/domain/scan/scan_rules.dart`): minimum duration
+  (default 30 s), minimum size, enabled format groups, `.nomedia` (Linux). Read once
+  per pass by `scanControllerProvider.deps()` through `currentScanRulesProvider`, so a
+  change applies from the next pass. See "Scan rules" below.
 - A `.lrc` sidecar is stored as `track_details.lrc_locator`.
 
 ## Walk and diff
 
-- `LocalFolderSource.list(({root}), excludedKeys, skipShorterThanMs)` calls the
+- `LocalFolderSource.list(({root}), excludedKeys, skipShorterThanMs, respectNomedia)` calls the
   catalog and returns a `SourceListing`: `files` (`ListedFile`: locator, size,
   mtime, duration), `.lrc` `lyrics` by folder key, `uncertainPrefixes`
   (unreadable and empty folders as locator prefixes with a trailing `/`; `''` is the
@@ -139,6 +141,9 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
 - A locator is the path below the root, `/` separators, no leading `/`, bytes as
   listed.
 - `diffScan(listing, storedRows, tagsVersion, keysVersion, full)` is pure.
+  `shortDropped`: an unchanged `present` row whose stored `duration_ms` is above 0
+  and below the minimum duration (it is not re-read, so only the stored length can
+  tell); the tag pass treats it as a short drop (missing candidate, `filteredOut`).
   `toRead`: new file; size or mtime differ; stored `tags_version` or
   `keys_version` below the current one (keys are recomputed by re-reading the file:
   raw sort tags are not stored); stored `status = missing` (a listed file revives
@@ -204,10 +209,13 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
    parser change, a version bump) the row is kept as it is (`permanentKept`, one count in
    the folder summary). Its versions stay old, so it is read again on every scan and its
    keys are not recomputed until the file parses or changes.
-5. Short files (setting on): a file under 30 s after the read is not stored; its
-   `(source, locator, mtime, size)` goes into a session memo so it is not read
-   again, and a stored present row becomes a missing candidate. Both count in
-   `filteredOut`.
+5. Short files (minimum duration above 0): a file shorter than the minimum after
+   the read is not stored; `ShortFileMemo` remembers `(mtime, size, duration)` per
+   `source|locator` so it is not read again while the same minimum or a stricter one
+   holds (`skips` is true only when the remembered duration is below the current
+   minimum), and a stored present row becomes a missing candidate. A read file that
+   is kept is forgotten. Both count in `filteredOut`. Relaxing the minimum in the same
+   session reads the file again and revives it.
 6. Rows are written 64 per transaction (`writeBatchRows`) through the frozen helpers
    only (`upsertTrackSnapshot`, `replaceTrackArtists`, `upsertTrackDetails`), with
    the source checked live and its mount enabled inside the same transaction. If it
@@ -233,12 +241,23 @@ re-reads and revives them. `ScanReport` carries the counts of a folder.
 
 ## Artists
 
-`splitArtists(values)` (`artist_split.dart`) works on the raw artist values Rust
-returns. It splits on `;` and `/`, on `feat.`, `feat`, `ft.`, `ft` and `featuring`
-between whitespace (any case), and takes the names of a bracketed `(feat. B)`. It
-never splits on `,`, `&` or ` with `, and keeps `AC/DC` whole. Names are trimmed,
-empty parts dropped, repeats removed by `groupKey` keeping the first spelling.
-`artistsForRow` pairs each name with its `groupKey` for `replaceTrackArtists`.
+`splitArtists(values, {rules})` (`artist_split.dart`) works on the raw artist values
+Rust returns, with an `ArtistSplitRules` (`artist_split_rules.dart`: the separators and
+kept names compiled once per rules object, entries `RegExp.escape`d; the default object
+is today's behaviour). An entry that starts with a letter is a **word** and splits only
+between whitespace, any case (`feat.`, `feat`, `ft.`, `ft`, `featuring`, `with`); any
+other entry is a **symbol** and splits wherever it appears (`;`, `/`, `,`, `&`), so
+"Featherweight", "Soft.Cell" and "Defeat.X" stay whole. Not in the lists and never
+changed: NUL and the bracketed `(feat. B)` part always split. Defaults: `;` `/` `feat.`
+`feat` `ft.` `ft` `featuring`, keeping `AC/DC` whole; `,`, `&` and `with` are not in it
+because many band names contain them.
+
+Kept-whole names are matched case-insensitively (not touching a letter or digit) and
+replaced by one private-use character each before any splitting, then put back, so no
+active separator, symbol or word, can cut them. Names are trimmed, empty parts dropped,
+repeats removed by `groupKey` keeping the first spelling. `artistsForRow` pairs each
+name with its `groupKey` for `replaceTrackArtists`. `buildTrackRow` takes the rules from
+the pass (`TagPassDeps.readRules`).
 
 ## Language
 
@@ -253,6 +272,13 @@ code `languageKey` gives the same 639-1 tag (`cmn` to `zho`, `pes` to `fas`; the
 others are identical; an `arb` to `ara` entry is a guard whatlang 0.18 never emits). `rust/crates/kanaru_media/tests/tags_fixtures/whatlang_codes.json`
 lists every whatlang code with its mapped value, generated by a Rust test (a stale
 file fails it; `UPDATE_FIXTURES=1 cargo test` rewrites it); a Dart test compares it with `languageCodeTable`.
+
+Which of the two a row keeps is `library.language_source` (`LanguageSource`):
+`tagThenDetected` (default: the tag, else the detected one), `tagOnly`, `detectedOnly`.
+`language_detected` is 1 exactly when the stored language came from detection.
+`detectedOnly` cannot work yet (Rust detects only untagged files): the picker shows it
+dimmed with "Coming soon", a stored value decodes to the default and `buildTrackRow`
+never applies it. The enum value stays for the Rust change that enables it.
 
 ## Cover files
 
@@ -876,8 +902,113 @@ Declared in `lib/src/library/state/scan/scan_settings.dart`.
 | Key | Default | Meaning |
 |---|---|---|
 | `library.setup_done` | false | First run finished. While false the router sends every location to `/welcome` and `rescan` is ignored. |
-| `library.skip_short_tracks` | true | Files under 30 s are not stored. No screen for it yet. |
+| `library.min_duration_ms` | 30000 | Files shorter than this are not stored (0 = off). Non-int: default; int clamped to 0..180000 and snapped to 5 s. While absent it follows `library.skip_short_tracks` (false: 0, otherwise 30 s). Writing it also writes `skip_short_tracks = value > 0`. Provider `minDurationMsProvider`. |
+| `library.skip_short_tracks` | true | Compatibility mirror of `min_duration_ms` (`value > 0`), never deleted; `skipShortTracksProvider` stays for the playlist importer. |
+| `library.min_size_bytes` | 0 | Files smaller than this are not stored. Stops: 0, 100 KB to 1 MB by 100 KB, 1.5 to 10 MB by 0.5 MB (decimal: 1 KB = 1000 B, as Android and Linux file managers show sizes); any int snaps to the nearest stop, non-int: 0. |
+| `library.format_groups` | all | List of format group ids that are scanned. Unknown ids dropped; missing, damaged or empty: all groups. |
+| `library.respect_nomedia` | false | Linux only: skip folders holding a `.nomedia` file. |
+| `library.dedup_by_file_name` | false | Tracks with the same file name (no extension, `groupKey`, accents kept) in different folders show as one, the best copy (see "Duplicate hiding"). Display only; applies at once. `dedupByFileNameProvider`. |
+| `library.artist_separators` | `;` `/` `feat.` `feat` `ft.` `ft` `featuring` | Artist separators, in stored order (`artistSeparatorsProvider`, `read_rules_settings.dart`). Entries go through `cleanSeparator`: no control characters, trimmed, 1 to 64 characters, no repeat (any case), at most 64. A damaged list (not strings, or an entry the check refuses): the default list as a whole; an empty list is valid (no splitting). |
+| `library.artist_keep_whole` | `AC/DC` | Names that stay one artist (`cleanKeepWhole`, same rules and fallback). |
+| `library.language_source` | `tagThenDetected` | `tagThenDetected` / `tagOnly` / `detectedOnly` (`enumByName`; unknown: default; `detectedOnly` decodes to the default until Rust can detect on request). |
+| `library.read_rules_applied` | `{}` | Written by the scanner only: source uid to the fingerprint its rows were last read with (see "Read rules"). A missing entry or a non-string value counts as the default fingerprint. |
 | `library.setup_defaults_applied` | false | The first-run defaults were added once, so removing `Music` later does not bring it back. |
+
+## Scan rules
+
+Settings (`scan_settings.dart`) become one `ScanRules` per pass:
+
+- `minDurationMs`: Android pre-filters by MediaStore duration in the listing; both
+  platforms drop short files in the tag pass; an unchanged Linux row is judged by its
+  stored length in `diffScan` (`shortDropped`).
+- `minSizeBytes` and `allowedExtensions`: `ScanRules.applyTo(listing)` runs in
+  `_scanFolder` right after `LocalFolderSource.list`, in one place for both
+  platforms (it lives in `library` because `storage` sits below it and must not
+  know `library` types). A listed size of 0 or less is unknown and never filtered.
+  Dropped files are counted in `SourceListing.ruleOut`.
+- `respectNomedia`: forwarded to `listAudio`; the Linux walk skips a folder holding a
+  file named `.nomedia` with everything below it and counts it in
+  `AudioListing.nomediaOut` (folders, not files), which `LocalFolderSource` adds to
+  `ruleOut`. Android ignores it (MediaStore already honours the file).
+- `ruleOut` is not part of `filteredOut` on purpose: a listing emptied only by
+  format, size or `.nomedia` rules still trips the empty-root guard (`rootSuspect`,
+  rows kept, warning logged). A bad value can therefore never empty the library; a
+  root that really only holds disabled formats keeps its old rows (accepted, safe
+  side). Rule-dropped files in a root that still lists other files become missing
+  candidates as usual, and come back when the rule is relaxed.
+- A row dropped by any rule is only `missing` (7-day GC grace; a playlist entry keeps
+  it for good), never deleted by the scan.
+- Android first-run estimate: `audioFolders(minDurationMs)`; `audioFoldersProvider`
+  passes `minDurationMsProvider`. Size is not part of the estimate.
+- Format groups (`format_groups.dart`): mp3 · flac · m4a (m4a, aac, alac) · ogg (ogg,
+  oga, opus) · wav · aiff · ape · wavpack · dsd; a test checks their union equals
+  `audioExtensions`. `losslessExtensions` is the extension set for lossless features;
+  `.m4a` is not in it (AAC or ALAC: the codec decides where known).
+
+## Duplicate hiding
+
+`database/track_duplicates.dart` `applyDuplicateHiding` sets `tracks.dup_hidden`
+(ranking in `docs/system-architecture-database.md`, "Library reads and search").
+`library/state/scan/duplicate_hiding.dart` wraps it in `DuplicateHiding`, which
+runs one call at a time and reads the setting when each call starts, so the last
+call always applies the newest value. Callers:
+
+- `scanControllerProvider` registers `listenDuplicateHiding`: a change of
+  `library.dedup_by_file_name` recomputes at once, no scan.
+- `runScanPass` calls `ScanPipelineDeps.applyDuplicateHiding` after each folder
+  whose tag pass added, updated or marked rows, and once after the folder loop,
+  before the cover phase and the library counts, so new, missing and revived
+  copies are reflected and the counts follow. Skipped when the app is closing.
+  A failure is logged and does not fail the pass. A toggle during a pass is not
+  lost: the next call reads the setting then.
+- `MusicFolderEditor` (`removeFolder`, `excludeFolder`, `includeFolder`) calls it
+  right after the write, so the other copy of a song whose shown copy just
+  left appears without a scan.
+
+The key (`tracks.name_key = groupKey(stem of locator)`) is written by
+`buildTrackRow` with every read. Known gap: Favorites lists still show hidden
+copies (playlist code owns it).
+
+Lossless = `codec` in `losslessCodecs` (`FLAC`, `ALAC`, `WAV`, `AIFF`, `APE`,
+`WavPack`; `MP4` is lossy because it covers AAC too) or, when the codec is NULL,
+the extension in `losslessExtensions`. Known limit: only the file name is
+compared, so unrelated songs both called `01.mp3` merge while the setting is on.
+
+## Read rules
+
+`LibraryReadRules {separators, keepWhole, languageSource}` (`domain/scan/read_rules.dart`;
+settings in `state/scan/read_rules_settings.dart`) say how tags become rows. Defaults are
+what the scanner did before the settings existed. Its `fingerprint` is the lower-hex SHA-1
+of the canonical JSON `{"v":1,"sep":[...],"keep":[...],"lang":"..."}` of the cleaned lists
+in stored order (a test pins the default's value; never `hashCode`).
+
+A change reaches rows already in the library by a **full re-read per music folder**, with
+no watcher and no schema change:
+
+- A pass reads the rules and `library.read_rules_applied` once, when it starts
+  (`ScanPipelineDeps.readRules`, `readRulesApplied`), like the scan rules.
+- `_scanFolder` runs a folder as full when a full pass was asked **or** its applied
+  fingerprint differs from the pass's (no entry: the default fingerprint, so a first run
+  or an upgrade re-reads nothing).
+- After a folder's tag pass the pipeline calls `onReadRulesApplied(sourceUid, fingerprint
+  of this pass)` **only when every row of the folder was read with the pass's rules**
+  (`FolderTagResult.readEveryRow`): the pass finished with no failure and no stuck native
+  call, and its report shows no row kept unread: not a suspect root (reachable but empty
+  listing over rows), no `uncertainKept` rows (subfolders that could not be listed or
+  stat'ed), no `keptUnderLostMount`, no `transientSkipped`, no `writeFailed`. Permanent
+  errors on unchanged files do not count (those files cannot be read anyway). The
+  controller provider merges the entry into the map (read and write with no await between,
+  so folders finishing together keep each other's entries). An unreachable folder (SD
+  card out), a stopped, failed or partly kept pass writes nothing, so the folder is full
+  again on the next pass, the startup scan included. A change made mid-pass leaves the old
+  fingerprint written, so the next pass re-reads.
+- The settings page calls a plain `rescan()` after each change (a running pass queues
+  it): the pipeline reads in full every folder whose applied fingerprint differs, and
+  only those. `ScanFinished` and `scan_status.dart` are unchanged.
+
+Known effect: for an album with no album artist the album key falls back to the first
+split artist, so a separator change can move such albums' keys (a custom album cover keyed
+to the old one stops matching; restoring the separators restores it).
 
 ## Known couplings
 

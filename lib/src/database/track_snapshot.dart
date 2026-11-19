@@ -16,6 +16,7 @@ const trackSnapshotColumns = {
   'start_ms',
   'end_ms',
   'song_key',
+  'name_key',
   'title',
   'title_sort',
   'title_search',
@@ -68,6 +69,11 @@ const trackUserColumns = {
   'lyrics_offset_ms',
   'lyrics_offset_updated_at',
 };
+
+/// Columns written only by `applyDuplicateHiding` (`track_duplicates.dart`),
+/// never by the snapshot upsert. (`name_key`, which it reads, is a snapshot
+/// column written with the row.)
+const trackDuplicateColumns = {'dup_hidden'};
 
 /// Columns derived from the source kind and the stored row, never passed by
 /// callers (`added_at` is set once on insert, `updated_at` on every write).

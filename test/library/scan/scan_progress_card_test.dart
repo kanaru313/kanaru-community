@@ -178,13 +178,13 @@ void main() {
     expect(find.byType(ProgressNoticeCard), findsNothing);
   });
 
-  testWidgets('an empty library says so in text only, then hides', (
+  testWidgets('an empty library says so, offers Change folders, then hides', (
     tester,
   ) async {
     await pumpCard(tester);
     await emit(tester, _finished(tracks: 0, added: 0));
     expect(find.text('No songs found'), findsOneWidget);
-    expect(find.byType(TextButton), findsNothing);
+    expect(find.widgetWithText(TextButton, 'Change folders'), findsOneWidget);
     expect(find.byType(FilledButton), findsNothing);
     expect(find.byType(OutlinedButton), findsNothing);
     expect(find.byType(LinearProgressIndicator), findsNothing);

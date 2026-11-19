@@ -55,6 +55,7 @@ class FakeCatalog implements LocalAudioCatalog {
     required String root,
     required Set<String> excludedKeys,
     int skipShorterThanMs = 0,
+    bool respectNomedia = false,
   }) async => const AudioListing();
   int audioFolderReads = 0;
 
@@ -63,7 +64,7 @@ class FakeCatalog implements LocalAudioCatalog {
   Completer<void>? readGate;
 
   @override
-  Future<AudioFoldersResult> audioFolders() async {
+  Future<AudioFoldersResult> audioFolders({int minDurationMs = 30000}) async {
     audioFolderReads++;
     await readGate?.future;
     return result ?? AudioFoldersListed(folders);

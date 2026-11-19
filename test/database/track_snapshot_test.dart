@@ -45,6 +45,7 @@ void main() {
       ...trackScanColumns,
       ...trackUserColumns,
       ...trackLifecycleColumns,
+      ...trackDuplicateColumns,
     ];
     final actual = db.tracks.$columns.map((c) => c.name).toList();
     expect(all.toSet(), hasLength(all.length));
@@ -129,6 +130,25 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test(
+    'an upsert of an existing row keeps dup_hidden and rewrites name_key',
+    () async {
+      final row = _row(local, 'a.flac').copyWith(nameKey: const Value('a'));
+      final id = await upsert(row);
+      await db.customStatement(
+        'UPDATE tracks SET dup_hidden = 1 WHERE id = ?',
+        [id],
+      );
+      expect(await upsert(row.copyWith(updatedAt: const Value(2000))), id);
+      final after = await read(id);
+      expect(after.dupHidden, 1);
+      expect(after.nameKey, 'a');
+      await upsert(row.copyWith(nameKey: const Value('b')));
+      expect((await read(id)).nameKey, 'b');
+      expect((await read(id)).dupHidden, 1);
+    },
+  );
 
   test('scan columns are written and rewritten', () async {
     final id = await upsert(

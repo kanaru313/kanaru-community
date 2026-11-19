@@ -12,9 +12,11 @@ import 'package:kanaru/src/library/state/scan_providers.dart';
 import 'package:kanaru/src/platform/domain/local_audio_catalog.dart';
 import 'package:kanaru/src/platform/domain/storage_volumes.dart';
 import 'package:kanaru/src/platform/state/local_audio_catalog_provider.dart';
+import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:kanaru/src/platform/state/storage_volumes_provider.dart';
 
 import '../../database/support/test_db.dart';
+import '../../support/memory_settings_store.dart';
 
 class _Catalog implements LocalAudioCatalog {
   Completer<MediaIndexRefresh>? gate;
@@ -42,7 +44,7 @@ class _Catalog implements LocalAudioCatalog {
   }
 
   @override
-  Future<AudioFoldersResult> audioFolders() async {
+  Future<AudioFoldersResult> audioFolders({int minDurationMs = 30000}) async {
     folderReads++;
     return folders;
   }
@@ -56,6 +58,7 @@ class _Catalog implements LocalAudioCatalog {
     required String root,
     required Set<String> excludedKeys,
     int skipShorterThanMs = 0,
+    bool respectNomedia = false,
   }) async => const AudioListing();
   @override
   FolderChoice get folderChoice => FolderChoice.mediaStoreSheet;
@@ -91,6 +94,7 @@ void main() {
   ProviderContainer make() => ProviderContainer(
     overrides: [
       appDatabaseProvider.overrideWithValue(db),
+      settingsStoreProvider.overrideWithValue(MemorySettingsStore()),
       localAudioCatalogProvider.overrideWithValue(catalog),
       storageVolumesProvider.overrideWithValue(_Volumes()),
       libraryScanCommandsProvider.overrideWithValue(scanner),

@@ -15,6 +15,7 @@ class StoredTrackRow {
     this.lrcLocator,
     this.lrcRevision,
     this.hasDetails = false,
+    this.durationMs,
   });
 
   final int id;
@@ -32,6 +33,9 @@ class StoredTrackRow {
 
   /// Whether a `track_details` row exists.
   final bool hasDetails;
+
+  /// Stored length in milliseconds; null or 0 when unknown.
+  final int? durationMs;
 
   bool get isPresent => status == 'present';
 }
@@ -64,7 +68,9 @@ class ScanDiff {
     this.unchanged = 0,
     this.lrcUpdates = const [],
     this.missingCandidates = const [],
+    this.shortDropped = const [],
     this.rootSuspect = false,
+    this.uncertainKept = 0,
   });
 
   final List<ScanRead> toRead;
@@ -74,9 +80,19 @@ class ScanDiff {
   /// Ids of stored `present` rows that are no longer listed.
   final List<int> missingCandidates;
 
+  /// Ids of unchanged `present` rows whose stored length is below the
+  /// minimum duration: they are dropped like a short file read by the tag
+  /// pass (missing candidates, counted as filtered out).
+  final List<int> shortDropped;
+
   /// The listing is reachable but empty although rows exist, and no filter of
   /// the user explains it: no row may be marked missing.
   final bool rootSuspect;
+
+  /// Stored `present` rows that are not listed but kept: they lie under a
+  /// folder that could not be listed or could not be stat'ed. They were not
+  /// read this pass.
+  final int uncertainKept;
 }
 
 bool _under(String locator, List<String> prefixes) {
@@ -102,6 +118,7 @@ ScanDiff diffScan(
   required int tagsVersion,
   required int keysVersion,
   bool full = false,
+  int minDurationMs = 0,
 }) {
   if (!listing.reachable) return const ScanDiff();
   final byLocator = {for (final r in stored) r.locator: r};
@@ -109,6 +126,7 @@ ScanDiff diffScan(
   final toRead = <ScanRead>[];
   final lrcUpdates = <LrcUpdate>[];
   final listed = <String>{};
+  final shortDropped = <int>[];
   var unchanged = 0;
   for (final file in listing.files) {
     listed.add(file.locator);
@@ -126,6 +144,16 @@ ScanDiff diffScan(
       toRead.add(ScanRead(file: file, stored: row, lrc: lrc));
       continue;
     }
+    final stored = row.durationMs;
+    if (minDurationMs > 0 &&
+        stored != null &&
+        stored > 0 &&
+        stored < minDurationMs) {
+      // Not re-read, so the tag pass would never see that the rule got
+      // stricter: judge it by the length it stored.
+      shortDropped.add(row.id);
+      continue;
+    }
     unchanged++;
     if (row.lrcLocator != lrc?.locator || row.lrcRevision != lrc?.revision) {
       lrcUpdates.add(LrcUpdate(row: row, lrc: lrc));
@@ -140,20 +168,27 @@ ScanDiff diffScan(
       toRead: toRead,
       unchanged: unchanged,
       lrcUpdates: lrcUpdates,
+      shortDropped: shortDropped,
       rootSuspect: true,
     );
   }
-  final candidates = <int>[
-    for (final r in present)
-      if (!listed.contains(r.locator) &&
-          !listing.unstattable.contains(r.locator) &&
-          !_under(r.locator, listing.uncertainPrefixes))
-        r.id,
-  ];
+  final candidates = <int>[];
+  var uncertainKept = 0;
+  for (final r in present) {
+    if (listed.contains(r.locator)) continue;
+    if (listing.unstattable.contains(r.locator) ||
+        _under(r.locator, listing.uncertainPrefixes)) {
+      uncertainKept++;
+    } else {
+      candidates.add(r.id);
+    }
+  }
   return ScanDiff(
     toRead: toRead,
     unchanged: unchanged,
     lrcUpdates: lrcUpdates,
     missingCandidates: candidates,
+    shortDropped: shortDropped,
+    uncertainKept: uncertainKept,
   );
 }

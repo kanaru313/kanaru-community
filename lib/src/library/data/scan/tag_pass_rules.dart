@@ -74,15 +74,11 @@ void queueTagResult(
     if (deps.skipShorterThanMs > 0 &&
         duration != null &&
         duration < deps.skipShorterThanMs) {
-      deps.shortMemo.add(
-        folder.sourceId,
-        file.locator,
-        file.mtimeMs,
-        file.sizeBytes,
-      );
+      deps.shortMemo.remember(folder.sourceId, file, duration);
       dropShort(report, candidates, stored);
       return;
     }
+    deps.shortMemo.forget(folder.sourceId, file);
   }
   buffer.add(
     SnapshotWrite(
@@ -93,6 +89,7 @@ void queueTagResult(
         now: deps.now(),
         lrc: item.lrc,
         stored: stored,
+        readRules: deps.readRules,
       ),
     ),
   );

@@ -8,7 +8,12 @@ import '../selection_picker.dart';
 /// [SelectionRow] per option, the check on the right and a tinted fill for
 /// the chosen ones, and a footer with [cancelLabel] and a confirm button
 /// labelled by [confirmLabel] (called with the number chosen, 0 included).
-/// Confirm is off while nothing is chosen.
+/// Confirm is off while nothing is chosen. With [minSelected] above 0 the
+/// last chosen rows are locked (dimmed, [minSelectedNote] under their text)
+/// and select-all is off once everything is chosen.
+///
+/// With [onChanged] the sheet is live: there is no footer, every tap reports
+/// the chosen set at once, and the future resolves to null on close.
 ///
 /// With [selectAllLabel] and at least two enabled options, a first row
 /// chooses or clears every enabled option (clears when all are chosen); its
@@ -24,8 +29,8 @@ Future<Set<T>?> showMultiSelectionSheet<T>(
   BuildContext context, {
   required List<SelectionOption<T>> options,
   required Widget title,
-  required String Function(int n) confirmLabel,
-  required String cancelLabel,
+  String Function(int n)? confirmLabel,
+  String? cancelLabel,
   Set<T> initial = const {},
   Widget? subtitle,
   Widget? emptyNote,
@@ -33,6 +38,9 @@ Future<Set<T>?> showMultiSelectionSheet<T>(
   Widget? footerNote,
   String? selectAllLabel,
   String Function(int n, int total)? selectedCountLabel,
+  int minSelected = 0,
+  String? minSelectedNote,
+  ValueChanged<Set<T>>? onChanged,
   bool useRootNavigator = false,
 }) => showKSheet<Set<T>>(
   context,
@@ -46,6 +54,9 @@ Future<Set<T>?> showMultiSelectionSheet<T>(
     footerNote: footerNote,
     selectAllLabel: selectAllLabel,
     selectedCountLabel: selectedCountLabel,
+    minSelected: minSelected,
+    minSelectedNote: minSelectedNote,
+    onChanged: onChanged,
     confirmLabel: confirmLabel,
     cancelLabel: cancelLabel,
     initial: initial,
@@ -67,14 +78,17 @@ class MultiSelectionSheet<T> extends StatelessWidget {
     super.key,
     required this.options,
     required this.title,
-    required this.confirmLabel,
-    required this.cancelLabel,
+    this.confirmLabel,
+    this.cancelLabel,
     this.subtitle,
     this.emptyNote,
     this.banner,
     this.footerNote,
     this.selectAllLabel,
     this.selectedCountLabel,
+    this.minSelected = 0,
+    this.minSelectedNote,
+    this.onChanged,
     this.initial = const {},
   });
 
@@ -90,8 +104,16 @@ class MultiSelectionSheet<T> extends StatelessWidget {
   final Widget? footerNote;
   final String? selectAllLabel;
   final String Function(int n, int total)? selectedCountLabel;
-  final String Function(int n) confirmLabel;
-  final String cancelLabel;
+
+  /// See [MultiSelectionBody.minSelected].
+  final int minSelected;
+  final String? minSelectedNote;
+
+  /// Live mode, see [MultiSelectionBody.onChanged]: no footer, every tap is
+  /// reported. [confirmLabel] and [cancelLabel] are then optional (unused).
+  final ValueChanged<Set<T>>? onChanged;
+  final String Function(int n)? confirmLabel;
+  final String? cancelLabel;
   final Set<T> initial;
 
   @override
@@ -104,7 +126,12 @@ class MultiSelectionSheet<T> extends StatelessWidget {
     listFooter: footerNote,
     selectAllLabel: selectAllLabel,
     selectedCountLabel: selectedCountLabel,
-    confirmLabel: (picked) => confirmLabel(picked.length),
+    minSelected: minSelected,
+    minSelectedNote: minSelectedNote,
+    onChanged: onChanged,
+    confirmLabel: confirmLabel == null
+        ? null
+        : (picked) => confirmLabel!(picked.length),
     cancelLabel: cancelLabel,
     initial: initial,
   );

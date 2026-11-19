@@ -44,6 +44,10 @@ class ScanReport {
   /// vanished: kept.
   int keptUnderLostMount = 0;
 
+  /// Present rows kept unread because their folder could not be listed or
+  /// stat'ed.
+  int uncertainKept = 0;
+
   /// Rows whose write failed (logged).
   int writeFailed = 0;
 
@@ -71,6 +75,7 @@ class ScanReport {
     transientSkipped += other.transientSkipped;
     permanentKept += other.permanentKept;
     keptUnderLostMount += other.keptUnderLostMount;
+    uncertainKept += other.uncertainKept;
     writeFailed += other.writeFailed;
     writeBatches += other.writeBatches;
     rootSuspect = rootSuspect || other.rootSuspect;

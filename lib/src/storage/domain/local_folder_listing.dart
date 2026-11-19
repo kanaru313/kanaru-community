@@ -47,6 +47,7 @@ class SourceListing {
     this.excludedOut = 0,
     this.skippedOut = 0,
     this.shortOut = 0,
+    this.ruleOut = 0,
     this.skippedLinks = 0,
     this.undecodableNames = 0,
     this.undecodableSampleDirs = const [],
@@ -78,6 +79,12 @@ class SourceListing {
   final int excludedOut;
   final int skippedOut;
   final int shortOut;
+
+  /// Items removed by the format, size and `.nomedia` scan rules. Kept apart
+  /// from [filteredOut] on purpose: a listing emptied only by these rules
+  /// must still trip the empty-root guard (rows are kept, not marked
+  /// missing), because a bad rule value must never empty the library.
+  final int ruleOut;
   final int skippedLinks;
   final int undecodableNames;
   final List<String> undecodableSampleDirs;
@@ -85,8 +92,29 @@ class SourceListing {
   /// Listed paths that were not under the root and were dropped.
   final int droppedOutsideRoot;
 
+  /// A copy with [files] instead of the listed ones and [extraRuleOut] more
+  /// items counted in [ruleOut]; everything else is carried over.
+  SourceListing withFiles(List<ListedFile> files, {int extraRuleOut = 0}) =>
+      SourceListing(
+        reachable: reachable,
+        unreachableReason: unreachableReason,
+        files: files,
+        lyrics: lyrics,
+        uncertainPrefixes: uncertainPrefixes,
+        unstattable: unstattable,
+        excludedOut: excludedOut,
+        skippedOut: skippedOut,
+        shortOut: shortOut,
+        ruleOut: ruleOut + extraRuleOut,
+        skippedLinks: skippedLinks,
+        undecodableNames: undecodableNames,
+        undecodableSampleDirs: undecodableSampleDirs,
+        droppedOutsideRoot: droppedOutsideRoot,
+      );
+
   /// What the user's own settings removed (exclusions and the short-file
-  /// filter). Only this may switch off the empty-root guard.
+  /// filter). Only this may switch off the empty-root guard; [ruleOut] never
+  /// does.
   int get filteredOut => excludedOut + shortOut;
 }
 

@@ -436,7 +436,7 @@
   "libraryMenuLanguageDetectionNote": "Cài đặt › Thư viện",
   "libraryMenuCopyPath": "Sao chép đường dẫn",
   "libraryMenuExclude": "Loại trừ khỏi thư viện",
-  "libraryMenuExcludeNote": "Giữ nguyên tệp; bỏ loại trong Cài đặt › Thư viện › Thư mục",
+  "libraryMenuExcludeNote": "Giữ nguyên tệp; bỏ loại trong Cài đặt › Thư viện › Loại trừ",
   "libraryMenuIncludesSubfolders": "Gồm thư mục con",
   "libraryMenuPlayDirect": "Chỉ phát bài trong thư mục này",
   "libraryMenuPlayDirectNote": "{count, plural, other{{count} bài}}, không gồm thư mục con",

@@ -39,16 +39,24 @@ class SettingsRootPage extends ConsumerWidget {
               value: Text(l10n.settingsRootAppearanceDesc),
               onTap: () => context.push(SettingsPaths.appearance),
             ),
-            // The library pages come with the library settings; until then
-            // the row is a "coming soon" one.
-            SoonRow(
+            SetupValueRow(
               icon: KIcons.library,
               title: Text(l10n.settingsRootLibrary),
-              desc:
-                  l10n.settingsRootLibraryDesc +
-                  (musicMissing
-                      ? l10n.settingsRootLibraryMissingPermission
-                      : ''),
+              value: Text.rich(
+                TextSpan(
+                  text: l10n.settingsRootLibraryDesc,
+                  children: [
+                    if (musicMissing)
+                      TextSpan(
+                        text: l10n.settingsRootLibraryMissingPermission,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              onTap: () => context.push(SettingsPaths.library),
             ),
             SetupValueRow(
               icon: KIcons.playCircle,

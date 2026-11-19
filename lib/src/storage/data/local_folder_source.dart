@@ -43,6 +43,7 @@ class LocalFolderSource {
     ({String root}) root, {
     Set<String> excludedKeys = const {},
     int skipShorterThanMs = 0,
+    bool respectNomedia = false,
   }) async {
     final AudioListing listing;
     try {
@@ -50,6 +51,7 @@ class LocalFolderSource {
         root: root.root,
         excludedKeys: excludedKeys,
         skipShorterThanMs: skipShorterThanMs,
+        respectNomedia: respectNomedia,
       );
     } on Object catch (e, st) {
       // The catalog promises not to throw; a broken implementation must not
@@ -130,6 +132,7 @@ class LocalFolderSource {
       excludedOut: listing.excludedOut,
       skippedOut: listing.skippedOut,
       shortOut: listing.shortOut,
+      ruleOut: listing.nomediaOut,
       skippedLinks: listing.skippedLinks,
       undecodableNames: listing.undecodableNames,
       undecodableSampleDirs: listing.undecodableSampleDirs,

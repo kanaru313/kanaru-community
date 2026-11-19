@@ -1,14 +1,15 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/scan_status.dart';
+import '../../state/library_settings_focus.dart';
 import '../../state/scan/scan_capabilities.dart';
 import '../../state/scan_providers.dart';
+import '../library_settings_links.dart';
 import 'scan_card_state.dart';
 
 /// The library scan card at the top of Home: progress while tags and covers
@@ -109,6 +110,14 @@ class _ScanProgressCardState extends ConsumerState<ScanProgressCard> {
           icon: KIcons.folderOff,
           title: Text(l10n.scanHomeNoTracks),
           showBar: false,
+          action: TextButton(
+            onPressed: () => openLibrarySettings(
+              context,
+              ref,
+              focus: LibrarySettingsAnchor.folders,
+            ),
+            child: Text(l10n.scanHomeChangeFolders),
+          ),
         );
     }
     return Padding(

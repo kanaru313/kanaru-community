@@ -42,6 +42,9 @@ abstract final class KIcons {
   static const IconData history = FluentIcons.history_24_regular;
   static const IconData mostPlayed = FluentIcons.data_histogram_24_regular;
   static const IconData rescan = FluentIcons.arrow_sync_24_regular;
+
+  /// Restore defaults (not [history], which means listening history).
+  static const IconData reset = FluentIcons.arrow_reset_24_regular;
   static const IconData keymap = FluentIcons.keyboard_24_regular;
   static const IconData ai = FluentIcons.sparkle_24_regular;
   static const IconData comingSoon = FluentIcons.clock_24_regular;
@@ -185,4 +188,11 @@ abstract final class KIcons {
   static const IconData clipping = FluentIcons.shield_24_regular;
   static const IconData license = FluentIcons.scales_24_regular;
   static const IconData openSourceLicenses = FluentIcons.book_open_24_regular;
+
+  // Settings › Library scan rules.
+  static const IconData skipShort = FluentIcons.timer_24_regular;
+  static const IconData fileSize = FluentIcons.document_data_24_regular;
+  static const IconData scanFormats = FluentIcons.filter_24_regular;
+  static const IconData noMedia = FluentIcons.document_dismiss_24_regular;
+  static const IconData watchFolders = FluentIcons.eye_24_regular;
 }

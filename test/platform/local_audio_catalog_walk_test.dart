@@ -55,6 +55,62 @@ void main() {
     expect(listing.lyrics.single.sizeBytes, 2);
   });
 
+  group('.nomedia', () {
+    test('is ignored unless asked for', () {
+      touch('A/.nomedia', content: '');
+      touch('A/song.mp3');
+      final listing = walkAudioTree(WalkRequest(root: root));
+      expect(names(listing.audio.map((f) => f.path)), {'A/song.mp3'});
+      expect(listing.nomediaOut, 0);
+    });
+
+    test('skips its folder and every subfolder when asked', () {
+      touch('keep/song.mp3');
+      touch('A/.nomedia', content: '');
+      touch('A/song.mp3');
+      touch('A/deep/er/song.flac');
+      final listing = walkAudioTree(
+        WalkRequest(root: root, respectNomedia: true),
+      );
+      expect(names(listing.audio.map((f) => f.path)), {'keep/song.mp3'});
+      expect(listing.nomediaOut, 1);
+      expect(listing.filteredOut, 0);
+    });
+
+    test('a root holding the file lists nothing but stays reachable', () {
+      touch('.nomedia', content: '');
+      touch('song.mp3');
+      final listing = walkAudioTree(
+        WalkRequest(root: root, respectNomedia: true),
+      );
+      expect(listing.reachable, isTrue);
+      expect(listing.audio, isEmpty);
+      expect(listing.nomediaOut, 1);
+    });
+
+    test('only a file with that exact name counts, not a folder', () {
+      Directory('$root/A/.nomedia').createSync(recursive: true);
+      touch('A/song.mp3');
+      final listing = walkAudioTree(
+        WalkRequest(root: root, respectNomedia: true),
+      );
+      expect(names(listing.audio.map((f) => f.path)), {'A/song.mp3'});
+    });
+
+    test('the Linux catalog forwards the flag through the isolate', () async {
+      touch('A/.nomedia', content: '');
+      touch('A/song.mp3');
+      touch('song.mp3');
+      // A root stays busy until its isolate exits: one catalog per call.
+      final on = await LinuxAudioCatalog(mountPoints: () => {})
+          .listAudio(root: root, excludedKeys: {}, respectNomedia: true);
+      expect(names(on.audio.map((f) => f.path)), {'song.mp3'});
+      final off = await LinuxAudioCatalog(mountPoints: () => {})
+          .listAudio(root: root, excludedKeys: {});
+      expect(names(off.audio.map((f) => f.path)), {'song.mp3', 'A/song.mp3'});
+    });
+  });
+
   test('a FIFO named like audio is not listed', () {
     final made = Process.runSync('mkfifo', ['$root/pipe.mp3']);
     if (made.exitCode != 0) {

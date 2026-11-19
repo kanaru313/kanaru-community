@@ -16,7 +16,18 @@ class KChip extends StatelessWidget {
     this.selected = false,
     this.enabled = true,
     this.onTap,
-  });
+  }) : trailing = null,
+       _interactive = true;
+
+  /// A pill that is a value, not a choice: no button, no selected state, no
+  /// ink. [trailing] (a remove button) sits at the end with less padding.
+  /// Use it for chips that only show something, or hold their own action.
+  const KChip.static({super.key, required this.label, this.trailing})
+    : icon = null,
+      selected = false,
+      enabled = true,
+      onTap = null,
+      _interactive = false;
 
   final Widget label;
   final Widget? icon;
@@ -26,6 +37,10 @@ class KChip extends StatelessWidget {
   final bool enabled;
   final VoidCallback? onTap;
 
+  /// Widget after the label of a [KChip.static] (its own action).
+  final Widget? trailing;
+  final bool _interactive;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -33,43 +48,43 @@ class KChip extends StatelessWidget {
         ? KLayout.minTarget
         : KLayout.minTargetDesktop;
     final fg = selected ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      selected: selected,
-      child: Opacity(
-        opacity: enabled ? 1 : 0.5,
-        child: Material(
-          color: selected
-              ? scheme.secondaryContainer
-              : scheme.surfaceContainerHigh,
-          shape: KShape.of(KRadius.full),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: enabled ? onTap : null,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: minHeight),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: KSpace.x4),
-                child: IconTheme.merge(
-                  data: IconThemeData(color: fg, size: KIconSize.xs),
-                  child: DefaultTextStyle.merge(
-                    style: Theme.of(context).textTheme.labelLarge
-                        ?.copyWith(color: fg),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (icon != null) ...[icon!, const KGap(KSpace.x2)],
-                        Flexible(child: label),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+    final content = ConstrainedBox(
+      constraints: BoxConstraints(minHeight: minHeight),
+      child: Padding(
+        padding: EdgeInsetsDirectional.only(
+          start: KSpace.x4,
+          end: trailing == null ? KSpace.x4 : KSpace.x2,
+        ),
+        child: IconTheme.merge(
+          data: IconThemeData(color: fg, size: KIconSize.xs),
+          child: DefaultTextStyle.merge(
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(color: fg),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[icon!, const KGap(KSpace.x2)],
+                Flexible(child: label),
+                if (trailing != null) ...[const KGap(KSpace.x2), trailing!],
+              ],
             ),
           ),
         ),
       ),
+    );
+    final pill = Material(
+      color: selected ? scheme.secondaryContainer : scheme.surfaceContainerHigh,
+      shape: KShape.of(KRadius.full),
+      clipBehavior: Clip.antiAlias,
+      child: _interactive
+          ? InkWell(onTap: enabled ? onTap : null, child: content)
+          : content,
+    );
+    if (!_interactive) return pill;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      selected: selected,
+      child: Opacity(opacity: enabled ? 1 : 0.5, child: pill),
     );
   }
 }

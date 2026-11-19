@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/library/data/scan/native_tag_reader.dart';
 import 'package:kanaru/src/library/data/scan/scan_pipeline.dart';
+import 'package:kanaru/src/library/domain/scan/read_rules.dart';
+import 'package:kanaru/src/library/domain/scan/scan_rules.dart';
 import 'package:kanaru/src/library/domain/scan/tag_read.dart';
 import 'package:kanaru/src/library/domain/scan_status.dart';
 import 'package:kanaru/src/platform/domain/local_audio_catalog.dart';
@@ -20,20 +22,23 @@ class MapCatalog implements LocalAudioCatalog {
   final Map<String, AudioListing> listings;
   final List<String> listed = [];
   final List<int> shortFilters = [];
+  final List<bool> nomediaFlags = [];
 
   @override
   Future<AudioListing> listAudio({
     required String root,
     required Set<String> excludedKeys,
     int skipShorterThanMs = 0,
+    bool respectNomedia = false,
   }) async {
     listed.add(root);
     shortFilters.add(skipShorterThanMs);
+    nomediaFlags.add(respectNomedia);
     return listings[root] ?? const AudioListing.unreachable();
   }
 
   @override
-  Future<AudioFoldersResult> audioFolders() async =>
+  Future<AudioFoldersResult> audioFolders({int minDurationMs = 30000}) async =>
       const AudioFoldersListed([]);
 
   @override
@@ -113,7 +118,12 @@ ScanPipelineDeps pipelineDeps(
   required Directory cache,
   MediaPermissionState permissions = grantedBoth,
   bool skipShort = true,
+  ScanRules? scanRules,
   Duration tagTimeout = const Duration(seconds: 5),
+  LibraryReadRules? readRules,
+  Map<String, String> readRulesApplied = const {},
+  Future<void> Function(String sourceUid, String fingerprint)?
+  onReadRulesApplied,
 }) => ScanPipelineDeps(
   db: db,
   source: LocalFolderSource(catalog, readMounts: () => {'/'}),
@@ -121,7 +131,10 @@ ScanPipelineDeps pipelineDeps(
   reader: reader,
   maker: maker,
   cacheDir: cache.path,
-  skipShortTracks: skipShort,
+  rules: scanRules ?? ScanRules(minDurationMs: skipShort ? 30000 : 0),
   now: () => scanNow,
   tagTimeout: tagTimeout,
+  readRules: readRules,
+  readRulesApplied: readRulesApplied,
+  onReadRulesApplied: onReadRulesApplied,
 );
