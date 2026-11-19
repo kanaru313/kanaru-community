@@ -9,14 +9,14 @@ import '../support/queue_fixtures.dart';
 void main() {
   group('end of track', () {
     test('always stops', () {
-      const p = EndOfTrackPolicy();
+      final p = EndOfTrackPolicy();
       expect(p.stopsAfterCurrent(makeQueue(3, current: 0), 0), isTrue);
       expect(p.stopsAfterCurrent(makeQueue(3, current: 2), 2), isTrue);
     });
   });
 
   group('end of queue', () {
-    const p = EndOfQueuePolicy();
+    final p = EndOfQueuePolicy();
 
     test('stops on the last entry only', () {
       expect(p.stopsAfterCurrent(makeQueue(3, current: 1), 0), isFalse);

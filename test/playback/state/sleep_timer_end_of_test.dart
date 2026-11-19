@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:kanaru/src/playback/domain/queue_logic.dart';
 import 'package:kanaru/src/playback/state/queue_row_infos.dart';
@@ -267,6 +268,47 @@ void main() {
       }, (e, _) => errors.add(e));
       expect(errors, isEmpty);
       expect(s.tracksChanged.hasListener, isFalse);
+    });
+  });
+
+  group('stale and cleared', () {
+    test('a late stop of a replaced policy does not end the new one', () async {
+      await s.play();
+      final handed = s.h.engine.nexts.last!.token;
+      final gate = Completer<void>();
+      s.h.engine.pauseGate = gate.future;
+      // The engine moves on just after the first install: the stop rests the
+      // new entry, which waits on the engine's pause.
+      s.timer.startEndOfTrack();
+      s.h.engine.emit(EngineAdvanced(handed));
+      await pumpEventQueue();
+      s.timer.startEndOfTrack();
+      gate.complete();
+      s.h.engine.pauseGate = null;
+      await s.h.settle();
+      expect(s.state.mode, SleepTimerMode.endOfTrack);
+      // The new policy is really installed, and cancel really removes it.
+      final before = s.h.engine.nexts.length;
+      await s.h.c.sleepPolicyChanged();
+      await s.h.settle();
+      expect(handedSince(before), isFalse);
+      s.timer.cancel();
+      await s.h.settle();
+      expect(s.state, const SleepTimerState.off());
+      expect(handedSince(before), isTrue);
+    });
+
+    test('clearQueue turns an end-of mode off', () async {
+      await s.play();
+      s.timer.startEndOfTrack();
+      await s.h.settle();
+      await s.h.c.clearQueue();
+      await s.h.settle();
+      expect(s.state, const SleepTimerState.off());
+      await s.h.play();
+      await s.h.settle();
+      expect(s.h.engine.nexts.last, isNotNull);
+      expect(s.state, const SleepTimerState.off());
     });
   });
 }

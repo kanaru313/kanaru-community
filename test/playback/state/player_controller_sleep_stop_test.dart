@@ -394,6 +394,54 @@ void main() {
     });
   });
 
+  group('freshest answer', () {
+    test('a stop decided at hand-over holds when the end arrives', () async {
+      final policy = _Policy();
+      await h.c.setSleepStopPolicy(policy);
+      await h.play();
+      await h.settle();
+      expect(h.engine.nexts.last, isNull);
+      await loaded();
+      // The answer changed but the owner has not said so yet.
+      policy.stop = false;
+      h.engine.emit(EngineEnded(h.loadedToken));
+      await h.settle();
+      expect(ends, hasLength(1));
+      expect(ends.single.sleepStop, isTrue);
+      expect(h.c.intent, PlayIntent.paused);
+    });
+
+    test('an owner saying go on beats the stop decided earlier', () async {
+      final policy = _Policy();
+      await h.c.setSleepStopPolicy(policy);
+      await h.play();
+      await h.settle();
+      expect(h.engine.nexts.last, isNull);
+      policy.stop = false;
+      await h.c.sleepPolicyChanged();
+      await h.settle();
+      expect(h.engine.nexts.last, isNotNull);
+      await ended();
+      expect(ends.where((e) => e.sleepStop), isEmpty);
+      expect(h.c.intent, PlayIntent.playing);
+    });
+
+    test('an answer queued before the end event wins over the stop', () async {
+      final policy = _Policy();
+      await h.c.setSleepStopPolicy(policy);
+      await h.play();
+      await h.settle();
+      await loaded();
+      policy.stop = false;
+      final changed = h.c.sleepPolicyChanged();
+      h.engine.emit(EngineEnded(h.loadedToken));
+      await changed;
+      await h.settle();
+      expect(ends.where((e) => e.sleepStop), isEmpty);
+      expect(h.c.intent, PlayIntent.playing);
+    });
+  });
+
   group('dispose', () {
     test('closes the stream; later calls do nothing', () async {
       final done = Completer<void>();

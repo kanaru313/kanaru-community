@@ -220,8 +220,13 @@ class PlayerController implements PlaybackCommands {
 
   /// The policy's answer may have changed: decide the next entry again.
   /// Does nothing after [dispose].
-  Future<void> sleepPolicyChanged() =>
-      _disposed ? Future.value() : _cmd(() async {}, keepsSleepFade: true);
+  /// A hand-over withheld for the old answer is forgotten: the freshest
+  /// answer decides.
+  Future<void> sleepPolicyChanged() => _disposed
+      ? Future.value()
+      : _cmd(() async {
+          _withheldFor = null;
+        }, keepsSleepFade: true);
 
   /// Play, pause or stop, and the volume.
   Stream<TransportView> get transport => _transport.stream;

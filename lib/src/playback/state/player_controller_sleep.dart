@@ -32,6 +32,7 @@ extension _SleepStop on PlayerController {
     required bool sleep,
     required bool queueEnded,
   }) {
+    final consumed = sleep ? _policy : null;
     if (sleep) {
       _policy = null;
       _withheldFor = null;
@@ -44,7 +45,12 @@ extension _SleepStop on PlayerController {
     }
     if (entryId == null || _failuresInRow > 0) return;
     _pendingEnds.add(
-      TrackEnd(entryId: entryId, sleepStop: sleep, queueEnded: queueEnded),
+      TrackEnd(
+        entryId: entryId,
+        sleepStop: sleep,
+        queueEnded: queueEnded,
+        policy: consumed,
+      ),
     );
   }
 

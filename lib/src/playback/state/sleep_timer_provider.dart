@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
+import '../domain/cleared_queue.dart';
 import '../domain/play_intent.dart';
 import '../domain/sleep_policies.dart';
 import '../domain/sleep_stop_policy.dart';
@@ -42,7 +43,9 @@ final sleepTimerProvider = NotifierProvider<SleepTimer, SleepTimerState>(
 /// [SleepStopPolicy] in the player, which decides at the moment it picks the
 /// next entry, and turn off when the player reports the stop.
 ///
-/// It does nothing until the player exists ([playerCreatedProvider]).
+/// It does nothing until the player phase is attached ([playerCreatedProvider]
+/// turns true only when the shell attaches it; reading the controller does
+/// not): a `start*` before that is ignored and logged.
 class SleepTimer extends Notifier<SleepTimerState> {
   PlayerController? _controller;
   StreamSubscription<TrackEnd>? _endsSub;
@@ -51,6 +54,7 @@ class SleepTimer extends Notifier<SleepTimerState> {
   SleepStopPolicy? _policy;
   SleepAlbumKeys? _albums;
   ProviderSubscription<AsyncValue<void>>? _tracksSub;
+  StreamSubscription<ClearedQueue>? _clearedSub;
 
   /// Minutes mode: the deadline on the controller's clock, and the time left
   /// while the count is on hold.
@@ -75,6 +79,10 @@ class SleepTimer extends Notifier<SleepTimerState> {
       _onTrackEnd,
       onError: (Object e) => _log.warning('track ends: ${e.runtimeType}'),
     );
+    _clearedSub = controller.queueCleared.listen(
+      (_) => _onQueueCleared(),
+      onError: (Object e) => _log.warning('queue cleared: ${e.runtimeType}'),
+    );
     _lifecycle = AppLifecycleListener(onResume: _tick);
     ref.onDispose(_onDispose);
     return const SleepTimerState.off();
@@ -88,6 +96,8 @@ class SleepTimer extends Notifier<SleepTimerState> {
     _lifecycle = null;
     unawaited(_endsSub?.cancel());
     _endsSub = null;
+    unawaited(_clearedSub?.cancel());
+    _clearedSub = null;
     _dropAlbums();
     // Queued behind any command of a rebuilt timer's predecessor and ahead of
     // its own, so they cannot undo a new install.
@@ -101,9 +111,15 @@ class SleepTimer extends Notifier<SleepTimerState> {
 
   // ---- commands ----
 
+  bool _ready() {
+    if (_controller != null) return true;
+    _log.fine('start ignored: the player is not attached yet');
+    return false;
+  }
+
   /// Pauses after [minutes], kept within 1 to 720.
   void startMinutes(int minutes) {
-    if (_controller == null) return;
+    if (!_ready()) return;
     _dropRuntime();
     _setPolicy(null);
     final length = Duration(
@@ -115,7 +131,7 @@ class SleepTimer extends Notifier<SleepTimerState> {
   /// Pauses after [count] tracks (1 to 20, the current one included) played
   /// to their end. Skipping does not use a track up.
   void startTracks(int count) {
-    if (_controller == null) return;
+    if (!_ready()) return;
     final policy = TracksPolicy(count);
     _startPolicyMode(policy);
     state = SleepTimerState(
@@ -125,19 +141,19 @@ class SleepTimer extends Notifier<SleepTimerState> {
   }
 
   void startEndOfTrack() {
-    if (_controller == null) return;
-    _startPolicyMode(const EndOfTrackPolicy());
+    if (!_ready()) return;
+    _startPolicyMode(EndOfTrackPolicy());
     state = const SleepTimerState(mode: SleepTimerMode.endOfTrack);
   }
 
   void startEndOfQueue() {
-    if (_controller == null) return;
-    _startPolicyMode(const EndOfQueuePolicy());
+    if (!_ready()) return;
+    _startPolicyMode(EndOfQueuePolicy());
     state = const SleepTimerState(mode: SleepTimerMode.endOfQueue);
   }
 
   void startEndOfAlbum() {
-    if (_controller == null) return;
+    if (!_ready()) return;
     _dropRuntime();
     final keys = SleepAlbumKeys(
       loaded: () => ref.mounted ? ref.read(queueRowInfosProvider) : const {},
@@ -305,10 +321,12 @@ class SleepTimer extends Notifier<SleepTimerState> {
     _setPolicy(policy);
   }
 
-  /// Installs [policy] in the player, or removes the installed one.
+  /// Installs [policy] in the player, or removes the installed one. Removal
+  /// is always sent (it is idempotent), so the player never keeps a policy
+  /// the timer has forgotten.
   void _setPolicy(SleepStopPolicy? policy) {
     final c = _controller;
-    if (c == null || (policy == null && _policy == null)) return;
+    if (c == null) return;
     _policy = policy;
     _send(c.setSleepStopPolicy(policy));
   }
@@ -319,10 +337,28 @@ class SleepTimer extends Notifier<SleepTimerState> {
     _send(c.sleepPolicyChanged());
   }
 
+  /// The player dropped its policy with the queue: a track mode has nothing
+  /// left to wait for. The minutes mode keeps counting.
+  void _onQueueCleared() {
+    final mode = state.mode;
+    if (_controller == null || mode == null || mode == SleepTimerMode.minutes) {
+      return;
+    }
+    _dropRuntime();
+    _policy = null;
+    state = const SleepTimerState.off();
+  }
+
   void _onTrackEnd(TrackEnd end) {
     final mode = state.mode;
     if (_controller == null || mode == null) return;
     if (mode == SleepTimerMode.minutes) return;
+    // The late stop of a policy that was replaced since: not ours.
+    if (end.sleepStop &&
+        end.policy != null &&
+        !identical(end.policy, _policy)) {
+      return;
+    }
     if (end.sleepStop || end.queueEnded) {
       _dropRuntime();
       // A stop consumed the policy in the player already.

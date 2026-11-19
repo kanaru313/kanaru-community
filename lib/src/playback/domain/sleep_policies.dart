@@ -25,7 +25,9 @@ class AlbumKnown extends AlbumLookupResult {
 
 /// Stops after every entry.
 class EndOfTrackPolicy implements SleepStopPolicy {
-  const EndOfTrackPolicy();
+  // Not const: every start installs its own instance, so a stop event can be
+  // matched to the install it belongs to.
+  EndOfTrackPolicy();
 
   @override
   bool stopsAfterCurrent(QueueState queue, int repeatTimes) => true;
@@ -36,7 +38,8 @@ class EndOfTrackPolicy implements SleepStopPolicy {
 
 /// Stops after the last entry in play order, whatever repeat says.
 class EndOfQueuePolicy implements SleepStopPolicy {
-  const EndOfQueuePolicy();
+  // Not const, see [EndOfTrackPolicy].
+  EndOfQueuePolicy();
 
   @override
   bool stopsAfterCurrent(QueueState queue, int repeatTimes) {

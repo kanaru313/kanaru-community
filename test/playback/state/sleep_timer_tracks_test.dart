@@ -200,4 +200,28 @@ void main() {
       expect(s.state, const SleepTimerState.off());
     });
   });
+
+  group('clearing the queue', () {
+    test('clearQueue turns the tracks mode off', () async {
+      await s.play();
+      s.timer.startTracks(3);
+      await s.h.settle();
+      await s.h.c.clearQueue();
+      await s.h.settle();
+      expect(s.state, const SleepTimerState.off());
+      await s.h.play();
+      await s.h.settle();
+      expect(s.h.engine.nexts.last, isNotNull);
+    });
+
+    test('the minutes mode keeps counting', () async {
+      await s.play();
+      s.timer.startMinutes(10);
+      await s.h.settle();
+      await s.h.c.clearQueue();
+      await s.pass(const Duration(minutes: 1));
+      expect(s.state.mode, SleepTimerMode.minutes);
+      expect(s.state.remaining, const Duration(minutes: 9));
+    });
+  });
 }

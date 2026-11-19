@@ -61,6 +61,11 @@ extension _Events on PlayerController {
       _position = Duration.zero;
       _startAt = Duration.zero;
       _saveNow();
+      // The sleep bookkeeping comes first: the title lookup below reads the
+      // database and must not be able to lose the stop.
+      _naturalEnd(endedId, sleep: sleep, queueEnded: false);
+      // The engine already started the next entry: rest at its start.
+      if (sleep) await _restAtStart();
       if (skip != null) {
         _notice(
           TrackSkipped(
@@ -70,9 +75,6 @@ extension _Events on PlayerController {
           ),
         );
       }
-      _naturalEnd(endedId, sleep: sleep, queueEnded: false);
-      // The engine already started the next entry: rest at its start.
-      if (sleep) await _restAtStart();
       return;
     }
     final endedId = _loaded?.entryId;

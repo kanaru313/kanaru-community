@@ -21,6 +21,7 @@ class TrackEnd {
     required this.entryId,
     required this.sleepStop,
     required this.queueEnded,
+    this.policy,
   });
 
   /// The entry that ended.
@@ -31,6 +32,11 @@ class TrackEnd {
 
   /// Nothing followed it: the queue ran out.
   final bool queueEnded;
+
+  /// The policy that stopped playback (the player consumed it), set only when
+  /// [sleepStop]. Lets the owner tell a stop of its current policy from the
+  /// late stop of one it already replaced. Not part of equality.
+  final SleepStopPolicy? policy;
 
   @override
   bool operator ==(Object other) =>

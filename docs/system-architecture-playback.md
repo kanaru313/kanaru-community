@@ -400,7 +400,9 @@ SleepTimerState>`). Session only: nothing is saved, a restart or kill loses it. 
 
 - **Gate:** `build()` returns off and touches nothing until `playerCreatedProvider` is true; then it
   watches `playerControllerProvider` (a new controller rebuilds it, off) and subscribes `trackEnds`.
-  Before the player exists every `start*` is ignored. `onDispose` removes the policy, ends the fade,
+  Before the player phase is attached (only the shell's `attach` flips `playerCreatedProvider`; reading
+  the controller does not) every `start*` is ignored and logged (fine): UI tests must attach the player
+  phase first. `onDispose` removes the policy, ends the fade,
   cancels the ticker, the lifecycle listener, the `trackEnds` subscription and the album requests. Every
   fire-and-forget call goes through `_send`, which logs a failure (warning, type).
 - **State** (`domain/sleep_timer_state.dart`): `mode` (`minutes`, `tracks`, `endOfTrack`, `endOfAlbum`,
@@ -435,6 +437,14 @@ SleepTimerState>`). Session only: nothing is saved, a restart or kill loses it. 
   `sleepPolicyChanged()`, so the player decides again; a failure is logged and the keys stay unknown
   (stop, not asked again until a `queueTracksChangedProvider` event clears the map). The request runs
   in the zone the keys were made in, because the policy is asked inside the player's chain.
+- **Clear and stale events:** `queueCleared` turns a track mode off (the player dropped its policy; the
+  minutes mode keeps counting). `TrackEnd.policy` is the policy a stop consumed: the timer ignores a
+  stop whose policy is no longer the installed one (a new `start*` landed while the stop was being
+  published). `cancel()` always sends the removal. `sleepPolicyChanged()` forgets the hand-over decision
+  (`_withheldFor`), so the freshest answer wins; the withhold only decides when the end event arrives
+  with no change announced.
+- **Engine contract:** `AudioEngine` calls never throw (`MediaKitEngine` swallows and logs); the retry
+  after a failed pause in the fade restore is defensive.
 - **`trackEnds`:** `sleepStop` or `queueEnded` in a track mode turns the state off; a natural end that
   did not stop in the tracks mode updates `tracksLeft` from the policy.
 - **Every end of a sleep** (pause at zero, expiry while paused, `TrackEnd(sleepStop)`) calls
