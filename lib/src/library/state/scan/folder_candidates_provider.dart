@@ -6,13 +6,17 @@ import '../../domain/scan/folder_list_state.dart';
 import '../music_folders_providers.dart';
 import 'music_folder_editor_lists.dart';
 import 'music_folder_editor_provider.dart';
+import 'scan_settings.dart';
 
 /// One MediaStore read of the folders that hold audio (Android), shared by
 /// every list below. It is not refreshed by edits (choosing folders does not
 /// change what MediaStore holds); a failed read or a media index refresh
-/// invalidates it.
+/// invalidates it. Counts skip files shorter than the scan's minimum
+/// duration, so the estimate follows that setting.
 final audioFoldersProvider = FutureProvider.autoDispose<AudioFoldersResult>(
-  (ref) => ref.watch(localAudioCatalogProvider).audioFolders(),
+  (ref) => ref
+      .watch(localAudioCatalogProvider)
+      .audioFolders(minDurationMs: ref.watch(minDurationMsProvider)),
 );
 
 /// Re-run the derived lists after an edit of folders or exclusions.

@@ -31,7 +31,6 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
     this._client, {
     Future<bool> Function(String path)? rootExists,
     Future<String> Function(String path)? resolveLinks,
-    this.firstRunMinDurationMs = 30000,
     this.timeout = defaultWalkTimeout,
     this.foldersTimeout = const Duration(seconds: 10),
     this.refreshTimeout = const Duration(minutes: 2),
@@ -47,10 +46,6 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
   final Future<bool> Function(String) _rootExists;
   final Future<String> Function(String) _resolveLinks;
   final ListChildDirs _listChildDirs;
-
-  /// Rows shorter than this are not counted by [audioFolders] (the first-run
-  /// estimate follows the "skip short tracks" default). 0 = off.
-  final int firstRunMinDurationMs;
 
   /// Longest a MediaStore listing may take.
   final Duration timeout;
@@ -107,6 +102,8 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
     required String root,
     required Set<String> excludedKeys,
     int skipShorterThanMs = 0,
+    // MediaStore already leaves out folders with a `.nomedia` file.
+    bool respectNomedia = false,
   }) async {
     final cancel = _Cancel();
     try {
@@ -237,12 +234,12 @@ class MediaStoreAudioCatalog implements LocalAudioCatalog {
   }
 
   @override
-  Future<AudioFoldersResult> audioFolders() async {
+  Future<AudioFoldersResult> audioFolders({int minDurationMs = 30000}) async {
     final MediaStoreFolderRows rows;
     try {
       rows = await _client
           .audioFolders(
-            minDurationMs: firstRunMinDurationMs,
+            minDurationMs: minDurationMs,
             extensions: audioExtensions.toList(),
           )
           .timeout(foldersTimeout);

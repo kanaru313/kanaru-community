@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../library/domain/library_tabs.dart';
 import '../../../library/state/library_tabs_providers.dart';
+import 'setup_mode.dart';
 
 final _log = Logger('screens.first_run');
 
@@ -19,18 +20,28 @@ String _tabName(AppLocalizations l10n, LibraryTab tab) => switch (tab) {
 };
 
 /// The six library tabs: switch each on or off, drag to reorder. The last
-/// enabled tab cannot be switched off.
+/// enabled tab cannot be switched off. In [SetupMode.settings] the caption
+/// also says where tabs show on this shell.
 class LibraryTabsSection extends ConsumerWidget {
-  const LibraryTabsSection({super.key});
+  const LibraryTabsSection({super.key, this.mode = SetupMode.firstRun});
+
+  final SetupMode mode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final config = ref.watch(libraryTabsProvider);
     final notifier = ref.read(libraryTabsProvider.notifier);
-    return SetupSection(
-      title: Text(l10n.scanSetupTabsTitle),
-      subtitle: Text(l10n.scanSetupTabsHint),
+    final settingsHint = FormFactor.of(context) == FormFactor.desktop
+        ? l10n.settingsLibraryTabsHintDesktop
+        : l10n.settingsLibraryTabsHintMobile;
+    return captionedSection(
+      context,
+      mode: mode,
+      title: l10n.scanSetupTabsTitle,
+      caption: mode == SetupMode.settings
+          ? settingsHint
+          : l10n.scanSetupTabsHint,
       children: [
         ReorderableToggleList<LibraryTab>(
           dragLabel: l10n.scanSetupTabDrag,

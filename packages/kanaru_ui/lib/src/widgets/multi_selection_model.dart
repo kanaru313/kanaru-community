@@ -31,6 +31,7 @@ class MultiSelectionView<T> {
     required this.hasEmptyNote,
     required this.hasListFooter,
     required this.hasSelectAll,
+    this.minSelected = 0,
   }) {
     final known = {
       for (final o in pinned) o.value,
@@ -82,6 +83,9 @@ class MultiSelectionView<T> {
   final bool hasListFooter;
   final bool hasSelectAll;
 
+  /// Fewest enabled options that must stay chosen (0 = no minimum).
+  final int minSelected;
+
   late final List<SelectionOption<T>> addedRows;
   late final List<SelectionOption<T>> allRows;
   late final List<T> enabledValues;
@@ -89,4 +93,16 @@ class MultiSelectionView<T> {
   late final bool iconRows;
   late final bool showAll;
   late final List<MultiEntry<T>> entries;
+
+  /// True while the chosen options are all that the minimum allows: none of
+  /// them can be unchosen.
+  bool get atMinimum => minSelected > 0 && picks.length <= minSelected;
+
+  /// Whether [value] is chosen and must stay so.
+  bool isLocked(T value) => atMinimum && picks.contains(value);
+
+  /// Select-all is off only with a minimum and every enabled option chosen:
+  /// its tap would clear them all.
+  bool get selectAllLocked =>
+      minSelected > 0 && picks.length == enabledValues.length;
 }

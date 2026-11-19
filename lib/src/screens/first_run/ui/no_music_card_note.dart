@@ -18,6 +18,10 @@ import 'section_states.dart';
 ///
 /// With [autoRun] (the audio permission is granted) the first time the card
 /// shows "no music" it starts one rescan, once per app launch.
+///
+/// The card does its work (the folder-list read, the auto refresh) only while
+/// it is shown ([TickerMode] enabled): Settings keeps its page mounted behind
+/// other tabs, where it only shows the plain "no folder" line.
 class NoMusicCardNote extends ConsumerStatefulWidget {
   const NoMusicCardNote({
     super.key,
@@ -53,6 +57,9 @@ class _NoMusicCardNoteState extends ConsumerState<NoMusicCardNote> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (!TickerMode.valuesOf(context).enabled) {
+      return SetupNote(child: Text(l10n.scanSetupFoldersEmpty));
+    }
     final async = ref.watch(folderCandidatesProvider);
     final refresh = ref.watch(mediaIndexRefreshProvider);
     final result = seenRefreshResult(refresh, widget.seenFrom);

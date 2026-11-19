@@ -837,4 +837,66 @@ void main() {
       expect(box.size.height, lessThan(line * 1.5));
     });
   });
+
+  group('live and anchored', () {
+    testWidgets('desktop: panel under the anchor, right edges aligned', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1400, 900));
+      final key = GlobalKey();
+      final seen = <Set<String>>[];
+      await tester.pumpWidget(
+        host(
+          Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 200),
+              child: Builder(
+                builder: (context) => TextButton(
+                  key: key,
+                  onPressed: () => showMultiSelectionPicker<String>(
+                    context,
+                    title: const Text('Formats'),
+                    options: _options,
+                    initial: const {'Rock'},
+                    minSelected: 1,
+                    minSelectedNote: 'keep one',
+                    onChanged: seen.add,
+                    anchor: key,
+                    anchorAlign: KAnchorAlign.end,
+                  ),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      // No footer in live mode.
+      expect(find.byType(FilledButton), findsNothing);
+      final panel = tester.getRect(
+        find.byWidgetPredicate((w) => w is Material && w.elevation == 3),
+      );
+      expect(panel.right, closeTo(tester.getRect(find.byKey(key)).right, 1));
+      // Dense rows (40 dp), like the sort dropdown.
+      expect(
+        tester
+            .getSize(
+              find.ancestor(
+                of: find.text('Jazz'),
+                matching: find.byType(SelectionRow),
+              ),
+            )
+            .height,
+        40,
+      );
+      await tester.tap(find.text('Jazz'));
+      await tester.pump();
+      expect(seen, [
+        {'Rock', 'Jazz'},
+      ]);
+    });
+  });
 }

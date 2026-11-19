@@ -35,12 +35,14 @@ class LinuxAudioCatalog implements LocalAudioCatalog {
     required String root,
     required Set<String> excludedKeys,
     int skipShorterThanMs = 0,
+    bool respectNomedia = false,
   }) async {
     final listing = await _runner.run(
       WalkRequest(
         root: root,
         excludedKeys: excludedKeys,
         mountPoints: _mountPoints(),
+        respectNomedia: respectNomedia,
       ),
     );
     if (listing.skippedLinks > 0) {
@@ -56,7 +58,7 @@ class LinuxAudioCatalog implements LocalAudioCatalog {
   }
 
   @override
-  Future<AudioFoldersResult> audioFolders() async =>
+  Future<AudioFoldersResult> audioFolders({int minDurationMs = 30000}) async =>
       const AudioFoldersListed([]);
 
   @override

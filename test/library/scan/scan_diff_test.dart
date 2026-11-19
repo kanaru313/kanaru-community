@@ -19,6 +19,7 @@ StoredTrackRow _row(
   int keys = _keys,
   String? lrcLocator,
   String? lrcRevision,
+  int? durationMs,
 }) => StoredTrackRow(
   id: id,
   locator: locator,
@@ -29,18 +30,21 @@ StoredTrackRow _row(
   keysVersion: keys,
   lrcLocator: lrcLocator,
   lrcRevision: lrcRevision,
+  durationMs: durationMs,
 );
 
 ScanDiff _diff(
   SourceListing listing,
   List<StoredTrackRow> stored, {
   bool full = false,
+  int minDurationMs = 0,
 }) => diffScan(
   listing,
   stored,
   tagsVersion: _tags,
   keysVersion: _keys,
   full: full,
+  minDurationMs: minDurationMs,
 );
 
 List<String> _read(ScanDiff d) => [for (final r in d.toRead) r.file.locator];
@@ -238,6 +242,47 @@ void main() {
         const [],
       );
       expect(d.toRead.single.lrc!.locator, 'a.lrc');
+    });
+  });
+
+  group('stored length against the minimum duration', () {
+    final listing = SourceListing(files: [_f('a.mp3'), _f('b.mp3')]);
+    final stored = [
+      _row(1, 'a.mp3', durationMs: 40000),
+      _row(2, 'b.mp3', durationMs: 200000),
+    ];
+
+    test('an unchanged row shorter than the minimum is a short drop', () {
+      final d = _diff(listing, stored, minDurationMs: 60000);
+      expect(d.shortDropped, [1]);
+      expect(d.unchanged, 1);
+      expect(d.toRead, isEmpty);
+      expect(d.missingCandidates, isEmpty);
+    });
+
+    test('the minimum off, or a longer row, drops nothing', () {
+      expect(_diff(listing, stored).shortDropped, isEmpty);
+      expect(
+        _diff(listing, stored, minDurationMs: 30000).shortDropped,
+        isEmpty,
+      );
+    });
+
+    test('an unknown or zero stored length is never dropped', () {
+      final d = _diff(listing, [
+        _row(1, 'a.mp3'),
+        _row(2, 'b.mp3', durationMs: 0),
+      ], minDurationMs: 60000);
+      expect(d.shortDropped, isEmpty);
+      expect(d.unchanged, 2);
+    });
+
+    test('a missing row is read again, not dropped by its old length', () {
+      final d = _diff(listing, [
+        _row(1, 'a.mp3', status: 'missing', durationMs: 40000),
+      ], minDurationMs: 60000);
+      expect(d.shortDropped, isEmpty);
+      expect(_read(d), contains('a.mp3'));
     });
   });
 }

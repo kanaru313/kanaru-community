@@ -7,13 +7,17 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../../platform/domain/media_permissions.dart';
 import '../../../platform/state/media_permissions_provider.dart';
 import 'section_states.dart';
+import 'setup_mode.dart';
 
 final _log = Logger('screens.first_run');
 
 /// The permission group (Android only; the page leaves it out where
-/// `MediaPermissionState.applies` is false).
+/// `MediaPermissionState.applies` is false). In [SetupMode.settings] the card
+/// takes an error tint while the music permission is missing.
 class PermissionsSection extends ConsumerStatefulWidget {
-  const PermissionsSection({super.key});
+  const PermissionsSection({super.key, this.mode = SetupMode.firstRun});
+
+  final SetupMode mode;
 
   @override
   ConsumerState<PermissionsSection> createState() => _PermissionsSectionState();
@@ -101,6 +105,7 @@ class _PermissionsSectionState extends ConsumerState<PermissionsSection> {
     );
     return PermissionCard(
       collapsed: state.allGranted,
+      attention: widget.mode == SetupMode.settings && !audioOk,
       collapsedLabel: Text(l10n.scanSetupPermissionsGranted),
       rows: [
         row(

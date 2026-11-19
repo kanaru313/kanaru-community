@@ -29,8 +29,8 @@ class MultiSelectionBody<T> extends StatefulWidget {
     super.key,
     required this.options,
     required this.title,
-    required this.confirmLabel,
-    required this.cancelLabel,
+    this.confirmLabel,
+    this.cancelLabel,
     this.pinned = const [],
     this.subtitle,
     this.emptyNote,
@@ -39,6 +39,9 @@ class MultiSelectionBody<T> extends StatefulWidget {
     this.footerNote,
     this.selectAllLabel,
     this.selectedCountLabel,
+    this.minSelected = 0,
+    this.minSelectedNote,
+    this.onChanged,
     this.initial = const {},
     this.leadingAction,
     this.filterHint,
@@ -47,7 +50,11 @@ class MultiSelectionBody<T> extends StatefulWidget {
     this.canConfirm,
     this.fillHeight = false,
     this.footerBorder = false,
-  });
+    this.dense = false,
+  }) : assert(
+         onChanged != null || (confirmLabel != null && cancelLabel != null),
+         'confirmLabel and cancelLabel are required unless onChanged is set',
+       );
 
   final List<SelectionOption<T>> options;
   final List<SelectionOption<T>> pinned;
@@ -65,8 +72,23 @@ class MultiSelectionBody<T> extends StatefulWidget {
   final Widget Function(BuildContext context, Set<T> selected)? footerNote;
   final String? selectAllLabel;
   final String Function(int n, int total)? selectedCountLabel;
-  final String Function(Set<T> selected) confirmLabel;
-  final String cancelLabel;
+
+  /// Fewest enabled options that must stay chosen. At the minimum the chosen
+  /// rows are locked (dimmed, [minSelectedNote] added to their subtitle) and
+  /// select-all is off while everything is chosen. 0 = no minimum.
+  final int minSelected;
+
+  /// Caller's words for a locked row ("keep at least one").
+  final String? minSelectedNote;
+
+  /// Live mode: told the chosen set after every tap, and the footer (cancel /
+  /// confirm) is left out, so a tap is the whole action. The sheet closes by
+  /// itself (drag, Back, tap outside).
+  final ValueChanged<Set<T>>? onChanged;
+
+  /// Footer button labels; required unless the body is live ([onChanged]).
+  final String Function(Set<T> selected)? confirmLabel;
+  final String? cancelLabel;
   final Set<T> initial;
   final MultiSelectionAction<T>? leadingAction;
   final String? filterHint;
@@ -80,6 +102,9 @@ class MultiSelectionBody<T> extends StatefulWidget {
 
   /// Draws a line above the footer.
   final bool footerBorder;
+
+  /// Dense rows (40 dp), as in dropdowns: for panels anchored to a row.
+  final bool dense;
 
   @override
   State<MultiSelectionBody<T>> createState() => _MultiSelectionBodyState<T>();
@@ -118,20 +143,39 @@ class _MultiSelectionBodyState<T> extends State<MultiSelectionBody<T>> {
     hasEmptyNote: widget.emptyNote != null,
     hasListFooter: widget.listFooter != null,
     hasSelectAll: widget.selectAllLabel != null,
+    minSelected: widget.minSelected,
   );
 
-  void _toggle(T value) => setState(() {
-    if (!_chosen.add(value)) _chosen.remove(value);
-  });
+  void _toggle(T value) {
+    var changed = true;
+    setState(() {
+      if (_chosen.add(value)) return;
+      if (_view().isLocked(value)) {
+        changed = false;
+        return;
+      }
+      _chosen.remove(value);
+    });
+    if (changed) widget.onChanged?.call({..._view().picks});
+  }
 
-  void _toggleAll() => setState(() {
-    final enabled = _view().enabledValues;
-    if (enabled.every(_chosen.contains)) {
-      _chosen.removeAll(enabled);
-    } else {
-      _chosen.addAll(enabled);
-    }
-  });
+  void _toggleAll() {
+    var changed = true;
+    setState(() {
+      final view = _view();
+      final enabled = view.enabledValues;
+      if (enabled.every(_chosen.contains)) {
+        if (view.selectAllLocked) {
+          changed = false;
+          return;
+        }
+        _chosen.removeAll(enabled);
+      } else {
+        _chosen.addAll(enabled);
+      }
+    });
+    if (changed) widget.onChanged?.call({..._view().picks});
+  }
 
   Future<void> _runAction() async {
     final action = widget.leadingAction;
@@ -184,7 +228,7 @@ class _MultiSelectionBodyState<T> extends State<MultiSelectionBody<T>> {
     final view = _view();
     final picks = view.picks;
     final canGo = picks.isNotEmpty && (widget.canConfirm?.call(picks) ?? true);
-    final label = widget.confirmLabel(picks);
+    final label = widget.confirmLabel?.call(picks) ?? '';
     final scheme = Theme.of(context).colorScheme;
     final rows = ListView.separated(
       shrinkWrap: !widget.fillHeight,
@@ -196,6 +240,7 @@ class _MultiSelectionBodyState<T> extends State<MultiSelectionBody<T>> {
         view: view,
         selectAllLabel: widget.selectAllLabel,
         selectedCountLabel: widget.selectedCountLabel,
+        minSelectedNote: widget.minSelectedNote,
         banner: widget.banner,
         emptyNote: widget.emptyNote,
         listFooter: widget.listFooter,
@@ -205,6 +250,7 @@ class _MultiSelectionBodyState<T> extends State<MultiSelectionBody<T>> {
         onToggle: _toggle,
         onToggleAll: _toggleAll,
         onAction: _runAction,
+        dense: widget.dense,
       ),
     );
     return PopScope(
@@ -231,29 +277,30 @@ class _MultiSelectionBodyState<T> extends State<MultiSelectionBody<T>> {
               ),
             ),
           widget.fillHeight ? Expanded(child: rows) : Flexible(child: rows),
-          PickerFooter(
-            border: widget.footerBorder,
-            note: widget.footerNote?.call(context, picks),
-            buttons: [
-              TextButton(
-                onPressed: _busy ? null : () => Navigator.of(context).pop(),
-                child: Text(widget.cancelLabel),
-              ),
-              FilledButton(
-                focusNode: _confirmFocus,
-                // Busy: disabled for the semantics and the keyboard, but it
-                // keeps the filled look under the progress ring.
-                onPressed: canGo && !_busy ? _confirm : null,
-                style: _busy
-                    ? FilledButton.styleFrom(
-                        disabledBackgroundColor: scheme.primary,
-                        disabledForegroundColor: scheme.onPrimary,
-                      )
-                    : null,
-                child: _busy ? BusyButtonLabel(label: label) : Text(label),
-              ),
-            ],
-          ),
+          if (widget.onChanged == null)
+            PickerFooter(
+              border: widget.footerBorder,
+              note: widget.footerNote?.call(context, picks),
+              buttons: [
+                TextButton(
+                  onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                  child: Text(widget.cancelLabel ?? ''),
+                ),
+                FilledButton(
+                  focusNode: _confirmFocus,
+                  // Busy: disabled for the semantics and the keyboard, but it
+                  // keeps the filled look under the progress ring.
+                  onPressed: canGo && !_busy ? _confirm : null,
+                  style: _busy
+                      ? FilledButton.styleFrom(
+                          disabledBackgroundColor: scheme.primary,
+                          disabledForegroundColor: scheme.onPrimary,
+                        )
+                      : null,
+                  child: _busy ? BusyButtonLabel(label: label) : Text(label),
+                ),
+              ],
+            ),
         ],
       ),
     );

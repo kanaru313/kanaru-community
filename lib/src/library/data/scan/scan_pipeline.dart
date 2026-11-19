@@ -106,10 +106,16 @@ Future<FolderTagResult> _scanFolder(
   final excluded = (await excludedFolderKeys(d.db, folder.sourceId)).toSet();
   // Built before the listing: it remembers the mounts the folder sat on.
   final presence = d.source.presenceCheck((root: folder.root));
-  final listing = await d.source.list(
-    (root: folder.root),
-    excludedKeys: excluded,
-    skipShorterThanMs: d.skipShortTracks ? shortTrackMs : 0,
+  final rules = d.rules;
+  // Format and size rules run here, after the listing and in one place, so
+  // both platforms share them and `ruleOut` keeps the empty-root guard.
+  final listing = rules.applyTo(
+    await d.source.list(
+      (root: folder.root),
+      excludedKeys: excluded,
+      skipShorterThanMs: rules.minDurationMs,
+      respectNomedia: rules.respectNomedia,
+    ),
   );
   return runTagPass(
     folder,
@@ -121,7 +127,7 @@ Future<FolderTagResult> _scanFolder(
       shouldStop: hooks.shouldStop,
       onProgress: onProgress,
       tagTimeout: d.tagTimeout,
-      skipShorterThanMs: d.skipShortTracks ? shortTrackMs : 0,
+      skipShorterThanMs: rules.minDurationMs,
       shortMemo: session.shortMemo,
       yielder: d.yielder,
       rootStillThere: presence,

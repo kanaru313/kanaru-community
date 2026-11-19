@@ -168,5 +168,160 @@
   "settingsAppearanceWindowFrameDesc": "Dùng thanh tiêu đề và viền cửa sổ của hệ thống thay cho thanh của Kanaru.",
   "settingsAppearanceWindowFrameApply": "Áp dụng sau khi mở lại Kanaru",
   "settingsAppearanceTextSizeDefault": "Mặc định",
-  "settingsPlaybackNeedsReplayGain": "Bật ReplayGain để dùng"
+  "settingsPlaybackNeedsReplayGain": "Bật ReplayGain để dùng",
+  "settingsSectionHintTooltip": "Giải thích {section}",
+  "@settingsSectionHintTooltip": {
+    "placeholders": {
+      "section": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryCounts": "{tracks} bài · {albums} album · {artists} nghệ sĩ",
+  "@settingsLibraryCounts": {
+    "placeholders": {
+      "tracks": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "albums": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "artists": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryLastScan": "Quét lần cuối {time} · thêm {added} bài",
+  "@settingsLibraryLastScan": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "added": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsLibraryBlockScan": "Quét",
+  "settingsLibraryBlockOrganise": "Sắp xếp",
+  "settingsLibraryBlockRemoved": "Đã loại",
+  "settingsLibraryFoldersEstimate": "Khoảng {count} bài",
+  "@settingsLibraryFoldersEstimate": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryMinDuration": "Bỏ qua tệp ngắn hơn",
+  "settingsLibraryMinDurationCaption": "Nhạc chuông, âm báo, đoạn ghi âm ngắn. Áp dụng ở lần quét sau.",
+  "settingsLibraryMinSize": "Bỏ qua tệp nhỏ hơn",
+  "settingsLibraryMinSizeCaption": "Tính theo dung lượng tệp. Áp dụng ở lần quét sau.",
+  "settingsLibrarySizeKb": "{kb} KB",
+  "@settingsLibrarySizeKb": {
+    "placeholders": {
+      "kb": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibrarySizeMb": "{mb} MB",
+  "@settingsLibrarySizeMb": {
+    "placeholders": {
+      "mb": {
+        "type": "double",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryFormats": "Định dạng được quét",
+  "settingsLibraryFormatsCaption": "Bỏ chọn để không quét định dạng đó. Cần giữ ít nhất một.",
+  "settingsLibraryFormatsKeepOne": "cần giữ ít nhất một",
+  "settingsLibraryFormatsAll": "Tất cả",
+  "settingsLibraryFormatsSelectAll": "Chọn tất cả",
+  "settingsCountOfTotal": "{n} / {total}",
+  "@settingsCountOfTotal": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsLibraryNomedia": "Bỏ qua thư mục có tệp .nomedia",
+  "settingsLibraryNomediaDesc": "Như Android: thư mục có .nomedia không được quét.",
+  "settingsLibraryWatch": "Tự cập nhật khi thư mục thay đổi",
+  "settingsLibraryWatchDesc": "Thấy tệp mới ngay, không cần quét lại.",
+  "settingsLibraryRulesApplyLater": "Áp dụng ở lần quét sau",
+  "settingsLibraryRescanning": "Đang quét lại thư viện ở nền",
+  "settingsLibraryMergeFolders": "Gộp thư mục chỉ có một thư mục con",
+  "settingsLibraryMergeFoldersDesc": "Tab Thư mục: đi thẳng xuống thư mục con duy nhất.",
+  "settingsLibraryAlbumGrouping": "Nhóm album theo",
+  "settingsLibraryRemoved": "Đã loại khỏi thư viện",
+  "settingsLibraryTabsHintMobile": "Bật tab muốn hiện, kéo để sắp xếp. Ít nhất 1 tab. Tab là hàng tab con ở đầu Thư viện.",
+  "settingsLibraryTabsHintDesktop": "Bật tab muốn hiện, kéo để sắp xếp. Ít nhất 1 tab. Tab là các mục Thư viện ở thanh bên.",
+  "settingsLibraryRemoveFolderTitle": "Bỏ thư mục “{name}”?",
+  "@settingsLibraryRemoveFolderTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryRemoveFolderBody": "Các bài trong thư mục này sẽ rời thư viện (playlist giữ chỗ, đánh dấu mất tệp).\n\nTệp trong máy không bị xoá.",
+  "settingsLibraryRemoveFolderBodyCount": "{count} bài trong thư mục này sẽ rời thư viện (playlist giữ chỗ, đánh dấu mất tệp).\n\nTệp trong máy không bị xoá.",
+  "@settingsLibraryRemoveFolderBodyCount": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryRemoveFolderConfirm": "Bỏ thư mục",
+  "settingsLibraryFolderRemoved": "Đã bỏ “{name}”",
+  "@settingsLibraryFolderRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryFolderRemovedCount": "Đã bỏ “{name}” · {count} bài rời thư viện",
+  "@settingsLibraryFolderRemovedCount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "settingsLibraryLastFolderTitle": "Không bỏ được thư mục cuối",
+  "settingsLibraryLastFolderBody": "Thư viện cần ít nhất một thư mục nhạc. Thêm thư mục khác trước, rồi bỏ “{name}”.",
+  "@settingsLibraryLastFolderBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLibraryGotIt": "Đã hiểu",
+  "settingsLibraryExclusionRemoved": "Thôi loại trừ “{name}” · đang quét lại",
+  "@settingsLibraryExclusionRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

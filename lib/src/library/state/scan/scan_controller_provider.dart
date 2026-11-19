@@ -44,7 +44,7 @@ final scanControllerProvider = Provider<ScanController>((ref) {
     reader: const RustTagReader(),
     maker: const RustCoverMaker(),
     cacheDir: paths.cacheDir.path,
-    skipShortTracks: _flag(ref, skipShortTracksSetting),
+    rules: ref.read(currentScanRulesProvider),
     now: now,
   );
   final controller = ScanController(

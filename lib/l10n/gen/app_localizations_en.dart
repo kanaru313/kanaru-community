@@ -487,6 +487,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanHomeNoTracks => 'No songs found';
 
   @override
+  String get scanHomeChangeFolders => 'Change folders';
+
+  @override
   String get playbackCover => 'Cover art';
 
   @override
@@ -1444,7 +1447,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryMenuExcludeNote =>
-      'Keeps the files; undo in Settings › Library › Folders';
+      'Keeps the files; undo in Settings › Library › Exclusions';
 
   @override
   String get libraryMenuIncludesSubfolders => 'Includes subfolders';
@@ -2828,4 +2831,238 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsPlaybackNeedsReplayGain =>
       'Turn on ReplayGain to use this';
+
+  @override
+  String settingsSectionHintTooltip(String section) {
+    return 'About $section';
+  }
+
+  @override
+  String settingsLibraryCounts(int tracks, int albums, int artists) {
+    final intl.NumberFormat tracksNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String tracksString = tracksNumberFormat.format(tracks);
+    final intl.NumberFormat albumsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String albumsString = albumsNumberFormat.format(albums);
+    final intl.NumberFormat artistsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String artistsString = artistsNumberFormat.format(artists);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      tracks,
+      locale: localeName,
+      other: '$tracksString songs',
+      one: '1 song',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      albums,
+      locale: localeName,
+      other: '$albumsString albums',
+      one: '1 album',
+    );
+    String _temp2 = intl.Intl.pluralLogic(
+      artists,
+      locale: localeName,
+      other: '$artistsString artists',
+      one: '1 artist',
+    );
+    return '$_temp0 · $_temp1 · $_temp2';
+  }
+
+  @override
+  String settingsLibraryLastScan(String time, int added) {
+    String _temp0 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added songs added',
+      one: '1 song added',
+    );
+    return 'Last scan $time · $_temp0';
+  }
+
+  @override
+  String get settingsLibraryBlockScan => 'Scan';
+
+  @override
+  String get settingsLibraryBlockOrganise => 'Organise';
+
+  @override
+  String get settingsLibraryBlockRemoved => 'Removed';
+
+  @override
+  String settingsLibraryFoldersEstimate(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString songs',
+      one: '1 song',
+    );
+    return 'About $_temp0';
+  }
+
+  @override
+  String get settingsLibraryMinDuration => 'Skip files shorter than';
+
+  @override
+  String get settingsLibraryMinDurationCaption =>
+      'Ringtones, alerts and short recordings. Applies at the next scan.';
+
+  @override
+  String get settingsLibraryMinSize => 'Skip files smaller than';
+
+  @override
+  String get settingsLibraryMinSizeCaption =>
+      'Measured by file size. Applies at the next scan.';
+
+  @override
+  String settingsLibrarySizeKb(int kb) {
+    final intl.NumberFormat kbNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String kbString = kbNumberFormat.format(kb);
+
+    return '$kbString KB';
+  }
+
+  @override
+  String settingsLibrarySizeMb(double mb) {
+    final intl.NumberFormat mbNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String mbString = mbNumberFormat.format(mb);
+
+    return '$mbString MB';
+  }
+
+  @override
+  String get settingsLibraryFormats => 'Scanned formats';
+
+  @override
+  String get settingsLibraryFormatsCaption =>
+      'Untick a format to skip it when scanning. Keep at least one.';
+
+  @override
+  String get settingsLibraryFormatsKeepOne => 'keep at least one';
+
+  @override
+  String get settingsLibraryFormatsAll => 'All';
+
+  @override
+  String get settingsLibraryFormatsSelectAll => 'Select all';
+
+  @override
+  String settingsCountOfTotal(int n, int total) {
+    return '$n / $total';
+  }
+
+  @override
+  String get settingsLibraryNomedia => 'Skip folders with a .nomedia file';
+
+  @override
+  String get settingsLibraryNomediaDesc =>
+      'Like Android: a folder with .nomedia is not scanned.';
+
+  @override
+  String get settingsLibraryWatch => 'Update when folders change';
+
+  @override
+  String get settingsLibraryWatchDesc =>
+      'See new files at once, no rescan needed.';
+
+  @override
+  String get settingsLibraryRulesApplyLater => 'Applies at the next scan';
+
+  @override
+  String get settingsLibraryRescanning =>
+      'Rescanning the library in the background';
+
+  @override
+  String get settingsLibraryMergeFolders =>
+      'Merge folders with a single subfolder';
+
+  @override
+  String get settingsLibraryMergeFoldersDesc =>
+      'Folders tab: go straight into the only subfolder.';
+
+  @override
+  String get settingsLibraryAlbumGrouping => 'Group albums by';
+
+  @override
+  String get settingsLibraryRemoved => 'Removed from library';
+
+  @override
+  String get settingsLibraryTabsHintMobile =>
+      'Turn on the tabs you want, drag to reorder. At least one tab stays on. Tabs are the sub-tab row at the top of Library.';
+
+  @override
+  String get settingsLibraryTabsHintDesktop =>
+      'Turn on the tabs you want, drag to reorder. At least one tab stays on. Tabs are the Library items in the sidebar.';
+
+  @override
+  String settingsLibraryRemoveFolderTitle(String name) {
+    return 'Remove “$name”?';
+  }
+
+  @override
+  String get settingsLibraryRemoveFolderBody =>
+      'The songs in this folder leave the library (playlists keep their place and mark them as missing).\n\nFiles on your device are not deleted.';
+
+  @override
+  String settingsLibraryRemoveFolderBodyCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString songs',
+      one: '1 song',
+    );
+    return '$_temp0 in this folder leave the library (playlists keep their place and mark them as missing).\n\nFiles on your device are not deleted.';
+  }
+
+  @override
+  String get settingsLibraryRemoveFolderConfirm => 'Remove folder';
+
+  @override
+  String settingsLibraryFolderRemoved(String name) {
+    return 'Removed “$name”';
+  }
+
+  @override
+  String settingsLibraryFolderRemovedCount(String name, int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString songs',
+      one: '1 song',
+    );
+    return 'Removed “$name” · $_temp0 left the library';
+  }
+
+  @override
+  String get settingsLibraryLastFolderTitle => 'Cannot remove the last folder';
+
+  @override
+  String settingsLibraryLastFolderBody(String name) {
+    return 'The library needs at least one music folder. Add another folder first, then remove “$name”.';
+  }
+
+  @override
+  String get settingsLibraryGotIt => 'Got it';
+
+  @override
+  String settingsLibraryExclusionRemoved(String name) {
+    return '“$name” is no longer excluded · rescanning';
+  }
 }

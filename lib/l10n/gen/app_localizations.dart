@@ -812,6 +812,12 @@ abstract class AppLocalizations {
   /// **'No songs found'**
   String get scanHomeNoTracks;
 
+  /// No description provided for @scanHomeChangeFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Change folders'**
+  String get scanHomeChangeFolders;
+
   /// No description provided for @playbackCover.
   ///
   /// In en, this message translates to:
@@ -2291,7 +2297,7 @@ abstract class AppLocalizations {
   /// No description provided for @libraryMenuExcludeNote.
   ///
   /// In en, this message translates to:
-  /// **'Keeps the files; undo in Settings › Library › Folders'**
+  /// **'Keeps the files; undo in Settings › Library › Exclusions'**
   String get libraryMenuExcludeNote;
 
   /// No description provided for @libraryMenuIncludesSubfolders.
@@ -4151,6 +4157,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn on ReplayGain to use this'**
   String get settingsPlaybackNeedsReplayGain;
+
+  /// No description provided for @settingsSectionHintTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'About {section}'**
+  String settingsSectionHintTooltip(String section);
+
+  /// No description provided for @settingsLibraryCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{tracks, plural, =1{1 song} other{{tracks} songs}} · {albums, plural, =1{1 album} other{{albums} albums}} · {artists, plural, =1{1 artist} other{{artists} artists}}'**
+  String settingsLibraryCounts(int tracks, int albums, int artists);
+
+  /// No description provided for @settingsLibraryLastScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Last scan {time} · {added, plural, =1{1 song added} other{{added} songs added}}'**
+  String settingsLibraryLastScan(String time, int added);
+
+  /// No description provided for @settingsLibraryBlockScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get settingsLibraryBlockScan;
+
+  /// No description provided for @settingsLibraryBlockOrganise.
+  ///
+  /// In en, this message translates to:
+  /// **'Organise'**
+  String get settingsLibraryBlockOrganise;
+
+  /// No description provided for @settingsLibraryBlockRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed'**
+  String get settingsLibraryBlockRemoved;
+
+  /// No description provided for @settingsLibraryFoldersEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'About {count, plural, =1{1 song} other{{count} songs}}'**
+  String settingsLibraryFoldersEstimate(int count);
+
+  /// No description provided for @settingsLibraryMinDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip files shorter than'**
+  String get settingsLibraryMinDuration;
+
+  /// No description provided for @settingsLibraryMinDurationCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Ringtones, alerts and short recordings. Applies at the next scan.'**
+  String get settingsLibraryMinDurationCaption;
+
+  /// No description provided for @settingsLibraryMinSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip files smaller than'**
+  String get settingsLibraryMinSize;
+
+  /// No description provided for @settingsLibraryMinSizeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Measured by file size. Applies at the next scan.'**
+  String get settingsLibraryMinSizeCaption;
+
+  /// No description provided for @settingsLibrarySizeKb.
+  ///
+  /// In en, this message translates to:
+  /// **'{kb} KB'**
+  String settingsLibrarySizeKb(int kb);
+
+  /// No description provided for @settingsLibrarySizeMb.
+  ///
+  /// In en, this message translates to:
+  /// **'{mb} MB'**
+  String settingsLibrarySizeMb(double mb);
+
+  /// No description provided for @settingsLibraryFormats.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned formats'**
+  String get settingsLibraryFormats;
+
+  /// No description provided for @settingsLibraryFormatsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Untick a format to skip it when scanning. Keep at least one.'**
+  String get settingsLibraryFormatsCaption;
+
+  /// No description provided for @settingsLibraryFormatsKeepOne.
+  ///
+  /// In en, this message translates to:
+  /// **'keep at least one'**
+  String get settingsLibraryFormatsKeepOne;
+
+  /// No description provided for @settingsLibraryFormatsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get settingsLibraryFormatsAll;
+
+  /// No description provided for @settingsLibraryFormatsSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get settingsLibraryFormatsSelectAll;
+
+  /// No description provided for @settingsCountOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} / {total}'**
+  String settingsCountOfTotal(int n, int total);
+
+  /// No description provided for @settingsLibraryNomedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip folders with a .nomedia file'**
+  String get settingsLibraryNomedia;
+
+  /// No description provided for @settingsLibraryNomediaDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Like Android: a folder with .nomedia is not scanned.'**
+  String get settingsLibraryNomediaDesc;
+
+  /// No description provided for @settingsLibraryWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Update when folders change'**
+  String get settingsLibraryWatch;
+
+  /// No description provided for @settingsLibraryWatchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'See new files at once, no rescan needed.'**
+  String get settingsLibraryWatchDesc;
+
+  /// No description provided for @settingsLibraryRulesApplyLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies at the next scan'**
+  String get settingsLibraryRulesApplyLater;
+
+  /// No description provided for @settingsLibraryRescanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescanning the library in the background'**
+  String get settingsLibraryRescanning;
+
+  /// No description provided for @settingsLibraryMergeFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge folders with a single subfolder'**
+  String get settingsLibraryMergeFolders;
+
+  /// No description provided for @settingsLibraryMergeFoldersDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders tab: go straight into the only subfolder.'**
+  String get settingsLibraryMergeFoldersDesc;
+
+  /// No description provided for @settingsLibraryAlbumGrouping.
+  ///
+  /// In en, this message translates to:
+  /// **'Group albums by'**
+  String get settingsLibraryAlbumGrouping;
+
+  /// No description provided for @settingsLibraryRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from library'**
+  String get settingsLibraryRemoved;
+
+  /// No description provided for @settingsLibraryTabsHintMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on the tabs you want, drag to reorder. At least one tab stays on. Tabs are the sub-tab row at the top of Library.'**
+  String get settingsLibraryTabsHintMobile;
+
+  /// No description provided for @settingsLibraryTabsHintDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on the tabs you want, drag to reorder. At least one tab stays on. Tabs are the Library items in the sidebar.'**
+  String get settingsLibraryTabsHintDesktop;
+
+  /// No description provided for @settingsLibraryRemoveFolderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove “{name}”?'**
+  String settingsLibraryRemoveFolderTitle(String name);
+
+  /// No description provided for @settingsLibraryRemoveFolderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The songs in this folder leave the library (playlists keep their place and mark them as missing).\n\nFiles on your device are not deleted.'**
+  String get settingsLibraryRemoveFolderBody;
+
+  /// No description provided for @settingsLibraryRemoveFolderBodyCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} in this folder leave the library (playlists keep their place and mark them as missing).\n\nFiles on your device are not deleted.'**
+  String settingsLibraryRemoveFolderBodyCount(int count);
+
+  /// No description provided for @settingsLibraryRemoveFolderConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove folder'**
+  String get settingsLibraryRemoveFolderConfirm;
+
+  /// No description provided for @settingsLibraryFolderRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed “{name}”'**
+  String settingsLibraryFolderRemoved(String name);
+
+  /// No description provided for @settingsLibraryFolderRemovedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed “{name}” · {count, plural, =1{1 song} other{{count} songs}} left the library'**
+  String settingsLibraryFolderRemovedCount(String name, int count);
+
+  /// No description provided for @settingsLibraryLastFolderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot remove the last folder'**
+  String get settingsLibraryLastFolderTitle;
+
+  /// No description provided for @settingsLibraryLastFolderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The library needs at least one music folder. Add another folder first, then remove “{name}”.'**
+  String settingsLibraryLastFolderBody(String name);
+
+  /// No description provided for @settingsLibraryGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get settingsLibraryGotIt;
+
+  /// No description provided for @settingsLibraryExclusionRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” is no longer excluded · rescanning'**
+  String settingsLibraryExclusionRemoved(String name);
 }
 
 class _AppLocalizationsDelegate

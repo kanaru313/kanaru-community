@@ -4,27 +4,47 @@ import '../../domain/scan/scan_report.dart';
 import 'native_tag_reader.dart';
 import 'scan_yield.dart';
 
-/// Files under this length are skipped when the setting is on.
+/// Default of `library.min_duration_ms`. Kept for code that has no access to
+/// the setting (the playlist importer); the scan reads the setting itself.
 const int shortTrackMs = 30000;
 
 /// Rows per Rust tag call: `ceil(n / 20)` clamped to 32..256.
 int tagBatchSize(int files) => ((files + 19) ~/ 20).clamp(32, 256);
 
-/// Files already found too short in this session, by `(locator, mtime,
-/// size)`, so a rescan does not read them again.
+/// Files found too short in this session. A file is remembered with the
+/// stat it had and the duration that was read, so relaxing the minimum in the
+/// same session reads it again instead of skipping it for good.
 class ShortFileMemo {
-  final Set<String> _keys = {};
+  final Map<String, ({int mtimeMs, int sizeBytes, int durationMs})> _seen = {};
 
-  static String _key(int sourceId, String locator, int mtimeMs, int size) =>
-      '$sourceId|$locator|$mtimeMs|$size';
+  static String _key(int sourceId, String locator) => '$sourceId|$locator';
 
-  bool contains(int sourceId, String locator, int mtimeMs, int size) =>
-      _keys.contains(_key(sourceId, locator, mtimeMs, size));
+  /// Whether [file] need not be read: the minimum is on, the file has the
+  /// same mtime and size as when it was found short, and that duration is
+  /// still below [minMs] (the current minimum).
+  bool skips(int sourceId, ListedFile file, int minMs) {
+    if (minMs <= 0) return false;
+    final seen = _seen[_key(sourceId, file.locator)];
+    return seen != null &&
+        seen.mtimeMs == file.mtimeMs &&
+        seen.sizeBytes == file.sizeBytes &&
+        seen.durationMs < minMs;
+  }
 
-  void add(int sourceId, String locator, int mtimeMs, int size) =>
-      _keys.add(_key(sourceId, locator, mtimeMs, size));
+  /// Notes that [file] was read and is [durationMs] long.
+  void remember(int sourceId, ListedFile file, int durationMs) {
+    _seen[_key(sourceId, file.locator)] = (
+      mtimeMs: file.mtimeMs,
+      sizeBytes: file.sizeBytes,
+      durationMs: durationMs,
+    );
+  }
 
-  int get length => _keys.length;
+  /// Drops the note of [file]: it was read and kept.
+  void forget(int sourceId, ListedFile file) =>
+      _seen.remove(_key(sourceId, file.locator));
+
+  int get length => _seen.length;
 }
 
 /// What the tag pass needs from its caller.

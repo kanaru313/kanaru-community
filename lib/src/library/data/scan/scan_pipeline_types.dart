@@ -1,6 +1,7 @@
 import '../../../database/database.dart';
 import '../../../platform/domain/media_permissions.dart';
 import '../../../storage/data/local_folder_source.dart';
+import '../../domain/scan/scan_rules.dart';
 import '../../domain/scan_status.dart';
 import 'library_counts.dart';
 import 'native_cover_maker.dart';
@@ -18,7 +19,7 @@ class ScanPipelineDeps {
     required this.reader,
     required this.maker,
     required this.cacheDir,
-    required this.skipShortTracks,
+    required this.rules,
     required this.now,
     ScanYield? yielder,
     this.tagTimeout = const Duration(seconds: 90),
@@ -33,7 +34,9 @@ class ScanPipelineDeps {
 
   /// Absolute path of the app cache folder.
   final String cacheDir;
-  final bool skipShortTracks;
+
+  /// The scan rules, read once when the pass starts.
+  final ScanRules rules;
 
   /// Milliseconds since the epoch.
   final int Function() now;

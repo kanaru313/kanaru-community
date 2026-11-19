@@ -68,28 +68,28 @@ Future<FolderTagResult> _runTagPass(
 
   final stored = await storedRowsOf(db, folder.sourceId, yielder: deps.yielder);
   final diff = stored.length > deps.isolateDiffAbove
-      ? await diffAgainstStoredInIsolate(listing, stored, full)
-      : diffAgainstStored(listing, stored, full);
+      ? await diffAgainstStoredInIsolate(
+          listing,
+          stored,
+          full,
+          deps.skipShorterThanMs,
+        )
+      : diffAgainstStored(listing, stored, full, deps.skipShorterThanMs);
   report
     ..unchanged = diff.unchanged
     ..rootSuspect = diff.rootSuspect;
   if (diff.rootSuspect) {
     _log.warning('${folder.root}: no files listed but rows exist; kept');
   }
-  final candidates = <int>{...diff.missingCandidates};
+  final candidates = <int>{...diff.missingCandidates, ...diff.shortDropped};
+  report.filteredOut += diff.shortDropped.length;
   final notFound = <int, String>{};
 
   // Short files seen before in this session are not read again.
   final reads = <ScanRead>[];
   for (final r in diff.toRead) {
     final f = r.file;
-    if (deps.skipShorterThanMs > 0 &&
-        deps.shortMemo.contains(
-          folder.sourceId,
-          f.locator,
-          f.mtimeMs,
-          f.sizeBytes,
-        )) {
+    if (deps.shortMemo.skips(folder.sourceId, f, deps.skipShorterThanMs)) {
       dropShort(report, candidates, r.stored);
     } else {
       reads.add(r);

@@ -16,6 +16,7 @@ class WalkRequest {
     this.excludedKeys = const {},
     this.mountPoints = const {},
     this.removableMediaPrefixes = defaultRemovableMediaPrefixes,
+    this.respectNomedia = false,
   });
 
   /// Absolute, canonical, no trailing slash.
@@ -29,10 +30,16 @@ class WalkRequest {
 
   /// Folders listed empty below these count as unmounted drives.
   final List<String> removableMediaPrefixes;
+
+  /// Skip a folder holding a file named `.nomedia`, with its subfolders.
+  final bool respectNomedia;
 }
 
 bool _isSameOrInside(String ancestor, String path) =>
     path == ancestor || path.startsWith('$ancestor/');
+
+bool _isNomedia(String path) =>
+    path.substring(path.lastIndexOf('/') + 1) == '.nomedia';
 
 bool _isExcluded(String relative, Set<String> keys) {
   for (final key in keys) {
@@ -60,17 +67,21 @@ AudioListing walkAudioTree(WalkRequest request) {
   final sampleDirs = <String>[];
   final aliased = <String>{};
   var excludedOut = 0, skippedOut = 0, skippedLinks = 0, undecodable = 0;
+  var nomediaOut = 0;
 
   void noteUndecodable(String dir) {
     undecodable++;
-    if (sampleDirs.length < maxUndecodableSamples && !sampleDirs.contains(dir)) {
+    if (sampleDirs.length < maxUndecodableSamples &&
+        !sampleDirs.contains(dir)) {
       sampleDirs.add(dir);
     }
   }
 
   bool emptyMeansUnmounted(String dir) =>
       request.mountPoints.contains(dir) ||
-      request.removableMediaPrefixes.any((prefix) => _isSameOrInside(prefix, dir));
+      request.removableMediaPrefixes.any(
+        (prefix) => _isSameOrInside(prefix, dir),
+      );
 
   final relativeStart = root.endsWith('/') ? root.length : root.length + 1;
   final pending = <String>[root];
@@ -85,6 +96,13 @@ AudioListing walkAudioTree(WalkRequest request) {
       if (dir.contains('�')) {
         noteUndecodable(dir.substring(0, dir.lastIndexOf('/')));
       }
+      continue;
+    }
+    if (request.respectNomedia &&
+        entries.any((e) => e is! Directory && _isNomedia(e.path))) {
+      // The folder and everything below it is not music; subfolders were not
+      // queued yet, so skipping here skips them too.
+      nomediaOut++;
       continue;
     }
     if (entries.isEmpty && dir != root && emptyMeansUnmounted(dir)) {
@@ -140,11 +158,19 @@ AudioListing walkAudioTree(WalkRequest request) {
           final mtimeMs = stat.modified.millisecondsSinceEpoch;
           if (isAudio) {
             audio.add(
-              LocalAudioFile(path: path, sizeBytes: stat.size, mtimeMs: mtimeMs),
+              LocalAudioFile(
+                path: path,
+                sizeBytes: stat.size,
+                mtimeMs: mtimeMs,
+              ),
             );
           } else {
             lyrics.add(
-              LocalSidecarFile(path: path, sizeBytes: stat.size, mtimeMs: mtimeMs),
+              LocalSidecarFile(
+                path: path,
+                sizeBytes: stat.size,
+                mtimeMs: mtimeMs,
+              ),
             );
           }
         case FileSystemEntityType.notFound:
@@ -153,8 +179,7 @@ AudioListing walkAudioTree(WalkRequest request) {
           if (isAudio) unstattable.add(path);
         default:
           // Folder link named like a file, FIFO, socket, device: not music.
-          if (entry is Link &&
-              stat.type == FileSystemEntityType.directory) {
+          if (entry is Link && stat.type == FileSystemEntityType.directory) {
             skippedLinks++;
           }
       }
@@ -167,6 +192,7 @@ AudioListing walkAudioTree(WalkRequest request) {
     emptyDirs: empty,
     unstattable: unstattable,
     excludedOut: excludedOut,
+    nomediaOut: nomediaOut,
     skippedOut: skippedOut,
     skippedLinks: skippedLinks,
     undecodableNames: undecodable,

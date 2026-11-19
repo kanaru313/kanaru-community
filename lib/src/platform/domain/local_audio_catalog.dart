@@ -103,6 +103,7 @@ class AudioListing {
     this.excludedOut = 0,
     this.skippedOut = 0,
     this.shortOut = 0,
+    this.nomediaOut = 0,
     this.unreachableReason = UnreachableReason.missing,
     this.skippedLinks = 0,
     this.undecodableNames = 0,
@@ -139,6 +140,11 @@ class AudioListing {
   /// Files dropped by the `skipShorterThanMs` pre-filter (Android; Linux is
   /// always 0).
   final int shortOut;
+
+  /// Folders left out because they hold a `.nomedia` file and the listing was
+  /// asked to respect it (Linux). Not part of [filteredOut]: a root emptied
+  /// only by it must still look suspect to the empty-root guard.
+  final int nomediaOut;
 
   /// The scan's "filtered out" count is `excludedOut + shortOut`: what the
   /// user's own settings removed. Only that sum may switch off the empty-root
@@ -224,19 +230,24 @@ enum FolderChoice { systemDialog, mediaStoreSheet }
 abstract interface class LocalAudioCatalog {
   /// Lists [root]. [excludedKeys] are folder keys relative to [root] (the
   /// root's own empty key is never passed). [skipShorterThanMs] is the
-  /// Android pre-filter (0 = off). Failures are reported in the result (`reachable` false with an
+  /// Android pre-filter (0 = off). [respectNomedia] makes the Linux walk skip
+  /// a folder (and everything below it) that holds a file named `.nomedia`;
+  /// Android ignores it because MediaStore already honours the file. Failures
+  /// are reported in the result (`reachable` false with an
   /// [UnreachableReason]); this never throws for a platform failure.
   Future<AudioListing> listAudio({
     required String root,
     required Set<String> excludedKeys,
     int skipShorterThanMs = 0,
+    bool respectNomedia = false,
   });
 
   /// Android: MediaStore folders that hold audio. Linux: listed, empty.
   /// A listed empty result means the index holds no usable audio after the
-  /// junk, app-data and short-file filters. Failures come back as
+  /// junk, app-data and short-file filters; files shorter than
+  /// [minDurationMs] are not counted (0 = off). Failures come back as
   /// [AudioFoldersFailed]; this never throws for a platform failure.
-  Future<AudioFoldersResult> audioFolders();
+  Future<AudioFoldersResult> audioFolders({int minDurationMs = 30000});
 
   /// Android: asks the system media index to scan the top-level folders of
   /// [volumeRoots] plus the chosen [folders], and waits for it. Never throws

@@ -12,22 +12,25 @@ class _FakeCatalog implements LocalAudioCatalog {
   String? lastRoot;
   Set<String>? lastExcluded;
   int? lastShort;
+  bool? lastNomedia;
 
   @override
   Future<AudioListing> listAudio({
     required String root,
     required Set<String> excludedKeys,
     int skipShorterThanMs = 0,
+    bool respectNomedia = false,
   }) async {
     lastRoot = root;
     lastExcluded = excludedKeys;
     lastShort = skipShorterThanMs;
+    lastNomedia = respectNomedia;
     if (error != null) throw error!;
     return listing;
   }
 
   @override
-  Future<AudioFoldersResult> audioFolders() async =>
+  Future<AudioFoldersResult> audioFolders({int minDurationMs = 30000}) async =>
       const AudioFoldersListed([]);
 
   @override
@@ -86,6 +89,7 @@ void main() {
     expect(catalog.lastRoot, '/music');
     expect(catalog.lastExcluded, {'x'});
     expect(catalog.lastShort, 30000);
+    expect(catalog.lastNomedia, isFalse);
     expect(listing.files.single.locator, 'a/one.mp3');
     expect(listing.files.single.durationMs, 5);
     expect(listing.lyrics.keys, unorderedEquals(['a', '']));
@@ -189,4 +193,18 @@ void main() {
       hasLength(2),
     );
   });
+
+  test(
+    'respectNomedia is forwarded and skipped folders count as ruleOut',
+    () async {
+      final catalog = _FakeCatalog(
+        AudioListing(audio: [_audio('/music/a.mp3')], nomediaOut: 2),
+      );
+      final listing = await LocalFolderSource(catalog)
+          .list((root: '/music'), respectNomedia: true);
+      expect(catalog.lastNomedia, isTrue);
+      expect(listing.ruleOut, 2);
+      expect(listing.filteredOut, 0);
+    },
+  );
 }

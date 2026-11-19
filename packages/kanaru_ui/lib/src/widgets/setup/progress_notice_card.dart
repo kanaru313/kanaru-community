@@ -15,6 +15,7 @@ class ProgressNoticeCard extends StatelessWidget {
     this.subtitle,
     this.progress,
     this.showBar = true,
+    this.action,
   });
 
   final IconData icon;
@@ -26,6 +27,9 @@ class ProgressNoticeCard extends StatelessWidget {
 
   /// False for a finished notice: no bar at all.
   final bool showBar;
+
+  /// A text button at the end of the card ("Change folders").
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +80,7 @@ class ProgressNoticeCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (action != null) ...[const KGap(KSpace.x2), action!],
             ],
           ),
         ),

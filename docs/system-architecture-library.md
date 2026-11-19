@@ -1050,8 +1050,9 @@ as tooltip and semantics label (`KIconTabRow`). `ScanBanner` shows under the tab
 `listing` "Scanning…", `tags` "Scanning · done / total songs" with a
 determinate bar (count only when the total is 0), `covers` "Fetching covers ·
 done / total". A library with no visible track (and no scan running) shows
-`LibraryEmptyState` in place of the body; its "Choose music folders" button is
-dimmed with "Coming soon" until Settings has the folders screen.
+`LibraryEmptyState` in place of the body; its "Choose music folders" button
+opens Settings › Library at the music folders (see "Settings › Library and
+links").
 
 `LibraryListFrame(list, filterHint, builder)` adds the list bar
 (`KListSortFilterBar`: the page's left group, the sort chip, the filter
@@ -1369,10 +1370,46 @@ tint. `KDetailLayout` draws no background. The album artist link is
 
 | Key | Setting / provider | Default | Used by |
 |---|---|---|---|
-| `library.tabs` | `libraryTabsSetting`, `libraryTabsProvider` | all six tabs, default order | mobile sub-tabs; Settings reorder UI is not built |
+| `library.tabs` | `libraryTabsSetting`, `libraryTabsProvider` | all six tabs, default order | mobile sub-tabs; Settings › Library tabs block (the first-run section in `SetupMode.settings`) |
 | `library.list_views` | `libraryListViewsSetting`, `libraryListViewsProvider` (`setSort`, `setView`, `setFolderView`) | first criterion per list (descending for detail songs and languages), albums as grid, others as rows, folders as tree | sort chip, view switch, folder view switch |
 | `library.playlist_track_sorts` | `playlistTrackSortsSetting`, `playlistTrackSortsProvider` (`set`, `reset`, `forget`) | none (a playlist without an entry uses playlist order) | track sort of each playlist, by uid |
-| `library.compact_folders` | `compactFoldersSetting`, `compactFoldersProvider` | `true` | `folders_page.dart` merges single-subfolder chains; no Settings toggle yet |
+| `library.compact_folders` | `compactFoldersSetting`, `compactFoldersProvider` | `true` | `folders_page.dart` merges single-subfolder chains; Settings › Library › Organise switch |
+| `library.min_duration_ms`, `library.min_size_bytes`, `library.format_groups`, `library.respect_nomedia` | `minDurationMsProvider`, `minSizeBytesProvider`, `formatGroupsProvider`, `respectNomediaProvider` (`library/state/scan/scan_settings.dart`) | 30 s, 0 (off), every group, `false` | the scan rules; Settings › Library › Scan (see `system-architecture-library-scan.md`) |
+
+## Settings › Library and links
+
+`/settings/library` (`LibrarySettingsPage`, `screens/settings/ui/library/`):
+the overview card (counts from `libraryOverviewProvider`, "Rescan", the last
+scan line only after a `ScanFinished` this session, `ProgressNoticeCard` while
+tags and covers are read), the permission card on Android, the three first-run
+blocks (`MusicFoldersSection`, `ExclusionsSection`, `LibraryTabsSection`) in
+`SetupMode.settings`, then Scan (`ScanRulesBlock`), Organise
+(`OrganiseBlock`) and Removed (coming soon).
+
+`SetupMode.settings` differs from first run in: the caption sits behind the
+section ⓘ (first run keeps it visible; the state line, such as the missing
+permission, is visible in both), adding or removing a folder or an exclusion
+rescans in the background with a SnackBar, removing a folder asks first and
+the last folder cannot be removed, and the MediaStore reads (estimate, counts,
+the no-music note's auto refresh) happen only while the page is shown
+(`TickerMode`).
+
+A rule change (duration, size, formats, `.nomedia`) shows "Applies at the
+next scan" with a "Rescan" action; nothing scans by itself. The format picker
+is `showMultiSelectionSheet` in live mode (`onChanged`, no footer) with
+`minSelected: 1`: the last chosen format is locked and "Select all" is off
+once everything is chosen.
+
+Deep link: `openLibrarySettings(context, ref, focus: …)`
+(`library/ui/library_settings_links.dart`) sets a one-shot request in
+`librarySettingsFocusProvider` (`library/state/library_settings_focus.dart`,
+`(anchor, seq)`) and goes to `/settings/library`; the URL never carries it.
+The page listens (also when it is mounted behind another tab), waits for the
+first frame and `KMotion.focusSettle`, scrolls the block to alignment 0.1,
+pulses its border once (`SettingsFocusPulse`, `KMotion.focusPulse`; reduced
+motion: scroll only) and clears the request. The only anchor is `folders`,
+used by the empty library's "Choose music folders" and the Home scan card's
+"Change folders".
 
 ## Coming soon
 
@@ -1385,7 +1422,6 @@ Dimmed and inert, with the tooltip or subtitle "Coming soon" (`appComingSoon`,
 | Context menus (`proRow`) | Ask AI (song, album, artist, selection), with the Pro badge | the Pro build |
 | Context menus | "Show in file manager" where `FileManager.canReveal` is false (Android) | a platform implementation |
 | Selection panel | Edit | tag editor |
-| Library empty state | "Choose music folders" | the Settings folders screen |
 | Scan banner (failed scan) | "Grant permission" | the Android permission flow |
 | Sidebar (`comingSoon: true`) | History, Most played | their mockups |
 

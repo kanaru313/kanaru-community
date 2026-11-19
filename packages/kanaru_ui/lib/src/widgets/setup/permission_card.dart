@@ -8,6 +8,9 @@ import '../../tokens/k_space.dart';
 import '../k_gap.dart';
 import 'setup_row_frame.dart';
 
+/// Share of `errorContainer` in the card colour while [PermissionCard.attention].
+const double _attentionMix = 0.55;
+
 /// One permission of a [PermissionCard].
 class PermissionRowData {
   const PermissionRowData({
@@ -39,6 +42,7 @@ class PermissionCard extends StatelessWidget {
     this.note,
     this.collapsed = false,
     this.collapsedLabel,
+    this.attention = false,
   }) : assert(
          !collapsed || collapsedLabel != null,
          'a collapsed card needs a collapsedLabel',
@@ -54,12 +58,22 @@ class PermissionCard extends StatelessWidget {
   /// The single line of the collapsed card, without the check.
   final Widget? collapsedLabel;
 
+  /// A permission the app cannot work without is missing: the card takes a
+  /// light error tint (`errorContainer` over the card colour).
+  final bool attention;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final reduce = MediaQuery.disableAnimationsOf(context);
     return Material(
-      color: scheme.surfaceContainerLow,
+      color: attention
+          ? Color.lerp(
+              scheme.surfaceContainerLow,
+              scheme.errorContainer,
+              _attentionMix,
+            )
+          : scheme.surfaceContainerLow,
       shape: KShape.of(KRadius.lg),
       clipBehavior: Clip.antiAlias,
       child: AnimatedSize(

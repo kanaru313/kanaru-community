@@ -109,4 +109,37 @@ void main() {
       throwsAssertionError,
     );
   });
+
+  testWidgets('attention tints the card toward the error container', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(360, 800));
+    Future<Color?> pumpColor(bool attention) async {
+      await tester.pumpWidget(
+        host(
+          SingleChildScrollView(
+            child: PermissionCard(
+              attention: attention,
+              rows: const [],
+              action: const SizedBox(),
+            ),
+          ),
+        ),
+      );
+      return tester
+          .widget<Material>(
+            find
+                .descendant(
+                  of: find.byType(PermissionCard),
+                  matching: find.byType(Material),
+                )
+                .first,
+          )
+          .color;
+    }
+
+    final plain = await pumpColor(false);
+    final tinted = await pumpColor(true);
+    expect(tinted, isNot(plain));
+  });
 }

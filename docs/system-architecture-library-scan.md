@@ -121,13 +121,15 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
   `O_NONBLOCK` and checks the type on the open handle, so a FIFO or a socket
   never blocks a scan.
 - Network roots get a per-root timeout, and a failing root cannot stop the others.
-- Short files: the "skip files under 30 seconds" setting (`library.skip_short_tracks`,
-  on by default) has no UI yet.
+- Scan rules (`ScanRules`, `library/domain/scan/scan_rules.dart`): minimum duration
+  (default 30 s), minimum size, enabled format groups, `.nomedia` (Linux). Read once
+  per pass by `scanControllerProvider.deps()` through `currentScanRulesProvider`, so a
+  change applies from the next pass. See "Scan rules" below.
 - A `.lrc` sidecar is stored as `track_details.lrc_locator`.
 
 ## Walk and diff
 
-- `LocalFolderSource.list(({root}), excludedKeys, skipShorterThanMs)` calls the
+- `LocalFolderSource.list(({root}), excludedKeys, skipShorterThanMs, respectNomedia)` calls the
   catalog and returns a `SourceListing`: `files` (`ListedFile`: locator, size,
   mtime, duration), `.lrc` `lyrics` by folder key, `uncertainPrefixes`
   (unreadable and empty folders as locator prefixes with a trailing `/`; `''` is the
@@ -139,6 +141,9 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
 - A locator is the path below the root, `/` separators, no leading `/`, bytes as
   listed.
 - `diffScan(listing, storedRows, tagsVersion, keysVersion, full)` is pure.
+  `shortDropped`: an unchanged `present` row whose stored `duration_ms` is above 0
+  and below the minimum duration (it is not re-read, so only the stored length can
+  tell); the tag pass treats it as a short drop (missing candidate, `filteredOut`).
   `toRead`: new file; size or mtime differ; stored `tags_version` or
   `keys_version` below the current one (keys are recomputed by re-reading the file:
   raw sort tags are not stored); stored `status = missing` (a listed file revives
@@ -204,10 +209,13 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
    parser change, a version bump) the row is kept as it is (`permanentKept`, one count in
    the folder summary). Its versions stay old, so it is read again on every scan and its
    keys are not recomputed until the file parses or changes.
-5. Short files (setting on): a file under 30 s after the read is not stored; its
-   `(source, locator, mtime, size)` goes into a session memo so it is not read
-   again, and a stored present row becomes a missing candidate. Both count in
-   `filteredOut`.
+5. Short files (minimum duration above 0): a file shorter than the minimum after
+   the read is not stored; `ShortFileMemo` remembers `(mtime, size, duration)` per
+   `source|locator` so it is not read again while the same minimum or a stricter one
+   holds (`skips` is true only when the remembered duration is below the current
+   minimum), and a stored present row becomes a missing candidate. A read file that
+   is kept is forgotten. Both count in `filteredOut`. Relaxing the minimum in the same
+   session reads the file again and revives it.
 6. Rows are written 64 per transaction (`writeBatchRows`) through the frozen helpers
    only (`upsertTrackSnapshot`, `replaceTrackArtists`, `upsertTrackDetails`), with
    the source checked live and its mount enabled inside the same transaction. If it
@@ -777,8 +785,43 @@ Declared in `lib/src/library/state/scan/scan_settings.dart`.
 | Key | Default | Meaning |
 |---|---|---|
 | `library.setup_done` | false | First run finished. While false the router sends every location to `/welcome` and `rescan` is ignored. |
-| `library.skip_short_tracks` | true | Files under 30 s are not stored. No screen for it yet. |
+| `library.min_duration_ms` | 30000 | Files shorter than this are not stored (0 = off). Non-int: default; int clamped to 0..180000 and snapped to 5 s. While absent it follows `library.skip_short_tracks` (false: 0, otherwise 30 s). Writing it also writes `skip_short_tracks = value > 0`. Provider `minDurationMsProvider`. |
+| `library.skip_short_tracks` | true | Compatibility mirror of `min_duration_ms` (`value > 0`), never deleted; `skipShortTracksProvider` stays for the playlist importer. |
+| `library.min_size_bytes` | 0 | Files smaller than this are not stored. Stops: 0, 100 KB to 1 MB by 100 KB, 1.5 to 10 MB by 0.5 MB (decimal: 1 KB = 1000 B, as Android and Linux file managers show sizes); any int snaps to the nearest stop, non-int: 0. |
+| `library.format_groups` | all | List of format group ids that are scanned. Unknown ids dropped; missing, damaged or empty: all groups. |
+| `library.respect_nomedia` | false | Linux only: skip folders holding a `.nomedia` file. |
 | `library.setup_defaults_applied` | false | The first-run defaults were added once, so removing `Music` later does not bring it back. |
+
+## Scan rules
+
+Settings (`scan_settings.dart`) become one `ScanRules` per pass:
+
+- `minDurationMs`: Android pre-filters by MediaStore duration in the listing; both
+  platforms drop short files in the tag pass; an unchanged Linux row is judged by its
+  stored length in `diffScan` (`shortDropped`).
+- `minSizeBytes` and `allowedExtensions`: `ScanRules.applyTo(listing)` runs in
+  `_scanFolder` right after `LocalFolderSource.list`, in one place for both
+  platforms (it lives in `library` because `storage` sits below it and must not
+  know `library` types). A listed size of 0 or less is unknown and never filtered.
+  Dropped files are counted in `SourceListing.ruleOut`.
+- `respectNomedia`: forwarded to `listAudio`; the Linux walk skips a folder holding a
+  file named `.nomedia` with everything below it and counts it in
+  `AudioListing.nomediaOut` (folders, not files), which `LocalFolderSource` adds to
+  `ruleOut`. Android ignores it (MediaStore already honours the file).
+- `ruleOut` is not part of `filteredOut` on purpose: a listing emptied only by
+  format, size or `.nomedia` rules still trips the empty-root guard (`rootSuspect`,
+  rows kept, warning logged). A bad value can therefore never empty the library; a
+  root that really only holds disabled formats keeps its old rows (accepted, safe
+  side). Rule-dropped files in a root that still lists other files become missing
+  candidates as usual, and come back when the rule is relaxed.
+- A row dropped by any rule is only `missing` (7-day GC grace; a playlist entry keeps
+  it for good), never deleted by the scan.
+- Android first-run estimate: `audioFolders(minDurationMs)`; `audioFoldersProvider`
+  passes `minDurationMsProvider`. Size is not part of the estimate.
+- Format groups (`format_groups.dart`): mp3 · flac · m4a (m4a, aac, alac) · ogg (ogg,
+  oga, opus) · wav · aiff · ape · wavpack · dsd; a test checks their union equals
+  `audioExtensions`. `losslessExtensions` is the extension set for lossless features;
+  `.m4a` is not in it (AAC or ALAC: the codec decides where known).
 
 ## Known couplings
 

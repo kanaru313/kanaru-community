@@ -9,12 +9,14 @@ ScanDiff diffAgainstStored(
   SourceListing listing,
   List<StoredTrackRow> stored,
   bool full,
+  int minDurationMs,
 ) => diffScan(
   listing,
   stored,
   tagsVersion: tagsPassVersion,
   keysVersion: libraryKeysVersion,
   full: full,
+  minDurationMs: minDurationMs,
 );
 
 // Top-level so the closure captures only its arguments.
@@ -22,4 +24,5 @@ Future<ScanDiff> diffAgainstStoredInIsolate(
   SourceListing listing,
   List<StoredTrackRow> stored,
   bool full,
-) => Isolate.run(() => diffAgainstStored(listing, stored, full));
+  int minDurationMs,
+) => Isolate.run(() => diffAgainstStored(listing, stored, full, minDurationMs));

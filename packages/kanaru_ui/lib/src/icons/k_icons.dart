@@ -185,4 +185,11 @@ abstract final class KIcons {
   static const IconData clipping = FluentIcons.shield_24_regular;
   static const IconData license = FluentIcons.scales_24_regular;
   static const IconData openSourceLicenses = FluentIcons.book_open_24_regular;
+
+  // Settings › Library scan rules.
+  static const IconData skipShort = FluentIcons.timer_24_regular;
+  static const IconData fileSize = FluentIcons.document_data_24_regular;
+  static const IconData scanFormats = FluentIcons.filter_24_regular;
+  static const IconData noMedia = FluentIcons.document_dismiss_24_regular;
+  static const IconData watchFolders = FluentIcons.eye_24_regular;
 }

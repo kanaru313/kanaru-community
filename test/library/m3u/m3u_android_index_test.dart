@@ -25,6 +25,7 @@ class _Catalog extends MapCatalog {
     required String root,
     required Set<String> excludedKeys,
     int skipShorterThanMs = 0,
+    bool respectNomedia = false,
   }) {
     expect(skipShorterThanMs, 0);
     if (throwing.contains(root)) throw StateError('boom');
