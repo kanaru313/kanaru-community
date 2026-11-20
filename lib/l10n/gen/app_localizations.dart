@@ -1469,7 +1469,7 @@ abstract class AppLocalizations {
   /// No description provided for @libraryPlayAll.
   ///
   /// In en, this message translates to:
-  /// **'Play all'**
+  /// **'Play'**
   String get libraryPlayAll;
 
   /// No description provided for @libraryShuffle.

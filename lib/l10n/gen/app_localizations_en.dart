@@ -928,7 +928,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryUnitFolders => 'folders';
 
   @override
-  String get libraryPlayAll => 'Play all';
+  String get libraryPlayAll => 'Play';
 
   @override
   String get libraryShuffle => 'Shuffle';

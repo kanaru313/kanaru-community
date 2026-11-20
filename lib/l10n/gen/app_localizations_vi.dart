@@ -854,7 +854,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get libraryUnitFolders => 'thư mục';
 
   @override
-  String get libraryPlayAll => 'Phát tất cả';
+  String get libraryPlayAll => 'Phát';
 
   @override
   String get libraryShuffle => 'Phát ngẫu nhiên';
