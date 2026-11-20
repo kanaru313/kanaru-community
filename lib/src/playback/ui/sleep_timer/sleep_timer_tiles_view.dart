@@ -79,7 +79,6 @@ class SleepTimerTilesView extends ConsumerWidget {
                         sleepMinutesRange.max,
                       ),
                       semanticLabel: l10n.sleepTimerCustom,
-                      icon: KIcons.edit,
                       opensMore: true,
                       onPressed: () => onCustom(SleepTimerKind.minutes),
                     ),

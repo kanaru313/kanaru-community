@@ -3594,6 +3594,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String sleepTimerChipPlusMinutes(int minutes) {
+    return '+$minutes min';
+  }
+
+  @override
+  String get sleepTimerChipPlusHour => '+1 h';
+
+  @override
+  String get sleepTimerAddHour => 'Add 1 hour';
+
+  @override
+  String sleepTimerStepMinus(int amount) {
+    return '−$amount';
+  }
+
+  @override
+  String sleepTimerStepPlus(int amount) {
+    return '+$amount';
+  }
+
+  @override
   String sleepTimerButtonMinusTracks(int count) {
     return '−$count track';
   }

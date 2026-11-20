@@ -184,4 +184,41 @@ void main() {
     );
     await g.up();
   });
+
+  testWidgets('text variant: shows its label, no icon, same size, taps', (
+    tester,
+  ) async {
+    var taps = 0;
+    useWindow(tester, const Size(400, 400));
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: KStepButton.text(
+            label: '−5',
+            semanticLabel: 'Bớt 5 phút',
+            onPressed: () => taps++,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('−5'), findsOneWidget);
+    expect(find.byType(Icon), findsNothing);
+    expect(tester.getSize(byStepButton('Bớt 5 phút')), const Size(48, 48));
+    await tester.tap(byStepButton('Bớt 5 phút'));
+    expect(taps, 1);
+    useWindow(tester, const Size(1300, 800));
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: KStepButton.text(
+            label: '+5',
+            semanticLabel: 'Thêm 5 phút',
+            onPressed: null,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getSize(byStepButton('Thêm 5 phút')), const Size(40, 40));
+  });
 }

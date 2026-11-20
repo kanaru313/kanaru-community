@@ -178,4 +178,28 @@ void main() {
     expect(tester.takeException(), isNull);
     expectTextsFit(tester, find.byType(KClockProgress));
   });
+
+  testWidgets('leading and trailing sit on the number line, 16 dp away', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 600));
+    await tester.pumpWidget(
+      host(
+        KClockProgress(
+          label: 'Ngủ sau',
+          bigText: '23:41',
+          statusLabel: 'Ngủ sau 24 phút',
+          leading: const SizedBox(key: Key('l'), width: 48, height: 48),
+          trailing: const SizedBox(key: Key('t'), width: 48, height: 48),
+        ),
+      ),
+    );
+    final l = tester.getRect(find.byKey(const Key('l')));
+    final t = tester.getRect(find.byKey(const Key('t')));
+    final number = tester.getRect(find.text('23:41'));
+    expect(number.left - l.right, greaterThanOrEqualTo(16));
+    expect(t.left - number.right, greaterThanOrEqualTo(16));
+    expect(l.center.dy, closeTo(t.center.dy, 0.5));
+    expect(l.center.dy, closeTo(number.center.dy, 1));
+  });
 }

@@ -8,6 +8,11 @@ import 'sleep_timer_modal_host.dart';
 
 const _desktop = Size(1300, 800);
 
+// Air between the caret and the unit label: field padding + gap above the
+// unit + the line box below the digits. Dropping any one of the three fix
+// parts (caret height, field padding, gap) leaves 8 to 11 dp.
+const _caretGap = KSpace.x3;
+
 Finder get _field => find.byType(TextField);
 String get _fieldText =>
     (find.byType(TextField).evaluate().single.widget as TextField)
@@ -51,26 +56,28 @@ void main() {
     expect(find.textContaining('Đang chạy'), findsNothing);
   });
 
-  testWidgets('the caret of the number stays above the unit label', (
-    tester,
-  ) async {
-    await pumpSleepModal(tester);
-    await _openCustom(tester);
-    await tester.tap(_field);
-    await tester.pump();
-    final editable = tester.state<EditableTextState>(find.byType(EditableText));
-    final render = editable.renderEditable;
-    final local = render.getLocalRectForCaret(
-      TextPosition(offset: _fieldText.length),
-    );
-    final caret = Rect.fromPoints(
-      render.localToGlobal(local.topLeft),
-      render.localToGlobal(local.bottomRight),
-    );
-    final unit = tester.getRect(find.text('phút'));
-    expect(caret.bottom, lessThan(unit.top));
-    expect(caret.overlaps(unit), isFalse);
-  });
+  for (final scale in [1.0, 2.0]) {
+    testWidgets('the caret of the number keeps a gap above the unit label '
+        '(text x$scale)', (tester) async {
+      await pumpSleepModal(tester, textScale: scale);
+      await _openCustom(tester);
+      await tester.tap(_field);
+      await tester.pump();
+      final editable = tester.state<EditableTextState>(
+        find.byType(EditableText),
+      );
+      final render = editable.renderEditable;
+      final local = render.getLocalRectForCaret(
+        TextPosition(offset: _fieldText.length),
+      );
+      final caret = Rect.fromPoints(
+        render.localToGlobal(local.topLeft),
+        render.localToGlobal(local.bottomRight),
+      );
+      final unit = tester.getRect(find.text('phút'));
+      expect(unit.top - caret.bottom, greaterThanOrEqualTo(_caretGap));
+    });
+  }
 
   testWidgets('Bắt đầu starts 45 minutes, closes and says it once', (
     tester,

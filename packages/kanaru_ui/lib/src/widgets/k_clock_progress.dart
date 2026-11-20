@@ -52,6 +52,9 @@ double _numberSize(_NumberKind kind, {required bool desktop}) {
 /// is excluded from semantics; [statusLabel] is a hidden node with the
 /// spoken state (minute precision from the caller). It is not a live region:
 /// announcing changes is the caller's job.
+///
+/// [leading] and [trailing] (usually [KStepButton]s) sit on one line with the
+/// big number, 16 dp from it; the number shrinks, the buttons never do.
 class KClockProgress extends StatelessWidget {
   const KClockProgress({
     super.key,
@@ -63,6 +66,8 @@ class KClockProgress extends StatelessWidget {
     this.startText,
     this.endText,
     this.held = false,
+    this.leading,
+    this.trailing,
   });
 
   final String label;
@@ -73,6 +78,8 @@ class KClockProgress extends StatelessWidget {
   final String? startText;
   final String? endText;
   final bool held;
+  final Widget? leading;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +99,19 @@ class KClockProgress extends StatelessWidget {
     final small = theme.textTheme.bodySmall?.copyWith(
       color: scheme.onSurfaceVariant,
     );
+    final number = ExcludeSemantics(
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          bigText,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          textScaler: MediaQuery.textScalerOf(context)
+              .clamp(maxScaleFactor: _kMaxNumberScale),
+          style: numberStyle,
+        ),
+      ),
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -103,19 +123,23 @@ class KClockProgress extends StatelessWidget {
             color: scheme.onSurfaceVariant,
           ),
         ),
-        ExcludeSemantics(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              bigText,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              textScaler: MediaQuery.textScalerOf(context)
-                  .clamp(maxScaleFactor: _kMaxNumberScale),
-              style: numberStyle,
-            ),
+        if (leading == null && trailing == null)
+          number
+        else
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (leading != null) ...[
+                leading!,
+                const SizedBox(width: KSpace.x4),
+              ],
+              Flexible(child: number),
+              if (trailing != null) ...[
+                const SizedBox(width: KSpace.x4),
+                trailing!,
+              ],
+            ],
           ),
-        ),
         Semantics(
           container: true,
           liveRegion: false,

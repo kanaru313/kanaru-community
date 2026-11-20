@@ -2502,6 +2502,32 @@
       }
     }
   },
+  "sleepTimerChipPlusMinutes": "+{minutes} ph",
+  "@sleepTimerChipPlusMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerChipPlusHour": "+1 giờ",
+  "sleepTimerAddHour": "Thêm 1 giờ",
+  "sleepTimerStepMinus": "−{amount}",
+  "@sleepTimerStepMinus": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerStepPlus": "+{amount}",
+  "@sleepTimerStepPlus": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerButtonMinusTracks": "−{count} bài",
   "@sleepTimerButtonMinusTracks": {
     "placeholders": {

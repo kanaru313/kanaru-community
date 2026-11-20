@@ -241,11 +241,7 @@ void main() {
   });
 
   group('info pill shows a normal label whole on a 360 dp phone', () {
-    for (final (label, scale) in [
-      ('Dừng lúc 23:40', 1.0),
-      ('Dừng lúc 23:40', 2.0),
-      ('Tạm dừng sau 3 bài, tính cả bài này', 1.0),
-    ]) {
+    for (final (label, scale) in [('Dừng lúc 23:40', 1.0)]) {
       testWidgets('"$label" at text $scale', (tester) async {
         useWindow(tester, const Size(360, 640));
         await tester.pumpWidget(host(_pill(label: label), textScale: scale));
@@ -255,5 +251,58 @@ void main() {
         expect(tester.getSize(find.text(label)).width, greaterThan(56 * scale));
       });
     }
+
+    testWidgets('"Dừng lúc 23:40" is one line in a 36 dp stadium', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(360, 640));
+      await tester.pumpWidget(host(_pill(label: 'Dừng lúc 23:40')));
+      expect(tester.getSize(find.byType(KPill)).height, 36);
+      final text = tester.widget<Text>(find.text('Dừng lúc 23:40'));
+      expect(text.maxLines, 1);
+      expect(tester.getSize(find.text('Dừng lúc 23:40')).height, lessThan(20));
+    });
+  });
+
+  testWidgets('info pill at 200 % text wraps to two lines and shows whole', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(360, 640));
+    await tester.pumpWidget(
+      host(_pill(label: 'Dừng lúc 23:40'), textScale: 2.0),
+    );
+    expect(tester.takeException(), isNull);
+    expect(tester.widget<Text>(find.text('Dừng lúc 23:40')).maxLines, 2);
+    expectTextsFit(tester, find.byType(KPill));
+  });
+
+  testWidgets('info pill at 150 % text stays one line', (tester) async {
+    useWindow(tester, const Size(360, 640));
+    await tester.pumpWidget(
+      host(_pill(label: 'Dừng lúc 23:40'), textScale: 1.5),
+    );
+    expect(tester.widget<Text>(find.text('Dừng lúc 23:40')).maxLines, 1);
+  });
+
+  testWidgets('info pill: ellipsis only when the parent is narrower', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(360, 640));
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: SizedBox(
+            width: 100,
+            child: KPill(
+              icon: KIcons.sleepTimerActive,
+              label: 'Tạm dừng sau 3 bài, tính cả bài này',
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(tester.getSize(find.byType(KPill)).width, lessThanOrEqualTo(100));
+    expect(tester.getSize(find.byType(KPill)).height, 36);
   });
 }

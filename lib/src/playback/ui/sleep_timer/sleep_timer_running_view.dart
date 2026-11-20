@@ -9,6 +9,7 @@ import 'sleep_timer_announce.dart';
 import 'sleep_timer_focus.dart';
 import 'sleep_timer_parts.dart';
 import 'sleep_timer_running_controls.dart';
+import 'sleep_timer_step_buttons.dart';
 import 'sleep_timer_texts.dart';
 
 /// Third screen: the clock of the running timer, the buttons that adjust it
@@ -49,7 +50,9 @@ class SleepTimerRunningView extends ConsumerWidget {
             icon: KIcons.sleepTimerActive,
           ),
           const SizedBox(height: KSpace.x3),
-          RepaintBoundary(child: _RunningClock(frozen: frozen)),
+          RepaintBoundary(
+            child: _RunningClock(focus: focus, frozen: frozen),
+          ),
           const SizedBox(height: KSpace.x3),
           SleepTimerRunningControls(
             focus: focus,
@@ -78,11 +81,12 @@ class SleepTimerRunningView extends ConsumerWidget {
   }
 }
 
-/// The clock, its bar and the row under it. A consumer of its own: it is the
-/// part that follows the seconds.
+/// The clock with its − / + beside it, its bar and the row under it. A
+/// consumer of its own: it is the part that follows the seconds.
 class _RunningClock extends ConsumerWidget {
-  const _RunningClock({this.frozen});
+  const _RunningClock({required this.focus, this.frozen});
 
+  final SleepTimerFocus focus;
   final SleepTimerState? frozen;
 
   @override
@@ -93,6 +97,12 @@ class _RunningClock extends ConsumerWidget {
     final texts = SleepTimerTexts.of(context);
     final l10n = texts.l10n;
     final status = texts.statusText(s, minutePrecision: true);
+    final sides = sleepTimerStepButtons(
+      context: context,
+      timer: ref.read(sleepTimerProvider.notifier),
+      s: s,
+      focus: focus,
+    );
     switch (mode) {
       case SleepTimerMode.minutes:
         final held = s.countingPaused;
@@ -104,6 +114,8 @@ class _RunningClock extends ConsumerWidget {
           statusLabel: status,
           fraction: set <= 0 ? 0 : s.remaining.inMicroseconds / set,
           held: held,
+          leading: sides?.leading,
+          trailing: sides?.trailing,
           startText: l10n.sleepTimerRowSet(
             texts.durationWords(s.setLength.inMinutes),
           ),
@@ -125,6 +137,8 @@ class _RunningClock extends ConsumerWidget {
           label: l10n.sleepTimerLabelPauseAfter,
           bigText: '${s.tracksLeft}',
           statusLabel: status,
+          leading: sides?.leading,
+          trailing: sides?.trailing,
           segments: (
             count: count,
             done: count - s.tracksLeft,

@@ -127,14 +127,20 @@ class _KStartAreaState extends State<KStartArea> {
   }
 }
 
-/// Columns of the grid on touch shells at normal text size: change this one
-/// line to switch 2 <-> 3. From 200 % text touch shells use one column
-/// ([_touchColumnsLarge]), whatever this says.
-const int _touchColumns = 2;
+/// Column rules of [KStartTileGrid], all in one place. Touch shells: 3
+/// columns, 2 when the grid is narrower than [_narrowWidth] (a third of it
+/// cannot hold "15 phút" at the tile title size), 1 from 200 % text. Desktop:
+/// 3 columns, 2 from 200 % text.
+const int _touchColumns = 3;
+const int _touchColumnsNarrow = 2;
 const int _touchColumnsLarge = 1;
+const int _desktopColumns = 3;
+const int _desktopColumnsLarge = 2;
+const double _narrowWidth = 360;
+const double _largeTextScale = 1.99;
 
-/// Grid of [KStartTile]s: 2 columns on touch shells, 3 on desktop; 1 / 2 from
-/// 200 % text. Tiles of a row share one height.
+/// Grid of [KStartTile]s: columns follow the rules above. Tiles of a row
+/// share one height.
 class KStartTileGrid extends StatelessWidget {
   const KStartTileGrid({super.key, required this.children});
 
@@ -142,11 +148,31 @@ class KStartTileGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final desktop = FormFactor.of(context) == FormFactor.desktop;
-    final large = MediaQuery.textScalerOf(context).scale(14) / 14 >= 1.99;
-    final columns = desktop
-        ? (large ? 2 : 3)
-        : (large ? _touchColumnsLarge : _touchColumns);
+    return LayoutBuilder(
+      builder: (context, constraints) => _grid(
+        context,
+        _columnsFor(
+          desktop: FormFactor.of(context) == FormFactor.desktop,
+          large:
+              MediaQuery.textScalerOf(context).scale(14) / 14 >=
+              _largeTextScale,
+          width: constraints.maxWidth,
+        ),
+      ),
+    );
+  }
+
+  static int _columnsFor({
+    required bool desktop,
+    required bool large,
+    required double width,
+  }) {
+    if (desktop) return large ? _desktopColumnsLarge : _desktopColumns;
+    if (large) return _touchColumnsLarge;
+    return width < _narrowWidth ? _touchColumnsNarrow : _touchColumns;
+  }
+
+  Widget _grid(BuildContext context, int columns) {
     final rows = <Widget>[];
     for (var i = 0; i < children.length; i += columns) {
       if (rows.isNotEmpty) rows.add(const SizedBox(height: KSpace.x2));

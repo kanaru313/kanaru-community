@@ -133,7 +133,7 @@ void main() {
       // Still mid-animation: the clock and the controls are still built.
       expect(modalOpen, findsOneWidget);
       expect(find.text('Tạm dừng đếm'), findsOneWidget);
-      expect(find.text('+5 phút'), findsOneWidget);
+      expect(find.text('+5'), findsOneWidget);
       await tester.pumpAndSettle();
       expect(modalOpen, findsNothing);
     });
@@ -155,7 +155,7 @@ void main() {
     ) async {
       await pumpSleepModal(tester, initial: runningMinutes());
       await openSleepModal(tester);
-      expect(focusedWithin(tester, holding(KModalButton, '−5 phút')), isFalse);
+      expect(focusedWithin(tester, holding(KStepButton, '−5')), isFalse);
       await tapVisible(tester, find.text('Đổi…'));
       expect(focusedWithin(tester, find.byType(TextField)), isFalse);
     });

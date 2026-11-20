@@ -16,8 +16,9 @@ const double _dialogScrim = 0.45;
 const double _sheetScrim = 0.42;
 
 /// Strength of the soft `primary` glow behind the top of the modal sheet.
-/// The glow is an ellipse centred on the top edge: 0.84 of the sheet width
-/// across and 0.63 of [_glowHeight] down, fading to nothing, so no edge shows.
+/// The glow is an ellipse centred on the top edge: its horizontal radius is
+/// 0.84 of the sheet width and its vertical radius 0.63 of [_glowHeight],
+/// fading to nothing, so no edge shows.
 const double _glowAlpha = 0.09;
 const double _glowHeight = 260;
 const double _glowReachX = 1.2 * 0.7;

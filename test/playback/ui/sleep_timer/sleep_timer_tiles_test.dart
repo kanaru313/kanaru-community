@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/domain/sleep_timer_state.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'sleep_timer_modal_host.dart';
 
@@ -28,6 +29,51 @@ void main() {
     expect(find.text('Sau số bài…'), findsOneWidget);
     expect(find.textContaining('Đang chạy'), findsNothing);
     expect(find.text('Huỷ'), findsOneWidget);
+  });
+
+  group('tile columns', () {
+    int perRow(WidgetTester tester) {
+      final top = tester.getTopLeft(find.byType(KStartTile).first).dy;
+      return tester
+          .widgetList<KStartTile>(find.byType(KStartTile))
+          .map((t) => tester.getTopLeft(find.byWidget(t)).dy)
+          .where((y) => y == top)
+          .length;
+    }
+
+    testWidgets('phone: 3 columns, two rows, no icon on "Tuỳ chỉnh…"', (
+      tester,
+    ) async {
+      await pumpSleepModal(tester);
+      await openSleepModal(tester);
+      expect(perRow(tester), 3);
+      expect(find.byType(KStartTile), findsNWidgets(6));
+      expect(
+        find.descendant(
+          of: find.byType(KStartTile),
+          matching: find.byType(Icon),
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets('a 320 phone (sheet under 360): 2 columns', (tester) async {
+      await pumpSleepModal(tester, size: const Size(320, 800));
+      await openSleepModal(tester);
+      expect(perRow(tester), 2);
+    });
+
+    testWidgets('200 % text: one column', (tester) async {
+      await pumpSleepModal(tester, textScale: 2);
+      await openSleepModal(tester);
+      expect(perRow(tester), 1);
+    });
+
+    testWidgets('desktop: 3 columns', (tester) async {
+      await pumpSleepModal(tester, size: _desktop);
+      await openSleepModal(tester);
+      expect(perRow(tester), 3);
+    });
   });
 
   testWidgets('tiles say they start: label with the stop time', (tester) async {

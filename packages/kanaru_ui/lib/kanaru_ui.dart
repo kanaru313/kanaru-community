@@ -18,6 +18,7 @@ export 'src/widgets/app_snack_bar.dart';
 export 'src/widgets/collections/collection_widgets.dart';
 export 'src/widgets/k_check_mark.dart';
 export 'src/widgets/k_chip.dart';
+export 'src/widgets/k_chip_line.dart';
 export 'src/widgets/k_clock_progress.dart' show KClockProgress, KClockSegments;
 export 'src/widgets/k_context_region.dart';
 export 'src/widgets/k_cover.dart' show KCover, KCoverPlaceholderColors;

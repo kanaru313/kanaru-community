@@ -1,17 +1,16 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
-import '../tokens/k_icon_size.dart';
 import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 import 'k_press_surface.dart';
 import 'k_start_arrows.dart';
 
-/// Touch tile sizes: title 18, "opens more" title 15, padding 14 x 6.
+/// Touch tile sizes: title 18, "opens more" title 15, padding 12 x 6.
 const double _touchTitle = 18;
 const double _touchCustomTitle = 15;
-const double _touchPadX = KSpace.x3 + 2;
+const double _touchPadX = KSpace.x3;
 const double _touchPadY = KSpace.x1 + 2;
 
 /// A start button: a title with a detail line under it ("45 phút" / "đến
@@ -19,8 +18,8 @@ const double _touchPadY = KSpace.x1 + 2;
 /// no selected state. Lay tiles out in a [KStartTileGrid].
 ///
 /// [opensMore] marks the tile that opens a further screen ("Tuỳ chỉnh…"): it
-/// is drawn outlined, and its [icon] (drawn by the tile, in `primary`) shows
-/// on touch shells only. Hover 8 %,
+/// is drawn outlined and centred, without an icon (a third-width touch tile has
+/// no room for one). Hover 8 %,
 /// press 10 % (touch shells also scale to 97 %), keyboard focus draws the
 /// 2 dp `primary` ring inside. [onPressed] null = disabled. Enter / Space
 /// activate it; arrow keys move between tiles inside a [KStartArea].
@@ -31,7 +30,6 @@ class KStartTile extends StatelessWidget {
     required this.semanticLabel,
     required this.onPressed,
     this.detail,
-    this.icon,
     this.opensMore = false,
     this.autofocus = false,
     this.focusNode,
@@ -44,8 +42,6 @@ class KStartTile extends StatelessWidget {
   final String semanticLabel;
   final VoidCallback? onPressed;
 
-  /// Leading icon of an [opensMore] tile; dropped on desktop.
-  final IconData? icon;
   final bool opensMore;
   final bool autofocus;
   final FocusNode? focusNode;
@@ -71,7 +67,6 @@ class KStartTile extends StatelessWidget {
         : (desktop
               ? scheme.surfaceContainerHighest
               : scheme.surfaceContainerHigh);
-    final showIcon = opensMore && icon != null && !desktop;
     return KStartMarker(
       child: KPressSurface(
         onPressed: onPressed,
@@ -121,10 +116,6 @@ class KStartTile extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (showIcon) ...[
-                        Icon(icon, size: KIconSize.md, color: scheme.primary),
-                        const SizedBox(width: KSpace.x2),
-                      ],
                       Flexible(
                         child: Text(
                           title,

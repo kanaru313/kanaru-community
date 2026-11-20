@@ -113,8 +113,10 @@ class SleepTimerCustomView extends ConsumerWidget {
               ),
             ],
           ),
-          // Room for the caret of the number above: it never reaches the unit.
-          const SizedBox(height: KSpace.x1),
+          // Touch shells: room for the caret of the number above, so it never
+          // reaches the unit.
+          if (FormFactor.of(context) != FormFactor.desktop)
+            const SizedBox(height: KSpace.x1),
           Text(
             _tracks
                 ? texts.unitTracks(draft.value)

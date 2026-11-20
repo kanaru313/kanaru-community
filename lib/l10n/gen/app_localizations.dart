@@ -5154,6 +5154,36 @@ abstract class AppLocalizations {
   /// **'+{count} track'**
   String sleepTimerButtonPlusTracks(int count);
 
+  /// No description provided for @sleepTimerChipPlusMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'+{minutes} min'**
+  String sleepTimerChipPlusMinutes(int minutes);
+
+  /// No description provided for @sleepTimerChipPlusHour.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 h'**
+  String get sleepTimerChipPlusHour;
+
+  /// No description provided for @sleepTimerAddHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Add 1 hour'**
+  String get sleepTimerAddHour;
+
+  /// No description provided for @sleepTimerStepMinus.
+  ///
+  /// In en, this message translates to:
+  /// **'−{amount}'**
+  String sleepTimerStepMinus(int amount);
+
+  /// No description provided for @sleepTimerStepPlus.
+  ///
+  /// In en, this message translates to:
+  /// **'+{amount}'**
+  String sleepTimerStepPlus(int amount);
+
   /// No description provided for @sleepTimerButtonMinusTracks.
   ///
   /// In en, this message translates to:

@@ -2515,6 +2515,32 @@
       }
     }
   },
+  "sleepTimerChipPlusMinutes": "+{minutes} min",
+  "@sleepTimerChipPlusMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerChipPlusHour": "+1 h",
+  "sleepTimerAddHour": "Add 1 hour",
+  "sleepTimerStepMinus": "−{amount}",
+  "@sleepTimerStepMinus": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerStepPlus": "+{amount}",
+  "@sleepTimerStepPlus": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
   "sleepTimerButtonMinusTracks": "−{count} track",
   "@sleepTimerButtonMinusTracks": {
     "placeholders": {

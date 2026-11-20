@@ -27,7 +27,6 @@ Widget _tile({
       onPressed: onPressed,
       opensMore: opensMore,
       autofocus: autofocus,
-      icon: KIcons.add,
     ),
   ),
 );
@@ -127,16 +126,6 @@ void main() {
       isSemantics(isButton: true, isFocusable: false),
     );
     semantics.dispose();
-  });
-
-  testWidgets('opensMore draws its icon on touch shells only', (tester) async {
-    useWindow(tester, _touch);
-    await tester.pumpWidget(host(_tile(opensMore: true, onPressed: () {})));
-    expect(find.byIcon(KIcons.add), findsOneWidget);
-    useWindow(tester, _desk);
-    await tester.pumpWidget(host(_tile(opensMore: true, onPressed: () {})));
-    await tester.pump();
-    expect(find.byIcon(KIcons.add), findsNothing);
   });
 
   testWidgets('reports a button with its spoken label; tap starts it', (
@@ -260,18 +249,18 @@ void main() {
     expect((shape as RoundedRectangleBorder).borderRadius, KRadius.sm);
   });
 
-  testWidgets('opensMore: outlined, icon on touch only', (tester) async {
+  testWidgets('opensMore: outlined, no icon on either shell', (tester) async {
     useWindow(tester, _touch);
     await tester.pumpWidget(
       host(_tile(title: 'Tuỳ chỉnh…', onPressed: () {}, opensMore: true)),
     );
-    expect(find.byIcon(KIcons.add), findsOneWidget);
+    expect(find.byType(Icon), findsNothing);
     expect(_fill(tester), isNull);
     useWindow(tester, _desk);
     await tester.pumpWidget(
       host(_tile(title: 'Tuỳ chỉnh…', onPressed: () {}, opensMore: true)),
     );
-    expect(find.byIcon(KIcons.add), findsNothing);
+    expect(find.byType(Icon), findsNothing);
   });
 
   group('grid', () {
@@ -290,12 +279,28 @@ void main() {
       ].length;
     }
 
-    testWidgets('2 columns on touch, 1 at 200 % text', (tester) async {
+    testWidgets('3 columns on touch, 1 at 200 % text', (tester) async {
       useWindow(tester, _touch);
-      await tester.pumpWidget(host(grid(5)));
-      expect(columns(tester, 5), 2);
-      await tester.pumpWidget(host(grid(5), textScale: 2));
-      expect(columns(tester, 5), 1);
+      await tester.pumpWidget(host(grid(6)));
+      expect(columns(tester, 6), 3);
+      await tester.pumpWidget(host(grid(6), textScale: 2));
+      expect(columns(tester, 6), 1);
+    });
+
+    testWidgets('touch: 2 columns when the grid is narrower than 360', (
+      tester,
+    ) async {
+      for (final (width, want) in [(359.0, 2), (360.0, 3), (320.0, 2)]) {
+        useWindow(tester, Size(width, 800));
+        await tester.pumpWidget(
+          host(
+            Center(
+              child: SizedBox(width: width, child: grid(6)),
+            ),
+          ),
+        );
+        expect(columns(tester, 6), want, reason: 'width $width');
+      }
     });
 
     testWidgets('3 columns on desktop, 2 at 200 % text', (tester) async {
@@ -387,11 +392,12 @@ void main() {
       await tester.pumpWidget(host(area()));
       await go(tester, 'a', LogicalKeyboardKey.arrowRight, 'b');
       await go(tester, 'b', LogicalKeyboardKey.arrowLeft, 'a');
-      await go(tester, 'a', LogicalKeyboardKey.arrowDown, 'c');
-      await go(tester, 'd', LogicalKeyboardKey.arrowUp, 'b');
+      await go(tester, 'a', LogicalKeyboardKey.arrowDown, 'd');
+      await go(tester, 'd', LogicalKeyboardKey.arrowUp, 'a');
+      await go(tester, 'c', LogicalKeyboardKey.arrowDown, 'e');
       await go(tester, 'e', LogicalKeyboardKey.arrowRight, 'e');
       await go(tester, 'e', LogicalKeyboardKey.arrowDown, 'r1');
-      await go(tester, 'e', LogicalKeyboardKey.arrowUp, 'c');
+      await go(tester, 'e', LogicalKeyboardKey.arrowUp, 'b');
     });
 
     testWidgets('rows: down skips the disabled row, up returns; no exit', (

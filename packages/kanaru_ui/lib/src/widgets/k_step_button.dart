@@ -9,18 +9,29 @@ import 'k_press_surface.dart';
 
 /// Tonal round − / + button beside a big number (48 dp on touch shells, 40 on
 /// desktop). [onPressed] null = at its bound: dimmed, not focusable.
-/// [semanticLabel] is its spoken name ("Thêm 5 phút").
+/// [semanticLabel] is its spoken name ("Thêm 5 phút"). [KStepButton.text]
+/// shows a short text ("−5", "+1") instead of an icon.
 class KStepButton extends StatelessWidget {
   const KStepButton({
     super.key,
-    required this.icon,
+    required IconData this.icon,
     required this.semanticLabel,
     required this.onPressed,
     this.focusNode,
     this.autofocus = false,
-  });
+  }) : label = null;
 
-  final IconData icon;
+  const KStepButton.text({
+    super.key,
+    required String this.label,
+    required this.semanticLabel,
+    required this.onPressed,
+    this.focusNode,
+    this.autofocus = false,
+  }) : icon = null;
+
+  final IconData? icon;
+  final String? label;
   final String semanticLabel;
   final VoidCallback? onPressed;
   final FocusNode? focusNode;
@@ -32,6 +43,9 @@ class KStepButton extends StatelessWidget {
     final desktop = FormFactor.of(context) == FormFactor.desktop;
     final size = desktop ? 40.0 : KLayout.minTarget;
     final enabled = onPressed != null;
+    final fg = enabled
+        ? scheme.onSecondaryContainer
+        : scheme.onSurface.withValues(alpha: 0.38);
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : KMotion.fast;
@@ -55,13 +69,17 @@ class KStepButton extends StatelessWidget {
                 )
               : scheme.onSurface.withValues(alpha: 0.10),
         ),
-        child: Icon(
-          icon,
-          size: desktop ? KIconSize.sm : KIconSize.md,
-          color: enabled
-              ? scheme.onSecondaryContainer
-              : scheme.onSurface.withValues(alpha: 0.38),
-        ),
+        child: icon != null
+            ? Icon(icon, size: desktop ? KIconSize.sm : KIconSize.md, color: fg)
+            : Text(
+                label!,
+                maxLines: 1,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: fg,
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
       ),
     );
   }

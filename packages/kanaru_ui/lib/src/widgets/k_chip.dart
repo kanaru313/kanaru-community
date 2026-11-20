@@ -18,6 +18,7 @@ class KChip extends StatelessWidget {
     this.enabled = true,
     this.onTap,
     this.dense = false,
+    this.semanticLabel,
   }) : trailing = null,
        _interactive = true;
 
@@ -30,6 +31,7 @@ class KChip extends StatelessWidget {
       enabled = true,
       onTap = null,
       dense = false,
+      semanticLabel = null,
       _interactive = false;
 
   final Widget label;
@@ -42,6 +44,10 @@ class KChip extends StatelessWidget {
 
   /// Compact height (see the class doc) with 12 dp corners on touch shells.
   final bool dense;
+
+  /// Spoken name instead of the visible label ("Thêm 10 phút" for "+10 ph").
+  /// Keep a tooltip visual only (`excludeFromSemantics`).
+  final String? semanticLabel;
 
   /// Widget after the label of a [KChip.static] (its own action).
   final Widget? trailing;
@@ -73,7 +79,12 @@ class KChip extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (icon != null) ...[icon!, const KGap(KSpace.x2)],
-                Flexible(child: label),
+                Flexible(
+                  child: ExcludeSemantics(
+                    excluding: semanticLabel != null,
+                    child: label,
+                  ),
+                ),
                 if (trailing != null) ...[const KGap(KSpace.x2), trailing!],
               ],
             ),
@@ -94,6 +105,7 @@ class KChip extends StatelessWidget {
       button: true,
       enabled: enabled,
       selected: selected,
+      label: semanticLabel,
       child: Opacity(opacity: enabled ? 1 : 0.5, child: pill),
     );
   }

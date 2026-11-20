@@ -14,6 +14,10 @@ typedef _Controls = ({
   bool held,
   bool canTakeMinutes,
   bool canAddMinutes,
+
+  /// Whole minutes that still fit under the 720 minute cap (changes once a
+  /// minute, so the quick-add chips are not rebuilt every second).
+  int roomMinutes,
   bool canRemoveTrack,
   bool canAddTrack,
 });
@@ -23,13 +27,19 @@ _Controls _controlsOf(SleepTimerState s) => (
   held: s.countingPaused,
   canTakeMinutes: s.canSubtract(sleepMinutesRange.step),
   canAddMinutes: s.canAddMinutes,
+  roomMinutes: s.mode == SleepTimerMode.minutes
+      ? (const Duration(minutes: sleepTimerMaxMinutes) - s.remaining)
+                .inSeconds ~/
+            60
+      : 0,
   canRemoveTrack: s.canRemoveTrack,
   canAddTrack: s.canAddTrack,
 );
 
-/// −5 / +5 and pause / resume (minutes), −1 / +1 (tracks), nothing for the
-/// end-of modes. A focused button that turns off hands focus to its pair; the
-/// pause and resume looks are one button with one focus node.
+/// Under the progress bar: the quick-add chips and pause / resume (minutes
+/// mode); nothing for the other modes (their − / + sit beside the clock, see
+/// [sleepTimerStepButtons]). A focused − / + that turns off hands focus to its
+/// pair; the pause and resume looks are one button with one focus node.
 class SleepTimerRunningControls extends ConsumerWidget {
   const SleepTimerRunningControls({
     super.key,
@@ -71,90 +81,73 @@ class SleepTimerRunningControls extends ConsumerWidget {
       );
       handOver(prev.canAddTrack, next.canAddTrack, focus.plus, focus.minus);
     });
+    if (c.mode != SleepTimerMode.minutes) return const SizedBox.shrink();
     final texts = SleepTimerTexts.of(context);
     final l10n = texts.l10n;
     final timer = ref.read(sleepTimerProvider.notifier);
-    final step = sleepMinutesRange.step;
-    switch (c.mode) {
-      case SleepTimerMode.minutes:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: KModalButton(
-                    label: l10n.sleepTimerButtonMinusMinutes(step),
-                    semanticLabel: l10n.sleepTimerRemoveMinutes(step),
-                    emphasis: KModalEmphasis.tonal,
-                    focusNode: focus.minus,
-                    onPressed: c.canTakeMinutes
-                        ? () => timer.addMinutes(-step)
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: KSpace.x2),
-                Expanded(
-                  child: KModalButton(
-                    label: l10n.sleepTimerButtonPlusMinutes(step),
-                    semanticLabel: l10n.sleepTimerAddMinutes(step),
-                    emphasis: KModalEmphasis.tonal,
-                    focusNode: focus.plus,
-                    onPressed: c.canAddMinutes
-                        ? () => timer.addMinutes(step)
-                        : null,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: KSpace.x2),
-            KModalButton(
-              label: c.held
-                  ? l10n.sleepTimerResumeCounting
-                  : l10n.sleepTimerPauseCounting,
-              emphasis: c.held
-                  ? KModalEmphasis.primary
-                  : KModalEmphasis.secondary,
-              icon: c.held ? KIcons.play : KIcons.pause,
-              focusNode: focus.pause,
-              onPressed: () {
-                if (c.held) {
-                  timer.resumeCounting();
-                  announcer.say(texts.announceResumed);
-                } else {
-                  timer.pauseCounting();
-                  announcer.say(texts.announceHeld);
-                }
-              },
-            ),
-          ],
-        );
-      case SleepTimerMode.tracks:
-        return Row(
-          children: [
-            Expanded(
-              child: KModalButton(
-                semanticLabel: l10n.sleepTimerRemoveTrack,
-                label: l10n.sleepTimerButtonMinusTracks(sleepTracksRange.step),
-                emphasis: KModalEmphasis.tonal,
-                focusNode: focus.minus,
-                onPressed: c.canRemoveTrack ? () => timer.addTracks(-1) : null,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _QuickAdds(room: c.roomMinutes, onAdd: timer.addMinutes),
+        const SizedBox(height: KSpace.x3),
+        KModalButton(
+          label: c.held
+              ? l10n.sleepTimerResumeCounting
+              : l10n.sleepTimerPauseCounting,
+          emphasis: c.held ? KModalEmphasis.primary : KModalEmphasis.secondary,
+          icon: c.held ? KIcons.play : KIcons.pause,
+          focusNode: focus.pause,
+          onPressed: () {
+            if (c.held) {
+              timer.resumeCounting();
+              announcer.say(texts.announceResumed);
+            } else {
+              timer.pauseCounting();
+              announcer.say(texts.announceHeld);
+            }
+          },
+        ),
+      ],
+    );
+  }
+}
+
+/// Minutes the quick-add chips give (the last one, 60, is "1 giờ").
+const _quickAdds = [10, 15, 30, 60];
+
+/// One line of chips; a chip that would pass the cap is off.
+class _QuickAdds extends StatelessWidget {
+  const _QuickAdds({required this.room, required this.onAdd});
+
+  final int room;
+  final void Function(int minutes) onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = SleepTimerTexts.of(context).l10n;
+    return KChipLine(
+      children: [
+        for (final m in _quickAdds)
+          Tooltip(
+            message: m == 60
+                ? l10n.sleepTimerAddHour
+                : l10n.sleepTimerAddMinutes(m),
+            excludeFromSemantics: true,
+            child: KChip(
+              dense: true,
+              semanticLabel: m == 60
+                  ? l10n.sleepTimerAddHour
+                  : l10n.sleepTimerAddMinutes(m),
+              enabled: m <= room,
+              label: Text(
+                m == 60
+                    ? l10n.sleepTimerChipPlusHour
+                    : l10n.sleepTimerChipPlusMinutes(m),
               ),
+              onTap: m <= room ? () => onAdd(m) : null,
             ),
-            const SizedBox(width: KSpace.x2),
-            Expanded(
-              child: KModalButton(
-                semanticLabel: l10n.sleepTimerAddTrack,
-                label: l10n.sleepTimerButtonPlusTracks(sleepTracksRange.step),
-                emphasis: KModalEmphasis.tonal,
-                focusNode: focus.plus,
-                onPressed: c.canAddTrack ? () => timer.addTracks(1) : null,
-              ),
-            ),
-          ],
-        );
-      default:
-        return const SizedBox.shrink();
-    }
+          ),
+      ],
+    );
   }
 }

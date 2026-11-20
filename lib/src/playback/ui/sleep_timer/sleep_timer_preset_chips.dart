@@ -86,7 +86,9 @@ class _SleepTimerPresetChipsState extends State<SleepTimerPresetChips> {
                     const SizedBox(width: KSpace.x2),
                   Tooltip(
                     message: widget.tooltip(p),
+                    excludeFromSemantics: true,
                     child: KChip(
+                      semanticLabel: widget.tooltip(p),
                       key: p == widget.selected ? _selectedKey : null,
                       dense: true,
                       selected: p == widget.selected,

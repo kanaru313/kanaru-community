@@ -22,7 +22,8 @@ const double _kMaxLabel = 56;
 ///
 /// The label of a button pill (the ticking indicator) is capped at 56 dp
 /// (scaled with the text) so it stays small; an info pill shows its whole
-/// label and is cut only when its parent is narrower.
+/// label on one line (two from 200 % text) and gets an ellipsis only when its
+/// parent is narrower.
 ///
 /// [widestLabel] is the widest string the label will ever show; the label box
 /// never gets narrower than it, so a ticking label does not relayout its
@@ -77,9 +78,11 @@ class KPill extends StatelessWidget {
         ? Duration.zero
         : KMotion.fast;
 
+    // Same 200 % rule as the tile grid: an info pill may wrap to two lines.
+    final large = MediaQuery.textScalerOf(context).scale(14) / 14 >= 1.99;
     Widget text(String s) => Text(
       s,
-      maxLines: _isButton ? 1 : 2,
+      maxLines: _isButton || !large ? 1 : 2,
       overflow: TextOverflow.ellipsis,
       style: style,
     );

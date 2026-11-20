@@ -5,6 +5,7 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:kanaru_ui/src/widgets/k_inset_shape.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'support/finders.dart';
@@ -1019,7 +1020,62 @@ void actionRowTests() {
     expect(taps, 1);
     // Title keeps the 16 dp axis.
     expect(tester.getTopLeft(find.byIcon(KIcons.sleepTimer).first).dx, 16);
-    // Square tint.
+    // Square tint: the ink shape has no rounding.
+    final ink0 = tester.widget<InkWell>(find.byType(InkWell).first);
+    final shape = (ink0.customBorder! as KInsetShape).base;
+    expect((shape as RoundedRectangleBorder).borderRadius, BorderRadius.zero);
+  });
+
+  testWidgets('running card in a full-bleed sheet keeps its 16 gutter', (
+    tester,
+  ) async {
+    useWindow(tester, _touchSize);
+    await tester.pumpWidget(
+      host(
+        KRowEdgesScope(
+          edges: KRowEdges.fullBleed,
+          child: _action(onTap: () {}, running: true),
+        ),
+      ),
+    );
+    final scheme = Theme.of(tester.element(find.byType(SelectionRow)))
+        .colorScheme;
+    final card = find.byWidgetPredicate(
+      (w) =>
+          w is DecoratedBox &&
+          w.decoration is ShapeDecoration &&
+          (w.decoration as ShapeDecoration).color == scheme.primaryContainer,
+    );
+    final rect = tester.getRect(card);
+    expect(rect.left, 16);
+    expect(rect.right, _touchSize.width - 16);
+    final shape =
+        (tester.widget<DecoratedBox>(card).decoration as ShapeDecoration).shape
+            as RoundedRectangleBorder;
+    expect(shape.borderRadius, KRadius.sm);
+  });
+
+  testWidgets('row in a dialog host (inset): padded 16 and rounded', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(700, 800));
+    await tester.pumpWidget(
+      host(
+        KRowEdgesScope(
+          edges: KRowEdges.inset,
+          child: _action(onTap: () {}),
+        ),
+      ),
+    );
+    final ink = tester.getRect(find.byType(InkWell).first);
+    expect(ink.left, 16);
+    expect(ink.right, 700 - 16);
+    final shape =
+        (tester.widget<InkWell>(find.byType(InkWell).first).customBorder!
+                    as KInsetShape)
+                .base
+            as RoundedRectangleBorder;
+    expect(shape.borderRadius, KRadius.sm);
   });
 
   testWidgets('running card keeps a 56 tonal card, radius 12', (tester) async {
