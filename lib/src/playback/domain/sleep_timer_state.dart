@@ -84,9 +84,9 @@ class SleepTimerState {
   final DateTime? startedAt;
 
   /// Identifies one start of the timer, so the UI can tell a replaced timer
-  /// (new value) from the same one continuing (hold, resume and adds keep it).
-  /// Counts the starts of the session: a start while running (or after an
-  /// end) gives a new value, hold, resume and adds do not. Zero while off.
+  /// from the same one continuing. Counts the starts of the session: a start
+  /// while running (or after an end) gives a new value; hold, resume and adds
+  /// keep it. Zero while off.
   final int startSerial;
 
   bool get active => mode != null;

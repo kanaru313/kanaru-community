@@ -85,6 +85,15 @@ void main() {
       expect(s.state.startSerial, 1);
     });
 
+    test('one press above the set length publishes once, with both', () async {
+      s.timer.startMinutes(45);
+      s.states.clear();
+      s.timer.addMinutes(5);
+      expect(s.states, hasLength(1));
+      expect(s.states.single.remaining, const Duration(minutes: 50));
+      expect(s.states.single.setLength, const Duration(minutes: 50));
+    });
+
     test('the time left is never above the set length', () async {
       s.timer.startMinutes(30);
       for (final d in [min, min, const Duration(minutes: 4)]) {

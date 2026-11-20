@@ -49,8 +49,9 @@ Future<void> _openSleepTimerOnRoot(NavigatorState root) async {
 
 /// The two groups of the "More" menu, shared by the mobile sheet and the
 /// desktop dropdown: add to playlist, go to album, go to artist
-/// | sleep timer, lyrics source, translate, visual effects (Pro), track info. Add to
-/// playlist and the two navigation items work now; [beforeNavigate] closes
+/// | sleep timer, lyrics source, translate, visual effects (Pro), track
+/// info. Add to playlist and the two navigation items work now;
+/// [beforeNavigate] closes
 /// what covers the library first (the picker opens over Now Playing, so it
 /// needs no such call). [openSleepTimer] replaces the default way of opening
 /// the sleep timer, for a screen that pins its chrome and owns the focus to
