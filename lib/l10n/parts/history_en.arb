@@ -206,5 +206,42 @@
         "type": "String"
       }
     }
+  },
+  "historyRangeDialogCaption": "Custom range",
+  "@historyRangeDialogCaption": {
+    "description": "Caption above the header block of the custom range dialog"
+  },
+  "historyRangePickStart": "Pick the start date",
+  "@historyRangePickStart": {
+    "description": "Hint in the custom range dialog before the first day is picked"
+  },
+  "historyRangePickEnd": "Pick the end date",
+  "@historyRangePickEnd": {
+    "description": "Hint in the custom range dialog after the first day is picked"
+  },
+  "historyRangeDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "@historyRangeDays": {
+    "description": "Days picked, shown as the second line of the custom range dialog header",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyRangeDayHasListens": "Has listens",
+  "@historyRangeDayHasListens": {
+    "description": "Screen reader cue on a day of the custom range calendar that holds plays"
+  },
+  "historyRangeStartPlaceholder": "Start date",
+  "@historyRangeStartPlaceholder": {
+    "description": "Shown in the custom range dialog header until the first day is picked"
+  },
+  "historyRangeEndPlaceholder": "End date",
+  "@historyRangeEndPlaceholder": {
+    "description": "Shown in the custom range dialog header until the last day is picked"
+  },
+  "historyRangeSave": "Save",
+  "@historyRangeSave": {
+    "description": "Save button of the custom range dialog"
   }
 }

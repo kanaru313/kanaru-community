@@ -3593,4 +3593,35 @@ class AppLocalizationsVi extends AppLocalizations {
   String historyTrackWhen(String day, String time) {
     return '$day $time';
   }
+
+  @override
+  String get historyRangeDialogCaption => 'Khoảng tuỳ chọn';
+
+  @override
+  String get historyRangePickStart => 'Chọn ngày bắt đầu';
+
+  @override
+  String get historyRangePickEnd => 'Chọn ngày kết thúc';
+
+  @override
+  String historyRangeDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ngày',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyRangeDayHasListens => 'Có lượt nghe';
+
+  @override
+  String get historyRangeStartPlaceholder => 'Ngày bắt đầu';
+
+  @override
+  String get historyRangeEndPlaceholder => 'Ngày kết thúc';
+
+  @override
+  String get historyRangeSave => 'Lưu';
 }

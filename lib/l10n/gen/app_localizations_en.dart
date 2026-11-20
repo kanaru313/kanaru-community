@@ -4004,4 +4004,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String historyTrackWhen(String day, String time) {
     return '$day $time';
   }
+
+  @override
+  String get historyRangeDialogCaption => 'Custom range';
+
+  @override
+  String get historyRangePickStart => 'Pick the start date';
+
+  @override
+  String get historyRangePickEnd => 'Pick the end date';
+
+  @override
+  String historyRangeDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyRangeDayHasListens => 'Has listens';
+
+  @override
+  String get historyRangeStartPlaceholder => 'Start date';
+
+  @override
+  String get historyRangeEndPlaceholder => 'End date';
+
+  @override
+  String get historyRangeSave => 'Save';
 }

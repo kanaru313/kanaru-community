@@ -122,6 +122,36 @@ class MostPlayedRange {
       );
 }
 
+/// The days the range picker may offer: from the first play (or today, when
+/// that is earlier) to the last play (or today). A clock that was wrong can
+/// leave plays in the future.
+({DateTime first, DateTime last}) pickerBounds(
+  ({int first, int last}) played,
+  DateTime now,
+) {
+  final today = localDay(now);
+  final first = localDay(DateTime.fromMillisecondsSinceEpoch(played.first));
+  final last = localDay(DateTime.fromMillisecondsSinceEpoch(played.last));
+  return (
+    first: first.isBefore(today) ? first : today,
+    last: last.isAfter(today) ? last : today,
+  );
+}
+
+/// The selection after a tap on [day]: with no start, or a complete range, the
+/// day starts a new one; a day on or after the start ends it (the same day is
+/// a one-day range); an earlier day becomes the new start.
+({DateTime? start, DateTime? end}) applyRangeTap(
+  DateTime? start,
+  DateTime? end,
+  DateTime day,
+) {
+  if (start == null || end != null) return (start: day, end: null);
+  return day.isBefore(start)
+      ? (start: day, end: null)
+      : (start: start, end: day);
+}
+
 /// Whether [window] takes in every play in [played], so the all-time list
 /// (cheaper to read, the same answer) can stand in for it.
 bool windowCoversPlays(

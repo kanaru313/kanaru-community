@@ -107,6 +107,52 @@ void main() {
     });
   });
 
+  group('pickerBounds', () {
+    final at = DateTime(2026, 10, 23, 12);
+    ({int first, int last}) played(DateTime a, DateTime b) =>
+        (first: a.millisecondsSinceEpoch, last: b.millisecondsSinceEpoch);
+
+    test('run from the first play to today', () {
+      final b = pickerBounds(
+        played(DateTime(2026, 8, 20, 9), DateTime(2026, 10, 1)),
+        at,
+      );
+      expect(b.first, DateTime(2026, 8, 20));
+      expect(b.last, DateTime(2026, 10, 23));
+    });
+
+    test('reach a play in the future and a first play today', () {
+      final b = pickerBounds(
+        played(DateTime(2026, 10, 23, 20), DateTime(2026, 11, 2, 8)),
+        at,
+      );
+      expect(b.first, DateTime(2026, 10, 23));
+      expect(b.last, DateTime(2026, 11, 2));
+    });
+  });
+
+  group('applyRangeTap', () {
+    final a = DateTime(2026, 10, 10);
+    final b = DateTime(2026, 10, 14);
+
+    test('a first tap, or a tap on a complete range, starts a new one', () {
+      expect(applyRangeTap(null, null, a), (start: a, end: null));
+      expect(applyRangeTap(a, b, DateTime(2026, 10, 20)), (
+        start: DateTime(2026, 10, 20),
+        end: null,
+      ));
+    });
+
+    test('a later day ends the range, the same day makes a one-day range', () {
+      expect(applyRangeTap(a, null, b), (start: a, end: b));
+      expect(applyRangeTap(a, null, a), (start: a, end: a));
+    });
+
+    test('an earlier day becomes the new start', () {
+      expect(applyRangeTap(b, null, a), (start: a, end: null));
+    });
+  });
+
   group('ClearScope', () {
     test('every bounded scope ends one millisecond after the fixed now', () {
       final end = now.millisecondsSinceEpoch + 1;

@@ -206,5 +206,20 @@
         "type": "String"
       }
     }
-  }
+  },
+  "historyRangeDialogCaption": "Khoảng tuỳ chọn",
+  "historyRangePickStart": "Chọn ngày bắt đầu",
+  "historyRangePickEnd": "Chọn ngày kết thúc",
+  "historyRangeDays": "{count, plural, other{{count} ngày}}",
+  "@historyRangeDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyRangeDayHasListens": "Có lượt nghe",
+  "historyRangeStartPlaceholder": "Ngày bắt đầu",
+  "historyRangeEndPlaceholder": "Ngày kết thúc",
+  "historyRangeSave": "Lưu"
 }

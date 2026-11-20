@@ -5735,6 +5735,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{day} {time}'**
   String historyTrackWhen(String day, String time);
+
+  /// Caption above the header block of the custom range dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Custom range'**
+  String get historyRangeDialogCaption;
+
+  /// Hint in the custom range dialog before the first day is picked
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the start date'**
+  String get historyRangePickStart;
+
+  /// Hint in the custom range dialog after the first day is picked
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the end date'**
+  String get historyRangePickEnd;
+
+  /// Days picked, shown as the second line of the custom range dialog header
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String historyRangeDays(int count);
+
+  /// Screen reader cue on a day of the custom range calendar that holds plays
+  ///
+  /// In en, this message translates to:
+  /// **'Has listens'**
+  String get historyRangeDayHasListens;
+
+  /// Shown in the custom range dialog header until the first day is picked
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get historyRangeStartPlaceholder;
+
+  /// Shown in the custom range dialog header until the last day is picked
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get historyRangeEndPlaceholder;
+
+  /// Save button of the custom range dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get historyRangeSave;
 }
 
 class _AppLocalizationsDelegate
