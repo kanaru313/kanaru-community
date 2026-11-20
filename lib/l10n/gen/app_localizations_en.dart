@@ -3590,4 +3590,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historyMenuMissing => 'Can\'t play';
+
+  @override
+  String get historyTrackEmpty => 'No plays yet';
+
+  @override
+  String historyTrackSummaryLast(String when) {
+    return 'Last played $when';
+  }
+
+  @override
+  String historyTrackSummaryFirst(String date) {
+    return 'first played $date';
+  }
+
+  @override
+  String historyTrackSummaryTotal(String duration) {
+    return '$duration listened in total';
+  }
+
+  @override
+  String historyTrackListened(String duration) {
+    return 'listened $duration';
+  }
+
+  @override
+  String historyTrackWhen(String day, String time) {
+    return '$day $time';
+  }
 }

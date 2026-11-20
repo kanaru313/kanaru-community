@@ -1551,8 +1551,8 @@ dialog from 600 px, but this menu stays a sheet up to the desktop form factor
   `/playlists` route, before `:uid`. On desktop the sidebar item stays lit on
   the sub-route; on mobile the hub tile opens the page as a child of the
   Playlist tab (`openLibraryPage`).
-- `TrackHistoryPage` is a placeholder until its page lands. Strings live in
-  the `history` arb part (prefix `history`).
+- `TrackHistoryPage` is the single-song sub-page (see "Single-song page").
+  Strings live in the `history` arb part (prefix `history`).
 
 ### History page
 
@@ -1632,6 +1632,44 @@ newest year (`historyMosaicTracks`: four distinct covers make a 2 x 2
   `rank` (badge in the cover's end-bottom corner, replaces the track number,
   `primary` fill for ranks 1-3), `onDelete`, `onUnavailableTap` (a missing row
   that has `onUnavailableTap` and its own `onMenu` also gets a ⋮).
+
+### Single-song page
+
+`library/ui/history/track/`: `track_history_page.dart` watches
+`trackHistoryProvider(TrackId)` (null for a song that does not exist) and
+`localDayProvider`; `track_history_hero.dart`, `track_history_rows.dart`,
+`track_history_labels.dart` (pure strings). The route builder passes the parsed
+id (null when the path has none), so an unusable id and an unknown song show
+the same empty line "No plays yet" in a plain frame; the page keeps the last
+answer on screen while a change re-reads it.
+
+- **Frame**: `HistoryPageFrame.layout` with `showBack: true` on both shells (a
+  sub-page, unlike the sidebar History page), so there is no header title until
+  the hero's name scrolls out of sight; two columns from 840 dp.
+- **Hero**: `KDetailHero` with the song's cover (radius 14 narrow), title,
+  artist (`line2`, left out when empty), `N plays` (`line3`) and one filled
+  `[▶ Play]` (`historyActions.playFrom([song], song)`, a toast when it fails).
+  The description (`KDetailDescription`, open state in
+  `detailDescriptionExpandedProvider` under `history-track:<id>`) reads "Last
+  played today 21:42 · first played 07/10/2026 · 22 min listened in total.":
+  today / yesterday by `dayLabelKind` against `localDayProvider`, else the date;
+  parts without a figure are dropped. A song that cannot play (missing or
+  hidden) dims the hero and disables Play, with "Can't play this song" as its
+  tooltip. With no plays left the hero stays and the list gives way to the
+  empty line.
+- **Rows**: `TrackHistoryRow` = `KListRow` (no cover) inside a `KContextRegion`:
+  `Thursday · 14/11/2026 · 21:42` and `listened 3:12` (omitted when
+  `listened_ms` is null), newest first, no ordinal. A play is not playable: a
+  tap does nothing while no song is selected (the no-op `onTap` only makes the
+  row a keyboard stop, which the Delete and Menu keys need). A long press
+  toggles the song in `librarySelectionProvider`, and every row shows selected
+  through `isSelectedProvider` (a tap while selecting toggles it). ⋮, right
+  click, Menu / Shift+F10 and the Delete key remove the play through
+  `removeHistoryPlay`, so the merged Undo toast and the error toast are the
+  History page's. Removing the last play shows the empty line; Undo restores
+  the rows.
+- The `/playlists/most-played/track/:trackId` route comes with the Most played
+  page and builds the same widget.
 
 ### Menus, dialogs, filter and jump
 

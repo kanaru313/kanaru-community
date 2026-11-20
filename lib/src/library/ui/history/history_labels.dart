@@ -26,7 +26,7 @@ String historyDayLabel(AppLocalizations l10n, DateTime day, DateTime today) =>
     switch (dayLabelKind(day, today)) {
       DayLabelKind.today => l10n.historyDayToday,
       DayLabelKind.yesterday => l10n.historyDayYesterday,
-      DayLabelKind.weekday => _capitalizeWords(
+      DayLabelKind.weekday => historyCapitalizeWords(
         DateFormat.EEEE(l10n.localeName).format(day),
       ),
       DayLabelKind.date => DateFormat('dd/MM').format(day),
@@ -53,8 +53,8 @@ String historyRowLine(
       : l10n.historyRowOrdinal(time, play.ordinal);
 }
 
-/// "thứ bảy" is "Thứ Bảy" in a header.
-String _capitalizeWords(String s) => s
+/// "thứ bảy" is "Thứ Bảy" in a header or a row.
+String historyCapitalizeWords(String s) => s
     .split(' ')
     .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
     .join(' ');

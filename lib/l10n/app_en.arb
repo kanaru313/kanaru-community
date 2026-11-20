@@ -2448,5 +2448,49 @@
       }
     }
   },
-  "historyMenuMissing": "Can't play"
+  "historyMenuMissing": "Can't play",
+  "historyTrackEmpty": "No plays yet",
+  "historyTrackSummaryLast": "Last played {when}",
+  "@historyTrackSummaryLast": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackSummaryFirst": "first played {date}",
+  "@historyTrackSummaryFirst": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackSummaryTotal": "{duration} listened in total",
+  "@historyTrackSummaryTotal": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackListened": "listened {duration}",
+  "@historyTrackListened": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackWhen": "{day} {time}",
+  "@historyTrackWhen": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

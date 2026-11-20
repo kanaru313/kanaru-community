@@ -162,5 +162,49 @@
       }
     }
   },
-  "historyMenuMissing": "Không phát được"
+  "historyMenuMissing": "Không phát được",
+  "historyTrackEmpty": "Chưa có lượt nghe nào",
+  "historyTrackSummaryLast": "Lần cuối {when}",
+  "@historyTrackSummaryLast": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackSummaryFirst": "lần đầu {date}",
+  "@historyTrackSummaryFirst": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackSummaryTotal": "đã nghe tổng {duration}",
+  "@historyTrackSummaryTotal": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackListened": "đã nghe {duration}",
+  "@historyTrackListened": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackWhen": "{day} {time}",
+  "@historyTrackWhen": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

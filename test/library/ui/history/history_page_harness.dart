@@ -66,7 +66,7 @@ class HistoryHarness {
 /// [years] and [overview] default from [byYear] (every play counted).
 /// With [pushed] the page is opened from a home page (tap "open history").
 /// [recorder] replaces the listen recorder the clear goes through,
-/// [playbackCommands] the fake player.
+/// [playbackCommands] the fake player, [page] the page under test.
 Future<HistoryHarness> pumpHistoryPage(
   WidgetTester tester, {
   required Map<int, List<HistoryPlay>> byYear,
@@ -82,6 +82,7 @@ Future<HistoryHarness> pumpHistoryPage(
   bool pushed = false,
   ListenRecorder? recorder,
   FakePlaybackCommands? playbackCommands,
+  Widget page = const HistoryPage(),
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, height);
@@ -151,7 +152,7 @@ Future<HistoryHarness> pumpHistoryPage(
                   ),
                 ),
               )
-            : const Scaffold(body: HistoryPage()),
+            : Scaffold(body: page),
       ),
     ),
   );

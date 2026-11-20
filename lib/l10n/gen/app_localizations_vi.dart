@@ -3233,4 +3233,32 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get historyMenuMissing => 'Không phát được';
+
+  @override
+  String get historyTrackEmpty => 'Chưa có lượt nghe nào';
+
+  @override
+  String historyTrackSummaryLast(String when) {
+    return 'Lần cuối $when';
+  }
+
+  @override
+  String historyTrackSummaryFirst(String date) {
+    return 'lần đầu $date';
+  }
+
+  @override
+  String historyTrackSummaryTotal(String duration) {
+    return 'đã nghe tổng $duration';
+  }
+
+  @override
+  String historyTrackListened(String duration) {
+    return 'đã nghe $duration';
+  }
+
+  @override
+  String historyTrackWhen(String day, String time) {
+    return '$day $time';
+  }
 }

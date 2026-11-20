@@ -46,6 +46,13 @@ class FakeHistoryStore implements HistoryStore {
   List<TrackId> playedTracks = [];
   Map<int, int> counts = {};
 
+  /// Songs and their plays (newest first) that [trackHistory] answers from.
+  /// A removal or an undo moves plays out of / back into these lists and
+  /// reports the change, as the database does.
+  final trackInfos = <int, TrackInfo>{};
+  final trackPlays = <int, List<HistoryPlay>>{};
+  final _hiddenByStamp = <int, List<(int, HistoryPlay)>>{};
+
   final yearReads = <int>[];
 
   /// When set, the next year read waits for it.
@@ -57,6 +64,7 @@ class FakeHistoryStore implements HistoryStore {
   final undone = <List<HistoryBatch>>[];
   final committed = <List<HistoryBatch>>[];
   Object? removeError;
+  Object? trackError;
   Object? undoError;
   Object? commitError;
   int stamp = 100;
@@ -85,7 +93,20 @@ class FakeHistoryStore implements HistoryStore {
   }
 
   @override
-  Future<TrackHistory?> trackHistory(TrackId id) async => null;
+  Future<TrackHistory?> trackHistory(TrackId id) async {
+    if (trackError != null) throw trackError!;
+    final track = trackInfos[id.value];
+    if (track == null) return null;
+    final list = List.of(trackPlays[id.value] ?? const <HistoryPlay>[]);
+    return TrackHistory(
+      track: track,
+      plays: list.length,
+      first: list.isEmpty ? null : list.last.playedAt,
+      last: list.isEmpty ? null : list.first.playedAt,
+      listenedMs: list.fold(0, (sum, p) => sum + (p.listenedMs ?? 0)),
+      list: list,
+    );
+  }
 
   @override
   Future<MostPlayed> top({
@@ -123,13 +144,35 @@ class FakeHistoryStore implements HistoryStore {
   Future<HistoryBatch?> removePlays(List<String> uids) async {
     if (removeError != null) throw removeError!;
     removed.add(uids);
-    return HistoryBatch(uids: uids, stamp: stamp++);
+    final batch = HistoryBatch(uids: uids, stamp: stamp++);
+    final hidden = <(int, HistoryPlay)>[];
+    for (final entry in trackPlays.entries) {
+      for (final p in entry.value.where((p) => uids.contains(p.uid))) {
+        hidden.add((entry.key, p));
+      }
+      entry.value.removeWhere((p) => uids.contains(p.uid));
+    }
+    if (hidden.isNotEmpty) {
+      _hiddenByStamp[batch.stamp] = hidden;
+      playsChanged.add(const HistoryChange(removed: true));
+    }
+    return batch;
   }
 
   @override
   Future<int> undoBatches(List<HistoryBatch> batches) async {
     if (undoError != null) throw undoError!;
     undone.add(batches);
+    var revived = false;
+    for (final b in batches) {
+      for (final (track, p)
+          in _hiddenByStamp.remove(b.stamp) ?? const <(int, HistoryPlay)>[]) {
+        (trackPlays[track] ??= []).add(p);
+        trackPlays[track]!.sort((a, b) => b.playedAt.compareTo(a.playedAt));
+        revived = true;
+      }
+    }
+    if (revived) playsChanged.add(const HistoryChange(inserted: true));
     return batches.fold<int>(0, (n, b) => n + b.uids.length);
   }
 

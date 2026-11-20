@@ -5171,6 +5171,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Can\'t play'**
   String get historyMenuMissing;
+
+  /// No description provided for @historyTrackEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No plays yet'**
+  String get historyTrackEmpty;
+
+  /// No description provided for @historyTrackSummaryLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Last played {when}'**
+  String historyTrackSummaryLast(String when);
+
+  /// No description provided for @historyTrackSummaryFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'first played {date}'**
+  String historyTrackSummaryFirst(String date);
+
+  /// No description provided for @historyTrackSummaryTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} listened in total'**
+  String historyTrackSummaryTotal(String duration);
+
+  /// No description provided for @historyTrackListened.
+  ///
+  /// In en, this message translates to:
+  /// **'listened {duration}'**
+  String historyTrackListened(String duration);
+
+  /// No description provided for @historyTrackWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} {time}'**
+  String historyTrackWhen(String day, String time);
 }
 
 class _AppLocalizationsDelegate

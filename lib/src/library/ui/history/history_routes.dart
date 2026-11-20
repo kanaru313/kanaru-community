@@ -18,9 +18,7 @@ List<GoRoute> historyRoutes() => [
           final id = int.tryParse(state.pathParameters['trackId'] ?? '');
           return KDetailPage(
             key: state.pageKey,
-            child: id == null
-                ? const HistoryPage()
-                : TrackHistoryPage(trackId: id),
+            child: TrackHistoryPage(trackId: id),
           );
         },
       ),
