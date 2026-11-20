@@ -2,6 +2,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../detail/detail_header.dart';
+import '../detail/detail_tint.dart';
 import '../library_locations.dart';
 
 /// Frame of the pages of the History family (History, one song's plays, Most
@@ -20,7 +21,7 @@ class HistoryPageFrame extends StatelessWidget {
     required this.child,
     this.titleInContent = false,
     this.showBack,
-  });
+  }) : tint = null;
 
   /// A page with a hero in [header] and the lists in [slivers]: one column
   /// when narrow, the hero in a fixed 320 dp column from 840 dp of page
@@ -32,6 +33,7 @@ class HistoryPageFrame extends StatelessWidget {
     required Widget header,
     required List<Widget> slivers,
     Widget? banner,
+    this.tint,
     this.showBack,
   }) : titleInContent = true,
        child = KDetailLayout(header: header, slivers: slivers, banner: banner);
@@ -41,6 +43,9 @@ class HistoryPageFrame extends StatelessWidget {
   final Widget child;
   final bool titleInContent;
 
+  /// Washes the page with the colours of the hero's cover; null: untinted.
+  final DetailTint? tint;
+
   /// Null: a back button on the mobile shell only.
   final bool? showBack;
 
@@ -48,6 +53,7 @@ class HistoryPageFrame extends StatelessWidget {
   Widget build(BuildContext context) => DetailFrame(
     title: title,
     titleInContent: titleInContent,
+    tint: tint,
     fallback: LibraryLocations.playlists,
     showBack: showBack ?? FormFactor.of(context) != FormFactor.desktop,
     child: child,

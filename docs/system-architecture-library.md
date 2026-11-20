@@ -1564,8 +1564,11 @@ nothing from `data/` or `database/`. States: pending / load error (a frame with
 no title), empty (`KEmpty` in the frame, the recording strip above it), and
 the page. The hero and the overview render as soon as the overview is read; the
 year's plays follow under a thin progress line. The hero's cover comes from the
-newest year (`historyMosaicTracks`: four distinct covers make a 2 x 2
-`KCoverMosaic`, fewer one cover).
+newest year (`historyCoverKeys`: the playlist rule `pickAutoCoverKeys` over
+the newest distinct albums whose file exists; one key one cover, 2 to 4 a
+`KCoverMosaic`, built by the shared `autoCoverArt` of `playlist_common/`). The
+hero is the playlist's: `KDetailHero(framedCover: true)`, `LibraryMoreButton`,
+and the page is tinted from the first cover (`watchCoverTint` in `detail/detail_tint.dart`, shared with the detail pages).
 
 - **Frame** (`history_page_frame.dart`, shared by the three 05d pages):
   `DetailFrame` + `KDetailLayout(header:, slivers:)`, two columns from 840 dp

@@ -1,13 +1,11 @@
-import 'dart:math' as math;
-
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../media/domain/cover_files.dart';
-import '../../../playback/ui/track_cover.dart';
 import '../../domain/playlists/playlist_ids.dart';
 import '../../state/custom_cover_providers.dart';
 import '../browse/item_covers.dart';
+import 'auto_cover_art.dart';
 
 /// Side, in decoded pixels, of the `thumb` cover files.
 const _thumbPx = 256;
@@ -100,40 +98,12 @@ class PlaylistCover extends StatelessWidget {
         radius: radius,
       );
     }
-    if (keys.length == 1) {
-      return TrackCover(
-        coverKey: keys.first,
-        seed: uid,
-        size: size,
-        dimension: dimension,
-        radius: radius,
-      );
-    }
-    return KCoverMosaic(
-      size: dimension,
+    return autoCoverArt(
+      keys: keys,
+      seed: uid,
+      size: size,
+      dimension: dimension,
       radius: radius,
-      tiles: [
-        for (final key in keys)
-          (context, w, h) {
-            final side = math.max(w, h);
-            // TrackCover draws a square; the tile crops it to w x h.
-            return ClipRect(
-              child: OverflowBox(
-                minWidth: side,
-                maxWidth: side,
-                minHeight: side,
-                maxHeight: side,
-                child: TrackCover(
-                  coverKey: key,
-                  seed: uid,
-                  size: size,
-                  dimension: side,
-                  radius: BorderRadius.zero,
-                ),
-              ),
-            );
-          },
-      ],
     );
   }
 }

@@ -8,6 +8,8 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/history/history_models.dart';
 import '../../state/history/history_providers.dart';
 import '../../state/history/history_year_selection.dart';
+import '../detail/detail_tint.dart';
+import '../selection/selection_inset.dart';
 import 'history_bar.dart';
 import 'history_calendar_dialog.dart';
 import 'history_filter.dart';
@@ -146,10 +148,12 @@ class HistoryContentState extends ConsumerState<HistoryContent> {
         : ref.watch(historyYearProvider(years.first));
     final older = years.where((y) => y < shown).firstOrNull;
     final list = plays.value;
+    final coverKeys = historyCoverKeys(newest.value ?? const []);
     return HistoryPageFrame.layout(
       title: l10n.historyTitle,
       banner: const HistoryRecordingNotice(),
-      header: HistoryHero(overview: widget.overview, plays: newest.value),
+      tint: watchCoverTint(ref, coverKeys.firstOrNull),
+      header: HistoryHero(overview: widget.overview, coverKeys: coverKeys),
       slivers: [
         SliverToBoxAdapter(
           child: HistoryBar(
@@ -185,6 +189,7 @@ class HistoryContentState extends ConsumerState<HistoryContent> {
             controller: _timeline,
             restore: _restore,
           ),
+        const SelectionInsetSliver(),
       ],
     );
   }
