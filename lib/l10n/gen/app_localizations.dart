@@ -5124,6 +5124,12 @@ abstract class AppLocalizations {
   /// **'Take off {minutes} minutes'**
   String sleepTimerRemoveMinutes(int minutes);
 
+  /// No description provided for @sleepTimerRemoveOneMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'Take off 1 minute'**
+  String get sleepTimerRemoveOneMinute;
+
   /// No description provided for @sleepTimerAddTrack.
   ///
   /// In en, this message translates to:

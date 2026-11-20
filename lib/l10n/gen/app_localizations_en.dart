@@ -3573,6 +3573,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get sleepTimerRemoveOneMinute => 'Take off 1 minute';
+
+  @override
   String get sleepTimerAddTrack => 'Add one track';
 
   @override

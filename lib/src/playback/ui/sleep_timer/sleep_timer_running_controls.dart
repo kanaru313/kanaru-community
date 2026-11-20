@@ -4,7 +4,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../state/sleep_timer_provider.dart';
 import 'sleep_timer_announce.dart';
-import 'sleep_timer_draft.dart';
 import 'sleep_timer_focus.dart';
 import 'sleep_timer_texts.dart';
 
@@ -25,7 +24,7 @@ typedef _Controls = ({
 _Controls _controlsOf(SleepTimerState s) => (
   mode: s.mode,
   held: s.countingPaused,
-  canTakeMinutes: s.canSubtract(sleepMinutesRange.step),
+  canTakeMinutes: s.canSubtract(s.minusMinutes),
   canAddMinutes: s.canAddMinutes,
   roomMinutes: s.mode == SleepTimerMode.minutes
       ? (const Duration(minutes: sleepTimerMaxMinutes) - s.remaining)

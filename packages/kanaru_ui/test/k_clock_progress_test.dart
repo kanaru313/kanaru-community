@@ -74,13 +74,25 @@ void main() {
     }
   });
 
-  testWidgets('segments: played empty, current drains, rest full', (
-    tester,
-  ) async {
+  testWidgets(
+    'segments: left ones full from the left, current drains, played empty',
+    (tester) async {
+      await tester.pumpWidget(
+        host(_clock(segments: (count: 5, done: 2, currentFraction: 0.4))),
+      );
+      expect(_painter(tester).fills, [1.0, 1.0, 0.4, 0.0, 0.0]);
+    },
+  );
+
+  testWidgets('segments: last track playing and nothing left', (tester) async {
     await tester.pumpWidget(
-      host(_clock(segments: (count: 5, done: 2, currentFraction: 0.4))),
+      host(_clock(segments: (count: 3, done: 2, currentFraction: 0.7))),
     );
-    expect(_painter(tester).fills, [0.0, 0.0, 0.4, 1.0, 1.0]);
+    expect(_painter(tester).fills, [0.7, 0.0, 0.0]);
+    await tester.pumpWidget(
+      host(_clock(segments: (count: 3, done: 3, currentFraction: 0.7))),
+    );
+    expect(_painter(tester).fills, [0.0, 0.0, 0.0]);
   });
 
   testWidgets('held: number 55 %, bar outline', (tester) async {

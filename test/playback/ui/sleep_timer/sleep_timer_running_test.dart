@@ -101,18 +101,43 @@ void main() {
       semantics.dispose();
     });
 
-    testWidgets('−5 is off at 5 minutes or less, +5 at 720', (tester) async {
+    testWidgets(
+      '−5 above 5 minutes, −1 at 5 or less, off at 1; +5 off at 720',
+      (tester) async {
+        final host = await pumpSleepModal(
+          tester,
+          initial: runningMinutes(remaining: const Duration(minutes: 6)),
+        );
+        await openSleepModal(tester);
+        expect(_side('−5'), findsOneWidget);
+        expect(_sideEnabled(tester, '−5'), isTrue);
+        host.timer.set(runningMinutes(remaining: const Duration(minutes: 5)));
+        await tester.pump();
+        expect(_side('−5'), findsNothing);
+        expect(_sideEnabled(tester, '−1'), isTrue);
+        expect(_sideEnabled(tester, '+5'), isTrue);
+        host.timer.set(runningMinutes(remaining: const Duration(minutes: 1)));
+        await tester.pump();
+        expect(_sideEnabled(tester, '−1'), isFalse);
+        host.timer.set(runningMinutes(remaining: const Duration(minutes: 720)));
+        await tester.pump();
+        expect(_sideEnabled(tester, '−5'), isTrue);
+        expect(_sideEnabled(tester, '+5'), isFalse);
+      },
+    );
+
+    testWidgets('−1 takes one minute off and says so', (tester) async {
       final host = await pumpSleepModal(
         tester,
-        initial: runningMinutes(remaining: const Duration(minutes: 5)),
+        initial: runningMinutes(remaining: const Duration(minutes: 3)),
       );
       await openSleepModal(tester);
-      expect(_sideEnabled(tester, '−5'), isFalse);
-      expect(_sideEnabled(tester, '+5'), isTrue);
-      host.timer.set(runningMinutes(remaining: const Duration(minutes: 720)));
-      await tester.pump();
-      expect(_sideEnabled(tester, '−5'), isTrue);
-      expect(_sideEnabled(tester, '+5'), isFalse);
+      final semantics = tester.ensureSemantics();
+      expect(find.bySemanticsLabel('Bớt 1 phút'), findsOneWidget);
+      semantics.dispose();
+      await tapVisible(tester, _side('−1'));
+      expect(host.timer.calls.last, 'addMinutes:-1');
+      expect(find.text('2:00'), findsOneWidget);
     });
 
     testWidgets('quick-add chips: one line under the bar, each adds its '
@@ -325,8 +350,8 @@ void main() {
       expect(focusedWithin(tester, _side('−5')), isTrue);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
-      // −5 is off at 5 minutes: +5 is first.
-      host.timer.set(runningMinutes(remaining: const Duration(minutes: 5)));
+      // −1 is off at 1 minute: +5 is first.
+      host.timer.set(runningMinutes(remaining: const Duration(minutes: 1)));
       await openSleepModal(tester);
       expect(focusedWithin(tester, _side('+5')), isTrue);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -337,7 +362,7 @@ void main() {
       expect(focusedWithin(tester, _button('Tắt hẹn giờ')), isTrue);
     });
 
-    testWidgets('a focused −5 that turns off hands focus to +5', (
+    testWidgets('a focused − keeps focus from −5 to −1, then hands it to +5', (
       tester,
     ) async {
       await pumpSleepModal(
@@ -349,8 +374,16 @@ void main() {
       expect(focusedWithin(tester, _side('−5')), isTrue);
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
+      // 5:00: the same button is now −1 and still focused.
       expect(find.text('5:00'), findsOneWidget);
-      expect(_sideEnabled(tester, '−5'), isFalse);
+      expect(_sideEnabled(tester, '−1'), isTrue);
+      expect(focusedWithin(tester, _side('−1')), isTrue);
+      for (var i = 0; i < 4; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('1:00'), findsOneWidget);
+      expect(_sideEnabled(tester, '−1'), isFalse);
       expect(focusedWithin(tester, _side('+5')), isTrue);
     });
 

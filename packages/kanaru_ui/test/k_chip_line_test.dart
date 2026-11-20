@@ -61,4 +61,62 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ShaderMask), findsNothing);
   });
+
+  testWidgets('chips that fit in a 288 parent at 320 are centred in it', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(320, 400));
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: SizedBox(key: const Key('p'), width: 288, child: _line(2)),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final line = tester.getRect(find.byType(KChip).first);
+    final last = tester.getRect(find.byType(KChip).last);
+    final parent = tester.getRect(find.byKey(const Key('p')));
+    expect((line.left + last.right) / 2, closeTo(parent.center.dx, 0.5));
+  });
+
+  testWidgets('overflow at 320 starts scrolled to the start, fade shown', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(320, 400));
+    await tester.pumpWidget(
+      host(Center(child: SizedBox(width: 288, child: _line(8)))),
+    );
+    await tester.pumpAndSettle();
+    final scrollable = tester.state<ScrollableState>(find.byType(Scrollable));
+    expect(scrollable.position.pixels, 0);
+    expect(scrollable.position.maxScrollExtent, greaterThan(0));
+    expect(find.byType(ShaderMask), findsOneWidget);
+  });
+
+  testWidgets('revealIndex scrolls an overflowing line to that chip', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(320, 400));
+    Widget line(int? reveal) => host(
+      Center(
+        child: SizedBox(
+          width: 288,
+          child: KChipLine(
+            revealIndex: reveal,
+            children: [
+              for (var i = 0; i < 8; i++)
+                KChip(dense: true, label: Text('+${i + 1} ph'), onTap: () {}),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpWidget(line(7));
+    await tester.pumpAndSettle();
+    expect(
+      tester.state<ScrollableState>(find.byType(Scrollable)).position.pixels,
+      greaterThan(0),
+    );
+  });
 }

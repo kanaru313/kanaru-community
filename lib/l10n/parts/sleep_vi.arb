@@ -203,6 +203,7 @@
       }
     }
   },
+  "sleepTimerRemoveOneMinute": "Bớt 1 phút",
   "sleepTimerAddTrack": "Thêm một bài",
   "sleepTimerRemoveTrack": "Bớt một bài",
   "sleepTimerChipPlusMinutes": "+{minutes} ph",

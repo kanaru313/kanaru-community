@@ -1,7 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 
-/// A bar cut into [count] segments: the first [done] are played (empty), the
-/// one at [done] drains with [currentFraction] (0..1 left), the rest are full.
+/// A bar cut into [count] segments read like the minutes bar: filled = what is
+/// left, shrinking toward the left. The first `count - done` segments are the
+/// tracks left; the last of them is the playing one and drains from its right
+/// end with [currentFraction] (0..1 left); the [done] played tracks are empty
+/// segments on the right.
 typedef KClockSegments = ({int count, int done, double currentFraction});
 
 const double _kSegmentGap = 4;
@@ -25,15 +28,16 @@ class ClockBarPainter extends CustomPainter {
   List<double> get fills {
     final s = segments;
     if (s == null) return [fraction];
+    final current = s.count - s.done - 1;
     return [
       for (var i = 0; i < s.count; i++)
-        i < s.done
-            ? 0.0
-            : (i == s.done
+        i < current
+            ? 1.0
+            : (i == current
                   ? (s.currentFraction.isNaN
                         ? 0.0
                         : s.currentFraction.clamp(0.0, 1.0))
-                  : 1.0),
+                  : 0.0),
     ];
   }
 

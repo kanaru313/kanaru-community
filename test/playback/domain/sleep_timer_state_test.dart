@@ -21,6 +21,14 @@ void main() {
     expect(s.canAddTrack, isFalse);
   });
 
+  test('minusMinutes is 5 above 5 minutes, 1 at 5 or less', () {
+    expect(minutes(const Duration(minutes: 6)).minusMinutes, 5);
+    expect(minutes(const Duration(minutes: 5, seconds: 1)).minusMinutes, 5);
+    expect(minutes(const Duration(minutes: 5)).minusMinutes, 1);
+    expect(minutes(const Duration(minutes: 1)).canSubtract(1), isFalse);
+    expect(minutes(const Duration(minutes: 2)).canSubtract(1), isTrue);
+  });
+
   group('canSubtract', () {
     test('needs more than the amount left', () {
       expect(minutes(const Duration(minutes: 5)).canSubtract(5), isFalse);

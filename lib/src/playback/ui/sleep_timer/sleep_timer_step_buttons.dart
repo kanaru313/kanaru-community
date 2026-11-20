@@ -20,12 +20,18 @@ import 'sleep_timer_texts.dart';
   switch (s.mode) {
     case SleepTimerMode.minutes:
       final step = sleepMinutesRange.step;
+      // − is −5, and −1 once 5 minutes or less are left; same focus node.
+      final minus = s.minusMinutes;
       return (
         leading: KStepButton.text(
-          label: l10n.sleepTimerStepMinus(step),
-          semanticLabel: l10n.sleepTimerRemoveMinutes(step),
+          label: l10n.sleepTimerStepMinus(minus),
+          semanticLabel: minus == 1
+              ? l10n.sleepTimerRemoveOneMinute
+              : l10n.sleepTimerRemoveMinutes(minus),
           focusNode: focus.minus,
-          onPressed: s.canSubtract(step) ? () => timer.addMinutes(-step) : null,
+          onPressed: s.canSubtract(minus)
+              ? () => timer.addMinutes(-minus)
+              : null,
         ),
         trailing: KStepButton.text(
           label: l10n.sleepTimerStepPlus(step),

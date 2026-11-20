@@ -135,7 +135,7 @@ class _SleepTimerModalState extends ConsumerState<_SleepTimerModal> {
   void _focusFirstRunningControl() {
     final s = ref.read(sleepTimerProvider);
     final candidates = <(FocusNode, bool)>[
-      (_focus.minus, s.canSubtract(sleepMinutesRange.step) || s.canRemoveTrack),
+      (_focus.minus, s.canSubtract(s.minusMinutes) || s.canRemoveTrack),
       (_focus.plus, s.mode == SleepTimerMode.minutes || s.canAddTrack),
       (_focus.pause, s.mode == SleepTimerMode.minutes),
       (_focus.off, true),

@@ -3182,6 +3182,9 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get sleepTimerRemoveOneMinute => 'Bớt 1 phút';
+
+  @override
   String get sleepTimerAddTrack => 'Thêm một bài';
 
   @override

@@ -96,6 +96,10 @@ class SleepTimerState {
   bool canSubtract(int minutes) =>
       mode == SleepTimerMode.minutes && remaining > Duration(minutes: minutes);
 
+  /// Minutes the running screen's − button takes off: 5, then 1 once no more
+  /// than 5 minutes are left (so the last minutes can still be trimmed).
+  int get minusMinutes => remaining > const Duration(minutes: 5) ? 5 : 1;
+
   /// Whether the minutes mode has room for more: adding is capped at
   /// [sleepTimerMaxMinutes] left.
   bool get canAddMinutes =>

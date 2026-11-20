@@ -9,9 +9,13 @@ import '../tokens/k_space.dart';
 /// (usually `dense`). Needs a bounded width (a Column with stretch, a sized
 /// box); under an unbounded parent it asserts.
 class KChipLine extends StatefulWidget {
-  const KChipLine({super.key, required this.children});
+  const KChipLine({super.key, required this.children, this.revealIndex});
 
   final List<Widget> children;
+
+  /// Child to bring into view (centred) once, when the line first lays out and
+  /// overflows (the chosen chip). Ignored while everything fits.
+  final int? revealIndex;
 
   @override
   State<KChipLine> createState() => _KChipLineState();
@@ -22,7 +26,25 @@ const double _fadeWidth = 28;
 
 class _KChipLineState extends State<KChipLine> {
   final _scroll = ScrollController();
+  final _revealKey = GlobalKey();
+
+  // Keeps the scroll state when the fade mask is added or removed around it.
+  final _scrollKey = GlobalKey();
   bool _more = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.revealIndex == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final chip = _revealKey.currentContext;
+      // Jump, not animate: it is the state the line opens in.
+      if (chip != null && _scroll.hasClients) {
+        Scrollable.ensureVisible(chip, alignment: 0.5);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -71,6 +93,7 @@ class _KChipLineState extends State<KChipLine> {
                 );
               },
               child: SingleChildScrollView(
+                key: _scrollKey,
                 controller: _scroll,
                 scrollDirection: Axis.horizontal,
                 child: ConstrainedBox(
@@ -80,7 +103,12 @@ class _KChipLineState extends State<KChipLine> {
                     children: [
                       for (var i = 0; i < widget.children.length; i++) ...[
                         if (i > 0) SizedBox(width: gap),
-                        widget.children[i],
+                        i == widget.revealIndex
+                            ? KeyedSubtree(
+                                key: _revealKey,
+                                child: widget.children[i],
+                              )
+                            : widget.children[i],
                       ],
                     ],
                   ),

@@ -2489,6 +2489,7 @@
       }
     }
   },
+  "sleepTimerRemoveOneMinute": "Take off 1 minute",
   "sleepTimerAddTrack": "Add one track",
   "sleepTimerRemoveTrack": "Remove one track",
   "sleepTimerChipPlusMinutes": "+{minutes} min",
