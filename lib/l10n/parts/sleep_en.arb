@@ -1,0 +1,350 @@
+{
+  "sleepTimerHint": "Tap an item to start right away.",
+  "sleepTimerCancel": "Cancel",
+  "sleepTimerSectionDuration": "After a while",
+  "sleepTimerSectionTracks": "By track",
+  "sleepTimerTileUntil": "until {time}",
+  "@sleepTimerTileUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerTileStartLabel": "Start {duration}, stops at {time}",
+  "@sleepTimerTileStartLabel": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerCustom": "Custom…",
+  "sleepTimerCustomRange": "{min}–{max} minutes",
+  "@sleepTimerCustomRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerEndOfTrack": "End of this track",
+  "sleepTimerEndOfAlbum": "End of this album",
+  "sleepTimerEndOfQueue": "End of the queue",
+  "sleepTimerAfterTracks": "After a number of tracks…",
+  "sleepTimerAfterTracksRange": "{min}–{max} tracks, this one included",
+  "@sleepTimerAfterTracksRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerNoAlbum": "This track has no album",
+  "sleepTimerLeftTime": "{time} left",
+  "@sleepTimerLeftTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerLeftTracks": "{count, plural, one{1 track left} other{{count} tracks left}}",
+  "@sleepTimerLeftTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerLeftTracksCapped": "{count}+ tracks left",
+  "@sleepTimerLeftTracksCapped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerLeftTracksDuration": "{count, plural, one{1 track left} other{{count} tracks left}} · {duration}",
+  "@sleepTimerLeftTracksDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerRunning": "Running",
+  "sleepTimerRunningWith": "Running · {status}",
+  "@sleepTimerRunningWith": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerCustomTitle": "Custom",
+  "sleepTimerKindLabel": "Timer type",
+  "sleepTimerKindMinutes": "Minutes",
+  "sleepTimerKindTracks": "Tracks",
+  "sleepTimerFieldMinutes": "Minutes",
+  "sleepTimerUnitMinutes": "minutes",
+  "sleepTimerUnitMinutesWords": "minutes · {words}",
+  "@sleepTimerUnitMinutesWords": {
+    "placeholders": {
+      "words": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerUnitTracks": "{count, plural, one{track} other{tracks}}",
+  "@sleepTimerUnitTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerStopsAt": "Stops at {time}",
+  "@sleepTimerStopsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerStopsAfterTracks": "Pauses after {count, plural, one{1 track} other{{count} tracks}}, this one included",
+  "@sleepTimerStopsAfterTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerTracksCount": "{count, plural, one{1 track} other{{count} tracks}}",
+  "@sleepTimerTracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerStart": "Start",
+  "sleepTimerMinutes": "{count, plural, one{{count} minute} other{{count} minutes}}",
+  "@sleepTimerMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerHours": "{count, plural, one{{count} hour} other{{count} hours}}",
+  "@sleepTimerHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerHoursMinutes": "{hours} h {minutes} min",
+  "@sleepTimerHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerHoursMinutesShort": "{hours} h {minutes}",
+  "@sleepTimerHoursMinutesShort": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerChipMinutes": "{minutes} min",
+  "@sleepTimerChipMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerAddMinutes": "Add {minutes} minutes",
+  "@sleepTimerAddMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerRemoveMinutes": "Take off {minutes} minutes",
+  "@sleepTimerRemoveMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerAddTrack": "Add one track",
+  "sleepTimerRemoveTrack": "Remove one track",
+  "sleepTimerButtonPlusMinutes": "+{minutes} min",
+  "@sleepTimerButtonPlusMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerButtonMinusMinutes": "−{minutes} min",
+  "@sleepTimerButtonMinusMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerButtonPlusTracks": "+{count} track",
+  "@sleepTimerButtonPlusTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerButtonMinusTracks": "−{count} track",
+  "@sleepTimerButtonMinusTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerLabelSleepIn": "Sleep in",
+  "sleepTimerLabelHeld": "Counting paused",
+  "sleepTimerLabelPauseAfter": "Pause after",
+  "sleepTimerLabelPauseAtEnd": "Pause at the end of",
+  "sleepTimerWordTrack": "this track",
+  "sleepTimerWordAlbum": "this album",
+  "sleepTimerWordQueue": "the queue",
+  "sleepTimerRowSet": "Set {duration}",
+  "@sleepTimerRowSet": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerRowHeld": "Counting paused",
+  "sleepTimerRowCurrentCounts": "The current track counts as one",
+  "sleepTimerRowLastTrack": "this is the last track",
+  "sleepTimerRowTracksOf": "{left} / {total}",
+  "@sleepTimerRowTracksOf": {
+    "placeholders": {
+      "left": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerRowQueueKept": "the queue stays",
+  "sleepTimerPauseCounting": "Pause counting",
+  "sleepTimerResumeCounting": "Resume counting",
+  "sleepTimerTurnOff": "Turn off timer",
+  "sleepTimerChange": "Change…",
+  "sleepTimerStatusMinutes": "Sleep in {duration}",
+  "@sleepTimerStatusMinutes": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerStatusHeld": "Counting paused · {duration} left",
+  "@sleepTimerStatusHeld": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerStatusTracks": "Pause after {count, plural, one{1 track} other{{count} tracks}}",
+  "@sleepTimerStatusTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerStatusEndTrack": "Pause at the end of this track",
+  "sleepTimerStatusEndAlbum": "Pause at the end of this album",
+  "sleepTimerStatusEndQueue": "Pause at the end of the queue",
+  "sleepTimerPillTrack": "Track",
+  "sleepTimerPillAlbum": "Album",
+  "sleepTimerPillQueue": "Queue",
+  "sleepTimerEntryEndTrack": "end of this track",
+  "sleepTimerEntryEndAlbum": "end of this album",
+  "sleepTimerEntryEndQueue": "end of the queue",
+  "sleepTimerEntryRunning": "Sleep timer: {status}",
+  "@sleepTimerEntryRunning": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerMenuRunning": "Sleep timer · {status}",
+  "@sleepTimerMenuRunning": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerHeldSuffix": "(counting paused)",
+  "sleepTimerAnnounceStartMinutes": "Sleep timer set for {duration}, stops at {time}",
+  "@sleepTimerAnnounceStartMinutes": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerAnnounceStartTracks": "Sleep timer set, pausing after {count, plural, one{1 track} other{{count} tracks}}",
+  "@sleepTimerAnnounceStartTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerAnnounceStartEndTrack": "Sleep timer set, pausing at the end of this track",
+  "sleepTimerAnnounceStartEndAlbum": "Sleep timer set, pausing at the end of this album",
+  "sleepTimerAnnounceStartEndQueue": "Sleep timer set, pausing at the end of the queue",
+  "sleepTimerAnnounceHeld": "Counting paused",
+  "sleepTimerAnnounceResumed": "Counting resumed",
+  "sleepTimerAnnounceCancelled": "Sleep timer turned off",
+  "sleepTimerAnnounceExpired": "Sleep timer ended, playback paused"
+}

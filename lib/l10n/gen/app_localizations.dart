@@ -4889,6 +4889,522 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ignore the file\'s language tag'**
   String get settingsLibraryLanguageDetectedDesc;
+
+  /// No description provided for @sleepTimerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap an item to start right away.'**
+  String get sleepTimerHint;
+
+  /// No description provided for @sleepTimerCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get sleepTimerCancel;
+
+  /// No description provided for @sleepTimerSectionDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'After a while'**
+  String get sleepTimerSectionDuration;
+
+  /// No description provided for @sleepTimerSectionTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'By track'**
+  String get sleepTimerSectionTracks;
+
+  /// No description provided for @sleepTimerTileUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'until {time}'**
+  String sleepTimerTileUntil(String time);
+
+  /// No description provided for @sleepTimerTileStartLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Start {duration}, stops at {time}'**
+  String sleepTimerTileStartLabel(String duration, String time);
+
+  /// No description provided for @sleepTimerCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom…'**
+  String get sleepTimerCustom;
+
+  /// No description provided for @sleepTimerCustomRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{min}–{max} minutes'**
+  String sleepTimerCustomRange(int min, int max);
+
+  /// No description provided for @sleepTimerEndOfTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'End of this track'**
+  String get sleepTimerEndOfTrack;
+
+  /// No description provided for @sleepTimerEndOfAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'End of this album'**
+  String get sleepTimerEndOfAlbum;
+
+  /// No description provided for @sleepTimerEndOfQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'End of the queue'**
+  String get sleepTimerEndOfQueue;
+
+  /// No description provided for @sleepTimerAfterTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'After a number of tracks…'**
+  String get sleepTimerAfterTracks;
+
+  /// No description provided for @sleepTimerAfterTracksRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{min}–{max} tracks, this one included'**
+  String sleepTimerAfterTracksRange(int min, int max);
+
+  /// No description provided for @sleepTimerNoAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'This track has no album'**
+  String get sleepTimerNoAlbum;
+
+  /// No description provided for @sleepTimerLeftTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} left'**
+  String sleepTimerLeftTime(String time);
+
+  /// No description provided for @sleepTimerLeftTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 track left} other{{count} tracks left}}'**
+  String sleepTimerLeftTracks(int count);
+
+  /// No description provided for @sleepTimerLeftTracksCapped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}+ tracks left'**
+  String sleepTimerLeftTracksCapped(int count);
+
+  /// No description provided for @sleepTimerLeftTracksDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 track left} other{{count} tracks left}} · {duration}'**
+  String sleepTimerLeftTracksDuration(int count, String duration);
+
+  /// No description provided for @sleepTimerRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get sleepTimerRunning;
+
+  /// No description provided for @sleepTimerRunningWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Running · {status}'**
+  String sleepTimerRunningWith(String status);
+
+  /// No description provided for @sleepTimerCustomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get sleepTimerCustomTitle;
+
+  /// No description provided for @sleepTimerKindLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer type'**
+  String get sleepTimerKindLabel;
+
+  /// No description provided for @sleepTimerKindMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes'**
+  String get sleepTimerKindMinutes;
+
+  /// No description provided for @sleepTimerKindTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracks'**
+  String get sleepTimerKindTracks;
+
+  /// No description provided for @sleepTimerFieldMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes'**
+  String get sleepTimerFieldMinutes;
+
+  /// No description provided for @sleepTimerUnitMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'minutes'**
+  String get sleepTimerUnitMinutes;
+
+  /// No description provided for @sleepTimerUnitMinutesWords.
+  ///
+  /// In en, this message translates to:
+  /// **'minutes · {words}'**
+  String sleepTimerUnitMinutesWords(String words);
+
+  /// No description provided for @sleepTimerUnitTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{track} other{tracks}}'**
+  String sleepTimerUnitTracks(int count);
+
+  /// No description provided for @sleepTimerStopsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops at {time}'**
+  String sleepTimerStopsAt(String time);
+
+  /// No description provided for @sleepTimerStopsAfterTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Pauses after {count, plural, one{1 track} other{{count} tracks}}, this one included'**
+  String sleepTimerStopsAfterTracks(int count);
+
+  /// No description provided for @sleepTimerTracksCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 track} other{{count} tracks}}'**
+  String sleepTimerTracksCount(int count);
+
+  /// No description provided for @sleepTimerStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get sleepTimerStart;
+
+  /// No description provided for @sleepTimerMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} minute} other{{count} minutes}}'**
+  String sleepTimerMinutes(int count);
+
+  /// No description provided for @sleepTimerHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} hour} other{{count} hours}}'**
+  String sleepTimerHours(int count);
+
+  /// No description provided for @sleepTimerHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String sleepTimerHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @sleepTimerHoursMinutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes}'**
+  String sleepTimerHoursMinutesShort(int hours, int minutes);
+
+  /// No description provided for @sleepTimerChipMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String sleepTimerChipMinutes(int minutes);
+
+  /// No description provided for @sleepTimerAddMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {minutes} minutes'**
+  String sleepTimerAddMinutes(int minutes);
+
+  /// No description provided for @sleepTimerRemoveMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Take off {minutes} minutes'**
+  String sleepTimerRemoveMinutes(int minutes);
+
+  /// No description provided for @sleepTimerAddTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Add one track'**
+  String get sleepTimerAddTrack;
+
+  /// No description provided for @sleepTimerRemoveTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove one track'**
+  String get sleepTimerRemoveTrack;
+
+  /// No description provided for @sleepTimerButtonPlusMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'+{minutes} min'**
+  String sleepTimerButtonPlusMinutes(int minutes);
+
+  /// No description provided for @sleepTimerButtonMinusMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'−{minutes} min'**
+  String sleepTimerButtonMinusMinutes(int minutes);
+
+  /// No description provided for @sleepTimerButtonPlusTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} track'**
+  String sleepTimerButtonPlusTracks(int count);
+
+  /// No description provided for @sleepTimerButtonMinusTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'−{count} track'**
+  String sleepTimerButtonMinusTracks(int count);
+
+  /// No description provided for @sleepTimerLabelSleepIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep in'**
+  String get sleepTimerLabelSleepIn;
+
+  /// No description provided for @sleepTimerLabelHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'Counting paused'**
+  String get sleepTimerLabelHeld;
+
+  /// No description provided for @sleepTimerLabelPauseAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause after'**
+  String get sleepTimerLabelPauseAfter;
+
+  /// No description provided for @sleepTimerLabelPauseAtEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause at the end of'**
+  String get sleepTimerLabelPauseAtEnd;
+
+  /// No description provided for @sleepTimerWordTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'this track'**
+  String get sleepTimerWordTrack;
+
+  /// No description provided for @sleepTimerWordAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'this album'**
+  String get sleepTimerWordAlbum;
+
+  /// No description provided for @sleepTimerWordQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'the queue'**
+  String get sleepTimerWordQueue;
+
+  /// No description provided for @sleepTimerRowSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {duration}'**
+  String sleepTimerRowSet(String duration);
+
+  /// No description provided for @sleepTimerRowHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'Counting paused'**
+  String get sleepTimerRowHeld;
+
+  /// No description provided for @sleepTimerRowCurrentCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'The current track counts as one'**
+  String get sleepTimerRowCurrentCounts;
+
+  /// No description provided for @sleepTimerRowLastTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'this is the last track'**
+  String get sleepTimerRowLastTrack;
+
+  /// No description provided for @sleepTimerRowTracksOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{left} / {total}'**
+  String sleepTimerRowTracksOf(int left, int total);
+
+  /// No description provided for @sleepTimerRowQueueKept.
+  ///
+  /// In en, this message translates to:
+  /// **'the queue stays'**
+  String get sleepTimerRowQueueKept;
+
+  /// No description provided for @sleepTimerPauseCounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause counting'**
+  String get sleepTimerPauseCounting;
+
+  /// No description provided for @sleepTimerResumeCounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume counting'**
+  String get sleepTimerResumeCounting;
+
+  /// No description provided for @sleepTimerTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off timer'**
+  String get sleepTimerTurnOff;
+
+  /// No description provided for @sleepTimerChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change…'**
+  String get sleepTimerChange;
+
+  /// No description provided for @sleepTimerStatusMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep in {duration}'**
+  String sleepTimerStatusMinutes(String duration);
+
+  /// No description provided for @sleepTimerStatusHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'Counting paused · {duration} left'**
+  String sleepTimerStatusHeld(String duration);
+
+  /// No description provided for @sleepTimerStatusTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause after {count, plural, one{1 track} other{{count} tracks}}'**
+  String sleepTimerStatusTracks(int count);
+
+  /// No description provided for @sleepTimerStatusEndTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause at the end of this track'**
+  String get sleepTimerStatusEndTrack;
+
+  /// No description provided for @sleepTimerStatusEndAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause at the end of this album'**
+  String get sleepTimerStatusEndAlbum;
+
+  /// No description provided for @sleepTimerStatusEndQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause at the end of the queue'**
+  String get sleepTimerStatusEndQueue;
+
+  /// No description provided for @sleepTimerPillTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Track'**
+  String get sleepTimerPillTrack;
+
+  /// No description provided for @sleepTimerPillAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get sleepTimerPillAlbum;
+
+  /// No description provided for @sleepTimerPillQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get sleepTimerPillQueue;
+
+  /// No description provided for @sleepTimerEntryEndTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'end of this track'**
+  String get sleepTimerEntryEndTrack;
+
+  /// No description provided for @sleepTimerEntryEndAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'end of this album'**
+  String get sleepTimerEntryEndAlbum;
+
+  /// No description provided for @sleepTimerEntryEndQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'end of the queue'**
+  String get sleepTimerEntryEndQueue;
+
+  /// No description provided for @sleepTimerEntryRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer: {status}'**
+  String sleepTimerEntryRunning(String status);
+
+  /// No description provided for @sleepTimerMenuRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer · {status}'**
+  String sleepTimerMenuRunning(String status);
+
+  /// No description provided for @sleepTimerHeldSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'(counting paused)'**
+  String get sleepTimerHeldSuffix;
+
+  /// No description provided for @sleepTimerAnnounceStartMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer set for {duration}, stops at {time}'**
+  String sleepTimerAnnounceStartMinutes(String duration, String time);
+
+  /// No description provided for @sleepTimerAnnounceStartTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer set, pausing after {count, plural, one{1 track} other{{count} tracks}}'**
+  String sleepTimerAnnounceStartTracks(int count);
+
+  /// No description provided for @sleepTimerAnnounceStartEndTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer set, pausing at the end of this track'**
+  String get sleepTimerAnnounceStartEndTrack;
+
+  /// No description provided for @sleepTimerAnnounceStartEndAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer set, pausing at the end of this album'**
+  String get sleepTimerAnnounceStartEndAlbum;
+
+  /// No description provided for @sleepTimerAnnounceStartEndQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer set, pausing at the end of the queue'**
+  String get sleepTimerAnnounceStartEndQueue;
+
+  /// No description provided for @sleepTimerAnnounceHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'Counting paused'**
+  String get sleepTimerAnnounceHeld;
+
+  /// No description provided for @sleepTimerAnnounceResumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Counting resumed'**
+  String get sleepTimerAnnounceResumed;
+
+  /// No description provided for @sleepTimerAnnounceCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer turned off'**
+  String get sleepTimerAnnounceCancelled;
+
+  /// No description provided for @sleepTimerAnnounceExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer ended, playback paused'**
+  String get sleepTimerAnnounceExpired;
 }
 
 class _AppLocalizationsDelegate
