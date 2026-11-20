@@ -3624,4 +3624,112 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get historyRangeSave => 'Lưu';
+
+  @override
+  String get historyMostPlayedRangeToday => 'Hôm nay';
+
+  @override
+  String get historyMostPlayedRange7Days => '7 ngày';
+
+  @override
+  String get historyMostPlayedRange30Days => '30 ngày';
+
+  @override
+  String get historyMostPlayedRange6Months => '6 tháng';
+
+  @override
+  String get historyMostPlayedRange1Year => '1 năm';
+
+  @override
+  String get historyMostPlayedRangeAll => 'Tất cả';
+
+  @override
+  String get historyMostPlayedRangeCustom => 'Tuỳ chọn…';
+
+  @override
+  String get historyMostPlayedRangesLabel => 'Khoảng thời gian';
+
+  @override
+  String get historyMostPlayedPrevious => 'Kỳ trước';
+
+  @override
+  String get historyMostPlayedNext => 'Kỳ sau';
+
+  @override
+  String historyMostPlayedTop(int count) {
+    return 'Top $count';
+  }
+
+  @override
+  String get historyMostPlayedTopLabel => 'Số bài hiển thị';
+
+  @override
+  String get historyMostPlayedLimitCustom => 'Tuỳ chọn…';
+
+  @override
+  String get historyMostPlayedLimitHint => 'Từ 1 đến 1000 bài';
+
+  @override
+  String historyMostPlayedLimitCustomValue(int count) {
+    return 'Top $count · từ 1 đến 1000 bài';
+  }
+
+  @override
+  String get historyMostPlayedLimitTitle => 'Số bài xếp hạng';
+
+  @override
+  String get historyMostPlayedLimitField => 'Số bài';
+
+  @override
+  String get historyMostPlayedLimitError => 'Chỉ nhận số từ 1 đến 1000';
+
+  @override
+  String historyMostPlayedHeroTotals(int songs, int plays) {
+    String _temp0 = intl.Intl.pluralLogic(
+      songs,
+      locale: localeName,
+      other: '$songs bài',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      plays,
+      locale: localeName,
+      other: '$plays lượt nghe',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String historyMostPlayedPlays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lượt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String historyMostPlayedRowMissing(String plays) {
+    return '$plays · không phát được';
+  }
+
+  @override
+  String get historyMostPlayedEmpty => 'Không có lượt nghe trong khoảng này.';
+
+  @override
+  String get historyMostPlayedPlayFailed => 'Không phát được danh sách';
+
+  @override
+  String get historyMostPlayedMenuPlay => 'Phát (theo thứ hạng)';
+
+  @override
+  String historyMostPlayedPlaylistName(String range) {
+    return 'Nghe nhiều nhất · $range';
+  }
+
+  @override
+  String get historyMostPlayedOpenDay => 'Mở trong Phát nhiều nhất';
+
+  @override
+  String get historyMostPlayedFavoriteFailed => 'Không thêm được vào Yêu thích';
 }

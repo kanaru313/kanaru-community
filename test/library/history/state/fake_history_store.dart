@@ -60,6 +60,10 @@ class FakeHistoryStore implements HistoryStore {
   var refreshCalls = 0;
   var overviewReads = 0;
   final topCalls = <({int start, int end})?>[];
+  final topLimits = <int>[];
+
+  /// When set, the next [top] read waits for it.
+  Completer<void>? topGate;
   final removed = <List<String>>[];
   final undone = <List<HistoryBatch>>[];
   final committed = <List<HistoryBatch>>[];
@@ -114,6 +118,12 @@ class FakeHistoryStore implements HistoryStore {
     required int limit,
   }) async {
     topCalls.add(window);
+    topLimits.add(limit);
+    final gate = topGate;
+    if (gate != null) {
+      topGate = null;
+      await gate.future;
+    }
     return topAnswer;
   }
 

@@ -162,3 +162,25 @@ bool windowCoversPlays(
 /// [limit] cut to the 1-1000 the list accepts.
 int clampMostPlayedLimit(int limit) =>
     limit.clamp(minMostPlayedLimit, maxMostPlayedLimit);
+
+/// What the Top N number field holds.
+enum MostPlayedLimitInput {
+  /// Nothing typed yet: no error, just not saveable.
+  empty,
+
+  /// A whole number from 1 to 1000.
+  valid,
+
+  /// Digits, but 0 or more than 1000.
+  outOfRange,
+}
+
+/// Judges the text of the Top N number field (digits only, as the field
+/// filters them).
+MostPlayedLimitInput checkMostPlayedLimitText(String text) {
+  final value = int.tryParse(text.trim());
+  if (text.trim().isEmpty || value == null) return MostPlayedLimitInput.empty;
+  return value >= minMostPlayedLimit && value <= maxMostPlayedLimit
+      ? MostPlayedLimitInput.valid
+      : MostPlayedLimitInput.outOfRange;
+}

@@ -78,6 +78,73 @@ void main() {
     expect(h.container.read(m3uExportBusyProvider), isFalse);
   });
 
+  group('a list of songs', () {
+    Future<List<TrackId>> songs(WidgetTester t, M3uFlowHarness h) async {
+      h.env.file('a.mp3');
+      h.env.file('b.mp3');
+      return (await t.runAsync(
+        () async => [
+          TrackId(await addTrack(h.env.db, h.env.source, locator: 'b.mp3')),
+          TrackId(await addTrack(h.env.db, h.env.source, locator: 'a.mp3')),
+        ],
+      ))!;
+    }
+
+    flowTest('file named after the list, songs in the order given', (t) async {
+      final h = await M3uFlowHarness.pump(t);
+      final ids = await songs(t, h);
+      h.picker.onCreate = (_) async => _target(h, 'out.m3u8');
+      final flow = h.start(
+        t,
+        (c) => runM3uTrackListExport(
+          c,
+          name: 'Nghe nhiều nhất · 30 ngày',
+          tracks: () async => ids,
+          relative: false,
+        ),
+      );
+      await h.untilDone(t, flow);
+      await t.pump(const Duration(milliseconds: 400));
+      expect(h.picker.suggestedName, 'Nghe nhiều nhất · 30 ngày.m3u8');
+      final text = File('${h.env.tmp}/lists/out.m3u8').readAsStringSync();
+      expect(
+        text.indexOf('${h.env.music}/b.mp3'),
+        lessThan(text.indexOf('${h.env.music}/a.mp3')),
+      );
+      expect(
+        find.text(h.l10n(t).playlistM3uExported(2, 'out.m3u8')),
+        findsOneWidget,
+      );
+      expect(h.container.read(m3uExportBusyProvider), isFalse);
+    });
+
+    flowTest('no song, or a failed read: the failure toast, no dialog', (
+      t,
+    ) async {
+      final h = await M3uFlowHarness.pump(t);
+      for (final read in <Future<List<TrackId>> Function()>[
+        () async => const <TrackId>[],
+        () async => throw StateError('db'),
+      ]) {
+        final flow = h.start(
+          t,
+          (c) => runM3uTrackListExport(
+            c,
+            name: 'x',
+            tracks: read,
+            relative: false,
+          ),
+        );
+        await h.untilDone(t, flow);
+        await t.pump();
+        expect(find.text(h.l10n(t).playlistM3uExportFailed), findsOneWidget);
+        expect(h.picker.suggestedName, isNull);
+        await t.pump(const Duration(seconds: 6));
+      }
+      expect(h.container.read(m3uExportBusyProvider), isFalse);
+    });
+  });
+
   flowTest('relative paths are written relative to the file folder', (t) async {
     final h = await M3uFlowHarness.pump(t);
     final uid = await _playlist(t, h);

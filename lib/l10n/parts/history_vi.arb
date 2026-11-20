@@ -221,5 +221,77 @@
   "historyRangeDayHasListens": "Có lượt nghe",
   "historyRangeStartPlaceholder": "Ngày bắt đầu",
   "historyRangeEndPlaceholder": "Ngày kết thúc",
-  "historyRangeSave": "Lưu"
+  "historyRangeSave": "Lưu",
+  "historyMostPlayedRangeToday": "Hôm nay",
+  "historyMostPlayedRange7Days": "7 ngày",
+  "historyMostPlayedRange30Days": "30 ngày",
+  "historyMostPlayedRange6Months": "6 tháng",
+  "historyMostPlayedRange1Year": "1 năm",
+  "historyMostPlayedRangeAll": "Tất cả",
+  "historyMostPlayedRangeCustom": "Tuỳ chọn…",
+  "historyMostPlayedRangesLabel": "Khoảng thời gian",
+  "historyMostPlayedPrevious": "Kỳ trước",
+  "historyMostPlayedNext": "Kỳ sau",
+  "historyMostPlayedTop": "Top {count}",
+  "@historyMostPlayedTop": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyMostPlayedTopLabel": "Số bài hiển thị",
+  "historyMostPlayedLimitCustom": "Tuỳ chọn…",
+  "historyMostPlayedLimitHint": "Từ 1 đến 1000 bài",
+  "historyMostPlayedLimitCustomValue": "Top {count} · từ 1 đến 1000 bài",
+  "@historyMostPlayedLimitCustomValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyMostPlayedLimitTitle": "Số bài xếp hạng",
+  "historyMostPlayedLimitField": "Số bài",
+  "historyMostPlayedLimitError": "Chỉ nhận số từ 1 đến 1000",
+  "historyMostPlayedHeroTotals": "{songs, plural, other{{songs} bài}} · {plays, plural, other{{plays} lượt nghe}}",
+  "@historyMostPlayedHeroTotals": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "plays": {
+        "type": "int"
+      }
+    }
+  },
+  "historyMostPlayedPlays": "{count, plural, other{{count} lượt}}",
+  "@historyMostPlayedPlays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyMostPlayedRowMissing": "{plays} · không phát được",
+  "@historyMostPlayedRowMissing": {
+    "placeholders": {
+      "plays": {
+        "type": "String"
+      }
+    }
+  },
+  "historyMostPlayedEmpty": "Không có lượt nghe trong khoảng này.",
+  "historyMostPlayedPlayFailed": "Không phát được danh sách",
+  "historyMostPlayedMenuPlay": "Phát (theo thứ hạng)",
+  "historyMostPlayedPlaylistName": "Nghe nhiều nhất · {range}",
+  "@historyMostPlayedPlaylistName": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "historyMostPlayedOpenDay": "Mở trong Phát nhiều nhất",
+  "historyMostPlayedFavoriteFailed": "Không thêm được vào Yêu thích"
 }

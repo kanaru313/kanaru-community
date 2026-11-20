@@ -4036,4 +4036,115 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historyRangeSave => 'Save';
+
+  @override
+  String get historyMostPlayedRangeToday => 'Today';
+
+  @override
+  String get historyMostPlayedRange7Days => '7 days';
+
+  @override
+  String get historyMostPlayedRange30Days => '30 days';
+
+  @override
+  String get historyMostPlayedRange6Months => '6 months';
+
+  @override
+  String get historyMostPlayedRange1Year => '1 year';
+
+  @override
+  String get historyMostPlayedRangeAll => 'All time';
+
+  @override
+  String get historyMostPlayedRangeCustom => 'Custom…';
+
+  @override
+  String get historyMostPlayedRangesLabel => 'Time range';
+
+  @override
+  String get historyMostPlayedPrevious => 'Previous period';
+
+  @override
+  String get historyMostPlayedNext => 'Next period';
+
+  @override
+  String historyMostPlayedTop(int count) {
+    return 'Top $count';
+  }
+
+  @override
+  String get historyMostPlayedTopLabel => 'Songs shown';
+
+  @override
+  String get historyMostPlayedLimitCustom => 'Custom…';
+
+  @override
+  String get historyMostPlayedLimitHint => 'From 1 to 1000 songs';
+
+  @override
+  String historyMostPlayedLimitCustomValue(int count) {
+    return 'Top $count · from 1 to 1000 songs';
+  }
+
+  @override
+  String get historyMostPlayedLimitTitle => 'Ranked songs';
+
+  @override
+  String get historyMostPlayedLimitField => 'Songs';
+
+  @override
+  String get historyMostPlayedLimitError => 'Only numbers from 1 to 1000';
+
+  @override
+  String historyMostPlayedHeroTotals(int songs, int plays) {
+    String _temp0 = intl.Intl.pluralLogic(
+      songs,
+      locale: localeName,
+      other: '$songs songs',
+      one: '1 song',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      plays,
+      locale: localeName,
+      other: '$plays plays',
+      one: '1 play',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String historyMostPlayedPlays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plays',
+      one: '1 play',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String historyMostPlayedRowMissing(String plays) {
+    return '$plays · can\'t play';
+  }
+
+  @override
+  String get historyMostPlayedEmpty => 'No plays in this range.';
+
+  @override
+  String get historyMostPlayedPlayFailed => 'Couldn\'t play the list';
+
+  @override
+  String get historyMostPlayedMenuPlay => 'Play (by rank)';
+
+  @override
+  String historyMostPlayedPlaylistName(String range) {
+    return 'Most played · $range';
+  }
+
+  @override
+  String get historyMostPlayedOpenDay => 'Open in Most played';
+
+  @override
+  String get historyMostPlayedFavoriteFailed => 'Couldn\'t add to Favorites';
 }
