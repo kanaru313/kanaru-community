@@ -17,6 +17,7 @@ class _Host extends StatefulWidget {
 
 class _HostState extends State<_Host> {
   int value = 45;
+  SleepTimerRange? range;
   void bump() => setState(() {});
 
   @override
@@ -27,7 +28,7 @@ class _HostState extends State<_Host> {
           width: 200,
           child: SleepTimerNumberField(
             value: value,
-            range: widget.range ?? sleepMinutesRange,
+            range: range ?? widget.range ?? sleepMinutesRange,
             semanticsLabel: 'Số phút',
             focusNode: widget.focus,
             onChanged: (v) {
@@ -243,5 +244,63 @@ void main() {
     await tester.pump();
     expect(shown(tester), '20');
     expect(log.last, 'changed 20');
+  });
+
+  const all2 = TextSelection(baseOffset: 0, extentOffset: 2);
+
+  testWidgets('touch: kind switch while focused, then a tap selects all', (
+    tester,
+  ) async {
+    await pump(tester);
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    await tester.pump();
+    final host = tester.state<_HostState>(find.byType(_Host));
+    host.range = sleepTracksRange;
+    host.value = 12;
+    host.bump();
+    await tester.pump();
+    await tester.pump();
+    expect(shown(tester), '12');
+    expect(focus.hasFocus, isTrue);
+    expect(selection(tester), all2);
+    // The caret moves (e.g. the platform placed it); the next tap selects all.
+    tester.widget<TextField>(find.byType(TextField)).controller!.selection =
+        const TextSelection.collapsed(offset: 2);
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    await tester.pump();
+    expect(selection(tester), all2);
+  });
+
+  testWidgets('touch: outside value while focused selects all', (tester) async {
+    await pump(tester);
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    await tester.pump();
+    final host = tester.state<_HostState>(find.byType(_Host));
+    host.value = 50;
+    host.bump();
+    await tester.pump();
+    await tester.pump();
+    expect(selection(tester), all2);
+  });
+
+  testWidgets('touch: a second tap with no outside change keeps the caret', (
+    tester,
+  ) async {
+    await pump(tester);
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    await tester.pump();
+    tester.widget<TextField>(find.byType(TextField)).controller!.selection =
+        const TextSelection.collapsed(offset: 1);
+    // Past the double-tap window, so it is a plain second tap.
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    await tester.pump();
+    expect(selection(tester).isCollapsed, isTrue);
   });
 }
