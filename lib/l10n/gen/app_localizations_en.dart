@@ -3370,4 +3370,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsLibraryLanguageDetectedDesc =>
       'Ignore the file\'s language tag';
+
+  @override
+  String get historyTitle => 'History';
 }

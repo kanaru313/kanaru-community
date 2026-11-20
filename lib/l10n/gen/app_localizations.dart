@@ -4889,6 +4889,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ignore the file\'s language tag'**
   String get settingsLibraryLanguageDetectedDesc;
+
+  /// No description provided for @historyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyTitle;
 }
 
 class _AppLocalizationsDelegate

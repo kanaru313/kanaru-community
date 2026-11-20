@@ -2271,5 +2271,6 @@
   "settingsLibraryLanguageTag": "Chỉ tag",
   "settingsLibraryLanguageTagDesc": "Bài không có tag vào “Chưa rõ”",
   "settingsLibraryLanguageDetected": "Chỉ tự nhận diện",
-  "settingsLibraryLanguageDetectedDesc": "Bỏ qua tag ngôn ngữ của tệp"
+  "settingsLibraryLanguageDetectedDesc": "Bỏ qua tag ngôn ngữ của tệp",
+  "historyTitle": "Lịch sử"
 }

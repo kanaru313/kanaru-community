@@ -223,8 +223,9 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   'playlists'`, not a tab); route `/playlists` (`PlaylistsPage`) with the child
   `favorites` first, then `:uid`, both through `KDetailPage` (`kanaru_ui`: the
   detail transition and surface ground). A static child always goes
-  before `:uid`, so a fixed name is never read as a playlist id (History and
-  Most played, still coming soon, would match `:uid` and show "not found").
+  before `:uid`, so a fixed name is never read as a playlist id (Most played,
+  still coming soon, would match `:uid` and show "not found"; History has its
+  routes, see "History").
 - **Seeds** (the placeholder body is replaced by the owner lane, the
   declaration stays): `PlaylistsPage`, `PlaylistPage({uid})` (playlist screens)
   were seeds (placeholder bodies replaced by
@@ -1018,7 +1019,8 @@ the `TrackId` anchor of this provider, because a track can be queued twice.
 | Songs to Folders | 110-160 | Children of `library` (`parentId`, `mobileTab: false`), paths `LibraryLocations.list(tab)`; always all six in the sidebar, in default order (the tab setting steers the mobile sub-tabs only) |
 | Playlists | 210 (mobile 30) | Tab, route `/playlists`; registered in `library/ui/playlist_common/playlist_registration.dart` (see "Playlists") |
 | Favorites | 220 | Child of `playlists` (`parentId`, `mobileTab: false`), path `/playlists/favorites` |
-| History, Most played | 240, 250 | `comingSoon`, `mobileTab: false` until their mockup exists |
+| History | 240 | Child of `playlists` (`parentId`, `mobileTab: false`), path `/playlists/history`, live; registered in `library/ui/history/history_registration.dart` (see "History") |
+| Most played | 250 | Same parent and registration file, path `/playlists/most-played`, `comingSoon` until its page exists |
 
 - `libraryRoute()` is `/library` with six sibling list routes under it
   (`songs` ... `folders`, `NoTransitionPage`, `state.pageKey`). The parent has
@@ -1535,6 +1537,22 @@ a modal route. It builds its own sheet instead of `showKSheet` (which can target
 root navigator since `useRootNavigator`): `showKSheet` turns into a 640 wide
 dialog from 600 px, but this menu stays a sheet up to the desktop form factor
 (1200 px) and is a 400 wide dialog above it.
+
+## History
+
+- Files in `library/ui/history/`: `history_registration.dart`
+  (`registerHistory`: nav items `history` 240 live and `most_played` 250
+  `comingSoon`, both `parentId: 'playlists'`, `mobileTab: false`; called by
+  `LibraryExtension` right after `registerPlaylists`, the parent goes first),
+  `history_locations.dart` (`HistoryLocations`: `history`, `track(id)`,
+  `mostPlayed`, `mostPlayedTrack(id)`), `history_routes.dart` (`historyRoutes()`:
+  `history` and `history/track/:trackId`, each page in `KDetailPage`).
+- `registerPlaylists` nests them with one line, `...historyRoutes()`, in the
+  `/playlists` route, before `:uid`. On desktop the sidebar item stays lit on
+  the sub-route; on mobile the hub tile opens the page as a child of the
+  Playlist tab (`openLibraryPage`).
+- `HistoryPage` and `TrackHistoryPage` are placeholders until their pages
+  land. Strings live in the `history` arb part (prefix `history`).
 
 ## Design pitfalls answered
 

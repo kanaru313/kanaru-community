@@ -2284,5 +2284,6 @@
   "settingsLibraryLanguageTag": "Tag only",
   "settingsLibraryLanguageTagDesc": "Songs with no tag go to “Unknown”",
   "settingsLibraryLanguageDetected": "Detection only",
-  "settingsLibraryLanguageDetectedDesc": "Ignore the file's language tag"
+  "settingsLibraryLanguageDetectedDesc": "Ignore the file's language tag",
+  "historyTitle": "History"
 }

@@ -3021,4 +3021,7 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsLibraryLanguageDetectedDesc =>
       'Bỏ qua tag ngôn ngữ của tệp';
+
+  @override
+  String get historyTitle => 'Lịch sử';
 }
