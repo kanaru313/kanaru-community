@@ -73,7 +73,10 @@ class SleepHarness {
         sleepTickerProvider.overrideWithValue(h.ticker.call),
         mediaSessionBridgeProvider.overrideWithValue(bridge),
         queueRowInfoLoaderProvider.overrideWithValue(_load),
-        queueTracksChangedProvider.overrideWith((ref) => tracksChanged.stream),
+        queueTracksChangedProvider.overrideWith((ref) {
+          var n = 0;
+          return tracksChanged.stream.map((_) => ++n);
+        }),
       ],
     );
     container.listen(sleepTimerProvider, (_, next) => states.add(next));
