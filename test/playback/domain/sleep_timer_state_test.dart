@@ -101,4 +101,78 @@ void main() {
     expect(sleepTimerMinTracks, 1);
     expect(sleepTimerMaxTracks, 20);
   });
+
+  group('copyWith', () {
+    final started = DateTime.utc(2026, 11, 20, 22);
+    final s = SleepTimerState(
+      mode: SleepTimerMode.minutes,
+      remaining: const Duration(minutes: 30),
+      endsAt: started.add(const Duration(minutes: 30)),
+      setLength: const Duration(minutes: 45),
+      tracksAtStart: 4,
+      startedAt: started,
+      startSerial: 3,
+    );
+
+    test('keeps what it is not given', () {
+      final c = s.copyWith(remaining: const Duration(minutes: 29));
+      expect(c.mode, SleepTimerMode.minutes);
+      expect(c.endsAt, s.endsAt);
+      expect(c.setLength, const Duration(minutes: 45));
+      expect(c.tracksAtStart, 4);
+      expect(c.startedAt, started);
+      expect(c.startSerial, 3);
+    });
+
+    test('can clear the nullable times', () {
+      final c = s.copyWith(endsAt: null, startedAt: null);
+      expect(c.endsAt, isNull);
+      expect(c.startedAt, isNull);
+      expect(c.setLength, const Duration(minutes: 45));
+    });
+
+    test('equality covers the new fields', () {
+      expect(s.copyWith(), s);
+      expect(s.copyWith().hashCode, s.hashCode);
+      expect(s.copyWith(setLength: const Duration(minutes: 50)), isNot(s));
+      expect(s.copyWith(tracksAtStart: 5), isNot(s));
+      expect(s.copyWith(startSerial: 4), isNot(s));
+      expect(
+        s.copyWith(startedAt: started.add(const Duration(seconds: 1))),
+        isNot(s),
+      );
+    });
+  });
+
+  group('sleepEndOfFraction', () {
+    final start = DateTime.utc(2026, 11, 20, 22);
+    double f(int leftMin, int sinceMin) => sleepEndOfFraction(
+      left: Duration(minutes: leftMin),
+      startedAt: start,
+      now: start.add(Duration(minutes: sinceMin)),
+    );
+
+    test('is the share still to go of what has run and what is left', () {
+      expect(f(10, 0), 1);
+      expect(f(5, 5), 0.5);
+      expect(f(1, 9), closeTo(0.1, 1e-9));
+    });
+
+    test('a queue edit that grows the time left widens the bar', () {
+      expect(f(20, 5), 0.8);
+      expect(f(20, 5), lessThanOrEqualTo(1));
+    });
+
+    test('nothing left, or nothing to divide by, is zero', () {
+      expect(f(0, 5), 0);
+      expect(
+        sleepEndOfFraction(left: Duration.zero, startedAt: start, now: start),
+        0,
+      );
+    });
+
+    test('a clock that went back counts as no time run', () {
+      expect(f(5, -3), 1);
+    });
+  });
 }

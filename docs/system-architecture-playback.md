@@ -450,6 +450,37 @@ SleepTimerState>`). Session only: nothing is saved, a restart or kill loses it. 
 - **Every end of a sleep** (pause at zero, expiry while paused, `TrackEnd(sleepStop)`) calls
   `mediaSessionBridgeProvider.cancelPendingResume()`.
 
+### Sleep timer read models
+
+Figures for the timer UI; they change no engine behaviour.
+
+- **Fields of `SleepTimerState`** (with `copyWith`): `setLength` (minutes mode), `tracksAtStart` (tracks
+  mode), `startedAt` (wall `DateTime` from the controller's `nowMs`) and `startSerial`. They are set only
+  by the public `start*` methods (a fresh state, so a start of another mode drops the old mode's
+  fields) and carried by every later state of the run: tick, hold, resume, `addMinutes`, `addTracks`,
+  track end. `_arm` is shared with `resumeCounting`, so it never sets them. `addMinutes` raises
+  `setLength` when the time left would exceed it, `addTracks` raises `tracksAtStart` likewise.
+  `startSerial` grows by one per `start*` and survives a cancel (the counter lives in the notifier).
+  `sleepEndOfFraction(left, startedAt, now)` is the end-of modes' bar: `left / (elapsed + left)`,
+  clamped to 0..1, 0 when there is nothing to divide by.
+- **`albumRunFrom`** (`domain/sleep_policies.dart`, pure): walks the play order from the current entry
+  while the next one has the same album (`neighboursOf`, so repeat one, a repeat all wrap and the end of
+  a reshuffled pass behave as Next does); stops at another, unknown or missing key, at a track without an
+  album, and never goes past one queue length or `limit`. `EndOfAlbumPolicy` is `albumRunFrom(limit: 2)`
+  with length at most 1 (plus asking for the entry after the pair); the estimate uses the same walk, so
+  the two cannot disagree.
+- **`playback/state/sleep_estimates.dart`**, all `autoDispose`, null until `playerCreatedProvider`:
+  `currentTrackLeftProvider` and `currentTrackPlayedProvider` (whole seconds, selected from
+  `playbackPositionProvider`, so one rebuild per second like the time labels);
+  `albumRunProvider` (`AsyncValue<AlbumRun?>`: `tracks` of the run with the current entry, at most 100
+  with `capped` for "100+" or a one-album repeat all queue, `restDuration` after the current entry,
+  `noAlbum`). Keys come from the engine's source (`queueRowInfosProvider` first, the loader for the
+  rest, at most 101 ids in one query) and it looks again on a queue view change, a `tracks` counter event
+  or a change of the infos, never on a position tick; a failure is an `AsyncError`, logged once with the
+  exception type. `albumLeftProvider` (current seconds plus `restDuration`) and `queueLeftProvider`
+  (`(tracks, time)`: entries from the current one on, with `currentTrackLeft` plus
+  `queueRemainingProvider`) are cheap providers over these, so a second tick never queries.
+
 ## Repeat
 
 Ported from the old app (`core/player/repeat_mode.dart`, `player_settings_commands.dart`,

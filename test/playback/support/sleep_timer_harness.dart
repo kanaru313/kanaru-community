@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/media/domain/track_info.dart';
@@ -17,6 +19,12 @@ import 'package:kanaru/src/playback/state/sleep_ticker_provider.dart';
 import 'package:kanaru/src/playback/state/sleep_timer_provider.dart';
 
 import 'controller_harness.dart';
+
+/// Makes the sleep timer and the sleep fade of [h]'s player tick by hand
+/// (`h.ticker.fire()`), so a test never leaves a real periodic timer behind.
+/// One override for every host that mounts the timer.
+Override sleepTickerOverride(Harness h) =>
+    sleepTickerProvider.overrideWithValue(h.ticker.call);
 
 /// System controls that only count `cancelPendingResume`.
 class CountingControls implements MediaControls {
@@ -70,7 +78,8 @@ class SleepHarness {
           controllerReads++;
           return h.c;
         }),
-        sleepTickerProvider.overrideWithValue(h.ticker.call),
+        sleepTickerOverride(h),
+        appDatabaseProvider.overrideWithValue(h.db),
         mediaSessionBridgeProvider.overrideWithValue(bridge),
         queueRowInfoLoaderProvider.overrideWithValue(_load),
         queueTracksChangedProvider.overrideWith((ref) {
@@ -98,6 +107,9 @@ class SleepHarness {
   /// Album key per track (a null key is a track without an album); a track
   /// that is not here is not in the database.
   final albums = <TrackId, AlbumKey?>{};
+
+  /// Length in milliseconds per track the loader reports; none = unknown.
+  final durations = <TrackId, int>{};
 
   /// Every id list the database loader was asked for.
   final loads = <List<TrackId>>[];
@@ -143,6 +155,7 @@ class SleepHarness {
             status: TrackAvailability.present,
             relPath: 't${id.value}.mp3',
             albumKey: albums[id],
+            durationMs: durations[id],
           ),
     ];
   }

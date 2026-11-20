@@ -66,6 +66,10 @@ class SleepTimer extends Notifier<SleepTimerState> {
   /// started again: the timer pauses at zero without one.
   bool _fadeStarted = false;
 
+  /// Starts so far; survives a rebuild of the notifier so a serial is never
+  /// handed out twice.
+  int _startSerial = 0;
+
   @override
   SleepTimerState build() {
     _controller = null;
@@ -125,8 +129,28 @@ class SleepTimer extends Notifier<SleepTimerState> {
     final length = Duration(
       minutes: minutes.clamp(sleepTimerMinMinutes, sleepTimerMaxMinutes),
     );
-    _arm(length.inMilliseconds);
+    // Published by the first tick of the countdown, in one step.
+    _arm(
+      length.inMilliseconds,
+      from: _startState(SleepTimerMode.minutes, setLength: length),
+    );
   }
+
+  /// The state of a fresh start: what the user set, when, and a new serial.
+  /// Only the public `start*` methods build it; every later state of the same
+  /// run is a [SleepTimerState.copyWith] of the one before.
+  SleepTimerState _startState(
+    SleepTimerMode mode, {
+    Duration setLength = Duration.zero,
+    int tracks = 0,
+  }) => SleepTimerState(
+    mode: mode,
+    tracksLeft: tracks,
+    tracksAtStart: tracks,
+    setLength: setLength,
+    startedAt: DateTime.fromMillisecondsSinceEpoch(_controller!.nowMs),
+    startSerial: ++_startSerial,
+  );
 
   /// Pauses after [count] tracks (1 to 20, the current one included) played
   /// to their end. Skipping does not use a track up.
@@ -134,22 +158,19 @@ class SleepTimer extends Notifier<SleepTimerState> {
     if (!_ready()) return;
     final policy = TracksPolicy(count);
     _startPolicyMode(policy);
-    state = SleepTimerState(
-      mode: SleepTimerMode.tracks,
-      tracksLeft: policy.left,
-    );
+    state = _startState(SleepTimerMode.tracks, tracks: policy.left);
   }
 
   void startEndOfTrack() {
     if (!_ready()) return;
     _startPolicyMode(EndOfTrackPolicy());
-    state = const SleepTimerState(mode: SleepTimerMode.endOfTrack);
+    state = _startState(SleepTimerMode.endOfTrack);
   }
 
   void startEndOfQueue() {
     if (!_ready()) return;
     _startPolicyMode(EndOfQueuePolicy());
-    state = const SleepTimerState(mode: SleepTimerMode.endOfQueue);
+    state = _startState(SleepTimerMode.endOfQueue);
   }
 
   void startEndOfAlbum() {
@@ -170,7 +191,7 @@ class SleepTimer extends Notifier<SleepTimerState> {
       _policyChanged(SleepTimerMode.endOfAlbum);
     });
     _setPolicy(EndOfAlbumPolicy(albumOf: keys.lookup, want: keys.want));
-    state = const SleepTimerState(mode: SleepTimerMode.endOfAlbum);
+    state = _startState(SleepTimerMode.endOfAlbum);
   }
 
   /// Adds [delta] minutes (or takes them off when negative) in the minutes
@@ -184,6 +205,10 @@ class SleepTimer extends Notifier<SleepTimerState> {
     final held = state.countingPaused;
     final left = held ? _heldMs : _deadlineMs - c.nowMs;
     final next = (left + delta * Duration.millisecondsPerMinute).clamp(1, most);
+    final nextLeft = Duration(seconds: (next + 999) ~/ 1000);
+    if (nextLeft > state.setLength) {
+      state = state.copyWith(setLength: nextLeft);
+    }
     if (held) {
       _heldMs = next;
       _publishHeld();
@@ -206,7 +231,10 @@ class SleepTimer extends Notifier<SleepTimerState> {
     );
     if (next == policy.left) return;
     policy.left = next;
-    state = SleepTimerState(mode: SleepTimerMode.tracks, tracksLeft: next);
+    state = state.copyWith(
+      tracksLeft: next,
+      tracksAtStart: next > state.tracksAtStart ? next : state.tracksAtStart,
+    );
     _send(c.sleepPolicyChanged());
   }
 
@@ -238,13 +266,14 @@ class SleepTimer extends Notifier<SleepTimerState> {
 
   // ---- minutes ----
 
-  /// Starts counting [leftMs] from now.
-  void _arm(int leftMs) {
+  /// Starts counting [leftMs] from now. A fresh start passes its state in
+  /// [from]; a resume carries the one it is on.
+  void _arm(int leftMs, {SleepTimerState? from}) {
     final c = _controller!;
     _stopTicker();
     _fadeStarted = false;
     _deadlineMs = c.nowMs + leftMs;
-    _publish(leftMs);
+    _publish(leftMs, from: from);
     _ticker = ref.read(sleepTickerProvider)(sleepTimerTick, _tick);
     _tick();
   }
@@ -292,19 +321,21 @@ class SleepTimer extends Notifier<SleepTimerState> {
     _cancelPendingResume();
   }
 
-  void _publish(int leftMs) {
-    final next = SleepTimerState(
+  void _publish(int leftMs, {SleepTimerState? from}) {
+    final next = (from ?? state).copyWith(
       mode: SleepTimerMode.minutes,
       remaining: Duration(seconds: (leftMs + 999) ~/ 1000),
       endsAt: DateTime.fromMillisecondsSinceEpoch(_deadlineMs),
+      countingPaused: false,
     );
     if (next != state) state = next;
   }
 
   void _publishHeld() {
-    state = SleepTimerState(
+    state = state.copyWith(
       mode: SleepTimerMode.minutes,
       remaining: Duration(seconds: (_heldMs + 999) ~/ 1000),
+      endsAt: null,
       countingPaused: true,
     );
   }
@@ -370,10 +401,7 @@ class SleepTimer extends Notifier<SleepTimerState> {
     }
     final policy = _policy;
     if (mode == SleepTimerMode.tracks && policy is TracksPolicy) {
-      state = SleepTimerState(
-        mode: SleepTimerMode.tracks,
-        tracksLeft: policy.left,
-      );
+      state = state.copyWith(tracksLeft: policy.left);
     }
   }
 

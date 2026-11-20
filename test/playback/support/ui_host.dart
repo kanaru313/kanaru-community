@@ -11,6 +11,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../support/player_phase_override.dart';
 import 'controller_harness.dart';
+import 'sleep_timer_harness.dart' show sleepTickerOverride;
 
 /// A widget under test wired to a real [PlayerController] on an in-memory
 /// database with a fake engine.
@@ -82,6 +83,7 @@ Future<UiHost> pumpWithPlayer(
     overrides: [
       playerControllerProvider.overrideWithValue(h.c),
       playerPhaseOverride(),
+      sleepTickerOverride(h),
       appDatabaseProvider.overrideWithValue(h.db),
       settingsStoreProvider.overrideWithValue(h.settings),
       ...overrides,
