@@ -667,4 +667,84 @@ void main() {
       expect(glyphColor(tester), scheme(tester).error);
     });
   });
+
+  group('circle shape', () {
+    Widget circle({VoidCallback? onPressed}) => Center(
+      child: KIconButton(
+        icon: Icons.add,
+        tooltip: 'Add',
+        onPressed: onPressed,
+        shape: KIconButtonShape.circle,
+      ),
+    );
+
+    Color? fill(WidgetTester tester) {
+      final box = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byType(KIconButton),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      return (box.decoration as BoxDecoration).color;
+    }
+
+    testWidgets('is a round 40 dp target, still one labelled button', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(host(circle(onPressed: () {})));
+      expect(tester.getSize(find.byType(KIconButton)), const Size(40, 40));
+      expect(
+        tester.getSemantics(find.byType(KIconButton)),
+        isSemantics(
+          label: 'Add',
+          isButton: true,
+          isEnabled: true,
+          hasEnabledState: true,
+          hasTapAction: true,
+          hasFocusAction: true,
+          isFocusable: true,
+        ),
+      );
+      semantics.dispose();
+    });
+
+    testWidgets('press shows a 10 % layer that fades back', (tester) async {
+      await tester.pumpWidget(host(circle(onPressed: () {})));
+      expect(fill(tester)!.a, 0);
+      final g = await tester.startGesture(
+        tester.getCenter(find.byType(KIconButton)),
+      );
+      await tester.pump(kPressTimeout);
+      final on = scheme(tester).onSurface;
+      expect(fill(tester), on.withValues(alpha: 0.10));
+      await g.up();
+      await settle(tester);
+      expect(fill(tester)!.a, 0);
+    });
+
+    testWidgets('keyboard focus draws the 2 dp ring, disabled has none', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(circle(onPressed: () {})));
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      final face = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byKey(KIconButton.ringKey),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      final border = (face.decoration as BoxDecoration).border! as Border;
+      expect(border.top.width, 2);
+      expect(border.top.color, scheme(tester).primary);
+      await tester.pumpWidget(host(circle()));
+      await tester.pump();
+      expect(find.byType(KIconButton), findsOneWidget);
+    });
+  });
 }

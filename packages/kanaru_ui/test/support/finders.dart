@@ -48,3 +48,31 @@ Finder bySliderValue(String label) => find.byWidgetPredicate(
       widget.semanticFormatterCallback?.call(widget.value) == label,
   description: 'Slider at "$label"',
 );
+
+/// Finds the start tile whose spoken label is [label].
+Finder byStartTile(String label) => find.byWidgetPredicate(
+  (widget) => widget is KStartTile && widget.semanticLabel == label,
+  description: 'KStartTile "$label"',
+);
+
+/// Finds the modal button labelled [label].
+Finder byModalButton(String label) => find.byWidgetPredicate(
+  (widget) => widget is KModalButton && widget.label == label,
+  description: 'KModalButton "$label"',
+);
+
+/// Finds the step button whose spoken label is [label].
+Finder byStepButton(String label) => find.byWidgetPredicate(
+  (widget) => widget is KStepButton && widget.semanticLabel == label,
+  description: 'KStepButton "$label"',
+);
+
+/// Makes the keyboard focus ring show (as after a Tab press) for the test.
+void useKeyboardHighlight() {
+  FocusManager.instance.highlightStrategy =
+      FocusHighlightStrategy.alwaysTraditional;
+  addTearDown(
+    () => FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.automatic,
+  );
+}

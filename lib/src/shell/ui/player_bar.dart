@@ -10,6 +10,7 @@ import '../../playback/state/track_info_providers.dart';
 import '../../playback/ui/play_pause_button.dart';
 import '../../playback/ui/playback_time_label.dart';
 import '../../playback/ui/track_cover.dart';
+import '../../playback/ui/sleep_timer/sleep_timer_entries.dart';
 import '../../playback/ui/transport_buttons.dart';
 import '../../playback/ui/volume_control.dart';
 import '../../screens/now_playing/ui/favorite_button.dart';
@@ -200,16 +201,11 @@ class _ToolsPart extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final panel = ref.read(nowPlayingPanelProvider.notifier);
     final queueOpen = ref.watch(rightPanelProvider) == RightPanelKind.queue;
-    final soon = l10n.appComingSoon;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (full)
-          KIconButton(
-            icon: KIcons.sleepTimer,
-            tooltip: '${l10n.playbackSleepTimer} · $soon',
-            onPressed: null,
-          ),
+          const SleepTimerDesktopEntry(placement: KPillPlacement.playerBar),
         KIconButton(
           icon: KIcons.lyrics,
           tooltip: l10n.playbackLyrics,

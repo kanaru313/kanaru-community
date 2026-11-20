@@ -1,0 +1,338 @@
+{
+  "sleepTimerHint": "Chạm một mục là bắt đầu ngay.",
+  "sleepTimerCancel": "Huỷ",
+  "sleepTimerSectionDuration": "Sau một khoảng",
+  "sleepTimerSectionTracks": "Theo bài",
+  "sleepTimerTileUntil": "đến {time}",
+  "@sleepTimerTileUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerTileStartLabel": "Bắt đầu {duration}, dừng lúc {time}",
+  "@sleepTimerTileStartLabel": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerCustom": "Tuỳ chỉnh…",
+  "sleepTimerCustomRange": "{min}–{max} phút",
+  "@sleepTimerCustomRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerEndOfTrack": "Hết bài này",
+  "sleepTimerEndOfAlbum": "Hết album này",
+  "sleepTimerEndOfQueue": "Hết hàng đợi",
+  "sleepTimerAfterTracks": "Sau số bài…",
+  "sleepTimerAfterTracksRange": "{min}–{max} bài, tính cả bài này",
+  "@sleepTimerAfterTracksRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerNoAlbum": "Bài này không có album",
+  "sleepTimerLeftTime": "còn {time}",
+  "@sleepTimerLeftTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerLeftTracks": "còn {count} bài",
+  "@sleepTimerLeftTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerRepeatOneStops": "Đang lặp một bài · dừng sau bài này",
+  "sleepTimerLeftTracksCapped": "còn {count}+ bài",
+  "@sleepTimerLeftTracksCapped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerLeftTracksDuration": "còn {count} bài · {duration}",
+  "@sleepTimerLeftTracksDuration": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerRunning": "Đang chạy",
+  "sleepTimerRunningWith": "Đang chạy · {status}",
+  "@sleepTimerRunningWith": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerCustomTitle": "Tuỳ chỉnh",
+  "sleepTimerKindLabel": "Kiểu hẹn giờ",
+  "sleepTimerKindMinutes": "Phút",
+  "sleepTimerKindTracks": "Số bài",
+  "sleepTimerFieldMinutes": "Số phút",
+  "sleepTimerUnitMinutes": "phút",
+  "sleepTimerUnitMinutesWords": "phút · {words}",
+  "@sleepTimerUnitMinutesWords": {
+    "placeholders": {
+      "words": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerUnitTracks": "bài",
+  "@sleepTimerUnitTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerStopsAt": "Dừng lúc {time}",
+  "@sleepTimerStopsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerStopsAfterTracks": "Tạm dừng sau {count} bài, tính cả bài này",
+  "@sleepTimerStopsAfterTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerTracksCount": "{count} bài",
+  "@sleepTimerTracksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerStart": "Bắt đầu",
+  "sleepTimerMinutes": "{count} phút",
+  "@sleepTimerMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerHours": "{count} giờ",
+  "@sleepTimerHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerHoursMinutes": "{hours} giờ {minutes} phút",
+  "@sleepTimerHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerHoursMinutesShort": "{hours} giờ {minutes}",
+  "@sleepTimerHoursMinutesShort": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerChipMinutes": "{minutes} ph",
+  "@sleepTimerChipMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerAddMinutes": "Thêm {minutes} phút",
+  "@sleepTimerAddMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerRemoveMinutes": "Bớt {minutes} phút",
+  "@sleepTimerRemoveMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerRemoveOneMinute": "Bớt 1 phút",
+  "sleepTimerAddTrack": "Thêm một bài",
+  "sleepTimerRemoveTrack": "Bớt một bài",
+  "sleepTimerChipPlusMinutes": "+{minutes} ph",
+  "@sleepTimerChipPlusMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerChipPlusHour": "+1 giờ",
+  "sleepTimerAddHour": "Thêm 1 giờ",
+  "sleepTimerStepMinus": "−{amount}",
+  "@sleepTimerStepMinus": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerStepPlus": "+{amount}",
+  "@sleepTimerStepPlus": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerLabelSleepIn": "Ngủ sau",
+  "sleepTimerLabelHeld": "Tạm dừng đếm",
+  "sleepTimerLabelPauseAfter": "Tạm dừng sau",
+  "sleepTimerLabelPauseAtEnd": "Tạm dừng khi hết",
+  "sleepTimerWordTrack": "bài này",
+  "sleepTimerWordAlbum": "album này",
+  "sleepTimerWordQueue": "hàng đợi",
+  "sleepTimerRowHeld": "Đã tạm dừng đếm",
+  "sleepTimerRowCurrentCounts": "Bài đang phát tính là một",
+  "sleepTimerRowLastTrack": "bài này là bài cuối",
+  "sleepTimerRowTracksOf": "{left} / {total}",
+  "@sleepTimerRowTracksOf": {
+    "placeholders": {
+      "left": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerRowQueueKept": "hàng đợi vẫn giữ",
+  "sleepTimerPauseCounting": "Tạm dừng đếm",
+  "sleepTimerResumeCounting": "Tiếp tục đếm",
+  "sleepTimerTurnOff": "Tắt hẹn giờ",
+  "sleepTimerChange": "Đổi…",
+  "sleepTimerStatusMinutes": "Ngủ sau {duration}",
+  "@sleepTimerStatusMinutes": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerStatusHeld": "Tạm dừng đếm · còn {duration}",
+  "@sleepTimerStatusHeld": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerStatusTracks": "Tạm dừng sau {count} bài",
+  "@sleepTimerStatusTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerStatusEndTrack": "Tạm dừng khi hết bài này",
+  "sleepTimerStatusEndAlbum": "Tạm dừng khi hết album này",
+  "sleepTimerStatusEndQueue": "Tạm dừng khi hết hàng đợi",
+  "sleepTimerPillTrack": "Bài",
+  "sleepTimerPillAlbum": "Album",
+  "sleepTimerPillQueue": "Hàng đợi",
+  "sleepTimerEntryEndTrack": "hết bài này",
+  "sleepTimerEntryEndAlbum": "hết album này",
+  "sleepTimerEntryEndQueue": "hết hàng đợi",
+  "sleepTimerEntryRunning": "Hẹn giờ ngủ: {status}",
+  "@sleepTimerEntryRunning": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerMenuRunning": "Hẹn giờ ngủ · {status}",
+  "@sleepTimerMenuRunning": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerHeldSuffix": "(tạm dừng đếm)",
+  "sleepTimerAnnounceStartMinutes": "Đã hẹn giờ ngủ {duration}, dừng lúc {time}",
+  "@sleepTimerAnnounceStartMinutes": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sleepTimerAnnounceStartTracks": "Đã hẹn giờ ngủ, tạm dừng sau {count} bài",
+  "@sleepTimerAnnounceStartTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerAnnounceStartEndTrack": "Đã hẹn giờ ngủ, tạm dừng khi hết bài này",
+  "sleepTimerAnnounceStartEndAlbum": "Đã hẹn giờ ngủ, tạm dừng khi hết album này",
+  "sleepTimerAnnounceStartEndQueue": "Đã hẹn giờ ngủ, tạm dừng khi hết hàng đợi",
+  "sleepTimerAnnounceHeld": "Đã tạm dừng đếm",
+  "sleepTimerAnnounceResumed": "Đã tiếp tục đếm",
+  "sleepTimerAnnounceCancelled": "Đã tắt hẹn giờ ngủ",
+  "sleepTimerAnnounceExpired": "Hẹn giờ ngủ đã hết, nhạc đã tạm dừng"
+}

@@ -80,7 +80,8 @@ Wave 1 follow-ups (not in wave 1 by decision; each needs its own design):
 - Favorites page done. History: nav, routes and l10n part wired, pages in progress. Most played: placeholder until its page.
 - Android "Open in file manager": needs a `MainActivity` change.
 - Settings › Library screen (tabs, folders, exclusions, short-file skip).
-- Lyrics card and tab, sleep timer, add-to-playlist.
+- Lyrics card and tab. Sleep timer: modal and entries (mobile ring button and ⋮ item, desktop pill and ⋮ item) and the desktop player bar pill are built; Android notification button is pending.
+- Add-to-playlist (done).
 - Golden tests for `kanaru_ui` widgets once a golden setup exists.
 - `cargo deny` license and duplicate check.
 - Linux packaging with an LGPL libmpv build before any Pro Linux build.

@@ -1,7 +1,11 @@
+import 'dart:ui' show CheckedState, Tristate;
+
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:kanaru_ui/src/widgets/k_inset_shape.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'support/finders.dart';
@@ -12,6 +16,7 @@ KCheckMark _mark(WidgetTester tester) =>
 
 void main() {
   tintFadeTests();
+  actionRowTests();
   for (final (name, brightness, scale) in hostVariants) {
     testWidgets('text rows: mark at the start, ring when off ($name)', (
       tester,
@@ -694,4 +699,452 @@ void tintFadeTests() {
       },
     );
   }
+}
+
+const _touchSize = Size(400, 800);
+const _deskSize = Size(1300, 800);
+
+Widget _action({
+  VoidCallback? onTap,
+  String? reason,
+  bool opensMore = false,
+  bool running = false,
+  bool autofocus = false,
+}) => SelectionRow.action(
+  leading: const Icon(KIcons.sleepTimer),
+  title: const Text('Hết bài này'),
+  subtitle: const Text('còn 2:48'),
+  disabledReason: reason,
+  opensMore: opensMore,
+  running: running,
+  autofocus: autofocus,
+  onTap: onTap,
+);
+
+void actionRowTests() {
+  for (final (name, brightness, scale) in hostVariants) {
+    testWidgets('action rows lay out without overflow at 320 ($name)', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(320, 700));
+      await tester.pumpWidget(
+        host(
+          Column(
+            children: [
+              _action(onTap: () {}),
+              _action(reason: 'Bài này không có album'),
+              _action(onTap: () {}, opensMore: true),
+              _action(onTap: () {}, running: true),
+            ],
+          ),
+          brightness: brightness,
+          textScale: scale,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final (name, size, inset, height) in [
+    ('touch', const Size(400, 700), 16.0, 56.0),
+    ('desktop', _deskSize, 8.0, 48.0),
+  ]) {
+    testWidgets('opensMore is an inset outlined button ($name)', (
+      tester,
+    ) async {
+      useWindow(tester, size);
+      await tester.pumpWidget(
+        host(
+          SizedBox(
+            width: 360,
+            child: SelectionRow.action(
+              title: const Text('Sau số bài…'),
+              subtitle: const Text('1–20 bài'),
+              opensMore: true,
+              onTap: () {},
+            ),
+          ),
+        ),
+      );
+      final row = tester.getRect(find.byType(SelectionRow));
+      final box = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(SelectionRow),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      expect(box.left - row.left, inset);
+      expect(row.right - box.right, inset);
+      expect(box.height, greaterThanOrEqualTo(height));
+      final deco =
+          tester
+                  .widget<DecoratedBox>(
+                    find
+                        .descendant(
+                          of: find.byType(SelectionRow),
+                          matching: find.byType(DecoratedBox),
+                        )
+                        .first,
+                  )
+                  .decoration
+              as ShapeDecoration;
+      final shape = deco.shape as RoundedRectangleBorder;
+      expect(shape.borderRadius, KRadius.sm);
+      expect(shape.side.width, 1);
+    });
+  }
+
+  testWidgets('action: a button, no mark, no selected or checked state', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    var taps = 0;
+    await tester.pumpWidget(host(_action(onTap: () => taps++)));
+    expect(find.byType(KCheckMark), findsNothing);
+    final node = tester.getSemantics(find.byType(SelectionRow));
+    // Strict: every flag not listed (selected, checked, mutually exclusive
+    // group, toggled...) must be absent, so a stray selected state fails.
+    expect(
+      node,
+      matchesSemantics(
+        label: 'Hết bài này\ncòn 2:48',
+        isButton: true,
+        hasEnabledState: true,
+        isEnabled: true,
+        hasTapAction: true,
+        isFocusable: true,
+        hasFocusAction: true,
+      ),
+    );
+    expect(node.flagsCollection.isSelected, Tristate.none);
+    expect(node.flagsCollection.isChecked, CheckedState.none);
+    expect(node.flagsCollection.isInMutuallyExclusiveGroup, isFalse);
+    await tester.tap(find.byType(SelectionRow));
+    expect(taps, 1);
+    semantics.dispose();
+  });
+
+  testWidgets('disabledReason: dimmed, reason replaces the detail, no taps, '
+      'not focusable', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var taps = 0;
+    await tester.pumpWidget(
+      host(_action(onTap: () => taps++, reason: 'Bài này không có album')),
+    );
+    expect(find.text('Bài này không có album'), findsOneWidget);
+    expect(find.text('còn 2:48'), findsNothing);
+    final node = tester.getSemantics(find.byType(SelectionRow));
+    expect(
+      node,
+      matchesSemantics(
+        label: 'Hết bài này\nBài này không có album',
+        isButton: true,
+        hasEnabledState: true,
+        isEnabled: false,
+      ),
+    );
+    await tester.tap(find.byType(SelectionRow), warnIfMissed: false);
+    expect(taps, 0);
+    expect(
+      tester.widget<InkWell>(find.byType(InkWell)).canRequestFocus,
+      isFalse,
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('touch: detail under the title, flat standard 56 row', (
+    tester,
+  ) async {
+    useWindow(tester, _touchSize);
+    await tester.pumpWidget(host(_action(onTap: () {})));
+    final t = tester.getCenter(find.text('Hết bài này'));
+    final d = tester.getCenter(find.text('còn 2:48'));
+    expect(d.dy, greaterThan(t.dy));
+    expect(tester.getSize(find.byType(SelectionRow)).height, 56);
+  });
+
+  testWidgets('desktop: dense 40 row, detail on the title line, right', (
+    tester,
+  ) async {
+    useWindow(tester, _deskSize);
+    await tester.pumpWidget(host(_action(onTap: () {})));
+    final t = tester.getCenter(find.text('Hết bài này'));
+    final d = tester.getCenter(find.text('còn 2:48'));
+    expect((d.dy - t.dy).abs(), lessThan(4));
+    expect(d.dx, greaterThan(t.dx));
+    expect(tester.getSize(find.byType(SelectionRow)).height, 40);
+  });
+
+  testWidgets('hover / press state layers are 8 % / 10 %', (tester) async {
+    await tester.pumpWidget(host(_action(onTap: () {})));
+    final scheme = Theme.of(tester.element(find.byType(SelectionRow)))
+        .colorScheme;
+    final ink = tester.widget<InkWell>(find.byType(InkWell));
+    expect(ink.hoverColor, scheme.onSurface.withValues(alpha: 0.08));
+    expect(ink.highlightColor, scheme.onSurface.withValues(alpha: 0.10));
+    // Keyboard focus is the ring, not a tint.
+    expect(ink.focusColor, const Color(0x00000000));
+  });
+
+  for (final (name, running, opensMore) in [
+    ('plain', false, false),
+    ('opensMore', false, true),
+    ('running', true, false),
+  ]) {
+    testWidgets('keyboard focus rings the 36 dp shape ($name)', (tester) async {
+      useKeyboardHighlight();
+      useWindow(tester, _deskSize);
+      await tester.pumpWidget(
+        host(
+          _action(
+            onTap: () {},
+            running: running,
+            opensMore: opensMore,
+            autofocus: true,
+          ),
+        ),
+      );
+      await tester.pump();
+      final rings = tester
+          .widgetList<KFocusRing>(find.byType(KFocusRing))
+          .where((r) => r.visible);
+      expect(rings, hasLength(1));
+      final ring = tester.getRect(find.byType(KFocusRing).first);
+      final row = tester.getRect(find.byType(SelectionRow));
+      // 40 dp hit area, 36 dp visible shape centred: 2 dp band each side.
+      // opensMore is the outlined 48 dp button inside a 6 dp top margin.
+      expect(ring.height, opensMore ? 48 : 36 + (running ? 8 : 0));
+      expect(ring.top - row.top, opensMore ? 6 : 2);
+    });
+  }
+
+  testWidgets('no focus ring without keyboard focus', (tester) async {
+    await tester.pumpWidget(host(_action(onTap: () {})));
+    expect(
+      tester
+          .widgetList<KFocusRing>(find.byType(KFocusRing))
+          .any((r) => r.visible),
+      isFalse,
+    );
+  });
+
+  testWidgets('semantics: focusable, focused only while it has focus', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(host(_action(onTap: () {})));
+    await tester.pump();
+    expect(
+      tester.getSemantics(find.byType(SelectionRow)),
+      isSemantics(isButton: true, isFocusable: true, isFocused: false),
+    );
+    await tester.pumpWidget(
+      host(
+        KeyedSubtree(
+          key: UniqueKey(),
+          child: _action(onTap: () {}, autofocus: true),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(
+      tester.getSemantics(find.byType(SelectionRow)),
+      isSemantics(isButton: true, isFocusable: true, isFocused: true),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('action rows are built only by SelectionRow.action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        const Column(
+          children: [
+            SelectionRow(selected: true, title: Text('a')),
+            SelectionRow.action(title: Text('b')),
+          ],
+        ),
+      ),
+    );
+    final rows = tester.widgetList<SelectionRow>(find.byType(SelectionRow));
+    expect(rows.map((r) => r.action), [false, true]);
+    expect(rows.last.selected, isFalse);
+    expect(rows.last.multi, isFalse);
+    expect(rows.first.disabledReason, isNull);
+  });
+
+  testWidgets('autofocus takes focus; Enter activates', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      host(_action(onTap: () => taps++, autofocus: true)),
+    );
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    expect(taps, 1);
+  });
+
+  testWidgets('running: primaryContainer card with a trailing chevron; '
+      'keyboard focus draws the ring', (tester) async {
+    useKeyboardHighlight();
+    await tester.pumpWidget(
+      host(_action(onTap: () {}, running: true, autofocus: true)),
+    );
+    await tester.pump();
+    final scheme = Theme.of(tester.element(find.byType(SelectionRow)))
+        .colorScheme;
+    final fill = tester
+        .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+        .map((b) => b.decoration)
+        .whereType<ShapeDecoration>()
+        .map((d) => d.color);
+    expect(fill, contains(scheme.primaryContainer));
+    expect(find.byIcon(KIcons.chevronRight), findsOneWidget);
+    expect(
+      tester
+          .widgetList<KFocusRing>(find.byType(KFocusRing))
+          .any((r) => r.visible),
+      isTrue,
+    );
+  });
+
+  testWidgets('opensMore: outlined shape, onSurface bold title, no fill', (
+    tester,
+  ) async {
+    useWindow(tester, _touchSize);
+    await tester.pumpWidget(host(_action(onTap: () {}, opensMore: true)));
+    final scheme = Theme.of(tester.element(find.byType(SelectionRow)))
+        .colorScheme;
+    final outlined = tester
+        .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+        .map((b) => b.decoration)
+        .whereType<ShapeDecoration>()
+        .where((d) => d.shape is RoundedRectangleBorder)
+        .map((d) => d.shape as RoundedRectangleBorder)
+        .where((s) => s.side.color == scheme.outlineVariant);
+    expect(outlined, hasLength(1));
+    final style = tester.widget<DefaultTextStyle>(
+      find
+          .ancestor(
+            of: find.text('Hết bài này'),
+            matching: find.byType(DefaultTextStyle),
+          )
+          .first,
+    );
+    expect(style.style.color, isNot(scheme.primary));
+    expect(style.style.fontWeight, FontWeight.w700);
+  });
+
+  testWidgets('touch row in a sheet: flat, spans the sheet, no gap', (
+    tester,
+  ) async {
+    useWindow(tester, _touchSize);
+    var taps = 0;
+    await tester.pumpWidget(
+      host(
+        KRowEdgesScope(
+          edges: KRowEdges.fullBleed,
+          child: Column(
+            children: [
+              _action(onTap: () => taps++),
+              _action(onTap: () {}),
+            ],
+          ),
+        ),
+      ),
+    );
+    final rows = find.byType(SelectionRow);
+    final first = tester.getRect(rows.first);
+    final ink = tester.getRect(find.byType(InkWell).first);
+    expect(ink.left, 0);
+    expect(ink.right, _touchSize.width);
+    expect(first.height, 56);
+    // No gap between rows.
+    expect(tester.getRect(rows.last).top, first.bottom);
+    await tester.tapAt(Offset(4, first.center.dy));
+    expect(taps, 1);
+    // Title keeps the 16 dp axis.
+    expect(tester.getTopLeft(find.byIcon(KIcons.sleepTimer).first).dx, 16);
+    // Square tint: the ink shape has no rounding.
+    final ink0 = tester.widget<InkWell>(find.byType(InkWell).first);
+    final shape = (ink0.customBorder! as KInsetShape).base;
+    expect((shape as RoundedRectangleBorder).borderRadius, BorderRadius.zero);
+  });
+
+  testWidgets('running card in a full-bleed sheet keeps its 16 gutter', (
+    tester,
+  ) async {
+    useWindow(tester, _touchSize);
+    await tester.pumpWidget(
+      host(
+        KRowEdgesScope(
+          edges: KRowEdges.fullBleed,
+          child: _action(onTap: () {}, running: true),
+        ),
+      ),
+    );
+    final scheme = Theme.of(tester.element(find.byType(SelectionRow)))
+        .colorScheme;
+    final card = find.byWidgetPredicate(
+      (w) =>
+          w is DecoratedBox &&
+          w.decoration is ShapeDecoration &&
+          (w.decoration as ShapeDecoration).color == scheme.primaryContainer,
+    );
+    final rect = tester.getRect(card);
+    expect(rect.left, 16);
+    expect(rect.right, _touchSize.width - 16);
+    final shape =
+        (tester.widget<DecoratedBox>(card).decoration as ShapeDecoration).shape
+            as RoundedRectangleBorder;
+    expect(shape.borderRadius, KRadius.sm);
+  });
+
+  testWidgets('row in a dialog host (inset): padded 16 and rounded', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(700, 800));
+    await tester.pumpWidget(
+      host(
+        KRowEdgesScope(
+          edges: KRowEdges.inset,
+          child: _action(onTap: () {}),
+        ),
+      ),
+    );
+    final ink = tester.getRect(find.byType(InkWell).first);
+    expect(ink.left, 16);
+    expect(ink.right, 700 - 16);
+    final shape =
+        (tester.widget<InkWell>(find.byType(InkWell).first).customBorder!
+                    as KInsetShape)
+                .base
+            as RoundedRectangleBorder;
+    expect(shape.borderRadius, KRadius.sm);
+  });
+
+  testWidgets('running card keeps a 56 tonal card, radius 12', (tester) async {
+    useWindow(tester, _touchSize);
+    await tester.pumpWidget(host(_action(onTap: () {}, running: true)));
+    final scheme = Theme.of(tester.element(find.byType(SelectionRow)))
+        .colorScheme;
+    expect(tester.getSize(find.byType(SelectionRow)).height, 56);
+    final card = tester
+        .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+        .map((b) => b.decoration)
+        .whereType<ShapeDecoration>()
+        .firstWhere((d) => d.color == scheme.primaryContainer);
+    expect((card.shape as RoundedRectangleBorder).borderRadius, KRadius.sm);
+  });
+
+  testWidgets('reduced motion: action row builds and taps', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      host(_action(onTap: () => taps++), reduceMotion: true),
+    );
+    await tester.tap(find.byType(SelectionRow));
+    expect(taps, 1);
+  });
 }

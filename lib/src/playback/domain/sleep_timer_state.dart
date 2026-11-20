@@ -25,6 +25,8 @@ const sleepTimerMaxMinutes = 720;
 const sleepTimerMinTracks = 1;
 const sleepTimerMaxTracks = 20;
 
+const Object _keep = Object();
+
 /// What the sleep timer shows. Session only: never saved.
 class SleepTimerState {
   const SleepTimerState.off()
@@ -32,7 +34,11 @@ class SleepTimerState {
       remaining = Duration.zero,
       endsAt = null,
       countingPaused = false,
-      tracksLeft = 0;
+      tracksLeft = 0,
+      setLength = Duration.zero,
+      tracksAtStart = 0,
+      startedAt = null,
+      startSerial = 0;
 
   const SleepTimerState({
     required SleepTimerMode this.mode,
@@ -40,6 +46,10 @@ class SleepTimerState {
     this.endsAt,
     this.countingPaused = false,
     this.tracksLeft = 0,
+    this.setLength = Duration.zero,
+    this.tracksAtStart = 0,
+    this.startedAt,
+    this.startSerial = 0,
   });
 
   /// `null` while the timer is off.
@@ -60,6 +70,25 @@ class SleepTimerState {
   /// zero in the other modes.
   final int tracksLeft;
 
+  /// What the user set in the minutes mode; raised when "+5" pushes the time
+  /// left above it, so a bar of time left over [setLength] never passes full.
+  /// Zero in the other modes.
+  final Duration setLength;
+
+  /// Tracks set in the tracks mode; raised when "+1" pushes the count above
+  /// it. Zero in the other modes.
+  final int tracksAtStart;
+
+  /// Wall-clock time of the start (the controller's clock, as [endsAt]); the
+  /// end-of modes measure their bar from it. Null while the timer is off.
+  final DateTime? startedAt;
+
+  /// Identifies one start of the timer, so the UI can tell a replaced timer
+  /// from the same one continuing. Counts the starts of the session: a start
+  /// while running (or after an end) gives a new value; hold, resume and adds
+  /// keep it. Zero while off.
+  final int startSerial;
+
   bool get active => mode != null;
 
   /// Whether taking [minutes] off still leaves time: subtracting is refused
@@ -67,10 +96,46 @@ class SleepTimerState {
   bool canSubtract(int minutes) =>
       mode == SleepTimerMode.minutes && remaining > Duration(minutes: minutes);
 
+  /// Minutes the running screen's − button takes off: 5, then 1 once no more
+  /// than 5 minutes are left (so the last minutes can still be trimmed).
+  int get minusMinutes => remaining > const Duration(minutes: 5) ? 5 : 1;
+
+  /// Whether the minutes mode has room for more: adding is capped at
+  /// [sleepTimerMaxMinutes] left.
+  bool get canAddMinutes =>
+      mode == SleepTimerMode.minutes &&
+      remaining < const Duration(minutes: sleepTimerMaxMinutes);
+
   bool get canRemoveTrack => mode == SleepTimerMode.tracks && tracksLeft > 1;
 
   bool get canAddTrack =>
       mode == SleepTimerMode.tracks && tracksLeft < sleepTimerMaxTracks;
+
+  /// A copy with the given fields replaced. [endsAt] and [startedAt] may be
+  /// set to null.
+  SleepTimerState copyWith({
+    SleepTimerMode? mode,
+    Duration? remaining,
+    Object? endsAt = _keep,
+    bool? countingPaused,
+    int? tracksLeft,
+    Duration? setLength,
+    int? tracksAtStart,
+    Object? startedAt = _keep,
+    int? startSerial,
+  }) => SleepTimerState(
+    mode: mode ?? this.mode!,
+    remaining: remaining ?? this.remaining,
+    endsAt: identical(endsAt, _keep) ? this.endsAt : endsAt as DateTime?,
+    countingPaused: countingPaused ?? this.countingPaused,
+    tracksLeft: tracksLeft ?? this.tracksLeft,
+    setLength: setLength ?? this.setLength,
+    tracksAtStart: tracksAtStart ?? this.tracksAtStart,
+    startedAt: identical(startedAt, _keep)
+        ? this.startedAt
+        : startedAt as DateTime?,
+    startSerial: startSerial ?? this.startSerial,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -79,11 +144,24 @@ class SleepTimerState {
       other.remaining == remaining &&
       other.endsAt == endsAt &&
       other.countingPaused == countingPaused &&
-      other.tracksLeft == tracksLeft;
+      other.tracksLeft == tracksLeft &&
+      other.setLength == setLength &&
+      other.tracksAtStart == tracksAtStart &&
+      other.startedAt == startedAt &&
+      other.startSerial == startSerial;
 
   @override
-  int get hashCode =>
-      Object.hash(mode, remaining, endsAt, countingPaused, tracksLeft);
+  int get hashCode => Object.hash(
+    mode,
+    remaining,
+    endsAt,
+    countingPaused,
+    tracksLeft,
+    setLength,
+    tracksAtStart,
+    startedAt,
+    startSerial,
+  );
 
   @override
   String toString() =>
@@ -91,4 +169,20 @@ class SleepTimerState {
       '${endsAt == null ? '' : ', ends $endsAt'}'
       '${countingPaused ? ', held' : ''}'
       '${tracksLeft > 0 ? ', $tracksLeft tracks' : ''})';
+}
+
+/// How much of an end-of mode's bar is left: the time still to go over the
+/// time since [startedAt] plus the time still to go, so a queue edit that
+/// grows [left] widens the bar instead of overflowing it. Clamped to 0..1;
+/// 0 when there is nothing to divide by (a clock that went back included).
+double sleepEndOfFraction({
+  required Duration left,
+  required DateTime startedAt,
+  required DateTime now,
+}) {
+  if (left <= Duration.zero) return 0;
+  final elapsed = now.difference(startedAt);
+  final total = (elapsed.isNegative ? Duration.zero : elapsed) + left;
+  if (total <= Duration.zero) return 0;
+  return (left.inMicroseconds / total.inMicroseconds).clamp(0.0, 1.0);
 }

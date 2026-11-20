@@ -6,6 +6,7 @@ import 'desktop_now_playing_header.dart';
 import 'desktop_side_pane.dart';
 import 'desktop_track_column.dart';
 import 'now_playing_auto_hide.dart';
+import 'now_playing_chrome.dart';
 
 /// How long a switch between split and pane-only takes to cross-fade.
 const Duration desktopBodyFadeDuration = Duration(milliseconds: 300);
@@ -17,14 +18,12 @@ class DesktopNowPlayingBody extends StatelessWidget {
   const DesktopNowPlayingBody({
     super.key,
     required this.chrome,
-    required this.floatingOpen,
     required this.columnShown,
     required this.onToggleColumn,
     required this.onClose,
   });
 
-  final AutoHideController chrome;
-  final ValueNotifier<bool> floatingOpen;
+  final NowPlayingChrome chrome;
   final bool columnShown;
   final VoidCallback onToggleColumn;
   final VoidCallback onClose;
@@ -76,7 +75,7 @@ class DesktopNowPlayingBody extends StatelessWidget {
               onClose: onClose,
               columnShown: columnShown,
               onToggleColumn: onToggleColumn,
-              floatingOpen: floatingOpen,
+              chrome: chrome,
             ),
           ),
           Expanded(

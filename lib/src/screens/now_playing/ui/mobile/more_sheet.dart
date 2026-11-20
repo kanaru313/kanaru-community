@@ -88,7 +88,7 @@ class NowPlayingMoreSheet extends ConsumerWidget {
               child: KListRow(
                 enabled: item.onTap != null,
                 leading: Icon(item.icon),
-                title: Text(item.label),
+                title: item.liveLabel?.call(context) ?? Text(item.label),
                 trailing: !item.soon
                     ? null
                     : item.pro

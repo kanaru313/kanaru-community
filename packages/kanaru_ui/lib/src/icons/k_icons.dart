@@ -77,6 +77,10 @@ abstract final class KIcons {
       FluentIcons.text_bullet_list_square_24_regular;
   static const IconData lyrics = FluentIcons.subtitles_24_regular;
   static const IconData sleepTimer = FluentIcons.timer_24_regular;
+  static const IconData sleepTimerActive = FluentIcons.timer_24_filled;
+
+  /// "Stops at 23:40": the moon of the sleep timer's stop-time pill.
+  static const IconData sleepAt = FluentIcons.weather_moon_24_regular;
   static const IconData volume = FluentIcons.speaker_2_24_regular;
   static const IconData volumeOff = FluentIcons.speaker_off_24_regular;
   static const IconData openFull = FluentIcons.arrow_maximize_24_regular;

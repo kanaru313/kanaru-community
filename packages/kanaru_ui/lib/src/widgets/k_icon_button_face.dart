@@ -14,6 +14,8 @@ class KIconButtonFace extends StatelessWidget {
     required this.size,
     required this.color,
     this.ring,
+    this.circle = false,
+    this.fill,
   });
 
   final IconData? icon;
@@ -26,19 +28,41 @@ class KIconButtonFace extends StatelessWidget {
   /// Ring colour while the button shows keyboard focus.
   final Color? ring;
 
+  /// A round 40 dp target ([KIconButtonShape.circle]) instead of the bare
+  /// glyph box; [fill] is its press layer.
+  final bool circle;
+  final Color? fill;
+
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      borderRadius: KRadius.sm,
-      border: Border.all(width: 2, color: ring ?? const Color(0x00000000)),
-    ),
-    child: ExcludeSemantics(
+  Widget build(BuildContext context) {
+    final glyph = ExcludeSemantics(
       child: child != null
           ? IconTheme(
               data: IconThemeData(size: size, color: color),
               child: child!,
             )
           : Icon(icon, size: size, color: color),
-    ),
-  );
+    );
+    final border = Border.all(width: 2, color: ring ?? const Color(0x00000000));
+    if (circle) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: fill,
+          border: border,
+        ),
+        child: SizedBox.square(
+          dimension: circleTarget,
+          child: Center(child: glyph),
+        ),
+      );
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(borderRadius: KRadius.sm, border: border),
+      child: glyph,
+    );
+  }
+
+  /// Width and height of the round target, ring included.
+  static const double circleTarget = 40;
 }

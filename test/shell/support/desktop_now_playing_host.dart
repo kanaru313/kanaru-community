@@ -17,6 +17,8 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../playback/support/controller_harness.dart';
+import '../../playback/support/sleep_timer_harness.dart'
+    show sleepTickerOverride;
 import '../../playback/support/ui_host.dart';
 import '../../support/app_harness.dart';
 import '../../support/player_phase_override.dart';
@@ -104,6 +106,7 @@ Future<DesktopHost> pumpDesktopShell(
   final container = ProviderContainer(
     overrides: [
       playerPhaseOverride(),
+      sleepTickerOverride(h),
       extensionRegistryProvider.overrideWithValue(registry),
       playerControllerProvider.overrideWithValue(h.c),
       appDatabaseProvider.overrideWithValue(h.db),

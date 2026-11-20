@@ -8,7 +8,9 @@ import '../tokens/k_space.dart';
 import 'k_check_mark.dart';
 import 'collections/k_media_card.dart';
 import 'k_gap.dart';
+import 'k_inset_shape.dart';
 import 'k_row_edges.dart';
+import 'selection_action_row.dart';
 
 /// One option of a choice list, tonal rounded fill and bold title when
 /// selected. No radio buttons.
@@ -38,7 +40,43 @@ class SelectionRow extends StatelessWidget {
     this.autofocus = false,
     this.hint,
     this.onTap,
-  }) : mediaTitle = null,
+  }) : action = false,
+       disabledReason = null,
+       opensMore = false,
+       running = false,
+       mediaTitle = null,
+       mediaLine2 = null,
+       mediaTag = null,
+       circleCover = false;
+
+  /// A start button, not a choice: it does its thing when tapped. No check
+  /// mark, no selected / checked semantics (it has no `selected`, `multi`,
+  /// `partial`, `plainMark` or `alikeOptions`). [subtitle] is its detail
+  /// ("còn 2:48"): under the title on touch shells, on the same line to the
+  /// right on desktop (the dense 40 / 36 geometry, chosen here from the
+  /// shell). [disabledReason] and [opensMore] are described on their fields;
+  /// [running] makes it the card that leads back to what is already running.
+  /// Keyboard focus draws the 2 dp `primary` ring around the visible shape.
+  const SelectionRow.action({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.leading,
+    this.enabled = true,
+    this.autofocus = false,
+    this.hint,
+    this.onTap,
+    this.disabledReason,
+    this.opensMore = false,
+    this.running = false,
+  }) : action = true,
+       selected = false,
+       multi = false,
+       partial = false,
+       plainMark = false,
+       alikeOptions = false,
+       dense = false,
+       mediaTitle = null,
        mediaLine2 = null,
        mediaTag = null,
        circleCover = false;
@@ -67,7 +105,11 @@ class SelectionRow extends StatelessWidget {
        subtitle = null,
        leading = cover,
        plainMark = false,
-       dense = false;
+       dense = false,
+       action = false,
+       disabledReason = null,
+       opensMore = false,
+       running = false;
 
   /// Set only by [SelectionRow.media]: the card's title, second line and tag.
   final String? mediaTitle;
@@ -116,6 +158,25 @@ class SelectionRow extends StatelessWidget {
   /// (no visible text; the ⓘ explanation widget reads it later).
   final String? hint;
   final VoidCallback? onTap;
+
+  /// A start button, not a choice: it does its thing when tapped. No check
+  /// mark, no selected / checked semantics (pass `selected: false`), the
+  /// [subtitle] is its detail ("còn 2:48"): under the title on touch shells,
+  /// on the same line to the right on desktop (the dense 40 / 36 geometry,
+  /// chosen here from the shell).
+  final bool action;
+
+  /// Why an action row cannot be used: the row is dimmed, skipped by arrow
+  /// keys and Tab, and this text replaces its detail.
+  final String? disabledReason;
+
+  /// An action row that opens a further screen ("Sau số bài…"): outlined on
+  /// touch shells, `primary` bold title on desktop.
+  final bool opensMore;
+
+  /// A tonal `primaryContainer` card with a trailing `›`: the way back to
+  /// what is already running.
+  final bool running;
 
   static const double _checkSlot = 24;
 
@@ -184,6 +245,20 @@ class SelectionRow extends StatelessWidget {
     final gap = dense ? KSpace.x3 : KSpace.x4;
     final bodyStyle = dense ? textTheme.bodyMedium : textTheme.bodyLarge;
     final active = enabled && onTap != null;
+    if (action) {
+      return SelectionActionRow(
+        title: title,
+        subtitle: subtitle,
+        leading: leading,
+        disabledReason: disabledReason,
+        enabled: enabled,
+        opensMore: opensMore,
+        running: running,
+        autofocus: autofocus,
+        hint: hint,
+        onTap: onTap,
+      );
+    }
     final edges = KRowEdgesScope.maybeOf(context);
     if (mediaTitle != null) return _buildMedia(context, edges);
     final corners = edges.corners(KRadius.md);
@@ -228,7 +303,7 @@ class SelectionRow extends StatelessWidget {
               Material(
                 type: MaterialType.transparency,
                 child: InkWell(
-                  customBorder: _InsetShape(KShape.of(corners), band),
+                  customBorder: KInsetShape(KShape.of(corners), band),
                   // M3 state layers (8 % hover, 10 % press/focus of onSurface),
                   // as the mockups draw them; the theme default (4 %) is too
                   // faint to see on surfaceContainerHighest menus.
@@ -304,35 +379,4 @@ class SelectionRow extends StatelessWidget {
       ),
     );
   }
-}
-
-/// [base] shrunk by [inset] above and below: the ink / hover / focus shape of a
-/// dense row while the widget itself keeps the full hit area.
-class _InsetShape extends ShapeBorder {
-  const _InsetShape(this.base, this.inset);
-
-  final ShapeBorder base;
-  final double inset;
-
-  @override
-  EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
-
-  @override
-  Path getInnerPath(Rect rect, {TextDirection? textDirection}) => base
-      .getInnerPath(rect.insetVertically(inset), textDirection: textDirection);
-
-  @override
-  Path getOuterPath(Rect rect, {TextDirection? textDirection}) => base
-      .getOuterPath(rect.insetVertically(inset), textDirection: textDirection);
-
-  @override
-  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {}
-
-  @override
-  ShapeBorder scale(double t) => _InsetShape(base.scale(t), inset * t);
-}
-
-extension on Rect {
-  Rect insetVertically(double v) =>
-      Rect.fromLTRB(left, top + v, right, bottom - v);
 }

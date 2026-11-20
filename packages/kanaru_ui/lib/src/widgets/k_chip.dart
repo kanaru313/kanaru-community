@@ -7,7 +7,8 @@ import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 import 'k_gap.dart';
 
-/// Tonal pill. 48 dp tall on touch shells, 40 on desktop.
+/// Tonal pill. 48 dp tall on touch shells, 40 on desktop; [dense] makes it
+/// 40 r12 on touch shells and 32 on desktop (a chip row that must fit).
 class KChip extends StatelessWidget {
   const KChip({
     super.key,
@@ -16,6 +17,8 @@ class KChip extends StatelessWidget {
     this.selected = false,
     this.enabled = true,
     this.onTap,
+    this.dense = false,
+    this.semanticLabel,
   }) : trailing = null,
        _interactive = true;
 
@@ -27,6 +30,8 @@ class KChip extends StatelessWidget {
       selected = false,
       enabled = true,
       onTap = null,
+      dense = false,
+      semanticLabel = null,
       _interactive = false;
 
   final Widget label;
@@ -37,16 +42,27 @@ class KChip extends StatelessWidget {
   final bool enabled;
   final VoidCallback? onTap;
 
+  /// Compact height (see the class doc) with 12 dp corners on touch shells.
+  final bool dense;
+
+  /// Spoken name instead of the visible label ("Thêm 10 phút" for "+10 ph").
+  /// Keep a tooltip visual only (`excludeFromSemantics`).
+  final String? semanticLabel;
+
   /// Widget after the label of a [KChip.static] (its own action).
   final Widget? trailing;
   final bool _interactive;
 
+  static const double _denseDesktopHeight = 32;
+  static const double _denseTouchHeight = 40;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final minHeight = FormFactor.of(context) == FormFactor.mobile
-        ? KLayout.minTarget
-        : KLayout.minTargetDesktop;
+    final touch = FormFactor.of(context) == FormFactor.mobile;
+    final minHeight = dense
+        ? (touch ? _denseTouchHeight : _denseDesktopHeight)
+        : (touch ? KLayout.minTarget : KLayout.minTargetDesktop);
     final fg = selected ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
     final content = ConstrainedBox(
       constraints: BoxConstraints(minHeight: minHeight),
@@ -63,7 +79,12 @@ class KChip extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (icon != null) ...[icon!, const KGap(KSpace.x2)],
-                Flexible(child: label),
+                Flexible(
+                  child: ExcludeSemantics(
+                    excluding: semanticLabel != null,
+                    child: label,
+                  ),
+                ),
                 if (trailing != null) ...[const KGap(KSpace.x2), trailing!],
               ],
             ),
@@ -73,7 +94,7 @@ class KChip extends StatelessWidget {
     );
     final pill = Material(
       color: selected ? scheme.secondaryContainer : scheme.surfaceContainerHigh,
-      shape: KShape.of(KRadius.full),
+      shape: KShape.of(dense && touch ? KRadius.sm : KRadius.full),
       clipBehavior: Clip.antiAlias,
       child: _interactive
           ? InkWell(onTap: enabled ? onTap : null, child: content)
@@ -84,6 +105,7 @@ class KChip extends StatelessWidget {
       button: true,
       enabled: enabled,
       selected: selected,
+      label: semanticLabel,
       child: Opacity(opacity: enabled ? 1 : 0.5, child: pill),
     );
   }

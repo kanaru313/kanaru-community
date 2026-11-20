@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/track_info.dart';
+import '../../../playback/ui/sleep_timer/sleep_timer_entries.dart';
+import '../../../playback/ui/sleep_timer/sleep_timer_modal.dart';
 import 'now_playing_playlist_actions.dart';
 import 'track_navigation.dart';
 
@@ -14,6 +18,7 @@ class NowPlayingMoreItem {
     this.onTap,
     this.pro = false,
     this.soon = true,
+    this.liveLabel,
   });
 
   final String label;
@@ -28,26 +33,40 @@ class NowPlayingMoreItem {
 
   /// Shows the Pro badge (the feature is Pro and not built yet).
   final bool pro;
+
+  /// Replaces the plain [label] with a widget that follows state (the sleep
+  /// timer's "· còn 23:41"). It brings its own text style and semantics.
+  final WidgetBuilder? liveLabel;
+}
+
+/// Opens the sleep timer from the mobile sheet. The sheet has popped by the
+/// time this runs, so its own context is gone: the modal opens on the root
+/// navigator captured while the items were built.
+Future<void> _openSleepTimerOnRoot(NavigatorState root) async {
+  if (!root.mounted) return;
+  await showSleepTimer(root.context);
 }
 
 /// The two groups of the "More" menu, shared by the mobile sheet and the
-/// desktop dropdown: sleep timer, add to playlist, go to album, go to artist
-/// | lyrics source, translate, visual effects (Pro), track info. Add to
-/// playlist and the two navigation items work now; [beforeNavigate] closes
+/// desktop dropdown: add to playlist, go to album, go to artist
+/// | sleep timer, lyrics source, translate, visual effects (Pro), track
+/// info. Add to playlist and the two navigation items work now;
+/// [beforeNavigate] closes
 /// what covers the library first (the picker opens over Now Playing, so it
-/// needs no such call).
+/// needs no such call). [openSleepTimer] replaces the default way of opening
+/// the sleep timer, for a screen that pins its chrome and owns the focus to
+/// return to (the desktop menu); without it the modal opens on the root
+/// navigator.
 List<List<NowPlayingMoreItem>> nowPlayingMoreItems(
   BuildContext context,
   TrackInfo? info, {
   VoidCallback? beforeNavigate,
+  VoidCallback? openSleepTimer,
 }) {
   final l10n = AppLocalizations.of(context);
+  final root = Navigator.of(context, rootNavigator: true);
   return [
     [
-      NowPlayingMoreItem(
-        label: l10n.playbackSleepTimer,
-        icon: KIcons.sleepTimer,
-      ),
       NowPlayingMoreItem(
         label: l10n.playbackAddToPlaylist,
         icon: KIcons.playlistAdd,
@@ -72,6 +91,13 @@ List<List<NowPlayingMoreItem>> nowPlayingMoreItems(
       ),
     ],
     [
+      NowPlayingMoreItem(
+        label: l10n.playbackSleepTimer,
+        icon: KIcons.sleepTimer,
+        soon: false,
+        liveLabel: sleepTimerMenuLabelBuilder,
+        onTap: openSleepTimer ?? () => unawaited(_openSleepTimerOnRoot(root)),
+      ),
       NowPlayingMoreItem(label: l10n.playbackLyricsSource, icon: KIcons.lyrics),
       NowPlayingMoreItem(
         label: l10n.playbackTranslateLyrics,

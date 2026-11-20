@@ -396,7 +396,7 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
 ## Sleep timer
 
 `playback/state/sleep_timer_provider.dart`: `sleepTimerProvider` (`NotifierProvider<SleepTimer,
-SleepTimerState>`). Session only: nothing is saved, a restart or kill loses it. No UI reads it yet.
+SleepTimerState>`). Session only: nothing is saved, a restart or kill loses it. The UI is in "Sleep timer UI" below.
 
 - **Gate:** `build()` returns off and touches nothing until `playerCreatedProvider` is true; then it
   watches `playerControllerProvider` (a new controller rebuilds it, off) and subscribes `trackEnds`.
@@ -449,6 +449,59 @@ SleepTimerState>`). Session only: nothing is saved, a restart or kill loses it. 
   did not stop in the tracks mode updates `tracksLeft` from the policy.
 - **Every end of a sleep** (pause at zero, expiry while paused, `TrackEnd(sleepStop)`) calls
   `mediaSessionBridgeProvider.cancelPendingResume()`.
+
+### Sleep timer read models
+
+Figures for the timer UI; they change no engine behaviour.
+
+- **Fields of `SleepTimerState`** (with `copyWith`): `setLength` (minutes mode), `tracksAtStart` (tracks
+  mode), `startedAt` (wall `DateTime` from the controller's `nowMs`) and `startSerial`. They are set only
+  by the public `start*` methods (a fresh state, so a start of another mode drops the old mode's
+  fields) and carried by every later state of the run: tick, hold, resume, `addMinutes`, `addTracks`,
+  track end. `_arm` is shared with `resumeCounting`, so it never sets them. `addMinutes` raises
+  `setLength` when the time left would exceed it, `addTracks` raises `tracksAtStart` likewise.
+  `startSerial` grows by one per `start*` and survives a cancel (the counter lives in the notifier).
+  `sleepEndOfFraction(left, startedAt, now)` is the end-of modes' bar: `left / (elapsed + left)`,
+  clamped to 0..1, 0 when there is nothing to divide by.
+- **`albumRunFrom`** (`domain/sleep_policies.dart`, pure): walks the play order from the current entry
+  while the next one has the same album (`neighboursOf`, so repeat one, a repeat all wrap and the end of
+  a reshuffled pass behave as Next does); stops at another, unknown or missing key, at a track without an
+  album, and never goes past one queue length or `limit`. `EndOfAlbumPolicy` is `albumRunFrom(limit: 2)`
+  with length at most 1 (plus asking for the entry after the pair); the estimate uses the same walk, so
+  the two cannot disagree.
+- **`playback/state/sleep_estimates.dart`**, all `autoDispose`, null until `playerCreatedProvider`:
+  `currentTrackLeftProvider` and `currentTrackPlayedProvider` (whole seconds, selected from
+  `playbackPositionProvider`, so one rebuild per second like the time labels);
+  `albumRunProvider` (`AsyncValue<AlbumRun?>`: `tracks` of the run with the current entry, at most 100
+  with `capped` for "100+" or a one-album repeat all queue, `restDuration` after the current entry,
+  `noAlbum`). Keys come from the engine's source (`queueRowInfosProvider` first, the loader for the
+  rest, at most 101 ids in one query) and it looks again on a queue view change, a `tracks` counter event
+  or a change of the infos, never on a position tick; a failure is an `AsyncError`, logged once with the
+  exception type. `albumLeftProvider` (current seconds plus `restDuration`) and `queueLeftProvider`
+  (`(tracks, time)`: entries from the current one on, with `currentTrackLeft` plus
+  `queueRemainingProvider`) are cheap providers over these, so a second tick never queries.
+
+### Sleep timer UI
+
+`playback/ui/sleep_timer/`; `showSleepTimer(context, returnFocus:)` (`sleep_timer_modal.dart`) opens one modal on the root
+navigator (bottom sheet on phones, dialog from 600 px): tiles, custom and running screens. It opens on the running screen
+while a timer runs. Focus goes back to `returnFocus` when it closes.
+
+- **Entries** (`sleep_timer_entries.dart`, each watches small `select`s, so only the entries rebuild per second):
+  `SleepTimerDesktopEntry` (player bar, desktop Now Playing header: the icon while off, a `KPill` while running, one
+  `FocusNode` for both looks), `SleepTimerRingButton` (mobile header, running only: round button with a progress ring,
+  falls back to the ⋮ node when Tắt removes it) and `SleepTimerMenuLabel` / `sleepTimerMenuLabelBuilder` (the ⋮ item:
+  "Hẹn giờ ngủ · còn 23:41" ticking). `SleepEntryFocus` and `SleepReturnFocus` (`sleep_timer_return_focus.dart`) pick the
+  node to focus at close time, because the entry's own node may be gone.
+- **Announcements (policy)**: the modal says by itself when it closes on a timer that ended. The entries never announce an
+  expiry (a bar, a header and the modal can be on screen together; each speaking would repeat it). Tooltips show seconds; the
+  semantic labels round to minutes so a screen reader does not talk every second.
+- **⋮ item** (`now_playing_more_items.dart`): "Hẹn giờ ngủ" before "Nguồn lời bài", with `NowPlayingMoreItem.liveLabel`.
+  The mobile sheet pops before `onTap` runs, so the items capture the root `Navigator` while they are built and open the modal
+  on it. The desktop menu passes its own opener.
+- **Desktop chrome pin**: the menu item and the header entries open the modal between `NowPlayingChrome.pinFloating()` and
+  `unpinFloating()` (skipped when the owner is gone), so the header stays shown while the modal is open; focus returns to the
+  ⋮ button or the pill.
 
 ## Repeat
 
@@ -823,8 +876,10 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
   the frame); at desktop width it first calls `nowPlayingPanelProvider.open()`, so a resize drag across 1200 dp ends
   with the panel open and no route. While the player has not answered yet it does not leave. The panel state lives in
   `playback/state/now_playing_panel.dart` so `screens/` can reach it.
-- `MobileNowPlaying` (`ui/mobile/`): header (56) with a drag-to-close title area (release past 120 dp closes, less
-  springs back), cover, title row, `NowPlayingSeekSlot` (48 dp; flat bar for now), controls, button row, dimmed lyrics
+- `MobileNowPlaying` (`ui/mobile/`): header (56, 72 from 200 % text; `[⌄]` left, `[ring slot][⋮]` right, the title block
+  centred on the full width; the ring slot is always reserved so the title never moves) with a drag-to-close area covering all of
+  the space between the side slots (release past 120 dp closes, less
+  springs back; the ring shows while a sleep timer runs), cover, title row, `NowPlayingSeekSlot` (48 dp; flat bar for now), controls, button row, dimmed lyrics
   card, info card. It sits on `CoverTintBackground` fed by `playingCoverColorsProvider`; the seed of the playing cover also themes the app (see "Playing cover and app theme").
   It owns a `FlightSource` (cover, text, play, next pieces) for the queue flights.
 - The cover box is `kanaru_ui` `NowPlayingCoverBox` (`min(420, width - 64)`, radius 20); the page gives it the full
@@ -833,7 +888,7 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
   cover width or a fling over 160 dp/s commits; where there is no track to go to the cover moves at most 30 % and
   springs back (the buttons raise the notices). With either repeat-all mode the last entry's left swipe wraps to the first, like Next (reshuffled: a new pass); under plain repeat all the first entry's right swipe goes to the last, like Previous. The new cover slides in when the entry id changes; if it never does, the
   cover comes back after 800 ms.
-- `NowPlayingMoreSheet` (⋮): the head and `nowPlayingMoreItems`, shared with the desktop dropdown. Only Go to album and Go
+- `NowPlayingMoreSheet` (⋮): the head and `nowPlayingMoreItems`, shared with the desktop dropdown. Sleep timer (live label), Add to playlist, Go to album and Go
   to artist work; the rest is dimmed "Coming soon", Visual effects carries the Pro badge. `track_navigation.dart` goes
   through `LibraryLocations` with `context.go`, and asks which artist first through `showSelectionPicker`.
 - The header line under the position is the current track's album (empty when it has none). It opens nothing.
@@ -883,8 +938,8 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
   pointer and focus). `V` flips the cover column only with no modifier, no menu open and no text field focused; the choice lives in
   `coverColumnShownProvider` for the session.
 - **Header** (`desktop_now_playing_header.dart`, 64 dp): `[⌄] [cover column] | [♥] [add to playlist] [Translate chip, soon]`
-  and `[repeat] [sleep timer, soon] [volume] [⋮]`. No Shuffle, no window buttons. The ⋮ menu (`desktop_more_menu.dart`) is the head row
-  plus the shared items; while it is open the header stays shown (`floatingOpen`). `now_playing_auto_hide.dart` is the old controller
+  and `[repeat] [sleep timer] [volume] [⋮]`. No Shuffle, no window buttons. The ⋮ menu (`desktop_more_menu.dart`) is the head row
+  plus the shared items; while it is open the header stays shown (`NowPlayingChrome` pin). `now_playing_auto_hide.dart` is the old controller
   as it was: hides after 3 s still, shows on a move (throttled to 300 ms) or any key, pinned while the pointer is on the header or the
   track column or a menu is open, hidden at once when the pointer leaves the window.
 - **Split geometry** (`kanaru_ui` `now_playing_split_geometry.dart`, `now_playing_split_layout.dart`): column 42 % of the body clamped
