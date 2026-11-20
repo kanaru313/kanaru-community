@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -275,7 +276,9 @@ void main() {
   testWidgets('drag end animates to the nearest tick', (tester) async {
     await tester.pumpWidget(host(_ruler()));
     final g = await tester.startGesture(tester.getCenter(find.byType(KRuler)));
-    await g.moveBy(const Offset(-20, 0)); // 2.5 ticks at 8 dp
+    await g.moveBy(
+      const Offset(-20, 0),
+    ); // past the touch slop, a few ticks at 8 dp
     await g.moveBy(const Offset(-4, 0));
     await g.up();
     await tester.pump(const Duration(milliseconds: 16));
@@ -314,7 +317,9 @@ void main() {
     expect(changes, isEmpty);
   });
 
-  testWidgets('haptic tick per step on touch only', (tester) async {
+  testWidgets('haptic tick per step for a touch pointer only (not by width)', (
+    tester,
+  ) async {
     final calls = <String>[];
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
       SystemChannels.platform,
@@ -329,16 +334,152 @@ void main() {
         null,
       ),
     );
-    useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_ruler()));
     await tester.drag(find.byType(KRuler), const Offset(-40, 0));
     await tester.pumpAndSettle();
     expect(calls, isNotEmpty);
     calls.clear();
-    useWindow(tester, const Size(1300, 800));
     await tester.pumpWidget(host(_ruler(value: 45)));
-    await tester.drag(find.byType(KRuler), const Offset(-40, 0));
+    final g = await tester.startGesture(
+      tester.getCenter(find.byType(KRuler)),
+      kind: PointerDeviceKind.mouse,
+    );
+    await g.moveBy(const Offset(-40, 0));
+    await g.up();
     await tester.pumpAndSettle();
     expect(calls, isEmpty);
   });
+
+  group('sync with an outside value', () {
+    testWidgets('two quick outside changes end centred on the last', (
+      tester,
+    ) async {
+      final changes = <int>[];
+      await tester.pumpWidget(host(_ruler(onChanged: changes.add)));
+      await tester.pumpWidget(host(_ruler(value: 50, onChanged: changes.add)));
+      await tester.pump(const Duration(milliseconds: 60));
+      await tester.pumpWidget(host(_ruler(value: 55, onChanged: changes.add)));
+      await tester.pumpAndSettle();
+      expect(_position(tester), 55);
+      expect(changes, isEmpty);
+    });
+
+    testWidgets('repeated arrow keys end centred on the final value', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(_Owner(autofocus: true)));
+      await tester.pump();
+      for (var i = 0; i < 5; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pump(const Duration(milliseconds: 40));
+      }
+      await tester.pumpAndSettle();
+      expect(_position(tester), 50);
+    });
+
+    testWidgets('min / max / tick change: parked on the value, then fling '
+        'rests on an integer without drift', (tester) async {
+      final key = GlobalKey<_OwnerState>();
+      await tester.pumpWidget(host(_Owner(key: key, value: 10)));
+      key.currentState!.setRange(min: 1, max: 20, labelEvery: 1);
+      await tester.pumpAndSettle();
+      expect(_position(tester), 10);
+      final seen = <int>[];
+      key.currentState!.listen = seen.add;
+      await tester.fling(find.byType(KRuler), const Offset(-120, 0), 800);
+      await tester.pumpAndSettle();
+      final p = _position(tester);
+      expect(p, p.roundToDouble());
+      expect(key.currentState!.value, p.round());
+      expect(p, greaterThan(10));
+      // and back to minutes (tick 8): same rule.
+      key.currentState!.setRange(min: 1, max: 180, labelEvery: 15);
+      await tester.pumpAndSettle();
+      expect(_position(tester), p.round().toDouble());
+      await tester.fling(find.byType(KRuler), const Offset(120, 0), 800);
+      await tester.pumpAndSettle();
+      final q = _position(tester);
+      expect(q, q.roundToDouble());
+      expect(key.currentState!.value, q.round());
+    });
+
+    for (final v in [300.0, 1500.0, 4000.0, 10000.0]) {
+      testWidgets('fling at $v px/s rests on an integer, no overshoot', (
+        tester,
+      ) async {
+        final changes = <int>[];
+        await tester.pumpWidget(host(_ruler(onChanged: changes.add)));
+        await tester.fling(find.byType(KRuler), const Offset(-200, 0), v);
+        await tester.pumpAndSettle();
+        final p = _position(tester);
+        expect(p, p.roundToDouble());
+        expect(p, lessThanOrEqualTo(180));
+        if (changes.isNotEmpty) expect(changes.last, p.round());
+      });
+    }
+
+    testWidgets('a fling into max stops at max, never past it', (tester) async {
+      final changes = <int>[];
+      await tester.pumpWidget(host(_ruler(value: 170, onChanged: changes.add)));
+      await tester.fling(find.byType(KRuler), const Offset(-300, 0), 8000);
+      await tester.pumpAndSettle();
+      expect(_position(tester), 180);
+      expect(changes.every((c) => c <= 180), isTrue);
+      expect(changes.last, 180);
+    });
+
+    testWidgets('a mouse drag moves the ruler', (tester) async {
+      final changes = <int>[];
+      await tester.pumpWidget(host(_ruler(onChanged: changes.add)));
+      final g = await tester.startGesture(
+        tester.getCenter(find.byType(KRuler)),
+        kind: PointerDeviceKind.mouse,
+      );
+      await g.moveBy(const Offset(-80, 0));
+      await g.up();
+      await tester.pumpAndSettle();
+      expect(changes, isNotEmpty);
+      expect(_position(tester), changes.last.toDouble());
+    });
+  });
+}
+
+/// Holds the value like a parent does: the ruler reports into it.
+class _Owner extends StatefulWidget {
+  const _Owner({super.key, this.value = 45, this.autofocus = false});
+  final int value;
+  final bool autofocus;
+  @override
+  State<_Owner> createState() => _OwnerState();
+}
+
+class _OwnerState extends State<_Owner> {
+  late int value = widget.value;
+  int min = 1;
+  int max = 180;
+  int labelEvery = 15;
+  void Function(int)? listen;
+
+  void setRange({
+    required int min,
+    required int max,
+    required int labelEvery,
+  }) => setState(() {
+    this.min = min;
+    this.max = max;
+    this.labelEvery = labelEvery;
+  });
+
+  @override
+  Widget build(BuildContext context) => _ruler(
+    value: value,
+    min: min,
+    max: max,
+    labelEvery: labelEvery,
+    autofocus: widget.autofocus,
+    onChanged: (v) {
+      listen?.call(v);
+      setState(() => value = v);
+    },
+  );
 }

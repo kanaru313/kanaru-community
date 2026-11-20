@@ -2,10 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
-import '../tokens/k_motion.dart';
-import 'k_ruler_marker.dart';
-import 'k_ruler_painter.dart';
-import 'k_ruler_physics.dart';
+import 'k_ruler_scroller.dart';
 
 String _plainNumber(int v) => '$v';
 
@@ -17,7 +14,10 @@ double _unitWidth(int labelEvery) => labelEvery <= 1 ? 28.0 : 8.0;
 /// the centre `primary` marker is the value, both edges fade out. Drag or
 /// fling to move; [onChanged] fires once each time the centred tick changes.
 /// A value changed from outside animates to its tick (a jump with reduced
-/// motion) without echoing [onChanged]; touch shells tick a haptic per step.
+/// motion) without echoing [onChanged]; a finger tick vibrates per step
+/// (touch pointers only). While the user drags or flings, the finger wins;
+/// when the ruler is at rest the outside [value] wins. A change of [min],
+/// [max] or [labelEvery] rebuilds the ruler parked on the value.
 ///
 /// A [value] outside the range sits at the nearest end and is never changed
 /// by the ruler itself. Keyboard: left / right step by 1 inside the range;
@@ -72,66 +72,9 @@ class KRuler extends StatefulWidget {
 }
 
 class _KRulerState extends State<KRuler> {
-  late final ScrollController _scroll;
   bool _focused = false;
 
-  /// The centred value last seen (reported or set from outside).
-  late int _idx;
-
-  /// True while this widget moves the scroll itself: no echo, no haptic.
-  bool _own = false;
-
-  double get _tick => _unitWidth(widget.labelEvery);
   int get _shown => widget.value.clamp(widget.min, widget.max);
-  double _offsetOf(int v) => (v - widget.min) * _tick;
-
-  @override
-  void initState() {
-    super.initState();
-    _idx = _shown;
-    _scroll = ScrollController(initialScrollOffset: _offsetOf(_idx))
-      ..addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_own || !_scroll.hasClients) return;
-    final v = (widget.min + (_scroll.offset / _tick).round()).clamp(
-      widget.min,
-      widget.max,
-    );
-    if (v == _idx) return;
-    _idx = v;
-    if (FormFactor.of(context) != FormFactor.desktop) {
-      HapticFeedback.selectionClick();
-    }
-    widget.onChanged(v);
-  }
-
-  @override
-  void didUpdateWidget(KRuler old) {
-    super.didUpdateWidget(old);
-    if (!_scroll.hasClients) return;
-    final moving = _scroll.position.isScrollingNotifier.value;
-    if (_shown == _idx || moving) return;
-    _idx = _shown;
-    final target = _offsetOf(_idx);
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _own = true;
-      _scroll.jumpTo(target);
-      _own = false;
-      return;
-    }
-    _own = true;
-    _scroll
-        .animateTo(target, duration: KMotion.normal, curve: KMotion.dialogCurve)
-        .whenComplete(() => _own = false);
-  }
 
   void _set(int v) {
     final next = v.clamp(widget.min, widget.max);
@@ -169,10 +112,9 @@ class _KRulerState extends State<KRuler> {
   Widget build(BuildContext context) {
     final desktop = FormFactor.of(context) == FormFactor.desktop;
     final height = desktop ? 60.0 : 72.0;
-    final tick = _tick;
+    final tick = _unitWidth(widget.labelEvery);
     final label = widget.valueLabel ?? (int v) => '$v';
     final shown = _shown;
-    final span = (widget.max - widget.min) * tick;
     return Semantics(
       slider: true,
       focusable: true,
@@ -191,35 +133,18 @@ class _KRulerState extends State<KRuler> {
           onFocusChange: (v) => setState(() => _focused = v),
           child: SizedBox(
             height: height,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: ListenableBuilder(
-                    listenable: _scroll,
-                    builder: (context, _) => KRulerFace(
-                      min: widget.min,
-                      max: widget.max,
-                      position: _scroll.hasClients
-                          ? widget.min + _scroll.offset / tick
-                          : _idx.toDouble(),
-                      unitWidth: tick,
-                      majorEvery: widget.majorEvery,
-                      labelEvery: widget.labelEvery,
-                      tickLabel: widget.tickLabel ?? _plainNumber,
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: KRulerScrollLayer(
-                    controller: _scroll,
-                    tick: tick,
-                    span: span,
-                  ),
-                ),
-                IgnorePointer(
-                  child: KRulerMarker(focused: _focused, height: height),
-                ),
-              ],
+            child: KRulerScroller(
+              key: ValueKey((widget.min, widget.max, tick)),
+              min: widget.min,
+              max: widget.max,
+              value: widget.value,
+              tick: tick,
+              majorEvery: widget.majorEvery,
+              labelEvery: widget.labelEvery,
+              tickLabel: widget.tickLabel ?? _plainNumber,
+              focused: _focused,
+              height: height,
+              onChanged: widget.onChanged,
             ),
           ),
         ),
