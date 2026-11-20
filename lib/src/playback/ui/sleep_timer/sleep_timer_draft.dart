@@ -13,6 +13,8 @@ class SleepTimerRange {
     required this.step,
     required this.defaultValue,
     required this.presets,
+    this.rulerMajorEvery = 5,
+    this.rulerLabelEvery = 15,
   });
 
   /// Fewest and most a typed number can be.
@@ -22,6 +24,11 @@ class SleepTimerRange {
   /// The ruler runs from [min] to this; a larger typed number leaves it at
   /// the end.
   final int rulerMax;
+
+  /// Ruler ticks: a taller one every [rulerMajorEvery] units, a number every
+  /// [rulerLabelEvery].
+  final int rulerMajorEvery;
+  final int rulerLabelEvery;
 
   /// Amount of the − / + buttons.
   final int step;
@@ -47,6 +54,7 @@ const sleepTracksRange = SleepTimerRange(
   min: sleepTimerMinTracks,
   max: sleepTimerMaxTracks,
   rulerMax: sleepTimerMaxTracks,
+  rulerLabelEvery: 1,
   step: 1,
   defaultValue: 3,
   presets: [1, 2, 3, 5, 10],
