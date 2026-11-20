@@ -312,6 +312,20 @@ void main() {
       });
     }
 
+    testWidgets('end of album under repeat one: stops after this one', (
+      tester,
+    ) async {
+      await pumpSleepModal(
+        tester,
+        initial: runningEndOf(SleepTimerMode.endOfAlbum),
+        repeatsOne: true,
+      );
+      await openSleepModal(tester);
+      expect(find.text('album này'), findsOneWidget);
+      expect(find.text('Đang lặp một bài · dừng sau bài này'), findsOneWidget);
+      expect(find.textContaining('còn 4 bài'), findsNothing);
+    });
+
     testWidgets('Đổi… shows the tiles with the running card', (tester) async {
       await pumpSleepModal(
         tester,

@@ -4986,6 +4986,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{1 track left} other{{count} tracks left}}'**
   String sleepTimerLeftTracks(int count);
 
+  /// No description provided for @sleepTimerRepeatOneStops.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeating one track · stops after this one'**
+  String get sleepTimerRepeatOneStops;
+
   /// No description provided for @sleepTimerLeftTracksCapped.
   ///
   /// In en, this message translates to:

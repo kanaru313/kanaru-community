@@ -104,10 +104,10 @@ void main() {
     expect(w.capped, isTrue);
   });
 
-  test('repeat one follows the entry Next goes to', () {
+  test('repeat one is the current entry alone: it plays again', () {
     setAlbums(['x', 'x', 'y']);
     final q = makeQueue(3, current: 0, repeat: RepeatMode.one);
-    expect(run(albumRunFrom(q, keyOf)), [0, 1]);
+    expect(run(albumRunFrom(q, keyOf)), [0]);
   });
 
   test('a shuffled queue is read in play order', () {

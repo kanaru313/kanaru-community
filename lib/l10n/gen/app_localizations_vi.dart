@@ -3083,6 +3083,9 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get sleepTimerRepeatOneStops => 'Đang lặp một bài · dừng sau bài này';
+
+  @override
   String sleepTimerLeftTracksCapped(int count) {
     return 'còn $count+ bài';
   }

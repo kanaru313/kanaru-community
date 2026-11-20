@@ -55,6 +55,7 @@ class AlbumRun {
     required this.restDuration,
     required this.noAlbum,
     required this.capped,
+    this.repeatsOne = false,
   });
 
   /// Entries of the run, the current one included; at most [albumRunWindow].
@@ -70,16 +71,22 @@ class AlbumRun {
   /// album under repeat all, which has no end.
   final bool capped;
 
+  /// Repeat one is on: the current track plays again, so the timer stops after
+  /// this play and the run has no track count.
+  final bool repeatsOne;
+
   @override
   bool operator ==(Object other) =>
       other is AlbumRun &&
       other.tracks == tracks &&
       other.restDuration == restDuration &&
       other.noAlbum == noAlbum &&
-      other.capped == capped;
+      other.capped == capped &&
+      other.repeatsOne == repeatsOne;
 
   @override
-  int get hashCode => Object.hash(tracks, restDuration, noAlbum, capped);
+  int get hashCode =>
+      Object.hash(tracks, restDuration, noAlbum, capped, repeatsOne);
 }
 
 /// The run the end-of-album timer would play, or null while the player is not
@@ -134,6 +141,7 @@ final albumRunProvider = StreamProvider.autoDispose<AlbumRun?>((ref) {
       restDuration: Duration(milliseconds: rest),
       noAlbum: infoOf(current.trackId)?.albumKey == null,
       capped: tooLong || walk.capped,
+      repeatsOne: queue.repeat == RepeatMode.one,
     );
   }
 

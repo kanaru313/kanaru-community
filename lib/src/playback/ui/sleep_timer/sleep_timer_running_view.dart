@@ -171,9 +171,7 @@ class _RunningClock extends ConsumerWidget {
       case SleepTimerMode.endOfAlbum:
         final run = ref.watch(albumRunProvider).value;
         left = ref.watch(albumLeftProvider);
-        leftText = run == null
-            ? null
-            : texts.leftTracks(run.tracks, time: left, capped: run.capped);
+        leftText = run == null ? null : texts.albumRunLine(run, time: left);
         word = l10n.sleepTimerWordAlbum;
       default:
         final queue = ref.watch(queueLeftProvider);

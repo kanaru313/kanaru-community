@@ -200,11 +200,13 @@ void main() {
       );
     });
 
-    test('repeat one follows the entry Next goes to', () async {
+    test('repeat one is one play: stops after this one', () async {
       twoAlbums(s);
       await s.h.c.setRepeat(RepeatMode.one);
       await s.play(start: 1);
-      expect((await albumRun(s))!.tracks, 2);
+      final run = (await albumRun(s))!;
+      expect(run.tracks, 1);
+      expect(run.repeatsOne, isTrue);
     });
 
     test('the end of a reshuffled pass ends it', () async {

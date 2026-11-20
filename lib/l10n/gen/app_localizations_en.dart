@@ -3438,6 +3438,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get sleepTimerRepeatOneStops =>
+      'Repeating one track · stops after this one';
+
+  @override
   String sleepTimerLeftTracksCapped(int count) {
     return '$count+ tracks left';
   }

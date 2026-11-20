@@ -184,9 +184,7 @@ class _EndOfAlbumRow extends ConsumerWidget {
     final noAlbum = run?.noAlbum ?? false;
     return SelectionRow.action(
       title: Text(texts.l10n.sleepTimerEndOfAlbum),
-      subtitle: run == null || noAlbum
-          ? null
-          : Text(texts.leftTracks(run.tracks, capped: run.capped)),
+      subtitle: run == null || noAlbum ? null : Text(texts.albumRunLine(run)),
       disabledReason: noAlbum ? texts.l10n.sleepTimerNoAlbum : null,
       leading: const Icon(KIcons.album),
       onTap: () => onStart((t) => t.startEndOfAlbum()),

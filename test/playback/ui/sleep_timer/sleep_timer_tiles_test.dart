@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/domain/sleep_timer_state.dart';
+import 'package:kanaru/src/playback/state/sleep_estimates.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -29,6 +32,48 @@ void main() {
     expect(find.text('Sau số bài…'), findsOneWidget);
     expect(find.textContaining('Đang chạy'), findsNothing);
     expect(find.text('Huỷ'), findsOneWidget);
+  });
+
+  group('end of album under repeat one', () {
+    const repeatText = 'Đang lặp một bài · dừng sau bài này';
+
+    testWidgets('the row says it stops after this one, no track count', (
+      tester,
+    ) async {
+      await pumpSleepModal(tester, repeatsOne: true);
+      await openSleepModal(tester);
+      expect(find.text(repeatText), findsOneWidget);
+      expect(find.text('còn 4 bài'), findsNothing);
+      expect(find.text('Hết album này'), findsOneWidget);
+    });
+
+    testWidgets('follows repeat mode changes while open', (tester) async {
+      final runs = StreamController<AlbumRun?>();
+      addTearDown(runs.close);
+      AlbumRun run({required bool one}) => AlbumRun(
+        tracks: one ? 1 : 4,
+        restDuration: Duration.zero,
+        noAlbum: false,
+        capped: false,
+        repeatsOne: one,
+      );
+      await pumpSleepModal(tester, albumRuns: runs.stream);
+      await openSleepModal(tester);
+      runs.add(run(one: false));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('còn 4 bài'), findsOneWidget);
+      runs.add(run(one: true));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text(repeatText), findsOneWidget);
+      expect(find.text('còn 4 bài'), findsNothing);
+      runs.add(run(one: false));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('còn 4 bài'), findsOneWidget);
+      expect(find.text(repeatText), findsNothing);
+    });
   });
 
   group('tile columns', () {
@@ -269,6 +314,7 @@ void main() {
           guard++ < 6) {
         await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
         await tester.pump();
+      await tester.pump();
       }
       expect(
         focusedWithin(tester, holding(SelectionRow, 'Hết bài này')),
@@ -276,11 +322,13 @@ void main() {
       );
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pump();
+      await tester.pump();
       expect(
         focusedWithin(tester, holding(SelectionRow, 'Hết hàng đợi')),
         isTrue,
       );
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pump();
       await tester.pump();
       expect(
         focusedWithin(tester, holding(SelectionRow, 'Hết bài này')),

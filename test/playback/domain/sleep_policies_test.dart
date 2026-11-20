@@ -166,10 +166,29 @@ void main() {
       );
     });
 
-    test('repeat one looks at the entry that follows in play order', () {
-      setAlbums(['x', 'x', 'y']);
-      expect(stops(makeQueue(3, current: 0, repeat: RepeatMode.one)), isFalse);
-      expect(stops(makeQueue(3, current: 1, repeat: RepeatMode.one)), isTrue);
+    test('repeat one stops after the current play, wherever it is', () {
+      // First, middle and last entry of an album: the entry plays again, so
+      // the run is that one play.
+      setAlbums(['x', 'x', 'x', 'y']);
+      for (final at in [0, 1, 2]) {
+        expect(
+          stops(makeQueue(4, current: at, repeat: RepeatMode.one)),
+          isTrue,
+          reason: 'entry $at',
+        );
+      }
+      expect(wanted, isEmpty);
+    });
+
+    test('albumRunFrom under repeat one is the current entry alone', () {
+      setAlbums(['x', 'x', 'x']);
+      final walk = albumRunFrom(
+        makeQueue(3, current: 0, repeat: RepeatMode.one),
+        (id) => known[id.value] ?? const AlbumUnknown(),
+      );
+      expect(walk.length, 1);
+      expect(walk.capped, isFalse);
+      expect(walk.unknown, isEmpty);
     });
 
     test('repeat all wraps to the first entry', () {

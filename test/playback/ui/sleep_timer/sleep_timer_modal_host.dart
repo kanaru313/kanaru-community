@@ -142,18 +142,30 @@ SleepTimerState runningEndOf(SleepTimerMode mode) => SleepTimerState(
 );
 
 /// The figures the tiles and the end-of rows show, without a database.
-List<Override> sleepEstimates({bool noAlbum = false}) => [
+///
+/// [repeatsOne] makes the album run the repeat-one one; [albumRuns], when
+/// given, is the stream the run comes from (a test pushes changes into it).
+List<Override> sleepEstimates({
+  bool noAlbum = false,
+  bool repeatsOne = false,
+  Stream<AlbumRun?>? albumRuns,
+}) => [
   currentTrackLeftProvider.overrideWithValue(168),
   currentTrackPlayedProvider.overrideWithValue((played: 12, total: 180)),
   albumRunProvider.overrideWith(
-    (ref) => Stream.value(
-      AlbumRun(
-        tracks: 4,
-        restDuration: const Duration(minutes: 11, seconds: 12),
-        noAlbum: noAlbum,
-        capped: false,
-      ),
-    ),
+    (ref) =>
+        albumRuns ??
+        Stream.value(
+          AlbumRun(
+            tracks: repeatsOne ? 1 : 4,
+            restDuration: repeatsOne
+                ? Duration.zero
+                : const Duration(minutes: 11, seconds: 12),
+            noAlbum: noAlbum,
+            capped: false,
+            repeatsOne: repeatsOne,
+          ),
+        ),
   ),
   albumLeftProvider.overrideWithValue(const Duration(minutes: 14)),
   queueLeftProvider.overrideWithValue((
@@ -200,6 +212,8 @@ Future<SleepModalHost> pumpSleepModal(
   Brightness brightness = Brightness.light,
   bool reduceMotion = false,
   bool noAlbum = false,
+  bool repeatsOne = false,
+  Stream<AlbumRun?>? albumRuns,
   SleepTimerState? initial,
 }) async {
   final ui = await pumpWithPlayer(
@@ -208,7 +222,11 @@ Future<SleepModalHost> pumpSleepModal(
     size: size,
     overrides: [
       sleepTimerProvider.overrideWith(FakeSleepTimer.new),
-      ...sleepEstimates(noAlbum: noAlbum),
+      ...sleepEstimates(
+        noAlbum: noAlbum,
+        repeatsOne: repeatsOne,
+        albumRuns: albumRuns,
+      ),
     ],
   );
   final announced = <String>[];

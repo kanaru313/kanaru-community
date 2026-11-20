@@ -74,7 +74,8 @@ class TracksPolicy implements SleepStopPolicy {
 ///
 /// Safe by default: a key that is not known yet, no entry after the current
 /// one, a reshuffled pass that ends here, and a track without an album all
-/// stop.
+/// stop. Under repeat one the current entry plays again instead of moving on,
+/// so the run is that one play and it stops after it, like the end of track.
 class EndOfAlbumPolicy implements SleepStopPolicy {
   EndOfAlbumPolicy({required this.albumOf, required this.want});
 
@@ -85,6 +86,7 @@ class EndOfAlbumPolicy implements SleepStopPolicy {
   bool stopsAfterCurrent(QueueState queue, int repeatTimes) {
     final current = queue.current;
     if (current == null || current >= queue.items.length) return true;
+    if (queue.repeat == RepeatMode.one) return true;
     final next = neighboursOf(queue.items, current, queue.repeat).next;
     if (next is! KnownNeighbour) return true;
     // One step is enough to decide; the walk reports what it found missing.
@@ -140,7 +142,8 @@ class AlbumWalk {
 /// at the end of the album sees the queue. It stops at an entry of another
 /// album, at one whose album is unknown ([AlbumWalk.unknown]), at a track
 /// without an album (an album of its own), where Next has nowhere to go and
-/// at the end of a reshuffled pass. It never goes past one queue length (a
+/// at the end of a reshuffled pass. Under repeat one the run is the current
+/// entry alone (it plays again, nothing follows). It never goes past one queue length (a
 /// queue that is one album under repeat all wraps forever) or [limit] entries.
 AlbumWalk albumRunFrom(
   QueueState queue,
@@ -151,6 +154,9 @@ AlbumWalk albumRunFrom(
   final start = queue.current;
   if (start == null || start < 0 || start >= items.length) {
     return const AlbumWalk(entries: [], unknown: [], capped: false);
+  }
+  if (queue.repeat == RepeatMode.one) {
+    return AlbumWalk(entries: [items[start]], unknown: const [], capped: false);
   }
   final cap = limit == null || limit > items.length ? items.length : limit;
   final entries = [items[start]];

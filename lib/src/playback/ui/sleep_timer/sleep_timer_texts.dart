@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/sleep_timer_state.dart';
+import '../../state/sleep_estimates.dart';
 import '../playback_time_label.dart';
 
 /// Every text of the sleep timer screens and entries, from l10n. Two kinds of
@@ -91,6 +92,12 @@ class SleepTimerTexts {
       durationWords(_ceilMinutes(time)),
     );
   }
+
+  /// The end-of-album line of a run: the track count, or under repeat one
+  /// "Đang lặp một bài · dừng sau bài này".
+  String albumRunLine(AlbumRun run, {Duration? time}) => run.repeatsOne
+      ? l10n.sleepTimerRepeatOneStops
+      : leftTracks(run.tracks, time: time, capped: run.capped);
 
   // ---- running state ----
 

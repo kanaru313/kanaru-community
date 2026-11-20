@@ -2352,6 +2352,7 @@
       }
     }
   },
+  "sleepTimerRepeatOneStops": "Repeating one track · stops after this one",
   "sleepTimerLeftTracksCapped": "{count}+ tracks left",
   "@sleepTimerLeftTracksCapped": {
     "placeholders": {

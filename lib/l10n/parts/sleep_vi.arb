@@ -66,6 +66,7 @@
       }
     }
   },
+  "sleepTimerRepeatOneStops": "Đang lặp một bài · dừng sau bài này",
   "sleepTimerLeftTracksCapped": "còn {count}+ bài",
   "@sleepTimerLeftTracksCapped": {
     "placeholders": {
