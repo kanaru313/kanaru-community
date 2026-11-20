@@ -89,11 +89,22 @@ void main() {
     );
   });
 
-  testWidgets('mobile focus does not select the number', (tester) async {
+  testWidgets('touch: tapping the field selects the whole number', (
+    tester,
+  ) async {
     await pump(tester);
-    focus.requestFocus();
+    await tester.tap(find.byType(TextField));
     await tester.pump();
-    expect(selection(tester).isCollapsed, isTrue);
+    await tester.pump();
+    expect(focus.hasFocus, isTrue);
+    expect(
+      selection(tester),
+      const TextSelection(baseOffset: 0, extentOffset: 2),
+    );
+    await tester.enterText(find.byType(TextField), '6');
+    await tester.pump();
+    expect(shown(tester), '6');
+    expect(log.last, 'changed 6');
   });
 
   testWidgets('a number past the maximum shows and reports the maximum', (

@@ -41,7 +41,8 @@ bool _composing(TextEditingValue v) =>
 /// soon as it means a value; empty and zero do not. Leaving the field shows
 /// [value] again. Enter / Done does the same and calls [onSubmit], so an empty
 /// field submits the last valid number. On desktop focusing selects the whole
-/// number; the field never takes focus by itself (the modal decides, and
+/// number; on touch shells focusing (a tap) selects it too, so typing replaces
+/// it. The field never takes focus by itself (the modal decides, and
 /// never on mobile, where the keyboard would cover the sheet).
 class SleepTimerNumberField extends StatefulWidget {
   const SleepTimerNumberField({
@@ -119,7 +120,18 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
 
   void _onFocusChanged() {
     if (_focus.hasFocus) {
-      if (FormFactor.of(context) == FormFactor.desktop) _selectAll();
+      if (FormFactor.of(context) == FormFactor.desktop) {
+        _selectAll();
+      } else {
+        // A tap places the caret after it gains focus; select after that so
+        // typing replaces the number. Later taps (already focused) place the
+        // caret normally.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || !_focus.hasFocus) return;
+          if (_composing(_controller.value)) return;
+          _selectAll();
+        });
+      }
     } else {
       _settle();
     }
