@@ -26,6 +26,7 @@ import '../../../database/support/test_db.dart';
 import '../../../support/fake_playback_commands.dart';
 import '../../../support/memory_settings_store.dart';
 import '../../history/state/fake_history_store.dart';
+import '../menus/menu_pump.dart';
 
 /// The day the History page tests run on.
 final testToday = DateTime(2026, 11, 20, 10);
@@ -64,6 +65,8 @@ class HistoryHarness {
 ///
 /// [years] and [overview] default from [byYear] (every play counted).
 /// With [pushed] the page is opened from a home page (tap "open history").
+/// [recorder] replaces the listen recorder the clear goes through,
+/// [playbackCommands] the fake player.
 Future<HistoryHarness> pumpHistoryPage(
   WidgetTester tester, {
   required Map<int, List<HistoryPlay>> byYear,
@@ -77,6 +80,8 @@ Future<HistoryHarness> pumpHistoryPage(
   FakeHistoryStore? store,
   bool settle = true,
   bool pushed = false,
+  ListenRecorder? recorder,
+  FakePlaybackCommands? playbackCommands,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, height);
@@ -96,7 +101,7 @@ Future<HistoryHarness> pumpHistoryPage(
   final settings = MemorySettingsStore();
   final db = openTestDb();
   addTearDown(db.close);
-  final playback = FakePlaybackCommands();
+  final playback = playbackCommands ?? FakePlaybackCommands();
   final now = StreamController<NowPlaying>()..add(NowPlaying.none);
   addTearDown(() => unawaited(now.close()));
   final container = ProviderContainer(
@@ -107,7 +112,7 @@ Future<HistoryHarness> pumpHistoryPage(
       playbackCommandsProvider.overrideWithValue(playback),
       nowPlayingProvider.overrideWith((ref) => now.stream),
       localDayProvider.overrideWith(_FixedDay.new),
-      listenRecorderProvider.overrideWithValue(_recorder(db)),
+      listenRecorderProvider.overrideWithValue(recorder ?? _recorder(db)),
       ...overrides,
     ],
   );
@@ -194,4 +199,11 @@ List<HistoryPlay> playsOverDays(List<int> perDay, {int first = 1}) {
 Future<void> focusRow(WidgetTester tester, String title) async {
   Focus.of(tester.element(find.text(title))).requestFocus();
   await tester.pump();
+}
+
+/// Opens the menu of the day whose bar reads [label] (a long press on it);
+/// the first bar with that text, so the pinned bar when it is the same day.
+Future<void> openDayMenu(WidgetTester tester, String label) async {
+  await tester.longPress(find.text(label).first);
+  await pumpMenu(tester);
 }

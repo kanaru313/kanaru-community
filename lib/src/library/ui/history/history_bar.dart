@@ -8,8 +8,9 @@ import '../browse/library_list_scaffold.dart';
 /// buttons at the end, then one chip per year that has plays (newest first,
 /// the shown one selected).
 ///
-/// The two buttons are present but off until the jump dialog and the filter
-/// are wired; pass [onJump] / [onFilter] to enable them.
+/// [onJump] / [onFilter] null leave a button off. While the filter is open
+/// ([filterOpen]) its button is pressed and [filterField] sits between the
+/// count line and the chips.
 class HistoryBar extends StatelessWidget {
   const HistoryBar({
     super.key,
@@ -19,6 +20,8 @@ class HistoryBar extends StatelessWidget {
     required this.onYear,
     this.onJump,
     this.onFilter,
+    this.filterOpen = false,
+    this.filterField,
   });
 
   /// Years with plays, newest first.
@@ -30,6 +33,10 @@ class HistoryBar extends StatelessWidget {
   final ValueChanged<int> onYear;
   final VoidCallback? onJump;
   final VoidCallback? onFilter;
+  final bool filterOpen;
+
+  /// The filter's text field, shown while [filterOpen].
+  final Widget? filterField;
 
   @override
   Widget build(BuildContext context) {
@@ -71,11 +78,22 @@ class HistoryBar extends StatelessWidget {
                 size: KIconSize.sm,
                 padding: const EdgeInsets.all(KSpace.x2),
                 onPressed: onFilter,
+                selected: filterOpen,
                 icon: KIcons.filter,
               ),
             ],
           ),
         ),
+        if (filterOpen && filterField != null)
+          Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(
+              gutter,
+              KSpace.x1,
+              libraryRowGutter(context),
+              KSpace.x1,
+            ),
+            child: filterField,
+          ),
         Semantics(
           container: true,
           label: l10n.historyYearsLabel,

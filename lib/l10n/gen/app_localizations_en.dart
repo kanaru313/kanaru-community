@@ -3488,4 +3488,106 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historyPlayFailed => 'Could not play the history';
+
+  @override
+  String get historyMenuMostPlayed => 'Most played';
+
+  @override
+  String get historyMenuClear => 'Clear history…';
+
+  @override
+  String get historyMenuPlayDay => 'Play the day';
+
+  @override
+  String get historyMenuDeleteDay => 'Remove the day from history';
+
+  @override
+  String get historyMenuTrackHistory => 'History of this song';
+
+  @override
+  String get historyMenuRemovePlay => 'Remove from history';
+
+  @override
+  String get historyNothingToAdd => 'No playable songs to add';
+
+  @override
+  String get historyClearTitle => 'Clear history?';
+
+  @override
+  String get historyClearHour => 'Last hour';
+
+  @override
+  String get historyClearToday => 'Today';
+
+  @override
+  String get historyClearWeek => 'Last 7 days';
+
+  @override
+  String get historyClearAll => 'Everything';
+
+  @override
+  String get historyClearConfirm => 'Clear';
+
+  @override
+  String get historyClearCountFailed => 'Could not count the plays';
+
+  @override
+  String get historyClearRetry => 'Try again';
+
+  @override
+  String get historyClearFailed => 'Could not clear the history';
+
+  @override
+  String historyCleared(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Removed $count plays',
+      one: 'Removed 1 play',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyDeleteDayTitle => 'Remove this day from history?';
+
+  @override
+  String historyDeleteDayBody(int count, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plays',
+      one: '1 play',
+    );
+    return '$_temp0 on $date will be removed. This cannot be undone.';
+  }
+
+  @override
+  String historyFilterHint(String year) {
+    return 'Filter in $year';
+  }
+
+  @override
+  String historyFilterMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plays match',
+      one: '1 play matches',
+    );
+    return '$_temp0 · not split by day';
+  }
+
+  @override
+  String historyFilterCapped(int max) {
+    return 'Showing the first $max plays. Narrow the filter to see more.';
+  }
+
+  @override
+  String historyFilterEmpty(String query) {
+    return 'No plays match “$query”.';
+  }
+
+  @override
+  String get historyMenuMissing => 'Can\'t play';
 }

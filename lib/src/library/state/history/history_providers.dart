@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
 import '../../../database/state/database_providers.dart';
-import '../../../foundation/text/text_fold.dart';
+import '../../../foundation/text/text_fold.dart' show foldDiacritics;
 import '../../../media/domain/track_id.dart';
 import '../../../playback/state/listen_recorder_provider.dart';
 import '../../../playback/state/playback_settings_providers.dart';
@@ -128,17 +128,39 @@ class HistoryFilterResult {
   bool get capped => matched > plays.length;
 }
 
+final _whitespace = RegExp(r'\s+');
+
+/// The folded `title artist album` of each play of a year, in the year's
+/// order: folded once per loaded list, not once per keystroke.
+final _historyHaystackProvider = Provider.autoDispose.family<List<String>, int>(
+  (ref, year) {
+    final plays = ref.watch(historyYearProvider(year)).value;
+    if (plays == null) return const [];
+    return [
+      for (final p in plays)
+        foldDiacritics(
+          '${p.track.title} ${p.track.artist ?? ''} ${p.track.album ?? ''}',
+        ),
+    ];
+  },
+);
+
 final historyFilterProvider = Provider.autoDispose
     .family<AsyncValue<HistoryFilterResult>, HistoryFilterKey>((ref, key) {
-      final match = foldedMatcher(key.query);
+      final tokens = foldDiacritics(key.query)
+          .split(_whitespace)
+          .where((t) => t.isNotEmpty)
+          .toList(growable: false);
+      final haystacks = ref.watch(_historyHaystackProvider(key.year));
       return ref.watch(historyYearProvider(key.year)).whenData((all) {
         final hits = <HistoryPlay>[];
         var matched = 0;
-        for (final p in all) {
-          final t = p.track;
-          if (!match('${t.title} ${t.artist ?? ''} ${t.album ?? ''}')) continue;
+        for (var i = 0; i < all.length; i++) {
+          if (i >= haystacks.length) break;
+          final text = haystacks[i];
+          if (!tokens.every(text.contains)) continue;
           matched++;
-          if (hits.length < historyFilterCap) hits.add(p);
+          if (hits.length < historyFilterCap) hits.add(all[i]);
         }
         return HistoryFilterResult(plays: hits, matched: matched);
       });

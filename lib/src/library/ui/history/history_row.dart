@@ -10,6 +10,7 @@ import '../../domain/history/history_models.dart';
 import '../songs/song_tile.dart';
 import 'history_labels.dart';
 import 'history_remove_toast.dart';
+import 'history_row_menu.dart';
 
 /// The songs a tap on a row of one day queues, in the order the day shows
 /// them: each song once at its first play, the ones that cannot play left
@@ -41,7 +42,9 @@ class HistoryDayQueue {
 /// A tap plays the day from this song. Only the newest play of the playing
 /// song is [current] (the others would all light up). A play whose file is
 /// gone is dimmed, says "can't play" and answers a tap with a toast. The
-/// Delete key removes the play.
+/// Delete key removes the play. The ⋮ menu is the song's menu plus "History of
+/// this song" and "Remove from history"; a missing play's menu holds only
+/// those two.
 class HistoryRow extends StatelessWidget {
   const HistoryRow({
     super.key,
@@ -71,6 +74,8 @@ class HistoryRow extends StatelessWidget {
       markCurrent: markCurrent,
       unavailable: missing,
       detailLine: historyRowLine(l10n, play, missing: missing),
+      menuExtras: missing ? const [] : historyRowMenuItems(l10n, play),
+      onMenu: missing ? missingPlayMenu(context, play) : null,
       onDelete: () => unawaited(removeHistoryPlay(context, play)),
       onUnavailableTap: () => showAppSnackBar(context, l10n.historyMissingTap),
     );

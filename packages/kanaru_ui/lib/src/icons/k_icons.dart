@@ -99,6 +99,9 @@ abstract final class KIcons {
   /// "Nâng cao…" row of the sort dropdown.
   static const IconData sortAdvanced = FluentIcons.options_24_regular;
   static const IconData chevronRight = FluentIcons.chevron_right_24_regular;
+
+  /// The previous-page chevron, the counterpart of [chevronRight].
+  static const IconData chevronLeft = FluentIcons.chevron_left_24_regular;
   static const IconData folderOpen = FluentIcons.folder_open_24_regular;
   static const IconData folderOff = FluentIcons.folder_prohibited_24_regular;
   static const IconData folderAdd = FluentIcons.folder_add_24_regular;

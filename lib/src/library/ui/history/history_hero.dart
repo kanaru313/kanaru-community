@@ -13,6 +13,7 @@ import '../../state/history/history_actions.dart';
 import '../browse/play_shuffle_buttons.dart';
 import '../playlist_common/playlist_cover.dart' show playlistCoverFileSize;
 import 'history_labels.dart';
+import 'history_menus.dart';
 
 /// Covers of the four most recent distinct albums among [plays] (newest
 /// first); fewer than four give an empty list, and the hero shows one cover.
@@ -90,12 +91,11 @@ class _HistoryHeroState extends ConsumerState<HistoryHero> {
         onPlay: enabled ? () => unawaited(_play(shuffle: false)) : null,
         onShuffle: enabled ? () => unawaited(_play(shuffle: true)) : null,
         trailing: [
-          // The page's menu is not wired yet: present, off.
           KIconButton(
             tooltip: l10n.libraryMenuMore,
             size: KIconSize.md,
             padding: const EdgeInsets.all(KSpace.x3),
-            onPressed: null,
+            onPressed: () => unawaited(openHistoryPageMenu(context)),
             icon: KIcons.moreVert,
           ),
         ],

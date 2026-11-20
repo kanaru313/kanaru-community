@@ -16,6 +16,9 @@ import 'history_removal_holder.dart';
 
 final _log = Logger('library.history');
 
+/// Lower bound of a count with none: before any play there can be.
+const _epochFloor = -(1 << 52);
+
 /// Everything the History and Most played pages do besides reading.
 ///
 /// A write that fails is logged by type only and reported to the caller
@@ -212,9 +215,7 @@ class HistoryActions {
     final out = <ClearScope, int>{};
     for (final scope in ClearScope.values) {
       final b = scope.bounds(now);
-      out[scope] = b.from == null || b.to == null
-          ? (await store.overview()).plays
-          : await store.countPlays(b.from!, b.to!);
+      out[scope] = await store.countPlays(b.from ?? _epochFloor, b.to!);
     }
     return out;
   }

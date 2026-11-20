@@ -1556,7 +1556,8 @@ dialog from 600 px, but this menu stays a sheet up to the desktop form factor
 
 ### History page
 
-`HistoryPage` (`history_page.dart`) watches `historyYearsProvider`,
+`HistoryPage` (`history_page.dart`; once there are plays it hands over to
+`HistoryContent` in `history_content.dart`, which holds the filter and jump state) watches `historyYearsProvider`,
 `historyOverviewProvider`, `historyShownYearProvider` and
 `historyYearProvider(year)` and only calls `historyActionsProvider`; it imports
 nothing from `data/` or `database/`. States: pending / load error (a frame with
@@ -1573,9 +1574,11 @@ newest year (`historyMosaicTracks`: four distinct covers make a 2 x 2
   the Playlist tab with a back button; desktop: a sidebar page, no back button
   (`showBack` null decides from `FormFactor`).
 - **Slivers**: `HistoryBar` (`2026 · N plays`, the jump and filter buttons,
-  present but off until wired; one `KChip` per year with plays, the shown year
-  selected, no check mark) then `HistoryTimeline`. `HistoryHero` has Play all /
-  shuffle (`playAllHistory`, a toast when nothing plays) and an off ⋮.
+  the jump and filter buttons; one `KChip` per year with plays, the shown year
+  selected, no check mark; the filter field sits under the count line while
+  open) then `HistoryTimeline` or, while a query is typed, `HistoryFilterList`.
+  `HistoryHero` has Play all / shuffle (`playAllHistory`, a toast when nothing
+  plays) and the page ⋮ (see "Menus, dialogs, filter and jump").
 - **Recording off**: `HistoryRecordingNotice` is a `KInlineNotice` above the
   hero. Turn on calls `enableRecording()`, shows the toast and folds the strip
   with `HistoryCollapse` (`KMotion.normal`, `AnimatedSize` + `AnimatedSwitcher`;
@@ -1602,7 +1605,8 @@ newest year (`historyMosaicTracks`: four distinct covers make a 2 x 2
   it draws the day at the top and, while the next header slides under, the
   next day rising from below at `dy + dayBar`. Lines and the bar are one line
   each with an ellipsis, the whole text is the header's semantics label and, on
-  desktop, a tooltip. The day's ⋮ is present but off.
+  desktop, a tooltip. The day's ⋮, a long press and a right click open the day
+  menu.
 - **Offset correction**: when a new list arrives with the old first play at
   index k > 0 and the reader is past the top of the list, the position is moved
   with `ScrollPosition.correctBy(playOffset(k) - 0)` while the timeline
@@ -1628,6 +1632,68 @@ newest year (`historyMosaicTracks`: four distinct covers make a 2 x 2
   `rank` (badge in the cover's end-bottom corner, replaces the track number,
   `primary` fill for ranks 1-3), `onDelete`, `onUnavailableTap` (a missing row
   that has `onUnavailableTap` and its own `onMenu` also gets a ⋮).
+
+### Menus, dialogs, filter and jump
+
+`history_menus.dart` (page), `history_day_menu.dart`, `history_row_menu.dart`,
+`history_clear_dialog.dart`,
+`history_delete_day.dart`, `history_filter.dart`, `history_calendar_dialog.dart`,
+`history_toasts.dart`. Every action goes through `historyActionsProvider`; the
+menus use the 04c model (`openMenu`, `MenuSpec`): a sheet on mobile, a layered
+menu on desktop.
+
+- **Page ⋮** (`buildHistoryPageMenu`, head = a history tile + the play count):
+  Play all, Shuffle, Add to playlist (all songs ever played, read when the row
+  is chosen; the picker names the source "History"), Most played, Export M3U,
+  Clear history (red). Play and add skip songs that are missing or hidden. Most
+  played and the M3U export show dimmed with the "coming soon" label until
+  their pages exist; the rows already sit in their place. Everything but
+  Most played and export is off with no plays, Clear also while a clear runs
+  (`historyClearingProvider`).
+- **Day menu** (`buildHistoryDayMenu`; also a long press or right click on the
+  day bar, Menu key / Shift+F10 through `KContextRegion`): Play the day,
+  Shuffle, Add to playlist (named by the full date), Remove the day from
+  history (red, `confirmAction` with the count, no undo). "Open in Most played"
+  is left out until that page exists.
+- **Row menu**: `SongTile.menuExtras` = "History of this song" (`MenuAction.go`
+  to `HistoryLocations.track`) and "Remove from history" (the merged Undo toast
+  of the Delete key). A missing play has no song to act on: `onMenu` opens a
+  menu with its head and only those two rows. The song menu itself is
+  untouched.
+- **Clear dialog** (`showHistoryClearDialog`): four `SelectionRow` text rows
+  (last hour, today, last 7 days, everything), each with its play count read
+  when the dialog opens from one `now` (`historyClockProvider`); the delete
+  uses the bounds of that same `now` (`ClearScope.bounds`). Clear is off until a
+  row with plays above zero is chosen, while the counts load or failed (Try
+  again), and while `historyClearingProvider` is true. Choosing it runs
+  `historyActions.clear` -> `ListenRecorder.clearHistory` (the recorder parks
+  the open listen, deletes on its write chain, then emits `cleared`) with
+  progress in the button; Esc, Back and the scrim wait meanwhile. The toast
+  "Removed N plays" has no Undo; a null result (the delete failed) shows the
+  error toast instead. Delete day goes the same way with the day's local
+  midnight bounds.
+- **Filter**: `KFilterField` "Filter in 2026" in the bar. A query (trimmed)
+  swaps the timeline for `HistoryFilterList`: a count line ("N plays match,
+  not split by day"), a `SliverFixedExtentList` of `HistoryRow`s (at most
+  `historyFilterCap` = 1000 plays of `historyFilterProvider`, `foldedMatcher`
+  over title, artist and album) and a "showing the first 1000" line when cut;
+  nothing matching shows an empty state. A tap plays the matched songs (one
+  `HistoryDayQueue` for the result). When results start, the page scrolls the
+  bar into view and remembers its offset; when the query empties (clear, Esc or
+  the filter button) the new `HistoryTimeline` gets `restoreOffset` and puts the
+  page back there. Switching year clears the query. The jump button is off
+  while results show (they have no day bars).
+- **Jump to date** (`showHistoryCalendar`, a port of the old hand-drawn grid
+  with `KIconButton`, `showKDialog(maxWidth: 360)` and the history strings): a
+  month grid within the shown year that opens on the month of the newest play,
+  dots and a tap only on days with plays (counts come from the loaded year via
+  `groupByDay`, no extra query), accessible label "date, N plays", [Close]. A
+  pick closes the dialog and calls `HistoryTimelineController.jumpToDay`: the
+  timeline sets the page offset to the list's top (`precedingScrollExtent`
+  from its last layout) plus `index.dayOffset(day)` (minus one bar height for the
+  first day, whose bar is the pinned one), clamped to the scroll extents, so
+  the day's bar is pinned at the top with its first play right under it,
+  whatever the hero, a notice or the text scale put above.
 
 ## Design pitfalls answered
 

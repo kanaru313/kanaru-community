@@ -1,17 +1,11 @@
-import 'dart:math' as math;
-
-import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/history/history_models.dart';
-import '../browse/library_list_scaffold.dart';
-import 'history_day_bar.dart';
 import 'history_line_metrics.dart';
-import 'history_row.dart';
-import 'history_sticky_bar.dart';
+import 'history_timeline_controller.dart';
 import 'history_timeline_data.dart';
-import 'history_timeline_index.dart';
+import 'history_timeline_slivers.dart';
+import 'history_timeline_scroll.dart';
 
 /// The plays of a year as slivers for the page's own scroll view: the day
 /// bar pinned under the page header, then one flat list of day header lines,
@@ -30,6 +24,8 @@ class HistoryTimeline extends StatefulWidget {
     required this.today,
     this.olderYear,
     this.onOlderYear,
+    this.controller,
+    this.restore,
   });
 
   /// What the plays are of (the year now; a day or a filter later). A change
@@ -47,6 +43,13 @@ class HistoryTimeline extends StatefulWidget {
   final int? olderYear;
   final VoidCallback? onOlderYear;
 
+  /// Lets the page scroll to a day of this list.
+  final HistoryTimelineController? controller;
+
+  /// Where to put the page when this timeline first lays out (coming back
+  /// from the filter), instead of at the first day bar. Taken once.
+  final HistoryRestore? restore;
+
   @override
   State<HistoryTimeline> createState() => _HistoryTimelineState();
 }
@@ -62,9 +65,25 @@ class _HistoryTimelineState extends State<HistoryTimeline> {
   HistoryTimelineData? _data;
 
   @override
-  void didUpdateWidget(HistoryTimeline old) {
-    super.didUpdateWidget(old);
-    if (old.scope != widget.scope) {
+  void initState() {
+    super.initState();
+    widget.controller?.bind(jump: _jumpToDay, anchor: _anchor);
+  }
+
+  @override
+  void dispose() {
+    widget.controller?.unbind(_jumpToDay);
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(HistoryTimeline oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?.unbind(_jumpToDay);
+      widget.controller?.bind(jump: _jumpToDay, anchor: _anchor);
+    }
+    if (oldWidget.scope != widget.scope) {
       // A new scope starts over: nothing to correct against, land on top.
       _data = null;
       _placed = false;
@@ -73,30 +92,67 @@ class _HistoryTimelineState extends State<HistoryTimeline> {
 
   ScrollPosition? get _position => Scrollable.maybeOf(context)?.position;
 
-  /// Scroll offset relative to the list's top; negative while the list's
-  /// top is still below the viewport's.
-  double _currentOffset() {
+  HistoryAnchor? _anchor() {
+    final data = _data;
     final top = _listTop;
     final position = _position;
-    if (top == null || position == null || !position.hasPixels) return 0;
-    return position.pixels - top;
+    if (!mounted ||
+        data == null ||
+        top == null ||
+        position == null ||
+        !position.hasPixels) {
+      return null;
+    }
+    return historyAnchorAt(data, top, position.pixels);
+  }
+
+  /// Scrolls so day [day]'s bar is pinned at the top, its first row right
+  /// under it. Reads the list's place from its last layout, so it is right
+  /// whatever sits above the list (the hero, a notice, the text scale).
+  bool _jumpToDay(DateTime day) {
+    final data = _data;
+    final top = _listTop;
+    final position = _position;
+    if (!mounted ||
+        data == null ||
+        top == null ||
+        position == null ||
+        !position.hasPixels) {
+      return false;
+    }
+    final pixels = historyDayPixels(data, top, day);
+    if (pixels == null) return false;
+    historyJumpClamped(position, pixels);
+    return true;
   }
 
   /// A new scope opens with its first day bar pinned and its first row right
   /// under it: when the page is scrolled past that place (the previous
-  /// scope's depth), it goes there. Higher up (hero in view) it stays.
+  /// scope's depth), it goes there. Higher up (hero in view) it stays. A
+  /// timeline that comes back from the filter goes back to the reader's
+  /// place instead, once.
   void _placeAtTop() {
     if (!mounted) return;
     final top = _listTop;
+    final data = _data;
     final position = _position;
-    if (top == null || position == null || !position.hasPixels) return;
-    final target = top - (_data?.metrics.dayBar ?? 0);
+    if (top == null || data == null || position == null) return;
+    if (!position.hasPixels) return;
+    final restore = widget.restore;
+    if (restore != null && !restore.used) {
+      restore.used = true;
+      final pixels = historyRestorePixels(data, top, restore);
+      if (pixels != null) {
+        historyJumpClamped(position, pixels);
+        return;
+      }
+    }
+    final target = top - data.metrics.dayBar;
     if (position.pixels > target) position.jumpTo(target);
   }
 
   /// Rebuilds what is drawn when the plays or the line sizes changed, and
-  /// keeps the reader's place: the first play under the pinned bar stays
-  /// where it is, whether plays came in, went out or came back above it.
+  /// keeps the reader's place (see [historyCorrectOffset]).
   HistoryTimelineData _refresh(HistoryLineMetrics metrics) {
     final old = _data;
     final hasOlder = widget.olderYear != null;
@@ -110,55 +166,11 @@ class _HistoryTimelineState extends State<HistoryTimeline> {
       hasOlderYear: hasOlder,
     );
     final position = _position;
-    final offset = _currentOffset();
-    // Scrolled under the bar at all: with the list top in full view a new
-    // play simply appears first. Moved with `correctBy` (not an animated
-    // jump, which would overwrite it) while the timeline rebuilds, so the
-    // same frame already has it.
-    if (old != null &&
-        position != null &&
-        _listTop != null &&
-        offset > -old.index.metrics.dayBar &&
-        old.index.metrics.row == metrics.row) {
-      final shift = HistoryTimelineData.anchorShift(old, data, offset);
-      // A big removal above would push the page past its top.
-      final s = math.max(shift, position.minScrollExtent - position.pixels);
-      if (s != 0) position.correctBy(s);
+    final top = _listTop;
+    if (old != null && position != null && top != null) {
+      historyCorrectOffset(position, top, old, data);
     }
     return data;
-  }
-
-  Widget _line(BuildContext context, HistoryTimelineData data, int i) {
-    final info = data.index.lineInfo(i);
-    final gutter = libraryRowGutter(context);
-    switch (info.kind) {
-      case HistoryLineKind.header:
-        return HistoryDayBar(
-          day: data.days[info.day],
-          today: widget.today,
-          height: data.index.metrics.dayBar,
-        );
-      case HistoryLineKind.row:
-        final play = data.days[info.day].plays[info.row];
-        return Padding(
-          key: ValueKey(play.uid),
-          padding: EdgeInsets.symmetric(horizontal: gutter),
-          child: HistoryRow(
-            play: play,
-            queue: data.queueOf(info.day),
-            markCurrent: data.newestOfSong.contains(play.uid),
-          ),
-        );
-      case HistoryLineKind.footer:
-        final l10n = AppLocalizations.of(context);
-        final year = widget.olderYear!;
-        return Center(
-          child: FilledButton.tonal(
-            onPressed: widget.onOlderYear,
-            child: Text(l10n.historyYearFooter('$year')),
-          ),
-        );
-    }
   }
 
   @override
@@ -168,40 +180,18 @@ class _HistoryTimelineState extends State<HistoryTimeline> {
       MediaQuery.textScalerOf(context),
     );
     final data = _refresh(metrics);
-    return SliverMainAxisGroup(
-      slivers: [
-        // The bar reads its own constraints in layout: the day at the top is
-        // right whatever moved above it (a notice, the hero, the text scale).
-        SliverLayoutBuilder(
-          builder: (context, constraints) => KStickyBarSliver(
-            height: metrics.dayBar,
-            child: HistoryStickyBar(
-              index: data.index,
-              days: data.days,
-              today: widget.today,
-              offset: constraints.scrollOffset - metrics.dayBar,
-            ),
-          ),
-        ),
-        SliverLayoutBuilder(
-          builder: (context, constraints) {
-            _listTop = constraints.precedingScrollExtent;
-            if (!_placed) {
-              _placed = true;
-              WidgetsBinding.instance.addPostFrameCallback(
-                (_) => _placeAtTop(),
-              );
-            }
-            return SliverVariedExtentList.builder(
-              itemCount: data.index.lineCount,
-              itemExtentBuilder: (i, _) => data.index.extentOf(i),
-              findChildIndexCallback: (key) =>
-                  key is ValueKey<String> ? data.lineOfPlay[key.value] : null,
-              itemBuilder: (context, i) => _line(context, data, i),
-            );
-          },
-        ),
-      ],
+    return historyTimelineSlivers(
+      data,
+      today: widget.today,
+      olderYear: widget.olderYear,
+      onOlderYear: widget.onOlderYear,
+      onListLayout: (top) {
+        _listTop = top;
+        if (!_placed) {
+          _placed = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) => _placeAtTop());
+        }
+      },
     );
   }
 }

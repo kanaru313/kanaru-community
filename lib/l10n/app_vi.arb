@@ -2366,5 +2366,74 @@
       }
     }
   },
-  "historyPlayFailed": "Không phát được lịch sử"
+  "historyPlayFailed": "Không phát được lịch sử",
+  "historyMenuMostPlayed": "Phát nhiều nhất",
+  "historyMenuClear": "Xoá lịch sử…",
+  "historyMenuPlayDay": "Phát cả ngày",
+  "historyMenuDeleteDay": "Xoá ngày khỏi lịch sử",
+  "historyMenuTrackHistory": "Lịch sử bài này",
+  "historyMenuRemovePlay": "Xoá khỏi lịch sử",
+  "historyNothingToAdd": "Không có bài phát được để thêm",
+  "historyClearTitle": "Xoá lịch sử?",
+  "historyClearHour": "Giờ qua",
+  "historyClearToday": "Hôm nay",
+  "historyClearWeek": "7 ngày qua",
+  "historyClearAll": "Toàn bộ",
+  "historyClearConfirm": "Xoá",
+  "historyClearCountFailed": "Không đếm được số lượt nghe",
+  "historyClearRetry": "Thử lại",
+  "historyClearFailed": "Không xoá được lịch sử",
+  "historyCleared": "{count, plural, other{Đã xoá {count} lượt nghe}}",
+  "@historyCleared": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyDeleteDayTitle": "Xoá ngày này khỏi lịch sử?",
+  "historyDeleteDayBody": "{count, plural, other{{count} lượt nghe}} của ngày {date} sẽ bị xoá. Không thể hoàn tác.",
+  "@historyDeleteDayBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "historyFilterHint": "Lọc trong {year}",
+  "@historyFilterHint": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "historyFilterMatches": "{count, plural, other{{count} lượt khớp}} · không chia theo ngày",
+  "@historyFilterMatches": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyFilterCapped": "Chỉ hiện {max} lượt đầu. Thu hẹp từ khoá để thấy thêm.",
+  "@historyFilterCapped": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "historyFilterEmpty": "Không có lượt nghe nào khớp “{query}”.",
+  "@historyFilterEmpty": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "historyMenuMissing": "Không phát được"
 }

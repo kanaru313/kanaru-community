@@ -10,6 +10,11 @@ String historyDate(int epochMs) =>
     DateFormat('dd/MM/yyyy')
         .format(DateTime.fromMillisecondsSinceEpoch(epochMs));
 
+/// `Saturday, November 14, 2026` of a local day, as the add-to-playlist
+/// picker and the day menu name it.
+String historyFullDate(AppLocalizations l10n, DateTime day) =>
+    DateFormat.yMMMMEEEEd(l10n.localeName).format(day);
+
 /// `21:42` (24 hours) of an epoch-ms time, in the local zone.
 String historyClock(AppLocalizations l10n, int epochMs) =>
     DateFormat.Hm(l10n.localeName)

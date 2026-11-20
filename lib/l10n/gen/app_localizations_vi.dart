@@ -3134,4 +3134,103 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get historyPlayFailed => 'Không phát được lịch sử';
+
+  @override
+  String get historyMenuMostPlayed => 'Phát nhiều nhất';
+
+  @override
+  String get historyMenuClear => 'Xoá lịch sử…';
+
+  @override
+  String get historyMenuPlayDay => 'Phát cả ngày';
+
+  @override
+  String get historyMenuDeleteDay => 'Xoá ngày khỏi lịch sử';
+
+  @override
+  String get historyMenuTrackHistory => 'Lịch sử bài này';
+
+  @override
+  String get historyMenuRemovePlay => 'Xoá khỏi lịch sử';
+
+  @override
+  String get historyNothingToAdd => 'Không có bài phát được để thêm';
+
+  @override
+  String get historyClearTitle => 'Xoá lịch sử?';
+
+  @override
+  String get historyClearHour => 'Giờ qua';
+
+  @override
+  String get historyClearToday => 'Hôm nay';
+
+  @override
+  String get historyClearWeek => '7 ngày qua';
+
+  @override
+  String get historyClearAll => 'Toàn bộ';
+
+  @override
+  String get historyClearConfirm => 'Xoá';
+
+  @override
+  String get historyClearCountFailed => 'Không đếm được số lượt nghe';
+
+  @override
+  String get historyClearRetry => 'Thử lại';
+
+  @override
+  String get historyClearFailed => 'Không xoá được lịch sử';
+
+  @override
+  String historyCleared(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã xoá $count lượt nghe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyDeleteDayTitle => 'Xoá ngày này khỏi lịch sử?';
+
+  @override
+  String historyDeleteDayBody(int count, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lượt nghe',
+    );
+    return '$_temp0 của ngày $date sẽ bị xoá. Không thể hoàn tác.';
+  }
+
+  @override
+  String historyFilterHint(String year) {
+    return 'Lọc trong $year';
+  }
+
+  @override
+  String historyFilterMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lượt khớp',
+    );
+    return '$_temp0 · không chia theo ngày';
+  }
+
+  @override
+  String historyFilterCapped(int max) {
+    return 'Chỉ hiện $max lượt đầu. Thu hẹp từ khoá để thấy thêm.';
+  }
+
+  @override
+  String historyFilterEmpty(String query) {
+    return 'Không có lượt nghe nào khớp “$query”.';
+  }
+
+  @override
+  String get historyMenuMissing => 'Không phát được';
 }

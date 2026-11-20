@@ -252,11 +252,10 @@ void main() {
     });
   });
 
-  test('counts: scopes by range, all from the overview', () async {
+  test('counts: every scope counts up to the same fixed end', () async {
     final now = DateTime(2026, 11, 20, 10);
     final b = ClearScope.today.bounds(now);
-    store.counts = {b.from!: 4};
-    store.overviewAnswer = const HistoryOverview(plays: 42, songs: 3, since: 1);
+    store.counts = {b.from!: 4, -(1 << 52): 42};
     final counts = await actions().counts(now);
     expect(counts[ClearScope.today], 4);
     expect(counts[ClearScope.hour], 0);

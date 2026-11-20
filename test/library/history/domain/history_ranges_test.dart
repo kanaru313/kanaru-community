@@ -127,8 +127,11 @@ void main() {
       );
     });
 
-    test('all has no bounds', () {
-      expect(ClearScope.all.bounds(now), (from: null, to: null));
+    test('all has no lower bound, the same end', () {
+      expect(ClearScope.all.bounds(now), (
+        from: null,
+        to: now.millisecondsSinceEpoch + 1,
+      ));
     });
   });
 }

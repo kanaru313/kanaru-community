@@ -43,10 +43,11 @@ void main() {
     expect(b.from, DateTime(2025, 12, 28).millisecondsSinceEpoch);
   });
 
-  test('all has no bounds', () {
+  test('all has no lower bound but the same upper bound as the others', () {
     final b = ClearScope.all.bounds(now);
     expect(b.from, isNull);
-    expect(b.to, isNull);
+    expect(b.to, now.millisecondsSinceEpoch + 1);
+    expect(b.to, ClearScope.today.bounds(now).to);
   });
 
   test(

@@ -93,5 +93,74 @@
       }
     }
   },
-  "historyPlayFailed": "Could not play the history"
+  "historyPlayFailed": "Could not play the history",
+  "historyMenuMostPlayed": "Most played",
+  "historyMenuClear": "Clear history…",
+  "historyMenuPlayDay": "Play the day",
+  "historyMenuDeleteDay": "Remove the day from history",
+  "historyMenuTrackHistory": "History of this song",
+  "historyMenuRemovePlay": "Remove from history",
+  "historyNothingToAdd": "No playable songs to add",
+  "historyClearTitle": "Clear history?",
+  "historyClearHour": "Last hour",
+  "historyClearToday": "Today",
+  "historyClearWeek": "Last 7 days",
+  "historyClearAll": "Everything",
+  "historyClearConfirm": "Clear",
+  "historyClearCountFailed": "Could not count the plays",
+  "historyClearRetry": "Try again",
+  "historyClearFailed": "Could not clear the history",
+  "historyCleared": "{count, plural, =1{Removed 1 play} other{Removed {count} plays}}",
+  "@historyCleared": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyDeleteDayTitle": "Remove this day from history?",
+  "historyDeleteDayBody": "{count, plural, =1{1 play} other{{count} plays}} on {date} will be removed. This cannot be undone.",
+  "@historyDeleteDayBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "historyFilterHint": "Filter in {year}",
+  "@historyFilterHint": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "historyFilterMatches": "{count, plural, =1{1 play matches} other{{count} plays match}} · not split by day",
+  "@historyFilterMatches": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyFilterCapped": "Showing the first {max} plays. Narrow the filter to see more.",
+  "@historyFilterCapped": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "historyFilterEmpty": "No plays match “{query}”.",
+  "@historyFilterEmpty": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "historyMenuMissing": "Can't play"
 }
