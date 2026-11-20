@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
+import '../layout/large_text.dart';
 import '../tokens/k_space.dart';
 import 'k_start_arrows.dart';
 
@@ -128,7 +129,8 @@ class _KStartAreaState extends State<KStartArea> {
 }
 
 /// Column rules of [KStartTileGrid], all in one place. Touch shells: 3
-/// columns, 2 when the grid is narrower than [_narrowWidth] (a third of it
+/// columns, 2 when the tile area (the grid's own width, the sheet's content box)
+/// is narrower than [_narrowWidth] (so sheets under 392 dp; a third of it
 /// cannot hold "15 phút" at the tile title size), 1 from 200 % text. Desktop:
 /// 3 columns, 2 from 200 % text.
 const int _touchColumns = 3;
@@ -137,7 +139,6 @@ const int _touchColumnsLarge = 1;
 const int _desktopColumns = 3;
 const int _desktopColumnsLarge = 2;
 const double _narrowWidth = 360;
-const double _largeTextScale = 1.99;
 
 /// Grid of [KStartTile]s: columns follow the rules above. Tiles of a row
 /// share one height.
@@ -153,9 +154,7 @@ class KStartTileGrid extends StatelessWidget {
         context,
         _columnsFor(
           desktop: FormFactor.of(context) == FormFactor.desktop,
-          large:
-              MediaQuery.textScalerOf(context).scale(14) / 14 >=
-              _largeTextScale,
+          large: isLargeText(context),
           width: constraints.maxWidth,
         ),
       ),

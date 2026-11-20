@@ -287,19 +287,32 @@ void main() {
       expect(columns(tester, 6), 1);
     });
 
-    testWidgets('touch: 2 columns when the grid is narrower than 360', (
+    testWidgets('touch: 2 columns when the tile area is narrower than 360', (
       tester,
     ) async {
-      for (final (width, want) in [(359.0, 2), (360.0, 3), (320.0, 2)]) {
-        useWindow(tester, Size(width, 800));
+      // The grid sits in a sheet with a 16 dp gutter on each side, so a
+      // 360 tile area is a 392 sheet.
+      for (final (sheet, want) in [
+        (320.0, 2),
+        (391.0, 2),
+        (392.0, 3),
+        (393.0, 3),
+      ]) {
+        useWindow(tester, Size(sheet, 800));
         await tester.pumpWidget(
           host(
             Center(
-              child: SizedBox(width: width, child: grid(6)),
+              child: SizedBox(
+                width: sheet,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: grid(6),
+                ),
+              ),
             ),
           ),
         );
-        expect(columns(tester, 6), want, reason: 'width $width');
+        expect(columns(tester, 6), want, reason: 'sheet width $sheet');
       }
     });
 

@@ -354,6 +354,28 @@ void main() {
       expect(focusedWithin(tester, _side('+5')), isTrue);
     });
 
+    testWidgets(
+      'a focused quick-add chip that turns off hands focus to pause',
+      (tester) async {
+        final host = await pumpSleepModal(
+          tester,
+          size: _desktop,
+          initial: runningMinutes(remaining: const Duration(minutes: 20)),
+        );
+        await openSleepModal(tester);
+        final chip = find.ancestor(
+          of: find.text('+1 giờ'),
+          matching: find.byType(KChip),
+        );
+        Focus.of(tester.element(find.text('+1 giờ'))).requestFocus();
+        await tester.pump();
+        host.timer.set(runningMinutes(remaining: const Duration(minutes: 700)));
+        await tester.pump();
+        expect(tester.widget<KChip>(chip).enabled, isFalse);
+        expect(focusedWithin(tester, _button('Tạm dừng đếm')), isTrue);
+      },
+    );
+
     testWidgets('pause and resume keep focus on the same button', (
       tester,
     ) async {

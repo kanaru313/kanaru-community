@@ -5136,24 +5136,6 @@ abstract class AppLocalizations {
   /// **'Remove one track'**
   String get sleepTimerRemoveTrack;
 
-  /// No description provided for @sleepTimerButtonPlusMinutes.
-  ///
-  /// In en, this message translates to:
-  /// **'+{minutes} min'**
-  String sleepTimerButtonPlusMinutes(int minutes);
-
-  /// No description provided for @sleepTimerButtonMinusMinutes.
-  ///
-  /// In en, this message translates to:
-  /// **'−{minutes} min'**
-  String sleepTimerButtonMinusMinutes(int minutes);
-
-  /// No description provided for @sleepTimerButtonPlusTracks.
-  ///
-  /// In en, this message translates to:
-  /// **'+{count} track'**
-  String sleepTimerButtonPlusTracks(int count);
-
   /// No description provided for @sleepTimerChipPlusMinutes.
   ///
   /// In en, this message translates to:
@@ -5183,12 +5165,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+{amount}'**
   String sleepTimerStepPlus(int amount);
-
-  /// No description provided for @sleepTimerButtonMinusTracks.
-  ///
-  /// In en, this message translates to:
-  /// **'−{count} track'**
-  String sleepTimerButtonMinusTracks(int count);
 
   /// No description provided for @sleepTimerLabelSleepIn.
   ///

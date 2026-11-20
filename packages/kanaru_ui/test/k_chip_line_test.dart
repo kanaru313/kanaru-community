@@ -50,4 +50,15 @@ void main() {
       expect(b.left - a.right, gap);
     }
   });
+
+  testWidgets('edges fade only while the chips overflow', (tester) async {
+    useWindow(tester, const Size(320, 400));
+    await tester.pumpWidget(host(SizedBox(width: 288, child: _line(6))));
+    await tester.pumpAndSettle();
+    expect(find.byType(ShaderMask), findsOneWidget);
+
+    await tester.pumpWidget(host(SizedBox(width: 288, child: _line(2))));
+    await tester.pumpAndSettle();
+    expect(find.byType(ShaderMask), findsNothing);
+  });
 }

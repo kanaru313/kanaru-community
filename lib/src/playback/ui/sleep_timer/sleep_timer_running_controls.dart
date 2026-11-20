@@ -80,6 +80,16 @@ class SleepTimerRunningControls extends ConsumerWidget {
         focus.plus,
       );
       handOver(prev.canAddTrack, next.canAddTrack, focus.plus, focus.minus);
+      // A focused quick-add chip that turns off (less room left than its
+      // minutes) hands focus to the pause / resume button.
+      if (next.roomMinutes < prev.roomMinutes) {
+        final chip = FocusManager.instance.primaryFocus?.context
+            ?.findAncestorWidgetOfExactType<KChip>();
+        final key = chip?.key;
+        if (key is ValueKey<int> && key.value > next.roomMinutes) {
+          focus.pause.requestFocus();
+        }
+      }
     });
     if (c.mode != SleepTimerMode.minutes) return const SizedBox.shrink();
     final texts = SleepTimerTexts.of(context);
@@ -134,6 +144,7 @@ class _QuickAdds extends StatelessWidget {
                 : l10n.sleepTimerAddMinutes(m),
             excludeFromSemantics: true,
             child: KChip(
+              key: ValueKey(m),
               dense: true,
               semanticLabel: m == 60
                   ? l10n.sleepTimerAddHour

@@ -74,7 +74,7 @@ class KStepButton extends StatelessWidget {
             : Text(
                 label!,
                 maxLines: 1,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: fg,
                   fontWeight: FontWeight.w700,
                   fontFeatures: const [FontFeature.tabularFigures()],

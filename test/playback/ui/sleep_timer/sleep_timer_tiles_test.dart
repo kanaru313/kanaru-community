@@ -57,10 +57,16 @@ void main() {
       );
     });
 
-    testWidgets('a 320 phone (sheet under 360): 2 columns', (tester) async {
+    testWidgets('a 320 phone (tile area under 360): 2 columns', (tester) async {
       await pumpSleepModal(tester, size: const Size(320, 800));
       await openSleepModal(tester);
       expect(perRow(tester), 2);
+    });
+
+    testWidgets('a 393 phone: 3 columns', (tester) async {
+      await pumpSleepModal(tester, size: const Size(393, 800));
+      await openSleepModal(tester);
+      expect(perRow(tester), 3);
     });
 
     testWidgets('200 % text: one column', (tester) async {

@@ -2491,30 +2491,6 @@
   },
   "sleepTimerAddTrack": "Add one track",
   "sleepTimerRemoveTrack": "Remove one track",
-  "sleepTimerButtonPlusMinutes": "+{minutes} min",
-  "@sleepTimerButtonPlusMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "sleepTimerButtonMinusMinutes": "−{minutes} min",
-  "@sleepTimerButtonMinusMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "sleepTimerButtonPlusTracks": "+{count} track",
-  "@sleepTimerButtonPlusTracks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "sleepTimerChipPlusMinutes": "+{minutes} min",
   "@sleepTimerChipPlusMinutes": {
     "placeholders": {
@@ -2537,14 +2513,6 @@
   "@sleepTimerStepPlus": {
     "placeholders": {
       "amount": {
-        "type": "int"
-      }
-    }
-  },
-  "sleepTimerButtonMinusTracks": "−{count} track",
-  "@sleepTimerButtonMinusTracks": {
-    "placeholders": {
-      "count": {
         "type": "int"
       }
     }

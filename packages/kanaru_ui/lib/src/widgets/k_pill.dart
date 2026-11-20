@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
+import '../layout/large_text.dart';
 import '../tokens/k_icon_size.dart';
 import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
@@ -79,7 +80,7 @@ class KPill extends StatelessWidget {
         : KMotion.fast;
 
     // Same 200 % rule as the tile grid: an info pill may wrap to two lines.
-    final large = MediaQuery.textScalerOf(context).scale(14) / 14 >= 1.99;
+    final large = isLargeText(context);
     Widget text(String s) => Text(
       s,
       maxLines: _isButton || !large ? 1 : 2,

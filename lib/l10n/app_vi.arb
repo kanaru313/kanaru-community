@@ -2478,30 +2478,6 @@
   },
   "sleepTimerAddTrack": "Thêm một bài",
   "sleepTimerRemoveTrack": "Bớt một bài",
-  "sleepTimerButtonPlusMinutes": "+{minutes} phút",
-  "@sleepTimerButtonPlusMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "sleepTimerButtonMinusMinutes": "−{minutes} phút",
-  "@sleepTimerButtonMinusMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "sleepTimerButtonPlusTracks": "+{count} bài",
-  "@sleepTimerButtonPlusTracks": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "sleepTimerChipPlusMinutes": "+{minutes} ph",
   "@sleepTimerChipPlusMinutes": {
     "placeholders": {
@@ -2524,14 +2500,6 @@
   "@sleepTimerStepPlus": {
     "placeholders": {
       "amount": {
-        "type": "int"
-      }
-    }
-  },
-  "sleepTimerButtonMinusTracks": "−{count} bài",
-  "@sleepTimerButtonMinusTracks": {
-    "placeholders": {
-      "count": {
         "type": "int"
       }
     }

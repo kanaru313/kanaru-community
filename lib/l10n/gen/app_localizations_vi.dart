@@ -3188,21 +3188,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get sleepTimerRemoveTrack => 'Bớt một bài';
 
   @override
-  String sleepTimerButtonPlusMinutes(int minutes) {
-    return '+$minutes phút';
-  }
-
-  @override
-  String sleepTimerButtonMinusMinutes(int minutes) {
-    return '−$minutes phút';
-  }
-
-  @override
-  String sleepTimerButtonPlusTracks(int count) {
-    return '+$count bài';
-  }
-
-  @override
   String sleepTimerChipPlusMinutes(int minutes) {
     return '+$minutes ph';
   }
@@ -3221,11 +3206,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String sleepTimerStepPlus(int amount) {
     return '+$amount';
-  }
-
-  @override
-  String sleepTimerButtonMinusTracks(int count) {
-    return '−$count bài';
   }
 
   @override

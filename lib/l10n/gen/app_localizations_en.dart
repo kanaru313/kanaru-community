@@ -3579,21 +3579,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sleepTimerRemoveTrack => 'Remove one track';
 
   @override
-  String sleepTimerButtonPlusMinutes(int minutes) {
-    return '+$minutes min';
-  }
-
-  @override
-  String sleepTimerButtonMinusMinutes(int minutes) {
-    return '−$minutes min';
-  }
-
-  @override
-  String sleepTimerButtonPlusTracks(int count) {
-    return '+$count track';
-  }
-
-  @override
   String sleepTimerChipPlusMinutes(int minutes) {
     return '+$minutes min';
   }
@@ -3612,11 +3597,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String sleepTimerStepPlus(int amount) {
     return '+$amount';
-  }
-
-  @override
-  String sleepTimerButtonMinusTracks(int count) {
-    return '−$count track';
   }
 
   @override

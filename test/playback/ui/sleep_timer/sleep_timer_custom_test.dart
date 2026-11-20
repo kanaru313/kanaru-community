@@ -76,6 +76,12 @@ void main() {
       );
       final unit = tester.getRect(find.text('phút'));
       expect(unit.top - caret.bottom, greaterThanOrEqualTo(_caretGap));
+      // The caret is as tall as the scaled digits (an unscaled one is shorter).
+      final fontSize = Theme.of(tester.element(_field))
+          .textTheme
+          .displayLarge!
+          .fontSize!;
+      expect(caret.height, closeTo(scale * fontSize, 1));
     });
   }
 
