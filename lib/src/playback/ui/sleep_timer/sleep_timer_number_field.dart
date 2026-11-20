@@ -77,11 +77,6 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
   FocusNode? _ownFocus;
   FocusNode get _focus => widget.focusNode ?? (_ownFocus ??= FocusNode());
 
-  /// The text was replaced from outside (kind, chip, step, ruler) while the
-  /// field kept focus on a touch shell: the next tap is not a focus gain, so
-  /// it must select all like a first tap does.
-  bool _selectOnTap = false;
-
   @override
   void initState() {
     super.initState();
@@ -117,19 +112,19 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
   }
 
   /// Touch shells: a number replaced from outside while the field has focus is
-  /// selected whole again, and the next tap selects it too.
+  /// selected whole again.
   void _outsideChange() {
     if (!_focus.hasFocus || FormFactor.of(context) == FormFactor.desktop) {
       return;
     }
-    _selectOnTap = true;
     _selectAllAfterFrame();
   }
 
+  /// Every tap on a touch shell selects the whole number (also on a field that
+  /// already has focus), so typing always replaces; the tap places the caret
+  /// after this callback, so select after that.
   void _onTap() {
-    if (!_selectOnTap) return;
-    _selectOnTap = false;
-    // The tap places the caret after this callback; select after that.
+    if (FormFactor.of(context) == FormFactor.desktop) return;
     _selectAllAfterFrame();
   }
 
@@ -139,6 +134,8 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
       if (_composing(_controller.value)) return;
       _selectAll();
     });
+    // A callback alone does not make a frame: ask for one so it runs now.
+    WidgetsBinding.instance.scheduleFrame();
   }
 
   /// Shows [SleepTimerNumberField.value] again.
@@ -156,13 +153,9 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
       if (FormFactor.of(context) == FormFactor.desktop) {
         _selectAll();
       } else {
-        // A tap places the caret after it gains focus; select after that so
-        // typing replaces the number. Later taps (already focused) place the
-        // caret normally.
         _selectAllAfterFrame();
       }
     } else {
-      _selectOnTap = false;
       _settle();
     }
   }
@@ -173,7 +166,6 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
   );
 
   void _onEdited(String text) {
-    _selectOnTap = false;
     if (_composing(_controller.value)) return;
     final typed = parseTypedNumber(text, widget.range);
     if (typed != null) widget.onChanged(typed);

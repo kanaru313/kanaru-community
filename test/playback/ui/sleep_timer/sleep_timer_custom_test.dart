@@ -245,6 +245,24 @@ void main() {
     expect(host.timer.calls, isEmpty);
   });
 
+  testWidgets('Huỷ discards a typed number: reopening shows the defaults', (
+    tester,
+  ) async {
+    final host = await pumpSleepModal(tester);
+    await _openCustom(tester);
+    await tester.enterText(find.byType(TextField), '90');
+    await tester.pump();
+    await tapVisible(tester, find.text('Huỷ'));
+    expect(modalOpen, findsNothing);
+    await openSleepModal(tester);
+    await tapVisible(tester, find.text('Tuỳ chỉnh…'));
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      '45',
+    );
+    expect(host.timer.calls, isEmpty);
+  });
+
   testWidgets('a running timer shows the Đang chạy chip, which goes back', (
     tester,
   ) async {

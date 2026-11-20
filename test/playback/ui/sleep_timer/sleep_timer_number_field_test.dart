@@ -287,7 +287,7 @@ void main() {
     expect(selection(tester), all2);
   });
 
-  testWidgets('touch: a second tap with no outside change keeps the caret', (
+  testWidgets('touch: a tap on a focused field selects all; typing replaces', (
     tester,
   ) async {
     await pump(tester);
@@ -301,6 +301,10 @@ void main() {
     await tester.tap(find.byType(TextField));
     await tester.pump();
     await tester.pump();
-    expect(selection(tester).isCollapsed, isTrue);
+    expect(selection(tester), all2);
+    await tester.enterText(find.byType(TextField), '7');
+    await tester.pump();
+    expect(shown(tester), '7');
+    await tester.pumpWidget(const SizedBox());
   });
 }
