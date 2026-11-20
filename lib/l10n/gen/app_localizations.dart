@@ -5214,12 +5214,6 @@ abstract class AppLocalizations {
   /// **'the queue'**
   String get sleepTimerWordQueue;
 
-  /// No description provided for @sleepTimerRowSet.
-  ///
-  /// In en, this message translates to:
-  /// **'Set {duration}'**
-  String sleepTimerRowSet(String duration);
-
   /// No description provided for @sleepTimerRowHeld.
   ///
   /// In en, this message translates to:

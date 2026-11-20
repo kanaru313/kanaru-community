@@ -3624,11 +3624,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sleepTimerWordQueue => 'the queue';
 
   @override
-  String sleepTimerRowSet(String duration) {
-    return 'Set $duration';
-  }
-
-  @override
   String get sleepTimerRowHeld => 'Counting paused';
 
   @override

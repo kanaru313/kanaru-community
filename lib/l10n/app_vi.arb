@@ -2512,14 +2512,6 @@
   "sleepTimerWordTrack": "bài này",
   "sleepTimerWordAlbum": "album này",
   "sleepTimerWordQueue": "hàng đợi",
-  "sleepTimerRowSet": "Đặt {duration}",
-  "@sleepTimerRowSet": {
-    "placeholders": {
-      "duration": {
-        "type": "String"
-      }
-    }
-  },
   "sleepTimerRowHeld": "Đã tạm dừng đếm",
   "sleepTimerRowCurrentCounts": "Bài đang phát tính là một",
   "sleepTimerRowLastTrack": "bài này là bài cuối",

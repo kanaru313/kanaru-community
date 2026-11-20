@@ -214,4 +214,24 @@ void main() {
     expect(l.center.dy, closeTo(t.center.dy, 0.5));
     expect(l.center.dy, closeTo(number.center.dy, 1));
   });
+
+  testWidgets('a lone end text is centred under the bar', (tester) async {
+    await tester.pumpWidget(
+      host(
+        const SizedBox(
+          width: 300,
+          child: KClockProgress(
+            label: 'Ngủ sau',
+            bigText: '23:41',
+            statusLabel: 'Ngủ sau 24 phút',
+            fraction: 0.5,
+            endText: 'Dừng lúc 23:40',
+          ),
+        ),
+      ),
+    );
+    final box = tester.getRect(find.byType(KClockProgress));
+    final text = tester.getCenter(find.text('Dừng lúc 23:40'));
+    expect(text.dx, closeTo(box.center.dx, 1));
+  });
 }

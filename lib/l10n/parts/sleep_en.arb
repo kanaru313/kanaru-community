@@ -239,14 +239,6 @@
   "sleepTimerWordTrack": "this track",
   "sleepTimerWordAlbum": "this album",
   "sleepTimerWordQueue": "the queue",
-  "sleepTimerRowSet": "Set {duration}",
-  "@sleepTimerRowSet": {
-    "placeholders": {
-      "duration": {
-        "type": "String"
-      }
-    }
-  },
   "sleepTimerRowHeld": "Counting paused",
   "sleepTimerRowCurrentCounts": "The current track counts as one",
   "sleepTimerRowLastTrack": "this is the last track",

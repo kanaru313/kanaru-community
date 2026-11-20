@@ -3233,11 +3233,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get sleepTimerWordQueue => 'hàng đợi';
 
   @override
-  String sleepTimerRowSet(String duration) {
-    return 'Đặt $duration';
-  }
-
-  @override
   String get sleepTimerRowHeld => 'Đã tạm dừng đếm';
 
   @override

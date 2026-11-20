@@ -37,7 +37,7 @@ void main() {
       await openSleepModal(tester);
       expect(find.text('Ngủ sau'), findsOneWidget);
       expect(find.text('23:41'), findsOneWidget);
-      expect(find.text('Đặt 45 phút'), findsOneWidget);
+      expect(find.text('Đặt 45 phút'), findsNothing);
       expect(find.textContaining('Dừng lúc'), findsOneWidget);
       expect(_side('−5'), findsOneWidget);
       expect(_side('+5'), findsOneWidget);
@@ -147,7 +147,7 @@ void main() {
         initial: runningMinutes(remaining: const Duration(minutes: 20)),
       );
       await openSleepModal(tester);
-      final row = tester.getRect(find.text('Đặt 45 phút'));
+      final row = tester.getRect(find.textContaining('Dừng lúc'));
       final pause = tester.getRect(_button('Tạm dừng đếm'));
       final tops = {
         for (final c in ['+10 ph', '+15 ph', '+30 ph', '+1 giờ'])

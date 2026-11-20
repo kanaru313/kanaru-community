@@ -162,20 +162,31 @@ class KClockProgress extends StatelessWidget {
         ),
         if (startText != null || endText != null) ...[
           const SizedBox(height: KSpace.x2),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(child: Text(startText ?? '', style: small)),
-              const SizedBox(width: KSpace.x3),
-              Flexible(
-                child: Text(
-                  endText ?? '',
-                  textAlign: TextAlign.end,
-                  style: small,
-                ),
+          if (startText == null)
+            // A lone line sits in the middle.
+            SizedBox(
+              width: double.infinity,
+              child: Text(
+                endText ?? '',
+                textAlign: TextAlign.center,
+                style: small,
               ),
-            ],
-          ),
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(child: Text(startText!, style: small)),
+                const SizedBox(width: KSpace.x3),
+                Flexible(
+                  child: Text(
+                    endText ?? '',
+                    textAlign: TextAlign.end,
+                    style: small,
+                  ),
+                ),
+              ],
+            ),
         ],
       ],
     );

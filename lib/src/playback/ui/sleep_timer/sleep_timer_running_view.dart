@@ -116,9 +116,6 @@ class _RunningClock extends ConsumerWidget {
           held: held,
           leading: sides?.leading,
           trailing: sides?.trailing,
-          startText: l10n.sleepTimerRowSet(
-            texts.durationWords(s.setLength.inMinutes),
-          ),
           endText: held
               ? l10n.sleepTimerRowHeld
               : (endsAt == null ? '' : texts.stopsAtTime(endsAt)),
