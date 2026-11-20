@@ -75,6 +75,11 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
     text: '${widget.value}',
   );
   FocusNode? _ownFocus;
+
+  /// Last number reported to the parent that its rebuild has not delivered
+  /// back through [SleepTimerNumberField.value] yet (submit and blur can
+  /// arrive before that frame).
+  int? _reported;
   FocusNode get _focus => widget.focusNode ?? (_ownFocus ??= FocusNode());
 
   @override
@@ -86,6 +91,7 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
   @override
   void didUpdateWidget(SleepTimerNumberField old) {
     super.didUpdateWidget(old);
+    _reported = null;
     if (old.focusNode != widget.focusNode) {
       (old.focusNode ?? _ownFocus)?.removeListener(_onFocusChanged);
       _focus.addListener(_onFocusChanged);
@@ -143,7 +149,7 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
 
   /// Shows [SleepTimerNumberField.value] again.
   void _settle() {
-    final text = '${widget.value}';
+    final text = '${_reported ?? widget.value}';
     if (_controller.text == text) return;
     _controller.value = TextEditingValue(
       text: text,
@@ -159,8 +165,27 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
         _selectAllAfterFrame();
       }
     } else {
-      _settle();
+      _commitThenSettle();
     }
+  }
+
+  /// Digits still under an IME composing region were not reported while
+  /// typing: when the field is left or submitted they count. A valid number
+  /// the parent does not know yet is reported and shown; otherwise the last
+  /// valid number comes back.
+  void _commitThenSettle() {
+    final typed = parseTypedNumber(_controller.text, widget.range);
+    if (typed != null && typed != (_reported ?? widget.value)) {
+      _reported = typed;
+      widget.onChanged(typed);
+      final text = '$typed';
+      _controller.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+      return;
+    }
+    _settle();
   }
 
   void _selectAll() => _controller.value = _controller.value.copyWith(
@@ -174,11 +199,13 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
   void _onEdited(String text) {
     if (_composing(_controller.value)) return;
     final typed = parseTypedNumber(text, widget.range);
-    if (typed != null) widget.onChanged(typed);
+    if (typed == null) return;
+    _reported = typed;
+    widget.onChanged(typed);
   }
 
   void _onSubmitted(String _) {
-    _settle();
+    _commitThenSettle();
     widget.onSubmit();
   }
 

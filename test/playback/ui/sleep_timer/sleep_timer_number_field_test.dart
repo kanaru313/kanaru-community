@@ -226,6 +226,42 @@ void main() {
     expect(log, ['changed 120']);
   });
 
+  const composingNinety = TextEditingValue(
+    text: '90',
+    selection: TextSelection.collapsed(offset: 2),
+    composing: TextRange(start: 0, end: 2),
+  );
+
+  testWidgets('Done with digits still composing reports them, then submits', (
+    tester,
+  ) async {
+    await pump(tester);
+    await tester.showKeyboard(find.byType(TextField));
+    tester.testTextInput.updateEditingValue(composingNinety);
+    await tester.pump();
+    expect(log, isEmpty);
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    expect(shown(tester), '90');
+    expect(log, ['changed 90', 'submit 90']);
+  });
+
+  testWidgets('leaving the field with digits still composing keeps them', (
+    tester,
+  ) async {
+    await pump(tester);
+    focus.requestFocus();
+    await tester.pump();
+    await tester.showKeyboard(find.byType(TextField));
+    tester.testTextInput.updateEditingValue(composingNinety);
+    await tester.pump();
+    expect(log, isEmpty);
+    focus.unfocus();
+    await tester.pump();
+    expect(shown(tester), '90');
+    expect(log, ['changed 90']);
+  });
+
   testWidgets('a value from outside (button, chip) replaces the text', (
     tester,
   ) async {
@@ -321,6 +357,7 @@ void realTapTests() {
         'selects all, typing replaces',
         (tester) async {
           debugDefaultTargetPlatformOverride = platform;
+          addTearDown(() => debugDefaultTargetPlatformOverride = null);
           final focus = FocusNode();
           addTearDown(focus.dispose);
           final log = <String>[];
@@ -372,7 +409,7 @@ void realTapTests() {
           await type('7');
           expect(controller.text, '7');
           if (!composing) expect(log.last, 'changed 7');
-          // Must be unset before the test body ends (checked by the binding).
+          // The binding checks the override is unset before the test ends.
           debugDefaultTargetPlatformOverride = null;
         },
       );
