@@ -51,6 +51,27 @@ void main() {
     expect(find.textContaining('Đang chạy'), findsNothing);
   });
 
+  testWidgets('the caret of the number stays above the unit label', (
+    tester,
+  ) async {
+    await pumpSleepModal(tester);
+    await _openCustom(tester);
+    await tester.tap(_field);
+    await tester.pump();
+    final editable = tester.state<EditableTextState>(find.byType(EditableText));
+    final render = editable.renderEditable;
+    final local = render.getLocalRectForCaret(
+      TextPosition(offset: _fieldText.length),
+    );
+    final caret = Rect.fromPoints(
+      render.localToGlobal(local.topLeft),
+      render.localToGlobal(local.bottomRight),
+    );
+    final unit = tester.getRect(find.text('phút'));
+    expect(caret.bottom, lessThan(unit.top));
+    expect(caret.overlaps(unit), isFalse);
+  });
+
   testWidgets('Bắt đầu starts 45 minutes, closes and says it once', (
     tester,
   ) async {

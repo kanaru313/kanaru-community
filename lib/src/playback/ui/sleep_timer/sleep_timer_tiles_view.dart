@@ -39,15 +39,17 @@ class SleepTimerTilesView extends ConsumerWidget {
     final texts = SleepTimerTexts.of(context);
     final l10n = texts.l10n;
     final running = ref.watch(sleepTimerProvider.select((s) => s.active));
+    // Action rows span the whole sheet (they keep their own gutter), so only
+    // the other content is padded.
     return Padding(
-      padding: sleepTimerPadding,
+      padding: const EdgeInsets.symmetric(vertical: KSpace.x2),
       child: KStartArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SleepTimerHeader(title: l10n.playbackSleepTimer),
-            SleepTimerCaption(l10n.sleepTimerHint),
+            _Gutter(SleepTimerHeader(title: l10n.playbackSleepTimer)),
+            _Gutter(SleepTimerCaption(l10n.sleepTimerHint)),
             if (running && !closing) ...[
               const SizedBox(height: KSpace.x3),
               Focus(
@@ -55,41 +57,40 @@ class SleepTimerTilesView extends ConsumerWidget {
                 child: _RunningCard(onTap: onRunning),
               ),
             ],
-            SleepTimerSection(l10n.sleepTimerSectionDuration),
-            SleepTimerClockBuilder(
-              builder: (context, now) => KStartTileGrid(
-                children: [
-                  for (final m in sleepMinutesRange.presets)
+            _Gutter(SleepTimerSection(l10n.sleepTimerSectionDuration)),
+            _Gutter(
+              SleepTimerClockBuilder(
+                builder: (context, now) => KStartTileGrid(
+                  children: [
+                    for (final m in sleepMinutesRange.presets)
+                      KStartTile(
+                        title: texts.minutesLabel(m),
+                        detail: texts.tileUntil(now, m),
+                        semanticLabel: texts.tileStartLabel(now, m),
+                        focusNode: m == sleepMinutesRange.defaultValue
+                            ? focus.tile45
+                            : null,
+                        onPressed: () => onStart((t) => t.startMinutes(m)),
+                      ),
                     KStartTile(
-                      title: texts.minutesLabel(m),
-                      detail: texts.tileUntil(now, m),
-                      semanticLabel: texts.tileStartLabel(now, m),
-                      focusNode: m == sleepMinutesRange.defaultValue
-                          ? focus.tile45
-                          : null,
-                      onPressed: () => onStart((t) => t.startMinutes(m)),
+                      title: l10n.sleepTimerCustom,
+                      detail: l10n.sleepTimerCustomRange(
+                        sleepMinutesRange.min,
+                        sleepMinutesRange.max,
+                      ),
+                      semanticLabel: l10n.sleepTimerCustom,
+                      icon: KIcons.edit,
+                      opensMore: true,
+                      onPressed: () => onCustom(SleepTimerKind.minutes),
                     ),
-                  KStartTile(
-                    title: l10n.sleepTimerCustom,
-                    detail: l10n.sleepTimerCustomRange(
-                      sleepMinutesRange.min,
-                      sleepMinutesRange.max,
-                    ),
-                    semanticLabel: l10n.sleepTimerCustom,
-                    icon: KIcons.edit,
-                    opensMore: true,
-                    onPressed: () => onCustom(SleepTimerKind.minutes),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-            SleepTimerSection(l10n.sleepTimerSectionTracks),
+            _Gutter(SleepTimerSection(l10n.sleepTimerSectionTracks)),
             _EndOfTrackRow(onStart: onStart),
-            const SizedBox(height: KSpace.x2),
             _EndOfAlbumRow(onStart: onStart),
-            const SizedBox(height: KSpace.x2),
             _EndOfQueueRow(onStart: onStart),
-            const SizedBox(height: KSpace.x2),
             SelectionRow.action(
               title: Text(l10n.sleepTimerAfterTracks),
               subtitle: Text(
@@ -101,20 +102,35 @@ class SleepTimerTilesView extends ConsumerWidget {
               opensMore: true,
               onTap: () => onCustom(SleepTimerKind.tracks),
             ),
-            SleepTimerFooter(
-              children: [
-                KModalButton(
-                  label: l10n.sleepTimerCancel,
-                  emphasis: KModalEmphasis.text,
-                  onPressed: onCancel,
-                ),
-              ],
+            _Gutter(
+              SleepTimerFooter(
+                children: [
+                  KModalButton(
+                    label: l10n.sleepTimerCancel,
+                    emphasis: KModalEmphasis.text,
+                    onPressed: onCancel,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+/// Side padding of the content of this screen that is not an action row.
+class _Gutter extends StatelessWidget {
+  const _Gutter(this.child);
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: KSpace.x4),
+    child: child,
+  );
 }
 
 /// "Đang chạy · Ngủ sau 23:41 ›": back to the running screen. Its own

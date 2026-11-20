@@ -113,6 +113,8 @@ class SleepTimerCustomView extends ConsumerWidget {
               ),
             ],
           ),
+          // Room for the caret of the number above: it never reaches the unit.
+          const SizedBox(height: KSpace.x1),
           Text(
             _tracks
                 ? texts.unitTracks(draft.value)

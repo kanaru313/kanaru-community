@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens/k_layout.dart';
@@ -14,8 +16,12 @@ const double _dialogScrim = 0.45;
 const double _sheetScrim = 0.42;
 
 /// Strength of the soft `primary` glow behind the top of the modal sheet.
+/// The glow is an ellipse centred on the top edge: 0.84 of the sheet width
+/// across and 0.63 of [_glowHeight] down, fading to nothing, so no edge shows.
 const double _glowAlpha = 0.09;
-const double _glowHeight = 96;
+const double _glowHeight = 260;
+const double _glowReachX = 1.2 * 0.7;
+const double _glowReachY = 0.9 * 0.7;
 
 /// Minimum distance between the modal dialog and the window edge.
 const double _dialogMargin = KSpace.x6;
@@ -23,7 +29,8 @@ const double _dialogMargin = KSpace.x6;
 /// Max height of the modal sheet, as a fraction of the window.
 const double _sheetMaxHeight = 0.92;
 
-/// Bottom padding of the modal sheet (clears the gesture bar).
+/// Gap under the content of the modal sheet, on top of the system bottom
+/// inset (gesture bar / navigation bar).
 const double _sheetBottom = KSpace.x6;
 
 /// Dialog look of `showKSheet(dialog: KSheetDialog.modal)`: centred, scales
@@ -117,6 +124,9 @@ Future<T?> showKModalSheet<T>(
     constraints: BoxConstraints(maxHeight: maxHeight),
     builder: (context) {
       final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+      // The route's safe area leaves the bottom alone: clear the system bar
+      // here (it is 0 while the keyboard covers it).
+      final systemBottom = MediaQuery.paddingOf(context).bottom;
       final available = (size.height - keyboard) < maxHeight
           ? size.height - keyboard
           : maxHeight;
@@ -134,7 +144,9 @@ Future<T?> showKModalSheet<T>(
                 child: _TopGlow(),
               ),
               Padding(
-                padding: EdgeInsets.only(bottom: keyboard + _sheetBottom),
+                padding: EdgeInsets.only(
+                  bottom: keyboard + systemBottom + _sheetBottom,
+                ),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     maxHeight: available,
@@ -158,19 +170,41 @@ class _TopGlow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
-    return IgnorePointer(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              primary.withValues(alpha: _glowAlpha),
-              primary.withValues(alpha: 0),
-            ],
-          ),
-        ),
-      ),
-    );
+    return IgnorePointer(child: CustomPaint(painter: _GlowPainter(primary)));
   }
+}
+
+/// Radial gradient drawn in a unit-ellipse space (scaled from the top centre),
+/// clamped to transparent past its reach: no visible boundary anywhere.
+class _GlowPainter extends CustomPainter {
+  const _GlowPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rx = size.width * _glowReachX;
+    final ry = size.height * _glowReachY;
+    final shader = ui.Gradient.radial(Offset.zero, 1, [
+      color.withValues(alpha: _glowAlpha),
+      color.withValues(alpha: 0),
+    ]);
+    canvas
+      ..save()
+      ..translate(size.width / 2, 0)
+      ..scale(rx, ry)
+      ..drawRect(
+        Rect.fromLTRB(
+          -size.width / 2 / rx,
+          0,
+          size.width / 2 / rx,
+          size.height / ry,
+        ),
+        Paint()..shader = shader,
+      )
+      ..restore();
+  }
+
+  @override
+  bool shouldRepaint(_GlowPainter old) => old.color != color;
 }

@@ -8,6 +8,12 @@ import '../tokens/k_space.dart';
 import 'k_press_surface.dart';
 import 'k_start_arrows.dart';
 
+/// Touch tile sizes: title 18, "opens more" title 15, padding 14 x 6.
+const double _touchTitle = 18;
+const double _touchCustomTitle = 15;
+const double _touchPadX = KSpace.x3 + 2;
+const double _touchPadY = KSpace.x1 + 2;
+
 /// A start button: a title with a detail line under it ("45 phút" / "đến
 /// 23:40"). Tapping it does the thing at once. Not a choice: no check mark,
 /// no selected state. Lay tiles out in a [KStartTileGrid].
@@ -49,12 +55,17 @@ class KStartTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final desktop = FormFactor.of(context) == FormFactor.desktop;
-    final radius = desktop ? KRadius.sm : KRadius.lg;
+    final radius = KRadius.sm;
     final animate = !MediaQuery.disableAnimationsOf(context);
     final enabled = onPressed != null;
-    final titleStyle = opensMore
-        ? (desktop ? text.titleSmall : text.titleMedium)
-        : (desktop ? text.titleMedium : text.titleLarge);
+    // Touch sizes sit between two M3 roles (18 / 15 for the title), so the
+    // role is the base and the size and line height are set from tokens below.
+    final titleStyle = desktop
+        ? (opensMore ? text.titleSmall : text.titleMedium)
+        : text.titleMedium?.copyWith(
+            fontSize: opensMore ? _touchCustomTitle : _touchTitle,
+            height: opensMore ? 22 / _touchCustomTitle : 24 / _touchTitle,
+          );
     final fill = opensMore
         ? null
         : (desktop
@@ -75,10 +86,10 @@ class KStartTile extends StatelessWidget {
             scale: pressed && animate && !desktop ? 0.97 : 1,
             duration: animate ? KMotion.fast : Duration.zero,
             child: Container(
-              constraints: BoxConstraints(minHeight: desktop ? 56 : 80),
+              constraints: BoxConstraints(minHeight: 56),
               padding: EdgeInsets.symmetric(
-                horizontal: desktop ? KSpace.x3 : KSpace.x4,
-                vertical: desktop ? KSpace.x2 : KSpace.x3,
+                horizontal: desktop ? KSpace.x3 : _touchPadX,
+                vertical: desktop ? KSpace.x2 : _touchPadY,
               ),
               decoration: ShapeDecoration(
                 color: fill == null

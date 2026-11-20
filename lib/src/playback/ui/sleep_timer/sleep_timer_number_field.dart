@@ -163,8 +163,12 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
         cursorColor: scheme.primary,
+        // The caret is as tall as the digits, not the whole line box, and the
+        // field keeps a little air above and below it.
+        cursorHeight: base?.fontSize,
         decoration: InputDecoration(
           isCollapsed: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: KSpace.x1),
           filled: false,
           border: InputBorder.none,
           enabledBorder: InputBorder.none,

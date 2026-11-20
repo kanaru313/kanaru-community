@@ -10,7 +10,6 @@ import 'support/host.dart';
 Widget _button({
   String label = 'Tạm dừng đếm',
   KModalEmphasis emphasis = KModalEmphasis.secondary,
-  bool prominent = false,
   VoidCallback? onPressed,
   FocusNode? focusNode,
   IconData? icon,
@@ -18,7 +17,6 @@ Widget _button({
   child: KModalButton(
     label: label,
     emphasis: emphasis,
-    prominent: prominent,
     onPressed: onPressed,
     focusNode: focusNode,
     icon: icon,
@@ -87,7 +85,6 @@ void main() {
           _button(
             emphasis: e,
             label: 'Tạm dừng đếm',
-            prominent: true,
             onPressed: () {},
             icon: KIcons.add,
           ),
@@ -105,7 +102,7 @@ void main() {
         useWindow(tester, const Size(320, 500));
         await tester.pumpWidget(
           host(
-            _button(emphasis: e, prominent: true, onPressed: () {}),
+            _button(emphasis: e, onPressed: () {}),
             brightness: brightness,
             textScale: scale,
           ),
@@ -146,29 +143,19 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('heights: 56 footer / 64 prominent on touch, 40 on desktop', (
-    tester,
-  ) async {
+  testWidgets('height: 48 stadium on touch, 40 on desktop', (tester) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_button(onPressed: () {})));
     await tester.pumpAndSettle();
-    expect(tester.getSize(byModalButton('Tạm dừng đếm')).height, 56);
-    await tester.pumpWidget(host(_button(prominent: true, onPressed: () {})));
-    await tester.pumpAndSettle();
-    expect(tester.getSize(byModalButton('Tạm dừng đếm')).height, 64);
-    useWindow(tester, const Size(1300, 800));
-    await tester.pumpWidget(host(_button(prominent: true, onPressed: () {})));
-    await tester.pumpAndSettle();
-    expect(tester.getSize(byModalButton('Tạm dừng đếm')).height, 40);
-  });
-
-  testWidgets('prominent on touch has radius 20', (tester) async {
-    useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_button(prominent: true, onPressed: () {})));
+    expect(tester.getSize(byModalButton('Tạm dừng đếm')).height, 48);
     expect(
       (_deco(tester).shape as RoundedRectangleBorder).borderRadius,
-      KRadius.lg,
+      KRadius.full,
     );
+    useWindow(tester, const Size(1300, 800));
+    await tester.pumpWidget(host(_button(onPressed: () {})));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(byModalButton('Tạm dừng đếm')).height, 40);
   });
 
   testWidgets('destructive: error text on an error 40 % outline', (
@@ -238,7 +225,6 @@ void main() {
         _button(
           label: 'Tiếp tục đếm',
           emphasis: KModalEmphasis.primary,
-          prominent: true,
           icon: KIcons.play,
           onPressed: () {},
           focusNode: node,

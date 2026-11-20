@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
 import '../tokens/k_icon_size.dart';
+import '../tokens/k_layout.dart';
 import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
@@ -25,9 +26,9 @@ enum KModalEmphasis {
   destructive,
 }
 
-/// Footer / control button of a modal (sheet or dialog): 56 dp on touch
-/// shells, 40 on desktop. [prominent] is the big running control (64 dp,
-/// radius 20 on touch shells; 40 on desktop).
+/// Footer / control button of a modal (sheet or dialog): a 48 dp stadium on
+/// touch shells, 40 on desktop; the running screen's − / + and pause buttons
+/// are the same size.
 ///
 /// One widget whatever the emphasis, so a pause <-> resume swap only changes
 /// [emphasis], [label] and [icon]: the element, its [focusNode] and the
@@ -38,7 +39,6 @@ class KModalButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.emphasis = KModalEmphasis.primary,
-    this.prominent = false,
     this.icon,
     this.focusNode,
     this.autofocus = false,
@@ -48,7 +48,6 @@ class KModalButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final KModalEmphasis emphasis;
-  final bool prominent;
   final IconData? icon;
   final FocusNode? focusNode;
   final bool autofocus;
@@ -63,8 +62,8 @@ class KModalButton extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final desktop = FormFactor.of(context) == FormFactor.desktop;
     final enabled = onPressed != null;
-    final radius = prominent && !desktop ? KRadius.lg : KRadius.full;
-    final minHeight = desktop ? 40.0 : (prominent ? 64.0 : 56.0);
+    const radius = KRadius.full;
+    final minHeight = desktop ? 40.0 : KLayout.minTarget;
     final dim = scheme.onSurface.withValues(alpha: 0.38);
     final (Color? fill, Color fg, Color? line) = switch (emphasis) {
       KModalEmphasis.primary => (scheme.primary, scheme.onPrimary, null),
@@ -84,9 +83,7 @@ class KModalButton extends StatelessWidget {
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : KMotion.fast;
-    final style = (desktop ? text.labelLarge : text.titleMedium)?.copyWith(
-      fontWeight: FontWeight.w700,
-    );
+    final style = text.labelLarge?.copyWith(fontWeight: FontWeight.w700);
     return KPressSurface(
       onPressed: onPressed,
       radius: radius,

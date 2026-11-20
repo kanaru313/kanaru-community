@@ -70,7 +70,7 @@ class SleepTimerHeader extends StatelessWidget {
 }
 
 /// Buttons at the bottom of a screen: side by side filling the width on touch
-/// shells, at the end on desktop.
+/// shells (16 dp under the content), at the end on desktop.
 class SleepTimerFooter extends StatelessWidget {
   const SleepTimerFooter({super.key, required this.children});
 
@@ -86,7 +86,7 @@ class SleepTimerFooter extends StatelessWidget {
       ],
     ];
     return Padding(
-      padding: const EdgeInsets.only(top: KSpace.x2),
+      padding: EdgeInsets.only(top: desktop ? KSpace.x2 : KSpace.x4),
       child: Row(
         mainAxisAlignment: desktop
             ? MainAxisAlignment.end

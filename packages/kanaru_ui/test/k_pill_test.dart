@@ -239,4 +239,21 @@ void main() {
       Duration.zero,
     );
   });
+
+  group('info pill shows a normal label whole on a 360 dp phone', () {
+    for (final (label, scale) in [
+      ('Dừng lúc 23:40', 1.0),
+      ('Dừng lúc 23:40', 2.0),
+      ('Tạm dừng sau 3 bài, tính cả bài này', 1.0),
+    ]) {
+      testWidgets('"$label" at text $scale', (tester) async {
+        useWindow(tester, const Size(360, 640));
+        await tester.pumpWidget(host(_pill(label: label), textScale: scale));
+        expect(tester.takeException(), isNull);
+        expectTextsFit(tester, find.byType(KPill));
+        // Not held to the 56 dp of the ticking label.
+        expect(tester.getSize(find.text(label)).width, greaterThan(56 * scale));
+      });
+    }
+  });
 }

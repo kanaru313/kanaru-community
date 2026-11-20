@@ -127,6 +127,12 @@ class _KStartAreaState extends State<KStartArea> {
   }
 }
 
+/// Columns of the grid on touch shells at normal text size: change this one
+/// line to switch 2 <-> 3. From 200 % text touch shells use one column
+/// ([_touchColumnsLarge]), whatever this says.
+const int _touchColumns = 2;
+const int _touchColumnsLarge = 1;
+
 /// Grid of [KStartTile]s: 2 columns on touch shells, 3 on desktop; 1 / 2 from
 /// 200 % text. Tiles of a row share one height.
 class KStartTileGrid extends StatelessWidget {
@@ -138,7 +144,9 @@ class KStartTileGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final desktop = FormFactor.of(context) == FormFactor.desktop;
     final large = MediaQuery.textScalerOf(context).scale(14) / 14 >= 1.99;
-    final columns = (desktop ? 3 : 2) - (large ? 1 : 0);
+    final columns = desktop
+        ? (large ? 2 : 3)
+        : (large ? _touchColumnsLarge : _touchColumns);
     final rows = <Widget>[];
     for (var i = 0; i < children.length; i += columns) {
       if (rows.isNotEmpty) rows.add(const SizedBox(height: KSpace.x2));

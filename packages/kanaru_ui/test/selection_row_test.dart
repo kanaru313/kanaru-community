@@ -802,7 +802,7 @@ void actionRowTests() {
     semantics.dispose();
   });
 
-  testWidgets('touch: detail under the title, card at least 64 tall', (
+  testWidgets('touch: detail under the title, flat standard 56 row', (
     tester,
   ) async {
     useWindow(tester, _touchSize);
@@ -810,7 +810,7 @@ void actionRowTests() {
     final t = tester.getCenter(find.text('Hết bài này'));
     final d = tester.getCenter(find.text('còn 2:48'));
     expect(d.dy, greaterThan(t.dy));
-    expect(tester.getSize(find.byType(SelectionRow)).height, 64);
+    expect(tester.getSize(find.byType(SelectionRow)).height, 56);
   });
 
   testWidgets('desktop: dense 40 row, detail on the title line, right', (
@@ -957,7 +957,9 @@ void actionRowTests() {
     );
   });
 
-  testWidgets('opensMore: outlined on touch, no fill', (tester) async {
+  testWidgets('opensMore on touch: no outline, no fill, primary bold title', (
+    tester,
+  ) async {
     useWindow(tester, _touchSize);
     await tester.pumpWidget(host(_action(onTap: () {}, opensMore: true)));
     final scheme = Theme.of(tester.element(find.byType(SelectionRow)))
@@ -967,15 +969,71 @@ void actionRowTests() {
         .map((b) => b.decoration)
         .whereType<ShapeDecoration>();
     expect(
-      shapes.any(
+      shapes.every(
         (d) =>
             d.color == null &&
-            d.shape is RoundedRectangleBorder &&
-            (d.shape as RoundedRectangleBorder).side.color ==
-                scheme.outlineVariant,
+            (d.shape is! RoundedRectangleBorder ||
+                (d.shape as RoundedRectangleBorder).side == BorderSide.none),
       ),
       isTrue,
     );
+    final style = tester.widget<DefaultTextStyle>(
+      find
+          .ancestor(
+            of: find.text('Hết bài này'),
+            matching: find.byType(DefaultTextStyle),
+          )
+          .first,
+    );
+    expect(style.style.color, scheme.primary);
+    expect(style.style.fontWeight, FontWeight.w700);
+  });
+
+  testWidgets('touch row in a sheet: flat, spans the sheet, no gap', (
+    tester,
+  ) async {
+    useWindow(tester, _touchSize);
+    var taps = 0;
+    await tester.pumpWidget(
+      host(
+        KRowEdgesScope(
+          edges: KRowEdges.fullBleed,
+          child: Column(
+            children: [
+              _action(onTap: () => taps++),
+              _action(onTap: () {}),
+            ],
+          ),
+        ),
+      ),
+    );
+    final rows = find.byType(SelectionRow);
+    final first = tester.getRect(rows.first);
+    final ink = tester.getRect(find.byType(InkWell).first);
+    expect(ink.left, 0);
+    expect(ink.right, _touchSize.width);
+    expect(first.height, 56);
+    // No gap between rows.
+    expect(tester.getRect(rows.last).top, first.bottom);
+    await tester.tapAt(Offset(4, first.center.dy));
+    expect(taps, 1);
+    // Title keeps the 16 dp axis.
+    expect(tester.getTopLeft(find.byIcon(KIcons.sleepTimer).first).dx, 16);
+    // Square tint.
+  });
+
+  testWidgets('running card keeps a 56 tonal card, radius 12', (tester) async {
+    useWindow(tester, _touchSize);
+    await tester.pumpWidget(host(_action(onTap: () {}, running: true)));
+    final scheme = Theme.of(tester.element(find.byType(SelectionRow)))
+        .colorScheme;
+    expect(tester.getSize(find.byType(SelectionRow)).height, 56);
+    final card = tester
+        .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+        .map((b) => b.decoration)
+        .whereType<ShapeDecoration>()
+        .firstWhere((d) => d.color == scheme.primaryContainer);
+    expect((card.shape as RoundedRectangleBorder).borderRadius, KRadius.sm);
   });
 
   testWidgets('reduced motion: action row builds and taps', (tester) async {

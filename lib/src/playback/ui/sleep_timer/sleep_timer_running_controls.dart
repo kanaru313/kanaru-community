@@ -87,7 +87,6 @@ class SleepTimerRunningControls extends ConsumerWidget {
                     label: l10n.sleepTimerButtonMinusMinutes(step),
                     semanticLabel: l10n.sleepTimerRemoveMinutes(step),
                     emphasis: KModalEmphasis.tonal,
-                    prominent: true,
                     focusNode: focus.minus,
                     onPressed: c.canTakeMinutes
                         ? () => timer.addMinutes(-step)
@@ -100,7 +99,6 @@ class SleepTimerRunningControls extends ConsumerWidget {
                     label: l10n.sleepTimerButtonPlusMinutes(step),
                     semanticLabel: l10n.sleepTimerAddMinutes(step),
                     emphasis: KModalEmphasis.tonal,
-                    prominent: true,
                     focusNode: focus.plus,
                     onPressed: c.canAddMinutes
                         ? () => timer.addMinutes(step)
@@ -139,7 +137,6 @@ class SleepTimerRunningControls extends ConsumerWidget {
                 semanticLabel: l10n.sleepTimerRemoveTrack,
                 label: l10n.sleepTimerButtonMinusTracks(sleepTracksRange.step),
                 emphasis: KModalEmphasis.tonal,
-                prominent: true,
                 focusNode: focus.minus,
                 onPressed: c.canRemoveTrack ? () => timer.addTracks(-1) : null,
               ),
@@ -150,7 +147,6 @@ class SleepTimerRunningControls extends ConsumerWidget {
                 semanticLabel: l10n.sleepTimerAddTrack,
                 label: l10n.sleepTimerButtonPlusTracks(sleepTracksRange.step),
                 emphasis: KModalEmphasis.tonal,
-                prominent: true,
                 focusNode: focus.plus,
                 onPressed: c.canAddTrack ? () => timer.addTracks(1) : null,
               ),

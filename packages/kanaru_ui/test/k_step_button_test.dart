@@ -110,10 +110,10 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('56 on touch shells, 40 on desktop', (tester) async {
+  testWidgets('48 on touch shells, 40 on desktop', (tester) async {
     useWindow(tester, const Size(400, 800));
     await tester.pumpWidget(host(_step(onPressed: () {})));
-    expect(tester.getSize(byStepButton('Thêm 5 phút')), const Size(56, 56));
+    expect(tester.getSize(byStepButton('Thêm 5 phút')), const Size(48, 48));
     useWindow(tester, const Size(1300, 800));
     await tester.pumpWidget(host(_step(onPressed: () {})));
     await tester.pumpAndSettle();

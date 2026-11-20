@@ -2,11 +2,12 @@ import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
 import '../tokens/k_icon_size.dart';
+import '../tokens/k_layout.dart';
 import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import 'k_press_surface.dart';
 
-/// Tonal round − / + button beside a big number (56 dp on touch shells, 40 on
+/// Tonal round − / + button beside a big number (48 dp on touch shells, 40 on
 /// desktop). [onPressed] null = at its bound: dimmed, not focusable.
 /// [semanticLabel] is its spoken name ("Thêm 5 phút").
 class KStepButton extends StatelessWidget {
@@ -29,7 +30,7 @@ class KStepButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final desktop = FormFactor.of(context) == FormFactor.desktop;
-    final size = desktop ? 40.0 : 56.0;
+    final size = desktop ? 40.0 : KLayout.minTarget;
     final enabled = onPressed != null;
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero

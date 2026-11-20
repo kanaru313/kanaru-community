@@ -246,6 +246,20 @@ void main() {
     await g2.up();
   });
 
+  testWidgets('touch tile: 56 tall, radius 12', (tester) async {
+    useWindow(tester, _touch);
+    await tester.pumpWidget(host(_tile(onPressed: () {})));
+    expect(tester.getSize(byStartTile('Bắt đầu 15 phút')).height, 56);
+    final box = tester.widget<Container>(
+      find.descendant(
+        of: find.byType(KFocusRing),
+        matching: find.byType(Container),
+      ),
+    );
+    final shape = (box.decoration! as ShapeDecoration).shape;
+    expect((shape as RoundedRectangleBorder).borderRadius, KRadius.sm);
+  });
+
   testWidgets('opensMore: outlined, icon on touch only', (tester) async {
     useWindow(tester, _touch);
     await tester.pumpWidget(

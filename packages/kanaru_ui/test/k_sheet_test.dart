@@ -314,6 +314,37 @@ void main() {
       expect(footer, 1);
     });
 
+    for (final inset in [24.0, 48.0]) {
+      testWidgets('bottom system inset $inset: footer fully visible and '
+          'tappable, 24 dp above the bar', (tester) async {
+        useWindow(tester, const Size(400, 800));
+        tester.view.padding = FakeViewPadding(bottom: inset);
+        tester.view.viewPadding = FakeViewPadding(bottom: inset);
+        addTearDown(tester.view.resetPadding);
+        addTearDown(tester.view.resetViewPadding);
+        var taps = 0;
+        await tester.pumpWidget(
+          scaledHost(
+            modalOpener(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 100),
+                  TextButton(onPressed: () => taps++, child: const Text('ok')),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+        final bottom = tester.getRect(find.byType(TextButton).last).bottom;
+        expect(bottom, lessThanOrEqualTo(800 - inset - 24 + 0.5));
+        await tester.tap(find.text('ok'));
+        expect(taps, 1);
+      });
+    }
+
     for (final (name, width) in [('dialog', 1200.0), ('sheet', 400.0)]) {
       testWidgets('returnFocus gets focus back when attached ($name)', (
         tester,

@@ -20,6 +20,10 @@ const double _kMaxLabel = 56;
 /// shells and 32 on desktop. With [onPressed] it is a button: [focusNode] is
 /// kept across label changes, hover 8 %, press 10 %, keyboard focus ring 2.
 ///
+/// The label of a button pill (the ticking indicator) is capped at 56 dp
+/// (scaled with the text) so it stays small; an info pill shows its whole
+/// label and is cut only when its parent is narrower.
+///
 /// [widestLabel] is the widest string the label will ever show; the label box
 /// never gets narrower than it, so a ticking label does not relayout its
 /// neighbours. [held] draws the icon in `onSurfaceVariant` (a paused state).
@@ -66,13 +70,19 @@ class KPill extends StatelessWidget {
       color: scheme.onSurfaceVariant,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
-    final maxLabel = MediaQuery.textScalerOf(context).scale(_kMaxLabel);
+    final maxLabel = _isButton
+        ? MediaQuery.textScalerOf(context).scale(_kMaxLabel)
+        : double.infinity;
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : KMotion.fast;
 
-    Widget text(String s) =>
-        Text(s, maxLines: 1, overflow: TextOverflow.ellipsis, style: style);
+    Widget text(String s) => Text(
+      s,
+      maxLines: _isButton ? 1 : 2,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    );
 
     Widget face(double overlay) => AnimatedContainer(
       duration: duration,
@@ -98,15 +108,17 @@ class KPill extends StatelessWidget {
             color: held ? scheme.onSurfaceVariant : scheme.primary,
           ),
           const SizedBox(width: KSpace.x2),
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxLabel),
-            child: Stack(
-              alignment: AlignmentDirectional.centerStart,
-              children: [
-                if (widestLabel != null)
-                  Opacity(opacity: 0, child: text(widestLabel!)),
-                text(label),
-              ],
+          Flexible(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxLabel),
+              child: Stack(
+                alignment: AlignmentDirectional.centerStart,
+                children: [
+                  if (widestLabel != null)
+                    Opacity(opacity: 0, child: text(widestLabel!)),
+                  text(label),
+                ],
+              ),
             ),
           ),
         ],
