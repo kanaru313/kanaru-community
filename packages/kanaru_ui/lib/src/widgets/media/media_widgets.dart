@@ -10,6 +10,7 @@ export 'k_count_stepper.dart';
 export 'k_menu_width.dart';
 export 'k_overflow_tooltip.dart';
 export 'k_progress_line.dart';
+export 'k_progress_ring_icon.dart' show KProgressRingIcon;
 export 'k_queue_strip.dart';
 export 'k_repeat_icon.dart';
 export 'k_shared_flight.dart';

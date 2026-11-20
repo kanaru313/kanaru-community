@@ -1,0 +1,179 @@
+import 'package:material_ui/material_ui.dart';
+
+import '../layout/form_factor.dart';
+import '../tokens/k_icon_size.dart';
+import '../tokens/k_motion.dart';
+import '../tokens/k_shape.dart';
+import '../tokens/k_space.dart';
+import 'k_focus_ring.dart';
+
+/// Where a button [KPill] sits: the default is 40 high, the desktop player
+/// bar's is 36.
+enum KPillPlacement { standard, playerBar }
+
+const double _kMaxLabel = 56;
+const double _kPressedOverlay = 0.10;
+const double _kHoverOverlay = 0.08;
+
+/// Stadium with an icon and a short label (the sleep timer's "Dừng lúc 23:40"
+/// and its running indicator).
+///
+/// Without [onPressed] it is an info pill: not focusable, 36 high on touch
+/// shells and 32 on desktop. With [onPressed] it is a button: [focusNode] is
+/// kept across label changes, hover 8 %, press 10 %, keyboard focus ring 2.
+///
+/// [widestLabel] is the widest string the label will ever show; the label box
+/// never gets narrower than it, so a ticking label does not relayout its
+/// neighbours. [held] draws the icon in `onSurfaceVariant` (a paused state).
+/// [semanticLabel] is spoken instead of the label (minute precision comes
+/// from the caller).
+class KPill extends StatefulWidget {
+  const KPill({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.onPressed,
+    this.focusNode,
+    this.tooltip,
+    this.semanticLabel,
+    this.widestLabel,
+    this.held = false,
+    this.placement = KPillPlacement.standard,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final FocusNode? focusNode;
+  final String? tooltip;
+  final String? semanticLabel;
+  final String? widestLabel;
+  final bool held;
+  final KPillPlacement placement;
+
+  @override
+  State<KPill> createState() => _KPillState();
+}
+
+class _KPillState extends State<KPill> {
+  bool _hovered = false;
+  bool _pressed = false;
+  bool _focused = false;
+
+  bool get _isButton => widget.onPressed != null;
+
+  double _height(bool desktop) {
+    if (!_isButton) return desktop ? 32 : 36;
+    return widget.placement == KPillPlacement.playerBar ? 36 : 40;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final desktop = FormFactor.of(context) == FormFactor.desktop;
+    final iconSize = _isButton ? KIconSize.md : KIconSize.sm;
+    final style = theme.textTheme.labelMedium?.copyWith(
+      color: scheme.onSurfaceVariant,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final maxLabel = MediaQuery.textScalerOf(context).scale(_kMaxLabel);
+    final overlay = !_isButton
+        ? 0.0
+        : (_pressed ? _kPressedOverlay : (_hovered ? _kHoverOverlay : 0.0));
+    final duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : KMotion.fast;
+
+    Widget text(String s) =>
+        Text(s, maxLines: 1, overflow: TextOverflow.ellipsis, style: style);
+
+    Widget body = KFocusRing(
+      focused: _focused,
+      radius: KRadius.full,
+      child: AnimatedContainer(
+        duration: duration,
+        curve: KMotion.emphasized,
+        constraints: BoxConstraints(minHeight: _height(desktop)),
+        padding: const EdgeInsetsDirectional.only(
+          start: KSpace.x1 + 2,
+          end: KSpace.x2 + 6,
+        ),
+        decoration: ShapeDecoration(
+          color: Color.alphaBlend(
+            scheme.onSurface.withValues(alpha: overlay),
+            scheme.surfaceContainerHighest,
+          ),
+          shape: KShape.of(KRadius.full),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              widget.icon,
+              size: iconSize,
+              color: widget.held ? scheme.onSurfaceVariant : scheme.primary,
+            ),
+            const SizedBox(width: KSpace.x2),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxLabel),
+              child: Stack(
+                alignment: AlignmentDirectional.centerStart,
+                children: [
+                  if (widget.widestLabel != null)
+                    Opacity(opacity: 0, child: text(widget.widestLabel!)),
+                  text(widget.label),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (!_isButton) {
+      return Semantics(
+        container: true,
+        label: widget.semanticLabel ?? widget.label,
+        child: ExcludeSemantics(child: body),
+      );
+    }
+
+    body = FocusableActionDetector(
+      focusNode: widget.focusNode,
+      mouseCursor: SystemMouseCursors.click,
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            widget.onPressed?.call();
+            return null;
+          },
+        ),
+      },
+      onShowFocusHighlight: (v) => setState(() => _focused = v),
+      onShowHoverHighlight: (v) => setState(() => _hovered = v),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
+        onTap: widget.onPressed,
+        child: body,
+      ),
+    );
+    if (widget.tooltip != null) {
+      body = Tooltip(
+        message: widget.tooltip,
+        excludeFromSemantics: true,
+        child: body,
+      );
+    }
+    return Semantics(
+      container: true,
+      button: true,
+      label: widget.semanticLabel ?? widget.tooltip ?? widget.label,
+      onTap: widget.onPressed,
+      child: ExcludeSemantics(child: body),
+    );
+  }
+}

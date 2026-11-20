@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -12,6 +13,7 @@ KCheckMark _mark(WidgetTester tester) =>
 
 void main() {
   tintFadeTests();
+  actionRowTests();
   for (final (name, brightness, scale) in hostVariants) {
     testWidgets('text rows: mark at the start, ring when off ($name)', (
       tester,
@@ -694,4 +696,201 @@ void tintFadeTests() {
       },
     );
   }
+}
+
+const _touchSize = Size(400, 800);
+const _deskSize = Size(1300, 800);
+
+Widget _action({
+  VoidCallback? onTap,
+  String? reason,
+  bool opensMore = false,
+  bool running = false,
+  bool autofocus = false,
+}) => SelectionRow(
+  action: true,
+  selected: false,
+  leading: const Icon(KIcons.sleepTimer),
+  title: const Text('Hết bài này'),
+  subtitle: const Text('còn 2:48'),
+  disabledReason: reason,
+  opensMore: opensMore,
+  running: running,
+  autofocus: autofocus,
+  onTap: onTap,
+);
+
+void actionRowTests() {
+  for (final (name, brightness, scale) in hostVariants) {
+    testWidgets('action rows lay out without overflow at 320 ($name)', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(320, 700));
+      await tester.pumpWidget(
+        host(
+          Column(
+            children: [
+              _action(onTap: () {}),
+              _action(reason: 'Bài này không có album'),
+              _action(onTap: () {}, opensMore: true),
+              _action(onTap: () {}, running: true),
+            ],
+          ),
+          brightness: brightness,
+          textScale: scale,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('action: a button, no mark, no selected or checked state', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    var taps = 0;
+    await tester.pumpWidget(host(_action(onTap: () => taps++)));
+    expect(find.byType(KCheckMark), findsNothing);
+    final node = tester.getSemantics(find.byType(SelectionRow));
+    expect(
+      node,
+      isSemantics(
+        label: 'Hết bài này\ncòn 2:48',
+        isButton: true,
+        hasEnabledState: true,
+        isEnabled: true,
+        hasTapAction: true,
+        isFocusable: true,
+        hasFocusAction: true,
+      ),
+    );
+    await tester.tap(find.byType(SelectionRow));
+    expect(taps, 1);
+    semantics.dispose();
+  });
+
+  testWidgets('disabledReason: dimmed, reason replaces the detail, no taps, '
+      'not focusable', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var taps = 0;
+    await tester.pumpWidget(
+      host(_action(onTap: () => taps++, reason: 'Bài này không có album')),
+    );
+    expect(find.text('Bài này không có album'), findsOneWidget);
+    expect(find.text('còn 2:48'), findsNothing);
+    final node = tester.getSemantics(find.byType(SelectionRow));
+    expect(
+      node,
+      isSemantics(
+        label: 'Hết bài này\nBài này không có album',
+        isButton: true,
+        hasEnabledState: true,
+        isEnabled: false,
+      ),
+    );
+    await tester.tap(find.byType(SelectionRow), warnIfMissed: false);
+    expect(taps, 0);
+    expect(
+      tester.widget<InkWell>(find.byType(InkWell)).canRequestFocus,
+      isFalse,
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('touch: detail under the title, card at least 64 tall', (
+    tester,
+  ) async {
+    useWindow(tester, _touchSize);
+    await tester.pumpWidget(host(_action(onTap: () {})));
+    final t = tester.getCenter(find.text('Hết bài này'));
+    final d = tester.getCenter(find.text('còn 2:48'));
+    expect(d.dy, greaterThan(t.dy));
+    expect(tester.getSize(find.byType(SelectionRow)).height, 64);
+  });
+
+  testWidgets('desktop: dense 40 row, detail on the title line, right', (
+    tester,
+  ) async {
+    useWindow(tester, _deskSize);
+    await tester.pumpWidget(host(_action(onTap: () {})));
+    final t = tester.getCenter(find.text('Hết bài này'));
+    final d = tester.getCenter(find.text('còn 2:48'));
+    expect((d.dy - t.dy).abs(), lessThan(4));
+    expect(d.dx, greaterThan(t.dx));
+    expect(tester.getSize(find.byType(SelectionRow)).height, 40);
+  });
+
+  testWidgets('hover / press state layers are 8 % / 10 %', (tester) async {
+    await tester.pumpWidget(host(_action(onTap: () {})));
+    final scheme = Theme.of(tester.element(find.byType(SelectionRow)))
+        .colorScheme;
+    final ink = tester.widget<InkWell>(find.byType(InkWell));
+    expect(ink.hoverColor, scheme.onSurface.withValues(alpha: 0.08));
+    expect(ink.highlightColor, scheme.onSurface.withValues(alpha: 0.10));
+    expect(ink.focusColor, scheme.onSurface.withValues(alpha: 0.10));
+  });
+
+  testWidgets('autofocus takes focus; Enter activates', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      host(_action(onTap: () => taps++, autofocus: true)),
+    );
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    expect(taps, 1);
+  });
+
+  testWidgets('running: primaryContainer card with a trailing chevron; '
+      'keyboard focus draws the ring', (tester) async {
+    useKeyboardHighlight();
+    await tester.pumpWidget(
+      host(_action(onTap: () {}, running: true, autofocus: true)),
+    );
+    await tester.pump();
+    final scheme = Theme.of(tester.element(find.byType(SelectionRow)))
+        .colorScheme;
+    final fill = tester
+        .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+        .map((b) => b.decoration)
+        .whereType<ShapeDecoration>()
+        .map((d) => d.color);
+    expect(fill, contains(scheme.primaryContainer));
+    expect(find.byIcon(KIcons.chevronRight), findsOneWidget);
+    expect(
+      tester
+          .widgetList<KFocusRing>(find.byType(KFocusRing))
+          .any((r) => r.visible),
+      isTrue,
+    );
+  });
+
+  testWidgets('opensMore: outlined on touch, no fill', (tester) async {
+    useWindow(tester, _touchSize);
+    await tester.pumpWidget(host(_action(onTap: () {}, opensMore: true)));
+    final scheme = Theme.of(tester.element(find.byType(SelectionRow)))
+        .colorScheme;
+    final shapes = tester
+        .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+        .map((b) => b.decoration)
+        .whereType<ShapeDecoration>();
+    expect(
+      shapes.any(
+        (d) =>
+            d.color == null &&
+            d.shape is RoundedRectangleBorder &&
+            (d.shape as RoundedRectangleBorder).side.color ==
+                scheme.outlineVariant,
+      ),
+      isTrue,
+    );
+  });
+
+  testWidgets('reduced motion: action row builds and taps', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      host(_action(onTap: () => taps++), reduceMotion: true),
+    );
+    await tester.tap(find.byType(SelectionRow));
+    expect(taps, 1);
+  });
 }
