@@ -7,6 +7,16 @@ import 'k_icon_button_face.dart';
 import 'k_icon_button_pulse.dart';
 import 'k_icon_button_scope.dart';
 
+/// Shape of a [KIconButton]'s target.
+enum KIconButtonShape {
+  /// The icon plus its padding.
+  standard,
+
+  /// A round 40 dp target with a 10 % press layer (the ring button of the
+  /// sleep timer); [KIconButton.padding] is ignored.
+  circle,
+}
+
 /// Light icon button: the icon plus its [padding], no disc and no 48 dp box
 /// (width = icon + horizontal padding, height = icon + vertical padding).
 ///
@@ -38,6 +48,7 @@ class KIconButton extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: KSpace.x2),
     this.focusNode,
     this.autofocus = false,
+    this.shape = KIconButtonShape.standard,
   }) : assert(
          (icon == null) != (child == null),
          'give exactly one of icon and child',
@@ -86,6 +97,9 @@ class KIconButton extends StatefulWidget {
   final EdgeInsetsGeometry padding;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// [KIconButtonShape.circle]: round 40 dp target, press layer, focus ring.
+  final KIconButtonShape shape;
 
   @override
   State<KIconButton> createState() => _KIconButtonState();
@@ -194,8 +208,12 @@ class _KIconButtonState extends State<KIconButton>
               onTap: _enabled ? _tap : null,
               onLongPress: _enabled ? _longPress : null,
               child: Padding(
-                padding: widget.padding,
+                padding: widget.shape == KIconButtonShape.circle
+                    ? EdgeInsets.zero
+                    : widget.padding,
                 child: KIconButtonFace(
+                  circle: widget.shape == KIconButtonShape.circle,
+                  fill: scheme.onSurface.withValues(alpha: 0.10 * _pulse.value),
                   key: KIconButton.ringKey,
                   icon: widget.selected == true
                       ? widget.selectedIcon ?? widget.icon

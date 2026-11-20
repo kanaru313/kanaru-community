@@ -155,4 +155,73 @@ void main() {
     await tester.tap(find.text('c'), warnIfMissed: false);
     expect(taps, 0);
   });
+
+  group('KChip dense', () {
+    for (final (width, height) in [(400.0, 40.0), (1300.0, 32.0)]) {
+      testWidgets('is $height dp tall at ${width}dp', (tester) async {
+        useWindow(tester, Size(width, 800));
+        await tester.pumpWidget(
+          host(const Center(child: KChip(label: Text('15 ph'), dense: true))),
+        );
+        expect(tester.getSize(find.byType(KChip)).height, height);
+      });
+    }
+
+    testWidgets('touch: r12 corners; default stays a 48 dp stadium', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      ShapeBorder shapeOf(WidgetTester t) => t
+          .widget<Material>(
+            find
+                .descendant(
+                  of: find.byType(KChip),
+                  matching: find.byType(Material),
+                )
+                .first,
+          )
+          .shape!;
+      await tester.pumpWidget(
+        host(const Center(child: KChip(label: Text('a'), dense: true))),
+      );
+      expect(
+        (shapeOf(tester) as RoundedRectangleBorder).borderRadius,
+        KRadius.sm,
+      );
+      await tester.pumpWidget(host(const Center(child: KChip(label: Text('a')))));
+      expect(tester.getSize(find.byType(KChip)).height, 48);
+    });
+
+    testWidgets('keeps selected state and taps', (tester) async {
+      var taps = 0;
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        host(
+          Center(
+            child: KChip(
+              label: const Text('1 giờ'),
+              dense: true,
+              selected: true,
+              onTap: () => taps++,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('1 giờ'));
+      expect(taps, 1);
+      expect(find.bySemanticsLabel('1 giờ'), findsOneWidget);
+      semantics.dispose();
+    });
+
+    testWidgets('200 % text does not overflow at 320 wide', (tester) async {
+      useWindow(tester, const Size(320, 640));
+      await tester.pumpWidget(
+        host(
+          const Center(child: KChip(label: Text('1 giờ 30'), dense: true)),
+          textScale: 2,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    });
+  });
 }

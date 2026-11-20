@@ -12,6 +12,11 @@ abstract final class KLayout {
   static const double dialogWide = 620;
   static const double sheet = 640;
 
+  /// Modal dialog of `showKSheet(dialog: KSheetDialog.modal)`; the large one
+  /// from 200 % text.
+  static const double dialogModal = 420;
+  static const double dialogModalLarge = 520;
+
   /// Max width of the "Sắp xếp theo" box (`KSortDialog`), centred on both shells.
   static const double sortDialog = 400;
 
