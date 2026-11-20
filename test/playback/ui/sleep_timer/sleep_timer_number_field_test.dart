@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/ui/sleep_timer/sleep_timer_draft.dart';
 import 'package:kanaru/src/playback/ui/sleep_timer/sleep_timer_number_field.dart';
@@ -44,6 +45,7 @@ class _HostState extends State<_Host> {
 }
 
 void main() {
+  realTapTests();
   late FocusNode focus;
   late List<String> log;
 
@@ -307,4 +309,73 @@ void main() {
     expect(shown(tester), '7');
     await tester.pumpWidget(const SizedBox());
   });
+}
+
+/// The real gesture path of a phone: the framework's own tap handling runs
+/// (caret placement, toolbar), then typing goes through the text input channel.
+void realTapTests() {
+  for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
+    for (final composing in [false, true]) {
+      testWidgets(
+        'real tap on $platform (composing after typing: $composing): every tap '
+        'selects all, typing replaces',
+        (tester) async {
+          debugDefaultTargetPlatformOverride = platform;
+          final focus = FocusNode();
+          addTearDown(focus.dispose);
+          final log = <String>[];
+          tester.view.physicalSize = const Size(400, 800);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.reset);
+          await tester.pumpWidget(
+            _Host(focus: focus, log: log, range: sleepTracksRange),
+          );
+          final controller = tester
+              .widget<TextField>(find.byType(TextField))
+              .controller!;
+
+          /// Replaces the selection with [digit] like the keyboard does.
+          Future<void> type(String digit) async {
+            final v = controller.value;
+            final text = v.text.replaceRange(
+              v.selection.start,
+              v.selection.end,
+              digit,
+            );
+            final end = v.selection.start + digit.length;
+            tester.testTextInput.updateEditingValue(
+              TextEditingValue(
+                text: text,
+                selection: TextSelection.collapsed(offset: end),
+                composing: composing
+                    ? TextRange(start: 0, end: text.length)
+                    : TextRange.empty,
+              ),
+            );
+            await tester.pump();
+          }
+
+          await tester.tap(find.byType(TextField));
+          await tester.pump(const Duration(seconds: 1));
+          await type('6');
+          expect(controller.text, '6');
+
+          // Second tap on the focused field, past the double-tap timeout.
+          await tester.pump(const Duration(seconds: 1));
+          await tester.tap(find.byType(TextField));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 500));
+          expect(
+            controller.selection,
+            const TextSelection(baseOffset: 0, extentOffset: 1),
+          );
+          await type('7');
+          expect(controller.text, '7');
+          if (!composing) expect(log.last, 'changed 7');
+          // Must be unset before the test body ends (checked by the binding).
+          debugDefaultTargetPlatformOverride = null;
+        },
+      );
+    }
+  }
 }

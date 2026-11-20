@@ -125,13 +125,16 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
   /// after this callback, so select after that.
   void _onTap() {
     if (FormFactor.of(context) == FormFactor.desktop) return;
-    _selectAllAfterFrame();
+    // A tap is explicit: select even when the keyboard left the typed digit
+    // under a composing region (many Android keyboards do), which would
+    // otherwise keep the caret collapsed and make the next digit append.
+    _selectAllAfterFrame(overrideComposing: true);
   }
 
-  void _selectAllAfterFrame() {
+  void _selectAllAfterFrame({bool overrideComposing = false}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_focus.hasFocus) return;
-      if (_composing(_controller.value)) return;
+      if (!overrideComposing && _composing(_controller.value)) return;
       _selectAll();
     });
     // A callback alone does not make a frame: ask for one so it runs now.
@@ -160,9 +163,12 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
     }
   }
 
-  void _selectAll() => _controller.selection = TextSelection(
-    baseOffset: 0,
-    extentOffset: _controller.text.length,
+  void _selectAll() => _controller.value = _controller.value.copyWith(
+    selection: TextSelection(
+      baseOffset: 0,
+      extentOffset: _controller.text.length,
+    ),
+    composing: TextRange.empty,
   );
 
   void _onEdited(String text) {
