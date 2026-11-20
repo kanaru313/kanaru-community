@@ -6,6 +6,7 @@ import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
+import 'package:kanaru/src/playback/state/sleep_timer_provider.dart';
 import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/playback/ui/volume_control.dart';
@@ -19,6 +20,7 @@ import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
 import '../support/icon_button_finders.dart';
 import '../playback/support/ui_host.dart';
+import '../playback/ui/sleep_timer/sleep_timer_modal_host.dart';
 
 Widget get _bar =>
     const Align(alignment: Alignment.bottomCenter, child: PlayerBar());
@@ -42,13 +44,54 @@ void main() {
     expect(find.byTooltip('Open Now Playing'), findsWidgets);
   });
 
-  testWidgets('sleep timer is dimmed with a coming-soon tooltip', (
-    tester,
-  ) async {
-    await _pump(tester, 1280);
-    final button = iconButtonAround(tester, find.byIcon(KIcons.sleepTimer));
-    expect(button.enabled, isFalse);
-    expect(button.tooltip, contains('Coming soon'));
+  group('sleep timer entry', () {
+    Future<FakeSleepTimer> pumpBar(WidgetTester tester, double width) async {
+      final host = await pumpWithPlayer(
+        tester,
+        _bar,
+        size: Size(width, 700),
+        overrides: [
+          sleepTimerProvider.overrideWith(FakeSleepTimer.new),
+          ...sleepEstimates(),
+        ],
+      );
+      return host.container.read(sleepTimerProvider.notifier) as FakeSleepTimer;
+    }
+
+    testWidgets('off: an enabled icon that says it sets a timer', (
+      tester,
+    ) async {
+      await pumpBar(tester, 1280);
+      final button = iconButtonAround(tester, find.byIcon(KIcons.sleepTimer));
+      expect(button.enabled, isTrue);
+      expect(button.tooltip, 'Sleep timer');
+      expect(find.byType(KPill), findsNothing);
+    });
+
+    testWidgets('running: the icon gives way to a pill with the time left', (
+      tester,
+    ) async {
+      final timer = await pumpBar(tester, 1280);
+      timer.set(runningMinutes());
+      await tester.pump();
+      expect(find.byIcon(KIcons.sleepTimer), findsNothing);
+      final pill = tester.widget<KPill>(find.byType(KPill));
+      expect(pill.label, '23:41');
+      expect(pill.placement, KPillPlacement.playerBar);
+      // Before the lyrics button, in the tools part.
+      expect(
+        tester.getCenter(find.byType(KPill)).dx,
+        lessThan(tester.getCenter(byIconButton('Lyrics')).dx),
+      );
+    });
+
+    testWidgets('under 1000 there is no entry at all', (tester) async {
+      final timer = await pumpBar(tester, 999);
+      timer.set(runningMinutes());
+      await tester.pump();
+      expect(find.byType(KPill), findsNothing);
+      expect(find.byIcon(KIcons.sleepTimer), findsNothing);
+    });
   });
 
   testWidgets('the heart sits right after the title text', (tester) async {

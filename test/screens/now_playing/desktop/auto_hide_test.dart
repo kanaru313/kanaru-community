@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/now_playing_auto_hide.dart';
+import 'package:kanaru/src/screens/now_playing/ui/desktop/now_playing_chrome.dart';
 import 'package:material_ui/material_ui.dart';
 
 Future<AutoHideController> _pump(
@@ -150,5 +151,27 @@ void main() {
       Duration.zero,
     );
     expect(_opacity(tester), 0);
+  });
+
+  testWidgets('floating pins count apart from the pointer pin', (tester) async {
+    final chrome = NowPlayingChrome();
+    addTearDown(chrome.dispose);
+    expect(chrome.hasFloating, isFalse);
+    chrome.pin();
+    expect(chrome.hasFloating, isFalse);
+    chrome.pinFloating();
+    chrome.pinFloating();
+    expect(chrome.hasFloating, isTrue);
+    chrome.unpinFloating();
+    expect(chrome.hasFloating, isTrue);
+    chrome.unpinFloating();
+    expect(chrome.hasFloating, isFalse);
+    // A stray extra release neither throws nor eats the pointer's pin.
+    chrome.unpinFloating();
+    await tester.pump(const Duration(seconds: 10));
+    expect(chrome.visible.value, isTrue);
+    chrome.unpin();
+    await tester.pump(const Duration(seconds: 4));
+    expect(chrome.visible.value, isFalse);
   });
 }

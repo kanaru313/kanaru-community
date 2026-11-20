@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
+import 'package:kanaru/src/playback/state/sleep_timer_provider.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/playback/ui/volume_control.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_now_playing_header.dart';
@@ -12,10 +13,17 @@ import '../../../support/icon_button_finders.dart';
 
 import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
+import '../../../playback/ui/sleep_timer/sleep_timer_modal_host.dart';
 import '../../../shell/support/desktop_now_playing_host.dart';
 
 Future<DesktopHost> _open(WidgetTester tester) async {
-  final host = await pumpDesktopShell(tester);
+  final host = await pumpDesktopShell(
+    tester,
+    overrides: [
+      sleepTimerProvider.overrideWith(FakeSleepTimer.new),
+      ...sleepEstimates(),
+    ],
+  );
   host.container.read(nowPlayingPanelProvider.notifier).open();
   await tester.pump();
   await settleSlide(tester);
@@ -78,18 +86,36 @@ void main() {
     expect(_in(header, find.byIcon(KIcons.shuffle)), findsNothing);
   });
 
-  testWidgets('unbuilt items are dimmed and inert', (tester) async {
+  testWidgets('the sleep timer is a live entry; only translate is dimmed', (
+    tester,
+  ) async {
     await _open(tester);
-    final button = tester.widget<KIconButton>(
-      byIconButton('Sleep timer · Coming soon'),
-    );
-    expect(button.onPressed, isNull);
+    final button = tester.widget<KIconButton>(byIconButton('Sleep timer'));
+    expect(button.onPressed, isNotNull);
     final chip = find.ancestor(
       of: find.text('Translate'),
       matching: find.byType(Opacity),
     );
     expect(tester.widget<Opacity>(chip.first).opacity, lessThan(1));
     expect(find.byTooltip('Translate · Coming soon'), findsOneWidget);
+  });
+
+  testWidgets('a running timer shows its pill in the header, not the icon', (
+    tester,
+  ) async {
+    final host = await _open(tester);
+    (host.container.read(sleepTimerProvider.notifier) as FakeSleepTimer).set(
+      runningMinutes(),
+    );
+    await tester.pump();
+    expect(_in(header, find.byIcon(KIcons.sleepTimer)), findsNothing);
+    final pill = tester.widget<KPill>(_in(header, find.byType(KPill)));
+    expect(pill.label, '23:41');
+    expect(pill.placement, KPillPlacement.standard);
+    // Between repeat and volume.
+    final x = _x(tester, _in(header, find.byType(KPill)));
+    expect(x, greaterThan(_x(tester, _in(header, find.byType(RepeatButton)))));
+    expect(x, lessThan(_x(tester, _in(header, find.byType(VolumeControl)))));
   });
 
   testWidgets('the header is 64 dp tall', (tester) async {

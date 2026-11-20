@@ -5,35 +5,38 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/state/track_info_providers.dart';
+import '../../../../playback/ui/sleep_timer/sleep_timer_entries.dart';
+import '../../../../playback/ui/sleep_timer/sleep_timer_modal.dart';
 import '../../../../playback/ui/transport_buttons.dart';
 import '../../../../playback/ui/volume_control.dart';
 import '../favorite_button.dart';
 import '../now_playing_playlist_actions.dart';
 import 'desktop_more_menu.dart';
+import 'now_playing_chrome.dart';
 
 /// Height of the header strip across the top of Now Playing.
 const double desktopNowPlayingHeaderHeight = 64;
 
 /// Left: close, show/hide the cover column | favourite, add to playlist,
-/// translate chip (soon). Right: repeat, sleep timer (soon), volume, more.
+/// translate chip (soon). Right: repeat, sleep timer, volume, more.
 /// There is no Shuffle (it is on the queue panel and the player bar) and no
 /// window buttons (they are on the top bar).
 ///
-/// [floatingOpen] is true while the More menu is open, so whoever hides the
-/// header keeps it shown.
+/// The More menu and the sleep timer modal pin [chrome] while open, so
+/// whoever hides the header keeps it shown.
 class DesktopNowPlayingHeader extends ConsumerStatefulWidget {
   const DesktopNowPlayingHeader({
     super.key,
     required this.onClose,
     required this.columnShown,
     required this.onToggleColumn,
-    required this.floatingOpen,
+    required this.chrome,
   });
 
   final VoidCallback onClose;
   final bool columnShown;
   final VoidCallback onToggleColumn;
-  final ValueNotifier<bool> floatingOpen;
+  final NowPlayingChrome chrome;
 
   @override
   ConsumerState<DesktopNowPlayingHeader> createState() =>
@@ -42,11 +45,19 @@ class DesktopNowPlayingHeader extends ConsumerStatefulWidget {
 
 class _DesktopNowPlayingHeaderState
     extends ConsumerState<DesktopNowPlayingHeader> {
-  @override
-  void dispose() {
-    // The menu leaves with the header: give the pin back.
-    widget.floatingOpen.value = false;
-    super.dispose();
+  /// Opens the modal with the header pinned. A header that left the tree
+  /// meanwhile (Now Playing closed) leaves its controller alone: the screen
+  /// disposes it.
+  Future<void> _openSleepTimer(
+    BuildContext context,
+    FocusNode returnFocus,
+  ) async {
+    final chrome = widget.chrome..pinFloating();
+    try {
+      await showSleepTimer(context, returnFocus: returnFocus);
+    } finally {
+      if (mounted) chrome.unpinFloating();
+    }
   }
 
   @override
@@ -120,15 +131,9 @@ class _DesktopNowPlayingHeaderState
             ),
             const Spacer(),
             const RepeatButton(),
-            KIconButton(
-              icon: KIcons.sleepTimer,
-              tooltip: '${l10n.playbackSleepTimer} · $soon',
-              onPressed: null,
-            ),
+            SleepTimerDesktopEntry(opener: _openSleepTimer),
             const VolumeControl(),
-            DesktopMoreMenu(
-              onOpenChanged: (open) => widget.floatingOpen.value = open,
-            ),
+            DesktopMoreMenu(chrome: widget.chrome),
           ],
         ),
       ),

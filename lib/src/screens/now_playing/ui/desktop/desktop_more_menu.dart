@@ -8,16 +8,38 @@ import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/state/track_info_providers.dart';
 import '../../../../playback/ui/track_cover.dart';
 import '../now_playing_more_items.dart';
+import 'now_playing_chrome.dart';
 
 /// The ⋮ dropdown of the desktop header: the track's head row and the shared
-/// items. [onOpenChanged] tells the header to stay shown while it is open.
-class DesktopMoreMenu extends ConsumerWidget {
-  const DesktopMoreMenu({super.key, required this.onOpenChanged});
+/// items. It pins [chrome] while it is open, so the header stays shown.
+class DesktopMoreMenu extends ConsumerStatefulWidget {
+  const DesktopMoreMenu({super.key, required this.chrome});
 
-  final ValueChanged<bool> onOpenChanged;
+  final NowPlayingChrome chrome;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DesktopMoreMenu> createState() => _DesktopMoreMenuState();
+}
+
+class _DesktopMoreMenuState extends ConsumerState<DesktopMoreMenu> {
+  /// Whether this menu holds a pin, so it is given back exactly once.
+  bool _pinned = false;
+
+  void _setPinned(bool pinned) {
+    if (_pinned == pinned) return;
+    _pinned = pinned;
+    pinned ? widget.chrome.pinFloating() : widget.chrome.unpinFloating();
+  }
+
+  @override
+  void dispose() {
+    // The menu leaves with its header: give the pin back.
+    _setPinned(false);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
@@ -39,8 +61,8 @@ class DesktopMoreMenu extends ConsumerWidget {
       child: Text(item.label),
     );
     return MenuAnchor(
-      onOpen: () => onOpenChanged(true),
-      onClose: () => onOpenChanged(false),
+      onOpen: () => _setPinned(true),
+      onClose: () => _setPinned(false),
       style: MenuStyle(
         backgroundColor: WidgetStatePropertyAll(scheme.surfaceContainerHighest),
       ),

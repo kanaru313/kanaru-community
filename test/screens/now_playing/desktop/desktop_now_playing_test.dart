@@ -1,17 +1,21 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
+import 'package:kanaru/src/playback/state/sleep_timer_provider.dart';
 import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_now_playing.dart';
+import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_now_playing_header.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_side_pane.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_track_column.dart';
 import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../playback/ui/sleep_timer/sleep_timer_modal_host.dart';
 import '../../../shell/support/desktop_now_playing_host.dart';
 import '../../../support/app_harness.dart';
 import '../../../support/icon_button_finders.dart';
@@ -20,7 +24,14 @@ Future<DesktopHost> _open(
   WidgetTester tester, {
   List<Override> overrides = const [],
 }) async {
-  final host = await pumpDesktopShell(tester, overrides: overrides);
+  final host = await pumpDesktopShell(
+    tester,
+    overrides: [
+      sleepTimerProvider.overrideWith(FakeSleepTimer.new),
+      ...sleepEstimates(),
+      ...overrides,
+    ],
+  );
   host.container.read(nowPlayingPanelProvider.notifier).open();
   await tester.pump();
   await settleSlide(tester);
@@ -221,6 +232,87 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
     await tester.pump(const Duration(milliseconds: 300));
     expect(fade().opacity, 0);
+  });
+
+  group('the header stays shown while a floating surface is open', () {
+    AnimatedOpacity fade(WidgetTester tester) => tester.widget<AnimatedOpacity>(
+      find
+          .ancestor(
+            of: byIconButton('Minimise'),
+            matching: find.byType(AnimatedOpacity),
+          )
+          .first,
+    );
+
+    Future<void> hideAfter(WidgetTester tester) async {
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    Finder headerSleep() => find.descendant(
+      of: find.byType(DesktopNowPlayingHeader),
+      matching: find.byIcon(KIcons.sleepTimer),
+    );
+
+    testWidgets('the sleep timer opened from the header icon', (tester) async {
+      await _open(tester);
+      await tester.tap(headerSleep());
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 6));
+      expect(fade(tester).opacity, 1);
+      await _key(tester, LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      // Closed: the header goes after the usual stillness.
+      await hideAfter(tester);
+      expect(fade(tester).opacity, 0);
+    });
+
+    testWidgets('the sleep timer opened from the running pill', (tester) async {
+      final host = await _open(tester);
+      (host.container.read(sleepTimerProvider.notifier) as FakeSleepTimer).set(
+        runningMinutes(),
+      );
+      await tester.pump();
+      await tester.tap(find.byType(KPill));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 6));
+      expect(fade(tester).opacity, 1);
+      await _key(tester, LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      await hideAfter(tester);
+      expect(fade(tester).opacity, 0);
+    });
+
+    testWidgets('Now Playing closing under an open modal ends cleanly', (
+      tester,
+    ) async {
+      final host = await _open(tester);
+      await tester.tap(headerSleep());
+      await tester.pumpAndSettle();
+      host.container.read(nowPlayingPanelProvider.notifier).close();
+      await tester.pump();
+      await settleSlide(tester);
+      expect(find.byType(DesktopNowPlaying), findsNothing);
+      await _key(tester, LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      // No unpin on the disposed controller: nothing throws, no timer is left
+      // pending (the test binding checks).
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('V still works with the pointer resting on the header', (
+      tester,
+    ) async {
+      await _open(tester);
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      await mouse.moveTo(tester.getCenter(find.byIcon(KIcons.collapse)));
+      await tester.pump();
+      await _key(tester, LogicalKeyboardKey.keyV);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(DesktopTrackColumn), findsNothing);
+      await mouse.removePointer();
+    });
   });
 
   testWidgets('no player bar or mini player shows under the screen', (

@@ -7,7 +7,7 @@ import '../../../../playback/state/playing_cover_colors.dart';
 import '../../../../playback/state/now_playing_panel.dart';
 import '../../state/desktop_view.dart';
 import 'desktop_now_playing_body.dart';
-import 'now_playing_auto_hide.dart';
+import 'now_playing_chrome.dart';
 
 /// The desktop Now Playing screen, as the shell's overlay shows it. It has its
 /// own Scaffold (transparent over the cover tint), so snack bars appear on top
@@ -25,18 +25,11 @@ class DesktopNowPlaying extends ConsumerStatefulWidget {
 
 class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
   final _focus = FocusNode(debugLabel: 'Now Playing');
-  final _chrome = AutoHideController();
-
-  /// True while a menu floats outside the header; the header stays shown.
-  final _floatingOpen = ValueNotifier<bool>(false);
-
-  void _pinForFloating() =>
-      _floatingOpen.value ? _chrome.pin() : _chrome.unpin();
+  final _chrome = NowPlayingChrome();
 
   @override
   void initState() {
     super.initState();
-    _floatingOpen.addListener(_pinForFloating);
     // `autofocus` alone loses to whatever the shell still has focused, which
     // is only released once this frame is built.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -47,9 +40,6 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
 
   @override
   void dispose() {
-    _floatingOpen
-      ..removeListener(_pinForFloating)
-      ..dispose();
     _focus.dispose();
     _chrome.dispose();
     super.dispose();
@@ -79,7 +69,7 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
         keyboard.isAltPressed ||
         keyboard.isMetaPressed ||
         keyboard.isShiftPressed ||
-        _floatingOpen.value ||
+        _chrome.hasFloating ||
         _textFieldFocused) {
       return KeyEventResult.ignored;
     }
@@ -102,7 +92,6 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
             backgroundColor: Colors.transparent,
             body: DesktopNowPlayingBody(
               chrome: _chrome,
-              floatingOpen: _floatingOpen,
               columnShown: columnShown,
               onToggleColumn: ref
                   .read(coverColumnShownProvider.notifier)
