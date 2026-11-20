@@ -13,10 +13,11 @@ import '../../state/browse/song_list_providers.dart'
     show trackRowLoaderProvider;
 import '../../state/history/history_providers.dart';
 import '../add_to_playlist/add_to_playlist.dart';
-import '../menus/menu_items.dart' show soonRow;
 import '../menus/menu_model.dart';
 import '../menus/open_menu.dart';
 import 'history_clear_dialog.dart';
+import 'history_export_rows.dart';
+import 'history_locations.dart';
 import 'history_toasts.dart';
 
 final _log = Logger('library.history');
@@ -33,18 +34,19 @@ Future<void> openHistoryPageMenu(
     env.l10n,
     plays: overview.plays,
     clearing: container.read(historyClearingProvider),
+    playedTracks: () =>
+        container.read(historyStoreProvider).playedTracksNewestFirst(),
   );
 }, viaKeyboard: viaKeyboard);
 
 /// The page menu from the overview's play count ([plays]) and whether a clear
-/// is running ([clearing]: clearing again waits).
-///
-/// Most played and the M3U export are built later, so they show dimmed with
-/// the "coming soon" label, as every unbuilt row of the app does.
+/// is running ([clearing]: clearing again waits). [playedTracks] reads every
+/// song ever played, last played first, when the M3U export is chosen.
 MenuSpec buildHistoryPageMenu(
   AppLocalizations l10n, {
   required int plays,
   required bool clearing,
+  required Future<List<TrackId>> Function() playedTracks,
 }) {
   final any = plays > 0;
   return MenuSpec(
@@ -90,11 +92,18 @@ MenuSpec buildHistoryPageMenu(
           enabled: any,
           action: MenuAction.run(_addAllToPlaylist),
         ),
-        soonRow(MenuItemId.link, KIcons.mostPlayed, l10n.historyMenuMostPlayed),
-        soonRow(
-          MenuItemId.playlistExportM3u,
-          KIcons.fileExport,
-          l10n.playlistMenuExportM3u,
+        MenuItemSpec(
+          // The id of the "go to" rows: no dedicated id exists for this one.
+          MenuItemId.link,
+          icon: KIcons.mostPlayed,
+          title: l10n.historyMenuMostPlayed,
+          action: MenuAction.go(HistoryLocations.mostPlayed),
+        ),
+        ...trackListExportRows(
+          l10n,
+          name: l10n.historyTitle,
+          tracks: playedTracks,
+          enabled: any,
         ),
       ],
       [

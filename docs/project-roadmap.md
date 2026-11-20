@@ -77,7 +77,7 @@ Wave 1 follow-ups (not in wave 1 by decision; each needs its own design):
 - Hide a single track or album ("Loại khỏi thư viện"): needs a schema decision,
   `hidden` has one meaning today (the user took the row out of the library: source removed, mount disabled or folder excluded), and the unhide helpers turn every `hidden` row back, so a per-track hide needs its own marker.
 - Delete file: needs platform work in both shells and an undo design.
-- Favorites page done. History: nav, routes and l10n part wired, pages in progress. Most played: placeholder until its page.
+- Favorites page done. History and Most played: pages, menus, routes, M3U track-list export and l10n done.
 - Android "Open in file manager": needs a `MainActivity` change.
 - Settings › Library screen (tabs, folders, exclusions, short-file skip).
 - Lyrics card and tab. Sleep timer: modal and entries (mobile ring button and ⋮ item, desktop pill and ⋮ item) and the desktop player bar pill are built; Android notification button is pending.

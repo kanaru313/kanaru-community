@@ -69,11 +69,11 @@ void main() {
       tester,
     ) async {
       await pumpKanaruApp(tester);
-      // Queue, Most played.
-      expect(_byTooltip('Coming soon'), findsNWidgets(2));
+      // Queue.
+      expect(_byTooltip('Coming soon'), findsOneWidget);
       final scheme = Theme.of(tester.element(find.byType(Scaffold).first))
           .colorScheme;
-      await tester.tap(find.text('Most played'));
+      await tester.tap(find.text('Queue'));
       await tester.pumpAndSettle();
       expect(
         GoRouter.of(tester.element(find.byType(Scaffold).first))
@@ -84,7 +84,7 @@ void main() {
         '/',
       );
       expect(_rowColor(tester, 'Home'), scheme.secondaryContainer);
-      expect(_rowColor(tester, 'Most played'), Colors.transparent);
+      expect(_rowColor(tester, 'Queue'), Colors.transparent);
     });
 
     testWidgets('the item of the open page is tinted', (tester) async {

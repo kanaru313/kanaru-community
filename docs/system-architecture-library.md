@@ -223,9 +223,8 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   'playlists'`, not a tab); route `/playlists` (`PlaylistsPage`) with the child
   `favorites` first, then `:uid`, both through `KDetailPage` (`kanaru_ui`: the
   detail transition and surface ground). A static child always goes
-  before `:uid`, so a fixed name is never read as a playlist id (Most played,
-  still coming soon, would match `:uid` and show "not found"; History has its
-  routes, see "History").
+  before `:uid`, so a fixed name is never read as a playlist id (History and Most
+  played have their routes, see "History" and "Most played").
 - **Seeds** (the placeholder body is replaced by the owner lane, the
   declaration stays): `PlaylistsPage`, `PlaylistPage({uid})` (playlist screens)
   were seeds (placeholder bodies replaced by
@@ -574,6 +573,13 @@ Linux and Android), `importM3u(context)` runs `runM3uImport`,
   Toast counts are distinct songs (a repeated song counts once); "lines" counts
   stay line counts. The report row "not in your library" is distinct songs too.
   A failed write discards the target.
+- **Lists that are not playlists.** `exportM3uTracks` (`runM3uTrackListExport`
+  in the flow, `M3uExportService.exportTracks`) writes a list of songs in the
+  order given: `loadM3uExportEntriesByTracks` reads the rows by track id in
+  chunks of 500 (a song listed twice counts once, an id with no song is left
+  out) and the rest is the playlist export (same toasts, replace prompt,
+  relative / absolute choice, skipped rows). The caller names the file and reads
+  the ids when the export starts. Used by History and Most played.
 - **Known limits.** On Linux a short track without `#EXTINF` duration becomes
   a placeholder that no scan revives: it stays "not in your library" until
   removed (Android takes the duration from the listing). On Android a file that exists but that
@@ -1020,7 +1026,7 @@ the `TrackId` anchor of this provider, because a track can be queued twice.
 | Playlists | 210 (mobile 30) | Tab, route `/playlists`; registered in `library/ui/playlist_common/playlist_registration.dart` (see "Playlists") |
 | Favorites | 220 | Child of `playlists` (`parentId`, `mobileTab: false`), path `/playlists/favorites` |
 | History | 240 | Child of `playlists` (`parentId`, `mobileTab: false`), path `/playlists/history`, live; registered in `library/ui/history/history_registration.dart` (see "History") |
-| Most played | 250 | Same parent and registration file, path `/playlists/most-played`, `comingSoon` until its page exists |
+| Most played | 250 | Same parent and registration file, path `/playlists/most-played`, live (see "Most played") |
 
 - `libraryRoute()` is `/library` with six sibling list routes under it
   (`songs` ... `folders`, `NoTransitionPage`, `state.pageKey`). The parent has
@@ -1436,7 +1442,7 @@ Dimmed and inert, with the tooltip or subtitle "Coming soon" (`appComingSoon`,
 | Context menus | "Show in file manager" where `FileManager.canReveal` is false (Android) | a platform implementation |
 | Selection panel | Edit | tag editor |
 | Scan banner (failed scan) | "Grant permission" | the Android permission flow |
-| Sidebar (`comingSoon: true`) | Most played | its page |
+| Sidebar (`comingSoon: true`) | Queue | its page |
 
 The empty state scrolls (centred when there is room), so a short window or
 large text never overflows.
@@ -1541,12 +1547,14 @@ dialog from 600 px, but this menu stays a sheet up to the desktop form factor
 ## History
 
 - Files in `library/ui/history/`: `history_registration.dart`
-  (`registerHistory`: nav items `history` 240 live and `most_played` 250
-  `comingSoon`, both `parentId: 'playlists'`, `mobileTab: false`; called by
+  (`registerHistory`: nav items `history` 240 and `most_played` 250, both live,
+  `parentId: 'playlists'`, `mobileTab: false`; called by
   `LibraryExtension` right after `registerPlaylists`, the parent goes first),
   `history_locations.dart` (`HistoryLocations`: `history`, `track(id)`,
   `mostPlayed`, `mostPlayedTrack(id)`), `history_routes.dart` (`historyRoutes()`:
-  `history` and `history/track/:trackId`, each page in `KDetailPage`).
+  `history`, `history/track/:trackId`, `most-played` and
+  `most-played/track/:trackId`, each page in `KDetailPage`; both track routes
+  build the same `TrackHistoryPage`).
 - `registerPlaylists` nests them with one line, `...historyRoutes()`, in the
   `/playlists` route, before `:uid`. On desktop the sidebar item stays lit on
   the sub-route; on mobile the hub tile opens the page as a child of the
@@ -1671,8 +1679,8 @@ answer on screen while a change re-reads it.
   `removeHistoryPlay`, so the merged Undo toast and the error toast are the
   History page's. Removing the last play shows the empty line; Undo restores
   the rows.
-- The `/playlists/most-played/track/:trackId` route comes with the Most played
-  page and builds the same widget.
+- The `/playlists/most-played/track/:trackId` route (opened from a Most played
+  row's "History of this song") builds the same widget.
 
 ### Menus, dialogs, filter and jump
 
@@ -1685,17 +1693,22 @@ menu on desktop.
 
 - **Page ⋮** (`buildHistoryPageMenu`, head = a history tile + the play count):
   Play all, Shuffle, Add to playlist (all songs ever played, read when the row
-  is chosen; the picker names the source "History"), Most played, Export M3U,
-  Clear history (red). Play and add skip songs that are missing or hidden. Most
-  played and the M3U export show dimmed with the "coming soon" label until
-  their pages exist; the rows already sit in their place. Everything but
-  Most played and export is off with no plays, Clear also while a clear runs
-  (`historyClearingProvider`).
+  is chosen; the picker names the source "History"), Most played
+  (`MenuAction.go` to `HistoryLocations.mostPlayed`, a push), Export M3U (two
+  rows, absolute and relative paths, from `trackListExportRows` in
+  `history_export_rows.dart`; the songs ever played, last played first, are read
+  when a row is chosen; the file is named "History"), Clear history (red). Play
+  and add skip songs that are missing or hidden. Everything but Most played is
+  off with no plays (export too), Clear also while a clear runs
+  (`historyClearingProvider`). The export rows are "coming soon" where
+  `m3uAvailable` is false.
 - **Day menu** (`buildHistoryDayMenu`; also a long press or right click on the
   day bar, Menu key / Shift+F10 through `KContextRegion`): Play the day,
   Shuffle, Add to playlist (named by the full date), Remove the day from
   history (red, `confirmAction` with the count, no undo). "Open in Most played"
-  is left out until that page exists.
+  (after Add to playlist) runs `openHistoryDayInMostPlayed`: it sets
+  `mostPlayedRangeProvider` to that one day as a custom range and pushes the
+  Most played page. There is no export on the day menu.
 - **Row menu**: `SongTile.menuExtras` = "History of this song" (`MenuAction.go`
   to `HistoryLocations.track`) and "Remove from history" (the merged Undo toast
   of the Delete key). A missing play has no song to act on: `onMenu` opens a
@@ -1735,6 +1748,70 @@ menu on desktop.
   first day, whose bar is the pinned one), clamped to the scroll extents, so
   the day's bar is pinned at the top with its first play right under it,
   whatever the hero, a notice or the text scale put above.
+
+## Most played
+
+"Phát nhiều nhất": the songs played most in a range, ranked. Files in
+`library/ui/most_played/`; the page is `MostPlayedPage`, opened from the sidebar
+item `most_played` or a hub tile, and from the History day menu. Nothing here
+imports `data/` or `database/`: it watches `mostPlayedRangeProvider`,
+`mostPlayedLimitProvider`, `mostPlayedProvider`, `playDaysProvider` and
+`historyBoundsProvider` (`library/state/history/`) and calls
+`historyActionsProvider.playTop`.
+
+- **Frame**: `HistoryPageFrame.layout` like History (no header title, the hero
+  names the page; the page tinted by the first cover through `watchCoverTint`;
+  two columns from 840 dp of page width). The hero (`MostPlayedHero`) has a
+  mosaic of the distinct albums of the top ranks in rank order (at most four,
+  songs whose file is gone skipped; `pickAutoCoverKeys`), the range line (`30
+  days · 16/10 – 14/11/2026`, "All time", or a custom range's dates), `M songs
+  · N plays` (the window's totals, not only the listed rows) and `[Play]
+  [shuffle] [⋮]`. The first read shows an empty frame; a failed read keeps the
+  hero (empty) and the chips and shows the error text in place of the rows.
+- **Range** (`MostPlayedRangeChips`, `KChip` row that scrolls sideways): Today,
+  7 days, 30 days, 6 months, 1 year, All time, Custom…. Default 30 days; the
+  range and the number live in keepAlive notifiers, so leaving the page and
+  coming back finds them (session only). Custom… is dim while no play exists at
+  all (`historyBoundsProvider` is null) and opens the range dialog with the
+  custom range in use; Save selects the chip, Cancel keeps the previous one.
+- **Period row** (`MostPlayedPeriodRow`): `‹` period text `›` and the "Top N ▾"
+  chip. The arrows step a whole period (a custom range by its own length);
+  next is off once the period reaches today (`localDayProvider`, so a page left
+  open overnight follows); All time has no arrows. The row wraps at large text.
+  A thin progress line under it shows while a new range or number loads: the
+  previous list stays (`MostPlayedState.stale`).
+- **Top N** (`chooseMostPlayedLimit`): `showSelectionPicker` anchored under the
+  chip (a sheet on mobile): Top 5 / 10 / 50 / 100 and Custom…, whose subtitle is
+  "From 1 to 1000 songs", or "Top 250 · from 1 to 1000 songs" when the number is
+  not a preset (the row is then selected). Custom… closes the picker and opens
+  `showMostPlayedLimitDialog` ("Số bài xếp hạng": digits only, four at most,
+  helper text replaced in place by the error outside 1 to 1000, Save off when
+  empty or invalid, Enter saves a valid number); Cancel, Esc, Back and the scrim
+  keep the old number and do not reopen the picker. `checkMostPlayedLimitText`
+  (domain) judges the text.
+- **Rows** (`mostPlayedRows`, `MostPlayedRow`): `SongTile` with `rank` and
+  `detailLine` `10 plays · album • year`; `TopQueue` (domain) holds the playable
+  songs in rank order, so a tap plays them from the tapped row
+  (`PlayContextKind.mostPlayed`). A song whose file is gone is dimmed, says "can't
+  play", answers a tap with a toast, is left out of every play action and its ⋮
+  holds only "History of this song"; `SongTile` draws no rank badge for it.
+  The ⋮ of a playable row is the song menu plus "History of this song"
+  (`/playlists/most-played/track/:id`); nothing is deleted here.
+- **Page ⋮** (`buildMostPlayedMenu`): Play (by rank), Shuffle, Add to playlist
+  (named "Most played · 30 days", `mostPlayedListName`), Add all to Favorites
+  (`FavoritesController.setFavorite`, then the "added N, skipped M" toast), and
+  the two M3U export rows (`trackListExportRows`, file named like the list, rank
+  order). Every row is off while the list reloads or has nothing to play; the
+  ⋮ button itself stays pressable (`LibraryMoreButton` has no disabled state).
+- **Custom range dialog** (`most_played/range_dialog/`, a port of the old app's
+  dialog; the only place that imports `table_calendar`, Apache-2.0): see its
+  files' headers. Pure rules in `domain/history/`: `applyRangeTap`,
+  `pickerBounds` (`history_ranges.dart`), `historySpanText`, `rangeDays`
+  (`history_span.dart`). The page converts its result with
+  `MostPlayedRange.withCustom`.
+- **M3U track-list export**: see "M3U import and export".
+- Strings: the `history` arb part, keys `historyMostPlayed*` and
+  `historyRange*`.
 
 ## Design pitfalls answered
 
