@@ -148,11 +148,11 @@ class HistoryBatch {
   List<TrackInfo> shown,
   TrackInfo tapped,
 ) {
-  if (!_canPlay(tapped)) return null;
+  if (!canPlayTrack(tapped)) return null;
   final seen = <int>{};
   final tracks = <TrackInfo>[
     for (final t in shown)
-      if (_canPlay(t) && seen.add(t.id.value)) t,
+      if (canPlayTrack(t) && seen.add(t.id.value)) t,
   ];
   final start = tracks.indexWhere((t) => t.id == tapped.id);
   return start < 0
@@ -160,6 +160,7 @@ class HistoryBatch {
       : (tracks: tracks, startIndex: start);
 }
 
-bool _canPlay(TrackInfo t) =>
+/// Whether a song can be played: a missing or hidden one cannot.
+bool canPlayTrack(TrackInfo t) =>
     t.status != TrackAvailability.missing &&
     t.status != TrackAvailability.hidden;

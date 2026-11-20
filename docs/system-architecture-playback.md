@@ -567,6 +567,24 @@ The controller's position follows engine ticks only while playing (a paused open
   `PlayContext`, `device_id` from `deviceIdProvider` (read when a row is written).
 - Writes run on the recorder's own `SerialChain`, are never awaited by a command, and a failed write is
   logged; a row is never inserted twice. Skips write nothing.
+- **Owner:** `listenRecorderProvider` (`state/listen_recorder_provider.dart`, keepAlive) builds the one
+  recorder and closes it when the container goes. The controller only feeds it: its dispose ends the open
+  listen (`observe(null)`) and flushes, it never closes the recorder, so a player rebuild cannot drop a
+  clear in flight.
+- **Clear:** `clearHistory({from, to})` deletes the live rows with `played_at` in `[from, to)` (open side =
+  no bound) through `PlayLogWriter.deleteRange` (`runPlayStatsBulk`, so `play_stats` is recomputed for the
+  touched tracks) and returns the count, `null` when the delete failed (logged by type only; history and
+  open listen stay as they were). The delete runs on the recorder's chain, so every write queued before it
+  lands first, and clears run one after another, each with its own count.
+- **Parking:** the first pending clear parks the open listen (`_held`) and `clearing` (a `ValueListenable`)
+  turns true. While any clear is pending `observe` only remembers the last observation; nothing is counted
+  or written. After a successful delete the parked listen is dropped when `clearTouches(bounds, playedAt)`
+  (a listen that never played counts as touched) and `cleared` (broadcast stream of `ClearBounds`) emits.
+  When the last clear is done a kept listen resumes if the player is still on its token, else it gets its
+  final write; counting then restarts from the last observation, so a dropped listen whose track still plays
+  is counted anew. `flush()` and `close()` wait for pending clears (also one started by a `clearing`
+  listener); a clear queued before `close()` still returns its count. `domain/listen_clear_scope.dart` holds
+  `ClearBounds`, `boundsCover` and `clearTouches`.
 
 ## Flush and exit
 

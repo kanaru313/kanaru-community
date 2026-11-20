@@ -6,6 +6,8 @@ import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/data/play_log_writer.dart';
 
 import '../../database/support/test_db.dart';
+import '../../library/history/data/history_fixture.dart'
+    show statsRecomputed, statsTable;
 
 void main() {
   late AppDatabase db;
@@ -114,5 +116,74 @@ void main() {
       now: 1,
     );
     await seen;
+  });
+
+  group('deleteRange', () {
+    late TrackId other;
+
+    setUp(() async {
+      final src = await addSource(db, name: 'Two');
+      other = TrackId(await addTrack(db, src, locator: 'b.mp3'));
+      for (final (t, at) in [
+        (track, 100),
+        (track, 200),
+        (track, 300),
+        (other, 150),
+        (other, 400),
+      ]) {
+        await writer.insertListen(
+          trackId: t,
+          playedAt: at,
+          listenedMs: 40000,
+          deviceId: 'dev',
+          now: at,
+        );
+      }
+    });
+
+    Future<List<int>> playedAts() async => [
+      for (final r
+          in await db
+              .customSelect('SELECT played_at FROM play_log ORDER BY played_at')
+              .get())
+        r.read<int>('played_at'),
+    ];
+
+    test(
+      'removes [from, to) and keeps the stats equal to a recompute',
+      () async {
+        expect(await writer.deleteRange(from: 150, to: 300), 2);
+        expect(await playedAts(), [100, 300, 400]);
+        expect(await statsTable(db), await statsRecomputed(db));
+      },
+    );
+
+    test('an open side reaches the end of the log', () async {
+      expect(await writer.deleteRange(from: 300), 2);
+      expect(await playedAts(), [100, 150, 200]);
+      expect(await writer.deleteRange(to: 150), 1);
+      expect(await playedAts(), [150, 200]);
+      expect(await statsTable(db), await statsRecomputed(db));
+    });
+
+    test('no bounds clears everything and empties the stats', () async {
+      expect(await writer.deleteRange(), 5);
+      expect(await playedAts(), isEmpty);
+      expect(await statsTable(db), isEmpty);
+    });
+
+    test('an empty range deletes nothing', () async {
+      expect(await writer.deleteRange(from: 500, to: 600), 0);
+      expect(await writer.deleteRange(from: 200, to: 200), 0);
+      expect(await playedAts(), hasLength(5));
+      expect(await statsTable(db), await statsRecomputed(db));
+    });
+
+    test('a tombstoned row is not counted as deleted', () async {
+      await db.customStatement(
+        'UPDATE play_log SET deleted_at = 1 WHERE played_at = 100',
+      );
+      expect(await writer.deleteRange(), 4);
+    });
   });
 }
