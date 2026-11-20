@@ -82,65 +82,57 @@ class KModalButton extends StatelessWidget {
     final style = (desktop ? text.labelLarge : text.titleMedium)?.copyWith(
       fontWeight: FontWeight.w700,
     );
-    return Semantics(
-      container: true,
-      button: true,
-      enabled: enabled,
-      label: label,
-      onTap: onPressed,
-      child: ExcludeSemantics(
-        child: KPressSurface(
-          onPressed: onPressed,
-          radius: radius,
-          focusNode: focusNode,
-          autofocus: autofocus,
-          builder: (context, overlay) => AnimatedContainer(
-            duration: duration,
-            constraints: BoxConstraints(minHeight: minHeight),
-            padding: EdgeInsets.symmetric(
-              horizontal: emphasis == KModalEmphasis.text
-                  ? (desktop ? KSpace.x3 : KSpace.x5)
-                  : (desktop ? KSpace.x5 : KSpace.x4),
-              vertical: KSpace.x2,
-            ),
-            decoration: ShapeDecoration(
-              color: enabled
-                  ? Color.alphaBlend(
-                      fg.withValues(alpha: overlay),
-                      fill ?? const Color(0x00000000),
-                    )
-                  : (fill == null
-                        ? null
-                        : scheme.onSurface.withValues(alpha: 0.12)),
-              shape: RoundedRectangleBorder(
-                borderRadius: radius,
-                side: line == null
-                    ? BorderSide.none
-                    : BorderSide(
-                        color: enabled
-                            ? line
-                            : scheme.onSurface.withValues(alpha: 0.12),
-                      ),
+    return KPressSurface(
+      onPressed: onPressed,
+      radius: radius,
+      semanticLabel: label,
+      focusNode: focusNode,
+      autofocus: autofocus,
+      builder: (context, overlay, _) => AnimatedContainer(
+        duration: duration,
+        constraints: BoxConstraints(minHeight: minHeight),
+        padding: EdgeInsets.symmetric(
+          horizontal: emphasis == KModalEmphasis.text
+              ? (desktop ? KSpace.x3 : KSpace.x5)
+              : (desktop ? KSpace.x5 : KSpace.x4),
+          vertical: KSpace.x2,
+        ),
+        decoration: ShapeDecoration(
+          color: enabled
+              ? Color.alphaBlend(
+                  fg.withValues(alpha: overlay),
+                  fill ?? const Color(0x00000000),
+                )
+              : (fill == null
+                    ? null
+                    : scheme.onSurface.withValues(alpha: 0.12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: radius,
+            side: line == null
+                ? BorderSide.none
+                : BorderSide(
+                    color: enabled
+                        ? line
+                        : scheme.onSurface.withValues(alpha: 0.12),
+                  ),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: KIconSize.md, color: enabled ? fg : dim),
+              const SizedBox(width: KSpace.x2),
+            ],
+            Flexible(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: style?.copyWith(color: enabled ? fg : dim),
               ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (icon != null) ...[
-                  Icon(icon, size: KIconSize.md, color: enabled ? fg : dim),
-                  const SizedBox(width: KSpace.x2),
-                ],
-                Flexible(
-                  child: Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: style?.copyWith(color: enabled ? fg : dim),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ],
         ),
       ),
     );

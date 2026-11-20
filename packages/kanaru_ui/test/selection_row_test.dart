@@ -1,3 +1,5 @@
+import 'dart:ui' show CheckedState, Tristate;
+
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
@@ -707,9 +709,7 @@ Widget _action({
   bool opensMore = false,
   bool running = false,
   bool autofocus = false,
-}) => SelectionRow(
-  action: true,
-  selected: false,
+}) => SelectionRow.action(
   leading: const Icon(KIcons.sleepTimer),
   title: const Text('Hết bài này'),
   subtitle: const Text('còn 2:48'),
@@ -752,9 +752,11 @@ void actionRowTests() {
     await tester.pumpWidget(host(_action(onTap: () => taps++)));
     expect(find.byType(KCheckMark), findsNothing);
     final node = tester.getSemantics(find.byType(SelectionRow));
+    // Strict: every flag not listed (selected, checked, mutually exclusive
+    // group, toggled...) must be absent, so a stray selected state fails.
     expect(
       node,
-      isSemantics(
+      matchesSemantics(
         label: 'Hết bài này\ncòn 2:48',
         isButton: true,
         hasEnabledState: true,
@@ -764,6 +766,9 @@ void actionRowTests() {
         hasFocusAction: true,
       ),
     );
+    expect(node.flagsCollection.isSelected, Tristate.none);
+    expect(node.flagsCollection.isChecked, CheckedState.none);
+    expect(node.flagsCollection.isInMutuallyExclusiveGroup, isFalse);
     await tester.tap(find.byType(SelectionRow));
     expect(taps, 1);
     semantics.dispose();
@@ -781,7 +786,7 @@ void actionRowTests() {
     final node = tester.getSemantics(find.byType(SelectionRow));
     expect(
       node,
-      isSemantics(
+      matchesSemantics(
         label: 'Hết bài này\nBài này không có album',
         isButton: true,
         hasEnabledState: true,
@@ -827,7 +832,95 @@ void actionRowTests() {
     final ink = tester.widget<InkWell>(find.byType(InkWell));
     expect(ink.hoverColor, scheme.onSurface.withValues(alpha: 0.08));
     expect(ink.highlightColor, scheme.onSurface.withValues(alpha: 0.10));
-    expect(ink.focusColor, scheme.onSurface.withValues(alpha: 0.10));
+    // Keyboard focus is the ring, not a tint.
+    expect(ink.focusColor, const Color(0x00000000));
+  });
+
+  for (final (name, running, opensMore) in [
+    ('plain', false, false),
+    ('opensMore', false, true),
+    ('running', true, false),
+  ]) {
+    testWidgets('keyboard focus rings the 36 dp shape ($name)', (tester) async {
+      useKeyboardHighlight();
+      useWindow(tester, _deskSize);
+      await tester.pumpWidget(
+        host(
+          _action(
+            onTap: () {},
+            running: running,
+            opensMore: opensMore,
+            autofocus: true,
+          ),
+        ),
+      );
+      await tester.pump();
+      final rings = tester
+          .widgetList<KFocusRing>(find.byType(KFocusRing))
+          .where((r) => r.visible);
+      expect(rings, hasLength(1));
+      final ring = tester.getRect(find.byType(KFocusRing).first);
+      final row = tester.getRect(find.byType(SelectionRow));
+      // 40 dp hit area, 36 dp visible shape centred: 2 dp band each side.
+      expect(ring.height, 36 + (running ? 8 : 0));
+      expect(ring.top - row.top, 2);
+    });
+  }
+
+  testWidgets('no focus ring without keyboard focus', (tester) async {
+    await tester.pumpWidget(host(_action(onTap: () {})));
+    expect(
+      tester
+          .widgetList<KFocusRing>(find.byType(KFocusRing))
+          .any((r) => r.visible),
+      isFalse,
+    );
+  });
+
+  testWidgets('semantics: focusable, focused only while it has focus', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(host(_action(onTap: () {})));
+    await tester.pump();
+    expect(
+      tester.getSemantics(find.byType(SelectionRow)),
+      isSemantics(isButton: true, isFocusable: true, isFocused: false),
+    );
+    await tester.pumpWidget(
+      host(
+        KeyedSubtree(
+          key: UniqueKey(),
+          child: _action(onTap: () {}, autofocus: true),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(
+      tester.getSemantics(find.byType(SelectionRow)),
+      isSemantics(isButton: true, isFocusable: true, isFocused: true),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('action rows are built only by SelectionRow.action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        const Column(
+          children: [
+            SelectionRow(selected: true, title: Text('a')),
+            SelectionRow.action(title: Text('b')),
+          ],
+        ),
+      ),
+    );
+    final rows = tester.widgetList<SelectionRow>(find.byType(SelectionRow));
+    expect(rows.map((r) => r.action), [false, true]);
+    expect(rows.last.selected, isFalse);
+    expect(rows.last.multi, isFalse);
+    expect(rows.first.disabledReason, isNull);
   });
 
   testWidgets('autofocus takes focus; Enter activates', (tester) async {

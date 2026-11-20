@@ -40,11 +40,43 @@ class SelectionRow extends StatelessWidget {
     this.autofocus = false,
     this.hint,
     this.onTap,
-    this.action = false,
+  }) : action = false,
+       disabledReason = null,
+       opensMore = false,
+       running = false,
+       mediaTitle = null,
+       mediaLine2 = null,
+       mediaTag = null,
+       circleCover = false;
+
+  /// A start button, not a choice: it does its thing when tapped. No check
+  /// mark, no selected / checked semantics (it has no `selected`, `multi`,
+  /// `partial`, `plainMark` or `alikeOptions`). [subtitle] is its detail
+  /// ("còn 2:48"): under the title on touch shells, on the same line to the
+  /// right on desktop (the dense 40 / 36 geometry, chosen here from the
+  /// shell). [disabledReason] and [opensMore] are described on their fields;
+  /// [running] makes it the card that leads back to what is already running.
+  /// Keyboard focus draws the 2 dp `primary` ring around the visible shape.
+  const SelectionRow.action({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.leading,
+    this.enabled = true,
+    this.autofocus = false,
+    this.hint,
+    this.onTap,
     this.disabledReason,
     this.opensMore = false,
     this.running = false,
-  }) : mediaTitle = null,
+  }) : action = true,
+       selected = false,
+       multi = false,
+       partial = false,
+       plainMark = false,
+       alikeOptions = false,
+       dense = false,
+       mediaTitle = null,
        mediaLine2 = null,
        mediaTag = null,
        circleCover = false;
@@ -134,16 +166,16 @@ class SelectionRow extends StatelessWidget {
   /// chosen here from the shell).
   final bool action;
 
-  /// Why an [action] row cannot be used: the row is dimmed, skipped by arrow
+  /// Why an action row cannot be used: the row is dimmed, skipped by arrow
   /// keys and Tab, and this text replaces its detail.
   final String? disabledReason;
 
-  /// An [action] row that opens a further screen ("Sau số bài…"): outlined on
+  /// An action row that opens a further screen ("Sau số bài…"): outlined on
   /// touch shells, `primary` bold title on desktop.
   final bool opensMore;
 
   /// A tonal `primaryContainer` card with a trailing `›`: the way back to
-  /// what is already running. Implies [action].
+  /// what is already running.
   final bool running;
 
   static const double _checkSlot = 24;
@@ -213,7 +245,7 @@ class SelectionRow extends StatelessWidget {
     final gap = dense ? KSpace.x3 : KSpace.x4;
     final bodyStyle = dense ? textTheme.bodyMedium : textTheme.bodyLarge;
     final active = enabled && onTap != null;
-    if (action || running) {
+    if (action) {
       return SelectionActionRow(
         title: title,
         subtitle: subtitle,

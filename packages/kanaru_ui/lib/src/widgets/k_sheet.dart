@@ -32,7 +32,9 @@ enum KSheetDialog {
 /// the shell's bottom bar and mini player).
 ///
 /// [dialog] picks the look ([KSheetDialog.modal]: content scrolls, so it must
-/// not hold an `Expanded`; [fixedHeight] then only applies to the sheet).
+/// not hold an `Expanded`; [fixedHeight] then only applies to the sheet, and
+/// [maxHeightFraction] is ignored: the modal look has its own sizes, 92 % high
+/// for the sheet and the window minus margins for the dialog).
 /// Esc closes the modal and is consumed by it. [returnFocus] gets focus after
 /// the route closes, only while it is still attached to the tree.
 Future<T?> showKSheet<T>(

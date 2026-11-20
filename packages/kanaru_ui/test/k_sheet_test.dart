@@ -386,6 +386,70 @@ void main() {
       expect(shell, 0);
     });
 
+    for (final (name, size) in [
+      ('dialog', const Size(1200, 800)),
+      ('sheet', const Size(400, 800)),
+    ]) {
+      testWidgets(
+        'an autofocus in the content wins; Esc still closes ($name)',
+        (tester) async {
+          useWindow(tester, size);
+          final node = FocusNode();
+          addTearDown(node.dispose);
+          await tester.pumpWidget(
+            scaledHost(
+              modalOpener(
+                content: KStartTile(
+                  title: '45 phút',
+                  semanticLabel: '45 phút',
+                  onPressed: () {},
+                  autofocus: true,
+                  focusNode: node,
+                ),
+              ),
+            ),
+          );
+          await tester.tap(find.text('open'));
+          await tester.pumpAndSettle();
+          expect(
+            node.hasPrimaryFocus,
+            isTrue,
+            reason: '${FocusManager.instance.primaryFocus}',
+          );
+          await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+          await tester.pumpAndSettle();
+          expect(find.text('45 phút'), findsNothing);
+        },
+      );
+    }
+
+    testWidgets('content without a focusable still holds focus for Esc', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1200, 800));
+      await tester.pumpWidget(
+        scaledHost(modalOpener(content: const Text('content'))),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(FocusManager.instance.primaryFocus?.debugLabel, 'KModalEscScope');
+    });
+
+    testWidgets('scrim and shadow come from the scheme roles', (tester) async {
+      useWindow(tester, const Size(1200, 800));
+      await tester.pumpWidget(
+        scaledHost(modalOpener(content: const Text('content'))),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      final scheme = Theme.of(tester.element(find.text('content'))).colorScheme;
+      final barrier = tester.widget<ModalBarrier>(
+        find.byType(ModalBarrier).last,
+      );
+      expect(barrier.color, scheme.scrim.withValues(alpha: 0.45));
+      expect(tester.widget<Material>(card()).shadowColor, scheme.shadow);
+    });
+
     testWidgets('scrim tap closes the dialog', (tester) async {
       useWindow(tester, const Size(1200, 800));
       await tester.pumpWidget(

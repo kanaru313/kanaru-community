@@ -6,14 +6,23 @@ import '../tokens/k_shape.dart';
 import 'k_focus_ring.dart';
 import 'k_ruler_painter.dart';
 
+String _plainNumber(int v) => '$v';
+
+/// Width of one unit: wide when every unit is numbered, narrow otherwise.
+double _unitWidth(int labelEvery) => labelEvery <= 1 ? 28.0 : 8.0;
+
 /// Horizontal drag ruler for a whole number between [min] and [max]: a tick
 /// per unit, a taller one every [majorEvery], a number every [labelEvery],
 /// the centre `primary` marker is the value, both edges fade out. Drag to
 /// move; the value changes one step at a time through [onChanged].
 ///
 /// A [value] outside the range sits at the nearest end and is never changed
-/// by the ruler itself. Keyboard: left / right step by 1 (inside the range),
-/// Enter calls [onSubmit]. Semantics: a slider with [valueLabel] as its value
+/// by the ruler itself. Keyboard: left / right step by 1 inside the range;
+/// from an outside value the key that points inward steps from the end (240
+/// with max 180: left gives 179) and the key that points further out changes
+/// nothing (it never lowers a value on "increase"); Enter calls [onSubmit].
+/// One unit is 28 dp wide when every unit carries a number ([labelEvery] 1),
+/// 8 dp otherwise. Semantics: a slider with [valueLabel] as its value
 /// and increase / decrease actions. 72 dp tall on touch shells, 60 on desktop.
 class KRuler extends StatefulWidget {
   const KRuler({
@@ -27,6 +36,7 @@ class KRuler extends StatefulWidget {
     this.onSubmit,
     this.semanticLabel,
     this.valueLabel,
+    this.tickLabel,
     this.focusNode,
     this.autofocus = false,
   }) : assert(min < max),
@@ -47,6 +57,10 @@ class KRuler extends StatefulWidget {
 
   /// Spoken value of a number; defaults to the number.
   final String Function(int value)? valueLabel;
+
+  /// Text drawn at a labelled tick ("1:15", "2 giờ"); defaults to the number.
+  /// Short: it sits in the width of [labelEvery] units.
+  final String Function(int value)? tickLabel;
   final FocusNode? focusNode;
   final bool autofocus;
 
@@ -76,13 +90,23 @@ class _KRulerState extends State<KRuler> {
     _set(pos.round());
   }
 
+  /// One step; the direction that points further out of the range from an
+  /// end or outside value is a no-op (the key is still consumed).
+  void _step(int delta) {
+    final v = widget.value;
+    if ((delta > 0 && v >= widget.max) || (delta < 0 && v <= widget.min)) {
+      return;
+    }
+    _set(_shown + delta);
+  }
+
   KeyEventResult _key(FocusNode node, KeyEvent e) {
     if (e is KeyUpEvent) return KeyEventResult.ignored;
     final k = e.logicalKey;
     if (k == LogicalKeyboardKey.arrowLeft) {
-      _set(_shown - 1);
+      _step(-1);
     } else if (k == LogicalKeyboardKey.arrowRight) {
-      _set(_shown + 1);
+      _step(1);
     } else if ((k == LogicalKeyboardKey.enter ||
             k == LogicalKeyboardKey.numpadEnter) &&
         widget.onSubmit != null) {
@@ -98,11 +122,13 @@ class _KRulerState extends State<KRuler> {
     final scheme = Theme.of(context).colorScheme;
     final desktop = FormFactor.of(context) == FormFactor.desktop;
     final height = desktop ? 60.0 : 72.0;
-    final tick = widget.labelEvery <= 1 ? 28.0 : 8.0;
+    final tick = _unitWidth(widget.labelEvery);
     final label = widget.valueLabel ?? (int v) => '$v';
     final shown = _shown;
     return Semantics(
       slider: true,
+      focusable: true,
+      focused: _focused,
       label: widget.semanticLabel,
       value: label(widget.value),
       increasedValue: label((shown + 1).clamp(widget.min, widget.max)),
@@ -125,42 +151,14 @@ class _KRulerState extends State<KRuler> {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: Builder(
-                      builder: (context) => ShaderMask(
-                        blendMode: BlendMode.dstIn,
-                        shaderCallback: (r) => LinearGradient(
-                          colors: const [
-                            Color(0x00000000),
-                            Color(0xFF000000),
-                            Color(0xFF000000),
-                            Color(0x00000000),
-                          ],
-                          stops: [
-                            0,
-                            (56 / r.width).clamp(0.0, 0.5),
-                            1 - (56 / r.width).clamp(0.0, 0.5),
-                            1,
-                          ],
-                        ).createShader(r),
-                        child: CustomPaint(
-                          painter: KRulerPainter(
-                            min: widget.min,
-                            max: widget.max,
-                            position: _drag ?? shown.toDouble(),
-                            tick: tick,
-                            majorEvery: widget.majorEvery,
-                            labelEvery: widget.labelEvery,
-                            minorColor: scheme.outlineVariant,
-                            majorColor: scheme.outline,
-                            labelStyle: Theme.of(context).textTheme.labelSmall!
-                                .copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                            textScaler: MediaQuery.textScalerOf(context),
-                          ),
-                        ),
-                      ),
+                    child: KRulerFace(
+                      min: widget.min,
+                      max: widget.max,
+                      position: _drag ?? shown.toDouble(),
+                      unitWidth: tick,
+                      majorEvery: widget.majorEvery,
+                      labelEvery: widget.labelEvery,
+                      tickLabel: widget.tickLabel ?? _plainNumber,
                     ),
                   ),
                   Align(

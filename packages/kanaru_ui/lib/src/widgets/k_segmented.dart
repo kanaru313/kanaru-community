@@ -5,7 +5,9 @@ import '../layout/form_factor.dart';
 import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
-import 'k_focus_ring.dart';
+import 'k_press_surface.dart';
+
+const double _kTrackPad = KSpace.x1 / 2;
 
 /// One segment of a [KSegmented].
 class KSegment<T> {
@@ -16,8 +18,8 @@ class KSegment<T> {
 }
 
 /// 2 to 4 short text values, always visible, one chosen: only the chosen
-/// segment is tinted (tonal fill), no check mark. 48 dp tall on touch shells,
-/// 36 on desktop.
+/// segment is tinted (tonal fill), no check mark. At least 48 dp tall on touch
+/// shells, 36 on desktop; taller when the text scale needs it.
 ///
 /// Tab walks the segments, the arrow keys move focus to the neighbour
 /// segment, Enter / Space choose the focused one. Semantics: one node per
@@ -97,8 +99,9 @@ class _KSegmentedState<T> extends State<KSegmented<T>> {
       container: true,
       label: widget.semanticLabel,
       child: Container(
-        height: height,
-        padding: const EdgeInsets.all(KSpace.x1 / 2),
+        // Grows with the text scale: never clips a label.
+        constraints: BoxConstraints(minHeight: height),
+        padding: const EdgeInsets.all(_kTrackPad),
         decoration: ShapeDecoration(
           color: scheme.surfaceContainerHigh,
           shape: KShape.of(KRadius.full),
@@ -128,6 +131,7 @@ class _KSegmentedState<T> extends State<KSegmented<T>> {
                       selected: widget.segments[i].value == widget.value,
                       focusNode: _nodes[i],
                       onTap: () => widget.onChanged(widget.segments[i].value),
+                      minHeight: height - 2 * _kTrackPad,
                     ),
                   ),
                 ),
@@ -139,90 +143,59 @@ class _KSegmentedState<T> extends State<KSegmented<T>> {
   }
 }
 
-class _Segment extends StatefulWidget {
+class _Segment extends StatelessWidget {
   const _Segment({
     required this.label,
     required this.selected,
     required this.focusNode,
     required this.onTap,
+    required this.minHeight,
   });
 
   final String label;
   final bool selected;
   final FocusNode focusNode;
   final VoidCallback onTap;
-
-  @override
-  State<_Segment> createState() => _SegmentState();
-}
-
-class _SegmentState extends State<_Segment> {
-  bool _hovered = false;
-  bool _pressed = false;
-  bool _focused = false;
+  final double minHeight;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final selected = widget.selected;
     final fg = selected ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
-    final overlay = _pressed ? 0.10 : (_hovered ? 0.08 : 0.0);
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : KMotion.fast;
-    return Semantics(
-      container: true,
-      button: true,
-      inMutuallyExclusiveGroup: true,
+    return KPressSurface(
+      onPressed: onTap,
+      radius: KRadius.full,
+      semanticLabel: label,
       selected: selected,
-      label: widget.label,
-      onTap: widget.onTap,
-      child: ExcludeSemantics(
-        child: FocusableActionDetector(
-          focusNode: widget.focusNode,
-          mouseCursor: SystemMouseCursors.click,
-          actions: {
-            ActivateIntent: CallbackAction<ActivateIntent>(
-              onInvoke: (_) {
-                widget.onTap();
-                return null;
-              },
-            ),
-          },
-          onShowFocusHighlight: (v) => setState(() => _focused = v),
-          onShowHoverHighlight: (v) => setState(() => _hovered = v),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: (_) => setState(() => _pressed = true),
-            onTapUp: (_) => setState(() => _pressed = false),
-            onTapCancel: () => setState(() => _pressed = false),
-            onTap: widget.onTap,
-            child: KFocusRing(
-              focused: _focused,
-              radius: KRadius.full,
-              child: AnimatedContainer(
-                duration: duration,
-                curve: KMotion.emphasized,
-                alignment: Alignment.center,
-                decoration: ShapeDecoration(
-                  color: Color.alphaBlend(
-                    scheme.onSurface.withValues(alpha: overlay),
-                    selected
-                        ? scheme.secondaryContainer
-                        : const Color(0x00000000),
-                  ),
-                  shape: KShape.of(KRadius.full),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
-                child: Text(
-                  widget.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: fg,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  ),
-                ),
+      inMutuallyExclusiveGroup: true,
+      focusNode: focusNode,
+      builder: (context, overlay, _) => AnimatedContainer(
+        duration: duration,
+        curve: KMotion.emphasized,
+        decoration: ShapeDecoration(
+          color: Color.alphaBlend(
+            scheme.onSurface.withValues(alpha: overlay),
+            selected ? scheme.secondaryContainer : const Color(0x00000000),
+          ),
+          shape: KShape.of(KRadius.full),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
+        // heightFactor 1: no stretching to the track's room; the minimum
+        // height centres the label.
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: minHeight),
+          child: Center(
+            heightFactor: 1,
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: fg,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ),

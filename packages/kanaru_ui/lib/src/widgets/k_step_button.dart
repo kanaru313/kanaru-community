@@ -34,40 +34,32 @@ class KStepButton extends StatelessWidget {
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : KMotion.fast;
-    return Semantics(
-      container: true,
-      button: true,
-      enabled: enabled,
-      label: semanticLabel,
-      onTap: onPressed,
-      child: ExcludeSemantics(
-        child: KPressSurface(
-          onPressed: onPressed,
-          radius: KRadius.full,
-          focusNode: focusNode,
-          autofocus: autofocus,
-          builder: (context, overlay) => AnimatedContainer(
-            duration: duration,
-            width: size,
-            height: size,
-            alignment: Alignment.center,
-            decoration: ShapeDecoration(
-              shape: KShape.of(KRadius.full),
-              color: enabled
-                  ? Color.alphaBlend(
-                      scheme.onSecondaryContainer.withValues(alpha: overlay),
-                      scheme.secondaryContainer,
-                    )
-                  : scheme.onSurface.withValues(alpha: 0.10),
-            ),
-            child: Icon(
-              icon,
-              size: desktop ? KIconSize.sm : KIconSize.md,
-              color: enabled
-                  ? scheme.onSecondaryContainer
-                  : scheme.onSurface.withValues(alpha: 0.38),
-            ),
-          ),
+    return KPressSurface(
+      onPressed: onPressed,
+      radius: KRadius.full,
+      semanticLabel: semanticLabel,
+      focusNode: focusNode,
+      autofocus: autofocus,
+      builder: (context, overlay, _) => AnimatedContainer(
+        duration: duration,
+        width: size,
+        height: size,
+        alignment: Alignment.center,
+        decoration: ShapeDecoration(
+          shape: KShape.of(KRadius.full),
+          color: enabled
+              ? Color.alphaBlend(
+                  scheme.onSecondaryContainer.withValues(alpha: overlay),
+                  scheme.secondaryContainer,
+                )
+              : scheme.onSurface.withValues(alpha: 0.10),
+        ),
+        child: Icon(
+          icon,
+          size: desktop ? KIconSize.sm : KIconSize.md,
+          color: enabled
+              ? scheme.onSecondaryContainer
+              : scheme.onSurface.withValues(alpha: 0.38),
         ),
       ),
     );

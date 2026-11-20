@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/src/widgets/k_clock_progress.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'support/fit.dart';
 import 'support/host.dart';
 
 Widget _clock({
@@ -34,13 +35,31 @@ ClockBarPainter _painter(WidgetTester tester) {
 }
 
 void main() {
-  test('number size by shell and length', () {
-    expect(KClockProgress.numberSize(desktop: false, length: 5), 57);
-    expect(KClockProgress.numberSize(desktop: false, length: 7), 45);
-    expect(KClockProgress.numberSize(desktop: false, length: 9), 36);
-    expect(KClockProgress.numberSize(desktop: true, length: 4), 45);
-    expect(KClockProgress.numberSize(desktop: true, length: 7), 36);
-    expect(KClockProgress.numberSize(desktop: true, length: 9), 28);
+  testWidgets('number size follows what the text is, per shell', (
+    tester,
+  ) async {
+    // figure, long clock (also 600+ minutes), words (bold).
+    const cases = [
+      ('23:41', 57.0, 45.0, FontWeight.w400),
+      ('3', 57.0, 45.0, FontWeight.w400),
+      ('2:05:09', 45.0, 36.0, FontWeight.w400),
+      ('12:00:00', 45.0, 36.0, FontWeight.w400),
+      ('album này', 36.0, 28.0, FontWeight.w700),
+      ('bài này', 36.0, 28.0, FontWeight.w700),
+    ];
+    for (final (text, touch, desktop, weight) in cases) {
+      for (final (size, want) in [
+        (const Size(400, 800), touch),
+        (const Size(1400, 900), desktop),
+      ]) {
+        useWindow(tester, size);
+        await tester.pumpWidget(host(_clock(big: text)));
+        await tester.pump();
+        final style = tester.widget<Text>(find.text(text)).style!;
+        expect(style.fontSize, want, reason: '$text at $size');
+        expect(style.fontWeight, weight, reason: '$text weight');
+      }
+    }
   });
 
   testWidgets('fraction is clamped and NaN is 0', (tester) async {
@@ -109,16 +128,54 @@ void main() {
         ),
       );
       expect(tester.takeException(), isNull);
+      expectTextsFit(tester, find.byType(KClockProgress));
     });
   }
 
-  testWidgets('200 % text, long number and reduced motion do not overflow', (
-    tester,
-  ) async {
+  for (final width in [320.0, 1400.0]) {
+    for (final big in [
+      '23:41',
+      '2:05:09',
+      '12:00:00',
+      'album này',
+      'bài này',
+    ]) {
+      testWidgets('200 % text, "$big", width $width: never clipped', (
+        tester,
+      ) async {
+        useWindow(tester, Size(width, 900));
+        await tester.pumpWidget(host(_clock(big: big), textScale: 2.0));
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        expectTextsFit(tester, find.byType(KClockProgress));
+        expect(
+          tester.getRect(find.text(big)).width,
+          lessThanOrEqualTo(width - 32 + 0.5),
+          reason: 'the number stays inside the 16 dp page padding',
+        );
+      });
+    }
+  }
+
+  testWidgets('number grows with the scale up to 1.4 x only', (tester) async {
+    useWindow(tester, const Size(1400, 900));
+    Future<double> height(double scale) async {
+      await tester.pumpWidget(host(_clock(), textScale: scale));
+      await tester.pump();
+      return tester.getSize(find.text('23:41')).height;
+    }
+
+    final one = await height(1.0);
+    expect(await height(1.4), closeTo(one * 1.4, 1.5));
+    expect(await height(2.0), closeTo(one * 1.4, 1.5));
+  });
+
+  testWidgets('reduced motion renders the same', (tester) async {
     useWindow(tester, const Size(320, 640));
     await tester.pumpWidget(
       host(_clock(big: 'hàng đợi'), textScale: 2.0, reduceMotion: true),
     );
     expect(tester.takeException(), isNull);
+    expectTextsFit(tester, find.byType(KClockProgress));
   });
 }

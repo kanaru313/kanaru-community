@@ -25,6 +25,9 @@ abstract final class KMotion {
   /// A modal dialog scaling in (96 -> 100 %); none with reduced motion.
   static const Duration dialogIn = Duration(milliseconds: 160);
 
+  /// Curve of [dialogIn] (fade and scale).
+  static const Curve dialogCurve = Curves.easeOutCubic;
+
   /// Curve of colour and opacity changes (04 §3.5: colour = emphasized,
   /// position = spring).
   static const Curve emphasized = Curves.easeInOutCubicEmphasized;

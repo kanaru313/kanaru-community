@@ -4,6 +4,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'support/finders.dart';
+import 'support/fit.dart';
 import 'support/host.dart';
 
 Widget _button({
@@ -32,6 +33,52 @@ TextStyle _text(WidgetTester tester, String label) =>
     tester.widget<Text>(find.text(label)).style!;
 
 void main() {
+  testWidgets('semantics: focusable while enabled, focused once focused', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final node = FocusNode();
+    addTearDown(node.dispose);
+    await tester.pumpWidget(host(_button(onPressed: () {}, focusNode: node)));
+    expect(
+      tester.getSemantics(byModalButton('Tạm dừng đếm')),
+      isSemantics(isButton: true, isFocusable: true, isFocused: false),
+    );
+    node.requestFocus();
+    await tester.pump();
+    expect(
+      tester.getSemantics(byModalButton('Tạm dừng đếm')),
+      isSemantics(isButton: true, isFocusable: true, isFocused: true),
+    );
+    await tester.pumpWidget(host(_button()));
+    expect(
+      tester.getSemantics(byModalButton('Tạm dừng đếm')),
+      isSemantics(isButton: true, isFocusable: false),
+    );
+    semantics.dispose();
+  });
+
+  for (final e in KModalEmphasis.values) {
+    testWidgets('200 % text at 320: ${e.name} label grows the button, '
+        'nothing is cut', (tester) async {
+      useWindow(tester, const Size(320, 500));
+      await tester.pumpWidget(
+        host(
+          _button(
+            emphasis: e,
+            label: 'Tạm dừng đếm',
+            prominent: true,
+            onPressed: () {},
+            icon: KIcons.add,
+          ),
+          textScale: 2.0,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expectTextsFit(tester, find.byType(KModalButton));
+    });
+  }
+
   for (final (name, brightness, scale) in hostVariants) {
     for (final e in KModalEmphasis.values) {
       testWidgets('${e.name} lays out at 320 ($name)', (tester) async {

@@ -1,16 +1,17 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../icons/k_icons.dart';
 import '../layout/form_factor.dart';
-import '../tokens/k_icon_size.dart';
 import '../tokens/k_layout.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 import 'k_focus_ring.dart';
 import 'k_inset_shape.dart';
+import 'k_start_arrows.dart';
+import 'selection_action_row_content.dart';
 
-/// Body of a `SelectionRow` with `action: true` or `running: true`: a button
-/// that does something at once, never a choice (no mark, no selected state).
+/// Body of a `SelectionRow.action`: a button that does something at once,
+/// never a choice (no mark, no selected state). Arrow keys move focus between
+/// start buttons of a `KStartArea`.
 /// Touch shells: a 64 dp card with the detail under the title. Desktop: the
 /// dense 40 / 36 row with the detail on the same line, right. Built only by
 /// `SelectionRow`.
@@ -94,6 +95,8 @@ class _SelectionActionRowState extends State<SelectionActionRow> {
         container: true,
         button: true,
         enabled: active,
+        focusable: active,
+        focused: active ? _focused : null,
         hint: widget.hint,
         child: Opacity(
           opacity: active ? 1 : 0.38,
@@ -119,73 +122,43 @@ class _SelectionActionRowState extends State<SelectionActionRow> {
                 bottom: band,
                 child: IgnorePointer(
                   child: KFocusRing(
-                    // Rows keep the tint as focus mark; the running card
-                    // draws the ring (the card is the focus target).
-                    focused: _focused && widget.running,
+                    focused: _focused,
                     radius: radius,
                     child: const SizedBox.expand(),
                   ),
                 ),
               ),
-              Material(
-                type: MaterialType.transparency,
-                child: InkWell(
-                  customBorder: KInsetShape(KShape.of(radius), band),
-                  hoverColor: scheme.onSurface.withValues(alpha: 0.08),
-                  focusColor: widget.running
-                      ? const Color(0x00000000)
-                      : scheme.onSurface.withValues(alpha: 0.10),
-                  highlightColor: scheme.onSurface.withValues(alpha: 0.10),
-                  autofocus: widget.autofocus,
-                  canRequestFocus: active,
-                  onFocusChange: (v) => setState(() => _focused = v),
-                  onTap: active ? widget.onTap : null,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: minHeight),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: desktop ? KSpace.x3 : KSpace.x4,
-                        vertical: KSpace.x2,
-                      ),
-                      child: Row(
-                        children: [
-                          if (widget.leading != null) ...[
-                            IconTheme.merge(
-                              data: IconThemeData(
-                                color: onCard ?? scheme.primary,
-                                size: desktop ? KIconSize.sm : KIconSize.md,
-                              ),
-                              child: widget.leading!,
-                            ),
-                            SizedBox(width: desktop ? KSpace.x3 : KSpace.x4),
-                          ],
-                          Expanded(
-                            child: desktop
-                                ? Row(
-                                    children: [
-                                      Flexible(child: titleWidget),
-                                      if (detailWidget != null) ...[
-                                        const SizedBox(width: KSpace.x3),
-                                        Expanded(child: detailWidget),
-                                      ],
-                                    ],
-                                  )
-                                : Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [titleWidget, ?detailWidget],
-                                  ),
+              KStartMarker(
+                child: Shortcuts(
+                  shortcuts: kStartArrowShortcuts(Directionality.of(context)),
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: InkWell(
+                      customBorder: KInsetShape(KShape.of(radius), band),
+                      hoverColor: scheme.onSurface.withValues(alpha: 0.08),
+                      // Keyboard focus is the ring around the visible shape.
+                      focusColor: const Color(0x00000000),
+                      highlightColor: scheme.onSurface.withValues(alpha: 0.10),
+                      autofocus: widget.autofocus,
+                      canRequestFocus: active,
+                      onFocusChange: (v) => setState(() => _focused = v),
+                      onTap: active ? widget.onTap : null,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: minHeight),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: desktop ? KSpace.x3 : KSpace.x4,
+                            vertical: KSpace.x2,
                           ),
-                          if (widget.running) ...[
-                            const SizedBox(width: KSpace.x2),
-                            Icon(
-                              KIcons.chevronRight,
-                              size: KIconSize.md,
-                              color: onCard,
-                            ),
-                          ],
-                        ],
+                          child: ActionRowContent(
+                            leading: widget.leading,
+                            title: titleWidget,
+                            detail: detailWidget,
+                            desktop: desktop,
+                            running: widget.running,
+                            color: onCard,
+                          ),
+                        ),
                       ),
                     ),
                   ),

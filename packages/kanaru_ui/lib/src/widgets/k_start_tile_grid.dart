@@ -1,14 +1,16 @@
-import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
 import '../tokens/k_space.dart';
+import 'k_start_arrows.dart';
 
-/// One navigation area for start buttons: arrow keys move focus to the nearest
-/// enabled start button in that direction (tiles of a [KStartTileGrid] and
-/// `SelectionRow(action: true)` rows alike, disabled ones skipped); Tab keeps
-/// walking in reading order. Arrows never leave the area, so a footer button
-/// below is reached with Tab only.
+/// One navigation area for start buttons: with focus on a start button, arrow
+/// keys move it to the nearest enabled start button in that direction (tiles
+/// of a [KStartTileGrid] and `SelectionRow.action` rows alike, disabled ones
+/// skipped); Tab keeps walking in reading order. Arrows never leave the area
+/// from a start button, so a footer button below is reached with Tab only.
+/// Arrow keys on any other focusable inside the area (a text field, a ruler)
+/// are not touched. Put only start buttons in an area.
 ///
 /// A [KStartTileGrid] outside any area wraps itself in one; put tiles and rows
 /// that should share arrow navigation under a single [KStartArea].
@@ -23,11 +25,6 @@ class KStartArea extends StatefulWidget {
 
   @override
   State<KStartArea> createState() => _KStartAreaState();
-}
-
-class _Move extends Intent {
-  const _Move(this.direction);
-  final TraversalDirection direction;
 }
 
 class _AreaMarker extends InheritedWidget {
@@ -53,7 +50,11 @@ class _KStartAreaState extends State<KStartArea> {
   void _move(TraversalDirection direction) {
     final current = FocusManager.instance.primaryFocus;
     if (current == null) return;
-    final candidates = _root.traversalDescendants.toList();
+    // Only start buttons are sources and targets.
+    final candidates = [
+      for (final node in _root.traversalDescendants)
+        if (node.context != null && KStartMarker.isIn(node.context!)) node,
+    ];
     if (!candidates.contains(current)) return;
     final from = current.rect;
     FocusNode? best;
@@ -66,7 +67,10 @@ class _KStartAreaState extends State<KStartArea> {
         bestScore = score;
       }
     }
-    best?.requestFocus();
+    // Same call as Tab traversal: also scrolls the target into view.
+    if (best != null) {
+      FocusTraversalPolicy.defaultTraversalRequestFocusCallback(best);
+    }
   }
 
   /// Lower is nearer; null when [to] does not lie in [direction] of [from].
@@ -101,38 +105,21 @@ class _KStartAreaState extends State<KStartArea> {
 
   @override
   Widget build(BuildContext context) {
-    final rtl = Directionality.of(context) == TextDirection.rtl;
     return _AreaMarker(
       child: FocusTraversalGroup(
         policy: ReadingOrderTraversalPolicy(),
         child: Focus(
           focusNode: _root,
-          child: Shortcuts(
-            shortcuts: {
-              const SingleActivator(LogicalKeyboardKey.arrowUp): const _Move(
-                TraversalDirection.up,
-              ),
-              const SingleActivator(LogicalKeyboardKey.arrowDown): const _Move(
-                TraversalDirection.down,
-              ),
-              const SingleActivator(LogicalKeyboardKey.arrowLeft): _Move(
-                rtl ? TraversalDirection.right : TraversalDirection.left,
-              ),
-              const SingleActivator(LogicalKeyboardKey.arrowRight): _Move(
-                rtl ? TraversalDirection.left : TraversalDirection.right,
+          child: Actions(
+            actions: {
+              KStartMoveIntent: CallbackAction<KStartMoveIntent>(
+                onInvoke: (intent) {
+                  _move(intent.direction);
+                  return null;
+                },
               ),
             },
-            child: Actions(
-              actions: {
-                _Move: CallbackAction<_Move>(
-                  onInvoke: (intent) {
-                    _move(intent.direction);
-                    return null;
-                  },
-                ),
-              },
-              child: widget.child,
-            ),
+            child: widget.child,
           ),
         ),
       ),

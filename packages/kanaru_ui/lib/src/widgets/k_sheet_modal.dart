@@ -1,10 +1,10 @@
-import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens/k_layout.dart';
 import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
+import 'k_modal_esc_scope.dart';
 import 'k_row_edges.dart';
 
 /// Scrim of the modal dialog (desktop and tablets).
@@ -35,31 +35,27 @@ Future<T?> showKModalDialog<T>(
   required bool useRootNavigator,
 }) {
   final reduce = MediaQuery.disableAnimationsOf(context);
+  final scheme = Theme.of(context).colorScheme;
+  final fade = CurveTween(curve: KMotion.dialogCurve);
+  final grow = Tween<double>(begin: 0.96, end: 1).chain(fade);
   return showGeneralDialog<T>(
     context: context,
     useRootNavigator: useRootNavigator,
     barrierDismissible: true,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: const Color(0xFF000000).withValues(alpha: _dialogScrim),
+    barrierColor: scheme.scrim.withValues(alpha: _dialogScrim),
     transitionDuration: reduce ? Duration.zero : KMotion.dialogIn,
     transitionBuilder: (context, animation, _, child) {
       if (reduce) return child;
-      final curved = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-      );
       return FadeTransition(
-        opacity: curved,
-        child: ScaleTransition(
-          scale: Tween<double>(begin: 0.96, end: 1).animate(curved),
-          child: child,
-        ),
+        opacity: animation.drive(fade),
+        child: ScaleTransition(scale: animation.drive(grow), child: child),
       );
     },
     pageBuilder: (context, _, _) {
       final media = MediaQuery.of(context);
       final large = media.textScaler.scale(10) >= 20;
-      return _EscCloses(
+      return KModalEscScope(
         child: SafeArea(
           child: Padding(
             padding: EdgeInsets.fromLTRB(
@@ -75,7 +71,7 @@ Future<T?> showKModalDialog<T>(
                 child: Material(
                   color: Theme.of(context).colorScheme.surfaceContainerHigh,
                   elevation: 6,
-                  shadowColor: const Color(0xFF000000),
+                  shadowColor: Theme.of(context).colorScheme.shadow,
                   shape: KShape.of(KRadius.lg, continuous: true),
                   clipBehavior: Clip.antiAlias,
                   child: KRowEdgesScope(
@@ -111,7 +107,8 @@ Future<T?> showKModalSheet<T>(
     showDragHandle: true,
     enableDrag: draggable,
     backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-    barrierColor: const Color(0xFF000000).withValues(alpha: _sheetScrim),
+    barrierColor: Theme.of(context).colorScheme.scrim
+        .withValues(alpha: _sheetScrim),
     clipBehavior: Clip.antiAlias,
     shape: KShape.of(
       BorderRadius.vertical(top: KRadius.xl.topLeft),
@@ -123,7 +120,7 @@ Future<T?> showKModalSheet<T>(
       final available = (size.height - keyboard) < maxHeight
           ? size.height - keyboard
           : maxHeight;
-      return _EscCloses(
+      return KModalEscScope(
         child: KRowEdgesScope(
           edges: KRowEdges.fullBleed,
           child: Stack(
@@ -176,31 +173,4 @@ class _TopGlow extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Esc closes the route and is consumed here, so a shortcut of the shell
-/// above the route never sees it. Holds focus inside the route when nothing
-/// else asks for it (an `autofocus` in the content wins).
-class _EscCloses extends StatelessWidget {
-  const _EscCloses({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Shortcuts(
-    shortcuts: const {
-      SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
-    },
-    child: Actions(
-      actions: {
-        DismissIntent: CallbackAction<DismissIntent>(
-          onInvoke: (_) {
-            Navigator.of(context).maybePop();
-            return null;
-          },
-        ),
-      },
-      child: Focus(autofocus: true, skipTraversal: true, child: child),
-    ),
-  );
 }

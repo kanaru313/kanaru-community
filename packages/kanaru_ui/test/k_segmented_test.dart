@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'support/fit.dart';
 import 'support/host.dart';
 
 const _segments = [
@@ -11,18 +12,21 @@ const _segments = [
   KSegment(value: 'tracks', label: 'Số bài'),
 ];
 
-Widget _segmented({String value = 'min', ValueChanged<String>? onChanged}) =>
-    Center(
-      child: SizedBox(
-        width: 280,
-        child: KSegmented<String>(
-          segments: _segments,
-          value: value,
-          onChanged: onChanged ?? (_) {},
-          semanticLabel: 'Kiểu',
-        ),
-      ),
-    );
+Widget _segmented({
+  String value = 'min',
+  ValueChanged<String>? onChanged,
+  double width = 280,
+}) => Center(
+  child: SizedBox(
+    width: width,
+    child: KSegmented<String>(
+      segments: _segments,
+      value: value,
+      onChanged: onChanged ?? (_) {},
+      semanticLabel: 'Kiểu',
+    ),
+  ),
+);
 
 Finder _seg(String label) => find.ancestor(
   of: find.text(label),
@@ -55,7 +59,9 @@ void main() {
           isSelected: true,
           isInMutuallyExclusiveGroup: true,
           hasTapAction: true,
-          hasEnabledState: false,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
         ),
       );
       expect(
@@ -66,7 +72,9 @@ void main() {
           isSelected: false,
           isInMutuallyExclusiveGroup: true,
           hasTapAction: true,
-          hasEnabledState: false,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
         ),
       );
       expect(tester.takeException(), isNull);
@@ -181,6 +189,53 @@ void main() {
       ),
     );
     expect(tester.takeException(), isNull);
+    // 'Số bài' at 28 dp is wider than the half track in Ahem: ellipsis is
+    // allowed here, the painted text must still stay inside the track.
+    expectTextsFit(
+      tester,
+      find.byType(KSegmented<String>),
+      allowEllipsis: true,
+    );
+  });
+
+  for (final (name, size, min) in [
+    ('desktop', const Size(1300, 800), 36.0),
+    ('touch', const Size(400, 800), 48.0),
+  ]) {
+    testWidgets('200 % text on $name: the track grows, labels stay inside it', (
+      tester,
+    ) async {
+      useWindow(tester, size);
+      await tester.pumpWidget(host(_segmented(width: 500), textScale: 2));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      final track = tester.getRect(find.byType(KSegmented<String>));
+      for (final label in ['Phút', 'Số bài']) {
+        final text = tester.getRect(find.text(label));
+        expect(track.top, lessThanOrEqualTo(text.top), reason: label);
+        expect(track.bottom, greaterThanOrEqualTo(text.bottom), reason: label);
+      }
+      expect(track.height, name == 'desktop' ? greaterThan(min) : min);
+      expectTextsFit(tester, find.byType(KSegmented<String>));
+    });
+  }
+
+  testWidgets('semantics: focusable, focused only on the focused segment', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(host(_segmented()));
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    expect(
+      tester.getSemantics(find.text('Phút')),
+      isSemantics(isButton: true, isFocusable: true, isFocused: true),
+    );
+    expect(
+      tester.getSemantics(find.text('Số bài')),
+      isSemantics(isButton: true, isFocusable: true, isFocused: false),
+    );
+    semantics.dispose();
   });
 
   testWidgets('reduced motion: the tint moves at once', (tester) async {

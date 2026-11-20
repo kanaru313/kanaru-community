@@ -48,13 +48,14 @@ class KChip extends StatelessWidget {
   final bool _interactive;
 
   static const double _denseDesktopHeight = 32;
+  static const double _denseTouchHeight = 40;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final touch = FormFactor.of(context) == FormFactor.mobile;
     final minHeight = dense
-        ? (touch ? KLayout.minTargetDesktop : _denseDesktopHeight)
+        ? (touch ? _denseTouchHeight : _denseDesktopHeight)
         : (touch ? KLayout.minTarget : KLayout.minTargetDesktop);
     final fg = selected ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
     final content = ConstrainedBox(

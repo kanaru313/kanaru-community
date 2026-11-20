@@ -16,6 +16,7 @@ Widget _ruler({
   ValueChanged<int>? onChanged,
   VoidCallback? onSubmit,
   bool autofocus = false,
+  String Function(int)? tickLabel,
 }) => Center(
   child: KRuler(
     min: min,
@@ -28,15 +29,17 @@ Widget _ruler({
     autofocus: autofocus,
     semanticLabel: 'Số phút',
     valueLabel: (v) => '$v phút',
+    tickLabel: tickLabel,
   ),
 );
 
-double _position(WidgetTester tester) => tester
+KRulerPainter _painter(WidgetTester tester) => tester
     .widgetList<CustomPaint>(find.byType(CustomPaint))
     .map((c) => c.painter)
     .whereType<KRulerPainter>()
-    .single
-    .position;
+    .single;
+
+double _position(WidgetTester tester) => _painter(tester).position;
 
 void main() {
   for (final (name, brightness, scale) in hostVariants) {
@@ -157,6 +160,74 @@ void main() {
     await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
     expect(changes, [179]);
+  });
+
+  testWidgets('off-range value: the key pointing further out changes nothing', (
+    tester,
+  ) async {
+    final changes = <int>[];
+    await tester.pumpWidget(
+      host(_ruler(value: 240, onChanged: changes.add, autofocus: true)),
+    );
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    expect(changes, isEmpty, reason: 'increase must never lower 240 to 180');
+    await tester.pumpWidget(
+      host(_ruler(value: -5, onChanged: changes.add, autofocus: true)),
+    );
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    expect(changes, isEmpty);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    expect(changes, [2], reason: 'inward key steps from the end');
+  });
+
+  testWidgets('arrow at an end is consumed, not passed to a parent', (
+    tester,
+  ) async {
+    var parent = 0;
+    await tester.pumpWidget(
+      host(
+        Focus(
+          onKeyEvent: (_, e) {
+            if (e is KeyDownEvent) parent++;
+            return KeyEventResult.ignored;
+          },
+          child: _ruler(value: 180, autofocus: true),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    expect(parent, 0);
+  });
+
+  testWidgets('tick labels come from the caller formatter', (tester) async {
+    await tester.pumpWidget(host(_ruler()));
+    expect(_painter(tester).tickLabel(75), '75');
+    await tester.pumpWidget(
+      host(_ruler(tickLabel: (v) => '${v ~/ 60}:${v % 60}')),
+    );
+    expect(_painter(tester).tickLabel(75), '1:15');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('semantics: focusable, focused only while it has focus', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(host(_ruler()));
+    expect(
+      tester.getSemantics(find.byType(KRuler)),
+      isSemantics(isSlider: true, isFocusable: true, isFocused: false),
+    );
+    await tester.pumpWidget(host(_ruler(autofocus: true)));
+    await tester.pump();
+    expect(
+      tester.getSemantics(find.byType(KRuler)),
+      isSemantics(isSlider: true, isFocusable: true, isFocused: true),
+    );
+    semantics.dispose();
   });
 
   testWidgets('one label per unit mode (tracks)', (tester) async {

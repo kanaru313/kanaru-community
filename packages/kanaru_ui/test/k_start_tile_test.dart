@@ -5,6 +5,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'support/finders.dart';
+import 'support/fit.dart';
 import 'support/host.dart';
 
 const _touch = Size(400, 900);
@@ -26,7 +27,7 @@ Widget _tile({
       onPressed: onPressed,
       opensMore: opensMore,
       autofocus: autofocus,
-      icon: const Icon(KIcons.add),
+      icon: KIcons.add,
     ),
   ),
 );
@@ -65,6 +66,78 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  for (final width in [320.0, 1400.0]) {
+    testWidgets('200 % text at width $width: every tile shows all its text', (
+      tester,
+    ) async {
+      useWindow(tester, Size(width, 900));
+      await tester.pumpWidget(
+        host(
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: KStartTileGrid(
+              children: [
+                for (final t in ['15 phút', '30 phút', '45 phút', '1 giờ 30'])
+                  KStartTile(
+                    title: t,
+                    detail: 'đến 23:40',
+                    semanticLabel: t,
+                    onPressed: () {},
+                  ),
+              ],
+            ),
+          ),
+          textScale: 2.0,
+        ),
+      );
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      for (final tile in find.byType(KStartTile).evaluate()) {
+        expectTextsFit(tester, find.byElementPredicate((e) => e == tile));
+      }
+    });
+  }
+
+  testWidgets('semantics: focusable while enabled, focused once focused', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(host(_tile(onPressed: () {})));
+    expect(
+      tester.getSemantics(byStartTile('Bắt đầu 15 phút')),
+      isSemantics(isButton: true, isFocusable: true, isFocused: false),
+    );
+    await tester.pumpWidget(
+      host(
+        KeyedSubtree(
+          key: UniqueKey(),
+          child: _tile(onPressed: () {}, autofocus: true),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(
+      tester.getSemantics(byStartTile('Bắt đầu 15 phút')),
+      isSemantics(isButton: true, isFocusable: true, isFocused: true),
+    );
+    await tester.pumpWidget(host(_tile()));
+    expect(
+      tester.getSemantics(byStartTile('Bắt đầu 15 phút')),
+      isSemantics(isButton: true, isFocusable: false),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('opensMore draws its icon on touch shells only', (tester) async {
+    useWindow(tester, _touch);
+    await tester.pumpWidget(host(_tile(opensMore: true, onPressed: () {})));
+    expect(find.byIcon(KIcons.add), findsOneWidget);
+    useWindow(tester, _desk);
+    await tester.pumpWidget(host(_tile(opensMore: true, onPressed: () {})));
+    await tester.pump();
+    expect(find.byIcon(KIcons.add), findsNothing);
+  });
 
   testWidgets('reports a button with its spoken label; tap starts it', (
     tester,
@@ -248,24 +321,12 @@ void main() {
                       ),
                   ],
                 ),
-                SelectionRow(
-                  action: true,
-                  selected: false,
-                  title: const Text('r1'),
-                  onTap: () {},
-                ),
-                const SelectionRow(
-                  action: true,
-                  selected: false,
+                SelectionRow.action(title: const Text('r1'), onTap: () {}),
+                const SelectionRow.action(
                   title: Text('r2'),
                   disabledReason: 'Không có album',
                 ),
-                SelectionRow(
-                  action: true,
-                  selected: false,
-                  title: const Text('r3'),
-                  onTap: () {},
-                ),
+                SelectionRow.action(title: const Text('r3'), onTap: () {}),
               ],
             ),
           ),
@@ -365,6 +426,105 @@ void main() {
       await tester.pump();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('arrow navigation boundaries', () {
+    testWidgets('a focused non-start control keeps its arrow keys', (
+      tester,
+    ) async {
+      useWindow(tester, _touch);
+      var outer = 0;
+      final tile = FocusNode();
+      final other = FocusNode();
+      addTearDown(tile.dispose);
+      addTearDown(other.dispose);
+      await tester.pumpWidget(
+        host(
+          CallbackShortcuts(
+            bindings: {
+              const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+                  outer++,
+            },
+            child: KStartArea(
+              child: Column(
+                children: [
+                  KStartTile(
+                    title: 'a',
+                    semanticLabel: 'a',
+                    focusNode: tile,
+                    onPressed: () {},
+                  ),
+                  Focus(
+                    focusNode: other,
+                    child: const SizedBox(width: 100, height: 40),
+                  ),
+                  KStartTile(title: 'b', semanticLabel: 'b', onPressed: () {}),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      other.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      expect(outer, 1, reason: 'the area lets the key through');
+      expect(other.hasPrimaryFocus, isTrue);
+      tile.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+      expect(outer, 1, reason: 'from a start button the area consumes it');
+      expect(other.hasPrimaryFocus, isFalse, reason: 'not a start button');
+      expect(tile.hasPrimaryFocus, isFalse);
+    });
+
+    testWidgets('arrow focus scrolls the target into view', (tester) async {
+      useWindow(tester, const Size(400, 500));
+      final top = FocusNode();
+      addTearDown(top.dispose);
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        host(
+          Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              height: 300,
+              child: SingleChildScrollView(
+                controller: controller,
+                child: KStartArea(
+                  child: Column(
+                    children: [
+                      KStartTile(
+                        title: 'a',
+                        semanticLabel: 'a',
+                        focusNode: top,
+                        onPressed: () {},
+                      ),
+                      const SizedBox(height: 1000),
+                      SelectionRow.action(
+                        title: const Text('far'),
+                        onTap: () {},
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      top.requestFocus();
+      await tester.pump();
+      expect(controller.offset, 0);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(controller.offset, greaterThan(0));
+      final row = tester.getRect(find.text('far'));
+      expect(row.bottom, lessThanOrEqualTo(300));
+      expect(row.top, greaterThanOrEqualTo(0));
     });
   });
 }

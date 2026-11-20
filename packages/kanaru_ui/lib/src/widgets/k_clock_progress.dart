@@ -2,23 +2,56 @@ import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
 import '../tokens/k_space.dart';
+import 'k_clock_bar_painter.dart';
 
-/// A bar cut into [count] segments: the first [done] are played (empty), the
-/// one at [done] drains with [currentFraction] (0..1 left), the rest are full.
-typedef KClockSegments = ({int count, int done, double currentFraction});
+export 'k_clock_bar_painter.dart' show ClockBarPainter, KClockSegments;
 
 const double _kHeldNumberAlpha = 0.55;
-const double _kSegmentGap = 4;
+
+/// The big number grows with the text scale only up to this factor (the
+/// board's 57 -> 78); past it the number is scaled down to fit instead.
+const double _kMaxNumberScale = 1.4;
+
+/// What the big number shows; decides its size and weight.
+enum _NumberKind {
+  /// "23:41", "3": one big figure group.
+  figure,
+
+  /// "2:05:09", "12:00:00": hours, minutes and seconds.
+  longClock,
+
+  /// "album này", "bài này": words, bold and smaller.
+  words,
+}
+
+/// Kind by what the text is, not by its length: no digit = words, two or more
+/// colons = long clock, anything else = figure.
+_NumberKind _kindOf(String text) {
+  if (!text.contains(RegExp(r'\d'))) return _NumberKind.words;
+  return ':'.allMatches(text).length >= 2
+      ? _NumberKind.longClock
+      : _NumberKind.figure;
+}
+
+/// Size of the big number by kind and shell: 57 / 45 / 36 on touch shells,
+/// 45 / 36 / 28 on desktop (figure, long clock, words).
+double _numberSize(_NumberKind kind, {required bool desktop}) {
+  final sizes = desktop ? const [45.0, 36.0, 28.0] : const [57.0, 45.0, 36.0];
+  return sizes[kind.index];
+}
 
 /// Big thin number with a small label above, a progress bar under it and a
 /// start / end text row (the sleep timer's running screen).
 ///
 /// The bar shows [fraction] (0..1, clamped, NaN = 0) or, when [segments] is
 /// set, one segment per track. [held] dims the number to 55 % and draws the
-/// bar in `outline` (the count is paused). The big number is excluded from
-/// semantics; [statusLabel] is a hidden node with the spoken state (minute
-/// precision from the caller). It is not a live region: announcing changes is
-/// the caller's job.
+/// bar in `outline` (the count is paused). The number's size follows what
+/// [bigText] is (a figure like `23:41`, a long clock like `2:05:09`, or words
+/// like `album này`, which are bold) and it never clips: past 1.4 x text
+/// scale, or on a narrow window, it shrinks to fit one line. The big number
+/// is excluded from semantics; [statusLabel] is a hidden node with the
+/// spoken state (minute precision from the caller). It is not a live region:
+/// announcing changes is the caller's job.
 class KClockProgress extends StatelessWidget {
   const KClockProgress({
     super.key,
@@ -41,23 +74,15 @@ class KClockProgress extends StatelessWidget {
   final String? endText;
   final bool held;
 
-  /// Number size by shell and text length: 57 / 45 / 36 on touch shells,
-  /// 45 / 36 / 28 on desktop (up to 5, up to 7, longer).
-  static double numberSize({required bool desktop, required int length}) {
-    final tier = length <= 5 ? 0 : (length <= 7 ? 1 : 2);
-    return (desktop
-        ? const [45.0, 36.0, 28.0]
-        : const [57.0, 45.0, 36.0])[tier];
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final desktop = FormFactor.of(context) == FormFactor.desktop;
+    final kind = _kindOf(bigText);
     final numberStyle = theme.textTheme.displayLarge?.copyWith(
-      fontSize: numberSize(desktop: desktop, length: bigText.length),
-      fontWeight: FontWeight.w400,
+      fontSize: _numberSize(kind, desktop: desktop),
+      fontWeight: kind == _NumberKind.words ? FontWeight.w700 : FontWeight.w400,
       height: 1.1,
       color: held
           ? scheme.onSurface.withValues(alpha: _kHeldNumberAlpha)
@@ -79,12 +104,16 @@ class KClockProgress extends StatelessWidget {
           ),
         ),
         ExcludeSemantics(
-          child: Text(
-            bigText,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: numberStyle,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              bigText,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              textScaler: MediaQuery.textScalerOf(context)
+                  .clamp(maxScaleFactor: _kMaxNumberScale),
+              style: numberStyle,
+            ),
           ),
         ),
         Semantics(
@@ -127,66 +156,4 @@ class KClockProgress extends StatelessWidget {
       ],
     );
   }
-}
-
-/// Paints the rounded track and its fill. Public inside the package so tests
-/// can read what is drawn; not exported from the barrel.
-class ClockBarPainter extends CustomPainter {
-  ClockBarPainter({
-    required double fraction,
-    required this.segments,
-    required this.fill,
-    required this.track,
-  }) : fraction = fraction.isNaN ? 0.0 : fraction.clamp(0.0, 1.0);
-
-  final double fraction;
-  final KClockSegments? segments;
-  final Color fill;
-  final Color track;
-
-  /// Filled share (0..1) of each drawn segment, left to right.
-  List<double> get fills {
-    final s = segments;
-    if (s == null) return [fraction];
-    return [
-      for (var i = 0; i < s.count; i++)
-        i < s.done
-            ? 0.0
-            : (i == s.done
-                  ? (s.currentFraction.isNaN
-                        ? 0.0
-                        : s.currentFraction.clamp(0.0, 1.0))
-                  : 1.0),
-    ];
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final parts = fills;
-    final gaps = (parts.length - 1) * _kSegmentGap;
-    final w = (size.width - gaps) / parts.length;
-    final r = Radius.circular(size.height / 2);
-    for (var i = 0; i < parts.length; i++) {
-      final x = i * (w + _kSegmentGap);
-      final rect = Rect.fromLTWH(x, 0, w, size.height);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, r),
-        Paint()..color = track,
-      );
-      if (parts[i] > 0) {
-        final part = Rect.fromLTWH(x, 0, w * parts[i], size.height);
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(part, r),
-          Paint()..color = fill,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(ClockBarPainter old) =>
-      old.fraction != fraction ||
-      old.segments != segments ||
-      old.fill != fill ||
-      old.track != track;
 }

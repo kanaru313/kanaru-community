@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'support/fit.dart';
 import 'support/host.dart';
 
 Widget _pill({
@@ -157,6 +158,9 @@ void main() {
       matchesSemantics(
         label: 'Hẹn giờ ngủ: còn 23:41',
         isButton: true,
+        hasEnabledState: true,
+        isEnabled: true,
+        isFocusable: true,
         hasTapAction: true,
       ),
     );
@@ -176,6 +180,51 @@ void main() {
         ),
       );
       expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('semantics: a button is focusable, focused once it has focus', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final node = FocusNode();
+    addTearDown(node.dispose);
+    await tester.pumpWidget(host(_pill(onPressed: () {}, focusNode: node)));
+    expect(
+      tester.getSemantics(find.byType(KPill)),
+      isSemantics(isButton: true, isFocusable: true, isFocused: false),
+    );
+    node.requestFocus();
+    await tester.pump();
+    expect(
+      tester.getSemantics(find.byType(KPill)),
+      isSemantics(isButton: true, isFocusable: true, isFocused: true),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('the tooltip stays out of the button semantics', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(host(_pill(onPressed: () {}, tooltip: 'Hẹn giờ')));
+    expect(find.bySemanticsLabel('Hẹn giờ'), findsNothing);
+    expect(find.bySemanticsLabel('Hẹn giờ ngủ: còn 23:41'), findsOneWidget);
+    semantics.dispose();
+  });
+
+  for (final width in [320.0, 1400.0]) {
+    testWidgets('200 % text at width $width: label shown whole', (
+      tester,
+    ) async {
+      useWindow(tester, Size(width, 640));
+      await tester.pumpWidget(
+        host(
+          _pill(onPressed: () {}, label: '0:59', widest: '0:59'),
+          textScale: 2.0,
+        ),
+      );
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expectTextsFit(tester, find.byType(KPill));
     });
   }
 

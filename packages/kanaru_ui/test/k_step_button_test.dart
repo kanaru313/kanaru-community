@@ -24,6 +24,36 @@ Color? _fill(WidgetTester tester) =>
         .color;
 
 void main() {
+  testWidgets('semantics: focusable while enabled, focused once focused', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(host(_step(onPressed: () {})));
+    expect(
+      tester.getSemantics(byStepButton('Thêm 5 phút')),
+      isSemantics(isButton: true, isFocusable: true, isFocused: false),
+    );
+    await tester.pumpWidget(
+      host(
+        KeyedSubtree(
+          key: UniqueKey(),
+          child: _step(onPressed: () {}, autofocus: true),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(
+      tester.getSemantics(byStepButton('Thêm 5 phút')),
+      isSemantics(isButton: true, isFocusable: true, isFocused: true),
+    );
+    await tester.pumpWidget(host(_step()));
+    expect(
+      tester.getSemantics(byStepButton('Thêm 5 phút')),
+      isSemantics(isButton: true, isFocusable: false),
+    );
+    semantics.dispose();
+  });
+
   for (final (name, brightness, scale) in hostVariants) {
     testWidgets('builds enabled and disabled ($name)', (tester) async {
       useWindow(tester, const Size(320, 400));
