@@ -192,7 +192,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.text('Sleep timer'));
     await tester.pumpAndSettle();
-    expect(find.byType(KModalButton), findsWidgets);
+    expect(find.text('Tap an item to start right away.'), findsOneWidget);
     // Header fully shown long after the usual stillness: the modal pins it.
     await tester.pump(const Duration(seconds: 6));
     expect(
@@ -210,7 +210,7 @@ void main() {
     );
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
-    expect(find.byType(KModalButton), findsNothing);
+    expect(find.text('Tap an item to start right away.'), findsNothing);
     expect(tester.widget<KIconButton>(more).focusNode!.hasPrimaryFocus, isTrue);
     // Pin given back: the header hides after the usual stillness.
     await tester.pump(const Duration(seconds: 4));
