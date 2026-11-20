@@ -81,8 +81,43 @@ void main() {
       s.timer.addMinutes(5);
       expect(s.state.countingPaused, isTrue);
       expect(s.state.remaining, const Duration(minutes: 54));
-      expect(s.state.setLength, const Duration(minutes: 54));
+      expect(s.state.setLength, const Duration(minutes: 55));
       expect(s.state.startSerial, 1);
+    });
+
+    test('adds raise the set length by the minutes added', () async {
+      s.timer.startMinutes(15);
+      await s.pass(const Duration(seconds: 30));
+      s.timer.addMinutes(5);
+      expect(s.state.setLength, const Duration(minutes: 20));
+      s.timer.addMinutes(5);
+      expect(s.state.setLength, const Duration(minutes: 25));
+      s.timer.addMinutes(-5);
+      expect(s.state.setLength, const Duration(minutes: 25));
+    });
+
+    test('a quick add of 30 from a fresh 15 gives 45', () async {
+      s.timer.startMinutes(15);
+      await s.pass(const Duration(seconds: 30));
+      s.timer.addMinutes(30);
+      expect(s.state.setLength, const Duration(minutes: 45));
+    });
+
+    test('the set length stays within 720 minutes', () async {
+      s.timer.startMinutes(715);
+      await s.pass(const Duration(seconds: 30));
+      s.timer.addMinutes(30);
+      expect(s.state.remaining, const Duration(minutes: 720));
+      expect(s.state.setLength, const Duration(minutes: 720));
+    });
+
+    test('one press publishes once when it raises the length', () async {
+      s.timer.startMinutes(15);
+      await s.pass(const Duration(seconds: 30));
+      s.states.clear();
+      s.timer.addMinutes(5);
+      expect(s.states, hasLength(1));
+      expect(s.states.single.setLength, const Duration(minutes: 20));
     });
 
     test('one press above the set length publishes once, with both', () async {

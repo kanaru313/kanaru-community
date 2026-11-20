@@ -207,9 +207,16 @@ class SleepTimer extends Notifier<SleepTimerState> {
     final next = (left + delta * Duration.millisecondsPerMinute).clamp(1, most);
     final nextLeft = Duration(seconds: (next + 999) ~/ 1000);
     // One notification per press: the longer set length rides on the publish.
-    final from = nextLeft > state.setLength
-        ? state.copyWith(setLength: nextLeft)
-        : state;
+    // It grows by the minutes added (not to the exact time left, which has
+    // odd seconds), and never past what the time left needs.
+    var from = state;
+    if (delta > 0 && nextLeft > state.setLength) {
+      final byAdded = state.setLength + Duration(minutes: delta);
+      final needed = Duration(minutes: (nextLeft.inSeconds + 59) ~/ 60);
+      final raised = byAdded >= nextLeft ? byAdded : needed;
+      const cap = Duration(minutes: sleepTimerMaxMinutes);
+      from = state.copyWith(setLength: raised > cap ? cap : raised);
+    }
     if (held) {
       _heldMs = next;
       _publishHeld(from: from);
