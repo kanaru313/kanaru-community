@@ -7,7 +7,13 @@ import 'package:material_ui/material_ui.dart';
 /// Holds the value like the custom screen does and records what the field
 /// reports.
 class _Host extends StatefulWidget {
-  const _Host({required this.focus, required this.log, this.range});
+  const _Host({
+    required this.focus,
+    required this.log,
+    this.range,
+    this.start = 45,
+  });
+  final int start;
   final FocusNode focus;
   final List<String> log;
   final SleepTimerRange? range;
@@ -17,7 +23,7 @@ class _Host extends StatefulWidget {
 }
 
 class _HostState extends State<_Host> {
-  int value = 45;
+  late int value = widget.start;
   SleepTimerRange? range;
   void bump() => setState(() {});
 
@@ -46,6 +52,8 @@ class _HostState extends State<_Host> {
 
 void main() {
   realTapTests();
+  honouredSelectAllTests();
+  desktopTests();
   imeAppendTest();
   formatterTests();
   late FocusNode focus;
@@ -448,6 +456,8 @@ void imeAppendTest() {
     await tester.tap(find.byType(TextField));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
+    // The IME ignores the select-all and keeps its own collapsed caret.
+    controller.selection = const TextSelection.collapsed(offset: 1);
     tester.testTextInput.updateEditingValue(
       const TextEditingValue(
         text: '67',
@@ -458,6 +468,116 @@ void imeAppendTest() {
     expect(controller.text, '7');
     expect(log.last, 'changed 7');
     debugDefaultTargetPlatformOverride = null;
+  });
+}
+
+/// An IME that honours the select-all: the typed or pasted text replaces the
+/// selection, so its first/last digit may equal the old number's.
+void honouredSelectAllTests() {
+  Future<void> tapAndSend(
+    WidgetTester tester,
+    FocusNode focus,
+    String text, {
+    String? then,
+  }) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
+
+  const cases = <(String, int, String, String)>[
+    ('45 sel-all, type 4', 45, '4', '4'),
+    ('45 sel-all, type 5', 45, '5', '5'),
+    ('45 sel-all, paste 450', 45, '450', '450'),
+    ('30 sel-all, paste 1000 clamps', 30, '1000', '720'),
+  ];
+  for (final (name, start, typed, expected) in cases) {
+    testWidgets('android tap: $name', (tester) async {
+      await tapAndSend(tester, FocusNode(), typed);
+      final focus = FocusNode();
+      addTearDown(focus.dispose);
+      await tester.pumpWidget(_Host(focus: focus, log: [], start: start));
+      final c = tester.widget<TextField>(find.byType(TextField)).controller!;
+      await tester.tap(find.byType(TextField));
+      await tester.pump(const Duration(seconds: 1));
+      tester.testTextInput.updateEditingValue(
+        TextEditingValue(
+          text: typed,
+          selection: TextSelection.collapsed(offset: typed.length),
+        ),
+      );
+      await tester.pump();
+      expect(c.text, expected);
+      debugDefaultTargetPlatformOverride = null;
+    });
+  }
+
+  testWidgets('android tap: 30 sel-all, type 3 then 5 gives 35', (
+    tester,
+  ) async {
+    await tapAndSend(tester, FocusNode(), '');
+    final focus = FocusNode();
+    addTearDown(focus.dispose);
+    await tester.pumpWidget(_Host(focus: focus, log: [], start: 30));
+    final c = tester.widget<TextField>(find.byType(TextField)).controller!;
+    await tester.tap(find.byType(TextField));
+    await tester.pump(const Duration(seconds: 1));
+    for (final (text, shown) in [('3', '3'), ('35', '35')]) {
+      tester.testTextInput.updateEditingValue(
+        TextEditingValue(
+          text: text,
+          selection: TextSelection.collapsed(offset: text.length),
+        ),
+      );
+      await tester.pump();
+      expect(c.text, shown);
+    }
+    debugDefaultTargetPlatformOverride = null;
+  });
+}
+
+/// Desktop never arms the replace: typing lands where the caret is.
+void desktopTests() {
+  testWidgets('desktop: focus, End, type 7 appends; delete removes one', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final focus = FocusNode();
+    addTearDown(focus.dispose);
+    await tester.pumpWidget(_Host(focus: focus, log: []));
+    final c = tester.widget<TextField>(find.byType(TextField)).controller!;
+    focus.requestFocus();
+    await tester.pump();
+    c.selection = const TextSelection.collapsed(offset: 2);
+    await tester.pump();
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: '457',
+        selection: TextSelection.collapsed(offset: 3),
+      ),
+    );
+    await tester.pump();
+    expect(c.text, '457');
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: '45',
+        selection: TextSelection.collapsed(offset: 2),
+      ),
+    );
+    await tester.pump();
+    expect(c.text, '45');
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: '4',
+        selection: TextSelection.collapsed(offset: 1),
+      ),
+    );
+    await tester.pump();
+    expect(c.text, '4');
   });
 }
 
@@ -502,6 +622,24 @@ void formatterTests() {
 
   test('armed: a deletion empties the field', () {
     expect(run(old45, v('4', 1)), '');
+    expect(run(old45, v('5', 1)), '');
+  });
+
+  test('armed: shared digit appended or prepended by the IME', () {
+    expect(run(old45, v('455', 3)), '5');
+    expect(run(old45, v('445', 1)), '4');
+    expect(run(v('6', 1), v('67', 2)), '7');
+  });
+
+  test('armed: a selected-all old text is replaced by the new text', () {
+    const all = TextSelection(baseOffset: 0, extentOffset: 2);
+    final sel45 = old45.copyWith(selection: all);
+    expect(run(sel45, v('4', 1)), '4');
+    expect(run(sel45, v('5', 1)), '5');
+    expect(run(sel45, v('450', 3)), '450');
+    final sel30 = const TextEditingValue(text: '30', selection: all);
+    expect(run(sel30, v('3', 1)), '3');
+    expect(run(sel30, v('1000', 4)), '720');
   });
 
   test('armed: the flag is spent by the first text change', () {

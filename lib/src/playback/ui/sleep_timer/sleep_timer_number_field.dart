@@ -17,10 +17,9 @@ class SleepReplaceFlag {
 /// value; the field puts the last valid number back when it is left).
 /// Text under an IME composition is left alone, except when [replace] is armed.
 ///
-/// Armed ([SleepReplaceFlag.armed]): the first edit that changes the text
-/// keeps only what that edit inserted (found by trimming the common prefix and
-/// suffix of old and new text), wherever the IME put its caret, and disarms.
-/// An edit that only deletes leaves an empty field: the user is replacing.
+/// Armed ([SleepReplaceFlag.armed], touch shells only): the first edit that
+/// changes the text replaces the number, by the shape of the change
+/// ([_replacement]), wherever the IME put its caret, and disarms.
 /// Composing digits that are inserted become the whole new text (no append).
 class SleepNumberFormatter extends TextInputFormatter {
   SleepNumberFormatter(this.range, {this.replace});
@@ -36,7 +35,7 @@ class SleepNumberFormatter extends TextInputFormatter {
     final flag = replace;
     if (flag != null && flag.armed && newValue.text != oldValue.text) {
       flag.armed = false;
-      final inserted = _inserted(oldValue.text, newValue.text);
+      final inserted = _replacement(oldValue, newValue);
       // Still composing: keep the inserted text raw and composing (it is
       // cleaned and reported when the composition ends, blur or submit).
       if (_composing(newValue) && inserted.isNotEmpty) {
@@ -53,20 +52,62 @@ class SleepNumberFormatter extends TextInputFormatter {
     return result.text == newValue.text ? newValue : result;
   }
 
-  /// The middle of [next] that is not shared with [old]'s start and end;
-  /// empty for a pure deletion.
-  static String _inserted(String old, String next) {
-    final limit = old.length < next.length ? old.length : next.length;
-    var prefix = 0;
-    while (prefix < limit && old[prefix] == next[prefix]) {
-      prefix++;
+  /// What the user meant to type when the field was armed to be replaced.
+  /// 1. The old text was fully selected (the IME honoured it): the new text.
+  /// 2. The new text still holds the whole old number (the IME appended or
+  ///    inserted at its own caret): only the inserted part.
+  /// 3. Only a piece was deleted: empty (the user is replacing).
+  /// 4. Anything else: the new text.
+  static String _replacement(TextEditingValue old, TextEditingValue next) {
+    final o = old.text;
+    final n = next.text;
+    final sel = old.selection;
+    if (sel.isValid &&
+        !sel.isCollapsed &&
+        sel.start == 0 &&
+        sel.end == o.length) {
+      return n;
     }
-    var suffix = 0;
-    while (suffix < limit - prefix &&
-        old[old.length - 1 - suffix] == next[next.length - 1 - suffix]) {
-      suffix++;
+    if (o.isNotEmpty && n.length > o.length) {
+      final starts = <int>[
+        for (var i = 0; i + o.length <= n.length; i++)
+          if (n.startsWith(o, i)) i,
+      ];
+      if (starts.isNotEmpty) {
+        final extra = n.length - o.length;
+        // The run position implied by where the old caret was (end: the IME
+        // appended, start: it prepended), else by the new caret (it sits at
+        // the end of the inserted part), else the first run.
+        final caret = sel.isValid ? sel.extentOffset : -1;
+        final wanted = caret >= o.length ? 0 : (caret == 0 ? extra : -1);
+        var at = starts.contains(wanted) ? wanted : -1;
+        if (at < 0) {
+          final end = next.selection.isValid ? next.selection.extentOffset : -1;
+          for (final i in starts) {
+            if ((i == 0 ? n.length : extra) == end) {
+              at = i;
+              break;
+            }
+          }
+        }
+        if (at < 0) at = starts.first;
+        return n.substring(0, at) + n.substring(at + o.length);
+      }
     }
-    return next.substring(prefix, next.length - suffix);
+    if (n.length < o.length) {
+      final limit = n.length;
+      var prefix = 0;
+      while (prefix < limit && o[prefix] == n[prefix]) {
+        prefix++;
+      }
+      var suffix = 0;
+      while (suffix < limit - prefix &&
+          o[o.length - 1 - suffix] == n[n.length - 1 - suffix]) {
+        suffix++;
+      }
+      if (prefix + suffix >= n.length) return '';
+    }
+    return n;
   }
 
   TextEditingValue _clean(String raw) {
@@ -241,7 +282,9 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
   }
 
   void _selectAll() {
-    _replace.armed = true;
+    // Only touch shells replace on the next edit; desktop types where the
+    // caret is (End then a digit appends).
+    _replace.armed = FormFactor.of(context) != FormFactor.desktop;
     _controller.value = _controller.value.copyWith(
       selection: TextSelection(
         baseOffset: 0,
