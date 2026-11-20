@@ -4,27 +4,76 @@ import 'package:material_ui/material_ui.dart';
 
 import 'sleep_timer_draft.dart';
 
+/// Set by a tap: the next edit replaces the whole number. Selection alone is
+/// not trusted for this, because some IMEs push their own value and caret after
+/// the select-all, so the typed digit would land beside the old number.
+class SleepReplaceFlag {
+  bool armed = false;
+}
+
 /// Keeps what is typed or pasted a clean number: other scripts' digits become
 /// ASCII, every other character goes, and the whole number is clamped before
 /// it is shown ("1000" → "720"). Empty and zero show as typed (they are not a
 /// value; the field puts the last valid number back when it is left).
-/// Text under an IME composition is left alone.
+/// Text under an IME composition is left alone, except when [replace] is armed.
+///
+/// Armed ([SleepReplaceFlag.armed]): the first edit that changes the text
+/// keeps only what that edit inserted (found by trimming the common prefix and
+/// suffix of old and new text), wherever the IME put its caret, and disarms.
+/// An edit that only deletes leaves an empty field: the user is replacing.
+/// Composing digits that are inserted become the whole new text (no append).
 class SleepNumberFormatter extends TextInputFormatter {
-  const SleepNumberFormatter(this.range);
+  SleepNumberFormatter(this.range, {this.replace});
 
   final SleepTimerRange range;
+  final SleepReplaceFlag? replace;
 
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
+    final flag = replace;
+    if (flag != null && flag.armed && newValue.text != oldValue.text) {
+      flag.armed = false;
+      final inserted = _inserted(oldValue.text, newValue.text);
+      // Still composing: keep the inserted text raw and composing (it is
+      // cleaned and reported when the composition ends, blur or submit).
+      if (_composing(newValue) && inserted.isNotEmpty) {
+        return TextEditingValue(
+          text: inserted,
+          selection: TextSelection.collapsed(offset: inserted.length),
+          composing: TextRange(start: 0, end: inserted.length),
+        );
+      }
+      return _clean(inserted);
+    }
     if (_composing(newValue)) return newValue;
-    final typed = parseTypedNumber(newValue.text, range);
+    final result = _clean(newValue.text);
+    return result.text == newValue.text ? newValue : result;
+  }
+
+  /// The middle of [next] that is not shared with [old]'s start and end;
+  /// empty for a pure deletion.
+  static String _inserted(String old, String next) {
+    final limit = old.length < next.length ? old.length : next.length;
+    var prefix = 0;
+    while (prefix < limit && old[prefix] == next[prefix]) {
+      prefix++;
+    }
+    var suffix = 0;
+    while (suffix < limit - prefix &&
+        old[old.length - 1 - suffix] == next[next.length - 1 - suffix]) {
+      suffix++;
+    }
+    return next.substring(prefix, next.length - suffix);
+  }
+
+  TextEditingValue _clean(String raw) {
+    final typed = parseTypedNumber(raw, range);
     final text = typed != null
         ? '$typed'
-        : (asciiDigitsOf(newValue.text).isEmpty ? '' : '0');
-    if (text == newValue.text) return newValue;
+        : (asciiDigitsOf(raw).isEmpty ? '' : '0');
     return TextEditingValue(
       text: text,
       selection: TextSelection.collapsed(offset: text.length),
@@ -75,6 +124,7 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
     text: '${widget.value}',
   );
   FocusNode? _ownFocus;
+  final SleepReplaceFlag _replace = SleepReplaceFlag();
 
   /// Last number reported to the parent that its rebuild has not delivered
   /// back through [SleepTimerNumberField.value] yet (submit and blur can
@@ -131,6 +181,7 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
   /// after this callback, so select after that.
   void _onTap() {
     if (FormFactor.of(context) == FormFactor.desktop) return;
+    _replace.armed = true;
     // A tap is explicit: select even when the keyboard left the typed digit
     // under a composing region (many Android keyboards do), which would
     // otherwise keep the caret collapsed and make the next digit append.
@@ -165,6 +216,7 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
         _selectAllAfterFrame();
       }
     } else {
+      _replace.armed = false;
       _commitThenSettle();
     }
   }
@@ -188,13 +240,16 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
     _settle();
   }
 
-  void _selectAll() => _controller.value = _controller.value.copyWith(
-    selection: TextSelection(
-      baseOffset: 0,
-      extentOffset: _controller.text.length,
-    ),
-    composing: TextRange.empty,
-  );
+  void _selectAll() {
+    _replace.armed = true;
+    _controller.value = _controller.value.copyWith(
+      selection: TextSelection(
+        baseOffset: 0,
+        extentOffset: _controller.text.length,
+      ),
+      composing: TextRange.empty,
+    );
+  }
 
   void _onEdited(String text) {
     if (_composing(_controller.value)) return;
@@ -225,7 +280,9 @@ class _SleepTimerNumberFieldState extends State<SleepTimerNumberField> {
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
         textInputAction: TextInputAction.done,
-        inputFormatters: [SleepNumberFormatter(widget.range)],
+        inputFormatters: [
+          SleepNumberFormatter(widget.range, replace: _replace),
+        ],
         style: base?.copyWith(
           color: scheme.onSurface,
           fontFeatures: const [FontFeature.tabularFigures()],

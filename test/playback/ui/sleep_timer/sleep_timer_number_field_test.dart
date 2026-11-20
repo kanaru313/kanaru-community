@@ -46,6 +46,8 @@ class _HostState extends State<_Host> {
 
 void main() {
   realTapTests();
+  imeAppendTest();
+  formatterTests();
   late FocusNode focus;
   late List<String> log;
 
@@ -415,4 +417,112 @@ void realTapTests() {
       );
     }
   }
+}
+
+/// An IME that ignores our select-all and appends at its own caret.
+void imeAppendTest() {
+  testWidgets('real tap on android: an IME that appends still gets replaced', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    final focus = FocusNode();
+    addTearDown(focus.dispose);
+    final log = <String>[];
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_Host(focus: focus, log: log));
+    final controller = tester
+        .widget<TextField>(find.byType(TextField))
+        .controller!;
+    await tester.tap(find.byType(TextField));
+    await tester.pump(const Duration(seconds: 1));
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: '6',
+        selection: TextSelection.collapsed(offset: 1),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: '67',
+        selection: TextSelection.collapsed(offset: 2),
+      ),
+    );
+    await tester.pump();
+    expect(controller.text, '7');
+    expect(log.last, 'changed 7');
+    debugDefaultTargetPlatformOverride = null;
+  });
+}
+
+void formatterTests() {
+  const old45 = TextEditingValue(
+    text: '45',
+    selection: TextSelection.collapsed(offset: 2),
+  );
+  TextEditingValue v(String t, int caret) => TextEditingValue(
+    text: t,
+    selection: TextSelection.collapsed(offset: caret),
+  );
+  String run(TextEditingValue o, TextEditingValue n, {bool armed = true}) {
+    final flag = SleepReplaceFlag()..armed = armed;
+    return SleepNumberFormatter(
+      sleepMinutesRange,
+      replace: flag,
+    ).formatEditUpdate(o, n).text;
+  }
+
+  test('armed: appended, prepended and swapped digits replace the number', () {
+    expect(run(old45, v('457', 3)), '7');
+    expect(run(old45, v('745', 1)), '7');
+    expect(run(v('3', 1), v('32', 2)), '2');
+    expect(run(v('3', 1), v('23', 1)), '2');
+    expect(run(old45, v('7', 1)), '7');
+  });
+
+  test('armed: composing inserted digits become the whole text', () {
+    final composing = const TextEditingValue(
+      text: '457',
+      selection: TextSelection.collapsed(offset: 3),
+      composing: TextRange(start: 2, end: 3),
+    );
+    final out = SleepNumberFormatter(
+      sleepMinutesRange,
+      replace: SleepReplaceFlag()..armed = true,
+    ).formatEditUpdate(old45, composing);
+    expect(out.text, '7');
+    expect(out.composing, const TextRange(start: 0, end: 1));
+  });
+
+  test('armed: a deletion empties the field', () {
+    expect(run(old45, v('4', 1)), '');
+  });
+
+  test('armed: the flag is spent by the first text change', () {
+    final flag = SleepReplaceFlag()..armed = true;
+    final f = SleepNumberFormatter(sleepMinutesRange, replace: flag);
+    expect(f.formatEditUpdate(old45, v('457', 3)).text, '7');
+    expect(flag.armed, isFalse);
+    expect(f.formatEditUpdate(v('7', 1), v('78', 2)).text, '78');
+  });
+
+  test('armed: a selection-only update keeps the flag', () {
+    final flag = SleepReplaceFlag()..armed = true;
+    SleepNumberFormatter(
+      sleepMinutesRange,
+      replace: flag,
+    ).formatEditUpdate(old45, v('45', 0));
+    expect(flag.armed, isTrue);
+  });
+
+  test('not armed: normal append and clamp', () {
+    expect(run(old45, v('457', 3), armed: false), '457');
+    expect(run(old45, v('4500', 4), armed: false), '720');
+  });
 }
