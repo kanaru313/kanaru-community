@@ -17,13 +17,18 @@ final queueRowInfoLoaderProvider = Provider<TrackInfoLoader>((ref) {
   return (ids) => loadTrackInfos(db, ids);
 });
 
-/// Fires when the `tracks` table changes (a scan, a tag edit).
-final queueTracksChangedProvider = StreamProvider<void>(
-  (ref) => ref
+/// Counts `tracks` table changes (a scan, a tag edit): 1, 2, 3, ...
+///
+/// A counter, not `void`: Riverpod drops a repeated equal `AsyncData`, so a
+/// `void` stream would reach listeners only once. Each change emits a new
+/// number. The count starts again when the provider is rebuilt.
+final queueTracksChangedProvider = StreamProvider<int>((ref) {
+  var count = 0;
+  return ref
       .watch(appDatabaseProvider)
       .tableUpdates(TableUpdateQuery.onTableName('tracks'))
-      .map((_) {}),
-);
+      .map((_) => ++count);
+});
 
 /// Most infos kept at once; the oldest touched are dropped first.
 const int queueRowInfoCapacity = 1000;

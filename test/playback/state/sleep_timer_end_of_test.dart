@@ -215,6 +215,12 @@ void main() {
       await s.h.settle();
       expect(s.loads, hasLength(2));
       expect(s.h.engine.nexts.last, isNull);
+      // A second edit moves it back: the change must reach the timer again.
+      s.albumOf(1, 'A');
+      s.tracksChanged.add(null);
+      await s.h.settle();
+      expect(s.loads, hasLength(3));
+      expect(s.h.engine.nexts.last, isNotNull);
     });
 
     test('shuffled, the boundary is read in play order', () async {
