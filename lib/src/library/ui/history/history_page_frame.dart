@@ -24,15 +24,17 @@ class HistoryPageFrame extends StatelessWidget {
 
   /// A page with a hero in [header] and the lists in [slivers]: one column
   /// when narrow, the hero in a fixed 320 dp column from 840 dp of page
-  /// width (measured on the page, not the window).
+  /// width (measured on the page, not the window). A [banner] spans the page
+  /// above both columns.
   HistoryPageFrame.layout({
     super.key,
     required this.title,
     required Widget header,
     required List<Widget> slivers,
+    Widget? banner,
     this.showBack,
   }) : titleInContent = true,
-       child = KDetailLayout(header: header, slivers: slivers);
+       child = KDetailLayout(header: header, slivers: slivers, banner: banner);
 
   /// Name of the page; the header shows it while the hero's name is hidden.
   final String title;

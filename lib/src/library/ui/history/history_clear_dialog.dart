@@ -11,6 +11,7 @@ import '../../domain/history/history_clear_scope.dart';
 import '../../state/history/history_actions.dart';
 import '../../state/history/history_providers.dart';
 import '../../state/history/local_day_provider.dart';
+import 'history_calendar_dialog.dart' show historyDialogWidth;
 import 'history_toasts.dart';
 
 final _log = Logger('library.history');
@@ -118,36 +119,39 @@ class _HistoryClearDialogState extends ConsumerState<HistoryClearDialog> {
       canPop: !_busy,
       child: AlertDialog(
         title: Text(l10n.historyClearTitle),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (final scope in ClearScope.values)
-                SelectionRow(
-                  title: Text(_label(l10n, scope)),
-                  subtitle: counts == null
-                      ? null
-                      : Text(l10n.historyHeroPlays(counts[scope] ?? 0)),
-                  selected: picked == scope,
-                  enabled: !_busy,
-                  onTap: () => setState(() => _picked = scope),
-                ),
-              if (_countFailed) ...[
-                const SizedBox(height: KSpace.x2),
-                Text(
-                  l10n.historyClearCountFailed,
-                  style: TextStyle(color: scheme.error),
-                ),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: TextButton(
-                    onPressed: () => unawaited(_load()),
-                    child: Text(l10n.historyClearRetry),
+        content: SizedBox(
+          width: historyDialogWidth(context),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final scope in ClearScope.values)
+                  SelectionRow(
+                    title: Text(_label(l10n, scope)),
+                    subtitle: counts == null
+                        ? null
+                        : Text(l10n.historyHeroPlays(counts[scope] ?? 0)),
+                    selected: picked == scope,
+                    enabled: !_busy,
+                    onTap: () => setState(() => _picked = scope),
                   ),
-                ),
+                if (_countFailed) ...[
+                  const SizedBox(height: KSpace.x2),
+                  Text(
+                    l10n.historyClearCountFailed,
+                    style: TextStyle(color: scheme.error),
+                  ),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton(
+                      onPressed: () => unawaited(_load()),
+                      child: Text(l10n.historyClearRetry),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
         actions: [

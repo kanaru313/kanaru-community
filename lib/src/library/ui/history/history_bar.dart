@@ -89,7 +89,7 @@ class HistoryBar extends StatelessWidget {
             padding: EdgeInsetsDirectional.fromSTEB(
               gutter,
               KSpace.x1,
-              libraryRowGutter(context),
+              gutter,
               KSpace.x1,
             ),
             child: filterField,

@@ -122,8 +122,11 @@ class TrackHistoryRow extends ConsumerWidget {
               CustomSemanticsAction(label: l10n.historyMenuRemovePlay): () =>
                   _remove(context),
             },
-            child: KListRow(
+            // The same row as every library list: flat and full width on
+            // mobile, a rounded card on desktop.
+            child: KMediaCard(
               selected: selected,
+              selecting: selecting,
               // A row with no tap is not a keyboard stop, and the Delete and
               // Menu keys need one: the tap is a no-op unless selecting.
               onTap: () {
@@ -131,8 +134,8 @@ class TrackHistoryRow extends ConsumerWidget {
                   ref.read(librarySelectionProvider.notifier).toggle(id);
                 }
               },
-              title: Text(when, maxLines: 1, overflow: TextOverflow.ellipsis),
-              subtitle: listened == null ? null : Text(listened),
+              title: when,
+              line2: listened,
               trailing: LibraryMoreButton(
                 onPressed: ({required viaKeyboard}) =>
                     _menu(context, viaKeyboard: viaKeyboard),

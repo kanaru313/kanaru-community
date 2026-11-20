@@ -90,7 +90,7 @@ Future<void> _remove(WidgetTester tester, String title) async {
 }
 
 List<bool> _selectedRows(WidgetTester tester) => [
-  for (final row in tester.widgetList<KListRow>(find.byType(KListRow)))
+  for (final row in tester.widgetList<KMediaCard>(find.byType(KMediaCard)))
     row.selected,
 ];
 
@@ -184,7 +184,7 @@ void main() {
       expect(find.text(_empty), findsOneWidget);
       expect(find.text('Song 7'), findsWidgets);
       expect(find.text('0 lượt nghe'), findsOneWidget);
-      expect(find.byType(KListRow), findsNothing);
+      expect(find.byType(KMediaCard), findsNothing);
     });
 
     testWidgets('a song whose file is gone: dimmed hero, Play disabled with '
@@ -217,7 +217,7 @@ void main() {
     ) async {
       await _pump(tester, store: _store(), trackId: 99);
       expect(find.text(_empty), findsOneWidget);
-      expect(find.byType(KListRow), findsNothing);
+      expect(find.byType(KMediaCard), findsNothing);
     });
 
     testWidgets('a path with no usable id shows the empty line', (
@@ -256,7 +256,7 @@ void main() {
       await _remove(tester, _rowToday);
       expect(find.text(_empty), findsOneWidget);
       expect(find.text('Song 7'), findsWidgets);
-      expect(find.byType(KListRow), findsNothing);
+      expect(find.byType(KMediaCard), findsNothing);
 
       await tester.pump(const Duration(seconds: 1));
       await tester.tap(find.text('Hoàn tác'));
@@ -388,7 +388,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(TrackHistoryPage), findsOneWidget);
     await _settle(tester);
-    expect(find.byType(KListRow), findsNWidgets(3));
+    expect(find.byType(KMediaCard), findsNWidgets(3));
 
     expect(await tester.binding.handlePopRoute(), isTrue);
     await tester.pumpAndSettle();

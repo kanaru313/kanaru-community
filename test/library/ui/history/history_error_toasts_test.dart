@@ -48,7 +48,7 @@ void main() {
     expect(find.text(l10n.historyPlayFailed), findsOneWidget);
   });
 
-  testWidgets('"Play all" with nothing that can play says so', (tester) async {
+  testWidgets('"Play" with nothing that can play says so', (tester) async {
     // The store lists no played song, so the page menu has nothing to queue.
     final h = await pumpHistoryPage(
       tester,

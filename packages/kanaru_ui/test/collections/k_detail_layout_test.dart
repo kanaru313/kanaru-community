@@ -4,20 +4,24 @@ import 'package:material_ui/material_ui.dart';
 
 import '../support/host.dart';
 
-Widget _layout({double headerHeight = 200, int rows = 30}) => KDetailLayout(
-  header: SizedBox(
-    key: const ValueKey('header'),
-    height: headerHeight,
-    child: const Center(child: Text('header')),
-  ),
-  slivers: [
-    SliverList.builder(
-      itemCount: rows,
-      itemBuilder: (context, i) =>
-          SizedBox(height: 48, child: Text('row $i', key: ValueKey('row$i'))),
-    ),
-  ],
-);
+Widget _layout({double headerHeight = 200, int rows = 30, Widget? banner}) =>
+    KDetailLayout(
+      banner: banner,
+      header: SizedBox(
+        key: const ValueKey('header'),
+        height: headerHeight,
+        child: const Center(child: Text('header')),
+      ),
+      slivers: [
+        SliverList.builder(
+          itemCount: rows,
+          itemBuilder: (context, i) => SizedBox(
+            height: 48,
+            child: Text('row $i', key: ValueKey('row$i')),
+          ),
+        ),
+      ],
+    );
 
 bool _hasGradient(WidgetTester tester) => tester
     .widgetList<DecoratedBox>(find.byType(DecoratedBox))
@@ -27,7 +31,88 @@ bool _hasGradient(WidgetTester tester) => tester
           (d.decoration as BoxDecoration).gradient != null,
     );
 
+const _banner = SizedBox(
+  key: ValueKey('banner'),
+  height: 40,
+  width: double.infinity,
+);
+
 void main() {
+  testWidgets(
+    'narrow: a tall banner moves the title collapse with the header',
+    (tester) async {
+      useWindow(tester, const Size(400, 800));
+      Finder inHeader() => find.descendant(
+        of: find.byType(PageHeader),
+        matching: find.text('Blue Hour'),
+      );
+      await tester.pumpWidget(
+        host(
+          KDetailTitleHost(
+            child: Column(
+              children: [
+                PageHeader(title: 'Blue Hour', titleInContent: true),
+                Expanded(
+                  child: KDetailLayout(
+                    banner: const SizedBox(height: 300),
+                    header: const Padding(
+                      padding: EdgeInsets.only(top: 100),
+                      child: KGridHeading(title: 'Blue Hour'),
+                    ),
+                    slivers: [
+                      SliverList.builder(
+                        itemCount: 40,
+                        itemBuilder: (_, i) =>
+                            SizedBox(height: 48, child: Text('r$i')),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // The name starts 400 dp down: still in view after 300 dp of scroll.
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+      await tester.pump();
+      expect(inHeader(), findsNothing);
+      // Past the name (400 dp + its height): the header takes it over.
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+      await tester.pump();
+      expect(inHeader(), findsOneWidget);
+    },
+  );
+
+  testWidgets('banner: above the header when narrow, same scroll', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_layout(banner: _banner)));
+    final banner = tester.getRect(find.byKey(const ValueKey('banner')));
+    final header = tester.getRect(find.byKey(const ValueKey('header')));
+    expect(banner.width, 400);
+    expect(header.top, banner.bottom);
+  });
+
+  testWidgets('banner: spans both columns above them when wide', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(1000, 800));
+    await tester.pumpWidget(host(_layout(banner: _banner)));
+    final banner = tester.getRect(find.byKey(const ValueKey('banner')));
+    expect(banner.width, 1000);
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('header'))).dy,
+      banner.bottom,
+    );
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('row0'))).dy,
+      banner.bottom,
+    );
+  });
+
   for (final (name, brightness, scale) in hostVariants) {
     testWidgets('renders narrow and wide ($name)', (tester) async {
       useWindow(tester, const Size(400, 800));

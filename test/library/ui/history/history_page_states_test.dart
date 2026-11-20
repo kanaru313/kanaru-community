@@ -37,7 +37,7 @@ void main() {
       );
       expect(find.text('6 lượt nghe'), findsOneWidget);
       expect(find.text('6 bài · từ 31/12/2025'), findsOneWidget);
-      expect(find.text('Phát tất cả'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Phát'), findsOneWidget);
     });
 
     testWidgets('the bar counts the shown year, chips list the years, the '
@@ -259,9 +259,7 @@ void main() {
   });
 
   group('hero buttons', () {
-    testWidgets('Phát tất cả plays every played song as History', (
-      tester,
-    ) async {
+    testWidgets('Play plays every played song as History', (tester) async {
       final infos = [info(1), info(2)];
       final store = FakeHistoryStore()
         ..playedTracks = [infos[1].id, infos[0].id];
@@ -279,7 +277,7 @@ void main() {
           ),
         ],
       );
-      await tester.tap(find.text('Phát tất cả'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Phát'));
       await tester.runAsync(() => Future<void>.delayed(Duration.zero));
       await tester.pump();
       final call = h.playback.calls.single as PlayTracksCall;
@@ -297,7 +295,7 @@ void main() {
           trackRowLoaderProvider.overrideWithValue((ids) async => const []),
         ],
       );
-      await tester.tap(find.text('Phát tất cả'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Phát'));
       await tester.runAsync(() => Future<void>.delayed(Duration.zero));
       await tester.pump();
       expect(find.text('Không phát được lịch sử'), findsOneWidget);

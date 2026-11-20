@@ -148,14 +148,8 @@ class HistoryContentState extends ConsumerState<HistoryContent> {
     final list = plays.value;
     return HistoryPageFrame.layout(
       title: l10n.historyTitle,
-      header: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const HistoryRecordingNotice(),
-          HistoryHero(overview: widget.overview, plays: newest.value),
-        ],
-      ),
+      banner: const HistoryRecordingNotice(),
+      header: HistoryHero(overview: widget.overview, plays: newest.value),
       slivers: [
         SliverToBoxAdapter(
           child: HistoryBar(

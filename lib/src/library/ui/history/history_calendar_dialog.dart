@@ -15,10 +15,19 @@ Future<DateTime?> showHistoryCalendar(
 }) => showKDialog<DateTime>(
   context,
   maxWidth: 360,
-  builder: (_) => Dialog(
-    child: HistoryCalendar(year: year, plays: plays),
+  builder: (context) => Dialog(
+    child: SizedBox(
+      width: historyDialogWidth(context),
+      child: HistoryCalendar(year: year, plays: plays),
+    ),
   ),
 );
+
+/// Width of a History dialog: fills up to the dialog's cap on desktop (the
+/// content has no width of its own); null on mobile, where the dialog keeps
+/// the app's default size.
+double? historyDialogWidth(BuildContext context) =>
+    FormFactor.of(context) == FormFactor.desktop ? double.maxFinite : null;
 
 /// Opens the jump dialog for the plays of [year] (the days with plays get a
 /// dot); the day picked, or null.
