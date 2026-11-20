@@ -2,12 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
+import 'package:kanaru/src/playback/state/sleep_timer_provider.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/more_sheet.dart';
 import 'package:kanaru/src/screens/now_playing/ui/now_playing_page.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../playback/support/ui_host.dart';
+import '../../../playback/ui/sleep_timer/sleep_timer_modal_host.dart';
 import '../../../support/icon_button_finders.dart';
 
 final _routes = <RouteBase>[
@@ -36,6 +38,10 @@ Future<UiHost> _openSheet(
     routes: _routes,
     size: const Size(390, 900),
     play: false,
+    overrides: [
+      sleepTimerProvider.overrideWith(FakeSleepTimer.new),
+      ...sleepEstimates(),
+    ],
   );
   await host.run(tester, () async {
     if (tagged) {
@@ -65,6 +71,9 @@ Future<UiHost> _openSheet(
   return host;
 }
 
+FakeSleepTimer _timer(UiHost host) =>
+    host.container.read(sleepTimerProvider.notifier) as FakeSleepTimer;
+
 String _location(UiHost host) =>
     host.router!.routerDelegate.currentConfiguration.last.matchedLocation;
 
@@ -91,16 +100,67 @@ void main() {
     expect(ys, [...ys]..sort());
   });
 
+  testWidgets('the sleep timer item is live, not "coming soon"', (
+    tester,
+  ) async {
+    await _openSheet(tester);
+    final row = find.ancestor(
+      of: find.text('Sleep timer'),
+      matching: find.byType(KListRow),
+    );
+    expect(tester.widget<KListRow>(row).enabled, isTrue);
+    expect(
+      find.descendant(of: row, matching: find.text('Coming soon')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('the sleep timer label ticks while the sheet is open', (
+    tester,
+  ) async {
+    final host = await _openSheet(tester);
+    final handle = tester.ensureSemantics();
+    _timer(host).set(runningMinutes());
+    await tester.pump();
+    expect(find.text('Sleep timer · 23:41 left'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Sleep timer · 24 minutes left'),
+      findsOneWidget,
+    );
+    _timer(
+      host,
+    ).set(runningMinutes(remaining: const Duration(minutes: 23, seconds: 40)));
+    await tester.pump();
+    expect(find.text('Sleep timer · 23:40 left'), findsOneWidget);
+    _timer(host).set(const SleepTimerState.off());
+    await tester.pump();
+    expect(find.text('Sleep timer'), findsOneWidget);
+    handle.dispose();
+  });
+
+  testWidgets('the sleep timer item closes the sheet, then opens the modal', (
+    tester,
+  ) async {
+    final host = await _openSheet(tester);
+    _timer(host).set(runningMinutes());
+    await tester.pump();
+    await tester.tap(find.text('Sleep timer · 23:41 left'));
+    await tester.pumpAndSettle();
+    expect(find.byType(NowPlayingMoreSheet), findsNothing);
+    expect(find.text('Turn off timer'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    // The modal closes with Back and leaves Now Playing in place.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Turn off timer'), findsNothing);
+    expect(_location(host), '/now-playing');
+  });
+
   testWidgets('unbuilt items are dimmed with "Coming soon"; Pro has a badge', (
     tester,
   ) async {
     await _openSheet(tester);
-    for (final label in [
-      'Sleep timer',
-      'Lyrics source',
-      'Translate lyrics…',
-      'Track info',
-    ]) {
+    for (final label in ['Lyrics source', 'Translate lyrics…', 'Track info']) {
       final row = find.ancestor(
         of: find.text(label),
         matching: find.byType(KListRow),
@@ -115,7 +175,7 @@ void main() {
         of: find.byType(NowPlayingMoreSheet),
         matching: find.text('Coming soon'),
       ),
-      findsNWidgets(4),
+      findsNWidgets(3),
     );
     expect(find.byType(ProBadge), findsOneWidget);
   });

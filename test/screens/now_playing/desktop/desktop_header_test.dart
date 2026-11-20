@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
@@ -143,8 +144,86 @@ void main() {
       expect(find.text(label), findsWidgets, reason: label);
     }
     expect(find.byType(ProBadge), findsOneWidget);
+    // Only the three unbuilt items say "Coming soon"; sleep is live.
+    expect(find.text('Coming soon'), findsNWidgets(3));
     // The head row: the playing track.
     expect(find.text('T0'), findsWidgets);
+  });
+
+  testWidgets('the More menu keeps the sleep timer first, live, and ticking', (
+    tester,
+  ) async {
+    final host = await _open(tester);
+    await tester.tap(_in(header, find.byIcon(KIcons.moreVert)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    final sleepY = tester.getTopLeft(find.text('Sleep timer')).dy;
+    expect(
+      sleepY,
+      lessThan(tester.getTopLeft(find.text('Add to playlist')).dy),
+    );
+    expect(sleepY, lessThan(tester.getTopLeft(find.text('Lyrics source')).dy));
+    final timer =
+        host.container.read(sleepTimerProvider.notifier) as FakeSleepTimer;
+    timer.set(runningMinutes());
+    await tester.pump();
+    expect(find.text('Sleep timer · 23:41 left'), findsOneWidget);
+    timer.set(
+      runningMinutes(remaining: const Duration(minutes: 23, seconds: 40)),
+    );
+    await tester.pump();
+    expect(find.text('Sleep timer · 23:40 left'), findsOneWidget);
+  });
+
+  testWidgets('the More menu sleep item pins the header and returns to ⋮', (
+    tester,
+  ) async {
+    await _open(tester);
+    final more = find.ancestor(
+      of: _in(header, find.byIcon(KIcons.moreVert)),
+      matching: find.byType(KIconButton),
+    );
+    await tester.tap(more);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Sleep timer'));
+    await tester.pumpAndSettle();
+    expect(find.byType(KModalButton), findsWidgets);
+    // Header fully shown long after the usual stillness: the modal pins it.
+    await tester.pump(const Duration(seconds: 6));
+    expect(
+      tester
+          .widget<AnimatedOpacity>(
+            find
+                .ancestor(
+                  of: byIconButton('Minimise'),
+                  matching: find.byType(AnimatedOpacity),
+                )
+                .first,
+          )
+          .opacity,
+      1,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.byType(KModalButton), findsNothing);
+    expect(tester.widget<KIconButton>(more).focusNode!.hasPrimaryFocus, isTrue);
+    // Pin given back: the header hides after the usual stillness.
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(
+      tester
+          .widget<AnimatedOpacity>(
+            find
+                .ancestor(
+                  of: byIconButton('Minimise'),
+                  matching: find.byType(AnimatedOpacity),
+                )
+                .first,
+          )
+          .opacity,
+      0,
+    );
   });
 
   testWidgets('the cover-column button reflects and flips the view', (

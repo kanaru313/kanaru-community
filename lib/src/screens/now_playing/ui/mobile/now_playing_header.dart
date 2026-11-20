@@ -5,14 +5,26 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/state/track_info_providers.dart';
+import '../../../../playback/ui/sleep_timer/sleep_timer_entries.dart';
 
 /// Height of the mobile page header.
 const double nowPlayingHeaderHeight = 56;
 
-/// `[⌄] · position over album · [⋮]` (the album line is empty when the track
-/// has none). The part between the buttons is the
-/// drag handle the page owner attaches a gesture to ([dragHandle]).
-class NowPlayingHeader extends ConsumerWidget {
+/// Height from 200 % text on, so the two title lines fit.
+const double nowPlayingHeaderTallHeight = 72;
+
+/// Width of a header button (24 dp icon + 8 dp each side; the ring is 40 dp).
+const double _buttonWidth = 40;
+
+/// Each side of the title is kept free for the buttons on the right: the ring
+/// slot (always reserved, so the title never moves when a timer starts) and ⋮.
+/// The left side takes the same width, so the title is centred on the screen.
+const double _sideWidth = _buttonWidth * 2;
+
+/// `[⌄] · position over album · [ring][⋮]` (the album line is empty when the
+/// track has none). The whole part between the side slots is the drag handle
+/// the page owner attaches a gesture to ([dragHandle]).
+class NowPlayingHeader extends ConsumerStatefulWidget {
   const NowPlayingHeader({
     super.key,
     required this.onClose,
@@ -27,7 +39,21 @@ class NowPlayingHeader extends ConsumerWidget {
   final Widget Function(Widget child) dragHandle;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NowPlayingHeader> createState() => _NowPlayingHeaderState();
+}
+
+class _NowPlayingHeaderState extends ConsumerState<NowPlayingHeader> {
+  /// The ⋮ button: where focus goes when the ring button leaves.
+  final _moreFocus = FocusNode(debugLabel: 'now playing more');
+
+  @override
+  void dispose() {
+    _moreFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
@@ -39,17 +65,15 @@ class NowPlayingHeader extends ConsumerWidget {
         ? null
         : ref.watch(trackInfoProvider(id).select((i) => i.value?.album));
     final (index, length) = place;
+    final tall = MediaQuery.textScalerOf(context).scale(1) >= 2;
     return SizedBox(
-      height: nowPlayingHeaderHeight,
-      child: Row(
+      height: tall ? nowPlayingHeaderTallHeight : nowPlayingHeaderHeight,
+      child: Stack(
         children: [
-          KIconButton(
-            icon: KIcons.collapse,
-            tooltip: l10n.playbackMinimize,
-            onPressed: onClose,
-          ),
-          Expanded(
-            child: dragHandle(
+          Positioned.fill(
+            left: _sideWidth,
+            right: _sideWidth,
+            child: widget.dragHandle(
               Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -72,10 +96,33 @@ class NowPlayingHeader extends ConsumerWidget {
               ),
             ),
           ),
-          KIconButton(
-            icon: KIcons.moreVert,
-            tooltip: l10n.playbackMore,
-            onPressed: onMore,
+          Align(
+            alignment: Alignment.centerLeft,
+            child: KIconButton(
+              icon: KIcons.collapse,
+              tooltip: l10n.playbackMinimize,
+              onPressed: widget.onClose,
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: _buttonWidth,
+                  child: Center(
+                    child: SleepTimerRingButton(fallbackFocus: _moreFocus),
+                  ),
+                ),
+                KIconButton(
+                  icon: KIcons.moreVert,
+                  tooltip: l10n.playbackMore,
+                  focusNode: _moreFocus,
+                  onPressed: widget.onMore,
+                ),
+              ],
+            ),
           ),
         ],
       ),

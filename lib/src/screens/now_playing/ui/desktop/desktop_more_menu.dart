@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -6,6 +8,7 @@ import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../media/domain/cover_files.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/state/track_info_providers.dart';
+import '../../../../playback/ui/sleep_timer/sleep_timer_modal.dart';
 import '../../../../playback/ui/track_cover.dart';
 import '../now_playing_more_items.dart';
 import 'now_playing_chrome.dart';
@@ -25,6 +28,9 @@ class _DesktopMoreMenuState extends ConsumerState<DesktopMoreMenu> {
   /// Whether this menu holds a pin, so it is given back exactly once.
   bool _pinned = false;
 
+  /// The ⋮ button: the sleep timer returns focus to it.
+  final _moreFocus = FocusNode(debugLabel: 'desktop more menu');
+
   void _setPinned(bool pinned) {
     if (_pinned == pinned) return;
     _pinned = pinned;
@@ -35,7 +41,20 @@ class _DesktopMoreMenuState extends ConsumerState<DesktopMoreMenu> {
   void dispose() {
     // The menu leaves with its header: give the pin back.
     _setPinned(false);
+    _moreFocus.dispose();
     super.dispose();
+  }
+
+  /// Opens the sleep timer with the header pinned. A menu that left the tree
+  /// meanwhile (Now Playing closed) leaves the controller alone: the screen
+  /// disposes it.
+  Future<void> _openSleepTimer() async {
+    final chrome = widget.chrome..pinFloating();
+    try {
+      await showSleepTimer(context, returnFocus: _moreFocus);
+    } finally {
+      if (mounted) chrome.unpinFloating();
+    }
   }
 
   @override
@@ -45,7 +64,11 @@ class _DesktopMoreMenuState extends ConsumerState<DesktopMoreMenu> {
     final scheme = Theme.of(context).colorScheme;
     final id = ref.watch(nowPlayingProvider.select((n) => n.value?.trackId));
     final info = id == null ? null : ref.watch(trackInfoProvider(id)).value;
-    final groups = nowPlayingMoreItems(context, info);
+    final groups = nowPlayingMoreItems(
+      context,
+      info,
+      openSleepTimer: () => unawaited(_openSleepTimer()),
+    );
     final sub = [
       if (info?.artist != null) info!.artist!,
       if (info?.album != null) info!.album!,
@@ -58,7 +81,7 @@ class _DesktopMoreMenuState extends ConsumerState<DesktopMoreMenu> {
           : item.pro
           ? const ProBadge()
           : Text(l10n.appComingSoon, style: text.labelMedium),
-      child: Text(item.label),
+      child: item.liveLabel?.call(context) ?? Text(item.label),
     );
     return MenuAnchor(
       onOpen: () => _setPinned(true),
@@ -117,6 +140,7 @@ class _DesktopMoreMenuState extends ConsumerState<DesktopMoreMenu> {
       builder: (context, controller, _) => KIconButton(
         icon: KIcons.moreVert,
         tooltip: l10n.playbackMore,
+        focusNode: _moreFocus,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),
       ),
