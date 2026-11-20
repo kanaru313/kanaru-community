@@ -36,6 +36,19 @@ class _DaysStore extends FakeHistoryStore {
   }
 }
 
+/// A store whose first and last play cannot be read ([fail]) or do not exist.
+class _BoundsStore extends _DaysStore {
+  _BoundsStore({required this.fail}) : super(const []);
+
+  final bool fail;
+
+  @override
+  Future<({int first, int last})?> playedRange() async {
+    if (fail) throw StateError('db');
+    return null;
+  }
+}
+
 Finder _day(int month, int day, {int year = 2026}) =>
     find.byKey(historyDayCellKey(DateTime(year, month, day)));
 
@@ -90,12 +103,14 @@ Future<_Opened> _open(
               .copyWith(textScaler: TextScaler.linear(textScale)),
           child: child!,
         ),
-        home: Builder(
-          builder: (context) => TextButton(
-            onPressed: () async => opened.results.add(
-              await showHistoryRangeDialog(context, initial: initial),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () async => opened.results.add(
+                await showHistoryRangeDialog(context, initial: initial),
+              ),
+              child: const Text('open'),
             ),
-            child: const Text('open'),
           ),
         ),
       ),
@@ -396,6 +411,36 @@ void main() {
     expect(find.text('September 2026'), findsOneWidget);
     expect(find.text('12/09 – 20/09/2026'), findsOneWidget);
     expect(find.text('9 days'), findsOneWidget);
+  });
+
+  testWidgets('a failed read of the bounds shows a toast and returns null', (
+    tester,
+  ) async {
+    final opened = await _open(tester, store: _BoundsStore(fail: true));
+
+    expect(opened.results, [null]);
+    expect(find.text('Could not load the list'), findsOneWidget);
+    expect(find.byType(HistoryRangePicker), findsNothing);
+  });
+
+  testWidgets('no plays at all returns null without a toast', (tester) async {
+    final opened = await _open(tester, store: _BoundsStore(fail: false));
+
+    expect(opened.results, [null]);
+    expect(find.text('Could not load the list'), findsNothing);
+    expect(find.byType(HistoryRangePicker), findsNothing);
+  });
+
+  testWidgets('an initial range outside the bounds is cut to them', (
+    tester,
+  ) async {
+    await _open(
+      tester,
+      initial: (start: DateTime(2026, 8, 1), end: DateTime(2026, 12, 31)),
+    );
+
+    // First play 10 Sep; the last day is today (23 Oct).
+    expect(find.text('10/09 – 23/10/2026'), findsOneWidget);
   });
 
   testWidgets('English weeks start on Sunday', (tester) async {

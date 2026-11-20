@@ -84,7 +84,7 @@ class HistoryRangeDialogHeader extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: KRadius.md,
             ),
             child: SizedBox(
               width: double.infinity,

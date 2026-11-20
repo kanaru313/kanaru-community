@@ -3,6 +3,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../domain/history/history_days.dart';
 import '../../../domain/history/history_ranges.dart';
 import '../../../state/history/history_providers.dart';
@@ -29,11 +30,18 @@ Future<HistoryDayRange?> showHistoryRangeDialog(
 }) async {
   final container = ProviderScope.containerOf(context, listen: false);
   final ({int first, int last})? played;
+  // The provider is auto-disposed: keep it alive while the read is in flight.
+  final sub = container.listen(historyBoundsProvider, (_, _) {});
   try {
     played = await container.read(historyBoundsProvider.future);
   } on Object catch (e) {
     _log.warning('Reading the first and last play failed: ${e.runtimeType}');
+    if (context.mounted) {
+      showAppSnackBar(context, AppLocalizations.of(context).libraryLoadFailed);
+    }
     return null;
+  } finally {
+    sub.close();
   }
   if (played == null || !context.mounted) return null;
   final today = localDay(container.read(historyClockProvider)());
