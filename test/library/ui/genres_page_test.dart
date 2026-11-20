@@ -164,7 +164,7 @@ void main() {
         .read(libraryListViewsProvider.notifier)
         .setView(BrowseList.genres, CollectionView.list);
     await tester.pump();
-    await tester.tap(byIconButton('Play all').at(1)); // Jazz
+    await tester.tap(byIconButton('Play').at(1)); // Jazz
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );
@@ -196,7 +196,7 @@ void main() {
       item: genreDetailItem(groupKey('Jazz')),
     ), SortOrder.by(SortCriterion.title, descending: true));
     await tester.pump();
-    await tester.tap(byIconButton('Play all').at(1)); // Jazz
+    await tester.tap(byIconButton('Play').at(1)); // Jazz
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );

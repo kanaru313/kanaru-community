@@ -86,8 +86,10 @@ class _PlaylistPageState extends ConsumerState<PlaylistPage> {
           : PlaylistPending(showBack: showBack, failed: async.hasError);
     }
     final summary = detail.summary;
+    // Favorites has no custom cover: its tint comes from the first key of its
+    // automatic cover (the newest favourite).
     final tint = isFavorites
-        ? null
+        ? watchCoverTint(ref, summary.autoCoverKeys.firstOrNull)
         : watchDetailTint(ref, (
             kind: CustomCoverKind.playlist,
             itemKey: uid,

@@ -431,7 +431,7 @@ Owner: library. File: `tables/library_cover_tables.dart`. Sync: cache (may be dr
 
 ### custom_covers: Coded in wave 1
 
-Owner: library. File: `tables/library_cover_tables.dart`, trigger in `tables/custom_cover_triggers.drift`. Sync: per device for now. A synced version needs `uid`, `updated_at` and `deleted_at` (a hard delete for "back to automatic" cannot propagate) and must carry the image files. Songs and the Favorites playlist are not supported (Favorites shows a fixed heart tile; `CustomCoverStore` rejects its uid).
+Owner: library. File: `tables/library_cover_tables.dart`, trigger in `tables/custom_cover_triggers.drift`. Sync: per device for now. A synced version needs `uid`, `updated_at` and `deleted_at` (a hard delete for "back to automatic" cannot propagate) and must carry the image files. Songs and the Favorites playlist are not supported (Favorites shows its automatic cover; `CustomCoverStore` rejects its uid).
 
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|

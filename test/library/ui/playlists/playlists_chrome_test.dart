@@ -16,6 +16,7 @@ import 'package:kanaru/src/library/ui/playlists/list/playlist_card.dart';
 import 'package:kanaru/src/library/ui/playlists/list/playlist_tile.dart';
 import 'package:kanaru/src/library/ui/playlists/playlists_page.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:kanaru/src/library/ui/playlists/list/playlists_hub.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/icon_button_finders.dart';
@@ -275,6 +276,14 @@ void main() {
       final h = await pumpPlaylistsPage(t);
       final l10n = pageL10n(t);
       expect(find.text(l10n.playlistTrackCount(0)), findsOneWidget);
+      // The hub shortcut keeps its icon; it is not a playlist cover.
+      expect(
+        find.descendant(
+          of: find.byType(PlaylistsHub),
+          matching: find.byIcon(KIcons.favorites),
+        ),
+        findsOneWidget,
+      );
       await t.runAsync(() async {
         final track = await h.fixture.track('fav');
         await h.fixture.repo.addToPlaylists(

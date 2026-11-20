@@ -167,7 +167,7 @@ void main() {
     final vie = titles.indexOf('Tiếng Việt · Vietnamese');
     expect(vie, isNonNegative);
     final unknown = titles.length - 1; // "unknown" stays last
-    await tester.tap(byIconButton('Play all').at(vie));
+    await tester.tap(byIconButton('Play').at(vie));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );
@@ -175,7 +175,7 @@ void main() {
     var call = playback.calls.single as PlayTracksCall;
     expect(call.tracks.length, 3);
     expect(call.context, languagePlayContext('vie', titles[vie]));
-    await tester.tap(byIconButton('Play all').at(unknown));
+    await tester.tap(byIconButton('Play').at(unknown));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );
@@ -202,7 +202,7 @@ void main() {
         r.title,
     ];
     await tester.tap(
-      byIconButton('Play all').at(titles.indexOf('Tiếng Việt · Vietnamese')),
+      byIconButton('Play').at(titles.indexOf('Tiếng Việt · Vietnamese')),
     );
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),

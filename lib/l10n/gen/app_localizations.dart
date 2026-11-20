@@ -1469,7 +1469,7 @@ abstract class AppLocalizations {
   /// No description provided for @libraryPlayAll.
   ///
   /// In en, this message translates to:
-  /// **'Play all'**
+  /// **'Play'**
   String get libraryPlayAll;
 
   /// No description provided for @libraryShuffle.
@@ -4889,6 +4889,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ignore the file\'s language tag'**
   String get settingsLibraryLanguageDetectedDesc;
+
+  /// No description provided for @historyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyTitle;
+
+  /// No description provided for @historyHeroPlays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 play} other{{count} plays}}'**
+  String historyHeroPlays(int count);
+
+  /// No description provided for @historyHeroSongsSince.
+  ///
+  /// In en, this message translates to:
+  /// **'{songs, plural, =1{1 song} other{{songs} songs}} · since {date}'**
+  String historyHeroSongsSince(int songs, String date);
+
+  /// No description provided for @historyBarCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{year} · {count, plural, =1{1 play} other{{count} plays}}'**
+  String historyBarCount(String year, int count);
+
+  /// No description provided for @historyJumpToDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to date'**
+  String get historyJumpToDay;
+
+  /// No description provided for @historyYearsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Years'**
+  String get historyYearsLabel;
+
+  /// No description provided for @historyDayToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get historyDayToday;
+
+  /// No description provided for @historyDayYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get historyDayYesterday;
+
+  /// No description provided for @historyDayPlays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 play} other{{count} plays}}'**
+  String historyDayPlays(int count);
+
+  /// No description provided for @historyDayMenuLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'More options for {day}'**
+  String historyDayMenuLabel(String day);
+
+  /// No description provided for @historyRowOrdinal.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} · play #{n}'**
+  String historyRowOrdinal(String time, int n);
+
+  /// No description provided for @historyRowMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} · can\'t play'**
+  String historyRowMissing(String time);
+
+  /// No description provided for @historyMissingTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t play this song'**
+  String get historyMissingTap;
+
+  /// No description provided for @historyRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Removed 1 play} other{Removed {count} plays}}'**
+  String historyRemoved(int count);
+
+  /// No description provided for @historyRemoveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove the play'**
+  String get historyRemoveFailed;
+
+  /// No description provided for @historyWriteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the change'**
+  String get historyWriteFailed;
+
+  /// No description provided for @historyEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The songs you play will show up here.'**
+  String get historyEmptyMessage;
+
+  /// No description provided for @historyRecordingOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening history is off. What was recorded stays.'**
+  String get historyRecordingOff;
+
+  /// No description provided for @historyRecordingOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get historyRecordingOn;
+
+  /// No description provided for @historyRecordingOnLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on recording listening history'**
+  String get historyRecordingOnLabel;
+
+  /// No description provided for @historyRecordingEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening history is on'**
+  String get historyRecordingEnabled;
+
+  /// No description provided for @historyYearFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'See {year}'**
+  String historyYearFooter(String year);
+
+  /// No description provided for @historyPlayFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not play the history'**
+  String get historyPlayFailed;
+
+  /// No description provided for @historyMenuMostPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Most played'**
+  String get historyMenuMostPlayed;
+
+  /// No description provided for @historyMenuClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history…'**
+  String get historyMenuClear;
+
+  /// No description provided for @historyMenuPlayDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play the day'**
+  String get historyMenuPlayDay;
+
+  /// No description provided for @historyMenuDeleteDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the day from history'**
+  String get historyMenuDeleteDay;
+
+  /// No description provided for @historyMenuTrackHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History of this song'**
+  String get historyMenuTrackHistory;
+
+  /// No description provided for @historyMenuRemovePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from history'**
+  String get historyMenuRemovePlay;
+
+  /// No description provided for @historyNothingToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'No playable songs to add'**
+  String get historyNothingToAdd;
+
+  /// No description provided for @historyClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history?'**
+  String get historyClearTitle;
+
+  /// No description provided for @historyClearHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Last hour'**
+  String get historyClearHour;
+
+  /// No description provided for @historyClearToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get historyClearToday;
+
+  /// No description provided for @historyClearWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get historyClearWeek;
+
+  /// No description provided for @historyClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything'**
+  String get historyClearAll;
+
+  /// No description provided for @historyClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get historyClearConfirm;
+
+  /// No description provided for @historyClearCountFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not count the plays'**
+  String get historyClearCountFailed;
+
+  /// No description provided for @historyClearRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get historyClearRetry;
+
+  /// No description provided for @historyClearFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clear the history'**
+  String get historyClearFailed;
+
+  /// No description provided for @historyCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Removed 1 play} other{Removed {count} plays}}'**
+  String historyCleared(int count);
+
+  /// No description provided for @historyDeleteDayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this day from history?'**
+  String get historyDeleteDayTitle;
+
+  /// No description provided for @historyDeleteDayBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 play} other{{count} plays}} on {date} will be removed. This cannot be undone.'**
+  String historyDeleteDayBody(int count, String date);
+
+  /// No description provided for @historyFilterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter in {year}'**
+  String historyFilterHint(String year);
+
+  /// No description provided for @historyFilterMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 play matches} other{{count} plays match}} · not split by day'**
+  String historyFilterMatches(int count);
+
+  /// No description provided for @historyFilterCapped.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the first {max} plays. Narrow the filter to see more.'**
+  String historyFilterCapped(int max);
+
+  /// No description provided for @historyFilterEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No plays match “{query}”.'**
+  String historyFilterEmpty(String query);
+
+  /// No description provided for @historyMenuMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t play'**
+  String get historyMenuMissing;
+
+  /// No description provided for @historyTrackEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No plays yet'**
+  String get historyTrackEmpty;
+
+  /// No description provided for @historyTrackSummaryLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Last played {when}'**
+  String historyTrackSummaryLast(String when);
+
+  /// No description provided for @historyTrackSummaryFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'first played {date}'**
+  String historyTrackSummaryFirst(String date);
+
+  /// No description provided for @historyTrackSummaryTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} listened in total'**
+  String historyTrackSummaryTotal(String duration);
+
+  /// No description provided for @historyTrackListened.
+  ///
+  /// In en, this message translates to:
+  /// **'listened {duration}'**
+  String historyTrackListened(String duration);
+
+  /// No description provided for @historyTrackWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} {time}'**
+  String historyTrackWhen(String day, String time);
 }
 
 class _AppLocalizationsDelegate

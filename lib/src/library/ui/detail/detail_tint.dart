@@ -55,6 +55,14 @@ DetailTint watchDetailTint(
       if (automatic == null) return DetailTint.none;
       coverKey = automatic;
   }
+  return watchCoverTint(ref, coverKey);
+}
+
+/// The tint of the cover [coverKey] (null: none): its palette, else its seed.
+/// While the colours are read the result is `loading`; an error or no colours
+/// leave the page untinted.
+DetailTint watchCoverTint(WidgetRef ref, String? coverKey) {
+  if (coverKey == null) return DetailTint.none;
   final colors = ref.watch(coverColorsProvider(coverKey));
   // An error counts as "no colours": the page stays as it is without a tint.
   if (!colors.hasValue) {
