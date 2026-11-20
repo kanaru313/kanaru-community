@@ -62,7 +62,25 @@ void main() {
     expect(playlistCoverFileSize(48, 3), CoverSize.thumb);
   });
 
-  testWidgets('Favorites is a heart tile', (tester) async {
+  testWidgets('Favorites shows its automatic cover, never a heart tile', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      PlaylistCover(
+        uid: PlaylistUids.favorites,
+        autoCoverKeys: [_key(1), _key(2), _key(3)],
+        dimension: 56,
+      ),
+      // A custom cover index entry for Favorites is ignored.
+      custom: {PlaylistUids.favorites},
+    );
+    expect(find.byType(KCoverMosaic), findsOneWidget);
+    expect(_tracks(tester).map((t) => t.coverKey), [_key(1), _key(2), _key(3)]);
+    expect(find.byIcon(KIcons.heartFilled), findsNothing);
+  });
+
+  testWidgets('empty Favorites shows the neutral tile', (tester) async {
     await _pump(
       tester,
       const PlaylistCover(
@@ -71,10 +89,28 @@ void main() {
         dimension: 56,
       ),
     );
+    final scheme = Theme.of(tester.element(find.byType(PlaylistCover)))
+        .colorScheme;
+    final tile = tester.widget<DecoratedBox>(find.byType(DecoratedBox).first);
+    expect(
+      (tile.decoration as BoxDecoration).color,
+      scheme.surfaceContainerHighest,
+    );
     expect(find.byType(TrackCover), findsNothing);
-    final icon = tester.widget<Icon>(find.byType(Icon));
-    expect(icon.icon, KIcons.heartFilled);
-    expect(icon.size, 56 * 0.42);
+    expect(tester.widget<Icon>(find.byType(Icon)).icon, KIcons.playlists);
+  });
+
+  testWidgets('Favorites with one key shows that cover alone', (tester) async {
+    await _pump(
+      tester,
+      PlaylistCover(
+        uid: PlaylistUids.favorites,
+        autoCoverKeys: [_key(1)],
+        dimension: 56,
+      ),
+    );
+    expect(find.byType(KCoverMosaic), findsNothing);
+    expect(_tracks(tester).map((t) => t.coverKey), [_key(1)]);
   });
 
   testWidgets('no keys: placeholder cover', (tester) async {

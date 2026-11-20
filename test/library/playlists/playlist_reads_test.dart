@@ -47,6 +47,103 @@ void main() {
   );
 
   test(
+    'Favorites cover keys: newest added first, distinct, capped at 4',
+    () async {
+      final t = [
+        for (var i = 0; i < 6; i++)
+          await withAlbum('t$i', 'Album${i == 5 ? 4 : i}', 1000, cover: 'c$i'),
+      ];
+      await f.repo.addToPlaylists(tracks: t, playlistUids: ['favorites']);
+      // Stamp the add times: t0 oldest ... t5 newest; moving an entry in the
+      // list (sort_key) must not change the order.
+      for (var i = 0; i < 6; i++) {
+        await f.db.customStatement(
+          'UPDATE playlist_entries SET added_at = ? WHERE track_id = ?',
+          [1000 + i, t[i].value],
+        );
+      }
+      f.db.notifyUpdates({const TableUpdate('playlist_entries')});
+      final s = await f.repo.watchSummaries().first;
+      // t5 shares Album4 with t4: the newer cover (c5) wins, c4 is skipped.
+      expect(s.favorites.autoCoverKeys, ['c5', 'c3', 'c2', 'c1']);
+      final detail = await f.repo.loadPlaylist('favorites');
+      expect(detail!.summary.autoCoverKeys, s.favorites.autoCoverKeys);
+    },
+  );
+
+  Future<List<TrackId>> favoritesWithAddTimes(List<int> times) async {
+    final t = [
+      for (var i = 0; i < times.length; i++)
+        await withAlbum('f$i', 'Alb$i', 1000, cover: 'c$i'),
+    ];
+    await f.repo.addToPlaylists(tracks: t, playlistUids: ['favorites']);
+    for (var i = 0; i < t.length; i++) {
+      await f.db.customStatement(
+        'UPDATE playlist_entries SET added_at = ? WHERE track_id = ?',
+        [times[i], t[i].value],
+      );
+    }
+    return t;
+  }
+
+  test(
+    'Favorites cover keys do not change when the list is reordered',
+    () async {
+      await favoritesWithAddTimes([10, 20, 30, 40, 50]);
+      final before =
+          (await f.repo.watchSummaries().first).favorites.autoCoverKeys;
+      expect(before, ['c4', 'c3', 'c2', 'c1']);
+      // Move the last entry of the list (the newest favourite) to the front.
+      final live = await f.live('favorites');
+      expect(
+        await f.repo.moveEntry('favorites', live.last.uid, afterEntryUid: null),
+        PlaylistMove.moved,
+      );
+      expect((await f.live('favorites')).first.uid, live.last.uid);
+      final after =
+          (await f.repo.watchSummaries().first).favorites.autoCoverKeys;
+      expect(after, before);
+      expect(
+        (await f.repo.loadPlaylist('favorites'))!.summary.autoCoverKeys,
+        before,
+      );
+    },
+  );
+
+  test('Favorites cover keys: equal add times keep list order', () async {
+    await favoritesWithAddTimes([5, 5, 5, 5]);
+    final s = await f.repo.watchSummaries().first;
+    expect(s.favorites.autoCoverKeys, ['c0', 'c1', 'c2', 'c3']);
+    expect(
+      (await f.repo.loadPlaylist('favorites'))!.summary.autoCoverKeys,
+      s.favorites.autoCoverKeys,
+    );
+  });
+
+  test('Favorites summary stays fast with 10000 favourites', () async {
+    await f.db.customStatement(
+      "INSERT INTO playlists (uid, name, name_key, description, kind, "
+      "created_at, updated_at) VALUES ('favorites', 'Favorites', 'favorites', "
+      "'', 'favorites', 1, 1)",
+    );
+    final t = await withAlbum('seed', 'S', 1000, cover: 'cs');
+    await f.db.customStatement(
+      'INSERT INTO playlist_entries (uid, playlist_id, track_id, sort_key, '
+      'added_at, updated_at) '
+      'WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n '
+      'WHERE i < 10000) '
+      "SELECT 'e' || i, (SELECT id FROM playlists WHERE uid = 'favorites'), "
+      "?, printf('%06d', i), i, i FROM n",
+      [t.value],
+    );
+    final sw = Stopwatch()..start();
+    final s = await f.repo.watchSummaries().first;
+    sw.stop();
+    expect(s.favorites.autoCoverKeys, ['cs']);
+    expect(sw.elapsedMilliseconds, lessThan(2000));
+  });
+
+  test(
     'summaries: Favorites absent is an empty summary; moods excluded',
     () async {
       await addPlaylist(

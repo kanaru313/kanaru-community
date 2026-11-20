@@ -236,7 +236,7 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   `m3u/m3u_entry_points.dart`) were seeds and are now real: see "Add to playlist"
   and "M3U import and export" below.
 - **`PlaylistCover({uid, autoCoverKeys, dimension, radius, automaticOnly})`**:
-  Favorites is a heart tile (icon at 0.42 of the side on `primaryContainer`; it has no custom cover). Others
+  Favorites has no custom cover. It always shows its automatic cover (no heart tile; the hub shortcut tile is an icon tile, not a `PlaylistCover`); its keys are the distinct albums of the 4 most recently added favourites, newest first (`added_at`, in `playlist_reads.dart`), and the page tint comes from the first key (`watchCoverTint`). Others
   show the custom cover when there is one, else the automatic one: 2 to 4 keys
   in a `KCoverMosaic`, 1 key as that cover, none as a neutral tile (`surfaceContainerHighest`, playlist icon in `onSurfaceVariant` at 0.42 of the side). `automaticOnly` skips the custom cover (the Edit preview). Size
   rule: when the decoded side (`dimension`, or the mosaic tile's longer side)

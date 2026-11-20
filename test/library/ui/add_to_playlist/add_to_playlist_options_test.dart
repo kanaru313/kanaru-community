@@ -111,6 +111,8 @@ void main() {
       reason: 'the Favorites hint is not a visible line',
     );
     expect(c.pinned.single.hint, c.l10n.playlistPickerFavoritesHint);
+    // Favorites row uses the automatic cover, not the heart tile.
+    expect(find.byIcon(KIcons.heartFilled), findsNothing);
     expect(c.options.every((o) => o.hint == null), isTrue);
     expect(find.text('Add to playlist'), findsOneWidget);
     expect(find.text('3 songs · Album'), findsOneWidget);

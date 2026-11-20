@@ -17,9 +17,9 @@ CoverSize playlistCoverFileSize(double side, double devicePixelRatio) =>
 
 /// Cover of a playlist (decorative: the name next to it names the item).
 ///
-/// Favorites is a heart tile (it has no custom cover). Any other playlist
-/// shows the cover the user chose, else its automatic cover: a mosaic of 2 to
-/// 4 song covers, the single cover of 1, or a placeholder for none. With
+/// A playlist shows the cover the user chose, else its automatic cover: a
+/// mosaic of 2 to 4 song covers, the single cover of 1, or a placeholder for
+/// none. Favorites has no custom cover: it always shows its automatic one. With
 /// [automaticOnly] a custom cover is ignored (the Edit preview of a staged
 /// "automatic cover").
 ///
@@ -45,17 +45,6 @@ class PlaylistCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (uid == PlaylistUids.favorites) {
-      return ExcludeSemantics(
-        child: _IconTile(
-          icon: KIcons.heartFilled,
-          background: Theme.of(context).colorScheme.primaryContainer,
-          foreground: Theme.of(context).colorScheme.onPrimaryContainer,
-          dimension: dimension,
-          radius: this.radius ?? KRadius.sm,
-        ),
-      );
-    }
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final radius = this.radius ?? KRadius.sm;
     final keys = autoCoverKeys.take(4).toList();
@@ -68,7 +57,7 @@ class PlaylistCover extends StatelessWidget {
       radius,
     );
     return ExcludeSemantics(
-      child: automaticOnly
+      child: automaticOnly || uid == PlaylistUids.favorites
           ? automatic
           : ItemCover(
               item: (kind: CustomCoverKind.playlist, itemKey: uid),
@@ -108,7 +97,7 @@ class PlaylistCover extends StatelessWidget {
   }
 }
 
-/// Icon on a flat tile: the empty-playlist and the Favorites covers.
+/// Icon on a flat tile: the cover of a playlist with no song cover.
 class _IconTile extends StatelessWidget {
   const _IconTile({
     required this.icon,
