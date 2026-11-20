@@ -1,3 +1,97 @@
 {
-  "historyTitle": "Lịch sử"
+  "historyTitle": "Lịch sử",
+  "historyHeroPlays": "{count, plural, other{{count} lượt nghe}}",
+  "@historyHeroPlays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyHeroSongsSince": "{songs, plural, other{{songs} bài}} · từ {date}",
+  "@historyHeroSongsSince": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "historyBarCount": "{year} · {count, plural, other{{count} lượt nghe}}",
+  "@historyBarCount": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyJumpToDay": "Nhảy tới ngày",
+  "historyYearsLabel": "Năm",
+  "historyDayToday": "Hôm nay",
+  "historyDayYesterday": "Hôm qua",
+  "historyDayPlays": "{count, plural, other{{count} lượt}}",
+  "@historyDayPlays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyDayMenuLabel": "Thêm: {day}",
+  "@historyDayMenuLabel": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "historyRowOrdinal": "{time} · lần thứ {n}",
+  "@historyRowOrdinal": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "historyRowMissing": "{time} · không phát được",
+  "@historyRowMissing": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "historyMissingTap": "Không phát được bài này",
+  "historyRemoved": "{count, plural, other{Đã xoá {count} lượt nghe}}",
+  "@historyRemoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyRemoveFailed": "Không xoá được lượt nghe",
+  "historyWriteFailed": "Không lưu được thay đổi",
+  "historyEmptyMessage": "Bài hát bạn đã phát sẽ hiện ở đây.",
+  "historyRecordingOff": "Đang tắt ghi lịch sử nghe. Những gì đã ghi vẫn còn.",
+  "historyRecordingOn": "Bật",
+  "historyRecordingOnLabel": "Bật ghi lịch sử nghe",
+  "historyRecordingEnabled": "Đã bật ghi lịch sử nghe",
+  "historyYearFooter": "Xem năm {year}",
+  "@historyYearFooter": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "historyPlayFailed": "Không phát được lịch sử"
 }

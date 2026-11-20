@@ -40,6 +40,9 @@ abstract final class KIcons {
   static const IconData favoritesSelected = FluentIcons.heart_24_filled;
   static const IconData queue = FluentIcons.reorder_20_regular;
   static const IconData history = FluentIcons.history_24_regular;
+
+  /// History switched off (the "recording is off" notice).
+  static const IconData historyOff = FluentIcons.history_dismiss_24_regular;
   static const IconData mostPlayed = FluentIcons.data_histogram_24_regular;
   static const IconData rescan = FluentIcons.arrow_sync_24_regular;
 

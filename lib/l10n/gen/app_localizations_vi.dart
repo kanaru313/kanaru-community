@@ -3024,4 +3024,114 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get historyTitle => 'Lịch sử';
+
+  @override
+  String historyHeroPlays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lượt nghe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String historyHeroSongsSince(int songs, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      songs,
+      locale: localeName,
+      other: '$songs bài',
+    );
+    return '$_temp0 · từ $date';
+  }
+
+  @override
+  String historyBarCount(String year, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lượt nghe',
+    );
+    return '$year · $_temp0';
+  }
+
+  @override
+  String get historyJumpToDay => 'Nhảy tới ngày';
+
+  @override
+  String get historyYearsLabel => 'Năm';
+
+  @override
+  String get historyDayToday => 'Hôm nay';
+
+  @override
+  String get historyDayYesterday => 'Hôm qua';
+
+  @override
+  String historyDayPlays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lượt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String historyDayMenuLabel(String day) {
+    return 'Thêm: $day';
+  }
+
+  @override
+  String historyRowOrdinal(String time, int n) {
+    return '$time · lần thứ $n';
+  }
+
+  @override
+  String historyRowMissing(String time) {
+    return '$time · không phát được';
+  }
+
+  @override
+  String get historyMissingTap => 'Không phát được bài này';
+
+  @override
+  String historyRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã xoá $count lượt nghe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyRemoveFailed => 'Không xoá được lượt nghe';
+
+  @override
+  String get historyWriteFailed => 'Không lưu được thay đổi';
+
+  @override
+  String get historyEmptyMessage => 'Bài hát bạn đã phát sẽ hiện ở đây.';
+
+  @override
+  String get historyRecordingOff =>
+      'Đang tắt ghi lịch sử nghe. Những gì đã ghi vẫn còn.';
+
+  @override
+  String get historyRecordingOn => 'Bật';
+
+  @override
+  String get historyRecordingOnLabel => 'Bật ghi lịch sử nghe';
+
+  @override
+  String get historyRecordingEnabled => 'Đã bật ghi lịch sử nghe';
+
+  @override
+  String historyYearFooter(String year) {
+    return 'Xem năm $year';
+  }
+
+  @override
+  String get historyPlayFailed => 'Không phát được lịch sử';
 }

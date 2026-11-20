@@ -157,6 +157,10 @@ class HistoryActions {
     }
   }
 
+  /// Registers how to close the toast now showing the pending removals, on
+  /// the same holder that took the removal (see [remove]).
+  void attachToast(HistoryToastHandle hide) => _holder.attachToast(hide);
+
   /// The removal toast [hide] closed without Undo: commits the removals.
   /// False when the commit failed, so the screen can show the error toast.
   Future<bool> toastClosed(HistoryToastHandle hide) =>

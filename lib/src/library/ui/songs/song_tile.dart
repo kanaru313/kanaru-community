@@ -52,6 +52,10 @@ class SongTile extends ConsumerWidget {
     this.unavailable = false,
     this.onRemove,
     this.onMenu,
+    this.detailLine,
+    this.rank,
+    this.onDelete,
+    this.onUnavailableTap,
   });
 
   final TrackInfo info;
@@ -90,6 +94,22 @@ class SongTile extends ConsumerWidget {
   /// Replaces the song menu entirely (right click, Menu key). A missing row
   /// ([unavailable]) opens no menu without it.
   final Future<void> Function({required bool viaKeyboard})? onMenu;
+
+  /// Third line in place of `album • year` (a missing row's "not in library"
+  /// too): History says when the play began, Most played the play count.
+  final String? detailLine;
+
+  /// Place in a ranking, shown as a badge in the cover's bottom-end corner;
+  /// the first three are emphasised. Replaces the track number badge.
+  final int? rank;
+
+  /// The Delete key on the focused row (outside edit mode, which removes
+  /// through its own handle).
+  final VoidCallback? onDelete;
+
+  /// A tap on an [unavailable] row (no song to play). Also gives that row a
+  /// ⋮ when [onMenu] is set; without it a missing row stays inert.
+  final VoidCallback? onUnavailableTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -152,6 +172,12 @@ class SongTile extends ConsumerWidget {
     // One ✕ at most: a missing row's, or the desktop one of an edit row.
     final showEditX = edit != null && (desktop || unavailable);
     final markNumber = showNumber && !selected && (info.trackNo ?? 0) > 0;
+    // A missing row that answers a tap and has a menu of its own.
+    final reachable =
+        unavailable &&
+        edit == null &&
+        onUnavailableTap != null &&
+        onMenu != null;
     return SongTileRemovalScope(
       builder: (context, removal) => KContextRegion(
         longPressOpens: false,
@@ -178,7 +204,13 @@ class SongTile extends ConsumerWidget {
           removal,
           CallbackShortcuts(
             bindings: edit == null
-                ? const {}
+                ? {
+                    // No key repeat: a held key removes one play.
+                    const SingleActivator(
+                      LogicalKeyboardKey.delete,
+                      includeRepeats: false,
+                    ): ?onDelete,
+                  }
                 : {
                     // No key repeat: a held key removes one entry.
                     const SingleActivator(
@@ -190,9 +222,11 @@ class SongTile extends ConsumerWidget {
             child: KMediaCard(
               title: info.title,
               line2: trackArtistLine(info),
-              line3: unavailable
-                  ? l10n.playlistNotInLibrary
-                  : trackAlbumLine(info),
+              line3:
+                  detailLine ??
+                  (unavailable
+                      ? l10n.playlistNotInLibrary
+                      : trackAlbumLine(info)),
               leading: unavailable
                   ? KCover(
                       image: null,
@@ -205,6 +239,7 @@ class SongTile extends ConsumerWidget {
                       info: info,
                       current: current,
                       number: markNumber ? info.trackNo : null,
+                      rank: rank,
                     ),
               top: duration == null
                   ? null
@@ -220,7 +255,9 @@ class SongTile extends ConsumerWidget {
                       showRemove: showEditX,
                       onRemove: () => removal.fire(edit),
                     ),
-              trailing: plain ? LibraryMoreButton(onPressed: menu) : null,
+              trailing: plain || reachable
+                  ? LibraryMoreButton(onPressed: menu)
+                  : null,
               current: current,
               currentLabel: l10n.libraryNowPlaying,
               selected: selected,
@@ -230,7 +267,11 @@ class SongTile extends ConsumerWidget {
               missing: unavailable,
               editing: edit != null,
               onLongPress: selected || !plain ? null : () => _select(ref),
-              onTap: plain ? () => _tap(ref, context) : null,
+              onTap: plain
+                  ? () => _tap(ref, context)
+                  : unavailable && edit == null
+                  ? onUnavailableTap
+                  : null,
             ),
           ),
         ),

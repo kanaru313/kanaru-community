@@ -4895,6 +4895,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'History'**
   String get historyTitle;
+
+  /// No description provided for @historyHeroPlays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 play} other{{count} plays}}'**
+  String historyHeroPlays(int count);
+
+  /// No description provided for @historyHeroSongsSince.
+  ///
+  /// In en, this message translates to:
+  /// **'{songs, plural, =1{1 song} other{{songs} songs}} · since {date}'**
+  String historyHeroSongsSince(int songs, String date);
+
+  /// No description provided for @historyBarCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{year} · {count, plural, =1{1 play} other{{count} plays}}'**
+  String historyBarCount(String year, int count);
+
+  /// No description provided for @historyJumpToDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to date'**
+  String get historyJumpToDay;
+
+  /// No description provided for @historyYearsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Years'**
+  String get historyYearsLabel;
+
+  /// No description provided for @historyDayToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get historyDayToday;
+
+  /// No description provided for @historyDayYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get historyDayYesterday;
+
+  /// No description provided for @historyDayPlays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 play} other{{count} plays}}'**
+  String historyDayPlays(int count);
+
+  /// No description provided for @historyDayMenuLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'More options for {day}'**
+  String historyDayMenuLabel(String day);
+
+  /// No description provided for @historyRowOrdinal.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} · play #{n}'**
+  String historyRowOrdinal(String time, int n);
+
+  /// No description provided for @historyRowMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} · can\'t play'**
+  String historyRowMissing(String time);
+
+  /// No description provided for @historyMissingTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t play this song'**
+  String get historyMissingTap;
+
+  /// No description provided for @historyRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Removed 1 play} other{Removed {count} plays}}'**
+  String historyRemoved(int count);
+
+  /// No description provided for @historyRemoveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove the play'**
+  String get historyRemoveFailed;
+
+  /// No description provided for @historyWriteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the change'**
+  String get historyWriteFailed;
+
+  /// No description provided for @historyEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The songs you play will show up here.'**
+  String get historyEmptyMessage;
+
+  /// No description provided for @historyRecordingOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening history is off. What was recorded stays.'**
+  String get historyRecordingOff;
+
+  /// No description provided for @historyRecordingOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get historyRecordingOn;
+
+  /// No description provided for @historyRecordingOnLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on recording listening history'**
+  String get historyRecordingOnLabel;
+
+  /// No description provided for @historyRecordingEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening history is on'**
+  String get historyRecordingEnabled;
+
+  /// No description provided for @historyYearFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'See {year}'**
+  String historyYearFooter(String year);
+
+  /// No description provided for @historyPlayFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not play the history'**
+  String get historyPlayFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -1436,7 +1436,7 @@ Dimmed and inert, with the tooltip or subtitle "Coming soon" (`appComingSoon`,
 | Context menus | "Show in file manager" where `FileManager.canReveal` is false (Android) | a platform implementation |
 | Selection panel | Edit | tag editor |
 | Scan banner (failed scan) | "Grant permission" | the Android permission flow |
-| Sidebar (`comingSoon: true`) | History, Most played | their mockups |
+| Sidebar (`comingSoon: true`) | Most played | its page |
 
 The empty state scrolls (centred when there is room), so a short window or
 large text never overflows.
@@ -1551,8 +1551,83 @@ dialog from 600 px, but this menu stays a sheet up to the desktop form factor
   `/playlists` route, before `:uid`. On desktop the sidebar item stays lit on
   the sub-route; on mobile the hub tile opens the page as a child of the
   Playlist tab (`openLibraryPage`).
-- `HistoryPage` and `TrackHistoryPage` are placeholders until their pages
-  land. Strings live in the `history` arb part (prefix `history`).
+- `TrackHistoryPage` is a placeholder until its page lands. Strings live in
+  the `history` arb part (prefix `history`).
+
+### History page
+
+`HistoryPage` (`history_page.dart`) watches `historyYearsProvider`,
+`historyOverviewProvider`, `historyShownYearProvider` and
+`historyYearProvider(year)` and only calls `historyActionsProvider`; it imports
+nothing from `data/` or `database/`. States: pending / load error (a frame with
+no title), empty (`KEmpty` in the frame, the recording strip above it), and
+the page. The hero and the overview render as soon as the overview is read; the
+year's plays follow under a thin progress line. The hero's cover comes from the
+newest year (`historyMosaicTracks`: four distinct covers make a 2 x 2
+`KCoverMosaic`, fewer one cover).
+
+- **Frame** (`history_page_frame.dart`, shared by the three 05d pages):
+  `DetailFrame` + `KDetailLayout(header:, slivers:)`, two columns from 840 dp
+  measured on the page, left column 320. The hero names the page, so the header
+  title shows only once the hero's has scrolled out (narrow). Mobile: child of
+  the Playlist tab with a back button; desktop: a sidebar page, no back button
+  (`showBack` null decides from `FormFactor`).
+- **Slivers**: `HistoryBar` (`2026 · N plays`, the jump and filter buttons,
+  present but off until wired; one `KChip` per year with plays, the shown year
+  selected, no check mark) then `HistoryTimeline`. `HistoryHero` has Play all /
+  shuffle (`playAllHistory`, a toast when nothing plays) and an off ⋮.
+- **Recording off**: `HistoryRecordingNotice` is a `KInlineNotice` above the
+  hero. Turn on calls `enableRecording()`, shows the toast and folds the strip
+  with `HistoryCollapse` (`KMotion.normal`, `AnimatedSize` + `AnimatedSwitcher`;
+  with animations off it is removed at once, an `AnimatedSize` with no time to
+  run re-dirties itself during layout).
+- **Line metrics** (`history_line_metrics.dart`, pure): `row` =
+  `KMediaCard.extentOf(scaler)`, `dayBar` = 2 x 10 dp padding + the `titleSmall`
+  line + the `bodySmall` line, both at `lineHeight` 1.4 x the scaled font size
+  (the bar's text styles set the same height, so the extent is what is drawn),
+  `footer` = `row`. 56 dp at scale 1.0.
+- **Timeline index** (`history_timeline_index.dart`, pure; input = plays per
+  day, newest day first): lines are `header` (every day but the first: the
+  pinned bar is the first day's header), `row`, `footer` (only with an older
+  year). Prefix sums give `topOf(line)`, `lineAt(offset)` (binary search),
+  `dayOffset(day)` (top of its header line, 0 for day 0), `dayAt(offset)` (the
+  last day whose header reached the bar), `pushUp(offset)` in `(-dayBar, 0]`,
+  and `playOffset(n)` / `lineOfPlay(n)`. Offsets are relative to the list's top.
+- **Sticky day bar**: `HistoryTimeline` returns one `SliverMainAxisGroup`: a
+  `KStickyBarSliver` of height `dayBar` and a `SliverVariedExtentList` of the
+  lines. The header line of day n is `HistoryDayBar` at the same height as the
+  pinned bar, so the swap is invisible. `HistoryStickyBar` listens to one
+  `ValueNotifier<double>` fed by the scroll position (offset = pixels - the
+  list's top, read from `SliverConstraints.precedingScrollExtent` at layout):
+  it draws the day at the top and, while the next header slides under, the
+  next day rising from below at `dy + dayBar`. Lines and the bar are one line
+  each with an ellipsis, the whole text is the header's semantics label and, on
+  desktop, a tooltip. The day's ⋮ is present but off.
+- **Offset correction**: when a new list arrives with the old first play at
+  index k > 0 and the reader is past the top of the list, the position is moved
+  with `ScrollPosition.correctBy(playOffset(k) - 0)` while the timeline
+  rebuilds, in the same frame, so the content under the viewport does not move.
+  At the top the new play simply appears first. Removals are not corrected.
+- **Rows**: `HistoryRow` = `SongTile` with `detailLine` (`21:42 · play #6`, or
+  `21:42 · can't play` for a missing / hidden song), `markCurrent` only on the
+  newest play of the song in the shown year, `onDelete` (desktop Delete on the
+  focused row) and `onUnavailableTap` (toast). A tap plays `HistoryDayQueue`
+  (the day's songs, each once at its first play, unplayable ones out) from the
+  tapped song, `PlayContextKind.history`. Selection is by track, so every row
+  of a selected song shows selected.
+- **Removing a play** (`history_remove_toast.dart`, `removeHistoryPlay`):
+  `historyActions.remove` then the root toast "Removed N plays" with Undo
+  (`showAppSnackBarOn` on the root navigator's messenger). The holder merges
+  removals while a toast is open; the new toast registers its own close handle
+  first, so the replaced one does not commit. Undo calls `historyActions.undo`;
+  closing any other way calls `toastClosed(handle)`; a failed remove, undo or
+  commit shows an error toast (no "Removed" after a failed write). The close
+  handle checks the messenger is still mounted (the holder also closes the toast
+  when the container is disposed).
+- `SongTile` got four intent parameters for these pages: `detailLine`,
+  `rank` (badge in the cover's end-bottom corner, replaces the track number,
+  `primary` fill for ranks 1-3), `onDelete`, `onUnavailableTap` (a missing row
+  that has `onUnavailableTap` and its own `onMenu` also gets a ⋮).
 
 ## Design pitfalls answered
 

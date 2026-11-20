@@ -3373,4 +3373,119 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historyTitle => 'History';
+
+  @override
+  String historyHeroPlays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plays',
+      one: '1 play',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String historyHeroSongsSince(int songs, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      songs,
+      locale: localeName,
+      other: '$songs songs',
+      one: '1 song',
+    );
+    return '$_temp0 · since $date';
+  }
+
+  @override
+  String historyBarCount(String year, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plays',
+      one: '1 play',
+    );
+    return '$year · $_temp0';
+  }
+
+  @override
+  String get historyJumpToDay => 'Jump to date';
+
+  @override
+  String get historyYearsLabel => 'Years';
+
+  @override
+  String get historyDayToday => 'Today';
+
+  @override
+  String get historyDayYesterday => 'Yesterday';
+
+  @override
+  String historyDayPlays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plays',
+      one: '1 play',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String historyDayMenuLabel(String day) {
+    return 'More options for $day';
+  }
+
+  @override
+  String historyRowOrdinal(String time, int n) {
+    return '$time · play #$n';
+  }
+
+  @override
+  String historyRowMissing(String time) {
+    return '$time · can\'t play';
+  }
+
+  @override
+  String get historyMissingTap => 'Can\'t play this song';
+
+  @override
+  String historyRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Removed $count plays',
+      one: 'Removed 1 play',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyRemoveFailed => 'Could not remove the play';
+
+  @override
+  String get historyWriteFailed => 'Could not save the change';
+
+  @override
+  String get historyEmptyMessage => 'The songs you play will show up here.';
+
+  @override
+  String get historyRecordingOff =>
+      'Listening history is off. What was recorded stays.';
+
+  @override
+  String get historyRecordingOn => 'Turn on';
+
+  @override
+  String get historyRecordingOnLabel => 'Turn on recording listening history';
+
+  @override
+  String get historyRecordingEnabled => 'Listening history is on';
+
+  @override
+  String historyYearFooter(String year) {
+    return 'See $year';
+  }
+
+  @override
+  String get historyPlayFailed => 'Could not play the history';
 }

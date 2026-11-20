@@ -1,3 +1,97 @@
 {
-  "historyTitle": "History"
+  "historyTitle": "History",
+  "historyHeroPlays": "{count, plural, =1{1 play} other{{count} plays}}",
+  "@historyHeroPlays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyHeroSongsSince": "{songs, plural, =1{1 song} other{{songs} songs}} · since {date}",
+  "@historyHeroSongsSince": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "historyBarCount": "{year} · {count, plural, =1{1 play} other{{count} plays}}",
+  "@historyBarCount": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyJumpToDay": "Jump to date",
+  "historyYearsLabel": "Years",
+  "historyDayToday": "Today",
+  "historyDayYesterday": "Yesterday",
+  "historyDayPlays": "{count, plural, =1{1 play} other{{count} plays}}",
+  "@historyDayPlays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyDayMenuLabel": "More options for {day}",
+  "@historyDayMenuLabel": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "historyRowOrdinal": "{time} · play #{n}",
+  "@historyRowOrdinal": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "historyRowMissing": "{time} · can't play",
+  "@historyRowMissing": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "historyMissingTap": "Can't play this song",
+  "historyRemoved": "{count, plural, =1{Removed 1 play} other{Removed {count} plays}}",
+  "@historyRemoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyRemoveFailed": "Could not remove the play",
+  "historyWriteFailed": "Could not save the change",
+  "historyEmptyMessage": "The songs you play will show up here.",
+  "historyRecordingOff": "Listening history is off. What was recorded stays.",
+  "historyRecordingOn": "Turn on",
+  "historyRecordingOnLabel": "Turn on recording listening history",
+  "historyRecordingEnabled": "Listening history is on",
+  "historyYearFooter": "See {year}",
+  "@historyYearFooter": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "historyPlayFailed": "Could not play the history"
 }
