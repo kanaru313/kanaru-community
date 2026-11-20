@@ -745,6 +745,57 @@ void actionRowTests() {
     });
   }
 
+  for (final (name, size, inset, height) in [
+    ('touch', const Size(400, 700), 16.0, 56.0),
+    ('desktop', _deskSize, 8.0, 48.0),
+  ]) {
+    testWidgets('opensMore is an inset outlined button ($name)', (
+      tester,
+    ) async {
+      useWindow(tester, size);
+      await tester.pumpWidget(
+        host(
+          SizedBox(
+            width: 360,
+            child: SelectionRow.action(
+              title: const Text('Sau số bài…'),
+              subtitle: const Text('1–20 bài'),
+              opensMore: true,
+              onTap: () {},
+            ),
+          ),
+        ),
+      );
+      final row = tester.getRect(find.byType(SelectionRow));
+      final box = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(SelectionRow),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      expect(box.left - row.left, inset);
+      expect(row.right - box.right, inset);
+      expect(box.height, greaterThanOrEqualTo(height));
+      final deco =
+          tester
+                  .widget<DecoratedBox>(
+                    find
+                        .descendant(
+                          of: find.byType(SelectionRow),
+                          matching: find.byType(DecoratedBox),
+                        )
+                        .first,
+                  )
+                  .decoration
+              as ShapeDecoration;
+      final shape = deco.shape as RoundedRectangleBorder;
+      expect(shape.borderRadius, KRadius.sm);
+      expect(shape.side.width, 1);
+    });
+  }
+
   testWidgets('action: a button, no mark, no selected or checked state', (
     tester,
   ) async {
@@ -863,8 +914,9 @@ void actionRowTests() {
       final ring = tester.getRect(find.byType(KFocusRing).first);
       final row = tester.getRect(find.byType(SelectionRow));
       // 40 dp hit area, 36 dp visible shape centred: 2 dp band each side.
-      expect(ring.height, 36 + (running ? 8 : 0));
-      expect(ring.top - row.top, 2);
+      // opensMore is the outlined 48 dp button inside a 6 dp top margin.
+      expect(ring.height, opensMore ? 48 : 36 + (running ? 8 : 0));
+      expect(ring.top - row.top, opensMore ? 6 : 2);
     });
   }
 
@@ -958,26 +1010,21 @@ void actionRowTests() {
     );
   });
 
-  testWidgets('opensMore on touch: no outline, no fill, primary bold title', (
+  testWidgets('opensMore: outlined shape, onSurface bold title, no fill', (
     tester,
   ) async {
     useWindow(tester, _touchSize);
     await tester.pumpWidget(host(_action(onTap: () {}, opensMore: true)));
     final scheme = Theme.of(tester.element(find.byType(SelectionRow)))
         .colorScheme;
-    final shapes = tester
+    final outlined = tester
         .widgetList<DecoratedBox>(find.byType(DecoratedBox))
         .map((b) => b.decoration)
-        .whereType<ShapeDecoration>();
-    expect(
-      shapes.every(
-        (d) =>
-            d.color == null &&
-            (d.shape is! RoundedRectangleBorder ||
-                (d.shape as RoundedRectangleBorder).side == BorderSide.none),
-      ),
-      isTrue,
-    );
+        .whereType<ShapeDecoration>()
+        .where((d) => d.shape is RoundedRectangleBorder)
+        .map((d) => d.shape as RoundedRectangleBorder)
+        .where((s) => s.side.color == scheme.outlineVariant);
+    expect(outlined, hasLength(1));
     final style = tester.widget<DefaultTextStyle>(
       find
           .ancestor(
@@ -986,7 +1033,7 @@ void actionRowTests() {
           )
           .first,
     );
-    expect(style.style.color, scheme.primary);
+    expect(style.style.color, isNot(scheme.primary));
     expect(style.style.fontWeight, FontWeight.w700);
   });
 

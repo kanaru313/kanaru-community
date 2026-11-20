@@ -18,7 +18,11 @@ import 'selection_action_row_content.dart';
 /// row reaches both sheet edges (the call site does not pad it; its content
 /// sits on the 16 dp axis). The running card keeps a tonal fill, radius 12,
 /// inside a 16 dp gutter. Desktop: the dense 40 / 36 row with
-/// the detail on the same line, right. Built only by `SelectionRow`.
+/// the detail on the same line, right. `opensMore` (a button that opens a
+/// further screen instead of starting something) is an outlined button on both
+/// shells: inset from the edges (16 touch, 8 desktop), radius 12,
+/// `outlineVariant` outline, bold `onSurface` title, 56 / 48 dp high.
+/// Built only by `SelectionRow`.
 class SelectionActionRow extends StatefulWidget {
   const SelectionActionRow({
     super.key,
@@ -60,12 +64,19 @@ class _SelectionActionRowState extends State<SelectionActionRow> {
     final reason = widget.disabledReason;
     final active = widget.enabled && reason == null && widget.onTap != null;
     final edges = KRowEdgesScope.maybeOf(context);
-    final radius = desktop
+    final outlined = widget.opensMore;
+    final radius = outlined
+        ? KRadius.sm
+        : desktop
         ? KRadius.xs
         : (widget.running ? KRadius.sm : edges.corners(KRadius.sm));
-    final bleed = !desktop && !widget.running && edges == KRowEdges.fullBleed;
+    final bleed =
+        !desktop &&
+        !widget.running &&
+        !outlined &&
+        edges == KRowEdges.fullBleed;
     // Dense geometry of KLayout: 40 hit area, 36 visible shape, centred.
-    final band = desktop
+    final band = desktop && !outlined
         ? (KLayout.dropdownRowHeight - KLayout.dropdownRowVisible) / 2
         : 0.0;
     final onCard = widget.running ? scheme.onPrimaryContainer : null;
@@ -74,7 +85,7 @@ class _SelectionActionRowState extends State<SelectionActionRow> {
       fontWeight: widget.opensMore || widget.running
           ? FontWeight.w700
           : FontWeight.w500,
-      color: widget.opensMore ? scheme.primary : onCard,
+      color: onCard,
     );
     final detailStyle = text.bodySmall?.copyWith(
       color: onCard ?? scheme.onSurfaceVariant,
@@ -93,7 +104,7 @@ class _SelectionActionRowState extends State<SelectionActionRow> {
             child: detail,
           );
     final minHeight = desktop
-        ? (widget.running ? 48.0 : KLayout.dropdownRowHeight)
+        ? (widget.running || outlined ? 48.0 : KLayout.dropdownRowHeight)
         : 56.0;
     return MergeSemantics(
       child: Semantics(
@@ -107,7 +118,11 @@ class _SelectionActionRowState extends State<SelectionActionRow> {
         // site leaves it out of its side padding; everywhere else the row
         // keeps the 16 dp gutter itself.
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: bleed ? 0 : KSpace.x4),
+          padding: EdgeInsets.only(
+            left: bleed ? 0 : (outlined && desktop ? KSpace.x2 : KSpace.x4),
+            right: bleed ? 0 : (outlined && desktop ? KSpace.x2 : KSpace.x4),
+            top: outlined ? (desktop ? KSpace.x1 + 2 : KSpace.x2) : 0,
+          ),
           child: Opacity(
             opacity: active ? 1 : 0.38,
             child: Stack(
@@ -118,7 +133,12 @@ class _SelectionActionRowState extends State<SelectionActionRow> {
                   child: DecoratedBox(
                     decoration: ShapeDecoration(
                       color: fill,
-                      shape: KShape.of(radius),
+                      shape: outlined
+                          ? RoundedRectangleBorder(
+                              borderRadius: radius,
+                              side: BorderSide(color: scheme.outlineVariant),
+                            )
+                          : KShape.of(radius),
                     ),
                   ),
                 ),
