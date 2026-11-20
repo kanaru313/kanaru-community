@@ -14,9 +14,19 @@ import '../media/page_ground.dart';
 /// It draws no background: a page tints itself by putting the layout (and its
 /// header) inside a `CoverTintBackground`.
 class KDetailLayout extends StatelessWidget {
-  const KDetailLayout({super.key, required this.header, required this.slivers});
+  const KDetailLayout({
+    super.key,
+    required this.header,
+    required this.slivers,
+    this.banner,
+  });
 
   final Widget header;
+
+  /// Optional strip (a notice) over the whole page: above both columns when
+  /// wide, above the [header] inside the same scroll when narrow. It takes no
+  /// room while it has no height, so it can fold itself away.
+  final Widget? banner;
   final List<Widget> slivers;
 
   /// Page width at which the two-column layout starts.
@@ -33,7 +43,8 @@ class KDetailLayout extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= wideBreakpoint;
-        final Widget content = wide
+        final banner = this.banner;
+        Widget content = wide
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -46,10 +57,19 @@ class KDetailLayout extends StatelessWidget {
               )
             : CustomScrollView(
                 slivers: [
+                  if (banner != null) SliverToBoxAdapter(child: banner),
                   SliverToBoxAdapter(child: header),
                   ...slivers,
                 ],
               );
+        if (wide && banner != null) {
+          content = Column(
+            children: [
+              banner,
+              Expanded(child: content),
+            ],
+          );
+        }
         return _DetailMode(wide: wide, child: content);
       },
     );

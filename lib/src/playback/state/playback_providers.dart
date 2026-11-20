@@ -1,21 +1,14 @@
-import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logging/logging.dart';
 
 import '../../media/domain/track_id.dart';
-import '../../platform/state/device_id_provider.dart';
 import '../../platform/state/settings_providers.dart';
 import '../domain/now_playing.dart';
 import '../domain/playback_commands.dart';
 import '../domain/playback_focus.dart';
-import '../../platform/domain/settings_store.dart';
-import '../domain/listen_accumulator.dart';
-import '../domain/playback_settings.dart';
 import 'audio_engine_provider.dart';
-import 'listen_recorder.dart';
+import 'listen_recorder_provider.dart';
 import 'player_controller.dart';
 import 'player_ready.dart';
-import 'session_restore.dart' show readSetting;
 import 'sleep_ticker_provider.dart';
 import 'playback_data_providers.dart';
 
@@ -36,15 +29,7 @@ final playerControllerProvider = Provider<PlayerController>((ref) {
     focus: _LiveFocus(ref),
     periodic: ref.read(sleepTickerProvider),
     titles: ref.read(trackTitleLookupProvider),
-    listens: ListenRecorder(
-      writer: ref.read(playLogWriterProvider),
-      // Read when a listen is written, so a container without a device id
-      // (a bare test) can still build the player.
-      deviceId: () => ref.read(deviceIdProvider),
-      // Read at each check, so a change applies to the next one.
-      rule: () => readListenRule(store),
-      historyEnabled: () => readSetting(store, historyEnabledSetting),
-    ),
+    listens: ref.read(listenRecorderProvider),
   );
   ref.onDispose(controller.dispose);
   ref.listen(
@@ -102,22 +87,3 @@ final isPlayingProvider = Provider<bool>(
   (ref) =>
       ref.watch(nowPlayingProvider.select((n) => n.value?.playing ?? false)),
 );
-
-Object? _warnedListenRule;
-
-/// The stored listen rule. A bad value reads as the default and is logged
-/// once per distinct value, not at every check of every listen.
-@visibleForTesting
-ListenRule readListenRule(SettingsStore store) {
-  final raw = store.read(listenRuleSetting.key);
-  if (raw == null) return listenRuleSetting.defaultValue;
-  try {
-    return listenRuleSetting.decode(raw);
-  } on Object catch (e) {
-    if (_warnedListenRule != raw) {
-      _warnedListenRule = raw;
-      Logger('playback').warning('bad listen rule, using the default: $e');
-    }
-    return listenRuleSetting.defaultValue;
-  }
-}

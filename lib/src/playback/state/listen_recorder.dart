@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 import 'package:logging/logging.dart';
 
 import '../../media/domain/play_context.dart';
@@ -5,7 +8,10 @@ import '../../media/domain/track_id.dart';
 import '../data/play_log_writer.dart';
 import '../domain/audio_engine.dart';
 import '../domain/listen_accumulator.dart';
+import '../domain/listen_clear_scope.dart';
 import 'command_chain.dart';
+
+part 'listen_recorder_clear.dart';
 
 final _log = Logger('ListenRecorder');
 
@@ -59,6 +65,9 @@ class _Listen {
 /// past the next check: [rule] at most once a second while a listen is
 /// open, [historyEnabled] when a row would be inserted. Switching history
 /// off only stops new rows; a row already written keeps being updated.
+///
+/// [clearHistory] deletes a range of the log without racing the open listen
+/// (see `listen_recorder_clear.dart`).
 class ListenRecorder {
   ListenRecorder({
     required this._writer,
@@ -88,11 +97,35 @@ class ListenRecorder {
   final _chain = SerialChain();
   _Listen? _active;
   bool _closed = false;
+  Future<void>? _closing;
+
+  // Clear coordination, driven by `listen_recorder_clear.dart`.
+  int _pendingClears = 0;
+  Completer<void>? _clearsDone;
+  _Listen? _held;
+  ListenObservation? _last;
+  final _clearing = ValueNotifier<bool>(false);
+  final _cleared = StreamController<ClearBounds>.broadcast();
+
+  /// Whether a clear is queued or running, for the screens that start one.
+  ValueListenable<bool> get clearing => _clearing;
+
+  /// The range of every clear that deleted, after its delete worked.
+  Stream<ClearBounds> get cleared => _cleared.stream;
+
+  /// Deletes the plays that started in `[from, to)`; see
+  /// `listen_recorder_clear.dart`. Returns how many went, null on failure.
+  Future<int?> clearHistory({int? from, int? to}) =>
+      _clear((from: from, to: to));
 
   /// Follows the player. Null = nothing is loaded (ends the open listen).
   /// Cheap and synchronous; writes are queued.
   void observe(ListenObservation? o) {
     if (_closed) return;
+    if (_pendingClears > 0) {
+      _last = o;
+      return;
+    }
     final active = _active;
     if (o == null) {
       if (active != null) _finish(active);
@@ -176,9 +209,10 @@ class ListenRecorder {
         );
   }
 
-  /// Writes the in-flight listen now and waits for the recorder's own queue.
-  /// Never waits on the player's commands.
+  /// Writes the in-flight listen now and waits for the recorder's own queue
+  /// (and for pending clears). Never waits on the player's commands.
   Future<void> flush() async {
+    await _waitForClears();
     final active = _active;
     if (active != null &&
         (active.queuedMs >= 0 || _wouldInsert(active, refresh: true))) {
@@ -187,11 +221,17 @@ class ListenRecorder {
     await _chain.whenIdle();
   }
 
-  /// Ends the open listen, writes it and refuses further observations.
-  Future<void> close() async {
+  /// Waits for pending clears, ends the open listen, writes it and refuses
+  /// further observations. A clear queued before still returns its count.
+  Future<void> close() => _closing ??= _close();
+
+  Future<void> _close() async {
+    await _waitForClears();
     final active = _active;
     if (active != null) _finish(active);
     _closed = true;
     await _chain.close();
+    _clearing.dispose();
+    await _cleared.close();
   }
 }

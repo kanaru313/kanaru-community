@@ -17,8 +17,7 @@ const _tabIcons = {
   LibraryTab.folders: KIcons.folders,
 };
 
-/// Library tab with its six lists, the placeholder items that follow
-/// Playlists in the sidebar (History, Most played), and the pages of the library lists.
+/// Library tab with its six lists, and the pages of the library lists.
 void registerLibraryBrowse(ExtensionRegistry registry) {
   registry.addNavItem(
     NavItem(
@@ -53,30 +52,5 @@ void registerLibraryBrowse(ExtensionRegistry registry) {
       ),
     );
   }
-  registry
-    ..addNavItem(
-      NavItem(
-        id: 'history',
-        path: '/playlists/history',
-        icon: KIcons.history,
-        selectedIcon: KIcons.history,
-        label: (c) => AppLocalizations.of(c).libraryNavHistory,
-        order: 240,
-        mobileTab: false,
-        comingSoon: true,
-      ),
-    )
-    ..addNavItem(
-      NavItem(
-        id: 'most_played',
-        path: '/playlists/most-played',
-        icon: KIcons.mostPlayed,
-        selectedIcon: KIcons.mostPlayed,
-        label: (c) => AppLocalizations.of(c).libraryNavMostPlayed,
-        order: 250,
-        mobileTab: false,
-        comingSoon: true,
-      ),
-    )
-    ..addRoute(libraryRoute());
+  registry.addRoute(libraryRoute());
 }

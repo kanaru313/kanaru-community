@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 
 import '../../../database/database.dart';
+import '../history/history_writes.dart';
 import '../playlists/playlist_entry_writes.dart';
 
 final _log = Logger('library.scan.gc');
@@ -12,6 +13,7 @@ Future<int?> runTrackGc(AppDatabase db, {required int now}) async {
   try {
     // Removals nobody committed or undid must not pin their tracks forever.
     await purgeRemovedPlaylistEntries(db, before: now - removedEntryGraceMs);
+    await purgeRemovedPlays(db, before: now - removedPlayGraceMs);
     final deleted = await collectOrphanTracks(db, now: now);
     if (deleted > 0) _log.info('track GC deleted $deleted rows');
     return deleted;

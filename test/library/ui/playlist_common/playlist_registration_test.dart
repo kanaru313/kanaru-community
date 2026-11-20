@@ -51,8 +51,8 @@ void main() {
       expect(favorites.comingSoon, isFalse);
     });
 
-    test('History and Most played stay coming soon', () {
-      expect(item('history').comingSoon, isTrue);
+    test('History is live, Most played stays coming soon', () {
+      expect(item('history').comingSoon, isFalse);
       expect(item('most_played').comingSoon, isTrue);
       expect(item('history').order, 240);
       expect(item('most_played').order, 250);

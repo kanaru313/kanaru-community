@@ -5,6 +5,7 @@ import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:kanaru/src/playback/domain/now_playing.dart';
+import 'package:kanaru/src/playback/state/listen_recorder_provider.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
 import 'package:kanaru/src/playback/state/player_controller.dart';
 import 'package:kanaru/src/playback/state/player_ready.dart';
@@ -49,6 +50,14 @@ void main() {
     final now = await c.read(nowPlayingProvider.future);
     expect(now, NowPlaying.none);
     expect(c.read(hasCurrentTrackProvider), isFalse);
+  });
+
+  test('the controller records into the provider\'s recorder', () async {
+    final rec = c.read(listenRecorderProvider);
+    c.read(playerControllerProvider);
+    c.invalidate(playerControllerProvider);
+    await pumpEventQueue();
+    expect(await rec.clearHistory(), 0, reason: 'the recorder outlives it');
   });
 
   test(

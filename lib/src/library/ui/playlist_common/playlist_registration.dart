@@ -5,15 +5,16 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../../extension/state/extension_registry.dart';
 import '../../../extension/state/registry_entries.dart';
 import '../../domain/playlists/playlist_ids.dart';
+import '../history/history_routes.dart';
 import '../library_locations.dart';
 import '../playlists/playlist_page.dart';
 import '../playlists/playlists_page.dart';
 
 /// Playlists tab, the Favorites sidebar item under it, and the playlist
 /// routes. Static children go before `:uid`, so a fixed name is never taken
-/// for a playlist id: `favorites` now, and History (`history`) and Most played
-/// (`most-played`) when they become real pages. Until then their paths match
-/// `:uid`, and a page asked for an unknown uid shows "not found".
+/// for a playlist id: `favorites` and History (`historyRoutes`). Most played
+/// (`most-played`) matches `:uid` until it is a real page, and a page asked
+/// for an unknown uid shows "not found".
 void registerPlaylists(ExtensionRegistry registry) {
   registry
     ..addNavItem(
@@ -44,6 +45,7 @@ void registerPlaylists(ExtensionRegistry registry) {
         path: LibraryLocations.playlists,
         builder: (_, _) => const PlaylistsPage(),
         routes: [
+          ...historyRoutes(),
           GoRoute(
             path: PlaylistUids.favorites,
             pageBuilder: (context, state) => KDetailPage(

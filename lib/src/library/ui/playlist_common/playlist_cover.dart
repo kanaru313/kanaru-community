@@ -1,13 +1,11 @@
-import 'dart:math' as math;
-
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../media/domain/cover_files.dart';
-import '../../../playback/ui/track_cover.dart';
 import '../../domain/playlists/playlist_ids.dart';
 import '../../state/custom_cover_providers.dart';
 import '../browse/item_covers.dart';
+import 'auto_cover_art.dart';
 
 /// Side, in decoded pixels, of the `thumb` cover files.
 const _thumbPx = 256;
@@ -19,9 +17,9 @@ CoverSize playlistCoverFileSize(double side, double devicePixelRatio) =>
 
 /// Cover of a playlist (decorative: the name next to it names the item).
 ///
-/// Favorites is a heart tile (it has no custom cover). Any other playlist
-/// shows the cover the user chose, else its automatic cover: a mosaic of 2 to
-/// 4 song covers, the single cover of 1, or a placeholder for none. With
+/// A playlist shows the cover the user chose, else its automatic cover: a
+/// mosaic of 2 to 4 song covers, the single cover of 1, or a placeholder for
+/// none. Favorites has no custom cover: it always shows its automatic one. With
 /// [automaticOnly] a custom cover is ignored (the Edit preview of a staged
 /// "automatic cover").
 ///
@@ -47,17 +45,6 @@ class PlaylistCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (uid == PlaylistUids.favorites) {
-      return ExcludeSemantics(
-        child: _IconTile(
-          icon: KIcons.heartFilled,
-          background: Theme.of(context).colorScheme.primaryContainer,
-          foreground: Theme.of(context).colorScheme.onPrimaryContainer,
-          dimension: dimension,
-          radius: this.radius ?? KRadius.sm,
-        ),
-      );
-    }
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final radius = this.radius ?? KRadius.sm;
     final keys = autoCoverKeys.take(4).toList();
@@ -70,7 +57,7 @@ class PlaylistCover extends StatelessWidget {
       radius,
     );
     return ExcludeSemantics(
-      child: automaticOnly
+      child: automaticOnly || uid == PlaylistUids.favorites
           ? automatic
           : ItemCover(
               item: (kind: CustomCoverKind.playlist, itemKey: uid),
@@ -100,45 +87,17 @@ class PlaylistCover extends StatelessWidget {
         radius: radius,
       );
     }
-    if (keys.length == 1) {
-      return TrackCover(
-        coverKey: keys.first,
-        seed: uid,
-        size: size,
-        dimension: dimension,
-        radius: radius,
-      );
-    }
-    return KCoverMosaic(
-      size: dimension,
+    return autoCoverArt(
+      keys: keys,
+      seed: uid,
+      size: size,
+      dimension: dimension,
       radius: radius,
-      tiles: [
-        for (final key in keys)
-          (context, w, h) {
-            final side = math.max(w, h);
-            // TrackCover draws a square; the tile crops it to w x h.
-            return ClipRect(
-              child: OverflowBox(
-                minWidth: side,
-                maxWidth: side,
-                minHeight: side,
-                maxHeight: side,
-                child: TrackCover(
-                  coverKey: key,
-                  seed: uid,
-                  size: size,
-                  dimension: side,
-                  radius: BorderRadius.zero,
-                ),
-              ),
-            );
-          },
-      ],
     );
   }
 }
 
-/// Icon on a flat tile: the empty-playlist and the Favorites covers.
+/// Icon on a flat tile: the cover of a playlist with no song cover.
 class _IconTile extends StatelessWidget {
   const _IconTile({
     required this.icon,

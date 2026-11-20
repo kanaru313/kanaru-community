@@ -854,7 +854,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get libraryUnitFolders => 'thư mục';
 
   @override
-  String get libraryPlayAll => 'Phát tất cả';
+  String get libraryPlayAll => 'Phát';
 
   @override
   String get libraryShuffle => 'Phát ngẫu nhiên';
@@ -3353,4 +3353,244 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get sleepTimerAnnounceExpired =>
       'Hẹn giờ ngủ đã hết, nhạc đã tạm dừng';
+
+  @override
+  String get historyTitle => 'Lịch sử';
+
+  @override
+  String historyHeroPlays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lượt nghe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String historyHeroSongsSince(int songs, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      songs,
+      locale: localeName,
+      other: '$songs bài',
+    );
+    return '$_temp0 · từ $date';
+  }
+
+  @override
+  String historyBarCount(String year, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lượt nghe',
+    );
+    return '$year · $_temp0';
+  }
+
+  @override
+  String get historyJumpToDay => 'Nhảy tới ngày';
+
+  @override
+  String get historyYearsLabel => 'Năm';
+
+  @override
+  String get historyDayToday => 'Hôm nay';
+
+  @override
+  String get historyDayYesterday => 'Hôm qua';
+
+  @override
+  String historyDayPlays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lượt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String historyDayMenuLabel(String day) {
+    return 'Thêm: $day';
+  }
+
+  @override
+  String historyRowOrdinal(String time, int n) {
+    return '$time · lần thứ $n';
+  }
+
+  @override
+  String historyRowMissing(String time) {
+    return '$time · không phát được';
+  }
+
+  @override
+  String get historyMissingTap => 'Không phát được bài này';
+
+  @override
+  String historyRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã xoá $count lượt nghe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyRemoveFailed => 'Không xoá được lượt nghe';
+
+  @override
+  String get historyWriteFailed => 'Không lưu được thay đổi';
+
+  @override
+  String get historyEmptyMessage => 'Bài hát bạn đã phát sẽ hiện ở đây.';
+
+  @override
+  String get historyRecordingOff =>
+      'Đang tắt ghi lịch sử nghe. Những gì đã ghi vẫn còn.';
+
+  @override
+  String get historyRecordingOn => 'Bật';
+
+  @override
+  String get historyRecordingOnLabel => 'Bật ghi lịch sử nghe';
+
+  @override
+  String get historyRecordingEnabled => 'Đã bật ghi lịch sử nghe';
+
+  @override
+  String historyYearFooter(String year) {
+    return 'Xem năm $year';
+  }
+
+  @override
+  String get historyPlayFailed => 'Không phát được lịch sử';
+
+  @override
+  String get historyMenuMostPlayed => 'Phát nhiều nhất';
+
+  @override
+  String get historyMenuClear => 'Xoá lịch sử…';
+
+  @override
+  String get historyMenuPlayDay => 'Phát cả ngày';
+
+  @override
+  String get historyMenuDeleteDay => 'Xoá ngày khỏi lịch sử';
+
+  @override
+  String get historyMenuTrackHistory => 'Lịch sử bài này';
+
+  @override
+  String get historyMenuRemovePlay => 'Xoá khỏi lịch sử';
+
+  @override
+  String get historyNothingToAdd => 'Không có bài phát được để thêm';
+
+  @override
+  String get historyClearTitle => 'Xoá lịch sử?';
+
+  @override
+  String get historyClearHour => 'Giờ qua';
+
+  @override
+  String get historyClearToday => 'Hôm nay';
+
+  @override
+  String get historyClearWeek => '7 ngày qua';
+
+  @override
+  String get historyClearAll => 'Toàn bộ';
+
+  @override
+  String get historyClearConfirm => 'Xoá';
+
+  @override
+  String get historyClearCountFailed => 'Không đếm được số lượt nghe';
+
+  @override
+  String get historyClearRetry => 'Thử lại';
+
+  @override
+  String get historyClearFailed => 'Không xoá được lịch sử';
+
+  @override
+  String historyCleared(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã xoá $count lượt nghe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyDeleteDayTitle => 'Xoá ngày này khỏi lịch sử?';
+
+  @override
+  String historyDeleteDayBody(int count, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lượt nghe',
+    );
+    return '$_temp0 của ngày $date sẽ bị xoá. Không thể hoàn tác.';
+  }
+
+  @override
+  String historyFilterHint(String year) {
+    return 'Lọc trong $year';
+  }
+
+  @override
+  String historyFilterMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lượt khớp',
+    );
+    return '$_temp0 · không chia theo ngày';
+  }
+
+  @override
+  String historyFilterCapped(int max) {
+    return 'Chỉ hiện $max lượt đầu. Thu hẹp từ khoá để thấy thêm.';
+  }
+
+  @override
+  String historyFilterEmpty(String query) {
+    return 'Không có lượt nghe nào khớp “$query”.';
+  }
+
+  @override
+  String get historyMenuMissing => 'Không phát được';
+
+  @override
+  String get historyTrackEmpty => 'Chưa có lượt nghe nào';
+
+  @override
+  String historyTrackSummaryLast(String when) {
+    return 'Lần cuối $when';
+  }
+
+  @override
+  String historyTrackSummaryFirst(String date) {
+    return 'lần đầu $date';
+  }
+
+  @override
+  String historyTrackSummaryTotal(String duration) {
+    return 'đã nghe tổng $duration';
+  }
+
+  @override
+  String historyTrackListened(String duration) {
+    return 'đã nghe $duration';
+  }
+
+  @override
+  String historyTrackWhen(String day, String time) {
+    return '$day $time';
+  }
 }

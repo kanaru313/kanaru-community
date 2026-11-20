@@ -554,7 +554,7 @@
   "libraryUnitGenres": "thể loại",
   "libraryUnitLanguages": "ngôn ngữ",
   "libraryUnitFolders": "thư mục",
-  "libraryPlayAll": "Phát tất cả",
+  "libraryPlayAll": "Phát",
   "libraryShuffle": "Phát ngẫu nhiên",
   "libraryPlayAlbum": "Phát cả album",
   "libraryPlayArtist": "Phát mọi bài",
@@ -2607,5 +2607,213 @@
   "sleepTimerAnnounceHeld": "Đã tạm dừng đếm",
   "sleepTimerAnnounceResumed": "Đã tiếp tục đếm",
   "sleepTimerAnnounceCancelled": "Đã tắt hẹn giờ ngủ",
-  "sleepTimerAnnounceExpired": "Hẹn giờ ngủ đã hết, nhạc đã tạm dừng"
+  "sleepTimerAnnounceExpired": "Hẹn giờ ngủ đã hết, nhạc đã tạm dừng",
+  "historyTitle": "Lịch sử",
+  "historyHeroPlays": "{count, plural, other{{count} lượt nghe}}",
+  "@historyHeroPlays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyHeroSongsSince": "{songs, plural, other{{songs} bài}} · từ {date}",
+  "@historyHeroSongsSince": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "historyBarCount": "{year} · {count, plural, other{{count} lượt nghe}}",
+  "@historyBarCount": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyJumpToDay": "Nhảy tới ngày",
+  "historyYearsLabel": "Năm",
+  "historyDayToday": "Hôm nay",
+  "historyDayYesterday": "Hôm qua",
+  "historyDayPlays": "{count, plural, other{{count} lượt}}",
+  "@historyDayPlays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyDayMenuLabel": "Thêm: {day}",
+  "@historyDayMenuLabel": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "historyRowOrdinal": "{time} · lần thứ {n}",
+  "@historyRowOrdinal": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "historyRowMissing": "{time} · không phát được",
+  "@historyRowMissing": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "historyMissingTap": "Không phát được bài này",
+  "historyRemoved": "{count, plural, other{Đã xoá {count} lượt nghe}}",
+  "@historyRemoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyRemoveFailed": "Không xoá được lượt nghe",
+  "historyWriteFailed": "Không lưu được thay đổi",
+  "historyEmptyMessage": "Bài hát bạn đã phát sẽ hiện ở đây.",
+  "historyRecordingOff": "Đang tắt ghi lịch sử nghe. Những gì đã ghi vẫn còn.",
+  "historyRecordingOn": "Bật",
+  "historyRecordingOnLabel": "Bật ghi lịch sử nghe",
+  "historyRecordingEnabled": "Đã bật ghi lịch sử nghe",
+  "historyYearFooter": "Xem năm {year}",
+  "@historyYearFooter": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "historyPlayFailed": "Không phát được lịch sử",
+  "historyMenuMostPlayed": "Phát nhiều nhất",
+  "historyMenuClear": "Xoá lịch sử…",
+  "historyMenuPlayDay": "Phát cả ngày",
+  "historyMenuDeleteDay": "Xoá ngày khỏi lịch sử",
+  "historyMenuTrackHistory": "Lịch sử bài này",
+  "historyMenuRemovePlay": "Xoá khỏi lịch sử",
+  "historyNothingToAdd": "Không có bài phát được để thêm",
+  "historyClearTitle": "Xoá lịch sử?",
+  "historyClearHour": "Giờ qua",
+  "historyClearToday": "Hôm nay",
+  "historyClearWeek": "7 ngày qua",
+  "historyClearAll": "Toàn bộ",
+  "historyClearConfirm": "Xoá",
+  "historyClearCountFailed": "Không đếm được số lượt nghe",
+  "historyClearRetry": "Thử lại",
+  "historyClearFailed": "Không xoá được lịch sử",
+  "historyCleared": "{count, plural, other{Đã xoá {count} lượt nghe}}",
+  "@historyCleared": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyDeleteDayTitle": "Xoá ngày này khỏi lịch sử?",
+  "historyDeleteDayBody": "{count, plural, other{{count} lượt nghe}} của ngày {date} sẽ bị xoá. Không thể hoàn tác.",
+  "@historyDeleteDayBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "historyFilterHint": "Lọc trong {year}",
+  "@historyFilterHint": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "historyFilterMatches": "{count, plural, other{{count} lượt khớp}} · không chia theo ngày",
+  "@historyFilterMatches": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyFilterCapped": "Chỉ hiện {max} lượt đầu. Thu hẹp từ khoá để thấy thêm.",
+  "@historyFilterCapped": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "historyFilterEmpty": "Không có lượt nghe nào khớp “{query}”.",
+  "@historyFilterEmpty": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "historyMenuMissing": "Không phát được",
+  "historyTrackEmpty": "Chưa có lượt nghe nào",
+  "historyTrackSummaryLast": "Lần cuối {when}",
+  "@historyTrackSummaryLast": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackSummaryFirst": "lần đầu {date}",
+  "@historyTrackSummaryFirst": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackSummaryTotal": "đã nghe tổng {duration}",
+  "@historyTrackSummaryTotal": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackListened": "đã nghe {duration}",
+  "@historyTrackListened": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackWhen": "{day} {time}",
+  "@historyTrackWhen": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

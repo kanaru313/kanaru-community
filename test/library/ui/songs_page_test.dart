@@ -166,7 +166,7 @@ void main() {
     );
     final ids = await _addSongs(h, ['Alpha', 'Bravo', 'Charlie']);
     await h.settle(tester);
-    await tester.tap(byIconButton('Play all'));
+    await tester.tap(byIconButton('Play'));
     await tester.pump();
     var call = _only(playback);
     expect(call.startIndex, 0);
@@ -193,9 +193,9 @@ void main() {
       );
       await _addSongs(h, ['Alpha']);
       await h.settle(tester);
-      expect(find.text('Play all'), findsNothing);
+      expect(byIconButton('Play'), findsOneWidget);
       expect(find.text('Shuffle'), findsNothing);
-      final play = byIconButton('Play all');
+      final play = byIconButton('Play');
       final shuffle = byIconButton('Shuffle');
       // 16 dp glyph with 8 dp around it; the two touch each other.
       expect(tester.getSize(play), const Size.square(32));

@@ -28,7 +28,8 @@ PlaylistSummary _emptyFavorites() => PlaylistSummary(
 /// Summary query: counts and durations walk the `playlist_entries_order`
 /// index (O(entries) per playlist); cover candidates come from a per-playlist
 /// `LIMIT` subquery that stops after 64 entries with a cover (it may pass
-/// cover-less ones first). Favorites (`kind = 'favorites'`) skips copies hidden
+/// cover-less ones first); its covers are in playlist order, and Favorites
+/// overrides them with [favoriteCoverSql]. Favorites (`kind = 'favorites'`) skips copies hidden
 /// by duplicate hiding (`dup_hidden = 1`); regular playlists keep them. The
 /// aggregate `ORDER BY` needs SQLite 3.44. The
 /// `sqlite3` package bundles a precompiled SQLite (3.54.x) on Android and
@@ -65,6 +66,21 @@ WHERE p.deleted_at IS NULL AND (p.kind IS NULL OR p.kind = 'favorites')
 ORDER BY p.created_at, p.id
 ''';
 
+/// Cover candidates of Favorites, newest added first (equal times keep list
+/// order); the first 64 with a cover, as the summary query does for the other
+/// playlists. There is no index on `added_at`, so SQLite keeps a 64-row top-N
+/// while it scans the live favourites.
+const favoriteCoverSql =
+    '''
+SELECT t.cover_key AS cover_key,
+  COALESCE(t.album_artist_key || '|' || t.album_title_key,
+           't' || t.id) AS grp
+FROM playlist_entries e JOIN tracks t ON t.id = e.track_id
+WHERE e.playlist_id = (SELECT id FROM playlists WHERE uid = ?)
+  AND e.deleted_at IS NULL AND t.cover_key IS NOT NULL AND t.dup_hidden = 0
+ORDER BY e.added_at DESC, e.sort_key, e.uid LIMIT $_coverCandidates
+''';
+
 /// All user playlists plus Favorites, from one query.
 Future<PlaylistSummaries> loadSummaries(AppDatabase db) async {
   final rows = await db.customSelect(summarySql).get();
@@ -73,9 +89,21 @@ Future<PlaylistSummaries> loadSummaries(AppDatabase db) async {
   for (final r in rows) {
     final isFavorites =
         r.readNullable<String>('kind') == PlaylistKind.favorites;
-    final covers =
-        ((jsonDecode(r.read<String>('covers')) as List).cast<List<Object?>>())
-            .map((c) => (group: c[1] as String, coverKey: c[0] as String?));
+    final covers = isFavorites
+        ? (await db
+                  .customSelect(
+                    favoriteCoverSql,
+                    variables: [Variable.withString(r.read<String>('uid'))],
+                  )
+                  .get())
+              .map(
+                (c) => (
+                  group: c.read<String>('grp'),
+                  coverKey: c.readNullable<String>('cover_key'),
+                ),
+              )
+        : ((jsonDecode(r.read<String>('covers')) as List).cast<List<Object?>>())
+              .map((c) => (group: c[1] as String, coverKey: c[0] as String?));
     final s = PlaylistSummary(
       uid: r.read<String>('uid'),
       name: r.read<String>('name'),
@@ -101,78 +129,97 @@ Future<PlaylistSummaries> loadSummaries(AppDatabase db) async {
 
 /// One playlist with its entries, read in one transaction so a write cannot
 /// land between the entries and their tracks.
-Future<PlaylistDetail?> loadDetail(AppDatabase db, String uid) =>
-    db.transaction(() async {
-      final rows = await db
-          .customSelect(
-            'SELECT id, uid, name, description, kind, created_at, updated_at '
-            'FROM playlists WHERE uid = ? AND deleted_at IS NULL',
-            variables: [Variable.withString(uid)],
-          )
-          .get();
-      if (rows.isEmpty) {
-        if (uid != PlaylistUids.favorites) return null;
-        return PlaylistDetail(summary: _emptyFavorites(), entries: const []);
-      }
-      final p = rows.single;
-      final entryRows = await db
-          .customSelect(
-            'SELECT e.uid AS uid, e.track_id AS track_id '
-            'FROM playlist_entries e JOIN tracks t ON t.id = e.track_id '
-            'WHERE e.playlist_id = ? AND e.deleted_at IS NULL '
-            // Favorites follows duplicate hiding; other playlists keep copies.
-            'AND (? = 0 OR t.dup_hidden = 0) '
-            'ORDER BY e.sort_key, e.uid',
-            variables: [
-              Variable.withInt(p.read<int>('id')),
-              Variable.withInt(
-                p.readNullable<String>('kind') == PlaylistKind.favorites
-                    ? 1
-                    : 0,
-              ),
-            ],
-          )
-          .get();
-      final infos = await loadTrackInfos(db, [
-        for (final r in entryRows) TrackId(r.read<int>('track_id')),
-      ]);
-      final byId = {for (final i in infos) i.id: i};
-      final entries = [
-        for (final r in entryRows)
-          if (byId[TrackId(r.read<int>('track_id'))] case final info?)
-            PlaylistEntryView(uid: r.read<String>('uid'), info: info),
-      ];
-      final distinct = <TrackId, int>{
-        for (final e in entries) e.info.id: e.info.durationMs ?? 0,
-      };
-      return PlaylistDetail(
-        summary: PlaylistSummary(
-          uid: uid,
-          name: p.read<String>('name'),
-          description: p.read<String>('description'),
-          isFavorites: p.readNullable<String>('kind') == PlaylistKind.favorites,
-          trackCount: distinct.length,
-          durationMs: distinct.values.fold(0, (a, b) => a + b),
-          createdAt: p.read<int>('created_at'),
-          updatedAt: p.read<int>('updated_at'),
-          autoCoverKeys: pickAutoCoverKeys(
-            entries
-                .where((e) => e.info.coverKey != null)
-                .take(_coverCandidates)
-                .map((e) {
-                  final k = e.info.albumKey;
-                  return (
-                    group: k == null
-                        ? 't${e.info.id.value}'
-                        : '${k.artistKey}|${k.titleKey}',
-                    coverKey: e.info.coverKey,
-                  );
-                }),
+Future<PlaylistDetail?> loadDetail(
+  AppDatabase db,
+  String uid,
+) => db.transaction(() async {
+  final rows = await db
+      .customSelect(
+        'SELECT id, uid, name, description, kind, created_at, updated_at '
+        'FROM playlists WHERE uid = ? AND deleted_at IS NULL',
+        variables: [Variable.withString(uid)],
+      )
+      .get();
+  if (rows.isEmpty) {
+    if (uid != PlaylistUids.favorites) return null;
+    return PlaylistDetail(summary: _emptyFavorites(), entries: const []);
+  }
+  final p = rows.single;
+  final entryRows = await db
+      .customSelect(
+        'SELECT e.uid AS uid, e.track_id AS track_id, e.added_at AS added_at '
+        'FROM playlist_entries e JOIN tracks t ON t.id = e.track_id '
+        'WHERE e.playlist_id = ? AND e.deleted_at IS NULL '
+        // Favorites follows duplicate hiding; other playlists keep copies.
+        'AND (? = 0 OR t.dup_hidden = 0) '
+        'ORDER BY e.sort_key, e.uid',
+        variables: [
+          Variable.withInt(p.read<int>('id')),
+          Variable.withInt(
+            p.readNullable<String>('kind') == PlaylistKind.favorites ? 1 : 0,
           ),
-        ),
-        entries: entries,
-      );
-    });
+        ],
+      )
+      .get();
+  final isFavorites = p.readNullable<String>('kind') == PlaylistKind.favorites;
+  // Entry uid -> added time, for the Favorites cover order.
+  final addedAt = {
+    for (final r in entryRows) r.read<String>('uid'): r.read<int>('added_at'),
+  };
+  final infos = await loadTrackInfos(db, [
+    for (final r in entryRows) TrackId(r.read<int>('track_id')),
+  ]);
+  final byId = {for (final i in infos) i.id: i};
+  final entries = [
+    for (final r in entryRows)
+      if (byId[TrackId(r.read<int>('track_id'))] case final info?)
+        PlaylistEntryView(uid: r.read<String>('uid'), info: info),
+  ];
+  final distinct = <TrackId, int>{
+    for (final e in entries) e.info.id: e.info.durationMs ?? 0,
+  };
+  return PlaylistDetail(
+    summary: PlaylistSummary(
+      uid: uid,
+      name: p.read<String>('name'),
+      description: p.read<String>('description'),
+      isFavorites: p.readNullable<String>('kind') == PlaylistKind.favorites,
+      trackCount: distinct.length,
+      durationMs: distinct.values.fold(0, (a, b) => a + b),
+      createdAt: p.read<int>('created_at'),
+      updatedAt: p.read<int>('updated_at'),
+      autoCoverKeys: pickAutoCoverKeys(
+        (isFavorites ? _newestFirst(entries, addedAt) : entries)
+            .where((e) => e.info.coverKey != null)
+            .take(_coverCandidates)
+            .map((e) {
+              final k = e.info.albumKey;
+              return (
+                group: k == null
+                    ? 't${e.info.id.value}'
+                    : '${k.artistKey}|${k.titleKey}',
+                coverKey: e.info.coverKey,
+              );
+            }),
+      ),
+    ),
+    entries: entries,
+  );
+});
+
+/// [entries] by added time, newest first; equal times keep list order, as the
+/// summary query does (`sort_key`, `uid`).
+List<PlaylistEntryView> _newestFirst(
+  List<PlaylistEntryView> entries,
+  Map<String, int> addedAt,
+) {
+  final indexed = [for (var i = 0; i < entries.length; i++) (i, entries[i])];
+  indexed.sort((a, b) {
+    final byTime = (addedAt[b.$2.uid] ?? 0).compareTo(addedAt[a.$2.uid] ?? 0);
+    return byTime != 0 ? byTime : a.$1.compareTo(b.$1);
+  });
+  return [for (final e in indexed) e.$2];
+}
 
 /// Distinct tracks of [tracks] each live playlist already holds.
 Future<Map<String, int>> countExistingTracks(

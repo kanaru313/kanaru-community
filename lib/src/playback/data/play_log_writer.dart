@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../database/database.dart' show runPlayStatsBulk;
 import '../../foundation/ids/ulid.dart';
 import '../../media/domain/play_context.dart';
 import '../../media/domain/track_id.dart';
@@ -50,5 +51,29 @@ class PlayLogWriter {
       ],
     );
     _db.notifyUpdates({const TableUpdate('play_log', kind: UpdateKind.update)});
+  }
+
+  /// Deletes the live rows whose `played_at` is in `[from, to)` (a missing side
+  /// is open, none at all is the whole log) and returns how many went.
+  /// `play_stats` is recomputed for the tracks touched, in the same
+  /// transaction.
+  Future<int> deleteRange({int? from, int? to}) {
+    final where = ['deleted_at IS NULL'];
+    final vars = <Variable>[];
+    if (from != null) {
+      where.add('played_at >= ?');
+      vars.add(Variable.withInt(from));
+    }
+    if (to != null) {
+      where.add('played_at < ?');
+      vars.add(Variable.withInt(to));
+    }
+    return runPlayStatsBulk(
+      _db,
+      () => _db.customUpdate(
+        'DELETE FROM play_log WHERE ${where.join(' AND ')}',
+        variables: vars,
+      ),
+    );
   }
 }

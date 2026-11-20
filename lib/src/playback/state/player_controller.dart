@@ -858,13 +858,16 @@ class PlayerController implements PlaybackCommands {
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
+    // The recorder outlives the controller: end the open listen first, so a
+    // rebuilt controller's observation is never ended by this one.
+    _listens.observe(null);
     _cancelRamp();
     await _chain.close();
     for (final s in _subs) {
       await s.cancel();
     }
     await _engine?.dispose();
-    await _listens.close();
+    await _listens.flush();
     await _now.close();
     await _view.close();
     await _pos.close();

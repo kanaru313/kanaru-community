@@ -15,6 +15,7 @@ class SongTileCover extends StatelessWidget {
     required this.info,
     required this.current,
     this.number,
+    this.rank,
   });
 
   final TrackInfo info;
@@ -22,6 +23,13 @@ class SongTileCover extends StatelessWidget {
 
   /// Track number badge in the bottom end corner; null shows none.
   final int? number;
+
+  /// Place in a ranking: a badge in the same corner as [number] (which it
+  /// replaces); the first [topRanks] have the `primary` fill.
+  final int? rank;
+
+  /// Ranks that get the emphasised badge.
+  static const int topRanks = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +58,14 @@ class SongTileCover extends StatelessWidget {
               ),
             ),
           ),
-        if (number != null)
+        if (rank != null)
+          PositionedDirectional(
+            key: songTileBadgeKey,
+            end: _badgeInset,
+            bottom: _badgeInset,
+            child: _NumberBadge(number: rank!, top: rank! <= topRanks),
+          )
+        else if (number != null)
           PositionedDirectional(
             key: songTileBadgeKey,
             end: _badgeInset,
@@ -70,23 +85,28 @@ const Key songTileBadgeKey = ValueKey('song-tile-number-badge');
 /// Track number pill on a cover: round for one digit, wider for more.
 /// Text scale is clamped so the badge stays inside the 56 dp cover.
 class _NumberBadge extends StatelessWidget {
-  const _NumberBadge({required this.number});
+  const _NumberBadge({required this.number, this.top = false});
 
   final int number;
+
+  /// A top rank: `primary` fill, `onPrimary` text.
+  final bool top;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scaler = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
     final style = theme.textTheme.labelSmall!.copyWith(
-      color: Colors.white,
+      color: top ? theme.colorScheme.onPrimary : Colors.white,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
     final height = scaler.scale(style.fontSize ?? 11) * (style.height ?? 1.3);
     // Not excluded: the number is read once, as text of the merged row.
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: theme.colorScheme.scrim.withValues(alpha: 0.55),
+        color: top
+            ? theme.colorScheme.primary
+            : theme.colorScheme.scrim.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(height),
       ),
       child: ConstrainedBox(

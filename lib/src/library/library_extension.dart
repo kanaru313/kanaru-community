@@ -1,5 +1,6 @@
 import '../extension/kanaru_extension.dart';
 import '../extension/state/extension_registry.dart';
+import 'ui/history/history_registration.dart';
 import 'ui/library_browse_registration.dart';
 import 'ui/playlist_common/playlist_registration.dart';
 import 'ui/scan/library_scan_registration.dart';
@@ -16,6 +17,7 @@ class LibraryExtension implements KanaruExtension {
   void register(ExtensionRegistry registry) {
     registerLibraryBrowse(registry);
     registerPlaylists(registry);
+    registerHistory(registry);
     registerLibraryScan(registry);
   }
 }

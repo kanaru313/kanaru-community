@@ -223,8 +223,9 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   'playlists'`, not a tab); route `/playlists` (`PlaylistsPage`) with the child
   `favorites` first, then `:uid`, both through `KDetailPage` (`kanaru_ui`: the
   detail transition and surface ground). A static child always goes
-  before `:uid`, so a fixed name is never read as a playlist id (History and
-  Most played, still coming soon, would match `:uid` and show "not found").
+  before `:uid`, so a fixed name is never read as a playlist id (Most played,
+  still coming soon, would match `:uid` and show "not found"; History has its
+  routes, see "History").
 - **Seeds** (the placeholder body is replaced by the owner lane, the
   declaration stays): `PlaylistsPage`, `PlaylistPage({uid})` (playlist screens)
   were seeds (placeholder bodies replaced by
@@ -235,7 +236,7 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   `m3u/m3u_entry_points.dart`) were seeds and are now real: see "Add to playlist"
   and "M3U import and export" below.
 - **`PlaylistCover({uid, autoCoverKeys, dimension, radius, automaticOnly})`**:
-  Favorites is a heart tile (icon at 0.42 of the side on `primaryContainer`; it has no custom cover). Others
+  Favorites has no custom cover. It always shows its automatic cover (no heart tile; the hub shortcut tile is an icon tile, not a `PlaylistCover`); its keys are the distinct albums of the 4 most recently added favourites, newest first (`added_at`, in `playlist_reads.dart`), and the page tint comes from the first key (`watchCoverTint`). Others
   show the custom cover when there is one, else the automatic one: 2 to 4 keys
   in a `KCoverMosaic`, 1 key as that cover, none as a neutral tile (`surfaceContainerHighest`, playlist icon in `onSurfaceVariant` at 0.42 of the side). `automaticOnly` skips the custom cover (the Edit preview). Size
   rule: when the decoded side (`dimension`, or the mosaic tile's longer side)
@@ -1018,7 +1019,8 @@ the `TrackId` anchor of this provider, because a track can be queued twice.
 | Songs to Folders | 110-160 | Children of `library` (`parentId`, `mobileTab: false`), paths `LibraryLocations.list(tab)`; always all six in the sidebar, in default order (the tab setting steers the mobile sub-tabs only) |
 | Playlists | 210 (mobile 30) | Tab, route `/playlists`; registered in `library/ui/playlist_common/playlist_registration.dart` (see "Playlists") |
 | Favorites | 220 | Child of `playlists` (`parentId`, `mobileTab: false`), path `/playlists/favorites` |
-| History, Most played | 240, 250 | `comingSoon`, `mobileTab: false` until their mockup exists |
+| History | 240 | Child of `playlists` (`parentId`, `mobileTab: false`), path `/playlists/history`, live; registered in `library/ui/history/history_registration.dart` (see "History") |
+| Most played | 250 | Same parent and registration file, path `/playlists/most-played`, `comingSoon` until its page exists |
 
 - `libraryRoute()` is `/library` with six sibling list routes under it
   (`songs` ... `folders`, `NoTransitionPage`, `state.pageKey`). The parent has
@@ -1434,7 +1436,7 @@ Dimmed and inert, with the tooltip or subtitle "Coming soon" (`appComingSoon`,
 | Context menus | "Show in file manager" where `FileManager.canReveal` is false (Android) | a platform implementation |
 | Selection panel | Edit | tag editor |
 | Scan banner (failed scan) | "Grant permission" | the Android permission flow |
-| Sidebar (`comingSoon: true`) | History, Most played | their mockups |
+| Sidebar (`comingSoon: true`) | Most played | its page |
 
 The empty state scrolls (centred when there is room), so a short window or
 large text never overflows.
@@ -1535,6 +1537,204 @@ a modal route. It builds its own sheet instead of `showKSheet` (which can target
 root navigator since `useRootNavigator`): `showKSheet` turns into a 640 wide
 dialog from 600 px, but this menu stays a sheet up to the desktop form factor
 (1200 px) and is a 400 wide dialog above it.
+
+## History
+
+- Files in `library/ui/history/`: `history_registration.dart`
+  (`registerHistory`: nav items `history` 240 live and `most_played` 250
+  `comingSoon`, both `parentId: 'playlists'`, `mobileTab: false`; called by
+  `LibraryExtension` right after `registerPlaylists`, the parent goes first),
+  `history_locations.dart` (`HistoryLocations`: `history`, `track(id)`,
+  `mostPlayed`, `mostPlayedTrack(id)`), `history_routes.dart` (`historyRoutes()`:
+  `history` and `history/track/:trackId`, each page in `KDetailPage`).
+- `registerPlaylists` nests them with one line, `...historyRoutes()`, in the
+  `/playlists` route, before `:uid`. On desktop the sidebar item stays lit on
+  the sub-route; on mobile the hub tile opens the page as a child of the
+  Playlist tab (`openLibraryPage`).
+- `TrackHistoryPage` is the single-song sub-page (see "Single-song page").
+  Strings live in the `history` arb part (prefix `history`).
+
+### History page
+
+`HistoryPage` (`history_page.dart`; once there are plays it hands over to
+`HistoryContent` in `history_content.dart`, which holds the filter and jump state) watches `historyYearsProvider`,
+`historyOverviewProvider`, `historyShownYearProvider` and
+`historyYearProvider(year)` and only calls `historyActionsProvider`; it imports
+nothing from `data/` or `database/`. States: pending / load error (a frame with
+no title), empty (`KEmpty` in the frame, the recording strip above it), and
+the page. The hero and the overview render as soon as the overview is read; the
+year's plays follow under a thin progress line. The hero's cover comes from the
+newest year (`historyCoverKeys`: the playlist rule `pickAutoCoverKeys` over
+the newest distinct albums whose file exists; one key one cover, 2 to 4 a
+`KCoverMosaic`, built by the shared `autoCoverArt` of `playlist_common/`). The
+hero is the playlist's: `KDetailHero(framedCover: true)`, `LibraryMoreButton`,
+and the page is tinted from the first cover (`watchCoverTint` in `detail/detail_tint.dart`, shared with the detail pages).
+
+- **Frame** (`history_page_frame.dart`, shared by the three 05d pages):
+  `DetailFrame` + `KDetailLayout(header:, slivers:)`, two columns from 840 dp
+  measured on the page, left column 320. The hero names the page, so the header
+  title shows only once the hero's has scrolled out (narrow). Mobile: child of
+  the Playlist tab with a back button; desktop: a sidebar page, no back button
+  (`showBack` null decides from `FormFactor`).
+- **Slivers**: `HistoryBar` (`2026 · N plays`, the jump and filter buttons,
+  the jump and filter buttons; one `KChip` per year with plays, the shown year
+  selected, no check mark; the filter field sits under the count line while
+  open) then `HistoryTimeline` or, while a query is typed, `HistoryFilterList`.
+  `HistoryHero` has Play all / shuffle (`playAllHistory`, a toast when nothing
+  plays) and the page ⋮ (see "Menus, dialogs, filter and jump").
+- **Recording off**: `HistoryRecordingNotice` is a `KInlineNotice` above the
+  hero. Turn on calls `enableRecording()`, shows the toast and folds the strip
+  with `HistoryCollapse` (`KMotion.normal`, `AnimatedSize` + `AnimatedSwitcher`;
+  with animations off it is removed at once, an `AnimatedSize` with no time to
+  run re-dirties itself during layout).
+- **Line metrics** (`history_line_metrics.dart`, pure): `row` =
+  `KMediaCard.extentOf(scaler)`, `dayBar` = 2 x 10 dp padding + the `titleSmall`
+  line + the `bodySmall` line, both at `lineHeight` 1.4 x the scaled font size
+  (the bar's text styles set the same height, so the extent is what is drawn),
+  `footer` = `row`. 56 dp at scale 1.0.
+- **Timeline index** (`history_timeline_index.dart`, pure; input = plays per
+  day, newest day first): lines are `header` (every day but the first: the
+  pinned bar is the first day's header), `row`, `footer` (only with an older
+  year). Prefix sums give `topOf(line)`, `lineAt(offset)` (binary search),
+  `dayOffset(day)` (top of its header line, 0 for day 0), `dayAt(offset)` (the
+  last day whose header reached the bar), `pushUp(offset)` in `(-dayBar, 0]`,
+  and `playOffset(n)` / `lineOfPlay(n)`. Offsets are relative to the list's top.
+- **Sticky day bar**: `HistoryTimeline` returns one `SliverMainAxisGroup`: a
+  `KStickyBarSliver` of height `dayBar` and a `SliverVariedExtentList` of the
+  lines. The header line of day n is `HistoryDayBar` at the same height as the
+  pinned bar, so the swap is invisible. `HistoryStickyBar` listens to one
+  `ValueNotifier<double>` fed by the scroll position (offset = pixels - the
+  list's top, read from `SliverConstraints.precedingScrollExtent` at layout):
+  it draws the day at the top and, while the next header slides under, the
+  next day rising from below at `dy + dayBar`. Lines and the bar are one line
+  each with an ellipsis, the whole text is the header's semantics label and, on
+  desktop, a tooltip. The day's ⋮, a long press and a right click open the day
+  menu.
+- **Offset correction**: when a new list arrives with the old first play at
+  index k > 0 and the reader is past the top of the list, the position is moved
+  with `ScrollPosition.correctBy(playOffset(k) - 0)` while the timeline
+  rebuilds, in the same frame, so the content under the viewport does not move.
+  At the top the new play simply appears first. Removals are not corrected.
+- **Rows**: `HistoryRow` = `SongTile` with `detailLine` (`21:42 · play #6`, or
+  `21:42 · can't play` for a missing / hidden song), `markCurrent` only on the
+  newest play of the song in the shown year, `onDelete` (desktop Delete on the
+  focused row) and `onUnavailableTap` (toast). A tap plays `HistoryDayQueue`
+  (the day's songs, each once at its first play, unplayable ones out) from the
+  tapped song, `PlayContextKind.history`. Selection is by track, so every row
+  of a selected song shows selected.
+- **Removing a play** (`history_remove_toast.dart`, `removeHistoryPlay`):
+  `historyActions.remove` then the root toast "Removed N plays" with Undo
+  (`showAppSnackBarOn` on the root navigator's messenger). The holder merges
+  removals while a toast is open; the new toast registers its own close handle
+  first, so the replaced one does not commit. Undo calls `historyActions.undo`;
+  closing any other way calls `toastClosed(handle)`; a failed remove, undo or
+  commit shows an error toast (no "Removed" after a failed write). The close
+  handle checks the messenger is still mounted (the holder also closes the toast
+  when the container is disposed).
+- `SongTile` got four intent parameters for these pages: `detailLine`,
+  `rank` (badge in the cover's end-bottom corner, replaces the track number,
+  `primary` fill for ranks 1-3), `onDelete`, `onUnavailableTap` (a missing row
+  that has `onUnavailableTap` and its own `onMenu` also gets a ⋮).
+
+### Single-song page
+
+`library/ui/history/track/`: `track_history_page.dart` watches
+`trackHistoryProvider(TrackId)` (null for a song that does not exist) and
+`localDayProvider`; `track_history_hero.dart`, `track_history_rows.dart`,
+`track_history_labels.dart` (pure strings). The route builder passes the parsed
+id (null when the path has none), so an unusable id and an unknown song show
+the same empty line "No plays yet" in a plain frame; the page keeps the last
+answer on screen while a change re-reads it.
+
+- **Frame**: `HistoryPageFrame.layout` with `showBack: true` on both shells (a
+  sub-page, unlike the sidebar History page), so there is no header title until
+  the hero's name scrolls out of sight; two columns from 840 dp.
+- **Hero**: `KDetailHero` with the song's cover (radius 14 narrow), title,
+  artist (`line2`, left out when empty), `N plays` (`line3`) and one filled
+  `[▶ Play]` (`historyActions.playFrom([song], song)`, a toast when it fails).
+  The description (`KDetailDescription`, open state in
+  `detailDescriptionExpandedProvider` under `history-track:<id>`) reads "Last
+  played today 21:42 · first played 07/10/2026 · 22 min listened in total.":
+  today / yesterday by `dayLabelKind` against `localDayProvider`, else the date;
+  parts without a figure are dropped. A song that cannot play (missing or
+  hidden) dims the hero and disables Play, with "Can't play this song" as its
+  tooltip. With no plays left the hero stays and the list gives way to the
+  empty line.
+- **Rows**: `TrackHistoryRow` = `KListRow` (no cover) inside a `KContextRegion`:
+  `Thursday · 14/11/2026 · 21:42` and `listened 3:12` (omitted when
+  `listened_ms` is null), newest first, no ordinal. A play is not playable: a
+  tap does nothing while no song is selected (the no-op `onTap` only makes the
+  row a keyboard stop, which the Delete and Menu keys need). A long press
+  toggles the song in `librarySelectionProvider`, and every row shows selected
+  through `isSelectedProvider` (a tap while selecting toggles it). ⋮, right
+  click, Menu / Shift+F10 and the Delete key remove the play through
+  `removeHistoryPlay`, so the merged Undo toast and the error toast are the
+  History page's. Removing the last play shows the empty line; Undo restores
+  the rows.
+- The `/playlists/most-played/track/:trackId` route comes with the Most played
+  page and builds the same widget.
+
+### Menus, dialogs, filter and jump
+
+`history_menus.dart` (page), `history_day_menu.dart`, `history_row_menu.dart`,
+`history_clear_dialog.dart`,
+`history_delete_day.dart`, `history_filter.dart`, `history_calendar_dialog.dart`,
+`history_toasts.dart`. Every action goes through `historyActionsProvider`; the
+menus use the 04c model (`openMenu`, `MenuSpec`): a sheet on mobile, a layered
+menu on desktop.
+
+- **Page ⋮** (`buildHistoryPageMenu`, head = a history tile + the play count):
+  Play all, Shuffle, Add to playlist (all songs ever played, read when the row
+  is chosen; the picker names the source "History"), Most played, Export M3U,
+  Clear history (red). Play and add skip songs that are missing or hidden. Most
+  played and the M3U export show dimmed with the "coming soon" label until
+  their pages exist; the rows already sit in their place. Everything but
+  Most played and export is off with no plays, Clear also while a clear runs
+  (`historyClearingProvider`).
+- **Day menu** (`buildHistoryDayMenu`; also a long press or right click on the
+  day bar, Menu key / Shift+F10 through `KContextRegion`): Play the day,
+  Shuffle, Add to playlist (named by the full date), Remove the day from
+  history (red, `confirmAction` with the count, no undo). "Open in Most played"
+  is left out until that page exists.
+- **Row menu**: `SongTile.menuExtras` = "History of this song" (`MenuAction.go`
+  to `HistoryLocations.track`) and "Remove from history" (the merged Undo toast
+  of the Delete key). A missing play has no song to act on: `onMenu` opens a
+  menu with its head and only those two rows. The song menu itself is
+  untouched.
+- **Clear dialog** (`showHistoryClearDialog`): four `SelectionRow` text rows
+  (last hour, today, last 7 days, everything), each with its play count read
+  when the dialog opens from one `now` (`historyClockProvider`); the delete
+  uses the bounds of that same `now` (`ClearScope.bounds`). Clear is off until a
+  row with plays above zero is chosen, while the counts load or failed (Try
+  again), and while `historyClearingProvider` is true. Choosing it runs
+  `historyActions.clear` -> `ListenRecorder.clearHistory` (the recorder parks
+  the open listen, deletes on its write chain, then emits `cleared`) with
+  progress in the button; Esc, Back and the scrim wait meanwhile. The toast
+  "Removed N plays" has no Undo; a null result (the delete failed) shows the
+  error toast instead. Delete day goes the same way with the day's local
+  midnight bounds.
+- **Filter**: `KFilterField` "Filter in 2026" in the bar. A query (trimmed)
+  swaps the timeline for `HistoryFilterList`: a count line ("N plays match,
+  not split by day"), a `SliverFixedExtentList` of `HistoryRow`s (at most
+  `historyFilterCap` = 1000 plays of `historyFilterProvider`, `foldedMatcher`
+  over title, artist and album) and a "showing the first 1000" line when cut;
+  nothing matching shows an empty state. A tap plays the matched songs (one
+  `HistoryDayQueue` for the result). When results start, the page scrolls the
+  bar into view and remembers its offset; when the query empties (clear, Esc or
+  the filter button) the new `HistoryTimeline` gets `restoreOffset` and puts the
+  page back there. Switching year clears the query. The jump button is off
+  while results show (they have no day bars).
+- **Jump to date** (`showHistoryCalendar`, a port of the old hand-drawn grid
+  with `KIconButton`, `showKDialog(maxWidth: 360)` and the history strings): a
+  month grid within the shown year that opens on the month of the newest play,
+  dots and a tap only on days with plays (counts come from the loaded year via
+  `groupByDay`, no extra query), accessible label "date, N plays", [Close]. A
+  pick closes the dialog and calls `HistoryTimelineController.jumpToDay`: the
+  timeline sets the page offset to the list's top (`precedingScrollExtent`
+  from its last layout) plus `index.dayOffset(day)` (minus one bar height for the
+  first day, whose bar is the pinned one), clamped to the scroll extents, so
+  the day's bar is pinned at the top with its first play right under it,
+  whatever the hero, a notice or the text scale put above.
 
 ## Design pitfalls answered
 
