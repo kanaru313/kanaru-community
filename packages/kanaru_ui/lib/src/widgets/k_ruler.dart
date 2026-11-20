@@ -2,19 +2,22 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
-import '../tokens/k_shape.dart';
-import 'k_focus_ring.dart';
+import '../tokens/k_motion.dart';
+import 'k_ruler_marker.dart';
 import 'k_ruler_painter.dart';
+import 'k_ruler_physics.dart';
 
 String _plainNumber(int v) => '$v';
 
 /// Width of one unit: wide when every unit is numbered, narrow otherwise.
 double _unitWidth(int labelEvery) => labelEvery <= 1 ? 28.0 : 8.0;
 
-/// Horizontal drag ruler for a whole number between [min] and [max]: a tick
-/// per unit, a taller one every [majorEvery], a number every [labelEvery],
-/// the centre `primary` marker is the value, both edges fade out. Drag to
-/// move; the value changes one step at a time through [onChanged].
+/// Horizontal ruler on a real scroll view (momentum, snaps to a tick) for a
+/// whole number between [min] and [max]: a tick per unit, a taller one every [majorEvery], a number every [labelEvery],
+/// the centre `primary` marker is the value, both edges fade out. Drag or
+/// fling to move; [onChanged] fires once each time the centred tick changes.
+/// A value changed from outside animates to its tick (a jump with reduced
+/// motion) without echoing [onChanged]; touch shells tick a haptic per step.
 ///
 /// A [value] outside the range sits at the nearest end and is never changed
 /// by the ruler itself. Keyboard: left / right step by 1 inside the range;
@@ -69,25 +72,70 @@ class KRuler extends StatefulWidget {
 }
 
 class _KRulerState extends State<KRuler> {
+  late final ScrollController _scroll;
   bool _focused = false;
 
-  /// Fractional position while dragging; null otherwise.
-  double? _drag;
+  /// The centred value last seen (reported or set from outside).
+  late int _idx;
 
+  /// True while this widget moves the scroll itself: no echo, no haptic.
+  bool _own = false;
+
+  double get _tick => _unitWidth(widget.labelEvery);
   int get _shown => widget.value.clamp(widget.min, widget.max);
+  double _offsetOf(int v) => (v - widget.min) * _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _idx = _shown;
+    _scroll = ScrollController(initialScrollOffset: _offsetOf(_idx))
+      ..addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_own || !_scroll.hasClients) return;
+    final v = (widget.min + (_scroll.offset / _tick).round()).clamp(
+      widget.min,
+      widget.max,
+    );
+    if (v == _idx) return;
+    _idx = v;
+    if (FormFactor.of(context) != FormFactor.desktop) {
+      HapticFeedback.selectionClick();
+    }
+    widget.onChanged(v);
+  }
+
+  @override
+  void didUpdateWidget(KRuler old) {
+    super.didUpdateWidget(old);
+    if (!_scroll.hasClients) return;
+    final moving = _scroll.position.isScrollingNotifier.value;
+    if (_shown == _idx || moving) return;
+    _idx = _shown;
+    final target = _offsetOf(_idx);
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _own = true;
+      _scroll.jumpTo(target);
+      _own = false;
+      return;
+    }
+    _own = true;
+    _scroll
+        .animateTo(target, duration: KMotion.normal, curve: KMotion.dialogCurve)
+        .whenComplete(() => _own = false);
+  }
 
   void _set(int v) {
     final next = v.clamp(widget.min, widget.max);
     if (next != widget.value) widget.onChanged(next);
-  }
-
-  void _update(DragUpdateDetails d, double tick) {
-    final pos = ((_drag ?? _shown.toDouble()) - d.delta.dx / tick).clamp(
-      widget.min.toDouble(),
-      widget.max.toDouble(),
-    );
-    setState(() => _drag = pos);
-    _set(pos.round());
   }
 
   /// One step; the direction that points further out of the range from an
@@ -119,12 +167,12 @@ class _KRulerState extends State<KRuler> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final desktop = FormFactor.of(context) == FormFactor.desktop;
     final height = desktop ? 60.0 : 72.0;
-    final tick = _unitWidth(widget.labelEvery);
+    final tick = _tick;
     final label = widget.valueLabel ?? (int v) => '$v';
     final shown = _shown;
+    final span = (widget.max - widget.min) * tick;
     return Semantics(
       slider: true,
       focusable: true,
@@ -141,47 +189,37 @@ class _KRulerState extends State<KRuler> {
           autofocus: widget.autofocus,
           onKeyEvent: _key,
           onFocusChange: (v) => setState(() => _focused = v),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onHorizontalDragUpdate: (d) => _update(d, tick),
-            onHorizontalDragEnd: (_) => setState(() => _drag = null),
-            onHorizontalDragCancel: () => setState(() => _drag = null),
-            child: SizedBox(
-              height: height,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: KRulerFace(
+          child: SizedBox(
+            height: height,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: ListenableBuilder(
+                    listenable: _scroll,
+                    builder: (context, _) => KRulerFace(
                       min: widget.min,
                       max: widget.max,
-                      position: _drag ?? shown.toDouble(),
+                      position: _scroll.hasClients
+                          ? widget.min + _scroll.offset / tick
+                          : _idx.toDouble(),
                       unitWidth: tick,
                       majorEvery: widget.majorEvery,
                       labelEvery: widget.labelEvery,
                       tickLabel: widget.tickLabel ?? _plainNumber,
                     ),
                   ),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Padding(
-                      padding: EdgeInsets.only(top: height * 0.3),
-                      child: KFocusRing(
-                        focused: _focused,
-                        radius: KRadius.full,
-                        inset: 2,
-                        child: Container(
-                          width: 4,
-                          height: height * 0.55,
-                          decoration: ShapeDecoration(
-                            color: scheme.primary,
-                            shape: KShape.of(KRadius.full),
-                          ),
-                        ),
-                      ),
-                    ),
+                ),
+                Positioned.fill(
+                  child: KRulerScrollLayer(
+                    controller: _scroll,
+                    tick: tick,
+                    span: span,
                   ),
-                ],
-              ),
+                ),
+                IgnorePointer(
+                  child: KRulerMarker(focused: _focused, height: height),
+                ),
+              ],
             ),
           ),
         ),

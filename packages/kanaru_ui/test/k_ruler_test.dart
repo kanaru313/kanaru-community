@@ -148,6 +148,7 @@ void main() {
     expect(_position(tester), 180);
     expect(changes, isEmpty);
     await tester.pumpWidget(host(_ruler(value: 0, onChanged: changes.add)));
+    await tester.pumpAndSettle();
     expect(_position(tester), 1);
     expect(changes, isEmpty);
   });
@@ -253,5 +254,91 @@ void main() {
     await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     expect(changes, [46]);
+  });
+
+  testWidgets('a fling settles on a tick, onChanged ascending integers', (
+    tester,
+  ) async {
+    final changes = <int>[];
+    await tester.pumpWidget(host(_ruler(onChanged: changes.add)));
+    await tester.fling(find.byType(KRuler), const Offset(-200, 0), 1500);
+    await tester.pumpAndSettle();
+    expect(changes, isNotEmpty);
+    expect(changes.every((v) => v > 45 && v <= 180), isTrue);
+    for (var i = 1; i < changes.length; i++) {
+      expect(changes[i], greaterThan(changes[i - 1]));
+    }
+    expect(_position(tester), changes.last.toDouble());
+    expect(changes.last, greaterThan(50), reason: 'it kept its momentum');
+  });
+
+  testWidgets('drag end animates to the nearest tick', (tester) async {
+    await tester.pumpWidget(host(_ruler()));
+    final g = await tester.startGesture(tester.getCenter(find.byType(KRuler)));
+    await g.moveBy(const Offset(-20, 0)); // 2.5 ticks at 8 dp
+    await g.moveBy(const Offset(-4, 0));
+    await g.up();
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pumpAndSettle();
+    final p = _position(tester);
+    expect(p, p.roundToDouble());
+    expect(p, greaterThan(45));
+  });
+
+  testWidgets('an outside value change animates, then centres', (tester) async {
+    final changes = <int>[];
+    await tester.pumpWidget(host(_ruler(onChanged: changes.add)));
+    await tester.pumpWidget(host(_ruler(value: 90, onChanged: changes.add)));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(_position(tester), inExclusiveRange(45, 90));
+    await tester.pumpAndSettle();
+    expect(_position(tester), 90);
+    expect(changes, isEmpty, reason: 'no echo');
+  });
+
+  testWidgets('reduced motion: an outside change jumps', (tester) async {
+    await tester.pumpWidget(host(_ruler(), reduceMotion: true));
+    await tester.pumpWidget(host(_ruler(value: 90), reduceMotion: true));
+    await tester.pump();
+    expect(_position(tester), 90);
+  });
+
+  testWidgets('an off-range value parks at the end and does not echo', (
+    tester,
+  ) async {
+    final changes = <int>[];
+    await tester.pumpWidget(host(_ruler(value: 240, onChanged: changes.add)));
+    await tester.pumpWidget(host(_ruler(value: 300, onChanged: changes.add)));
+    await tester.pumpAndSettle();
+    expect(_position(tester), 180);
+    expect(changes, isEmpty);
+  });
+
+  testWidgets('haptic tick per step on touch only', (tester) async {
+    final calls = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (c) async {
+        if (c.method == 'HapticFeedback.vibrate') calls.add('${c.arguments}');
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(host(_ruler()));
+    await tester.drag(find.byType(KRuler), const Offset(-40, 0));
+    await tester.pumpAndSettle();
+    expect(calls, isNotEmpty);
+    calls.clear();
+    useWindow(tester, const Size(1300, 800));
+    await tester.pumpWidget(host(_ruler(value: 45)));
+    await tester.drag(find.byType(KRuler), const Offset(-40, 0));
+    await tester.pumpAndSettle();
+    expect(calls, isEmpty);
   });
 }
