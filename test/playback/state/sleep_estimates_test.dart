@@ -209,6 +209,16 @@ void main() {
       expect(run.repeatsOne, isTrue);
     });
 
+    test('repeat one loads only the current track', () async {
+      twoAlbums(s);
+      await s.h.c.setRepeat(RepeatMode.one);
+      await s.play(start: 1);
+      s.loads.clear();
+      await albumRun(s);
+      final current = s.h.c.queueState.currentItem!.trackId;
+      expect(s.loads.expand((ids) => ids).every((id) => id == current), isTrue);
+    });
+
     test('the end of a reshuffled pass ends it', () async {
       for (var i = 0; i < 6; i++) {
         s.albumOf(i, 'A');

@@ -180,6 +180,18 @@ void main() {
       expect(wanted, isEmpty);
     });
 
+    test('repeat one stops without asking for any album', () {
+      // Nothing is known: the walk past the current entry would ask for keys.
+      for (final at in [0, 1, 2]) {
+        expect(
+          stops(makeQueue(4, current: at, repeat: RepeatMode.one)),
+          isTrue,
+          reason: 'entry $at',
+        );
+      }
+      expect(wanted, isEmpty);
+    });
+
     test('albumRunFrom under repeat one is the current entry alone', () {
       setAlbums(['x', 'x', 'x']);
       final walk = albumRunFrom(

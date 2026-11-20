@@ -109,7 +109,10 @@ final albumRunProvider = StreamProvider.autoDispose<AlbumRun?>((ref) {
     final current = queue.currentItem;
     if (current == null) return null;
     // One more than the window tells "exactly 100" from "more".
-    final ids = _playOrderWindow(queue, albumRunWindow + 1);
+    // Under repeat one the run is the current entry alone: no window.
+    final ids = queue.repeat == RepeatMode.one
+        ? [current.trackId]
+        : _playOrderWindow(queue, albumRunWindow + 1);
     final known = ref.read(queueRowInfosProvider);
     final missing = [
       for (final id in ids)

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
+import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/queue_logic.dart';
 import 'package:kanaru/src/playback/state/sleep_estimates.dart';
 import 'package:kanaru/src/playback/state/sleep_timer_provider.dart';
@@ -40,6 +41,27 @@ void main() {
         },
       );
     }
+  });
+
+  test('Next under repeat one: stops after the new track\'s play', () async {
+    await s.h.c.setRepeat(RepeatMode.one);
+    await s.play(start: 0);
+    s.timer.startEndOfAlbum();
+    await s.h.settle();
+    await s.h.c.next();
+    await s.h.settle();
+    expect(s.h.c.queueState.current, 1);
+    expect(s.state.mode, SleepTimerMode.endOfAlbum);
+    expect(s.h.engine.nexts.last, isNull);
+    // The new entry has its own token; it ends by itself.
+    final token = s.h.loadedToken;
+    s.h.engine.emit(EngineLoaded(token, const Duration(seconds: 10)));
+    await s.h.settle();
+    s.h.engine.emit(EngineEnded(token));
+    await s.h.settle();
+    expect(s.state, const SleepTimerState.off());
+    expect(s.h.c.intent, PlayIntent.paused);
+    expect(s.h.c.queueState.current, 1);
   });
 
   group('repeat mode changes while the timer runs', () {

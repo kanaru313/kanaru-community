@@ -314,7 +314,6 @@ void main() {
           guard++ < 6) {
         await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
         await tester.pump();
-      await tester.pump();
       }
       expect(
         focusedWithin(tester, holding(SelectionRow, 'Hết bài này')),
@@ -322,13 +321,11 @@ void main() {
       );
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pump();
-      await tester.pump();
       expect(
         focusedWithin(tester, holding(SelectionRow, 'Hết hàng đợi')),
         isTrue,
       );
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
-      await tester.pump();
       await tester.pump();
       expect(
         focusedWithin(tester, holding(SelectionRow, 'Hết bài này')),
