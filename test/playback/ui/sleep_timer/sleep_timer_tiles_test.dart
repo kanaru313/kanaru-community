@@ -31,7 +31,8 @@ void main() {
     expect(find.text('còn 7 bài · 29 phút'), findsOneWidget);
     expect(find.text('Sau số bài…'), findsOneWidget);
     expect(find.textContaining('Đang chạy'), findsNothing);
-    expect(find.text('Huỷ'), findsOneWidget);
+    expect(find.text('Huỷ'), findsNothing);
+    expect(find.bySemanticsLabel('Huỷ'), findsNothing);
   });
 
   group('end of album under repeat one', () {
@@ -210,13 +211,20 @@ void main() {
     expect(modalOpen, findsNothing);
   });
 
-  testWidgets('Huỷ closes and changes nothing', (tester) async {
-    final host = await pumpSleepModal(tester);
+  testWidgets('the last row clears the sheet bottom gap, no footer', (
+    tester,
+  ) async {
+    await pumpSleepModal(tester);
     await openSleepModal(tester);
-    await tapVisible(tester, find.text('Huỷ'));
-    expect(modalOpen, findsNothing);
-    expect(host.timer.calls, isEmpty);
-    expect(host.announced, isEmpty);
+    final last = tester.getRect(find.text('Sau số bài…'));
+    final sheet = tester.getRect(find.byType(KStartArea));
+    expect(find.byType(KModalButton), findsNothing);
+    // Row text sits above the content's bottom edge; nothing is cut.
+    expect(last.bottom, lessThanOrEqualTo(sheet.bottom));
+    expect(
+      tester.view.physicalSize.height / tester.view.devicePixelRatio,
+      greaterThanOrEqualTo(last.bottom + KSpace.x6),
+    );
   });
 
   testWidgets('Tuỳ chỉnh… and Sau số bài… open the custom screen', (

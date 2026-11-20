@@ -206,7 +206,6 @@ class _SleepTimerModalState extends ConsumerState<_SleepTimerModal> {
           onStart: _startAndClose,
           onCustom: _openCustom,
           onRunning: () => _show(_Screen.running),
-          onCancel: _close,
           closing: _closed,
         ),
         _Screen.custom => SleepTimerCustomView(

@@ -12,7 +12,8 @@ import 'sleep_timer_texts.dart';
 
 /// First screen: every tile and row starts a timer at once ([onStart] starts,
 /// announces and closes the modal); "Tuỳ chỉnh…" and "Sau số bài…" open the
-/// custom screen; while a timer runs a card leads back to it.
+/// custom screen; while a timer runs a card leads back to it. It has no
+/// footer: the modal closes by drag, scrim, Back or Esc.
 class SleepTimerTilesView extends ConsumerWidget {
   const SleepTimerTilesView({
     super.key,
@@ -20,7 +21,6 @@ class SleepTimerTilesView extends ConsumerWidget {
     required this.onStart,
     required this.onCustom,
     required this.onRunning,
-    required this.onCancel,
     this.closing = false,
   });
 
@@ -28,7 +28,6 @@ class SleepTimerTilesView extends ConsumerWidget {
   final void Function(void Function(SleepTimer timer) start) onStart;
   final ValueChanged<SleepTimerKind> onCustom;
   final VoidCallback onRunning;
-  final VoidCallback onCancel;
 
   /// The modal is animating out: the running card stays hidden, so a start
   /// from a tile does not flash it in.
@@ -40,9 +39,10 @@ class SleepTimerTilesView extends ConsumerWidget {
     final l10n = texts.l10n;
     final running = ref.watch(sleepTimerProvider.select((s) => s.active));
     // Action rows span the whole sheet (they keep their own gutter), so only
-    // the other content is padded.
+    // the other content is padded. No footer and no bottom padding: the sheet
+    // keeps its own bottom gap under the last row.
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: KSpace.x2),
+      padding: const EdgeInsets.only(top: KSpace.x2),
       child: KStartArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -100,17 +100,6 @@ class SleepTimerTilesView extends ConsumerWidget {
               ),
               opensMore: true,
               onTap: () => onCustom(SleepTimerKind.tracks),
-            ),
-            _Gutter(
-              SleepTimerFooter(
-                children: [
-                  KModalButton(
-                    label: l10n.sleepTimerCancel,
-                    emphasis: KModalEmphasis.text,
-                    onPressed: onCancel,
-                  ),
-                ],
-              ),
             ),
           ],
         ),

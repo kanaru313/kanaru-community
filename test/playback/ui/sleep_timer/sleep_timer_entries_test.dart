@@ -80,7 +80,7 @@ Finder get _pill => find.byType(KPill);
 Finder get _icon => find.byWidgetPredicate(
   (w) => w is KIconButton && w.icon == KIcons.sleepTimer,
 );
-Finder get _modal => find.byType(KModalButton);
+Finder get _modal => find.byType(KStartArea);
 Finder get _ring => find.byType(KProgressRingIcon);
 
 FocusNode _pillNode(WidgetTester tester) =>
