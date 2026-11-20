@@ -13,8 +13,8 @@ const double nowPlayingHeaderHeight = 56;
 /// Height from 200 % text on, so the two title lines fit.
 const double nowPlayingHeaderTallHeight = 72;
 
-/// Width of a header button (24 dp icon + 8 dp each side; the ring is 40 dp).
-const double _buttonWidth = 40;
+/// Width of a header button (the ring button has the same 40 dp).
+const double _buttonWidth = KIconButton.defaultWidth;
 
 /// Each side of the title is kept free for the buttons on the right: the ring
 /// slot (always reserved, so the title never moves when a timer starts) and ⋮.

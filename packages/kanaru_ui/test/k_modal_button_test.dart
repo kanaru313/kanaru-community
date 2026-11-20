@@ -33,6 +33,26 @@ TextStyle _text(WidgetTester tester, String label) =>
     tester.widget<Text>(find.text(label)).style!;
 
 void main() {
+  testWidgets('semanticLabel replaces the label for a screen reader', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: KModalButton(
+            label: '+5 phút',
+            semanticLabel: 'Thêm 5 phút',
+            onPressed: () {},
+          ),
+        ),
+      ),
+    );
+    expect(find.bySemanticsLabel('Thêm 5 phút'), findsOneWidget);
+    expect(find.bySemanticsLabel('+5 phút'), findsNothing);
+    semantics.dispose();
+  });
+
   testWidgets('semantics: focusable while enabled, focused once focused', (
     tester,
   ) async {

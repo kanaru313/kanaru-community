@@ -14,17 +14,15 @@ import 'sleep_timer_tiles_view.dart';
 
 /// Opens the sleep timer: a bottom sheet on phones, a dialog from 600 px, on
 /// the root navigator. It opens on the running screen while a timer runs, else
-/// on the tiles. [returnFocus] gets focus back when it closes.
-Future<void> showSleepTimer(
-  BuildContext context, {
-  required FocusNode returnFocus,
-}) => showKSheet<void>(
-  context,
-  dialog: KSheetDialog.modal,
-  useRootNavigator: true,
-  returnFocus: returnFocus,
-  builder: (_) => const _SleepTimerModal(),
-);
+/// on the tiles. [returnFocus], when given, gets focus back when it closes.
+Future<void> showSleepTimer(BuildContext context, {FocusNode? returnFocus}) =>
+    showKSheet<void>(
+      context,
+      dialog: KSheetDialog.modal,
+      useRootNavigator: true,
+      returnFocus: returnFocus,
+      builder: (_) => const _SleepTimerModal(),
+    );
 
 enum _Screen { tiles, custom, running }
 
@@ -45,6 +43,12 @@ class _SleepTimerModalState extends ConsumerState<_SleepTimerModal> {
   /// ending, the track going away).
   bool _closed = false;
 
+  /// The timer as the running screen last showed it, kept once the modal is
+  /// closing: the route animates out for a moment, and the content must not
+  /// change (a turned-off timer would shrink the sheet) while it does.
+  SleepTimerState? _frozen;
+  SleepTimerState? _lastActive;
+
   /// The modal should close but another route covers it: it closes when it is
   /// the current route again, so nothing stale shows.
   bool _closeWhenCurrent = false;
@@ -55,6 +59,12 @@ class _SleepTimerModalState extends ConsumerState<_SleepTimerModal> {
     _screen = ref.read(sleepTimerProvider).active
         ? _Screen.running
         : _Screen.tiles;
+    _lastActive = ref.read(sleepTimerProvider).active
+        ? ref.read(sleepTimerProvider)
+        : null;
+    ref.listenManual(sleepTimerProvider, (_, s) {
+      if (s.active) _lastActive = s;
+    });
     // The timer turning off by itself while its screen shows.
     ref.listenManual(sleepTimerProvider.select((s) => s.active), (_, active) {
       if (active || _screen != _Screen.running || _closed) return;
@@ -87,6 +97,8 @@ class _SleepTimerModalState extends ConsumerState<_SleepTimerModal> {
   void _close() {
     if (_closed || !mounted) return;
     _closed = true;
+    final now = ref.read(sleepTimerProvider);
+    setState(() => _frozen = now.active ? now : _lastActive);
     Navigator.of(context).pop();
   }
 
@@ -195,6 +207,7 @@ class _SleepTimerModalState extends ConsumerState<_SleepTimerModal> {
           onCustom: _openCustom,
           onRunning: () => _show(_Screen.running),
           onCancel: _close,
+          closing: _closed,
         ),
         _Screen.custom => SleepTimerCustomView(
           draft: _draft,
@@ -208,6 +221,7 @@ class _SleepTimerModalState extends ConsumerState<_SleepTimerModal> {
         _Screen.running => SleepTimerRunningView(
           focus: _focus,
           announcer: _announcer,
+          frozen: _frozen,
           onOff: _turnOff,
           onChange: _change,
         ),

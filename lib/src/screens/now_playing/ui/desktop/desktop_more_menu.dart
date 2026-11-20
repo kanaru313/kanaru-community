@@ -48,14 +48,10 @@ class _DesktopMoreMenuState extends ConsumerState<DesktopMoreMenu> {
   /// Opens the sleep timer with the header pinned. A menu that left the tree
   /// meanwhile (Now Playing closed) leaves the controller alone: the screen
   /// disposes it.
-  Future<void> _openSleepTimer() async {
-    final chrome = widget.chrome..pinFloating();
-    try {
-      await showSleepTimer(context, returnFocus: _moreFocus);
-    } finally {
-      if (mounted) chrome.unpinFloating();
-    }
-  }
+  Future<void> _openSleepTimer() => widget.chrome.whilePinned(
+    () => showSleepTimer(context, returnFocus: _moreFocus),
+    stillOwned: () => mounted,
+  );
 
   @override
   Widget build(BuildContext context) {

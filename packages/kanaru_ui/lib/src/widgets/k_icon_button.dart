@@ -57,6 +57,11 @@ class KIconButton extends StatefulWidget {
   @visibleForTesting
   static const ringKey = ValueKey('k-icon-button-ring');
 
+  /// Width of a default button: the default icon size plus the default
+  /// horizontal padding on each side. Layouts that reserve room for such a
+  /// button use this instead of a number of their own.
+  static const double defaultWidth = KIconSize.md + 2 * KSpace.x2;
+
   /// True when the primary focus sits inside a [KIconButton] (the shell lets
   /// Space activate it instead of play/pause).
   static bool ownsPrimaryFocus() => primaryFocusInsideKIconButton();

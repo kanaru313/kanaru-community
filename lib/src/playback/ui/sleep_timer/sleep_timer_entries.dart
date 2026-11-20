@@ -165,7 +165,7 @@ class _SleepTimerRingButtonState extends ConsumerState<SleepTimerRingButton> {
       focusNode: _focus.node,
       onPressed: _open,
       child: KProgressRingIcon(
-        icon: KIcons.sleepTimer,
+        icon: KIcons.sleepTimerActive,
         progress: s.mode == SleepTimerMode.minutes && length > 0
             ? s.remaining.inMilliseconds / length
             : null,

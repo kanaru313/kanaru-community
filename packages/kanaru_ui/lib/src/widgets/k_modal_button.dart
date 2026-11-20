@@ -42,6 +42,7 @@ class KModalButton extends StatelessWidget {
     this.icon,
     this.focusNode,
     this.autofocus = false,
+    this.semanticLabel,
   });
 
   final String label;
@@ -51,6 +52,10 @@ class KModalButton extends StatelessWidget {
   final IconData? icon;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// What a screen reader says when it differs from [label] ("Thêm 5 phút"
+  /// for "+5 phút"). Defaults to [label].
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +90,7 @@ class KModalButton extends StatelessWidget {
     return KPressSurface(
       onPressed: onPressed,
       radius: radius,
-      semanticLabel: label,
+      semanticLabel: semanticLabel ?? label,
       focusNode: focusNode,
       autofocus: autofocus,
       builder: (context, overlay, _) => AnimatedContainer(

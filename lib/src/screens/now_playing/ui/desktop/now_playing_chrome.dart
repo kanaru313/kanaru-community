@@ -21,4 +21,19 @@ class NowPlayingChrome extends AutoHideController {
     _floating--;
     unpin();
   }
+
+  /// Runs [body] (a floating surface) with the header pinned. [stillOwned]
+  /// tells whether the caller is still in the tree afterwards: one that left
+  /// (Now Playing closed) leaves the controller alone, the screen disposes it.
+  Future<T> whilePinned<T>(
+    Future<T> Function() body, {
+    required bool Function() stillOwned,
+  }) async {
+    pinFloating();
+    try {
+      return await body();
+    } finally {
+      if (stillOwned()) unpinFloating();
+    }
+  }
 }

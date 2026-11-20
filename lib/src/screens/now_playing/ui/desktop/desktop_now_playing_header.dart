@@ -48,17 +48,11 @@ class _DesktopNowPlayingHeaderState
   /// Opens the modal with the header pinned. A header that left the tree
   /// meanwhile (Now Playing closed) leaves its controller alone: the screen
   /// disposes it.
-  Future<void> _openSleepTimer(
-    BuildContext context,
-    FocusNode returnFocus,
-  ) async {
-    final chrome = widget.chrome..pinFloating();
-    try {
-      await showSleepTimer(context, returnFocus: returnFocus);
-    } finally {
-      if (mounted) chrome.unpinFloating();
-    }
-  }
+  Future<void> _openSleepTimer(BuildContext context, FocusNode returnFocus) =>
+      widget.chrome.whilePinned(
+        () => showSleepTimer(context, returnFocus: returnFocus),
+        stillOwned: () => mounted,
+      );
 
   @override
   Widget build(BuildContext context) {

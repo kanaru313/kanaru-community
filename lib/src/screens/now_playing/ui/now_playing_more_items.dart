@@ -44,19 +44,12 @@ class NowPlayingMoreItem {
 /// navigator captured while the items were built.
 Future<void> _openSleepTimerOnRoot(NavigatorState root) async {
   if (!root.mounted) return;
-  // No input focus to give back on a phone: the node only satisfies the modal.
-  final focus = FocusNode(debugLabel: 'sleep timer return');
-  try {
-    await showSleepTimer(root.context, returnFocus: focus);
-  } finally {
-    // The modal asks for focus in a post-frame callback of its own.
-    WidgetsBinding.instance.addPostFrameCallback((_) => focus.dispose());
-  }
+  await showSleepTimer(root.context);
 }
 
 /// The two groups of the "More" menu, shared by the mobile sheet and the
-/// desktop dropdown: sleep timer, add to playlist, go to album, go to artist
-/// | lyrics source, translate, visual effects (Pro), track info. Add to
+/// desktop dropdown: add to playlist, go to album, go to artist
+/// | sleep timer, lyrics source, translate, visual effects (Pro), track info. Add to
 /// playlist and the two navigation items work now; [beforeNavigate] closes
 /// what covers the library first (the picker opens over Now Playing, so it
 /// needs no such call). [openSleepTimer] replaces the default way of opening
@@ -73,13 +66,6 @@ List<List<NowPlayingMoreItem>> nowPlayingMoreItems(
   final root = Navigator.of(context, rootNavigator: true);
   return [
     [
-      NowPlayingMoreItem(
-        label: l10n.playbackSleepTimer,
-        icon: KIcons.sleepTimer,
-        soon: false,
-        liveLabel: sleepTimerMenuLabelBuilder,
-        onTap: openSleepTimer ?? () => unawaited(_openSleepTimerOnRoot(root)),
-      ),
       NowPlayingMoreItem(
         label: l10n.playbackAddToPlaylist,
         icon: KIcons.playlistAdd,
@@ -104,6 +90,13 @@ List<List<NowPlayingMoreItem>> nowPlayingMoreItems(
       ),
     ],
     [
+      NowPlayingMoreItem(
+        label: l10n.playbackSleepTimer,
+        icon: KIcons.sleepTimer,
+        soon: false,
+        liveLabel: sleepTimerMenuLabelBuilder,
+        onTap: openSleepTimer ?? () => unawaited(_openSleepTimerOnRoot(root)),
+      ),
       NowPlayingMoreItem(label: l10n.playbackLyricsSource, icon: KIcons.lyrics),
       NowPlayingMoreItem(
         label: l10n.playbackTranslateLyrics,

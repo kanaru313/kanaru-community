@@ -87,10 +87,10 @@ void main() {
   testWidgets('both groups are listed in order', (tester) async {
     await _openSheet(tester);
     final labels = [
-      'Sleep timer',
       'Add to playlist',
       'Go to album',
       'Go to artist',
+      'Sleep timer',
       'Lyrics source',
       'Translate lyrics…',
       'Visual effects',

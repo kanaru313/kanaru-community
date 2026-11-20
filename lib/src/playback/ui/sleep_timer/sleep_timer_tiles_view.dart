@@ -21,6 +21,7 @@ class SleepTimerTilesView extends ConsumerWidget {
     required this.onCustom,
     required this.onRunning,
     required this.onCancel,
+    this.closing = false,
   });
 
   final SleepTimerFocus focus;
@@ -28,6 +29,10 @@ class SleepTimerTilesView extends ConsumerWidget {
   final ValueChanged<SleepTimerKind> onCustom;
   final VoidCallback onRunning;
   final VoidCallback onCancel;
+
+  /// The modal is animating out: the running card stays hidden, so a start
+  /// from a tile does not flash it in.
+  final bool closing;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,7 +48,7 @@ class SleepTimerTilesView extends ConsumerWidget {
           children: [
             SleepTimerHeader(title: l10n.playbackSleepTimer),
             SleepTimerCaption(l10n.sleepTimerHint),
-            if (running) ...[
+            if (running && !closing) ...[
               const SizedBox(height: KSpace.x3),
               Focus(
                 focusNode: focus.runningCard,
@@ -125,19 +130,12 @@ class _RunningCard extends ConsumerWidget {
     final state = ref.watch(sleepTimerProvider);
     return SelectionRow.action(
       title: Text(texts.l10n.sleepTimerRunningWith(texts.statusText(state))),
-      leading: const Icon(KIcons.sleepTimerActive, size: KIconSize.md),
+      leading: const Icon(KIcons.sleepTimerActive),
       running: true,
       onTap: onTap,
     );
   }
 }
-
-Icon _rowIcon(BuildContext context, IconData icon) => Icon(
-  icon,
-  size: FormFactor.of(context) == FormFactor.desktop
-      ? KIconSize.sm
-      : KIconSize.md,
-);
 
 class _EndOfTrackRow extends ConsumerWidget {
   const _EndOfTrackRow({required this.onStart});
@@ -153,7 +151,7 @@ class _EndOfTrackRow extends ConsumerWidget {
       subtitle: left == null
           ? null
           : Text(texts.leftTime(Duration(seconds: left))),
-      leading: _rowIcon(context, KIcons.songs),
+      leading: const Icon(KIcons.songs),
       onTap: () => onStart((t) => t.startEndOfTrack()),
     );
   }
@@ -175,7 +173,7 @@ class _EndOfAlbumRow extends ConsumerWidget {
           ? null
           : Text(texts.leftTracks(run.tracks, capped: run.capped)),
       disabledReason: noAlbum ? texts.l10n.sleepTimerNoAlbum : null,
-      leading: _rowIcon(context, KIcons.album),
+      leading: const Icon(KIcons.album),
       onTap: () => onStart((t) => t.startEndOfAlbum()),
     );
   }
@@ -195,7 +193,7 @@ class _EndOfQueueRow extends ConsumerWidget {
       subtitle: left == null
           ? null
           : Text(texts.leftTracks(left.tracks, time: left.time)),
-      leading: _rowIcon(context, KIcons.queue),
+      leading: const Icon(KIcons.queue),
       onTap: () => onStart((t) => t.startEndOfQueue()),
     );
   }

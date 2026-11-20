@@ -121,6 +121,23 @@ void main() {
       expect(host.announced, ['Đã tắt hẹn giờ ngủ']);
     });
 
+    testWidgets('Tắt hẹn giờ keeps the running screen while the route leaves', (
+      tester,
+    ) async {
+      final host = await pumpSleepModal(tester, initial: runningMinutes());
+      await openSleepModal(tester);
+      await tester.tap(find.text('Tắt hẹn giờ'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(host.timer.state.active, isFalse);
+      // Still mid-animation: the clock and the controls are still built.
+      expect(modalOpen, findsOneWidget);
+      expect(find.text('Tạm dừng đếm'), findsOneWidget);
+      expect(find.text('+5 phút'), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(modalOpen, findsNothing);
+    });
+
     testWidgets('closing hands focus back to the opener on desktop', (
       tester,
     ) async {

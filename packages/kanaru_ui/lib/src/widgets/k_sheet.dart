@@ -60,7 +60,7 @@ Future<T?> showKSheet<T>(
   return result.whenComplete(() {
     // After the route's own focus handling has run.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (returnFocus.context != null) returnFocus.requestFocus();
+      if (returnFocus.context?.mounted == true) returnFocus.requestFocus();
     });
   });
 }

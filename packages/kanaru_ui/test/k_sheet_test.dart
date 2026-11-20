@@ -341,6 +341,40 @@ void main() {
       });
     }
 
+    testWidgets('returnFocus whose widget left the tree is not focused', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1200, 800));
+      final node = FocusNode();
+      addTearDown(node.dispose);
+      final anchorShown = ValueNotifier(true);
+      addTearDown(anchorShown.dispose);
+      await tester.pumpWidget(
+        scaledHost(
+          Column(
+            children: [
+              ValueListenableBuilder<bool>(
+                valueListenable: anchorShown,
+                builder: (_, shown, _) => shown
+                    ? Focus(focusNode: node, child: const Text('anchor'))
+                    : const SizedBox.shrink(),
+              ),
+              modalOpener(content: const Text('content'), returnFocus: node),
+            ],
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      anchorShown.value = false;
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.text('content'), findsNothing);
+      expect(node.hasFocus, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('returnFocus that is not attached does nothing', (
       tester,
     ) async {

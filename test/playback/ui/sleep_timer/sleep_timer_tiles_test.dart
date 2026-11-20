@@ -98,6 +98,21 @@ void main() {
     expect(host.timer.state.mode, SleepTimerMode.minutes);
   });
 
+  testWidgets('a start does not flash the running card while closing', (
+    tester,
+  ) async {
+    final host = await pumpSleepModal(tester);
+    await openSleepModal(tester);
+    await tester.tap(find.text('30 phút'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(host.timer.state.active, isTrue);
+    expect(modalOpen, findsOneWidget);
+    expect(find.textContaining('Đang chạy'), findsNothing);
+    await tester.pumpAndSettle();
+    expect(modalOpen, findsNothing);
+  });
+
   testWidgets('Huỷ closes and changes nothing', (tester) async {
     final host = await pumpSleepModal(tester);
     await openSleepModal(tester);

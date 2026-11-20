@@ -132,10 +132,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     for (final label in [
-      'Sleep timer',
       'Add to playlist',
       'Go to album',
       'Go to artist',
+      'Sleep timer',
       'Lyrics source',
       'Translate lyrics…',
       'Visual effects',
@@ -150,30 +150,34 @@ void main() {
     expect(find.text('T0'), findsWidgets);
   });
 
-  testWidgets('the More menu keeps the sleep timer first, live, and ticking', (
-    tester,
-  ) async {
-    final host = await _open(tester);
-    await tester.tap(_in(header, find.byIcon(KIcons.moreVert)));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    final sleepY = tester.getTopLeft(find.text('Sleep timer')).dy;
-    expect(
-      sleepY,
-      lessThan(tester.getTopLeft(find.text('Add to playlist')).dy),
-    );
-    expect(sleepY, lessThan(tester.getTopLeft(find.text('Lyrics source')).dy));
-    final timer =
-        host.container.read(sleepTimerProvider.notifier) as FakeSleepTimer;
-    timer.set(runningMinutes());
-    await tester.pump();
-    expect(find.text('Sleep timer · 23:41 left'), findsOneWidget);
-    timer.set(
-      runningMinutes(remaining: const Duration(minutes: 23, seconds: 40)),
-    );
-    await tester.pump();
-    expect(find.text('Sleep timer · 23:40 left'), findsOneWidget);
-  });
+  testWidgets(
+    'the More menu puts the sleep timer right before the lyrics source, live, and ticking',
+    (tester) async {
+      final host = await _open(tester);
+      await tester.tap(_in(header, find.byIcon(KIcons.moreVert)));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      final sleepY = tester.getTopLeft(find.text('Sleep timer')).dy;
+      expect(
+        sleepY,
+        greaterThan(tester.getTopLeft(find.text('Go to artist')).dy),
+      );
+      expect(
+        sleepY,
+        lessThan(tester.getTopLeft(find.text('Lyrics source')).dy),
+      );
+      final timer =
+          host.container.read(sleepTimerProvider.notifier) as FakeSleepTimer;
+      timer.set(runningMinutes());
+      await tester.pump();
+      expect(find.text('Sleep timer · 23:41 left'), findsOneWidget);
+      timer.set(
+        runningMinutes(remaining: const Duration(minutes: 23, seconds: 40)),
+      );
+      await tester.pump();
+      expect(find.text('Sleep timer · 23:40 left'), findsOneWidget);
+    },
+  );
 
   testWidgets('the More menu sleep item pins the header and returns to ⋮', (
     tester,

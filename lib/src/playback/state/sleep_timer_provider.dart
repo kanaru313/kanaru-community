@@ -206,16 +206,17 @@ class SleepTimer extends Notifier<SleepTimerState> {
     final left = held ? _heldMs : _deadlineMs - c.nowMs;
     final next = (left + delta * Duration.millisecondsPerMinute).clamp(1, most);
     final nextLeft = Duration(seconds: (next + 999) ~/ 1000);
-    if (nextLeft > state.setLength) {
-      state = state.copyWith(setLength: nextLeft);
-    }
+    // One notification per press: the longer set length rides on the publish.
+    final from = nextLeft > state.setLength
+        ? state.copyWith(setLength: nextLeft)
+        : state;
     if (held) {
       _heldMs = next;
-      _publishHeld();
+      _publishHeld(from: from);
       return;
     }
     _deadlineMs = c.nowMs + next;
-    _tick();
+    _tick(from: from);
   }
 
   /// Adds [delta] tracks (or takes them off when negative) in the tracks
@@ -279,7 +280,7 @@ class SleepTimer extends Notifier<SleepTimerState> {
   }
 
   /// Publishes the time left and fades, pauses or ends when it is due.
-  void _tick() {
+  void _tick({SleepTimerState? from}) {
     final c = _controller;
     if (c == null || state.mode != SleepTimerMode.minutes) return;
     if (_ticker == null) return; // on hold
@@ -287,7 +288,7 @@ class SleepTimer extends Notifier<SleepTimerState> {
     final leftMs = _deadlineMs - now;
     final playing = c.intent == PlayIntent.playing;
     if (leftMs > 0) {
-      _publish(leftMs);
+      _publish(leftMs, from: from);
       if (leftMs > sleepFadeLength.inMilliseconds) {
         // Time was added during the fade: undo it and arm it again.
         if (_fadeStarted) _send(c.endSleepFade());
@@ -331,8 +332,8 @@ class SleepTimer extends Notifier<SleepTimerState> {
     if (next != state) state = next;
   }
 
-  void _publishHeld() {
-    state = state.copyWith(
+  void _publishHeld({SleepTimerState? from}) {
+    state = (from ?? state).copyWith(
       mode: SleepTimerMode.minutes,
       remaining: Duration(seconds: (_heldMs + 999) ~/ 1000),
       endsAt: null,

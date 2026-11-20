@@ -77,8 +77,10 @@ void main() {
         'addMinutes:-5',
       ]);
       expect(find.text('15:00'), findsOneWidget);
-      expect(find.byTooltip('Thêm 5 phút'), findsOneWidget);
-      expect(find.byTooltip('Bớt 5 phút'), findsOneWidget);
+      final semantics = tester.ensureSemantics();
+      expect(find.bySemanticsLabel('Thêm 5 phút'), findsOneWidget);
+      expect(find.bySemanticsLabel('Bớt 5 phút'), findsOneWidget);
+      semantics.dispose();
     });
 
     testWidgets('−5 is off at 5 minutes or less, +5 at 720', (tester) async {
