@@ -51,11 +51,8 @@ class _HostState extends State<_Host> {
 }
 
 void main() {
-  realTapTests();
-  honouredSelectAllTests();
   desktopTests();
-  imeAppendTest();
-  formatterTests();
+  touchTests();
   late FocusNode focus;
   late List<String> log;
 
@@ -100,24 +97,6 @@ void main() {
       selection(tester),
       const TextSelection(baseOffset: 0, extentOffset: 2),
     );
-  });
-
-  testWidgets('touch: tapping the field selects the whole number', (
-    tester,
-  ) async {
-    await pump(tester);
-    await tester.tap(find.byType(TextField));
-    await tester.pump();
-    await tester.pump();
-    expect(focus.hasFocus, isTrue);
-    expect(
-      selection(tester),
-      const TextSelection(baseOffset: 0, extentOffset: 2),
-    );
-    await tester.enterText(find.byType(TextField), '6');
-    await tester.pump();
-    expect(shown(tester), '6');
-    expect(log.last, 'changed 6');
   });
 
   testWidgets('a number past the maximum shows and reports the maximum', (
@@ -293,252 +272,9 @@ void main() {
     expect(shown(tester), '20');
     expect(log.last, 'changed 20');
   });
-
-  const all2 = TextSelection(baseOffset: 0, extentOffset: 2);
-
-  testWidgets('touch: kind switch while focused, then a tap selects all', (
-    tester,
-  ) async {
-    await pump(tester);
-    await tester.tap(find.byType(TextField));
-    await tester.pump();
-    await tester.pump();
-    final host = tester.state<_HostState>(find.byType(_Host));
-    host.range = sleepTracksRange;
-    host.value = 12;
-    host.bump();
-    await tester.pump();
-    await tester.pump();
-    expect(shown(tester), '12');
-    expect(focus.hasFocus, isTrue);
-    expect(selection(tester), all2);
-    // The caret moves (e.g. the platform placed it); the next tap selects all.
-    tester.widget<TextField>(find.byType(TextField)).controller!.selection =
-        const TextSelection.collapsed(offset: 2);
-    await tester.pump(const Duration(seconds: 1));
-    await tester.tap(find.byType(TextField));
-    await tester.pump();
-    await tester.pump();
-    expect(selection(tester), all2);
-  });
-
-  testWidgets('touch: outside value while focused selects all', (tester) async {
-    await pump(tester);
-    await tester.tap(find.byType(TextField));
-    await tester.pump();
-    await tester.pump();
-    final host = tester.state<_HostState>(find.byType(_Host));
-    host.value = 50;
-    host.bump();
-    await tester.pump();
-    await tester.pump();
-    expect(selection(tester), all2);
-  });
-
-  testWidgets('touch: a tap on a focused field selects all; typing replaces', (
-    tester,
-  ) async {
-    await pump(tester);
-    await tester.tap(find.byType(TextField));
-    await tester.pump();
-    await tester.pump();
-    tester.widget<TextField>(find.byType(TextField)).controller!.selection =
-        const TextSelection.collapsed(offset: 1);
-    // Past the double-tap window, so it is a plain second tap.
-    await tester.pump(const Duration(seconds: 1));
-    await tester.tap(find.byType(TextField));
-    await tester.pump();
-    await tester.pump();
-    expect(selection(tester), all2);
-    await tester.enterText(find.byType(TextField), '7');
-    await tester.pump();
-    expect(shown(tester), '7');
-    await tester.pumpWidget(const SizedBox());
-  });
 }
 
-/// The real gesture path of a phone: the framework's own tap handling runs
-/// (caret placement, toolbar), then typing goes through the text input channel.
-void realTapTests() {
-  for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
-    for (final composing in [false, true]) {
-      testWidgets(
-        'real tap on $platform (composing after typing: $composing): every tap '
-        'selects all, typing replaces',
-        (tester) async {
-          debugDefaultTargetPlatformOverride = platform;
-          addTearDown(() => debugDefaultTargetPlatformOverride = null);
-          final focus = FocusNode();
-          addTearDown(focus.dispose);
-          final log = <String>[];
-          tester.view.physicalSize = const Size(400, 800);
-          tester.view.devicePixelRatio = 1;
-          addTearDown(tester.view.reset);
-          await tester.pumpWidget(
-            _Host(focus: focus, log: log, range: sleepTracksRange),
-          );
-          final controller = tester
-              .widget<TextField>(find.byType(TextField))
-              .controller!;
-
-          /// Replaces the selection with [digit] like the keyboard does.
-          Future<void> type(String digit) async {
-            final v = controller.value;
-            final text = v.text.replaceRange(
-              v.selection.start,
-              v.selection.end,
-              digit,
-            );
-            final end = v.selection.start + digit.length;
-            tester.testTextInput.updateEditingValue(
-              TextEditingValue(
-                text: text,
-                selection: TextSelection.collapsed(offset: end),
-                composing: composing
-                    ? TextRange(start: 0, end: text.length)
-                    : TextRange.empty,
-              ),
-            );
-            await tester.pump();
-          }
-
-          await tester.tap(find.byType(TextField));
-          await tester.pump(const Duration(seconds: 1));
-          await type('6');
-          expect(controller.text, '6');
-
-          // Second tap on the focused field, past the double-tap timeout.
-          await tester.pump(const Duration(seconds: 1));
-          await tester.tap(find.byType(TextField));
-          await tester.pump();
-          await tester.pump(const Duration(milliseconds: 500));
-          expect(
-            controller.selection,
-            const TextSelection(baseOffset: 0, extentOffset: 1),
-          );
-          await type('7');
-          expect(controller.text, '7');
-          if (!composing) expect(log.last, 'changed 7');
-          // The binding checks the override is unset before the test ends.
-          debugDefaultTargetPlatformOverride = null;
-        },
-      );
-    }
-  }
-}
-
-/// An IME that ignores our select-all and appends at its own caret.
-void imeAppendTest() {
-  testWidgets('real tap on android: an IME that appends still gets replaced', (
-    tester,
-  ) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
-    final focus = FocusNode();
-    addTearDown(focus.dispose);
-    final log = <String>[];
-    tester.view.physicalSize = const Size(400, 800);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(_Host(focus: focus, log: log));
-    final controller = tester
-        .widget<TextField>(find.byType(TextField))
-        .controller!;
-    await tester.tap(find.byType(TextField));
-    await tester.pump(const Duration(seconds: 1));
-    tester.testTextInput.updateEditingValue(
-      const TextEditingValue(
-        text: '6',
-        selection: TextSelection.collapsed(offset: 1),
-      ),
-    );
-    await tester.pump(const Duration(seconds: 1));
-    await tester.tap(find.byType(TextField));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-    // The IME ignores the select-all and keeps its own collapsed caret.
-    controller.selection = const TextSelection.collapsed(offset: 1);
-    tester.testTextInput.updateEditingValue(
-      const TextEditingValue(
-        text: '67',
-        selection: TextSelection.collapsed(offset: 2),
-      ),
-    );
-    await tester.pump();
-    expect(controller.text, '7');
-    expect(log.last, 'changed 7');
-    debugDefaultTargetPlatformOverride = null;
-  });
-}
-
-/// An IME that honours the select-all: the typed or pasted text replaces the
-/// selection, so its first/last digit may equal the old number's.
-void honouredSelectAllTests() {
-  Future<void> tapAndSend(
-    WidgetTester tester,
-    FocusNode focus,
-    String text, {
-    String? then,
-  }) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
-    tester.view.physicalSize = const Size(400, 800);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-  }
-
-  const cases = <(String, int, String, String)>[
-    ('45 sel-all, type 4', 45, '4', '4'),
-    ('45 sel-all, type 5', 45, '5', '5'),
-    ('45 sel-all, paste 450', 45, '450', '450'),
-    ('30 sel-all, paste 1000 clamps', 30, '1000', '720'),
-  ];
-  for (final (name, start, typed, expected) in cases) {
-    testWidgets('android tap: $name', (tester) async {
-      await tapAndSend(tester, FocusNode(), typed);
-      final focus = FocusNode();
-      addTearDown(focus.dispose);
-      await tester.pumpWidget(_Host(focus: focus, log: [], start: start));
-      final c = tester.widget<TextField>(find.byType(TextField)).controller!;
-      await tester.tap(find.byType(TextField));
-      await tester.pump(const Duration(seconds: 1));
-      tester.testTextInput.updateEditingValue(
-        TextEditingValue(
-          text: typed,
-          selection: TextSelection.collapsed(offset: typed.length),
-        ),
-      );
-      await tester.pump();
-      expect(c.text, expected);
-      debugDefaultTargetPlatformOverride = null;
-    });
-  }
-
-  testWidgets('android tap: 30 sel-all, type 3 then 5 gives 35', (
-    tester,
-  ) async {
-    await tapAndSend(tester, FocusNode(), '');
-    final focus = FocusNode();
-    addTearDown(focus.dispose);
-    await tester.pumpWidget(_Host(focus: focus, log: [], start: 30));
-    final c = tester.widget<TextField>(find.byType(TextField)).controller!;
-    await tester.tap(find.byType(TextField));
-    await tester.pump(const Duration(seconds: 1));
-    for (final (text, shown) in [('3', '3'), ('35', '35')]) {
-      tester.testTextInput.updateEditingValue(
-        TextEditingValue(
-          text: text,
-          selection: TextSelection.collapsed(offset: text.length),
-        ),
-      );
-      await tester.pump();
-      expect(c.text, shown);
-    }
-    debugDefaultTargetPlatformOverride = null;
-  });
-}
-
-/// Desktop never arms the replace: typing lands where the caret is.
+/// Desktop: typing lands where the caret is.
 void desktopTests() {
   testWidgets('desktop: focus, End, type 7 appends; delete removes one', (
     tester,
@@ -581,86 +317,81 @@ void desktopTests() {
   });
 }
 
-void formatterTests() {
-  const old45 = TextEditingValue(
-    text: '45',
-    selection: TextSelection.collapsed(offset: 2),
-  );
-  TextEditingValue v(String t, int caret) => TextEditingValue(
-    text: t,
-    selection: TextSelection.collapsed(offset: caret),
-  );
-  String run(TextEditingValue o, TextEditingValue n, {bool armed = true}) {
-    final flag = SleepReplaceFlag()..armed = armed;
-    return SleepNumberFormatter(
-      sleepMinutesRange,
-      replace: flag,
-    ).formatEditUpdate(o, n).text;
+/// Touch shells: a plain text field. The platform places the caret and what
+/// the keyboard sends stays.
+void touchTests() {
+  Future<TextEditingController> tapped(
+    WidgetTester tester, {
+    int start = 45,
+  }) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final focus = FocusNode();
+    addTearDown(focus.dispose);
+    await tester.pumpWidget(_Host(focus: focus, log: [], start: start));
+    final c = tester.widget<TextField>(find.byType(TextField)).controller!;
+    await tester.tap(find.byType(TextField));
+    await tester.pump(const Duration(seconds: 1));
+    expect(focus.hasFocus, isTrue);
+    return c;
   }
 
-  test('armed: appended, prepended and swapped digits replace the number', () {
-    expect(run(old45, v('457', 3)), '7');
-    expect(run(old45, v('745', 1)), '7');
-    expect(run(v('3', 1), v('32', 2)), '2');
-    expect(run(v('3', 1), v('23', 1)), '2');
-    expect(run(old45, v('7', 1)), '7');
-  });
-
-  test('armed: composing inserted digits become the whole text', () {
-    final composing = const TextEditingValue(
-      text: '457',
-      selection: TextSelection.collapsed(offset: 3),
-      composing: TextRange(start: 2, end: 3),
+  void send(WidgetTester tester, String text) {
+    tester.testTextInput.updateEditingValue(
+      TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      ),
     );
-    final out = SleepNumberFormatter(
-      sleepMinutesRange,
-      replace: SleepReplaceFlag()..armed = true,
-    ).formatEditUpdate(old45, composing);
-    expect(out.text, '7');
-    expect(out.composing, const TextRange(start: 0, end: 1));
+  }
+
+  testWidgets('touch: a tap focuses and does not select the number', (
+    tester,
+  ) async {
+    final c = await tapped(tester);
+    expect(c.selection.isCollapsed, isTrue);
+    debugDefaultTargetPlatformOverride = null;
   });
 
-  test('armed: a deletion empties the field', () {
-    expect(run(old45, v('4', 1)), '');
-    expect(run(old45, v('5', 1)), '');
+  testWidgets('touch: a digit typed after a tap is appended', (tester) async {
+    final c = await tapped(tester);
+    send(tester, '457');
+    await tester.pump();
+    expect(c.text, '457');
+    debugDefaultTargetPlatformOverride = null;
   });
 
-  test('armed: shared digit appended or prepended by the IME', () {
-    expect(run(old45, v('455', 3)), '5');
-    expect(run(old45, v('445', 1)), '4');
-    expect(run(v('6', 1), v('67', 2)), '7');
+  testWidgets('touch: backspace removes one digit', (tester) async {
+    final c = await tapped(tester);
+    send(tester, '4');
+    await tester.pump();
+    expect(c.text, '4');
+    debugDefaultTargetPlatformOverride = null;
   });
 
-  test('armed: a selected-all old text is replaced by the new text', () {
-    const all = TextSelection(baseOffset: 0, extentOffset: 2);
-    final sel45 = old45.copyWith(selection: all);
-    expect(run(sel45, v('4', 1)), '4');
-    expect(run(sel45, v('5', 1)), '5');
-    expect(run(sel45, v('450', 3)), '450');
-    final sel30 = const TextEditingValue(text: '30', selection: all);
-    expect(run(sel30, v('3', 1)), '3');
-    expect(run(sel30, v('1000', 4)), '720');
-  });
-
-  test('armed: the flag is spent by the first text change', () {
-    final flag = SleepReplaceFlag()..armed = true;
-    final f = SleepNumberFormatter(sleepMinutesRange, replace: flag);
-    expect(f.formatEditUpdate(old45, v('457', 3)).text, '7');
-    expect(flag.armed, isFalse);
-    expect(f.formatEditUpdate(v('7', 1), v('78', 2)).text, '78');
-  });
-
-  test('armed: a selection-only update keeps the flag', () {
-    final flag = SleepReplaceFlag()..armed = true;
-    SleepNumberFormatter(
-      sleepMinutesRange,
-      replace: flag,
-    ).formatEditUpdate(old45, v('45', 0));
-    expect(flag.armed, isTrue);
-  });
-
-  test('not armed: normal append and clamp', () {
-    expect(run(old45, v('457', 3), armed: false), '457');
-    expect(run(old45, v('4500', 4), armed: false), '720');
+  testWidgets('touch: tracks 3 then 2 gives 20 (clamped)', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final focus = FocusNode();
+    addTearDown(focus.dispose);
+    await tester.pumpWidget(
+      _Host(focus: focus, log: [], start: 5, range: sleepTracksRange),
+    );
+    final c = tester.widget<TextField>(find.byType(TextField)).controller!;
+    await tester.tap(find.byType(TextField));
+    await tester.pump(const Duration(seconds: 1));
+    send(tester, '3');
+    await tester.pump();
+    expect(c.text, '3');
+    send(tester, '32');
+    await tester.pump();
+    expect(c.text, '20');
+    debugDefaultTargetPlatformOverride = null;
   });
 }
