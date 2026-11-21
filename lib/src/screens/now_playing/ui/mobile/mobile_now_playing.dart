@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
+import '../../../../lyrics/ui/lyrics_card.dart';
 import '../../../../media/domain/cover_files.dart';
 import '../../../../media/domain/track_id.dart';
 import '../../../../playback/domain/repeat_mode.dart';
@@ -16,7 +17,6 @@ import '../../../../playback/ui/track_cover.dart';
 import '../favorite_button.dart';
 import '../now_playing_seek_slot.dart';
 import 'cover_swiper.dart';
-import 'lyrics_card_placeholder.dart';
 import 'more_sheet.dart';
 import 'now_playing_button_row.dart';
 import 'now_playing_controls.dart';
@@ -37,6 +37,7 @@ class MobileNowPlaying extends ConsumerStatefulWidget {
     super.key,
     required this.onClose,
     this.onQueue,
+    this.onOpenLyrics,
     required this.flight,
   });
 
@@ -44,6 +45,9 @@ class MobileNowPlaying extends ConsumerStatefulWidget {
 
   /// The Queue button; null leaves it inert.
   final VoidCallback? onQueue;
+
+  /// The lyrics card: opens the lyrics screen; null leaves it inert.
+  final VoidCallback? onOpenLyrics;
 
   /// The pieces that fly to the queue strip.
   final FlightSource flight;
@@ -135,7 +139,7 @@ class _MobileNowPlayingState extends ConsumerState<MobileNowPlaying>
                               const SizedBox(height: KSpace.x5),
                               NowPlayingButtonRow(onQueue: widget.onQueue),
                               const SizedBox(height: KSpace.x5),
-                              const LyricsCardPlaceholder(),
+                              LyricsCard(onOpen: widget.onOpenLyrics),
                               const SizedBox(height: KSpace.x3),
                               TrackInfoCard(info: info),
                               const SizedBox(height: KSpace.x6),
