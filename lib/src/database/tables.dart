@@ -10,3 +10,5 @@ export 'tables/library_track_tables.dart';
 export 'tables/library_track_tables.drift.dart';
 export 'tables/playback_tables.dart';
 export 'tables/playback_tables.drift.dart';
+export 'tables/lyrics_tables.dart';
+export 'tables/lyrics_tables.drift.dart';

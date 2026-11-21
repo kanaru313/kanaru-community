@@ -5,7 +5,12 @@ import 'tables.dart';
 /// Child tables whose rows are owned by the track (one-to-one or one-to-many,
 /// e.g. `track_artists`). The GC ignores them when deciding whether a track is
 /// referenced and deletes them together with the track.
-const trackOwnedChildTables = {'track_details', 'play_stats', 'track_artists'};
+const trackOwnedChildTables = {
+  'track_details',
+  'play_stats',
+  'track_artists',
+  'track_lyrics_choices',
+};
 
 /// A `missing` track is kept this long (ms) after `missing_since`.
 const missingGraceMs = 7 * 24 * 60 * 60 * 1000;

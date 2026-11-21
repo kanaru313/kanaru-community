@@ -55,6 +55,10 @@ void main() {
           'INSERT INTO play_stats (track_id, play_count) VALUES (?, 0)',
           [id],
         ),
+        'track_lyrics_choices': (id) => db.customStatement(
+          "INSERT INTO track_lyrics_choices (track_id, mode, updated_at) VALUES (?, 'off', 1)",
+          [id],
+        ),
       };
       var n = 0;
       for (final entry in cases.entries) {
