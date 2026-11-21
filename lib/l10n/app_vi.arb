@@ -2926,5 +2926,46 @@
     }
   },
   "historyMostPlayedOpenDay": "Mở trong Phát nhiều nhất",
-  "historyMostPlayedFavoriteFailed": "Không thêm được vào Yêu thích"
+  "historyMostPlayedFavoriteFailed": "Không thêm được vào Yêu thích",
+  "lyricsLabelTagSynced": "Lời trong tag · Đồng bộ",
+  "lyricsLabelTagPlain": "Lời trong tag · Thường",
+  "lyricsLabelLrcSynced": "Tệp .lrc · Đồng bộ",
+  "lyricsLabelLrcPlain": "Tệp .lrc · Thường",
+  "lyricsLabelOff": "Tắt lời",
+  "lyricsLabelNone": "Không có lời",
+  "lyricsLabelShortTag": "Trong tag",
+  "lyricsLabelShortLrc": "Tệp .lrc",
+  "lyricsLabelShortOff": "Tắt",
+  "lyricsPlainNote": "Lời thường, không có mốc thời gian: không tự cuộn.",
+  "lyricsNoneTitle": "Không có lời",
+  "lyricsNoneMessage": "Không có lời trong tệp hay tệp .lrc cạnh bài.",
+  "lyricsOffTitle": "Lời đang tắt cho bài này",
+  "lyricsOffMessageDesktop": "Chuột phải nút lời để bật lại nhanh.",
+  "lyricsOffMessageMobile": "Bạn chọn “Không hiện lời” trong Lời cho bài này.",
+  "lyricsOffOpenChoice": "Lời cho bài này",
+  "lyricsBackToLine": "Về dòng đang hát",
+  "lyricsSeekHint": "Tua tới {time}",
+  "@lyricsSeekHint": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsGapLabel": "Khoảng nhạc không lời",
+  "lyricsCardNone": "Không có lời cho bài này",
+  "lyricsCardOff": "Lời đang tắt cho bài này",
+  "lyricsCardOpenHint": "Mở màn lời",
+  "lyricsCardLabel": "{title} · {source}",
+  "@lyricsCardLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateSoon": "Dịch lời · Sắp có"
 }
