@@ -62,6 +62,27 @@ void main() {
       });
     }
 
+    Map<String, Object?> withScript(String key, String file) =>
+        validManifest()
+          ..['script'] = {
+            'search': 'search.js',
+            'lyrics': 'lyrics.js',
+            key: file,
+          };
+
+    test('a script key of 64 characters is fine, 65 is refused', () {
+      final ok = 'k' * 64;
+      expect(parseOk(withScript(ok, 'x.js')).scripts, contains(ok));
+      final bad = 'k' * 65;
+      expectInvalid(withScript(bad, 'x.js'), 'script.$bad');
+    });
+
+    test('a script file stem of 100 characters is fine, 101 is refused', () {
+      final ok = '${'f' * 100}.js';
+      expect(parseOk(withScript('extra', ok)).scripts['extra'], ok);
+      expectInvalid(withScript('extra', '${'f' * 101}.js'), 'script.extra');
+    });
+
     test('refuses missing metadata and script objects', () {
       expectInvalid({'script': <String, Object?>{}}, 'metadata');
       expectInvalid(validManifest()..remove('script'), 'script');

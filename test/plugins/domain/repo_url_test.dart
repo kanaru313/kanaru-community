@@ -61,6 +61,30 @@ void main() {
       }
     });
 
+    test('refuses a non-ASCII host, accepts punycode', () {
+      expect(canonicalRepoUrl('https://b\u00fccher.de/p'), isNull);
+      expect(
+        canonicalRepoUrl('https://xn--bcher-kva.de/p'),
+        'https://xn--bcher-kva.de/p',
+      );
+    });
+
+    test('drops one trailing dot of the host', () {
+      expect(
+        canonicalRepoUrl('https://Example.com./p'),
+        canonicalRepoUrl('https://example.com/p'),
+      );
+      expect(canonicalRepoUrl('https://example.com./p'), isNotNull);
+      expect(canonicalRepoUrl('https://./p'), isNull);
+    });
+
+    test('the query is part of the identity', () {
+      expect(
+        canonicalRepoUrl('https://a.example.com/p?t=1'),
+        isNot(canonicalRepoUrl('https://a.example.com/p?t=2')),
+      );
+    });
+
     test('rejects user info', () {
       expect(canonicalRepoUrl('https://user:pw@repo.example.com/p'), isNull);
       expect(canonicalRepoUrl('https://user@repo.example.com/p'), isNull);

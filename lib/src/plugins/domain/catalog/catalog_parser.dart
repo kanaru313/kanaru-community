@@ -35,7 +35,7 @@ const _maxReferenceLength = 2048;
 Result<Catalog, CatalogProblem> parseCatalog(
   Uint8List bytes,
   Uri url, {
-  bool Function(Uri reference)? isReferenceAllowed,
+  required bool Function(Uri reference) isReferenceAllowed,
 }) {
   if (bytes.length > maxCatalogBytes) return const Err(CatalogProblem.tooLarge);
   const invalidCatalog = Err<Catalog, CatalogProblem>(
@@ -57,7 +57,7 @@ Result<Catalog, CatalogProblem> parseCatalog(
   final author = _text(metadata['author'], max: 80, optional: true);
   if (name == null || author == null) return invalidCatalog;
 
-  bool allowed(Uri reference) => isReferenceAllowed?.call(reference) ?? true;
+  bool allowed(Uri reference) => isReferenceAllowed(reference);
   final entries = <CatalogEntry>[];
   final slugs = <String>{};
   var dropped = 0;

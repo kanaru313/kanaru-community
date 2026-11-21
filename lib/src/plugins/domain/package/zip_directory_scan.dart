@@ -36,8 +36,10 @@ PackageProblemError _notZip(String reason) =>
 /// - over-long names, extra fields and comments, in central and local headers;
 /// - entries whose local header plus data overlap each other or the central
 ///   directory (two records on one local header included);
-/// - one end record, closing the file (no trailing data, no second record
-///   hidden in the comment).
+/// - an end record that closes the file (no trailing data, no fake record
+///   hidden in the comment);
+/// - a local header that disagrees with its central record on name, method
+///   or flags.
 ///
 /// Throws [PackageProblemError]: `NotAZip` unless stated.
 int scanZipDirectory(Uint8List bytes) {
@@ -90,7 +92,17 @@ int scanZipDirectory(Uint8List bytes) {
         localOffset == 0xffffffff) {
       throw _notZip('zip64');
     }
-    final headerEnd = _checkLocalHeader(data, localOffset, offset);
+    if (position + 46 + nameLength > offset + size) {
+      throw _notZip('bad central record');
+    }
+    final headerEnd = _checkLocalHeader(
+      bytes,
+      data,
+      localOffset,
+      offset,
+      centralAt: position,
+      centralNameLength: nameLength,
+    );
     ranges.add((localOffset, headerEnd + compressed));
     position += 46 + nameLength + extraLength + commentLength;
     walked++;
@@ -102,9 +114,19 @@ int scanZipDirectory(Uint8List bytes) {
   return total;
 }
 
-/// The local header an entry points at is parsed too: bound its lengths.
-/// Returns where its data starts.
-int _checkLocalHeader(ByteData data, int at, int directoryStart) {
+/// The local header an entry points at is parsed too: bound its lengths and
+/// compare its name, method and flags with the central record (the zip
+/// parser reads the central values only, other readers the local ones). The
+/// data-descriptor flag (bit 3) may differ, as writers that stream set it in
+/// one place only. Returns where its data starts.
+int _checkLocalHeader(
+  Uint8List bytes,
+  ByteData data,
+  int at,
+  int directoryStart, {
+  required int centralAt,
+  required int centralNameLength,
+}) {
   if (at + 30 > directoryStart ||
       data.getUint32(at, Endian.little) != _localSignature) {
     throw _notZip('bad local header');
@@ -114,7 +136,26 @@ int _checkLocalHeader(ByteData data, int at, int directoryStart) {
   if (nameLength > _maxNameLength || extraLength > _maxExtraLength) {
     throw _notZip('over-long record field');
   }
-  return at + 30 + nameLength + extraLength;
+  const descriptorBit = 0x8;
+  final centralFlags = data.getUint16(centralAt + 8, Endian.little);
+  final localFlags = data.getUint16(at + 6, Endian.little);
+  if (nameLength != centralNameLength ||
+      (centralFlags & ~descriptorBit) != (localFlags & ~descriptorBit) ||
+      data.getUint16(centralAt + 10, Endian.little) !=
+          data.getUint16(at + 8, Endian.little) ||
+      !_sameBytes(bytes, centralAt + 46, at + 30, nameLength)) {
+    throw _notZip('local header differs from the directory');
+  }
+  final dataStart = at + 30 + nameLength + extraLength;
+  if (dataStart > directoryStart) throw _notZip('bad local header');
+  return dataStart;
+}
+
+bool _sameBytes(Uint8List bytes, int a, int b, int length) {
+  for (var i = 0; i < length; i++) {
+    if (bytes[a + i] != bytes[b + i]) return false;
+  }
+  return true;
 }
 
 /// Each entry's local header and data (as the central record sizes them)
@@ -129,21 +170,21 @@ void _checkNoOverlap(List<(int, int)> ranges, int directoryStart) {
 }
 
 /// Offset of the end record, or -1. The zip parser takes the first end
-/// signature found scanning back from 22 bytes before the end; so do we, and
-/// we also refuse a second signature anywhere in the allowed window (22 bytes
-/// plus a comment of at most 64 KiB). The two parsers can then not be led to
-/// different records, for example by a fake record inside the real comment.
+/// signature found scanning back from 22 bytes before the end (the last one
+/// in the file); so do we, and it must close the file: its comment length
+/// reaches exactly the end. Other signature bytes earlier in the file (a
+/// stored nested zip, binary data) are ignored, and a fake record inside the
+/// real comment lies after the real one's start, so it is the one found and
+/// fails the closing check.
 int _findEndRecord(Uint8List bytes, ByteData data) {
   final lowest = max(0, bytes.length - 22 - 0xffff);
-  var found = -1;
   for (var i = bytes.length - 22; i >= lowest; i--) {
     if (data.getUint32(i, Endian.little) != _endSignature) continue;
-    if (found >= 0) throw _notZip('more than one end record');
     final commentLength = data.getUint16(i + 20, Endian.little);
     if (i + 22 + commentLength != bytes.length) {
       throw _notZip('end record does not close the file');
     }
-    found = i;
+    return i;
   }
-  return found;
+  return -1;
 }

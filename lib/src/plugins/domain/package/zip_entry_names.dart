@@ -39,13 +39,25 @@ void checkNoDuplicateNames(Iterable<String> names) {
 /// The single top-level folder to strip, or null. Zipping a folder instead
 /// of its contents is the common mistake: `plugin.json` is then not at the
 /// root but at `<dir>/plugin.json`, and every entry sits under `<dir>/`.
+///
+/// Finder metadata (`__MACOSX/` entries, `.DS_Store` files) is left out of
+/// the test; [isFinderMetadata] says which entries those are.
 String? topFolder(List<String> names) {
   if (names.contains('plugin.json')) return null;
   for (final name in names) {
     if (!name.endsWith('/plugin.json')) continue;
     final dir = name.substring(0, name.length - '/plugin.json'.length);
     if (dir.isEmpty || dir.contains('/')) continue;
-    if (names.every((n) => n.startsWith('$dir/'))) return dir;
+    if (names.every((n) => isFinderMetadata(n) || n.startsWith('$dir/'))) {
+      return dir;
+    }
   }
   return null;
 }
+
+/// True for the entries macOS Finder adds when it zips a folder: anything
+/// under `__MACOSX/` and files named `.DS_Store`. They are never read.
+bool isFinderMetadata(String name) =>
+    name.startsWith('__MACOSX/') ||
+    name == '.DS_Store' ||
+    name.endsWith('/.DS_Store');

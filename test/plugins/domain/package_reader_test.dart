@@ -144,6 +144,19 @@ void main() {
     expect(withBom.scripts['bom.js'], 'A');
   });
 
+  test('only one leading BOM of a script goes; a second one is content', () {
+    final twice = readOk(
+      validZip(
+        extra: {
+          'src/bom.js': Uint8List.fromList([
+            0xef, 0xbb, 0xbf, 0xef, 0xbb, 0xbf, 0x41, //
+          ]),
+        },
+      ),
+    );
+    expect(twice.scripts['bom.js'], '\u{feff}A');
+  });
+
   test('a manifest with a BOM keeps its bytes and reads', () {
     final text = jsonEncode(validManifest());
     final bytes = Uint8List.fromList([0xef, 0xbb, 0xbf, ...utf8.encode(text)]);

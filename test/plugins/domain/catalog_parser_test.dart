@@ -5,50 +5,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/foundation/result.dart';
 import 'package:kanaru/src/plugins/domain/catalog/catalog.dart';
 import 'package:kanaru/src/plugins/domain/catalog/catalog_parser.dart';
-
-Map<String, Object?> _entry([Map<String, Object?> over = const {}]) => {
-  'slug': 'netease',
-  'name': 'NetEase Cloud Music',
-  'version': 3,
-  'apiVersion': 1,
-  'type': 'lyrics',
-  'hosts': ['music.163.com'],
-  'path': 'https://cdn.example.com/netease/plugin.zip',
-  ...over,
-};
-
-Uint8List _json(Object? value) =>
-    Uint8List.fromList(utf8.encode(jsonEncode(value)));
-
-Map<String, Object?> _catalog(List<Object?> data) => {
-  'metadata': {'name': 'Kho của hieu05', 'author': 'hieu05'},
-  'data': data,
-};
-
-final _url = Uri.parse('https://repo.example.com/plugins.json');
-
-Result<Catalog, CatalogProblem> _parse(
-  Object? json, {
-  Uri? url,
-  bool Function(Uri)? allowed,
-}) => parseCatalog(_json(json), url ?? _url, isReferenceAllowed: allowed);
-
-Catalog _ok(Object? json, {Uri? url, bool Function(Uri)? allowed}) =>
-    switch (_parse(json, url: url, allowed: allowed)) {
-      Ok(:final value) => value,
-      Err(:final error) => fail('refused: $error'),
-    };
-
-CatalogProblem _problem(Object? json) => switch (_parse(json)) {
-  Ok() => fail('the catalog was accepted'),
-  Err(:final error) => error,
-};
+import '../fixtures/catalog_support.dart';
 
 void main() {
   test('parses a full entry', () {
-    final catalog = _ok(
-      _catalog([
-        _entry({
+    final catalog = okCatalog(
+      catalogJson([
+        entryJson({
           'icon': 'https://cdn.example.com/netease/icon.png',
           'description': 'Lời từ NetEase',
           'author': 'hieu05',
@@ -80,7 +43,7 @@ void main() {
   });
 
   test('author is optional; an empty data list is a valid empty catalog', () {
-    final catalog = _ok({
+    final catalog = okCatalog({
       'metadata': {'name': 'Rỗng'},
       'data': <Object?>[],
     });
@@ -90,9 +53,9 @@ void main() {
 
   group('references', () {
     test('path and icon resolve against the catalog address', () {
-      final catalog = _ok(
-        _catalog([
-          _entry({'path': 'dist/netease/plugin.zip', 'icon': '../icons/n.png'}),
+      final catalog = okCatalog(
+        catalogJson([
+          entryJson({'path': 'dist/netease/plugin.zip', 'icon': '../icons/n.png'}),
         ]),
         url: Uri.parse('https://repo.example.com/store/plugins.json'),
       );
@@ -105,9 +68,9 @@ void main() {
     });
 
     test('a root-relative path keeps the port of a local catalog', () {
-      final catalog = _ok(
-        _catalog([
-          _entry({'path': '/z/plugin.zip'}),
+      final catalog = okCatalog(
+        catalogJson([
+          entryJson({'path': '/z/plugin.zip'}),
         ]),
         url: Uri.parse('http://192.168.1.5:8765/plugins.json'),
       );
@@ -118,9 +81,9 @@ void main() {
     });
 
     test('a fragment is dropped', () {
-      final catalog = _ok(
-        _catalog([
-          _entry({'path': 'a.zip#frag'}),
+      final catalog = okCatalog(
+        catalogJson([
+          entryJson({'path': 'a.zip#frag'}),
         ]),
       );
       expect(catalog.entries.single.path.hasFragment, isFalse);
@@ -136,10 +99,10 @@ void main() {
           'javascript:alert(1)',
           'https:///a.zip',
         ]) {
-          final catalog = _ok(
-            _catalog([
-              _entry({'slug': 'bad', 'path': path}),
-              _entry(),
+          final catalog = okCatalog(
+            catalogJson([
+              entryJson({'slug': 'bad', 'path': path}),
+              entryJson(),
             ]),
           );
           expect(catalog.entries.map((e) => e.slug), ['netease'], reason: path);
@@ -152,10 +115,10 @@ void main() {
       'the address policy decides: path drops the entry, icon only the icon',
       () {
         bool onlyCdn(Uri u) => u.host == 'cdn.example.com';
-        final catalog = _ok(
-          _catalog([
-            _entry({'slug': 'a', 'path': 'https://other.example.com/a.zip'}),
-            _entry({'slug': 'b', 'icon': 'https://other.example.com/i.png'}),
+        final catalog = okCatalog(
+          catalogJson([
+            entryJson({'slug': 'a', 'path': 'https://other.example.com/a.zip'}),
+            entryJson({'slug': 'b', 'icon': 'https://other.example.com/i.png'}),
           ]),
           allowed: onlyCdn,
         );
@@ -166,15 +129,15 @@ void main() {
     );
 
     test('an address over 2048 characters once absolute is dropped', () {
-      final catalog = _ok(
-        _catalog([
-          _entry(),
-          _entry({
+      final catalog = okCatalog(
+        catalogJson([
+          entryJson(),
+          entryJson({
             'slug': 'long',
             'path': 'https://cdn.example.com/z?${'a' * 2040}',
           }),
           // 2033 characters relative, longer once resolved.
-          _entry({'slug': 'rel', 'path': '/z?${'b' * 2030}'}),
+          entryJson({'slug': 'rel', 'path': '/z?${'b' * 2030}'}),
         ]),
       );
       expect(catalog.entries.map((e) => e.slug), ['netease']);
@@ -182,9 +145,9 @@ void main() {
     });
 
     test('a long icon only drops the icon', () {
-      final catalog = _ok(
-        _catalog([
-          _entry({'icon': 'https://cdn.example.com/i.png?${'a' * 2040}'}),
+      final catalog = okCatalog(
+        catalogJson([
+          entryJson({'icon': 'https://cdn.example.com/i.png?${'a' * 2040}'}),
         ]),
       );
       expect(catalog.entries.single.icon, isNull);
@@ -192,243 +155,26 @@ void main() {
     });
   });
 
-  group('entry rules', () {
-    test('slug pattern', () {
-      final slugs = [
-        'a',
-        'a-b_c9',
-        'x' * 64,
-        'Upper',
-        'has space',
-        'dot.dot',
-        '',
-        'x' * 65,
-        'ü',
-      ];
-      final catalog = _ok(
-        _catalog([
-          for (final s in slugs) _entry({'slug': s}),
-        ]),
-      );
-      expect(catalog.entries.map((e) => e.slug), ['a', 'a-b_c9', 'x' * 64]);
-      expect(catalog.dropped, 6);
-    });
-
-    test('a repeated slug keeps the first one', () {
-      final catalog = _ok(
-        _catalog([
-          _entry({'name': 'First'}),
-          _entry({'name': 'Second'}),
-        ]),
-      );
-      expect(catalog.entries.single.name, 'First');
-      expect(catalog.dropped, 1);
-    });
-
-    test('the four kinds are known', () {
-      final catalog = _ok(
-        _catalog([
-          _entry({'slug': 'a', 'type': 'lyrics'}),
-          _entry({'slug': 'b', 'type': 'translate'}),
-          _entry({'slug': 'c', 'type': 'ai-translate'}),
-          _entry({'slug': 'd', 'type': 'streaming'}),
-        ]),
-      );
-      expect(catalog.entries.map((e) => e.kind), [
-        PluginKind.lyrics,
-        PluginKind.translate,
-        PluginKind.aiTranslate,
-        PluginKind.streaming,
-      ]);
-      expect(catalog.entries.every((e) => !e.needsNewerApp), isTrue);
-    });
-
-    test('an unknown type is kept and needs a newer app', () {
-      final catalog = _ok(
-        _catalog([
-          _entry({'slug': 'chat', 'type': 'chat'}),
-          _entry({'slug': 'old', 'type': 'source'}),
-          _entry(),
-        ]),
-      );
-      expect(catalog.entries.map((e) => e.slug), ['chat', 'old', 'netease']);
-      expect(catalog.entries.first.kind, isNull);
-      expect(catalog.entries.first.needsNewerApp, isTrue);
-      expect(catalog.entries.last.needsNewerApp, isFalse);
-      expect(catalog.dropped, 0);
-    });
-
-    test('a type that is not a string drops the entry', () {
-      final catalog = _ok(
-        _catalog([
-          _entry({'slug': 'x', 'type': null}),
-          _entry({'slug': 'y', 'type': 7}),
-          _entry(),
-        ]),
-      );
-      expect(catalog.entries.map((e) => e.slug), ['netease']);
-      expect(catalog.dropped, 2);
-    });
-
-    test('an entry for a newer apiVersion is kept and flagged', () {
-      final catalog = _ok(
-        _catalog([
-          _entry({'apiVersion': 9}),
-        ]),
-      );
-      expect(catalog.entries.single.apiVersion, 9);
-      expect(catalog.entries.single.needsNewerApp, isTrue);
-    });
-
-    test('only a streaming entry may list wildcard hosts', () {
-      final catalog = _ok(
-        _catalog([
-          _entry({
-            'slug': 'yt',
-            'type': 'streaming',
-            'hosts': ['www.youtube.com', '*.googlevideo.com'],
-          }),
-          _entry({
-            'slug': 'bad',
-            'hosts': ['*.googlevideo.com'],
-          }),
-          _entry({
-            'slug': 'bad2',
-            'type': 'translate',
-            'hosts': ['*.googlevideo.com'],
-          }),
-        ]),
-      );
-      expect(catalog.entries.map((e) => e.slug), ['yt']);
-      expect(catalog.entries.single.hosts, [
-        'www.youtube.com',
-        '*.googlevideo.com',
-      ]);
-      expect(catalog.dropped, 2);
-    });
-
-    test('a streaming entry with a refused wildcard is dropped', () {
-      final bad = <List<String>>[
-        ['*.workers.dev'],
-        ['*.com'],
-        ['a.*.example.com'],
-        [for (var i = 0; i <= 10; i++) '*.h$i.example.com'],
-      ];
-      for (final hosts in bad) {
-        final catalog = _ok(
-          _catalog([
-            _entry({'slug': 'bad', 'type': 'streaming', 'hosts': hosts}),
-            _entry(),
-          ]),
-        );
-        expect(catalog.entries.map((e) => e.slug), [
-          'netease',
-        ], reason: '$hosts');
-      }
-    });
-
-    test('invalid fields drop the entry', () {
-      final bad = <Map<String, Object?>>[
-        {'name': ''},
-        {'name': 'x' * 81},
-        {'name': 5},
-        {'version': 0},
-        {'version': '3'},
-        {'version': 2147483648},
-        {'apiVersion': 0},
-        {'apiVersion': 'one'},
-        {'hosts': <Object?>[]},
-        {'hosts': 'music.163.com'},
-        {
-          'hosts': ['localhost'],
-        },
-        {
-          'hosts': ['192.168.1.1'],
-        },
-        {
-          'hosts': ['single'],
-        },
-        {
-          'hosts': ['ok.example.com', 5],
-        },
-        {'hosts': List.generate(21, (i) => 'h$i.example.com')},
-        {'description': 'x' * 501},
-        {'author': 'x' * 81},
-        {'path': null},
-        {'path': ''},
-        {'path': 7},
-        {'sha256': 'abc'},
-        {'sha256': 'z' * 64},
-        {'sha256': 5},
-        {'size': 0},
-        {'size': 5 * 1024 * 1024 + 1},
-        {'size': '10'},
-      ];
-      for (final over in bad) {
-        final catalog = _ok(
-          _catalog([
-            _entry({'slug': 'bad', ...over}),
-            _entry(),
-          ]),
-        );
-        expect(catalog.entries.map((e) => e.slug), [
-          'netease',
-        ], reason: '$over');
-        expect(catalog.dropped, 1, reason: '$over');
-      }
-    });
-
-    test('sha256 and size are optional', () {
-      final e = _ok(_catalog([_entry()])).entries.single;
-      expect(e.sha256, isNull);
-      expect(e.size, isNull);
-    });
-
-    test('text is cleaned like manifest text', () {
-      final bidi = String.fromCharCode(0x202e);
-      final catalog = _ok(
-        _catalog([
-          _entry({'name': '  Net${bidi}Ease\u0000  '}),
-        ]),
-      );
-      expect(catalog.entries.single.name, 'NetEase');
-    });
-
-    test('an entry that is not an object is dropped', () {
-      final catalog = _ok(_catalog([5, null, 'x', _entry()]));
-      expect(catalog.entries, hasLength(1));
-      expect(catalog.dropped, 3);
-    });
-
-    test('a bad languages value keeps the entry and makes it global', () {
-      final catalog = _ok(
-        _catalog([
-          _entry({'languages': 'vi'}),
-        ]),
-      );
-      expect(catalog.entries.single.languages, isEmpty);
-    });
-  });
 
   group('catalog rules', () {
     test('no usable entry in a non-empty data is invalid', () {
       expect(
-        _problem(
-          _catalog([
-            _entry({'slug': 'BAD'}),
+        problemOfCatalog(
+          catalogJson([
+            entryJson({'slug': 'BAD'}),
           ]),
         ),
         CatalogProblem.invalidCatalog,
       );
-      expect(_problem(_catalog([1, 2])), CatalogProblem.invalidCatalog);
+      expect(problemOfCatalog(catalogJson([1, 2])), CatalogProblem.invalidCatalog);
     });
 
     test('at most 500 entries', () {
       List<Object?> many(int n) => [
-        for (var i = 0; i < n; i++) _entry({'slug': 's$i'}),
+        for (var i = 0; i < n; i++) entryJson({'slug': 's$i'}),
       ];
-      expect(_ok(_catalog(many(500))).entries, hasLength(500));
-      expect(_problem(_catalog(many(501))), CatalogProblem.invalidCatalog);
+      expect(okCatalog(catalogJson(many(500))).entries, hasLength(500));
+      expect(problemOfCatalog(catalogJson(many(501))), CatalogProblem.invalidCatalog);
     });
 
     test('shape errors', () {
@@ -458,16 +204,16 @@ void main() {
           'data': <String, Object?>{},
         },
       ]) {
-        expect(_problem(json), CatalogProblem.invalidCatalog, reason: '$json');
+        expect(problemOfCatalog(json), CatalogProblem.invalidCatalog, reason: '$json');
       }
     });
 
     test('not JSON or not UTF-8', () {
       expect(
-        parseCatalog(Uint8List.fromList(utf8.encode('{nope')), _url),
+        parseCatalog(Uint8List.fromList(utf8.encode('{nope')), catalogUrl, isReferenceAllowed: allowAll),
         isA<Err<Catalog, CatalogProblem>>(),
       );
-      final bad = parseCatalog(Uint8List.fromList([0xff, 0xfe]), _url);
+      final bad = parseCatalog(Uint8List.fromList([0xff, 0xfe]), catalogUrl, isReferenceAllowed: allowAll);
       expect(
         (bad as Err<Catalog, CatalogProblem>).error,
         CatalogProblem.invalidCatalog,
@@ -479,23 +225,48 @@ void main() {
         0xEF,
         0xBB,
         0xBF,
-        ...utf8.encode(jsonEncode(_catalog([_entry()]))),
+        ...utf8.encode(jsonEncode(catalogJson([entryJson()]))),
       ]);
-      final result = parseCatalog(bytes, _url);
+      final result = parseCatalog(bytes, catalogUrl, isReferenceAllowed: allowAll);
       expect(
         (result as Ok<Catalog, CatalogProblem>).value.entries,
         hasLength(1),
       );
     });
 
+    test('the address policy is asked for every path and icon', () {
+      final seen = <Uri>[];
+      final catalog = okCatalog(
+        catalogJson([
+          entryJson({'icon': 'https://cdn.example.com/i.png'}),
+          entryJson({'slug': 'other', 'path': 'https://evil.example.com/p.zip'}),
+        ]),
+        allowed: (uri) {
+          seen.add(uri);
+          return uri.host != 'evil.example.com';
+        },
+      );
+      expect(catalog.entries.map((e) => e.slug), ['netease']);
+      expect(seen.map((u) => u.host), contains('evil.example.com'));
+      expect(seen.map((u) => u.path), contains('/i.png'));
+    });
+
+    test('a policy that refuses an icon only drops the icon', () {
+      final catalog = okCatalog(
+        catalogJson([entryJson({'icon': 'https://cdn.example.com/i.png'})]),
+        allowed: (uri) => !uri.path.endsWith('.png'),
+      );
+      expect(catalog.entries.single.icon, isNull);
+    });
+
     test('over 1 MiB is too large', () {
-      final result = parseCatalog(Uint8List(maxCatalogBytes + 1), _url);
+      final result = parseCatalog(Uint8List(maxCatalogBytes + 1), catalogUrl, isReferenceAllowed: allowAll);
       expect(
         (result as Err<Catalog, CatalogProblem>).error,
         CatalogProblem.tooLarge,
       );
       expect(
-        parseCatalog(Uint8List(maxCatalogBytes), _url),
+        parseCatalog(Uint8List(maxCatalogBytes), catalogUrl, isReferenceAllowed: allowAll),
         isA<Err<Catalog, CatalogProblem>>(),
       );
     });

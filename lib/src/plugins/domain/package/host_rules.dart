@@ -1,5 +1,6 @@
-export 'wildcard_denylist.dart';
 import 'wildcard_denylist.dart';
+
+export 'wildcard_denylist.dart';
 
 /// The prefix of a wildcard host entry: `*.` + a base host name.
 const hostWildcardPrefix = '*.';

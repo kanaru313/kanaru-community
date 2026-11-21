@@ -71,6 +71,7 @@ ZipContents readZip(Uint8List bytes) {
   final scripts = <String, Uint8List>{};
   var inflatedTotal = 0;
   for (final header in headers) {
+    if (isFinderMetadata(header.filename)) continue;
     final name = header.filename.substring(prefix.length);
     final scriptMatch = _scriptPath.firstMatch(name);
     final int cap;
@@ -150,10 +151,19 @@ Uint8List _inflate(ZipFileHeader header) {
   if (method != 0 && method != 8) {
     throw PackageProblemError(NotAZip('compression $method: $name'));
   }
-  final file = header.file;
-  if (file == null) throw PackageProblemError(NotAZip('no data: $name'));
   final declared = header.uncompressedSize;
-  final raw = file.getRawContent();
+  final Uint8List raw;
+  try {
+    // The zip parser reads the local header lazily and may throw any type
+    // on hostile input.
+    final file = header.file;
+    if (file == null) throw PackageProblemError(NotAZip('no data: $name'));
+    raw = file.getRawContent();
+  } on PackageProblemError {
+    rethrow;
+  } on Object {
+    throw PackageProblemError(NotAZip('local header: $name'));
+  }
   final Uint8List data;
   if (method == 0) {
     if (raw.length > declared) throw PackageProblemError(PackageTooLarge(name));

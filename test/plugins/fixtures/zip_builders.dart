@@ -175,6 +175,9 @@ Uint8List amplifiedZip({
   u16(0);
   out.add(List.filled(localNameLength, 0x61));
   final directoryStart = out.length;
+  // Central names match the local one up to 10 bytes; a longer local name is
+  // there to be refused as over-long.
+  final centralNameLength = localNameLength < 10 ? localNameLength : 10;
   for (var i = 0; i < records; i++) {
     u32(0x02014b50);
     for (final v in [20, 20, 0, 0, 0, 0]) {
@@ -183,14 +186,14 @@ Uint8List amplifiedZip({
     u32(0);
     u32(0);
     u32(0);
-    u16(1);
+    u16(centralNameLength);
     u16(0);
     u16(0);
     u16(0);
     u16(0);
     u32(0);
     u32(0);
-    out.add([0x61]);
+    out.add(List.filled(centralNameLength, 0x61));
   }
   final directorySize = out.length - directoryStart;
   u32(0x06054b50);

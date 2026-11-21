@@ -62,8 +62,8 @@ PluginPackage _read(Uint8List bytes) {
 /// UTF-8 decode, BOM stripped; a script that is not UTF-8 is refused.
 String _decodeScript(String name, Uint8List bytes) {
   try {
-    final text = utf8.decode(bytes);
-    return text.startsWith('\uFEFF') ? text.substring(1) : text;
+    // `utf8.decode` drops a leading BOM itself.
+    return utf8.decode(bytes);
   } on FormatException {
     throw PackageProblemError(ScriptNotUtf8(name));
   }

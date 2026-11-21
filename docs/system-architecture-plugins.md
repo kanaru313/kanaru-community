@@ -160,10 +160,13 @@ Order of work in `readZip`:
 2. **Pre-scan of the central directory** (`zip_directory_scan.dart`), before
    the zip parser allocates anything: no zip64, no multi-disk, at most 50
    records (`TooManyEntries`, counted on the end record and while walking),
-   name / extra / comment of a record at most 1 KiB (central and local), one
-   end record that closes the file (no trailing bytes, no second end record
-   inside the comment), a walk that ends exactly at the announced count and
-   size, and no two entries whose local header plus data overlap or reach the
+   name / extra / comment of a record at most 1 KiB (central and local), an
+   end record that closes the file (the last end signature in the file; no
+   trailing bytes, no fake record inside the comment; signature bytes inside
+   entry data, such as a stored nested zip, are fine), a local header that
+   agrees with its central record on name, method and flags (the
+   data-descriptor bit may differ), a walk that ends exactly at the
+   announced count and size, and no two entries whose local header plus data overlap or reach the
    directory.
 3. `archive`'s `ZipDirectory` reads the headers.
 4. Names (`zip_entry_names.dart`), for every entry including ignored ones: no
@@ -172,7 +175,9 @@ Order of work in `readZip`:
 5. Declared sizes of all entries, ignored ones too, add up to at most 5 MiB.
    A nested stray `plugin.zip` is not opened but counts.
 6. One top folder is stripped when `plugin.json` sits at `<dir>/plugin.json`
-   and every entry is under `<dir>/`.
+   and every entry is under `<dir>/` (Finder's `__MACOSX/` entries and
+   `.DS_Store` files are left out of that test and never decoded; they still
+   count in the names, duplicate and size checks).
 7. Only `plugin.json` (64 KiB), `icon.png` (64 KiB) and flat `src/<name>.js`
    (1 MiB each) are inflated; every other entry is never decoded. An entry
    whose declared size is over its cap is refused before decoding.
@@ -236,8 +241,13 @@ Tests: `test/plugins/domain/{catalog_parser,repo_url}_test.dart`.
 | `fileInstallId(name, author)` | `plugin-` + `stableHashHex(['file', name, author ?? ''], 32)`, for a file and for a link |
 
 32 hex characters is 128 bits. `repoUrl` is the output of `canonicalRepoUrl`.
-The id comes from where a plugin was installed from, never from what the
-package claims, so a package cannot take over another plugin's id.
+A repository id comes from the source (repository address + slug). A file or
+link id comes from the manifest's own `name` and `author`, which the package
+chooses, so it is not a trust boundary: two packages with the same name and
+author share an id. What stops a spoofed update is the same-install-source
+rule applied when installing (an update is accepted only from the source the
+plugin was installed from, and a clash between ids of different sources is
+refused), added with the install flow in a later PR.
 
 `diffUpdate(consentedHosts, installedVersion, installedKind, candidate)`
 (`update_diff.dart`) returns `UpdateDiff`: `newHosts` (candidate entries not
