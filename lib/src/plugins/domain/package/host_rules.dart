@@ -1,29 +1,11 @@
+export 'wildcard_denylist.dart';
+import 'wildcard_denylist.dart';
+
 /// The prefix of a wildcard host entry: `*.` + a base host name.
 const hostWildcardPrefix = '*.';
 
 /// Most wildcard entries one plugin may list.
 const maxHostWildcards = 10;
-
-/// Bases a wildcard may not use: shared-hosting suffixes under which anyone
-/// can register a name, so `*.<base>` would reach every tenant's site.
-const deniedWildcardBases = {
-  'workers.dev',
-  'pages.dev',
-  'github.io',
-  'gitlab.io',
-  'netlify.app',
-  'vercel.app',
-  'herokuapp.com',
-  'appspot.com',
-  'web.app',
-  'firebaseapp.com',
-  'cloudfront.net',
-  'azurewebsites.net',
-  'blogspot.com',
-  'onrender.com',
-  'fly.dev',
-  'glitch.me',
-};
 
 final _hostChars = RegExp(r'^[a-z0-9.-]+$');
 final _digits = RegExp(r'^\d+$');
@@ -40,15 +22,25 @@ const _localSuffixes = [
   '.lan',
   '.home.arpa',
   '.localdomain',
+  '.test',
+  '.invalid',
+  '.example',
+  '.onion',
+  '.corp',
+  '.home',
+  '.intranet',
 ];
 
 /// Why [host] may not be a plugin host, or null when it may. Only a public
-/// DNS name passes: no scheme, port or path, no IP literal (so no loopback,
-/// link-local or private address), no single-label or local name.
+/// DNS name passes: no scheme, port or path, no IP literal, no
+/// single-label or local name. A public name may still resolve to a private
+/// address: resolved addresses are checked when a request is made.
 String? publicHostProblem(String host) {
   if (!_hostChars.hasMatch(host)) return 'not a plain host name';
   final labels = host.split('.');
+  if (host.length > 253) return 'host name too long';
   if (labels.length < 2) return 'single-label host';
+  if (labels.any((l) => l.length > 63)) return 'label too long';
   if (labels.any((l) => l.isEmpty || l.startsWith('-') || l.endsWith('-'))) {
     return 'malformed label';
   }
@@ -85,7 +77,8 @@ enum HostRefusal {
   /// A wildcard in a plugin that is not a streaming plugin.
   wildcardNotAllowed,
 
-  /// A wildcard over a shared-hosting suffix ([deniedWildcardBases]).
+  /// A wildcard over a shared-hosting suffix ([deniedWildcardBases]) or a
+  /// country registry name such as `co.uk`.
   sharedHostingWildcard,
 
   /// More than [maxHostWildcards] distinct wildcard entries.
@@ -96,7 +89,8 @@ enum HostRefusal {
 /// null when every entry may. [hosts] are expected trimmed and lower-cased.
 ///
 /// Each entry must pass [hostPatternProblem]. Wildcards are refused unless
-/// [wildcardsAllowed], a wildcard base may not be in [deniedWildcardBases],
+/// [wildcardsAllowed], a wildcard base may not be denied by
+/// [wildcardBaseDenied],
 /// and at most [maxHostWildcards] distinct wildcards are allowed; the entry
 /// reported for that is the first one over the cap.
 ({String entry, HostRefusal reason})? hostListProblem(
@@ -116,7 +110,7 @@ enum HostRefusal {
       return (entry: entry, reason: HostRefusal.wildcardNotAllowed);
     }
     final base = entry.substring(hostWildcardPrefix.length);
-    if (deniedWildcardBases.contains(base)) {
+    if (wildcardBaseDenied(base)) {
       return (entry: entry, reason: HostRefusal.sharedHostingWildcard);
     }
     wildcards.add(entry);
@@ -144,7 +138,7 @@ final class HostPattern {
       return HostPattern._(entry, null);
     }
     final base = entry.substring(hostWildcardPrefix.length);
-    if (deniedWildcardBases.contains(base)) return null;
+    if (wildcardBaseDenied(base)) return null;
     return HostPattern._(entry, base);
   }
 

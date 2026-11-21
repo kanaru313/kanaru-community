@@ -80,7 +80,7 @@ void main() {
     }
   });
 
-  test('no shipped manifest declares a secret input or an unknown format', () {
+  test('no shipped manifest uses the secret input format', () {
     for (final MapEntry(key: name, value: text) in texts.entries) {
       expect(text, isNot(contains('"secret"')), reason: name);
     }

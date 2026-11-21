@@ -35,9 +35,9 @@ through typed helpers (`json_read.dart`); no member access is dynamic.
 | `author` | optional, <= 80 |
 | `description` | optional, <= 500, newlines kept |
 | `hosts` | 1-20 strings, trimmed, lower-cased, deduplicated, then the host rules below |
-| `languages` | optional, never invalid; library keys (ISO 639-3); `*` / `all` / `any`, a non-list or a list over 50 = global (empty); <= 20 kept |
-| `script` | object, at most 50 entries; key `^[A-Za-z0-9_.-]+$`, file `^[A-Za-z0-9_.-]+\.js$`; **every key is kept** in `PluginManifest.scripts`; required: lyrics `search` + `lyrics`, translate and ai-translate `translate`, streaming `search` + `stream`. Shipped streaming manifests declare 10 keys (`search, stream, home, genre, album, playlist, artist, related, autocomplete, resolve`). That the files exist is checked against the unpacked package (§ Catalog) |
-| `metadata.regexp` | optional string <= 500 code points that compiles as a Dart `RegExp` |
+| `languages` | optional, never invalid; library keys via `languageKey` (ISO 639-3; a code it does not know is dropped); `*` / `all` / `any`, a non-list or a list over 50 = global (empty); <= 20 kept |
+| `script` | object, at most 50 entries; key `^[A-Za-z0-9_.-]{1,64}$`, file `^[A-Za-z0-9_.-]{1,100}\.js$`; **every key is kept** in `PluginManifest.scripts`; required: lyrics `search` + `lyrics`, translate and ai-translate `translate`, streaming `search` + `stream`. Shipped streaming manifests declare 10 keys (`search, stream, home, genre, album, playlist, artist, related, autocomplete, resolve`). That the files exist is checked against the unpacked package (§ Catalog) |
+| `metadata.regexp` | optional string <= 500 code points that compiles as a Dart `RegExp`. **Untrusted:** a backtracking pattern can run for minutes, so never match it on the UI isolate without a bound (QuickJS with the run interrupt, or a short-lived isolate with a timeout, and a capped input length) |
 | `translate` | translate-family kinds only; see below |
 | `config` | optional object, see below |
 
@@ -53,9 +53,15 @@ code points.
 
 - An entry is a public DNS name (no IP literal, no `localhost`, no
   single-label name, no `.local` / `.internal` / `.lan` / `.home.arpa` /
-  `.localdomain`, alphabetic top label), or `*.` + such a name.
+  `.localdomain` / `.test` / `.invalid` / `.example` / `.onion` / `.corp` /
+  `.home` / `.intranet`, labels <= 63, name <= 253, alphabetic top label), or
+  `*.` + such a name. A public name may still resolve to a private address:
+  resolved addresses are checked when a request is made, not here.
 - Wildcards: streaming plugins only, at most 10 distinct, never over one of
-  the 16 shared-hosting bases (`github.io`, `workers.dev`, ...).
+  a shared-hosting base (22: `github.io`, `workers.dev`, `s3.amazonaws.com`,
+  `ngrok.io`, `googleusercontent.com`, ...) or a name under one, and never over
+  a country registry name (`co`, `com`, `net`, `org`, `gov`, `edu`, `ac`, `or`,
+  `ne`, `go` + a 2-letter TLD: `*.co.uk`, `*.com.vn`).
 - `HostPattern.matches(host)`: a wildcard matches exactly one label
   (`[a-z0-9-]{1,63}`) in front of its base; the apex and deeper names do not
   match; a host ending in `.` never matches.
@@ -100,7 +106,9 @@ placeholder <= 200. Sealed `ConfigField`:
 ### Value rules (`config_value_rules.dart`, `config_required.dart`)
 
 `valueProblem(field, value)` returns the first `ValueProblem` or null; the
-config store and form use it for every write. Lists and maps may be
+config store and form use it for every write. A `custom` single select
+is checked against its effective field (manifest options plus the user's own
+choices); the config store must merge them before calling it. Lists and maps may be
 JSON-decoded. URL values: https only, a host, no credentials, no
 whitespace / control / format characters, <= 2000. Map keys: 1-100 code
 points, no control characters, no outer space, `__proto__` refused, case

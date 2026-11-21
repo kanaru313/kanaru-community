@@ -31,7 +31,7 @@ Result<PluginManifest, List<PackageProblem>> parseManifest(String text) {
 PluginManifest _read(String text) {
   final Object? json;
   try {
-    json = jsonDecode(text.startsWith('﻿') ? text.substring(1) : text);
+    json = jsonDecode(text.startsWith('\uFEFF') ? text.substring(1) : text);
   } on FormatException {
     invalid('plugin.json');
   }

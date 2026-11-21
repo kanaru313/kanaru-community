@@ -36,7 +36,7 @@ num? readNumber(
   final value = raw[attr];
   if (value == null) return null;
   if (value is! num || !value.isFinite) invalid('$path.$attr');
-  if (whole && (value is! int || value.abs() > configSafeInt)) {
+  if (whole && (value is! int || !isSafeInt(value))) {
     invalid('$path.$attr');
   }
   return value;

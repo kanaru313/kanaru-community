@@ -8,6 +8,7 @@ void main() {
       'music.xn--p1ai',
       'a1.example.co.uk',
       'lrclib.net',
+      'x.${'a' * 63}.com',
     ]) {
       test('accepts $host', () => expect(publicHostProblem(host), isNull));
     }
@@ -33,6 +34,15 @@ void main() {
       'box.localdomain',
       'a.internal',
       'a.lan',
+      'a.test',
+      'a.invalid',
+      'a.example',
+      'hidden.onion',
+      'a.corp',
+      'a.home',
+      'a.intranet',
+      'x.${'a' * 64}.com',
+      '${List.filled(60, 'abcd').join('.')}.com',
       '',
       'a..b.com',
       '-a.example.com',
@@ -49,7 +59,7 @@ void main() {
       'googlevideo.com',
       '*.googlevideo.com',
       '*.a.b.example.com',
-      '*.xn--p1ai.example',
+      '*.xn--p1ai.example.com',
     ]) {
       test('accepts $pattern', () {
         expect(hostPatternProblem(pattern), isNull);
@@ -144,11 +154,44 @@ void main() {
     });
 
     test('a wildcard over a shared-hosting suffix is refused', () {
-      expect(deniedWildcardBases, hasLength(16));
+      expect(deniedWildcardBases, hasLength(22));
       for (final base in deniedWildcardBases) {
         final found = hostListProblem(['*.$base'], wildcardsAllowed: true);
         expect(found?.entry, '*.$base');
         expect(found?.reason, HostRefusal.sharedHostingWildcard);
+      }
+    });
+
+    test('a wildcard over a country registry name is refused', () {
+      for (final base in ['co.uk', 'com.vn', 'com.br', 'or.jp', 'ac.nz']) {
+        final found = hostListProblem(['*.$base'], wildcardsAllowed: true);
+        expect(found?.reason, HostRefusal.sharedHostingWildcard, reason: base);
+      }
+    });
+
+    test('a wildcard over a vendor name under a registry stays allowed', () {
+      for (final base in ['vendor.co.jp', 'vendor.com.vn', 'example.com']) {
+        expect(
+          hostListProblem(['*.$base'], wildcardsAllowed: true),
+          isNull,
+          reason: base,
+        );
+      }
+    });
+
+    test('a wildcard under a multi-tenant suffix is refused', () {
+      for (final base in [
+        's3.amazonaws.com',
+        'bucket.s3.amazonaws.com',
+        'blob.core.windows.net',
+        'ngrok.io',
+        'ngrok-free.app',
+        'trycloudflare.com',
+        'googleusercontent.com',
+        'lh3.googleusercontent.com',
+      ]) {
+        final found = hostListProblem(['*.$base'], wildcardsAllowed: true);
+        expect(found?.reason, HostRefusal.sharedHostingWildcard, reason: base);
       }
     });
 

@@ -75,7 +75,7 @@ ValueProblem? listProblem(ListField field, Object? value) {
             item.runes.length <= configMaxText,
       ListFormat.url => item is String && urlProblem(item) == null,
       ListFormat.number => item is num && item.isFinite,
-      ListFormat.integer => item is int && item.abs() <= configSafeInt,
+      ListFormat.integer => item is int && isSafeInt(item),
     };
     if (!ok) return ValueProblem.badItem;
   }

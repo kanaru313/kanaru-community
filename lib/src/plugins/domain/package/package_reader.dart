@@ -63,7 +63,7 @@ PluginPackage _read(Uint8List bytes) {
 String _decodeScript(String name, Uint8List bytes) {
   try {
     final text = utf8.decode(bytes);
-    return text.startsWith('﻿') ? text.substring(1) : text;
+    return text.startsWith('\uFEFF') ? text.substring(1) : text;
   } on FormatException {
     throw PackageProblemError(ScriptNotUtf8(name));
   }

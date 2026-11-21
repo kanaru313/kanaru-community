@@ -1,8 +1,11 @@
 // Control characters (Cc), format characters (Cf: bidi overrides and
 // isolates, zero-width characters, BOM) and line / paragraph separators.
-final _unwanted = RegExp(r'[\p{Cc}\p{Cf}  ]', unicode: true);
+final _unwanted = RegExp(r'[\p{Cc}\p{Cf}\u2028\u2029]', unicode: true);
 // The same, except a line feed.
-final _unwantedKeepNewline = RegExp(r'(?!\n)\p{Cc}|[\p{Cf}  ]', unicode: true);
+final _unwantedKeepNewline = RegExp(
+  r'(?!\n)\p{Cc}|[\p{Cf}\u2028\u2029]',
+  unicode: true,
+);
 
 /// [text] without characters that could spoof or break a dialog, trimmed.
 /// Lengths in the plugin rules count Unicode code points (`runes`).

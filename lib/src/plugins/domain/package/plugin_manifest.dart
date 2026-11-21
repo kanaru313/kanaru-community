@@ -43,6 +43,10 @@ class PluginManifest {
 
   /// `metadata.regexp`: a pattern the streaming engine uses to match links
   /// to this plugin. Checked to compile as a Dart `RegExp`, kept as text.
+  ///
+  /// Untrusted: a backtracking pattern can run for minutes. Never match it on
+  /// the UI isolate without a bound: use QuickJS with the run interrupt, or a
+  /// short-lived isolate with a timeout, and cap the input length.
   final String? regexp;
 
   /// The `translate` block; set exactly for a translate-family plugin.

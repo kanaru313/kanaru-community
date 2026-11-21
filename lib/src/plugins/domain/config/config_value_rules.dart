@@ -55,7 +55,7 @@ ValueProblem? _input(InputField field, Object? value) {
             ? ValueProblem.notInteger
             : ValueProblem.wrongType;
       }
-      if (number is int && number.abs() > configSafeInt) {
+      if (number is int && !isSafeInt(number)) {
         return number < 0 ? ValueProblem.belowMin : ValueProblem.aboveMax;
       }
       final min = field.min;

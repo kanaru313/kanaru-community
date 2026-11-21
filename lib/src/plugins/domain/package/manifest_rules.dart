@@ -8,8 +8,8 @@ const maxHosts = 20;
 const maxScripts = 50;
 const maxRegexpLength = 500;
 
-final _scriptKey = RegExp(r'^[A-Za-z0-9_.-]+$');
-final _scriptFile = RegExp(r'^[A-Za-z0-9_.-]+\.js$');
+final _scriptKey = RegExp(r'^[A-Za-z0-9_.-]{1,64}$');
+final _scriptFile = RegExp(r'^[A-Za-z0-9_.-]{1,100}\.js$');
 
 /// `metadata.hosts`: 1 to 20 strings, trimmed, lower-cased and deduplicated,
 /// then checked by [hostListProblem].

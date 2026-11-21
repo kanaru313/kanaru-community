@@ -44,6 +44,10 @@ void main() {
     expect(parsePluginLanguages(['x-klingon', 'not a code']), isEmpty);
   });
 
+  test('an unknown two-letter code is dropped', () {
+    expect(parsePluginLanguages(['xx', 'bh', 'vi']), ['vie']);
+  });
+
   test('at most 20 languages are kept', () {
     final codes = [
       for (var a = 97; a < 97 + 5; a++)

@@ -22,6 +22,10 @@ const configMaxRows = 10;
 /// Largest integer a script reads back exactly (a JS number).
 const configSafeInt = 9007199254740991;
 
+/// Whether [value] is within the range JavaScript holds exactly (no `abs()`:
+/// it overflows for the most negative 64-bit integer).
+bool isSafeInt(int value) => value <= configSafeInt && value >= -configSafeInt;
+
 /// One choice of a `select` field.
 class ConfigOption {
   const ConfigOption({required this.value, required this.title, this.subtitle});
