@@ -57,6 +57,23 @@ case "$PLATFORM" in
     SERIAL=${ANDROID_SERIAL:-12f5c1bf0505}
     ADB=(adb -s "$SERIAL")
     "${ADB[@]}" get-state >/dev/null
+
+    # The Nix Flutter SDK is read-only and Gradle 9 refuses a plugin project
+    # directory it cannot write ("Configuring project ':integration_test'
+    # without an existing directory is not allowed"). Use a writable copy of
+    # the SDK package through a gitignored pubspec_overrides.yaml, for this
+    # run only; the trap removes it and restores the pub state.
+    SDK_PKG=$(dirname "$(dirname "$(readlink -f "$(command -v flutter)")")")/packages/integration_test
+    COPY=/tmp/kanaru-it-sdk/integration_test
+    command rm -rf /tmp/kanaru-it-sdk && mkdir -p /tmp/kanaru-it-sdk
+    cp -rL "$SDK_PKG" "$COPY" && chmod -R u+w "$COPY"
+    restore_pub() {
+      command rm -f pubspec_overrides.yaml
+      flutter pub get >/dev/null
+    }
+    trap restore_pub EXIT
+    printf 'dependency_overrides:\n  integration_test:\n    path: %s\n' "$COPY" >pubspec_overrides.yaml
+    flutter pub get >/dev/null
     DIR=/sdcard/Music/kanaru-it
     "${ADB[@]}" shell "rm -rf $DIR && mkdir -p $DIR"
     "${ADB[@]}" push "$FIXTURES/." "$DIR/" >/dev/null
