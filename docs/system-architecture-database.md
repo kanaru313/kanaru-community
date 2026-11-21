@@ -30,7 +30,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 | Lyrics choice of the user per track | `track_lyrics_choices`; [track_lyrics_choices](#track_lyrics_choices-coded-with-offline-lyrics) |
 | Cover chosen by the user (playlist, album, artist) | `custom_covers`; [custom_covers](#custom_covers-coded-in-wave-1) |
 | DATA-10 Rating and mood playlists | `tracks.rating`, `playlists.name_key` |
-| DATA-11 Plugin install ids | `plugins.install_id` (spec only) |
+| DATA-11 Plugin install ids | `plugins.install_id`, 128-bit, derived from the install source; [plugins](#plugins-coded-with-the-plugin-store) |
 
 ## Rules
 
@@ -67,6 +67,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 - Until sync exists, user removals are hard `DELETE`s: clear history, delete a playlist, unfavorite.
 - Synced tables keep `updated_at` and `deleted_at` for sync. Every read filters `deleted_at IS NULL`. Every partial index for live rows includes `deleted_at IS NULL`.
 - Removing a source is a tombstone (`deleted_at` set), so re-adding the same root revives it.
+- Removing a plugin is a tombstone too (`plugins.removed_at`, no `deleted_at`: the table is per device), see [plugins](#plugins-coded-with-the-plugin-store).
 - Re-adding a row with a deterministic uid is `insertOrRevive`:
 
   ```sql
@@ -226,6 +227,7 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 | `track_artists.track_id` | `tracks.id` | RESTRICT | library (coded) |
 | `queue_entries.track_id` | `tracks.id` | RESTRICT | playback (coded) |
 | `custom_covers.item_key` | none | none | library (coded): not a foreign key, see [custom_covers](#custom_covers-coded-in-wave-1) |
+| `plugin_data.install_id` | `plugins.install_id` | RESTRICT | plugins (coded) |
 | `lyrics_pins.track_id` | `tracks.id` | RESTRICT | lyrics (spec only) |
 | Any other track reference (lyrics, Pro) | `tracks.id` | RESTRICT | rule |
 
@@ -612,6 +614,61 @@ Owner: public database. File: `tables/extension_tables.dart`. Sync: per device (
 |---|---|---|
 | `extension_schema` | `extension_id` TEXT PK, `version` INTEGER NOT NULL | Each extension records its own table version here and migrates by hand. |
 
+### plugins: Coded with the plugin store
+
+Owner: plugins (`tables/plugin_tables.dart`; the table file knows no plugin types, so `kind` and `origin` are raw strings). Sync: per device for now, but built for a later sync: ids derive from the install source, remove is a tombstone, consent and config are in the rows. No `uid` column (the sync plan adds what it needs). Typed access: `plugins/data/store/` (`PluginRows`, `PluginRepoRows`, `PluginConfigStore`); package files live under `dataDir/plugins/<install_id>/`.
+
+**plugin_repos**: repositories the user added.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` | INTEGER | PK | | Autoincrement. |
+| `url` | TEXT | NOT NULL | | UNIQUE. The canonical address (`canonicalRepoUrl`). |
+| `name` | TEXT | NOT NULL | | |
+| `catalog_json` | TEXT | NULL | | Last good catalog as received, at most 1 MiB (checked by `PluginRepoRows`). A failed refresh keeps it. |
+| `refreshed_at` | INTEGER | NULL | | Last successful fetch. |
+| `last_attempt_at` | INTEGER | NULL | | |
+| `last_error` | TEXT | NULL | | Kind of the last failure, not a message; NULL after a success. |
+| `added_at` | INTEGER | NOT NULL | | |
+| `address_class` | TEXT | NOT NULL | | `CHECK (address_class IN ('public', 'local'))`. Address class of the catalog as the fetcher reported it at add or the last refresh; package and icon fetches from this catalog are judged with it. Only an exact `local` reads as local; any other stored value reads as public, the strict class. |
+
+Removing a repository deletes only its row; plugins keep their own `repo_url` and `repo_slug` and stop getting updates.
+
+**plugins**: installed and removed plugins.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `install_id` | TEXT | PK | | `plugin-` + 32 hex (128 bits): repository install `stableHashHex(['repo', url, slug], 32)`, file and link install `stableHashHex(['file', name, author ?? ''], 32)`. The id is not a trust boundary: an update comes only from the install source of the row. |
+| `kind` | TEXT | NOT NULL | | `CHECK (kind IN ('lyrics', 'translate', 'ai-translate', 'streaming'))`. A new kind is a table rebuild. |
+| `name` | TEXT | NOT NULL | | |
+| `author` | TEXT | NULL | | |
+| `version` | INTEGER | NOT NULL | | |
+| `api_version` | INTEGER | NOT NULL | | |
+| `manifest_json` | TEXT | NOT NULL | | The original `plugin.json` text, at most 64 KiB; parsed on read and memoized per `(install_id, updated_at)`. Unknown fields survive. |
+| `package_dir` | TEXT | NULL | | `v<version>-<epochMs>` under `plugins/<install_id>/`. NULL for a tombstone and for a row waiting for its package. |
+| `package_sha256` | TEXT | NOT NULL | | Lower-case hex SHA-256 of the zip; a repair of the same version must match it. |
+| `origin` | TEXT | NOT NULL | | `CHECK (origin IN ('repo', 'file', 'link'))`. |
+| `repo_url`, `repo_slug` | TEXT | NULL | | Set exactly for `origin = 'repo'`. |
+| `origin_label` | TEXT | NULL | | File name, or the link (the re-download source). NULL for `repo`. |
+| `consented_hosts_json` | TEXT | NOT NULL | | JSON array of the hosts the user agreed to at install / update. A package needing a host outside it needs a new review. |
+| `installed_at` | INTEGER | NOT NULL | | Reset by a revive. |
+| `updated_at` | INTEGER | NOT NULL | | `MAX(now, updated_at + 1)` on every package switch, remove and revive, so it only grows. |
+| `removed_at` | INTEGER | NULL | | Tombstone. Live = `removed_at IS NULL`. |
+
+Constraints `plugins_origin_repo` (`origin = 'repo'` exactly when `repo_url` and `repo_slug` are both set; otherwise both are NULL) and `plugins_origin_link` (a link install has its link). Unique index `plugins_repo_entry` on `(repo_url, repo_slug)`: one row per repository entry (non-repository rows have both NULL, and NULLs never collide). No other indexes besides the primary key.
+
+**plugin_data**: the user's config, plain text (no secret store).
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `install_id` | TEXT | PK, FK | | `plugins.install_id` RESTRICT. |
+| `config_json` | TEXT | NOT NULL | `'{}'` | Field key to value, at most 64 KiB (`PluginConfigStore` returns `tooLarge`). |
+| `custom_choices_json` | TEXT | NOT NULL | `'{}'` | Field key to `[{value, subtitle?}]`, the choices the user added to a `custom` select, at most 64 KiB. Never read by a script. |
+
+**Tombstone.** A plugin row is never deleted. Remove, in one transaction, deletes the `plugin_data` row, sets `removed_at` and clears `package_dir`; the package folder is deleted after the commit (a failure is left to the sweep). Installing the same id again revives the row: `removed_at` cleared, new source and package columns, new consented hosts, `installed_at` = now, an empty `plugin_data` row. `PluginRows.installOrRevive` leaves a live row alone. `lyrics_source_prefs` of the first spec is not a table of this group: source order and enabled flags belong to the modules that consume plugins.
+
+The schema is still v1 and changed in place; the schema guard runs only in debug builds, so a release build over an older dev database opens without these tables. Clear dev data after updating (phone: `pm clear`, Linux: isolated XDG dirs).
+
 ## Spec-only groups
 
 Each group below is added by its owning module before the first release. The schema version stays 1. Column types and nullability are proposed here; the module's change confirms them. Where a group names only its keys, the module sets the other columns.
@@ -630,14 +687,6 @@ Each group below is added by its owning module before the first release. The sch
 **lyrics_translations** (cache). Keyed by `content_hash`, `provider` and `target_lang`. Safe to drop. Per-track translation settings are not here: they belong to Pro.
 
 **lyrics_search** (derived). FTS5 table, contentless (`contentless_delete = 1`), with stale triggers. Invariant: `tracks.lyrics_version = 0` means the track has no tokens in `lyrics_search`. The stale triggers set `lyrics_version` back to 0 when the audio `revision`, the sidecar `lrc_revision` or the pin changes. This depends on the scanner's `lyrics_version` column (see `tracks`).
-
-### plugins: Spec only, added by plugins before first release
-
-**plugins** (per device: no uid, so not synced). `install_id` TEXT PK, deterministic:
-- repository install: `plugin-` + `stableHashHex(['repo', url, slug], 12)`;
-- file install: `plugin-` + `stableHashHex(['file', name, author ?? ''], 12)`.
-
-`plugin_data`, `plugin_repos`, `lyrics_source_prefs` (per device). Keys and columns set by the plugins module. A plugin source uses `install_id` as its `sources.root`.
 
 ### cache: Spec only, added by the owning module before first release
 

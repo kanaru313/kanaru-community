@@ -41,6 +41,9 @@ void configureConnection(CommonDatabase db) {
     Playlists,
     PlaylistEntries,
     SavedItems,
+    PluginRepos,
+    Plugins,
+    PluginData,
   ],
   include: {
     'tables/custom_cover_triggers.drift',

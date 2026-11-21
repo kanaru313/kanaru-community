@@ -98,4 +98,23 @@ void main() {
       expect(rows, isEmpty);
     }
   });
+
+  test('a plugin with config cannot be deleted, only tombstoned', () async {
+    const id = 'plugin-00000000000000000000000000000001';
+    await db.customStatement(
+      'INSERT INTO plugins (install_id, kind, name, version, api_version, '
+      "manifest_json, package_sha256, origin, consented_hosts_json, "
+      "installed_at, updated_at) VALUES (?, 'lyrics', 'P', 1, 1, '{}', ?, "
+      "'file', '[]', 1, 1)",
+      [id, 'a' * 64],
+    );
+    await db.customStatement(
+      'INSERT INTO plugin_data (install_id) VALUES (?)',
+      [id],
+    );
+    await expectLater(
+      db.customStatement('DELETE FROM plugins WHERE install_id = ?', [id]),
+      throwsConstraint('FOREIGN KEY'),
+    );
+  });
 }

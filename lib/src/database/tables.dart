@@ -12,3 +12,5 @@ export 'tables/playback_tables.dart';
 export 'tables/playback_tables.drift.dart';
 export 'tables/lyrics_tables.dart';
 export 'tables/lyrics_tables.drift.dart';
+export 'tables/plugin_tables.dart';
+export 'tables/plugin_tables.drift.dart';
