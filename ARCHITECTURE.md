@@ -16,7 +16,7 @@ platform    -> foundation
 database    -> foundation
 extension   -> foundation
 media       -> extension, foundation
-plugins     -> media, database, foundation
+plugins     -> media, database, platform, foundation
 playback    -> media, platform, database
 storage     -> media, platform
 library     -> playback, storage, media, database, extension, platform
@@ -37,7 +37,9 @@ Present in `lib/src/` today: `foundation`, `platform`, `database`,
 `library` (contracts and seeds, plus the Library and Playlists pages),
 `lyrics` (no UI yet), `online`, `screens`, `shell`, `router`, and
 `lib/src/rust/` (generated FFI).
-`plugins` and `storage` are in the DAG but have no code yet. `lyrics` has its
+`plugins` has its package, config, catalog and install rules (`domain/`) and
+the network seams (`domain/net`, `data/net`); `storage` is in the DAG but has
+no code yet. `lyrics` has its
 domain, data and state layers (offline lyrics: parser, readers, loader,
 providers, settings) and no UI yet; nothing watches its providers.
 

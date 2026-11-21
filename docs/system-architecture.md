@@ -31,6 +31,7 @@ main.dart
 - [system-architecture-library-scan.md](./system-architecture-library-scan.md): scanner, pass versions, covers, first run, Rust pools, custom cover import (lane A, merged).
 - [system-architecture-lyrics.md](./system-architecture-lyrics.md): embedded lyrics reader and its bridge API.
 - [system-architecture-plugin-runtime.md](./system-architecture-plugin-runtime.md): plugin runtime instance, threads and thread budget, `PluginHost`, park and waker, cancel, late drain, bindgen on Android.
+- [system-architecture-plugins.md](./system-architecture-plugins.md): plugin package, catalog and install rules, network seams (address rules, pinned fetcher), backup rules.
 - [plugin-host-api.md](./plugin-host-api.md): what a plugin script sees (globals, errors, limits, streaming runs, what is absent).
 
 ## Runtime pieces

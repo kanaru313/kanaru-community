@@ -45,6 +45,9 @@ void main() {
         'track_lyrics_choices',
         'queue_entries',
         'cover_colors',
+        'plugin_repos',
+        'plugins',
+        'plugin_data',
       }),
     );
   });
@@ -125,8 +128,23 @@ void main() {
         'playlist_entries_order',
         'playlist_entries_track',
         'saved_items_lookup',
+        'plugins_repo_entry',
       }),
     );
+  });
+
+  test('plugin_data references plugins with RESTRICT', () async {
+    final fk = (await rows(_allForeignKeys))
+        .singleWhere((r) => r['tbl'] == 'plugin_data');
+    expect(fk['col'], 'install_id');
+    expect(fk['parent'], 'plugins');
+    expect(fk['action'], 'RESTRICT');
+  });
+
+  test('plugins and plugin_repos reference nothing', () async {
+    final fks = await rows(_allForeignKeys);
+    expect(fks.where((r) => r['tbl'] == 'plugins'), isEmpty);
+    expect(fks.where((r) => r['tbl'] == 'plugin_repos'), isEmpty);
   });
 
   test('every foreign key into tracks is RESTRICT', () async {

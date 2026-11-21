@@ -17,7 +17,8 @@ import 'package:kanaru/src/database/tables/custom_cover_triggers.drift.dart'
     as i8;
 import 'package:kanaru/src/database/tables/extension_tables.drift.dart' as i9;
 import 'package:kanaru/src/database/tables/lyrics_tables.drift.dart' as i10;
-import 'package:drift/internal/modular.dart' as i11;
+import 'package:kanaru/src/database/tables/plugin_tables.drift.dart' as i11;
+import 'package:drift/internal/modular.dart' as i12;
 
 abstract class $AppDatabase extends i0.GeneratedDatabase {
   $AppDatabase(i0.QueryExecutor e) : super(e);
@@ -44,8 +45,11 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
       .$ExtensionSchemaTable(this);
   late final i10.$TrackLyricsChoicesTable trackLyricsChoices = i10
       .$TrackLyricsChoicesTable(this);
+  late final i11.$PluginReposTable pluginRepos = i11.$PluginReposTable(this);
+  late final i11.$PluginsTable plugins = i11.$PluginsTable(this);
+  late final i11.$PluginDataTable pluginData = i11.$PluginDataTable(this);
   i1.PlaybackStatsDrift get playbackStatsDrift =>
-      i11.ReadDatabaseContainer(this)
+      i12.ReadDatabaseContainer(this)
           .accessor<i1.PlaybackStatsDrift>(i1.PlaybackStatsDrift.new);
   @override
   Iterable<i0.TableInfo<i0.Table, Object?>> get allTables =>
@@ -109,6 +113,10 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
     i6.savedItemsLookup,
     extensionSchema,
     trackLyricsChoices,
+    pluginRepos,
+    plugins,
+    pluginData,
+    i11.pluginsRepoEntry,
   ];
   @override
   i0.StreamQueryUpdateRules get streamUpdateRules =>
@@ -250,4 +258,10 @@ class $AppDatabaseManager {
       i9.$$ExtensionSchemaTableTableManager(_db, _db.extensionSchema);
   i10.$$TrackLyricsChoicesTableTableManager get trackLyricsChoices =>
       i10.$$TrackLyricsChoicesTableTableManager(_db, _db.trackLyricsChoices);
+  i11.$$PluginReposTableTableManager get pluginRepos =>
+      i11.$$PluginReposTableTableManager(_db, _db.pluginRepos);
+  i11.$$PluginsTableTableManager get plugins =>
+      i11.$$PluginsTableTableManager(_db, _db.plugins);
+  i11.$$PluginDataTableTableManager get pluginData =>
+      i11.$$PluginDataTableTableManager(_db, _db.pluginData);
 }
