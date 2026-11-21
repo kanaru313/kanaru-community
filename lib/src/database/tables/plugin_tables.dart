@@ -40,8 +40,10 @@ class PluginRepos extends Table {
   TextColumn get url => text().unique()();
   TextColumn get name => text()();
 
-  /// The last good catalog as received (at most 1 MiB), null before the first
-  /// successful fetch. A failed refresh keeps it.
+  /// The last good catalog (at most 1 MiB) as normalized JSON with every
+  /// reference absolute (the plugin store writes the parsed catalog, not the
+  /// received bytes); null before the first successful fetch. A failed
+  /// refresh keeps it.
   TextColumn get catalogJson => text().nullable()();
   IntColumn get refreshedAt => integer().nullable()();
   IntColumn get lastAttemptAt => integer().nullable()();

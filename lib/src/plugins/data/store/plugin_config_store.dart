@@ -25,6 +25,9 @@ enum ConfigWrite {
 
   /// The values (or the choices) would pass the 64 KiB cap.
   tooLarge,
+
+  /// The database failed; nothing was written.
+  failed,
 }
 
 /// The config the user set for each plugin, plain text in `plugin_data`:

@@ -1427,8 +1427,10 @@ class PluginRepoRow extends i0.DataClass
   final String url;
   final String name;
 
-  /// The last good catalog as received (at most 1 MiB), null before the first
-  /// successful fetch. A failed refresh keeps it.
+  /// The last good catalog (at most 1 MiB) as normalized JSON with every
+  /// reference absolute (the plugin store writes the parsed catalog, not the
+  /// received bytes); null before the first successful fetch. A failed
+  /// refresh keeps it.
   final String? catalogJson;
   final int? refreshedAt;
   final int? lastAttemptAt;

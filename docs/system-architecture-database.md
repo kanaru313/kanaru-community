@@ -625,7 +625,7 @@ Owner: plugins (`tables/plugin_tables.dart`; the table file knows no plugin type
 | `id` | INTEGER | PK | | Autoincrement. |
 | `url` | TEXT | NOT NULL | | UNIQUE. The canonical address (`canonicalRepoUrl`). |
 | `name` | TEXT | NOT NULL | | |
-| `catalog_json` | TEXT | NULL | | Last good catalog as received, at most 1 MiB (checked by `PluginRepoRows`). A failed refresh keeps it. |
+| `catalog_json` | TEXT | NULL | | Last good catalog as normalized JSON with every reference absolute (the plugin store writes the parsed catalog back, not the received bytes), at most 1 MiB (checked by `PluginRepoRows`). A failed refresh keeps it. |
 | `refreshed_at` | INTEGER | NULL | | Last successful fetch. |
 | `last_attempt_at` | INTEGER | NULL | | |
 | `last_error` | TEXT | NULL | | Kind of the last failure, not a message; NULL after a success. |
