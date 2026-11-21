@@ -16,7 +16,8 @@ import 'package:kanaru/src/database/tables/library_cover_tables.drift.dart'
 import 'package:kanaru/src/database/tables/custom_cover_triggers.drift.dart'
     as i8;
 import 'package:kanaru/src/database/tables/extension_tables.drift.dart' as i9;
-import 'package:drift/internal/modular.dart' as i10;
+import 'package:kanaru/src/database/tables/lyrics_tables.drift.dart' as i10;
+import 'package:drift/internal/modular.dart' as i11;
 
 abstract class $AppDatabase extends i0.GeneratedDatabase {
   $AppDatabase(i0.QueryExecutor e) : super(e);
@@ -41,8 +42,10 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
   late final i6.$SavedItemsTable savedItems = i6.$SavedItemsTable(this);
   late final i9.$ExtensionSchemaTable extensionSchema = i9
       .$ExtensionSchemaTable(this);
+  late final i10.$TrackLyricsChoicesTable trackLyricsChoices = i10
+      .$TrackLyricsChoicesTable(this);
   i1.PlaybackStatsDrift get playbackStatsDrift =>
-      i10.ReadDatabaseContainer(this)
+      i11.ReadDatabaseContainer(this)
           .accessor<i1.PlaybackStatsDrift>(i1.PlaybackStatsDrift.new);
   @override
   Iterable<i0.TableInfo<i0.Table, Object?>> get allTables =>
@@ -105,6 +108,7 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
     i6.playlistEntriesTrack,
     i6.savedItemsLookup,
     extensionSchema,
+    trackLyricsChoices,
   ];
   @override
   i0.StreamQueryUpdateRules get streamUpdateRules =>
@@ -244,4 +248,6 @@ class $AppDatabaseManager {
       i6.$$SavedItemsTableTableManager(_db, _db.savedItems);
   i9.$$ExtensionSchemaTableTableManager get extensionSchema =>
       i9.$$ExtensionSchemaTableTableManager(_db, _db.extensionSchema);
+  i10.$$TrackLyricsChoicesTableTableManager get trackLyricsChoices =>
+      i10.$$TrackLyricsChoicesTableTableManager(_db, _db.trackLyricsChoices);
 }

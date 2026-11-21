@@ -106,8 +106,17 @@ void main() {
     await db
         .into(db.playStats)
         .insert(PlayStatsCompanion.insert(trackId: Value(id), playCount: 0));
+    await db.customStatement(
+      "INSERT INTO track_lyrics_choices (track_id, mode, updated_at) VALUES (?, 'off', 1)",
+      [id],
+    );
     expect(await collectOrphanTracks(db, now: _now), 1);
-    for (final t in ['track_details', 'play_stats', 'tracks']) {
+    for (final t in [
+      'track_details',
+      'play_stats',
+      'track_lyrics_choices',
+      'tracks',
+    ]) {
       expect(
         await db.customSelect('SELECT 1 FROM $t').get(),
         isEmpty,
@@ -121,6 +130,22 @@ void main() {
         )
         .get();
     expect(fts, isEmpty);
+  });
+
+  test('a collected track (absent afterwards) takes its lyrics choice row along, a live one keeps its', () async {
+    final gone = await addAgedTrack(db, local, 'a', TrackStatus.missing);
+    final live = await addAgedTrack(db, local, 'b', TrackStatus.present);
+    for (final id in [gone, live]) {
+      await db.customStatement(
+        "INSERT INTO track_lyrics_choices (track_id, mode, updated_at) VALUES (?, 'off', 1)",
+        [id],
+      );
+    }
+    expect(await collectOrphanTracks(db, now: _now), 1);
+    final rows = await db
+        .customSelect('SELECT track_id FROM track_lyrics_choices')
+        .get();
+    expect([for (final r in rows) r.read<int>('track_id')], [live]);
   });
 
   test('a stream on tracks re-emits and the count is exact', () async {

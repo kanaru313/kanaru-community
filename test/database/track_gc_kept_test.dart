@@ -63,6 +63,20 @@ void main() {
     expect(await remaining(), {id});
   });
 
+  test('the lyrics choice row of a live track stays', () async {
+    final id = await addAgedTrack(db, local, 'p', TrackStatus.present);
+    await db.customStatement(
+      "INSERT INTO track_lyrics_choices (track_id, mode, updated_at) VALUES (?, 'off', 1)",
+      [id],
+    );
+    expect(await collectOrphanTracks(db, now: _now), 0);
+    expect(await remaining(), {id});
+    final rows = await db
+        .customSelect('SELECT 1 FROM track_lyrics_choices')
+        .get();
+    expect(rows, hasLength(1));
+  });
+
   test('referenced by a playlist, even past grace', () async {
     final pl = await addPlaylist(db);
     final r = await addAgedTrack(db, plugin, 'r', TrackStatus.remote);

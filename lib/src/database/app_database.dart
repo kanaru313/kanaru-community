@@ -36,6 +36,7 @@ void configureConnection(CommonDatabase db) {
     CustomCovers,
     PlayLog,
     PlayStats,
+    TrackLyricsChoices,
     QueueEntries,
     Playlists,
     PlaylistEntries,

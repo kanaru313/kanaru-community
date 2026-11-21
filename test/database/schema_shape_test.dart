@@ -42,6 +42,7 @@ void main() {
         'playlist_entries',
         'saved_items',
         'track_artists',
+        'track_lyrics_choices',
         'queue_entries',
         'cover_colors',
       }),
