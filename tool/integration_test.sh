@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Runs the integration tests against the real app on Linux or the test phone.
 #
-# Usage: tool/integration_test.sh <linux|android> [test file under integration_test/]
+# Usage: tool/integration_test.sh [--clear] <linux|android> [test file under integration_test/]
+#   --clear  android only: `pm clear` the app first (dev data; needed when the
+#            schema guard refuses an older database). Off by default.
 #
 # Builds nothing by itself that the main-build lock should guard: run it
 # through the machine build lock from the main checkout, e.g.
@@ -20,6 +22,8 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 
+CLEAR=0
+if [ "${1:-}" = "--clear" ]; then CLEAR=1; shift; fi
 PLATFORM=${1:-}
 TEST=${2:-}
 FIXTURES=$ROOT/integration_test/fixtures/music
@@ -67,6 +71,7 @@ case "$PLATFORM" in
     fi
     flutter build apk --debug
     "${ADB[@]}" install -r build/app/outputs/flutter-apk/app-debug.apk
+    if [ "$CLEAR" = 1 ]; then "${ADB[@]}" shell pm clear "$APP_ID"; fi
     for permission in READ_MEDIA_AUDIO READ_MEDIA_IMAGES; do
       "${ADB[@]}" shell pm grant "$APP_ID" "android.permission.$permission"
     done

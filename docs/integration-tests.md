@@ -27,7 +27,7 @@ Debug mode is fine for these runs. `tool/integration_test.sh` itself:
   build with `install -r` and runs `pm grant` for `READ_MEDIA_AUDIO` and
   `READ_MEDIA_IMAGES`. It never clears app data: an older dev database may be
   refused by the schema guard ("created by an older build of schema v1"); then
-  clear the app data by hand (`pm clear`) and run again.
+  clear the app data by hand (`pm clear`, or pass `--clear` to the script) and run again.
 
 ## What the harness does
 
