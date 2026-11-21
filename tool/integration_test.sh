@@ -8,7 +8,7 @@
 #   .claude/scripts/main-build.sh <branch> sh -c 'tool/integration_test.sh linux'
 #
 # linux:   XDG_CONFIG_HOME / XDG_DATA_HOME / XDG_CACHE_HOME under
-#          /tmp/kanaru-it/ (recreated every run), the fixtures copied there and
+#          /tmp/kanaru-it/ (recreated for every test file), the fixtures copied there and
 #          announced as XDG_MUSIC_DIR, so the app's own first-run default picks
 #          them up (no folder picker).
 # android: $ANDROID_SERIAL (default 12f5c1bf0505); fixtures pushed to
@@ -25,21 +25,29 @@ TEST=${2:-}
 FIXTURES=$ROOT/integration_test/fixtures/music
 APP_ID=io.github.kanaru313.kanaru_community
 
+# One `flutter test` per file: each launches the app once (one `runKanaru`
+# per process), and a second launch right after the first can fail while the
+# previous window is still closing.
 if [ -n "$TEST" ]; then
-  TARGET=integration_test/${TEST#integration_test/}
+  FILES=("integration_test/${TEST#integration_test/}")
 else
-  TARGET=integration_test
+  FILES=(integration_test/*_test.dart)
 fi
 
 case "$PLATFORM" in
   linux)
     IT=/tmp/kanaru-it
-    command rm -rf "$IT"
-    mkdir -p "$IT/config" "$IT/data" "$IT/cache" "$IT/music"
-    cp -a "$FIXTURES/." "$IT/music/"
-    printf 'XDG_MUSIC_DIR="%s"\n' "$IT/music" >"$IT/config/user-dirs.dirs"
-    export XDG_CONFIG_HOME=$IT/config XDG_DATA_HOME=$IT/data XDG_CACHE_HOME=$IT/cache
-    exec flutter test "$TARGET" -d linux
+    failed=0
+    for file in "${FILES[@]}"; do
+      while pgrep -x kanaru >/dev/null; do sleep 1; done
+      command rm -rf "$IT"
+      mkdir -p "$IT/config" "$IT/data" "$IT/cache" "$IT/music"
+      cp -a "$FIXTURES/." "$IT/music/"
+      printf 'XDG_MUSIC_DIR="%s"\n' "$IT/music" >"$IT/config/user-dirs.dirs"
+      XDG_CONFIG_HOME=$IT/config XDG_DATA_HOME=$IT/data XDG_CACHE_HOME=$IT/cache \
+        flutter test "$file" -d linux || failed=1
+    done
+    exit $failed
     ;;
   android)
     SERIAL=${ANDROID_SERIAL:-12f5c1bf0505}
@@ -62,7 +70,11 @@ case "$PLATFORM" in
     for permission in READ_MEDIA_AUDIO READ_MEDIA_IMAGES; do
       "${ADB[@]}" shell pm grant "$APP_ID" "android.permission.$permission"
     done
-    exec flutter test "$TARGET" -d "$SERIAL"
+    failed=0
+    for file in "${FILES[@]}"; do
+      flutter test "$file" -d "$SERIAL" || failed=1
+    done
+    exit $failed
     ;;
   *)
     echo "usage: $0 <linux|android> [test file]" >&2

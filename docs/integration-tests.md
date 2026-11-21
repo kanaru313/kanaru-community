@@ -18,10 +18,10 @@ tool/integration_test.sh linux app_smoke_test.dart     # one file
 
 Debug mode is fine for these runs. `tool/integration_test.sh` itself:
 
-- **linux:** recreates `/tmp/kanaru-it/{config,data,cache,music}`, points
+- **linux:** recreates `/tmp/kanaru-it/{config,data,cache,music}` (fresh for every test file, one app launch per file), points
   `XDG_CONFIG_HOME` / `XDG_DATA_HOME` / `XDG_CACHE_HOME` at it, copies the
   fixtures into `music/` and writes `user-dirs.dirs` with `XDG_MUSIC_DIR`
-  there, then runs `flutter test integration_test -d linux`.
+  there, then runs `flutter test <file> -d linux` for each file.
 - **android:** serial from `$ANDROID_SERIAL` (default `12f5c1bf0505`); pushes
   the fixtures to `/sdcard/Music/kanaru-it/`, indexes them, installs the debug
   build with `install -r` and runs `pm grant` for `READ_MEDIA_AUDIO` and
