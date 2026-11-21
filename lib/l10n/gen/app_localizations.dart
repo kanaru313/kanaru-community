@@ -5987,6 +5987,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t add to Favorites'**
   String get historyMostPlayedFavoriteFailed;
+
+  /// No description provided for @lyricsLabelTagSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics in tag · Synced'**
+  String get lyricsLabelTagSynced;
+
+  /// No description provided for @lyricsLabelTagPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics in tag · Plain'**
+  String get lyricsLabelTagPlain;
+
+  /// No description provided for @lyricsLabelLrcSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'LRC file · Synced'**
+  String get lyricsLabelLrcSynced;
+
+  /// No description provided for @lyricsLabelLrcPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'LRC file · Plain'**
+  String get lyricsLabelLrcPlain;
+
+  /// No description provided for @lyricsLabelOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics off'**
+  String get lyricsLabelOff;
+
+  /// No description provided for @lyricsLabelNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics'**
+  String get lyricsLabelNone;
+
+  /// No description provided for @lyricsLabelShortTag.
+  ///
+  /// In en, this message translates to:
+  /// **'In tag'**
+  String get lyricsLabelShortTag;
+
+  /// No description provided for @lyricsLabelShortLrc.
+  ///
+  /// In en, this message translates to:
+  /// **'LRC file'**
+  String get lyricsLabelShortLrc;
+
+  /// No description provided for @lyricsLabelShortOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get lyricsLabelShortOff;
+
+  /// No description provided for @lyricsPlainNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain lyrics, no time marks: they do not scroll by themselves.'**
+  String get lyricsPlainNote;
+
+  /// No description provided for @lyricsNoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics'**
+  String get lyricsNoneTitle;
+
+  /// No description provided for @lyricsNoneMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics in the file or in an .lrc file next to the song.'**
+  String get lyricsNoneMessage;
+
+  /// No description provided for @lyricsOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics are off for this song'**
+  String get lyricsOffTitle;
+
+  /// No description provided for @lyricsOffMessageDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click the lyrics button to turn them back on.'**
+  String get lyricsOffMessageDesktop;
+
+  /// No description provided for @lyricsOffMessageMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'You chose “Don’t show lyrics” in Lyrics for this song.'**
+  String get lyricsOffMessageMobile;
+
+  /// No description provided for @lyricsOffOpenChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics for this song'**
+  String get lyricsOffOpenChoice;
+
+  /// No description provided for @lyricsBackToLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to current line'**
+  String get lyricsBackToLine;
+
+  /// No description provided for @lyricsSeekHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Seek to {time}'**
+  String lyricsSeekHint(String time);
+
+  /// No description provided for @lyricsGapLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Instrumental break'**
+  String get lyricsGapLabel;
+
+  /// No description provided for @lyricsCardNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics for this song'**
+  String get lyricsCardNone;
+
+  /// No description provided for @lyricsCardOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics are off for this song'**
+  String get lyricsCardOff;
+
+  /// No description provided for @lyricsCardOpenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the lyrics screen'**
+  String get lyricsCardOpenHint;
+
+  /// No description provided for @lyricsCardLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} · {source}'**
+  String lyricsCardLabel(String title, String source);
+
+  /// No description provided for @lyricsTranslateSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate lyrics · Coming soon'**
+  String get lyricsTranslateSoon;
 }
 
 class _AppLocalizationsDelegate

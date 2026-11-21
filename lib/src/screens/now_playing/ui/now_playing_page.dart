@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../playback/state/now_playing_panel.dart';
 import '../../../playback/state/playback_providers.dart';
 import '../../../playback/ui/flight_source.dart';
+import 'mobile/lyrics_screen_route.dart';
 import 'mobile/mobile_now_playing.dart';
 import 'mobile/queue_sheet.dart';
 
@@ -31,11 +32,33 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
 
   @override
   void dispose() {
+    // The page went away by another way than `_pop` (a location change): the
+    // lyrics screen above it must not stay on its own. Removing a route while
+    // the tree is being torn down is not safe, so it waits for the frame.
+    final lyrics = _lyricsRoute;
+    if (lyrics != null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => closeLyricsScreen(lyrics, animated: false),
+      );
+    }
     _flight.dispose();
     super.dispose();
   }
 
+  /// The open lyrics screen, if any.
+  LyricsScreenRoute? _lyricsRoute;
+
+  void _openLyrics() {
+    if (_lyricsRoute?.isActive ?? false) return;
+    _lyricsRoute = showLyricsScreen(context);
+  }
+
   void _pop() {
+    // The lyrics screen sits above this page: remove it first, so the pop
+    // below always takes `/now-playing` and never the lyrics route.
+    final lyrics = _lyricsRoute;
+    if (lyrics != null) closeLyricsScreen(lyrics, animated: false);
+    _lyricsRoute = null;
     final router = GoRouter.of(context);
     if (router.canPop()) {
       router.pop();
@@ -85,6 +108,7 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
       onClose: _close,
       flight: _flight,
       onQueue: () => showQueueSheet(context, from: _flight),
+      onOpenLyrics: _openLyrics,
     );
   }
 }

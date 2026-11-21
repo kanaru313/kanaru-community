@@ -3762,4 +3762,83 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get historyMostPlayedFavoriteFailed => 'Không thêm được vào Yêu thích';
+
+  @override
+  String get lyricsLabelTagSynced => 'Lời trong tag · Đồng bộ';
+
+  @override
+  String get lyricsLabelTagPlain => 'Lời trong tag · Thường';
+
+  @override
+  String get lyricsLabelLrcSynced => 'Tệp .lrc · Đồng bộ';
+
+  @override
+  String get lyricsLabelLrcPlain => 'Tệp .lrc · Thường';
+
+  @override
+  String get lyricsLabelOff => 'Tắt lời';
+
+  @override
+  String get lyricsLabelNone => 'Không có lời';
+
+  @override
+  String get lyricsLabelShortTag => 'Trong tag';
+
+  @override
+  String get lyricsLabelShortLrc => 'Tệp .lrc';
+
+  @override
+  String get lyricsLabelShortOff => 'Tắt';
+
+  @override
+  String get lyricsPlainNote =>
+      'Lời thường, không có mốc thời gian: không tự cuộn.';
+
+  @override
+  String get lyricsNoneTitle => 'Không có lời';
+
+  @override
+  String get lyricsNoneMessage =>
+      'Không có lời trong tệp hay tệp .lrc cạnh bài.';
+
+  @override
+  String get lyricsOffTitle => 'Lời đang tắt cho bài này';
+
+  @override
+  String get lyricsOffMessageDesktop => 'Chuột phải nút lời để bật lại nhanh.';
+
+  @override
+  String get lyricsOffMessageMobile =>
+      'Bạn chọn “Không hiện lời” trong Lời cho bài này.';
+
+  @override
+  String get lyricsOffOpenChoice => 'Lời cho bài này';
+
+  @override
+  String get lyricsBackToLine => 'Về dòng đang hát';
+
+  @override
+  String lyricsSeekHint(String time) {
+    return 'Tua tới $time';
+  }
+
+  @override
+  String get lyricsGapLabel => 'Khoảng nhạc không lời';
+
+  @override
+  String get lyricsCardNone => 'Không có lời cho bài này';
+
+  @override
+  String get lyricsCardOff => 'Lời đang tắt cho bài này';
+
+  @override
+  String get lyricsCardOpenHint => 'Mở màn lời';
+
+  @override
+  String lyricsCardLabel(String title, String source) {
+    return '$title · $source';
+  }
+
+  @override
+  String get lyricsTranslateSoon => 'Dịch lời · Sắp có';
 }

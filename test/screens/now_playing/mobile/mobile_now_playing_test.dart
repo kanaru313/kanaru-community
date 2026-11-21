@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_card.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
@@ -9,7 +10,7 @@ import 'package:kanaru/src/playback/ui/play_pause_button.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/cover_swiper.dart';
-import 'package:kanaru/src/screens/now_playing/ui/mobile/lyrics_card_placeholder.dart';
+import 'package:kanaru/src/screens/now_playing/ui/mobile/lyrics_screen.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/mobile_now_playing.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/now_playing_button_row.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/now_playing_header.dart';
@@ -194,7 +195,7 @@ void main() {
         y(find.byType(NowPlayingSeekSlot)),
         y(find.byType(PlayPauseButton)),
         y(find.byType(NowPlayingButtonRow)),
-        y(find.byType(LyricsCardPlaceholder)),
+        y(find.byType(LyricsCard)),
         y(find.byType(TrackInfoCard)),
       ];
       expect(order, [...order]..sort());
@@ -313,34 +314,22 @@ void main() {
     expect(ai.onPressed, isNull);
   });
 
-  testWidgets('the lyrics card is dimmed, "Coming soon" and not tappable', (
+  testWidgets('the lyrics card is a live button that opens the lyrics screen', (
     tester,
   ) async {
     await _open(tester);
     await tester.scrollUntilVisible(
-      find.byType(LyricsCardPlaceholder),
+      find.byType(LyricsCard),
       200,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Coming soon'), findsWidgets);
-    expect(
-      tester
-          .widget<Opacity>(
-            find.descendant(
-              of: find.byType(LyricsCardPlaceholder),
-              matching: find.byType(Opacity),
-            ),
-          )
-          .opacity,
-      lessThan(1),
-    );
-    expect(
-      find.descendant(
-        of: find.byType(LyricsCardPlaceholder),
-        matching: find.byType(InkWell),
-      ),
-      findsNothing,
-    );
+    expect(find.text('Coming soon'), findsNothing);
+    expect(find.byType(LyricsScreen), findsNothing);
+    await tester.tap(find.byType(LyricsCard));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(LyricsScreen), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('the info card lists album and artist, then the technical line', (

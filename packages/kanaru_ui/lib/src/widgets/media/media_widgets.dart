@@ -7,6 +7,7 @@ export 'page_ground.dart' show KPageGround;
 export 'readable_gradient_stops.dart'
     show maxGradientStops, readableGradientStops;
 export 'k_count_stepper.dart';
+export 'k_lyrics_metrics.dart';
 export 'k_menu_width.dart';
 export 'k_overflow_tooltip.dart';
 export 'k_progress_line.dart';

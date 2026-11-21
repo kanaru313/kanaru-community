@@ -131,6 +131,9 @@ void main() {
     expect(find.byType(DesktopNowPlaying), findsNothing);
     expect(find.byType(PlayerBar), findsOneWidget);
     expect(_state(host).covered, isFalse);
+    // Closing cancels the lyrics facts stream; drift schedules a zero-delay
+    // timer on cancel, which must run before the test ends.
+    await tester.pump(const Duration(milliseconds: 1));
   });
 
   testWidgets('a tap on the screen never reaches the region under it', (
