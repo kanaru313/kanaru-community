@@ -15,10 +15,9 @@ import 'track_history_labels.dart';
 const double _rowHeight = 48;
 const double _headerHeight = 32;
 
-/// Widths of the two number columns at the default text size; they grow with
-/// the text scale so a figure never gets cut.
-const double _timeWidth = 56;
-const double _listenedWidth = 64;
+/// Widest figures the two number columns must hold (`00:00`, `0:00:00`).
+const String _timeSample = '00:00';
+const String _listenedSample = '0:00:00';
 
 /// The plays of one song as a table, newest first: the count line, the
 /// header row `Day · Time · Listened`, then one row per play. Rows are 48 dp
@@ -202,8 +201,8 @@ class _Grid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scaler = MediaQuery.textScalerOf(context);
     final gutter = libraryBarGutter(context);
+    final widths = _numberColumns(context);
     return Padding(
       padding: EdgeInsetsDirectional.symmetric(horizontal: gutter),
       child: DecoratedBox(
@@ -216,9 +215,9 @@ class _Grid extends StatelessWidget {
             children: [
               Expanded(child: day),
               const SizedBox(width: KSpace.x2),
-              SizedBox(width: scaler.scale(_timeWidth), child: time),
+              SizedBox(width: widths.time, child: time),
               const SizedBox(width: KSpace.x2),
-              SizedBox(width: scaler.scale(_listenedWidth), child: listened),
+              SizedBox(width: widths.listened, child: listened),
               const SizedBox(width: KSpace.x2),
               // Fixed so the header's empty cell lines the columns up.
               SizedBox(width: 40, child: Center(child: action)),
@@ -228,4 +227,41 @@ class _Grid extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Widths of the Time and Listened columns, measured with the text scaler in
+/// force so a figure or a column name never gets cut: the Day column gives way
+/// instead. Rows and header use the same widths, so the columns line up.
+({double time, double listened}) _numberColumns(BuildContext context) {
+  final l10n = AppLocalizations.of(context);
+  final theme = Theme.of(context);
+  final scaler = MediaQuery.textScalerOf(context);
+  final direction = Directionality.of(context);
+  final figures = theme.textTheme.bodyMedium?.copyWith(
+    fontFeatures: const [FontFeature.tabularFigures()],
+  );
+  final head = theme.textTheme.labelMedium;
+  double widest(List<(String, TextStyle?)> items) {
+    var width = 0.0;
+    for (final (text, style) in items) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: direction,
+        textScaler: scaler,
+        maxLines: 1,
+      )..layout();
+      width = width < painter.width ? painter.width : width;
+      painter.dispose();
+    }
+    // Rounded up: a fraction short of the text would ellipsise it.
+    return width.ceilToDouble() + 1;
+  }
+
+  return (
+    time: widest([(_timeSample, figures), (l10n.historyTrackColTime, head)]),
+    listened: widest([
+      (_listenedSample, figures),
+      (l10n.historyTrackColListened, head),
+    ]),
+  );
 }

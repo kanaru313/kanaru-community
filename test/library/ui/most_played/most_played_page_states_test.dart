@@ -301,6 +301,28 @@ void main() {
     expect(find.text('Không tải được danh sách'), findsNothing);
   });
 
+  testWidgets('a range that fails after data shows the error, not the old '
+      'list', (tester) async {
+    final store = _FailingStore()..fail = false;
+    final h = await pumpMostPlayed(
+      tester,
+      store: store,
+      top: topList([topEntry(1)]),
+    );
+    expect(find.text('Song 1'), findsOneWidget);
+    store.fail = true;
+    h.container
+        .read(mostPlayedRangeProvider.notifier)
+        .set(
+          h.container
+              .read(mostPlayedRangeProvider)
+              .withPreset(MostPlayedPreset.days7),
+        );
+    await tester.pumpAndSettle();
+    expect(find.text('Không tải được danh sách'), findsOneWidget);
+    expect(find.text('Song 1'), findsNothing);
+  });
+
   group('hero line and chips on a phone', () {
     testWidgets('the hero line is the dates alone, end year included', (
       tester,

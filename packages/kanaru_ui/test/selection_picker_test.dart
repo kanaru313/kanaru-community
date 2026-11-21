@@ -204,12 +204,13 @@ void main() {
       tester.view.viewPadding = const FakeViewPadding(bottom: 120);
       final anchor = GlobalKey();
       late Future<int?> result;
-      // The panel would fit below the trigger (ending near 594) but not above
-      // the 120 dp inset (limit 564): it must flip up instead.
+      // The trigger sits low enough that the panel would run into the inset
+      // when opened below it (limit 700 - 16 - 120) but still fits above the
+      // screen's own bottom margin: only the inset forces the flip up.
       await tester.pumpWidget(
         host(
           Padding(
-            padding: const EdgeInsets.only(bottom: 260),
+            padding: const EdgeInsets.only(bottom: 200),
             child: _opener(
               (f) => result = f,
               anchor: anchor,
@@ -221,11 +222,19 @@ void main() {
       );
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
-      expect(
-        tester.getBottomLeft(find.text('Two')).dy,
-        lessThanOrEqualTo(700 - 120),
+      final a = tester.getRect(find.byKey(anchor));
+      final panel = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(CustomSingleChildLayout),
+              matching: find.byType(Material),
+            )
+            .first,
       );
-      await tester.tap(find.text('Two'));
+      expect(panel.bottom, lessThanOrEqualTo(700 - 120));
+      expect(panel.bottom, lessThanOrEqualTo(a.top), reason: 'flipped above');
+      final last = find.text('Two');
+      await tester.tap(last);
       await tester.pumpAndSettle();
       expect(await result, 2);
     });

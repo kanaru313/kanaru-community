@@ -11,8 +11,8 @@ import 'most_played_limit_dialog.dart';
 /// songs).
 const _custom = 0;
 
-/// Opens the Top N picker (a dropdown under [anchor] on both shells): Top 5 / 10 / 50 / 100 and Tuỳ chọn… for any number from 1 to
-/// 1000. A number outside the presets selects Tuỳ chọn… and shows itself in
+/// Opens the Top N picker (a dropdown under [anchor] on both shells): Top 5 /
+/// 10 / 50 / 100 and Tuỳ chọn… for any number from 1 to 1000. A number outside the presets selects Tuỳ chọn… and shows itself in
 /// its subtitle. Choosing a preset sets it; choosing Tuỳ chọn… closes the
 /// picker and opens the number dialog, whose Huỷ keeps the old number and does
 /// not bring the picker back.

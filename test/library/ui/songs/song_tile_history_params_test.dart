@@ -118,6 +118,24 @@ void main() {
       );
     });
 
+    testWidgets('a missing row in a normal list has no badge, as before', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        info: TrackInfo(
+          id: trackInfo().id,
+          title: 'So What',
+          status: TrackAvailability.present,
+          relPath: 'a.flac',
+          trackNo: 9,
+        ),
+        showNumber: true,
+        unavailable: true,
+      );
+      expect(find.byKey(songTileBadgeKey), findsNothing);
+    });
+
     testWidgets('a lower rank has the quiet badge', (tester) async {
       await _pump(tester, rank: 4);
       final scheme = Theme.of(tester.element(find.byType(SongTile)))

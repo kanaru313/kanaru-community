@@ -165,7 +165,7 @@ void main() {
         'Phát ngẫu nhiên',
         'Thêm vào playlist…',
         'Thêm tất cả vào Yêu thích',
-        'Xuất tệp M3U…',
+        'Xuất M3U…',
       ]) {
         expect(find.text(label), findsOneWidget, reason: label);
       }

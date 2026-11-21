@@ -79,8 +79,6 @@ MenuSpec buildHistoryDayMenu(
             ),
           ),
         ),
-      ],
-      [
         addToPlaylistRow(l10n, ids, full),
         MenuItemSpec(
           // The id of the "go to" rows: no dedicated id exists for this one.

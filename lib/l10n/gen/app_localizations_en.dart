@@ -3897,6 +3897,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get historyNothingToAdd => 'No playable songs to add';
 
   @override
+  String get historyMenuExportM3u => 'Export M3U…';
+
+  @override
   String get historyNothingToExport => 'Nothing to export';
 
   @override

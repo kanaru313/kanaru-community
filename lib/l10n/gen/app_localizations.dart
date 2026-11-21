@@ -5598,6 +5598,12 @@ abstract class AppLocalizations {
   /// **'No playable songs to add'**
   String get historyNothingToAdd;
 
+  /// No description provided for @historyMenuExportM3u.
+  ///
+  /// In en, this message translates to:
+  /// **'Export M3U…'**
+  String get historyMenuExportM3u;
+
   /// No description provided for @historyNothingToExport.
   ///
   /// In en, this message translates to:

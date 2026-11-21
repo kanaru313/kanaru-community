@@ -30,9 +30,9 @@ List<String> mostPlayedCoverKeys(List<TopEntry> entries) => pickAutoCoverKeys(
 );
 
 /// Top of the Most played page: the framed cover (a mosaic of the top
-/// albums), "Phát nhiều nhất", the period's dates (`16/10 – 14/11/2026`; the chosen chip names the preset, and the
-/// one-line detail line has no room for both on a phone),
-/// `M bài · N lượt nghe` and `[▶ Phát] [shuffle] [⋮]`.
+/// albums), "Phát nhiều nhất", the period's dates (`16/10 – 14/11/2026`; the
+/// chosen chip names the preset, and the one-line detail line has no room for
+/// both on a phone), `M bài · N lượt nghe` and `[▶ Phát] [shuffle] [⋮]`.
 ///
 /// Play, shuffle and ⋮ wait while the list reloads ([stale]) and are off for
 /// a list with nothing to play.

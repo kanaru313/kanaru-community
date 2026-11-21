@@ -3489,6 +3489,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get historyNothingToAdd => 'Không có bài phát được để thêm';
 
   @override
+  String get historyMenuExportM3u => 'Xuất M3U…';
+
+  @override
   String get historyNothingToExport => 'Không có bài nào để xuất';
 
   @override

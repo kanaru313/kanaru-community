@@ -73,7 +73,9 @@ final _mostPlayedReadProvider = FutureProvider.autoDispose<MostPlayed>((
 final mostPlayedProvider = Provider.autoDispose<MostPlayedState>((ref) {
   final read = ref.watch(_mostPlayedReadProvider);
   final data = read.value;
-  if (data == null && read.hasError) {
+  // A failed read is an error even when an earlier range's list is still
+  // held: that list must not pass for the current one.
+  if (read.hasError) {
     return MostPlayedState(error: read.error, stale: read.isLoading);
   }
   return MostPlayedState(data: data, stale: data != null && read.isLoading);

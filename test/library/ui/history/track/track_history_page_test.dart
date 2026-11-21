@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/history/history_change.dart';
@@ -258,12 +259,43 @@ void main() {
     testWidgets('a row is 48 dp and keeps one line at 200 % text', (
       tester,
     ) async {
-      await _pump(tester, textScale: 2);
+      await _pump(tester, textScale: 2, width: 520);
       expect(tester.takeException(), isNull);
       expect(tester.getSize(_row(0)).height, greaterThanOrEqualTo(48));
       await tester.drag(_row(0), const Offset(0, -400));
       await tester.pump();
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('at 200 % text the time and listened figures are never cut; '
+        'the day gives way', (tester) async {
+      // 520 dp: the test font is 1 em wide per glyph, about twice a real
+      // digit, so this is the 400 dp phone in practice.
+      await _pump(tester, textScale: 2, width: 520);
+      final figures = find.descendant(
+        of: _row(0),
+        matching: find.textContaining(RegExp(r'^\d{1,2}:\d{2}')),
+      );
+      expect(figures, findsWidgets);
+      for (final e in figures.evaluate()) {
+        final paragraph = e.renderObject! as RenderParagraph;
+        expect(
+          paragraph.didExceedMaxLines,
+          isFalse,
+          reason: (e.widget as Text).data,
+        );
+      }
+      final day = find.descendant(
+        of: _row(0),
+        matching: find.byWidgetPredicate(
+          (w) => w is Text && w.data != null && !w.data!.contains(':'),
+        ),
+      );
+      expect(
+        (day.evaluate().first.renderObject! as RenderParagraph)
+            .didExceedMaxLines,
+        isTrue,
+      );
     });
   });
 

@@ -146,7 +146,7 @@ void main() {
       );
       await pumpMenu(tester);
       expect(store.reads, 0, reason: 'the menu opens without the list');
-      await tester.tap(find.text(l10n.playlistMenuExportM3u));
+      await tester.tap(find.text(l10n.historyMenuExportM3u));
       await tester.pumpAndSettle();
       expect(store.reads, 1);
       expect(picker.suggestedName, '${l10n.historyTitle}.m3u8');
@@ -194,8 +194,12 @@ void main() {
         clearing: false,
       );
       expect(_groups(spec), [
-        [MenuItemId.play, MenuItemId.shuffle],
-        [MenuItemId.playlist, MenuItemId.link],
+        [
+          MenuItemId.play,
+          MenuItemId.shuffle,
+          MenuItemId.playlist,
+          MenuItemId.link,
+        ],
         [MenuItemId.delete],
       ]);
       expect(rowOf(spec, MenuItemId.link).title, 'Open in Most played');
@@ -317,7 +321,7 @@ void main() {
         l10n.libraryShuffle,
         l10n.libraryMenuAddToPlaylist,
         l10n.historyMenuMostPlayed,
-        l10n.playlistMenuExportM3u,
+        l10n.historyMenuExportM3u,
         l10n.historyMenuClear,
       ]) {
         expect(

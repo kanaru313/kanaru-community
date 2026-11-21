@@ -19,7 +19,7 @@ MenuItemSpec trackListExportRow(
 }) => MenuItemSpec(
   MenuItemId.playlistExportM3u,
   icon: KIcons.fileExport,
-  title: l10n.playlistMenuExportM3u,
+  title: l10n.historyMenuExportM3u,
   enabled: enabled,
   soon: !m3uAvailable,
   action: MenuAction.run(

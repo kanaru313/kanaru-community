@@ -2723,6 +2723,7 @@
   "historyMenuTrackHistory": "History of this song",
   "historyMenuRemovePlay": "Remove from history",
   "historyNothingToAdd": "No playable songs to add",
+  "historyMenuExportM3u": "Export M3U…",
   "historyNothingToExport": "Nothing to export",
   "historyClearTitle": "Clear history?",
   "historyClearHour": "Last hour",

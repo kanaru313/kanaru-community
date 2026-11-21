@@ -101,6 +101,7 @@
   "historyMenuTrackHistory": "Lịch sử bài này",
   "historyMenuRemovePlay": "Xoá khỏi lịch sử",
   "historyNothingToAdd": "Không có bài phát được để thêm",
+  "historyMenuExportM3u": "Xuất M3U…",
   "historyNothingToExport": "Không có bài nào để xuất",
   "historyClearTitle": "Xoá lịch sử?",
   "historyClearHour": "Giờ qua",
