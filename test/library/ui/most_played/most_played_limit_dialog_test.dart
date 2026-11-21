@@ -1,5 +1,8 @@
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/l10n/gen/app_localizations.dart';
+import 'package:kanaru/src/library/ui/most_played/most_played_limit_picker.dart';
 import 'package:kanaru/src/library/domain/history/history_ranges.dart';
 import 'package:kanaru/src/library/state/history/most_played_selection.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -90,6 +93,73 @@ void main() {
       expect(h.container.read(mostPlayedLimitProvider), 1000);
       expect(find.byType(AlertDialog), findsNothing);
     });
+
+    testWidgets('a repeated Enter saves once and keeps the page', (
+      tester,
+    ) async {
+      final h = await pumpMostPlayed(tester, top: topList([topEntry(1)]));
+      await openDialog(tester);
+      await tester.enterText(find.byType(TextField), '42');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await _settle(tester);
+      expect(tester.takeException(), isNull);
+      expect(h.container.read(mostPlayedLimitProvider), 42);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.widgetWithText(KChip, 'Top 42'), findsOneWidget);
+    });
+
+    testWidgets(
+      'closing the page while the dialog is open ignores the result',
+      (tester) async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final show = ValueNotifier(true);
+        addTearDown(show.dispose);
+        final anchor = GlobalKey();
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              theme: buildKanaruTheme(brightness: Brightness.light),
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                ...GlobalMaterialLocalizations.delegates,
+              ],
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: const Locale('vi'),
+              home: ValueListenableBuilder<bool>(
+                valueListenable: show,
+                builder: (_, visible, _) => visible
+                    ? Consumer(
+                        builder: (context, ref, _) => TextButton(
+                          key: anchor,
+                          onPressed: () => chooseMostPlayedLimit(
+                            context,
+                            ref,
+                            anchor: anchor,
+                          ),
+                          child: const Text('open'),
+                        ),
+                      )
+                    : const SizedBox(),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(SelectionRow, 'Tuỳ chọn…'));
+        await tester.pumpAndSettle();
+        show.value = false;
+        await tester.pump();
+        await tester.enterText(find.byType(TextField), '7');
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await _settle(tester);
+        expect(tester.takeException(), isNull);
+        expect(container.read(mostPlayedLimitProvider), isNot(7));
+      },
+    );
 
     testWidgets('Enter on an invalid number does nothing', (tester) async {
       final h = await pumpMostPlayed(tester, top: topList([topEntry(1)]));

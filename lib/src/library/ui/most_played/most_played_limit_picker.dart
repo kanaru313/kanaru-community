@@ -11,8 +11,7 @@ import 'most_played_limit_dialog.dart';
 /// songs).
 const _custom = 0;
 
-/// Opens the Top N picker (a sheet on mobile, a dropdown under [anchor] on
-/// desktop): Top 5 / 10 / 50 / 100 and Tuỳ chọn… for any number from 1 to
+/// Opens the Top N picker (a dropdown under [anchor] on both shells): Top 5 / 10 / 50 / 100 and Tuỳ chọn… for any number from 1 to
 /// 1000. A number outside the presets selects Tuỳ chọn… and shows itself in
 /// its subtitle. Choosing a preset sets it; choosing Tuỳ chọn… closes the
 /// picker and opens the number dialog, whose Huỷ keeps the old number and does
@@ -28,6 +27,7 @@ Future<void> chooseMostPlayedLimit(
   final picked = await showSelectionPicker<int>(
     context,
     anchor: anchor,
+    presentation: SelectionPickerPresentation.anchored,
     selected: custom ? _custom : current,
     options: [
       for (final n in mostPlayedLimitPresets)
@@ -49,5 +49,7 @@ Future<void> chooseMostPlayedLimit(
     return;
   }
   final typed = await showMostPlayedLimitDialog(context, initial: current);
-  if (typed != null) ref.read(mostPlayedLimitProvider.notifier).set(typed);
+  // The page may have closed while the dialog was open: its ref is dead.
+  if (typed == null || !context.mounted) return;
+  ref.read(mostPlayedLimitProvider.notifier).set(typed);
 }

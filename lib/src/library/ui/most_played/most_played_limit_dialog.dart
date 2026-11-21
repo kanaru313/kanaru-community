@@ -43,11 +43,17 @@ class _MostPlayedLimitDialogState extends State<MostPlayedLimitDialog> {
     super.dispose();
   }
 
+  /// A held or repeated Enter must not pop twice (the second pop would close
+  /// the page under the dialog).
+  bool _saved = false;
+
   void _save() {
+    if (_saved) return;
     if (checkMostPlayedLimitText(_controller.text) !=
         MostPlayedLimitInput.valid) {
       return;
     }
+    _saved = true;
     Navigator.of(context).pop(int.parse(_controller.text.trim()));
   }
 

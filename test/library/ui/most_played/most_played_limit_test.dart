@@ -21,7 +21,10 @@ bool _chosen(WidgetTester tester, String title) => tester
     .selected;
 
 void main() {
-  for (final shell in [('mobile sheet', 400.0), ('desktop dropdown', 1400.0)]) {
+  for (final shell in [
+    ('mobile dropdown', 400.0),
+    ('desktop dropdown', 1400.0),
+  ]) {
     group(shell.$1, () {
       testWidgets('lists the presets and Tuỳ chọn…, the current one chosen', (
         tester,
@@ -35,6 +38,9 @@ void main() {
         for (final t in ['Top 5', 'Top 10', 'Top 50', 'Top 100']) {
           expect(find.widgetWithText(SelectionRow, t), findsOneWidget);
         }
+        // Both shells show the anchored dropdown, never a sheet.
+        expect(find.byType(BottomSheet), findsNothing);
+        expect(find.byType(CustomSingleChildLayout), findsWidgets);
         expect(_chosen(tester, 'Top 100'), isTrue);
         expect(_chosen(tester, 'Top 5'), isFalse);
         expect(find.widgetWithText(SelectionRow, 'Tuỳ chọn…'), findsOneWidget);
