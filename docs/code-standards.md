@@ -252,6 +252,8 @@ rebase conflict, take either side and run the two commands again.
 - With `material_ui`, `find.byTooltip` does not match its `Tooltip`; use a
   local finder as in `test/shell/shell_test.dart`.
 
+Real-app tests (`integration_test/`, run on Linux and the phone): see [integration-tests.md](integration-tests.md).
+
 ## Commits
 
 Conventional commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `ci:`),
