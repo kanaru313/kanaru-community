@@ -72,9 +72,14 @@ enum SelectionPickerPresentation {
   /// A centred dialog ([KLayout.dialog] wide) on both shells; the anchor is
   /// ignored.
   dialog,
+
+  /// A dropdown panel under the anchor on both shells (dense 40 dp rows, as
+  /// the sort dropdown). Without a laid-out anchor it falls back to [auto].
+  anchored,
 }
 
-/// Single-choice picker. Mobile: sheet ([showKSheet]). Desktop: a panel
+/// Single-choice picker. Mobile: sheet ([showKSheet]), unless [presentation]
+/// is `anchored` (the dropdown panel on both shells). Desktop: a panel
 /// anchored under [anchor] when given, otherwise a centred dialog
 /// ([presentation] `dialog` forces the dialog on both shells). [anchorAlign]
 /// picks which edge of the panel lines up with the anchor (`end` for panels
@@ -116,13 +121,15 @@ Future<T?> showSelectionPicker<T>(
   );
 
   final centred = presentation == SelectionPickerPresentation.dialog;
-  if (!centred && FormFactor.of(context) == FormFactor.mobile) {
-    return showKSheet<T>(context, builder: body);
-  }
   final box = centred ? null : anchor?.currentContext?.findRenderObject();
   final rect = box is RenderBox && box.attached
       ? box.localToGlobal(Offset.zero) & box.size
       : null;
+  final dropdown =
+      presentation == SelectionPickerPresentation.anchored && rect != null;
+  if (!centred && !dropdown && FormFactor.of(context) == FormFactor.mobile) {
+    return showKSheet<T>(context, builder: body);
+  }
   if (rect == null) {
     return showDialog<T>(
       context: context,
@@ -150,7 +157,11 @@ Future<T?> showSelectionPicker<T>(
     builder: (context) => KRowEdgesScope(
       edges: KRowEdges.inset,
       child: CustomSingleChildLayout(
-        delegate: AnchoredPanelLayout(rect, align: anchorAlign),
+        delegate: AnchoredPanelLayout(
+          rect,
+          align: anchorAlign,
+          bottomInset: MediaQuery.paddingOf(context).bottom,
+        ),
         child: Material(
           elevation: 3,
           color: Theme.of(context).colorScheme.surfaceContainerHigh,

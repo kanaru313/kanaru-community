@@ -1,9 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kanaru/l10n/gen/app_localizations_en.dart';
 import 'package:kanaru/src/library/domain/history/history_models.dart';
+import 'package:kanaru/src/library/domain/history/history_ranges.dart';
+import 'package:kanaru/src/library/state/history/most_played_selection.dart';
 import 'package:kanaru/src/library/ui/history/history_hero.dart';
 import 'package:kanaru/src/library/ui/history/history_locations.dart';
 import 'package:kanaru/src/library/ui/history/history_day_menu.dart';
@@ -11,9 +14,13 @@ import 'package:kanaru/src/library/ui/history/history_menus.dart';
 import 'package:kanaru/src/library/ui/history/history_row_menu.dart';
 import 'package:kanaru/src/library/ui/menus/menu_model.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
+import 'package:kanaru/src/platform/domain/document_picker.dart';
+import 'package:kanaru/src/platform/state/document_picker_provider.dart';
+import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/media/domain/track_info.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
-import 'package:material_ui/material_ui.dart' show BottomSheet, Focus, Icon;
+import 'package:material_ui/material_ui.dart'
+    show BottomSheet, Focus, Icon, Scaffold, Text;
 
 import '../../../support/fake_playback_commands.dart';
 import '../../../support/icon_button_finders.dart';
@@ -23,6 +30,52 @@ import '../menus/menu_pump.dart';
 import 'history_page_harness.dart';
 
 final _l10n = AppLocalizationsEn();
+
+const _mostPlayedMarker = 'the most played page';
+
+final _mostPlayedRoute = GoRoute(
+  path: HistoryLocations.mostPlayed,
+  builder: (context, state) => const Scaffold(body: Text(_mostPlayedMarker)),
+);
+
+/// Counts how often every played song is read.
+class _CountingStore extends FakeHistoryStore {
+  int reads = 0;
+
+  @override
+  Future<List<TrackId>> playedTracksNewestFirst() {
+    reads++;
+    return super.playedTracksNewestFirst();
+  }
+}
+
+/// A file dialog that only notes the name it was asked for, then fails.
+class _NamePicker implements DocumentPicker {
+  String? suggestedName;
+
+  @override
+  Future<SaveTarget?> createDocument({
+    required String suggestedName,
+    DocumentFilter? filter,
+  }) async {
+    this.suggestedName = suggestedName;
+    throw const DocumentPickerException(DocumentPickerFailure.unavailable);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+MenuSpec _page({
+  required int plays,
+  bool clearing = false,
+  Future<List<TrackId>> Function()? playedTracks,
+}) => buildHistoryPageMenu(
+  _l10n,
+  plays: plays,
+  clearing: clearing,
+  playedTracks: playedTracks ?? () async => const [],
+);
 
 /// The ids of each group of rows, in order.
 List<List<MenuItemId>> _groups(MenuSpec spec) => [
@@ -36,17 +89,20 @@ void main() {
   setUpAll(() => initializeDateFormatting('en'));
 
   group('page menu', () {
-    test('lists the rows in their groups; the unbuilt ones are dimmed', () {
-      final spec = buildHistoryPageMenu(_l10n, plays: 12, clearing: false);
+    test('lists the rows in their groups; every one is live', () {
+      final spec = _page(plays: 12);
       expect(_groups(spec), [
-        [MenuItemId.play, MenuItemId.shuffle],
-        [MenuItemId.playlist, MenuItemId.link, MenuItemId.playlistExportM3u],
+        [MenuItemId.play, MenuItemId.shuffle, MenuItemId.playlist],
+        [MenuItemId.link, MenuItemId.playlistExportM3u],
         [MenuItemId.delete],
       ]);
       expect(spec.header.subtitle, '12 plays');
-      expect(rowOf(spec, MenuItemId.link).soon, isTrue);
-      expect(rowOf(spec, MenuItemId.link).active, isFalse);
-      expect(rowOf(spec, MenuItemId.playlistExportM3u).active, isFalse);
+      expect(rowOf(spec, MenuItemId.link).soon, isFalse);
+      expect(rowOf(spec, MenuItemId.link).active, isTrue);
+      expect(
+        rowOf(spec, MenuItemId.link).action,
+        MenuAction.go(HistoryLocations.mostPlayed),
+      );
       for (final id in [
         MenuItemId.play,
         MenuItemId.shuffle,
@@ -57,8 +113,47 @@ void main() {
       }
     });
 
+    test('the export row dims with no plays', () {
+      final spec = _page(plays: 3);
+      expect(rowOf(spec, MenuItemId.playlistExportM3u).enabled, isTrue);
+      expect(
+        rowOf(spec, MenuItemId.playlistExportM3u).action,
+        isA<RunAction>(),
+      );
+      final none = _page(plays: 0);
+      expect(rowOf(none, MenuItemId.playlistExportM3u).enabled, isFalse);
+      expect(rowOf(none, MenuItemId.link).enabled, isTrue);
+    });
+
+    testWidgets('choosing export reads the songs then asks for the file, '
+        'named after the page', (tester) async {
+      final store = _CountingStore()..playedTracks = [TrackId(5), TrackId(2)];
+      final picker = _NamePicker();
+      await pumpHistoryPage(
+        tester,
+        byYear: {
+          2026: playsOverDays([2, 2]),
+        },
+        store: store,
+        overrides: [documentPickerProvider.overrideWithValue(picker)],
+      );
+      final l10n = l10nOf(tester);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(HistoryHero),
+          matching: byIconButton(l10n.libraryMenuMore),
+        ),
+      );
+      await pumpMenu(tester);
+      expect(store.reads, 0, reason: 'the menu opens without the list');
+      await tester.tap(find.text(l10n.historyMenuExportM3u));
+      await tester.pumpAndSettle();
+      expect(store.reads, 1);
+      expect(picker.suggestedName, '${l10n.historyTitle}.m3u8');
+    });
+
     test('Clear history is the only red row', () {
-      final spec = buildHistoryPageMenu(_l10n, plays: 3, clearing: false);
+      final spec = _page(plays: 3);
       final red = [
         for (final g in spec.groups)
           for (final i in g)
@@ -69,7 +164,7 @@ void main() {
     });
 
     test('with no plays every action is off', () {
-      final spec = buildHistoryPageMenu(_l10n, plays: 0, clearing: false);
+      final spec = _page(plays: 0);
       for (final id in [
         MenuItemId.play,
         MenuItemId.shuffle,
@@ -81,7 +176,7 @@ void main() {
     });
 
     test('Clear history waits while a clear runs', () {
-      final spec = buildHistoryPageMenu(_l10n, plays: 3, clearing: true);
+      final spec = _page(plays: 3, clearing: true);
       expect(rowOf(spec, MenuItemId.delete).enabled, isFalse);
       expect(rowOf(spec, MenuItemId.play).enabled, isTrue);
     });
@@ -90,7 +185,7 @@ void main() {
   group('day menu', () {
     final today = DateTime(2026, 11, 20);
 
-    test('plays, shuffles, adds and removes; no Most played yet', () {
+    test('plays, shuffles, adds, opens Most played and removes', () {
       final plays = [playAt(1, DateTime(2026, 11, 19, 20))];
       final spec = buildHistoryDayMenu(
         _l10n,
@@ -99,10 +194,16 @@ void main() {
         clearing: false,
       );
       expect(_groups(spec), [
-        [MenuItemId.play, MenuItemId.shuffle],
-        [MenuItemId.playlist],
+        [
+          MenuItemId.play,
+          MenuItemId.shuffle,
+          MenuItemId.playlist,
+          MenuItemId.link,
+        ],
         [MenuItemId.delete],
       ]);
+      expect(rowOf(spec, MenuItemId.link).title, 'Open in Most played');
+      expect(rowOf(spec, MenuItemId.link).active, isTrue);
       expect(spec.header.title, 'Yesterday');
       expect(rowOf(spec, MenuItemId.delete).danger, isTrue);
       expect(rowOf(spec, MenuItemId.delete).enabled, isTrue);
@@ -153,6 +254,8 @@ void main() {
         expect(rowOf(spec, MenuItemId.shuffle).enabled, isFalse);
         expect(rowOf(spec, MenuItemId.playlist).enabled, isFalse);
         expect(rowOf(spec, MenuItemId.delete).enabled, isFalse);
+        // The page can still show that day, whatever its songs.
+        expect(rowOf(spec, MenuItemId.link).enabled, isTrue);
       },
     );
   });
@@ -173,6 +276,30 @@ void main() {
   });
 
   group('on the page', () {
+    testWidgets('the page menu\'s Most played row opens that page', (
+      tester,
+    ) async {
+      await pumpHistoryPage(
+        tester,
+        byYear: {
+          2026: playsOverDays([2, 2]),
+        },
+        routes: [_mostPlayedRoute],
+      );
+      final l10n = l10nOf(tester);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(HistoryHero),
+          matching: byIconButton(l10n.libraryMenuMore),
+        ),
+      );
+      await pumpMenu(tester);
+      await tester.tap(find.text(l10n.historyMenuMostPlayed));
+      await pumpMenu(tester);
+      expect(find.text(_mostPlayedMarker), findsOneWidget);
+      expect(find.byType(HistoryHero), findsNothing);
+    });
+
     testWidgets('the hero ⋮ opens the page menu in a sheet', (tester) async {
       final h = await pumpHistoryPage(
         tester,
@@ -194,7 +321,7 @@ void main() {
         l10n.libraryShuffle,
         l10n.libraryMenuAddToPlaylist,
         l10n.historyMenuMostPlayed,
-        l10n.playlistMenuExportM3u,
+        l10n.historyMenuExportM3u,
         l10n.historyMenuClear,
       ]) {
         expect(
@@ -228,6 +355,28 @@ void main() {
         expect(call.context.kind, PlayContextKind.history);
       },
     );
+
+    testWidgets('the day menu\'s "Open in Most played" shows that one day '
+        'there', (tester) async {
+      final h = await pumpHistoryPage(
+        tester,
+        byYear: {
+          2026: playsOverDays([2, 3]),
+        },
+        routes: [_mostPlayedRoute],
+      );
+      final l10n = l10nOf(tester);
+      await tester.longPress(find.text(l10n.historyDayYesterday).first);
+      await pumpMenu(tester);
+      await tester.tap(find.text(l10n.historyMostPlayedOpenDay));
+      await pumpMenu(tester);
+      final range = h.container.read(mostPlayedRangeProvider);
+      expect(range.preset, MostPlayedPreset.custom);
+      expect(range.customStart, DateTime(2026, 11, 19));
+      expect(range.customEndInclusive, DateTime(2026, 11, 19));
+      expect(range.back, 0);
+      expect(find.text(_mostPlayedMarker), findsOneWidget);
+    });
 
     testWidgets('a right click on a day bar opens the menu too', (
       tester,

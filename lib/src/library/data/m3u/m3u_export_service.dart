@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 
 import '../../../database/database.dart';
 import '../../../foundation/result.dart';
+import '../../../media/domain/track_id.dart';
 import '../../../platform/domain/document_picker.dart';
 import '../../../storage/domain/m3u/m3u_relative_path.dart';
 import '../../../storage/domain/m3u/m3u_write.dart';
@@ -30,9 +31,31 @@ class M3uExportService {
     String playlistUid,
     SaveTarget target, {
     required bool relative,
-  }) async {
+  }) =>
+      _guarded(target, () => loadM3uExportEntries(_db, playlistUid), relative);
+
+  /// Writes the songs [trackIds], in that order, to [target]: the same file
+  /// as a playlist's, for a list that is not one (Most played, History).
+  /// Rows with no file of their own are counted in `skipped` as in
+  /// [exportPlaylist].
+  Future<Result<M3uExportResult, M3uExportError>> exportTracks(
+    List<TrackId> trackIds,
+    SaveTarget target, {
+    required bool relative,
+  }) => _guarded(
+    target,
+    () =>
+        loadM3uExportEntriesByTracks(_db, [for (final t in trackIds) t.value]),
+    relative,
+  );
+
+  Future<Result<M3uExportResult, M3uExportError>> _guarded(
+    SaveTarget target,
+    Future<List<M3uExportEntry>?> Function() load,
+    bool relative,
+  ) async {
     try {
-      return await _export(playlistUid, target, relative);
+      return await _export(load, target, relative);
     } on Object {
       // Unexpected failure: give the created target up, then let it surface.
       await _discardQuietly(target);
@@ -41,11 +64,11 @@ class M3uExportService {
   }
 
   Future<Result<M3uExportResult, M3uExportError>> _export(
-    String playlistUid,
+    Future<List<M3uExportEntry>?> Function() load,
     SaveTarget target,
     bool relative,
   ) async {
-    final entries = await loadM3uExportEntries(_db, playlistUid);
+    final entries = await load();
     if (entries == null) return _fail(target, M3uExportError.playlistGone);
     String? dir;
     if (relative) {

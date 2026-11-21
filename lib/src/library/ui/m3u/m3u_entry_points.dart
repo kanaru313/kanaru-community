@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../media/domain/track_id.dart';
 import '../../../platform/state/document_picker_provider.dart';
 import 'm3u_export_flow.dart';
 import 'm3u_import_flow.dart';
@@ -19,6 +20,23 @@ Future<void> exportM3u(
   String uid, {
   required bool relative,
 }) => runM3uExport(context, uid, relative: relative);
+
+/// Exports a list of songs that is not a playlist (Most played, History) as
+/// M3U, in the order [tracks] gives, the file named after [name]. [tracks] is
+/// read when the export starts.
+Future<void> exportM3uTracks(
+  BuildContext context, {
+  required String name,
+  required String fallback,
+  required Future<List<TrackId>> Function() tracks,
+  required bool relative,
+}) => runM3uTrackListExport(
+  context,
+  name: name,
+  fallback: fallback,
+  tracks: tracks,
+  relative: relative,
+);
 
 /// Progress of a running M3U import, the first sliver of the playlists list.
 /// Draws nothing while no import has run for more than a second.

@@ -140,6 +140,137 @@ void main() {
     expect(env.picker.lastText, isNot(contains('b.mp3')));
   });
 
+  group('a list of songs', () {
+    test('is written in the order given, a repeat once', () async {
+      final a = await addTrack(
+        env.db,
+        env.source,
+        locator: 'a.mp3',
+        title: 'A',
+      );
+      final b = await addTrack(
+        env.db,
+        env.source,
+        locator: 'b.mp3',
+        title: 'B',
+      );
+      final c = await addTrack(
+        env.db,
+        env.source,
+        locator: 'c.mp3',
+        title: 'C',
+      );
+      final res = ok(
+        await service().exportTracks(
+          [TrackId(c), TrackId(a), TrackId(c), TrackId(b)],
+          target(),
+          relative: false,
+        ),
+      );
+      expect((res.written, res.skipped), (3, 0));
+      expect(
+        env.picker.lastText,
+        '#EXTM3U\n#EXTINF:-1,C\n${env.music}/c.mp3\n'
+        '#EXTINF:-1,A\n${env.music}/a.mp3\n'
+        '#EXTINF:-1,B\n${env.music}/b.mp3\n',
+      );
+    });
+
+    test(
+      'relative paths, and remote or cue rows skipped as in a playlist',
+      () async {
+        final a = await addTrack(
+          env.db,
+          env.source,
+          locator: 'd/a.mp3',
+          title: 'A',
+        );
+        final cue = await addTrack(env.db, env.source, locator: 'c.flac#2');
+        final remote = await addSource(
+          env.db,
+          kind: SourceKind.plugin,
+          root: 'p',
+        );
+        final r = await addTrack(env.db, remote, locator: 'id1');
+        final res = ok(
+          await service().exportTracks(
+            [TrackId(cue), TrackId(a), TrackId(r)],
+            target(),
+            relative: true,
+          ),
+        );
+        expect((res.written, res.skipped), (1, 2));
+        expect(
+          env.picker.lastText,
+          '#EXTM3U\n#EXTINF:-1,A\n../music/d/a.mp3\n',
+        );
+      },
+    );
+
+    test(
+      'an id with no song is left out; an unknown folder is typed',
+      () async {
+        final a = await addTrack(
+          env.db,
+          env.source,
+          locator: 'a.mp3',
+          title: 'A',
+        );
+        final res = ok(
+          await service().exportTracks(
+            [TrackId(9999), TrackId(a)],
+            target(),
+            relative: false,
+          ),
+        );
+        expect(res.written, 1);
+        const unknown = SaveTarget(name: 'o.m3u', handle: 'content://x');
+        final folder = await service().exportTracks(
+          [TrackId(a)],
+          unknown,
+          relative: true,
+        );
+        expect((folder as Err).error, M3uExportError.folderUnknown);
+        expect(env.picker.discarded, [unknown]);
+      },
+    );
+
+    test('more songs than one query holds keep their order', () async {
+      final ids = <int>[];
+      for (var i = 0; i < 1100; i++) {
+        ids.add(
+          await addTrack(env.db, env.source, locator: 's$i.mp3', title: 'T$i'),
+        );
+      }
+      final entries = await loadM3uExportEntriesByTracks(
+        env.db,
+        ids.reversed.toList(),
+      );
+      // Every song at its place, across the chunk boundaries.
+      expect(
+        [for (final e in entries) e.title],
+        [for (var i = 1099; i >= 0; i--) 'T$i'],
+      );
+    });
+
+    test('a song listed again after the first chunk counts once, at its '
+        'first place', () async {
+      final ids = <int>[];
+      for (var i = 0; i < 1100; i++) {
+        ids.add(
+          await addTrack(env.db, env.source, locator: 's$i.mp3', title: 'T$i'),
+        );
+      }
+      final entries = await loadM3uExportEntriesByTracks(env.db, [
+        ...ids,
+        ids[10],
+      ]);
+      expect(entries.length, 1100);
+      expect(entries[10].title, 'T10');
+      expect(entries.where((e) => e.title == 'T10').length, 1);
+    });
+  });
+
   test('a thrown write error discards the target and propagates', () async {
     final a = await addTrack(env.db, env.source, locator: 'a.mp3');
     final uid = await playlist([a]);

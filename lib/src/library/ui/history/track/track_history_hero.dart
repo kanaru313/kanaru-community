@@ -8,17 +8,19 @@ import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../media/domain/track_lines.dart';
 import '../../../../playback/ui/track_cover.dart';
 import '../../../domain/history/history_models.dart';
-import '../../../state/browse/detail_expand_providers.dart';
 import '../../../state/history/history_actions.dart';
 import '../../browse/library_labels.dart';
+import '../../menus/more_button.dart';
+import '../../menus/open_menu.dart';
 import '../../playlist_common/playlist_cover.dart' show playlistCoverFileSize;
 import 'track_history_labels.dart';
 
 /// Top of the page of one song's plays: its cover, title, artist, `N plays`,
-/// a single `[▶ Play]` and the summary of its plays.
+/// `[▶ Play] [⋮]` (one song: no shuffle; ⋮ is the song menu) and the summary
+/// of its plays, one fact per line.
 ///
 /// A song whose file is gone shows dimmed, with Play disabled and the reason
-/// as its tooltip.
+/// as its tooltip; it has no song menu.
 class TrackHistoryHero extends ConsumerStatefulWidget {
   const TrackHistoryHero({
     super.key,
@@ -70,10 +72,6 @@ class _TrackHistoryHeroState extends ConsumerState<TrackHistoryHero> {
       widget.today,
       formatTotal: (ms) => formatTotalDuration(l10n, ms),
     );
-    final pageKey = 'history-track:${track.id.value}';
-    final expanded = ref.watch(
-      detailDescriptionExpandedProvider.select((s) => s.contains(pageKey)),
-    );
     final play = FilledButton.icon(
       onPressed: missing || _serving ? null : () => unawaited(_play()),
       icon: const Icon(KIcons.play),
@@ -97,21 +95,51 @@ class _TrackHistoryHeroState extends ConsumerState<TrackHistoryHero> {
         title: track.title,
         line2: artist.isEmpty ? null : KDetailLine(text: artist),
         line3: l10n.historyHeroPlays(history.plays),
-        actions: missing
-            ? Tooltip(message: l10n.historyMissingTap, child: play)
-            : play,
-        description: summary == null
-            ? null
-            : KDetailDescription(
-                text: summary,
-                expanded: expanded,
-                onExpandedChanged: (v) => ref
-                    .read(detailDescriptionExpandedProvider.notifier)
-                    .set(pageKey, v),
-                moreLabel: l10n.libraryShowMore,
-                lessLabel: l10n.libraryShowLess,
+        actions: Wrap(
+          spacing: KSpace.x2,
+          runSpacing: KSpace.x2,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            missing
+                ? Tooltip(message: l10n.historyMissingTap, child: play)
+                : play,
+            if (!missing)
+              LibraryMoreButton(
+                large: true,
+                onPressed: ({required viaKeyboard}) => unawaited(
+                  openSongMenu(context, track, viaKeyboard: viaKeyboard),
+                ),
               ),
+          ],
+        ),
+        description: summary.isEmpty ? null : _SummaryLines(lines: summary),
       ),
+    );
+  }
+}
+
+/// The facts of the song's plays, one line each (at most three, so the text
+/// is not clamped).
+class _SummaryLines extends StatelessWidget {
+  const _SummaryLines({required this.lines});
+
+  final List<String> lines;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final line in lines)
+          Text(
+            line,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+      ],
     );
   }
 }

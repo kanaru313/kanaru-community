@@ -5598,6 +5598,18 @@ abstract class AppLocalizations {
   /// **'No playable songs to add'**
   String get historyNothingToAdd;
 
+  /// No description provided for @historyMenuExportM3u.
+  ///
+  /// In en, this message translates to:
+  /// **'Export M3U…'**
+  String get historyMenuExportM3u;
+
+  /// No description provided for @historyNothingToExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to export'**
+  String get historyNothingToExport;
+
   /// No description provided for @historyClearTitle.
   ///
   /// In en, this message translates to:
@@ -5706,22 +5718,52 @@ abstract class AppLocalizations {
   /// **'No plays yet'**
   String get historyTrackEmpty;
 
+  /// No description provided for @historyTrackColDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get historyTrackColDay;
+
+  /// No description provided for @historyTrackColTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get historyTrackColTime;
+
+  /// No description provided for @historyTrackColListened.
+  ///
+  /// In en, this message translates to:
+  /// **'Listened'**
+  String get historyTrackColListened;
+
+  /// No description provided for @historyTrackListHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} play, newest first} other{{count} plays, newest first}}'**
+  String historyTrackListHeader(int count);
+
+  /// No description provided for @historyTrackRemovePlayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the play at {time}, {date}'**
+  String historyTrackRemovePlayLabel(String time, String date);
+
   /// No description provided for @historyTrackSummaryLast.
   ///
   /// In en, this message translates to:
-  /// **'Last played {when}'**
+  /// **'Last played: {when}'**
   String historyTrackSummaryLast(String when);
 
   /// No description provided for @historyTrackSummaryFirst.
   ///
   /// In en, this message translates to:
-  /// **'first played {date}'**
+  /// **'First played: {date}'**
   String historyTrackSummaryFirst(String date);
 
   /// No description provided for @historyTrackSummaryTotal.
   ///
   /// In en, this message translates to:
-  /// **'{duration} listened in total'**
+  /// **'Listened in total: {duration}'**
   String historyTrackSummaryTotal(String duration);
 
   /// No description provided for @historyTrackListened.
@@ -5735,6 +5777,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{day} {time}'**
   String historyTrackWhen(String day, String time);
+
+  /// Caption above the header block of the custom range dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Custom range'**
+  String get historyRangeDialogCaption;
+
+  /// Hint in the custom range dialog before the first day is picked
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the start date'**
+  String get historyRangePickStart;
+
+  /// Hint in the custom range dialog after the first day is picked
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the end date'**
+  String get historyRangePickEnd;
+
+  /// Days picked, shown as the second line of the custom range dialog header
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String historyRangeDays(int count);
+
+  /// Screen reader cue on a day of the custom range calendar that holds plays
+  ///
+  /// In en, this message translates to:
+  /// **'Has listens'**
+  String get historyRangeDayHasListens;
+
+  /// Shown in the custom range dialog header until the first day is picked
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get historyRangeStartPlaceholder;
+
+  /// Shown in the custom range dialog header until the last day is picked
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get historyRangeEndPlaceholder;
+
+  /// Save button of the custom range dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get historyRangeSave;
+
+  /// No description provided for @historyMostPlayedRange1Day.
+  ///
+  /// In en, this message translates to:
+  /// **'1 day'**
+  String get historyMostPlayedRange1Day;
+
+  /// No description provided for @historyMostPlayedRange7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get historyMostPlayedRange7Days;
+
+  /// No description provided for @historyMostPlayedRange30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'30 days'**
+  String get historyMostPlayedRange30Days;
+
+  /// No description provided for @historyMostPlayedRange6Months.
+  ///
+  /// In en, this message translates to:
+  /// **'6 months'**
+  String get historyMostPlayedRange6Months;
+
+  /// No description provided for @historyMostPlayedRange1Year.
+  ///
+  /// In en, this message translates to:
+  /// **'1 year'**
+  String get historyMostPlayedRange1Year;
+
+  /// No description provided for @historyMostPlayedRangeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get historyMostPlayedRangeAll;
+
+  /// No description provided for @historyMostPlayedRangeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom…'**
+  String get historyMostPlayedRangeCustom;
+
+  /// No description provided for @historyMostPlayedRangesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Time range'**
+  String get historyMostPlayedRangesLabel;
+
+  /// No description provided for @historyMostPlayedPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous period'**
+  String get historyMostPlayedPrevious;
+
+  /// No description provided for @historyMostPlayedNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next period'**
+  String get historyMostPlayedNext;
+
+  /// No description provided for @historyMostPlayedTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Top {count}'**
+  String historyMostPlayedTop(int count);
+
+  /// No description provided for @historyMostPlayedTopLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs shown'**
+  String get historyMostPlayedTopLabel;
+
+  /// No description provided for @historyMostPlayedLimitCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom…'**
+  String get historyMostPlayedLimitCustom;
+
+  /// No description provided for @historyMostPlayedLimitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'From 1 to 1000 songs'**
+  String get historyMostPlayedLimitHint;
+
+  /// No description provided for @historyMostPlayedLimitCustomValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Top {count} · from 1 to 1000 songs'**
+  String historyMostPlayedLimitCustomValue(int count);
+
+  /// No description provided for @historyMostPlayedLimitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranked songs'**
+  String get historyMostPlayedLimitTitle;
+
+  /// No description provided for @historyMostPlayedLimitField.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs'**
+  String get historyMostPlayedLimitField;
+
+  /// No description provided for @historyMostPlayedLimitError.
+  ///
+  /// In en, this message translates to:
+  /// **'Only numbers from 1 to 1000'**
+  String get historyMostPlayedLimitError;
+
+  /// No description provided for @historyMostPlayedHeroTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'{songs, plural, =1{1 song} other{{songs} songs}} · {plays, plural, =1{1 play} other{{plays} plays}}'**
+  String historyMostPlayedHeroTotals(int songs, int plays);
+
+  /// No description provided for @historyMostPlayedPlays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 play} other{{count} plays}}'**
+  String historyMostPlayedPlays(int count);
+
+  /// No description provided for @historyMostPlayedRowMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{plays} · can\'t play'**
+  String historyMostPlayedRowMissing(String plays);
+
+  /// No description provided for @historyMostPlayedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No plays in this range.'**
+  String get historyMostPlayedEmpty;
+
+  /// No description provided for @historyMostPlayedPlayFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t play the list'**
+  String get historyMostPlayedPlayFailed;
+
+  /// No description provided for @historyMostPlayedMenuPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play (by rank)'**
+  String get historyMostPlayedMenuPlay;
+
+  /// No description provided for @historyMostPlayedPlaylistName.
+  ///
+  /// In en, this message translates to:
+  /// **'Most played · {range}'**
+  String historyMostPlayedPlaylistName(String range);
+
+  /// No description provided for @historyMostPlayedOpenDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Most played'**
+  String get historyMostPlayedOpenDay;
+
+  /// No description provided for @historyMostPlayedFavoriteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add to Favorites'**
+  String get historyMostPlayedFavoriteFailed;
 }
 
 class _AppLocalizationsDelegate

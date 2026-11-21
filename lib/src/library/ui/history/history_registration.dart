@@ -32,7 +32,6 @@ void registerHistory(ExtensionRegistry registry) {
         order: 250,
         mobileTab: false,
         parentId: 'playlists',
-        comingSoon: true,
       ),
     );
 }

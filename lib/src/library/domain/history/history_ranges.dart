@@ -122,6 +122,36 @@ class MostPlayedRange {
       );
 }
 
+/// The days the range picker may offer: from the first play (or today, when
+/// that is earlier) to the last play (or today). A clock that was wrong can
+/// leave plays in the future.
+({DateTime first, DateTime last}) pickerBounds(
+  ({int first, int last}) played,
+  DateTime now,
+) {
+  final today = localDay(now);
+  final first = localDay(DateTime.fromMillisecondsSinceEpoch(played.first));
+  final last = localDay(DateTime.fromMillisecondsSinceEpoch(played.last));
+  return (
+    first: first.isBefore(today) ? first : today,
+    last: last.isAfter(today) ? last : today,
+  );
+}
+
+/// The selection after a tap on [day]: with no start, or a complete range, the
+/// day starts a new one; a day on or after the start ends it (the same day is
+/// a one-day range); an earlier day becomes the new start.
+({DateTime? start, DateTime? end}) applyRangeTap(
+  DateTime? start,
+  DateTime? end,
+  DateTime day,
+) {
+  if (start == null || end != null) return (start: day, end: null);
+  return day.isBefore(start)
+      ? (start: day, end: null)
+      : (start: start, end: day);
+}
+
 /// Whether [window] takes in every play in [played], so the all-time list
 /// (cheaper to read, the same answer) can stand in for it.
 bool windowCoversPlays(
@@ -132,3 +162,25 @@ bool windowCoversPlays(
 /// [limit] cut to the 1-1000 the list accepts.
 int clampMostPlayedLimit(int limit) =>
     limit.clamp(minMostPlayedLimit, maxMostPlayedLimit);
+
+/// What the Top N number field holds.
+enum MostPlayedLimitInput {
+  /// Nothing typed yet: no error, just not saveable.
+  empty,
+
+  /// A whole number from 1 to 1000.
+  valid,
+
+  /// Digits, but 0 or more than 1000.
+  outOfRange,
+}
+
+/// Judges the text of the Top N number field (digits only, as the field
+/// filters them).
+MostPlayedLimitInput checkMostPlayedLimitText(String text) {
+  final value = int.tryParse(text.trim());
+  if (text.trim().isEmpty || value == null) return MostPlayedLimitInput.empty;
+  return value >= minMostPlayedLimit && value <= maxMostPlayedLimit
+      ? MostPlayedLimitInput.valid
+      : MostPlayedLimitInput.outOfRange;
+}

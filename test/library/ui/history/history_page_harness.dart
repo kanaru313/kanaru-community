@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/database/app_database.dart';
 import 'package:kanaru/src/database/state/database_providers.dart';
@@ -66,7 +67,9 @@ class HistoryHarness {
 /// [years] and [overview] default from [byYear] (every play counted).
 /// With [pushed] the page is opened from a home page (tap "open history").
 /// [recorder] replaces the listen recorder the clear goes through,
-/// [playbackCommands] the fake player, [page] the page under test.
+/// [playbackCommands] the fake player, [page] the page under test. With
+/// [routes] the page is the `/` route of a router that also has them (for a
+/// test of where a menu row goes).
 Future<HistoryHarness> pumpHistoryPage(
   WidgetTester tester, {
   required Map<int, List<HistoryPlay>> byYear,
@@ -83,6 +86,7 @@ Future<HistoryHarness> pumpHistoryPage(
   ListenRecorder? recorder,
   FakePlaybackCommands? playbackCommands,
   Widget page = const HistoryPage(),
+  List<RouteBase>? routes,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, height);
@@ -121,39 +125,65 @@ Future<HistoryHarness> pumpHistoryPage(
   if (!recording) {
     await container.read(historyEnabledProvider.notifier).set(false);
   }
-  await tester.pumpWidget(
-    UncontrolledProviderScope(
-      container: container,
-      child: MaterialApp(
-        theme: buildKanaruTheme(brightness: Brightness.light),
-        locale: locale,
-        localizationsDelegates: [
-          AppLocalizations.delegate,
-          ...GlobalMaterialLocalizations.delegates,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(textScale),
-            disableAnimations: !animations,
-          ),
-          child: child!,
-        ),
-        home: pushed
-            ? Scaffold(
-                body: Builder(
-                  builder: (context) => TextButton(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const Scaffold(body: HistoryPage()),
-                      ),
-                    ),
-                    child: const Text('open history'),
-                  ),
-                ),
-              )
-            : Scaffold(body: page),
+  Widget app(Widget? home) {
+    final delegates = [
+      AppLocalizations.delegate,
+      ...GlobalMaterialLocalizations.delegates,
+    ];
+    Widget scale(BuildContext context, Widget? child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        textScaler: TextScaler.linear(textScale),
+        disableAnimations: !animations,
       ),
+      child: child!,
+    );
+    final theme = buildKanaruTheme(brightness: Brightness.light);
+    return UncontrolledProviderScope(
+      container: container,
+      child: routes == null
+          ? MaterialApp(
+              theme: theme,
+              locale: locale,
+              localizationsDelegates: delegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              builder: scale,
+              home: home,
+            )
+          : MaterialApp.router(
+              theme: theme,
+              locale: locale,
+              localizationsDelegates: delegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              builder: scale,
+              routerConfig: GoRouter(
+                routes: [
+                  GoRoute(
+                    path: '/',
+                    builder: (context, state) => Scaffold(body: page),
+                  ),
+                  ...routes,
+                ],
+              ),
+            ),
+    );
+  }
+
+  await tester.pumpWidget(
+    app(
+      pushed
+          ? Scaffold(
+              body: Builder(
+                builder: (context) => TextButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const Scaffold(body: HistoryPage()),
+                    ),
+                  ),
+                  child: const Text('open history'),
+                ),
+              ),
+            )
+          : Scaffold(body: page),
     ),
   );
   if (pushed) {

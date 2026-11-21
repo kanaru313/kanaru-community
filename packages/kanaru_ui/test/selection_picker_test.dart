@@ -20,6 +20,7 @@ Widget _opener(
   GlobalKey? anchor,
   Alignment align = Alignment.center,
   KAnchorAlign anchorAlign = KAnchorAlign.start,
+  SelectionPickerPresentation presentation = SelectionPickerPresentation.auto,
 }) {
   return Align(
     alignment: align,
@@ -36,6 +37,7 @@ Widget _opener(
             confirm: confirm,
             anchor: anchor,
             anchorAlign: anchorAlign,
+            presentation: presentation,
           ),
         ),
         child: const Text('open'),
@@ -134,6 +136,134 @@ void main() {
       tester.getTopLeft(find.text('ORDER')).dy,
       lessThan(tester.getTopLeft(find.text('One')).dy),
     );
+  });
+
+  group('anchored presentation on a phone-width surface', () {
+    Future<Future<int?>> open(
+      WidgetTester tester,
+      GlobalKey anchor, {
+      Alignment align = Alignment.center,
+    }) async {
+      useWindow(tester, const Size(360, 700));
+      late Future<int?> result;
+      await tester.pumpWidget(
+        host(
+          _opener(
+            (f) => result = f,
+            anchor: anchor,
+            align: align,
+            presentation: SelectionPickerPresentation.anchored,
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      return result;
+    }
+
+    testWidgets('opens a panel under the trigger, not a sheet', (tester) async {
+      final anchor = GlobalKey();
+      final result = await open(tester, anchor);
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.byType(CustomSingleChildLayout), findsWidgets);
+      final a = tester.getRect(find.byKey(anchor));
+      expect(tester.getTopLeft(find.text('Pick')).dy, greaterThan(a.bottom));
+      final panel = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(CustomSingleChildLayout),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      expect(panel.left, greaterThanOrEqualTo(0));
+      expect(panel.right, lessThanOrEqualTo(360));
+      // Dense rows: 40 dp.
+      expect(tester.getSize(find.byType(SelectionRow).first).height, 40);
+      expect(
+        tester.getSemantics(find.text('One')),
+        isSemantics(isSelected: true, hasSelectedState: true),
+      );
+      await tester.tap(find.text('Two'));
+      await tester.pumpAndSettle();
+      expect(await result, 2);
+    });
+
+    testWidgets('flips above a trigger near the bottom', (tester) async {
+      final anchor = GlobalKey();
+      await open(tester, anchor, align: Alignment.bottomLeft);
+      final a = tester.getRect(find.byKey(anchor));
+      expect(tester.getBottomLeft(find.text('Two')).dy, lessThan(a.top));
+    });
+
+    testWidgets('stays above the bottom inset; last row is hittable', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(360, 700));
+      tester.view.padding = const FakeViewPadding(bottom: 120);
+      tester.view.viewPadding = const FakeViewPadding(bottom: 120);
+      final anchor = GlobalKey();
+      late Future<int?> result;
+      // The trigger sits low enough that the panel would run into the inset
+      // when opened below it (limit 700 - 16 - 120) but still fits above the
+      // screen's own bottom margin: only the inset forces the flip up.
+      await tester.pumpWidget(
+        host(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 200),
+            child: _opener(
+              (f) => result = f,
+              anchor: anchor,
+              align: Alignment.bottomLeft,
+              presentation: SelectionPickerPresentation.anchored,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      final a = tester.getRect(find.byKey(anchor));
+      final panel = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(CustomSingleChildLayout),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      expect(panel.bottom, lessThanOrEqualTo(700 - 120));
+      expect(panel.bottom, lessThanOrEqualTo(a.top), reason: 'flipped above');
+      final last = find.text('Two');
+      await tester.tap(last);
+      await tester.pumpAndSettle();
+      expect(await result, 2);
+    });
+
+    testWidgets('Back closes with null', (tester) async {
+      final result = await open(tester, GlobalKey());
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(await result, isNull);
+    });
+
+    testWidgets('a tap outside closes with null', (tester) async {
+      final result = await open(tester, GlobalKey());
+      await tester.tapAt(const Offset(2, 690));
+      await tester.pumpAndSettle();
+      expect(await result, isNull);
+      expect(find.text('Pick'), findsNothing);
+    });
+  });
+
+  testWidgets('default presentation on a phone is still a sheet', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(360, 700));
+    final anchor = GlobalKey();
+    await tester.pumpWidget(host(_opener((_) {}, anchor: anchor)));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsOneWidget);
   });
 
   testWidgets('desktop with anchor opens a panel under it', (tester) async {

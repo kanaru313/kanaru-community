@@ -101,6 +101,8 @@
   "historyMenuTrackHistory": "History of this song",
   "historyMenuRemovePlay": "Remove from history",
   "historyNothingToAdd": "No playable songs to add",
+  "historyMenuExportM3u": "Export M3U…",
+  "historyNothingToExport": "Nothing to export",
   "historyClearTitle": "Clear history?",
   "historyClearHour": "Last hour",
   "historyClearToday": "Today",
@@ -164,7 +166,29 @@
   },
   "historyMenuMissing": "Can't play",
   "historyTrackEmpty": "No plays yet",
-  "historyTrackSummaryLast": "Last played {when}",
+  "historyTrackColDay": "Day",
+  "historyTrackColTime": "Time",
+  "historyTrackColListened": "Listened",
+  "historyTrackListHeader": "{count, plural, one{{count} play, newest first} other{{count} plays, newest first}}",
+  "@historyTrackListHeader": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyTrackRemovePlayLabel": "Remove the play at {time}, {date}",
+  "@historyTrackRemovePlayLabel": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackSummaryLast": "Last played: {when}",
   "@historyTrackSummaryLast": {
     "placeholders": {
       "when": {
@@ -172,7 +196,7 @@
       }
     }
   },
-  "historyTrackSummaryFirst": "first played {date}",
+  "historyTrackSummaryFirst": "First played: {date}",
   "@historyTrackSummaryFirst": {
     "placeholders": {
       "date": {
@@ -180,7 +204,7 @@
       }
     }
   },
-  "historyTrackSummaryTotal": "{duration} listened in total",
+  "historyTrackSummaryTotal": "Listened in total: {duration}",
   "@historyTrackSummaryTotal": {
     "placeholders": {
       "duration": {
@@ -206,5 +230,114 @@
         "type": "String"
       }
     }
-  }
+  },
+  "historyRangeDialogCaption": "Custom range",
+  "@historyRangeDialogCaption": {
+    "description": "Caption above the header block of the custom range dialog"
+  },
+  "historyRangePickStart": "Pick the start date",
+  "@historyRangePickStart": {
+    "description": "Hint in the custom range dialog before the first day is picked"
+  },
+  "historyRangePickEnd": "Pick the end date",
+  "@historyRangePickEnd": {
+    "description": "Hint in the custom range dialog after the first day is picked"
+  },
+  "historyRangeDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "@historyRangeDays": {
+    "description": "Days picked, shown as the second line of the custom range dialog header",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyRangeDayHasListens": "Has listens",
+  "@historyRangeDayHasListens": {
+    "description": "Screen reader cue on a day of the custom range calendar that holds plays"
+  },
+  "historyRangeStartPlaceholder": "Start date",
+  "@historyRangeStartPlaceholder": {
+    "description": "Shown in the custom range dialog header until the first day is picked"
+  },
+  "historyRangeEndPlaceholder": "End date",
+  "@historyRangeEndPlaceholder": {
+    "description": "Shown in the custom range dialog header until the last day is picked"
+  },
+  "historyRangeSave": "Save",
+  "@historyRangeSave": {
+    "description": "Save button of the custom range dialog"
+  },
+  "historyMostPlayedRange1Day": "1 day",
+  "historyMostPlayedRange7Days": "7 days",
+  "historyMostPlayedRange30Days": "30 days",
+  "historyMostPlayedRange6Months": "6 months",
+  "historyMostPlayedRange1Year": "1 year",
+  "historyMostPlayedRangeAll": "All time",
+  "historyMostPlayedRangeCustom": "Custom…",
+  "historyMostPlayedRangesLabel": "Time range",
+  "historyMostPlayedPrevious": "Previous period",
+  "historyMostPlayedNext": "Next period",
+  "historyMostPlayedTop": "Top {count}",
+  "@historyMostPlayedTop": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyMostPlayedTopLabel": "Songs shown",
+  "historyMostPlayedLimitCustom": "Custom…",
+  "historyMostPlayedLimitHint": "From 1 to 1000 songs",
+  "historyMostPlayedLimitCustomValue": "Top {count} · from 1 to 1000 songs",
+  "@historyMostPlayedLimitCustomValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyMostPlayedLimitTitle": "Ranked songs",
+  "historyMostPlayedLimitField": "Songs",
+  "historyMostPlayedLimitError": "Only numbers from 1 to 1000",
+  "historyMostPlayedHeroTotals": "{songs, plural, =1{1 song} other{{songs} songs}} · {plays, plural, =1{1 play} other{{plays} plays}}",
+  "@historyMostPlayedHeroTotals": {
+    "placeholders": {
+      "songs": {
+        "type": "int"
+      },
+      "plays": {
+        "type": "int"
+      }
+    }
+  },
+  "historyMostPlayedPlays": "{count, plural, =1{1 play} other{{count} plays}}",
+  "@historyMostPlayedPlays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyMostPlayedRowMissing": "{plays} · can't play",
+  "@historyMostPlayedRowMissing": {
+    "placeholders": {
+      "plays": {
+        "type": "String"
+      }
+    }
+  },
+  "historyMostPlayedEmpty": "No plays in this range.",
+  "historyMostPlayedPlayFailed": "Couldn't play the list",
+  "historyMostPlayedMenuPlay": "Play (by rank)",
+  "historyMostPlayedPlaylistName": "Most played · {range}",
+  "@historyMostPlayedPlaylistName": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "historyMostPlayedOpenDay": "Open in Most played",
+  "historyMostPlayedFavoriteFailed": "Couldn't add to Favorites"
 }

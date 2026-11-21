@@ -1,25 +1,23 @@
 import 'dart:async';
 
-import 'package:flutter/semantics.dart'
-    show CustomSemanticsAction, SemanticsAction;
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/history/history_change.dart';
 import 'package:kanaru/src/library/domain/history/history_models.dart';
-import 'package:kanaru/src/library/state/browse/selection_providers.dart';
 import 'package:kanaru/src/library/domain/history/history_days.dart';
 import 'package:kanaru/src/library/state/history/history_providers.dart';
 import 'package:kanaru/src/library/state/history/local_day_provider.dart';
 import 'package:kanaru/src/library/ui/history/history_locations.dart';
 import 'package:kanaru/src/library/ui/history/history_page.dart';
 import 'package:kanaru/src/library/ui/history/track/track_history_page.dart';
-import 'package:kanaru/src/media/domain/track_id.dart';
+import 'package:kanaru/src/library/ui/history/track/track_history_rows.dart';
 import 'package:kanaru/src/media/domain/track_info.dart';
 import 'package:kanaru/src/router/state/router_provider.dart';
-import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../support/app_harness.dart';
+import '../../../../support/icon_button_finders.dart';
 import '../../../history/state/fake_history_store.dart';
 import '../history_page_harness.dart';
 
@@ -78,74 +76,93 @@ Future<void> _settle(WidgetTester tester) async {
   }
 }
 
-const _rowToday = 'Hôm nay · 20/11/2026 · 21:42';
-const _rowSaturday = 'Thứ Bảy · 14/11/2026 · 21:42';
 const _empty = 'Chưa có lượt nghe nào';
+const _removeTip = 'Xoá khỏi lịch sử';
 
-/// The Delete key on the row of [title].
-Future<void> _remove(WidgetTester tester, String title) async {
-  await focusRow(tester, title);
+Finder _row(int i) => find.byType(TrackHistoryRow).at(i);
+
+/// The text of the cell [text] inside row [i].
+Finder _in(int i, String text) =>
+    find.descendant(of: _row(i), matching: find.text(text));
+
+/// The Delete key on row [i]: its button takes the focus, as Tab would.
+Future<void> _remove(WidgetTester tester, int i) async {
+  final icon = find
+      .descendant(
+        of: byIconButton(_removeTip).at(i),
+        matching: find.byType(Icon),
+      )
+      .first;
+  Focus.of(tester.element(icon)).requestFocus();
+  await tester.pump();
   await tester.sendKeyEvent(LogicalKeyboardKey.delete);
   await _settle(tester);
 }
 
-List<bool> _selectedRows(WidgetTester tester) => [
-  for (final row in tester.widgetList<KMediaCard>(find.byType(KMediaCard)))
-    row.selected,
-];
-
 void main() {
-  group('with plays', () {
-    testWidgets('the hero names the song and the rows list every play, '
-        'newest first', (tester) async {
+  group('hero', () {
+    testWidgets('names the song, its artist and the plays; Play and ⋮ only', (
+      tester,
+    ) async {
       await _pump(tester);
       expect(find.text('Song 7'), findsWidgets);
       expect(find.text('Artist'), findsOneWidget);
       expect(find.text('3 lượt nghe'), findsOneWidget);
-      expect(
-        find.text(
-          'Lần cuối hôm nay 21:42 · lần đầu 07/10/2026 · '
-          'đã nghe tổng 22 phút.',
+      expect(find.text('Phát'), findsOneWidget);
+      expect(find.text('Phát ngẫu nhiên'), findsNothing);
+      expect(byIconButton('Phát ngẫu nhiên'), findsNothing);
+      expect(byIconButton('Tùy chọn khác'), findsOneWidget);
+    });
+
+    testWidgets('the summary is three lines, no full stop', (tester) async {
+      await _pump(tester);
+      expect(find.text('Lần cuối: hôm nay 21:42'), findsOneWidget);
+      expect(find.text('Lần đầu: 07/10/2026'), findsOneWidget);
+      expect(find.text('Đã nghe tổng: 22 phút'), findsOneWidget);
+      final ys = [
+        for (final t in [
+          'Lần cuối: hôm nay 21:42',
+          'Lần đầu: 07/10/2026',
+          'Đã nghe tổng: 22 phút',
+        ])
+          tester.getTopLeft(find.text(t)).dy,
+      ];
+      expect(ys[0], lessThan(ys[1]));
+      expect(ys[1], lessThan(ys[2]));
+    });
+
+    testWidgets('a figure the song has none of leaves its line out', (
+      tester,
+    ) async {
+      final plays = [
+        HistoryPlay(
+          id: 1,
+          uid: 'n',
+          track: info(_id, title: 'Song 7', artist: 'Artist'),
+          playedAt: DateTime(2026, 10, 7, 8, 30).millisecondsSinceEpoch,
+          listenedMs: null,
+          ordinal: 1,
         ),
-        findsOneWidget,
-      );
-      expect(find.text(_rowToday), findsOneWidget);
-      expect(find.text(_rowSaturday), findsOneWidget);
-      expect(
-        tester.getTopLeft(find.text(_rowToday)).dy,
-        lessThan(tester.getTopLeft(find.text(_rowSaturday)).dy),
-      );
-      expect(find.text('đã nghe 3:12'), findsOneWidget);
-      expect(find.text('đã nghe 18:48'), findsOneWidget);
-      // The play with no length has no second line.
-      expect(find.textContaining('đã nghe '), findsNWidgets(2 + 1));
-    });
-
-    testWidgets('a last play of yesterday reads "hôm qua"', (tester) async {
-      final plays = [playAt(_id, DateTime(2026, 11, 19, 8, 5), uid: 'y')];
+      ];
       await _pump(tester, store: _store(plays: plays));
-      expect(find.textContaining('Lần cuối hôm qua 8:05'), findsOneWidget);
+      expect(find.textContaining('Lần cuối: 07/10 8:30'), findsOneWidget);
+      expect(find.textContaining('Lần đầu: 07/10/2026'), findsOneWidget);
+      expect(find.textContaining('Đã nghe tổng'), findsNothing);
     });
 
-    testWidgets('a last play of an older day reads its date', (tester) async {
-      final plays = [playAt(_id, DateTime(2026, 10, 7, 21, 42), uid: 'o')];
-      await _pump(tester, store: _store(plays: plays));
-      expect(find.textContaining('Lần cuối 07/10 21:42'), findsOneWidget);
-    });
-
-    testWidgets('a last play within a week reads its weekday', (tester) async {
-      final plays = [playAt(_id, DateTime(2026, 11, 14, 21, 42), uid: 'w')];
-      await _pump(tester, store: _store(plays: plays));
-      expect(find.textContaining('Lần cuối thứ bảy 21:42'), findsOneWidget);
-    });
-
-    testWidgets('a tap on a row does nothing', (tester) async {
-      final h = await _pump(tester);
-      await tester.tap(find.text(_rowToday));
-      await _settle(tester);
-      expect(h.playback.calls, isEmpty);
-      expect(_selectedRows(tester), everyElement(isFalse));
-    });
+    for (final (name, at, line) in [
+      ('yesterday', DateTime(2026, 11, 19, 8, 5), 'Lần cuối: hôm qua 8:05'),
+      ('a weekday', DateTime(2026, 11, 14, 21, 42), 'Lần cuối: thứ bảy 21:42'),
+      ('a date', DateTime(2026, 10, 7, 21, 42), 'Lần cuối: 07/10 21:42'),
+    ]) {
+      testWidgets('the last play reads $name', (tester) async {
+        await _pump(
+          tester,
+          store: _store(plays: [playAt(_id, at, uid: 'x')]),
+        );
+        expect(find.text(line), findsOneWidget);
+      });
+    }
 
     testWidgets('Play queues just this song', (tester) async {
       final h = await _pump(tester);
@@ -154,9 +171,17 @@ void main() {
       expect(h.playback.calls, hasLength(1));
     });
 
-    testWidgets('both languages: English words the rows and the summary', (
-      tester,
-    ) async {
+    testWidgets('the ⋮ opens the menu of the song', (tester) async {
+      await _pump(tester);
+      await tester.tap(byIconButton('Tùy chọn khác'));
+      await tester.pumpAndSettle();
+      // The head of the song menu: the song itself.
+      expect(find.text('Song 7'), findsWidgets);
+      expect(find.text(_removeTip), findsNothing);
+      expect(find.text('Lịch sử bài này'), findsNothing);
+    });
+
+    testWidgets('English words the labels and the summary', (tester) async {
       await pumpHistoryPage(
         tester,
         byYear: const {},
@@ -164,14 +189,112 @@ void main() {
         locale: const Locale('en'),
         page: const TrackHistoryPage(trackId: _id),
       );
-      expect(find.text('Today · 20/11/2026 · 21:42'), findsOneWidget);
-      expect(find.text('listened 3:12'), findsOneWidget);
+      expect(find.text('Last played: today 21:42'), findsOneWidget);
+      expect(find.text('First played: 07/10/2026'), findsOneWidget);
+      expect(find.text('Listened in total: 22 min'), findsOneWidget);
+      expect(find.text('3 plays, newest first'), findsOneWidget);
+      expect(_in(0, 'Today'), findsOneWidget);
+    });
+  });
+
+  group('the table of plays', () {
+    testWidgets('a header row, then one row per play, newest first', (
+      tester,
+    ) async {
+      await _pump(tester);
+      expect(find.text('3 lượt nghe, mới nhất trước'), findsOneWidget);
+      for (final h in ['Ngày', 'Giờ', 'Đã nghe']) {
+        expect(find.text(h), findsOneWidget, reason: h);
+      }
+      expect(find.byType(TrackHistoryRow), findsNWidgets(3));
       expect(
-        find.text(
-          'Last played today 21:42 · first played 07/10/2026 · '
-          '22 min listened in total.',
-        ),
+        tester.getTopLeft(find.text('Ngày')).dy,
+        lessThan(tester.getTopLeft(_row(0)).dy),
+      );
+      expect(
+        tester.getTopLeft(_row(0)).dy,
+        lessThan(tester.getTopLeft(_row(1)).dy),
+      );
+    });
+
+    testWidgets('Today and Yesterday by name, other days as dd/mm/yyyy', (
+      tester,
+    ) async {
+      final plays = [
+        playAt(_id, DateTime(2026, 11, 20, 21, 42), uid: 'a'),
+        playAt(_id, DateTime(2026, 11, 19, 8, 5), uid: 'b'),
+        playAt(_id, DateTime(2026, 11, 14, 21, 42), uid: 'c'),
+        playAt(_id, DateTime(2026, 10, 7, 9, 30), uid: 'd'),
+      ];
+      await _pump(tester, store: _store(plays: plays));
+      expect(_in(0, 'Hôm nay'), findsOneWidget);
+      expect(_in(1, 'Hôm qua'), findsOneWidget);
+      // No weekday: the date alone, with its year.
+      expect(_in(2, '14/11/2026'), findsOneWidget);
+      expect(_in(3, '07/10/2026'), findsOneWidget);
+    });
+
+    testWidgets('time and listened length each sit in their own cell', (
+      tester,
+    ) async {
+      await _pump(tester);
+      expect(_in(0, '21:42'), findsOneWidget);
+      expect(_in(0, '3:12'), findsOneWidget);
+      expect(_in(1, '18:48'), findsOneWidget);
+      // The play with no length has an empty last cell, not a made-up one.
+      expect(_in(2, '8:30'), findsOneWidget);
+      expect(
+        find.descendant(of: _row(2), matching: find.textContaining(':')),
         findsOneWidget,
+      );
+    });
+
+    testWidgets('a tap on a row does nothing', (tester) async {
+      final h = await _pump(tester);
+      await tester.tap(_row(0));
+      await _settle(tester);
+      expect(h.playback.calls, isEmpty);
+    });
+
+    testWidgets('a row is 48 dp and keeps one line at 200 % text', (
+      tester,
+    ) async {
+      await _pump(tester, textScale: 2, width: 520);
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(_row(0)).height, greaterThanOrEqualTo(48));
+      await tester.drag(_row(0), const Offset(0, -400));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('at 200 % text the time and listened figures are never cut; '
+        'the day gives way', (tester) async {
+      // 520 dp: the test font is 1 em wide per glyph, about twice a real
+      // digit, so this is the 400 dp phone in practice.
+      await _pump(tester, textScale: 2, width: 520);
+      final figures = find.descendant(
+        of: _row(0),
+        matching: find.textContaining(RegExp(r'^\d{1,2}:\d{2}')),
+      );
+      expect(figures, findsWidgets);
+      for (final e in figures.evaluate()) {
+        final paragraph = e.renderObject! as RenderParagraph;
+        expect(
+          paragraph.didExceedMaxLines,
+          isFalse,
+          reason: (e.widget as Text).data,
+        );
+      }
+      final day = find.descendant(
+        of: _row(0),
+        matching: find.byWidgetPredicate(
+          (w) => w is Text && w.data != null && !w.data!.contains(':'),
+        ),
+      );
+      expect(
+        (day.evaluate().first.renderObject! as RenderParagraph)
+            .didExceedMaxLines,
+        isTrue,
       );
     });
   });
@@ -184,11 +307,12 @@ void main() {
       expect(find.text(_empty), findsOneWidget);
       expect(find.text('Song 7'), findsWidgets);
       expect(find.text('0 lượt nghe'), findsOneWidget);
-      expect(find.byType(KMediaCard), findsNothing);
+      expect(find.byType(TrackHistoryRow), findsNothing);
+      expect(find.text('Ngày'), findsNothing);
     });
 
     testWidgets('a song whose file is gone: dimmed hero, Play disabled with '
-        'the reason', (tester) async {
+        'the reason, no song menu', (tester) async {
       final semantics = tester.ensureSemantics();
       final h = await _pump(
         tester,
@@ -207,8 +331,9 @@ void main() {
       await tester.tap(find.text('Phát'), warnIfMissed: false);
       await _settle(tester);
       expect(h.playback.calls, isEmpty);
+      expect(byIconButton('Tùy chọn khác'), findsNothing);
       // The plays are still listed.
-      expect(find.text(_rowToday), findsOneWidget);
+      expect(_in(0, 'Hôm nay'), findsOneWidget);
       semantics.dispose();
     });
 
@@ -217,7 +342,7 @@ void main() {
     ) async {
       await _pump(tester, store: _store(), trackId: 99);
       expect(find.text(_empty), findsOneWidget);
-      expect(find.byType(KMediaCard), findsNothing);
+      expect(find.byType(TrackHistoryRow), findsNothing);
     });
 
     testWidgets('a path with no usable id shows the empty line', (
@@ -229,15 +354,17 @@ void main() {
   });
 
   group('removing a play', () {
-    testWidgets('Delete removes the row and Undo brings it back', (
+    testWidgets('the delete button removes the row; Undo brings it back', (
       tester,
     ) async {
-      final h = await _pump(tester, width: 1400);
-      await _remove(tester, _rowSaturday);
+      final h = await _pump(tester);
+      expect(byIconButton(_removeTip), findsNWidgets(3));
+      await tester.tap(byIconButton(_removeTip).at(1));
+      await _settle(tester);
       expect(h.store.removed, [
         ['b'],
       ]);
-      expect(find.text(_rowSaturday), findsNothing);
+      expect(find.byType(TrackHistoryRow), findsNWidgets(2));
       expect(find.text('2 lượt nghe'), findsOneWidget);
       expect(find.text('Đã xoá 1 lượt nghe'), findsOneWidget);
 
@@ -245,37 +372,49 @@ void main() {
       await tester.tap(find.text('Hoàn tác'));
       await _settle(tester);
       await tester.pumpAndSettle();
-      expect(find.text(_rowSaturday), findsOneWidget);
+      expect(find.byType(TrackHistoryRow), findsNWidgets(3));
       expect(find.text('3 lượt nghe'), findsOneWidget);
+    });
+
+    testWidgets('the toast closes by itself after 4 seconds', (tester) async {
+      await _pump(tester);
+      await tester.tap(byIconButton(_removeTip).at(0));
+      await _settle(tester);
+      expect(find.text('Đã xoá 1 lượt nghe'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Đã xoá 1 lượt nghe'), findsNothing);
+    });
+
+    testWidgets('the Delete key on the focused row does the same', (
+      tester,
+    ) async {
+      final h = await _pump(tester, width: 1400);
+      await _remove(tester, 1);
+      expect(h.store.removed, [
+        ['b'],
+      ]);
+      expect(find.byType(TrackHistoryRow), findsNWidgets(2));
+      expect(find.text('Đã xoá 1 lượt nghe'), findsOneWidget);
     });
 
     testWidgets('removing the last play shows the empty line, Undo restores '
         'the list', (tester) async {
       final plays = [playAt(_id, DateTime(2026, 11, 20, 21, 42), uid: 'a')];
       await _pump(tester, store: _store(plays: plays), width: 1400);
-      await _remove(tester, _rowToday);
+      await tester.tap(byIconButton(_removeTip));
+      await _settle(tester);
       expect(find.text(_empty), findsOneWidget);
       expect(find.text('Song 7'), findsWidgets);
-      expect(find.byType(KMediaCard), findsNothing);
+      expect(find.byType(TrackHistoryRow), findsNothing);
 
       await tester.pump(const Duration(seconds: 1));
       await tester.tap(find.text('Hoàn tác'));
       await _settle(tester);
       await tester.pumpAndSettle();
       expect(find.text(_empty), findsNothing);
-      expect(find.text(_rowToday), findsOneWidget);
-    });
-
-    testWidgets('the ⋮ menu removes a play too', (tester) async {
-      final h = await _pump(tester);
-      await tester.tap(find.byType(KMoreButton).first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Xoá khỏi lịch sử'));
-      await _settle(tester);
-      await tester.pumpAndSettle();
-      expect(h.store.removed, [
-        ['a'],
-      ]);
+      expect(find.byType(TrackHistoryRow), findsOneWidget);
     });
 
     testWidgets('a failed write shows the error toast and keeps the row', (
@@ -283,32 +422,32 @@ void main() {
     ) async {
       final store = _store()..removeError = StateError('disk');
       await _pump(tester, store: store, width: 1400);
-      await _remove(tester, _rowSaturday);
+      await tester.tap(byIconButton(_removeTip).at(1));
+      await _settle(tester);
       expect(find.text('Không xoá được lượt nghe'), findsOneWidget);
       expect(find.textContaining('Đã xoá'), findsNothing);
-      expect(find.text(_rowSaturday), findsOneWidget);
+      expect(find.byType(TrackHistoryRow), findsNWidgets(3));
     });
   });
 
   group('semantics and reload errors', () {
-    testWidgets('a row reads as one labelled node with a remove action, not '
-        'a button', (tester) async {
+    testWidgets('a row is one labelled node with the full date; its button '
+        'names the play it removes', (tester) async {
       final semantics = tester.ensureSemantics();
       final h = await _pump(tester);
-      final node = tester.getSemantics(find.text(_rowToday));
-      expect(node.label, '$_rowToday, đã nghe 3:12');
-      expect(node.flagsCollection.isButton, isFalse);
-      final data = node.getSemanticsData();
-      expect(data.customSemanticsActionIds, isNotEmpty);
-      final action = CustomSemanticsAction.getAction(
-        data.customSemanticsActionIds!.single,
-      )!;
-      expect(action.label, 'Xoá khỏi lịch sử');
-      tester.semantics.performAction(
-        find.semantics.byLabel(RegExp('^$_rowToday')),
-        SemanticsAction.customAction,
-        args: data.customSemanticsActionIds!.single,
+      for (final label in [
+        '20/11/2026, 21:42, đã nghe 3:12',
+        '14/11/2026, 21:42, đã nghe 18:48',
+        // No length: nothing is said about one.
+        '07/10/2026, 8:30',
+      ]) {
+        expect(find.semantics.byLabel(label), findsOneWidget, reason: label);
+      }
+      final remove = find.semantics.byLabel(
+        'Xoá lượt nghe lúc 21:42, 20/11/2026',
       );
+      expect(remove, findsOneWidget);
+      tester.semantics.tap(remove);
       await _settle(tester);
       expect(h.store.removed, [
         ['a'],
@@ -324,45 +463,8 @@ void main() {
       h.store.playsChanged.add(const HistoryChange(inserted: true));
       await _settle(tester);
       expect(find.text('Không tải được danh sách'), findsOneWidget);
-      expect(find.text(_rowToday), findsOneWidget);
+      expect(find.byType(TrackHistoryRow), findsNWidgets(3));
     });
-  });
-
-  group('selection', () {
-    testWidgets('a long press selects the song and every row shows it', (
-      tester,
-    ) async {
-      final h = await _pump(tester);
-      await tester.longPress(find.text(_rowToday));
-      await _settle(tester);
-      expect(
-        h.container.read(librarySelectionProvider).set,
-        contains(const TrackId(_id)),
-      );
-      expect(_selectedRows(tester), [true, true, true]);
-    });
-
-    testWidgets('a tap while selecting toggles the song off', (tester) async {
-      final h = await _pump(tester);
-      await tester.longPress(find.text(_rowToday));
-      await _settle(tester);
-      await tester.tap(find.text(_rowSaturday));
-      await _settle(tester);
-      expect(h.container.read(librarySelectionProvider).isEmpty, isTrue);
-      expect(_selectedRows(tester), everyElement(isFalse));
-    });
-  });
-
-  testWidgets('200 % text: the hero and the rows lay out without overflow', (
-    tester,
-  ) async {
-    await _pump(tester, textScale: 2);
-    expect(tester.takeException(), isNull);
-    expect(find.text('Song 7'), findsWidgets);
-    expect(find.text(_rowToday), findsOneWidget);
-    await tester.drag(find.text(_rowToday), const Offset(0, -400));
-    await tester.pump();
-    expect(tester.takeException(), isNull);
   });
 
   testWidgets('mobile: Back from the sub-page goes to the History page', (
@@ -388,7 +490,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(TrackHistoryPage), findsOneWidget);
     await _settle(tester);
-    expect(find.byType(KMediaCard), findsNWidgets(3));
+    expect(find.byType(TrackHistoryRow), findsNWidgets(3));
 
     expect(await tester.binding.handlePopRoute(), isTrue);
     await tester.pumpAndSettle();

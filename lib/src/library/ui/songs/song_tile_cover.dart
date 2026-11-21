@@ -16,6 +16,7 @@ class SongTileCover extends StatelessWidget {
     required this.current,
     this.number,
     this.rank,
+    this.missing = false,
   });
 
   final TrackInfo info;
@@ -28,6 +29,12 @@ class SongTileCover extends StatelessWidget {
   /// replaces); the first [topRanks] have the `primary` fill.
   final int? rank;
 
+  /// The song's file is gone: a placeholder cover in place of the picture, no
+  /// now-playing overlay and no track-number badge (as in every list before
+  /// ranks existed). Only a [rank] still shows its badge: it is the row's
+  /// place in the list, not a fact about the file.
+  final bool missing;
+
   /// Ranks that get the emphasised badge.
   static const int topRanks = 3;
 
@@ -36,14 +43,23 @@ class SongTileCover extends StatelessWidget {
     const radius = KMediaCard.coverRadius;
     return Stack(
       children: [
-        TrackCover(
-          coverKey: info.coverKey,
-          seed: info.coverSeed,
-          size: CoverSize.thumb,
-          dimension: KMediaCard.coverSize,
-          radius: radius,
-        ),
-        if (current)
+        if (missing)
+          KCover(
+            image: null,
+            size: KMediaCard.coverSize,
+            placeholderSeed: info.coverSeed,
+            placeholderIcon: KIcons.musicOff,
+            radius: radius,
+          )
+        else
+          TrackCover(
+            coverKey: info.coverKey,
+            seed: info.coverSeed,
+            size: CoverSize.thumb,
+            dimension: KMediaCard.coverSize,
+            radius: radius,
+          ),
+        if (current && !missing)
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -65,7 +81,7 @@ class SongTileCover extends StatelessWidget {
             bottom: _badgeInset,
             child: _NumberBadge(number: rank!, top: rank! <= topRanks),
           )
-        else if (number != null)
+        else if (number != null && !missing)
           PositionedDirectional(
             key: songTileBadgeKey,
             end: _badgeInset,
