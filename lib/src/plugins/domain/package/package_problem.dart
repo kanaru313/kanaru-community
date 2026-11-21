@@ -3,8 +3,8 @@ import 'text_clean.dart';
 /// Why a plugin package was refused. The domain holds no UI text: the screens
 /// map a variant (plus [detail]) to a localized "Lý do" line.
 ///
-/// Every variant here is about `plugin.json`; the zip and catalog problems
-/// join this hierarchy where they are read.
+/// The first variants are about `plugin.json`; the zip variants (from
+/// [NotAZip] on) are about the package file around it.
 sealed class PackageProblem {
   const PackageProblem(this._raw);
 
@@ -66,6 +66,46 @@ final class SharedHostingWildcard extends PackageProblem {
 /// More wildcard hosts than allowed; the detail is the first one over.
 final class TooManyWildcardHosts extends PackageProblem {
   const TooManyWildcardHosts(super.host);
+}
+
+/// Not a readable zip, or an entry cannot be read as one. The detail is a
+/// short English reason for logs (`zip64`, `encrypted: src/a.js`); screens
+/// show one generic line.
+final class NotAZip extends PackageProblem {
+  const NotAZip(super.reason);
+}
+
+/// The file, an entry or the unpacked total is over its cap; the detail is
+/// the entry to blame, or empty for the file itself or the total.
+final class PackageTooLarge extends PackageProblem {
+  const PackageTooLarge([super.entry = '']);
+}
+
+/// An entry name or kind that must never be unpacked (path traversal,
+/// absolute path, symlink, duplicate name); the detail is the entry name.
+final class UnsafeEntry extends PackageProblem {
+  const UnsafeEntry(super.entry);
+}
+
+/// More zip entries than allowed.
+final class TooManyEntries extends PackageProblem {
+  const TooManyEntries() : super('');
+}
+
+/// No `plugin.json` at the top of the package.
+final class MissingManifest extends PackageProblem {
+  const MissingManifest() : super('');
+}
+
+/// The `script` map names a file that is not in `src/`; the detail is the
+/// file name.
+final class MissingScript extends PackageProblem {
+  const MissingScript(super.file);
+}
+
+/// A script is not valid UTF-8; the detail is the file name.
+final class ScriptNotUtf8 extends PackageProblem {
+  const ScriptNotUtf8(super.file);
 }
 
 /// Thrown inside the parsers to stop at the first problem; the public entry

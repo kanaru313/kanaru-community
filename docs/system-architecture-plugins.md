@@ -2,7 +2,8 @@
 
 `lib/src/plugins/` holds what the app knows about a plugin package: the
 manifest, the config schema and its value rules (this file, § Package), the
-catalog and the zip reader (§ Catalog), the install ids (§ Ids). Everything
+zip reader (§ Package zip), the catalog (§ Catalog), the install ids and the
+update diff (§ Ids and update diff). Everything
 under `plugins/domain/` is plain Dart (no Flutter, drift or platform).
 Plugins themselves live in `kanaru313/kanaru-plugins`; the app ships none.
 
@@ -111,8 +112,10 @@ missing; absent, whitespace-only text, empty list or map is.
 Sealed `PackageProblem` (`detail` = field path, host or type):
 `InvalidManifest`, `UnknownConfigFormat`, `NeedsNewerApp`, `UnsupportedKind`,
 `InvalidHost`, `InvalidWildcardHost`, `WildcardHostNotAllowed`,
-`SharedHostingWildcard`, `TooManyWildcardHosts`. The screens map each to one
-"Lý do" line; zip and catalog problems join the hierarchy in § Catalog.
+`SharedHostingWildcard`, `TooManyWildcardHosts`; and from the zip reader
+(§ Package zip): `NotAZip`, `PackageTooLarge`, `UnsafeEntry`, `TooManyEntries`,
+`MissingManifest`, `MissingScript`, `ScriptNotUtf8`. The screens map each to
+one "Lý do" line.
 
 ### Tests
 
@@ -121,10 +124,122 @@ Sealed `PackageProblem` (`detail` = field path, host or type):
 README for the plugins-repo commit); the corpus test parses each with zero
 problems and checks that streaming manifests keep their 10 script keys.
 
+## Package zip
+
+`plugins/domain/package/`. `readPackage(Uint8List zip)` returns
+`Result<PluginPackage, PackageProblem>` (the first problem, never a part).
+It is pure, synchronous and CPU-bound on up to 5 MiB: callers run it in
+`Isolate.run`. Nothing is written and no script runs; the syntax check is the
+`ScriptChecker` seam (`install/script_checker.dart`, implemented in the data
+layer).
+
+```
+readZip(bytes)      zip_reader.dart        safe unpack -> ZipContents (raw bytes)
+readPackage(bytes)  package_reader.dart    + manifest, scripts, sha256 -> PluginPackage
+```
+
+`PluginPackage`: `manifestBytes` (the `plugin.json` entry byte for byte, what
+is written to disk), `manifestText` (the same decoded as UTF-8, a leading BOM
+not part of it, what the database keeps), `manifest`, `scripts` (file name to
+decoded source), `icon?`, `sha256` (of the zip, lower-case hex), `size`.
+`scripts` holds every `src/<name>.js` of the zip, not only the ones the
+`script` map names: shipped streaming plugins ship a `common.js` that the
+others `load()`. Every file the map names must be there (`MissingScript`).
+
+Order of work in `readZip`:
+
+1. File over 5 MiB: `PackageTooLarge`.
+2. **Pre-scan of the central directory** (`zip_directory_scan.dart`), before
+   the zip parser allocates anything: no zip64, no multi-disk, at most 50
+   records (`TooManyEntries`, counted on the end record and while walking),
+   name / extra / comment of a record at most 1 KiB (central and local), one
+   end record that closes the file (no trailing bytes, no second end record
+   inside the comment), a walk that ends exactly at the announced count and
+   size, and no two entries whose local header plus data overlap or reach the
+   directory.
+3. `archive`'s `ZipDirectory` reads the headers.
+4. Names (`zip_entry_names.dart`), for every entry including ignored ones: no
+   NUL, `\`, leading `/`, drive letter or `..`; no symlink mode; no case-
+   insensitive duplicates (trailing `/` ignored). All `UnsafeEntry`.
+5. Declared sizes of all entries, ignored ones too, add up to at most 5 MiB.
+   A nested stray `plugin.zip` is not opened but counts.
+6. One top folder is stripped when `plugin.json` sits at `<dir>/plugin.json`
+   and every entry is under `<dir>/`.
+7. Only `plugin.json` (64 KiB), `icon.png` (64 KiB) and flat `src/<name>.js`
+   (1 MiB each) are inflated; every other entry is never decoded. An entry
+   whose declared size is over its cap is refused before decoding.
+8. Inflating (`capped_output.dart`): stored or deflate only, not encrypted
+   (`NotAZip`). Deflate goes through `ZLibDecoder().decodeStream(..., raw:
+   true)` into a `CappedOutput` whose buffer is allocated once at the
+   declared size and never grows; a write past it throws and the entry is
+   `PackageTooLarge`. The `Inflate(bytes)` constructor without `output:` is
+   never used (it is eager and unbounded). The result must equal the declared
+   size and the CRC32.
+9. Icon: PNG signature and IHDR, at most 256 x 256 (`icon_check.dart`). A bad,
+   oversized or unreadable icon is dropped and the install goes on.
+
+The `archive` calls (`ZipDirectory.read`, `ZipFileHeader.file.getRawContent`,
+`ZLibDecoder.decodeStream`, `OutputMemoryStream`, `getCrc32`) exist in 4.5.2
+and 4.6.0; the cap is our own so it does not depend on 4.6's `maxOutputSize`.
+
+Tests: `test/plugins/domain/{zip_reader,capped_output,package_reader}_test.dart`;
+hostile zips are built in the test from `test/plugins/fixtures/zip_builders.dart`.
+
 ## Catalog
 
-Filled by the zip and catalog phase.
+`plugins/domain/catalog/`. `parseCatalog(bytes, url, {isReferenceAllowed})`
+returns `Result<Catalog, CatalogProblem>`. `url` is the final address of the
+catalog after redirects; relative `path` and `icon` resolve against it.
 
-## Ids
+- Whole catalog: body at most 1 MiB (`tooLarge`); UTF-8 JSON
+  `{metadata: {name 1-80, author <= 80}, data: [...]}`, at most 500 entries;
+  a non-empty `data` of which no entry is usable is `invalidCatalog`.
+- Entry: `slug ^[a-z0-9_-]{1,64}$`, `name` 1-80, `type`, `version` >= 1,
+  `apiVersion` >= 1, `hosts` (manifest host rules for the entry's kind),
+  `path`, `icon?`, `author?`, `description?`, `languages?`, `sha256?` (64 hex,
+  kept lower-case), `size?` (1 to 5 MiB). A bad entry is dropped and counted
+  in `Catalog.dropped`; a repeated slug keeps the first; a bad `sha256` or
+  `size` drops the entry (a silent skip would disable the integrity check); a
+  bad `icon` drops only the icon; a bad `languages` means global.
+- References: `http(s)`, a host, no user info, at most 2048 characters once
+  absolute, fragment dropped. The address policy (public against local
+  networks) is the caller's: `isReferenceAllowed(uri)` is asked for each
+  `path` (false drops the entry) and `icon` (false drops the icon).
+- **Newer app**: an entry whose `apiVersion` is above the supported one, or
+  whose `type` is not one of the four kinds, is kept with
+  `CatalogEntry.needsNewerApp`; its `kind` is null for an unknown type. The
+  store lists these under "Cần Kanaru mới hơn" and offers no install. (The
+  old app dropped unknown types; the plan keeps them so the user sees what a
+  newer Kanaru would offer.) An unknown type may list wildcard hosts.
+- `canonicalRepoUrl(input)` (`repo_url.dart`): lower-case scheme and host,
+  default port removed, fragment dropped, a bare root `/` dropped, path and
+  query as typed; null for anything but `http(s)` with a host and no user
+  info. This string is the repository identity.
 
-Filled by the zip and catalog phase.
+Tests: `test/plugins/domain/{catalog_parser,repo_url}_test.dart`.
+
+## Ids and update diff
+
+`plugins/domain/install/`.
+
+| Function | Value |
+|---|---|
+| `repoInstallId(repoUrl, slug)` | `plugin-` + `stableHashHex(['repo', repoUrl, slug], 32)` |
+| `fileInstallId(name, author)` | `plugin-` + `stableHashHex(['file', name, author ?? ''], 32)`, for a file and for a link |
+
+32 hex characters is 128 bits. `repoUrl` is the output of `canonicalRepoUrl`.
+The id comes from where a plugin was installed from, never from what the
+package claims, so a package cannot take over another plugin's id.
+
+`diffUpdate(consentedHosts, installedVersion, installedKind, candidate)`
+(`update_diff.dart`) returns `UpdateDiff`: `newHosts` (candidate entries not
+covered by `hostSetCovers`), `versionOrder` (newer / same / older),
+`kindChange` (none; allowed inside the translate family; refused otherwise or
+for an unknown kind) and `needsReview` (= `newHosts` not empty). The
+candidate is a catalog entry (a hint before downloading) or a package (the
+authority). `catalogMatches(entry, package)` lists where a downloaded package
+differs from the entry that offered it (`kind`, `version`, `hosts` as sets,
+`sha256` and `size` when the entry gives them); the install screen shows
+"Gói không khớp danh sách" when it is not empty.
+
+Tests: `test/plugins/domain/{install_id,update_diff}_test.dart`.
