@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show debugPrint;
-import 'package:flutter/widgets.dart' show Scrollable, Size;
+import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
+import 'package:flutter/widgets.dart' show RepaintBoundary, Scrollable, Size;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
@@ -35,7 +37,6 @@ void main() {
     tester.view.physicalSize = const Size(800, 900);
     addTearDown(tester.view.reset);
     final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
 
     final app = await startKanaru(tester);
     final container = app.container;
@@ -45,11 +46,22 @@ void main() {
     Future<void> shot(String name) async {
       await tester.pump(const Duration(milliseconds: 400));
       try {
-        final bytes = await binding.takeScreenshot(name);
-        final dir = Directory('/tmp/kanaru-it/shots');
         if (Platform.isLinux) {
-          dir.createSync(recursive: true);
-          File('${dir.path}/$name.png').writeAsBytesSync(bytes);
+          // The Linux embedder has no screenshot plugin: draw the app's
+          // outermost repaint boundary (the app's own window only).
+          final boundary = tester.renderObject<RenderRepaintBoundary>(
+            find.byType(RepaintBoundary).first,
+          );
+          final image = await boundary.toImage();
+          final bytes = (await image.toByteData(
+            format: ui.ImageByteFormat.png,
+          ))!;
+          final dir = Directory('/tmp/kanaru-it/shots')
+            ..createSync(recursive: true);
+          File('${dir.path}/$name.png')
+              .writeAsBytesSync(bytes.buffer.asUint8List());
+        } else {
+          await binding.takeScreenshot(name);
         }
       } on Object catch (e) {
         // A screenshot is for the eye only: never fail the test for it.
@@ -244,5 +256,6 @@ void main() {
       what: 'the none state in the desktop tab',
     );
     await shot('desktop-03-tab-none');
+    semantics.dispose();
   }, timeout: const Timeout(Duration(minutes: 6)));
 }
