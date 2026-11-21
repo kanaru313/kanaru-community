@@ -261,3 +261,82 @@ differs from the entry that offered it (`kind`, `version`, `hosts` as sets,
 "Gói không khớp danh sách" when it is not empty.
 
 Tests: `test/plugins/domain/{install_id,update_diff}_test.dart`.
+
+## Network
+
+Rules in `plugins/domain/net/` (plain Dart, address bytes only), transport in
+`plugins/data/net/`. `plugins` imports `platform` (DAG edge added); Android
+declares `INTERNET` in the main manifest.
+
+- **Address classes** (`address_class.dart`): `public`, `local` (loopback,
+  RFC 1918, CGNAT, link-local, ULA, site-local), `refused` (`0/8`, `::`,
+  multicast, broadcast, reserved, documentation, transition ranges), and
+  `mixed` for a set of answers that disagree. An IPv4-mapped IPv6 or NAT64
+  address takes the class of the IPv4 address inside it. `198.18.0.0/15` is
+  `public`: fake-ip TUN proxies (Clash, mihomo, sing-box) answer every lookup
+  from it and route the connection to the real host; refusing it would break
+  every public repository for those users. Local-looking names (`.lan`,
+  `.local`, `localhost`, ...) are a hint only: a local name that resolves to a
+  public address is refused.
+- **Rules** (`address_rules.dart`, `judgeAddress`): no user info; only `http`
+  and `https`; every answer of one lookup must have the same class; a public
+  destination needs `https`; the repository address the user typed may be
+  `http` for a local destination. A reference inside a catalog obeys the
+  catalog's `AddressKind`: a public catalog points to public `https` only; a
+  local catalog may point to local addresses (any scheme) and public `https`.
+  `isCatalogReferenceAllowed(kind)` is the `isReferenceAllowed` callback of
+  `parseCatalog`; the lookup-free subset only, the connection judges the
+  resolved answer again.
+- **Policies** (`net_policy.dart`): `repo` (catalog, cap 1 MiB, address chosen
+  by the user), `package` (zip, cap 5 MiB, from a catalog), `icon` (cap
+  64 KiB, from a catalog), `link` (package rules and cap, address chosen by
+  the user). A `package` or `icon` fetch without a catalog kind is judged as
+  `public`.
+- **Fetcher** (`HttpFetcher.get(uri, policy, {catalogKind, maxBytes,
+  expectedSize, cancel, onProgress})`) returns
+  `Result<FetchResult, FetchFailure>` and throws nothing. A new `HttpClient`
+  per call, `findProxy` DIRECT, no bad-certificate callback. Per connection:
+  resolve once, judge every answer, then dial only those addresses
+  (`pinnedConnectionFactory`); for `https` the TLS handshake runs on that
+  socket with the original host name, so SNI and certificate checks use the
+  name. A factory call that is asked for a proxy refuses. Redirects are
+  followed by hand, at most 3, each hop judged again with the catalog kind,
+  which becomes `public` once any hop is public (a local origin cannot be
+  used to reach the local network after a public hop, and the reverse).
+  Every hop is a new connection (`persistentConnection = false`). Connect
+  limit 10 s for lookup, dial and TLS together, total 20 s over all hops; the timeout and a cancel complete the
+  result first and then `close(force: true)` the client, which destroys the
+  sockets. Body read: a declared length over the cap, or the first byte past the
+  cap arriving, is `tooLarge`, and the rest is not read. `onProgress(received,
+  total)`: total is `expectedSize` (the catalog's `size`), else the declared
+  length.
+- **Failures** (`FetchFailure`): `network` (also too many redirects and a
+  redirect without a usable `Location`), `timeout` (connect or total),
+  `tooLarge`, `blockedAddress(reason)`, `badStatus(code)`, `invalidUrl`,
+  `cancelled`. None carries an address or body.
+- **User-Agent**: the caller passes `Kanaru/<version> (+<repository>)`; the
+  default has no version (the app's version is not known to the module).
+- **Stored repository class**: `effectiveAddressKind(stored, currentVerdict)`
+  is the stricter of the class kept at the last good fetch and a fresh verdict
+  on the repository address (public wins; a refused or unresolved verdict gives
+  null: fail closed). The lookup and the storage of the class belong to the
+  repository state code.
+- **Known limit**: a fake-ip setup that also answers IPv6 from a private ULA
+  range (for example sing-box `fc00::/18`) gives `{198.18.x, fcxx::}`, a mixed
+  answer, which is refused; those users cannot reach public repositories.
+
+Tests: `test/plugins/net/{address_rules,fetcher}_test.dart` (real loopback
+`HttpServer` and `ServerSocket`, a fake resolver and a recording dialer; the
+TLS cases use the certificate in `test/plugins/net/fixtures/`).
+
+## Backup
+
+Android full backup (Android 11 and older, `backup_rules.xml`) and cloud
+backup (Android 12+, `<cloud-backup>` of `data_extraction_rules.xml`) leave
+out `data/plugins` (packages) and `data/plugin-logs`. `data/` is
+`AppPaths.dataDir` (`files/data`, the same base as the existing
+`data/device_id` and `data/custom_covers` rules). The database restores the
+installed list, and each package installs again from its source; logs are not
+worth backing up. `<device-transfer>` excludes neither folder: the packages
+move with the phone. A restore cannot be tried locally; the restore path (rows
+without files) is covered by the Linux simulation in the install-flow checks.

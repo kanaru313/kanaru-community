@@ -30,7 +30,7 @@ modules:
   database: [foundation]
   extension: [foundation]   # startup hooks get drift's DatabaseConnection, not AppDatabase
   media: [extension, foundation]
-  plugins: [media, database, foundation]
+  plugins: [media, database, platform, foundation]
   playback: [media, platform, database]
   storage: [media, platform]
   library: [playback, storage, media, database, extension, platform]
