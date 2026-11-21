@@ -23,34 +23,40 @@ void main() {
     final container = app.container;
     const title = 'IT Uslt Tag';
 
-    // The songs list shows the fixture titles.
-    final row = find.text(title);
     final scrollable = find
         .descendant(
           of: find.byType(SongList),
           matching: find.byType(Scrollable),
         )
         .first;
-    await app.pumpUntil(
-      () => scrollable.evaluate().isNotEmpty,
-      what: 'the Songs list with rows',
-    );
-    // Other music may share the list (the phone's library), so look each
-    // title up by scrolling it into view rather than assuming it is visible.
+
+    // Other music may share the list (the phone's library): scroll down, then
+    // back up, until the title is built.
+    Future<void> reveal(String text) async {
+      final target = find.text(text);
+      for (var step = 0; step < 80; step++) {
+        if (target.evaluate().isNotEmpty) return;
+        if (scrollable.evaluate().isNotEmpty) {
+          await tester.drag(scrollable, Offset(0, step < 40 ? -300 : 300));
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await tester.pump();
+      }
+      throw TestFailure('song "$text" is not in the Songs list');
+    }
+
+    // The songs list shows the fixture titles.
     for (final t in const ['IT Sylt Tag', 'IT No Lyrics']) {
-      await tester.scrollUntilVisible(
-        find.text(t),
-        300,
-        scrollable: scrollable,
-      );
+      await reveal(t);
       expect(find.text(t), findsWidgets, reason: 'song "$t" is listed');
     }
+    final row = find.text(title);
+    await reveal(title);
 
     // Tapping a row plays that track through the real engine.
     final id = TrackId((await app.trackIdsByTitle())[title]!);
     final position = container.listen(playbackPositionProvider, (_, _) {});
     addTearDown(position.close);
-    await tester.scrollUntilVisible(row, 300, scrollable: scrollable);
     await tester.tap(row);
     await app.pumpUntil(
       () =>
