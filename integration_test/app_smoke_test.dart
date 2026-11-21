@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart' show Scrollable;
+import 'package:flutter/widgets.dart' show Scrollable, ScrollableState;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:kanaru/src/library/ui/songs/song_list.dart';
@@ -29,22 +29,34 @@ void main() {
       matching: find.byType(Scrollable),
     );
 
-    // Other music may share the list (the phone's library): scroll down, then
-    // back up, until the title is built.
+    // Other music may share the list (the phone's library is large): sweep
+    // the list from the top in viewport-sized jumps until the title is built.
     Future<void> reveal(String text) async {
       final target = find.text(text);
-      for (var step = 0; step < 80; step++) {
-        if (target.evaluate().isNotEmpty) return;
-        if (scrollables.evaluate().isNotEmpty) {
-          await tester.drag(
-            scrollables.first,
-            Offset(0, step < 40 ? -300 : 300),
-          );
-        }
+      final deadline = DateTime.now().add(const Duration(seconds: 60));
+      while (scrollables.evaluate().isEmpty) {
         await Future<void>.delayed(const Duration(milliseconds: 100));
         await tester.pump();
       }
-      throw TestFailure('song "$text" is not in the Songs list');
+      final position = tester
+          .state<ScrollableState>(scrollables.first)
+          .position;
+      position.jumpTo(position.minScrollExtent);
+      await tester.pump();
+      while (target.evaluate().isEmpty) {
+        if (DateTime.now().isAfter(deadline) ||
+            position.pixels >= position.maxScrollExtent) {
+          throw TestFailure('song "$text" is not in the Songs list');
+        }
+        position.jumpTo(
+          (position.pixels + position.viewportDimension * 0.8).clamp(
+            position.minScrollExtent,
+            position.maxScrollExtent,
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        await tester.pump();
+      }
     }
 
     // The songs list shows the fixture titles.
