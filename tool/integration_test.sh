@@ -1,30 +1,45 @@
 #!/usr/bin/env bash
 # Runs the integration tests against the real app on Linux or the test phone.
 #
-# Usage: tool/integration_test.sh [--clear] <linux|android> [test file under integration_test/]
-#   --clear  android only: `pm clear` the app first (dev data; needed when the
-#            schema guard refuses an older database). Off by default.
+# Usage: tool/integration_test.sh [--clear] [--keep-fixtures] <linux|android> [test file under integration_test/]
+#   --clear          android only: `pm clear` the app first, if installed (dev
+#                    data; for when the schema guard refuses an older database).
+#   --keep-fixtures  android only: leave /sdcard/Music/kanaru-it on the phone
+#                    after the run (by default it is removed and MediaStore
+#                    is rescanned).
 #
-# Builds nothing by itself that the main-build lock should guard: run it
-# through the machine build lock from the main checkout, e.g.
+# Run it through the machine build lock from the main checkout, e.g.
 #   .claude/scripts/main-build.sh <branch> sh -c 'tool/integration_test.sh linux'
 #
 # linux:   XDG_CONFIG_HOME / XDG_DATA_HOME / XDG_CACHE_HOME under
-#          /tmp/kanaru-it/ (recreated for every test file), the fixtures copied there and
-#          announced as XDG_MUSIC_DIR, so the app's own first-run default picks
-#          them up (no folder picker).
-# android: $ANDROID_SERIAL (default 12f5c1bf0505); fixtures pushed to
-#          /sdcard/Music/kanaru-it/ and indexed, the debug app installed with
-#          READ_MEDIA_AUDIO / READ_MEDIA_IMAGES granted with `pm grant` right
-#          after `flutter test` installs the app (no system dialog). App data
-#          is cleared only with --clear.
+#          /tmp/kanaru-it/ (recreated for every test file), the fixtures copied
+#          there and announced as XDG_MUSIC_DIR, so the app's own first-run
+#          default picks them up (no folder picker). Waits (30 s) for a
+#          previous `kanaru` process to exit; it never kills one.
+# android: $ANDROID_SERIAL (default 12f5c1bf0505). WARNING: `flutter test`
+#          installs the debug app fresh for every file and UNINSTALLS it
+#          afterwards, so the installed Kanaru build and ALL its data on the
+#          phone are removed (the user allows wiping Kanaru dev data). Fixtures
+#          are pushed to /sdcard/Music/kanaru-it/ and indexed; a background
+#          loop keeps granting READ_MEDIA_AUDIO / READ_MEDIA_IMAGES with
+#          `pm grant` until the test ends (no system dialog). The Nix SDK
+#          package is copied through a temporary pubspec_overrides.yaml (the
+#          script refuses to start if one exists).
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 
 CLEAR=0
-if [ "${1:-}" = "--clear" ]; then CLEAR=1; shift; fi
+KEEP=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --clear) CLEAR=1 ;;
+    --keep-fixtures) KEEP=1 ;;
+    *) break ;;
+  esac
+  shift
+done
 PLATFORM=${1:-}
 TEST=${2:-}
 FIXTURES=$ROOT/integration_test/fixtures/music
@@ -44,7 +59,15 @@ case "$PLATFORM" in
     IT=/tmp/kanaru-it
     failed=0
     for file in "${FILES[@]}"; do
-      while pgrep -x kanaru >/dev/null; do sleep 1; done
+      waited=0
+      while pgrep -x kanaru >/dev/null; do
+        if [ "$waited" -ge 30 ]; then
+          echo "integration_test: a kanaru process is still running (pid $(pgrep -x kanaru | tr '\n' ' ')); not started by this script, not killing it" >&2
+          exit 1
+        fi
+        sleep 1
+        waited=$((waited + 1))
+      done
       command rm -rf "$IT"
       mkdir -p "$IT/config" "$IT/data" "$IT/cache" "$IT/music"
       cp -a "$FIXTURES/." "$IT/music/"
@@ -58,61 +81,78 @@ case "$PLATFORM" in
     SERIAL=${ANDROID_SERIAL:-12f5c1bf0505}
     ADB=(adb -s "$SERIAL")
     "${ADB[@]}" get-state >/dev/null
+    if [ -e pubspec_overrides.yaml ]; then
+      echo "integration_test: pubspec_overrides.yaml already exists; remove it first" >&2
+      exit 1
+    fi
+    echo "integration_test: WARNING: the installed Kanaru app and its data on $SERIAL will be removed" >&2
+
+    DIR=/sdcard/Music/kanaru-it
+    scan_media() {
+      # The shell may call MediaProvider; a broadcast per file is the fallback.
+      "${ADB[@]}" shell content call --uri content://media/ \
+        --method scan_volume --arg external_primary >/dev/null 2>&1 ||
+        "${ADB[@]}" shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE \
+          -d "file://$DIR" >/dev/null 2>&1 || true
+    }
+    OVERRIDE_MADE=0
+    granter=""
+    cleanup() {
+      rc=$?
+      trap - EXIT
+      [ -n "$granter" ] && kill "$granter" 2>/dev/null
+      if [ "$OVERRIDE_MADE" = 1 ]; then
+        command rm -f pubspec_overrides.yaml
+        flutter pub get >/dev/null || echo "integration_test: pub get failed while restoring" >&2
+      fi
+      if [ "$KEEP" = 0 ]; then
+        "${ADB[@]}" shell "rm -rf $DIR" >/dev/null 2>&1 || true
+        scan_media
+      fi
+      exit $rc
+    }
+    trap cleanup EXIT
 
     # The Nix Flutter SDK is read-only and Gradle 9 refuses a plugin project
     # directory it cannot write ("Configuring project ':integration_test'
     # without an existing directory is not allowed"). Use a writable copy of
     # the SDK package through a gitignored pubspec_overrides.yaml, for this
-    # run only; the trap removes it and restores the pub state.
+    # run only; cleanup removes it and restores the pub state.
     SDK_PKG=$(dirname "$(dirname "$(readlink -f "$(command -v flutter)")")")/packages/integration_test
     COPY=/tmp/kanaru-it-sdk/integration_test
     command rm -rf /tmp/kanaru-it-sdk && mkdir -p /tmp/kanaru-it-sdk
     cp -rL "$SDK_PKG" "$COPY" && chmod -R u+w "$COPY"
-    restore_pub() {
-      command rm -f pubspec_overrides.yaml
-      flutter pub get >/dev/null
-    }
-    trap restore_pub EXIT
     printf 'dependency_overrides:\n  integration_test:\n    path: %s\n' "$COPY" >pubspec_overrides.yaml
+    OVERRIDE_MADE=1
     flutter pub get >/dev/null
-    DIR=/sdcard/Music/kanaru-it
+
     "${ADB[@]}" shell "rm -rf $DIR && mkdir -p $DIR"
     "${ADB[@]}" push "$FIXTURES/." "$DIR/" >/dev/null
-    # Index the files now (shell may call MediaProvider); a broadcast per
-    # file is the fallback for builds where the volume scan is refused.
-    if ! "${ADB[@]}" shell content call --uri content://media/ \
-      --method scan_volume --arg external_primary >/dev/null 2>&1; then
-      for f in "$FIXTURES"/*; do
-        "${ADB[@]}" shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE \
-          -d "file://$DIR/$(basename "$f")" >/dev/null
-      done
-    fi
+    scan_media
     if [ "$CLEAR" = 1 ] && "${ADB[@]}" shell pm path "$APP_ID" | grep -q package; then
       "${ADB[@]}" shell pm clear "$APP_ID"
     fi
     failed=0
     for file in "${FILES[@]}"; do
-      # `flutter test` installs the app fresh and uninstalls it afterwards, so
-      # permissions cannot be granted beforehand: a background loop grants them
-      # as soon as the package exists (the harness re-reads the permission
-      # state, so the race with the first launch is harmless).
+      # Permissions cannot be granted beforehand (the app is not installed
+      # yet, and every file reinstalls it), so a loop grants them again and
+      # again until the test ends; the harness re-reads the permission state.
       (
-        for _ in $(seq 1 1200); do
-          if "${ADB[@]}" shell pm grant "$APP_ID" android.permission.READ_MEDIA_AUDIO 2>/dev/null &&
-            "${ADB[@]}" shell pm grant "$APP_ID" android.permission.READ_MEDIA_IMAGES 2>/dev/null; then
-            exit 0
-          fi
-          sleep 0.5
+        while true; do
+          "${ADB[@]}" shell pm grant "$APP_ID" android.permission.READ_MEDIA_AUDIO >/dev/null 2>&1 || true
+          "${ADB[@]}" shell pm grant "$APP_ID" android.permission.READ_MEDIA_IMAGES >/dev/null 2>&1 || true
+          sleep 1
         done
       ) &
       granter=$!
       flutter test "$file" -d "$SERIAL" || failed=1
       kill "$granter" 2>/dev/null || true
+      granter=""
     done
     exit $failed
     ;;
   *)
-    echo "usage: $0 <linux|android> [test file]" >&2
+    echo "usage: $0 [--clear] [--keep-fixtures] <linux|android> [test file]" >&2
     exit 64
     ;;
 esac

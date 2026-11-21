@@ -16,18 +16,28 @@ machine build lock (it needs a committed branch):
 tool/integration_test.sh linux app_smoke_test.dart     # one file
 ```
 
-Debug mode is fine for these runs. `tool/integration_test.sh` itself:
+Debug mode is fine for these runs. `tool/integration_test.sh [--clear] [--keep-fixtures] <platform> [file]` itself:
 
 - **linux:** recreates `/tmp/kanaru-it/{config,data,cache,music}` (fresh for every test file, one app launch per file), points
   `XDG_CONFIG_HOME` / `XDG_DATA_HOME` / `XDG_CACHE_HOME` at it, copies the
   fixtures into `music/` and writes `user-dirs.dirs` with `XDG_MUSIC_DIR`
   there, then runs `flutter test <file> -d linux` for each file.
-- **android:** serial from `$ANDROID_SERIAL` (default `12f5c1bf0505`); pushes
-  the fixtures to `/sdcard/Music/kanaru-it/`, indexes them, installs the debug
-  build with `install -r` and runs `pm grant` for `READ_MEDIA_AUDIO` and
-  `READ_MEDIA_IMAGES`. It never clears app data: an older dev database may be
-  refused by the schema guard ("created by an older build of schema v1"); then
-  clear the app data by hand (`pm clear`, or pass `--clear` to the script) and run again.
+- **android:** serial from `$ANDROID_SERIAL` (default `12f5c1bf0505`).
+  **`flutter test` installs the debug app fresh for every file and uninstalls
+  it afterwards: the Kanaru build installed on the phone and all its data are
+  removed** (accepted for dev data; the script prints a warning). It pushes the
+  fixtures to `/sdcard/Music/kanaru-it/`, indexes them, and runs a background
+  loop that keeps granting `READ_MEDIA_AUDIO` and `READ_MEDIA_IMAGES` with
+  `pm grant` until the test ends (the app is not installed before the test, so
+  a one-off grant would be lost). On exit it removes the fixture folder and
+  rescans (`--keep-fixtures` leaves it). `--clear` runs `pm clear` first when
+  the app is installed (for the schema guard). The Nix SDK package is
+  read-only and Gradle 9 refuses it, so the script builds from a writable copy
+  through a temporary, gitignored `pubspec_overrides.yaml`; it refuses to start
+  if one already exists and removes it on exit. MIUI may refuse the install
+  (`INSTALL_FAILED_USER_RESTRICTED`) until "Install via USB" is enabled.
+- **linux:** also waits up to 30 s for a previous `kanaru` process and fails
+  naming its pid; it never kills one.
 
 ## What the harness does
 

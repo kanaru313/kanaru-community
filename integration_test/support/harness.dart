@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart' show OrderingTerm;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/kanaru.dart';
@@ -96,13 +97,25 @@ Future<RunningApp> startKanaru(WidgetTester tester) async {
 
   if (container.read(firstRunRequiredProvider)) {
     final next = find.byType(SetupNextButton);
+    var lastRefresh = DateTime.fromMillisecondsSinceEpoch(0);
     await app.pumpUntil(
       () {
         // Permissions are granted from outside (`pm grant`) while the app
-        // starts: look again until they show.
-        unawaited(
-          container.read(mediaPermissionStateProvider.notifier).refresh(),
-        );
+        // starts: look again, at most once a second, until they show.
+        final now = DateTime.now();
+        if (now.difference(lastRefresh) >= const Duration(seconds: 1)) {
+          lastRefresh = now;
+          unawaited(
+            container
+                .read(mediaPermissionStateProvider.notifier)
+                .refresh()
+                .then<void>(
+                  (_) {},
+                  onError: (Object e) =>
+                      debugPrint('permission refresh failed: $e'),
+                ),
+          );
+        }
         return next.hitTestable().evaluate().isNotEmpty &&
             tester.widget<SetupNextButton>(next).onPressed != null;
       },

@@ -1,5 +1,7 @@
+import 'package:flutter/widgets.dart' show Scrollable;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:kanaru/src/library/ui/songs/song_list.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru/src/playback/state/playback_position_provider.dart';
@@ -24,17 +26,31 @@ void main() {
     // The songs list shows the fixture titles.
     final row = find.text(title);
     await app.pumpUntil(
-      () => row.evaluate().isNotEmpty,
-      what: 'song "$title" in the Songs list',
+      () => find.byType(SongList).evaluate().isNotEmpty,
+      what: 'the Songs list',
     );
+    final scrollable = find
+        .descendant(
+          of: find.byType(SongList),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    // Other music may share the list (the phone's library), so look each
+    // title up by scrolling it into view rather than assuming it is visible.
     for (final t in const ['IT Sylt Tag', 'IT No Lyrics']) {
-      expect(find.text(t), findsOneWidget, reason: 'song "$t" is listed');
+      await tester.scrollUntilVisible(
+        find.text(t),
+        300,
+        scrollable: scrollable,
+      );
+      expect(find.text(t), findsWidgets, reason: 'song "$t" is listed');
     }
 
     // Tapping a row plays that track through the real engine.
     final id = TrackId((await app.trackIdsByTitle())[title]!);
     final position = container.listen(playbackPositionProvider, (_, _) {});
     addTearDown(position.close);
+    await tester.scrollUntilVisible(row, 300, scrollable: scrollable);
     await tester.tap(row);
     await app.pumpUntil(
       () =>
