@@ -51,6 +51,7 @@ class MostPlayedPage extends ConsumerWidget {
         today: today,
         stale: state.stale || data == null,
         coverKeys: coverKeys,
+        showTotals: data != null,
       ),
       slivers: [
         const SliverToBoxAdapter(child: MostPlayedRangeChips()),

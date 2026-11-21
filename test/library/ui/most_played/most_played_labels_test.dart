@@ -25,8 +25,24 @@ void main() {
         range.withPreset(MostPlayedPreset.today),
         _today,
       ),
-      'Today · 20/11/2026',
+      '1 day · Today',
     );
+  });
+
+  test('a period moved back reads its dates, not the preset name', () {
+    final today = const MostPlayedRange()
+        .withPreset(MostPlayedPreset.today)
+        .previous();
+    expect(mostPlayedRangeLine(_vi, today, _today), 'Hôm qua');
+    expect(mostPlayedRangeLine(_en, today, _today), 'Yesterday');
+    expect(mostPlayedRangeLine(_vi, today.previous(), _today), '18/11/2026');
+    final month = const MostPlayedRange().previous();
+    expect(mostPlayedRangeLine(_vi, month, _today), '22/09 – 21/10/2026');
+  });
+
+  test('the chip of one day is named by its length', () {
+    expect(mostPlayedPresetLabel(_vi, MostPlayedPreset.today), '1 ngày');
+    expect(mostPlayedPresetLabel(_en, MostPlayedPreset.today), '1 day');
   });
 
   test('all time reads "Tất cả" alone', () {
@@ -61,7 +77,7 @@ void main() {
     // A period moved back needs its dates to be told apart.
     expect(
       mostPlayedListName(_vi, const MostPlayedRange().previous(), _today),
-      'Nghe nhiều nhất · 30 ngày · 22/09 – 21/10/2026',
+      'Nghe nhiều nhất · 22/09 – 21/10/2026',
     );
   });
 }

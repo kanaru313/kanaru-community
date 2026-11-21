@@ -16,6 +16,7 @@ class SongTileCover extends StatelessWidget {
     required this.current,
     this.number,
     this.rank,
+    this.missing = false,
   });
 
   final TrackInfo info;
@@ -28,6 +29,10 @@ class SongTileCover extends StatelessWidget {
   /// replaces); the first [topRanks] have the `primary` fill.
   final int? rank;
 
+  /// The song's file is gone: a placeholder cover in place of the picture,
+  /// the badge rules unchanged.
+  final bool missing;
+
   /// Ranks that get the emphasised badge.
   static const int topRanks = 3;
 
@@ -36,13 +41,22 @@ class SongTileCover extends StatelessWidget {
     const radius = KMediaCard.coverRadius;
     return Stack(
       children: [
-        TrackCover(
-          coverKey: info.coverKey,
-          seed: info.coverSeed,
-          size: CoverSize.thumb,
-          dimension: KMediaCard.coverSize,
-          radius: radius,
-        ),
+        if (missing)
+          KCover(
+            image: null,
+            size: KMediaCard.coverSize,
+            placeholderSeed: info.coverSeed,
+            placeholderIcon: KIcons.musicOff,
+            radius: radius,
+          )
+        else
+          TrackCover(
+            coverKey: info.coverKey,
+            seed: info.coverSeed,
+            size: CoverSize.thumb,
+            dimension: KMediaCard.coverSize,
+            radius: radius,
+          ),
         if (current)
           Positioned.fill(
             child: DecoratedBox(

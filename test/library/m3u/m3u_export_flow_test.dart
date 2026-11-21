@@ -99,6 +99,7 @@ void main() {
         (c) => runM3uTrackListExport(
           c,
           name: 'Nghe nhiều nhất · 30 ngày',
+          fallback: 'Fallback',
           tracks: () async => ids,
           relative: false,
         ),
@@ -118,30 +119,51 @@ void main() {
       expect(h.container.read(m3uExportBusyProvider), isFalse);
     });
 
-    flowTest('no song, or a failed read: the failure toast, no dialog', (
-      t,
-    ) async {
-      final h = await M3uFlowHarness.pump(t);
-      for (final read in <Future<List<TrackId>> Function()>[
-        () async => const <TrackId>[],
-        () async => throw StateError('db'),
-      ]) {
+    for (final (name, fails) in [('no song', false), ('a failed read', true)]) {
+      flowTest('$name: a toast says so, no dialog', (t) async {
+        final h = await M3uFlowHarness.pump(t);
         final flow = h.start(
           t,
           (c) => runM3uTrackListExport(
             c,
             name: 'x',
-            tracks: read,
+            fallback: 'Fallback',
+            tracks: fails
+                ? () async => throw StateError('db')
+                : () async => const <TrackId>[],
             relative: false,
           ),
         );
         await h.untilDone(t, flow);
         await t.pump();
-        expect(find.text(h.l10n(t).playlistM3uExportFailed), findsOneWidget);
+        // An empty list is not an error: it says there is nothing to write.
+        final toast = fails
+            ? h.l10n(t).playlistM3uExportFailed
+            : h.l10n(t).historyNothingToExport;
+        expect(find.text(toast), findsOneWidget);
         expect(h.picker.suggestedName, isNull);
         await t.pump(const Duration(seconds: 6));
-      }
-      expect(h.container.read(m3uExportBusyProvider), isFalse);
+        expect(h.container.read(m3uExportBusyProvider), isFalse);
+      });
+    }
+
+    flowTest('a name no file can hold falls back to the one given', (t) async {
+      final h = await M3uFlowHarness.pump(t);
+      final ids = await songs(t, h);
+      h.picker.onCreate = (_) async => _target(h, 'out.m3u8');
+      final flow = h.start(
+        t,
+        (c) => runM3uTrackListExport(
+          c,
+          name: '  ',
+          fallback: 'Fallback',
+          tracks: () async => ids,
+          relative: false,
+        ),
+      );
+      await h.untilDone(t, flow);
+      await t.pump(const Duration(milliseconds: 400));
+      expect(h.picker.suggestedName, 'Fallback.m3u8');
     });
   });
 

@@ -33,7 +33,13 @@ void main() {
         top: topList([topEntry(1, count: 10), topEntry(2, count: 4)]),
       );
       expect(find.text('Phát nhiều nhất'), findsWidgets);
-      expect(find.text('30 ngày · 22/10 – 20/11/2026'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(KDetailHero),
+          matching: find.text('22/10 – 20/11/2026'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('2 bài · 14 lượt nghe'), findsOneWidget);
       expect(find.text('Song 1'), findsOneWidget);
       expect(find.text('Song 2'), findsOneWidget);
@@ -119,16 +125,16 @@ void main() {
         ]),
       );
       expect(find.text('7 lượt · không phát được'), findsOneWidget);
-      // The missing row draws no cover of its own, so no badge: the playable
-      // one keeps its own rank.
-      expect(find.byKey(songTileBadgeKey), findsOneWidget);
-      expect(
-        find.descendant(
-          of: find.byKey(songTileBadgeKey),
-          matching: find.text('2'),
-        ),
-        findsOneWidget,
-      );
+      // The missing row keeps its rank: 1 and 2.
+      final badges = find.byKey(songTileBadgeKey);
+      expect(badges, findsNWidgets(2));
+      for (final r in [1, 2]) {
+        expect(
+          find.descendant(of: badges, matching: find.text('$r')),
+          findsOneWidget,
+          reason: 'rank $r',
+        );
+      }
       await tester.tap(find.text('Gone'));
       await _settle(tester);
       expect(h.playback.calls, isEmpty);
@@ -264,6 +270,82 @@ void main() {
     expect(find.byType(KChip), findsWidgets);
   });
 
+  testWidgets('a failed read states no totals', (tester) async {
+    await pumpMostPlayed(tester, store: _FailingStore());
+    expect(find.textContaining('lượt nghe'), findsNothing);
+  });
+
+  testWidgets('a retry after a failed read keeps the failed frame', (
+    tester,
+  ) async {
+    final store = _FailingStore();
+    final h = await pumpMostPlayed(tester, store: store);
+    final gate = Completer<void>();
+    store
+      ..fail = false
+      ..topGate = gate;
+    h.container
+        .read(mostPlayedRangeProvider.notifier)
+        .set(
+          h.container
+              .read(mostPlayedRangeProvider)
+              .withPreset(MostPlayedPreset.days7),
+        );
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Không tải được danh sách'), findsOneWidget);
+    expect(find.byType(KChip), findsWidgets);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('Không tải được danh sách'), findsNothing);
+  });
+
+  group('hero line and chips on a phone', () {
+    testWidgets('the hero line is the dates alone, end year included', (
+      tester,
+    ) async {
+      await pumpMostPlayed(tester, width: 360, top: topList([topEntry(1)]));
+      final line = find.descendant(
+        of: find.byType(KDetailHero),
+        matching: find.text('22/10 – 20/11/2026'),
+      );
+      expect(line, findsOneWidget);
+      // The preset name is the chosen chip's job: the line is the dates
+      // alone, short enough for the end year to stay on a phone.
+      expect(
+        find.descendant(
+          of: find.byType(KDetailHero),
+          matching: find.textContaining('30 ngày'),
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets('the chosen chip scrolls into view when it changes', (
+      tester,
+    ) async {
+      final h = await pumpMostPlayed(
+        tester,
+        width: 360,
+        top: topList([topEntry(1)]),
+      );
+      final custom = find.widgetWithText(KChip, 'Tuỳ chọn…');
+      expect(tester.getRect(custom).right, greaterThan(360));
+      h.container
+          .read(mostPlayedRangeProvider.notifier)
+          .set(
+            h.container
+                .read(mostPlayedRangeProvider)
+                .withCustom(DateTime(2026, 11, 1), DateTime(2026, 11, 5)),
+          );
+      await tester.pumpAndSettle();
+      final rect = tester.getRect(custom);
+      expect(rect.left, greaterThanOrEqualTo(0));
+      expect(rect.right, lessThanOrEqualTo(360));
+    });
+  });
+
   group('layout', () {
     testWidgets('two columns from 840 dp of page width, one below', (
       tester,
@@ -290,9 +372,15 @@ void main() {
 }
 
 class _FailingStore extends FakeHistoryStore {
+  /// True: every read throws; false: reads answer like the fake.
+  bool fail = true;
+
   @override
   Future<MostPlayed> top({
     ({int start, int end})? window,
     required int limit,
-  }) async => throw StateError('db');
+  }) async {
+    if (fail) throw StateError('db');
+    return super.top(window: window, limit: limit);
+  }
 }

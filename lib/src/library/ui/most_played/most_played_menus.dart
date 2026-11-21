@@ -66,8 +66,9 @@ Future<void> openMostPlayedMenu(
 );
 
 /// The page menu: play by rank, shuffle, add to a playlist (named after the
-/// range), add all to Favorites, export as M3U. Every row waits while the list
-/// reloads ([stale]) and stays dim for an empty one.
+/// range), add all to Favorites, export as M3U: one group, as drawn. Every row
+/// waits while the list reloads ([stale]); all but export stay dim for a list
+/// with nothing to play.
 MenuSpec buildMostPlayedMenu(
   AppLocalizations l10n, {
   required MostPlayed data,
@@ -77,6 +78,7 @@ MenuSpec buildMostPlayedMenu(
 }) {
   final queue = TopQueue(data.entries);
   final enabled = !stale && queue.ids.isNotEmpty;
+  final exportEnabled = !stale && data.entries.isNotEmpty;
   final name = mostPlayedListName(l10n, range, today);
   return MenuSpec(
     header: MenuHeader(
@@ -106,8 +108,6 @@ MenuSpec buildMostPlayedMenu(
             (ctx) => playMostPlayedOrToast(ctx, data.entries, shuffle: true),
           ),
         ),
-      ],
-      [
         MenuItemSpec(
           MenuItemId.playlist,
           icon: KIcons.playlistAdd,
@@ -127,16 +127,25 @@ MenuSpec buildMostPlayedMenu(
           enabled: enabled,
           action: MenuAction.run((ctx) => favoriteAll(ctx, queue.ids)),
         ),
-        ...trackListExportRows(
+        trackListExportRow(
           l10n,
           name: name,
-          enabled: enabled,
-          tracks: () async => [for (final e in data.entries) e.track.id],
+          fallback: l10n.libraryNavMostPlayed,
+          // Rows whose file is gone keep their old path, as in a playlist.
+          enabled: exportEnabled,
+          tracks: () async => mostPlayedExportTracks(data.entries),
         ),
       ],
     ],
   );
 }
+
+/// The songs of [entries] by rank, for the M3U export: songs whose file is
+/// gone included (an M3U keeps their old path).
+List<TrackId> mostPlayedExportTracks(List<TopEntry> entries) => [
+  for (final e in ([...entries]..sort((a, b) => a.rank.compareTo(b.rank))))
+    e.track.id,
+];
 
 /// Adds [ids] to Favorites and says how many were added and how many were
 /// there already.

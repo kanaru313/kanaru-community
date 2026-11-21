@@ -6,7 +6,7 @@ import '../../domain/history/history_span.dart';
 /// Name of a range chip: "30 ngày", "Tất cả", "Tuỳ chọn…".
 String mostPlayedPresetLabel(AppLocalizations l10n, MostPlayedPreset preset) =>
     switch (preset) {
-      MostPlayedPreset.today => l10n.historyMostPlayedRangeToday,
+      MostPlayedPreset.today => l10n.historyMostPlayedRange1Day,
       MostPlayedPreset.days7 => l10n.historyMostPlayedRange7Days,
       MostPlayedPreset.days30 => l10n.historyMostPlayedRange30Days,
       MostPlayedPreset.months6 => l10n.historyMostPlayedRange6Months,
@@ -28,11 +28,20 @@ String mostPlayedPeriodText(
         ? l10n.historyMostPlayedRangeAll
         : l10n.historyMostPlayedRangeCustom;
   }
+  // One day: "Hôm nay" / "Hôm qua" as long as they are true, else the date.
+  if (range.preset == MostPlayedPreset.today) {
+    return switch (range.back) {
+      0 => l10n.historyDayToday,
+      1 => l10n.historyDayYesterday,
+      _ => historySpanText(days.start, days.start),
+    };
+  }
   return historySpanText(days.start, addDays(days.end, -1));
 }
 
-/// Second line of the hero: `30 ngày · 16/10 – 14/11/2026`, a custom range
-/// as its dates alone, "Tất cả" for all time.
+/// `30 ngày · 16/10 – 14/11/2026`: the preset and its dates. A custom range,
+/// or a period moved back (it is no longer the current "30 ngày"), shows its
+/// dates alone; "Tất cả" for all time.
 String mostPlayedRangeLine(
   AppLocalizations l10n,
   MostPlayedRange range,
@@ -40,13 +49,14 @@ String mostPlayedRangeLine(
 ) {
   final period = mostPlayedPeriodText(l10n, range, today);
   return switch (range.preset) {
+    _ when range.back != 0 => period,
     MostPlayedPreset.all || MostPlayedPreset.custom => period,
     _ => '${mostPlayedPresetLabel(l10n, range.preset)} · $period',
   };
 }
 
 /// The range in a few words, for a playlist or a file made from the list:
-/// "30 ngày" (the full [mostPlayedRangeLine] once the period moved back),
+/// "30 ngày" (the dates alone once the period moved back),
 /// "Tất cả", or a custom range's dates.
 String mostPlayedRangeName(
   AppLocalizations l10n,

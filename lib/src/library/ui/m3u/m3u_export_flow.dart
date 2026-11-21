@@ -64,22 +64,29 @@ Future<void> runM3uExport(
 /// Exports a list of songs that is not a playlist (Most played, History) in
 /// the order [tracks] gives, under the file name [name]; otherwise as
 /// [runM3uExport]. [tracks] is read when the export starts (the list can be
-/// long and the menu opens without it); no song at all is a failure toast.
+/// long and the menu opens without it); no song at all says so in a toast.
+/// [fallback] names the file when [name] has nothing a file name can hold.
 Future<void> runM3uTrackListExport(
   BuildContext context, {
   required String name,
+  required String fallback,
   required Future<List<TrackId>> Function() tracks,
   required bool relative,
 }) => _run(context, (container, l10n) async {
   final ids = await tracks();
-  if (ids.isEmpty) return null;
+  if (ids.isEmpty) throw const _NothingToExport();
   return _ExportSource(
     name: name,
-    fallback: l10n.historyTitle,
+    fallback: fallback,
     write: (service, target) =>
         service.exportTracks(ids, target, relative: relative),
   );
 });
+
+/// The list to export has no song (it emptied since the menu opened).
+class _NothingToExport implements Exception {
+  const _NothingToExport();
+}
 
 Future<void> _run(
   BuildContext context,
@@ -138,6 +145,9 @@ Future<void> _export(
       suggestedName: suggestedM3uFileName(source.name, source.fallback),
       filter: m3uDocumentFilter(label: l10n.playlistM3uFileTypes),
     );
+  } on _NothingToExport {
+    _toast(messenger, l10n.historyNothingToExport);
+    return;
   } on DocumentPickerException catch (e, st) {
     if (e.failure == DocumentPickerFailure.busy) return;
     _log.warning('M3U save dialog failed', e, st);

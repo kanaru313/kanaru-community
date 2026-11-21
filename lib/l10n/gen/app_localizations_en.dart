@@ -3897,6 +3897,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get historyNothingToAdd => 'No playable songs to add';
 
   @override
+  String get historyNothingToExport => 'Nothing to export';
+
+  @override
   String get historyClearTitle => 'Clear history?';
 
   @override
@@ -3981,18 +3984,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get historyTrackEmpty => 'No plays yet';
 
   @override
+  String get historyTrackColDay => 'Day';
+
+  @override
+  String get historyTrackColTime => 'Time';
+
+  @override
+  String get historyTrackColListened => 'Listened';
+
+  @override
+  String historyTrackListHeader(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plays, newest first',
+      one: '$count play, newest first',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String historyTrackRemovePlayLabel(String time, String date) {
+    return 'Remove the play at $time, $date';
+  }
+
+  @override
   String historyTrackSummaryLast(String when) {
-    return 'Last played $when';
+    return 'Last played: $when';
   }
 
   @override
   String historyTrackSummaryFirst(String date) {
-    return 'first played $date';
+    return 'First played: $date';
   }
 
   @override
   String historyTrackSummaryTotal(String duration) {
-    return '$duration listened in total';
+    return 'Listened in total: $duration';
   }
 
   @override
@@ -4038,7 +4066,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get historyRangeSave => 'Save';
 
   @override
-  String get historyMostPlayedRangeToday => 'Today';
+  String get historyMostPlayedRange1Day => '1 day';
 
   @override
   String get historyMostPlayedRange7Days => '7 days';

@@ -88,12 +88,12 @@ void main() {
           for (final g in spec.groups) rowIds([g]),
         ],
         [
-          [MenuItemId.play, MenuItemId.shuffle],
           [
+            MenuItemId.play,
+            MenuItemId.shuffle,
             MenuItemId.playlist,
             MenuItemId.favorite,
             MenuItemId.playlistExportM3u,
-            MenuItemId.playlistExportM3uRelative,
           ],
         ],
       );
@@ -108,7 +108,6 @@ void main() {
         MenuItemId.playlist,
         MenuItemId.favorite,
         MenuItemId.playlistExportM3u,
-        MenuItemId.playlistExportM3uRelative,
       ]) {
         expect(rowOf(spec, id).enabled, isTrue, reason: '$id');
       }
@@ -118,11 +117,6 @@ void main() {
       for (final spec in [
         _menu(entries: const []),
         _menu(entries: entries, stale: true),
-        _menu(
-          entries: [
-            topEntry(1, track: info(1, status: TrackAvailability.missing)),
-          ],
-        ),
       ]) {
         for (final g in spec.groups) {
           for (final row in g) {
@@ -130,6 +124,33 @@ void main() {
           }
         }
       }
+    });
+
+    test('only missing songs: nothing plays, the export still works', () {
+      final spec = _menu(
+        entries: [
+          topEntry(1, track: info(1, status: TrackAvailability.missing)),
+        ],
+      );
+      for (final row in spec.groups.expand((g) => g)) {
+        expect(
+          row.enabled,
+          row.id == MenuItemId.playlistExportM3u,
+          reason: '${row.id}',
+        );
+      }
+    });
+
+    test('the export lists every song by rank, missing ones included', () {
+      final ids = mostPlayedExportTracks([
+        topEntry(3),
+        topEntry(
+          2,
+          track: info(2, title: 'Gone', status: TrackAvailability.missing),
+        ),
+        topEntry(1),
+      ]);
+      expect([for (final t in ids) t.value], [1, 2, 3]);
     });
   });
 
@@ -145,11 +166,11 @@ void main() {
         'Thêm vào playlist…',
         'Thêm tất cả vào Yêu thích',
         'Xuất tệp M3U…',
-        'Xuất M3U, đường dẫn tương đối…',
       ]) {
         expect(find.text(label), findsOneWidget, reason: label);
       }
       expect(find.text('Phát tất cả'), findsNothing);
+      expect(find.textContaining('đường dẫn tương đối'), findsNothing);
     });
 
     testWidgets('Phát plays in rank order without the missing songs; '

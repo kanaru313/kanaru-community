@@ -101,6 +101,7 @@
   "historyMenuTrackHistory": "History of this song",
   "historyMenuRemovePlay": "Remove from history",
   "historyNothingToAdd": "No playable songs to add",
+  "historyNothingToExport": "Nothing to export",
   "historyClearTitle": "Clear history?",
   "historyClearHour": "Last hour",
   "historyClearToday": "Today",
@@ -164,7 +165,29 @@
   },
   "historyMenuMissing": "Can't play",
   "historyTrackEmpty": "No plays yet",
-  "historyTrackSummaryLast": "Last played {when}",
+  "historyTrackColDay": "Day",
+  "historyTrackColTime": "Time",
+  "historyTrackColListened": "Listened",
+  "historyTrackListHeader": "{count, plural, one{{count} play, newest first} other{{count} plays, newest first}}",
+  "@historyTrackListHeader": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyTrackRemovePlayLabel": "Remove the play at {time}, {date}",
+  "@historyTrackRemovePlayLabel": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackSummaryLast": "Last played: {when}",
   "@historyTrackSummaryLast": {
     "placeholders": {
       "when": {
@@ -172,7 +195,7 @@
       }
     }
   },
-  "historyTrackSummaryFirst": "first played {date}",
+  "historyTrackSummaryFirst": "First played: {date}",
   "@historyTrackSummaryFirst": {
     "placeholders": {
       "date": {
@@ -180,7 +203,7 @@
       }
     }
   },
-  "historyTrackSummaryTotal": "{duration} listened in total",
+  "historyTrackSummaryTotal": "Listened in total: {duration}",
   "@historyTrackSummaryTotal": {
     "placeholders": {
       "duration": {
@@ -244,7 +267,7 @@
   "@historyRangeSave": {
     "description": "Save button of the custom range dialog"
   },
-  "historyMostPlayedRangeToday": "Today",
+  "historyMostPlayedRange1Day": "1 day",
   "historyMostPlayedRange7Days": "7 days",
   "historyMostPlayedRange30Days": "30 days",
   "historyMostPlayedRange6Months": "6 months",

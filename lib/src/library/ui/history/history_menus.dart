@@ -83,8 +83,6 @@ MenuSpec buildHistoryPageMenu(
             ),
           ),
         ),
-      ],
-      [
         MenuItemSpec(
           MenuItemId.playlist,
           icon: KIcons.playlistAdd,
@@ -92,6 +90,8 @@ MenuSpec buildHistoryPageMenu(
           enabled: any,
           action: MenuAction.run(_addAllToPlaylist),
         ),
+      ],
+      [
         MenuItemSpec(
           // The id of the "go to" rows: no dedicated id exists for this one.
           MenuItemId.link,
@@ -99,9 +99,10 @@ MenuSpec buildHistoryPageMenu(
           title: l10n.historyMenuMostPlayed,
           action: MenuAction.go(HistoryLocations.mostPlayed),
         ),
-        ...trackListExportRows(
+        trackListExportRow(
           l10n,
           name: l10n.historyTitle,
+          fallback: l10n.historyTitle,
           tracks: playedTracks,
           enabled: any,
         ),

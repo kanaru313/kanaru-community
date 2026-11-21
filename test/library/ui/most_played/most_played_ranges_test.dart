@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/ui/most_played/most_played_period_row.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/library/domain/history/history_ranges.dart';
 import 'package:kanaru/src/library/state/history/most_played_selection.dart';
@@ -39,13 +40,19 @@ bool _enabled(WidgetTester tester, String tooltip) =>
   end: lastExclusive.millisecondsSinceEpoch,
 );
 
+/// The dates in the period row (the hero says them too).
+Finder _periodText(String dates) => find.descendant(
+  of: find.byType(MostPlayedPeriodRow),
+  matching: find.text(dates),
+);
+
 void main() {
   testWidgets('30 ngày is chosen at first; each preset can be chosen', (
     tester,
   ) async {
     final h = await pumpMostPlayed(tester, top: topList([topEntry(1)]));
     for (final label in [
-      'Hôm nay',
+      '1 ngày',
       '7 ngày',
       '30 ngày',
       '6 tháng',
@@ -113,16 +120,34 @@ void main() {
   });
 
   group('period row', () {
+    testWidgets('1 ngày stays lit while the day moves, and the row says which '
+        'day', (tester) async {
+      await pumpMostPlayed(tester, top: topList([topEntry(1)]));
+      await _tapChip(tester, '1 ngày');
+      await _settle(tester);
+      expect(_periodText('Hôm nay'), findsOneWidget);
+
+      await tester.tap(byIconButton('Kỳ trước'));
+      await _settle(tester);
+      expect(_chosen(tester, '1 ngày'), isTrue);
+      expect(_periodText('Hôm qua'), findsOneWidget);
+
+      await tester.tap(byIconButton('Kỳ trước'));
+      await _settle(tester);
+      expect(_chosen(tester, '1 ngày'), isTrue);
+      expect(_periodText('18/11/2026'), findsOneWidget);
+    });
+
     testWidgets('Kỳ trước and Kỳ sau step a whole period; Kỳ sau is off at '
         'today', (tester) async {
       final h = await pumpMostPlayed(tester, top: topList([topEntry(1)]));
-      expect(find.text('22/10 – 20/11/2026'), findsOneWidget);
+      expect(_periodText('22/10 – 20/11/2026'), findsOneWidget);
       expect(_enabled(tester, 'Kỳ trước'), isTrue);
       expect(_enabled(tester, 'Kỳ sau'), isFalse);
 
       await tester.tap(byIconButton('Kỳ trước'));
       await _settle(tester);
-      expect(find.text('22/09 – 21/10/2026'), findsOneWidget);
+      expect(_periodText('22/09 – 21/10/2026'), findsOneWidget);
       expect(_enabled(tester, 'Kỳ sau'), isTrue);
       expect(
         h.store.topCalls.last,
@@ -131,7 +156,7 @@ void main() {
 
       await tester.tap(byIconButton('Kỳ sau'));
       await _settle(tester);
-      expect(find.text('22/10 – 20/11/2026'), findsOneWidget);
+      expect(_periodText('22/10 – 20/11/2026'), findsOneWidget);
       expect(_enabled(tester, 'Kỳ sau'), isFalse);
     });
 
@@ -151,7 +176,7 @@ void main() {
       await _settle(tester);
       await _tapChip(tester, '7 ngày');
       await _settle(tester);
-      expect(find.text('14/11 – 20/11/2026'), findsOneWidget);
+      expect(_periodText('14/11 – 20/11/2026'), findsOneWidget);
       expect(_enabled(tester, 'Kỳ sau'), isFalse);
     });
   });

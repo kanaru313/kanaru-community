@@ -14,6 +14,8 @@ import 'package:kanaru/src/library/ui/history/history_menus.dart';
 import 'package:kanaru/src/library/ui/history/history_row_menu.dart';
 import 'package:kanaru/src/library/ui/menus/menu_model.dart';
 import 'package:kanaru/src/media/domain/play_context.dart';
+import 'package:kanaru/src/platform/domain/document_picker.dart';
+import 'package:kanaru/src/platform/state/document_picker_provider.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/media/domain/track_info.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -35,6 +37,34 @@ final _mostPlayedRoute = GoRoute(
   path: HistoryLocations.mostPlayed,
   builder: (context, state) => const Scaffold(body: Text(_mostPlayedMarker)),
 );
+
+/// Counts how often every played song is read.
+class _CountingStore extends FakeHistoryStore {
+  int reads = 0;
+
+  @override
+  Future<List<TrackId>> playedTracksNewestFirst() {
+    reads++;
+    return super.playedTracksNewestFirst();
+  }
+}
+
+/// A file dialog that only notes the name it was asked for, then fails.
+class _NamePicker implements DocumentPicker {
+  String? suggestedName;
+
+  @override
+  Future<SaveTarget?> createDocument({
+    required String suggestedName,
+    DocumentFilter? filter,
+  }) async {
+    this.suggestedName = suggestedName;
+    throw const DocumentPickerException(DocumentPickerFailure.unavailable);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
 
 MenuSpec _page({
   required int plays,
@@ -62,13 +92,8 @@ void main() {
     test('lists the rows in their groups; every one is live', () {
       final spec = _page(plays: 12);
       expect(_groups(spec), [
-        [MenuItemId.play, MenuItemId.shuffle],
-        [
-          MenuItemId.playlist,
-          MenuItemId.link,
-          MenuItemId.playlistExportM3u,
-          MenuItemId.playlistExportM3uRelative,
-        ],
+        [MenuItemId.play, MenuItemId.shuffle, MenuItemId.playlist],
+        [MenuItemId.link, MenuItemId.playlistExportM3u],
         [MenuItemId.delete],
       ]);
       expect(spec.header.subtitle, '12 plays');
@@ -88,30 +113,44 @@ void main() {
       }
     });
 
-    test(
-      'the export rows dim with no plays and read the songs when chosen',
-      () async {
-        final read = <int>[];
-        final spec = _page(
-          plays: 3,
-          playedTracks: () async {
-            read.add(1);
-            return [TrackId(5), TrackId(2)];
-          },
-        );
-        expect(read, isEmpty, reason: 'the menu opens without the list');
-        for (final id in [
-          MenuItemId.playlistExportM3u,
-          MenuItemId.playlistExportM3uRelative,
-        ]) {
-          expect(rowOf(spec, id).enabled, isTrue, reason: '$id');
-          expect(rowOf(spec, id).action, isA<RunAction>());
-        }
-        final none = _page(plays: 0);
-        expect(rowOf(none, MenuItemId.playlistExportM3u).enabled, isFalse);
-        expect(rowOf(none, MenuItemId.link).enabled, isTrue);
-      },
-    );
+    test('the export row dims with no plays', () {
+      final spec = _page(plays: 3);
+      expect(rowOf(spec, MenuItemId.playlistExportM3u).enabled, isTrue);
+      expect(
+        rowOf(spec, MenuItemId.playlistExportM3u).action,
+        isA<RunAction>(),
+      );
+      final none = _page(plays: 0);
+      expect(rowOf(none, MenuItemId.playlistExportM3u).enabled, isFalse);
+      expect(rowOf(none, MenuItemId.link).enabled, isTrue);
+    });
+
+    testWidgets('choosing export reads the songs then asks for the file, '
+        'named after the page', (tester) async {
+      final store = _CountingStore()..playedTracks = [TrackId(5), TrackId(2)];
+      final picker = _NamePicker();
+      await pumpHistoryPage(
+        tester,
+        byYear: {
+          2026: playsOverDays([2, 2]),
+        },
+        store: store,
+        overrides: [documentPickerProvider.overrideWithValue(picker)],
+      );
+      final l10n = l10nOf(tester);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(HistoryHero),
+          matching: byIconButton(l10n.libraryMenuMore),
+        ),
+      );
+      await pumpMenu(tester);
+      expect(store.reads, 0, reason: 'the menu opens without the list');
+      await tester.tap(find.text(l10n.playlistMenuExportM3u));
+      await tester.pumpAndSettle();
+      expect(store.reads, 1);
+      expect(picker.suggestedName, '${l10n.historyTitle}.m3u8');
+    });
 
     test('Clear history is the only red row', () {
       final spec = _page(plays: 3);

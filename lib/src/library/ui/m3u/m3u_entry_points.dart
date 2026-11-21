@@ -27,11 +27,13 @@ Future<void> exportM3u(
 Future<void> exportM3uTracks(
   BuildContext context, {
   required String name,
+  required String fallback,
   required Future<List<TrackId>> Function() tracks,
   required bool relative,
 }) => runM3uTrackListExport(
   context,
   name: name,
+  fallback: fallback,
   tracks: tracks,
   relative: relative,
 );

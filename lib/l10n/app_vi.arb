@@ -2710,6 +2710,7 @@
   "historyMenuTrackHistory": "Lịch sử bài này",
   "historyMenuRemovePlay": "Xoá khỏi lịch sử",
   "historyNothingToAdd": "Không có bài phát được để thêm",
+  "historyNothingToExport": "Không có bài nào để xuất",
   "historyClearTitle": "Xoá lịch sử?",
   "historyClearHour": "Giờ qua",
   "historyClearToday": "Hôm nay",
@@ -2773,7 +2774,29 @@
   },
   "historyMenuMissing": "Không phát được",
   "historyTrackEmpty": "Chưa có lượt nghe nào",
-  "historyTrackSummaryLast": "Lần cuối {when}",
+  "historyTrackColDay": "Ngày",
+  "historyTrackColTime": "Giờ",
+  "historyTrackColListened": "Đã nghe",
+  "historyTrackListHeader": "{count, plural, other{{count} lượt nghe, mới nhất trước}}",
+  "@historyTrackListHeader": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyTrackRemovePlayLabel": "Xoá lượt nghe lúc {time}, {date}",
+  "@historyTrackRemovePlayLabel": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "historyTrackSummaryLast": "Lần cuối: {when}",
   "@historyTrackSummaryLast": {
     "placeholders": {
       "when": {
@@ -2781,7 +2804,7 @@
       }
     }
   },
-  "historyTrackSummaryFirst": "lần đầu {date}",
+  "historyTrackSummaryFirst": "Lần đầu: {date}",
   "@historyTrackSummaryFirst": {
     "placeholders": {
       "date": {
@@ -2789,7 +2812,7 @@
       }
     }
   },
-  "historyTrackSummaryTotal": "đã nghe tổng {duration}",
+  "historyTrackSummaryTotal": "Đã nghe tổng: {duration}",
   "@historyTrackSummaryTotal": {
     "placeholders": {
       "duration": {
@@ -2831,7 +2854,7 @@
   "historyRangeStartPlaceholder": "Ngày bắt đầu",
   "historyRangeEndPlaceholder": "Ngày kết thúc",
   "historyRangeSave": "Lưu",
-  "historyMostPlayedRangeToday": "Hôm nay",
+  "historyMostPlayedRange1Day": "1 ngày",
   "historyMostPlayedRange7Days": "7 ngày",
   "historyMostPlayedRange30Days": "30 ngày",
   "historyMostPlayedRange6Months": "6 tháng",

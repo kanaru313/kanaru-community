@@ -1658,27 +1658,28 @@ answer on screen while a change re-reads it.
   sub-page, unlike the sidebar History page), so there is no header title until
   the hero's name scrolls out of sight; two columns from 840 dp.
 - **Hero**: `KDetailHero` with the song's cover (radius 14 narrow), title,
-  artist (`line2`, left out when empty), `N plays` (`line3`) and one filled
-  `[▶ Play]` (`historyActions.playFrom([song], song)`, a toast when it fails).
-  The description (`KDetailDescription`, open state in
-  `detailDescriptionExpandedProvider` under `history-track:<id>`) reads "Last
-  played today 21:42 · first played 07/10/2026 · 22 min listened in total.":
-  today / yesterday by `dayLabelKind` against `localDayProvider`, else the date;
-  parts without a figure are dropped. A song that cannot play (missing or
-  hidden) dims the hero and disables Play, with "Can't play this song" as its
-  tooltip. With no plays left the hero stays and the list gives way to the
-  empty line.
-- **Rows**: `TrackHistoryRow` = `KListRow` (no cover) inside a `KContextRegion`:
-  `Thursday · 14/11/2026 · 21:42` and `listened 3:12` (omitted when
-  `listened_ms` is null), newest first, no ordinal. A play is not playable: a
-  tap does nothing while no song is selected (the no-op `onTap` only makes the
-  row a keyboard stop, which the Delete and Menu keys need). A long press
-  toggles the song in `librarySelectionProvider`, and every row shows selected
-  through `isSelectedProvider` (a tap while selecting toggles it). ⋮, right
-  click, Menu / Shift+F10 and the Delete key remove the play through
-  `removeHistoryPlay`, so the merged Undo toast and the error toast are the
-  History page's. Removing the last play shows the empty line; Undo restores
-  the rows.
+  artist (`line2`, left out when empty), `N plays` (`line3`) and `[▶ Play] [⋮]`
+  (no shuffle for one song; Play is `historyActions.playFrom([song], song)`, a
+  toast when it fails; ⋮ opens `openSongMenu`, the song menu of every row). The
+  description is the summary as lines, one fact each and no full stop: `Last
+  played: today 21:42`, `First played: 07/10/2026`, `Listened in total: 22 min`
+  (today / yesterday by `dayLabelKind` against `localDayProvider`, else the
+  date; facts without a figure are dropped). A song that cannot play (missing or
+  hidden) dims the hero, disables Play with "Can't play this song" as its
+  tooltip and has no ⋮. With no plays left the hero stays and the list gives way
+  to the empty line.
+- **Plays**: `trackHistoryRows` is a one-line table, newest first: the count
+  line (`N plays, newest first`), a small header row `Day · Time · Listened`,
+  then one 48 dp `TrackHistoryRow` per play: day ("Today" / "Yesterday", else
+  `dd/MM/yyyy`), time and listened length (right-aligned, tabular figures,
+  widths that follow the text scale; the length is blank when `listened_ms` is
+  null) and a delete `KIconButton`. A play is not playable and has no menu or
+  selection. The button, and the Delete key anywhere in the row, remove the play
+  through `removeHistoryPlay`, so the merged Undo toast and the error toast are
+  the History page's. One semantics label per row (`14/11/2026, 21:42, listened
+  3:12`, always the full date); the button says "Remove the play at 21:42,
+  14/11/2026". Removing the last play shows the empty line; Undo restores the
+  rows.
 - The `/playlists/most-played/track/:trackId` route (opened from a Most played
   row's "History of this song") builds the same widget.
 
@@ -1694,10 +1695,10 @@ menu on desktop.
 - **Page ⋮** (`buildHistoryPageMenu`, head = a history tile + the play count):
   Play all, Shuffle, Add to playlist (all songs ever played, read when the row
   is chosen; the picker names the source "History"), Most played
-  (`MenuAction.go` to `HistoryLocations.mostPlayed`, a push), Export M3U (two
-  rows, absolute and relative paths, from `trackListExportRows` in
-  `history_export_rows.dart`; the songs ever played, last played first, are read
-  when a row is chosen; the file is named "History"), Clear history (red). Play
+  (`MenuAction.go` to `HistoryLocations.mostPlayed`, a push), Export M3U (one
+  row, absolute paths, from `trackListExportRow` in `history_export_rows.dart`;
+  the songs ever played, last played first, are read when it is chosen; the file
+  is named "History"), Clear history (red). Play
   and add skip songs that are missing or hidden. Everything but Most played is
   off with no plays (export too), Clear also while a clear runs
   (`historyClearingProvider`). The export rows are "coming soon" where
@@ -1763,25 +1764,29 @@ imports `data/` or `database/`: it watches `mostPlayedRangeProvider`,
   names the page; the page tinted by the first cover through `watchCoverTint`;
   two columns from 840 dp of page width). The hero (`MostPlayedHero`) has a
   mosaic of the distinct albums of the top ranks in rank order (at most four,
-  songs whose file is gone skipped; `pickAutoCoverKeys`), the range line (`30
-  days · 16/10 – 14/11/2026`, "All time", or a custom range's dates), `M songs
+  songs whose file is gone skipped; `pickAutoCoverKeys`), the period's dates (`16/10 – 14/11/2026`, "All time", or for the 1-day chip
+  "Today" / "Yesterday" / the date: the chosen chip names the preset, and the
+  hero's one-line detail has no room for both on a phone), `M songs
   · N plays` (the window's totals, not only the listed rows) and `[Play]
   [shuffle] [⋮]`. The first read shows an empty frame; a failed read keeps the
-  hero (empty) and the chips and shows the error text in place of the rows.
-- **Range** (`MostPlayedRangeChips`, `KChip` row that scrolls sideways): Today,
-  7 days, 30 days, 6 months, 1 year, All time, Custom…. Default 30 days; the
+  hero (no totals line) and the chips and shows the error text in place of the
+  rows; a retry keeps that frame until it answers.
+- **Range** (`MostPlayedRangeChips`, `KChip` row that scrolls sideways; the chosen chip is
+  scrolled into view): 1 day (the `today` preset), 7 days, 30 days, 6 months, 1 year, All time, Custom…. Default 30 days; the
   range and the number live in keepAlive notifiers, so leaving the page and
   coming back finds them (session only). Custom… is dim while no play exists at
   all (`historyBoundsProvider` is null) and opens the range dialog with the
   custom range in use; Save selects the chip, Cancel keeps the previous one.
 - **Period row** (`MostPlayedPeriodRow`): `‹` period text `›` and the "Top N ▾"
-  chip. The arrows step a whole period (a custom range by its own length);
+  chip. The arrows step a whole period (a custom range by its own length); the chip
+  stays lit, so a moved period never claims to be the current one (the 1-day
+  chip's text turns "Yesterday", then the date; other presets show their dates);
   next is off once the period reaches today (`localDayProvider`, so a page left
   open overnight follows); All time has no arrows. The row wraps at large text.
   A thin progress line under it shows while a new range or number loads: the
   previous list stays (`MostPlayedState.stale`).
 - **Top N** (`chooseMostPlayedLimit`): `showSelectionPicker` anchored under the
-  chip (a sheet on mobile): Top 5 / 10 / 50 / 100 and Custom…, whose subtitle is
+  chip on both shells (`SelectionPickerPresentation.anchored`): Top 5 / 10 / 50 / 100 and Custom…, whose subtitle is
   "From 1 to 1000 songs", or "Top 250 · from 1 to 1000 songs" when the number is
   not a preset (the row is then selected). Custom… closes the picker and opens
   `showMostPlayedLimitDialog` ("Số bài xếp hạng": digits only, four at most,
@@ -1800,8 +1805,9 @@ imports `data/` or `database/`: it watches `mostPlayedRangeProvider`,
 - **Page ⋮** (`buildMostPlayedMenu`): Play (by rank), Shuffle, Add to playlist
   (named "Most played · 30 days", `mostPlayedListName`), Add all to Favorites
   (`FavoritesController.setFavorite`, then the "added N, skipped M" toast), and
-  the two M3U export rows (`trackListExportRows`, file named like the list, rank
-  order). Every row is off while the list reloads or has nothing to play; the
+  one M3U export row (`trackListExportRow`, absolute paths, file named like the
+  list, rank order, songs whose file is gone included). Every row is off while
+  the list reloads; all but export are off with nothing to play; the
   ⋮ button itself stays pressable (`LibraryMoreButton` has no disabled state).
 - **Custom range dialog** (`most_played/range_dialog/`, a port of the old app's
   dialog; the only place that imports `table_calendar`, Apache-2.0): see its

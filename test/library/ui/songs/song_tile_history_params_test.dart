@@ -107,6 +107,17 @@ void main() {
       expect(_badgeFill(tester), scheme.primary);
     });
 
+    testWidgets('an unavailable row keeps its rank badge', (tester) async {
+      await _pump(tester, rank: 2, unavailable: true);
+      expect(
+        find.descendant(
+          of: find.byKey(songTileBadgeKey),
+          matching: find.text('2'),
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('a lower rank has the quiet badge', (tester) async {
       await _pump(tester, rank: 4);
       final scheme = Theme.of(tester.element(find.byType(SongTile)))

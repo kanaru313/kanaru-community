@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 
 import '../../domain/history/history_models.dart';
 import '../../domain/history/history_ranges.dart';
@@ -30,8 +31,11 @@ class MostPlayedLimitNotifier extends Notifier<int> {
   void set(int limit) => state = clampMostPlayedLimit(limit);
 }
 
+final _log = Logger('library.most_played');
+
 /// The Most played list for the chosen range. While a new range or limit
-/// loads, the previous list stays ([stale] true) so the page does not blink.
+/// loads, the previous list stays ([stale] true) so the page does not blink;
+/// a retry after a failed read keeps the failed frame ([error] with [stale]).
 class MostPlayedState {
   const MostPlayedState({this.data, this.stale = false, this.error});
 
@@ -57,14 +61,20 @@ final _mostPlayedReadProvider = FutureProvider.autoDispose<MostPlayed>((
     // A window that takes in every play answers like all time, cheaper.
     if (played == null || windowCoversPlays(window, played)) window = null;
   }
-  return store.top(window: window, limit: limit);
+  try {
+    return await store.top(window: window, limit: limit);
+  } catch (e) {
+    // The type only: the message of a database error may hold paths.
+    _log.warning('Reading the most played list failed: ${e.runtimeType}');
+    rethrow;
+  }
 });
 
 final mostPlayedProvider = Provider.autoDispose<MostPlayedState>((ref) {
   final read = ref.watch(_mostPlayedReadProvider);
   final data = read.value;
-  if (read.hasError && !read.isLoading) {
-    return MostPlayedState(error: read.error);
+  if (data == null && read.hasError) {
+    return MostPlayedState(error: read.error, stale: read.isLoading);
   }
   return MostPlayedState(data: data, stale: data != null && read.isLoading);
 });

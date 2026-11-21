@@ -5598,6 +5598,12 @@ abstract class AppLocalizations {
   /// **'No playable songs to add'**
   String get historyNothingToAdd;
 
+  /// No description provided for @historyNothingToExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to export'**
+  String get historyNothingToExport;
+
   /// No description provided for @historyClearTitle.
   ///
   /// In en, this message translates to:
@@ -5706,22 +5712,52 @@ abstract class AppLocalizations {
   /// **'No plays yet'**
   String get historyTrackEmpty;
 
+  /// No description provided for @historyTrackColDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get historyTrackColDay;
+
+  /// No description provided for @historyTrackColTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get historyTrackColTime;
+
+  /// No description provided for @historyTrackColListened.
+  ///
+  /// In en, this message translates to:
+  /// **'Listened'**
+  String get historyTrackColListened;
+
+  /// No description provided for @historyTrackListHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} play, newest first} other{{count} plays, newest first}}'**
+  String historyTrackListHeader(int count);
+
+  /// No description provided for @historyTrackRemovePlayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the play at {time}, {date}'**
+  String historyTrackRemovePlayLabel(String time, String date);
+
   /// No description provided for @historyTrackSummaryLast.
   ///
   /// In en, this message translates to:
-  /// **'Last played {when}'**
+  /// **'Last played: {when}'**
   String historyTrackSummaryLast(String when);
 
   /// No description provided for @historyTrackSummaryFirst.
   ///
   /// In en, this message translates to:
-  /// **'first played {date}'**
+  /// **'First played: {date}'**
   String historyTrackSummaryFirst(String date);
 
   /// No description provided for @historyTrackSummaryTotal.
   ///
   /// In en, this message translates to:
-  /// **'{duration} listened in total'**
+  /// **'Listened in total: {duration}'**
   String historyTrackSummaryTotal(String duration);
 
   /// No description provided for @historyTrackListened.
@@ -5784,11 +5820,11 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get historyRangeSave;
 
-  /// No description provided for @historyMostPlayedRangeToday.
+  /// No description provided for @historyMostPlayedRange1Day.
   ///
   /// In en, this message translates to:
-  /// **'Today'**
-  String get historyMostPlayedRangeToday;
+  /// **'1 day'**
+  String get historyMostPlayedRange1Day;
 
   /// No description provided for @historyMostPlayedRange7Days.
   ///

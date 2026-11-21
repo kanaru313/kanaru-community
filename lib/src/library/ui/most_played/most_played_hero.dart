@@ -30,7 +30,8 @@ List<String> mostPlayedCoverKeys(List<TopEntry> entries) => pickAutoCoverKeys(
 );
 
 /// Top of the Most played page: the framed cover (a mosaic of the top
-/// albums), "Phát nhiều nhất", the range (`30 ngày · 16/10 – 14/11/2026`),
+/// albums), "Phát nhiều nhất", the period's dates (`16/10 – 14/11/2026`; the chosen chip names the preset, and the
+/// one-line detail line has no room for both on a phone),
 /// `M bài · N lượt nghe` and `[▶ Phát] [shuffle] [⋮]`.
 ///
 /// Play, shuffle and ⋮ wait while the list reloads ([stale]) and are off for
@@ -43,6 +44,7 @@ class MostPlayedHero extends StatelessWidget {
     required this.today,
     required this.stale,
     required this.coverKeys,
+    this.showTotals = true,
   });
 
   final MostPlayed data;
@@ -50,6 +52,9 @@ class MostPlayedHero extends StatelessWidget {
   final DateTime today;
   final bool stale;
   final List<String> coverKeys;
+
+  /// False after a failed read: there are no totals to state.
+  final bool showTotals;
 
   @override
   Widget build(BuildContext context) {
@@ -70,8 +75,10 @@ class MostPlayedHero extends StatelessWidget {
         ),
       ),
       title: l10n.libraryNavMostPlayed,
-      line2: KDetailLine(text: mostPlayedRangeLine(l10n, range, today)),
-      line3: l10n.historyMostPlayedHeroTotals(data.songs, data.plays),
+      line2: KDetailLine(text: mostPlayedPeriodText(l10n, range, today)),
+      line3: showTotals
+          ? l10n.historyMostPlayedHeroTotals(data.songs, data.plays)
+          : null,
       actions: PlayShuffleButtons(
         compact: false,
         labelled: true,

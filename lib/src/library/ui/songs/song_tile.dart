@@ -227,20 +227,13 @@ class SongTile extends ConsumerWidget {
                   (unavailable
                       ? l10n.playlistNotInLibrary
                       : trackAlbumLine(info)),
-              leading: unavailable
-                  ? KCover(
-                      image: null,
-                      size: KMediaCard.coverSize,
-                      placeholderSeed: info.coverSeed,
-                      placeholderIcon: KIcons.musicOff,
-                      radius: KMediaCard.coverRadius,
-                    )
-                  : SongTileCover(
-                      info: info,
-                      current: current,
-                      number: markNumber ? info.trackNo : null,
-                      rank: rank,
-                    ),
+              leading: SongTileCover(
+                info: info,
+                current: current,
+                number: markNumber ? info.trackNo : null,
+                rank: rank,
+                missing: unavailable,
+              ),
               top: duration == null
                   ? null
                   : Text(formatClock(Duration(milliseconds: duration))),

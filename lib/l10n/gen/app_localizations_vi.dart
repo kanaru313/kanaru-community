@@ -3489,6 +3489,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get historyNothingToAdd => 'Không có bài phát được để thêm';
 
   @override
+  String get historyNothingToExport => 'Không có bài nào để xuất';
+
+  @override
   String get historyClearTitle => 'Xoá lịch sử?';
 
   @override
@@ -3570,18 +3573,42 @@ class AppLocalizationsVi extends AppLocalizations {
   String get historyTrackEmpty => 'Chưa có lượt nghe nào';
 
   @override
+  String get historyTrackColDay => 'Ngày';
+
+  @override
+  String get historyTrackColTime => 'Giờ';
+
+  @override
+  String get historyTrackColListened => 'Đã nghe';
+
+  @override
+  String historyTrackListHeader(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lượt nghe, mới nhất trước',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String historyTrackRemovePlayLabel(String time, String date) {
+    return 'Xoá lượt nghe lúc $time, $date';
+  }
+
+  @override
   String historyTrackSummaryLast(String when) {
-    return 'Lần cuối $when';
+    return 'Lần cuối: $when';
   }
 
   @override
   String historyTrackSummaryFirst(String date) {
-    return 'lần đầu $date';
+    return 'Lần đầu: $date';
   }
 
   @override
   String historyTrackSummaryTotal(String duration) {
-    return 'đã nghe tổng $duration';
+    return 'Đã nghe tổng: $duration';
   }
 
   @override
@@ -3626,7 +3653,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get historyRangeSave => 'Lưu';
 
   @override
-  String get historyMostPlayedRangeToday => 'Hôm nay';
+  String get historyMostPlayedRange1Day => '1 ngày';
 
   @override
   String get historyMostPlayedRange7Days => '7 ngày';

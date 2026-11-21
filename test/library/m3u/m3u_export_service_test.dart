@@ -246,9 +246,28 @@ void main() {
         env.db,
         ids.reversed.toList(),
       );
+      // Every song at its place, across the chunk boundaries.
+      expect(
+        [for (final e in entries) e.title],
+        [for (var i = 1099; i >= 0; i--) 'T$i'],
+      );
+    });
+
+    test('a song listed again after the first chunk counts once, at its '
+        'first place', () async {
+      final ids = <int>[];
+      for (var i = 0; i < 1100; i++) {
+        ids.add(
+          await addTrack(env.db, env.source, locator: 's$i.mp3', title: 'T$i'),
+        );
+      }
+      final entries = await loadM3uExportEntriesByTracks(env.db, [
+        ...ids,
+        ids[10],
+      ]);
       expect(entries.length, 1100);
-      expect(entries.first.title, 'T1099');
-      expect(entries.last.title, 'T0');
+      expect(entries[10].title, 'T10');
+      expect(entries.where((e) => e.title == 'T10').length, 1);
     });
   });
 
