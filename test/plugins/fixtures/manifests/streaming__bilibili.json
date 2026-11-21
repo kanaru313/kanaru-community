@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "name": "Bilibili",
+    "author": "Kanaru Contributors",
+    "version": 3,
+    "apiVersion": 1,
+    "type": "streaming",
+    "description": "Nguồn phát âm thanh Bilibili (DASH .m4a AAC) cho Kanaru. Hỗ trợ tìm kiếm, khám phá, thể loại, radio, playlist, nghệ sĩ và dán link Bilibili (BV/av).",
+    "hosts": [
+      "api.bilibili.com",
+      "www.bilibili.com",
+      "*.akamaized.net",
+      "*.bilivideo.com",
+      "*.bilivideo.cn"
+    ],
+    "regexp": "^https?:\\/\\/(?:(?:www|m)\\.)?bilibili\\.com\\/|^https?:\\/\\/b23\\.tv\\/"
+  },
+  "script": {
+    "search": "search.js",
+    "stream": "stream.js",
+    "home": "home.js",
+    "genre": "genre.js",
+    "album": "album.js",
+    "playlist": "playlist.js",
+    "artist": "artist.js",
+    "related": "related.js",
+    "autocomplete": "autocomplete.js",
+    "resolve": "resolve.js"
+  },
+  "config": {
+    "quality": {
+      "title": "Chất lượng âm thanh",
+      "subtitle": "Ưu tiên bitrate cao nhất hoặc tiết kiệm dữ liệu",
+      "mode": "select",
+      "format": "single",
+      "default": "Cao nhất",
+      "options": [
+        {
+          "value": "Cao nhất",
+          "title": "Cao nhất"
+        },
+        {
+          "value": "Tiết kiệm dữ liệu",
+          "title": "Tiết kiệm dữ liệu"
+        }
+      ]
+    }
+  }
+}
