@@ -35,8 +35,11 @@ implements it.
 Present in `lib/src/` today: `foundation`, `platform`, `database`,
 `extension`, `media` (domain types only), `playback` (contracts and seeds),
 `library` (contracts and seeds, plus the Library and Playlists pages),
-`online`, `screens`, `shell`, `router`, and `lib/src/rust/` (generated FFI).
-`plugins`, `storage` and `lyrics` are in the DAG but have no code yet.
+`lyrics` (no UI yet), `online`, `screens`, `shell`, `router`, and
+`lib/src/rust/` (generated FFI).
+`plugins` and `storage` are in the DAG but have no code yet. `lyrics` has its
+domain, data and state layers (offline lyrics: parser, readers, loader,
+providers, settings) and no UI yet; nothing watches its providers.
 
 Outside the DAG:
 

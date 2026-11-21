@@ -109,3 +109,94 @@ recovers the reader. The cap is checked when a read starts and only abandoned
 threads count, so reads still within their timeout are never refused; reads
 started at the same time can push the stuck count past the cap, up to the cap
 plus the reads in flight. Callers should run one read at a time.
+
+## Dart side: readers
+
+Code: `lib/src/lyrics/` (`domain/`, `data/`, `state/`). Only `data/` imports
+`lib/src/rust/` and `database/`; `domain/` is pure Dart.
+
+- **Model** (`domain/lyrics.dart`): `Lyrics { lines, synced, origin }`,
+  `LyricLine { time, text, words }`, `LyricWord { start, text }`. `origin` is
+  `tag` or `lrc`. Enhanced-LRC word times (`<mm:ss.xx>`) fill `words`; views
+  ignore them (karaoke later). `Lyrics.lineAt(position)` is a binary search
+  (`-1` before the first line or when not synced).
+- **Parser** (`lrc_parser.dart`): time tags are scanned with an index
+  (`matchAsPrefix`), so a row costs linear time. Caps: at most 100 time tags
+  per row (the rest stays text), 10 000 lines, 1 MiB of line text in total
+  after tags repeat a line (the first line that would pass it, and every
+  later one of that kind, is dropped; synced and plain lines are capped
+  separately). Known meta keys only (`[Chorus: X]` stays text); `[offset:ms]`
+  anywhere applies to lines and words. Plain text trims blank edges.
+- **Decoder** (`lyrics_text_decoder.dart`): UTF-8 (BOM or not), UTF-16 LE/BE
+  with BOM (unpaired surrogates become U+FFFD), else Latin-1; never throws.
+- **Selection** (`local_lyrics_pick.dart`): synced in the preferred source,
+  synced in the other, plain in the preferred, plain in the other. The
+  preferred source is the `lyrics.local_first` setting (`tag` default).
+- **Readers** (`data/local_lyrics_reader.dart`): `LocalLyricsReader` has
+  `readTag`, `statLrc`, `readLrc`; failures are `LyricsReadFailure(kind,
+  transient)`. The default `localLyricsReaderProvider` is the inert
+  `NoLocalLyricsReader` (no I/O, so widget tests never touch files or FFI);
+  `lib/kanaru.dart` overrides it with `NativeLocalLyricsReader`: the tag
+  through `readEmbeddedLyrics` (native `Timeout` is transient, every other
+  kind permanent), the `.lrc` through `dart:io`.
+- **`.lrc` file read** (`lrc_file_read.dart`): regular files only (a FIFO,
+  device or folder is never opened), at most 1 MiB (also checked after the
+  read), stat + read under a 5 s timeout (transient failure). Only
+  ENOENT, EACCES and EPERM (errno 2, 13, 1) are permanent (absent); EIO and
+  every other error are transient. The read reuses the stat taken for the
+  cache key (no second stat). The `.lrc` path is the folder of the resolved audio path plus
+  the file name of `track_details.lrc_locator`; without a locator
+  `<stem>.lrc` then `<stem>.LRC` are probed. Logs carry the track id and an
+  error kind, never a path or lyrics text.
+- **Facts** (`lyrics_facts_query.dart`): `watchLyricsFacts` joins `tracks`,
+  `track_details` and `track_lyrics_choices` (track revision, `.lrc` locator
+  and revision, off). Playability and the audio path come only from
+  `PlayableResolver`.
+- **Choice store** (`lyrics_choice_store.dart`): `setLyricsOff` (upsert),
+  `clearLyricsChoice`.
+
+## Dart side: loading and state
+
+- **`LyricsLoader`** (`data/lyrics_loader.dart`, app lifetime, shaped like the
+  waveform loader). Per request it stats the `.lrc`, checks the cache, then
+  reads tag and `.lrc` in parallel, each source independent: a failing source
+  is absent and the other still shows. Tag reads go through `TagReadQueue`:
+  one in flight (the bridge keeps at most two stuck threads), the newest
+  waiting request next. A waiting read is dropped (`LyricsSuperseded`) only
+  when its requester cancels it (`LoadCancel`, fired when the provider is
+  disposed) and no other requester shares it; a newer request never drops an
+  older one. A request whose requester left after its tag read started stays
+  joinable. In-flight stats are shared per path and in-flight `.lrc` reads
+  per path + mtime + size (the stat used for the cache key), so a dead mount
+  holds at most one stuck call each and an edited file is never served an
+  older read.
+  Decode + parse run in `Isolate.run` above 16 KiB (tag text or `.lrc`
+  bytes), inline below. Reads with a transiently failed source are returned
+  but not cached; a parse failure is deterministic, so it counts as "no
+  lyrics" and is cached.
+- **Cache** (`lyrics_read_cache.dart`): LRU, at most 8 entries and 4 MiB of
+  lyrics text. Key: track id, resolved audio path, `tracks.revision`, stat
+  (path, mtime, size) of the `.lrc` actually read, so an edited or newly added
+  `.lrc` is read again. `peek(trackId)` is the synchronous newest read of a
+  track (for menus).
+- **Providers** (`state/`): `lyricsFactsProvider(id)` (stream),
+  `localLyricsReadProvider(id)` (resolver + loader; re-runs only when the
+  file identity changes, so a choice write or a setting flip reads nothing; an
+  unplayable track is `LocalLyricsRead.unavailable`, no I/O; a cancelled
+  request never completes, nobody consumes it), `trackLyricsProvider(id)`
+  (a refresh of the same track keeps what it shows; `TrackLyrics`: `LyricsLoading`, `LyricsShown`, `LyricsNone`, `LyricsOff`,
+  `LyricsUnavailable`; applies the selection order and the choice),
+  `playingLyricsProvider` (lyrics of the loaded entry with its entry id; loading
+  right after an entry change, never the previous track's lines) and
+  `playingLyricsLineProvider` (`Provider<int>`; watches the position only for
+  shown synced lyrics, uses it only when its entry id matches, notifies only
+  when the index changes), `lyricsChoiceCommandsProvider` (`setOff`, `clear`,
+  `toggle`). Every family and both playing providers are `isAutoDispose: true` and every future / stream
+  provider has `retry: null`. Nothing in the UI watches them yet.
+- **Settings** (`state/lyrics_settings.dart`): `lyrics.font_scale`
+  (small 0.85 / medium 1.0 / large 1.2), `lyrics.align` (start / center),
+  `lyrics.auto_return` (off / 3 / 5 / 10 s), `lyrics.dim` (light 0.36 /
+  strong 0.20 / off 1.0, alpha of `onSurface`), `lyrics.local_first` (tag /
+  lrc). Enum names; an unknown stored name falls back to the default.
+- **Table:** `track_lyrics_choices` (see
+  [system-architecture-database.md](./system-architecture-database.md)).

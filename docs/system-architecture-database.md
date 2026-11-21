@@ -27,6 +27,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 | DATA-06 Song key | `tracks.song_key`, `online_lyrics.cache_key` |
 | DATA-09 Track details | `track_details` |
 | Artists of a track, play queue, cover colours | `track_artists`, `queue_entries`, `cover_colors` |
+| Lyrics choice of the user per track | `track_lyrics_choices`; [track_lyrics_choices](#track_lyrics_choices-coded-with-offline-lyrics) |
 | Cover chosen by the user (playlist, album, artist) | `custom_covers`; [custom_covers](#custom_covers-coded-in-wave-1) |
 | DATA-10 Rating and mood playlists | `tracks.rating`, `playlists.name_key` |
 | DATA-11 Plugin install ids | `plugins.install_id` (spec only) |
@@ -82,7 +83,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 
 - Every foreign key into `tracks` (public and Pro) is `ON DELETE RESTRICT`. No `CASCADE` and no `SET NULL` into `tracks`.
 - `CASCADE` only runs from a parent to a pure child outside `tracks`: playlist to entries, source to mount, source to excluded folders.
-- Owned one-to-one children of a track (`track_details`, `play_stats`, and `track_artists` once added) are `RESTRICT` too. The track GC deletes them before the track. Nothing may reference an owned child: the GC throws when a foreign key points at one.
+- Owned one-to-one children of a track (`track_details`, `play_stats`, `track_artists` and `track_lyrics_choices`) are `RESTRICT` too. The track GC deletes them before the track. Nothing may reference an owned child: the GC throws when a foreign key points at one.
 - Every `*track_id` column has a foreign key into `tracks` and an index whose first column is that column. A single `INTEGER PRIMARY KEY` counts as that index.
 - Every foreign key column is the first column of an index, or the primary key.
 
@@ -130,7 +131,7 @@ The full list is in [Foreign key list](#foreign-key-list).
 1. Refuse to run when `PRAGMA foreign_keys` is 0.
 2. Find every foreign key into `tracks` at run time (`sqlite_master` joined with `pragma_foreign_key_list`). Pro tables are included.
 3. Throw if any of them is not `RESTRICT`.
-4. Ignore the owned-child tables `trackOwnedChildTables` = `{track_details, play_stats, track_artists}` when deciding whether a track is referenced. Delete their rows before the track rows, in the same transaction.
+4. Ignore the owned-child tables `trackOwnedChildTables` = `{track_details, play_stats, track_artists, track_lyrics_choices}` when deciding whether a track is referenced. Delete their rows before the track rows, in the same transaction.
 5. Delete a track only if no other foreign key row points at it (tombstoned rows count), `rating IS NULL AND lyrics_offset_ms = 0`, and one of:
 
    | Status | Condition |
@@ -140,7 +141,7 @@ The full list is in [Foreign key list](#foreign-key-list).
    | `remote` | `updated_at <= now - remoteGraceMs` (24 h). Keeps the now-playing and queued online track. |
 
 6. `present` rows are never deleted.
-7. The helper notifies streams for `tracks`, `track_details`, `play_stats`, `track_artists` and `track_search` (the FTS delete trigger writes it), only when rows were deleted. It returns the number of deleted tracks.
+7. The helper notifies streams for `tracks`, `track_details`, `play_stats`, `track_artists`, `track_lyrics_choices` and `track_search` (the FTS delete trigger writes it), only when rows were deleted. It returns the number of deleted tracks.
 
 Details: the checks and the candidate set are computed once per run (a `TEMP` table inside the transaction, dropped at the end), so the owned-children delete and the track delete use the same ids. A foreign key whose parent column is not named in the schema refers to `tracks.id`. Only the main schema is inspected. A composite foreign key into `tracks` throws like a non-`RESTRICT` one. Tables are addressed as `main.<table>`, so a temp table of the same name cannot hide a reference. A foreign key into an owned child table throws too. A `missing` row with `missing_since IS NULL` is never collected, so the scanner must set `missing_since` when it marks a row missing. Any failure leaves the database unchanged.
 
@@ -217,6 +218,7 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 | `track_details.track_id` | `tracks.id` | RESTRICT | tracks (coded) |
 | `play_log.track_id` | `tracks.id` | RESTRICT | play (coded) |
 | `play_stats.track_id` | `tracks.id` | RESTRICT | play (coded) |
+| `track_lyrics_choices.track_id` | `tracks.id` | RESTRICT | lyrics (coded) |
 | `playlists.origin_source_id` | `sources.id` | RESTRICT | collections (coded) |
 | `playlist_entries.playlist_id` | `playlists.id` | CASCADE | collections (coded) |
 | `playlist_entries.track_id` | `tracks.id` | RESTRICT | collections (coded) |
@@ -416,6 +418,20 @@ Owner: library. File: `tables/library_track_tables.dart`. Sync: derived. Owned c
 | `position` | INTEGER | NOT NULL | | Order in the tag, from 0 (the "2 artists" chips). |
 
 Primary key `(artist_key, track_id)`; index `track_artists_track` on `(track_id)`. The scanner rewrites a track's rows with `replaceTrackArtists` in the same transaction as its snapshot upsert.
+
+### track_lyrics_choices: Coded with offline lyrics
+
+Owner: lyrics (the table file `tables/lyrics_tables.dart` is in `database/`, which knows no lyrics types). Sync: device-local for now. Owned child of `tracks` (joins `trackOwnedChildTables`). No row = automatic selection.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `track_id` | INTEGER | PK, FK | | `tracks.id` RESTRICT. |
+| `mode` | TEXT | NOT NULL | | `CHECK (mode IN ('off'))`: the user turned lyrics off for this track. Raw strings (`LyricsChoiceMode`); a later kind is a table rebuild. |
+| `updated_at` | INTEGER | NOT NULL | | Epoch ms of the write. |
+
+No other indexes (the primary key is the lookup). The lyrics module writes it through `lyrics/data/lyrics_choice_store.dart` (`setLyricsOff` upserts, `clearLyricsChoice` deletes) and reads it with the facts query that joins `tracks`, `track_details` and this table.
+
+The schema is still v1 and changed in place. The schema guard runs only in debug builds, so a release build over an older dev database opens without this table and the GC run then fails (and is only logged): clear dev data after updating (phone: `pm clear`, Linux: isolated XDG dirs).
 
 ### cover_colors: Coded in wave 1
 
@@ -651,7 +667,7 @@ Dart API of the coded groups. `lib/src/database/database.dart` is the barrel; th
 | reads | `visibleTrackWhere(alias)`, `isVisibleTrack(tracks)`, `applyDuplicateHiding(db, {enabled, rules})` (`track_duplicates.dart`), `ftsPrefixQuery(input)` (null for empty input) |
 | maintenance | `collectOrphanTracks(db, now:)`; `verifyDevSchema`, `dumpSchema` (`schema_guard.dart`, not exported) |
 
-Database helpers live in `lib/src/database/`. `database.dart` exports the tables (`Sources`, `SourceMounts`, `ExcludedFolders`, `Tracks`, `TrackDetails`, `TrackArtists`, `CoverColors`, `CustomCovers`, `PlayLog`, `PlayStats`, `QueueEntries`, `Playlists`, `PlaylistEntries`, `SavedItems`, `ExtensionSchema`) and the helpers above. It does not export the `play_stats_ctl` type (the generated `playStatsCtl` getter on `AppDatabase` is internal) and exports only `runPlayStatsBulk` from the bulk file.
+Database helpers live in `lib/src/database/`. `database.dart` exports the tables (`Sources`, `SourceMounts`, `ExcludedFolders`, `Tracks`, `TrackDetails`, `TrackArtists`, `TrackLyricsChoices`, `CoverColors`, `CustomCovers`, `PlayLog`, `PlayStats`, `QueueEntries`, `Playlists`, `PlaylistEntries`, `SavedItems`, `ExtensionSchema`) and the helpers above. It does not export the `play_stats_ctl` type (the generated `playStatsCtl` getter on `AppDatabase` is internal) and exports only `runPlayStatsBulk` from the bulk file.
 
 Contract for every database helper:
 
