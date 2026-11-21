@@ -25,16 +25,16 @@ void main() {
 
     // The songs list shows the fixture titles.
     final row = find.text(title);
-    await app.pumpUntil(
-      () => find.byType(SongList).evaluate().isNotEmpty,
-      what: 'the Songs list',
-    );
     final scrollable = find
         .descendant(
           of: find.byType(SongList),
           matching: find.byType(Scrollable),
         )
         .first;
+    await app.pumpUntil(
+      () => scrollable.evaluate().isNotEmpty,
+      what: 'the Songs list with rows',
+    );
     // Other music may share the list (the phone's library), so look each
     // title up by scrolling it into view rather than assuming it is visible.
     for (final t in const ['IT Sylt Tag', 'IT No Lyrics']) {
