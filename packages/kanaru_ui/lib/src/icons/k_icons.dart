@@ -76,6 +76,12 @@ abstract final class KIcons {
   static const IconData queueMusic =
       FluentIcons.text_bullet_list_square_24_regular;
   static const IconData lyrics = FluentIcons.subtitles_24_regular;
+
+  /// Lyrics turned off for a song.
+  static const IconData lyricsOff = FluentIcons.closed_caption_off_24_regular;
+
+  /// Lyrics without time marks (the note line above plain lyrics).
+  static const IconData lyricsNote = FluentIcons.note_24_regular;
   static const IconData sleepTimer = FluentIcons.timer_24_regular;
   static const IconData sleepTimerActive = FluentIcons.timer_24_filled;
 
