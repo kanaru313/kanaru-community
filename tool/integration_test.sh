@@ -15,8 +15,9 @@
 #          them up (no folder picker).
 # android: $ANDROID_SERIAL (default 12f5c1bf0505); fixtures pushed to
 #          /sdcard/Music/kanaru-it/ and indexed, the debug app installed with
-#          `install -r` and READ_MEDIA_AUDIO / READ_MEDIA_IMAGES granted with
-#          `pm grant` (no system dialog). Never clears app data.
+#          READ_MEDIA_AUDIO / READ_MEDIA_IMAGES granted with `pm grant` right
+#          after `flutter test` installs the app (no system dialog). App data
+#          is cleared only with --clear.
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -86,15 +87,27 @@ case "$PLATFORM" in
           -d "file://$DIR/$(basename "$f")" >/dev/null
       done
     fi
-    flutter build apk --debug
-    "${ADB[@]}" install -r build/app/outputs/flutter-apk/app-debug.apk
-    if [ "$CLEAR" = 1 ]; then "${ADB[@]}" shell pm clear "$APP_ID"; fi
-    for permission in READ_MEDIA_AUDIO READ_MEDIA_IMAGES; do
-      "${ADB[@]}" shell pm grant "$APP_ID" "android.permission.$permission"
-    done
+    if [ "$CLEAR" = 1 ] && "${ADB[@]}" shell pm path "$APP_ID" | grep -q package; then
+      "${ADB[@]}" shell pm clear "$APP_ID"
+    fi
     failed=0
     for file in "${FILES[@]}"; do
+      # `flutter test` installs the app fresh and uninstalls it afterwards, so
+      # permissions cannot be granted beforehand: a background loop grants them
+      # as soon as the package exists (the harness re-reads the permission
+      # state, so the race with the first launch is harmless).
+      (
+        for _ in $(seq 1 1200); do
+          if "${ADB[@]}" shell pm grant "$APP_ID" android.permission.READ_MEDIA_AUDIO 2>/dev/null &&
+            "${ADB[@]}" shell pm grant "$APP_ID" android.permission.READ_MEDIA_IMAGES 2>/dev/null; then
+            exit 0
+          fi
+          sleep 0.5
+        done
+      ) &
+      granter=$!
       flutter test "$file" -d "$SERIAL" || failed=1
+      kill "$granter" 2>/dev/null || true
     done
     exit $failed
     ;;

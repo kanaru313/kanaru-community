@@ -9,6 +9,7 @@ import 'package:kanaru/kanaru.dart';
 import 'package:kanaru/kanaru_error_app.dart';
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/platform/data/app_paths_factory.dart';
+import 'package:kanaru/src/platform/state/media_permissions_provider.dart';
 import 'package:kanaru/src/router/state/router_provider.dart';
 import 'package:kanaru/src/router/ui/kanaru_app.dart';
 import 'package:kanaru/src/screens/first_run/state/first_run_gate.dart';
@@ -96,9 +97,15 @@ Future<RunningApp> startKanaru(WidgetTester tester) async {
   if (container.read(firstRunRequiredProvider)) {
     final next = find.byType(SetupNextButton);
     await app.pumpUntil(
-      () =>
-          next.evaluate().isNotEmpty &&
-          tester.widget<SetupNextButton>(next).onPressed != null,
+      () {
+        // Permissions are granted from outside (`pm grant`) while the app
+        // starts: look again until they show.
+        unawaited(
+          container.read(mediaPermissionStateProvider.notifier).refresh(),
+        );
+        return next.hitTestable().evaluate().isNotEmpty &&
+            tester.widget<SetupNextButton>(next).onPressed != null;
+      },
       what:
           'first-run page with a default music folder (is XDG_MUSIC_DIR set?)',
     );
