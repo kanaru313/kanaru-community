@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "name": "YouTube",
+    "author": "Kanaru Contributors",
+    "version": 3,
+    "apiVersion": 1,
+    "type": "streaming",
+    "description": "Nguồn nhạc YouTube (chỉ âm thanh) cho Kanaru. Hỗ trợ tìm kiếm, khám phá, thể loại, radio, playlist, nghệ sĩ và dán link YouTube.",
+    "hosts": [
+      "www.youtube.com",
+      "i.ytimg.com",
+      "*.googlevideo.com"
+    ],
+    "regexp": "^https?:\\/\\/(?:(?:www|m|music)\\.)?youtube\\.com\\/|^https?:\\/\\/youtu\\.be\\/"
+  },
+  "script": {
+    "search": "search.js",
+    "stream": "stream.js",
+    "home": "home.js",
+    "genre": "genre.js",
+    "album": "album.js",
+    "playlist": "playlist.js",
+    "artist": "artist.js",
+    "related": "related.js",
+    "autocomplete": "autocomplete.js",
+    "resolve": "resolve.js"
+  },
+  "config": {
+    "quality": {
+      "title": "Chất lượng âm thanh",
+      "subtitle": "Ưu tiên bitrate cao nhất hoặc tiết kiệm dữ liệu",
+      "mode": "select",
+      "format": "single",
+      "default": "Cao nhất",
+      "options": [
+        {
+          "value": "Cao nhất",
+          "title": "Cao nhất"
+        },
+        {
+          "value": "Tiết kiệm dữ liệu",
+          "title": "Tiết kiệm dữ liệu"
+        }
+      ]
+    }
+  }
+}
