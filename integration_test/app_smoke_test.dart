@@ -33,7 +33,7 @@ void main() {
     // the list from the top in viewport-sized jumps until the title is built.
     Future<void> reveal(String text) async {
       final target = find.text(text);
-      final deadline = DateTime.now().add(const Duration(seconds: 60));
+      final deadline = DateTime.now().add(const Duration(seconds: 30));
       while (scrollables.evaluate().isEmpty) {
         await Future<void>.delayed(const Duration(milliseconds: 100));
         await tester.pump();
@@ -44,8 +44,8 @@ void main() {
       position.jumpTo(position.minScrollExtent);
       await tester.pump();
       while (target.evaluate().isEmpty) {
-        if (DateTime.now().isAfter(deadline) ||
-            position.pixels >= position.maxScrollExtent) {
+        // At the end the loop keeps polling: rows may still be loading.
+        if (DateTime.now().isAfter(deadline)) {
           throw TestFailure('song "$text" is not in the Songs list');
         }
         position.jumpTo(
