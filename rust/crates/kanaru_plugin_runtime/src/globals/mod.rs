@@ -7,6 +7,7 @@
 
 mod execute;
 mod load;
+mod no_eval;
 mod response;
 
 use std::collections::HashMap;
@@ -114,6 +115,7 @@ pub fn install<'js>(
     let helpers = response::install(ctx)?;
     load::install(ctx, sources, entry)?;
     host::install(ctx, host)?;
+    no_eval::install(ctx)?;
 
     #[cfg(feature = "test-hooks")]
     install_test_hooks(ctx, &collector, &late)?;
