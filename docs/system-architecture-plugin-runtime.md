@@ -155,6 +155,30 @@ internals (`parser.tokenizer.sink.sink`), so `html5ever`, `scraper`, `ego-tree`,
 `selectors` and `cssparser` are pinned exactly in the workspace. `unsafe` is not
 used.
 
+## Removed globals
+
+Why: a static review of a plugin package is only worth something if the package
+is all the code that ever runs. `eval` or `Function` would let a plugin fetch
+JS and run it.
+
+What: `globals/no_eval.rs` runs last in `globals::install` (test builds install their hooks after it),
+before the entry script. It replaces `.constructor` on the four function prototypes (plain,
+async, generator, async generator; the last three found with
+`Object.getPrototypeOf` of a literal) with a non-configurable getter that
+throws `TypeError`, then deletes the globals `eval` and `Function` and fails
+the setup (`Internal`) if either is still there. The prototype objects stay, so
+the prelude's captured `Function.prototype.call` keeps working. `load()` and the
+entry compile through Rust (`eval_classic`), so they are not affected. Normal
+and streaming runs share `engine::run_in_context`, so both get it.
+
+Trade-off: the globals are deleted, not replaced by stubs, so code that
+probes `Function` fails loudly instead of silently misbehaving; libraries that
+need `Function` or `fn.constructor` do not run (see the compatibility note in
+`plugin-host-api.md`).
+
+Tests: `tests/no_eval.rs` (every route blocked, constructor not restorable,
+`load` / crypto / host API still work).
+
 ## Tests
 
 `crates/kanaru_plugin_runtime/tests/` share one runtime per test binary behind a

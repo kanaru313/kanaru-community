@@ -152,9 +152,10 @@ fn a_script_cannot_forge_or_break_responses() {
 fn poisoned_function_helpers_cannot_forge_a_response() {
     let _t = common::test();
     let script = "
-        Function.prototype.call = function () { return true; };
-        Function.prototype.apply = function () { return true; };
-        Function.prototype.bind = function () { return function () { return true; }; };
+        var FP = Object.getPrototypeOf(function () {});
+        FP.call = function () { return true; };
+        FP.apply = function () { return true; };
+        FP.bind = function () { return function () { return true; }; };
         Reflect.apply = function () { return true; };
         function execute() { return { ok: true, data: 'forged' }; }
     ";
@@ -164,7 +165,7 @@ fn poisoned_function_helpers_cannot_forge_a_response() {
 
     // The real helpers still work after the poisoning.
     let r = run_script(
-        "Function.prototype.call = null; Function.prototype.bind = null; function execute() { return Response.success(1); }",
+        "var FP = Object.getPrototypeOf(function () {}); FP.call = null; FP.bind = null; function execute() { return Response.success(1); }",
         0,
     );
     assert_eq!(r.status, S::Ok, "{r:?}");

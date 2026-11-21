@@ -186,9 +186,6 @@ fn deep_recursion_is_a_stack_error_not_a_crash() {
         // recursion through Array.prototype.sort and apply
         "function execute() { function f() { [2, 1].sort(f); } f(); }",
         "function execute() { function f() { return f.apply(null, []); } return Response.success(f()); }",
-        // recursion in the parser of eval and new Function
-        "function execute() { return Response.success(eval('('.repeat(300000) + '1' + ')'.repeat(300000))); }",
-        "function execute() { return Response.success(new Function('return ' + '['.repeat(300000) + ']'.repeat(300000))()); }",
     ];
     for (n, code) in cases.iter().enumerate() {
         let r = run_script(code, 3000);
@@ -199,6 +196,29 @@ fn deep_recursion_is_a_stack_error_not_a_crash() {
         if n < 9 {
             assert_eq!(r.status, S::Stack, "case {n}: {r:?}");
         }
+        assert_pool_still_works();
+    }
+}
+
+#[test]
+fn deeply_nested_source_fails_cleanly_in_entry_and_loaded_file() {
+    let _t = common::test();
+    let nested = format!("var x = {}1{};", "(".repeat(300000), ")".repeat(300000));
+    let entry_deep = format!("{nested} function execute() {{ return Response.success(1); }}");
+    let entry_load = "function execute() { load('deep.js'); return Response.success(1); }";
+    let cases = [
+        vec![common::file("search.js", &entry_deep)],
+        vec![
+            common::file("search.js", entry_load),
+            common::file("deep.js", &nested),
+        ],
+    ];
+    for (n, files) in cases.into_iter().enumerate() {
+        let job = common::rt::begin_job();
+        let r = common::block_on(common::rt::run(common::request_with(
+            job, files, "{}", 3000,
+        )));
+        assert_eq!(r.status, S::Stack, "case {n}: {r:?}");
         assert_pool_still_works();
     }
 }

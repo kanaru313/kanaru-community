@@ -309,6 +309,18 @@ in an error message or log.
 `XMLHttpRequest`, `WebSocket`, `require`, `import`, `setTimeout` and
 `setInterval`, modules, file and process APIs, WebView, and `cacheStorage`.
 
+Also absent: `eval` and `Function`. The globals are deleted, so `eval(...)`
+and `Function(...)` throw `ReferenceError`. Any read of `.constructor` on a
+function (plain, async, generator, async generator, including bound functions
+and classes) throws `TypeError: Kanaru plugins cannot compile code at run time
+(eval / Function are disabled)`. A plugin cannot compile code at run time; the
+only code that runs is the package's own files. `load(name)` is not affected.
+
+Compatibility note for plugin authors: `instanceof Function`, `Function.prototype`
+by name, `fn.constructor`, Babel class helpers and `Function('return this')`
+(lodash style) do not work. Use `Object.getPrototypeOf(function () {})` for the
+function prototype and `globalThis` for the global object.
+
 ## Compatibility check
 
 `rust/crates/kanaru_plugin_runtime/tests/compat_repo.rs` runs every plugin of a
