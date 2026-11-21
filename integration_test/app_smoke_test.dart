@@ -23,12 +23,11 @@ void main() {
     final container = app.container;
     const title = 'IT Uslt Tag';
 
-    final scrollable = find
-        .descendant(
-          of: find.byType(SongList),
-          matching: find.byType(Scrollable),
-        )
-        .first;
+    // No `.first` here: that finder throws while the list has no scrollable.
+    final scrollables = find.descendant(
+      of: find.byType(SongList),
+      matching: find.byType(Scrollable),
+    );
 
     // Other music may share the list (the phone's library): scroll down, then
     // back up, until the title is built.
@@ -36,8 +35,11 @@ void main() {
       final target = find.text(text);
       for (var step = 0; step < 80; step++) {
         if (target.evaluate().isNotEmpty) return;
-        if (scrollable.evaluate().isNotEmpty) {
-          await tester.drag(scrollable, Offset(0, step < 40 ? -300 : 300));
+        if (scrollables.evaluate().isNotEmpty) {
+          await tester.drag(
+            scrollables.first,
+            Offset(0, step < 40 ? -300 : 300),
+          );
         }
         await Future<void>.delayed(const Duration(milliseconds: 100));
         await tester.pump();
