@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart' show BuildContext;
 import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../media/domain/track_info.dart';
@@ -16,6 +17,8 @@ class SongMenuData {
     required this.file,
     required this.favorite,
     required this.selected,
+    this.lyricsLabel,
+    this.openLyrics,
   });
 
   final TrackInfo info;
@@ -25,6 +28,13 @@ class SongMenuData {
   final SongInfo? file;
   final bool favorite;
   final bool selected;
+
+  /// Subtitle of the "Lyrics source" row; null when not known.
+  final String? lyricsLabel;
+
+  /// Opens the lyrics modal of the song; null without a lyrics module (the
+  /// row is then a soon row).
+  final Future<void> Function(BuildContext context)? openLyrics;
 }
 
 /// Menu of a song. [origin] is the page the song is listed on: a song on its
@@ -96,10 +106,7 @@ MenuSpec buildSongMenu(
     )!.item;
   }
 
-  final advanced = <List<MenuItemSpec>>[
-    [soonRow(MenuItemId.lyrics, KIcons.lyrics, l10n.libraryMenuFindLyrics)],
-    removeRows(env, 1),
-  ];
+  final advanced = <List<MenuItemSpec>>[removeRows(env, 1)];
 
   if (infoPage != null) pages[infoPageKey] = infoPage;
   return MenuSpec(
@@ -119,6 +126,7 @@ MenuSpec buildSongMenu(
     groups: withAdvanced(
       [
         [?goAlbum, artistRow, ?albumArtistRow, folderRow],
+        [lyricsSourceRow(l10n, data.lyricsLabel, data.openLyrics)],
         [
           addToPlaylistRow(
             l10n,

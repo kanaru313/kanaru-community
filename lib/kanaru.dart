@@ -17,8 +17,10 @@ import 'src/extension/kanaru_extension.dart';
 import 'src/extension/state/extension_providers.dart';
 import 'src/foundation/app_logger.dart';
 import 'src/library/library_extension.dart';
+import 'src/library/ui/menus/song_lyrics_entry.dart';
 import 'src/lyrics/data/native_local_lyrics_reader.dart';
 import 'src/lyrics/state/lyrics_reader_provider.dart';
+import 'src/lyrics/ui/song_lyrics_entry_impl.dart';
 import 'src/online/online_extension.dart';
 import 'src/platform/data/app_paths_factory.dart';
 import 'src/platform/data/file_device_id.dart';
@@ -79,6 +81,7 @@ Future<void> runKanaru({List<KanaruExtension> extensions = const []}) async {
         appDatabaseProvider.overrideWithValue(started.database),
         extensionRegistryProvider.overrideWithValue(started.registry),
         localLyricsReaderProvider.overrideWithValue(NativeLocalLyricsReader()),
+        songLyricsEntryProvider.overrideWithValue(const LyricsSongEntry()),
       ],
       child: const KanaruApp(),
     ),

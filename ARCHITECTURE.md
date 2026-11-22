@@ -41,7 +41,9 @@ Present in `lib/src/` today: `foundation`, `platform`, `database`,
 the network seams (`domain/net`, `data/net`); `storage` is in the DAG but has
 no code yet. `lyrics` has its
 domain, data and state layers (offline lyrics: parser, readers, loader,
-providers, settings) and no UI yet; nothing watches its providers.
+providers, settings) and no UI yet; nothing watches its providers. The song menu's
+lyrics row is a seam: `library` owns `SongLyricsEntry` / `songLyricsEntryProvider`,
+`lyrics/ui` implements it, `lib/kanaru.dart` overrides it.
 
 Outside the DAG:
 

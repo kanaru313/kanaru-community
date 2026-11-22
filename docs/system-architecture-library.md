@@ -267,8 +267,11 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   (`playlistMoveUp` ... `playlistAskAi`). `openMenu(context, build, {viaKeyboard})`
   is public (same load guard as the typed openers). `openSongMenu(...,
   playlistGroup:, favoriteRow:)` goes through `withSongPageRows`: the page's
-  own group becomes the second group (after "Go to"), and `favoriteRow: false`
-  drops the heart row. A playlist menu builder throws
+  own group is inserted at index 1, right after the "Go to" group, and
+  `favoriteRow: false` drops the heart row. The song menu's groups are Go to ·
+  Lyrics source · actions (playlist, heart, edit, select, Ask AI) · Advanced; on a
+  playlist page the order is Go to · the page's playlist rows · Lyrics source ·
+  actions · Advanced. A playlist menu builder throws
   `ItemGoneException('playlist <uid>')` when `loadPlaylist` returns null: the
   `libraryNotFoundMessage` toast, no menu.
 - **`SongTile`** (`songs/song_tile.dart`, with `song_tile_edit.dart`,
@@ -888,7 +891,8 @@ both shells. The builders are pure functions of loaded data (no
 | `menu_actions.dart` | `MenuAction` (`go`, `favorite`, `exclude`, `copy`, `reveal`, `select`, `play`, `run`) and its cases |
 | `link_rows.dart` | The "Go to ..." rules in one place (below) |
 | `{song,album,artist,group,folder,selection}_menu.dart` | The builder of each kind (`group` = genre and language) |
-| `menu_items.dart` | Shared rows: Play / Shuffle, add all to favorites, the dimmed rows, the "Advanced" row |
+| `menu_items.dart` | Shared rows: Play / Shuffle, add all to favorites, the dimmed rows, the "Lyrics source" row (`lyricsSourceRow`), the "Advanced" row |
+| `song_lyrics_entry.dart` | The lyrics seam (below): `SongLyricsEntry` and `songLyricsEntryProvider` |
 
 **Link rules** (`contextModalLinksPageFrom = 4`, `linkPageFrom`): no target ->
 a dimmed row saying "No album" / "No artist"; one -> a plain row with the name
@@ -907,6 +911,18 @@ replaces "Go to folder". Artists are the exception (decision C45, old app
 `93af918d`): "Go to artist" on a song or album shown on an artist's page keeps
 every artist, that page's included. On an item's own page (`own`, the page's ⋮)
 the self link, Play and Shuffle are left out.
+
+**Lyrics seam** (`song_lyrics_entry.dart`): `library` cannot import `lyrics`, so
+the song menu owns `SongLyricsEntry` (`label(db, container, id, l10n)`,
+`open(context, id)`) and `songLyricsEntryProvider` (null by default).
+`lyrics/ui/song_lyrics_entry_impl.dart` implements it and `lib/kanaru.dart`
+overrides the provider. `songMenuSpec` reads the entry once; the label does no
+file I/O and holds no provider subscription (one database read of the song's
+choice gives "Lyrics off", else the loader's memory cache gives the summary,
+else no subtitle) and an error in it is logged and leaves the row without a
+subtitle. The row opens "Lyrics for this song" for that song
+(`followsPlaying: false`). Without an entry the row is a dimmed "coming soon" row
+at the same place.
 
 **Items per kind** follow mockup 04c. Rows not built yet are dimmed and inert
 (see "Coming soon"). "Exclude from library" of a folder (not on a music
@@ -1437,7 +1453,7 @@ Dimmed and inert, with the tooltip or subtitle "Coming soon" (`appComingSoon`,
 
 | Where | Item | Waits for |
 |---|---|---|
-| Context menus (`soonRow`) | Edit song / album info, find lyrics online, remove from library, delete files (Move to Trash wording when `MenuEnv.trash`), split genres / artists, language detection settings | tag editor, lyrics, library management, Settings |
+| Context menus (`soonRow`) | Edit song / album info, remove from library, delete files (Move to Trash wording when `MenuEnv.trash`), split genres / artists, language detection settings | tag editor, lyrics, library management, Settings |
 | Context menus (`proRow`) | Ask AI (song, album, artist, selection), with the Pro badge | the Pro build |
 | Context menus | "Show in file manager" where `FileManager.canReveal` is false (Android) | a platform implementation |
 | Selection panel | Edit | tag editor |

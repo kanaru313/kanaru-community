@@ -265,8 +265,13 @@ Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens
   file" (subtitle names tag or `.lrc` and synced or plain; disabled with "Không có lời trong file" when the file has none or the read
   is loading) and "Không hiện lời" (always enabled, even while loading). Choosing reads `LyricsChoiceCommands`, closes, then writes
   exactly once: file → `clear(id)`, off → `setOff(id)`. The chosen row only closes. A failed write is logged.
+- **Song menu entry** (`song_lyrics_entry_impl.dart`, `LyricsSongEntry`, implements the library's `SongLyricsEntry`; the app overrides
+  `songLyricsEntryProvider` in `lib/kanaru.dart`): `label` makes the subtitle of "Nguồn lời bài" with one one-shot read of the
+  song's choice (`watchLyricsFacts(...).first`): off → "Tắt lời"; else `LyricsLoader.peek` (memory cache) with `pickLocalLyrics` and
+  the `lyrics.local_first` setting → the summary label; else null (never a file read, never a subscription). `open` calls
+  `showLyricsForTrack(context, id, followsPlaying: false)`.
 - **`LyricsSourceButton`**: watches only `playingLyricsProvider`. Icon: file lyrics = `KIcons.lyrics` in `primary`; none, loading =
   the same at 38 %; off = `KIcons.lyricsOff`. 48 dp wide on mobile, 40 on desktop. Semantics label = the summary label (the modal
-  title while loading). Disabled without a track and for a track with no readable file. Desktop tooltip "<label> (L)" plus the
+  title while loading). Disabled only without a track: a track whose file cannot be read keeps the dimmed look of "none" but still opens the modal (and the right-click toggle works), the same rule as every other entry, because the song menu cannot know a file is unreadable without file I/O; the modal then says the file has no lyrics and still offers "Không hiện lời". Desktop tooltip "<label> (L)" plus the
   right-click line when `onToggle` is given; right-click (`KContextRegion`, no long press) calls `onToggle`, built by
   `toggleLyricsOfPlaying(ref)` (off ↔ automatic through `LyricsChoiceCommands.toggle`).

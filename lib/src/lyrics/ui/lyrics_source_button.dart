@@ -17,8 +17,11 @@ final _log = Logger('lyrics_source_button');
 /// The button that shows where the playing song's lyrics come from and opens
 /// "Lời cho bài này" ([onOpen]). Its icon follows the lyrics: primary when
 /// the file has some, dimmed while there are none or they load, struck
-/// through when the user turned them off. Disabled without a track or when
-/// the track has no readable file.
+/// through when the user turned them off. Disabled only without a track: a
+/// file that cannot be read keeps the dimmed look of "none" but still opens
+/// the modal, like every other entry (the song menu cannot know a file is
+/// unreadable without reading it); the modal says the file has no lyrics and
+/// still offers "Không hiện lời".
 ///
 /// The button is 48 dp wide on the mobile shell and 40 dp on the desktop
 /// shell, where the tooltip also names the `L` key and [onToggle] (right
@@ -39,8 +42,7 @@ class LyricsSourceButton extends ConsumerWidget {
     final desktop = FormFactor.of(context) == FormFactor.desktop;
     final playing = ref.watch(playingLyricsProvider);
     final summary = summaryOf(playing.lyrics);
-    final usable =
-        playing.trackId != null && summary != LyricsSummary.unavailable;
+    final usable = playing.trackId != null;
     final named = lyricsSummaryLabel(l10n, summary);
     final label = named.isEmpty ? l10n.lyricsForTrackTitle : named;
     final tooltip = desktop
