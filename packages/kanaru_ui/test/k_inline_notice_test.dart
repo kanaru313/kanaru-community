@@ -239,4 +239,27 @@ void main() {
     expect(fill(), scheme.surfaceContainerHigh);
     expect(_iconColor(tester), scheme.error);
   });
+
+  testWidgets('a busy action is a spinner that cannot be pressed again', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    var taps = 0;
+    await tester.pumpWidget(
+      host(
+        KInlineNotice(
+          icon: KIcons.info,
+          message: 'Có bản mới.',
+          actionLabel: 'Cập nhật',
+          onAction: () => taps++,
+          actionBusy: true,
+          actionBusyLabel: 'Đang xử lý',
+        ),
+      ),
+    );
+    expect(find.text('Cập nhật'), findsNothing);
+    expect(find.bySemanticsLabel('Đang xử lý'), findsOneWidget);
+    await tester.tap(find.byType(TextButton), warnIfMissed: false);
+    expect(taps, 0);
+  });
 }

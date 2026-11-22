@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../platform/state/document_picker_provider.dart';
 import '../../../plugins/state/install_ops.dart';
 import '../../../plugins/state/store_view_models.dart';
 import '../install/link_install_dialog.dart';
 import '../install/package_flow.dart';
+import '../plugin_paths.dart';
 import '../remove/remove_flow.dart';
 import '../updates/update_actions.dart';
 import '../updates/update_failures.dart';
@@ -55,10 +59,12 @@ final storeActionsProvider = Provider<StoreActions>(_wiredStoreActions);
 
 /// The store's flows: install (repository, file, link), update, update all
 /// and remove. Each runs its own screen or dialog; the store only calls them.
-/// The plugin page flow (open an installed plugin) is not wired here.
+/// A tap on an installed row opens its page.
 StoreActions _wiredStoreActions(Ref ref) {
   InstallOps ops() => ref.read(installOpsProvider);
   return StoreActions(
+    onOpenPlugin: (context, row) =>
+        unawaited(context.push(PluginPaths.plugin(row.installId))),
     onInstall: (context, row) => installFromRepository(
       context,
       ops(),

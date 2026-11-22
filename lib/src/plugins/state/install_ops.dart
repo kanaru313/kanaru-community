@@ -82,6 +82,13 @@ abstract interface class InstallOps {
   /// Updates every plugin without new hosts, one after the other.
   Future<UpdateAllState> updateAll();
 
+  /// Brings the package folder of [installId] back from its own origin (a
+  /// repository or link). The same version is written again only when its
+  /// hash equals the stored one; a newer one is an update, which waits for
+  /// the user when it adds hosts. A package held for review is dropped here:
+  /// the update screen prepares it again.
+  Future<InstallResult> repair(String installId);
+
   /// Read fresh when the remove dialog opens; null when not installed.
   Future<RemovePreview?> removePreview(String installId);
   Future<RemoveResult> remove(String installId);
@@ -150,6 +157,13 @@ class _ServiceInstallOps implements InstallOps {
 
   @override
   Future<UpdateAllState> updateAll() => _actions.updateAll.run();
+
+  @override
+  Future<InstallResult> repair(String installId) async {
+    final result = await _actions.repairer.repair(installId);
+    if (result is InstallNeedsReview) _held.discard(result.held.token);
+    return result;
+  }
 
   @override
   Future<RemovePreview?> removePreview(String installId) async {

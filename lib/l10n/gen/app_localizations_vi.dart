@@ -4957,4 +4957,186 @@ class AppLocalizationsVi extends AppLocalizations {
   String pluginsUpdatedNoVersion(String name) {
     return 'Đã cập nhật $name';
   }
+
+  @override
+  String get pluginsPageTitle => 'Chi tiết plugin';
+
+  @override
+  String get pluginsPageLoadFailed => 'Không đọc được danh sách plugin';
+
+  @override
+  String get pluginsPageGone => 'Plugin này không còn được cài.';
+
+  @override
+  String get pluginsPageToStore => 'Về Kho plugin';
+
+  @override
+  String pluginsPageByline(String author, int version) {
+    return '$author · bản $version';
+  }
+
+  @override
+  String pluginsPageUpdateTitle(int version) {
+    return 'Có bản mới bản $version';
+  }
+
+  @override
+  String get pluginsPageUpdateBusy => 'Đang xử lý';
+
+  @override
+  String pluginsPageReviewBody(String hosts) {
+    return 'Bản mới kết nối thêm tới $hosts: xem trước khi cập nhật.';
+  }
+
+  @override
+  String get pluginsPageReviewBodyAny =>
+      'Bản mới thêm host hoặc quyền mới: xem trước khi cập nhật.';
+
+  @override
+  String get pluginsPageReviewButton => 'Xem bản cập nhật';
+
+  @override
+  String get pluginsPageRefreshList => 'Làm mới danh sách';
+
+  @override
+  String pluginsPageNeedsConfigTitle(String name) {
+    return '$name cần được cấu hình';
+  }
+
+  @override
+  String pluginsPageNeedsConfigBody(String fields) {
+    return 'Plugin chưa chạy được tới khi có: $fields.';
+  }
+
+  @override
+  String get pluginsPageOpenConfig => 'Mở cấu hình';
+
+  @override
+  String get pluginsPageBrokenTitle => 'Không đọc được gói của plugin';
+
+  @override
+  String get pluginsPageBrokenBody =>
+      'Thư mục của plugin bị thiếu hoặc hỏng nên plugin không chạy. Cài lại giữ nguyên cài đặt và dữ liệu.';
+
+  @override
+  String get pluginsPageBrokenBodyFile =>
+      'Thư mục của plugin bị thiếu hoặc hỏng nên plugin không chạy. Plugin này cài từ file: hãy xoá rồi cài file mới.';
+
+  @override
+  String get pluginsPageReinstall => 'Cài lại';
+
+  @override
+  String pluginsPageReinstalled(String name) {
+    return 'Đã cài lại $name';
+  }
+
+  @override
+  String pluginsPageReinstallFailed(String reason) {
+    return 'Không cài lại được: $reason';
+  }
+
+  @override
+  String get pluginsPageDetails => 'Chi tiết';
+
+  @override
+  String get pluginsPageFrom => 'Cài từ';
+
+  @override
+  String pluginsPageFromRepo(String name) {
+    return 'Repo: $name';
+  }
+
+  @override
+  String pluginsPageFromFile(String name) {
+    return 'File: $name';
+  }
+
+  @override
+  String pluginsPageFromLink(String name) {
+    return 'Đường dẫn: $name';
+  }
+
+  @override
+  String get pluginsPageNoUpdatesFile =>
+      'Plugin này cài từ file nên không có cập nhật. Hãy xoá rồi cài file mới.';
+
+  @override
+  String get pluginsPageNoUpdatesLink =>
+      'Plugin này cài từ đường dẫn nên không có cập nhật. Hãy xoá rồi cài bản mới.';
+
+  @override
+  String pluginsPageWildcardLine(String label, String host) {
+    return '$label ($host)';
+  }
+
+  @override
+  String get pluginsPageNotEntered => '(chưa nhập)';
+
+  @override
+  String pluginsPageEndpointLine(String field, String hosts) {
+    return 'Địa chỉ bạn nhập ở ô $field: $hosts';
+  }
+
+  @override
+  String get pluginsPageInstalledAt => 'Cài lúc';
+
+  @override
+  String pluginsPageInstalledDates(String installed, String updated) {
+    return '$installed · cập nhật $updated';
+  }
+
+  @override
+  String get pluginsPageDescription => 'Mô tả';
+
+  @override
+  String get pluginsPageType => 'Loại';
+
+  @override
+  String pluginsPageTypeValue(String kind, int api) {
+    return 'Plugin $kind · API plugin $api';
+  }
+
+  @override
+  String pluginsPageTypeValueAi(String kind, int api) {
+    return 'Plugin $kind · AI · API plugin $api';
+  }
+
+  @override
+  String get pluginsPageSourceCode => 'Mã nguồn';
+
+  @override
+  String get pluginsPageUseLyrics => 'Tự tìm lời';
+
+  @override
+  String get pluginsPageUseTranslate => 'Dịch vụ dịch mặc định';
+
+  @override
+  String get pluginsPageConnection => 'Kết nối';
+
+  @override
+  String get pluginsPageConcurrent => 'Yêu cầu cùng lúc';
+
+  @override
+  String get pluginsPageSpacing => 'Giãn cách giữa các yêu cầu';
+
+  @override
+  String get pluginsPageData => 'Dữ liệu';
+
+  @override
+  String get pluginsPageOwnStorage => 'Bộ nhớ riêng của plugin';
+
+  @override
+  String get pluginsPageSavedLyrics => 'Lời đã lưu từ nguồn này';
+
+  @override
+  String get pluginsPageTrackCache => 'Cache bài và ảnh bìa';
+
+  @override
+  String get pluginsPageLog => 'Nhật ký';
+
+  @override
+  String get pluginsPageOpen => 'Mở';
+
+  @override
+  String get pluginsPageBadgeAi => 'AI';
 }

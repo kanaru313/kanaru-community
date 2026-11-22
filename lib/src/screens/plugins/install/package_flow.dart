@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -5,6 +8,7 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../../platform/domain/document_picker.dart';
 import '../../../plugins/domain/install/prepare_result.dart';
 import '../../../plugins/state/install_ops.dart';
+import '../plugin_paths.dart';
 import '../problems/install_problem_dialog.dart';
 import 'package_controller.dart';
 import 'package_exit.dart';
@@ -23,12 +27,28 @@ Future<void> runPackageFlow(
 }) async {
   final messenger = ScaffoldMessenger.of(context);
   final l10n = AppLocalizations.of(context);
-  void announce(PackageInstalled installed) => showAppSnackBarOn(
-    messenger,
-    installed.updated
-        ? l10n.pluginsPkgUpdated(installed.name, installed.version)
-        : l10n.pluginsPkgInstalled(installed.name),
-  );
+  // Taken before any await: the page that started the flow may be gone when
+  // the SnackBar shows. Without a router (a bare test host) there is no [Mở].
+  final router = GoRouter.maybeOf(context);
+  void announce(PackageInstalled installed) {
+    if (installed.updated) {
+      showAppSnackBarOn(
+        messenger,
+        l10n.pluginsPkgUpdated(installed.name, installed.version),
+      );
+      return;
+    }
+    showAppSnackBarOn(
+      messenger,
+      l10n.pluginsPkgInstalled(installed.name),
+      actionLabel: router == null ? null : l10n.pluginsPageOpen,
+      onAction: router == null
+          ? null
+          : () =>
+                unawaited(router.push(PluginPaths.plugin(installed.installId))),
+    );
+  }
+
   var starter = start;
   while (true) {
     final exit = await _showPackageScreen(

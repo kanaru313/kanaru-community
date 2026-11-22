@@ -64,6 +64,9 @@ class FakeInstallOps implements InstallOps {
   final removed = <String>[];
   var updateCalls = <String>[];
   var updateAllCalls = 0;
+  final repairCalls = <String>[];
+  Future<InstallResult> Function(String id) onRepair = (_) async =>
+      const Installed('id-demo', InstallOutcome.repaired);
   var blocked = false;
 
   /// Replaces the answer of [streamingBlocked] (to make it throw).
@@ -114,6 +117,12 @@ class FakeInstallOps implements InstallOps {
   Future<UpdateRun> update(String installId) {
     updateCalls.add(installId);
     return onUpdate(installId);
+  }
+
+  @override
+  Future<InstallResult> repair(String installId) {
+    repairCalls.add(installId);
+    return onRepair(installId);
   }
 
   @override

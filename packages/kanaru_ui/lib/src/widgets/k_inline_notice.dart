@@ -22,6 +22,8 @@ class KInlineNotice extends StatelessWidget {
     this.actionLabel,
     this.onAction,
     this.actionSemanticsLabel,
+    this.actionBusy = false,
+    this.actionBusyLabel,
   }) : assert(
          (actionLabel == null) == (onAction == null),
          'actionLabel and onAction are set together',
@@ -36,6 +38,11 @@ class KInlineNotice extends StatelessWidget {
 
   /// Longer label for screen readers; defaults to [actionLabel].
   final String? actionSemanticsLabel;
+
+  /// The action is running: its label becomes a small spinner and it cannot
+  /// be pressed again. [actionBusyLabel] is what a screen reader says then.
+  final bool actionBusy;
+  final String? actionBusyLabel;
 
   /// From this text scale the action moves under the text.
   static const double _stackScale = 1.5;
@@ -95,15 +102,25 @@ class KInlineNotice extends StatelessWidget {
             container: true,
             button: true,
             enabled: true,
-            onTap: onAction,
-            label: actionSemanticsLabel ?? actionLabel,
+            onTap: actionBusy ? null : onAction,
+            label: actionBusy
+                ? (actionBusyLabel ?? actionLabel)
+                : (actionSemanticsLabel ?? actionLabel),
             excludeSemantics: true,
             child: TextButton(
-              onPressed: onAction,
+              onPressed: actionBusy ? null : onAction,
               style: filled
                   ? TextButton.styleFrom(foregroundColor: foreground)
                   : null,
-              child: Text(actionLabel!),
+              child: actionBusy
+                  ? SizedBox.square(
+                      dimension: KIconSize.xs,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: foreground,
+                      ),
+                    )
+                  : Text(actionLabel!),
             ),
           )
         : null;

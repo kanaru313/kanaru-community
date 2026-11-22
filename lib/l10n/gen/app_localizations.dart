@@ -7943,6 +7943,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Updated {name}'**
   String pluginsUpdatedNoVersion(String name);
+
+  /// No description provided for @pluginsPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin details'**
+  String get pluginsPageTitle;
+
+  /// No description provided for @pluginsPageLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t read the plugin list'**
+  String get pluginsPageLoadFailed;
+
+  /// No description provided for @pluginsPageGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This plugin is no longer installed.'**
+  String get pluginsPageGone;
+
+  /// No description provided for @pluginsPageToStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the plugin store'**
+  String get pluginsPageToStore;
+
+  /// No description provided for @pluginsPageByline.
+  ///
+  /// In en, this message translates to:
+  /// **'{author} · version {version}'**
+  String pluginsPageByline(String author, int version);
+
+  /// No description provided for @pluginsPageUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New version {version}'**
+  String pluginsPageUpdateTitle(int version);
+
+  /// No description provided for @pluginsPageUpdateBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Working'**
+  String get pluginsPageUpdateBusy;
+
+  /// No description provided for @pluginsPageReviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The new version also connects to {hosts}: look before you update.'**
+  String pluginsPageReviewBody(String hosts);
+
+  /// No description provided for @pluginsPageReviewBodyAny.
+  ///
+  /// In en, this message translates to:
+  /// **'The new version adds hosts or permissions: look before you update.'**
+  String get pluginsPageReviewBodyAny;
+
+  /// No description provided for @pluginsPageReviewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'See the update'**
+  String get pluginsPageReviewButton;
+
+  /// No description provided for @pluginsPageRefreshList.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh the list'**
+  String get pluginsPageRefreshList;
+
+  /// No description provided for @pluginsPageNeedsConfigTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} needs to be set up'**
+  String pluginsPageNeedsConfigTitle(String name);
+
+  /// No description provided for @pluginsPageNeedsConfigBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin can’t run until it has: {fields}.'**
+  String pluginsPageNeedsConfigBody(String fields);
+
+  /// No description provided for @pluginsPageOpenConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get pluginsPageOpenConfig;
+
+  /// No description provided for @pluginsPageBrokenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t read the plugin’s package'**
+  String get pluginsPageBrokenTitle;
+
+  /// No description provided for @pluginsPageBrokenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin’s folder is missing or damaged, so it doesn’t run. Reinstalling keeps its settings and data.'**
+  String get pluginsPageBrokenBody;
+
+  /// No description provided for @pluginsPageBrokenBodyFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin’s folder is missing or damaged, so it doesn’t run. This plugin was installed from a file: remove it and install the file again.'**
+  String get pluginsPageBrokenBodyFile;
+
+  /// No description provided for @pluginsPageReinstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstall'**
+  String get pluginsPageReinstall;
+
+  /// No description provided for @pluginsPageReinstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstalled {name}'**
+  String pluginsPageReinstalled(String name);
+
+  /// No description provided for @pluginsPageReinstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t reinstall: {reason}'**
+  String pluginsPageReinstallFailed(String reason);
+
+  /// No description provided for @pluginsPageDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get pluginsPageDetails;
+
+  /// No description provided for @pluginsPageFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed from'**
+  String get pluginsPageFrom;
+
+  /// No description provided for @pluginsPageFromRepo.
+  ///
+  /// In en, this message translates to:
+  /// **'Repo: {name}'**
+  String pluginsPageFromRepo(String name);
+
+  /// No description provided for @pluginsPageFromFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File: {name}'**
+  String pluginsPageFromFile(String name);
+
+  /// No description provided for @pluginsPageFromLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link: {name}'**
+  String pluginsPageFromLink(String name);
+
+  /// No description provided for @pluginsPageNoUpdatesFile.
+  ///
+  /// In en, this message translates to:
+  /// **'This plugin was installed from a file, so it gets no updates. Remove it and install the new file.'**
+  String get pluginsPageNoUpdatesFile;
+
+  /// No description provided for @pluginsPageNoUpdatesLink.
+  ///
+  /// In en, this message translates to:
+  /// **'This plugin was installed from a link, so it gets no updates. Remove it and install the new version.'**
+  String get pluginsPageNoUpdatesLink;
+
+  /// No description provided for @pluginsPageWildcardLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} ({host})'**
+  String pluginsPageWildcardLine(String label, String host);
+
+  /// No description provided for @pluginsPageNotEntered.
+  ///
+  /// In en, this message translates to:
+  /// **'(not entered)'**
+  String get pluginsPageNotEntered;
+
+  /// No description provided for @pluginsPageEndpointLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Address you enter in {field}: {hosts}'**
+  String pluginsPageEndpointLine(String field, String hosts);
+
+  /// No description provided for @pluginsPageInstalledAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get pluginsPageInstalledAt;
+
+  /// No description provided for @pluginsPageInstalledDates.
+  ///
+  /// In en, this message translates to:
+  /// **'{installed} · updated {updated}'**
+  String pluginsPageInstalledDates(String installed, String updated);
+
+  /// No description provided for @pluginsPageDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get pluginsPageDescription;
+
+  /// No description provided for @pluginsPageType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get pluginsPageType;
+
+  /// No description provided for @pluginsPageTypeValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin for {kind} · plugin API {api}'**
+  String pluginsPageTypeValue(String kind, int api);
+
+  /// No description provided for @pluginsPageTypeValueAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI plugin for {kind} · plugin API {api}'**
+  String pluginsPageTypeValueAi(String kind, int api);
+
+  /// No description provided for @pluginsPageSourceCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Source code'**
+  String get pluginsPageSourceCode;
+
+  /// No description provided for @pluginsPageUseLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Find lyrics automatically'**
+  String get pluginsPageUseLyrics;
+
+  /// No description provided for @pluginsPageUseTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Default translation service'**
+  String get pluginsPageUseTranslate;
+
+  /// No description provided for @pluginsPageConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get pluginsPageConnection;
+
+  /// No description provided for @pluginsPageConcurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests at once'**
+  String get pluginsPageConcurrent;
+
+  /// No description provided for @pluginsPageSpacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Time between requests'**
+  String get pluginsPageSpacing;
+
+  /// No description provided for @pluginsPageData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get pluginsPageData;
+
+  /// No description provided for @pluginsPageOwnStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin’s own storage'**
+  String get pluginsPageOwnStorage;
+
+  /// No description provided for @pluginsPageSavedLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics saved from this source'**
+  String get pluginsPageSavedLyrics;
+
+  /// No description provided for @pluginsPageTrackCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Track and cover cache'**
+  String get pluginsPageTrackCache;
+
+  /// No description provided for @pluginsPageLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get pluginsPageLog;
+
+  /// No description provided for @pluginsPageOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get pluginsPageOpen;
+
+  /// No description provided for @pluginsPageBadgeAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get pluginsPageBadgeAi;
 }
 
 class _AppLocalizationsDelegate

@@ -751,5 +751,177 @@
         "type": "String"
       }
     }
-  }
+  },
+  "pluginsPageTitle": "Plugin details",
+  "pluginsPageLoadFailed": "Couldn’t read the plugin list",
+  "pluginsPageGone": "This plugin is no longer installed.",
+  "pluginsPageToStore": "Back to the plugin store",
+  "pluginsPageByline": "{author} · version {version}",
+  "@pluginsPageByline": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPageUpdateTitle": "New version {version}",
+  "@pluginsPageUpdateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPageUpdateBusy": "Working",
+  "pluginsPageReviewBody": "The new version also connects to {hosts}: look before you update.",
+  "@pluginsPageReviewBody": {
+    "placeholders": {
+      "hosts": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageReviewBodyAny": "The new version adds hosts or permissions: look before you update.",
+  "pluginsPageReviewButton": "See the update",
+  "pluginsPageRefreshList": "Refresh the list",
+  "pluginsPageNeedsConfigTitle": "{name} needs to be set up",
+  "@pluginsPageNeedsConfigTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageNeedsConfigBody": "The plugin can’t run until it has: {fields}.",
+  "@pluginsPageNeedsConfigBody": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageOpenConfig": "Open settings",
+  "pluginsPageBrokenTitle": "Couldn’t read the plugin’s package",
+  "pluginsPageBrokenBody": "The plugin’s folder is missing or damaged, so it doesn’t run. Reinstalling keeps its settings and data.",
+  "pluginsPageBrokenBodyFile": "The plugin’s folder is missing or damaged, so it doesn’t run. This plugin was installed from a file: remove it and install the file again.",
+  "pluginsPageReinstall": "Reinstall",
+  "pluginsPageReinstalled": "Reinstalled {name}",
+  "@pluginsPageReinstalled": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageReinstallFailed": "Couldn’t reinstall: {reason}",
+  "@pluginsPageReinstallFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageDetails": "Details",
+  "pluginsPageFrom": "Installed from",
+  "pluginsPageFromRepo": "Repo: {name}",
+  "@pluginsPageFromRepo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageFromFile": "File: {name}",
+  "@pluginsPageFromFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageFromLink": "Link: {name}",
+  "@pluginsPageFromLink": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageNoUpdatesFile": "This plugin was installed from a file, so it gets no updates. Remove it and install the new file.",
+  "pluginsPageNoUpdatesLink": "This plugin was installed from a link, so it gets no updates. Remove it and install the new version.",
+  "pluginsPageWildcardLine": "{label} ({host})",
+  "@pluginsPageWildcardLine": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageNotEntered": "(not entered)",
+  "pluginsPageEndpointLine": "Address you enter in {field}: {hosts}",
+  "@pluginsPageEndpointLine": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      },
+      "hosts": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageInstalledAt": "Installed",
+  "pluginsPageInstalledDates": "{installed} · updated {updated}",
+  "@pluginsPageInstalledDates": {
+    "placeholders": {
+      "installed": {
+        "type": "String"
+      },
+      "updated": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageDescription": "Description",
+  "pluginsPageType": "Type",
+  "pluginsPageTypeValue": "Plugin for {kind} · plugin API {api}",
+  "@pluginsPageTypeValue": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "api": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPageTypeValueAi": "AI plugin for {kind} · plugin API {api}",
+  "@pluginsPageTypeValueAi": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "api": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPageSourceCode": "Source code",
+  "pluginsPageUseLyrics": "Find lyrics automatically",
+  "pluginsPageUseTranslate": "Default translation service",
+  "pluginsPageConnection": "Connection",
+  "pluginsPageConcurrent": "Requests at once",
+  "pluginsPageSpacing": "Time between requests",
+  "pluginsPageData": "Data",
+  "pluginsPageOwnStorage": "Plugin’s own storage",
+  "pluginsPageSavedLyrics": "Lyrics saved from this source",
+  "pluginsPageTrackCache": "Track and cover cache",
+  "pluginsPageLog": "Log",
+  "pluginsPageOpen": "Open",
+  "pluginsPageBadgeAi": "AI"
 }

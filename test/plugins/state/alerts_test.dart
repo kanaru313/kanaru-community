@@ -162,6 +162,38 @@ void main() {
     expect((await h.settled(pluginPageProvider('plugin-none'))).value, isNull);
   });
 
+  test(
+    'the page names the missing setting and what an address field holds',
+    () async {
+      h = StateHarness();
+      final id = await install(
+        'a',
+        manifest: withConfig({
+          'token': {
+            'title': 'Token',
+            'mode': 'input',
+            'format': 'text',
+            'required': true,
+          },
+          'server': {'title': 'Server', 'mode': 'input', 'format': 'url'},
+        }),
+      );
+
+      var page = (await h.settled(pluginPageProvider(id))).requireValue!;
+      expect(page.missingConfig, ['Token']);
+      expect(page.endpoints.single.label, 'Server');
+      expect(page.endpoints.single.hosts, isEmpty);
+      expect(page.update, isNull);
+
+      final writes = h.container.read(pluginActionsProvider).configWrites;
+      await writes.setValue(id, 'token', 'abc');
+      await writes.setValue(id, 'server', 'https://lyrics.home.lan:8443/api');
+      page = (await h.settled(pluginPageProvider(id))).requireValue!;
+      expect(page.missingConfig, isEmpty);
+      expect(page.endpoints.single.hosts, ['lyrics.home.lan']);
+    },
+  );
+
   test('installed by kind carries the restore state', () async {
     h = StateHarness();
     final id = await install('a');

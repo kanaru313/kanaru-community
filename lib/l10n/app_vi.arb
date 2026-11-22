@@ -3797,5 +3797,177 @@
         "type": "String"
       }
     }
-  }
+  },
+  "pluginsPageTitle": "Chi tiết plugin",
+  "pluginsPageLoadFailed": "Không đọc được danh sách plugin",
+  "pluginsPageGone": "Plugin này không còn được cài.",
+  "pluginsPageToStore": "Về Kho plugin",
+  "pluginsPageByline": "{author} · bản {version}",
+  "@pluginsPageByline": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPageUpdateTitle": "Có bản mới bản {version}",
+  "@pluginsPageUpdateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPageUpdateBusy": "Đang xử lý",
+  "pluginsPageReviewBody": "Bản mới kết nối thêm tới {hosts}: xem trước khi cập nhật.",
+  "@pluginsPageReviewBody": {
+    "placeholders": {
+      "hosts": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageReviewBodyAny": "Bản mới thêm host hoặc quyền mới: xem trước khi cập nhật.",
+  "pluginsPageReviewButton": "Xem bản cập nhật",
+  "pluginsPageRefreshList": "Làm mới danh sách",
+  "pluginsPageNeedsConfigTitle": "{name} cần được cấu hình",
+  "@pluginsPageNeedsConfigTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageNeedsConfigBody": "Plugin chưa chạy được tới khi có: {fields}.",
+  "@pluginsPageNeedsConfigBody": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageOpenConfig": "Mở cấu hình",
+  "pluginsPageBrokenTitle": "Không đọc được gói của plugin",
+  "pluginsPageBrokenBody": "Thư mục của plugin bị thiếu hoặc hỏng nên plugin không chạy. Cài lại giữ nguyên cài đặt và dữ liệu.",
+  "pluginsPageBrokenBodyFile": "Thư mục của plugin bị thiếu hoặc hỏng nên plugin không chạy. Plugin này cài từ file: hãy xoá rồi cài file mới.",
+  "pluginsPageReinstall": "Cài lại",
+  "pluginsPageReinstalled": "Đã cài lại {name}",
+  "@pluginsPageReinstalled": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageReinstallFailed": "Không cài lại được: {reason}",
+  "@pluginsPageReinstallFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageDetails": "Chi tiết",
+  "pluginsPageFrom": "Cài từ",
+  "pluginsPageFromRepo": "Repo: {name}",
+  "@pluginsPageFromRepo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageFromFile": "File: {name}",
+  "@pluginsPageFromFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageFromLink": "Đường dẫn: {name}",
+  "@pluginsPageFromLink": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageNoUpdatesFile": "Plugin này cài từ file nên không có cập nhật. Hãy xoá rồi cài file mới.",
+  "pluginsPageNoUpdatesLink": "Plugin này cài từ đường dẫn nên không có cập nhật. Hãy xoá rồi cài bản mới.",
+  "pluginsPageWildcardLine": "{label} ({host})",
+  "@pluginsPageWildcardLine": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageNotEntered": "(chưa nhập)",
+  "pluginsPageEndpointLine": "Địa chỉ bạn nhập ở ô {field}: {hosts}",
+  "@pluginsPageEndpointLine": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      },
+      "hosts": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageInstalledAt": "Cài lúc",
+  "pluginsPageInstalledDates": "{installed} · cập nhật {updated}",
+  "@pluginsPageInstalledDates": {
+    "placeholders": {
+      "installed": {
+        "type": "String"
+      },
+      "updated": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageDescription": "Mô tả",
+  "pluginsPageType": "Loại",
+  "pluginsPageTypeValue": "Plugin {kind} · API plugin {api}",
+  "@pluginsPageTypeValue": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "api": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPageTypeValueAi": "Plugin {kind} · AI · API plugin {api}",
+  "@pluginsPageTypeValueAi": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "api": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPageSourceCode": "Mã nguồn",
+  "pluginsPageUseLyrics": "Tự tìm lời",
+  "pluginsPageUseTranslate": "Dịch vụ dịch mặc định",
+  "pluginsPageConnection": "Kết nối",
+  "pluginsPageConcurrent": "Yêu cầu cùng lúc",
+  "pluginsPageSpacing": "Giãn cách giữa các yêu cầu",
+  "pluginsPageData": "Dữ liệu",
+  "pluginsPageOwnStorage": "Bộ nhớ riêng của plugin",
+  "pluginsPageSavedLyrics": "Lời đã lưu từ nguồn này",
+  "pluginsPageTrackCache": "Cache bài và ảnh bìa",
+  "pluginsPageLog": "Nhật ký",
+  "pluginsPageOpen": "Mở",
+  "pluginsPageBadgeAi": "AI"
 }

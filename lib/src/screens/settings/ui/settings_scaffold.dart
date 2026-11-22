@@ -17,6 +17,7 @@ class SettingsScaffold extends ConsumerWidget {
     required this.children,
     this.parentPath,
     this.pinnedBelowHeader,
+    this.headerBuilder,
     this.actions = const [],
     this.spaced = true,
   });
@@ -32,6 +33,13 @@ class SettingsScaffold extends ConsumerWidget {
   /// Null keeps the whole page in one scroll view, header included.
   final Widget? pinnedBelowHeader;
 
+  /// Draws the header instead of the standard one (a title that changes while
+  /// the page scrolls). It gets the back action (null on a root page) and the
+  /// header stays fixed while [children] scroll, like with
+  /// [pinnedBelowHeader]. [title] and [actions] are not used then.
+  final Widget Function(BuildContext context, VoidCallback? onBack)?
+  headerBuilder;
+
   /// Buttons at the end of the header (a filter and a ⋮ menu).
   final List<Widget> actions;
 
@@ -45,7 +53,9 @@ class SettingsScaffold extends ConsumerWidget {
     final failing = ref.watch(settingsSaveFailingProvider).value ?? false;
     final parent = parentPath;
     final pinned = pinnedBelowHeader;
-    if (pinned != null) return _pinnedLayout(context, l10n, failing, pinned);
+    if (pinned != null || headerBuilder != null) {
+      return _pinnedLayout(context, l10n, failing, pinned);
+    }
     return KPage(
       maxWidth: KLayout.settings,
       children: [
@@ -75,7 +85,7 @@ class SettingsScaffold extends ConsumerWidget {
     BuildContext context,
     AppLocalizations l10n,
     bool failing,
-    Widget pinned,
+    Widget? pinned,
   ) {
     final parent = parentPath;
     final desktop = FormFactor.of(context) == FormFactor.desktop;
@@ -94,15 +104,21 @@ class SettingsScaffold extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    PageHeader(
-                      title: title,
-                      onBack: parent == null
-                          ? null
-                          : () => _back(context, parent),
-                      backTooltip: parent == null ? null : l10n.tooltipBack,
-                      actions: actions,
-                    ),
-                    pinned,
+                    if (headerBuilder != null)
+                      headerBuilder!(
+                        context,
+                        parent == null ? null : () => _back(context, parent),
+                      )
+                    else
+                      PageHeader(
+                        title: title,
+                        onBack: parent == null
+                            ? null
+                            : () => _back(context, parent),
+                        backTooltip: parent == null ? null : l10n.tooltipBack,
+                        actions: actions,
+                      ),
+                    ?pinned,
                     const KGap(KSpace.x2),
                   ],
                 ),

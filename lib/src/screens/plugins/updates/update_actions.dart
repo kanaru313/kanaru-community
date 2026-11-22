@@ -9,8 +9,9 @@ import 'update_reasons.dart';
 
 /// [Cập nhật] of a row: updates in place. The row spins (the services mark
 /// it), a failure puts the red line on the row and the same sentence in a
-/// SnackBar, a new version that adds hosts turns the row into [Xem].
-Future<void> updatePlugin(
+/// SnackBar, a new version that adds hosts turns the row into [Xem]. Returns
+/// what the update said, for a page that shows more than the row does.
+Future<InstallResult> updatePlugin(
   BuildContext context,
   InstallOps ops,
   UpdateFailures failures, {
@@ -37,6 +38,7 @@ Future<void> updatePlugin(
     failures.set(installId, line);
     showAppSnackBarOn(messenger, line);
   }
+  return result;
 }
 
 /// "Cập nhật tất cả": runs the update of every plugin without new hosts, then

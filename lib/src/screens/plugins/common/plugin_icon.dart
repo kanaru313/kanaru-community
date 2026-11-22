@@ -15,6 +15,7 @@ class PluginIcon extends ConsumerWidget {
     required this.installId,
     required this.kind,
     this.alerted = false,
+    this.dimension = size,
   });
 
   final String installId;
@@ -22,6 +23,9 @@ class PluginIcon extends ConsumerWidget {
   final bool alerted;
 
   static const double size = KIconSize.xl;
+
+  /// Side of the icon; the plugin page draws it larger.
+  final double dimension;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,7 +40,7 @@ class PluginIcon extends ConsumerWidget {
       ),
     );
     final face = SizedBox.square(
-      dimension: size,
+      dimension: dimension,
       child: ClipRRect(
         borderRadius: KRadius.sm,
         child: bytes == null

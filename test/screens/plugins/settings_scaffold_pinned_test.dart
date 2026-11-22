@@ -58,4 +58,48 @@ void main() {
     expect(tester.getTopLeft(find.text('PINNED')), before);
     expect(find.text('row 0'), findsNothing);
   });
+
+  testWidgets('a header builder replaces the header and stays fixed', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    VoidCallback? back;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          settingsSaveFailingProvider.overrideWith(
+            (ref) => Stream.value(false),
+          ),
+        ],
+        child: MaterialApp(
+          theme: buildKanaruTheme(brightness: Brightness.light),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SettingsScaffold(
+              title: 'unused',
+              parentPath: '/up',
+              headerBuilder: (context, onBack) {
+                back = onBack;
+                return const Text('CUSTOM HEADER');
+              },
+              children: [
+                for (var i = 0; i < 40; i++)
+                  SizedBox(height: 60, child: Text('row $i')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('unused'), findsNothing);
+    expect(back, isNotNull, reason: 'a page with a parent gets a back action');
+    await tester.drag(find.byType(ListView), const Offset(0, -1500));
+    await tester.pump();
+    expect(find.text('CUSTOM HEADER'), findsOneWidget);
+    expect(find.text('row 0'), findsNothing);
+  });
 }

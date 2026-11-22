@@ -5410,4 +5410,186 @@ class AppLocalizationsEn extends AppLocalizations {
   String pluginsUpdatedNoVersion(String name) {
     return 'Updated $name';
   }
+
+  @override
+  String get pluginsPageTitle => 'Plugin details';
+
+  @override
+  String get pluginsPageLoadFailed => 'Couldn’t read the plugin list';
+
+  @override
+  String get pluginsPageGone => 'This plugin is no longer installed.';
+
+  @override
+  String get pluginsPageToStore => 'Back to the plugin store';
+
+  @override
+  String pluginsPageByline(String author, int version) {
+    return '$author · version $version';
+  }
+
+  @override
+  String pluginsPageUpdateTitle(int version) {
+    return 'New version $version';
+  }
+
+  @override
+  String get pluginsPageUpdateBusy => 'Working';
+
+  @override
+  String pluginsPageReviewBody(String hosts) {
+    return 'The new version also connects to $hosts: look before you update.';
+  }
+
+  @override
+  String get pluginsPageReviewBodyAny =>
+      'The new version adds hosts or permissions: look before you update.';
+
+  @override
+  String get pluginsPageReviewButton => 'See the update';
+
+  @override
+  String get pluginsPageRefreshList => 'Refresh the list';
+
+  @override
+  String pluginsPageNeedsConfigTitle(String name) {
+    return '$name needs to be set up';
+  }
+
+  @override
+  String pluginsPageNeedsConfigBody(String fields) {
+    return 'The plugin can’t run until it has: $fields.';
+  }
+
+  @override
+  String get pluginsPageOpenConfig => 'Open settings';
+
+  @override
+  String get pluginsPageBrokenTitle => 'Couldn’t read the plugin’s package';
+
+  @override
+  String get pluginsPageBrokenBody =>
+      'The plugin’s folder is missing or damaged, so it doesn’t run. Reinstalling keeps its settings and data.';
+
+  @override
+  String get pluginsPageBrokenBodyFile =>
+      'The plugin’s folder is missing or damaged, so it doesn’t run. This plugin was installed from a file: remove it and install the file again.';
+
+  @override
+  String get pluginsPageReinstall => 'Reinstall';
+
+  @override
+  String pluginsPageReinstalled(String name) {
+    return 'Reinstalled $name';
+  }
+
+  @override
+  String pluginsPageReinstallFailed(String reason) {
+    return 'Couldn’t reinstall: $reason';
+  }
+
+  @override
+  String get pluginsPageDetails => 'Details';
+
+  @override
+  String get pluginsPageFrom => 'Installed from';
+
+  @override
+  String pluginsPageFromRepo(String name) {
+    return 'Repo: $name';
+  }
+
+  @override
+  String pluginsPageFromFile(String name) {
+    return 'File: $name';
+  }
+
+  @override
+  String pluginsPageFromLink(String name) {
+    return 'Link: $name';
+  }
+
+  @override
+  String get pluginsPageNoUpdatesFile =>
+      'This plugin was installed from a file, so it gets no updates. Remove it and install the new file.';
+
+  @override
+  String get pluginsPageNoUpdatesLink =>
+      'This plugin was installed from a link, so it gets no updates. Remove it and install the new version.';
+
+  @override
+  String pluginsPageWildcardLine(String label, String host) {
+    return '$label ($host)';
+  }
+
+  @override
+  String get pluginsPageNotEntered => '(not entered)';
+
+  @override
+  String pluginsPageEndpointLine(String field, String hosts) {
+    return 'Address you enter in $field: $hosts';
+  }
+
+  @override
+  String get pluginsPageInstalledAt => 'Installed';
+
+  @override
+  String pluginsPageInstalledDates(String installed, String updated) {
+    return '$installed · updated $updated';
+  }
+
+  @override
+  String get pluginsPageDescription => 'Description';
+
+  @override
+  String get pluginsPageType => 'Type';
+
+  @override
+  String pluginsPageTypeValue(String kind, int api) {
+    return 'Plugin for $kind · plugin API $api';
+  }
+
+  @override
+  String pluginsPageTypeValueAi(String kind, int api) {
+    return 'AI plugin for $kind · plugin API $api';
+  }
+
+  @override
+  String get pluginsPageSourceCode => 'Source code';
+
+  @override
+  String get pluginsPageUseLyrics => 'Find lyrics automatically';
+
+  @override
+  String get pluginsPageUseTranslate => 'Default translation service';
+
+  @override
+  String get pluginsPageConnection => 'Connection';
+
+  @override
+  String get pluginsPageConcurrent => 'Requests at once';
+
+  @override
+  String get pluginsPageSpacing => 'Time between requests';
+
+  @override
+  String get pluginsPageData => 'Data';
+
+  @override
+  String get pluginsPageOwnStorage => 'Plugin’s own storage';
+
+  @override
+  String get pluginsPageSavedLyrics => 'Lyrics saved from this source';
+
+  @override
+  String get pluginsPageTrackCache => 'Track and cover cache';
+
+  @override
+  String get pluginsPageLog => 'Log';
+
+  @override
+  String get pluginsPageOpen => 'Open';
+
+  @override
+  String get pluginsPageBadgeAi => 'AI';
 }
