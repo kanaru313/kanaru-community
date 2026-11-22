@@ -250,3 +250,23 @@ Code: `lib/src/lyrics/` (`domain/`, `data/`, `state/`). Only `data/` imports
 
 Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens/now_playing/ui/mobile/lyrics_screen*.dart`, see
 [system-architecture-playback.md](./system-architecture-playback.md) Now Playing mobile) and the desktop `DesktopSidePane`.
+
+## Dart side: "Lời cho bài này" and the source button (`lyrics/ui/`)
+
+- **`showLyricsForTrack(context, id, {followsPlaying})`**: a bottom sheet (`showKSheet`, root navigator) on the mobile shell, a dialog
+  of `KLayout.dialog` (`showKDialog`) on the desktop shell, chosen with `FormFactor`. With `followsPlaying` it closes once when the
+  playing track changes or stops (Now Playing entry points); opened from a song menu it stays on its track. Every close goes through
+  one guarded path: it pops only while the modal is the current route (a later pop waits for that), and a second request (a double tap,
+  a track change during the exit animation) does nothing.
+- **Body** (`LyricsForTrackBody`): header "Lời cho bài này" and a close button (no settings button), a status line "Không có lời trên
+  máy" only when the file has no lyrics, the two choice rows, a divider, then three dimmed inert "Sắp có" rows (find online, create
+  from audio, save).
+- **Choice rows** (`LyricsChoiceRows`, two single-choice icon `SelectionRow`s, marked by tint and bold title only): "Lời trong
+  file" (subtitle names tag or `.lrc` and synced or plain; disabled with "Không có lời trong file" when the file has none or the read
+  is loading) and "Không hiện lời" (always enabled, even while loading). Choosing reads `LyricsChoiceCommands`, closes, then writes
+  exactly once: file → `clear(id)`, off → `setOff(id)`. The chosen row only closes. A failed write is logged.
+- **`LyricsSourceButton`**: watches only `playingLyricsProvider`. Icon: file lyrics = `KIcons.lyrics` in `primary`; none, loading =
+  the same at 38 %; off = `KIcons.lyricsOff`. 48 dp wide on mobile, 40 on desktop. Semantics label = the summary label (the modal
+  title while loading). Disabled without a track and for a track with no readable file. Desktop tooltip "<label> (L)" plus the
+  right-click line when `onToggle` is given; right-click (`KContextRegion`, no long press) calls `onToggle`, built by
+  `toggleLyricsOfPlaying(ref)` (off ↔ automatic through `LyricsChoiceCommands.toggle`).

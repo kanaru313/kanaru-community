@@ -6131,6 +6131,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Translate lyrics · Coming soon'**
   String get lyricsTranslateSoon;
+
+  /// No description provided for @lyricsForTrackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics for this song'**
+  String get lyricsForTrackTitle;
+
+  /// No description provided for @lyricsModalClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get lyricsModalClose;
+
+  /// No description provided for @lyricsModalNoneOnDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics on this device'**
+  String get lyricsModalNoneOnDevice;
+
+  /// No description provided for @lyricsChoiceFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics in file'**
+  String get lyricsChoiceFile;
+
+  /// No description provided for @lyricsChoiceFileNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics in the file'**
+  String get lyricsChoiceFileNone;
+
+  /// No description provided for @lyricsChoiceOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Don’t show lyrics'**
+  String get lyricsChoiceOff;
+
+  /// No description provided for @lyricsChoiceSubTagSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'In tag · Synced'**
+  String get lyricsChoiceSubTagSynced;
+
+  /// No description provided for @lyricsChoiceSubTagPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'In tag · Plain'**
+  String get lyricsChoiceSubTagPlain;
+
+  /// No description provided for @lyricsChoiceSubLrcSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'LRC file · Synced'**
+  String get lyricsChoiceSubLrcSynced;
+
+  /// No description provided for @lyricsChoiceSubLrcPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'LRC file · Plain'**
+  String get lyricsChoiceSubLrcPlain;
+
+  /// No description provided for @lyricsFindOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Find lyrics online…'**
+  String get lyricsFindOnline;
+
+  /// No description provided for @lyricsFromAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Create lyrics from audio…'**
+  String get lyricsFromAudio;
+
+  /// No description provided for @lyricsFromAudioSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Groq Whisper'**
+  String get lyricsFromAudioSub;
+
+  /// No description provided for @lyricsSaveLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Save lyrics…'**
+  String get lyricsSaveLyrics;
+
+  /// No description provided for @lyricsSourceTooltipDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} (L)'**
+  String lyricsSourceTooltipDesktop(String label);
+
+  /// No description provided for @lyricsSourceToggleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click: turn this song’s lyrics on or off'**
+  String get lyricsSourceToggleHint;
 }
 
 class _AppLocalizationsDelegate
