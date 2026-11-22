@@ -25,9 +25,11 @@ properties, `ParsingMode::BestAttempt`.
   ID3v2 tag keeps what the generic tag drops: binary `SYLT` frames and `TXXX`
   user text.
 - MP3 only: when that concrete read fails for a reason that is not a
-  transient I/O error (a frame lofty refuses fails the whole tag), the ID3v2
+  transient I/O error (a frame lofty refuses fails the whole tag; a damaged
+  APE or ID3v1 trailer also fails the read, and then an intact ID3v2 tag is
+  recovered in full), the ID3v2
   tag at the start of the file is read again with symphonia
-  (`lyrics_reader/id3_fallback.rs`, see below).
+  (`lyrics_reader/id3_fallback.rs`, tag bounding in `id3_bound.rs`; see below).
 - FLAC, Ogg Vorbis, Opus: read the same way as `FlacFile`, `VorbisFile`,
   `OpusFile`, to reach the Vorbis comments the generic tag drops (keys lofty
   does not map). Their parse failures stay errors (see Error outcomes).
@@ -65,10 +67,20 @@ text, else `TXXX:LYRICS` / `TXXX:UNSYNCEDLYRICS` (description matched ignoring
 ASCII case), same blank and size rules as above; and the best `SYLT` frame
 through the same parser as the normal path.
 
-The tag is read into memory at most `MAX_ID3_FALLBACK_BYTES` (16 MiB). When
-the declared tag size is larger than the bytes held (a hostile header, or a
-file cut short), the declared size in our copy is lowered to the bytes held,
-so no size check inside the parser trusts the header.
+ID3v2.2, 2.3 and 2.4 are read (symphonia keeps the three-letter ids of 2.2:
+`ULT`, `TXX`, `SLT`).
+
+The tag is read into memory at most `MAX_ID3_FALLBACK_BYTES` (16 MiB). The
+copy handed to symphonia is bounded first, because symphonia logs a warning
+for each frame it skips and a hostile tag can hold millions of them:
+
+- the declared size is lowered to the bytes held (a hostile header, or a file
+  cut short), so no size check inside the parser trusts the header;
+- a tag-level unsynchronisation (ID3v2.3 and older) is undone in the copy;
+- the frames are walked by their on-disk sizes, and the tag is cut before the
+  first empty frame or padding, after `MAX_ID3_FALLBACK_FRAMES` (1024) frames,
+  or before a frame header that does not fit. Lyrics frames after that point
+  are not recovered.
 
 What it does not recover: frames after the first structural error; WAV and
 AIFF (ID3v2 in a chunk); a FLAC with a broken ID3v2 prefix (whole read fails,
@@ -95,7 +107,7 @@ there lists the file by its name).
 | Case | Result |
 |---|---|
 | No lyrics, blank or oversized lyrics, no tag | `Ok(None)` |
-| MP3 whose concrete read fails (broken ID3 tag or file, including an empty or truncated file), not transient | The ID3v2 fallback's result: the lyrics kept before the first structural error, else `Ok(None)`. Plain text stored elsewhere (an APE tag) is not read |
+| MP3 whose concrete read fails (broken ID3 tag or file, including an empty or truncated file), not transient | The ID3v2 fallback's result: the lyrics kept before the first structural error (within the frame cap), else `Ok(None)`. Plain text stored elsewhere (an APE tag) is not read |
 | WAV/AIFF whose concrete read fails, not transient | `Ok(None)`: the whole file has no lyrics, even if plain text exists elsewhere |
 | ID3v2 fallback: I/O error that is transient | `Err(MediaError::Io)` |
 | Concrete read fails with a transient I/O error, or rewind fails | `Err(MediaError::Io)` |

@@ -221,3 +221,58 @@ pub fn broken_id3v2(frames: &[Vec<u8>], declared: Option<usize>) -> Vec<u8> {
 fn syncsafe(size: usize) -> [u8; 4] {
     [21, 14, 7, 0].map(|shift| ((size >> shift) & 0x7f) as u8)
 }
+
+/// A frame of ID3v2.`version` (2, 3 or 4): `id` is the four-letter id, cut to
+/// its three-letter legacy form for 2.2 (`USLT` -> `ULT`, `TXXX` -> `TXX`).
+pub fn versioned_frame(version: u8, id: &str, body: &[u8]) -> Vec<u8> {
+    let mut frame = Vec::new();
+    match version {
+        2 => {
+            let legacy = match id {
+                "USLT" => "ULT",
+                "TXXX" => "TXX",
+                "TIT2" => "TT2",
+                other => panic!("no legacy id for {other}"),
+            };
+            frame.extend_from_slice(legacy.as_bytes());
+            frame.extend_from_slice(&(body.len() as u32).to_be_bytes()[1..]);
+        }
+        3 => {
+            frame.extend_from_slice(id.as_bytes());
+            frame.extend_from_slice(&(body.len() as u32).to_be_bytes());
+            frame.extend_from_slice(&[0, 0]);
+        }
+        _ => return id3v2_frame(id, body),
+    }
+    frame.extend_from_slice(body);
+    frame
+}
+
+/// A `USLT` (`ULT` in 2.2) frame in ISO-8859-1.
+pub fn versioned_uslt(version: u8, text: &str) -> Vec<u8> {
+    let mut body = b"\x00eng\x00".to_vec();
+    body.extend(text.chars().map(|c| c as u8));
+    versioned_frame(version, "USLT", &body)
+}
+
+/// A `TXXX` (`TXX` in 2.2) frame lofty refuses (unknown encoding byte).
+pub fn versioned_bad_frame(version: u8) -> Vec<u8> {
+    versioned_frame(version, "TXXX", b"\x09d\x00t")
+}
+
+/// An ID3v2.`version` tag with `flags` made of `body` (declaring its length)
+/// in front of the in-memory MP3.
+pub fn id3v2_tag_bytes(version: u8, flags: u8, body: &[u8]) -> Vec<u8> {
+    let mut bytes = vec![b'I', b'D', b'3', version, 0, flags];
+    bytes.extend_from_slice(&syncsafe(body.len()));
+    bytes.extend_from_slice(body);
+    bytes.extend_from_slice(&mp3_bytes());
+    bytes
+}
+
+/// `body` with a `00` inserted after every `FF` (tag-level unsynchronisation).
+pub fn unsynchronised(body: &[u8]) -> Vec<u8> {
+    body.iter()
+        .flat_map(|&b| if b == 0xff { vec![b, 0] } else { vec![b] })
+        .collect()
+}

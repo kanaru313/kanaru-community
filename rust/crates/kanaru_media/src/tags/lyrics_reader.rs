@@ -22,6 +22,7 @@ use super::errors::{from_parse_error, from_sniff_error};
 use super::lyrics_sylt::synced_lines;
 use crate::MediaError;
 
+mod id3_bound;
 mod id3_fallback;
 pub use id3_fallback::MAX_ID3_FALLBACK_BYTES;
 

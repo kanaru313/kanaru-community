@@ -13,8 +13,9 @@ use lofty::id3::v2::{ExtendedTextFrame, Frame, Id3v2Tag, SyncTextContentType, Ti
 use lofty::tag::{ItemKey, Tag, TagExt, TagType};
 use lofty::TextEncoding;
 use lyrics_fixtures::{
-    broken_id3v2, frame_that_ends_the_tag, frame_with_a_bad_encoding, id3v2_frame, read, sample,
-    sylt, sylt_with, uslt, uslt_frame, write_generic, write_id3v2, write_vorbis_key,
+    broken_id3v2, frame_that_ends_the_tag, frame_with_a_bad_encoding, id3v2_frame, id3v2_tag_bytes,
+    read, sample, sylt, sylt_with, unsynchronised, uslt, uslt_frame, versioned_bad_frame,
+    versioned_uslt, write_generic, write_id3v2, write_vorbis_key,
 };
 use tags_fixtures::{flac_bytes, mp3_bytes, TempDir};
 
@@ -270,7 +271,7 @@ fn an_oversized_primary_tag_falls_to_the_next_tag() {
 }
 
 #[test]
-fn a_broken_id3_tag_means_no_lyrics_for_the_whole_file() {
+fn a_broken_id3_tag_with_nothing_recoverable_gives_no_lyrics() {
     let dir = TempDir::new();
     let path = dir.write(
         "garbage.mp3",
@@ -470,8 +471,9 @@ fn a_huge_declared_id3_tag_is_read_within_the_cap() {
     let bytes = broken_id3v2(&[uslt_frame("Small")], Some(250 * 1024 * 1024));
     let path = dir.write("huge.mp3", &bytes);
     assert!(lofty::read_from_path(&path).is_err());
-    // The frame is whole and the declared tag is far past the end of the file: the text
-    // before the cut is kept, and no allocation follows the declared size.
+    // The tag declares far more than the file holds. The declared size is
+    // lowered to the bytes held, so the frame read before it is recovered
+    // instead of the read failing at the end of the file.
     let lyrics = read(&path).unwrap().expect("lyrics");
     assert_eq!(lyrics.text.as_deref(), Some("Small"));
 
@@ -518,4 +520,61 @@ fn a_flac_with_a_broken_id3v2_prefix_is_an_error() {
     let path = dir.write("broken.flac", &bytes);
     let result = read(&path);
     assert!(matches!(result, Err(MediaError::Corrupt(_))), "{result:?}");
+}
+
+#[test]
+fn lyrics_before_the_damage_are_kept_in_id3v2_2_and_2_3() {
+    let dir = TempDir::new();
+    for version in [2u8, 3] {
+        let mut body = versioned_uslt(version, "Kept lines");
+        body.extend(versioned_bad_frame(version));
+        let path = dir.write("old.mp3", &id3v2_tag_bytes(version, 0, &body));
+        assert!(lofty::read_from_path(&path).is_err(), "v2.{version}");
+        let lyrics = read(&path)
+            .unwrap()
+            .unwrap_or_else(|| panic!("v2.{version}: none"));
+        assert_eq!(lyrics.text.as_deref(), Some("Kept lines"), "v2.{version}");
+    }
+}
+
+#[test]
+fn a_tag_level_unsynchronised_id3v2_3_tag_is_recovered() {
+    let dir = TempDir::new();
+    // The Latin-1 `\u{ff}` makes an FF byte that unsynchronisation escapes.
+    let mut body = versioned_uslt(3, "Kept \u{ff} lines");
+    body.extend(versioned_bad_frame(3));
+    let path = dir.write(
+        "unsync.mp3",
+        &id3v2_tag_bytes(3, 0x80, &unsynchronised(&body)),
+    );
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Kept \u{ff} lines"));
+}
+
+/// 16 MiB of frames after the lyrics and the frame lofty refuses: the read
+/// must stay quick and keep the lyrics.
+fn assert_flood_is_read_fast(flood: Vec<u8>) {
+    let dir = TempDir::new();
+    let mut body = uslt_frame("Before the flood");
+    body.extend(frame_that_ends_the_tag());
+    body.extend(flood);
+    let path = dir.write("flood.mp3", &broken_id3v2(&[body], None));
+    assert!(lofty::read_from_path(&path).is_err());
+    let started = std::time::Instant::now();
+    let lyrics = read(&path).expect("read").expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Before the flood"));
+    assert!(started.elapsed() < std::time::Duration::from_secs(3));
+}
+
+#[test]
+fn a_flood_of_empty_id3_frames_is_read_fast() {
+    let empty = id3v2_frame("TIT2", b"");
+    assert_flood_is_read_fast(empty.repeat(16 * 1024 * 1024 / empty.len()));
+}
+
+#[test]
+fn a_flood_of_tiny_junk_id3_frames_is_read_fast() {
+    let junk = id3v2_frame("TIT2", b"\x09");
+    assert_flood_is_read_fast(junk.repeat(16 * 1024 * 1024 / junk.len()));
 }
