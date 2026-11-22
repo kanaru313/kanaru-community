@@ -9,7 +9,7 @@ import 'package:kanaru/src/screens/plugins/repos/add_repository_dialog.dart';
 import 'package:kanaru/src/screens/plugins/repos/repositories_page.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart'
-    show FilledButton, TextButton, TextField;
+    show FilledButton, ListView, TextButton, TextField;
 
 import '../../../support/icon_button_finders.dart';
 import '../support/plugin_fixtures.dart';
@@ -112,6 +112,23 @@ void main() {
     final fab = tester.getRect(find.byType(KFab));
     final last = tester.getRect(find.text('Repo 15'));
     expect(last.bottom, lessThanOrEqualTo(fab.top));
+  });
+
+  testWidgets('on a wide window the button sits at the end of the column', (
+    tester,
+  ) async {
+    await pumpPlugins(
+      tester,
+      _fixture(),
+      location: _path,
+      size: const Size(1600, 900),
+    );
+    final fab = tester.getRect(find.byType(KFab));
+    final column = tester.getRect(find.byType(ListView));
+    // Inside the centred page column, not at the window edge.
+    expect(fab.right, lessThanOrEqualTo(column.right));
+    expect(fab.right, greaterThan(column.right - 80));
+    expect(fab.right, lessThan(1600 - 100));
   });
 
   group('add dialog', () {

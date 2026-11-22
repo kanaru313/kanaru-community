@@ -5,58 +5,84 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/state/store_view_models.dart';
 import '../updates/update_all_button.dart';
 import 'store_actions.dart';
+import 'store_card_slice.dart';
 import 'store_empty.dart';
 import 'store_rows.dart';
 
 /// The three blocks of the list, in order Cập nhật → Đã cài → Chưa cài (an
 /// empty one is left out), then the footer. A store with no repository shows
 /// its guide card in place of Chưa cài.
+///
+/// Returns a flat list of list items (a heading, then one slice per row) with
+/// the gaps between blocks included, so the page builds only the rows in view
+/// and starts only their icon fetches.
 List<Widget> storeSectionWidgets(
   BuildContext context,
   StoreView view,
   StoreActions actions,
 ) {
   final l10n = AppLocalizations.of(context);
-  final sections = <Widget>[
+  const gap = KGap(KSpace.x5);
+  final blocks = <List<Widget>>[
     if (view.updates.isNotEmpty)
-      SetupSection(
-        title: Text(l10n.pluginsSectionUpdates(view.updates.length)),
-        hint: l10n.pluginsUpdatesHint,
-        hintTooltip: l10n.pluginsUpdatesHintTooltip,
-        hintTitle: l10n.pluginsSectionUpdates(view.updates.length),
-        action: UpdateAllButton(count: view.updateAllCount, actions: actions),
-        children: [
+      _block(
+        heading: SetupSection(
+          card: false,
+          title: Text(l10n.pluginsSectionUpdates(view.updates.length)),
+          hint: l10n.pluginsUpdatesHint,
+          hintTooltip: l10n.pluginsUpdatesHintTooltip,
+          hintTitle: l10n.pluginsSectionUpdates(view.updates.length),
+          action: UpdateAllButton(count: view.updateAllCount, actions: actions),
+          children: const [],
+        ),
+        rows: [
           for (final row in view.updates)
-            UpdateRow(key: ValueKey(row.installId), row: row, actions: actions),
+            (row.installId, UpdateRow(row: row, actions: actions)),
         ],
       ),
     if (view.installed.isNotEmpty)
-      SetupSection(
-        title: Text(l10n.pluginsSectionInstalled(view.installed.length)),
-        children: [
+      _block(
+        heading: SetupSection(
+          card: false,
+          title: Text(l10n.pluginsSectionInstalled(view.installed.length)),
+          children: const [],
+        ),
+        rows: [
           for (final row in view.installed)
-            InstalledRow(
-              key: ValueKey(row.installId),
-              row: row,
-              actions: actions,
-            ),
+            (row.installId, InstalledRow(row: row, actions: actions)),
         ],
       ),
     if (view.notInstalled.isNotEmpty)
-      SetupSection(
-        title: Text(l10n.pluginsSectionAvailable(view.notInstalled.length)),
-        children: [
+      _block(
+        heading: SetupSection(
+          card: false,
+          title: Text(l10n.pluginsSectionAvailable(view.notInstalled.length)),
+          children: const [],
+        ),
+        rows: [
           for (final row in view.notInstalled)
-            AvailableRow(
-              key: ValueKey(row.installId),
-              row: row,
-              actions: actions,
-            ),
+            (row.installId, AvailableRow(row: row, actions: actions)),
         ],
       )
     else if (view.repoCount == 0)
-      NoRepositoryCard(actions: actions),
-    StoreFooter(newerAppCount: view.needsNewerAppCount),
+      [NoRepositoryCard(actions: actions)],
+    [StoreFooter(newerAppCount: view.needsNewerAppCount)],
   ];
-  return sections;
+  return [
+    for (var i = 0; i < blocks.length; i++) ...[if (i > 0) gap, ...blocks[i]],
+  ];
 }
+
+List<Widget> _block({
+  required Widget heading,
+  required List<(String, Widget)> rows,
+}) => [
+  heading,
+  for (var i = 0; i < rows.length; i++)
+    CardSlice(
+      key: ValueKey(rows[i].$1),
+      first: i == 0,
+      last: i == rows.length - 1,
+      child: rows[i].$2,
+    ),
+];

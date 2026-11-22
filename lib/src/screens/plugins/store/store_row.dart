@@ -7,7 +7,7 @@ import '../common/plugin_icon.dart';
 import '../common/plugin_labels.dart';
 
 /// The frame every store row shares: icon, name, kind and author tags, an
-/// optional short status, then [trailing]. No description, no version.
+/// then [trailing]. No description, no version.
 class StoreRowFrame extends StatelessWidget {
   const StoreRowFrame({
     super.key,
@@ -29,7 +29,6 @@ class StoreRowFrame extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final kind = kindLabel(l10n, row.kind);
-    final note = _noteText(l10n, row.note);
     return SetupRowFrame(
       leading: PluginIcon(
         installId: row.installId,
@@ -53,7 +52,6 @@ class StoreRowFrame extends StatelessWidget {
                 ),
                 outlined: true,
               ),
-              if (note != null) Text(note),
             ],
           ),
           if (errorLine != null)
@@ -67,12 +65,4 @@ class StoreRowFrame extends StatelessWidget {
       onTap: onTap,
     );
   }
-
-  static String? _noteText(AppLocalizations l10n, StoreRowNote note) =>
-      switch (note) {
-        StoreRowNote.none => null,
-        StoreRowNote.reinstallFromFile => l10n.pluginsNoteReinstallFile,
-        StoreRowNote.proRequired => l10n.pluginsNoteProRequired,
-        StoreRowNote.packageMissing => l10n.pluginsNotePackageMissing,
-      };
 }

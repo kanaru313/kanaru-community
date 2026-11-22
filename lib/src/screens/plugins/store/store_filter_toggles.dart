@@ -1,27 +1,11 @@
 import '../../../plugins/state/store_filter.dart';
 import '../common/plugin_labels.dart';
 
-/// The three values of Lọc › Trạng thái. Each is one section of the list:
-/// an updatable plugin is "có bản cập nhật" only, not "đã cài".
-enum StoreStateChip {
-  installed({StoreItemState.installed}),
-  notInstalled({
-    StoreItemState.notInstalled,
-    StoreItemState.locked,
-    StoreItemState.needsNewerApp,
-  }),
-  updatable({StoreItemState.updateAvailable});
-
-  const StoreStateChip(this.states);
-
-  final Set<StoreItemState> states;
-}
-
 /// Reads and edits the filter values the Lọc sheet shows, one chip at a time.
 extension StoreFilterToggles on StoreFilter {
   bool hasKind(StoreKindGroup group) => kinds.any(group.kinds.contains);
 
-  bool hasState(StoreStateChip chip) => states.any(chip.states.contains);
+  bool hasState(StoreStateChip chip) => states.contains(chip);
 
   /// How many values are chosen (a kind group counts once): the badge.
   int get valueCount =>
@@ -37,11 +21,8 @@ extension StoreFilterToggles on StoreFilter {
         : {...kinds, ...group.kinds},
   );
 
-  StoreFilter toggleState(StoreStateChip chip) => copyWith(
-    states: hasState(chip)
-        ? ({...states}..removeAll(chip.states))
-        : {...states, ...chip.states},
-  );
+  StoreFilter toggleState(StoreStateChip chip) =>
+      copyWith(states: _flip(states, chip));
 
   StoreFilter toggleLanguage(String key) =>
       copyWith(languages: _flip(languages, key));

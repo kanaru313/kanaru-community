@@ -130,7 +130,7 @@ void main() {
 
     n.set(const StoreFilter(kinds: {PluginKind.translate}));
     expect(slugs((await sections()).notInstalled), ['tr']);
-    n.set(const StoreFilter(states: {StoreItemState.installed}));
+    n.set(const StoreFilter(states: {StoreStateChip.installed}));
     expect(slugs((await sections()).installed), ['ly']);
     // A global plugin matches every language.
     final key = (await h.settled(storeItemsProvider)).requireValue

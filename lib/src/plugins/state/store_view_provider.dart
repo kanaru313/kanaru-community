@@ -53,7 +53,6 @@ final storeViewProvider = Provider<AsyncValue<StoreView>>((ref) {
       kind: row?.pluginKind ?? item.entry.kind,
       state: item.state,
       alerted: alerts.of(item.installId).isNotEmpty,
-      note: _noteOf(alerts.of(item.installId)),
       needsReview: reviewIds.contains(item.installId),
     );
   }
@@ -81,8 +80,6 @@ final storeViewProvider = Provider<AsyncValue<StoreView>>((ref) {
         kind: row.pluginKind,
         state: StoreItemState.installed,
         alerted: alerts.of(row.installId).isNotEmpty,
-        note: _noteOf(alerts.of(row.installId)),
-        fromCatalog: false,
       ),
     );
   }
@@ -114,17 +111,6 @@ final storeViewProvider = Provider<AsyncValue<StoreView>>((ref) {
   );
 });
 
-StoreRowNote _noteOf(Set<PluginAlert> alerts) {
-  if (alerts.contains(PluginAlert.reinstallFromFile)) {
-    return StoreRowNote.reinstallFromFile;
-  }
-  if (alerts.contains(PluginAlert.proRequired)) return StoreRowNote.proRequired;
-  if (alerts.contains(PluginAlert.packageMissing)) {
-    return StoreRowNote.packageMissing;
-  }
-  return StoreRowNote.none;
-}
-
 /// The store's own filter applied to an installed plugin that has no catalog
 /// entry: such a plugin is installed, has no repository entry and goes by its
 /// manifest for hosts and languages.
@@ -141,7 +127,7 @@ bool _extraMatches({
     return false;
   }
   if (filter.states.isNotEmpty &&
-      !filter.states.contains(StoreItemState.installed)) {
+      !filter.states.any((chip) => chip.matches(StoreItemState.installed))) {
     return false;
   }
   final author = (row.author ?? '').trim();

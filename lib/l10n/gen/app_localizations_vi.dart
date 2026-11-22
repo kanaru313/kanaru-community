@@ -4151,15 +4151,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pluginsAlertLabel => 'Có lỗi';
 
   @override
-  String get pluginsNoteReinstallFile => 'Cài lại từ tệp';
-
-  @override
-  String get pluginsNoteProRequired => 'Cần Kanaru Pro';
-
-  @override
-  String get pluginsNotePackageMissing => 'Thiếu gói, sẽ tải lại';
-
-  @override
   String get pluginsFreeStreamingLimit =>
       'Bản Free chỉ cài được một plugin nguồn nhạc. Gỡ plugin hiện có để cài plugin này.';
 

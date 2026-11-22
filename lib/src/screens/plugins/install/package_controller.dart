@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:logging/logging.dart';
 
 import '../../../foundation/result.dart';
 import '../../../plugins/domain/install/held_package.dart';
@@ -9,23 +10,11 @@ import '../../../plugins/domain/install/prepare_result.dart';
 import '../../../plugins/state/install_ops.dart';
 import '../problems/install_problem.dart';
 import 'package_exit.dart';
+import 'package_models.dart';
 
-enum PackagePhase { loading, ready, working, failed }
+export 'package_models.dart';
 
-/// A short note above the package: why the screen looked at it again.
-enum PackageNotice { stale, expired }
-
-/// What the file or link the screen was opened for is called, for the
-/// problem dialogs.
-class PackageSubject {
-  const PackageSubject(this.name, {this.isFile = false, this.named = true});
-
-  final String name;
-  final bool isFile;
-
-  /// False when [name] is a file name or an address, not a plugin name.
-  final bool named;
-}
+final _log = Logger('plugin_install');
 
 /// State of the install / update screen: prepares the package (download or
 /// read, check, hold), installs the one the user reviewed, and holds nothing
@@ -36,6 +25,7 @@ class PackageController extends ChangeNotifier {
     required this.ops,
     required this.start,
     required this.subject,
+    this.onInstalledAfterClose,
   });
 
   final InstallOps ops;
@@ -44,6 +34,10 @@ class PackageController extends ChangeNotifier {
   /// stale review.
   final PrepareOperation Function() start;
   final PackageSubject subject;
+
+  /// Called when the plugin was written after the screen had already gone
+  /// (the install was in flight): the user still hears that it happened.
+  final void Function(PackageInstalled installed)? onInstalledAfterClose;
 
   PackagePhase phase = PackagePhase.loading;
   HeldPackage? held;
@@ -121,7 +115,19 @@ class PackageController extends ChangeNotifier {
     }
     // Held before the next await, so a close in between still discards it.
     held = package;
-    final blocked = await ops.streamingBlocked(package);
+    final bool blocked;
+    try {
+      blocked = await ops.streamingBlocked(package);
+    } on Object catch (error) {
+      _log.warning('Checking the streaming rule failed: ${error.runtimeType}');
+      if (_disposed || !identical(held, package)) return;
+      ops.discard(package.token);
+      held = null;
+      writeFailure = InstallFailure.unexpected;
+      phase = PackagePhase.failed;
+      _changed();
+      return;
+    }
     if (_disposed || !identical(held, package)) return;
     proBlocked = blocked;
     phase = PackagePhase.ready;
@@ -134,17 +140,37 @@ class PackageController extends ChangeNotifier {
     if (package == null || phase != PackagePhase.ready || proBlocked) return;
     phase = PackagePhase.working;
     _changed();
-    final result = await ops.install(package.token);
+    final InstallResult result;
+    try {
+      result = await ops.install(package.token);
+    } on Object catch (error) {
+      _log.warning('Installing failed: ${error.runtimeType}');
+      if (_disposed) return;
+      writeFailure = InstallFailure.unexpected;
+      phase = PackagePhase.failed;
+      _changed();
+      return;
+    }
+    if (result case Installed(:final installId)) {
+      final installed = PackageInstalled(
+        installId: installId,
+        name: package.package.manifest.name,
+        version: package.package.manifest.version,
+        updated: package.review is UpdateReview,
+      );
+      if (_disposed) {
+        onInstalledAfterClose?.call(installed);
+        return;
+      }
+      exit = installed;
+      _changed();
+      return;
+    }
     if (_disposed) return;
     switch (result) {
-      case Installed(:final installId):
-        exit = PackageInstalled(
-          installId: installId,
-          name: package.package.manifest.name,
-          version: package.package.manifest.version,
-          updated: package.review is UpdateReview,
-        );
-        _changed();
+      case Installed():
+        break; // handled above
+
       case InstallRefused(:final failure):
         await _refused(package, failure);
       case InstallPrepareFailed(:final failure):
@@ -178,6 +204,7 @@ class PackageController extends ChangeNotifier {
               ? source.fileName
               : package.package.manifest.name,
           isFile: source is FileHeldSource,
+          existing: package.snapshot?.source,
         );
         if (problem != null) {
           exit = PackageRefused(problem);

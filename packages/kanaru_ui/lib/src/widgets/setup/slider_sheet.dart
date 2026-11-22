@@ -7,6 +7,7 @@ import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../anchored_panel_layout.dart';
+import '../k_anchored_panel.dart';
 import '../k_focus_ring.dart';
 import '../k_gap.dart';
 import '../k_sheet.dart';
@@ -85,23 +86,14 @@ Future<void> showSliderSheet(
       ),
     );
   }
-  return showDialog<void>(
-    context: context,
-    animationStyle: KMotion.routeAnimationStyle(context),
-    useSafeArea: false,
-    barrierColor: const Color(0x00000000),
-    builder: (context) => CustomSingleChildLayout(
-      delegate: AnchoredPanelLayout(rect, align: anchorAlign),
-      child: Material(
-        elevation: 3,
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        shape: KShape.of(KRadius.lg, continuous: true),
-        clipBehavior: Clip.antiAlias,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: KLayout.dialog),
-          child: body(context),
-        ),
-      ),
+  return showKAnchoredPanel<void>(
+    context,
+    anchor: rect,
+    align: anchorAlign,
+    insetRows: false,
+    builder: (context) => ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: KLayout.dialog),
+      child: body(context),
     ),
   );
 }

@@ -18,6 +18,7 @@ class SettingsScaffold extends ConsumerWidget {
     this.parentPath,
     this.pinnedBelowHeader,
     this.actions = const [],
+    this.spaced = true,
   });
 
   final String title;
@@ -33,6 +34,10 @@ class SettingsScaffold extends ConsumerWidget {
 
   /// Buttons at the end of the header (a filter and a ⋮ menu).
   final List<Widget> actions;
+
+  /// True puts block spacing between [children]. A long list that is its own
+  /// list items (one per row) sets false and draws its own gaps.
+  final bool spaced;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,7 +64,7 @@ class SettingsScaffold extends ConsumerWidget {
           const KGap(KSpace.x5),
         ],
         for (var i = 0; i < children.length; i++) ...[
-          if (i > 0) const KGap(KSpace.x5),
+          if (spaced && i > 0) const KGap(KSpace.x5),
           children[i],
         ],
       ],
@@ -116,7 +121,7 @@ class SettingsScaffold extends ConsumerWidget {
                     const KGap(KSpace.x5),
                   ],
                   for (var i = 0; i < children.length; i++) ...[
-                    if (i > 0) const KGap(KSpace.x5),
+                    if (spaced && i > 0) const KGap(KSpace.x5),
                     children[i],
                   ],
                 ],

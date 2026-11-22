@@ -3159,9 +3159,6 @@
     }
   },
   "pluginsAlertLabel": "Has a problem",
-  "pluginsNoteReinstallFile": "Reinstall from file",
-  "pluginsNoteProRequired": "Needs Kanaru Pro",
-  "pluginsNotePackageMissing": "Package missing, will download again",
   "pluginsFreeStreamingLimit": "The Free edition installs only one music source plugin. Remove the current one to install this.",
   "pluginsKindLyrics": "Lyrics",
   "pluginsKindTranslate": "Translation",

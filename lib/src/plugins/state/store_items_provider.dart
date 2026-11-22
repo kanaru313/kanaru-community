@@ -129,7 +129,8 @@ bool storeItemMatches(StoreItem item, StoreFilter filter) {
   if (filter.kinds.isNotEmpty && !filter.kinds.contains(entry.kind)) {
     return false;
   }
-  if (filter.states.isNotEmpty && !filter.states.contains(item.state)) {
+  if (filter.states.isNotEmpty &&
+      !filter.states.any((chip) => chip.matches(item.state))) {
     return false;
   }
   if (filter.authors.isNotEmpty && !filter.authors.contains(entry.author)) {

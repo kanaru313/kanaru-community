@@ -116,6 +116,38 @@ void main() {
     expect(tester.widget<KIconButton>(byIconButton('Filter')).badgeCount, 3);
   });
 
+  testWidgets(
+    'Installed holds a plugin with an update, Update available only it',
+    (tester) async {
+      final h = await pumpPlugins(
+        tester,
+        StoreFixture(
+          items: [
+            itemOf('u', StoreItemState.updateAvailable, name: 'Upd'),
+            itemOf('h', StoreItemState.installed, name: 'Have'),
+            itemOf('n', StoreItemState.notInstalled, name: 'Fresh'),
+          ],
+          live: [
+            liveRow('id-u', name: 'Upd'),
+            liveRow('id-h', name: 'Have'),
+          ],
+          repos: const [RepoView(id: 1, name: 'Kho', url: 'u', pluginCount: 3)],
+        ),
+      );
+      await _open(tester);
+      await tester.tap(_chip('Installed'));
+      await tester.pump();
+      expect(find.text('Showing 2 plugins'), findsOneWidget);
+      expect(h.container.read(storeFilterProvider).states, {
+        StoreStateChip.installed,
+      });
+      await tester.tap(_chip('Installed'));
+      await tester.tap(_chip('Update available'));
+      await tester.pump();
+      expect(find.text('Showing 1 plugin'), findsOneWidget);
+    },
+  );
+
   testWidgets('a group with no values is left out', (tester) async {
     await pumpPlugins(
       tester,

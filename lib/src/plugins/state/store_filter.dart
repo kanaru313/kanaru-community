@@ -16,6 +16,25 @@ enum StoreItemState {
   needsNewerApp,
 }
 
+/// The values of Lọc › Trạng thái, each a set of [StoreItemState]s. They
+/// overlap on purpose: "Đã cài" holds every installed plugin, one with an
+/// update included.
+enum StoreStateChip {
+  installed({StoreItemState.installed, StoreItemState.updateAvailable}),
+  notInstalled({
+    StoreItemState.notInstalled,
+    StoreItemState.locked,
+    StoreItemState.needsNewerApp,
+  }),
+  updatable({StoreItemState.updateAvailable});
+
+  const StoreStateChip(this.states);
+
+  final Set<StoreItemState> states;
+
+  bool matches(StoreItemState state) => states.contains(state);
+}
+
 /// The search text and filters of the store list. An empty set means "all".
 class StoreFilter {
   const StoreFilter({
@@ -29,7 +48,7 @@ class StoreFilter {
 
   final String query;
   final Set<PluginKind> kinds;
-  final Set<StoreItemState> states;
+  final Set<StoreStateChip> states;
 
   /// Normalized language keys; a global plugin matches any of them.
   final Set<String> languages;
@@ -47,7 +66,7 @@ class StoreFilter {
   StoreFilter copyWith({
     String? query,
     Set<PluginKind>? kinds,
-    Set<StoreItemState>? states,
+    Set<StoreStateChip>? states,
     Set<String>? languages,
     Set<String>? authors,
     Set<int>? repoIds,

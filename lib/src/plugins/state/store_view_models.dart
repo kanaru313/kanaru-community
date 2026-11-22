@@ -1,21 +1,6 @@
 import '../domain/package/plugin_kind.dart';
 import 'store_filter.dart';
 
-/// The short status line of an installed row (what the user must do, if
-/// anything). A missing required setting is no note: the alert dot says it.
-enum StoreRowNote {
-  none,
-
-  /// The package folder is gone and only the user can pick the file again.
-  reinstallFromFile,
-
-  /// A second streaming plugin that needs Pro.
-  proRequired,
-
-  /// The package folder is gone; the app downloads it again.
-  packageMissing,
-}
-
 /// One row of the store list, with no database types: what a screen draws.
 class StoreRowView {
   const StoreRowView({
@@ -25,9 +10,7 @@ class StoreRowView {
     required this.kind,
     required this.state,
     this.alerted = false,
-    this.note = StoreRowNote.none,
     this.needsReview = false,
-    this.fromCatalog = true,
   });
 
   final String installId;
@@ -42,13 +25,9 @@ class StoreRowView {
 
   /// An installed plugin that needs attention (red dot on its icon).
   final bool alerted;
-  final StoreRowNote note;
 
   /// An update that adds hosts or permissions: the button is "Xem".
   final bool needsReview;
-
-  /// False for a plugin installed from a file or link (no catalog entry).
-  final bool fromCatalog;
 }
 
 /// The filtered store list, grouped, plus the counts the page needs.

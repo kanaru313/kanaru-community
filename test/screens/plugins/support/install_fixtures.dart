@@ -65,6 +65,9 @@ class FakeInstallOps implements InstallOps {
   var updateCalls = <String>[];
   var updateAllCalls = 0;
   var blocked = false;
+
+  /// Replaces the answer of [streamingBlocked] (to make it throw).
+  Future<bool> Function(HeldPackage held)? onStreamingBlocked;
   Future<InstallResult> Function(String token) onInstall = (token) async =>
       const Installed('id-demo', InstallOutcome.installed);
   Future<UpdateRun> Function(String id) onUpdate = (_) async =>
@@ -99,7 +102,8 @@ class FakeInstallOps implements InstallOps {
   @override
   void discard(String token) => discarded.add(token);
   @override
-  Future<bool> streamingBlocked(HeldPackage held) async => blocked;
+  Future<bool> streamingBlocked(HeldPackage held) async =>
+      onStreamingBlocked != null ? onStreamingBlocked!(held) : blocked;
   @override
   Future<InstallResult> install(String token) {
     installed.add(token);

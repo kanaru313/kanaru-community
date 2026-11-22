@@ -5,10 +5,12 @@ import '../../tokens/k_shape.dart';
 /// One-line outlined text field, 56 dp: the label floats inside the box, the
 /// [hint] shows while focused, [helper] sits under the field and [error]
 /// replaces it (never both). Enter calls [onSubmitted] (the screen's primary
-/// action). Not focused, a long value ends with an ellipsis.
+/// action). A long value is clipped at the box edge, not ellipsised: the
+/// framework's text field has no overflow option.
 ///
 /// The label float is the framework's own 167 ms transition (the field has no
-/// hook for another duration). The caller owns [controller]. [enabled] false dims it and ignores input.
+/// hook for another duration). The caller owns [controller]. [enabled] false
+/// dims it and ignores input.
 class KTextFieldRow extends StatelessWidget {
   const KTextFieldRow({
     super.key,

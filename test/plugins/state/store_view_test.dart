@@ -73,7 +73,7 @@ void main() {
     expect(view.needsNewerAppCount, 1);
   });
 
-  test('notes follow the alerts, a missing setting is only a dot', () async {
+  test('an alerted plugin carries the flag and no status text', () async {
     final c = _container(
       StoreFixture(
         items: [
@@ -93,9 +93,44 @@ void main() {
     );
     final rows = {for (final r in (await _view(c)).installed) r.name: r};
     expect(rows['A']!.alerted, isTrue);
-    expect(rows['A']!.note, StoreRowNote.none);
-    expect(rows['B']!.note, StoreRowNote.reinstallFromFile);
+    expect(rows['B']!.alerted, isTrue);
   });
+
+  test(
+    'Đã cài keeps a plugin with an update, Có bản cập nhật only it',
+    () async {
+      final c = _container(
+        StoreFixture(
+          items: [
+            itemOf('a', StoreItemState.updateAvailable, name: 'Alpha'),
+            itemOf('b', StoreItemState.installed, name: 'Beta'),
+            itemOf('c', StoreItemState.notInstalled, name: 'Gamma'),
+          ],
+          live: [
+            liveRow('id-a', name: 'Alpha'),
+            liveRow('id-b', name: 'Beta'),
+          ],
+          repos: const [RepoView(id: 1, name: 'Kho', url: 'u', pluginCount: 3)],
+        ),
+      );
+      final n = c.read(storeFilterProvider.notifier);
+      n.set(const StoreFilter(states: {StoreStateChip.installed}));
+      var view = await _view(c);
+      expect(_names(view.updates), ['Alpha']);
+      expect(_names(view.installed), ['Beta']);
+      expect(view.notInstalled, isEmpty);
+
+      n.set(const StoreFilter(states: {StoreStateChip.updatable}));
+      view = await _view(c);
+      expect(_names(view.updates), ['Alpha']);
+      expect(view.installed, isEmpty);
+
+      n.set(const StoreFilter(states: {StoreStateChip.notInstalled}));
+      view = await _view(c);
+      expect(_names(view.notInstalled), ['Gamma']);
+      expect(view.updates, isEmpty);
+    },
+  );
 
   test('facets list each language and author once', () async {
     final c = _container(

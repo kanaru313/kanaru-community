@@ -4570,16 +4570,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginsAlertLabel => 'Has a problem';
 
   @override
-  String get pluginsNoteReinstallFile => 'Reinstall from file';
-
-  @override
-  String get pluginsNoteProRequired => 'Needs Kanaru Pro';
-
-  @override
-  String get pluginsNotePackageMissing =>
-      'Package missing, will download again';
-
-  @override
   String get pluginsFreeStreamingLimit =>
       'The Free edition installs only one music source plugin. Remove the current one to install this.';
 

@@ -293,4 +293,17 @@ void valueRowTests() {
     expect(find.bySemanticsLabel(RegExp('Có plugin lỗi')), findsNothing);
     handle.dispose();
   });
+
+  test('an alert without its spoken label is refused', () {
+    expect(
+      () => SetupValueRow(
+        icon: KIcons.language,
+        title: const Text('Plugin'),
+        value: const Text('2 plugin'),
+        alert: true,
+        onTap: () {},
+      ),
+      throwsAssertionError,
+    );
+  });
 }

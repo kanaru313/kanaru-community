@@ -29,7 +29,10 @@ void main() {
   var resolved = [publicIp()];
   var lookups = 0;
 
-  PluginIconCache cache({int maxBytes = iconCacheMaxBytes}) => PluginIconCache(
+  PluginIconCache cache({
+    int maxBytes = iconCacheMaxBytes,
+    int maxConcurrent = iconMaxConcurrent,
+  }) => PluginIconCache(
     fetcher: fetcher,
     guard: RepoAddressGuard(
       resolver: (_) async {
@@ -40,6 +43,7 @@ void main() {
     ),
     files: PluginFiles(dir),
     maxBytes: maxBytes,
+    maxConcurrent: maxConcurrent,
     clock: () => now,
   );
 
@@ -195,5 +199,40 @@ void main() {
     expect(fetcher.calls, isEmpty);
     await icons.catalogIcon(repo, entry('b'));
     expect(fetcher.calls, hasLength(1));
+  });
+
+  test(
+    'a burst of icons runs at most the cap at once, the rest wait',
+    () async {
+      final gate = Completer<void>();
+      fetcher.answer = (_) async {
+        await gate.future;
+        return served(pngHeader(16, 16));
+      };
+      final icons = cache(maxConcurrent: 3);
+      final all = Future.wait([
+        for (var i = 0; i < 10; i++) icons.catalogIcon(repo, entry('s$i')),
+      ]);
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(fetcher.running, 3);
+      gate.complete();
+      final got = await all;
+      expect(got.every((b) => b != null), isTrue);
+      expect(fetcher.calls, hasLength(10));
+      expect(fetcher.maxRunning, 3);
+    },
+  );
+
+  test('a failed fetch gives its slot to the next one', () async {
+    fetcher.answer = (uri) async => uri.path.contains('bad')
+        ? throw StateError('boom')
+        : served(pngHeader(16, 16));
+    final icons = cache(maxConcurrent: 1);
+    final got = await Future.wait([
+      icons.catalogIcon(repo, entry('bad1')),
+      icons.catalogIcon(repo, entry('good')),
+    ]);
+    expect(got[0], isNull);
+    expect(got[1], isNotNull);
   });
 }

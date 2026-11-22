@@ -70,15 +70,23 @@ void main() {
     expect(seen, ['https://a.b/p.json']);
   });
 
-  testWidgets('long text at 200 % does not overflow', (tester) async {
+  testWidgets('a long value at 200 % stays one line high, helper visible', (
+    tester,
+  ) async {
     useWindow(tester, const Size(360, 800));
-    controller.text = 'https://example.com/${'a' * 200}';
-    await tester.pumpWidget(
-      host(
+    Widget at(String text) {
+      controller.text = text;
+      return host(
         KTextFieldRow(label: 'URL', controller: controller, helper: 'Gợi ý'),
         textScale: 2,
-      ),
-    );
+      );
+    }
+
+    await tester.pumpWidget(at('https://a.b'));
+    final short = tester.getSize(find.byType(TextField)).height;
+    await tester.pumpWidget(at('https://example.com/${'a' * 200}'));
     expect(tester.takeException(), isNull);
+    expect(tester.getSize(find.byType(TextField)).height, short);
+    expect(find.text('Gợi ý'), findsOneWidget);
   });
 }

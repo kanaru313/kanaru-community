@@ -6690,24 +6690,6 @@ abstract class AppLocalizations {
   /// **'Has a problem'**
   String get pluginsAlertLabel;
 
-  /// No description provided for @pluginsNoteReinstallFile.
-  ///
-  /// In en, this message translates to:
-  /// **'Reinstall from file'**
-  String get pluginsNoteReinstallFile;
-
-  /// No description provided for @pluginsNoteProRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Needs Kanaru Pro'**
-  String get pluginsNoteProRequired;
-
-  /// No description provided for @pluginsNotePackageMissing.
-  ///
-  /// In en, this message translates to:
-  /// **'Package missing, will download again'**
-  String get pluginsNotePackageMissing;
-
   /// No description provided for @pluginsFreeStreamingLimit.
   ///
   /// In en, this message translates to:

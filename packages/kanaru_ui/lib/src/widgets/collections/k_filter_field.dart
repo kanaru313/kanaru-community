@@ -18,7 +18,7 @@ class KFilterField extends StatelessWidget {
     required this.onClose,
     this.closeTooltip,
     this.onChanged,
-    this.autofocus = true,
+    this.autofocus,
     this.persistent = false,
   });
 
@@ -28,13 +28,16 @@ class KFilterField extends StatelessWidget {
   final String? closeTooltip;
   final ValueChanged<String>? onChanged;
 
-  /// Takes the keyboard when it appears; off for a field that sits above a
-  /// list in a picker, where the list is what the user acts on first.
-  final bool autofocus;
+  /// Takes the keyboard when it appears. Null means yes for a field that is
+  /// opened on demand and no for a [persistent] one (a field that is always on
+  /// the page must not pop the keyboard on every visit). Off too for a field
+  /// above a list in a picker, where the list is what the user acts on first.
+  final bool? autofocus;
 
   /// A field that is always on the page (a store's search): pill on
   /// `surfaceContainerHighest`, search icon, ✕ only while there is text. The
-  /// ✕ and Esc clear the text but never close it, so [onClose] is not called.
+  /// ✕ and Esc clear the text but never close it, so [onClose] is not called;
+  /// Esc on an empty field is left to whatever is above (a dialog, the page).
   final bool persistent;
 
   static const double height = 48;
@@ -45,81 +48,49 @@ class KFilterField extends StatelessWidget {
     if (!persistent) onClose();
   }
 
+  KeyEventResult _onKey(FocusNode _, KeyEvent event) {
+    if (event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.escape ||
+        (persistent && controller.text.isEmpty)) {
+      return KeyEventResult.ignored;
+    }
+    _close();
+    return KeyEventResult.handled;
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    if (persistent) return _buildPersistent(context, scheme);
-    return CallbackShortcuts(
-      bindings: {const SingleActivator(LogicalKeyboardKey.escape): _close},
-      child: SizedBox(
-        height: height,
-        child: TextField(
-          controller: controller,
-          autofocus: autofocus,
-          onChanged: onChanged,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: hint,
-            filled: false,
-            isDense: true,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: KSpace.x3,
-              vertical: KSpace.x3,
-            ),
-            prefixIcon: const Icon(KIcons.filter),
-            suffixIcon: KIconButton(
-              tooltip:
-                  closeTooltip ??
-                  MaterialLocalizations.of(context).closeButtonTooltip,
-              onPressed: _close,
-              icon: KIcons.close,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: KRadius.md,
-              borderSide: BorderSide(color: scheme.outlineVariant),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: KRadius.md,
-              borderSide: BorderSide(color: scheme.outlineVariant),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: KRadius.md,
-              borderSide: BorderSide(color: scheme.primary, width: 2),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPersistent(BuildContext context, ColorScheme scheme) {
-    const none = BorderSide.none;
-    final pill = OutlineInputBorder(
-      borderRadius: KRadius.full,
-      borderSide: none,
-    );
-    return CallbackShortcuts(
-      bindings: {const SingleActivator(LogicalKeyboardKey.escape): _close},
+    final radius = persistent ? KRadius.full : KRadius.md;
+    OutlineInputBorder border(BorderSide side) =>
+        OutlineInputBorder(borderRadius: radius, borderSide: side);
+    final rest = persistent
+        ? BorderSide.none
+        : BorderSide(color: scheme.outlineVariant);
+    return Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onKeyEvent: _onKey,
       child: SizedBox(
         height: height,
         child: ListenableBuilder(
           listenable: controller,
           builder: (context, _) => TextField(
             controller: controller,
-            autofocus: autofocus,
+            autofocus: autofocus ?? !persistent,
             onChanged: onChanged,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
               hintText: hint,
-              filled: true,
-              fillColor: scheme.surfaceContainerHighest,
+              filled: persistent,
+              fillColor: persistent ? scheme.surfaceContainerHighest : null,
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: KSpace.x3,
                 vertical: KSpace.x3,
               ),
-              prefixIcon: const Icon(KIcons.search),
-              suffixIcon: controller.text.isEmpty
+              prefixIcon: Icon(persistent ? KIcons.search : KIcons.filter),
+              suffixIcon: persistent && controller.text.isEmpty
                   ? null
                   : KIconButton(
                       tooltip:
@@ -128,11 +99,10 @@ class KFilterField extends StatelessWidget {
                       onPressed: _close,
                       icon: KIcons.close,
                     ),
-              border: pill,
-              enabledBorder: pill,
-              focusedBorder: OutlineInputBorder(
-                borderRadius: KRadius.full,
-                borderSide: BorderSide(color: scheme.primary, width: 2),
+              border: border(rest),
+              enabledBorder: border(rest),
+              focusedBorder: border(
+                BorderSide(color: scheme.primary, width: 2),
               ),
             ),
           ),

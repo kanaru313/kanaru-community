@@ -25,7 +25,9 @@ class StoreBanner extends ConsumerWidget {
     if (failed.isEmpty) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
     final ops = ref.read(storeOpsProvider);
+    // One failing repository is named; "offline" needs two or more, all down.
     final offline =
+        repos.length >= 2 &&
         failed.length == repos.length &&
         failed.every((r) => isNetworkFailure(r.errorKind));
     final KInlineNotice notice;

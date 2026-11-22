@@ -31,7 +31,10 @@ class SetupValueRow extends StatelessWidget {
     this.soonLabel,
     this.alert = false,
     this.alertLabel,
-  });
+  }) : assert(
+         !alert || alertLabel != null,
+         'a dot needs the words a screen reader says for it',
+       );
 
   final IconData icon;
   final Widget title;

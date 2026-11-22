@@ -5,10 +5,10 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/domain/install/prepare_result.dart';
 import '../../../plugins/state/install_ops.dart';
-import '../common/plugin_labels.dart';
 import 'package_body.dart';
 import 'package_controller.dart';
-import 'package_icon.dart';
+import 'package_exit.dart';
+import 'package_header.dart';
 
 /// The one screen of install and update: a dialog on desktop (600 wide, up to
 /// 840 high), a full-screen page on mobile ([fullScreen]). It pops with a
@@ -21,6 +21,7 @@ class PluginPackageScreen extends ConsumerStatefulWidget {
     required this.subject,
     required this.fullScreen,
     this.expectUpdate = false,
+    this.onInstalledAfterClose,
   });
 
   /// Starts one preparation of the package; called again by [Thử lại].
@@ -31,6 +32,9 @@ class PluginPackageScreen extends ConsumerStatefulWidget {
   /// The screen was opened from an update row: its title says so while the
   /// package loads.
   final bool expectUpdate;
+
+  /// Tells the flow the plugin was written after this screen had closed.
+  final void Function(PackageInstalled installed)? onInstalledAfterClose;
 
   @override
   ConsumerState<PluginPackageScreen> createState() => _PackageScreenState();
@@ -47,6 +51,7 @@ class _PackageScreenState extends ConsumerState<PluginPackageScreen> {
       ops: ref.read(installOpsProvider),
       start: widget.start,
       subject: widget.subject,
+      onInstalledAfterClose: widget.onInstalledAfterClose,
     )..addListener(_onChange);
     _c.prepare();
   }
@@ -97,7 +102,11 @@ class _PackageScreenState extends ConsumerState<PluginPackageScreen> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _header(context, l10n),
+        PackageHeader(
+          controller: _c,
+          subject: widget.subject,
+          expectUpdate: widget.expectUpdate,
+        ),
         Flexible(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: KSpace.x5),
@@ -140,70 +149,6 @@ class _PackageScreenState extends ConsumerState<PluginPackageScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _header(BuildContext context, AppLocalizations l10n) {
-    final held = _c.held;
-    final text = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
-    final manifest = held?.package.manifest;
-    final update = held == null ? widget.expectUpdate : _c.isUpdate;
-    final name = manifest?.name ?? widget.subject.name;
-    final title = held == null && !widget.subject.named
-        ? l10n.pluginsPkgLoadingTitle
-        : update
-        ? l10n.pluginsPkgUpdateTitle(name)
-        : l10n.pluginsPkgInstallTitle(name);
-    String? subtitle;
-    if (manifest != null) {
-      final kind = (kindLabel(l10n, manifest.kind) ?? '').toLowerCase();
-      final author = manifest.author.isEmpty
-          ? l10n.pluginsAuthorUnknown
-          : l10n.pluginsPkgAuthorDeclared(manifest.author);
-      subtitle = update
-          ? l10n.pluginsPkgUpdateSubtitle(kind, author)
-          : l10n.pluginsPkgInstallSubtitle(kind, manifest.version, author);
-    }
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        KSpace.x5,
-        KSpace.x4,
-        KSpace.x2,
-        KSpace.x3,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: KSpace.x3,
-        children: [
-          PackageIcon(kind: manifest?.kind, bytes: held?.package.icon),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Semantics(
-                  header: true,
-                  child: Text(title, style: text.titleLarge),
-                ),
-                if (subtitle != null)
-                  Text(
-                    subtitle,
-                    style: text.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          KIconButton(
-            icon: KIcons.close,
-            tooltip: l10n.pluginsPkgClose,
-            onPressed: _c.phase == PackagePhase.working
-                ? null
-                : () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
     );
   }
 }

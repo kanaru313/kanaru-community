@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:typed_data';
 
 import 'package:logging/logging.dart';
@@ -17,6 +18,10 @@ final _log = Logger('plugin_icons');
 /// Most bytes of icons kept in memory; the least recently used go first.
 const iconCacheMaxBytes = 8 * 1024 * 1024;
 
+/// Most icon fetches in flight at once; the others wait their turn, so a long
+/// catalog does not open one connection per row to the repository host.
+const iconMaxConcurrent = 4;
+
 /// How long a failed icon is remembered before the next ask tries again.
 const iconRetryAfter = Duration(seconds: 60);
 
@@ -25,7 +30,7 @@ const iconRetryAfter = Duration(seconds: 60);
 /// kept in memory only, at most [iconCacheMaxBytes], least recently used
 /// first out. A failure of any kind (network, refused address, not a PNG) is
 /// remembered for [iconRetryAfter] so a list does not refetch on every
-/// rebuild. Concurrent asks for one icon share one fetch. A catalog icon
+/// rebuild. At most [iconMaxConcurrent] fetches run at once. Concurrent asks for one icon share one fetch. A catalog icon
 /// obeys the address class the [RepoAddressGuard] narrows to, never a looser
 /// stored one. Installed icons are read from the package folder.
 class PluginIconCache {
@@ -35,6 +40,7 @@ class PluginIconCache {
     required this._files,
     this._maxBytes = iconCacheMaxBytes,
     this._retryAfter = iconRetryAfter,
+    this._maxConcurrent = iconMaxConcurrent,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
@@ -43,6 +49,7 @@ class PluginIconCache {
   final PluginFiles _files;
   final int _maxBytes;
   final Duration _retryAfter;
+  final int _maxConcurrent;
   final DateTime Function() _clock;
 
   /// Insertion order is use order: a hit moves the entry to the end.
@@ -50,6 +57,8 @@ class PluginIconCache {
   var _bytes = 0;
   final _loading = <String, Future<Uint8List?>>{};
   final _failedAt = <String, DateTime>{};
+  var _running = 0;
+  final _queue = Queue<Completer<void>>();
 
   /// Bytes held now (for tests and diagnostics).
   int get cachedBytes => _bytes;
@@ -88,7 +97,37 @@ class PluginIconCache {
   /// Forgets remembered failures, so the next ask tries again.
   void clearFailures() => _failedAt.clear();
 
+  /// Waits for one of the fetch slots; each caller gives it back through
+  /// [_release].
+  Future<void> _acquire() {
+    if (_running < _maxConcurrent) {
+      _running++;
+      return Future.value();
+    }
+    final turn = Completer<void>();
+    _queue.add(turn);
+    return turn.future;
+  }
+
+  void _release() {
+    // The slot passes straight to the next waiter, so the count stays.
+    if (_queue.isNotEmpty) {
+      _queue.removeFirst().complete();
+    } else {
+      _running--;
+    }
+  }
+
   Future<Uint8List?> _load(String key, PluginRepoRow repo, Uri url) async {
+    await _acquire();
+    try {
+      return await _fetch(key, repo, url);
+    } finally {
+      _release();
+    }
+  }
+
+  Future<Uint8List?> _fetch(String key, PluginRepoRow repo, Uri url) async {
     try {
       final catalogKind = switch (await _guard.kindFor(repo)) {
         Ok(:final value) => value,

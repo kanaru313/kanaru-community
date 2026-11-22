@@ -23,6 +23,12 @@ Future<void> runPackageFlow(
 }) async {
   final messenger = ScaffoldMessenger.of(context);
   final l10n = AppLocalizations.of(context);
+  void announce(PackageInstalled installed) => showAppSnackBarOn(
+    messenger,
+    installed.updated
+        ? l10n.pluginsPkgUpdated(installed.name, installed.version)
+        : l10n.pluginsPkgInstalled(installed.name),
+  );
   var starter = start;
   while (true) {
     final exit = await _showPackageScreen(
@@ -30,17 +36,13 @@ Future<void> runPackageFlow(
       start: starter,
       subject: subject,
       expectUpdate: expectUpdate,
+      onInstalledAfterClose: announce,
     );
     switch (exit) {
       case null:
         return;
-      case PackageInstalled(:final name, :final version, :final updated):
-        showAppSnackBarOn(
-          messenger,
-          updated
-              ? l10n.pluginsPkgUpdated(name, version)
-              : l10n.pluginsPkgInstalled(name),
-        );
+      case PackageInstalled():
+        announce(exit);
         return;
       case PackageRefused(:final problem):
         if (!context.mounted) return;
@@ -57,6 +59,7 @@ Future<PackageExit?> _showPackageScreen(
   required PrepareOperation Function() start,
   required PackageSubject subject,
   required bool expectUpdate,
+  required void Function(PackageInstalled installed) onInstalledAfterClose,
 }) {
   final full = FormFactor.of(context) == FormFactor.mobile;
   Widget screen() => PluginPackageScreen(
@@ -64,6 +67,7 @@ Future<PackageExit?> _showPackageScreen(
     subject: subject,
     fullScreen: full,
     expectUpdate: expectUpdate,
+    onInstalledAfterClose: onInstalledAfterClose,
   );
   if (full) {
     return Navigator.of(context, rootNavigator: true).push<PackageExit>(

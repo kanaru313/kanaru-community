@@ -557,6 +557,29 @@ void main() {
     });
   });
 
+  group('critical emphasis', () {
+    Widget critical({bool enabled = true}) => host(
+      Center(
+        child: KIconButton(
+          icon: Icons.add,
+          tooltip: 'Delete',
+          emphasis: KIconEmphasis.critical,
+          onPressed: enabled ? () {} : null,
+        ),
+      ),
+    );
+
+    testWidgets('error at rest', (tester) async {
+      await tester.pumpWidget(critical());
+      expect(glyphColor(tester), scheme(tester).error);
+    });
+
+    testWidgets('disabled is dimmed, not error', (tester) async {
+      await tester.pumpWidget(critical(enabled: false));
+      expect(glyphColor(tester), isNot(scheme(tester).error));
+    });
+  });
+
   group('destructive emphasis', () {
     Widget destructive({Widget Function(Widget)? wrap}) {
       final b = Center(

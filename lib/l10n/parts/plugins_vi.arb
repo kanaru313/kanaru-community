@@ -78,9 +78,6 @@
     }
   },
   "pluginsAlertLabel": "Có lỗi",
-  "pluginsNoteReinstallFile": "Cài lại từ tệp",
-  "pluginsNoteProRequired": "Cần Kanaru Pro",
-  "pluginsNotePackageMissing": "Thiếu gói, sẽ tải lại",
   "pluginsFreeStreamingLimit": "Bản Free chỉ cài được một plugin nguồn nhạc. Gỡ plugin hiện có để cài plugin này.",
   "pluginsKindLyrics": "Lời bài",
   "pluginsKindTranslate": "Dịch",

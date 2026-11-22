@@ -91,13 +91,28 @@ class RepositoriesPage extends ConsumerWidget {
             const SizedBox(height: KFab.listEndPadding - KSpace.x7),
           ],
         ),
-        PositionedDirectional(
-          end: gutter,
-          bottom: MediaQuery.paddingOf(context).bottom + KSpace.x4,
-          child: KFab(
-            icon: KIcons.add,
-            tooltip: l10n.pluginsAddRepository,
-            onPressed: () => showAddRepositoryDialog(context),
+        // Bottom end of the page column, not of the window: the column is
+        // centred and at most KLayout.settings wide.
+        Positioned.fill(
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: KLayout.settings),
+              child: Padding(
+                padding: EdgeInsetsDirectional.only(
+                  end: gutter,
+                  bottom: MediaQuery.paddingOf(context).bottom + KSpace.x4,
+                ),
+                child: Align(
+                  alignment: AlignmentDirectional.bottomEnd,
+                  child: KFab(
+                    icon: KIcons.add,
+                    tooltip: l10n.pluginsAddRepository,
+                    onPressed: () => showAddRepositoryDialog(context),
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ],

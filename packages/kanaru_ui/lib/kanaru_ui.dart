@@ -13,8 +13,9 @@ export 'src/tokens/k_layout.dart';
 export 'src/tokens/k_motion.dart';
 export 'src/tokens/k_shape.dart';
 export 'src/tokens/k_space.dart';
-export 'src/widgets/anchored_panel_layout.dart'
-    show AnchoredPanelLayout, KAnchorAlign;
+export 'src/widgets/anchored_panel_layout.dart' show KAnchorAlign;
+export 'src/widgets/k_anchored_panel.dart'
+    show kAnchorRectOf, showKAnchoredPanel;
 export 'src/widgets/app_snack_bar.dart';
 export 'src/widgets/collections/collection_widgets.dart';
 export 'src/widgets/form/k_text_field_row.dart';

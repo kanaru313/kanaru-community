@@ -196,7 +196,7 @@ void main() {
     expect(installs, 0);
   });
 
-  testWidgets('an alerted plugin shows the dot and its status line', (
+  testWidgets('an alerted plugin shows only the dot, no status text', (
     tester,
   ) async {
     final handle = tester.ensureSemantics();
@@ -215,7 +215,8 @@ void main() {
       ),
     );
     expect(find.bySemanticsLabel(RegExp('Has a problem')), findsOneWidget);
-    expect(find.text('Needs Kanaru Pro'), findsOneWidget);
+    expect(find.text('Needs Kanaru Pro'), findsNothing);
+    expect(find.text('Reinstall from file'), findsNothing);
     handle.dispose();
   });
 
@@ -367,26 +368,57 @@ void main() {
       expect(fixture.ops.refreshed, [2]);
     });
 
-    testWidgets('every repository failing for the network: offline', (
-      tester,
-    ) async {
-      final fixture = StoreFixture(
-        items: [itemOf('new', StoreItemState.notInstalled)],
-        repos: const [
-          RepoView(
-            id: 1,
-            name: 'A',
-            url: 'a',
-            pluginCount: 1,
-            errorKind: 'network',
-          ),
-        ],
-      );
-      await pumpPlugins(tester, fixture);
-      expect(find.text('No network connection'), findsOneWidget);
-      await tester.tap(find.text('Retry'));
-      expect(fixture.ops.refreshAlls, 1);
-    });
+    testWidgets(
+      'two or more repositories all failing for the network: offline',
+      (tester) async {
+        final fixture = StoreFixture(
+          items: [itemOf('new', StoreItemState.notInstalled)],
+          repos: const [
+            RepoView(
+              id: 1,
+              name: 'A',
+              url: 'a',
+              pluginCount: 1,
+              errorKind: 'network',
+            ),
+            RepoView(
+              id: 2,
+              name: 'B',
+              url: 'b',
+              pluginCount: 1,
+              errorKind: 'timeout',
+            ),
+          ],
+        );
+        await pumpPlugins(tester, fixture);
+        expect(find.text('No network connection'), findsOneWidget);
+        await tester.tap(find.text('Retry'));
+        expect(fixture.ops.refreshAlls, 1);
+      },
+    );
+
+    testWidgets(
+      'a single repository failing for the network keeps its own band',
+      (tester) async {
+        final fixture = StoreFixture(
+          items: [itemOf('new', StoreItemState.notInstalled)],
+          repos: const [
+            RepoView(
+              id: 1,
+              name: 'Solo',
+              url: 'a',
+              pluginCount: 1,
+              errorKind: 'network',
+            ),
+          ],
+        );
+        await pumpPlugins(tester, fixture);
+        expect(find.text('No network connection'), findsNothing);
+        expect(find.textContaining('Couldn\'t load Solo'), findsOneWidget);
+        await tester.tap(find.text('Retry'));
+        expect(fixture.ops.refreshed, [1]);
+      },
+    );
 
     testWidgets('no band when every repository loaded', (tester) async {
       await pumpPlugins(tester, _full());

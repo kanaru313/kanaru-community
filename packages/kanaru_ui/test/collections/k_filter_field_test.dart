@@ -159,6 +159,54 @@ void main() {
       expect(closed, 0);
     });
 
+    testWidgets('does not take the keyboard unless asked', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          Align(
+            alignment: Alignment.topCenter,
+            child: KFilterField(
+              controller: controller,
+              hint: 'Tìm plugin',
+              persistent: true,
+              onClose: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(
+        tester
+            .widget<EditableText>(find.byType(EditableText))
+            .focusNode
+            .hasFocus,
+        isFalse,
+      );
+    });
+
+    testWidgets('Esc on an empty field reaches the parent', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      var reached = 0;
+      await tester.pumpWidget(
+        host(
+          CallbackShortcuts(
+            bindings: {
+              const SingleActivator(LogicalKeyboardKey.escape): () => reached++,
+            },
+            child: persistent(() {}),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(TextField));
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      expect(reached, 1);
+      // With text, Esc clears and stays inside the field.
+      await tester.enterText(find.byType(TextField), 'ab');
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      expect(controller.text, isEmpty);
+      expect(reached, 1);
+    });
+
     testWidgets('is a filled pill on surfaceContainerHighest', (tester) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(host(persistent(() {})));

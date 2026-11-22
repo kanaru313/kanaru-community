@@ -73,7 +73,7 @@ class InstalledRow extends StatelessWidget {
           : () => actions.onOpenPlugin!(context, row),
       trailing: KIconButton(
         icon: KIcons.delete,
-        color: Theme.of(context).colorScheme.error,
+        emphasis: KIconEmphasis.critical,
         tooltip: l10n.pluginsRemoveTooltip(row.name),
         onPressed: remove == null ? null : () => remove(context, row),
       ),
@@ -104,7 +104,7 @@ class AvailableRow extends StatelessWidget {
       onTap: run,
       trailing: KIconButton(
         icon: KIcons.download,
-        color: Theme.of(context).colorScheme.primary,
+        emphasis: KIconEmphasis.primary,
         tooltip: l10n.pluginsInstallTooltip(row.name),
         onPressed: run,
       ),

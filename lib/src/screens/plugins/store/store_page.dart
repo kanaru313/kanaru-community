@@ -77,8 +77,13 @@ class _StorePageState extends ConsumerState<StorePage> {
       parentPath: SettingsPaths.root,
       actions: [_filterButton(l10n, filter), _moreButton(l10n, actions, repos)],
       pinnedBelowHeader: bare ? null : _searchField(l10n, filter),
+      // The list rows are list items of their own, so the page spaces them.
+      spaced: false,
       children: [
-        if (repos.any((r) => r.errorKind != null)) StoreBanner(repos: repos),
+        if (repos.any((r) => r.errorKind != null)) ...[
+          StoreBanner(repos: repos),
+          const KGap(KSpace.x5),
+        ],
         ..._body(context, view, actions, filter),
       ],
     );
@@ -122,7 +127,6 @@ class _StorePageState extends ConsumerState<StorePage> {
         hint: l10n.pluginsSearchHint,
         closeTooltip: l10n.pluginsSearchClear,
         persistent: true,
-        autofocus: false,
         onClose: () {},
         onChanged: (text) => ref
             .read(storeFilterProvider.notifier)

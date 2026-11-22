@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart' show Size;
+import 'package:material_ui/material_ui.dart' show ThemeData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -245,6 +246,8 @@ Future<SettingsHarness> pumpPlugins(
   Size size = const Size(400, 900),
   double textScale = 1,
   List<Override> overrides = const [],
+  ThemeData? theme,
+  bool reduceMotion = false,
 }) async {
   addTearDown(fixture.close);
   return pumpSettings(
@@ -252,6 +255,8 @@ Future<SettingsHarness> pumpPlugins(
     location: location,
     size: size,
     textScale: textScale,
+    theme: theme,
+    reduceMotion: reduceMotion,
     scaffold: true,
     quietPlugins: false,
     overrides: [...fixture.overrides, ...overrides],
