@@ -65,14 +65,16 @@ void main() {
       },
     );
 
-    testWidgets('out-of-scope items are dimmed with a tooltip and do nothing', (
+    testWidgets('no item is coming soon; Queue is live and opens its page', (
       tester,
     ) async {
       await pumpKanaruApp(tester);
-      // Queue.
-      expect(_byTooltip('Coming soon'), findsOneWidget);
+      // The dimmed "Coming soon" state is covered with a synthetic navigation
+      // in `test/shell`; the shipped navigation has no such item left.
+      expect(_byTooltip('Coming soon'), findsNothing);
       final scheme = Theme.of(tester.element(find.byType(Scaffold).first))
           .colorScheme;
+      expect(_rowColor(tester, 'Queue'), Colors.transparent);
       await tester.tap(find.text('Queue'));
       await tester.pumpAndSettle();
       expect(
@@ -81,10 +83,11 @@ void main() {
             .currentConfiguration
             .uri
             .path,
-        '/',
+        LibraryLocations.savedQueues,
       );
-      expect(_rowColor(tester, 'Home'), scheme.secondaryContainer);
-      expect(_rowColor(tester, 'Queue'), Colors.transparent);
+      expect(_rowColor(tester, 'Queue'), scheme.secondaryContainer);
+      expect(_rowColor(tester, 'Home'), Colors.transparent);
+      await unmountApp(tester);
     });
 
     testWidgets('the item of the open page is tinted', (tester) async {
