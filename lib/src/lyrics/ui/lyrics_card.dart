@@ -10,6 +10,7 @@ import '../domain/lyrics_summary.dart';
 import '../state/lyrics_settings.dart';
 import '../state/playing_lyrics_providers.dart';
 import 'lyrics_labels.dart';
+import 'lyrics_gap_mark.dart';
 import 'lyrics_text_styles.dart';
 
 /// A blank that still takes the height of a line.
@@ -160,33 +161,80 @@ class _SyncedLines extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final index = ref.watch(playingLyricsLineProvider);
     final lines = lyrics.lines;
-    // A gap, or the time before the first line, reads as a note.
-    String textAt(int i) => i < 0 || i >= lines.length
-        ? _blank
-        : (lines[i].text.isEmpty ? '♪' : lines[i].text);
-    // Before the first line the current row is the note, the first line is next.
-    final current = index < 0 ? '♪' : textAt(index);
+    // A gap line is the three-note mark; the slots outside the list are empty.
+    LyricLine? lineAt(int i) => i < 0 || i >= lines.length ? null : lines[i];
     TextStyle style(bool strong) => lyricsLineStyle(
       context,
       size: size,
       current: strong,
       dim: dim,
     ).copyWith(height: 26 / 18);
+    // Before the first line the current row is the mark, the first line next.
+    final current = index < 0
+        ? const LyricLine(Duration.zero, '')
+        : lines[index];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _OneLine(
-          text: index < 0 ? _blank : textAt(index - 1),
+        _CardRow(
+          line: index < 0 ? null : lineAt(index - 1),
+          active: false,
           style: style(false),
           textAlign: textAlign,
         ),
-        _OneLine(text: current, style: style(true), textAlign: textAlign),
-        _OneLine(
-          text: textAt(index + 1),
+        _CardRow(
+          line: current,
+          active: true,
+          style: style(true),
+          textAlign: textAlign,
+        ),
+        _CardRow(
+          line: lineAt(index + 1),
+          active: false,
           style: style(false),
           textAlign: textAlign,
         ),
       ],
+    );
+  }
+}
+
+/// One row of the card window: text, the gap mark for a gap line (pulsing
+/// only while it is the current row), or nothing for a missing line.
+class _CardRow extends StatelessWidget {
+  const _CardRow({
+    required this.line,
+    required this.active,
+    required this.style,
+    required this.textAlign,
+  });
+
+  final LyricLine? line;
+  final bool active;
+  final TextStyle style;
+  final TextAlign textAlign;
+
+  @override
+  Widget build(BuildContext context) {
+    final line = this.line;
+    if (line == null) {
+      return _OneLine(text: _blank, style: style, textAlign: textAlign);
+    }
+    if (!line.isGap) {
+      return _OneLine(text: line.text, style: style, textAlign: textAlign);
+    }
+    return SizedBox(
+      height: (style.fontSize ?? 18) * (style.height ?? 1.4),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: textAlign == TextAlign.center
+            ? Alignment.center
+            : Alignment.centerLeft,
+        child: LyricsGapMark(
+          active: active,
+          color: style.color ?? Colors.white,
+        ),
+      ),
     );
   }
 }

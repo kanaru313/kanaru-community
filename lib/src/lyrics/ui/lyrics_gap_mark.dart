@@ -1,30 +1,28 @@
 import 'package:flutter/widgets.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
-/// One pulse cycle of the dots.
-const Duration _cycle = Duration(milliseconds: 1400);
+/// One pulse cycle of the notes (3.5 slow steps).
+final Duration _cycle = KMotion.slow * 3.5;
 
-/// Diameter of a dot.
-const double _dotSize = 10;
+/// Delay between two notes, as a share of the cycle.
+const double _noteDelay = 0.2 / 1.4;
 
-/// Delay between two dots, as a share of the cycle (0.2 s of 1.4 s).
-const double _dotDelay = 0.2 / 1.4;
-
-/// The three dots of an instrumental gap, in the colour of the surrounding
-/// text at half strength. While [active] (the gap is the current line) and
-/// animations are on they pulse one after another; otherwise they are still.
+/// The three music notes of an instrumental gap, in the colour of the
+/// surrounding text at half strength. While [active] (the gap is the current
+/// line) and animations are on they pulse one after another (opacity and a
+/// slight scale); otherwise they are still.
 /// The ticker exists only while pulsing.
-class LyricsGapDots extends StatefulWidget {
-  const LyricsGapDots({super.key, required this.active, required this.color});
+class LyricsGapMark extends StatefulWidget {
+  const LyricsGapMark({super.key, required this.active, required this.color});
 
   final bool active;
   final Color color;
 
   @override
-  State<LyricsGapDots> createState() => _LyricsGapDotsState();
+  State<LyricsGapMark> createState() => _LyricsGapMarkState();
 }
 
-class _LyricsGapDotsState extends State<LyricsGapDots>
+class _LyricsGapMarkState extends State<LyricsGapMark>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
@@ -50,7 +48,7 @@ class _LyricsGapDotsState extends State<LyricsGapDots>
   }
 
   @override
-  void didUpdateWidget(LyricsGapDots oldWidget) {
+  void didUpdateWidget(LyricsGapMark oldWidget) {
     super.didUpdateWidget(oldWidget);
     _sync();
   }
@@ -61,9 +59,9 @@ class _LyricsGapDotsState extends State<LyricsGapDots>
     super.dispose();
   }
 
-  /// 0 at rest, 1 at the peak of a dot's pulse (a triangle over the cycle).
-  double _peak(int dot) {
-    final t = (_controller.value - dot * _dotDelay) % 1.0;
+  /// 0 at rest, 1 at the peak of a note's pulse (a triangle over the cycle).
+  double _peak(int note) {
+    final t = (_controller.value - note * _noteDelay) % 1.0;
     return 1 - (2 * t - 1).abs();
   }
 
@@ -77,17 +75,15 @@ class _LyricsGapDotsState extends State<LyricsGapDots>
           mainAxisSize: MainAxisSize.min,
           spacing: KSpace.x2,
           children: [
-            for (var dot = 0; dot < 3; dot++)
+            for (var note = 0; note < 3; note++)
               Opacity(
-                opacity: 0.5 + 0.5 * (_pulsing ? _peak(dot) : 0),
+                opacity: 0.5 + 0.5 * (_pulsing ? _peak(note) : 0),
                 child: Transform.scale(
-                  scale: 1 + 0.25 * (_pulsing ? _peak(dot) : 0),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: widget.color,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const SizedBox.square(dimension: _dotSize),
+                  scale: 1 + 0.25 * (_pulsing ? _peak(note) : 0),
+                  child: Icon(
+                    KIcons.songs,
+                    size: KIconSize.sm,
+                    color: widget.color,
                   ),
                 ),
               ),

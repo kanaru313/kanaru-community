@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics.dart';
+import 'package:kanaru/src/lyrics/domain/lyrics_intro_gap.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_gap_mark.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_display_prefs.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_line.dart';
 import 'package:kanaru/src/lyrics/ui/synced_lyrics_view.dart';
@@ -296,7 +298,7 @@ void main() {
     });
   }
 
-  testWidgets('a gap line is a pressable dot row that seeks', (tester) async {
+  testWidgets('a gap line is a pressable note row that seeks', (tester) async {
     host = LyricsUiHost(line: 0);
     final lyrics = Lyrics(
       lines: const [
@@ -314,6 +316,25 @@ void main() {
     expect(host.player.seekTargets, [const Duration(seconds: 4)]);
   });
 
+  testWidgets('tapping the intro gap seeks to zero', (tester) async {
+    host = LyricsUiHost(line: 0);
+    final lyrics = withIntroGap(
+      const Lyrics(
+        lines: [
+          LyricLine(Duration(seconds: 30), 'First'),
+          LyricLine(Duration(seconds: 34), 'Second'),
+        ],
+        synced: true,
+        origin: LyricsOrigin.tag,
+      ),
+    );
+    await host.pump(tester, _view(lyrics));
+    await settleScroll(tester);
+    await tester.tap(find.bySemanticsLabel('Instrumental break'));
+    await tester.pump();
+    expect(host.player.seekTargets, [Duration.zero]);
+  });
+
   testWidgets('a failed seek puts the highlight back on the real line', (
     tester,
   ) async {
@@ -329,7 +350,7 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('with centred alignment the gap dots are centred too', (
+  testWidgets('with centred alignment the gap notes are centred too', (
     tester,
   ) async {
     host = LyricsUiHost(line: 0);
@@ -342,8 +363,9 @@ void main() {
       synced: true,
       origin: LyricsOrigin.lrc,
     );
-    Finder dots() => find.byWidgetPredicate(
-      (w) => w is SizedBox && w.width == 10 && w.height == 10,
+    Finder dots() => find.descendant(
+      of: find.byType(LyricsGapMark),
+      matching: find.byType(Icon),
     );
     await host.pump(tester, _view(lyrics, align: LyricsAlign.center));
     await settleScroll(tester);

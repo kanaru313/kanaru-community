@@ -5,7 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../domain/lyrics.dart';
 import '../domain/lyrics_display_prefs.dart';
-import 'lyrics_gap_dots.dart';
+import 'lyrics_gap_mark.dart';
 import 'lyrics_text_styles.dart';
 
 /// Scale of the current line.
@@ -25,7 +25,7 @@ String lyricsClock(Duration time) {
 /// listens to the one [active] index and rebuilds only when it becomes or
 /// stops being the current line, never on a position tick: a line change
 /// rebuilds two lines. Pressing it seeks to the line. A timed blank line is a
-/// gap (three dots). Its own repaint boundary keeps a scroll past it, or a
+/// gap (three music notes). Its own repaint boundary keeps a scroll past it, or a
 /// neighbour changing style, from laying the text out again.
 class LyricsLine extends StatefulWidget {
   const LyricsLine({
@@ -160,7 +160,7 @@ class _Gap extends StatelessWidget {
       child: ExcludeSemantics(
         child: Align(
           alignment: centered ? Alignment.center : Alignment.centerLeft,
-          child: LyricsGapDots(active: active, color: color),
+          child: LyricsGapMark(active: active, color: color),
         ),
       ),
     );

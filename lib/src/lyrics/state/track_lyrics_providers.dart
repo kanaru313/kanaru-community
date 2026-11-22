@@ -11,6 +11,7 @@ import '../data/local_lyrics_read.dart';
 import '../data/lyrics_facts_query.dart';
 import '../domain/local_lyrics_pick.dart';
 import '../domain/lyrics_facts.dart';
+import '../domain/lyrics_intro_gap.dart';
 import '../domain/lyrics_status.dart';
 import 'lyrics_loader_provider.dart';
 import 'lyrics_settings.dart';
@@ -93,5 +94,5 @@ final trackLyricsProvider = Provider.family<TrackLyrics, TrackId>((ref, id) {
   final unavailable = result.unavailable;
   if (unavailable != null) return LyricsUnavailable(unavailable);
   final shown = pick.shown;
-  return shown == null ? const LyricsNone() : LyricsShown(shown);
+  return shown == null ? const LyricsNone() : LyricsShown(withIntroGap(shown));
 }, isAutoDispose: true);
