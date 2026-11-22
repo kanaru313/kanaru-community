@@ -15,6 +15,12 @@ const double _currentScale = 1.02;
 /// off its own side padding so the text lines up with the area's margin.
 const double lyricsLineInset = KSpace.x3;
 
+/// Opacity of the `onSurface` fill behind the current line.
+const double _fillAlpha = 0.08;
+
+/// Finds the fill of a line (tests read its decoration).
+const Key lyricsLineFillKey = ValueKey('lyrics-line-fill');
+
 /// `m:ss` of [time], for the seek hint.
 String lyricsClock(Duration time) {
   final seconds = time.inSeconds;
@@ -93,6 +99,7 @@ class _LyricsLineState extends State<LyricsLine> {
         : KMotion.slow;
     final centered = widget.align == LyricsAlign.center;
     final isCurrent = _current;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     final style = lyricsLineStyle(
       context,
       size: widget.size,
@@ -109,10 +116,20 @@ class _LyricsLineState extends State<LyricsLine> {
           child: InkWell(
             onTap: widget.onTap,
             borderRadius: KRadius.md,
-            child: Padding(
+            // The padding is on every line, only the fill colour changes, so
+            // a line keeps its height when it becomes current. The ink
+            // (hover, press) paints under this translucent fill.
+            child: AnimatedContainer(
+              key: lyricsLineFillKey,
+              duration: duration,
+              curve: KMotion.emphasized,
               padding: const EdgeInsets.symmetric(
                 horizontal: lyricsLineInset,
                 vertical: KSpace.x2,
+              ),
+              decoration: BoxDecoration(
+                borderRadius: KRadius.md,
+                color: onSurface.withValues(alpha: isCurrent ? _fillAlpha : 0),
               ),
               child: AnimatedScale(
                 scale: isCurrent ? _currentScale : 1,

@@ -225,7 +225,7 @@ Code: `lib/src/lyrics/` (`domain/`, `data/`, `state/`). Only `data/` imports
   after a reopen, since the audio service keeps the engine and the open lyrics screen alive). Edge fade 12 % (`ShaderMask`), no
   scrollbar. One `ref.listen(playingLyricsLineProvider)` moves one shared `ValueNotifier<int>`; each built `LyricsLine` rebuilds only
   when it becomes or stops being the current line, so a line change rebuilds two lines and a position
-  tick none. Lines are all the same size and w700; the current one is `onSurface` and scaled 1.02, the others `onSurface` at the `lyrics.dim`
+  tick none. Lines are all the same size and w700; the current one is `onSurface`, scaled 1.02 and has a rounded `onSurface` 8 % fill (`KRadius.md`, padding on every line so its height never changes; always, every dim level, gaps too; animated with the text colour; hover/press ink shows through), the others `onSurface` at the `lyrics.dim`
   alpha; colour and scale animate `KMotion.slow`. A timed blank line is a gap: three music notes (`LyricsGapMark`, `KIcons.songs` at `KIconSize.sm`, text colour at half strength) that pulse (opacity + slight scale) only while it is
   current and animations are on (the ticker exists only then). Pressing a line (gaps too) seeks through `playerControllerProvider` and
   makes it current at once.
