@@ -67,6 +67,16 @@ const List<FixtureTrack> fixtureTracks = [
     lrc: null,
   ),
   FixtureTrack(
+    title: 'IT Flac Unsynced Space',
+    tag: ExpectedLyrics(
+      synced: false,
+      firstText: 'Unsynced first line',
+      firstTime: Duration.zero,
+      secondText: 'Unsynced second line',
+    ),
+    lrc: null,
+  ),
+  FixtureTrack(
     title: 'IT Ogg Plain Tag',
     tag: ExpectedLyrics(
       synced: false,

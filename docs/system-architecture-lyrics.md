@@ -24,6 +24,9 @@ properties, `ParsingMode::BestAttempt`.
   as the concrete file type (`MpegFile`, `WavFile`, `AiffFile`). The concrete
   ID3v2 tag keeps what the generic tag drops: binary `SYLT` frames and `TXXX`
   user text.
+- FLAC, Ogg Vorbis, Opus: read the same way as `FlacFile`, `VorbisFile`,
+  `OpusFile`, to reach the Vorbis comments the generic tag drops (keys lofty
+  does not map). Their parse failures stay errors (see Error outcomes).
 - Every other format: `probe.read()`, generic tag only.
 
 ### Plain text
@@ -33,11 +36,19 @@ tags of the file (for example an APE tag on an MP3). The first value that is
 not blank and at most 1 MiB (`MAX_LYRICS_TEXT_BYTES`) wins; blank or oversized
 values are skipped and the search goes on.
 
-`TXXX` fallback (ID3v2 only): `TXXX:LYRICS` or `TXXX:UNSYNCEDLYRICS` (description matched ignoring ASCII case, LYRICS first), used
-only when the generic search found no text.
+Fallbacks from the concrete file, used only when the generic search found no
+text (same blank and size rules, the first usable value wins):
 
-Formats read through the generic tag: FLAC, Ogg Vorbis, Opus, MP4/M4A, APE,
-WavPack, and the non-ID3 tags of MP3/WAV/AIFF.
+- ID3v2 (MP3, WAV, AIFF): `TXXX:LYRICS` or `TXXX:UNSYNCEDLYRICS` (description
+  matched ignoring ASCII case, LYRICS first).
+- Vorbis comments (FLAC, Ogg Vorbis, Opus): foobar2000's `UNSYNCED LYRICS`
+  (with a space; key matched ignoring ASCII case). `LYRICS` and
+  `UNSYNCEDLYRICS` are mapped by lofty and found by the generic search. An
+  ID3v2 tag in front of a FLAC stream is part of the generic tags, so its
+  `USLT` wins over `UNSYNCED LYRICS`.
+
+Formats read through the generic tag only: MP4/M4A, APE, WavPack, Speex, and
+the non-ID3 tags of MP3/WAV/AIFF.
 
 ### Synced lyrics (`SYLT`)
 
@@ -62,12 +73,10 @@ WavPack, and the non-ID3 tags of MP3/WAV/AIFF.
 | MP3/WAV/AIFF whose concrete read fails (broken ID3 tag or file, including an empty or truncated file), not transient | `Ok(None)`: the whole file has no lyrics, even if plain text exists elsewhere |
 | Concrete read fails with a transient I/O error, or rewind fails | `Err(MediaError::Io)` |
 | Sniffing the content fails | `Err`, via `errors::from_sniff_error` |
-| Other formats: parse fails (unknown format, corrupt, empty or truncated: `Io` `UnexpectedEof`, I/O) | `Err`, via `errors::from_parse_error` |
+| FLAC, Ogg Vorbis, Opus, other formats: parse fails (unknown format, corrupt, empty or truncated: `Io` `UnexpectedEof`, I/O) | `Err`, via `errors::from_parse_error` |
 
 ### Known gaps
 
-- foobar2000 Vorbis comment `UNSYNCED LYRICS` is not mapped by lofty, so it is
-  not found.
 - `SYLT` is read only from ID3v2 in MP3, WAV and AIFF; none in FLAC, MP4 or APE.
 - A broken ID3 tag drops plain text stored elsewhere in the same file.
 - A `SYLT` frame body over 4 MiB (`MAX_SYLT_FRAME_BYTES`) is skipped; below that lofty parses the whole frame before the line caps apply.

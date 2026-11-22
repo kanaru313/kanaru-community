@@ -79,6 +79,12 @@ tone "$OUT/ogg_plain.ogg" -c:a libvorbis -q:a -1 \
   -metadata title="IT Ogg Plain Tag" -metadata artist="Kanaru Fixture" \
   -metadata LYRICS=$'Ogg first line\nOgg second line'
 
+# FLAC with foobar2000's `UNSYNCED LYRICS` comment (key with a space) and no
+# `LYRICS` key (plain, tag).
+tone "$OUT/flac_unsynced_space.flac" -c:a flac -compression_level 8 \
+  -metadata title="IT Flac Unsynced Space" -metadata artist="Kanaru Fixture" \
+  -metadata "UNSYNCED LYRICS"=$'Unsynced first line\nUnsynced second line'
+
 # Tracks without tag lyrics, with `.lrc` sidecars.
 mp3 "$OUT/lrc_utf8.mp3"
 id3 "$OUT/lrc_utf8.mp3" "IT Lrc Utf8"

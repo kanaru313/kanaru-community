@@ -8,10 +8,13 @@ use std::io::{BufReader, Seek};
 use lofty::config::{ParseOptions, ParsingMode};
 use lofty::error::FileParseError;
 use lofty::file::{AudioFile, FileType, TaggedFile, TaggedFileExt};
+use lofty::flac::FlacFile;
 use lofty::id3::v2::{Frame, Id3v2Tag};
 use lofty::iff::aiff::AiffFile;
 use lofty::iff::wav::WavFile;
 use lofty::mpeg::MpegFile;
+use lofty::ogg::tag::VorbisComments;
+use lofty::ogg::{OpusFile, VorbisFile};
 use lofty::probe::Probe;
 use lofty::tag::ItemKey;
 
@@ -52,8 +55,9 @@ pub struct SyncedLine {
 /// - a transient I/O error anywhere, a failure to sniff the content, or a
 ///   failed rewind before the concrete read: `Err` (mapped by `tags::errors`),
 ///   so the caller may retry when it is transient;
-/// - any other format whose parse fails (unknown format, corrupt, empty or
-///   truncated, where lofty reports `UnexpectedEof`): `Err`.
+/// - FLAC, Ogg Vorbis, Opus and every other format whose parse fails
+///   (unknown format, corrupt, empty or truncated, where lofty reports
+///   `UnexpectedEof`): `Err`.
 pub fn read_lyrics(
     file: File,
     ext_hint: Option<&str>,
@@ -74,24 +78,37 @@ pub fn read_lyrics(
         .guess_file_type()
         .map_err(|e| from_sniff_error(&e))?;
 
-    // Formats whose ID3v2 tag may hold SYLT are read as their concrete type,
-    // which keeps the binary frames the generic tag drops.
+    // Formats with data the generic tag drops are read as their concrete
+    // type: binary `SYLT` and `TXXX` frames of ID3v2 (MP3, WAV, AIFF), the
+    // unmapped `UNSYNCED LYRICS` key of Vorbis comments (FLAC, Ogg, Opus).
+    // A broken ID3 tag means no lyrics; a failed Vorbis parse is an error.
+    let id3 = OnFailure::NoLyrics;
+    let vorbis = OnFailure::Error;
     let concrete_read = match probe.file_type() {
-        Some(FileType::Mpeg) => concrete::<MpegFile>(probe, options, |f| f.id3v2()),
-        Some(FileType::Wav) => concrete::<WavFile>(probe, options, |f| f.id3v2()),
-        Some(FileType::Aiff) => concrete::<AiffFile>(probe, options, |f| f.id3v2()),
+        Some(FileType::Mpeg) => concrete::<MpegFile>(probe, options, id3, |f| of_id3v2(f.id3v2())),
+        Some(FileType::Wav) => concrete::<WavFile>(probe, options, id3, |f| of_id3v2(f.id3v2())),
+        Some(FileType::Aiff) => concrete::<AiffFile>(probe, options, id3, |f| of_id3v2(f.id3v2())),
+        Some(FileType::Flac) => {
+            concrete::<FlacFile>(probe, options, vorbis, |f| of_vorbis(f.vorbis_comments()))
+        }
+        Some(FileType::Vorbis) => concrete::<VorbisFile>(probe, options, vorbis, |f| {
+            of_vorbis(Some(f.vorbis_comments()))
+        }),
+        Some(FileType::Opus) => concrete::<OpusFile>(probe, options, vorbis, |f| {
+            of_vorbis(Some(f.vorbis_comments()))
+        }),
         _ => {
             let tagged = probe.read().map_err(|e| from_parse_error(&e))?;
-            Ok((tagged, Id3v2Lyrics::default()))
+            Ok((tagged, ConcreteLyrics::default()))
         }
     };
-    let (tagged, id3v2) = match concrete_read {
+    let (tagged, concrete) = match concrete_read {
         Ok(read) => read,
         Err(Concrete::Fatal(error)) => return Err(error),
         Err(Concrete::Unreadable) => return Ok(None),
     };
-    let text = lyrics_text(&tagged).or(id3v2.user_text);
-    let synced = id3v2.synced;
+    let text = lyrics_text(&tagged).or(concrete.fallback_text);
+    let synced = concrete.synced;
     if text.is_none() && synced.is_empty() {
         return Ok(None);
     }
@@ -106,46 +123,70 @@ enum Concrete {
     Fatal(MediaError),
 }
 
-/// What only the concrete ID3v2 tag holds: the generic tag drops binary
-/// `SYLT` frames and user text frames with lyrics descriptions.
-#[derive(Default)]
-struct Id3v2Lyrics {
-    synced: Vec<SyncedLine>,
-    /// `TXXX:LYRICS` or `TXXX:UNSYNCEDLYRICS`, as some taggers write.
-    user_text: Option<String>,
+/// What a failed concrete read means for the file.
+#[derive(Clone, Copy)]
+enum OnFailure {
+    /// The whole file has no lyrics (ID3 formats: a broken tag drops all).
+    NoLyrics,
+    /// The read is an error, like any generic read (Vorbis formats).
+    Error,
 }
 
-impl Id3v2Lyrics {
-    fn of(tag: &Id3v2Tag) -> Self {
-        // lofty's `get_user_text` matches the description exactly; taggers
-        // write `Lyrics` and `unsyncedlyrics` too, so match ignoring ASCII case.
-        let user_text = ["LYRICS", "UNSYNCEDLYRICS"]
-            .into_iter()
-            .find_map(|wanted| {
-                tag.into_iter()
-                    .filter_map(|frame| match frame {
-                        Frame::UserText(text) if text.description.eq_ignore_ascii_case(wanted) => {
-                            Some(text.content.as_ref())
-                        }
-                        _ => None,
-                    })
-                    .find(|text| usable_text(text))
-            })
-            .map(str::to_owned);
-        Self {
-            synced: synced_lines(tag),
-            user_text,
-        }
+/// What only the concrete file holds: the generic tag drops binary `SYLT`
+/// frames, user text frames with lyrics descriptions and unmapped Vorbis keys.
+#[derive(Default)]
+struct ConcreteLyrics {
+    synced: Vec<SyncedLine>,
+    /// Plain text used only when the generic tags give none: ID3
+    /// `TXXX:LYRICS` / `TXXX:UNSYNCEDLYRICS`, Vorbis `UNSYNCED LYRICS`.
+    fallback_text: Option<String>,
+}
+
+fn of_id3v2(tag: Option<&Id3v2Tag>) -> ConcreteLyrics {
+    let Some(tag) = tag else {
+        return ConcreteLyrics::default();
+    };
+    // lofty's `get_user_text` matches the description exactly; taggers
+    // write `Lyrics` and `unsyncedlyrics` too, so match ignoring ASCII case.
+    let fallback_text = ["LYRICS", "UNSYNCEDLYRICS"]
+        .into_iter()
+        .find_map(|wanted| {
+            tag.into_iter()
+                .filter_map(|frame| match frame {
+                    Frame::UserText(text) if text.description.eq_ignore_ascii_case(wanted) => {
+                        Some(text.content.as_ref())
+                    }
+                    _ => None,
+                })
+                .find(|text| usable_text(text))
+        })
+        .map(str::to_owned);
+    ConcreteLyrics {
+        synced: synced_lines(tag),
+        fallback_text,
     }
 }
 
-/// Reads the probed file as `F` and takes what its ID3v2 tag holds before
-/// turning it into a generic [`TaggedFile`] (which consumes the file).
+/// foobar2000 writes `UNSYNCED LYRICS` (with a space), which lofty does not
+/// map; the key is matched ignoring ASCII case.
+fn of_vorbis(comments: Option<&VorbisComments>) -> ConcreteLyrics {
+    let fallback_text = comments
+        .and_then(|c| c.get_all("UNSYNCED LYRICS").find(|text| usable_text(text)))
+        .map(str::to_owned);
+    ConcreteLyrics {
+        synced: Vec::new(),
+        fallback_text,
+    }
+}
+
+/// Reads the probed file as `F` and takes what only the concrete type holds
+/// before turning it into a generic [`TaggedFile`] (which consumes the file).
 fn concrete<F>(
     probe: Probe<BufReader<File>>,
     options: ParseOptions,
-    id3v2: impl Fn(&F) -> Option<&Id3v2Tag>,
-) -> Result<(TaggedFile, Id3v2Lyrics), Concrete>
+    on_failure: OnFailure,
+    extract: impl Fn(&F) -> ConcreteLyrics,
+) -> Result<(TaggedFile, ConcreteLyrics), Concrete>
 where
     F: AudioFile + Into<TaggedFile>,
 {
@@ -153,16 +194,16 @@ where
     reader
         .rewind()
         .map_err(|e| Concrete::Fatal(from_sniff_error(&e)))?;
-    let file = F::read_from(&mut reader, options).map_err(|e| concrete_failure(&e))?;
-    let lyrics = id3v2(&file).map(Id3v2Lyrics::of).unwrap_or_default();
+    let file = F::read_from(&mut reader, options).map_err(|e| concrete_failure(&e, on_failure))?;
+    let lyrics = extract(&file);
     Ok((file.into(), lyrics))
 }
 
-/// Splits a failed concrete read: a transient error is worth retrying, any
-/// other failure means the file has no usable lyrics.
-fn concrete_failure(error: &FileParseError) -> Concrete {
+/// Splits a failed concrete read: a transient error is worth retrying; any
+/// other failure follows `on_failure`.
+fn concrete_failure(error: &FileParseError, on_failure: OnFailure) -> Concrete {
     let mapped = from_parse_error(error);
-    if mapped.is_transient() {
+    if mapped.is_transient() || matches!(on_failure, OnFailure::Error) {
         Concrete::Fatal(mapped)
     } else {
         Concrete::Unreadable
@@ -175,8 +216,7 @@ fn usable_text(text: &str) -> bool {
 }
 
 /// The first usable lyrics text, looking at `Lyrics` then `UnsyncLyrics`
-/// in the primary tag first, then in the other tags. Keys lofty does not
-/// map (foobar2000's Vorbis `UNSYNCED LYRICS`) never reach the generic tag.
+/// in the primary tag first, then in the other tags.
 fn lyrics_text(tagged: &TaggedFile) -> Option<String> {
     let primary = tagged.primary_tag();
     let others = tagged
@@ -206,7 +246,7 @@ mod tests {
     fn a_transient_io_error_is_fatal() {
         let e: FileParseError = std::io::Error::from(ErrorKind::TimedOut).into();
         assert!(matches!(
-            concrete_failure(&e),
+            concrete_failure(&e, OnFailure::NoLyrics),
             Concrete::Fatal(MediaError::Io(ErrorKind::TimedOut))
         ));
     }
@@ -214,12 +254,27 @@ mod tests {
     #[test]
     fn a_non_transient_io_error_means_no_lyrics() {
         let e: FileParseError = std::io::Error::from(ErrorKind::UnexpectedEof).into();
-        assert!(matches!(concrete_failure(&e), Concrete::Unreadable));
+        assert!(matches!(
+            concrete_failure(&e, OnFailure::NoLyrics),
+            Concrete::Unreadable
+        ));
     }
 
     #[test]
     fn a_parse_failure_means_no_lyrics() {
         let e: FileParseError = SizeMismatchError.into();
-        assert!(matches!(concrete_failure(&e), Concrete::Unreadable));
+        assert!(matches!(
+            concrete_failure(&e, OnFailure::NoLyrics),
+            Concrete::Unreadable
+        ));
+    }
+
+    #[test]
+    fn a_parse_failure_is_an_error_when_the_format_asks_for_it() {
+        let e: FileParseError = SizeMismatchError.into();
+        assert!(matches!(
+            concrete_failure(&e, OnFailure::Error),
+            Concrete::Fatal(_)
+        ));
     }
 }

@@ -9,10 +9,12 @@ use std::fs::File;
 use kanaru_media::tags::lyrics_reader::{read_lyrics, SyncedLine};
 use kanaru_media::MediaError;
 use lofty::config::WriteOptions;
-use lofty::id3::v2::{ExtendedTextFrame, Frame, SyncTextContentType, TimestampFormat};
+use lofty::id3::v2::{ExtendedTextFrame, Frame, Id3v2Tag, SyncTextContentType, TimestampFormat};
 use lofty::tag::{ItemKey, Tag, TagExt, TagType};
 use lofty::TextEncoding;
-use lyrics_fixtures::{read, sample, sylt, sylt_with, uslt, write_generic, write_id3v2};
+use lyrics_fixtures::{
+    read, sample, sylt, sylt_with, uslt, write_generic, write_id3v2, write_vorbis_key,
+};
 use tags_fixtures::TempDir;
 
 fn line(time_ms: u32, text: &str) -> SyncedLine {
@@ -349,4 +351,63 @@ fn an_mp3_cut_inside_its_id3_tag_means_no_lyrics() {
     let bytes = std::fs::read(&path).unwrap();
     let cut = dir.write("cut.mp3", &bytes[..30]);
     assert_eq!(read(&cut), Ok(None));
+}
+
+const FOOBAR_KEY: &str = "UNSYNCED LYRICS";
+
+#[test]
+fn reads_foobar_unsynced_lyrics_from_flac_ogg_and_opus() {
+    let dir = TempDir::new();
+    for name in ["sample.flac", "sample.ogg", "sample.opus"] {
+        for key in [FOOBAR_KEY, "unsynced lyrics"] {
+            let path = sample(&dir, name);
+            write_vorbis_key(&path, key, "Foobar words");
+            let lyrics = read(&path)
+                .unwrap()
+                .unwrap_or_else(|| panic!("{name} {key}: none"));
+            assert_eq!(lyrics.text.as_deref(), Some("Foobar words"), "{name} {key}");
+            assert!(lyrics.synced.is_empty(), "{name} {key}");
+        }
+    }
+}
+
+#[test]
+fn generic_lyrics_win_over_unsynced_lyrics_with_a_space() {
+    let dir = TempDir::new();
+    for name in ["sample.flac", "sample.ogg", "sample.opus"] {
+        let path = sample(&dir, name);
+        write_vorbis_key(&path, FOOBAR_KEY, "Second");
+        write_vorbis_key(&path, "LYRICS", "First");
+        let lyrics = read(&path).unwrap().expect("lyrics");
+        assert_eq!(lyrics.text.as_deref(), Some("First"), "{name}");
+    }
+}
+
+#[test]
+fn an_id3v2_uslt_in_flac_wins_over_unsynced_lyrics_with_a_space() {
+    let dir = TempDir::new();
+    let path = sample(&dir, "sample.flac");
+    write_vorbis_key(&path, FOOBAR_KEY, "From Vorbis");
+    // lofty only reads an ID3v2 tag in front of a FLAC stream: prepend one.
+    let mut id3 = Id3v2Tag::new();
+    id3.insert(uslt("From USLT"));
+    let mut bytes = Vec::new();
+    id3.dump_to(&mut bytes, WriteOptions::default())
+        .expect("encode ID3v2");
+    bytes.extend(std::fs::read(&path).unwrap());
+    let path = dir.write("with_id3.flac", &bytes);
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("From USLT"));
+}
+
+#[test]
+fn blank_or_oversized_unsynced_lyrics_count_as_none() {
+    let dir = TempDir::new();
+    for name in ["sample.flac", "sample.ogg", "sample.opus"] {
+        for text in ["  \n ".to_owned(), "a".repeat(1024 * 1024 + 1)] {
+            let path = sample(&dir, name);
+            write_vorbis_key(&path, FOOBAR_KEY, &text);
+            assert_eq!(read(&path), Ok(None), "{name}");
+        }
+    }
 }

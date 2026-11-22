@@ -10,11 +10,14 @@ use std::path::{Path, PathBuf};
 use kanaru_media::tags::lyrics_reader::{read_lyrics, EmbeddedLyrics};
 use kanaru_media::MediaError;
 use lofty::config::WriteOptions;
-use lofty::file::TaggedFileExt;
+use lofty::file::{AudioFile, TaggedFileExt};
+use lofty::flac::FlacFile;
 use lofty::id3::v2::{
     BinaryFrame, Frame, FrameId, Id3v2Tag, SyncTextContentType, SynchronizedTextFrame,
     TimestampFormat, UnsynchronizedTextFrame,
 };
+use lofty::ogg::tag::VorbisComments;
+use lofty::ogg::{OpusFile, VorbisFile};
 use lofty::tag::{ItemKey, Tag, TagExt};
 use lofty::TextEncoding;
 
@@ -135,4 +138,37 @@ pub fn write_id3v2(path: &Path, frames: Vec<Frame<'static>>) {
     }
     tag.save_to_path(path, WriteOptions::default())
         .expect("save ID3v2");
+}
+
+/// Writes a raw Vorbis comment (`key` kept as given, no mapping to an
+/// `ItemKey`) into a FLAC, Ogg Vorbis or Opus file, replacing earlier ones of
+/// that key.
+pub fn write_vorbis_key(path: &Path, key: &str, text: &str) {
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .expect("extension");
+    let mut file = File::open(path).expect("open fixture");
+    let options = lofty::config::ParseOptions::new();
+    macro_rules! write_key {
+        ($file_type:ty, |$f:ident| $comments:expr) => {{
+            let mut $f = <$file_type>::read_from(&mut file, options).expect("read fixture");
+            let comments: &mut VorbisComments = $comments;
+            comments.insert(key.to_owned(), text.to_owned());
+            comments
+                .save_to_path(path, WriteOptions::default())
+                .expect("save Vorbis comments");
+        }};
+    }
+    match ext {
+        "flac" => write_key!(FlacFile, |f| {
+            if f.vorbis_comments().is_none() {
+                f.set_vorbis_comments(VorbisComments::default());
+            }
+            f.vorbis_comments_mut().expect("just set")
+        }),
+        "ogg" => write_key!(VorbisFile, |f| f.vorbis_comments_mut()),
+        "opus" => write_key!(OpusFile, |f| f.vorbis_comments_mut()),
+        other => panic!("no Vorbis comments in .{other}"),
+    }
 }
