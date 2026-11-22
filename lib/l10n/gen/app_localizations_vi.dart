@@ -4099,7 +4099,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pluginsMenuLogsMobile => 'Chia sẻ nhật ký plugin…';
 
   @override
-  String get pluginsSearchHint => 'Tìm theo tên, tác giả, repository, host';
+  String get pluginsSearchHint => 'Tìm tên, tác giả, repository, host, #loại';
 
   @override
   String get pluginsSearchClear => 'Xoá';
@@ -4136,6 +4136,25 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pluginsReview => 'Xem';
+
+  @override
+  String pluginsUpdateTooltip(String name) {
+    return 'Cập nhật $name';
+  }
+
+  @override
+  String pluginsReviewTooltip(String name) {
+    return 'Xem bản cập nhật $name';
+  }
+
+  @override
+  String get pluginsPageSettingsTitle => 'Cài đặt của plugin';
+
+  @override
+  String get pluginsPageSettingsSoon => 'Cấu hình của plugin';
+
+  @override
+  String get pluginsPageRefreshFailed => 'Không làm mới được danh sách';
 
   @override
   String pluginsInstallTooltip(String name) {

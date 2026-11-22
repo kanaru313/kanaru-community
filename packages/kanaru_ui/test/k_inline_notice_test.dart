@@ -262,4 +262,49 @@ void main() {
     await tester.tap(find.byType(TextButton), warnIfMissed: false);
     expect(taps, 0);
   });
+
+  testWidgets('prominentAction draws a filled button that still presses', (
+    tester,
+  ) async {
+    var pressed = 0;
+    await tester.pumpWidget(
+      host(
+        KInlineNotice(
+          icon: KIcons.download,
+          message: 'Bản mới',
+          tone: KInlineNoticeTone.primaryFilled,
+          actionLabel: 'Cập nhật',
+          onAction: () => pressed++,
+          prominentAction: true,
+        ),
+      ),
+    );
+    expect(find.byType(FilledButton), findsOneWidget);
+    expect(find.byType(TextButton), findsNothing);
+    await tester.tap(find.bySemanticsLabel('Cập nhật'));
+    expect(pressed, 1);
+  });
+
+  testWidgets('a prominent action that is busy cannot be pressed', (
+    tester,
+  ) async {
+    var pressed = 0;
+    await tester.pumpWidget(
+      host(
+        KInlineNotice(
+          icon: KIcons.download,
+          message: 'Bản mới',
+          actionLabel: 'Cập nhật',
+          onAction: () => pressed++,
+          actionBusy: true,
+          prominentAction: true,
+        ),
+      ),
+    );
+    expect(
+      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      isNull,
+    );
+    expect(pressed, 0);
+  });
 }

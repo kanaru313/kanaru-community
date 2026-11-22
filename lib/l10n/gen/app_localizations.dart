@@ -6615,7 +6615,7 @@ abstract class AppLocalizations {
   /// No description provided for @pluginsSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search by name, author, repository, host'**
+  /// **'Search name, author, repository, host, #type'**
   String get pluginsSearchHint;
 
   /// No description provided for @pluginsSearchClear.
@@ -6671,6 +6671,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Review'**
   String get pluginsReview;
+
+  /// No description provided for @pluginsUpdateTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Update {name}'**
+  String pluginsUpdateTooltip(String name);
+
+  /// No description provided for @pluginsReviewTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Review the update of {name}'**
+  String pluginsReviewTooltip(String name);
+
+  /// No description provided for @pluginsPageSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin’s settings'**
+  String get pluginsPageSettingsTitle;
+
+  /// No description provided for @pluginsPageSettingsSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin configuration'**
+  String get pluginsPageSettingsSoon;
+
+  /// No description provided for @pluginsPageRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not refresh the list'**
+  String get pluginsPageRefreshFailed;
 
   /// No description provided for @pluginsInstallTooltip.
   ///

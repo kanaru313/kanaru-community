@@ -156,4 +156,64 @@ void main() {
     expect(facets.languages, ['eng', 'vie']);
     expect(facets.authors, ['ann']);
   });
+
+  test('#tags filter by kind, independent of the Lọc kinds', () async {
+    final c = _container(
+      StoreFixture(
+        items: [
+          itemOf('a', StoreItemState.installed, name: 'Alpha'),
+          itemOf(
+            'b',
+            StoreItemState.notInstalled,
+            name: 'Beta',
+            kind: PluginKind.streaming,
+          ),
+          itemOf(
+            'c',
+            StoreItemState.notInstalled,
+            name: 'Gamma',
+            kind: PluginKind.aiTranslate,
+          ),
+        ],
+        live: [liveRow('id-a', name: 'Alpha')],
+        repos: const [RepoView(id: 1, name: 'Kho', url: 'u', pluginCount: 3)],
+      ),
+    );
+    final notifier = c.read(storeFilterProvider.notifier);
+    notifier.set(const StoreFilter(query: '#lyric'));
+    var view = await _view(c);
+    expect(_names(view.installed), ['Alpha']);
+    expect(_names(view.notInstalled), isEmpty);
+
+    notifier.set(const StoreFilter(query: '#music #translate'));
+    view = await _view(c);
+    expect(_names(view.notInstalled), ['Beta', 'Gamma']);
+
+    // The tag is ANDed with Lọc, and the partial tag filters nothing.
+    notifier.set(
+      const StoreFilter(query: '#music #translate', kinds: {PluginKind.lyrics}),
+    );
+    expect((await _view(c)).noMatch, isTrue);
+    notifier.set(const StoreFilter(query: '#ly'));
+    expect((await _view(c)).noMatch, isFalse);
+    notifier.set(const StoreFilter(query: '#music gam'));
+    expect((await _view(c)).noMatch, isTrue);
+  });
+
+  test('#tags apply to a plugin installed from a file', () async {
+    final c = _container(
+      StoreFixture(
+        items: [itemOf('a', StoreItemState.installed, name: 'Alpha')],
+        live: [
+          liveRow('id-a', name: 'Alpha'),
+          liveRow('f1', name: 'Zeta file', kind: 'translate', origin: 'file'),
+        ],
+        repos: const [RepoView(id: 1, name: 'Kho', url: 'u', pluginCount: 1)],
+      ),
+    );
+    c
+        .read(storeFilterProvider.notifier)
+        .set(const StoreFilter(query: '#translate'));
+    expect(_names((await _view(c)).installed), ['Zeta file']);
+  });
 }

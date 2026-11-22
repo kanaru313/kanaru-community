@@ -4518,7 +4518,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginsMenuLogsMobile => 'Share plugin logs…';
 
   @override
-  String get pluginsSearchHint => 'Search by name, author, repository, host';
+  String get pluginsSearchHint =>
+      'Search name, author, repository, host, #type';
 
   @override
   String get pluginsSearchClear => 'Clear';
@@ -4555,6 +4556,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pluginsReview => 'Review';
+
+  @override
+  String pluginsUpdateTooltip(String name) {
+    return 'Update $name';
+  }
+
+  @override
+  String pluginsReviewTooltip(String name) {
+    return 'Review the update of $name';
+  }
+
+  @override
+  String get pluginsPageSettingsTitle => 'The plugin’s settings';
+
+  @override
+  String get pluginsPageSettingsSoon => 'Plugin configuration';
+
+  @override
+  String get pluginsPageRefreshFailed => 'Could not refresh the list';
 
   @override
   String pluginsInstallTooltip(String name) {

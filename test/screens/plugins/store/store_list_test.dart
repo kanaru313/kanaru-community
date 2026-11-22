@@ -5,8 +5,7 @@ import 'package:kanaru/src/plugins/state/store_view_models.dart';
 import 'package:kanaru/src/screens/plugins/store/store_card_slice.dart';
 import 'package:kanaru/src/screens/plugins/store/store_row.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
-import 'package:material_ui/material_ui.dart'
-    show FilledButton, ListView, ThemeData;
+import 'package:material_ui/material_ui.dart' show ListView, ThemeData;
 
 import '../../../support/icon_button_finders.dart';
 import '../support/plugin_fixtures.dart';
@@ -110,7 +109,7 @@ void main() {
       expect(find.text('kanaru313'), findsNWidgets(2));
       expect(find.text('cat'), findsOneWidget);
       // Exactly one control per row: Update, trash, Install.
-      expect(find.widgetWithText(FilledButton, 'Update'), findsOneWidget);
+      expect(byIconButton('Update Upd'), findsOneWidget);
       expect(byIconButton('Remove Have'), findsOneWidget);
       expect(byIconButton('Install Fresh'), findsOneWidget);
       expect(byIconButton('Remove Upd'), findsNothing);

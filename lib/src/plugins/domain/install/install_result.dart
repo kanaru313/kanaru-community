@@ -46,6 +46,10 @@ enum InstallFailure {
   /// The package has script or catalog problems and cannot be installed.
   hasProblems,
 
+  /// The package differs from the catalog entry that offered it: refreshing
+  /// the repository list can fix it.
+  catalogMismatch,
+
   /// A silent path (update all, restore, repair) found new hosts: the user
   /// has to review the update.
   needsReview,
@@ -112,4 +116,14 @@ final class InstallNeedsReview extends InstallResult {
   const InstallNeedsReview(this.held);
 
   final HeldPackage held;
+}
+
+/// The refusal for a package with [review] problems: another origin, a
+/// package that differs from the list, or a package defect.
+InstallFailure failureOfProblems(ProblemsReview review) {
+  if (review.hasOtherOrigin) return InstallFailure.otherOrigin;
+  if (review.problems.any((p) => p is CatalogDiffers)) {
+    return InstallFailure.catalogMismatch;
+  }
+  return InstallFailure.hasProblems;
 }

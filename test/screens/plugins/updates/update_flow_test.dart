@@ -8,8 +8,6 @@ import 'package:kanaru/src/plugins/state/install_ops.dart';
 import 'package:kanaru/src/plugins/state/store_items_provider.dart';
 import 'package:kanaru/src/plugins/state/updates_provider.dart';
 
-import 'package:kanaru/src/screens/plugins/store/store_rows.dart';
-
 import '../support/install_fixtures.dart';
 import '../support/plugin_fixtures.dart';
 
@@ -26,11 +24,8 @@ StoreFixture _store({List<String> reviewIds = const []}) => StoreFixture(
   reviewIds: reviewIds,
 );
 
-/// The button [label] inside the row of the plugin [name].
-Finder _buttonOf(String name, String label) => find.descendant(
-  of: find.ancestor(of: find.text(name), matching: find.byType(UpdateRow)),
-  matching: find.text(label),
-);
+/// The icon button that updates the plugin [name], found by its label.
+Finder _updateOf(String name) => find.bySemanticsLabel('Update $name');
 
 void main() {
   for (final (name, size) in [
@@ -48,7 +43,7 @@ void main() {
           size: size,
           overrides: [installOpsProvider.overrideWithValue(ops)],
         );
-        await tester.tap(_buttonOf('Updatable', 'Update'));
+        await tester.tap(_updateOf('Updatable'));
         await tester.pumpAndSettle();
         expect(ops.updateCalls, ['id-upd']);
         expect(find.text('Updated Updatable to version 4'), findsOneWidget);
@@ -70,7 +65,7 @@ void main() {
           size: size,
           overrides: [installOpsProvider.overrideWithValue(ops)],
         );
-        await tester.tap(_buttonOf('Updatable', 'Update'));
+        await tester.tap(_updateOf('Updatable'));
         await tester.pumpAndSettle();
         // The row line and the SnackBar say the same sentence.
         expect(find.text('Couldn’t update: network error'), findsNWidgets(2));
@@ -91,7 +86,7 @@ void main() {
           size: size,
           overrides: [installOpsProvider.overrideWithValue(ops)],
         );
-        await tester.tap(_buttonOf('Updatable', 'Update'));
+        await tester.tap(_updateOf('Updatable'));
         await tester.pumpAndSettle();
         expect(
           find.text('Couldn’t update: it could not be saved on this device'),
@@ -99,7 +94,7 @@ void main() {
         );
         fail = false;
         await tester.pump(const Duration(seconds: 5));
-        await tester.tap(_buttonOf('Updatable', 'Update'));
+        await tester.tap(_updateOf('Updatable'));
         await tester.pumpAndSettle();
         expect(find.textContaining('Couldn’t update'), findsNothing);
         expect(find.text('Updated Updatable to version 5'), findsOneWidget);
@@ -117,7 +112,7 @@ void main() {
           size: size,
           overrides: [installOpsProvider.overrideWithValue(ops)],
         );
-        await tester.tap(_buttonOf('Updatable', 'Update'));
+        await tester.tap(_updateOf('Updatable'));
         await tester.pumpAndSettle();
         expect(
           find.text(
@@ -139,7 +134,9 @@ void main() {
           size: size,
           overrides: [installOpsProvider.overrideWithValue(ops)],
         );
-        await tester.tap(find.text('Review'));
+        await tester.tap(
+          find.bySemanticsLabel('Review the update of Updatable'),
+        );
         await tester.pumpAndSettle();
         expect(ops.prepared, ['update:id-upd']);
         expect(find.text('Update Demo'), findsOneWidget);

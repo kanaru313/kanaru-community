@@ -6,8 +6,8 @@ import 'page/plugin_page.dart';
 import 'repos/repositories_page.dart';
 import 'store/store_page.dart';
 
-/// The `plugins` sub-tree of the Settings branch: the store (`?kind=` presets
-/// its Loại filter), its repositories and the page of one installed plugin.
+/// The `plugins` sub-tree of the Settings branch: the store (`?kind=` fills
+/// its search with the kind's `#tag`), its repositories and the page of one installed plugin.
 GoRoute buildPluginsRoute() => GoRoute(
   path: 'plugins',
   pageBuilder: (_, state) =>

@@ -21,14 +21,6 @@ enum StoreKindGroup {
     }
     return null;
   }
-
-  /// The group a `?kind=` query value names.
-  static StoreKindGroup? fromQuery(String? value) => switch (value) {
-    'lyrics' => lyrics,
-    'translate' => translate,
-    'streaming' => streaming,
-    _ => null,
-  };
 }
 
 String kindGroupLabel(AppLocalizations l10n, StoreKindGroup group) =>

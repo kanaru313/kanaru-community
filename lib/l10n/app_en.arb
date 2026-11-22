@@ -3104,7 +3104,7 @@
   "pluginsMenuRefreshAll": "Refresh all",
   "pluginsMenuLogsDesktop": "Open log folder",
   "pluginsMenuLogsMobile": "Share plugin logs…",
-  "pluginsSearchHint": "Search by name, author, repository, host",
+  "pluginsSearchHint": "Search name, author, repository, host, #type",
   "pluginsSearchClear": "Clear",
   "pluginsSectionUpdates": "Updates ({count})",
   "@pluginsSectionUpdates": {
@@ -3142,6 +3142,25 @@
   },
   "pluginsUpdate": "Update",
   "pluginsReview": "Review",
+  "pluginsUpdateTooltip": "Update {name}",
+  "@pluginsUpdateTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReviewTooltip": "Review the update of {name}",
+  "@pluginsReviewTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageSettingsTitle": "The plugin’s settings",
+  "pluginsPageSettingsSoon": "Plugin configuration",
+  "pluginsPageRefreshFailed": "Could not refresh the list",
   "pluginsInstallTooltip": "Install {name}",
   "@pluginsInstallTooltip": {
     "placeholders": {

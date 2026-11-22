@@ -40,12 +40,9 @@ class StoreRowFrame extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const KGap(KSpace.x1),
-          Wrap(
-            spacing: KSpace.x2,
-            runSpacing: KSpace.x1,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              if (kind != null) KChip.tag(label: Text(kind)),
+          KTagRow(
+            fixed: [if (kind != null) KChip.tag(label: Text(kind))],
+            shrinking: [
               KChip.tag(
                 label: Text(
                   row.author.isEmpty ? l10n.pluginsAuthorUnknown : row.author,

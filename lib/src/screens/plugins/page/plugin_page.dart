@@ -34,7 +34,8 @@ class PluginPage extends ConsumerStatefulWidget {
   ConsumerState<PluginPage> createState() => _PluginPageState();
 }
 
-class _PluginPageState extends ConsumerState<PluginPage> {
+class _PluginPageState extends ConsumerState<PluginPage>
+    with WidgetsBindingObserver {
   final _nameKey = GlobalKey();
   final _headerKey = GlobalKey();
   final _slotKey = GlobalKey<ConfigSlotState>();
@@ -45,7 +46,20 @@ class _PluginPageState extends ConsumerState<PluginPage> {
   bool _removing = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeMetrics() => _queueMeasure();
+
+  @override
+  void didChangeTextScaleFactor() => _queueMeasure();
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _collapsed.dispose();
     super.dispose();
   }
@@ -55,6 +69,10 @@ class _PluginPageState extends ConsumerState<PluginPage> {
   /// Scroll offset of the latest notification.
   double _pixels = 0;
 
+  /// The plugin's name while the page is blank for a removal, so the header
+  /// keeps it instead of falling back to "Chi tiết plugin".
+  String? _lastName;
+
   /// A scroll moved the list. Layout of the new offset is not done yet, so
   /// the position of the name is read after the frame.
   bool _onScroll(ScrollNotification notification) {
@@ -62,13 +80,18 @@ class _PluginPageState extends ConsumerState<PluginPage> {
       return false;
     }
     _pixels = notification.metrics.pixels;
-    if (_measureQueued) return false;
+    _queueMeasure();
+    return false;
+  }
+
+  /// Reads the position of the name once the frame is laid out.
+  void _queueMeasure() {
+    if (_measureQueued) return;
     _measureQueued = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _measureQueued = false;
       if (mounted) _measure(_pixels);
     });
-    return false;
   }
 
   /// The header shows the plugin's name while the name in the head card is
@@ -92,30 +115,43 @@ class _PluginPageState extends ConsumerState<PluginPage> {
     final l10n = AppLocalizations.of(context);
     final page = ref.watch(pluginPageProvider(widget.installId));
     final data = _removing ? null : page.value;
+    if (data != null) _lastName = data.row.name;
+    // New page data moves the name without a scroll: measure after the frame
+    // (a window or text scale change does the same, see the observer).
+    _queueMeasure();
     return NotificationListener<ScrollNotification>(
       onNotification: _onScroll,
-      child: SettingsScaffold(
-        title: l10n.pluginsPageTitle,
-        parentPath: PluginPaths.store,
-        headerBuilder: (context, onBack) => KeyedSubtree(
-          key: _headerKey,
-          child: PluginPageHeader(
-            collapsed: _collapsed,
-            name: data?.row.name,
-            onBack: onBack,
-            actions: [
-              if (data != null)
-                KIconButton(
-                  icon: KIcons.delete,
-                  emphasis: KIconEmphasis.critical,
-                  tooltip: l10n.pluginsRemoveTooltip(data.row.name),
-                  onPressed: () => unawaited(_remove()),
-                ),
-            ],
-          ),
+      child: _scaffold(context, l10n, page, data),
+    );
+  }
+
+  Widget _scaffold(
+    BuildContext context,
+    AppLocalizations l10n,
+    AsyncValue<PluginPageData?> page,
+    PluginPageData? data,
+  ) {
+    return SettingsScaffold(
+      title: l10n.pluginsPageTitle,
+      parentPath: PluginPaths.store,
+      headerBuilder: (context, onBack) => KeyedSubtree(
+        key: _headerKey,
+        child: PluginPageHeader(
+          collapsed: _collapsed,
+          name: data?.row.name ?? (_removing ? _lastName : null),
+          onBack: onBack,
+          actions: [
+            if (data != null)
+              KIconButton(
+                icon: KIcons.delete,
+                emphasis: KIconEmphasis.critical,
+                tooltip: l10n.pluginsRemoveTooltip(data.row.name),
+                onPressed: () => unawaited(_remove()),
+              ),
+          ],
         ),
-        children: _children(context, l10n, page, data),
       ),
+      children: _children(context, l10n, page, data),
     );
   }
 

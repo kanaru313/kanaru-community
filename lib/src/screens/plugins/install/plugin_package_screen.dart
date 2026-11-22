@@ -71,6 +71,9 @@ class _PackageScreenState extends ConsumerState<PluginPackageScreen> {
     }
   }
 
+  static const double _boxWidth = 600;
+  static const double _boxMaxHeight = 840;
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -83,10 +86,14 @@ class _PackageScreenState extends ConsumerState<PluginPackageScreen> {
           child: widget.fullScreen
               ? Scaffold(body: SafeArea(child: content))
               : Dialog(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 840),
-                    child: content,
+                  // showKDialog already caps the width at 600: no side inset
+                  // of the Material dialog on top of it.
+                  insetPadding: const EdgeInsets.symmetric(vertical: 24),
+                  constraints: const BoxConstraints(
+                    maxWidth: _boxWidth,
+                    maxHeight: _boxMaxHeight,
                   ),
+                  child: SizedBox(width: _boxWidth, child: content),
                 ),
         );
       },

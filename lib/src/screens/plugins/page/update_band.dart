@@ -10,6 +10,7 @@ import '../../../plugins/state/install_ops.dart';
 import '../../../plugins/state/plugin_page_provider.dart';
 import '../../../plugins/state/store_ops.dart';
 import '../install/package_flow.dart';
+import '../updates/refresh_offers.dart';
 import '../updates/update_actions.dart';
 import '../updates/update_failures.dart';
 
@@ -32,15 +33,15 @@ class UpdateBand extends ConsumerStatefulWidget {
 class _UpdateBandState extends ConsumerState<UpdateBand> {
   bool _running = false;
 
-  /// The last update failed on the package itself: offer to refresh the list.
-  bool _offerRefresh = false;
-
   @override
   Widget build(BuildContext context) {
     final update = widget.data.update;
     if (update == null) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
     final busy = _running || widget.data.updating;
+    final offerRefresh = ref
+        .watch(refreshOffersProvider)
+        .contains(widget.data.row.installId);
     final hosts = update.newHosts;
     final String? message;
     final String label;
@@ -51,7 +52,7 @@ class _UpdateBandState extends ConsumerState<UpdateBand> {
           : l10n.pluginsPageReviewBody(hosts.join(', '));
       label = l10n.pluginsPageReviewButton;
       action = _review;
-    } else if (_offerRefresh) {
+    } else if (offerRefresh) {
       message = null;
       label = l10n.pluginsPageRefreshList;
       action = () => unawaited(_refresh(update.repoId));
@@ -68,6 +69,7 @@ class _UpdateBandState extends ConsumerState<UpdateBand> {
       actionLabel: label,
       onAction: action,
       actionBusy: busy,
+      prominentAction: true,
       actionBusyLabel: l10n.pluginsPageUpdateBusy,
     );
   }
@@ -82,6 +84,8 @@ class _UpdateBandState extends ConsumerState<UpdateBand> {
   );
 
   Future<void> _update() async {
+    final offers = ref.read(refreshOffersProvider.notifier);
+    final installId = widget.data.row.installId;
     setState(() => _running = true);
     final result = await updatePlugin(
       context,
@@ -90,22 +94,30 @@ class _UpdateBandState extends ConsumerState<UpdateBand> {
       installId: widget.data.row.installId,
       name: widget.data.row.name,
     );
+    // Only a package that differs from the list is cured by a refresh. Kept
+    // even when the page was left meanwhile.
+    if (result is InstallRefused &&
+        result.failure == InstallFailure.catalogMismatch) {
+      offers.offer(installId);
+    }
     if (!mounted) return;
-    setState(() {
-      _running = false;
-      _offerRefresh =
-          result is InstallRefused &&
-          result.failure == InstallFailure.hasProblems;
-    });
+    setState(() => _running = false);
   }
 
   Future<void> _refresh(int repoId) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final failed = AppLocalizations.of(context).pluginsPageRefreshFailed;
+    final offers = ref.read(refreshOffersProvider.notifier);
+    final installId = widget.data.row.installId;
     setState(() => _running = true);
-    await ref.read(storeOpsProvider).refresh(repoId);
+    final result = await ref.read(storeOpsProvider).refresh(repoId);
+    final ok = result != null && result.error == null;
+    if (ok) {
+      offers.clear(installId);
+    } else {
+      showAppSnackBarOn(messenger, failed);
+    }
     if (!mounted) return;
-    setState(() {
-      _running = false;
-      _offerRefresh = false;
-    });
+    setState(() => _running = false);
   }
 }

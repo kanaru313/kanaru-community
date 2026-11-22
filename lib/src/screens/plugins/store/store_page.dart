@@ -5,12 +5,12 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../plugins/domain/search/store_search.dart';
 import '../../../plugins/state/store_filter.dart';
 import '../../../plugins/state/store_ops.dart';
 import '../../../plugins/state/store_view_provider.dart';
 import '../../settings/settings_routes.dart';
 import '../../settings/ui/settings_scaffold.dart';
-import '../common/plugin_labels.dart';
 import '../common/restore_trigger.dart';
 import 'store_actions.dart';
 import 'store_banners.dart';
@@ -22,7 +22,7 @@ import 'store_sections.dart';
 
 /// Kho plugin: one list under a pinned header and search, in the blocks
 /// Cập nhật → Đã cài → Chưa cài. Opening it starts from a fresh filter
-/// ([kind] presets Lọc › Loại), refreshes the stale repositories and retries
+/// ([kind] fills the search with its `#tag`), refreshes the stale repositories and retries
 /// the plugins that were missing their package.
 class StorePage extends ConsumerStatefulWidget {
   const StorePage({super.key, this.kind});
@@ -46,9 +46,7 @@ class _StorePageState extends ConsumerState<StorePage> {
       if (!mounted) return;
       ref
           .read(storeFilterProvider.notifier)
-          .set(
-            StoreFilterToggles.preset(StoreKindGroup.fromQuery(widget.kind)),
-          );
+          .set(StoreFilter(query: storeSearchForKind(widget.kind)));
       unawaited(ref.read(storeOpsProvider).onOpen());
     });
   }
@@ -76,7 +74,7 @@ class _StorePageState extends ConsumerState<StorePage> {
       title: l10n.pluginsStoreTitle,
       parentPath: SettingsPaths.root,
       actions: [_filterButton(l10n, filter), _moreButton(l10n, actions, repos)],
-      pinnedBelowHeader: bare ? null : _searchField(l10n, filter),
+      pinnedBelowHeader: bare ? null : _searchField(l10n),
       // The list rows are list items of their own, so the page spaces them.
       spaced: false,
       children: [
@@ -121,17 +119,16 @@ class _StorePageState extends ConsumerState<StorePage> {
     ),
   );
 
-  Widget _searchField(AppLocalizations l10n, StoreFilter filter) =>
-      KFilterField(
-        controller: _search,
-        hint: l10n.pluginsSearchHint,
-        closeTooltip: l10n.pluginsSearchClear,
-        persistent: true,
-        onClose: () {},
-        onChanged: (text) => ref
-            .read(storeFilterProvider.notifier)
-            .set(ref.read(storeFilterProvider).copyWith(query: text)),
-      );
+  Widget _searchField(AppLocalizations l10n) => KFilterField(
+    controller: _search,
+    hint: l10n.pluginsSearchHint,
+    closeTooltip: l10n.pluginsSearchClear,
+    persistent: true,
+    onClose: () {},
+    onChanged: (text) => ref
+        .read(storeFilterProvider.notifier)
+        .set(ref.read(storeFilterProvider).copyWith(query: text)),
+  );
 
   List<Widget> _body(
     BuildContext context,

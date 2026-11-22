@@ -105,6 +105,9 @@ class FakeStoreOps implements StoreOps {
   int opens = 0;
   int refreshAlls = 0;
   final refreshed = <int>[];
+
+  /// A refresh that finds the repository gone (`null`).
+  bool refreshFails = false;
   final added = <String>[];
   final removed = <int>[];
   RepoAddResult Function(String input) onAdd = (_) => const RepoAdded(1);
@@ -129,7 +132,7 @@ class FakeStoreOps implements StoreOps {
   @override
   Future<RepoRefreshResult?> refresh(int repoId) async {
     refreshed.add(repoId);
-    return RepoRefreshResult(repoId);
+    return refreshFails ? null : RepoRefreshResult(repoId);
   }
 
   @override

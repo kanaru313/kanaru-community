@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../foundation/text/text_fold.dart';
 import '../../database/tables.dart';
 import '../data/install/update_candidates.dart';
+import '../domain/search/store_search.dart';
 import '../data/store/plugin_row_types.dart';
 import 'alerts_provider.dart';
 import 'async_join.dart';
@@ -142,9 +143,12 @@ bool _extraMatches({
       !languages.any(filter.languages.contains)) {
     return false;
   }
-  final words = foldDiacritics(filter.query)
-      .split(RegExp(r'\s+'))
-      .where((w) => w.isNotEmpty);
+  final search = parseStoreSearch(filter.query);
+  final tagKinds = search.kinds;
+  if (tagKinds.isNotEmpty && (kind == null || !tagKinds.contains(kind))) {
+    return false;
+  }
+  final words = [for (final w in search.words) foldDiacritics(w)];
   if (words.isEmpty) return true;
   final haystack = foldDiacritics([row.name, author, ...hosts].join('\n'));
   return words.every(haystack.contains);

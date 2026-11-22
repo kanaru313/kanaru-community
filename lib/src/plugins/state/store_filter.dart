@@ -84,7 +84,7 @@ class StoreFilterNotifier extends Notifier<StoreFilter> {
   @override
   StoreFilter build() => const StoreFilter();
 
-  /// A route preset (the list of one kind) sets [StoreFilter.kinds] this way.
+  /// Replaces the whole filter (a route opens the store with its search text).
   void set(StoreFilter filter) => state = filter;
 
   void clear() => state = const StoreFilter();

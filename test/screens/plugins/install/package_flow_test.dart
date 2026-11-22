@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart' show BuildContext;
+import 'package:material_ui/material_ui.dart' show Dialog, Material;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/foundation/result.dart';
 import 'package:kanaru/src/platform/domain/document_picker.dart';
@@ -312,4 +313,24 @@ void main() {
       });
     });
   }
+
+  testWidgets('on desktop the install box is 600 wide and at most 840 high', (
+    tester,
+  ) async {
+    final ops = FakeInstallOps();
+    await pumpFlowHost(
+      tester,
+      ops: ops,
+      size: wideWindow,
+      onTap: (c) => _open(c, ops),
+    );
+    // The Dialog widget fills the window; its Material is the box.
+    final box = tester.getRect(
+      find
+          .descendant(of: find.byType(Dialog), matching: find.byType(Material))
+          .first,
+    );
+    expect(box.width, 600);
+    expect(box.height, lessThanOrEqualTo(840));
+  });
 }

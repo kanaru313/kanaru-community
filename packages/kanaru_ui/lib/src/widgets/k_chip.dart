@@ -41,9 +41,10 @@ class KChip extends StatelessWidget {
       _tag = false;
 
   /// A small label that only shows a value (the kind and the author on a
-  /// plugin row): 24 dp, `labelMedium`, no ink, never a button. Filled with
-  /// `secondaryContainer`, or only outlined when [outlined]; a long label
-  /// ends with an ellipsis.
+  /// plugin row): 20 dp tall, `labelSmall`, radius 6, label centred, no ink,
+  /// never a button. Filled with `secondaryContainer`, or only outlined when
+  /// [outlined]; one line, a long label ends with an ellipsis. Put it in a
+  /// [KTagRow]. At 1.5x text it grows with the label.
   const KChip.tag({super.key, required this.label, this.outlined = false})
     : icon = null,
       selected = false,
@@ -148,30 +149,92 @@ class KChip extends StatelessWidget {
 
   Widget _buildTag(BuildContext context, ColorScheme scheme) {
     final fg = outlined ? scheme.onSurfaceVariant : scheme.onSecondaryContainer;
+    final large = KTagRow.isLarge(context);
     return DecoratedBox(
       decoration: ShapeDecoration(
         color: outlined ? null : scheme.secondaryContainer,
-        shape: StadiumBorder(
+        shape: RoundedRectangleBorder(
+          borderRadius: _tagRadius,
           side: outlined
               ? BorderSide(color: scheme.outlineVariant)
               : BorderSide.none,
         ),
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 24),
+        // Fixed 20 dp tall; from 1.5x text the label sets the height and the
+        // width cap goes.
+        constraints: BoxConstraints(
+          minHeight: _tagHeight,
+          maxWidth: large ? double.infinity : _tagMaxWidth,
+        ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: KSpace.x2,
-            vertical: KSpace.x1 / 2,
-          ),
-          child: DefaultTextStyle.merge(
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(color: fg),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            child: label,
+          // 8 dp from the edge for both looks (the outline takes 1 dp of it).
+          padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
+          // Shrink to the label; the extra height of the 20 dp box is split
+          // evenly above and below it.
+          child: Center(
+            widthFactor: 1,
+            heightFactor: 1,
+            child: DefaultTextHeightBehavior(
+              textHeightBehavior: const TextHeightBehavior(
+                leadingDistribution: TextLeadingDistribution.even,
+              ),
+              child: DefaultTextStyle.merge(
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(color: fg),
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+                child: label,
+              ),
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  static const double _tagHeight = 20;
+  static const double _tagMaxWidth = 154;
+  static const BorderRadius _tagRadius = BorderRadius.all(Radius.circular(6));
+}
+
+/// The meta line of a list row: [fixed] chips keep their width, [shrinking]
+/// chips (the author, then any tail) give way with an ellipsis; it never
+/// wraps. From 1.5x text everything wraps like words instead. Gap 6. Needs a
+/// bounded width.
+class KTagRow extends StatelessWidget {
+  const KTagRow({super.key, this.fixed = const [], required this.shrinking});
+
+  final List<Widget> fixed;
+  final List<Widget> shrinking;
+
+  /// From this text scale the chips grow and may wrap.
+  static const double _largeScale = 1.5;
+
+  static const double _gap = 6;
+
+  /// Whether the text is scaled enough for the wrapping layout.
+  static bool isLarge(BuildContext context) =>
+      MediaQuery.textScalerOf(context).scale(11) / 11 >= _largeScale;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLarge(context)) {
+      return Wrap(
+        spacing: _gap,
+        runSpacing: KSpace.x1,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [...fixed, ...shrinking],
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: _gap,
+      children: [
+        ...fixed,
+        for (final c in shrinking) Flexible(child: c),
+      ],
     );
   }
 }

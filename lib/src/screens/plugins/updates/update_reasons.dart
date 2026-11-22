@@ -16,6 +16,7 @@ String updateReason(AppLocalizations l10n, InstallResult result) {
     },
     InstallRefused(:final failure) => switch (failure) {
       InstallFailure.hasProblems ||
+      InstallFailure.catalogMismatch ||
       InstallFailure.otherOrigin ||
       InstallFailure.kindChange ||
       InstallFailure.needsNewerApp => l10n.pluginsUpdateReasonProblems,

@@ -117,7 +117,7 @@ void main() {
       expect(_pages(tester).whereType<KDetailPage>(), isNotEmpty);
     });
 
-    testWidgets('an unknown kind opens the store without a preset', (
+    testWidgets('an unknown kind opens the store with an empty search', (
       tester,
     ) async {
       final h = await pumpPlugins(

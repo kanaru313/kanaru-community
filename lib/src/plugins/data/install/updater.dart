@@ -76,11 +76,7 @@ class PluginUpdater {
       }
       if (held.review is ProblemsReview) {
         _held.discard(held.token);
-        return InstallRefused(
-          (held.review as ProblemsReview).hasOtherOrigin
-              ? InstallFailure.otherOrigin
-              : InstallFailure.hasProblems,
-        );
+        return InstallRefused(failureOfProblems(held.review as ProblemsReview));
       }
       final result = await _installer.install(
         held.token,

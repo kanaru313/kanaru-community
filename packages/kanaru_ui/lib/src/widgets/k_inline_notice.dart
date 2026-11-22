@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens/k_icon_size.dart';
+import '../tokens/k_layout.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 
@@ -24,6 +25,7 @@ class KInlineNotice extends StatelessWidget {
     this.actionSemanticsLabel,
     this.actionBusy = false,
     this.actionBusyLabel,
+    this.prominentAction = false,
   }) : assert(
          (actionLabel == null) == (onAction == null),
          'actionLabel and onAction are set together',
@@ -44,8 +46,42 @@ class KInlineNotice extends StatelessWidget {
   final bool actionBusy;
   final String? actionBusyLabel;
 
+  /// The action is the main thing to do here: a filled button instead of a
+  /// text button.
+  final bool prominentAction;
+
   /// From this text scale the action moves under the text.
   static const double _stackScale = 1.5;
+
+  Widget _button(Color foreground, ColorScheme scheme) {
+    final child = actionBusy
+        ? SizedBox.square(
+            dimension: KIconSize.xs,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: prominentAction ? scheme.onPrimary : foreground,
+            ),
+          )
+        : Text(actionLabel!);
+    final onPressed = actionBusy ? null : onAction;
+    if (prominentAction) {
+      return FilledButton(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(0, KLayout.compactButton),
+        ),
+        child: child,
+      );
+    }
+    final filled =
+        tone == KInlineNoticeTone.errorFilled ||
+        tone == KInlineNoticeTone.primaryFilled;
+    return TextButton(
+      onPressed: onPressed,
+      style: filled ? TextButton.styleFrom(foregroundColor: foreground) : null,
+      child: child,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,21 +143,7 @@ class KInlineNotice extends StatelessWidget {
                 ? (actionBusyLabel ?? actionLabel)
                 : (actionSemanticsLabel ?? actionLabel),
             excludeSemantics: true,
-            child: TextButton(
-              onPressed: actionBusy ? null : onAction,
-              style: filled
-                  ? TextButton.styleFrom(foregroundColor: foreground)
-                  : null,
-              child: actionBusy
-                  ? SizedBox.square(
-                      dimension: KIconSize.xs,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: foreground,
-                      ),
-                    )
-                  : Text(actionLabel!),
-            ),
+            child: _button(foreground, scheme),
           )
         : null;
 

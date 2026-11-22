@@ -5,6 +5,7 @@ import 'package:kanaru/src/plugins/state/alerts_provider.dart';
 import 'package:kanaru/src/plugins/state/store_filter.dart';
 import 'package:kanaru/src/plugins/state/store_view_models.dart';
 import 'package:kanaru/src/screens/plugins/store/store_actions.dart';
+import 'package:kanaru/src/screens/plugins/store/store_filter_toggles.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart' show ListView;
 
@@ -110,8 +111,11 @@ void main() {
       updateAllCount: 1,
     );
     await pumpPlugins(tester, fixture);
-    expect(find.text('Update'), findsOneWidget);
-    expect(find.text('Review'), findsOneWidget);
+    expect(find.bySemanticsLabel('Update Alpha'), findsOneWidget);
+    expect(find.bySemanticsLabel('Review the update of Beta'), findsOneWidget);
+    // Icon buttons only: no text button on an update row.
+    expect(find.text('Update'), findsNothing);
+    expect(find.text('Review'), findsNothing);
     // The title button counts what "update all" installs, not Review ones.
     expect(find.text('Update all (1)'), findsOneWidget);
   });
@@ -148,7 +152,7 @@ void main() {
     );
     expect(h.container, isNotNull);
     await tester.tap(find.text('Update all (1)'));
-    await tester.tap(find.text('Update'));
+    await tester.tap(find.bySemanticsLabel('Update Updatable'));
     await tester.tap(byIconButton('Install Fresh'));
     await tester.tap(byIconButton('Remove Installed one'));
     await tester.tap(find.text('Installed one'));
@@ -237,8 +241,8 @@ void main() {
     expect(find.text('No repository yet'), findsOneWidget);
   });
 
-  group('kind preset from the route', () {
-    testWidgets('?kind=translate starts with Lọc › Loại = Dịch', (
+  group('kind from the route', () {
+    testWidgets('?kind=translate fills the search with its tag, Lọc empty', (
       tester,
     ) async {
       final fixture = StoreFixture(
@@ -260,25 +264,30 @@ void main() {
       );
       expect(find.text('Trans'), findsOneWidget);
       expect(find.text('Lyr'), findsNothing);
-      expect(h.container.read(storeFilterProvider).kinds, {
-        PluginKind.translate,
-        PluginKind.aiTranslate,
-      });
+      expect(
+        tester.widget<KFilterField>(find.byType(KFilterField)).controller.text,
+        '#translate ',
+      );
+      expect(h.container.read(storeFilterProvider).kinds, isEmpty);
       final badge = tester.widget<KIconButton>(byIconButton('Filter'));
-      expect(badge.badgeCount, 1);
-      expect(badge.selected, isTrue);
+      expect(badge.badgeCount, 0);
+      expect(badge.selected, isFalse);
     });
 
-    testWidgets('opening without a kind clears an older filter', (
+    testWidgets('an unknown kind or none leaves the search empty', (
       tester,
     ) async {
       final fixture = StoreFixture(
         items: [itemOf('l', StoreItemState.notInstalled, name: 'Lyr')],
         repos: const [RepoView(id: 1, name: 'Kho', url: 'u', pluginCount: 1)],
       );
-      final h = await pumpPlugins(tester, fixture);
+      final h = await pumpPlugins(
+        tester,
+        fixture,
+        location: '/settings/plugins?kind=skill',
+      );
       expect(h.container.read(storeFilterProvider).isEmpty, isTrue);
-      expect(tester.widget<KIconButton>(byIconButton('Filter')).badgeCount, 0);
+      expect(find.text('Lyr'), findsOneWidget);
     });
   });
 
@@ -315,6 +324,48 @@ void main() {
         isEmpty,
       );
     });
+  });
+
+  group('search tags', () {
+    testWidgets(
+      '#tag filters, leaves the Lọc badge alone, clears with the text',
+      (tester) async {
+        final fixture = StoreFixture(
+          items: [
+            itemOf('a', StoreItemState.notInstalled, name: 'Lyric one'),
+            itemOf(
+              'b',
+              StoreItemState.notInstalled,
+              name: 'Stream one',
+              kind: PluginKind.streaming,
+            ),
+          ],
+          live: const [],
+          repos: const [RepoView(id: 1, name: 'Kho', url: 'u', pluginCount: 2)],
+        );
+        final h = await pumpPlugins(tester, fixture);
+        await tester.enterText(find.byType(KFilterField), '#ly');
+        await tester.pump();
+        expect(find.text('Lyric one'), findsOneWidget);
+        expect(find.text('Stream one'), findsOneWidget, reason: 'partial tag');
+
+        await tester.enterText(find.byType(KFilterField), '#streaming');
+        await tester.pump();
+        expect(find.text('Lyric one'), findsNothing);
+        expect(find.text('Stream one'), findsOneWidget);
+        expect(h.container.read(storeFilterProvider).kinds, isEmpty);
+        expect(h.container.read(storeFilterProvider).valueCount, 0);
+
+        await tester.enterText(find.byType(KFilterField), '#lyric #music');
+        await tester.pump();
+        expect(find.text('Lyric one'), findsOneWidget);
+        expect(find.text('Stream one'), findsOneWidget);
+
+        await tester.enterText(find.byType(KFilterField), '');
+        await tester.pump();
+        expect(find.text('Lyric one'), findsOneWidget);
+      },
+    );
   });
 
   group('no repository', () {

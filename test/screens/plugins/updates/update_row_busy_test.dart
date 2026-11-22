@@ -11,6 +11,8 @@ import 'package:kanaru/src/screens/plugins/store/store_rows.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../support/icon_button_finders.dart';
+
 StoreRowView _row(String id, String name) => StoreRowView(
   installId: id,
   name: name,
@@ -52,9 +54,12 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.text('Updating…'), findsOneWidget);
-    await tester.tap(find.text('Updating…'));
-    await tester.tap(find.text('Update'));
+    // The busy row keeps its slot: a spinner, button disabled.
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    final first = tester.widget<KIconButton>(byIconButton('Update First'));
+    expect(first.onPressed, isNull);
+    await tester.tap(byIconButton('Update First'), warnIfMissed: false);
+    await tester.tap(byIconButton('Update Second'));
     await tester.pump();
     expect(tapped, ['b']);
   });

@@ -34,11 +34,6 @@ extension StoreFilterToggles on StoreFilter {
 
   /// Every value cleared; the search text stays.
   StoreFilter get withoutValues => StoreFilter(query: query);
-
-  /// The list of one kind, as a route preset asks for: replaces the kinds and
-  /// clears every other value (search included).
-  static StoreFilter preset(StoreKindGroup? group) =>
-      StoreFilter(kinds: group?.kinds ?? const {});
 }
 
 Set<T> _flip<T>(Set<T> set, T value) =>

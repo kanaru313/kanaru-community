@@ -107,7 +107,7 @@ void main() {
     ) async {
       final ops = FakeInstallOps()
         ..onUpdate = (_) async =>
-            const UpdateRun(InstallRefused(InstallFailure.hasProblems));
+            const UpdateRun(InstallRefused(InstallFailure.catalogMismatch));
       final (_, fixture) = await _pump(
         tester,
         pageData(update: _update),
@@ -122,6 +122,68 @@ void main() {
       expect(fixture.ops.refreshed, [1]);
       expect(ops.updateCalls, ['id-demo'], reason: 'refresh does not update');
       expect(find.text('Update'), findsOneWidget);
+    });
+
+    testWidgets('a package defect does not offer a refresh', (tester) async {
+      final ops = FakeInstallOps()
+        ..onUpdate = (_) async =>
+            const UpdateRun(InstallRefused(InstallFailure.hasProblems));
+      await _pump(tester, pageData(update: _update), ops: ops);
+      await tester.tap(find.text('Update'));
+      await tester.pumpAndSettle();
+      expect(find.text('Refresh the list'), findsNothing);
+      expect(find.text('Update'), findsOneWidget);
+    });
+
+    testWidgets('the refresh offer survives the band being rebuilt', (
+      tester,
+    ) async {
+      final ops = FakeInstallOps()
+        ..onUpdate = (_) async =>
+            const UpdateRun(InstallRefused(InstallFailure.catalogMismatch));
+      final fixture = StoreFixture();
+      final h = await pumpPlugins(
+        tester,
+        fixture,
+        location: pagePath,
+        size: const Size(400, 2400),
+        overrides: pageOverrides(
+          AsyncData(pageData(update: _update)),
+          ops: ops,
+        ),
+      );
+      await tester.tap(find.text('Update'));
+      await tester.pumpAndSettle();
+      expect(find.text('Refresh the list'), findsOneWidget);
+      // The band goes away and comes back (another list read).
+      h.container.read(pageHolder.notifier).set(AsyncData(pageData()));
+      await tester.pump();
+      expect(find.text('Refresh the list'), findsNothing);
+      h.container
+          .read(pageHolder.notifier)
+          .set(AsyncData(pageData(update: _update)));
+      await tester.pump();
+      expect(find.text('Refresh the list'), findsOneWidget);
+    });
+
+    testWidgets('a refresh that fails says so and keeps the offer', (
+      tester,
+    ) async {
+      final ops = FakeInstallOps()
+        ..onUpdate = (_) async =>
+            const UpdateRun(InstallRefused(InstallFailure.catalogMismatch));
+      final (_, fixture) = await _pump(
+        tester,
+        pageData(update: _update),
+        ops: ops,
+      );
+      fixture.ops.refreshFails = true;
+      await tester.tap(find.text('Update'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Refresh the list'));
+      await tester.pumpAndSettle();
+      expect(find.text('Could not refresh the list'), findsOneWidget);
+      expect(find.text('Refresh the list'), findsOneWidget);
     });
 
     testWidgets('a failed update says why in a SnackBar', (tester) async {
@@ -173,9 +235,20 @@ void main() {
         find.text('The plugin can’t run until it has: Token, API key.'),
         findsOneWidget,
       );
+      // The target of the button is visible: the section with its dimmed row.
+      expect(find.text('The plugin’s settings'), findsOneWidget);
+      expect(find.text('Plugin configuration'), findsOneWidget);
       await tester.tap(find.text('Open settings'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+      expect(find.text('The plugin’s settings'), findsOneWidget);
+    });
+
+    testWidgets('a plugin without settings shows no settings section', (
+      tester,
+    ) async {
+      await _pump(tester, pageData());
+      expect(find.text('The plugin’s settings'), findsNothing);
     });
 
     testWidgets('a missing package of a repository plugin can be reinstalled', (

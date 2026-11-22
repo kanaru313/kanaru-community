@@ -3069,7 +3069,7 @@
   "pluginsMenuRefreshAll": "Làm mới tất cả",
   "pluginsMenuLogsDesktop": "Mở thư mục nhật ký",
   "pluginsMenuLogsMobile": "Chia sẻ nhật ký plugin…",
-  "pluginsSearchHint": "Tìm theo tên, tác giả, repository, host",
+  "pluginsSearchHint": "Tìm tên, tác giả, repository, host, #loại",
   "pluginsSearchClear": "Xoá",
   "pluginsSectionUpdates": "Cập nhật ({count})",
   "@pluginsSectionUpdates": {
@@ -3107,6 +3107,25 @@
   },
   "pluginsUpdate": "Cập nhật",
   "pluginsReview": "Xem",
+  "pluginsUpdateTooltip": "Cập nhật {name}",
+  "@pluginsUpdateTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReviewTooltip": "Xem bản cập nhật {name}",
+  "@pluginsReviewTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPageSettingsTitle": "Cài đặt của plugin",
+  "pluginsPageSettingsSoon": "Cấu hình của plugin",
+  "pluginsPageRefreshFailed": "Không làm mới được danh sách",
   "pluginsInstallTooltip": "Cài {name}",
   "@pluginsInstallTooltip": {
     "placeholders": {

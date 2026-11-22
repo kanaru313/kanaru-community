@@ -135,6 +135,8 @@ abstract final class KIcons {
       FluentIcons.re_order_dots_vertical_24_regular;
   static const IconData add = FluentIcons.add_24_regular;
   static const IconData download = FluentIcons.arrow_download_24_regular;
+  static const IconData upload = FluentIcons.arrow_upload_24_regular;
+  static const IconData eye = FluentIcons.eye_24_regular;
   static const IconData remove = FluentIcons.subtract_24_regular;
   static const IconData arrowForward = FluentIcons.arrow_right_24_regular;
   static const IconData permission = FluentIcons.shield_keyhole_24_regular;

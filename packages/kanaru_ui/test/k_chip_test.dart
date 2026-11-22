@@ -75,7 +75,7 @@ void main() {
     expect(fill(find.widgetWithText(KChip, 'c')), scheme.surfaceContainerHigh);
   });
 
-  testWidgets('tag is a 24 dp label that is not a button', (tester) async {
+  testWidgets('tag is a 20 dp label that is not a button', (tester) async {
     final semantics = tester.ensureSemantics();
     await tester.pumpWidget(
       host(
@@ -87,12 +87,97 @@ void main() {
         ),
       ),
     );
-    expect(tester.getSize(find.byType(KChip).first).height, 24);
-    expect(tester.getSize(find.byType(KChip).last).height, 24);
+    // Tinted and outlined are exactly as tall.
+    expect(tester.getSize(find.byType(KChip).first).height, 20);
+    expect(tester.getSize(find.byType(KChip).last).height, 20);
     expect(
       tester.getSemantics(find.text('Lời bài')),
       isNot(matchesSemantics(isButton: true)),
     );
     semantics.dispose();
+  });
+
+  testWidgets('tag labels sit at the same height in both looks', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            KChip.tag(label: Text('Lời bài')),
+            KChip.tag(label: Text('Lời bài'), outlined: true),
+          ],
+        ),
+      ),
+    );
+    final labels = find.text('Lời bài');
+    final first = tester.getCenter(labels.first).dy;
+    expect(tester.getCenter(labels.last).dy, first);
+    // Centred in the 20 dp box.
+    final box = tester.getRect(find.byType(KChip).first);
+    expect((first - box.center.dy).abs(), lessThanOrEqualTo(0.5));
+  });
+
+  testWidgets('KTagRow keeps the kind and ellipsizes the author', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        const SizedBox(
+          width: 140,
+          child: KTagRow(
+            fixed: [KChip.tag(label: Text('Lời bài'))],
+            shrinking: [
+              KChip.tag(
+                label: Text('an author with a very long name indeed'),
+                outlined: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    final kind = tester.getSize(find.byType(KChip).first);
+    final author = tester.getSize(find.byType(KChip).last);
+    // One line: both chips on the same row, 20 dp, within the 140 dp.
+    expect(kind.height, 20);
+    expect(author.height, 20);
+    expect(
+      tester.getTopLeft(find.byType(KChip).last).dy,
+      tester.getTopLeft(find.byType(KChip).first).dy,
+    );
+    expect(tester.getSize(find.byType(KTagRow)).width, lessThanOrEqualTo(140));
+    // The kind chip is as wide as it is alone.
+    await tester.pumpWidget(
+      host(const Center(child: KChip.tag(label: Text('Lời bài')))),
+    );
+    expect(tester.getSize(find.byType(KChip)).width, kind.width);
+  });
+
+  testWidgets('at 200 % text the tags grow and wrap', (tester) async {
+    await tester.pumpWidget(
+      host(
+        const SizedBox(
+          width: 200,
+          child: KTagRow(
+            fixed: [KChip.tag(label: Text('Lời bài'))],
+            shrinking: [KChip.tag(label: Text('kanaru313'), outlined: true)],
+          ),
+        ),
+        textScale: 2,
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    final kind = find.byType(KChip).first;
+    final author = find.byType(KChip).last;
+    expect(tester.getSize(kind).height, greaterThan(20));
+    expect(tester.getSize(kind).height, tester.getSize(author).height);
+    // Too wide for one line: the author goes under the kind.
+    expect(
+      tester.getTopLeft(author).dy,
+      greaterThan(tester.getTopLeft(kind).dy),
+    );
   });
 }

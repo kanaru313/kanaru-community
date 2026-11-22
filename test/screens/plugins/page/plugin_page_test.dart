@@ -191,6 +191,30 @@ void main() {
         expect(find.text('Removed Demo'), findsOneWidget);
       });
 
+      testWidgets('removing keeps the name in the header, no fade back', (
+        tester,
+      ) async {
+        final ops = _GatedOps();
+        await pumpPlugins(
+          tester,
+          StoreFixture(),
+          location: pagePath,
+          size: size,
+          overrides: pageOverrides(AsyncData(pageData()), ops: ops),
+        );
+        await tester.drag(find.byType(ListView), const Offset(0, -700));
+        await tester.pumpAndSettle();
+        expect(_inHeader('Demo'), findsOneWidget);
+        await tester.tap(byIconButton('Remove Demo'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Remove'));
+        await tester.pumpAndSettle();
+        expect(_inHeader('Demo'), findsOneWidget);
+        expect(_inHeader('Plugin details'), findsNothing);
+        ops.gate.complete();
+        await tester.pumpAndSettle();
+      });
+
       testWidgets('a failed remove brings the page back', (tester) async {
         final ops = FakeInstallOps()..removeResult = RemoveResult.failed;
         await pumpPlugins(

@@ -10,8 +10,9 @@ import '../updates/update_failures.dart';
 import 'store_actions.dart';
 import 'store_row.dart';
 
-/// A row of the Cập nhật block: one button, [Xem] when the update adds hosts
-/// or permissions, else [Cập nhật]. A tap on the row opens the update screen.
+/// A row of the Cập nhật block: one icon button, an eye (Xem bản cập nhật)
+/// when the update adds hosts or permissions, else an upload arrow (Cập
+/// nhật), a spinner in the same slot while it runs. A tap on the row opens the update screen.
 class UpdateRow extends ConsumerWidget {
   const UpdateRow({super.key, required this.row, required this.actions});
 
@@ -31,24 +32,19 @@ class UpdateRow extends ConsumerWidget {
       onTap: actions.onReview == null
           ? null
           : () => actions.onReview!(context, row),
-      trailing: FilledButton.tonal(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(0, KLayout.compactButton),
-        ),
+      trailing: KIconButton(
+        icon: busy ? null : (review ? KIcons.eye : KIcons.upload),
+        emphasis: KIconEmphasis.primary,
+        tooltip: review
+            ? l10n.pluginsReviewTooltip(row.name)
+            : l10n.pluginsUpdateTooltip(row.name),
         onPressed: run == null || busy ? null : () => run(context, row),
         child: busy
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: KSpace.x2,
-                children: [
-                  const SizedBox.square(
-                    dimension: KIconSize.sm,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  Text(l10n.pluginsUpdating),
-                ],
+            ? const SizedBox.square(
+                dimension: KIconSize.sm,
+                child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : Text(review ? l10n.pluginsReview : l10n.pluginsUpdate),
+            : null,
       ),
     );
   }

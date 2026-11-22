@@ -160,7 +160,8 @@ InstallProblem? problemOfFailure(
     InstallFailure.olderVersion => const OlderVersionReason(),
     InstallFailure.kindChange => const KindChangeReason(),
     InstallFailure.otherOrigin => OtherOriginReason(existing),
-    InstallFailure.hasProblems => const UnknownReason(),
+    InstallFailure.hasProblems ||
+    InstallFailure.catalogMismatch => const UnknownReason(),
     _ => null,
   };
   if (reason == null) return null;
