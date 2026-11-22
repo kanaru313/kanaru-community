@@ -35,13 +35,15 @@ implements it.
 Present in `lib/src/` today: `foundation`, `platform`, `database`,
 `extension`, `media` (domain types only), `playback` (contracts and seeds),
 `library` (contracts and seeds, plus the Library and Playlists pages),
-`lyrics` (no UI yet), `online`, `screens`, `shell`, `router`, and
+`lyrics` (domain, data, state and UI), `online`, `screens`, `shell`, `router`, and
 `lib/src/rust/` (generated FFI).
-`plugins` has its package, config, catalog and install rules (`domain/`) and
-the network seams (`domain/net`, `data/net`); `storage` is in the DAG but has
-no code yet. `lyrics` has its
-domain, data and state layers (offline lyrics: parser, readers, loader,
-providers, settings) and no UI yet; nothing watches its providers. The song menu's
+`plugins` has its package, config, catalog and install rules (`domain/`), the
+network seams (`domain/net`, `data/net`), and its store, install and native
+data plus state layers; `storage` holds M3U text handling. `lyrics` has its
+domain, data, state and UI: offline lyrics (parser, readers, loader,
+providers, settings), the Now Playing lyrics views, the source button, the
+"Lời cho bài này" modal and the song-menu entry. Settings › Lời bài lives in
+`screens/settings/ui/lyrics/`. The song menu's
 lyrics row is a seam: `library` owns `SongLyricsEntry` / `songLyricsEntryProvider`,
 `lyrics/ui` implements it, `lib/kanaru.dart` overrides it.
 

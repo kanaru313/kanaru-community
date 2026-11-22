@@ -85,7 +85,7 @@ class LyricsDisplaySection extends StatelessWidget {
         ),
         if (mobile)
           SoonRow(
-            icon: KIcons.windowFrame,
+            icon: KIcons.themeLight,
             title: Text(l10n.lyricsSettingsKeepAwake),
             desc: l10n.lyricsSettingsKeepAwakeDesc,
           ),

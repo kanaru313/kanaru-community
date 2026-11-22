@@ -77,6 +77,21 @@ void main() {
     });
   }
 
+  testWidgets('dismissing a picker without choosing keeps the stored value', (
+    tester,
+  ) async {
+    final h = await _open(tester, size: _desktop);
+    final before = h.store.read('lyrics.font_scale');
+    await tester.tap(find.text('Lyrics text size'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SelectionRow), findsWidgets);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.byType(SelectionRow), findsNothing);
+    expect(h.store.read('lyrics.font_scale'), before);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a default option says so', (tester) async {
     await _open(tester);
     await tester.tap(find.text('Lyrics alignment'));

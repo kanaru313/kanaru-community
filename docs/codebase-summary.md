@@ -33,8 +33,8 @@ Generated from the source tree; the file names here are the real ones.
 | `storage/` | M3U text (no Flutter). `domain/m3u/`: `m3u_decode.dart`, `m3u_line_form.dart`, `m3u_parse.dart`, `m3u_relative_path.dart`, `m3u_text.dart`, `m3u_write.dart`, `m3u_limits.dart`. `data/m3u/`: `m3u_reader.dart`, `m3u_line_resolver.dart`, `m3u_fs_probe.dart`, `m3u_document_filter.dart` |
 | `rust/` | Generated flutter_rust_bridge Dart code (do not edit) |
 
-Not yet present: the plugin data and state layers, and the scanner, playback and
-library UI bodies (their seeds are in the table above).
+The table above lists what each module has today, UI included. Lyrics plugins
+are not wired into the lyrics loader yet (offline lyrics only).
 
 ## Packages
 
