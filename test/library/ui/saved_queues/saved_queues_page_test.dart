@@ -186,7 +186,17 @@ void main() {
     });
   });
 
-  group('menu', () {
+  group('open', () {
+    testWidgets('a tap opens the queue page', (t) async {
+      final h = await pumpSavedQueues(
+        t,
+        store: FakeSavedQueueStore([_q('abc', _at(21))]),
+      );
+      await t.tap(find.text('Hôm nay · 21:17'));
+      await settle(t);
+      expect(h.location, '/playlists/queues/abc');
+    });
+
     testWidgets('⋮, long press and right click open the menu', (t) async {
       await pumpSavedQueues(t, store: FakeSavedQueueStore([_q('a', _at(21))]));
       final l10n = l10nOf(t);

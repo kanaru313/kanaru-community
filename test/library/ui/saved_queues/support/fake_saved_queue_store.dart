@@ -65,6 +65,24 @@ PlaylistDetail savedQueue(
   );
 }
 
+extension PlainPlaylist on PlaylistDetail {
+  /// The same entries as an ordinary playlist (no saved-queue info).
+  PlaylistDetail copyWithoutSavedQueue() => PlaylistDetail(
+    summary: PlaylistSummary(
+      uid: summary.uid,
+      name: summary.name,
+      description: '',
+      isFavorites: false,
+      trackCount: summary.trackCount,
+      durationMs: summary.durationMs,
+      createdAt: summary.createdAt,
+      updatedAt: summary.updatedAt,
+      autoCoverKeys: summary.autoCoverKeys,
+    ),
+    entries: entries,
+  );
+}
+
 /// A [SavedQueueStore] over a list the test edits. Reads can be made to fail
 /// ([failReads]) and writes too ([failWrites]); writes are recorded.
 class FakeSavedQueueStore implements SavedQueueStore {
@@ -77,6 +95,9 @@ class FakeSavedQueueStore implements SavedQueueStore {
 
   bool failReads = false;
   bool failWrites = false;
+
+  /// Runs right before a delete is applied (to see where the page was).
+  void Function()? beforeDelete;
 
   /// What the page was asked to do, in order.
   final List<String> touched = [];
@@ -142,6 +163,7 @@ class FakeSavedQueueStore implements SavedQueueStore {
   @override
   Future<bool> deleteSavedQueue(String uid) async {
     _check(failWrites);
+    beforeDelete?.call();
     final q = _find(uid);
     if (q == null) return false;
     deleted.add(uid);

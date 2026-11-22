@@ -110,7 +110,15 @@ Future<void> favoriteSavedQueue(BuildContext context, String uid) => _guarded(
     final ids = await _playableOrSay(root, l10n, container, uid);
     if (ids == null) return;
     final distinct = ids.toSet();
-    final already = await container.read(favoriteTrackIdsProvider.future);
+    // A provider nobody listens to is paused and never answers: hold it open
+    // for the read (the page may have no heart on screen to do it).
+    final Set<TrackId> already;
+    final hold = container.listen(favoriteTrackIdsProvider, (_, _) {});
+    try {
+      already = await container.read(favoriteTrackIdsProvider.future);
+    } finally {
+      hold.close();
+    }
     final skipped = distinct.where(already.contains).length;
     await container
         .read(favoritesControllerProvider)

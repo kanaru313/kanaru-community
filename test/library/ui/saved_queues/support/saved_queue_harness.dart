@@ -113,12 +113,15 @@ Future<SavedQueueHarness> pumpSavedQueues(
           ...GlobalMaterialLocalizations.delegates,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(textScale),
-            disableAnimations: !animations,
+        // The app shell's Scaffold is what shows the toasts.
+        builder: (context, child) => Scaffold(
+          body: MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(textScale),
+              disableAnimations: !animations,
+            ),
+            child: child!,
           ),
-          child: child!,
         ),
         routerConfig: router,
       ),

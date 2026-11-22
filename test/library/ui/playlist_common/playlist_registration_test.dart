@@ -7,6 +7,7 @@ import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/library_extension.dart';
 import 'package:kanaru/src/library/ui/playlist_common/playlist_labels.dart';
 import 'package:kanaru/src/library/ui/playlists/playlist_page.dart';
+import 'package:kanaru/src/library/ui/saved_queues/saved_queue_page.dart';
 import 'package:kanaru/src/library/ui/saved_queues/saved_queues_page.dart';
 import 'package:kanaru/src/shell/state/mobile_sidebar_state.dart';
 import 'package:kanaru/src/shell/ui/mobile_sidebar.dart';
@@ -141,6 +142,10 @@ void main() {
       tester.getSemantics(inSidebar('Queue')),
       isSemantics(isSelected: true, isButton: true, isEnabled: true),
     );
+    router.go(LibraryLocations.savedQueue(ulid));
+    await tester.pumpAndSettle();
+    expect(find.byType(SavedQueuePage), findsOneWidget);
+    expect(find.byType(PlaylistPage), findsNothing);
     // Let the pages' query cooldown run out before the test ends.
     await tester.pump(const Duration(seconds: 2));
     handle.dispose();
