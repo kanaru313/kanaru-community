@@ -98,6 +98,8 @@ void main() {
       expect(secondary, 1);
       await tester.longPress(find.text('btn'));
       expect(long, 1);
+      await tester.tap(find.text('btn'), buttons: kSecondaryButton);
+      expect(secondary, 1);
       await tester.tap(find.text('btn'));
       expect(buttons, 1);
     });

@@ -198,8 +198,9 @@ class _SetupRowFrameState extends State<SetupRowFrame> {
   }
 }
 
-/// Keeps a long press on a button inside a [SetupRowFrame] from reaching the
-/// row's own long-press action: the nearest recogniser wins and does nothing.
+/// Keeps a long press or a right click on a button inside a [SetupRowFrame]
+/// from reaching the row's own actions: the nearest recogniser wins and does
+/// nothing.
 class RowGestureShield extends StatelessWidget {
   const RowGestureShield({super.key, required this.child});
 
@@ -207,5 +208,5 @@ class RowGestureShield extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      GestureDetector(onLongPress: () {}, child: child);
+      GestureDetector(onLongPress: () {}, onSecondaryTap: () {}, child: child);
 }

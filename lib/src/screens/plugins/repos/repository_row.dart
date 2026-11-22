@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/state/store_view_models.dart';
 import '../common/plugin_labels.dart';
+
+final _log = Logger('plugin_repository_row');
 
 /// One repository: icon (a "!" on `errorContainer` after a failed fetch),
 /// name, its address as entered, then the number of plugins or the red error
@@ -27,14 +30,14 @@ class RepositoryRow extends StatelessWidget {
   Future<void> _copyAddress(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    if (FormFactor.of(context) == FormFactor.mobile) {
-      unawaited(HapticFeedback.lightImpact());
-    }
+    final mobile = FormFactor.of(context) == FormFactor.mobile;
     try {
       await Clipboard.setData(ClipboardData(text: repo.url));
-    } on PlatformException {
+    } on PlatformException catch (e, st) {
+      _log.warning('copying the repository address failed', e, st);
       return;
     }
+    if (mobile) unawaited(HapticFeedback.lightImpact());
     if (messenger.mounted) {
       showAppSnackBarOn(messenger, l10n.pluginsRepoAddressCopied);
     }

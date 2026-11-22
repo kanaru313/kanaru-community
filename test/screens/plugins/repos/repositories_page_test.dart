@@ -124,12 +124,30 @@ void main() {
       expect(copied, [url]);
     });
 
+    testWidgets('a failing clipboard shows no copied message', (tester) async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+            if (call.method == 'Clipboard.setData') {
+              throw PlatformException(code: 'unavailable');
+            }
+            return null;
+          });
+      await pumpPlugins(tester, _fixture(), location: _path);
+      await tester.longPress(find.text('Nhạc Việt Plugins'));
+      await tester.pump();
+      expect(find.text('Repository address copied'), findsNothing);
+    });
+
     testWidgets('a long press on the trash or Retry copies nothing', (
       tester,
     ) async {
       await pumpPlugins(tester, _fixture(), location: _path);
       await tester.longPress(byIconButton('Remove repository Broken'));
       await tester.longPress(find.text('Retry'));
+      await tester.tap(
+        byIconButton('Remove repository Broken'),
+        buttons: kSecondaryButton,
+      );
       await tester.pump();
       expect(copied, isEmpty);
       expect(find.text('Repository address copied'), findsNothing);
