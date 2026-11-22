@@ -31,7 +31,7 @@ import 'package:kanaru/src/screens/now_playing/ui/mobile/lyrics_screen.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/mobile_now_playing.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/more_sheet.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
-import 'package:material_ui/material_ui.dart' show Dialog, Tooltip;
+import 'package:material_ui/material_ui.dart' show Dialog;
 
 import 'support/harness.dart';
 
@@ -44,6 +44,11 @@ import 'support/harness.dart';
 ///
 /// Run: `tool/integration_test.sh linux integration_test/lyrics_source_test.dart`
 /// (through the main checkout's `main-build.sh`).
+/// A [KIconButton] by its tooltip text (`find.byTooltip` cannot: it has no
+/// Tooltip widget on every shell).
+Finder iconButton(String tooltip) =>
+    find.byWidgetPredicate((w) => w is KIconButton && w.tooltip == tooltip);
+
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -196,7 +201,7 @@ void main() {
       expect(rowSelected(t.lyricsChoiceFile), fileSelected);
       expect(rowSelected(t.lyricsChoiceOff), !fileSelected);
       expect(find.text(t.appComingSoon), findsNWidgets(3));
-      expect(find.byTooltip(t.lyricsModalClose), findsOneWidget);
+      expect(iconButton(t.lyricsModalClose), findsOneWidget);
       // A "coming soon" row is inert: a tap leaves the modal open.
       await tester.tap(find.text(t.lyricsFindOnline));
       await tester.pump(const Duration(milliseconds: 300));
@@ -271,7 +276,7 @@ void main() {
     expect(find.byType(MobileNowPlaying), findsOneWidget);
 
     // 2. Now Playing more sheet -> "Nguồn lời bài", opened after it closes.
-    await tester.tap(find.byTooltip(l10n().playbackMore));
+    await tester.tap(iconButton(l10n().playbackMore));
     await app.pumpUntil(
       () => find.byType(NowPlayingMoreSheet).evaluate().isNotEmpty,
       what: 'the Now Playing more sheet',
@@ -285,13 +290,13 @@ void main() {
       timeout: const Duration(seconds: 15),
     );
     await expectModalContent(fileSelected: true);
-    await tester.tap(find.byTooltip(l10n().lyricsModalClose));
+    await tester.tap(iconButton(l10n().lyricsModalClose));
     await waitClosed('the close button');
     expect(find.byType(MobileNowPlaying), findsOneWidget);
 
     // 5. A track without lyrics: the status line, file row disabled.
     await playPaused([noneId]);
-    await tester.tap(find.byTooltip(l10n().playbackMore));
+    await tester.tap(iconButton(l10n().playbackMore));
     await app.pumpUntil(
       () => find.byType(NowPlayingMoreSheet).evaluate().isNotEmpty,
       what: 'the more sheet (no lyrics track)',
@@ -301,12 +306,12 @@ void main() {
     expect(find.text(l10n().lyricsModalNoneOnDevice), findsOneWidget);
     expect(find.text(l10n().lyricsChoiceFileNone), findsOneWidget);
     await shot('mobile-06-sheet-none-on-device');
-    await tester.tap(find.byTooltip(l10n().lyricsModalClose));
+    await tester.tap(iconButton(l10n().lyricsModalClose));
     await waitClosed('the close button (no lyrics)');
 
     // 4. The modal follows the playing track: skipping closes it.
     await playPaused([syltId, usltId]);
-    await tester.tap(find.byTooltip(l10n().playbackMore));
+    await tester.tap(iconButton(l10n().playbackMore));
     await app.pumpUntil(
       () => find.byType(NowPlayingMoreSheet).evaluate().isNotEmpty,
       what: 'the more sheet (queue of two)',
@@ -410,12 +415,9 @@ void main() {
     expect(
       find.byWidgetPredicate(
         (w) =>
-            w is Tooltip &&
-            (w.message?.startsWith(
-                  l10n().lyricsSourceTooltipDesktop(tagLabel),
-                ) ??
-                false) &&
-            w.message!.contains(l10n().lyricsSourceToggleHint),
+            w is KIconButton &&
+            w.tooltip.startsWith(l10n().lyricsSourceTooltipDesktop(tagLabel)) &&
+            w.tooltip.contains(l10n().lyricsSourceToggleHint),
       ),
       findsOneWidget,
     );
@@ -457,7 +459,7 @@ void main() {
     await waitLyrics(syltId, (l) => l is LyricsShown, 'right-click: on again');
 
     // 3d. Desktop ⋮ menu item opens it after the menu closes.
-    await tester.tap(find.byTooltip(l10n().playbackMore).hitTestable().first);
+    await tester.tap(iconButton(l10n().playbackMore).hitTestable().first);
     await app.pumpUntil(
       () => find.text(l10n().playbackLyricsSource).evaluate().isNotEmpty,
       what: 'the desktop more menu',
