@@ -71,6 +71,16 @@ void main() {
       expect(find.textContaining('Từ '), findsNothing);
     });
 
+    testWidgets('a missing song listed twice counts once', (t) async {
+      await pumpSavedQueues(
+        t,
+        store: FakeSavedQueueStore([
+          savedQueue('a', savedAt: _at(20), ids: [1, 1, 2], missing: {1}),
+        ]),
+      );
+      expect(find.textContaining('1 bài không còn'), findsOneWidget);
+    });
+
     testWidgets('20 queues: newest first, the list scrolls', (t) async {
       final queues = [
         // Newest first: 20 distinct days back from the 21st, 8 to 1 Nov then

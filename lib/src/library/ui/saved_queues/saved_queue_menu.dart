@@ -60,7 +60,12 @@ MenuSpec buildSavedQueueMenu(
   if (info == null) throw ArgumentError('not a saved queue: ${summary.uid}');
   final uid = summary.uid;
   final name = savedQueueName(l10n, info.savedAt, today);
-  final missing = detail.unavailableCount;
+  // Distinct songs, as the list row counts them (a song listed twice is one).
+  final missing = {
+    for (final e in detail.entries)
+      if (!e.available) e.info.id.value,
+  }.length;
+  final anyUnavailable = detail.unavailableCount > 0;
   final canPlay = savedQueuePlayableIds(detail).isNotEmpty;
   return MenuSpec(
     header: MenuHeader(
@@ -119,7 +124,7 @@ MenuSpec buildSavedQueueMenu(
           soon: !m3uAvailable,
           action: MenuAction.run((ctx) => exportM3u(ctx, uid, relative: false)),
         ),
-        if (missing > 0)
+        if (anyUnavailable)
           MenuItemSpec(
             MenuItemId.playlistRemoveMissing,
             icon: KIcons.musicOff,

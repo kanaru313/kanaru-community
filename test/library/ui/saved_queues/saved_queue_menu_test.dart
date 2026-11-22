@@ -69,6 +69,12 @@ void main() {
     expect(spec.header.itemKey, 'a');
   });
 
+  test('a missing song listed twice counts once in the head', () {
+    final spec = _menu(ids: [1, 1, 2], missing: {1});
+    expect(spec.header.subtitle, endsWith('1 song gone'));
+    expect(hasRow(spec, MenuItemId.playlistRemoveMissing), isTrue);
+  });
+
   test('titles follow the spec', () {
     final spec = _menu();
     expect(rowOf(spec, MenuItemId.play).title, _en.savedQueueMenuPlay);

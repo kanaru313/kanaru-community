@@ -59,6 +59,8 @@ Future<void> playSavedQueue(
     }
     // Named as the user saw it, before playing renames it to now.
     final name = savedQueueName(l10n, info.savedAt, today);
+    // Touch first: a replay must not be pruned by the save of the queue it
+    // replaces. A failed play leaves it moved up, which is harmless.
     if (!await store.touch(uid)) {
       say(l10n.savedQueueNotFoundTitle);
       return;
