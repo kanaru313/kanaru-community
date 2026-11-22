@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/data/queue_repository.dart';
-import 'package:kanaru/src/playback/domain/cleared_queue.dart';
+import 'package:kanaru/src/playback/domain/replaced_queue.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:kanaru/src/playback/domain/playback_notice.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
@@ -10,12 +10,12 @@ import '../support/controller_harness.dart';
 
 void main() {
   late Harness h;
-  late List<ClearedQueue> cleared;
+  late List<ReplacedQueue> cleared;
 
   setUp(() async {
     h = await Harness.create();
     cleared = [];
-    h.c.queueCleared.listen(cleared.add);
+    h.c.queueReplaced.listen(cleared.add);
   });
   tearDown(() => h.close());
 
@@ -87,7 +87,7 @@ void main() {
     expect(h.settings.read('playback.position_ms'), 0);
   });
 
-  test('queueCleared fires once with the tracks in play order', () async {
+  test('queueReplaced fires once with the tracks in play order', () async {
     await h.play(start: 2, shuffle: true);
     await h.settle();
     final order = [for (final i in h.c.queueState.items) i.trackId];

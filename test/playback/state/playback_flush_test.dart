@@ -8,6 +8,9 @@ import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/play_intent.dart';
 import 'package:kanaru/src/playback/state/playback_flush.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
+import 'package:kanaru/src/playback/data/saved_queue_writer.dart';
+import 'package:kanaru/src/playback/state/saved_queue_recorder.dart';
+import 'package:kanaru/src/playback/state/saved_queue_recorder_provider.dart';
 
 import '../support/controller_harness.dart';
 
@@ -24,7 +27,8 @@ class _SpyStore implements SettingsStore {
   @override
   Stream<String> get changes => inner.changes;
   @override
-  Future<void> flush() async => positionsAtFlush.add(inner.read('playback.position_ms'));
+  Future<void> flush() async =>
+      positionsAtFlush.add(inner.read('playback.position_ms'));
 }
 
 void main() {
@@ -75,7 +79,9 @@ void main() {
         h.c.queueState.currentItem!.entryId,
       );
       expect(h.settings.read('playback.context'), isNotNull);
-      expect(spy.positionsAtFlush, [42000], reason: 'flush came after the write');
+      expect(spy.positionsAtFlush, [
+        42000,
+      ], reason: 'flush came after the write');
     });
 
     test('a frozen restored session is not written', () async {
@@ -135,8 +141,58 @@ void main() {
         await pumpEventQueue();
       }
       await playbackFlushHook(c);
-      final rows = await h.db.customSelect('SELECT COUNT(*) AS n FROM play_log').getSingle();
+      final rows = await h.db
+          .customSelect('SELECT COUNT(*) AS n FROM play_log')
+          .getSingle();
       expect(rows.read<int>('n'), 1);
+    });
+
+    test('does not create the saved queue recorder', () async {
+      container.read(playerControllerProvider);
+      await playbackFlushHook(container);
+      expect(container.read(savedQueueRecorderProvider.exists), isFalse);
+    });
+
+    test('waits for a saved queue write that is running', () async {
+      final gate = Completer<void>();
+      final recorder = _GatedRecorder(h, gate.future);
+      final c = ProviderContainer(
+        overrides: [
+          settingsStoreProvider.overrideWithValue(spy),
+          playerControllerProvider.overrideWithValue(h.c),
+          savedQueueRecorderProvider.overrideWithValue(recorder),
+        ],
+      );
+      addTearDown(c.dispose);
+      c.read(playerControllerProvider);
+      c.read(savedQueueRecorderProvider);
+      var done = false;
+      final flush = playbackFlushHook(c).then((_) => done = true);
+      await pumpEventQueue();
+      expect(done, isFalse, reason: 'the write is still running');
+      gate.complete();
+      await flush;
+      expect(done, isTrue);
+    });
+
+    test('gives up on a saved queue write that never ends', () async {
+      final recorder = _GatedRecorder(h, Completer<void>().future);
+      final c = ProviderContainer(
+        overrides: [
+          settingsStoreProvider.overrideWithValue(spy),
+          playerControllerProvider.overrideWithValue(h.c),
+          savedQueueRecorderProvider.overrideWithValue(recorder),
+        ],
+      );
+      addTearDown(c.dispose);
+      c.read(playerControllerProvider);
+      c.read(savedQueueRecorderProvider);
+      // Completing at all proves the wait gave up; the wait is shortened so
+      // the test does not spend real seconds.
+      await playbackFlushHook(
+        c,
+        savedQueueWait: const Duration(milliseconds: 50),
+      ).timeout(const Duration(seconds: 1));
     });
 
     test('a failing write does not stop the settings flush', () async {
@@ -203,4 +259,13 @@ class _FlushThrows extends _SpyStore {
   _FlushThrows(super.inner);
   @override
   Future<void> flush() => Future.error(StateError('disk full'));
+}
+
+/// A recorder whose pending write ends when [_gate] completes.
+class _GatedRecorder extends SavedQueueRecorder {
+  _GatedRecorder(Harness h, this._gate)
+    : super(writer: SavedQueueWriter(h.db), now: () => 0);
+  final Future<void> _gate;
+  @override
+  Future<void> get idle => _gate;
 }

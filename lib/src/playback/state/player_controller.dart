@@ -9,7 +9,7 @@ import '../../platform/domain/settings_store.dart';
 import '../data/queue_repository.dart';
 import '../domain/audio_engine.dart';
 import '../domain/cleanup_kind.dart';
-import '../domain/cleared_queue.dart';
+import '../domain/replaced_queue.dart';
 import '../domain/now_playing.dart';
 import '../domain/play_intent.dart';
 import '../domain/playable.dart';
@@ -172,7 +172,7 @@ class PlayerController implements PlaybackCommands {
   final _transport = ReplayStream<TransportView>(const TransportView());
   final _seekCtrl = StreamController<Duration>.broadcast();
   final _noticeCtrl = StreamController<PlaybackNotice>.broadcast();
-  final _clearedCtrl = StreamController<ClearedQueue>.broadcast();
+  final _replacedCtrl = StreamController<ReplacedQueue>.broadcast();
   final _trackEndsCtrl = StreamController<TrackEnd>.broadcast();
 
   // The sleep stop policy (see player_controller_sleep.dart). [_withheldFor]
@@ -200,8 +200,24 @@ class PlayerController implements PlaybackCommands {
   Stream<PlaybackPosition> get position => _pos.stream;
   Stream<PlaybackNotice> get notices => _noticeCtrl.stream;
 
-  /// The queue each time [clearQueue] emptied it, for saved-queue history.
-  Stream<ClearedQueue> get queueCleared => _clearedCtrl.stream;
+  /// The old queue each time a non-empty queue was cleared or replaced by
+  /// `playTracks`, after the change is stored. For saved-queue history.
+  Stream<ReplacedQueue> get queueReplaced => _replacedCtrl.stream;
+
+  ReplacedQueue _replacedNow(List<TrackId>? next) => ReplacedQueue(
+    tracks: [for (final i in _queue.items) i.trackId],
+    userOrder: [
+      for (final i in [
+        ..._queue.items,
+      ]..sort((a, b) {
+          final k = a.sortKey.compareTo(b.sortKey);
+          return k != 0 ? k : a.entryId.compareTo(b.entryId);
+        }))
+        i.trackId,
+    ],
+    context: _context,
+    next: next,
+  );
 
   /// Each entry the engine finished by itself, after the state it left
   /// behind was published. Never for failures, skips, jumps or seeks.
@@ -426,6 +442,8 @@ class PlayerController implements PlaybackCommands {
       ]..shuffle(_random);
       order = [startIndex, ...rest];
     }
+    // Captured before the queue is reassigned, so the event carries the old one.
+    final replaced = _queue.items.isEmpty ? null : _replacedNow(tracks);
     final items = await _repo.replace(tracks, _nowMs(), shuffleOrder: order);
     _queue = QueueState(
       items: items,
@@ -441,6 +459,7 @@ class PlayerController implements PlaybackCommands {
     _write(shuffleSetting.key, shuffled);
     _write(contextSetting.key, contextSetting.encode(context));
     _write(positionMsSetting.key, 0);
+    if (replaced != null) _replacedCtrl.add(replaced);
   }
 
   /// The next load starts at 0 and ticks of the old file are ignored until
@@ -783,10 +802,7 @@ class PlayerController implements PlaybackCommands {
   /// queue. A database error leaves the queue as it was.
   Future<void> clearQueue() => _cmd(() async {
     if (_queue.items.isEmpty) return;
-    final cleared = ClearedQueue(
-      tracks: [for (final i in _queue.items) i.trackId],
-      context: _context,
-    );
+    final cleared = _replacedNow(null);
     await _repo.replace(const [], _nowMs());
     _queue = QueueState(shuffled: _queue.shuffled, repeat: _queue.repeat);
     _context = null;
@@ -798,7 +814,7 @@ class PlayerController implements PlaybackCommands {
     _thaw();
     _write(positionMsSetting.key, 0);
     _write(contextSetting.key, contextSetting.encode(null));
-    _clearedCtrl.add(cleared);
+    _replacedCtrl.add(cleared);
   });
 
   Future<UndoToken?> cleanup(CleanupKind kind) => _cmd(() async {
@@ -874,7 +890,7 @@ class PlayerController implements PlaybackCommands {
     await _transport.close();
     await _seekCtrl.close();
     await _noticeCtrl.close();
-    await _clearedCtrl.close();
+    await _replacedCtrl.close();
     await _trackEndsCtrl.close();
   }
 }

@@ -214,6 +214,16 @@ void main() {
       expect(s.h.engine.nexts.last, isNotNull);
     });
 
+    test('playTracks over a non-empty queue keeps the tracks mode', () async {
+      await s.play();
+      s.timer.startTracks(3);
+      await s.h.settle();
+      await s.h.play(start: 2);
+      await s.h.settle();
+      expect(s.state.mode, SleepTimerMode.tracks);
+      expect(s.state.tracksLeft, 3);
+    });
+
     test('the minutes mode keeps counting', () async {
       await s.play();
       s.timer.startMinutes(10);

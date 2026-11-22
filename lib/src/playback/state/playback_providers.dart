@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../media/domain/track_id.dart';
@@ -9,6 +11,7 @@ import 'audio_engine_provider.dart';
 import 'listen_recorder_provider.dart';
 import 'player_controller.dart';
 import 'player_ready.dart';
+import 'saved_queue_recorder_provider.dart';
 import 'sleep_ticker_provider.dart';
 import 'playback_data_providers.dart';
 
@@ -31,6 +34,12 @@ final playerControllerProvider = Provider<PlayerController>((ref) {
     titles: ref.read(trackTitleLookupProvider),
     listens: ref.read(listenRecorderProvider),
   );
+  // Registered before the controller's dispose: the subscription is cancelled
+  // first, then the controller closes its streams. The recorder outlives the
+  // controller and is stopped by its own provider.
+  final recorder = ref.read(savedQueueRecorderProvider);
+  final replacedSub = controller.queueReplaced.listen(recorder.onReplaced);
+  ref.onDispose(() => unawaited(replacedSub.cancel()));
   ref.onDispose(controller.dispose);
   ref.listen(
     mediaSessionBridgeProvider,

@@ -307,8 +307,21 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
 
 - **Clear queue:** `clearQueue` empties `queue_entries` in one transaction (a database error leaves
   memory untouched), keeps shuffle and repeat, drops the context, stops playback and resets the
-  saved position, so nothing is restored on the next start. No undo. It emits the old tracks (in
-  play order) and context on `queueCleared`, for saved-queue history; an empty queue does nothing.
+  saved position, so nothing is restored on the next start. No undo. It emits the old queue on
+  `queueReplaced`; an empty queue does nothing.
+- **Replaced queue event:** `queueReplaced` (`ReplacedQueue`: `tracks` in play order, `userOrder` in
+  `sort_key` order, `context`, `next` = the tracks of the replacing `playTracks`, null for a clear;
+  `isClear`) fires inside the command chain after the queue write succeeded, only when the old queue
+  had tracks. So the first play, `playNext` / `enqueue` (on an empty or a filled queue), a database
+  error and the session restore emit nothing. `playTracks` over a filled queue and `clearQueue` emit.
+- **Saved queue recorder** (`saved_queue_recorder.dart`, own provider `savedQueueRecorderProvider` in
+  `saved_queue_recorder_provider.dart`, like `listenRecorderProvider`): `playerControllerProvider`
+  subscribes it to `queueReplaced`; on dispose the subscription is cancelled before
+  `controller.dispose`, while the recorder is stopped by its own provider (a rebuilt player keeps saving). A replace whose `next` equals the old queue in user order is skipped;
+  every other event queues a write through `SavedQueueWriter` (`playback/data/saved_queue_writer.dart`, like `PlayLogWriter`: it turns the `PlayContext` into plain strings and calls `recordSavedQueue`) on a tail chain, so writes run in event
+  order after the command returned. A failed write is only logged (`playback.saved_queue`, warning with
+  stack): history never breaks playback. After `dispose` no new write starts (one already running finishes); `idle` completes when
+  the queued writes ended.
 
 - **One chain** (`command_chain.dart`): UI commands, media-control commands and engine events run in
   call order. A task that runs another task of the same chain asserts in debug. After the last
@@ -437,7 +450,7 @@ SleepTimerState>`). Session only: nothing is saved, a restart or kill loses it. 
   `sleepPolicyChanged()`, so the player decides again; a failure is logged and the keys stay unknown
   (stop, not asked again until a `queueTracksChangedProvider` event clears the map). The request runs
   in the zone the keys were made in, because the policy is asked inside the player's chain.
-- **Clear and stale events:** `queueCleared` turns a track mode off (the player dropped its policy; the
+- **Clear and stale events:** a clear (`queueReplaced` with `isClear`) turns a track mode off (the player dropped its policy; the
   minutes mode keeps counting). `TrackEnd.policy` is the policy a stop consumed: the timer ignores a
   stop whose policy is no longer the installed one (a new `start*` landed while the stop was being
   published). `cancel()` always sends the removal. `sleepPolicyChanged()` forgets the hand-over decision
@@ -649,8 +662,13 @@ The controller's position follows engine ticks only while playing (a paused open
 - `addFlushHook(playbackFlushHook)`: does nothing (and creates nothing) if the controller does not
   exist. Otherwise it writes `playback.position_ms`, `current_entry` and `context` from the saver's
   last snapshot (not when frozen), calls `SettingsStore.flush()`, then flushes the open listen through
-  the recorder's own chain (so a busy database cannot delay the position). It never waits on the
-  command chain.
+  the recorder's own chain (so a busy database cannot delay the position). Last, if the saved queue
+  recorder exists, it waits for its `idle` for at most 2 s (a timeout or an error is logged). On exit the
+  whole flush is capped at `exitFlushCap` (2 s, shared with the other flush steps), so the hook's own
+  2 s only bounds background (hidden / paused) flushes. A replace that already left the command chain
+  is saved before exit when the cap leaves time (best effort); one still waiting in the chain is not
+  (the hook never waits on the command chain), so that queue can be lost. Playing the new tracks
+  is not affected.
 - `addStartupHook(mediaSessionStartHook())`: `initAndroidMediaSession()` with a 3 s timeout and a
   catch; Android only, returns at once elsewhere; a failure is logged and never stops bootstrap.
 

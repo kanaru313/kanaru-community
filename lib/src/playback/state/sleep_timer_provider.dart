@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
-import '../domain/cleared_queue.dart';
+import '../domain/replaced_queue.dart';
 import '../domain/play_intent.dart';
 import '../domain/sleep_policies.dart';
 import '../domain/sleep_stop_policy.dart';
@@ -54,7 +54,7 @@ class SleepTimer extends Notifier<SleepTimerState> {
   SleepStopPolicy? _policy;
   SleepAlbumKeys? _albums;
   ProviderSubscription<AsyncValue<void>>? _tracksSub;
-  StreamSubscription<ClearedQueue>? _clearedSub;
+  StreamSubscription<ReplacedQueue>? _clearedSub;
 
   /// Minutes mode: the deadline on the controller's clock, and the time left
   /// while the count is on hold.
@@ -83,10 +83,13 @@ class SleepTimer extends Notifier<SleepTimerState> {
       _onTrackEnd,
       onError: (Object e) => _log.warning('track ends: ${e.runtimeType}'),
     );
-    _clearedSub = controller.queueCleared.listen(
-      (_) => _onQueueCleared(),
-      onError: (Object e) => _log.warning('queue cleared: ${e.runtimeType}'),
-    );
+    _clearedSub = controller.queueReplaced
+        .where((e) => e.isClear)
+        .listen(
+          (_) => _onQueueCleared(),
+          onError: (Object e) =>
+              _log.warning('queue cleared: ${e.runtimeType}'),
+        );
     _lifecycle = AppLifecycleListener(onResume: _tick);
     ref.onDispose(_onDispose);
     return const SleepTimerState.off();
