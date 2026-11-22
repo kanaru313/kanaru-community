@@ -1,7 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics.dart';
+import 'package:kanaru/src/lyrics/domain/lyrics_intro_gap.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_card.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_gap_mark.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -47,7 +50,7 @@ void main() {
     final host = LyricsUiHost(lyrics: LyricsShown(syncedLyrics(4)), line: -1);
     await host.pump(tester, _card());
     expect(find.text('Line 0'), findsOneWidget);
-    expect(find.text('♪'), findsOneWidget);
+    expect(find.byType(LyricsGapMark), findsOneWidget);
   });
 
   testWidgets('a gap reads as a note', (tester) async {
@@ -62,9 +65,119 @@ void main() {
     );
     final host = LyricsUiHost(lyrics: LyricsShown(lyrics), line: 1);
     await host.pump(tester, _card());
-    expect(find.text('♪'), findsOneWidget);
+    expect(find.byType(LyricsGapMark), findsOneWidget);
     expect(find.text('A'), findsOneWidget);
     expect(find.text('B'), findsOneWidget);
+  });
+
+  testWidgets('during an intro gap the card shows the gap as current', (
+    tester,
+  ) async {
+    final lyrics = withIntroGap(
+      const Lyrics(
+        lines: [LyricLine(Duration(seconds: 30), 'First')],
+        synced: true,
+        origin: LyricsOrigin.tag,
+      ),
+    );
+    final host = LyricsUiHost(lyrics: LyricsShown(lyrics), line: 0);
+    await host.pump(tester, _card());
+    expect(find.byType(LyricsGapMark), findsOneWidget);
+    expect(find.text('First'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byType(LyricsGapMark)).dy,
+      lessThan(_y(tester, 'First')),
+    );
+  });
+
+  testWidgets(
+    'gaps: static as previous or next, pulsing as current, edges empty',
+    (tester) async {
+      final lyrics = Lyrics(
+        lines: const [
+          LyricLine(Duration.zero, ''),
+          LyricLine(Duration(seconds: 4), 'A'),
+          LyricLine(Duration(seconds: 8), ''),
+        ],
+        synced: true,
+        origin: LyricsOrigin.lrc,
+      );
+      final host = LyricsUiHost(lyrics: LyricsShown(lyrics), line: 1);
+      await host.pump(tester, _card());
+      expect(find.byType(LyricsGapMark), findsNWidgets(2));
+      expect(
+        tester
+            .widgetList<LyricsGapMark>(find.byType(LyricsGapMark))
+            .map((m) => m.active),
+        [false, false],
+      );
+      await tester.pump(const Duration(seconds: 1));
+      expect(SchedulerBinding.instance.transientCallbackCount, 0);
+      host.setLine(0);
+      await tester.pump();
+      // Current gap pulses; the slot before the first line is empty.
+      expect(find.byType(LyricsGapMark), findsOneWidget);
+      expect(
+        tester.widget<LyricsGapMark>(find.byType(LyricsGapMark)).active,
+        isTrue,
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(SchedulerBinding.instance.transientCallbackCount, greaterThan(0));
+      host.setLine(2);
+      await tester.pump();
+      expect(find.byType(LyricsGapMark), findsNWidgets(1));
+      expect(find.text('A'), findsOneWidget);
+    },
+  );
+
+  testWidgets('before a leading gap line only one mark shows', (tester) async {
+    final lyrics = Lyrics(
+      lines: const [
+        LyricLine(Duration.zero, ''),
+        LyricLine(Duration(seconds: 4), 'A'),
+      ],
+      synced: true,
+      origin: LyricsOrigin.lrc,
+    );
+    final host = LyricsUiHost(lyrics: LyricsShown(lyrics), line: -1);
+    await host.pump(tester, _card());
+    expect(find.byType(LyricsGapMark), findsOneWidget);
+    expect(find.text('A'), findsNothing);
+  });
+
+  testWidgets('a gap in the window keeps the card height at 200 % text', (
+    tester,
+  ) async {
+    Future<double> heightWith(List<LyricLine> lines) async {
+      final host = LyricsUiHost(
+        lyrics: LyricsShown(
+          Lyrics(lines: lines, synced: true, origin: LyricsOrigin.lrc),
+        ),
+        line: 1,
+      );
+      await host.pump(
+        tester,
+        _card(),
+        textScale: 2,
+        size: const Size(360, 800),
+      );
+      final height = tester.getSize(find.byType(LyricsCard)).height;
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+      return height;
+    }
+
+    final withText = await heightWith(const [
+      LyricLine(Duration.zero, 'A'),
+      LyricLine(Duration(seconds: 4), 'B'),
+      LyricLine(Duration(seconds: 8), 'C'),
+    ]);
+    final withGap = await heightWith(const [
+      LyricLine(Duration.zero, 'A'),
+      LyricLine(Duration(seconds: 4), 'B'),
+      LyricLine(Duration(seconds: 8), ''),
+    ]);
+    expect(withGap, withText);
   });
 
   testWidgets('plain: the first three lines at 15', (tester) async {

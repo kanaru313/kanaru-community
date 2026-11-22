@@ -218,4 +218,26 @@ void main() {
     expect(h.container.read(trackLyricsProvider(id).exists), isFalse);
     expect(h.container.read(playingLyricsProvider.exists), isFalse);
   });
+
+  test('a late first line adds an intro gap that is line 0 until it', () async {
+    final id = await h.addTrackRow('a.flac');
+    h.reader.tags['/m/${id.value}.flac'] = const EmbeddedLyrics(
+      text: '[00:30.87]a\n[00:35.00]b',
+    );
+    final sub = h.container.listen(playingLyricsLineProvider, (_, _) {});
+    nowPlaying.add(_np(10, id));
+    await h.until(
+      () => h.container.read(playingLyricsProvider).lyrics is LyricsShown,
+    );
+    final shown =
+        (h.container.read(playingLyricsProvider).lyrics as LyricsShown).lyrics;
+    expect(shown.lines.length, 3);
+    expect(shown.lines.first.isGap, isTrue);
+    position.add(_at(10, 1000));
+    await pumpEventQueue();
+    expect(sub.read(), 0);
+    position.add(_at(10, 30870));
+    await pumpEventQueue();
+    expect(sub.read(), 1);
+  });
 }

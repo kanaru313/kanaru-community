@@ -2967,5 +2967,28 @@
       }
     }
   },
-  "lyricsTranslateSoon": "Dịch lời · Sắp có"
+  "lyricsTranslateSoon": "Dịch lời · Sắp có",
+  "lyricsForTrackTitle": "Lời cho bài này",
+  "lyricsModalClose": "Đóng",
+  "lyricsModalNoneOnDevice": "Không có lời trên máy",
+  "lyricsChoiceFile": "Lời trong file",
+  "lyricsChoiceFileNone": "Không có lời trong file",
+  "lyricsChoiceOff": "Không hiện lời",
+  "lyricsChoiceSubTagSynced": "Trong tag · Đồng bộ",
+  "lyricsChoiceSubTagPlain": "Trong tag · Thường",
+  "lyricsChoiceSubLrcSynced": "Tệp .lrc · Đồng bộ",
+  "lyricsChoiceSubLrcPlain": "Tệp .lrc · Thường",
+  "lyricsFindOnline": "Tìm lời trực tuyến…",
+  "lyricsFromAudio": "Tạo lời từ âm thanh…",
+  "lyricsFromAudioSub": "Groq Whisper",
+  "lyricsSaveLyrics": "Lưu lời…",
+  "lyricsSourceTooltipDesktop": "{label} (L)",
+  "@lyricsSourceTooltipDesktop": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSourceToggleHint": "Chuột phải: bật/tắt lời bài này"
 }

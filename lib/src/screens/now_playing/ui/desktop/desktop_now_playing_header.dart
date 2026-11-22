@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
+import '../../../../lyrics/state/playing_lyrics_providers.dart';
+import '../../../../lyrics/ui/lyrics_for_track_modal.dart';
+import '../../../../lyrics/ui/lyrics_source_button.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/state/track_info_providers.dart';
 import '../../../../playback/ui/sleep_timer/sleep_timer_entries.dart';
@@ -22,7 +27,7 @@ const double desktopNowPlayingHeaderHeight = 64;
 /// There is no Shuffle (it is on the queue panel and the player bar) and no
 /// window buttons (they are on the top bar).
 ///
-/// The More menu and the sleep timer modal pin [chrome] while open, so
+/// The More menu, the sleep timer modal and the lyrics modal pin [chrome] while open, so
 /// whoever hides the header keeps it shown.
 class DesktopNowPlayingHeader extends ConsumerStatefulWidget {
   const DesktopNowPlayingHeader({
@@ -53,6 +58,17 @@ class _DesktopNowPlayingHeaderState
         () => showSleepTimer(context, returnFocus: returnFocus),
         stillOwned: () => mounted,
       );
+
+  /// Opens "Lời cho bài này" for the playing song with the header pinned, the
+  /// same way as the sleep timer.
+  Future<void> _openLyrics() {
+    final id = ref.read(playingLyricsProvider).trackId;
+    if (id == null) return Future.value();
+    return widget.chrome.whilePinned(
+      () => showLyricsForTrack(context, id, followsPlaying: true),
+      stillOwned: () => mounted,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +110,10 @@ class _DesktopNowPlayingHeaderState
                   ? null
                   : () => addCurrentToPlaylist(context, info),
             ),
+            LyricsSourceButton(
+              onOpen: () => unawaited(_openLyrics()),
+              onToggle: toggleLyricsOfPlaying(ref),
+            ),
             Padding(
               padding: const EdgeInsets.only(left: KSpace.x1),
               child: Tooltip(
@@ -127,7 +147,10 @@ class _DesktopNowPlayingHeaderState
             const RepeatButton(),
             SleepTimerDesktopEntry(opener: _openSleepTimer),
             const VolumeControl(),
-            DesktopMoreMenu(chrome: widget.chrome),
+            DesktopMoreMenu(
+              chrome: widget.chrome,
+              onOpenLyrics: () => unawaited(_openLyrics()),
+            ),
           ],
         ),
       ),

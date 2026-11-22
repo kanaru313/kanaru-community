@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
+import '../../../../lyrics/state/playing_lyrics_providers.dart';
 import '../../../../lyrics/ui/lyrics_body.dart';
+import '../../../../lyrics/ui/lyrics_for_track_modal.dart';
 import '../../state/desktop_view.dart';
 
 /// Second column of the split body (or the only one): the lyrics, titled like
@@ -38,6 +42,11 @@ class DesktopSidePane extends ConsumerWidget {
           child: LyricsBody(
             surface: KLyricsSurface.tab,
             coverColumnShown: ref.watch(coverColumnShownProvider),
+            onOpenChoice: () {
+              final id = ref.read(playingLyricsProvider).trackId;
+              if (id == null) return;
+              unawaited(showLyricsForTrack(context, id, followsPlaying: true));
+            },
           ),
         ),
       ],

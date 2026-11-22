@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../lyrics/state/playing_lyrics_providers.dart';
 import '../../../../lyrics/ui/lyrics_body.dart';
+import '../../../../lyrics/ui/lyrics_for_track_modal.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/state/playing_cover_colors.dart';
 import '../../../../playback/ui/play_pause_button.dart';
@@ -45,6 +49,12 @@ class _LyricsScreenState extends ConsumerState<LyricsScreen>
   }
 
   void _close() => closeLyricsScreen(widget.route);
+
+  void _openChoice() {
+    final id = ref.read(playingLyricsProvider).trackId;
+    if (id == null) return;
+    unawaited(showLyricsForTrack(context, id, followsPlaying: true));
+  }
 
   void _pullBy(double dy) {
     _pull.value = (_pull.value + dy).clamp(0, double.infinity);
@@ -112,7 +122,10 @@ class _LyricsScreenState extends ConsumerState<LyricsScreen>
                 Expanded(
                   child: NotificationListener<ScrollNotification>(
                     onNotification: _onBodyScroll,
-                    child: const LyricsBody(surface: KLyricsSurface.screen),
+                    child: LyricsBody(
+                      surface: KLyricsSurface.screen,
+                      onOpenChoice: _openChoice,
+                    ),
                   ),
                 ),
                 _handle(const _Footer()),

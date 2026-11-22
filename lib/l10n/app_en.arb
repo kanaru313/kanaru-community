@@ -3002,5 +3002,28 @@
       }
     }
   },
-  "lyricsTranslateSoon": "Translate lyrics · Coming soon"
+  "lyricsTranslateSoon": "Translate lyrics · Coming soon",
+  "lyricsForTrackTitle": "Lyrics for this song",
+  "lyricsModalClose": "Close",
+  "lyricsModalNoneOnDevice": "No lyrics on this device",
+  "lyricsChoiceFile": "Lyrics in file",
+  "lyricsChoiceFileNone": "No lyrics in the file",
+  "lyricsChoiceOff": "Don’t show lyrics",
+  "lyricsChoiceSubTagSynced": "In tag · Synced",
+  "lyricsChoiceSubTagPlain": "In tag · Plain",
+  "lyricsChoiceSubLrcSynced": "LRC file · Synced",
+  "lyricsChoiceSubLrcPlain": "LRC file · Plain",
+  "lyricsFindOnline": "Find lyrics online…",
+  "lyricsFromAudio": "Create lyrics from audio…",
+  "lyricsFromAudioSub": "Groq Whisper",
+  "lyricsSaveLyrics": "Save lyrics…",
+  "lyricsSourceTooltipDesktop": "{label} (L)",
+  "@lyricsSourceTooltipDesktop": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSourceToggleHint": "Right-click: turn this song’s lyrics on or off"
 }

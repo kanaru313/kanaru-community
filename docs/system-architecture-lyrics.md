@@ -226,7 +226,7 @@ Code: `lib/src/lyrics/` (`domain/`, `data/`, `state/`). Only `data/` imports
   scrollbar. One `ref.listen(playingLyricsLineProvider)` moves one shared `ValueNotifier<int>`; each built `LyricsLine` rebuilds only
   when it becomes or stops being the current line, so a line change rebuilds two lines and a position
   tick none. Lines are all the same size and w700; the current one is `onSurface` and scaled 1.02, the others `onSurface` at the `lyrics.dim`
-  alpha; colour and scale animate `KMotion.slow`. A timed blank line is a gap: three dots (`LyricsGapDots`) that pulse only while it is
+  alpha; colour and scale animate `KMotion.slow`. A timed blank line is a gap: three music notes (`LyricsGapMark`, `KIcons.songs` at `KIconSize.sm`, text colour at half strength) that pulse (opacity + slight scale) only while it is
   current and animations are on (the ticker exists only then). Pressing a line (gaps too) seeks through `playerControllerProvider` and
   makes it current at once.
 - **Scrolling** (`SyncedLyricsScroll` mixin, ported from the old app): the current line is kept at 40 % of the height with the view's own
@@ -241,12 +241,32 @@ Code: `lib/src/lyrics/` (`domain/`, `data/`, `state/`). Only `data/` imports
   change puts the line back without a glide; with animations off every move is a jump.
 - **`PlainLyricsView`**: the note "Lời thường, không có mốc thời gian: không tự cuộn." then a lazy `ListView.builder` (a blank line is
   a break); no highlight, no seek, no auto-scroll.
+- **Intro gap**: `withIntroGap` (`domain/lyrics_intro_gap.dart`, applied once in `trackLyricsProvider`) adds a gap line at 0 s to synced lyrics whose first line is sung and starts at `introGapThreshold` (5 s) or later, so it is the current line during the intro (tap seeks to 0). Plain lyrics, a first line that is already a gap and mid-song silences are untouched. Line indexes always refer to this shown list. The gap exists only in the shown lyrics (`trackLyricsProvider`): saving or editing lyrics later must read the raw lyrics, not the shown list.
 - **`LyricsStateView`**: none ("Không có lời trong tệp hay tệp .lrc cạnh bài.", no button; a track with no local file reads the same)
   and off (title, then the desktop or mobile sentence, and the tonal button when `onOpenChoice` is given), both `KEmpty`.
 - **`LyricsCard`** (mobile Now Playing): `surfaceContainerHigh`, radius 20, padding 16; title, short source label and an open icon;
-  body = previous (dim) / current / next lines of synced lyrics at 18 (one line each, ellipsis, a gap or the time before the first line
-  reads as a note), the first three lines of plain lyrics at 15, or one status line. One button (semantics label "title · source").
+  body = previous (dim) / current / next lines of synced lyrics at 18 (one line each, ellipsis, a gap line, or the time before the first line, is the same `LyricsGapMark` (pulsing only as the current row); the slot before the first and after the last line is empty), the first three lines of plain lyrics at 15, or one status line. One button (semantics label "title · source").
 - **Labels**: `lyricsSummaryLabel(l10n, summary, short:)`; strings are the `lyrics*` keys of `lib/l10n/parts/lyrics_*.arb`.
 
 Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens/now_playing/ui/mobile/lyrics_screen*.dart`, see
 [system-architecture-playback.md](./system-architecture-playback.md) Now Playing mobile) and the desktop `DesktopSidePane`.
+
+## Dart side: "Lời cho bài này" and the source button (`lyrics/ui/`)
+
+- **`showLyricsForTrack(context, id, {followsPlaying})`**: a bottom sheet (`showKSheet`, root navigator) on the mobile shell, a dialog
+  of `KLayout.dialog` (`showKDialog`) on the desktop shell, chosen with `FormFactor`. With `followsPlaying` it closes once when the
+  playing track changes or stops (Now Playing entry points); opened from a song menu it stays on its track. Every close goes through
+  one guarded path: it pops only while the modal is the current route (a later pop waits for that), and a second request (a double tap,
+  a track change during the exit animation) does nothing.
+- **Body** (`LyricsForTrackBody`): header "Lời cho bài này" and a close button (no settings button), a status line "Không có lời trên
+  máy" only when the file has no lyrics, the two choice rows, a divider, then three dimmed inert "Sắp có" rows (find online, create
+  from audio, save).
+- **Choice rows** (`LyricsChoiceRows`, two single-choice icon `SelectionRow`s, marked by tint and bold title only): "Lời trong
+  file" (subtitle names tag or `.lrc` and synced or plain; disabled with "Không có lời trong file" when the file has none or the read
+  is loading) and "Không hiện lời" (always enabled, even while loading). Choosing reads `LyricsChoiceCommands`, closes, then writes
+  exactly once: file → `clear(id)`, off → `setOff(id)`. The chosen row only closes. A failed write is logged.
+- **`LyricsSourceButton`**: watches only `playingLyricsProvider`. Icon: file lyrics = `KIcons.lyrics` in `primary`; none, loading =
+  the same at 38 %; off = `KIcons.lyricsOff`. 48 dp wide on mobile, 40 on desktop. Semantics label = the summary label (the modal
+  title while loading). Disabled without a track and for a track with no readable file. Desktop tooltip "<label> (L)" plus the
+  right-click line when `onToggle` is given; right-click (`KContextRegion`, no long press) calls `onToggle`, built by
+  `toggleLyricsOfPlaying(ref)` (off ↔ automatic through `LyricsChoiceCommands.toggle`).

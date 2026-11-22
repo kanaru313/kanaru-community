@@ -3841,4 +3841,54 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lyricsTranslateSoon => 'Dịch lời · Sắp có';
+
+  @override
+  String get lyricsForTrackTitle => 'Lời cho bài này';
+
+  @override
+  String get lyricsModalClose => 'Đóng';
+
+  @override
+  String get lyricsModalNoneOnDevice => 'Không có lời trên máy';
+
+  @override
+  String get lyricsChoiceFile => 'Lời trong file';
+
+  @override
+  String get lyricsChoiceFileNone => 'Không có lời trong file';
+
+  @override
+  String get lyricsChoiceOff => 'Không hiện lời';
+
+  @override
+  String get lyricsChoiceSubTagSynced => 'Trong tag · Đồng bộ';
+
+  @override
+  String get lyricsChoiceSubTagPlain => 'Trong tag · Thường';
+
+  @override
+  String get lyricsChoiceSubLrcSynced => 'Tệp .lrc · Đồng bộ';
+
+  @override
+  String get lyricsChoiceSubLrcPlain => 'Tệp .lrc · Thường';
+
+  @override
+  String get lyricsFindOnline => 'Tìm lời trực tuyến…';
+
+  @override
+  String get lyricsFromAudio => 'Tạo lời từ âm thanh…';
+
+  @override
+  String get lyricsFromAudioSub => 'Groq Whisper';
+
+  @override
+  String get lyricsSaveLyrics => 'Lưu lời…';
+
+  @override
+  String lyricsSourceTooltipDesktop(String label) {
+    return '$label (L)';
+  }
+
+  @override
+  String get lyricsSourceToggleHint => 'Chuột phải: bật/tắt lời bài này';
 }

@@ -4258,4 +4258,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsTranslateSoon => 'Translate lyrics · Coming soon';
+
+  @override
+  String get lyricsForTrackTitle => 'Lyrics for this song';
+
+  @override
+  String get lyricsModalClose => 'Close';
+
+  @override
+  String get lyricsModalNoneOnDevice => 'No lyrics on this device';
+
+  @override
+  String get lyricsChoiceFile => 'Lyrics in file';
+
+  @override
+  String get lyricsChoiceFileNone => 'No lyrics in the file';
+
+  @override
+  String get lyricsChoiceOff => 'Don’t show lyrics';
+
+  @override
+  String get lyricsChoiceSubTagSynced => 'In tag · Synced';
+
+  @override
+  String get lyricsChoiceSubTagPlain => 'In tag · Plain';
+
+  @override
+  String get lyricsChoiceSubLrcSynced => 'LRC file · Synced';
+
+  @override
+  String get lyricsChoiceSubLrcPlain => 'LRC file · Plain';
+
+  @override
+  String get lyricsFindOnline => 'Find lyrics online…';
+
+  @override
+  String get lyricsFromAudio => 'Create lyrics from audio…';
+
+  @override
+  String get lyricsFromAudioSub => 'Groq Whisper';
+
+  @override
+  String get lyricsSaveLyrics => 'Save lyrics…';
+
+  @override
+  String lyricsSourceTooltipDesktop(String label) {
+    return '$label (L)';
+  }
+
+  @override
+  String get lyricsSourceToggleHint =>
+      'Right-click: turn this song’s lyrics on or off';
 }
