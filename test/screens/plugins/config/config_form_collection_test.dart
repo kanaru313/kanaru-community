@@ -69,6 +69,23 @@ void main() {
         expect(h.calls, ['set:keys=["a","bb"]']);
       });
 
+      testWidgets('leaving the page with a row still focused saves its edit', (
+        tester,
+      ) async {
+        final h = ConfigHarness(
+          [_keys],
+          values: {
+            'keys': ['a', 'b'],
+          },
+        );
+        await pumpConfigForm(tester, h, size: size);
+        await _type(tester, 1, 'bb');
+        expect(h.calls, isEmpty);
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpAndSettle();
+        expect(h.calls, ['set:keys=["a","bb"]']);
+      });
+
       testWidgets(
         'Add makes a blank row, blank rows are not items, delete saves at once',
         (tester) async {

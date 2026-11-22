@@ -331,4 +331,35 @@ void main() {
       expect(tester.widget<TextField>(field(2)).decoration!.errorText, isNull);
     });
   });
+
+  group('dispose', () {
+    testWidgets('flushes an edit still focused, once', (tester) async {
+      final sent = <List<String>>[];
+      await tester.pumpWidget(list(onCommit: sent.add));
+      await tester.enterText(field(0), 'z');
+      expect(sent, isEmpty);
+      await tester.pumpWidget(host(const SizedBox()));
+      expect(sent, [
+        ['z', 'b'],
+      ]);
+    });
+
+    testWidgets('sends nothing when nothing changed or it was committed', (
+      tester,
+    ) async {
+      final sent = <List<String>>[];
+      await tester.pumpWidget(list(onCommit: sent.add));
+      await tester.tap(field(0));
+      await tester.pumpWidget(host(const SizedBox()));
+      expect(sent, isEmpty);
+
+      await tester.pumpWidget(list(onCommit: sent.add));
+      await tester.enterText(field(0), 'y');
+      await leave(tester);
+      await tester.pump();
+      expect(sent.length, 1);
+      await tester.pumpWidget(host(const SizedBox()));
+      expect(sent.length, 1);
+    });
+  });
 }

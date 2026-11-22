@@ -1,4 +1,8 @@
+import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../plugins/domain/config/config_field.dart';
 import '../../../plugins/state/config_form_provider.dart' show ConfigWrite;
 import 'config_checks.dart';
 
@@ -37,3 +41,13 @@ String configRefusalText(AppLocalizations l10n, ConfigWrite result) =>
       ConfigWrite.unknownKey => l10n.pluginsCfgRefusedGone,
       ConfigWrite.failed || ConfigWrite.written => l10n.pluginsCfgRefusedOther,
     };
+
+/// The field's own note, shown under a picker's title.
+Widget pickerCaption(BuildContext context, SelectField field) => Padding(
+  padding: const EdgeInsets.fromLTRB(KSpace.x4, 0, KSpace.x4, KSpace.x2),
+  child: Text(
+    field.subtitle ?? '',
+    style: Theme.of(context).textTheme.bodySmall
+        ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+  ),
+);

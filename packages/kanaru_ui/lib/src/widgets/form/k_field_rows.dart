@@ -19,7 +19,8 @@ import 'k_field_row_view.dart';
 ///
 /// **Commit.** [onCommit] gets the rows that are not blank (white space only)
 /// when a row loses focus, on Enter in a field and after a remove, only when
-/// they differ from the last ones sent. The widget keeps the text being edited:
+/// they differ from the last ones sent; disposing the widget flushes an
+/// edit not yet committed the same way. The widget keeps the text being edited:
 /// a new [values] from outside replaces the rows only when the content really
 /// changed and no field has focus; one arriving during focus waits for the
 /// blur and is dropped if the user committed an edit meanwhile.
@@ -134,6 +135,9 @@ class _KFieldRowsState extends State<KFieldRows> {
 
   @override
   void dispose() {
+    // Leaving with an edit not yet committed (a row still focused): send it,
+    // as a blur would have.
+    _commit();
     for (final row in _rows) {
       row.dispose();
     }

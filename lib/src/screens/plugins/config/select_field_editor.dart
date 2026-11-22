@@ -152,7 +152,7 @@ class _SelectFieldEditorState extends State<SelectFieldEditor>
     final title = field.title.isEmpty ? field.key : field.title;
     return KeyedSubtree(
       key: _anchor,
-      child: SetupRowFrame(
+      child: SetupValueRow(
         title: Text.rich(
           TextSpan(
             text: title,
@@ -167,7 +167,7 @@ class _SelectFieldEditorState extends State<SelectFieldEditor>
         ),
         enabled: !widget.env.locked,
         onTap: _open,
-        subtitle: Column(
+        value: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -190,18 +190,7 @@ class _SelectFieldEditorState extends State<SelectFieldEditor>
               Text(error, style: text.bodySmall?.copyWith(color: scheme.error)),
           ],
         ),
-        trailing: Icon(KIcons.chevronRight, color: scheme.onSurfaceVariant),
       ),
     );
   }
 }
-
-/// The field's own note, shown under the picker's title.
-Widget pickerCaption(BuildContext context, SelectField field) => Padding(
-  padding: const EdgeInsets.fromLTRB(KSpace.x4, 0, KSpace.x4, KSpace.x2),
-  child: Text(
-    field.subtitle ?? '',
-    style: Theme.of(context).textTheme.bodySmall
-        ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-  ),
-);

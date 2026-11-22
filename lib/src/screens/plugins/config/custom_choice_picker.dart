@@ -15,8 +15,8 @@ import 'config_texts.dart';
 /// null when the user gave up, else the store's answer (a written one closes
 /// the picker, the choice is selected).
 ///
-/// Composed here because `showSelectionPicker` has no row action, footer or
-/// live options yet.
+/// The frame, rows, ✕, footer and error line are `showSelectionPicker`'s; this
+/// only feeds it the stored options and turns the store's answers into texts.
 Future<void> showCustomChoicePicker(
   BuildContext context, {
   required String installId,
@@ -26,236 +26,91 @@ Future<void> showCustomChoicePicker(
   required void Function(String value) onChoose,
   required Future<ConfigWrite> Function(String value) onRemove,
   required Future<ConfigWrite?> Function(BuildContext context) onAdd,
-}) {
-  Widget body(BuildContext context, {required bool compact}) => _PickerBody(
-    installId: installId,
-    field: field,
-    title: title,
-    compact: compact,
-    onChoose: onChoose,
-    onRemove: onRemove,
-    onAdd: onAdd,
-  );
-  if (FormFactor.of(context) == FormFactor.mobile) {
-    return showKSheet<void>(context, builder: (c) => body(c, compact: false));
+}) async {
+  final l10n = AppLocalizations.of(context);
+  final container = ProviderScope.containerOf(context);
+  final provider = configFormProvider(installId);
+
+  var current = field;
+  SelectionPickerState<String> stateOf() {
+    final data = container.read(provider).value;
+    final live = data?.field(field.key);
+    current = live is SelectField ? live : field;
+    return SelectionPickerState(
+      selected: switch (data?.valueOf(current)) {
+        final String v => v,
+        _ => null,
+      },
+      options: [
+        for (final o in current.options)
+          SelectionOption(
+            value: o.value,
+            title: _title(l10n, o, data?.isOwn(field.key, o.value) ?? false),
+            subtitle: o.subtitle == null ? null : Text(o.subtitle!),
+            hint: o.subtitle,
+            removeTooltip: (data?.isOwn(field.key, o.value) ?? false)
+                ? l10n.pluginsCfgRemoveModel
+                : null,
+            onRemove: (data?.isOwn(field.key, o.value) ?? false)
+                ? () async {
+                    final result = await onRemove(o.value);
+                    return result == ConfigWrite.written
+                        ? null
+                        : configRefusalText(l10n, result);
+                  }
+                : null,
+          ),
+      ],
+    );
   }
-  final rect = kAnchorRectOf(anchor);
-  if (rect == null) {
-    return showKDialog<void>(
+
+  final live = ValueNotifier(stateOf());
+  final sub = container.listen(provider, (_, _) => live.value = stateOf());
+  try {
+    final chosen = await showSelectionPicker<String>(
       context,
-      builder: (c) => Dialog(
-        shape: KShape.of(KRadius.xl, continuous: true),
-        clipBehavior: Clip.antiAlias,
-        child: body(c, compact: false),
+      anchor: anchor,
+      title: Text(title),
+      header: field.subtitle == null ? null : pickerCaption(context, field),
+      options: live.value.options,
+      selected: live.value.selected,
+      live: live,
+      footerAction: SelectionPickerAction(
+        label: l10n.pluginsCfgAddModel,
+        onPressed: (pickerContext) async {
+          if (current.options.length >= configMaxItems) {
+            return SelectionActionResult.error(
+              configIssueText(
+                l10n,
+                const ConfigIssue(ConfigIssueKind.tooManyItems, configMaxItems),
+              ),
+            );
+          }
+          final result = await onAdd(pickerContext);
+          return switch (result) {
+            null => const SelectionActionResult.stay(),
+            ConfigWrite.written => const SelectionActionResult.close(),
+            _ => SelectionActionResult.error(configRefusalText(l10n, result)),
+          };
+        },
       ),
     );
+    if (chosen != null) onChoose(chosen);
+  } finally {
+    sub.close();
+    live.dispose();
   }
-  return showKAnchoredPanel<void>(
-    context,
-    anchor: rect,
-    builder: (c) => SizedBox(
-      width: KLayout.anchoredPickerMaxWidth,
-      child: body(c, compact: true),
+}
+
+/// The option's name, with the "own" tag after it for the user's choices.
+Widget _title(AppLocalizations l10n, ConfigOption option, bool own) => Row(
+  children: [
+    Flexible(
+      child: Text(option.title, maxLines: 1, overflow: TextOverflow.ellipsis),
     ),
-  );
-}
-
-class _PickerBody extends ConsumerStatefulWidget {
-  const _PickerBody({
-    required this.installId,
-    required this.field,
-    required this.title,
-    required this.compact,
-    required this.onChoose,
-    required this.onRemove,
-    required this.onAdd,
-  });
-
-  final String installId;
-  final SelectField field;
-  final String title;
-  final bool compact;
-  final void Function(String value) onChoose;
-  final Future<ConfigWrite> Function(String value) onRemove;
-  final Future<ConfigWrite?> Function(BuildContext context) onAdd;
-
-  @override
-  ConsumerState<_PickerBody> createState() => _PickerBodyState();
-}
-
-class _PickerBodyState extends ConsumerState<_PickerBody> {
-  bool _busy = false;
-  String? _error;
-
-  Future<void> _remove(String value) async {
-    final l10n = AppLocalizations.of(context);
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    final result = await widget.onRemove(value);
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      _error = result == ConfigWrite.written
-          ? null
-          : configRefusalText(l10n, result);
-    });
-  }
-
-  Future<void> _add(SelectField field) async {
-    final l10n = AppLocalizations.of(context);
-    if (field.options.length >= configMaxItems) {
-      setState(
-        () => _error = configIssueText(
-          l10n,
-          const ConfigIssue(ConfigIssueKind.tooManyItems, configMaxItems),
-        ),
-      );
-      return;
-    }
-    setState(() => _error = null);
-    final result = await widget.onAdd(context);
-    if (!mounted || result == null) return;
-    if (result == ConfigWrite.written) {
-      Navigator.of(context).pop();
-    } else {
-      setState(() => _error = configRefusalText(l10n, result));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final data = ref.watch(configFormProvider(widget.installId)).value;
-    final live = data?.field(widget.field.key);
-    final field = live is SelectField ? live : widget.field;
-    final selected = data?.valueOf(field);
-    final caption = field.subtitle;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            KSpace.x6,
-            KSpace.x4,
-            KSpace.x6,
-            KSpace.x2,
-          ),
-          child: Text(
-            widget.title,
-            style:
-                (widget.compact
-                        ? theme.textTheme.titleSmall
-                        : theme.textTheme.titleMedium)
-                    ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-        ),
-        if (caption != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              KSpace.x6,
-              0,
-              KSpace.x6,
-              KSpace.x2,
-            ),
-            child: Text(
-              caption,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        Flexible(
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.symmetric(vertical: KSpace.x2),
-            children: [
-              for (final o in field.options)
-                _row(
-                  context,
-                  l10n,
-                  o,
-                  data?.isOwn(field.key, o.value) ?? false,
-                  selected == o.value,
-                ),
-            ],
-          ),
-        ),
-        if (_error != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              KSpace.x6,
-              KSpace.x1,
-              KSpace.x6,
-              KSpace.x2,
-            ),
-            child: Text(
-              _error!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.error,
-              ),
-            ),
-          ),
-        PickerFooter(
-          buttons: [
-            TextButton.icon(
-              onPressed: _busy ? null : () => _add(field),
-              icon: const Icon(KIcons.add),
-              label: Text(l10n.pluginsCfgAddModel),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _row(
-    BuildContext context,
-    AppLocalizations l10n,
-    ConfigOption option,
-    bool own,
-    bool selected,
-  ) {
-    return Row(
-      children: [
-        Expanded(
-          child: SelectionRow(
-            dense: widget.compact,
-            selected: selected,
-            enabled: !_busy,
-            title: Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    option.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (own) ...[
-                  const KGap(KSpace.x2),
-                  KChip.tag(label: Text(l10n.pluginsCfgOwnTag)),
-                ],
-              ],
-            ),
-            subtitle: option.subtitle == null ? null : Text(option.subtitle!),
-            hint: option.subtitle,
-            onTap: () {
-              widget.onChoose(option.value);
-              Navigator.of(context).pop();
-            },
-          ),
-        ),
-        if (own)
-          KIconButton(
-            icon: KIcons.close,
-            tooltip: l10n.pluginsCfgRemoveModel,
-            onPressed: _busy ? null : () => _remove(option.value),
-          ),
-      ],
-    );
-  }
-}
+    if (own) ...[
+      const KGap(KSpace.x2),
+      KChip.tag(label: Text(l10n.pluginsCfgOwnTag)),
+    ],
+  ],
+);
