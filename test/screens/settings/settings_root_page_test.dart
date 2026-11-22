@@ -41,8 +41,8 @@ void main() {
     ]) {
       expect(find.text(name), findsOneWidget, reason: name);
     }
-    // Appearance, Library, Playback and About are built here; the rest wait.
-    expect(find.text('Coming soon'), findsNWidgets(7));
+    // Appearance, Library, Playback, Lyrics and About are built here; the rest wait.
+    expect(find.text('Coming soon'), findsNWidgets(6));
   });
 
   testWidgets('the Playback row opens its page', (tester) async {
@@ -52,6 +52,16 @@ void main() {
     expect(
       h.router.routerDelegate.currentConfiguration.last.matchedLocation,
       SettingsPaths.playback,
+    );
+  });
+
+  testWidgets('the Lyrics row opens its page', (tester) async {
+    final h = await pumpSettings(tester, size: const Size(400, 1600));
+    await tester.tap(find.text('Lyrics'));
+    await tester.pumpAndSettle();
+    expect(
+      h.router.routerDelegate.currentConfiguration.last.matchedLocation,
+      SettingsPaths.lyrics,
     );
   });
 
@@ -126,7 +136,7 @@ void main() {
       expect(find.text('Activated · thank you'), findsOneWidget);
       expect(find.text('PRO'), findsNothing);
       // The Pro row is no longer one of the coming-soon rows.
-      expect(find.text('Coming soon'), findsNWidgets(6));
+      expect(find.text('Coming soon'), findsNWidgets(5));
     });
   });
 

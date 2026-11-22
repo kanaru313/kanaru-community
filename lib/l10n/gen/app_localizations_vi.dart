@@ -3891,4 +3891,176 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lyricsSourceToggleHint => 'Chuột phải: bật/tắt lời bài này';
+
+  @override
+  String get lyricsSettingsModalSettings => 'Cài đặt lời bài';
+
+  @override
+  String get lyricsSettingsDefault => 'Mặc định';
+
+  @override
+  String get lyricsSettingsDisplay => 'Hiển thị lời';
+
+  @override
+  String get lyricsSettingsFind => 'Tìm và lưu lời';
+
+  @override
+  String get lyricsSettingsSources => 'Nguồn lời trực tuyến';
+
+  @override
+  String get lyricsSettingsWhere => 'Nơi hiện lời';
+
+  @override
+  String get lyricsSettingsTranslation => 'Dịch lời';
+
+  @override
+  String get lyricsSettingsSpeech => 'Tạo lời từ âm thanh';
+
+  @override
+  String get lyricsSettingsSpeechHint =>
+      'Plugin chuyển giọng nói thành chữ, dùng cho “Tạo lời từ âm thanh…” trong Lời cho bài này.';
+
+  @override
+  String get lyricsSettingsFontSize => 'Cỡ chữ lời';
+
+  @override
+  String get lyricsSettingsFontSizeCaption =>
+      'Áp cho màn lời, tab Lời bài và thẻ lời.';
+
+  @override
+  String get lyricsSettingsSizeSmall => 'Nhỏ';
+
+  @override
+  String get lyricsSettingsSizeMedium => 'Vừa';
+
+  @override
+  String get lyricsSettingsSizeLarge => 'Lớn';
+
+  @override
+  String get lyricsSettingsAlign => 'Căn lời';
+
+  @override
+  String get lyricsSettingsAlignStart => 'Trái';
+
+  @override
+  String get lyricsSettingsAlignCenter => 'Giữa';
+
+  @override
+  String get lyricsSettingsAutoReturn => 'Tự về dòng đang hát';
+
+  @override
+  String get lyricsSettingsAutoReturnCaption =>
+      'Sau khi bạn cuộn lời bằng tay. Tắt thì lời đứng yên tới khi bạn bấm “Về dòng đang hát”.';
+
+  @override
+  String get lyricsSettingsAutoReturnOff => 'Tắt';
+
+  @override
+  String get lyricsSettingsAutoReturn3 => '3 giây';
+
+  @override
+  String get lyricsSettingsAutoReturn5 => '5 giây';
+
+  @override
+  String get lyricsSettingsAutoReturn10 => '10 giây';
+
+  @override
+  String get lyricsSettingsDim => 'Làm mờ dòng không hát';
+
+  @override
+  String get lyricsSettingsDimLight => 'Mờ nhẹ';
+
+  @override
+  String get lyricsSettingsDimStrong => 'Mờ nhiều';
+
+  @override
+  String get lyricsSettingsDimOff => 'Tắt';
+
+  @override
+  String get lyricsSettingsRomanize => 'Phiên âm';
+
+  @override
+  String get lyricsSettingsRomanizeDesc =>
+      'Romaji, Pinyin, Furigana dưới lời tiếng Nhật, Trung, Hàn.';
+
+  @override
+  String get lyricsSettingsKeepAwake => 'Giữ màn hình sáng';
+
+  @override
+  String get lyricsSettingsKeepAwakeDesc =>
+      'Màn hình không tắt khi đang mở màn lời.';
+
+  @override
+  String get lyricsSettingsAutoFind => 'Tự tìm lời khi bài không có lời';
+
+  @override
+  String get lyricsSettingsAutoFindDesc =>
+      'Tìm ở các nguồn lời đang bật khi bài không có lời trong máy.';
+
+  @override
+  String get lyricsSettingsLocalFirst => 'Lời trong máy';
+
+  @override
+  String get lyricsSettingsLocalFirstCaption =>
+      'Lời đồng bộ luôn được chọn trước lời thường.';
+
+  @override
+  String get lyricsSettingsLocalTag => 'Lời trong tệp nhạc trước';
+
+  @override
+  String get lyricsSettingsLocalTagSub => 'Rồi tới tệp .lrc';
+
+  @override
+  String get lyricsSettingsLocalLrc => 'Tệp .lrc trước';
+
+  @override
+  String get lyricsSettingsLocalLrcSub => 'Rồi tới lời trong tệp nhạc';
+
+  @override
+  String get lyricsSettingsAutoSave => 'Tự lưu lời tìm được thành .lrc';
+
+  @override
+  String get lyricsSettingsAutoSaveDesc =>
+      'Ghi tệp .lrc cạnh bài khi tìm được lời trực tuyến.';
+
+  @override
+  String get lyricsSettingsAddSource => 'Thêm nguồn lời trực tuyến';
+
+  @override
+  String get lyricsSettingsFloating => 'Lời nổi trên màn hình';
+
+  @override
+  String get lyricsSettingsFloatingDesc =>
+      'Cửa sổ lời nhỏ luôn nằm trên các cửa sổ khác.';
+
+  @override
+  String get lyricsSettingsLockScreen => 'Lời trên màn khoá và thông báo';
+
+  @override
+  String get lyricsSettingsLockScreenDesc =>
+      'Dòng đang hát hiện trong thông báo phát nhạc và trên màn khoá.';
+
+  @override
+  String get lyricsSettingsTrService => 'Dịch vụ dịch mặc định';
+
+  @override
+  String get lyricsSettingsTrServiceNone => 'Chưa chọn';
+
+  @override
+  String get lyricsSettingsTrTarget => 'Ngôn ngữ dịch mặc định';
+
+  @override
+  String get lyricsSettingsTrTargetApp => 'Theo ngôn ngữ ứng dụng';
+
+  @override
+  String get lyricsSettingsTrAhead => 'Dịch trước';
+
+  @override
+  String get lyricsSettingsTrAheadNow => 'Chỉ bài đang phát';
+
+  @override
+  String get lyricsSettingsAddTrService => 'Thêm dịch vụ dịch';
+
+  @override
+  String get lyricsSettingsAddSpeech => 'Thêm plugin chuyển giọng nói';
 }

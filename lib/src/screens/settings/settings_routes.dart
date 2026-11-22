@@ -2,11 +2,13 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
+import '../../lyrics/ui/lyrics_settings_link.dart';
 import 'ui/about/about_settings_page.dart';
 import 'ui/appearance/appearance_settings_page.dart';
 import 'ui/appearance/seek_bar_style_page.dart';
 import 'ui/library/artist_split_page.dart';
 import 'ui/library/library_settings_page.dart';
+import 'ui/lyrics/lyrics_settings_page.dart';
 import 'ui/playback/playback_settings_page.dart';
 import 'ui/root/settings_root_page.dart';
 
@@ -19,6 +21,7 @@ abstract final class SettingsPaths {
   static const library = '/settings/library';
   static const artistSplit = '/settings/library/artist-split';
   static const playback = '/settings/playback';
+  static const lyrics = lyricsSettingsLocation;
   static const about = '/settings/about';
 }
 
@@ -50,6 +53,10 @@ GoRoute buildSettingsRoute() => GoRoute(
     GoRoute(
       path: 'playback',
       pageBuilder: (_, s) => _page(s, const PlaybackSettingsPage()),
+    ),
+    GoRoute(
+      path: 'lyrics',
+      pageBuilder: (_, s) => _page(s, const LyricsSettingsPage()),
     ),
     GoRoute(
       path: 'about',

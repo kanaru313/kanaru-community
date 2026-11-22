@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
 import 'package:kanaru/src/lyrics/state/lyrics_choice_commands.dart';
@@ -9,6 +10,8 @@ import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_choice_rows.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_for_track_body.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_for_track_modal.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_settings_link.dart';
+import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -40,6 +43,11 @@ Finder _closeButton() => find.byWidgetPredicate(
   description: 'close button',
 );
 
+Finder _settingsButton() => find.byWidgetPredicate(
+  (w) => w is KIconButton && w.tooltip == 'Lyrics settings',
+  description: 'settings button',
+);
+
 /// Records the writes; nothing touches a database.
 class _Commands implements LyricsChoiceCommands {
   final calls = <String>[];
@@ -67,9 +75,13 @@ bool _enabled(WidgetTester tester, String title) =>
     isSemantics(isEnabled: true).matches(tester.getSemantics(_row(title)), {});
 
 class _Setup {
-  _Setup(this.container, this.commands);
+  _Setup(this.container, this.commands, this.router);
   final ProviderContainer container;
   final _Commands commands;
+  final GoRouter router;
+
+  String get location =>
+      router.routerDelegate.currentConfiguration.last.matchedLocation;
 
   void play(int? entry) => container.read(_playing.notifier).play(entry);
 }
@@ -94,10 +106,34 @@ Future<_Setup> _open(
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
   addTearDown(tester.view.reset);
+  final router = GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, _) => Scaffold(
+          body: Center(
+            child: TextButton(
+              onPressed: () => showLyricsForTrack(
+                context,
+                const TrackId(1),
+                followsPlaying: followsPlaying,
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: lyricsSettingsLocation,
+        builder: (_, _) => const Scaffold(body: Text('settings page')),
+      ),
+    ],
+  );
+  addTearDown(router.dispose);
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: MaterialApp(
+      child: MaterialApp.router(
         theme: buildKanaruTheme(brightness: Brightness.light),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -106,26 +142,13 @@ Future<_Setup> _open(
               .copyWith(textScaler: TextScaler.linear(textScale)),
           child: app!,
         ),
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => Center(
-              child: TextButton(
-                onPressed: () => showLyricsForTrack(
-                  context,
-                  const TrackId(1),
-                  followsPlaying: followsPlaying,
-                ),
-                child: const Text('open'),
-              ),
-            ),
-          ),
-        ),
+        routerConfig: router,
       ),
     ),
   );
   await tester.tap(find.text('open'));
   await tester.pumpAndSettle();
-  return _Setup(container, commands);
+  return _Setup(container, commands, router);
 }
 
 void main() {
@@ -241,9 +264,7 @@ void main() {
         expect(setup.commands.calls, ['off:1']);
       });
 
-      testWidgets('soon rows are dimmed and inert; no settings button', (
-        tester,
-      ) async {
+      testWidgets('soon rows are dimmed and inert', (tester) async {
         final handle = tester.ensureSemantics();
         final setup = await _open(tester, const LyricsNone(), size: size);
         expect(find.text('Coming soon'), findsNWidgets(3));
@@ -259,7 +280,8 @@ void main() {
         }
         expect(setup.commands.calls, isEmpty);
         expect(_closeButton(), findsOneWidget);
-        expect(find.byType(KIconButton), findsOneWidget);
+        expect(_settingsButton(), findsOneWidget);
+        expect(find.byType(KIconButton), findsNWidgets(2));
         handle.dispose();
       });
 
@@ -329,6 +351,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(LyricsForTrackBody), findsOneWidget);
   });
+
+  for (final (name, size) in [('mobile', _mobile), ('desktop', _desktop)]) {
+    testWidgets('$name: the settings button closes the modal and opens '
+        'Settings › Lyrics', (tester) async {
+      final setup = await _open(tester, const LyricsNone(), size: size);
+      setup.container.read(nowPlayingPanelProvider.notifier).open();
+      await tester.tap(_settingsButton());
+      await tester.pumpAndSettle();
+      expect(find.byType(LyricsForTrackBody), findsNothing);
+      expect(setup.location, lyricsSettingsLocation);
+      expect(find.text('settings page'), findsOneWidget);
+      expect(setup.container.read(nowPlayingPanelProvider).open, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   test('fileLyricsSummary reads the file even while lyrics are off', () {
     expect(fileLyricsSummary(const LyricsNone()), isNull);

@@ -258,7 +258,7 @@ Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens
   playing track changes or stops (Now Playing entry points); opened from a song menu it stays on its track. Every close goes through
   one guarded path: it pops only while the modal is the current route (a later pop waits for that), and a second request (a double tap,
   a track change during the exit animation) does nothing.
-- **Body** (`LyricsForTrackBody`): header "Lời cho bài này" and a close button (no settings button), a status line "Không có lời trên
+- **Body** (`LyricsForTrackBody`): header "Lời cho bài này" and a settings button (`KIcons.settings`, tooltip "Cài đặt lời bài") and a close button, a status line "Không có lời trên
   máy" only when the file has no lyrics, the two choice rows, a divider, then three dimmed inert "Sắp có" rows (find online, create
   from audio, save).
 - **Choice rows** (`LyricsChoiceRows`, two single-choice icon `SelectionRow`s, marked by tint and bold title only): "Lời trong
@@ -275,3 +275,24 @@ Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens
   title while loading). Disabled only without a track: a track whose file cannot be read keeps the dimmed look of "none" but still opens the modal (and the right-click toggle works), the same rule as every other entry, because the song menu cannot know a file is unreadable without file I/O; the modal then says the file has no lyrics and still offers "Không hiện lời". Desktop tooltip "<label> (L)" plus the
   right-click line when `onToggle` is given; right-click (`KContextRegion`, no long press) calls `onToggle`, built by
   `toggleLyricsOfPlaying(ref)` (off ↔ automatic through `LyricsChoiceCommands.toggle`).
+
+## Settings › Lyrics (`screens/settings/ui/lyrics/`)
+
+Route `/settings/lyrics`: `lyricsSettingsLocation` (`lyrics/ui/lyrics_settings_link.dart`) is the single copy of the path;
+`SettingsPaths.lyrics` points at it and `buildSettingsRoute` has one `GoRoute(path: 'lyrics')`. The root row "Lời bài" opens it.
+The ⚙ of "Lời cho bài này" takes the router and the Now Playing panel notifier first, closes the modal through its guarded close
+(nothing happens when it is already closing), closes the desktop Now Playing panel, then `go`es to the location (the page opens at
+its top). It works from Now Playing (mobile route and desktop panel) and from a song menu.
+
+`LyricsChoiceRow<T>` is one value row plus its picker (anchored on desktop, a caption as the picker header, "Mặc định" as the
+subtitle of the default option); a choice is written at once through the setting's notifier.
+
+| Section | Row | Kind | Setting |
+|---|---|---|---|
+| Hiển thị lời | Cỡ chữ lời, Căn lời, Tự về dòng đang hát, Làm mờ dòng không hát | picker | `lyrics.font_scale`, `lyrics.align`, `lyrics.auto_return`, `lyrics.dim` |
+| | Phiên âm; Giữ màn hình sáng (mobile shell only) | coming soon | none |
+| Tìm và lưu lời | Lời trong máy | picker | `lyrics.local_first` |
+| | Tự tìm lời khi bài không có lời, Tự lưu lời tìm được thành .lrc | coming soon | none |
+| Nguồn lời trực tuyến, Dịch lời | Thêm nguồn lời trực tuyến; dịch vụ, ngôn ngữ, dịch trước, thêm dịch vụ | coming soon | none |
+| Nơi hiện lời | Lời nổi trên màn hình + Pro (desktop shell); Lời trên màn khoá và thông báo (mobile shell) | coming soon | none |
+| Tạo lời từ âm thanh | Thêm plugin chuyển giọng nói (section ⓘ) | coming soon | none |

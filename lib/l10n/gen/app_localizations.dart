@@ -6227,6 +6227,330 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Right-click: turn this song’s lyrics on or off'**
   String get lyricsSourceToggleHint;
+
+  /// No description provided for @lyricsSettingsModalSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics settings'**
+  String get lyricsSettingsModalSettings;
+
+  /// No description provided for @lyricsSettingsDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get lyricsSettingsDefault;
+
+  /// No description provided for @lyricsSettingsDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Display'**
+  String get lyricsSettingsDisplay;
+
+  /// No description provided for @lyricsSettingsFind.
+  ///
+  /// In en, this message translates to:
+  /// **'Find and save'**
+  String get lyricsSettingsFind;
+
+  /// No description provided for @lyricsSettingsSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Online sources'**
+  String get lyricsSettingsSources;
+
+  /// No description provided for @lyricsSettingsWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Where lyrics show'**
+  String get lyricsSettingsWhere;
+
+  /// No description provided for @lyricsSettingsTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation'**
+  String get lyricsSettingsTranslation;
+
+  /// No description provided for @lyricsSettingsSpeech.
+  ///
+  /// In en, this message translates to:
+  /// **'Create lyrics from audio'**
+  String get lyricsSettingsSpeech;
+
+  /// No description provided for @lyricsSettingsSpeechHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech-to-text plugins, used by “Create lyrics from audio…” in Lyrics for this song.'**
+  String get lyricsSettingsSpeechHint;
+
+  /// No description provided for @lyricsSettingsFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics text size'**
+  String get lyricsSettingsFontSize;
+
+  /// No description provided for @lyricsSettingsFontSizeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to the lyrics screen, the Lyrics tab and the lyrics card.'**
+  String get lyricsSettingsFontSizeCaption;
+
+  /// No description provided for @lyricsSettingsSizeSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get lyricsSettingsSizeSmall;
+
+  /// No description provided for @lyricsSettingsSizeMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get lyricsSettingsSizeMedium;
+
+  /// No description provided for @lyricsSettingsSizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get lyricsSettingsSizeLarge;
+
+  /// No description provided for @lyricsSettingsAlign.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics alignment'**
+  String get lyricsSettingsAlign;
+
+  /// No description provided for @lyricsSettingsAlignStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get lyricsSettingsAlignStart;
+
+  /// No description provided for @lyricsSettingsAlignCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center'**
+  String get lyricsSettingsAlignCenter;
+
+  /// No description provided for @lyricsSettingsAutoReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to the current line'**
+  String get lyricsSettingsAutoReturn;
+
+  /// No description provided for @lyricsSettingsAutoReturnCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'After you scroll the lyrics by hand. Off keeps the lyrics still until you tap “Back to current line”.'**
+  String get lyricsSettingsAutoReturnCaption;
+
+  /// No description provided for @lyricsSettingsAutoReturnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get lyricsSettingsAutoReturnOff;
+
+  /// No description provided for @lyricsSettingsAutoReturn3.
+  ///
+  /// In en, this message translates to:
+  /// **'3 seconds'**
+  String get lyricsSettingsAutoReturn3;
+
+  /// No description provided for @lyricsSettingsAutoReturn5.
+  ///
+  /// In en, this message translates to:
+  /// **'5 seconds'**
+  String get lyricsSettingsAutoReturn5;
+
+  /// No description provided for @lyricsSettingsAutoReturn10.
+  ///
+  /// In en, this message translates to:
+  /// **'10 seconds'**
+  String get lyricsSettingsAutoReturn10;
+
+  /// No description provided for @lyricsSettingsDim.
+  ///
+  /// In en, this message translates to:
+  /// **'Dim the lines not being sung'**
+  String get lyricsSettingsDim;
+
+  /// No description provided for @lyricsSettingsDimLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Slightly dimmed'**
+  String get lyricsSettingsDimLight;
+
+  /// No description provided for @lyricsSettingsDimStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strongly dimmed'**
+  String get lyricsSettingsDimStrong;
+
+  /// No description provided for @lyricsSettingsDimOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get lyricsSettingsDimOff;
+
+  /// No description provided for @lyricsSettingsRomanize.
+  ///
+  /// In en, this message translates to:
+  /// **'Transliteration'**
+  String get lyricsSettingsRomanize;
+
+  /// No description provided for @lyricsSettingsRomanizeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Romaji, Pinyin, Furigana under Japanese, Chinese and Korean lyrics.'**
+  String get lyricsSettingsRomanizeDesc;
+
+  /// No description provided for @lyricsSettingsKeepAwake.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the screen on'**
+  String get lyricsSettingsKeepAwake;
+
+  /// No description provided for @lyricsSettingsKeepAwakeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The screen stays on while the lyrics screen is open.'**
+  String get lyricsSettingsKeepAwakeDesc;
+
+  /// No description provided for @lyricsSettingsAutoFind.
+  ///
+  /// In en, this message translates to:
+  /// **'Find lyrics for songs without any'**
+  String get lyricsSettingsAutoFind;
+
+  /// No description provided for @lyricsSettingsAutoFindDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Searches the enabled lyrics sources when a song has no lyrics on this device.'**
+  String get lyricsSettingsAutoFindDesc;
+
+  /// No description provided for @lyricsSettingsLocalFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics on this device'**
+  String get lyricsSettingsLocalFirst;
+
+  /// No description provided for @lyricsSettingsLocalFirstCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced lyrics always win over plain ones.'**
+  String get lyricsSettingsLocalFirstCaption;
+
+  /// No description provided for @lyricsSettingsLocalTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics in the music file first'**
+  String get lyricsSettingsLocalTag;
+
+  /// No description provided for @lyricsSettingsLocalTagSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Then the .lrc file'**
+  String get lyricsSettingsLocalTagSub;
+
+  /// No description provided for @lyricsSettingsLocalLrc.
+  ///
+  /// In en, this message translates to:
+  /// **'.lrc file first'**
+  String get lyricsSettingsLocalLrc;
+
+  /// No description provided for @lyricsSettingsLocalLrcSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Then the lyrics in the music file'**
+  String get lyricsSettingsLocalLrcSub;
+
+  /// No description provided for @lyricsSettingsAutoSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save found lyrics as .lrc'**
+  String get lyricsSettingsAutoSave;
+
+  /// No description provided for @lyricsSettingsAutoSaveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Writes an .lrc file next to the song when online lyrics are found.'**
+  String get lyricsSettingsAutoSaveDesc;
+
+  /// No description provided for @lyricsSettingsAddSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an online lyrics source'**
+  String get lyricsSettingsAddSource;
+
+  /// No description provided for @lyricsSettingsFloating.
+  ///
+  /// In en, this message translates to:
+  /// **'Floating lyrics'**
+  String get lyricsSettingsFloating;
+
+  /// No description provided for @lyricsSettingsFloatingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A small lyrics window that stays above other windows.'**
+  String get lyricsSettingsFloatingDesc;
+
+  /// No description provided for @lyricsSettingsLockScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics on the lock screen and notification'**
+  String get lyricsSettingsLockScreen;
+
+  /// No description provided for @lyricsSettingsLockScreenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The line being sung shows in the playback notification and on the lock screen.'**
+  String get lyricsSettingsLockScreenDesc;
+
+  /// No description provided for @lyricsSettingsTrService.
+  ///
+  /// In en, this message translates to:
+  /// **'Default translation service'**
+  String get lyricsSettingsTrService;
+
+  /// No description provided for @lyricsSettingsTrServiceNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not chosen'**
+  String get lyricsSettingsTrServiceNone;
+
+  /// No description provided for @lyricsSettingsTrTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Default translation language'**
+  String get lyricsSettingsTrTarget;
+
+  /// No description provided for @lyricsSettingsTrTargetApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows the app language'**
+  String get lyricsSettingsTrTargetApp;
+
+  /// No description provided for @lyricsSettingsTrAhead.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate ahead'**
+  String get lyricsSettingsTrAhead;
+
+  /// No description provided for @lyricsSettingsTrAheadNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Current song only'**
+  String get lyricsSettingsTrAheadNow;
+
+  /// No description provided for @lyricsSettingsAddTrService.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a translation service'**
+  String get lyricsSettingsAddTrService;
+
+  /// No description provided for @lyricsSettingsAddSpeech.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a speech-to-text plugin'**
+  String get lyricsSettingsAddSpeech;
 }
 
 class _AppLocalizationsDelegate

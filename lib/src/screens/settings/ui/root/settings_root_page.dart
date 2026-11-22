@@ -64,10 +64,11 @@ class SettingsRootPage extends ConsumerWidget {
               value: Text(l10n.settingsRootPlaybackDesc),
               onTap: () => context.push(SettingsPaths.playback),
             ),
-            SoonRow(
+            SetupValueRow(
               icon: KIcons.lyrics,
               title: Text(l10n.settingsRootLyrics),
-              desc: l10n.settingsRootLyricsDesc,
+              value: Text(l10n.settingsRootLyricsDesc),
+              onTap: () => context.push(SettingsPaths.lyrics),
             ),
           ],
         ),
