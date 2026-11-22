@@ -134,6 +134,9 @@ abstract final class KIcons {
   static const IconData dragIndicator =
       FluentIcons.re_order_dots_vertical_24_regular;
   static const IconData add = FluentIcons.add_24_regular;
+  static const IconData download = FluentIcons.arrow_download_24_regular;
+  static const IconData upload = FluentIcons.arrow_upload_24_regular;
+  static const IconData eye = FluentIcons.eye_24_regular;
   static const IconData remove = FluentIcons.subtract_24_regular;
   static const IconData arrowForward = FluentIcons.arrow_right_24_regular;
   static const IconData permission = FluentIcons.shield_keyhole_24_regular;
@@ -211,4 +214,14 @@ abstract final class KIcons {
   static const IconData scanFormats = FluentIcons.filter_24_regular;
   static const IconData noMedia = FluentIcons.document_dismiss_24_regular;
   static const IconData watchFolders = FluentIcons.eye_24_regular;
+
+  // Plugin store.
+  static const IconData refresh = FluentIcons.arrow_clockwise_24_regular;
+  static const IconData repository = FluentIcons.box_multiple_24_regular;
+  static const IconData installFile = FluentIcons.document_add_24_regular;
+  static const IconData installLink = FluentIcons.link_24_regular;
+  static const IconData pluginLogs =
+      FluentIcons.document_bullet_list_24_regular;
+  static const IconData sandbox = FluentIcons.shield_checkmark_24_regular;
+  static const IconData offline = FluentIcons.error_circle_24_regular;
 }

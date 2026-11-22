@@ -13,6 +13,8 @@ export 'progress_notice_card.dart';
 export 'reorderable_toggle_list.dart';
 export 'setup_next_button.dart';
 export 'setup_path_row.dart';
+export 'setup_row_frame.dart';
 export 'setup_section.dart';
+export 'setup_section_pulse.dart';
 export 'setup_simple_rows.dart';
 export 'slider_sheet.dart';

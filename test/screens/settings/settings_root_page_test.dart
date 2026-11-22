@@ -1,5 +1,10 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    show AsyncData, AsyncError, AsyncLoading;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/plugins/state/alerts_provider.dart';
+import 'package:kanaru/src/plugins/state/plugin_actions_provider.dart';
+import 'package:kanaru/src/plugins/state/updates_provider.dart';
 import 'package:kanaru/src/extension/state/extension_registry.dart';
 import 'package:kanaru/src/extension/state/registry_entries.dart';
 import 'package:kanaru/src/platform/domain/media_permissions.dart';
@@ -9,6 +14,7 @@ import 'package:kanaru/src/screens/settings/state/app_edition.dart';
 import 'package:material_ui/material_ui.dart' show Theme;
 
 import '../../support/icon_button_finders.dart';
+import '../plugins/support/plugin_fixtures.dart';
 import 'support/settings_host.dart';
 
 void main() {
@@ -41,8 +47,9 @@ void main() {
     ]) {
       expect(find.text(name), findsOneWidget, reason: name);
     }
-    // Appearance, Library, Playback, Lyrics and About are built here; the rest wait.
-    expect(find.text('Coming soon'), findsNWidgets(6));
+    // Appearance, Library, Playback, Lyrics, Plugins and About are built here;
+    // the rest wait.
+    expect(find.text('Coming soon'), findsNWidgets(5));
   });
 
   testWidgets('the Playback row opens its page', (tester) async {
@@ -120,6 +127,105 @@ void main() {
     });
   });
 
+  group('Plugins row', () {
+    Finder dotLabel() => find.bySemanticsLabel(
+      RegExp('A plugin has a problem or an update needs review'),
+    );
+
+    testWidgets('opens the plugin store', (tester) async {
+      final h = await pumpPlugins(
+        tester,
+        StoreFixture(),
+        location: SettingsPaths.root,
+        size: const Size(400, 1600),
+      );
+      await tester.tap(find.text('Plugins'));
+      await tester.pumpAndSettle();
+      expect(
+        h.router.routerDelegate.currentConfiguration.last.matchedLocation,
+        '/settings/plugins',
+      );
+    });
+
+    testWidgets('no dot when nothing needs attention', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpSettings(tester, size: const Size(400, 1600));
+      expect(dotLabel(), findsNothing);
+      handle.dispose();
+    });
+
+    testWidgets('a plugin with a problem lights the dot', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpSettings(
+        tester,
+        size: const Size(400, 1600),
+        quietPlugins: false,
+        overrides: [
+          ...quietPluginOverrides().skip(1),
+          pluginAlertsProvider.overrideWithValue(
+            const AsyncData(
+              PluginAlerts({
+                'a': {PluginAlert.broken},
+              }),
+            ),
+          ),
+        ],
+      );
+      expect(dotLabel(), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('an update that needs review lights the dot', (tester) async {
+      final handle = tester.ensureSemantics();
+      final fixture = StoreFixture(reviewIds: ['a']);
+      addTearDown(fixture.close);
+      await pumpSettings(
+        tester,
+        size: const Size(400, 1600),
+        quietPlugins: false,
+        overrides: fixture.overrides,
+      );
+      expect(dotLabel(), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('loading or a database error shows no dot', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpSettings(
+        tester,
+        size: const Size(400, 1600),
+        quietPlugins: false,
+        overrides: [
+          ...quietPluginOverrides().skip(2),
+          pluginAlertsProvider.overrideWithValue(
+            AsyncError<PluginAlerts>('db', StackTrace.empty),
+          ),
+          updatesProvider.overrideWithValue(const AsyncLoading()),
+        ],
+      );
+      expect(dotLabel(), findsNothing);
+      expect(find.text('Plugins'), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('reading the row starts the restore once', (tester) async {
+      var starts = 0;
+      await pumpSettings(
+        tester,
+        size: const Size(400, 1600),
+        quietPlugins: false,
+        overrides: [
+          ...quietPluginOverrides().take(2),
+          pluginRestoreProvider.overrideWith((ref) async {
+            starts++;
+            return const [];
+          }),
+        ],
+      );
+      expect(starts, 1);
+    });
+  });
+
   group('Pro row', () {
     testWidgets('free: badge and coming soon', (tester) async {
       await pumpSettings(tester, size: const Size(400, 1600));
@@ -136,7 +242,7 @@ void main() {
       expect(find.text('Activated · thank you'), findsOneWidget);
       expect(find.text('PRO'), findsNothing);
       // The Pro row is no longer one of the coming-soon rows.
-      expect(find.text('Coming soon'), findsNWidgets(5));
+      expect(find.text('Coming soon'), findsNWidgets(4));
     });
   });
 

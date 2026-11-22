@@ -19,8 +19,11 @@ class KChip extends StatelessWidget {
     this.onTap,
     this.dense = false,
     this.semanticLabel,
+    this.onRaised = false,
   }) : trailing = null,
-       _interactive = true;
+       outlined = false,
+       _interactive = true,
+       _tag = false;
 
   /// A pill that is a value, not a choice: no button, no selected state, no
   /// ink. [trailing] (a remove button) sits at the end with less padding.
@@ -32,7 +35,27 @@ class KChip extends StatelessWidget {
       onTap = null,
       dense = false,
       semanticLabel = null,
-      _interactive = false;
+      onRaised = false,
+      outlined = false,
+      _interactive = false,
+      _tag = false;
+
+  /// A small label that only shows a value (the kind and the author on a
+  /// plugin row): 20 dp tall, `labelSmall`, radius 6, label centred, no ink,
+  /// never a button. Filled with `secondaryContainer`, or only outlined when
+  /// [outlined]; one line, a long label ends with an ellipsis. Put it in a
+  /// [KTagRow]. At 1.5x text it grows with the label.
+  const KChip.tag({super.key, required this.label, this.outlined = false})
+    : icon = null,
+      selected = false,
+      enabled = true,
+      onTap = null,
+      dense = true,
+      semanticLabel = null,
+      onRaised = false,
+      trailing = null,
+      _interactive = false,
+      _tag = true;
 
   final Widget label;
   final Widget? icon;
@@ -49,9 +72,18 @@ class KChip extends StatelessWidget {
   /// Keep a tooltip visual only (`excludeFromSemantics`).
   final String? semanticLabel;
 
+  /// The chip sits on a raised surface (`surfaceContainerHigh`: a filter
+  /// panel); an unselected chip then uses `surfaceContainerHighest` so it does
+  /// not sink into the background.
+  final bool onRaised;
+
   /// Widget after the label of a [KChip.static] (its own action).
   final Widget? trailing;
+
+  /// Outline instead of fill ([KChip.tag] only).
+  final bool outlined;
   final bool _interactive;
+  final bool _tag;
 
   static const double _denseDesktopHeight = 32;
   static const double _denseTouchHeight = 40;
@@ -59,6 +91,7 @@ class KChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    if (_tag) return _buildTag(context, scheme);
     final touch = FormFactor.of(context) == FormFactor.mobile;
     final minHeight = dense
         ? (touch ? _denseTouchHeight : _denseDesktopHeight)
@@ -93,7 +126,11 @@ class KChip extends StatelessWidget {
       ),
     );
     final pill = Material(
-      color: selected ? scheme.secondaryContainer : scheme.surfaceContainerHigh,
+      color: selected
+          ? scheme.secondaryContainer
+          : onRaised
+          ? scheme.surfaceContainerHighest
+          : scheme.surfaceContainerHigh,
       shape: KShape.of(dense && touch ? KRadius.sm : KRadius.full),
       clipBehavior: Clip.antiAlias,
       child: _interactive
@@ -107,6 +144,97 @@ class KChip extends StatelessWidget {
       selected: selected,
       label: semanticLabel,
       child: Opacity(opacity: enabled ? 1 : 0.5, child: pill),
+    );
+  }
+
+  Widget _buildTag(BuildContext context, ColorScheme scheme) {
+    final fg = outlined ? scheme.onSurfaceVariant : scheme.onSecondaryContainer;
+    final large = KTagRow.isLarge(context);
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: outlined ? null : scheme.secondaryContainer,
+        shape: RoundedRectangleBorder(
+          borderRadius: _tagRadius,
+          side: outlined
+              ? BorderSide(color: scheme.outlineVariant)
+              : BorderSide.none,
+        ),
+      ),
+      child: ConstrainedBox(
+        // Fixed 20 dp tall; from 1.5x text the label sets the height and the
+        // width cap goes.
+        constraints: BoxConstraints(
+          minHeight: _tagHeight,
+          maxWidth: large ? double.infinity : _tagMaxWidth,
+        ),
+        child: Padding(
+          // 8 dp from the edge for both looks (the outline takes 1 dp of it).
+          padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
+          // Shrink to the label; the extra height of the 20 dp box is split
+          // evenly above and below it.
+          child: Center(
+            widthFactor: 1,
+            heightFactor: 1,
+            child: DefaultTextHeightBehavior(
+              textHeightBehavior: const TextHeightBehavior(
+                leadingDistribution: TextLeadingDistribution.even,
+              ),
+              child: DefaultTextStyle.merge(
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(color: fg),
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+                child: label,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static const double _tagHeight = 20;
+  static const double _tagMaxWidth = 154;
+  static const BorderRadius _tagRadius = BorderRadius.all(Radius.circular(6));
+}
+
+/// The meta line of a list row: [fixed] chips keep their width, [shrinking]
+/// chips (the author, then any tail) give way with an ellipsis; it never
+/// wraps. From 1.5x text everything wraps like words instead. Gap 6. Needs a
+/// bounded width.
+class KTagRow extends StatelessWidget {
+  const KTagRow({super.key, this.fixed = const [], required this.shrinking});
+
+  final List<Widget> fixed;
+  final List<Widget> shrinking;
+
+  /// From this text scale the chips grow and may wrap.
+  static const double _largeScale = 1.5;
+
+  static const double _gap = 6;
+
+  /// Whether the text is scaled enough for the wrapping layout.
+  static bool isLarge(BuildContext context) =>
+      MediaQuery.textScalerOf(context).scale(11) / 11 >= _largeScale;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLarge(context)) {
+      return Wrap(
+        spacing: _gap,
+        runSpacing: KSpace.x1,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [...fixed, ...shrinking],
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: _gap,
+      children: [
+        ...fixed,
+        for (final c in shrinking) Flexible(child: c),
+      ],
     );
   }
 }

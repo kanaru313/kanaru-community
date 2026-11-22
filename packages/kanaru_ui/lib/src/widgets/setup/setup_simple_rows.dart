@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../icons/k_icons.dart';
 import '../../tokens/k_icon_size.dart';
 import '../../tokens/k_space.dart';
+import '../k_alert_dot.dart';
 import '../k_gap.dart';
 import 'setup_row_frame.dart';
 
@@ -13,7 +14,8 @@ import 'setup_row_frame.dart';
 ///
 /// [enabled] false dims the row, ignores taps and shows [disabledReason] in
 /// place of the value. [comingSoon] dims it too and shows [soonLabel] where
-/// the chevron was.
+/// the chevron was. [alert] puts a [KAlertDot] after the title; [alertLabel]
+/// is what a screen reader adds to the row for it (the dot itself is silent).
 class SetupValueRow extends StatelessWidget {
   const SetupValueRow({
     super.key,
@@ -27,7 +29,12 @@ class SetupValueRow extends StatelessWidget {
     this.disabledReason,
     this.comingSoon = false,
     this.soonLabel,
-  });
+    this.alert = false,
+    this.alertLabel,
+  }) : assert(
+         !alert || alertLabel != null,
+         'a dot needs the words a screen reader says for it',
+       );
 
   final IconData icon;
   final Widget title;
@@ -43,6 +50,8 @@ class SetupValueRow extends StatelessWidget {
   final Widget? disabledReason;
   final bool comingSoon;
   final String? soonLabel;
+  final bool alert;
+  final String? alertLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +61,7 @@ class SetupValueRow extends StatelessWidget {
       key: anchorKey,
       child: SetupRowFrame(
         leading: Icon(icon),
-        title: title,
+        title: alert ? _titleWithDot() : title,
         enabled: enabled,
         comingSoon: comingSoon,
         soonLabel: soonLabel,
@@ -60,6 +69,17 @@ class SetupValueRow extends StatelessWidget {
         subtitle: reason ?? _valueLine(),
         trailing: Icon(KIcons.chevronRight, color: scheme.onSurfaceVariant),
       ),
+    );
+  }
+
+  Widget _titleWithDot() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(child: title),
+        const KGap(KSpace.x2),
+        Semantics(label: alertLabel, child: const KAlertDot()),
+      ],
     );
   }
 

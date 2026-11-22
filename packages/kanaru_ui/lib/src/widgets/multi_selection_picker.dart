@@ -5,6 +5,7 @@ import '../tokens/k_layout.dart';
 import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import 'anchored_panel_layout.dart';
+import 'k_anchored_panel.dart';
 import 'k_sheet.dart';
 import 'multi_selection_body.dart';
 import 'selection_picker.dart';
@@ -103,27 +104,18 @@ Future<Set<T>?> showMultiSelectionPicker<T>(
   final rect = AnchoredPanelLayout.rectOf(anchor);
   if (rect != null) {
     // Desktop with an anchor: a panel under the row, like the single picker.
-    return showDialog<Set<T>>(
-      context: context,
-      animationStyle: KMotion.routeAnimationStyle(context),
-      useSafeArea: false,
-      barrierColor: const Color(0x00000000),
-      builder: (context) => CustomSingleChildLayout(
-        delegate: AnchoredPanelLayout(rect, align: anchorAlign),
-        child: Material(
-          elevation: 3,
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
-          shape: KShape.of(KRadius.lg, continuous: true),
-          clipBehavior: Clip.antiAlias,
-          child: ConstrainedBox(
-            // A fixed width: the rows live in a lazy list, which cannot
-            // report an intrinsic width.
-            constraints: const BoxConstraints.tightFor(
-              width: KLayout.anchoredPickerMaxWidth,
-            ).enforce(const BoxConstraints(maxHeight: _dialogMaxHeight)),
-            child: body(sheet: false, dense: true),
-          ),
-        ),
+    return showKAnchoredPanel<Set<T>>(
+      context,
+      anchor: rect,
+      align: anchorAlign,
+      insetRows: false,
+      builder: (_) => ConstrainedBox(
+        // A fixed width: the rows live in a lazy list, which cannot report an
+        // intrinsic width.
+        constraints: const BoxConstraints.tightFor(
+          width: KLayout.anchoredPickerMaxWidth,
+        ).enforce(const BoxConstraints(maxHeight: _dialogMaxHeight)),
+        child: body(sheet: false, dense: true),
       ),
     );
   }

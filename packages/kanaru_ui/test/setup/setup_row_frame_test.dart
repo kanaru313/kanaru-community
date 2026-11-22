@@ -1,3 +1,5 @@
+import 'package:flutter/gestures.dart' show kSecondaryButton;
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/src/widgets/setup/setup_row_frame.dart';
 import 'package:flutter/services.dart';
@@ -69,5 +71,62 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pump();
     expect(tester.widget<KFocusRing>(find.byType(KFocusRing)).visible, isTrue);
+  });
+
+  group('long press and secondary tap', () {
+    testWidgets('both run on the row; a trailing button keeps its own', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      var long = 0, secondary = 0, buttons = 0;
+      await tester.pumpWidget(
+        host(
+          SetupRowFrame(
+            title: const Text('Row'),
+            onLongPress: () => long++,
+            onSecondaryTap: () => secondary++,
+            trailing: IconButton(
+              onPressed: () => buttons++,
+              icon: const Text('btn'),
+            ),
+          ),
+        ),
+      );
+      await tester.longPress(find.text('Row'));
+      expect(long, 1);
+      await tester.tap(find.text('Row'), buttons: kSecondaryButton);
+      expect(secondary, 1);
+      await tester.longPress(find.text('btn'));
+      expect(long, 1);
+      await tester.tap(find.text('btn'), buttons: kSecondaryButton);
+      expect(secondary, 1);
+      await tester.tap(find.text('btn'));
+      expect(buttons, 1);
+    });
+
+    testWidgets('the long-press label is a custom semantics action', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      final handle = tester.ensureSemantics();
+      var long = 0;
+      await tester.pumpWidget(
+        host(
+          SetupRowFrame(
+            title: const Text('Row'),
+            onLongPress: () => long++,
+            longPressLabel: 'Copy',
+          ),
+        ),
+      );
+      final data = tester.getSemantics(find.text('Row')).getSemanticsData();
+      expect(
+        data.customSemanticsActionIds!.map(
+          (id) => CustomSemanticsAction.getAction(id)!.label,
+        ),
+        contains('Copy'),
+      );
+      handle.dispose();
+    });
   });
 }

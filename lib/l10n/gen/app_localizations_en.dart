@@ -4482,4 +4482,1128 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsSettingsAddSpeech => 'Add a speech-to-text plugin';
+
+  @override
+  String get pluginsStoreTitle => 'Plugin store';
+
+  @override
+  String get pluginsFilterTooltip => 'Filter';
+
+  @override
+  String pluginsFilterActiveLabel(int count) {
+    return '$count on';
+  }
+
+  @override
+  String get pluginsMenuTooltip => 'More options';
+
+  @override
+  String get pluginsMenuInstallFile => 'Install from file…';
+
+  @override
+  String get pluginsMenuInstallLink => 'Install from link…';
+
+  @override
+  String pluginsMenuRepositories(int count) {
+    return 'Repositories ($count)';
+  }
+
+  @override
+  String get pluginsMenuRefreshAll => 'Refresh all';
+
+  @override
+  String get pluginsMenuLogsDesktop => 'Open log folder';
+
+  @override
+  String get pluginsMenuLogsMobile => 'Share plugin logs…';
+
+  @override
+  String get pluginsSearchHint =>
+      'Search name, author, repository, host, #type';
+
+  @override
+  String get pluginsSearchClear => 'Clear';
+
+  @override
+  String pluginsSectionUpdates(int count) {
+    return 'Updates ($count)';
+  }
+
+  @override
+  String pluginsSectionInstalled(int count) {
+    return 'Installed ($count)';
+  }
+
+  @override
+  String pluginsSectionAvailable(int count) {
+    return 'Not installed ($count)';
+  }
+
+  @override
+  String get pluginsUpdatesHint =>
+      '“Update all” skips updates with new hosts or permissions: you open those one by one, as when installing.';
+
+  @override
+  String get pluginsUpdatesHintTooltip => 'About updates';
+
+  @override
+  String pluginsUpdateAll(int count) {
+    return 'Update all ($count)';
+  }
+
+  @override
+  String get pluginsUpdate => 'Update';
+
+  @override
+  String pluginsUpdateTooltip(String name) {
+    return 'Update $name';
+  }
+
+  @override
+  String pluginsReviewTooltip(String name) {
+    return 'Review the update of $name';
+  }
+
+  @override
+  String get pluginsPageSettingsTitle => 'The plugin’s settings';
+
+  @override
+  String get pluginsPageSettingsSoon => 'Plugin configuration';
+
+  @override
+  String get pluginsPageRefreshFailed => 'Could not refresh the list';
+
+  @override
+  String pluginsInstallTooltip(String name) {
+    return 'Install $name';
+  }
+
+  @override
+  String pluginsRemoveTooltip(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String get pluginsAlertLabel => 'Has a problem';
+
+  @override
+  String get pluginsFreeStreamingLimit =>
+      'The Free edition installs only one music source plugin. Remove the current one to install this.';
+
+  @override
+  String get pluginsKindLyrics => 'Lyrics';
+
+  @override
+  String get pluginsKindTranslate => 'Translation';
+
+  @override
+  String get pluginsKindStreaming => 'Music source';
+
+  @override
+  String get pluginsKindHelpLyrics =>
+      'Finds lyrics for the song playing, with lines that follow the song.';
+
+  @override
+  String get pluginsKindHelpTranslate =>
+      'Translates lyrics into the language you choose.';
+
+  @override
+  String get pluginsKindHelpStreaming =>
+      'Searches and plays music from an online service.';
+
+  @override
+  String get pluginsAuthorUnknown => 'Unknown author';
+
+  @override
+  String pluginsFooterNewer(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plugins need a newer Kanaru',
+      one: '1 plugin needs a newer Kanaru',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pluginsSandboxNote =>
+      'Plugins run in a sandbox and can only connect to the addresses declared when installed.';
+
+  @override
+  String get pluginsNoMatch => 'No matching plugins.';
+
+  @override
+  String get pluginsClearFilters => 'Clear filters';
+
+  @override
+  String get pluginsLoadFailed => 'Couldn\'t read the plugin list.';
+
+  @override
+  String get pluginsNoRepoTitle => 'No repository yet';
+
+  @override
+  String get pluginsNoRepoBody =>
+      'Kanaru has no built-in repository. A repository is a list of plugins (a plugins.json file) published by plugin authors.';
+
+  @override
+  String get pluginsNoRepoStep1 =>
+      'Find the address of the plugins.json file of a repository you trust, usually in the author\'s README. It starts with https://.';
+
+  @override
+  String get pluginsNoRepoStep2 =>
+      'Press Add repository, paste the address, then press Add.';
+
+  @override
+  String get pluginsNoRepoStep3 =>
+      'The repository\'s plugins appear here; press Install to see hosts and facts before installing.';
+
+  @override
+  String get pluginsAddRepository => 'Add repository';
+
+  @override
+  String pluginsRepoFailedOne(String name, String reason) {
+    return 'Couldn\'t load $name: $reason';
+  }
+
+  @override
+  String pluginsRepoFailedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count repositories couldn\'t load',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pluginsRepoShowingSaved(String time) {
+    return 'Showing the list saved at $time.';
+  }
+
+  @override
+  String get pluginsRetry => 'Retry';
+
+  @override
+  String get pluginsOfflineTitle => 'No network connection';
+
+  @override
+  String get pluginsOfflineBody =>
+      'Showing the list saved last time. Installing and updating need a network.';
+
+  @override
+  String get pluginsLoadReasonNetwork => 'network error';
+
+  @override
+  String get pluginsLoadReasonNotFound => 'file not found';
+
+  @override
+  String get pluginsLoadReasonTooLarge => 'file too large';
+
+  @override
+  String get pluginsLoadReasonInvalid => 'not a valid plugin list';
+
+  @override
+  String get pluginsLoadReasonBlocked => 'address blocked';
+
+  @override
+  String get pluginsLoadReasonStorage => 'could not be saved';
+
+  @override
+  String get pluginsFilterTitle => 'Filter';
+
+  @override
+  String get pluginsFilterGroupKind => 'Plugin type';
+
+  @override
+  String get pluginsFilterGroupState => 'Status';
+
+  @override
+  String get pluginsFilterGroupLanguage => 'Language';
+
+  @override
+  String get pluginsFilterGroupAuthor => 'Author';
+
+  @override
+  String get pluginsFilterGroupRepository => 'Repository';
+
+  @override
+  String get pluginsStateInstalled => 'Installed';
+
+  @override
+  String get pluginsStateNotInstalled => 'Not installed';
+
+  @override
+  String get pluginsStateUpdatable => 'Update available';
+
+  @override
+  String pluginsFilterShowing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Showing $count plugins',
+      one: 'Showing 1 plugin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pluginsFilterClearAll => 'Clear all';
+
+  @override
+  String get pluginsFilterDone => 'Done';
+
+  @override
+  String get pluginsReposTitle => 'Repositories';
+
+  @override
+  String get pluginsReposRefreshAll => 'Refresh all';
+
+  @override
+  String pluginsRepoPluginCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plugins',
+      one: '1 plugin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pluginsRepoLastError(String reason) {
+    return 'Last load failed: $reason';
+  }
+
+  @override
+  String pluginsRepoRemoveTooltip(String name) {
+    return 'Remove repository $name';
+  }
+
+  @override
+  String get pluginsReposEmpty => 'No repository yet.';
+
+  @override
+  String get pluginsReposFooter =>
+      'Removing a repository keeps the plugins installed from it, but they no longer get updates.';
+
+  @override
+  String get pluginsAddDialogUrlLabel => 'URL';
+
+  @override
+  String get pluginsAddDialogUrlHint => 'https://…/plugins.json';
+
+  @override
+  String get pluginsAddDialogHelper =>
+      'The address of the plugins.json file. Must be https, except for machines on your home network (localhost, 192.168.x…).';
+
+  @override
+  String get pluginsAddDialogConfirm => 'Add';
+
+  @override
+  String get pluginsAddDialogLoading => 'Loading…';
+
+  @override
+  String get pluginsCancel => 'Cancel';
+
+  @override
+  String pluginsAddedRepo(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added $name · $count plugins',
+      one: 'Added $name · 1 plugin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pluginsAddErrNeedsHttps => 'Public addresses need https';
+
+  @override
+  String get pluginsAddErrInvalidUrl => 'Invalid URL';
+
+  @override
+  String get pluginsAddErrDuplicate => 'This repository is already added';
+
+  @override
+  String get pluginsAddErrNetwork => 'Couldn\'t load the list: network error';
+
+  @override
+  String get pluginsAddErrNotFound => 'No plugin list found at this address';
+
+  @override
+  String get pluginsAddErrBadFormat => 'The file is not a valid plugin list';
+
+  @override
+  String get pluginsAddErrBlocked => 'This address is blocked';
+
+  @override
+  String pluginsAddErrBlockedReason(String reason) {
+    return 'This address is blocked: $reason';
+  }
+
+  @override
+  String get pluginsAddErrStorage => 'Couldn\'t save the repository';
+
+  @override
+  String get pluginsAddressUserInfo =>
+      'the address must not contain a user name or password';
+
+  @override
+  String get pluginsAddressLocalFromPublic =>
+      'a public repository must not point to a local address';
+
+  @override
+  String get pluginsAddressRefused => 'this address is not allowed';
+
+  @override
+  String get pluginsAddressMixed =>
+      'the domain points to both local and public addresses';
+
+  @override
+  String get pluginsAddressLocalNamePublic =>
+      'a local-looking name points to a public address';
+
+  @override
+  String pluginsRemoveRepoTitle(String name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get pluginsRemoveRepoBody =>
+      'Plugins already installed from this repository are kept, but they will no longer get updates.';
+
+  @override
+  String get pluginsRemoveRepoConfirm => 'Remove';
+
+  @override
+  String pluginsRemoveRepoFailed(String name) {
+    return 'Couldn\'t remove $name';
+  }
+
+  @override
+  String get pluginsRootAlertLabel =>
+      'A plugin has a problem or an update needs review';
+
+  @override
+  String get pluginsPkgClose => 'Close';
+
+  @override
+  String get pluginsPkgLoading => 'Loading and checking the package…';
+
+  @override
+  String pluginsPkgProgress(int done, int total) {
+    return '$done / $total KB · checking plugin.json, file names, hosts, scripts';
+  }
+
+  @override
+  String pluginsPkgProgressUnknown(int done) {
+    return '$done KB · checking plugin.json, file names, hosts, scripts';
+  }
+
+  @override
+  String get pluginsPkgChecking =>
+      'Checking plugin.json, file names, hosts, scripts';
+
+  @override
+  String pluginsPkgInstallTitle(String name) {
+    return 'Install $name?';
+  }
+
+  @override
+  String pluginsPkgUpdateTitle(String name) {
+    return 'Update $name';
+  }
+
+  @override
+  String pluginsPkgInstallSubtitle(String kind, int version, String author) {
+    return 'Plugin $kind · version $version · $author';
+  }
+
+  @override
+  String pluginsPkgUpdateSubtitle(String kind, String author) {
+    return '$kind · $author';
+  }
+
+  @override
+  String pluginsPkgAuthorDeclared(String author) {
+    return '$author (self-declared)';
+  }
+
+  @override
+  String pluginsPkgFromRepo(String name) {
+    return 'From repository $name';
+  }
+
+  @override
+  String pluginsPkgFromFile(String name, String size) {
+    return 'From file $name · $size';
+  }
+
+  @override
+  String get pluginsPkgFromLink => 'From link';
+
+  @override
+  String get pluginsPkgSendTo => 'Sends data to';
+
+  @override
+  String pluginsPkgWildcard(String labels) {
+    return '$labels: only music source plugins may declare this (up to 10).';
+  }
+
+  @override
+  String pluginsPkgWildcardHost(String domain) {
+    return 'Every subdomain of $domain';
+  }
+
+  @override
+  String pluginsPkgUserEndpoint(String field) {
+    return 'Address you enter in $field';
+  }
+
+  @override
+  String get pluginsPkgNoHosts => 'No fixed address.';
+
+  @override
+  String get pluginsPkgNewBadge => 'NEW';
+
+  @override
+  String get pluginsPkgConsentInstall =>
+      'Installing a plugin means you agree to let it send data to these addresses. Kanaru does not ask again when the plugin runs.';
+
+  @override
+  String get pluginsPkgConsentUpdate =>
+      'Updating means you agree to let the plugin send data to the new addresses too. Kanaru does not ask again when the plugin runs.';
+
+  @override
+  String get pluginsPkgFacts => 'Static facts';
+
+  @override
+  String get pluginsPkgFactsUpdate =>
+      'Static facts · compared with the installed version';
+
+  @override
+  String get pluginsPkgAskAi => 'Ask AI about this plugin';
+
+  @override
+  String get pluginsPkgAskAiUpdate => 'Ask AI what the new version changes';
+
+  @override
+  String get pluginsPkgLater => 'Later';
+
+  @override
+  String get pluginsPkgInstall => 'Install';
+
+  @override
+  String get pluginsPkgUpdate => 'Update';
+
+  @override
+  String get pluginsPkgInstalling => 'Installing…';
+
+  @override
+  String get pluginsPkgUpdating => 'Updating…';
+
+  @override
+  String pluginsPkgInstalled(String name) {
+    return 'Installed $name';
+  }
+
+  @override
+  String pluginsPkgUpdated(String name, int version) {
+    return 'Updated $name to version $version';
+  }
+
+  @override
+  String pluginsPkgErrDownload(String reason) {
+    return 'Couldn’t download the plugin package: $reason';
+  }
+
+  @override
+  String pluginsPkgErrFile(String reason) {
+    return 'Couldn’t read the file: $reason';
+  }
+
+  @override
+  String get pluginsPkgNothingNetwork =>
+      'Check your connection and try again. Nothing has been installed.';
+
+  @override
+  String get pluginsPkgNothing => 'Nothing has been installed.';
+
+  @override
+  String get pluginsPkgReasonNetwork => 'network error';
+
+  @override
+  String get pluginsPkgReasonTimeout => 'timed out';
+
+  @override
+  String pluginsPkgReasonStatus(int status) {
+    return 'the server answered $status';
+  }
+
+  @override
+  String get pluginsPkgReasonTooLarge => 'the package is too large';
+
+  @override
+  String get pluginsPkgReasonBlocked => 'the address is blocked';
+
+  @override
+  String get pluginsPkgReasonInvalidUrl => 'invalid URL';
+
+  @override
+  String get pluginsPkgReasonCancelled => 'cancelled';
+
+  @override
+  String get pluginsPkgReasonNotZip => 'not a .zip file';
+
+  @override
+  String get pluginsPkgReasonFileLarge => 'the file is too large';
+
+  @override
+  String get pluginsPkgReasonUnreadable => 'it can’t be read';
+
+  @override
+  String get pluginsPkgReasonFileSlow =>
+      'the file provider did not answer in time';
+
+  @override
+  String get pluginsPkgErrGone =>
+      'This plugin is no longer in its repository’s list.';
+
+  @override
+  String get pluginsPkgErrUnexpected =>
+      'Something went wrong while checking the package. Nothing has been installed.';
+
+  @override
+  String get pluginsPkgErrWrite =>
+      'The plugin could not be saved on this device. Nothing has changed.';
+
+  @override
+  String get pluginsPkgNoticeStale =>
+      'The plugin changed while you were looking. Kanaru checked the package again: review it before installing.';
+
+  @override
+  String get pluginsPkgNoticeExpired =>
+      'The package waited too long, so Kanaru checked it again.';
+
+  @override
+  String get pluginsPkgProTitle => 'Needs Kanaru Pro';
+
+  @override
+  String get pluginsPkgFilePickerFailed => 'Couldn’t open the file picker.';
+
+  @override
+  String get pluginsProblemTitle => 'Can’t install';
+
+  @override
+  String pluginsProblemFileBody(String name) {
+    return 'The file $name isn’t a valid plugin.';
+  }
+
+  @override
+  String pluginsProblemPluginBody(String name) {
+    return '$name can’t be installed.';
+  }
+
+  @override
+  String get pluginsProblemReasons => 'Reasons';
+
+  @override
+  String get pluginsProblemHostsNote =>
+      'Plugins may only declare public domain names (https).';
+
+  @override
+  String get pluginsProblemNewerTitle => 'Needs a newer Kanaru';
+
+  @override
+  String pluginsProblemNewerBody(String name) {
+    return '$name uses a newer plugin API than this Kanaru supports. Update Kanaru, then install it again.';
+  }
+
+  @override
+  String pluginsProblemNewerBodyVersion(String name, String version, int max) {
+    return '$name uses a newer plugin API than this Kanaru supports (apiVersion $version, this version supports up to $max). Update Kanaru, then install it again.';
+  }
+
+  @override
+  String get pluginsReasonTooLarge =>
+      'The package, or an entry in it, is too large';
+
+  @override
+  String get pluginsReasonNotZip => 'The file isn’t a readable zip package';
+
+  @override
+  String pluginsReasonUnsafeEntry(String detail) {
+    return 'The package has an unsafe entry name ($detail)';
+  }
+
+  @override
+  String get pluginsReasonTooManyEntries => 'The package has too many files';
+
+  @override
+  String get pluginsReasonMissingManifest =>
+      'plugin.json not found at the top of the package';
+
+  @override
+  String pluginsReasonInvalidManifest(String detail) {
+    return '“$detail” in plugin.json is not valid';
+  }
+
+  @override
+  String get pluginsReasonInvalidManifestPlain => 'plugin.json is not valid';
+
+  @override
+  String pluginsReasonUnknownFormat(String detail) {
+    return '$detail: this kind of field is not supported';
+  }
+
+  @override
+  String get pluginsReasonNeedsNewerApp =>
+      'Needs a newer Kanaru: the plugin uses a newer plugin API than this version supports';
+
+  @override
+  String get pluginsReasonUnsupportedKind =>
+      'plugin.json: type is not a kind of plugin this Kanaru runs';
+
+  @override
+  String pluginsReasonBadHost(String detail) {
+    return 'hosts: “$detail” is not a public domain name';
+  }
+
+  @override
+  String pluginsReasonBadWildcard(String detail) {
+    return 'hosts: “$detail” is not a valid wildcard: write *. and then a public domain name';
+  }
+
+  @override
+  String pluginsReasonWildcardNotAllowed(String detail) {
+    return 'hosts: “$detail”: only music source plugins may use a wildcard host';
+  }
+
+  @override
+  String pluginsReasonSharedHosting(String detail) {
+    return 'hosts: “$detail” covers a shared-hosting domain, where anyone can get a subdomain';
+  }
+
+  @override
+  String pluginsReasonTooManyWildcards(String detail, int max) {
+    return 'hosts: “$detail” is over the limit of $max wildcard hosts';
+  }
+
+  @override
+  String pluginsReasonMissingScript(String detail) {
+    return 'src/$detail not found in the package';
+  }
+
+  @override
+  String pluginsReasonScriptNotUtf8(String detail) {
+    return 'Script $detail is not valid UTF-8';
+  }
+
+  @override
+  String pluginsReasonScriptError(String detail) {
+    return 'Script $detail has an error';
+  }
+
+  @override
+  String pluginsReasonScriptErrorLine(String detail, int line) {
+    return 'Script $detail has an error at line $line';
+  }
+
+  @override
+  String get pluginsReasonCheckUnavailable =>
+      'Kanaru can’t check scripts right now (the plugin runtime did not load), so it can’t tell whether the package is valid';
+
+  @override
+  String get pluginsReasonSameVersion =>
+      'This package is the same version as the installed one.';
+
+  @override
+  String get pluginsReasonOlderVersion =>
+      'This package is older than the installed version, so it can’t be used.';
+
+  @override
+  String get pluginsReasonKindChange =>
+      'This package is another kind of plugin than the installed one, so it can’t be used. Remove the plugin, then install the new one.';
+
+  @override
+  String pluginsReasonOtherOrigin(String source) {
+    return 'This plugin is already installed from $source. A package from another place can’t replace it: remove the installed plugin, then install again.';
+  }
+
+  @override
+  String pluginsOriginRepo(String url) {
+    return 'repository $url';
+  }
+
+  @override
+  String pluginsOriginFile(String name) {
+    return 'file $name';
+  }
+
+  @override
+  String get pluginsOriginLink => 'a link';
+
+  @override
+  String get pluginsOriginOther => 'another source';
+
+  @override
+  String get pluginsMismatchTitle => 'Package doesn’t match the list';
+
+  @override
+  String pluginsMismatchBody(String name, String repo) {
+    return '$name · Repository: $repo';
+  }
+
+  @override
+  String get pluginsMismatchDiffs => 'Differences';
+
+  @override
+  String get pluginsMismatchKind =>
+      'The plugin type of the package differs from the list';
+
+  @override
+  String get pluginsMismatchVersion =>
+      'The version of the package differs from the list';
+
+  @override
+  String get pluginsMismatchHosts =>
+      'The hosts of the package differ from the list';
+
+  @override
+  String get pluginsMismatchSha =>
+      'The checksum (sha256) of the package differs from the list';
+
+  @override
+  String get pluginsMismatchSize =>
+      'The size of the package differs from the list';
+
+  @override
+  String get pluginsMismatchHint =>
+      'This usually happens when the repository was just updated and its cache has not caught up. Refresh the list and try again in a few minutes. If it still differs, tell the repository owner.';
+
+  @override
+  String get pluginsMismatchRetry => 'Refresh and try again';
+
+  @override
+  String get pluginsLinkTitle => 'Install from link';
+
+  @override
+  String get pluginsLinkLabel => 'Link to the .zip package';
+
+  @override
+  String get pluginsLinkHint => 'https://…/plugin.zip';
+
+  @override
+  String get pluginsLinkHelper =>
+      'Kanaru downloads the package and checks it, then shows the install screen. Nothing is installed until you tap Install.';
+
+  @override
+  String get pluginsLinkHelperCatalog =>
+      'This is a plugin list (plugins.json), not a package. Add it as a repository?';
+
+  @override
+  String get pluginsLinkErrInvalid => 'Invalid URL';
+
+  @override
+  String get pluginsLinkContinue => 'Continue';
+
+  @override
+  String get pluginsLinkAddRepo => 'Add repository';
+
+  @override
+  String pluginsUpdateAllRunning(int done, int total) {
+    return 'Updating $done / $total…';
+  }
+
+  @override
+  String pluginsUpdateFailedLine(String reason) {
+    return 'Couldn’t update: $reason';
+  }
+
+  @override
+  String get pluginsUpdateReasonProblems => 'the new package is not valid';
+
+  @override
+  String get pluginsUpdateReasonGone => 'the plugin or its repository is gone';
+
+  @override
+  String get pluginsUpdateReasonNoNewer => 'no newer version';
+
+  @override
+  String get pluginsUpdateReasonStorage =>
+      'it could not be saved on this device';
+
+  @override
+  String get pluginsUpdateReasonPro => 'needs Kanaru Pro';
+
+  @override
+  String get pluginsUpdateReasonOther => 'something went wrong';
+
+  @override
+  String pluginsUpdateNeedsReview(String name) {
+    return 'The new version of $name adds hosts or permissions: tap Review.';
+  }
+
+  @override
+  String pluginsUpdateAllUpdated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Updated $count plugins',
+      one: 'Updated 1 plugin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pluginsUpdateAllReview(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count versions to review (new hosts or permissions): open each one',
+      one: '1 version to review (new hosts or permissions): open it',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pluginsUpdateAllFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count could not be updated',
+      one: '1 could not be updated',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pluginsRemoveTitle(String name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String pluginsRemoveBy(String author, int version) {
+    return '$author · version $version';
+  }
+
+  @override
+  String get pluginsRemoveWillDelete => 'Will be removed';
+
+  @override
+  String get pluginsRemoveCode => 'The plugin’s code';
+
+  @override
+  String get pluginsRemoveSettings => 'The plugin’s settings';
+
+  @override
+  String get pluginsRemoveConfirm => 'Remove';
+
+  @override
+  String pluginsRemoved(String name) {
+    return 'Removed $name';
+  }
+
+  @override
+  String pluginsRemoveFailed(String name) {
+    return 'Couldn’t remove $name';
+  }
+
+  @override
+  String get pluginsPkgLoadingTitle => 'Install plugin';
+
+  @override
+  String pluginsUpdatedNoVersion(String name) {
+    return 'Updated $name';
+  }
+
+  @override
+  String get pluginsPageTitle => 'Plugin details';
+
+  @override
+  String get pluginsPageLoadFailed => 'Couldn’t read the plugin list';
+
+  @override
+  String get pluginsPageGone => 'This plugin is no longer installed.';
+
+  @override
+  String get pluginsPageToStore => 'Back to the plugin store';
+
+  @override
+  String pluginsPageByline(String author, int version) {
+    return '$author · version $version';
+  }
+
+  @override
+  String pluginsPageUpdateTitle(int version) {
+    return 'New version $version';
+  }
+
+  @override
+  String get pluginsPageUpdateBusy => 'Working';
+
+  @override
+  String pluginsPageReviewBody(String hosts) {
+    return 'The new version also connects to $hosts: look before you update.';
+  }
+
+  @override
+  String get pluginsPageReviewBodyAny =>
+      'The new version adds hosts or permissions: look before you update.';
+
+  @override
+  String get pluginsPageReviewButton => 'See the update';
+
+  @override
+  String get pluginsPageRefreshList => 'Refresh the list';
+
+  @override
+  String pluginsPageNeedsConfigTitle(String name) {
+    return '$name needs to be set up';
+  }
+
+  @override
+  String pluginsPageNeedsConfigBody(String fields) {
+    return 'The plugin can’t run until it has: $fields.';
+  }
+
+  @override
+  String get pluginsPageOpenConfig => 'Open settings';
+
+  @override
+  String get pluginsPageBrokenTitle => 'Couldn’t read the plugin’s package';
+
+  @override
+  String get pluginsPageBrokenBody =>
+      'The plugin’s folder is missing or damaged, so it doesn’t run. Reinstalling keeps its settings and data.';
+
+  @override
+  String get pluginsPageBrokenBodyFile =>
+      'The plugin’s folder is missing or damaged, so it doesn’t run. This plugin was installed from a file: remove it and install the file again.';
+
+  @override
+  String get pluginsPageReinstall => 'Reinstall';
+
+  @override
+  String pluginsPageReinstalled(String name) {
+    return 'Reinstalled $name';
+  }
+
+  @override
+  String pluginsPageReinstallFailed(String reason) {
+    return 'Couldn’t reinstall: $reason';
+  }
+
+  @override
+  String get pluginsPageDetails => 'Details';
+
+  @override
+  String get pluginsPageFrom => 'Installed from';
+
+  @override
+  String pluginsPageFromRepo(String name) {
+    return 'Repo: $name';
+  }
+
+  @override
+  String pluginsPageFromFile(String name) {
+    return 'File: $name';
+  }
+
+  @override
+  String pluginsPageFromLink(String name) {
+    return 'Link: $name';
+  }
+
+  @override
+  String get pluginsPageNoUpdatesFile =>
+      'This plugin was installed from a file, so it gets no updates. Remove it and install the new file.';
+
+  @override
+  String get pluginsPageNoUpdatesLink =>
+      'This plugin was installed from a link, so it gets no updates. Remove it and install the new version.';
+
+  @override
+  String pluginsPageWildcardLine(String label, String host) {
+    return '$label ($host)';
+  }
+
+  @override
+  String get pluginsPageNotEntered => '(not entered)';
+
+  @override
+  String pluginsPageEndpointLine(String field, String hosts) {
+    return 'Address you enter in $field: $hosts';
+  }
+
+  @override
+  String get pluginsPageInstalledAt => 'Installed';
+
+  @override
+  String pluginsPageInstalledDates(String installed, String updated) {
+    return '$installed · updated $updated';
+  }
+
+  @override
+  String get pluginsPageDescription => 'Description';
+
+  @override
+  String get pluginsPageType => 'Type';
+
+  @override
+  String pluginsPageTypeValue(String kind, int api) {
+    return 'Plugin for $kind · plugin API $api';
+  }
+
+  @override
+  String pluginsPageTypeValueAi(String kind, int api) {
+    return 'AI plugin for $kind · plugin API $api';
+  }
+
+  @override
+  String get pluginsPageSourceCode => 'Source code';
+
+  @override
+  String get pluginsPageUseLyrics => 'Find lyrics automatically';
+
+  @override
+  String get pluginsPageUseTranslate => 'Default translation service';
+
+  @override
+  String get pluginsPageConnection => 'Connection';
+
+  @override
+  String get pluginsPageConcurrent => 'Requests at once';
+
+  @override
+  String get pluginsPageSpacing => 'Time between requests';
+
+  @override
+  String get pluginsPageData => 'Data';
+
+  @override
+  String get pluginsPageOwnStorage => 'Plugin’s own storage';
+
+  @override
+  String get pluginsPageSavedLyrics => 'Lyrics saved from this source';
+
+  @override
+  String get pluginsPageTrackCache => 'Track and cover cache';
+
+  @override
+  String get pluginsPageLog => 'Log';
+
+  @override
+  String get pluginsPageOpen => 'Open';
+
+  @override
+  String get pluginsPageBadgeAi => 'AI';
+
+  @override
+  String get pluginsRepoAddressCopied => 'Repository address copied';
+
+  @override
+  String get pluginsRepoCopyAddress => 'Copy address';
 }

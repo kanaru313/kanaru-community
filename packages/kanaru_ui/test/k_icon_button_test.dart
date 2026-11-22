@@ -557,6 +557,29 @@ void main() {
     });
   });
 
+  group('critical emphasis', () {
+    Widget critical({bool enabled = true}) => host(
+      Center(
+        child: KIconButton(
+          icon: Icons.add,
+          tooltip: 'Delete',
+          emphasis: KIconEmphasis.critical,
+          onPressed: enabled ? () {} : null,
+        ),
+      ),
+    );
+
+    testWidgets('error at rest', (tester) async {
+      await tester.pumpWidget(critical());
+      expect(glyphColor(tester), scheme(tester).error);
+    });
+
+    testWidgets('disabled is dimmed, not error', (tester) async {
+      await tester.pumpWidget(critical(enabled: false));
+      expect(glyphColor(tester), isNot(scheme(tester).error));
+    });
+  });
+
   group('destructive emphasis', () {
     Widget destructive({Widget Function(Widget)? wrap}) {
       final b = Center(
@@ -745,6 +768,76 @@ void main() {
       await tester.pumpWidget(host(circle()));
       await tester.pump();
       expect(find.byType(KIconButton), findsOneWidget);
+    });
+  });
+
+  group('badge', () {
+    Widget button({int? count, bool? selected}) => host(
+      Center(
+        child: KIconButton(
+          icon: KIcons.filter,
+          tooltip: 'Lọc',
+          selected: selected,
+          badgeCount: count,
+          badgeSemanticLabel: '$count đang bật',
+          onPressed: () {},
+        ),
+      ),
+    );
+
+    for (final (count, text) in [(1, '1'), (9, '9'), (10, '9+'), (12, '9+')]) {
+      testWidgets('count $count reads "$text"', (tester) async {
+        await tester.pumpWidget(button(count: count));
+        expect(find.text(text), findsOneWidget);
+      });
+    }
+
+    testWidgets('0 and null show no badge', (tester) async {
+      await tester.pumpWidget(button(count: 0));
+      expect(find.text('0'), findsNothing);
+      await tester.pumpWidget(button());
+      expect(find.byType(Text), findsNothing);
+    });
+
+    testWidgets('semantics add the badge phrase and toggled', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(button(count: 3, selected: true));
+      expect(
+        tester.getSemantics(find.byType(KIconButton)),
+        isSemantics(
+          label: 'Lọc, 3 đang bật',
+          isButton: true,
+          hasToggledState: true,
+          isToggled: true,
+          isEnabled: true,
+          hasEnabledState: true,
+          hasTapAction: true,
+          hasFocusAction: true,
+          isFocusable: true,
+        ),
+      );
+      await tester.pumpWidget(button(count: 0));
+      expect(find.bySemanticsLabel('Lọc'), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('badge grows with text scale', (tester) async {
+      await tester.pumpWidget(button(count: 12));
+      final small = tester.getSize(find.text('9+'));
+      await tester.pumpWidget(
+        host(
+          Center(
+            child: KIconButton(
+              icon: KIcons.filter,
+              tooltip: 'Lọc',
+              badgeCount: 12,
+              onPressed: () {},
+            ),
+          ),
+          textScale: 2,
+        ),
+      );
+      expect(tester.getSize(find.text('9+')).width, greaterThan(small.width));
     });
   });
 }

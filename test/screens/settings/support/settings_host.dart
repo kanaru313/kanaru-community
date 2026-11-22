@@ -14,6 +14,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/memory_settings_store.dart';
+import '../../plugins/support/plugin_fixtures.dart';
 
 class _FakePermissions implements MediaPermissions {
   _FakePermissions(this.state);
@@ -62,6 +63,10 @@ Future<SettingsHarness> pumpSettings(
 
   /// Platform asks for reduced motion.
   bool reduceMotion = false,
+
+  /// Replaces the plugin store's data with an empty one (the root page reads
+  /// it for its dot). False when [overrides] bring their own.
+  bool quietPlugins = true,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -78,6 +83,7 @@ Future<SettingsHarness> pumpSettings(
         mediaPermissionsProvider.overrideWithValue(
           _FakePermissions(permission),
         ),
+      if (quietPlugins) ...quietPluginOverrides(),
       ...overrides,
     ],
   );

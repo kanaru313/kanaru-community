@@ -6,6 +6,7 @@ import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 import 'anchored_panel_layout.dart';
+import 'k_anchored_panel.dart';
 import 'k_gap.dart';
 import 'k_sheet.dart';
 import 'picker_footer.dart';
@@ -147,37 +148,18 @@ Future<T?> showSelectionPicker<T>(
       ),
     );
   }
-  return showDialog<T>(
-    context: context,
-    animationStyle: KMotion.routeAnimationStyle(context),
-    // The panel position is computed in global coordinates; the route's
-    // SafeArea would shift it by the insets.
-    useSafeArea: false,
-    barrierColor: const Color(0x00000000),
-    builder: (context) => KRowEdgesScope(
-      edges: KRowEdges.inset,
-      child: CustomSingleChildLayout(
-        delegate: AnchoredPanelLayout(
-          rect,
-          align: anchorAlign,
-          bottomInset: MediaQuery.paddingOf(context).bottom,
-        ),
-        child: Material(
-          elevation: 3,
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
-          shape: KShape.of(KRadius.lg, continuous: true),
-          clipBehavior: Clip.antiAlias,
-          // Same size as the sort dropdown: width follows the content between
-          // the dropdown limits, rows are dense.
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              minWidth: KLayout.anchoredPickerMinWidth,
-              maxWidth: KLayout.anchoredPickerMaxWidth,
-            ),
-            child: IntrinsicWidth(child: body(context, compact: true)),
-          ),
-        ),
+  return showKAnchoredPanel<T>(
+    context,
+    anchor: rect,
+    align: anchorAlign,
+    // Same size as the sort dropdown: width follows the content between the
+    // dropdown limits, rows are dense.
+    builder: (context) => ConstrainedBox(
+      constraints: const BoxConstraints(
+        minWidth: KLayout.anchoredPickerMinWidth,
+        maxWidth: KLayout.anchoredPickerMaxWidth,
       ),
+      child: IntrinsicWidth(child: body(context, compact: true)),
     ),
   );
 }

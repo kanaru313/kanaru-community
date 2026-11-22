@@ -25,7 +25,10 @@
      menus, multi-select, favorites, folder exclusions, and the Linux "open in
      file manager" action. It merges last, after the scanner and the player.
 4. **Core modules after wave 1**, one at a time, each working on both shells:
-   lyrics, plugins.
+   lyrics, plugins. Plugins: the store screens are shipped (Kho plugin,
+   Repository, install / update / remove flows, the plugin page); the form of
+   "Cài đặt của plugin" is next (its slot is on the page), then the lyrics and
+   translation consumers and the plugin runtime parts the page shows as "Sắp có".
 5. **Extensions**: licensing support in an extension package, then its features
    one by one. Streaming runtime and remote sources live in this repo.
 

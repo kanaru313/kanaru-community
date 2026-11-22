@@ -96,11 +96,7 @@ class PluginInstaller {
 
   Future<InstallResult> _install(HeldPackage held, InstallOptions o) async {
     if (held.review is ProblemsReview) {
-      return InstallRefused(
-        (held.review as ProblemsReview).hasOtherOrigin
-            ? InstallFailure.otherOrigin
-            : InstallFailure.hasProblems,
-      );
+      return InstallRefused(failureOfProblems(held.review as ProblemsReview));
     }
     final row = await _rows.byId(held.installId);
     final live = row != null && row.isLive ? row : null;

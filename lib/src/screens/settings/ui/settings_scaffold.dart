@@ -16,6 +16,10 @@ class SettingsScaffold extends ConsumerWidget {
     required this.title,
     required this.children,
     this.parentPath,
+    this.pinnedBelowHeader,
+    this.headerBuilder,
+    this.actions = const [],
+    this.spaced = true,
   });
 
   final String title;
@@ -25,11 +29,33 @@ class SettingsScaffold extends ConsumerWidget {
   /// Null on the root, which has no arrow of its own.
   final String? parentPath;
 
+  /// Stays fixed under the header while [children] scroll (a search field).
+  /// Null keeps the whole page in one scroll view, header included.
+  final Widget? pinnedBelowHeader;
+
+  /// Draws the header instead of the standard one (a title that changes while
+  /// the page scrolls). It gets the back action (null on a root page) and the
+  /// header stays fixed while [children] scroll, like with
+  /// [pinnedBelowHeader]. [title] and [actions] are not used then.
+  final Widget Function(BuildContext context, VoidCallback? onBack)?
+  headerBuilder;
+
+  /// Buttons at the end of the header (a filter and a ⋮ menu).
+  final List<Widget> actions;
+
+  /// True puts block spacing between [children]. A long list that is its own
+  /// list items (one per row) sets false and draws its own gaps.
+  final bool spaced;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final failing = ref.watch(settingsSaveFailingProvider).value ?? false;
     final parent = parentPath;
+    final pinned = pinnedBelowHeader;
+    if (pinned != null || headerBuilder != null) {
+      return _pinnedLayout(context, l10n, failing, pinned);
+    }
     return KPage(
       maxWidth: KLayout.settings,
       children: [
@@ -37,6 +63,7 @@ class SettingsScaffold extends ConsumerWidget {
           title: title,
           onBack: parent == null ? null : () => _back(context, parent),
           backTooltip: parent == null ? null : l10n.tooltipBack,
+          actions: actions,
         ),
         if (failing) ...[
           FolderSheetBanner(
@@ -47,10 +74,78 @@ class SettingsScaffold extends ConsumerWidget {
           const KGap(KSpace.x5),
         ],
         for (var i = 0; i < children.length; i++) ...[
-          if (i > 0) const KGap(KSpace.x5),
+          if (spaced && i > 0) const KGap(KSpace.x5),
           children[i],
         ],
       ],
+    );
+  }
+
+  Widget _pinnedLayout(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool failing,
+    Widget? pinned,
+  ) {
+    final parent = parentPath;
+    final desktop = FormFactor.of(context) == FormFactor.desktop;
+    final gutter = desktop ? KLayout.gutterDesktop : KLayout.gutterMobile;
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: KLayout.settings),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Material(
+              color: Theme.of(context).colorScheme.surface,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: gutter),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (headerBuilder != null)
+                      headerBuilder!(
+                        context,
+                        parent == null ? null : () => _back(context, parent),
+                      )
+                    else
+                      PageHeader(
+                        title: title,
+                        onBack: parent == null
+                            ? null
+                            : () => _back(context, parent),
+                        backTooltip: parent == null ? null : l10n.tooltipBack,
+                        actions: actions,
+                      ),
+                    ?pinned,
+                    const KGap(KSpace.x2),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: KPage(
+                maxWidth: KLayout.settings,
+                children: [
+                  if (failing) ...[
+                    FolderSheetBanner(
+                      icon: KIcons.permissionMissing,
+                      isError: true,
+                      child: Text(l10n.settingsSaveFailed),
+                    ),
+                    const KGap(KSpace.x5),
+                  ],
+                  for (var i = 0; i < children.length; i++) ...[
+                    if (spaced && i > 0) const KGap(KSpace.x5),
+                    children[i],
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

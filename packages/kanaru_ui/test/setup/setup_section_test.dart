@@ -131,4 +131,28 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(KHelpIcon), findsOneWidget);
   });
+
+  testWidgets('action sits beside the title, under it from 1.5x text', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    Widget section(double scale) => host(
+      SetupSection(
+        title: const Text('Cập nhật'),
+        action: TextButton(onPressed: () {}, child: const Text('Tất cả')),
+        children: const [Text('row')],
+      ),
+      textScale: scale,
+    );
+    await tester.pumpWidget(section(1));
+    final title = tester.getRect(find.text('Cập nhật'));
+    var button = tester.getRect(find.byType(TextButton));
+    expect(button.left, greaterThan(title.right));
+    expect((button.center.dy - title.center.dy).abs(), lessThan(10));
+    await tester.pumpWidget(section(2));
+    final bigTitle = tester.getRect(find.text('Cập nhật'));
+    button = tester.getRect(find.byType(TextButton));
+    expect(button.top, greaterThanOrEqualTo(bigTitle.bottom - 1));
+    expect(tester.takeException(), isNull);
+  });
 }

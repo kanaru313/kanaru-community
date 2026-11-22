@@ -35,7 +35,9 @@ class KIconButtonColors extends InheritedWidget {
 /// [destructive] keeps the quiet glyph at rest and turns `error` on hover,
 /// press and focus (the remove button of an edit-mode row); a
 /// [KIconButtonColors] above wins for the rest colour only.
-enum KIconEmphasis { normal, primary, destructive }
+/// [critical] is `error` at rest and on hover (the delete button of a row in
+/// a list, always visible).
+enum KIconEmphasis { normal, primary, destructive, critical }
 
 /// Glyph colour of a `KIconButton` for its current state. [pressed] (0..1)
 /// dims the colour by up to half through its alpha: press feedback needs no
@@ -54,15 +56,25 @@ Color resolveKIconButtonColor({
 }) {
   if (!enabled) return scheme.onSurface.withValues(alpha: 0.38);
   final accent = emphasis == KIconEmphasis.primary;
+  final critical = emphasis == KIconEmphasis.critical;
   final base = selected
       ? selectedColor ?? scheme.primary
       : emphasis == KIconEmphasis.destructive &&
             (hovered || focused || pressed > 0)
       ? scheme.error
       : hovered
-      ? colors?.hover ?? (accent ? scheme.primary : scheme.onSurface)
+      ? colors?.hover ??
+            (accent
+                ? scheme.primary
+                : critical
+                ? scheme.error
+                : scheme.onSurface)
       : color ??
             colors?.rest ??
-            (accent ? scheme.primary : scheme.onSurfaceVariant);
+            (accent
+                ? scheme.primary
+                : critical
+                ? scheme.error
+                : scheme.onSurfaceVariant);
   return base.withValues(alpha: base.a * (1 - 0.5 * pressed));
 }

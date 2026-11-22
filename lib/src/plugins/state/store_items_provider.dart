@@ -8,6 +8,7 @@ import '../data/store/plugin_row_types.dart';
 import '../domain/catalog/catalog.dart';
 import '../domain/install/free_rule.dart';
 import '../domain/install/install_id.dart';
+import '../domain/search/store_search.dart';
 import 'async_join.dart';
 import 'plugin_actions_provider.dart';
 import 'plugin_services_provider.dart';
@@ -129,7 +130,11 @@ bool storeItemMatches(StoreItem item, StoreFilter filter) {
   if (filter.kinds.isNotEmpty && !filter.kinds.contains(entry.kind)) {
     return false;
   }
-  if (filter.states.isNotEmpty && !filter.states.contains(item.state)) {
+  final search = parseStoreSearch(filter.query);
+  final tagKinds = search.kinds;
+  if (tagKinds.isNotEmpty && !tagKinds.contains(entry.kind)) return false;
+  if (filter.states.isNotEmpty &&
+      !filter.states.any((chip) => chip.matches(item.state))) {
     return false;
   }
   if (filter.authors.isNotEmpty && !filter.authors.contains(entry.author)) {
@@ -143,9 +148,7 @@ bool storeItemMatches(StoreItem item, StoreFilter filter) {
       !entry.languages.any(filter.languages.contains)) {
     return false;
   }
-  final words = foldDiacritics(filter.query)
-      .split(RegExp(r'\s+'))
-      .where((w) => w.isNotEmpty);
+  final words = [for (final w in search.words) foldDiacritics(w)];
   if (words.isEmpty) return true;
   final haystack = foldDiacritics(
     [entry.name, entry.author, item.repo.name, ...entry.hosts].join('\n'),

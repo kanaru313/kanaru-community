@@ -199,4 +199,112 @@ void main() {
       throwsAssertionError,
     );
   });
+
+  testWidgets('filled tones tint the strip and keep the action', (
+    tester,
+  ) async {
+    var tapped = false;
+    await tester.pumpWidget(
+      host(
+        _notice(
+          tone: KInlineNoticeTone.errorFilled,
+          action: 'Thử lại',
+          onAction: () => tapped = true,
+        ),
+      ),
+    );
+    final scheme = Theme.of(tester.element(find.byType(KInlineNotice)))
+        .colorScheme;
+    Color? fill() {
+      final box = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byType(KInlineNotice),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      return (box.decoration as BoxDecoration).color;
+    }
+
+    expect(fill(), scheme.errorContainer);
+    expect(_iconColor(tester), scheme.onErrorContainer);
+    await tester.tap(find.text('Thử lại'));
+    expect(tapped, isTrue);
+    await tester.pumpWidget(
+      host(_notice(tone: KInlineNoticeTone.primaryFilled)),
+    );
+    expect(fill(), scheme.primaryContainer);
+    await tester.pumpWidget(host(_notice(tone: KInlineNoticeTone.error)));
+    expect(fill(), scheme.surfaceContainerHigh);
+    expect(_iconColor(tester), scheme.error);
+  });
+
+  testWidgets('a busy action is a spinner that cannot be pressed again', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    var taps = 0;
+    await tester.pumpWidget(
+      host(
+        KInlineNotice(
+          icon: KIcons.info,
+          message: 'Có bản mới.',
+          actionLabel: 'Cập nhật',
+          onAction: () => taps++,
+          actionBusy: true,
+          actionBusyLabel: 'Đang xử lý',
+        ),
+      ),
+    );
+    expect(find.text('Cập nhật'), findsNothing);
+    expect(find.bySemanticsLabel('Đang xử lý'), findsOneWidget);
+    await tester.tap(find.byType(TextButton), warnIfMissed: false);
+    expect(taps, 0);
+  });
+
+  testWidgets('prominentAction draws a filled button that still presses', (
+    tester,
+  ) async {
+    var pressed = 0;
+    await tester.pumpWidget(
+      host(
+        KInlineNotice(
+          icon: KIcons.download,
+          message: 'Bản mới',
+          tone: KInlineNoticeTone.primaryFilled,
+          actionLabel: 'Cập nhật',
+          onAction: () => pressed++,
+          prominentAction: true,
+        ),
+      ),
+    );
+    expect(find.byType(FilledButton), findsOneWidget);
+    expect(find.byType(TextButton), findsNothing);
+    await tester.tap(find.bySemanticsLabel('Cập nhật'));
+    expect(pressed, 1);
+  });
+
+  testWidgets('a prominent action that is busy cannot be pressed', (
+    tester,
+  ) async {
+    var pressed = 0;
+    await tester.pumpWidget(
+      host(
+        KInlineNotice(
+          icon: KIcons.download,
+          message: 'Bản mới',
+          actionLabel: 'Cập nhật',
+          onAction: () => pressed++,
+          actionBusy: true,
+          prominentAction: true,
+        ),
+      ),
+    );
+    expect(
+      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      isNull,
+    );
+    expect(pressed, 0);
+  });
 }

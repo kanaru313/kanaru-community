@@ -1,3 +1,4 @@
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:material_ui/material_ui.dart';
 
 import '../../layout/form_factor.dart';
@@ -17,6 +18,9 @@ class SetupRowFrame extends StatefulWidget {
     this.leading,
     this.trailing,
     this.onTap,
+    this.onLongPress,
+    this.onSecondaryTap,
+    this.longPressLabel,
     this.titleStyle,
     this.sharedTrailing = false,
     this.enabled = true,
@@ -25,6 +29,10 @@ class SetupRowFrame extends StatefulWidget {
   }) : assert(
          !comingSoon || soonLabel != null,
          'a coming-soon row needs its label',
+       ),
+       assert(
+         longPressLabel == null || onLongPress != null,
+         'a long-press label needs a long-press action',
        );
 
   final Widget title;
@@ -32,6 +40,16 @@ class SetupRowFrame extends StatefulWidget {
   final Widget? leading;
   final Widget? trailing;
   final VoidCallback? onTap;
+
+  /// Long press on the row (mobile and desktop); a secondary tap (right click)
+  /// runs [onSecondaryTap]. Buttons in [trailing] keep their own gestures: a
+  /// long press on them does not reach the row. Wrap a button placed in
+  /// [subtitle] in [RowGestureShield].
+  final VoidCallback? onLongPress;
+  final VoidCallback? onSecondaryTap;
+
+  /// Name of the [onLongPress] action for screen readers (a custom action).
+  final String? longPressLabel;
 
   /// Defaults to `bodyLarge`.
   final TextStyle? titleStyle;
@@ -75,6 +93,10 @@ class _SetupRowFrameState extends State<SetupRowFrame> {
     final w = widget;
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final pressable = w.onLongPress != null || w.onSecondaryTap != null;
+    final trailing = pressable && w.trailing != null
+        ? RowGestureShield(child: w.trailing!)
+        : w.trailing;
     final content = ConstrainedBox(
       constraints: BoxConstraints(minHeight: SetupRowFrame.minHeight(context)),
       child: Padding(
@@ -126,11 +148,11 @@ class _SetupRowFrameState extends State<SetupRowFrame> {
                   flex: 2,
                   child: Align(
                     alignment: AlignmentDirectional.centerEnd,
-                    child: w.trailing!,
+                    child: trailing!,
                   ),
                 )
               else
-                w.trailing!,
+                trailing!,
             ],
           ],
         ),
@@ -145,18 +167,46 @@ class _SetupRowFrameState extends State<SetupRowFrame> {
         ),
       );
     }
-    if (w.onTap == null) return content;
-    return Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        onTap: w.onTap,
-        onFocusChange: (v) => setState(() => _focused = v),
-        child: KFocusRing(
-          focused: _focused,
-          radius: BorderRadius.zero,
-          child: content,
-        ),
+    final Widget row = w.onTap == null
+        ? content
+        : Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: w.onTap,
+              onFocusChange: (v) => setState(() => _focused = v),
+              child: KFocusRing(
+                focused: _focused,
+                radius: BorderRadius.zero,
+                child: content,
+              ),
+            ),
+          );
+    if (!pressable) return row;
+    final label = w.longPressLabel;
+    return Semantics(
+      customSemanticsActions: {
+        if (label != null && w.onLongPress != null)
+          CustomSemanticsAction(label: label): w.onLongPress!,
+      },
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onLongPress: w.onLongPress,
+        onSecondaryTap: w.onSecondaryTap,
+        child: row,
       ),
     );
   }
+}
+
+/// Keeps a long press or a right click on a button inside a [SetupRowFrame]
+/// from reaching the row's own actions: the nearest recogniser wins and does
+/// nothing.
+class RowGestureShield extends StatelessWidget {
+  const RowGestureShield({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) =>
+      GestureDetector(onLongPress: () {}, onSecondaryTap: () {}, child: child);
 }

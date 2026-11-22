@@ -1,11 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/plugins/state/store_filter.dart';
+import 'package:kanaru/src/screens/plugins/plugin_paths.dart';
+import 'package:kanaru/src/screens/plugins/repos/repositories_page.dart';
+import 'package:kanaru/src/screens/plugins/store/store_page.dart';
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
 import 'package:kanaru/src/screens/settings/ui/lyrics/lyrics_settings_page.dart';
 import 'package:kanaru/src/screens/settings/ui/settings_scaffold.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../plugins/support/plugin_fixtures.dart';
+import '../../support/icon_button_finders.dart';
 import 'support/settings_host.dart';
 
 Iterable<GoRoute> _all(List<RouteBase> routes) sync* {
@@ -27,7 +33,15 @@ void main() {
     final subs = _all(root.routes).toList();
     expect(
       subs.map((r) => r.path),
-      containsAll(['appearance', 'seek-bar', 'playback', 'lyrics', 'about']),
+      containsAll([
+        'appearance',
+        'seek-bar',
+        'playback',
+        'lyrics',
+        'about',
+        'plugins',
+        'repositories',
+      ]),
     );
     for (final r in subs) {
       expect(r.pageBuilder, isNotNull, reason: r.path);
@@ -89,5 +103,51 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1));
     expect(find.text('Native libraries'), findsNothing);
     expect(tester.hasRunningAnimations, isFalse);
+  });
+
+  group('plugin pages', () {
+    testWidgets('the store takes the kind query', (tester) async {
+      await pumpPlugins(
+        tester,
+        StoreFixture(),
+        location: '/settings/plugins?kind=streaming',
+      );
+      final page = tester.widget<StorePage>(find.byType(StorePage));
+      expect(page.kind, 'streaming');
+      expect(_pages(tester).whereType<KDetailPage>(), isNotEmpty);
+    });
+
+    testWidgets('an unknown kind opens the store with an empty search', (
+      tester,
+    ) async {
+      final h = await pumpPlugins(
+        tester,
+        StoreFixture(),
+        location: '/settings/plugins?kind=chat',
+      );
+      expect(h.container.read(storeFilterProvider).isEmpty, isTrue);
+    });
+
+    testWidgets('back goes up one level at a time', (tester) async {
+      final h = await pumpPlugins(
+        tester,
+        StoreFixture(),
+        location: PluginPaths.repositories,
+      );
+      expect(find.byType(RepositoriesPage), findsOneWidget);
+      // Opened directly: the arrow leads to the store, then to Settings.
+      await tester.tap(byIconButton('Back'));
+      await tester.pumpAndSettle();
+      expect(
+        h.router.routerDelegate.currentConfiguration.last.matchedLocation,
+        PluginPaths.store,
+      );
+      await tester.tap(byIconButton('Back'));
+      await tester.pumpAndSettle();
+      expect(
+        h.router.routerDelegate.currentConfiguration.last.matchedLocation,
+        SettingsPaths.root,
+      );
+    });
   });
 }
