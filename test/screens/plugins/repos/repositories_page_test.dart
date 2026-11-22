@@ -1,6 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart' show Size;
+import 'package:flutter/gestures.dart' show kSecondaryButton;
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/plugins/domain/install/repo_results.dart';
 import 'package:kanaru/src/plugins/domain/net/address_rules.dart';
@@ -72,6 +74,82 @@ void main() {
       );
     });
   }
+
+  group('copy address', () {
+    const url = 'https://nhacviet.example.org/plugins.json?token=abc';
+    late List<String> copied;
+
+    setUp(() {
+      copied = [];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+            if (call.method == 'Clipboard.setData') {
+              copied.add((call.arguments as Map)['text'] as String);
+            }
+            return null;
+          });
+    });
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null);
+    });
+
+    for (final (name, size) in [
+      ('narrow', const Size(400, 900)),
+      ('wide', const Size(1400, 900)),
+    ]) {
+      testWidgets('$name: long press copies the address and says so', (
+        tester,
+      ) async {
+        await pumpPlugins(tester, _fixture(), location: _path, size: size);
+        await tester.longPress(find.text('Nhạc Việt Plugins'));
+        await tester.pump();
+        expect(copied, [url]);
+        expect(find.text('Repository address copied'), findsOneWidget);
+      });
+    }
+
+    testWidgets('wide: a secondary tap copies', (tester) async {
+      await pumpPlugins(
+        tester,
+        _fixture(),
+        location: _path,
+        size: const Size(1400, 900),
+      );
+      await tester.tap(
+        find.text('Nhạc Việt Plugins'),
+        buttons: kSecondaryButton,
+      );
+      await tester.pump();
+      expect(copied, [url]);
+    });
+
+    testWidgets('a long press on the trash or Retry copies nothing', (
+      tester,
+    ) async {
+      await pumpPlugins(tester, _fixture(), location: _path);
+      await tester.longPress(byIconButton('Remove repository Broken'));
+      await tester.longPress(find.text('Retry'));
+      await tester.pump();
+      expect(copied, isEmpty);
+      expect(find.text('Repository address copied'), findsNothing);
+    });
+
+    testWidgets('the row has a Copy address action', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpPlugins(tester, _fixture(), location: _path);
+      final data = tester
+          .getSemantics(find.text('Nhạc Việt Plugins'))
+          .getSemanticsData();
+      expect(
+        data.customSemanticsActionIds!.map(
+          (id) => CustomSemanticsAction.getAction(id)!.label,
+        ),
+        contains('Copy address'),
+      );
+      handle.dispose();
+    });
+  });
 
   testWidgets('the header refreshes every repository', (tester) async {
     final fixture = _fixture();

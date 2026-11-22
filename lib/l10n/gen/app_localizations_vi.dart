@@ -5146,4 +5146,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pluginsPageBadgeAi => 'AI';
+
+  @override
+  String get pluginsRepoAddressCopied => 'Đã chép địa chỉ repository';
+
+  @override
+  String get pluginsRepoCopyAddress => 'Chép địa chỉ';
 }

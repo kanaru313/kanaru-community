@@ -5600,4 +5600,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pluginsPageBadgeAi => 'AI';
+
+  @override
+  String get pluginsRepoAddressCopied => 'Repository address copied';
+
+  @override
+  String get pluginsRepoCopyAddress => 'Copy address';
 }

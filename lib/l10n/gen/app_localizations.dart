@@ -8243,6 +8243,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'AI'**
   String get pluginsPageBadgeAi;
+
+  /// No description provided for @pluginsRepoAddressCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Repository address copied'**
+  String get pluginsRepoAddressCopied;
+
+  /// No description provided for @pluginsRepoCopyAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy address'**
+  String get pluginsRepoCopyAddress;
 }
 
 class _AppLocalizationsDelegate

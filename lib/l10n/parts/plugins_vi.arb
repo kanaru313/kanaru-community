@@ -938,5 +938,7 @@
   "pluginsPageTrackCache": "Cache bài và ảnh bìa",
   "pluginsPageLog": "Nhật ký",
   "pluginsPageOpen": "Mở",
-  "pluginsPageBadgeAi": "AI"
+  "pluginsPageBadgeAi": "AI",
+  "pluginsRepoAddressCopied": "Đã chép địa chỉ repository",
+  "pluginsRepoCopyAddress": "Chép địa chỉ"
 }

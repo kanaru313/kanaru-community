@@ -938,5 +938,7 @@
   "pluginsPageTrackCache": "Track and cover cache",
   "pluginsPageLog": "Log",
   "pluginsPageOpen": "Open",
-  "pluginsPageBadgeAi": "AI"
+  "pluginsPageBadgeAi": "AI",
+  "pluginsRepoAddressCopied": "Repository address copied",
+  "pluginsRepoCopyAddress": "Copy address"
 }
