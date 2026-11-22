@@ -40,6 +40,7 @@ dart run tool/merge_arb.dart             # merge lib/l10n/parts into app_*.arb (
 flutter test                             # app tests
 tool/integration_test.sh linux           # real-app integration tests (see docs/integration-tests.md)
 tool/integration_test.sh android         # same on the test phone ($ANDROID_SERIAL)
+tool/build_apk.sh [--release|--profile|--debug]   # APK with a writable integration_test copy (Nix SDK is read-only; docs/integration-tests.md)
 (cd packages/kanaru_ui && flutter test)  # design system tests
 (cd tool/architecture_lint && dart test) # gate tests
 flutter pub run build_runner build --delete-conflicting-outputs   # drift codegen
@@ -94,7 +95,7 @@ XDG_CONFIG_HOME=$R/config XDG_DATA_HOME=$R/data XDG_CACHE_HOME=$R/cache \
 | `rust/` | Cargo workspace: `kanaru_media`, `kanaru_plugin_runtime`, `kanaru_bridge` |
 | `rust_builder/` | cargokit glue that builds `kanaru_bridge` |
 | `integration_test/` | Real-app tests and their generated fixtures (docs/integration-tests.md) |
-| `tool/` | `check` (gate), `integration_test.sh`, `make_fixtures.sh`, `check_architecture.dart`, `merge_arb.dart` (l10n parts), `architecture_lint/` (analyzer plugin and CLI) |
+| `tool/` | `check` (gate), `integration_test.sh`, `build_apk.sh`, `android_writable_sdk.sh`, `make_fixtures.sh`, `check_architecture.dart`, `merge_arb.dart` (l10n parts), `architecture_lint/` (analyzer plugin and CLI) |
 | `architecture.yaml` | Module DAG used by the gate |
 | `android/`, `linux/` | Platform runners |
 
