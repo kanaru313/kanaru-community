@@ -242,7 +242,7 @@ void main() {
       expect(find.text('Activated · thank you'), findsOneWidget);
       expect(find.text('PRO'), findsNothing);
       // The Pro row is no longer one of the coming-soon rows.
-      expect(find.text('Coming soon'), findsNWidgets(5));
+      expect(find.text('Coming soon'), findsNWidgets(4));
     });
   });
 
