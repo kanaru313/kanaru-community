@@ -60,7 +60,6 @@
     }
   },
   "pluginsUpdate": "Cập nhật",
-  "pluginsReview": "Xem",
   "pluginsUpdateTooltip": "Cập nhật {name}",
   "@pluginsUpdateTooltip": {
     "placeholders": {
@@ -663,7 +662,6 @@
   "pluginsLinkErrInvalid": "URL không hợp lệ",
   "pluginsLinkContinue": "Tiếp tục",
   "pluginsLinkAddRepo": "Thêm repository",
-  "pluginsUpdating": "Đang cập nhật…",
   "pluginsUpdateAllRunning": "Đang cập nhật {done} / {total}…",
   "@pluginsUpdateAllRunning": {
     "placeholders": {
@@ -683,7 +681,6 @@
       }
     }
   },
-  "pluginsUpdateReasonNetwork": "lỗi mạng",
   "pluginsUpdateReasonProblems": "gói mới không hợp lệ",
   "pluginsUpdateReasonGone": "plugin hoặc repository không còn",
   "pluginsUpdateReasonNoNewer": "chưa có bản mới hơn",
@@ -722,7 +719,6 @@
       }
     }
   },
-  "pluginsUpdateAllNone": "Không có bản nào để cập nhật.",
   "pluginsRemoveTitle": "Xoá {name}?",
   "@pluginsRemoveTitle": {
     "placeholders": {

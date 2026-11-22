@@ -3141,7 +3141,6 @@
     }
   },
   "pluginsUpdate": "Update",
-  "pluginsReview": "Review",
   "pluginsUpdateTooltip": "Update {name}",
   "@pluginsUpdateTooltip": {
     "placeholders": {
@@ -3744,7 +3743,6 @@
   "pluginsLinkErrInvalid": "Invalid URL",
   "pluginsLinkContinue": "Continue",
   "pluginsLinkAddRepo": "Add repository",
-  "pluginsUpdating": "Updating…",
   "pluginsUpdateAllRunning": "Updating {done} / {total}…",
   "@pluginsUpdateAllRunning": {
     "placeholders": {
@@ -3764,7 +3762,6 @@
       }
     }
   },
-  "pluginsUpdateReasonNetwork": "network error",
   "pluginsUpdateReasonProblems": "the new package is not valid",
   "pluginsUpdateReasonGone": "the plugin or its repository is gone",
   "pluginsUpdateReasonNoNewer": "no newer version",
@@ -3803,7 +3800,6 @@
       }
     }
   },
-  "pluginsUpdateAllNone": "Nothing to update.",
   "pluginsRemoveTitle": "Remove {name}?",
   "@pluginsRemoveTitle": {
     "placeholders": {

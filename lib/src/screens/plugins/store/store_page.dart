@@ -38,16 +38,35 @@ class _StorePageState extends ConsumerState<StorePage> {
   final _search = TextEditingController();
   final _filterKey = GlobalKey();
 
+  /// The route's kind is in the filter. Until then the list is not shown, so
+  /// the first frame never flashes the unfiltered list.
+  bool _kindApplied = false;
+
   @override
   void initState() {
     super.initState();
-    // Providers cannot change while the tree builds.
+    _queueApplyKind(open: true);
+  }
+
+  @override
+  void didUpdateWidget(StorePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Same page, another `?kind=`.
+    if (oldWidget.kind == widget.kind) return;
+    _kindApplied = false;
+    _queueApplyKind(open: false);
+  }
+
+  /// Providers cannot change while the tree builds: a fresh filter whose
+  /// search is the `#tag` of the route's kind is set right after the frame.
+  void _queueApplyKind({required bool open}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref
-          .read(storeFilterProvider.notifier)
-          .set(StoreFilter(query: storeSearchForKind(widget.kind)));
-      unawaited(ref.read(storeOpsProvider).onOpen());
+      final query = storeSearchForKind(widget.kind);
+      _search.text = query;
+      ref.read(storeFilterProvider.notifier).set(StoreFilter(query: query));
+      setState(() => _kindApplied = true);
+      if (open) unawaited(ref.read(storeOpsProvider).onOpen());
     });
   }
 
@@ -82,7 +101,13 @@ class _StorePageState extends ConsumerState<StorePage> {
           StoreBanner(repos: repos),
           const KGap(KSpace.x5),
         ],
-        ..._body(context, view, actions, filter),
+        if (_kindApplied)
+          ..._body(context, view, actions, filter)
+        else
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: KSpace.x7),
+            child: Center(child: CircularProgressIndicator()),
+          ),
       ],
     );
   }

@@ -4135,9 +4135,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pluginsUpdate => 'Cập nhật';
 
   @override
-  String get pluginsReview => 'Xem';
-
-  @override
   String pluginsUpdateTooltip(String name) {
     return 'Cập nhật $name';
   }
@@ -4881,9 +4878,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pluginsLinkAddRepo => 'Thêm repository';
 
   @override
-  String get pluginsUpdating => 'Đang cập nhật…';
-
-  @override
   String pluginsUpdateAllRunning(int done, int total) {
     return 'Đang cập nhật $done / $total…';
   }
@@ -4892,9 +4886,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String pluginsUpdateFailedLine(String reason) {
     return 'Không cập nhật được: $reason';
   }
-
-  @override
-  String get pluginsUpdateReasonNetwork => 'lỗi mạng';
 
   @override
   String get pluginsUpdateReasonProblems => 'gói mới không hợp lệ';
@@ -4933,9 +4924,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String pluginsUpdateAllFailed(int count) {
     return '$count bản không cập nhật được';
   }
-
-  @override
-  String get pluginsUpdateAllNone => 'Không có bản nào để cập nhật.';
 
   @override
   String pluginsRemoveTitle(String name) {

@@ -6666,12 +6666,6 @@ abstract class AppLocalizations {
   /// **'Update'**
   String get pluginsUpdate;
 
-  /// No description provided for @pluginsReview.
-  ///
-  /// In en, this message translates to:
-  /// **'Review'**
-  String get pluginsReview;
-
   /// No description provided for @pluginsUpdateTooltip.
   ///
   /// In en, this message translates to:
@@ -7824,12 +7818,6 @@ abstract class AppLocalizations {
   /// **'Add repository'**
   String get pluginsLinkAddRepo;
 
-  /// No description provided for @pluginsUpdating.
-  ///
-  /// In en, this message translates to:
-  /// **'Updating…'**
-  String get pluginsUpdating;
-
   /// No description provided for @pluginsUpdateAllRunning.
   ///
   /// In en, this message translates to:
@@ -7841,12 +7829,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn’t update: {reason}'**
   String pluginsUpdateFailedLine(String reason);
-
-  /// No description provided for @pluginsUpdateReasonNetwork.
-  ///
-  /// In en, this message translates to:
-  /// **'network error'**
-  String get pluginsUpdateReasonNetwork;
 
   /// No description provided for @pluginsUpdateReasonProblems.
   ///
@@ -7907,12 +7889,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{1 could not be updated} other{{count} could not be updated}}'**
   String pluginsUpdateAllFailed(int count);
-
-  /// No description provided for @pluginsUpdateAllNone.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing to update.'**
-  String get pluginsUpdateAllNone;
 
   /// No description provided for @pluginsRemoveTitle.
   ///

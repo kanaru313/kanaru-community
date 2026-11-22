@@ -4555,9 +4555,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginsUpdate => 'Update';
 
   @override
-  String get pluginsReview => 'Review';
-
-  @override
   String pluginsUpdateTooltip(String name) {
     return 'Update $name';
   }
@@ -5315,9 +5312,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginsLinkAddRepo => 'Add repository';
 
   @override
-  String get pluginsUpdating => 'Updating…';
-
-  @override
   String pluginsUpdateAllRunning(int done, int total) {
     return 'Updating $done / $total…';
   }
@@ -5326,9 +5320,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String pluginsUpdateFailedLine(String reason) {
     return 'Couldn’t update: $reason';
   }
-
-  @override
-  String get pluginsUpdateReasonNetwork => 'network error';
 
   @override
   String get pluginsUpdateReasonProblems => 'the new package is not valid';
@@ -5387,9 +5378,6 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get pluginsUpdateAllNone => 'Nothing to update.';
 
   @override
   String pluginsRemoveTitle(String name) {

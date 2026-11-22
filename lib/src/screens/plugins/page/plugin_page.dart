@@ -107,6 +107,11 @@ class _PluginPageState extends ConsumerState<PluginPage>
     }
     final nameBottom = name.localToGlobal(Offset(0, name.size.height)).dy;
     final headerBottom = header.localToGlobal(Offset(0, header.size.height)).dy;
+    if (nameBottom.isNaN) {
+      // Kept by the list but off the screen and not laid out: far above.
+      _collapsed.value = pixels > 0;
+      return;
+    }
     _collapsed.value = nameBottom <= headerBottom + 0.5;
   }
 
@@ -192,7 +197,10 @@ class _PluginPageState extends ConsumerState<PluginPage>
           PluginHeadCard(data: data, nameKey: _nameKey),
           if (data.update != null) UpdateBand(data: data),
           if (PluginErrorBand.applies(data))
-            PluginErrorBand(data: data, onOpenConfig: _openConfig),
+            PluginErrorBand(
+              data: data,
+              onOpenConfig: () => unawaited(_openConfig()),
+            ),
         ],
       ),
       Column(
@@ -212,11 +220,14 @@ class _PluginPageState extends ConsumerState<PluginPage>
     ref.invalidate(pluginPageProvider(widget.installId));
   }
 
-  void _openConfig() => unawaited(
-    _slotKey.currentState?.reveal(
+  /// Scrolls to the settings. The scroll is programmatic, so the name is
+  /// measured again once it has finished.
+  Future<void> _openConfig() async {
+    await _slotKey.currentState?.reveal(
       animate: !MediaQuery.disableAnimationsOf(context),
-    ),
-  );
+    );
+    if (mounted) _queueMeasure();
+  }
 
   Future<void> _remove() async {
     final gone = await removePluginFlow(

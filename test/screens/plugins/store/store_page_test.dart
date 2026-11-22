@@ -274,6 +274,38 @@ void main() {
       expect(badge.selected, isFalse);
     });
 
+    testWidgets('another ?kind= on the open store updates the search', (
+      tester,
+    ) async {
+      final fixture = StoreFixture(
+        items: [
+          itemOf('l', StoreItemState.notInstalled, name: 'Lyr'),
+          itemOf(
+            't',
+            StoreItemState.notInstalled,
+            name: 'Trans',
+            kind: PluginKind.translate,
+          ),
+        ],
+        repos: const [RepoView(id: 1, name: 'Kho', url: 'u', pluginCount: 2)],
+      );
+      final h = await pumpPlugins(
+        tester,
+        fixture,
+        location: '/settings/plugins?kind=translate',
+      );
+      expect(find.text('Lyr'), findsNothing);
+      h.router.go('/settings/plugins?kind=lyrics');
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<KFilterField>(find.byType(KFilterField)).controller.text,
+        '#lyric ',
+      );
+      expect(find.text('Lyr'), findsOneWidget);
+      expect(find.text('Trans'), findsNothing);
+      expect(h.container.read(storeFilterProvider).query, '#lyric ');
+    });
+
     testWidgets('an unknown kind or none leaves the search empty', (
       tester,
     ) async {

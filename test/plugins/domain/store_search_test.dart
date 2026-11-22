@@ -52,6 +52,14 @@ void main() {
     }
   });
 
+  test('a lone # is ignored: neither a tag nor text', () {
+    for (final q in ['#', ' # ', 'demo #']) {
+      final s = parseStoreSearch(q);
+      expect(s.tags, isEmpty, reason: q);
+      expect(s.words, q == 'demo #' ? ['demo'] : isEmpty, reason: q);
+    }
+  });
+
   test('a route kind opens the search with its first tag and a space', () {
     expect(storeSearchForKind('lyrics'), '#lyric ');
     expect(storeSearchForKind('translate'), '#translate ');

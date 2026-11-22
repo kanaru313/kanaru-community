@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/widgets.dart' show ListView, Size;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/plugins/state/alerts_provider.dart';
 import 'package:kanaru/src/plugins/state/install_ops.dart';
 import 'package:kanaru/src/plugins/state/store_items_provider.dart';
 import 'package:kanaru/src/plugins/state/store_view_models.dart';
 import 'package:kanaru/src/screens/plugins/page/plugin_page_header.dart';
 
 import '../../../support/icon_button_finders.dart';
+import '../../../plugins/domain/plugin_test_support.dart';
 import '../support/install_fixtures.dart';
 import '../support/page_fixtures.dart';
 import '../support/plugin_fixtures.dart';
@@ -141,6 +143,41 @@ void main() {
           expect(_inHeader('Demo'), findsNothing);
         },
       );
+
+      testWidgets('Open settings scrolls the card away and the title follows', (
+        tester,
+      ) async {
+        final config = parseOk(
+          withConfig({
+            'token': {
+              'title': 'Token',
+              'mode': 'input',
+              'format': 'text',
+              'required': true,
+            },
+          }),
+        );
+        await pumpPlugins(
+          tester,
+          StoreFixture(),
+          location: pagePath,
+          size: const Size(400, 420),
+          overrides: pageOverrides(
+            AsyncData(
+              pageData(
+                manifest: config,
+                alerts: {PluginAlert.missingRequiredConfig},
+                missingConfig: ['Token'],
+              ),
+            ),
+          ),
+        );
+        expect(_inHeader('Plugin details'), findsOneWidget);
+        await tester.tap(find.text('Open settings'));
+        await tester.pumpAndSettle();
+        expect(_inHeader('Demo'), findsOneWidget);
+        expect(_inHeader('Plugin details'), findsNothing);
+      });
 
       testWidgets('with reduced motion the title changes in the same frame', (
         tester,
