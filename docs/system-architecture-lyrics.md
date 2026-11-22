@@ -225,7 +225,7 @@ Code: `lib/src/lyrics/` (`domain/`, `data/`, `state/`). Only `data/` imports
   after a reopen, since the audio service keeps the engine and the open lyrics screen alive). Edge fade 12 % (`ShaderMask`), no
   scrollbar. One `ref.listen(playingLyricsLineProvider)` moves one shared `ValueNotifier<int>`; each built `LyricsLine` rebuilds only
   when it becomes or stops being the current line, so a line change rebuilds two lines and a position
-  tick none. Lines are all the same size and w700; the current one is `onSurface` and scaled 1.02, the others `onSurface` at the `lyrics.dim`
+  tick none. Lines are all the same size and w700; the current one is `onSurface`, scaled 1.02 and has a rounded `onSurface` 8 % fill (`KRadius.md`, padding on every line so its height never changes; always, every dim level, gaps too; animated with the text colour; hover/press ink shows through), the others `onSurface` at the `lyrics.dim`
   alpha; colour and scale animate `KMotion.slow`. A timed blank line is a gap: three music notes (`LyricsGapMark`, `KIcons.songs` at `KIconSize.sm`, text colour at half strength) that pulse (opacity + slight scale) only while it is
   current and animations are on (the ticker exists only then). Pressing a line (gaps too) seeks through `playerControllerProvider` and
   makes it current at once.
@@ -258,15 +258,41 @@ Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens
   playing track changes or stops (Now Playing entry points); opened from a song menu it stays on its track. Every close goes through
   one guarded path: it pops only while the modal is the current route (a later pop waits for that), and a second request (a double tap,
   a track change during the exit animation) does nothing.
-- **Body** (`LyricsForTrackBody`): header "Lời cho bài này" and a close button (no settings button), a status line "Không có lời trên
+- **Body** (`LyricsForTrackBody`): header "Lời cho bài này" and a settings button (`KIcons.settings`, tooltip "Cài đặt lời bài") and a close button, a status line "Không có lời trên
   máy" only when the file has no lyrics, the two choice rows, a divider, then three dimmed inert "Sắp có" rows (find online, create
   from audio, save).
 - **Choice rows** (`LyricsChoiceRows`, two single-choice icon `SelectionRow`s, marked by tint and bold title only): "Lời trong
   file" (subtitle names tag or `.lrc` and synced or plain; disabled with "Không có lời trong file" when the file has none or the read
   is loading) and "Không hiện lời" (always enabled, even while loading). Choosing reads `LyricsChoiceCommands`, closes, then writes
   exactly once: file → `clear(id)`, off → `setOff(id)`. The chosen row only closes. A failed write is logged.
+- **Song menu entry** (`song_lyrics_entry_impl.dart`, `LyricsSongEntry`, implements the library's `SongLyricsEntry`; the app overrides
+  `songLyricsEntryProvider` in `lib/kanaru.dart`): `label` makes the subtitle of "Nguồn lời bài" with one one-shot read of the
+  song's choice (`watchLyricsFacts(...).first`): off → "Tắt lời"; else `LyricsLoader.peek` (memory cache) with `pickLocalLyrics` and
+  the `lyrics.local_first` setting → the summary label; else null (never a file read, never a subscription). `open` calls
+  `showLyricsForTrack(context, id, followsPlaying: false)`.
 - **`LyricsSourceButton`**: watches only `playingLyricsProvider`. Icon: file lyrics = `KIcons.lyrics` in `primary`; none, loading =
   the same at 38 %; off = `KIcons.lyricsOff`. 48 dp wide on mobile, 40 on desktop. Semantics label = the summary label (the modal
-  title while loading). Disabled without a track and for a track with no readable file. Desktop tooltip "<label> (L)" plus the
+  title while loading). Disabled only without a track: a track whose file cannot be read keeps the dimmed look of "none" but still opens the modal (and the right-click toggle works), the same rule as every other entry, because the song menu cannot know a file is unreadable without file I/O; the modal then says the file has no lyrics and still offers "Không hiện lời". Desktop tooltip "<label> (L)" plus the
   right-click line when `onToggle` is given; right-click (`KContextRegion`, no long press) calls `onToggle`, built by
   `toggleLyricsOfPlaying(ref)` (off ↔ automatic through `LyricsChoiceCommands.toggle`).
+
+## Settings › Lyrics (`screens/settings/ui/lyrics/`)
+
+Route `/settings/lyrics`: `lyricsSettingsLocation` (`lyrics/ui/lyrics_settings_link.dart`) is the single copy of the path;
+`SettingsPaths.lyrics` points at it and `buildSettingsRoute` has one `GoRoute(path: 'lyrics')`. The root row "Lời bài" opens it.
+The ⚙ of "Lời cho bài này" takes the router and the Now Playing panel notifier first, closes the modal through its guarded close
+(nothing happens when it is already closing), closes the desktop Now Playing panel, then `go`es to the location (the page opens at
+its top). It works from Now Playing (mobile route and desktop panel) and from a song menu.
+
+`LyricsChoiceRow<T>` is one value row plus its picker (anchored on desktop, a caption as the picker header, "Mặc định" as the
+subtitle of the default option); a choice is written at once through the setting's notifier.
+
+| Section | Row | Kind | Setting |
+|---|---|---|---|
+| Hiển thị lời | Cỡ chữ lời, Căn lời, Tự về dòng đang hát, Làm mờ dòng không hát | picker | `lyrics.font_scale`, `lyrics.align`, `lyrics.auto_return`, `lyrics.dim` |
+| | Phiên âm; Giữ màn hình sáng (mobile shell only) | coming soon | none |
+| Tìm và lưu lời | Lời trong máy | picker | `lyrics.local_first` |
+| | Tự tìm lời khi bài không có lời, Tự lưu lời tìm được thành .lrc | coming soon | none |
+| Nguồn lời trực tuyến, Dịch lời | Thêm nguồn lời trực tuyến; dịch vụ, ngôn ngữ, dịch trước, thêm dịch vụ | coming soon | none |
+| Nơi hiện lời | Lời nổi trên màn hình + Pro (desktop shell); Lời trên màn khoá và thông báo (mobile shell) | coming soon | none |
+| Tạo lời từ âm thanh | Thêm plugin chuyển giọng nói (section ⓘ) | coming soon | none |

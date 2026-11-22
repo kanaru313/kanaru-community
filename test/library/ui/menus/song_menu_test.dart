@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart' show BuildContext;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
@@ -6,6 +7,7 @@ import 'package:kanaru/src/library/ui/menus/menu_origin.dart';
 import 'package:kanaru/src/library/ui/menus/song_menu.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
+import 'package:kanaru_ui/kanaru_ui.dart' show KIcons;
 
 import 'menu_fixtures.dart';
 
@@ -19,6 +21,8 @@ MenuSpec _menu({
   bool selected = false,
   bool canReveal = true,
   bool trash = false,
+  String? lyricsLabel,
+  Future<void> Function(BuildContext)? openLyrics,
 }) => buildSongMenu(
   SongMenuData(
     info: trackInfo(artists: artists, album: album),
@@ -31,6 +35,8 @@ MenuSpec _menu({
     file: songFile,
     favorite: favorite,
     selected: selected,
+    lyricsLabel: lyricsLabel,
+    openLyrics: openLyrics,
   ),
   origin,
   env(canReveal: canReveal, trash: trash),
@@ -84,6 +90,7 @@ void main() {
       MenuItemId.goAlbum,
       MenuItemId.goArtist,
       MenuItemId.goFolder,
+      MenuItemId.lyrics,
       MenuItemId.playlist,
       MenuItemId.favorite,
       MenuItemId.edit,
@@ -91,14 +98,53 @@ void main() {
       MenuItemId.ai,
       MenuItemId.advanced,
     ]);
-    expect(rowIds(spec.advanced), [
-      MenuItemId.lyrics,
-      MenuItemId.hide,
-      MenuItemId.delete,
-    ]);
+    expect(rowIds(spec.advanced), [MenuItemId.hide, MenuItemId.delete]);
     expect(spec.queueIds, [TrackId(1)]);
     expect(spec.header.title, 'So What');
     expect(spec.header.subtitle, 'Miles · Blue');
+  });
+
+  test('the lyrics source row is a group of its own after Go to', () {
+    Future<void> open(BuildContext _) async {}
+    final spec = _menu(lyricsLabel: 'Lyrics in tag · Synced', openLyrics: open);
+    expect(spec.groups[1].map((i) => i.id), [MenuItemId.lyrics]);
+    final row = rowOf(spec, MenuItemId.lyrics);
+    expect(row.title, 'Lyrics source');
+    expect(row.subtitle, 'Lyrics in tag · Synced');
+    expect(row.soon, isFalse);
+    expect(row.active, isTrue);
+    expect(spec.advanced.expand((g) => g).map((i) => i.id), [
+      MenuItemId.hide,
+      MenuItemId.delete,
+    ]);
+  });
+
+  test('without a lyrics module the row is a soon row at the same place', () {
+    final spec = _menu();
+    expect(spec.groups[1].map((i) => i.id), [MenuItemId.lyrics]);
+    expect(rowOf(spec, MenuItemId.lyrics).soon, isTrue);
+    expect(rowOf(spec, MenuItemId.lyrics).active, isFalse);
+  });
+
+  test('on a playlist page the playlist rows come before the lyrics row', () {
+    final spec = withSongPageRows(
+      _menu(openLyrics: (_) async {}),
+      playlistGroup: [
+        const MenuItemSpec(
+          MenuItemId.playlistRemove,
+          icon: KIcons.delete,
+          title: 'Remove',
+        ),
+      ],
+    );
+    expect(rowIds(spec.groups).take(6), [
+      MenuItemId.goAlbum,
+      MenuItemId.goArtist,
+      MenuItemId.goFolder,
+      MenuItemId.playlistRemove,
+      MenuItemId.lyrics,
+      MenuItemId.playlist,
+    ]);
   });
 
   test('rows that are not built are dimmed with the coming-soon label', () {
@@ -106,7 +152,6 @@ void main() {
     for (final id in [
       MenuItemId.edit,
       MenuItemId.ai,
-      MenuItemId.lyrics,
       MenuItemId.hide,
       MenuItemId.delete,
     ]) {

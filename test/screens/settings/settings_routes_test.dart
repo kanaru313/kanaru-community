@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
+import 'package:kanaru/src/screens/settings/ui/lyrics/lyrics_settings_page.dart';
 import 'package:kanaru/src/screens/settings/ui/settings_scaffold.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -26,7 +27,7 @@ void main() {
     final subs = _all(root.routes).toList();
     expect(
       subs.map((r) => r.path),
-      containsAll(['appearance', 'seek-bar', 'playback', 'about']),
+      containsAll(['appearance', 'seek-bar', 'playback', 'lyrics', 'about']),
     );
     for (final r in subs) {
       expect(r.pageBuilder, isNotNull, reason: r.path);
@@ -45,6 +46,11 @@ void main() {
     expect(tester.hasRunningAnimations, isTrue);
     await tester.pumpAndSettle();
     expect(find.text('Native libraries'), findsOneWidget);
+  });
+
+  testWidgets('/settings/lyrics builds the lyrics page', (tester) async {
+    await pumpSettings(tester, location: SettingsPaths.lyrics);
+    expect(find.byType(LyricsSettingsPage), findsOneWidget);
   });
 
   testWidgets('a sub-page paints an opaque surface ground', (tester) async {

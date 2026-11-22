@@ -1,12 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../media/domain/track_id.dart';
+import '../../playback/state/now_playing_panel.dart';
 import '../domain/lyrics_status.dart';
 import '../state/track_lyrics_providers.dart';
 import 'lyrics_choice_rows.dart';
+import 'lyrics_settings_link.dart';
 
 /// The content of "Lời cho bài này": header with a close button, a status
 /// line when the file has no lyrics, the two choice rows, then the online
@@ -85,13 +88,24 @@ class LyricsForTrackBody extends ConsumerWidget {
   }
 }
 
-class _Header extends StatelessWidget {
+class _Header extends ConsumerWidget {
   const _Header({required this.onClose});
 
   final bool Function() onClose;
 
+  /// Closes the modal and the desktop Now Playing panel, then opens Settings ›
+  /// Lyrics. Everything is taken before closing: the modal's context is gone
+  /// once it pops.
+  void _openSettings(BuildContext context, WidgetRef ref) {
+    final router = GoRouter.of(context);
+    final panel = ref.read(nowPlayingPanelProvider.notifier);
+    if (!onClose()) return;
+    panel.close();
+    router.go(lyricsSettingsLocation);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -108,6 +122,12 @@ class _Header extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
+          ),
+          KIconButton(
+            icon: KIcons.settings,
+            tooltip: l10n.lyricsSettingsModalSettings,
+            padding: const EdgeInsets.all(KSpace.x3),
+            onPressed: () => _openSettings(context, ref),
           ),
           KIconButton(
             icon: KIcons.close,

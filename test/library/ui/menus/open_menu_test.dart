@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:drift/drift.dart' show Variable;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/ui/menus/song_lyrics_entry.dart';
 import 'package:kanaru/src/database/database.dart' show TrackStatus;
 import 'package:kanaru/src/library/state/favorites_providers.dart';
 import 'package:kanaru/src/library/state/folder_exclusion_providers.dart';
@@ -30,6 +32,7 @@ Future<LibraryHarness> _pump(
   FakePlaybackCommands? playback,
   bool canReveal = true,
   FakeFolderExclusions? exclusions,
+  List<Override> extraOverrides = const [],
 }) async {
   final h = await pumpLibrary(
     tester,
@@ -43,6 +46,7 @@ Future<LibraryHarness> _pump(
       ),
       if (exclusions != null)
         folderExclusionsProvider.overrideWithValue(exclusions),
+      ...extraOverrides,
     ],
   );
   await addAlbum(h, 'Blue', 'Zed', year: 2001);
@@ -81,6 +85,23 @@ Future<void> _tapAdvanced(WidgetTester tester) async {
 Finder _sheet() => find.byType(BottomSheet);
 
 Finder _dialog() => find.byType(Dialog);
+
+class _Entry implements SongLyricsEntry {
+  _Entry({this.fails = false});
+  final bool fails;
+  int labelCalls = 0;
+  final opened = <int>[];
+
+  @override
+  Future<String?> label(db, container, id, l10n) async {
+    labelCalls++;
+    if (fails) throw StateError('no label');
+    return 'Lyrics in tag · Synced';
+  }
+
+  @override
+  Future<void> open(BuildContext context, id) async => opened.add(id.value);
+}
 
 void main() {
   testWidgets('the ⋮ of a song opens its menu on the mobile shell', (
@@ -181,7 +202,7 @@ void main() {
     await tester.tap(_firstMore());
     await pumpMenu(tester);
     await _tapAdvanced(tester);
-    expect(find.text('Find lyrics online…'), findsOneWidget);
+    expect(find.text('Remove from library'), findsOneWidget);
     expect(find.text('Go to album'), findsNothing);
     await tester.tap(byIconButton('Back'));
     await pumpMenu(tester);
@@ -192,7 +213,7 @@ void main() {
     await pumpMenu(tester);
     expect(_dialog(), findsOneWidget);
     expect(find.text('Advanced'), findsOneWidget);
-    expect(find.text('Find lyrics online…'), findsNothing);
+    expect(find.text('Remove from library'), findsNothing);
     await unmountApp(tester);
   });
 
@@ -389,6 +410,43 @@ void main() {
     expect(find.text('This is no longer in your library.'), findsOneWidget);
     expect(find.text("Could not open the menu"), findsNothing);
     await tester.pump(const Duration(seconds: 5));
+    await unmountApp(tester);
+  });
+
+  testWidgets('the song menu shows the lyrics source row and opens it', (
+    tester,
+  ) async {
+    final entry = _Entry();
+    await _pump(
+      tester,
+      extraOverrides: [songLyricsEntryProvider.overrideWithValue(entry)],
+    );
+    await tester.tap(_firstMore());
+    await pumpMenu(tester);
+    expect(find.text('Lyrics source'), findsOneWidget);
+    expect(find.text('Lyrics in tag · Synced'), findsOneWidget);
+    expect(entry.labelCalls, 1);
+    await tester.tap(find.text('Lyrics source'));
+    await pumpMenu(tester);
+    expect(entry.opened, hasLength(1));
+    expect(_sheet(), findsNothing);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a failing label leaves the row without a subtitle', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      extraOverrides: [
+        songLyricsEntryProvider.overrideWithValue(_Entry(fails: true)),
+      ],
+    );
+    await tester.tap(_firstMore());
+    await pumpMenu(tester);
+    expect(_sheet(), findsOneWidget);
+    expect(find.text('Lyrics source'), findsOneWidget);
+    expect(find.text('Lyrics in tag · Synced'), findsNothing);
     await unmountApp(tester);
   });
 }

@@ -115,15 +115,17 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('a track without a readable file: disabled', (tester) async {
+  testWidgets('a track without a readable file: still opens the modal', (
+    tester,
+  ) async {
     final handle = tester.ensureSemantics();
     final h = await _pump(
       tester,
       _playing(const LyricsUnavailable(UnplayableReason.unknownTrack)),
     );
-    expect(_enabled(tester), isFalse);
-    await tester.tap(find.byType(KIconButton), warnIfMissed: false);
-    expect(h.opened, isEmpty);
+    expect(_enabled(tester), isTrue);
+    await tester.tap(find.byType(KIconButton));
+    expect(h.opened, hasLength(1));
     handle.dispose();
   });
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../database/state/database_providers.dart';
@@ -31,7 +32,10 @@ import 'menu_model.dart';
 import 'menu_origin.dart';
 import 'selection_menu.dart';
 import 'song_info_page.dart';
+import 'song_lyrics_entry.dart';
 import 'song_menu.dart';
+
+final _log = Logger('library.menu');
 
 /// Loads what a menu shows, once, before it opens: no half-filled rows and no
 /// rows that change under the user's finger. Each function reads the database
@@ -112,6 +116,16 @@ Future<MenuSpec> songMenuSpec(
   if (links == null) throw ItemGoneException('track ${info.id}');
   final file = await songInfo(db, info.id);
   final favorites = await _first(container, favoriteTrackIdsProvider);
+  final entry = container.read(songLyricsEntryProvider);
+  String? lyricsLabel;
+  if (entry != null) {
+    try {
+      lyricsLabel = await entry.label(db, container, info.id, env.l10n);
+    } on Object catch (e, s) {
+      // The row stays, without a subtitle; the menu still opens.
+      _log.warning('lyrics label of track ${info.id.value} failed', e, s);
+    }
+  }
   return buildSongMenu(
     SongMenuData(
       info: info,
@@ -119,6 +133,8 @@ Future<MenuSpec> songMenuSpec(
       file: file,
       favorite: favorites.contains(info.id),
       selected: container.read(librarySelectionProvider).set.contains(info.id),
+      lyricsLabel: lyricsLabel,
+      openLyrics: entry == null ? null : (ctx) => entry.open(ctx, info.id),
     ),
     origin,
     env,

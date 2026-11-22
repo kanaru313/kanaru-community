@@ -4309,4 +4309,177 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get lyricsSourceToggleHint =>
       'Right-click: turn this song’s lyrics on or off';
+
+  @override
+  String get lyricsSettingsModalSettings => 'Lyrics settings';
+
+  @override
+  String get lyricsSettingsDefault => 'Default';
+
+  @override
+  String get lyricsSettingsDisplay => 'Display';
+
+  @override
+  String get lyricsSettingsFind => 'Find and save';
+
+  @override
+  String get lyricsSettingsSources => 'Online sources';
+
+  @override
+  String get lyricsSettingsWhere => 'Where lyrics show';
+
+  @override
+  String get lyricsSettingsTranslation => 'Translation';
+
+  @override
+  String get lyricsSettingsSpeech => 'Create lyrics from audio';
+
+  @override
+  String get lyricsSettingsSpeechHint =>
+      'Speech-to-text plugins, used by “Create lyrics from audio…” in Lyrics for this song.';
+
+  @override
+  String get lyricsSettingsFontSize => 'Lyrics text size';
+
+  @override
+  String get lyricsSettingsFontSizeCaption =>
+      'Applies to the lyrics screen, the Lyrics tab and the lyrics card.';
+
+  @override
+  String get lyricsSettingsSizeSmall => 'Small';
+
+  @override
+  String get lyricsSettingsSizeMedium => 'Medium';
+
+  @override
+  String get lyricsSettingsSizeLarge => 'Large';
+
+  @override
+  String get lyricsSettingsAlign => 'Lyrics alignment';
+
+  @override
+  String get lyricsSettingsAlignStart => 'Left';
+
+  @override
+  String get lyricsSettingsAlignCenter => 'Center';
+
+  @override
+  String get lyricsSettingsAutoReturn => 'Return to the current line';
+
+  @override
+  String get lyricsSettingsAutoReturnCaption =>
+      'After you scroll the lyrics by hand. Off keeps the lyrics still until you tap “Back to current line”.';
+
+  @override
+  String get lyricsSettingsAutoReturnOff => 'Off';
+
+  @override
+  String get lyricsSettingsAutoReturn3 => '3 seconds';
+
+  @override
+  String get lyricsSettingsAutoReturn5 => '5 seconds';
+
+  @override
+  String get lyricsSettingsAutoReturn10 => '10 seconds';
+
+  @override
+  String get lyricsSettingsDim => 'Dim the lines not being sung';
+
+  @override
+  String get lyricsSettingsDimLight => 'Slightly dimmed';
+
+  @override
+  String get lyricsSettingsDimStrong => 'Strongly dimmed';
+
+  @override
+  String get lyricsSettingsDimOff => 'Off';
+
+  @override
+  String get lyricsSettingsRomanize => 'Transliteration';
+
+  @override
+  String get lyricsSettingsRomanizeDesc =>
+      'Romaji, Pinyin, Furigana under Japanese, Chinese and Korean lyrics.';
+
+  @override
+  String get lyricsSettingsKeepAwake => 'Keep the screen on';
+
+  @override
+  String get lyricsSettingsKeepAwakeDesc =>
+      'The screen stays on while the lyrics screen is open.';
+
+  @override
+  String get lyricsSettingsAutoFind => 'Find lyrics for songs without any';
+
+  @override
+  String get lyricsSettingsAutoFindDesc =>
+      'Searches the enabled lyrics sources when a song has no lyrics on this device.';
+
+  @override
+  String get lyricsSettingsLocalFirst => 'Lyrics on this device';
+
+  @override
+  String get lyricsSettingsLocalFirstCaption =>
+      'Synced lyrics always win over plain ones.';
+
+  @override
+  String get lyricsSettingsLocalTag => 'Lyrics in the music file first';
+
+  @override
+  String get lyricsSettingsLocalTagSub => 'Then the .lrc file';
+
+  @override
+  String get lyricsSettingsLocalLrc => '.lrc file first';
+
+  @override
+  String get lyricsSettingsLocalLrcSub => 'Then the lyrics in the music file';
+
+  @override
+  String get lyricsSettingsAutoSave => 'Save found lyrics as .lrc';
+
+  @override
+  String get lyricsSettingsAutoSaveDesc =>
+      'Writes an .lrc file next to the song when online lyrics are found.';
+
+  @override
+  String get lyricsSettingsAddSource => 'Add an online lyrics source';
+
+  @override
+  String get lyricsSettingsFloating => 'Floating lyrics';
+
+  @override
+  String get lyricsSettingsFloatingDesc =>
+      'A small lyrics window that stays above other windows.';
+
+  @override
+  String get lyricsSettingsLockScreen =>
+      'Lyrics on the lock screen and notification';
+
+  @override
+  String get lyricsSettingsLockScreenDesc =>
+      'The line being sung shows in the playback notification and on the lock screen.';
+
+  @override
+  String get lyricsSettingsTrService => 'Default translation service';
+
+  @override
+  String get lyricsSettingsTrServiceNone => 'Not chosen';
+
+  @override
+  String get lyricsSettingsTrTarget => 'Default translation language';
+
+  @override
+  String get lyricsSettingsTrTargetApp => 'Follows the app language';
+
+  @override
+  String get lyricsSettingsTrAhead => 'Translate ahead';
+
+  @override
+  String get lyricsSettingsTrAheadNow => 'Current song only';
+
+  @override
+  String get lyricsSettingsAddTrService => 'Add a translation service';
+
+  @override
+  String get lyricsSettingsAddSpeech => 'Add a speech-to-text plugin';
 }

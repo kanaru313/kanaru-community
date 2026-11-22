@@ -7,6 +7,7 @@ import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
 import 'package:kanaru/src/lyrics/state/playing_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_for_track_body.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_settings_link.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_source_button.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
@@ -30,9 +31,11 @@ import '../../../support/icon_button_finders.dart';
 Future<DesktopHost> _open(
   WidgetTester tester, {
   List<Override> overrides = const [],
+  List<RouteBase> routes = const [],
 }) async {
   final host = await pumpDesktopShell(
     tester,
+    routes: routes,
     overrides: [
       sleepTimerProvider.overrideWith(FakeSleepTimer.new),
       ...sleepEstimates(),
@@ -346,6 +349,42 @@ void main() {
         );
         await tester.pumpAndSettle();
         await expectPinnedThenReleased(tester);
+      });
+
+      testWidgets('its settings button closes the panel and opens Settings', (
+        tester,
+      ) async {
+        final host = await _open(
+          tester,
+          overrides: _lyricsOverrides(),
+          routes: [
+            GoRoute(
+              path: lyricsSettingsLocation,
+              builder: (_, _) => const Text('lyrics settings page'),
+            ),
+          ],
+        );
+        await tester.tap(
+          find.descendant(
+            of: find.byType(DesktopNowPlayingHeader),
+            matching: find.byType(LyricsSourceButton),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byWidgetPredicate(
+            (w) => w is KIconButton && w.tooltip == 'Lyrics settings',
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(LyricsForTrackBody), findsNothing);
+        expect(host.container.read(nowPlayingPanelProvider).open, isFalse);
+        expect(
+          host.router!.routerDelegate.currentConfiguration.last.matchedLocation,
+          lyricsSettingsLocation,
+        );
+        expect(find.text('lyrics settings page'), findsOneWidget);
+        expect(tester.takeException(), isNull);
       });
 
       testWidgets('L opens it with the header pinned', (tester) async {

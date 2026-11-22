@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart' show IconData;
+import 'package:flutter/widgets.dart' show BuildContext, IconData;
 import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
@@ -22,6 +22,23 @@ MenuItemSpec soonRow(
   soon: true,
   danger: danger,
 );
+
+/// "Lyrics source": opens the lyrics modal of the song through [open] with
+/// [label] as subtitle. Without [open] (no lyrics module) it is a soon row at
+/// the same place.
+MenuItemSpec lyricsSourceRow(
+  AppLocalizations l10n,
+  String? label,
+  Future<void> Function(BuildContext context)? open,
+) => open == null
+    ? soonRow(MenuItemId.lyrics, KIcons.lyrics, l10n.playbackLyricsSource)
+    : MenuItemSpec(
+        MenuItemId.lyrics,
+        icon: KIcons.lyrics,
+        title: l10n.playbackLyricsSource,
+        subtitle: label,
+        action: MenuAction.run(open),
+      );
 
 /// "Add to playlist...": opens the picker for [ids], listed as coming from
 /// [sourceLabel]; [excludePlaylistUid] is the playlist the tracks are shown

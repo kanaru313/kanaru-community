@@ -6,6 +6,7 @@ import 'package:kanaru/src/lyrics/state/playing_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_body.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_for_track_body.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_settings_link.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_source_button.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
@@ -27,6 +28,10 @@ final _routes = <RouteBase>[
   GoRoute(
     path: '/now-playing',
     builder: (context, state) => const NowPlayingPage(),
+  ),
+  GoRoute(
+    path: lyricsSettingsLocation,
+    builder: (context, state) => const Text('lyrics settings page'),
   ),
 ];
 
@@ -110,6 +115,31 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(LyricsForTrackBody), findsOneWidget);
     expect(find.byType(LyricsScreen), findsOneWidget);
+  });
+
+  testWidgets('the modal settings button leaves the lyrics screen and Now '
+      'Playing for Settings', (tester) async {
+    final host = await _openScreen(
+      tester,
+      lyrics: LyricsShown(syncedLyrics(40)),
+    );
+    await tester.tap(find.byType(LyricsSourceButton));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byWidgetPredicate(
+        (w) => w is KIconButton && w.tooltip == 'Lyrics settings',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(LyricsForTrackBody), findsNothing);
+    expect(find.byType(LyricsScreen), findsNothing);
+    expect(find.byType(MobileNowPlaying), findsNothing);
+    expect(find.text('lyrics settings page'), findsOneWidget);
+    expect(
+      host.router!.routerDelegate.currentConfiguration.last.matchedLocation,
+      lyricsSettingsLocation,
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('the trailing buttons touch: no gap between them', (
