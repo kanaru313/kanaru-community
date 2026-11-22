@@ -28,6 +28,7 @@ const Map<String, String?> arbParts = {
   'sleep': 'sleepTimer',
   'history': 'history',
   'lyrics': 'lyrics',
+  'plugins': 'plugins',
 };
 
 /// Locale whose key set every other locale must match.

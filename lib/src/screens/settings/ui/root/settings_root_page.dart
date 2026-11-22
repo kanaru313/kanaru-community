@@ -7,6 +7,10 @@ import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../extension/state/extension_providers.dart';
 import '../../../../platform/domain/media_permissions.dart';
 import '../../../../platform/state/media_permissions_provider.dart';
+import '../../../../plugins/state/alerts_provider.dart';
+import '../../../../plugins/state/updates_provider.dart';
+import '../../../plugins/common/restore_trigger.dart';
+import '../../../plugins/plugin_paths.dart';
 import '../../settings_routes.dart';
 import '../../state/app_edition.dart';
 import '../settings_scaffold.dart';
@@ -28,6 +32,11 @@ class SettingsRootPage extends ConsumerWidget {
         permission.audio != MediaPermissionStatus.granted;
     final sections = ref.watch(extensionRegistryProvider).settingsSections;
     final desktop = FormFactor.of(context) == FormFactor.desktop;
+    watchPluginRestore(ref);
+    // A loading or failing database shows no dot: only a known problem does.
+    final pluginNeedsAttention =
+        (ref.watch(pluginAlertsProvider).value?.any ?? false) ||
+        (ref.watch(updatesProvider).value?.needsReview.isNotEmpty ?? false);
     return SettingsScaffold(
       title: l10n.navSettings,
       children: [
@@ -74,10 +83,13 @@ class SettingsRootPage extends ConsumerWidget {
         ),
         SettingsBlock(
           children: [
-            SoonRow(
+            SetupValueRow(
               icon: KIcons.extension,
               title: Text(l10n.settingsRootPlugins),
-              desc: l10n.settingsRootPluginsDesc,
+              value: Text(l10n.settingsRootPluginsDesc),
+              alert: pluginNeedsAttention,
+              alertLabel: l10n.pluginsRootAlertLabel,
+              onTap: () => context.push(PluginPaths.store),
             ),
             SoonRow(
               icon: KIcons.ai,

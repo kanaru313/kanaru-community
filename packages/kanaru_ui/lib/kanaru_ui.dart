@@ -13,7 +13,8 @@ export 'src/tokens/k_layout.dart';
 export 'src/tokens/k_motion.dart';
 export 'src/tokens/k_shape.dart';
 export 'src/tokens/k_space.dart';
-export 'src/widgets/anchored_panel_layout.dart' show KAnchorAlign;
+export 'src/widgets/anchored_panel_layout.dart'
+    show AnchoredPanelLayout, KAnchorAlign;
 export 'src/widgets/app_snack_bar.dart';
 export 'src/widgets/collections/collection_widgets.dart';
 export 'src/widgets/form/k_text_field_row.dart';
@@ -32,6 +33,7 @@ export 'src/widgets/k_drag_handle.dart';
 export 'src/widgets/k_empty.dart';
 export 'src/widgets/k_empty_page.dart';
 export 'src/widgets/k_equalizer_icon.dart';
+export 'src/widgets/k_fab.dart';
 export 'src/widgets/k_fab_menu.dart';
 export 'src/widgets/k_focus_ring.dart';
 export 'src/widgets/k_gap.dart';

@@ -3079,5 +3079,253 @@
   "lyricsSettingsTrAhead": "Translate ahead",
   "lyricsSettingsTrAheadNow": "Current song only",
   "lyricsSettingsAddTrService": "Add a translation service",
-  "lyricsSettingsAddSpeech": "Add a speech-to-text plugin"
+  "lyricsSettingsAddSpeech": "Add a speech-to-text plugin",
+  "pluginsStoreTitle": "Plugin store",
+  "pluginsFilterTooltip": "Filter",
+  "pluginsFilterActiveLabel": "{count} on",
+  "@pluginsFilterActiveLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsMenuTooltip": "More options",
+  "pluginsMenuInstallFile": "Install from file…",
+  "pluginsMenuInstallLink": "Install from link…",
+  "pluginsMenuRepositories": "Repositories ({count})",
+  "@pluginsMenuRepositories": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsMenuRefreshAll": "Refresh all",
+  "pluginsMenuLogsDesktop": "Open log folder",
+  "pluginsMenuLogsMobile": "Share plugin logs…",
+  "pluginsSearchHint": "Search by name, author, repository, host",
+  "pluginsSearchClear": "Clear",
+  "pluginsSectionUpdates": "Updates ({count})",
+  "@pluginsSectionUpdates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsSectionInstalled": "Installed ({count})",
+  "@pluginsSectionInstalled": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsSectionAvailable": "Not installed ({count})",
+  "@pluginsSectionAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsUpdatesHint": "“Update all” skips updates with new hosts or permissions: you open those one by one, as when installing.",
+  "pluginsUpdatesHintTooltip": "About updates",
+  "pluginsUpdateAll": "Update all ({count})",
+  "@pluginsUpdateAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsUpdate": "Update",
+  "pluginsReview": "Review",
+  "pluginsInstallTooltip": "Install {name}",
+  "@pluginsInstallTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsRemoveTooltip": "Remove {name}",
+  "@pluginsRemoveTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsAlertLabel": "Has a problem",
+  "pluginsNoteReinstallFile": "Reinstall from file",
+  "pluginsNoteProRequired": "Needs Kanaru Pro",
+  "pluginsNotePackageMissing": "Package missing, will download again",
+  "pluginsFreeStreamingLimit": "The Free edition installs only one music source plugin. Remove the current one to install this.",
+  "pluginsKindLyrics": "Lyrics",
+  "pluginsKindTranslate": "Translation",
+  "pluginsKindStreaming": "Music source",
+  "pluginsKindHelpLyrics": "Finds lyrics for the song playing, with lines that follow the song.",
+  "pluginsKindHelpTranslate": "Translates lyrics into the language you choose.",
+  "pluginsKindHelpStreaming": "Searches and plays music from an online service.",
+  "pluginsAuthorUnknown": "Unknown author",
+  "pluginsFooterNewer": "{count, plural, one{1 plugin needs a newer Kanaru} other{{count} plugins need a newer Kanaru}}",
+  "@pluginsFooterNewer": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsSandboxNote": "Plugins run in a sandbox and can only connect to the addresses declared when installed.",
+  "pluginsNoMatch": "No matching plugins.",
+  "pluginsClearFilters": "Clear filters",
+  "pluginsLoadFailed": "Couldn't read the plugin list.",
+  "pluginsNoRepoTitle": "No repository yet",
+  "pluginsNoRepoBody": "Kanaru has no built-in repository. A repository is a list of plugins (a plugins.json file) published by plugin authors.",
+  "pluginsNoRepoStep1": "Find the address of the plugins.json file of a repository you trust, usually in the author's README. It starts with https://.",
+  "pluginsNoRepoStep2": "Press Add repository, paste the address, then press Add.",
+  "pluginsNoRepoStep3": "The repository's plugins appear here; press Install to see hosts and facts before installing.",
+  "pluginsAddRepository": "Add repository",
+  "pluginsRepoFailedOne": "Couldn't load {name}: {reason}",
+  "@pluginsRepoFailedOne": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsRepoFailedMany": "{count, plural, other{{count} repositories couldn't load}}",
+  "@pluginsRepoFailedMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsRepoShowingSaved": "Showing the list saved at {time}.",
+  "@pluginsRepoShowingSaved": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsRetry": "Retry",
+  "pluginsOfflineTitle": "No network connection",
+  "pluginsOfflineBody": "Showing the list saved last time. Installing and updating need a network.",
+  "pluginsLoadReasonNetwork": "network error",
+  "pluginsLoadReasonNotFound": "file not found",
+  "pluginsLoadReasonTooLarge": "file too large",
+  "pluginsLoadReasonInvalid": "not a valid plugin list",
+  "pluginsLoadReasonBlocked": "address blocked",
+  "pluginsLoadReasonStorage": "could not be saved",
+  "pluginsFilterTitle": "Filter",
+  "pluginsFilterGroupKind": "Plugin type",
+  "pluginsFilterGroupState": "Status",
+  "pluginsFilterGroupLanguage": "Language",
+  "pluginsFilterGroupAuthor": "Author",
+  "pluginsFilterGroupRepository": "Repository",
+  "pluginsStateInstalled": "Installed",
+  "pluginsStateNotInstalled": "Not installed",
+  "pluginsStateUpdatable": "Update available",
+  "pluginsFilterShowing": "{count, plural, one{Showing 1 plugin} other{Showing {count} plugins}}",
+  "@pluginsFilterShowing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsFilterClearAll": "Clear all",
+  "pluginsFilterDone": "Done",
+  "pluginsReposTitle": "Repositories",
+  "pluginsReposRefreshAll": "Refresh all",
+  "pluginsRepoPluginCount": "{count, plural, one{1 plugin} other{{count} plugins}}",
+  "@pluginsRepoPluginCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsRepoLastError": "Last load failed: {reason}",
+  "@pluginsRepoLastError": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsRepoRemoveTooltip": "Remove repository {name}",
+  "@pluginsRepoRemoveTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReposEmpty": "No repository yet.",
+  "pluginsReposFooter": "Removing a repository keeps the plugins installed from it, but they no longer get updates.",
+  "pluginsAddDialogUrlLabel": "URL",
+  "pluginsAddDialogUrlHint": "https://…/plugins.json",
+  "pluginsAddDialogHelper": "The address of the plugins.json file. Must be https, except for machines on your home network (localhost, 192.168.x…).",
+  "pluginsAddDialogConfirm": "Add",
+  "pluginsAddDialogLoading": "Loading…",
+  "pluginsCancel": "Cancel",
+  "pluginsAddedRepo": "{count, plural, one{Added {name} · 1 plugin} other{Added {name} · {count} plugins}}",
+  "@pluginsAddedRepo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsAddErrNeedsHttps": "Public addresses need https",
+  "pluginsAddErrInvalidUrl": "Invalid URL",
+  "pluginsAddErrDuplicate": "This repository is already added",
+  "pluginsAddErrNetwork": "Couldn't load the list: network error",
+  "pluginsAddErrNotFound": "No plugin list found at this address",
+  "pluginsAddErrBadFormat": "The file is not a valid plugin list",
+  "pluginsAddErrBlocked": "This address is blocked",
+  "pluginsAddErrBlockedReason": "This address is blocked: {reason}",
+  "@pluginsAddErrBlockedReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsAddErrStorage": "Couldn't save the repository",
+  "pluginsAddressUserInfo": "the address must not contain a user name or password",
+  "pluginsAddressLocalFromPublic": "a public repository must not point to a local address",
+  "pluginsAddressRefused": "this address is not allowed",
+  "pluginsAddressMixed": "the domain points to both local and public addresses",
+  "pluginsAddressLocalNamePublic": "a local-looking name points to a public address",
+  "pluginsRemoveRepoTitle": "Remove {name}?",
+  "@pluginsRemoveRepoTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsRemoveRepoBody": "Plugins already installed from this repository are kept, but they will no longer get updates.",
+  "pluginsRemoveRepoConfirm": "Remove",
+  "pluginsRemoveRepoFailed": "Couldn't remove {name}",
+  "@pluginsRemoveRepoFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsRootAlertLabel": "A plugin has a problem or an update needs review"
 }

@@ -85,7 +85,8 @@ class KInlineNotice extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
-          Text(message, style: textTheme?.copyWith(color: foreground)),
+          if (message.isNotEmpty)
+            Text(message, style: textTheme?.copyWith(color: foreground)),
         ],
       ),
     );

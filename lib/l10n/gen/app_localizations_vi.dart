@@ -4063,4 +4063,394 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lyricsSettingsAddSpeech => 'Thêm plugin chuyển giọng nói';
+
+  @override
+  String get pluginsStoreTitle => 'Kho plugin';
+
+  @override
+  String get pluginsFilterTooltip => 'Lọc';
+
+  @override
+  String pluginsFilterActiveLabel(int count) {
+    return '$count đang bật';
+  }
+
+  @override
+  String get pluginsMenuTooltip => 'Tùy chọn khác';
+
+  @override
+  String get pluginsMenuInstallFile => 'Cài từ tệp…';
+
+  @override
+  String get pluginsMenuInstallLink => 'Cài từ đường dẫn…';
+
+  @override
+  String pluginsMenuRepositories(int count) {
+    return 'Repository ($count)';
+  }
+
+  @override
+  String get pluginsMenuRefreshAll => 'Làm mới tất cả';
+
+  @override
+  String get pluginsMenuLogsDesktop => 'Mở thư mục nhật ký';
+
+  @override
+  String get pluginsMenuLogsMobile => 'Chia sẻ nhật ký plugin…';
+
+  @override
+  String get pluginsSearchHint => 'Tìm theo tên, tác giả, repository, host';
+
+  @override
+  String get pluginsSearchClear => 'Xoá';
+
+  @override
+  String pluginsSectionUpdates(int count) {
+    return 'Cập nhật ($count)';
+  }
+
+  @override
+  String pluginsSectionInstalled(int count) {
+    return 'Đã cài ($count)';
+  }
+
+  @override
+  String pluginsSectionAvailable(int count) {
+    return 'Chưa cài ($count)';
+  }
+
+  @override
+  String get pluginsUpdatesHint =>
+      '“Cập nhật tất cả” bỏ qua bản có host hoặc quyền mới: các bản “Cần xem” bạn mở từng bản, như lúc cài.';
+
+  @override
+  String get pluginsUpdatesHintTooltip => 'Giải thích về cập nhật';
+
+  @override
+  String pluginsUpdateAll(int count) {
+    return 'Cập nhật tất cả ($count)';
+  }
+
+  @override
+  String get pluginsUpdate => 'Cập nhật';
+
+  @override
+  String get pluginsReview => 'Xem';
+
+  @override
+  String pluginsInstallTooltip(String name) {
+    return 'Cài $name';
+  }
+
+  @override
+  String pluginsRemoveTooltip(String name) {
+    return 'Xoá $name';
+  }
+
+  @override
+  String get pluginsAlertLabel => 'Có lỗi';
+
+  @override
+  String get pluginsNoteReinstallFile => 'Cài lại từ tệp';
+
+  @override
+  String get pluginsNoteProRequired => 'Cần Kanaru Pro';
+
+  @override
+  String get pluginsNotePackageMissing => 'Thiếu gói, sẽ tải lại';
+
+  @override
+  String get pluginsFreeStreamingLimit =>
+      'Bản Free chỉ cài được một plugin nguồn nhạc. Gỡ plugin hiện có để cài plugin này.';
+
+  @override
+  String get pluginsKindLyrics => 'Lời bài';
+
+  @override
+  String get pluginsKindTranslate => 'Dịch';
+
+  @override
+  String get pluginsKindStreaming => 'Nguồn nhạc';
+
+  @override
+  String get pluginsKindHelpLyrics =>
+      'Tìm lời cho bài đang nghe, có lời chạy theo dòng.';
+
+  @override
+  String get pluginsKindHelpTranslate => 'Dịch lời bài sang ngôn ngữ bạn chọn.';
+
+  @override
+  String get pluginsKindHelpStreaming =>
+      'Tìm và phát nhạc từ một dịch vụ trực tuyến.';
+
+  @override
+  String get pluginsAuthorUnknown => 'Không rõ tác giả';
+
+  @override
+  String pluginsFooterNewer(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plugin cần Kanaru mới hơn',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pluginsSandboxNote =>
+      'Plugin chạy trong hộp cát và chỉ kết nối được tới các địa chỉ đã khai lúc cài.';
+
+  @override
+  String get pluginsNoMatch => 'Không có plugin khớp.';
+
+  @override
+  String get pluginsClearFilters => 'Xoá bộ lọc';
+
+  @override
+  String get pluginsLoadFailed => 'Không đọc được danh sách plugin.';
+
+  @override
+  String get pluginsNoRepoTitle => 'Chưa có repository nào';
+
+  @override
+  String get pluginsNoRepoBody =>
+      'Kanaru không có sẵn repository nào. Repository là một danh sách plugin (tệp plugins.json) do người viết plugin đăng.';
+
+  @override
+  String get pluginsNoRepoStep1 =>
+      'Tìm địa chỉ tệp plugins.json của repository bạn tin, thường ghi trong trang giới thiệu (README) của người viết plugin. Địa chỉ bắt đầu bằng https://.';
+
+  @override
+  String get pluginsNoRepoStep2 =>
+      'Bấm Thêm repository, dán địa chỉ, rồi bấm Thêm.';
+
+  @override
+  String get pluginsNoRepoStep3 =>
+      'Plugin của repository hiện ở đây; bấm Cài để xem host và dữ kiện trước khi cài.';
+
+  @override
+  String get pluginsAddRepository => 'Thêm repository';
+
+  @override
+  String pluginsRepoFailedOne(String name, String reason) {
+    return 'Không tải được $name: $reason';
+  }
+
+  @override
+  String pluginsRepoFailedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count repository không tải được',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pluginsRepoShowingSaved(String time) {
+    return 'Đang hiện danh sách lưu lúc $time.';
+  }
+
+  @override
+  String get pluginsRetry => 'Thử lại';
+
+  @override
+  String get pluginsOfflineTitle => 'Không có kết nối mạng';
+
+  @override
+  String get pluginsOfflineBody =>
+      'Đang hiện danh sách lưu lần trước. Cài và cập nhật cần mạng.';
+
+  @override
+  String get pluginsLoadReasonNetwork => 'lỗi mạng';
+
+  @override
+  String get pluginsLoadReasonNotFound => 'không tìm thấy file';
+
+  @override
+  String get pluginsLoadReasonTooLarge => 'file quá lớn';
+
+  @override
+  String get pluginsLoadReasonInvalid => 'không phải danh sách plugin hợp lệ';
+
+  @override
+  String get pluginsLoadReasonBlocked => 'địa chỉ bị chặn';
+
+  @override
+  String get pluginsLoadReasonStorage => 'không lưu được';
+
+  @override
+  String get pluginsFilterTitle => 'Lọc';
+
+  @override
+  String get pluginsFilterGroupKind => 'Loại plugin';
+
+  @override
+  String get pluginsFilterGroupState => 'Trạng thái';
+
+  @override
+  String get pluginsFilterGroupLanguage => 'Ngôn ngữ';
+
+  @override
+  String get pluginsFilterGroupAuthor => 'Tác giả';
+
+  @override
+  String get pluginsFilterGroupRepository => 'Repository';
+
+  @override
+  String get pluginsStateInstalled => 'Đã cài';
+
+  @override
+  String get pluginsStateNotInstalled => 'Chưa cài';
+
+  @override
+  String get pluginsStateUpdatable => 'Có bản cập nhật';
+
+  @override
+  String pluginsFilterShowing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hiện $count plugin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pluginsFilterClearAll => 'Xoá hết';
+
+  @override
+  String get pluginsFilterDone => 'Xong';
+
+  @override
+  String get pluginsReposTitle => 'Repository';
+
+  @override
+  String get pluginsReposRefreshAll => 'Làm mới tất cả';
+
+  @override
+  String pluginsRepoPluginCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plugin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pluginsRepoLastError(String reason) {
+    return 'Lần tải gần nhất bị lỗi: $reason';
+  }
+
+  @override
+  String pluginsRepoRemoveTooltip(String name) {
+    return 'Gỡ repository $name';
+  }
+
+  @override
+  String get pluginsReposEmpty => 'Chưa có repository nào.';
+
+  @override
+  String get pluginsReposFooter =>
+      'Gỡ một repository thì plugin đã cài từ đó vẫn giữ, nhưng không nhận cập nhật nữa.';
+
+  @override
+  String get pluginsAddDialogUrlLabel => 'URL';
+
+  @override
+  String get pluginsAddDialogUrlHint => 'https://…/plugins.json';
+
+  @override
+  String get pluginsAddDialogHelper =>
+      'Địa chỉ tệp plugins.json. Phải là https, trừ máy trong mạng nhà (localhost, 192.168.x…).';
+
+  @override
+  String get pluginsAddDialogConfirm => 'Thêm';
+
+  @override
+  String get pluginsAddDialogLoading => 'Đang tải…';
+
+  @override
+  String get pluginsCancel => 'Huỷ';
+
+  @override
+  String pluginsAddedRepo(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã thêm $name · $count plugin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pluginsAddErrNeedsHttps => 'Địa chỉ công khai cần https';
+
+  @override
+  String get pluginsAddErrInvalidUrl => 'URL không hợp lệ';
+
+  @override
+  String get pluginsAddErrDuplicate => 'Repository này đã được thêm';
+
+  @override
+  String get pluginsAddErrNetwork => 'Không tải được danh sách: lỗi mạng';
+
+  @override
+  String get pluginsAddErrNotFound =>
+      'Không thấy danh sách plugin ở địa chỉ này';
+
+  @override
+  String get pluginsAddErrBadFormat =>
+      'File không phải danh sách plugin hợp lệ';
+
+  @override
+  String get pluginsAddErrBlocked => 'Địa chỉ này bị chặn';
+
+  @override
+  String pluginsAddErrBlockedReason(String reason) {
+    return 'Địa chỉ này bị chặn: $reason';
+  }
+
+  @override
+  String get pluginsAddErrStorage => 'Không lưu được repository';
+
+  @override
+  String get pluginsAddressUserInfo =>
+      'địa chỉ không được chứa tên người dùng hay mật khẩu';
+
+  @override
+  String get pluginsAddressLocalFromPublic =>
+      'repository công khai không được trỏ tới địa chỉ cục bộ';
+
+  @override
+  String get pluginsAddressRefused => 'địa chỉ này không được phép truy cập';
+
+  @override
+  String get pluginsAddressMixed =>
+      'tên miền trỏ tới cả địa chỉ cục bộ và công khai';
+
+  @override
+  String get pluginsAddressLocalNamePublic =>
+      'tên trông như cục bộ lại trỏ tới địa chỉ công khai';
+
+  @override
+  String pluginsRemoveRepoTitle(String name) {
+    return 'Gỡ $name?';
+  }
+
+  @override
+  String get pluginsRemoveRepoBody =>
+      'Plugin đã cài từ repository này vẫn được giữ, nhưng sẽ không còn nhận cập nhật.';
+
+  @override
+  String get pluginsRemoveRepoConfirm => 'Gỡ';
+
+  @override
+  String pluginsRemoveRepoFailed(String name) {
+    return 'Không gỡ được $name';
+  }
+
+  @override
+  String get pluginsRootAlertLabel => 'Có plugin lỗi hoặc bản cập nhật cần xem';
 }

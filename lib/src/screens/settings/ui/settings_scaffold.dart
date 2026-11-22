@@ -17,6 +17,7 @@ class SettingsScaffold extends ConsumerWidget {
     required this.children,
     this.parentPath,
     this.pinnedBelowHeader,
+    this.actions = const [],
   });
 
   final String title;
@@ -29,6 +30,9 @@ class SettingsScaffold extends ConsumerWidget {
   /// Stays fixed under the header while [children] scroll (a search field).
   /// Null keeps the whole page in one scroll view, header included.
   final Widget? pinnedBelowHeader;
+
+  /// Buttons at the end of the header (a filter and a ⋮ menu).
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,6 +48,7 @@ class SettingsScaffold extends ConsumerWidget {
           title: title,
           onBack: parent == null ? null : () => _back(context, parent),
           backTooltip: parent == null ? null : l10n.tooltipBack,
+          actions: actions,
         ),
         if (failing) ...[
           FolderSheetBanner(
@@ -90,6 +95,7 @@ class SettingsScaffold extends ConsumerWidget {
                           ? null
                           : () => _back(context, parent),
                       backTooltip: parent == null ? null : l10n.tooltipBack,
+                      actions: actions,
                     ),
                     pinned,
                     const KGap(KSpace.x2),

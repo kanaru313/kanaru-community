@@ -21,7 +21,9 @@ class KChip extends StatelessWidget {
     this.semanticLabel,
     this.onRaised = false,
   }) : trailing = null,
-       _interactive = true;
+       outlined = false,
+       _interactive = true,
+       _tag = false;
 
   /// A pill that is a value, not a choice: no button, no selected state, no
   /// ink. [trailing] (a remove button) sits at the end with less padding.
@@ -34,7 +36,25 @@ class KChip extends StatelessWidget {
       dense = false,
       semanticLabel = null,
       onRaised = false,
-      _interactive = false;
+      outlined = false,
+      _interactive = false,
+      _tag = false;
+
+  /// A small label that only shows a value (the kind and the author on a
+  /// plugin row): 24 dp, `labelMedium`, no ink, never a button. Filled with
+  /// `secondaryContainer`, or only outlined when [outlined]; a long label
+  /// ends with an ellipsis.
+  const KChip.tag({super.key, required this.label, this.outlined = false})
+    : icon = null,
+      selected = false,
+      enabled = true,
+      onTap = null,
+      dense = true,
+      semanticLabel = null,
+      onRaised = false,
+      trailing = null,
+      _interactive = false,
+      _tag = true;
 
   final Widget label;
   final Widget? icon;
@@ -58,7 +78,11 @@ class KChip extends StatelessWidget {
 
   /// Widget after the label of a [KChip.static] (its own action).
   final Widget? trailing;
+
+  /// Outline instead of fill ([KChip.tag] only).
+  final bool outlined;
   final bool _interactive;
+  final bool _tag;
 
   static const double _denseDesktopHeight = 32;
   static const double _denseTouchHeight = 40;
@@ -66,6 +90,7 @@ class KChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    if (_tag) return _buildTag(context, scheme);
     final touch = FormFactor.of(context) == FormFactor.mobile;
     final minHeight = dense
         ? (touch ? _denseTouchHeight : _denseDesktopHeight)
@@ -118,6 +143,35 @@ class KChip extends StatelessWidget {
       selected: selected,
       label: semanticLabel,
       child: Opacity(opacity: enabled ? 1 : 0.5, child: pill),
+    );
+  }
+
+  Widget _buildTag(BuildContext context, ColorScheme scheme) {
+    final fg = outlined ? scheme.onSurfaceVariant : scheme.onSecondaryContainer;
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: outlined ? null : scheme.secondaryContainer,
+        shape: StadiumBorder(
+          side: outlined
+              ? BorderSide(color: scheme.outlineVariant)
+              : BorderSide.none,
+        ),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 24),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: KSpace.x2,
+            vertical: KSpace.x1 / 2,
+          ),
+          child: DefaultTextStyle.merge(
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(color: fg),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            child: label,
+          ),
+        ),
+      ),
     );
   }
 }

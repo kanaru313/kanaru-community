@@ -74,4 +74,25 @@ void main() {
     expect(fill(find.widgetWithText(KChip, 'b')), scheme.secondaryContainer);
     expect(fill(find.widgetWithText(KChip, 'c')), scheme.surfaceContainerHigh);
   });
+
+  testWidgets('tag is a 24 dp label that is not a button', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      host(
+        const Column(
+          children: [
+            KChip.tag(label: Text('Lời bài')),
+            KChip.tag(label: Text('tác giả'), outlined: true),
+          ],
+        ),
+      ),
+    );
+    expect(tester.getSize(find.byType(KChip).first).height, 24);
+    expect(tester.getSize(find.byType(KChip).last).height, 24);
+    expect(
+      tester.getSemantics(find.text('Lời bài')),
+      isNot(matchesSemantics(isButton: true)),
+    );
+    semantics.dispose();
+  });
 }

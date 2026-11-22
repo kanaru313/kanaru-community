@@ -6551,6 +6551,618 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a speech-to-text plugin'**
   String get lyricsSettingsAddSpeech;
+
+  /// No description provided for @pluginsStoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin store'**
+  String get pluginsStoreTitle;
+
+  /// No description provided for @pluginsFilterTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get pluginsFilterTooltip;
+
+  /// No description provided for @pluginsFilterActiveLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} on'**
+  String pluginsFilterActiveLabel(int count);
+
+  /// No description provided for @pluginsMenuTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get pluginsMenuTooltip;
+
+  /// No description provided for @pluginsMenuInstallFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Install from file…'**
+  String get pluginsMenuInstallFile;
+
+  /// No description provided for @pluginsMenuInstallLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Install from link…'**
+  String get pluginsMenuInstallLink;
+
+  /// No description provided for @pluginsMenuRepositories.
+  ///
+  /// In en, this message translates to:
+  /// **'Repositories ({count})'**
+  String pluginsMenuRepositories(int count);
+
+  /// No description provided for @pluginsMenuRefreshAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh all'**
+  String get pluginsMenuRefreshAll;
+
+  /// No description provided for @pluginsMenuLogsDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Open log folder'**
+  String get pluginsMenuLogsDesktop;
+
+  /// No description provided for @pluginsMenuLogsMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share plugin logs…'**
+  String get pluginsMenuLogsMobile;
+
+  /// No description provided for @pluginsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, author, repository, host'**
+  String get pluginsSearchHint;
+
+  /// No description provided for @pluginsSearchClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get pluginsSearchClear;
+
+  /// No description provided for @pluginsSectionUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates ({count})'**
+  String pluginsSectionUpdates(int count);
+
+  /// No description provided for @pluginsSectionInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed ({count})'**
+  String pluginsSectionInstalled(int count);
+
+  /// No description provided for @pluginsSectionAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not installed ({count})'**
+  String pluginsSectionAvailable(int count);
+
+  /// No description provided for @pluginsUpdatesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'“Update all” skips updates with new hosts or permissions: you open those one by one, as when installing.'**
+  String get pluginsUpdatesHint;
+
+  /// No description provided for @pluginsUpdatesHintTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'About updates'**
+  String get pluginsUpdatesHintTooltip;
+
+  /// No description provided for @pluginsUpdateAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Update all ({count})'**
+  String pluginsUpdateAll(int count);
+
+  /// No description provided for @pluginsUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get pluginsUpdate;
+
+  /// No description provided for @pluginsReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get pluginsReview;
+
+  /// No description provided for @pluginsInstallTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Install {name}'**
+  String pluginsInstallTooltip(String name);
+
+  /// No description provided for @pluginsRemoveTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}'**
+  String pluginsRemoveTooltip(String name);
+
+  /// No description provided for @pluginsAlertLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Has a problem'**
+  String get pluginsAlertLabel;
+
+  /// No description provided for @pluginsNoteReinstallFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstall from file'**
+  String get pluginsNoteReinstallFile;
+
+  /// No description provided for @pluginsNoteProRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs Kanaru Pro'**
+  String get pluginsNoteProRequired;
+
+  /// No description provided for @pluginsNotePackageMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Package missing, will download again'**
+  String get pluginsNotePackageMissing;
+
+  /// No description provided for @pluginsFreeStreamingLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'The Free edition installs only one music source plugin. Remove the current one to install this.'**
+  String get pluginsFreeStreamingLimit;
+
+  /// No description provided for @pluginsKindLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get pluginsKindLyrics;
+
+  /// No description provided for @pluginsKindTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation'**
+  String get pluginsKindTranslate;
+
+  /// No description provided for @pluginsKindStreaming.
+  ///
+  /// In en, this message translates to:
+  /// **'Music source'**
+  String get pluginsKindStreaming;
+
+  /// No description provided for @pluginsKindHelpLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Finds lyrics for the song playing, with lines that follow the song.'**
+  String get pluginsKindHelpLyrics;
+
+  /// No description provided for @pluginsKindHelpTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translates lyrics into the language you choose.'**
+  String get pluginsKindHelpTranslate;
+
+  /// No description provided for @pluginsKindHelpStreaming.
+  ///
+  /// In en, this message translates to:
+  /// **'Searches and plays music from an online service.'**
+  String get pluginsKindHelpStreaming;
+
+  /// No description provided for @pluginsAuthorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown author'**
+  String get pluginsAuthorUnknown;
+
+  /// No description provided for @pluginsFooterNewer.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 plugin needs a newer Kanaru} other{{count} plugins need a newer Kanaru}}'**
+  String pluginsFooterNewer(int count);
+
+  /// No description provided for @pluginsSandboxNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins run in a sandbox and can only connect to the addresses declared when installed.'**
+  String get pluginsSandboxNote;
+
+  /// No description provided for @pluginsNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching plugins.'**
+  String get pluginsNoMatch;
+
+  /// No description provided for @pluginsClearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get pluginsClearFilters;
+
+  /// No description provided for @pluginsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the plugin list.'**
+  String get pluginsLoadFailed;
+
+  /// No description provided for @pluginsNoRepoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No repository yet'**
+  String get pluginsNoRepoTitle;
+
+  /// No description provided for @pluginsNoRepoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru has no built-in repository. A repository is a list of plugins (a plugins.json file) published by plugin authors.'**
+  String get pluginsNoRepoBody;
+
+  /// No description provided for @pluginsNoRepoStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Find the address of the plugins.json file of a repository you trust, usually in the author\'s README. It starts with https://.'**
+  String get pluginsNoRepoStep1;
+
+  /// No description provided for @pluginsNoRepoStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Press Add repository, paste the address, then press Add.'**
+  String get pluginsNoRepoStep2;
+
+  /// No description provided for @pluginsNoRepoStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'The repository\'s plugins appear here; press Install to see hosts and facts before installing.'**
+  String get pluginsNoRepoStep3;
+
+  /// No description provided for @pluginsAddRepository.
+  ///
+  /// In en, this message translates to:
+  /// **'Add repository'**
+  String get pluginsAddRepository;
+
+  /// No description provided for @pluginsRepoFailedOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load {name}: {reason}'**
+  String pluginsRepoFailedOne(String name, String reason);
+
+  /// No description provided for @pluginsRepoFailedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} repositories couldn\'t load}}'**
+  String pluginsRepoFailedMany(int count);
+
+  /// No description provided for @pluginsRepoShowingSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the list saved at {time}.'**
+  String pluginsRepoShowingSaved(String time);
+
+  /// No description provided for @pluginsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get pluginsRetry;
+
+  /// No description provided for @pluginsOfflineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No network connection'**
+  String get pluginsOfflineTitle;
+
+  /// No description provided for @pluginsOfflineBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the list saved last time. Installing and updating need a network.'**
+  String get pluginsOfflineBody;
+
+  /// No description provided for @pluginsLoadReasonNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'network error'**
+  String get pluginsLoadReasonNetwork;
+
+  /// No description provided for @pluginsLoadReasonNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'file not found'**
+  String get pluginsLoadReasonNotFound;
+
+  /// No description provided for @pluginsLoadReasonTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'file too large'**
+  String get pluginsLoadReasonTooLarge;
+
+  /// No description provided for @pluginsLoadReasonInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'not a valid plugin list'**
+  String get pluginsLoadReasonInvalid;
+
+  /// No description provided for @pluginsLoadReasonBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'address blocked'**
+  String get pluginsLoadReasonBlocked;
+
+  /// No description provided for @pluginsLoadReasonStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'could not be saved'**
+  String get pluginsLoadReasonStorage;
+
+  /// No description provided for @pluginsFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get pluginsFilterTitle;
+
+  /// No description provided for @pluginsFilterGroupKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin type'**
+  String get pluginsFilterGroupKind;
+
+  /// No description provided for @pluginsFilterGroupState.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get pluginsFilterGroupState;
+
+  /// No description provided for @pluginsFilterGroupLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get pluginsFilterGroupLanguage;
+
+  /// No description provided for @pluginsFilterGroupAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'Author'**
+  String get pluginsFilterGroupAuthor;
+
+  /// No description provided for @pluginsFilterGroupRepository.
+  ///
+  /// In en, this message translates to:
+  /// **'Repository'**
+  String get pluginsFilterGroupRepository;
+
+  /// No description provided for @pluginsStateInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get pluginsStateInstalled;
+
+  /// No description provided for @pluginsStateNotInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not installed'**
+  String get pluginsStateNotInstalled;
+
+  /// No description provided for @pluginsStateUpdatable.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get pluginsStateUpdatable;
+
+  /// No description provided for @pluginsFilterShowing.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Showing 1 plugin} other{Showing {count} plugins}}'**
+  String pluginsFilterShowing(int count);
+
+  /// No description provided for @pluginsFilterClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get pluginsFilterClearAll;
+
+  /// No description provided for @pluginsFilterDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get pluginsFilterDone;
+
+  /// No description provided for @pluginsReposTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Repositories'**
+  String get pluginsReposTitle;
+
+  /// No description provided for @pluginsReposRefreshAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh all'**
+  String get pluginsReposRefreshAll;
+
+  /// No description provided for @pluginsRepoPluginCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 plugin} other{{count} plugins}}'**
+  String pluginsRepoPluginCount(int count);
+
+  /// No description provided for @pluginsRepoLastError.
+  ///
+  /// In en, this message translates to:
+  /// **'Last load failed: {reason}'**
+  String pluginsRepoLastError(String reason);
+
+  /// No description provided for @pluginsRepoRemoveTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove repository {name}'**
+  String pluginsRepoRemoveTooltip(String name);
+
+  /// No description provided for @pluginsReposEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No repository yet.'**
+  String get pluginsReposEmpty;
+
+  /// No description provided for @pluginsReposFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing a repository keeps the plugins installed from it, but they no longer get updates.'**
+  String get pluginsReposFooter;
+
+  /// No description provided for @pluginsAddDialogUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get pluginsAddDialogUrlLabel;
+
+  /// No description provided for @pluginsAddDialogUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://…/plugins.json'**
+  String get pluginsAddDialogUrlHint;
+
+  /// No description provided for @pluginsAddDialogHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'The address of the plugins.json file. Must be https, except for machines on your home network (localhost, 192.168.x…).'**
+  String get pluginsAddDialogHelper;
+
+  /// No description provided for @pluginsAddDialogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get pluginsAddDialogConfirm;
+
+  /// No description provided for @pluginsAddDialogLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get pluginsAddDialogLoading;
+
+  /// No description provided for @pluginsCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get pluginsCancel;
+
+  /// No description provided for @pluginsAddedRepo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Added {name} · 1 plugin} other{Added {name} · {count} plugins}}'**
+  String pluginsAddedRepo(int count, String name);
+
+  /// No description provided for @pluginsAddErrNeedsHttps.
+  ///
+  /// In en, this message translates to:
+  /// **'Public addresses need https'**
+  String get pluginsAddErrNeedsHttps;
+
+  /// No description provided for @pluginsAddErrInvalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid URL'**
+  String get pluginsAddErrInvalidUrl;
+
+  /// No description provided for @pluginsAddErrDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'This repository is already added'**
+  String get pluginsAddErrDuplicate;
+
+  /// No description provided for @pluginsAddErrNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the list: network error'**
+  String get pluginsAddErrNetwork;
+
+  /// No description provided for @pluginsAddErrNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No plugin list found at this address'**
+  String get pluginsAddErrNotFound;
+
+  /// No description provided for @pluginsAddErrBadFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is not a valid plugin list'**
+  String get pluginsAddErrBadFormat;
+
+  /// No description provided for @pluginsAddErrBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This address is blocked'**
+  String get pluginsAddErrBlocked;
+
+  /// No description provided for @pluginsAddErrBlockedReason.
+  ///
+  /// In en, this message translates to:
+  /// **'This address is blocked: {reason}'**
+  String pluginsAddErrBlockedReason(String reason);
+
+  /// No description provided for @pluginsAddErrStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the repository'**
+  String get pluginsAddErrStorage;
+
+  /// No description provided for @pluginsAddressUserInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'the address must not contain a user name or password'**
+  String get pluginsAddressUserInfo;
+
+  /// No description provided for @pluginsAddressLocalFromPublic.
+  ///
+  /// In en, this message translates to:
+  /// **'a public repository must not point to a local address'**
+  String get pluginsAddressLocalFromPublic;
+
+  /// No description provided for @pluginsAddressRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'this address is not allowed'**
+  String get pluginsAddressRefused;
+
+  /// No description provided for @pluginsAddressMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'the domain points to both local and public addresses'**
+  String get pluginsAddressMixed;
+
+  /// No description provided for @pluginsAddressLocalNamePublic.
+  ///
+  /// In en, this message translates to:
+  /// **'a local-looking name points to a public address'**
+  String get pluginsAddressLocalNamePublic;
+
+  /// No description provided for @pluginsRemoveRepoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String pluginsRemoveRepoTitle(String name);
+
+  /// No description provided for @pluginsRemoveRepoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins already installed from this repository are kept, but they will no longer get updates.'**
+  String get pluginsRemoveRepoBody;
+
+  /// No description provided for @pluginsRemoveRepoConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get pluginsRemoveRepoConfirm;
+
+  /// No description provided for @pluginsRemoveRepoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t remove {name}'**
+  String pluginsRemoveRepoFailed(String name);
+
+  /// No description provided for @pluginsRootAlertLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'A plugin has a problem or an update needs review'**
+  String get pluginsRootAlertLabel;
 }
 
 class _AppLocalizationsDelegate
