@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../lyrics/state/playing_lyrics_providers.dart';
+import '../../../../lyrics/ui/lyrics_for_track_modal.dart';
 import '../../../../playback/state/playing_cover_colors.dart';
 import '../../../../playback/state/now_playing_panel.dart';
 import '../../state/desktop_view.dart';
@@ -14,8 +18,8 @@ import 'now_playing_chrome.dart';
 /// of it, and its own focus scope: Esc closes it here, before the history
 /// input could take Esc as "go back".
 ///
-/// Keys: Esc closes; `V` shows or hides the cover column (no modifier, no text
-/// field focused, no menu open); any key shows the hidden header.
+/// Keys: Esc closes; `V` shows or hides the cover column and `L` opens the
+/// lyrics modal (no modifier, no text field focused, no menu open); any key shows the hidden header.
 class DesktopNowPlaying extends ConsumerStatefulWidget {
   const DesktopNowPlaying({super.key});
 
@@ -63,7 +67,9 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
       _close();
       return KeyEventResult.handled;
     }
-    if (key != LogicalKeyboardKey.keyV) return KeyEventResult.ignored;
+    if (key != LogicalKeyboardKey.keyV && key != LogicalKeyboardKey.keyL) {
+      return KeyEventResult.ignored;
+    }
     final keyboard = HardwareKeyboard.instance;
     if (keyboard.isControlPressed ||
         keyboard.isAltPressed ||
@@ -72,6 +78,19 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
         _chrome.hasFloating ||
         _textFieldFocused) {
       return KeyEventResult.ignored;
+    }
+    if (key == LogicalKeyboardKey.keyL) {
+      final id = ref.read(playingLyricsProvider).trackId;
+      if (id == null) return KeyEventResult.ignored;
+      // The page may close while the modal is open: then it leaves the
+      // controller to its own dispose.
+      unawaited(
+        _chrome.whilePinned(
+          () => showLyricsForTrack(context, id, followsPlaying: true),
+          stillOwned: () => mounted,
+        ),
+      );
+      return KeyEventResult.handled;
     }
     ref.read(coverColumnShownProvider.notifier).toggle();
     return KeyEventResult.handled;

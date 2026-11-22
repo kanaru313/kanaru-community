@@ -3,7 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
+import 'package:kanaru/src/lyrics/state/playing_lyrics_providers.dart';
+import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_for_track_body.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_source_button.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
+import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
 import 'package:kanaru/src/playback/state/sleep_timer_provider.dart';
 import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
@@ -15,6 +21,7 @@ import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../lyrics/ui/lyrics_ui_host.dart' show syncedLyrics;
 import '../../../playback/ui/sleep_timer/sleep_timer_modal_host.dart';
 import '../../../shell/support/desktop_now_playing_host.dart';
 import '../../../support/app_harness.dart';
@@ -37,6 +44,18 @@ Future<DesktopHost> _open(
   await settleSlide(tester);
   return host;
 }
+
+/// The playing song has file lyrics, so the source button is enabled.
+List<Override> _lyricsOverrides() => [
+  playingLyricsProvider.overrideWithValue(
+    PlayingLyrics(
+      entryId: 1,
+      trackId: const TrackId(1),
+      lyrics: LyricsShown(syncedLyrics(2)),
+    ),
+  ),
+  trackLyricsProvider.overrideWith((ref, id) => LyricsShown(syncedLyrics(2))),
+];
 
 Future<void> _key(WidgetTester tester, LogicalKeyboardKey key) async {
   await tester.sendKeyEvent(key);
@@ -298,6 +317,99 @@ void main() {
       // No unpin on the disposed controller: nothing throws, no timer is left
       // pending (the test binding checks).
       expect(tester.takeException(), isNull);
+    });
+
+    group('the lyrics modal', () {
+      Future<DesktopHost> openLyricsHost(WidgetTester tester) =>
+          _open(tester, overrides: _lyricsOverrides());
+
+      Future<void> expectPinnedThenReleased(WidgetTester tester) async {
+        expect(find.byType(LyricsForTrackBody), findsOneWidget);
+        await tester.pump(const Duration(seconds: 6));
+        expect(fade(tester).opacity, 1);
+        await _key(tester, LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+        expect(find.byType(LyricsForTrackBody), findsNothing);
+        await hideAfter(tester);
+        expect(fade(tester).opacity, 0);
+      }
+
+      testWidgets('the header button opens it with the header pinned', (
+        tester,
+      ) async {
+        await openLyricsHost(tester);
+        await tester.tap(
+          find.descendant(
+            of: find.byType(DesktopNowPlayingHeader),
+            matching: find.byType(LyricsSourceButton),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await expectPinnedThenReleased(tester);
+      });
+
+      testWidgets('L opens it with the header pinned', (tester) async {
+        await openLyricsHost(tester);
+        await _key(tester, LogicalKeyboardKey.keyL);
+        await tester.pumpAndSettle();
+        await expectPinnedThenReleased(tester);
+      });
+
+      testWidgets('L is ignored with a modifier', (tester) async {
+        await openLyricsHost(tester);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyL);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pumpAndSettle();
+        expect(find.byType(LyricsForTrackBody), findsNothing);
+      });
+
+      testWidgets('L is ignored while a text field has focus', (tester) async {
+        await openLyricsHost(tester);
+        // A persistent bottom sheet lives inside the page's Scaffold, so its
+        // field is under the key handler of the page.
+        tester
+            .state<ScaffoldState>(
+              find
+                  .descendant(
+                    of: find.byType(DesktopNowPlaying),
+                    matching: find.byType(Scaffold),
+                  )
+                  .first,
+            )
+            .showBottomSheet((_) => const TextField(autofocus: true));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(TextField));
+        await tester.pumpAndSettle();
+        expect(find.byType(EditableText), findsOneWidget);
+        await _key(tester, LogicalKeyboardKey.keyL);
+        await tester.pumpAndSettle();
+        expect(find.byType(LyricsForTrackBody), findsNothing);
+      });
+
+      testWidgets('the ⋮ item opens it with the header pinned', (tester) async {
+        await openLyricsHost(tester);
+        await tester.tap(find.byIcon(KIcons.moreVert));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Lyrics source'));
+        await tester.pumpAndSettle();
+        await expectPinnedThenReleased(tester);
+      });
+
+      testWidgets('Now Playing closing under the open modal ends cleanly', (
+        tester,
+      ) async {
+        final host = await openLyricsHost(tester);
+        await _key(tester, LogicalKeyboardKey.keyL);
+        await tester.pumpAndSettle();
+        host.container.read(nowPlayingPanelProvider.notifier).close();
+        await tester.pump();
+        await settleSlide(tester);
+        expect(find.byType(DesktopNowPlaying), findsNothing);
+        await _key(tester, LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      });
     });
 
     testWidgets('V still works with the pointer resting on the header', (

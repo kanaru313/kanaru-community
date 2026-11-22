@@ -899,8 +899,15 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
   springs back (the buttons raise the notices). With either repeat-all mode the last entry's left swipe wraps to the first, like Next (reshuffled: a new pass); under plain repeat all the first entry's right swipe goes to the last, like Previous. The new cover slides in when the entry id changes; if it never does, the
   cover comes back after 800 ms.
 - `NowPlayingMoreSheet` (⋮): the head and `nowPlayingMoreItems`, shared with the desktop dropdown. Sleep timer (live label), Add to playlist, Go to album and Go
-  to artist work; the rest is dimmed "Coming soon", Visual effects carries the Pro badge. `track_navigation.dart` goes
+  to artist and "Lyrics source" work (no subtitle); the rest is dimmed "Coming soon", Visual effects carries the Pro badge. `track_navigation.dart` goes
   through `LibraryLocations` with `context.go`, and asks which artist first through `showSelectionPicker`.
+- **Lyrics source** (`LyricsSourceButton`, `lyrics/ui/`): opens "Lời cho bài này" (`showLyricsForTrack(followsPlaying: true)`).
+  Mobile: first of the trailing buttons of the lyrics screen header (source, Dịch, heart sit together in one `Row`, no gap),
+  the lyrics screen's off-state button, and the ⋮ sheet item; the sheet's opener is built from the page context before
+  the sheet opens and runs after its pop. Desktop: header button after playlist-add and before Dịch (right-click turns the
+  song's lyrics off or on), `L` (same guards as `V`: no modifier, no text field, no floating surface), the ⋮ item. The
+  header and `L` open the modal through `NowPlayingChrome.whilePinned` (the header stays shown; the unpin is skipped when
+  Now Playing left the tree). The side pane's off-state button opens it without a pin (it has no chrome handle).
 - The header line under the position is the current track's album (empty when it has none). It opens nothing.
 
 ## Queue sheet and flights (mobile)

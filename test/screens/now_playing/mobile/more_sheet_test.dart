@@ -1,4 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
+import 'package:kanaru/src/lyrics/state/playing_lyrics_providers.dart';
+import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_for_track_body.dart';
+import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
@@ -8,6 +13,7 @@ import 'package:kanaru/src/screens/now_playing/ui/now_playing_page.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../lyrics/ui/lyrics_ui_host.dart' show syncedLyrics;
 import '../../../playback/support/ui_host.dart';
 import '../../../playback/ui/sleep_timer/sleep_timer_modal_host.dart';
 import '../../../support/icon_button_finders.dart';
@@ -41,6 +47,16 @@ Future<UiHost> _openSheet(
     overrides: [
       sleepTimerProvider.overrideWith(FakeSleepTimer.new),
       ...sleepEstimates(),
+      playingLyricsProvider.overrideWithValue(
+        PlayingLyrics(
+          entryId: 1,
+          trackId: const TrackId(1),
+          lyrics: LyricsShown(syncedLyrics(2)),
+        ),
+      ),
+      trackLyricsProvider.overrideWith(
+        (ref, id) => LyricsShown(syncedLyrics(2)),
+      ),
     ],
   );
   await host.run(tester, () async {
@@ -156,11 +172,35 @@ void main() {
     expect(_location(host), '/now-playing');
   });
 
+  testWidgets('the lyrics source item is live and opens the modal after the '
+      'sheet closed', (tester) async {
+    final host = await _openSheet(tester);
+    final row = find.ancestor(
+      of: find.text('Lyrics source'),
+      matching: find.byType(KListRow),
+    );
+    expect(tester.widget<KListRow>(row).enabled, isTrue);
+    expect(
+      find.descendant(of: row, matching: find.text('Coming soon')),
+      findsNothing,
+    );
+    await tester.tap(find.text('Lyrics source'));
+    await tester.pumpAndSettle();
+    expect(find.byType(NowPlayingMoreSheet), findsNothing);
+    expect(find.byType(LyricsForTrackBody), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    // One route on top of Now Playing: Back closes the modal only.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(LyricsForTrackBody), findsNothing);
+    expect(_location(host), '/now-playing');
+  });
+
   testWidgets('unbuilt items are dimmed with "Coming soon"; Pro has a badge', (
     tester,
   ) async {
     await _openSheet(tester);
-    for (final label in ['Lyrics source', 'Translate lyrics…', 'Track info']) {
+    for (final label in ['Translate lyrics…', 'Track info']) {
       final row = find.ancestor(
         of: find.text(label),
         matching: find.byType(KListRow),
@@ -175,7 +215,7 @@ void main() {
         of: find.byType(NowPlayingMoreSheet),
         matching: find.text('Coming soon'),
       ),
-      findsNWidgets(3),
+      findsNWidgets(2),
     );
     expect(find.byType(ProBadge), findsOneWidget);
   });

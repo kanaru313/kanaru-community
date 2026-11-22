@@ -1,5 +1,11 @@
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
+import 'package:kanaru/src/lyrics/state/playing_lyrics_providers.dart';
+import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_source_button.dart';
+import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
 import 'package:kanaru/src/playback/state/sleep_timer_provider.dart';
@@ -14,8 +20,21 @@ import '../../../support/icon_button_finders.dart';
 
 import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
+import '../../../lyrics/ui/lyrics_ui_host.dart' show syncedLyrics;
 import '../../../playback/ui/sleep_timer/sleep_timer_modal_host.dart';
 import '../../../shell/support/desktop_now_playing_host.dart';
+
+/// The playing song has file lyrics, so the source button is enabled.
+List<Override> _lyricsOverrides() => [
+  playingLyricsProvider.overrideWithValue(
+    PlayingLyrics(
+      entryId: 1,
+      trackId: const TrackId(1),
+      lyrics: LyricsShown(syncedLyrics(2)),
+    ),
+  ),
+  trackLyricsProvider.overrideWith((ref, id) => LyricsShown(syncedLyrics(2))),
+];
 
 Future<DesktopHost> _open(WidgetTester tester) async {
   final host = await pumpDesktopShell(
@@ -23,6 +42,7 @@ Future<DesktopHost> _open(WidgetTester tester) async {
     overrides: [
       sleepTimerProvider.overrideWith(FakeSleepTimer.new),
       ...sleepEstimates(),
+      ..._lyricsOverrides(),
     ],
   );
   host.container.read(nowPlayingPanelProvider.notifier).open();
@@ -50,6 +70,27 @@ void main() {
         _x(tester, _in(header, find.text('Translate'))),
       ];
       expect(xs, [...xs]..sort());
+    },
+  );
+
+  testWidgets(
+    'the lyrics source button sits after playlist, before Translate',
+    (tester) async {
+      await _open(tester);
+      final xs = [
+        _x(tester, _in(header, find.byIcon(KIcons.playlistAdd))),
+        _x(tester, _in(header, find.byType(LyricsSourceButton))),
+        _x(tester, _in(header, find.text('Translate'))),
+      ];
+      expect(xs, [...xs]..sort());
+      final button = tester.widget<KIconButton>(
+        find.descendant(
+          of: find.byType(LyricsSourceButton),
+          matching: find.byType(KIconButton),
+        ),
+      );
+      expect(button.tooltip, startsWith('Lyrics in tag · Synced (L)'));
+      expect(button.tooltip, contains('Right-click'));
     },
   );
 
@@ -144,8 +185,8 @@ void main() {
       expect(find.text(label), findsWidgets, reason: label);
     }
     expect(find.byType(ProBadge), findsOneWidget);
-    // Only the three unbuilt items say "Coming soon"; sleep is live.
-    expect(find.text('Coming soon'), findsNWidgets(3));
+    // Only the two unbuilt items say "Coming soon"; sleep is live.
+    expect(find.text('Coming soon'), findsNWidgets(2));
     // The head row: the playing track.
     expect(find.text('T0'), findsWidgets);
   });

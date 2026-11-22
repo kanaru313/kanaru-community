@@ -3,7 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
 import 'package:kanaru/src/lyrics/state/playing_lyrics_providers.dart';
+import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_body.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_for_track_body.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_source_button.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
@@ -45,6 +48,7 @@ Future<UiHost> _openScreen(
       PlayingLyrics(entryId: 1, trackId: const TrackId(1), lyrics: lyrics),
     ),
     playingLyricsLineProvider.overrideWithValue(line),
+    trackLyricsProvider.overrideWith((ref, id) => lyrics),
   ];
   final host = await pumpWithPlayer(
     tester,
@@ -98,10 +102,40 @@ void main() {
     expect(button.onPressed, isNull);
   });
 
-  testWidgets('no source button until the lyrics source lands', (tester) async {
-    await _openScreen(tester);
-    expect(byIconButton('Lyrics for this song'), findsNothing);
-    expect(find.text('Lyrics for this song'), findsNothing);
+  testWidgets('the source button opens the modal over the screen', (
+    tester,
+  ) async {
+    await _openScreen(tester, lyrics: LyricsShown(syncedLyrics(40)));
+    await tester.tap(find.byType(LyricsSourceButton));
+    await tester.pumpAndSettle();
+    expect(find.byType(LyricsForTrackBody), findsOneWidget);
+    expect(find.byType(LyricsScreen), findsOneWidget);
+  });
+
+  testWidgets('the trailing buttons touch: no gap between them', (
+    tester,
+  ) async {
+    await _openScreen(tester, lyrics: LyricsShown(syncedLyrics(40)));
+    Rect rect(Finder f) => tester.getRect(f);
+    final source = rect(find.byType(LyricsSourceButton));
+    final translate = rect(byIconButton('Translate lyrics · Coming soon'));
+    final favourite = rect(find.byType(FavoriteButton));
+    expect(translate.left, closeTo(source.right, 0.01));
+    expect(favourite.left, closeTo(translate.right, 0.01));
+  });
+
+  testWidgets('Back order: modal, then the lyrics screen, then Now Playing', (
+    tester,
+  ) async {
+    await _openScreen(tester, lyrics: LyricsShown(syncedLyrics(40)));
+    await tester.tap(find.byType(LyricsSourceButton));
+    await tester.pumpAndSettle();
+    await _back(tester);
+    expect(find.byType(LyricsForTrackBody), findsNothing);
+    expect(find.byType(LyricsScreen), findsOneWidget);
+    await _back(tester);
+    expect(find.byType(LyricsScreen), findsNothing);
+    expect(find.byType(MobileNowPlaying), findsOneWidget);
   });
 
   testWidgets('the minimise button closes it and leaves Now Playing', (
@@ -163,12 +197,14 @@ void main() {
     expect(find.byType(MobileNowPlaying), findsOneWidget);
   });
 
-  testWidgets('the off state shows, without a button until the source lands', (
+  testWidgets('the off state shows a button that opens the modal', (
     tester,
   ) async {
     await _openScreen(tester, lyrics: const LyricsOff(null));
     expect(find.text('Lyrics are off for this song'), findsOneWidget);
-    expect(find.text('Lyrics for this song'), findsNothing);
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    expect(find.byType(LyricsForTrackBody), findsOneWidget);
   });
 
   testWidgets('with no track left the screen and the page leave, once', (

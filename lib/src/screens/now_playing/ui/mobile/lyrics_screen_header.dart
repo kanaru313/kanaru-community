@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
+import '../../../../lyrics/state/playing_lyrics_providers.dart';
+import '../../../../lyrics/ui/lyrics_for_track_modal.dart';
+import '../../../../lyrics/ui/lyrics_source_button.dart';
 import '../../../../media/domain/cover_files.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/state/track_info_providers.dart';
@@ -12,18 +17,13 @@ import 'now_playing_header.dart'
     show nowPlayingHeaderHeight, nowPlayingHeaderTallHeight;
 
 /// Header of the lyrics screen: `[⌄] · cover 40 · title / artist · [source]
-/// [Dịch] · [♥]`. [sourceButton] is the lyrics source button (null leaves its
-/// place empty); the translate button is dimmed and inert until translation
-/// exists.
+/// [Dịch] · [♥]`. The source button opens "Lời cho bài này" for the playing
+/// song; the translate button is dimmed and inert until translation exists.
+/// The three action buttons sit together, with no gap but their own padding.
 class LyricsScreenHeader extends ConsumerWidget {
-  const LyricsScreenHeader({
-    super.key,
-    required this.onClose,
-    this.sourceButton,
-  });
+  const LyricsScreenHeader({super.key, required this.onClose});
 
   final VoidCallback onClose;
-  final Widget? sourceButton;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -77,13 +77,30 @@ class LyricsScreenHeader extends ConsumerWidget {
                 ],
               ),
             ),
-            ?sourceButton,
-            KIconButton(
-              icon: KIcons.languages,
-              tooltip: l10n.lyricsTranslateSoon,
-              onPressed: null,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                LyricsSourceButton(
+                  onOpen: () {
+                    final playing = ref.read(playingLyricsProvider).trackId;
+                    if (playing == null) return;
+                    unawaited(
+                      showLyricsForTrack(
+                        context,
+                        playing,
+                        followsPlaying: true,
+                      ),
+                    );
+                  },
+                ),
+                KIconButton(
+                  icon: KIcons.languages,
+                  tooltip: l10n.lyricsTranslateSoon,
+                  onPressed: null,
+                ),
+                if (id != null) FavoriteButton(trackId: id),
+              ],
             ),
-            if (id != null) FavoriteButton(trackId: id),
           ],
         ),
       ),

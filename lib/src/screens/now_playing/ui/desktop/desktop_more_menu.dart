@@ -16,9 +16,16 @@ import 'now_playing_chrome.dart';
 /// The ⋮ dropdown of the desktop header: the track's head row and the shared
 /// items. It pins [chrome] while it is open, so the header stays shown.
 class DesktopMoreMenu extends ConsumerStatefulWidget {
-  const DesktopMoreMenu({super.key, required this.chrome});
+  const DesktopMoreMenu({
+    super.key,
+    required this.chrome,
+    required this.onOpenLyrics,
+  });
 
   final NowPlayingChrome chrome;
+
+  /// Opens "Lời cho bài này" (null disables the item).
+  final VoidCallback? onOpenLyrics;
 
   @override
   ConsumerState<DesktopMoreMenu> createState() => _DesktopMoreMenuState();
@@ -64,6 +71,7 @@ class _DesktopMoreMenuState extends ConsumerState<DesktopMoreMenu> {
       context,
       info,
       openSleepTimer: () => unawaited(_openSleepTimer()),
+      onOpenLyrics: widget.onOpenLyrics,
     );
     final sub = [
       if (info?.artist != null) info!.artist!,

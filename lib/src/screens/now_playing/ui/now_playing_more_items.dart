@@ -56,12 +56,13 @@ Future<void> _openSleepTimerOnRoot(NavigatorState root) async {
 /// needs no such call). [openSleepTimer] replaces the default way of opening
 /// the sleep timer, for a screen that pins its chrome and owns the focus to
 /// return to (the desktop menu); without it the modal opens on the root
-/// navigator.
+/// navigator. [onOpenLyrics] opens "Lời cho bài này"; null disables the item.
 List<List<NowPlayingMoreItem>> nowPlayingMoreItems(
   BuildContext context,
   TrackInfo? info, {
   VoidCallback? beforeNavigate,
   VoidCallback? openSleepTimer,
+  VoidCallback? onOpenLyrics,
 }) {
   final l10n = AppLocalizations.of(context);
   final root = Navigator.of(context, rootNavigator: true);
@@ -98,7 +99,12 @@ List<List<NowPlayingMoreItem>> nowPlayingMoreItems(
         liveLabel: sleepTimerMenuLabelBuilder,
         onTap: openSleepTimer ?? () => unawaited(_openSleepTimerOnRoot(root)),
       ),
-      NowPlayingMoreItem(label: l10n.playbackLyricsSource, icon: KIcons.lyrics),
+      NowPlayingMoreItem(
+        label: l10n.playbackLyricsSource,
+        icon: KIcons.lyrics,
+        soon: false,
+        onTap: onOpenLyrics,
+      ),
       NowPlayingMoreItem(
         label: l10n.playbackTranslateLyrics,
         icon: KIcons.language,
