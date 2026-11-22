@@ -3,9 +3,9 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/gestures.dart' show kSecondaryButton;
-import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
+import 'package:flutter/rendering.dart' show OffsetLayer;
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
-import 'package:flutter/widgets.dart' show RepaintBoundary, Scrollable, Size;
+import 'package:flutter/widgets.dart' show Offset, Scrollable, Size;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
@@ -73,12 +73,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       try {
         if (Platform.isLinux) {
-          // No screenshot plugin on Linux: draw the app's outermost repaint
-          // boundary (the app's own window only).
-          final boundary = tester.renderObject<RenderRepaintBoundary>(
-            find.byType(RepaintBoundary).first,
-          );
-          final image = await boundary.toImage();
+          // No screenshot plugin on Linux: draw the app's own root layer
+          // (the whole window, modals included; nothing of the desktop).
+          final view = tester.binding.renderViews.first;
+          final layer = view.debugLayer! as OffsetLayer;
+          final image = await layer.toImage(Offset.zero & view.size);
           final bytes = (await image.toByteData(
             format: ui.ImageByteFormat.png,
           ))!;
