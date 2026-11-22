@@ -172,7 +172,11 @@ class _SyncedLines extends ConsumerWidget {
     // Before the first line the current row is the mark, the first line next.
     final current = index < 0
         ? const LyricLine(Duration.zero, '')
-        : lines[index];
+        : lineAt(index);
+    // A leading gap line is already the mark of the current row: no second one.
+    final next = index < 0 && (lineAt(0)?.isGap ?? false)
+        ? null
+        : lineAt(index + 1);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -189,7 +193,7 @@ class _SyncedLines extends ConsumerWidget {
           textAlign: textAlign,
         ),
         _CardRow(
-          line: lineAt(index + 1),
+          line: next,
           active: false,
           style: style(false),
           textAlign: textAlign,
@@ -224,7 +228,9 @@ class _CardRow extends StatelessWidget {
       return _OneLine(text: line.text, style: style, textAlign: textAlign);
     }
     return SizedBox(
-      height: (style.fontSize ?? 18) * (style.height ?? 1.4),
+      height:
+          MediaQuery.textScalerOf(context).scale(style.fontSize ?? 18) *
+          (style.height ?? 1.4),
       child: FittedBox(
         fit: BoxFit.scaleDown,
         alignment: textAlign == TextAlign.center

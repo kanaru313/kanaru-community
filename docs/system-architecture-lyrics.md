@@ -241,7 +241,7 @@ Code: `lib/src/lyrics/` (`domain/`, `data/`, `state/`). Only `data/` imports
   change puts the line back without a glide; with animations off every move is a jump.
 - **`PlainLyricsView`**: the note "Lời thường, không có mốc thời gian: không tự cuộn." then a lazy `ListView.builder` (a blank line is
   a break); no highlight, no seek, no auto-scroll.
-- **Intro gap**: `withIntroGap` (`domain/lyrics_intro_gap.dart`, applied once in `trackLyricsProvider`) adds a gap line at 0 s to synced lyrics whose first line is sung and starts at `introGapThreshold` (5 s) or later, so it is the current line during the intro (tap seeks to 0). Plain lyrics, a first line that is already a gap and mid-song silences are untouched. Line indexes always refer to this shown list.
+- **Intro gap**: `withIntroGap` (`domain/lyrics_intro_gap.dart`, applied once in `trackLyricsProvider`) adds a gap line at 0 s to synced lyrics whose first line is sung and starts at `introGapThreshold` (5 s) or later, so it is the current line during the intro (tap seeks to 0). Plain lyrics, a first line that is already a gap and mid-song silences are untouched. Line indexes always refer to this shown list. The gap exists only in the shown lyrics (`trackLyricsProvider`): saving or editing lyrics later must read the raw lyrics, not the shown list.
 - **`LyricsStateView`**: none ("Không có lời trong tệp hay tệp .lrc cạnh bài.", no button; a track with no local file reads the same)
   and off (title, then the desktop or mobile sentence, and the tonal button when `onOpenChoice` is given), both `KEmpty`.
 - **`LyricsCard`** (mobile Now Playing): `surfaceContainerHigh`, radius 20, padding 16; title, short source label and an open icon;

@@ -130,6 +130,56 @@ void main() {
     },
   );
 
+  testWidgets('before a leading gap line only one mark shows', (tester) async {
+    final lyrics = Lyrics(
+      lines: const [
+        LyricLine(Duration.zero, ''),
+        LyricLine(Duration(seconds: 4), 'A'),
+      ],
+      synced: true,
+      origin: LyricsOrigin.lrc,
+    );
+    final host = LyricsUiHost(lyrics: LyricsShown(lyrics), line: -1);
+    await host.pump(tester, _card());
+    expect(find.byType(LyricsGapMark), findsOneWidget);
+    expect(find.text('A'), findsNothing);
+  });
+
+  testWidgets('a gap in the window keeps the card height at 200 % text', (
+    tester,
+  ) async {
+    Future<double> heightWith(List<LyricLine> lines) async {
+      final host = LyricsUiHost(
+        lyrics: LyricsShown(
+          Lyrics(lines: lines, synced: true, origin: LyricsOrigin.lrc),
+        ),
+        line: 1,
+      );
+      await host.pump(
+        tester,
+        _card(),
+        textScale: 2,
+        size: const Size(360, 800),
+      );
+      final height = tester.getSize(find.byType(LyricsCard)).height;
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+      return height;
+    }
+
+    final withText = await heightWith(const [
+      LyricLine(Duration.zero, 'A'),
+      LyricLine(Duration(seconds: 4), 'B'),
+      LyricLine(Duration(seconds: 8), 'C'),
+    ]);
+    final withGap = await heightWith(const [
+      LyricLine(Duration.zero, 'A'),
+      LyricLine(Duration(seconds: 4), 'B'),
+      LyricLine(Duration(seconds: 8), ''),
+    ]);
+    expect(withGap, withText);
+  });
+
   testWidgets('plain: the first three lines at 15', (tester) async {
     final host = LyricsUiHost(lyrics: LyricsShown(plainLyrics(8)));
     await host.pump(tester, _card());
