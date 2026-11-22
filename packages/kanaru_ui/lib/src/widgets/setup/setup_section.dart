@@ -18,6 +18,7 @@ class SetupSection extends StatelessWidget {
     this.hint,
     this.hintTooltip,
     this.hintTitle,
+    this.action,
   }) : assert(
          hint == null || hintTooltip != null,
          'a hint needs the accessible name of its icon',
@@ -37,6 +38,13 @@ class SetupSection extends StatelessWidget {
   /// Heading of the sheet / panel a long [hint] opens in.
   final String? hintTitle;
 
+  /// A text button beside the title (for example "Cập nhật tất cả"). From
+  /// 1.5x text scale it moves under the title.
+  final Widget? action;
+
+  /// From this text scale [action] drops under the title.
+  static const double _stackScale = 1.5;
+
   /// False when [children] bring their own card (the permission card).
   final bool card;
 
@@ -44,34 +52,15 @@ class SetupSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final stacked =
+        action != null &&
+        MediaQuery.textScalerOf(context).scale(14) / 14 >= _stackScale;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: KSpace.x1),
-          child: Row(
-            children: [
-              Flexible(
-                child: Semantics(
-                  header: true,
-                  hint: hint,
-                  child: DefaultTextStyle.merge(
-                    style: textTheme.titleSmall?.copyWith(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    child: title,
-                  ),
-                ),
-              ),
-              if (hint != null)
-                KHelpIcon(
-                  message: hint!,
-                  tooltip: hintTooltip!,
-                  title: hintTitle,
-                ),
-            ],
-          ),
+          child: _heading(context, stacked),
         ),
         if (subtitle != null) ...[
           const KGap(KSpace.x1),
@@ -98,6 +87,57 @@ class SetupSection extends StatelessWidget {
           )
         else
           ...children,
+      ],
+    );
+  }
+
+  Widget _heading(BuildContext context, bool stacked) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final titleRow = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: Semantics(
+            header: true,
+            hint: hint,
+            child: DefaultTextStyle.merge(
+              style: textTheme.titleSmall?.copyWith(
+                color: scheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+              child: title,
+            ),
+          ),
+        ),
+        if (hint != null)
+          KHelpIcon(message: hint!, tooltip: hintTooltip!, title: hintTitle),
+      ],
+    );
+    if (action == null) {
+      return Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: titleRow,
+      );
+    }
+    if (!stacked) {
+      return Row(
+        children: [
+          Expanded(
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: titleRow,
+            ),
+          ),
+          action!,
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        titleRow,
+        Align(alignment: AlignmentDirectional.centerEnd, child: action),
       ],
     );
   }

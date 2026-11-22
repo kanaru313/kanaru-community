@@ -16,6 +16,7 @@ class SettingsScaffold extends ConsumerWidget {
     required this.title,
     required this.children,
     this.parentPath,
+    this.pinnedBelowHeader,
   });
 
   final String title;
@@ -25,11 +26,17 @@ class SettingsScaffold extends ConsumerWidget {
   /// Null on the root, which has no arrow of its own.
   final String? parentPath;
 
+  /// Stays fixed under the header while [children] scroll (a search field).
+  /// Null keeps the whole page in one scroll view, header included.
+  final Widget? pinnedBelowHeader;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final failing = ref.watch(settingsSaveFailingProvider).value ?? false;
     final parent = parentPath;
+    final pinned = pinnedBelowHeader;
+    if (pinned != null) return _pinnedLayout(context, l10n, failing, pinned);
     return KPage(
       maxWidth: KLayout.settings,
       children: [
@@ -51,6 +58,67 @@ class SettingsScaffold extends ConsumerWidget {
           children[i],
         ],
       ],
+    );
+  }
+
+  Widget _pinnedLayout(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool failing,
+    Widget pinned,
+  ) {
+    final parent = parentPath;
+    final desktop = FormFactor.of(context) == FormFactor.desktop;
+    final gutter = desktop ? KLayout.gutterDesktop : KLayout.gutterMobile;
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: KLayout.settings),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Material(
+              color: Theme.of(context).colorScheme.surface,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: gutter),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    PageHeader(
+                      title: title,
+                      onBack: parent == null
+                          ? null
+                          : () => _back(context, parent),
+                      backTooltip: parent == null ? null : l10n.tooltipBack,
+                    ),
+                    pinned,
+                    const KGap(KSpace.x2),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: KPage(
+                maxWidth: KLayout.settings,
+                children: [
+                  if (failing) ...[
+                    FolderSheetBanner(
+                      icon: KIcons.permissionMissing,
+                      isError: true,
+                      child: Text(l10n.settingsSaveFailed),
+                    ),
+                    const KGap(KSpace.x5),
+                  ],
+                  for (var i = 0; i < children.length; i++) ...[
+                    if (i > 0) const KGap(KSpace.x5),
+                    children[i],
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

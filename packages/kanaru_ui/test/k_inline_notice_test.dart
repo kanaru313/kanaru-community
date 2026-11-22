@@ -199,4 +199,44 @@ void main() {
       throwsAssertionError,
     );
   });
+
+  testWidgets('filled tones tint the strip and keep the action', (
+    tester,
+  ) async {
+    var tapped = false;
+    await tester.pumpWidget(
+      host(
+        _notice(
+          tone: KInlineNoticeTone.errorFilled,
+          action: 'Thử lại',
+          onAction: () => tapped = true,
+        ),
+      ),
+    );
+    final scheme = Theme.of(tester.element(find.byType(KInlineNotice)))
+        .colorScheme;
+    Color? fill() {
+      final box = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byType(KInlineNotice),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      return (box.decoration as BoxDecoration).color;
+    }
+
+    expect(fill(), scheme.errorContainer);
+    expect(_iconColor(tester), scheme.onErrorContainer);
+    await tester.tap(find.text('Thử lại'));
+    expect(tapped, isTrue);
+    await tester.pumpWidget(
+      host(_notice(tone: KInlineNoticeTone.primaryFilled)),
+    );
+    expect(fill(), scheme.primaryContainer);
+    await tester.pumpWidget(host(_notice(tone: KInlineNoticeTone.error)));
+    expect(fill(), scheme.surfaceContainerHigh);
+    expect(_iconColor(tester), scheme.error);
+  });
 }

@@ -270,4 +270,27 @@ void valueRowTests() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('alert adds its label to the row and the dot stays silent', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    Widget row({required bool alert}) => host(
+      SetupValueRow(
+        icon: KIcons.language,
+        title: const Text('Plugin'),
+        value: const Text('2 plugin'),
+        alert: alert,
+        alertLabel: 'Có plugin lỗi',
+        onTap: () {},
+      ),
+    );
+    await tester.pumpWidget(row(alert: true));
+    expect(find.byType(KAlertDot), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Có plugin lỗi')), findsOneWidget);
+    await tester.pumpWidget(row(alert: false));
+    expect(find.byType(KAlertDot), findsNothing);
+    expect(find.bySemanticsLabel(RegExp('Có plugin lỗi')), findsNothing);
+    handle.dispose();
+  });
 }

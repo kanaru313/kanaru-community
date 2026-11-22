@@ -19,6 +19,7 @@ class KChip extends StatelessWidget {
     this.onTap,
     this.dense = false,
     this.semanticLabel,
+    this.onRaised = false,
   }) : trailing = null,
        _interactive = true;
 
@@ -32,6 +33,7 @@ class KChip extends StatelessWidget {
       onTap = null,
       dense = false,
       semanticLabel = null,
+      onRaised = false,
       _interactive = false;
 
   final Widget label;
@@ -48,6 +50,11 @@ class KChip extends StatelessWidget {
   /// Spoken name instead of the visible label ("Thêm 10 phút" for "+10 ph").
   /// Keep a tooltip visual only (`excludeFromSemantics`).
   final String? semanticLabel;
+
+  /// The chip sits on a raised surface (`surfaceContainerHigh`: a filter
+  /// panel); an unselected chip then uses `surfaceContainerHighest` so it does
+  /// not sink into the background.
+  final bool onRaised;
 
   /// Widget after the label of a [KChip.static] (its own action).
   final Widget? trailing;
@@ -93,7 +100,11 @@ class KChip extends StatelessWidget {
       ),
     );
     final pill = Material(
-      color: selected ? scheme.secondaryContainer : scheme.surfaceContainerHigh,
+      color: selected
+          ? scheme.secondaryContainer
+          : onRaised
+          ? scheme.surfaceContainerHighest
+          : scheme.surfaceContainerHigh,
       shape: KShape.of(dense && touch ? KRadius.sm : KRadius.full),
       clipBehavior: Clip.antiAlias,
       child: _interactive

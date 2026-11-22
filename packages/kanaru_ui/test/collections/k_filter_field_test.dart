@@ -116,4 +116,59 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     expect(seen, ['']);
   });
+
+  group('persistent', () {
+    final clearButton = find.byWidgetPredicate(
+      (w) => w is Tooltip && w.message == 'Xoá',
+    );
+    Widget persistent(VoidCallback onClose) => Align(
+      alignment: Alignment.topCenter,
+      child: KFilterField(
+        controller: controller,
+        hint: 'Tìm plugin',
+        closeTooltip: 'Xoá',
+        autofocus: false,
+        persistent: true,
+        onClose: onClose,
+      ),
+    );
+
+    testWidgets('clear shows only with text and never closes', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      var closed = 0;
+      await tester.pumpWidget(host(persistent(() => closed++)));
+      expect(clearButton, findsNothing);
+      await tester.enterText(find.byType(TextField), 'ab');
+      await tester.pump();
+      expect(clearButton, findsOneWidget);
+      await tester.tap(clearButton);
+      await tester.pump();
+      expect(controller.text, isEmpty);
+      expect(clearButton, findsNothing);
+      expect(closed, 0);
+    });
+
+    testWidgets('Esc clears the text without closing', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      var closed = 0;
+      await tester.pumpWidget(host(persistent(() => closed++)));
+      await tester.enterText(find.byType(TextField), 'ab');
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pump();
+      expect(controller.text, isEmpty);
+      expect(closed, 0);
+    });
+
+    testWidgets('is a filled pill on surfaceContainerHighest', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(persistent(() {})));
+      final decoration = tester
+          .widget<TextField>(find.byType(TextField))
+          .decoration!;
+      final scheme = Theme.of(tester.element(find.byType(TextField)))
+          .colorScheme;
+      expect(decoration.filled, isTrue);
+      expect(decoration.fillColor, scheme.surfaceContainerHighest);
+    });
+  });
 }

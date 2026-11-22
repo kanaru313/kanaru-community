@@ -49,6 +49,8 @@ class KIconButton extends StatefulWidget {
     this.focusNode,
     this.autofocus = false,
     this.shape = KIconButtonShape.standard,
+    this.badgeCount,
+    this.badgeSemanticLabel,
   }) : assert(
          (icon == null) != (child == null),
          'give exactly one of icon and child',
@@ -105,6 +107,15 @@ class KIconButton extends StatefulWidget {
 
   /// [KIconButtonShape.circle]: round 40 dp target, press layer, focus ring.
   final KIconButtonShape shape;
+
+  /// Count badge on the top-right of the glyph (an M3 large badge). Null or 0
+  /// shows none; above 9 it reads "9+". The count is text, so it grows with
+  /// the text scale.
+  final int? badgeCount;
+
+  /// Said after the label while a badge shows ("3 đang bật" gives "Lọc, 3
+  /// đang bật"); the caller localises it.
+  final String? badgeSemanticLabel;
 
   @override
   State<KIconButton> createState() => _KIconButtonState();
@@ -177,7 +188,11 @@ class _KIconButtonState extends State<KIconButton>
       focused: _ring,
       emphasis: widget.emphasis,
     );
-    final label = widget.semanticLabel ?? widget.tooltip;
+    final badge = widget.badgeCount ?? 0;
+    final base = widget.semanticLabel ?? widget.tooltip;
+    final label = badge > 0 && widget.badgeSemanticLabel != null
+        ? '$base, ${widget.badgeSemanticLabel}'
+        : base;
     return Semantics(
       container: true,
       button: true,
@@ -216,23 +231,67 @@ class _KIconButtonState extends State<KIconButton>
                 padding: widget.shape == KIconButtonShape.circle
                     ? EdgeInsets.zero
                     : widget.padding,
-                child: KIconButtonFace(
-                  circle: widget.shape == KIconButtonShape.circle,
-                  fill: scheme.onSurface.withValues(alpha: 0.10 * _pulse.value),
-                  key: KIconButton.ringKey,
-                  icon: widget.selected == true
-                      ? widget.selectedIcon ?? widget.icon
-                      : widget.icon,
-                  size: widget.size,
-                  color: color,
-                  ring: _ring ? scheme.primary : null,
-                  child: widget.child,
+                child: _withBadge(
+                  scheme,
+                  KIconButtonFace(
+                    circle: widget.shape == KIconButtonShape.circle,
+                    fill: scheme.onSurface.withValues(
+                      alpha: 0.10 * _pulse.value,
+                    ),
+                    key: KIconButton.ringKey,
+                    icon: widget.selected == true
+                        ? widget.selectedIcon ?? widget.icon
+                        : widget.icon,
+                    size: widget.size,
+                    color: color,
+                    ring: _ring ? scheme.primary : null,
+                    child: widget.child,
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _withBadge(ColorScheme scheme, Widget face) {
+    final count = widget.badgeCount ?? 0;
+    if (count <= 0) return face;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        face,
+        PositionedDirectional(
+          top: -KSpace.x1,
+          end: -KSpace.x2,
+          child: ExcludeSemantics(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                child: Center(
+                  widthFactor: 1,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      count > 9 ? '9+' : '$count',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: scheme.onPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

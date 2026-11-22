@@ -4,8 +4,10 @@ import '../tokens/k_icon_size.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 
-/// Colour intent of a [KInlineNotice]: only the icon changes.
-enum KInlineNoticeTone { normal, error }
+/// Colour intent of a [KInlineNotice]. [normal] and [error] only change the
+/// icon colour; [errorFilled] and [primaryFilled] tint the whole strip
+/// (`errorContainer` / `primaryContainer`) for a page-level banner.
+enum KInlineNoticeTone { normal, error, errorFilled, primaryFilled }
 
 /// Strip inside a page: icon, optional bold title, message that wraps, and an
 /// optional text action. No close button: the caller removes it when the
@@ -47,13 +49,28 @@ class KInlineNotice extends StatelessWidget {
         hasAction &&
         MediaQuery.textScalerOf(context).scale(14) / 14 >= _stackScale;
 
+    final filled =
+        tone == KInlineNoticeTone.errorFilled ||
+        tone == KInlineNoticeTone.primaryFilled;
+    final background = switch (tone) {
+      KInlineNoticeTone.errorFilled => scheme.errorContainer,
+      KInlineNoticeTone.primaryFilled => scheme.primaryContainer,
+      _ => scheme.surfaceContainerHigh,
+    };
+    final foreground = switch (tone) {
+      KInlineNoticeTone.errorFilled => scheme.onErrorContainer,
+      KInlineNoticeTone.primaryFilled => scheme.onPrimaryContainer,
+      _ => scheme.onSurface,
+    };
+    final iconColor = filled
+        ? foreground
+        : tone == KInlineNoticeTone.error
+        ? scheme.error
+        : scheme.primary;
+
     final iconWidget = Padding(
       padding: const EdgeInsets.only(top: KSpace.x2),
-      child: Icon(
-        icon,
-        size: KIconSize.md,
-        color: tone == KInlineNoticeTone.error ? scheme.error : scheme.primary,
-      ),
+      child: Icon(icon, size: KIconSize.md, color: iconColor),
     );
     final text = Padding(
       padding: const EdgeInsets.symmetric(vertical: KSpace.x3),
@@ -64,11 +81,11 @@ class KInlineNotice extends StatelessWidget {
             Text(
               title!,
               style: textTheme?.copyWith(
-                color: scheme.onSurface,
+                color: foreground,
                 fontWeight: FontWeight.w700,
               ),
             ),
-          Text(message, style: textTheme?.copyWith(color: scheme.onSurface)),
+          Text(message, style: textTheme?.copyWith(color: foreground)),
         ],
       ),
     );
@@ -80,7 +97,13 @@ class KInlineNotice extends StatelessWidget {
             onTap: onAction,
             label: actionSemanticsLabel ?? actionLabel,
             excludeSemantics: true,
-            child: TextButton(onPressed: onAction, child: Text(actionLabel!)),
+            child: TextButton(
+              onPressed: onAction,
+              style: filled
+                  ? TextButton.styleFrom(foregroundColor: foreground)
+                  : null,
+              child: Text(actionLabel!),
+            ),
           )
         : null;
 
@@ -116,10 +139,7 @@ class KInlineNotice extends StatelessWidget {
       container: true,
       liveRegion: true,
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHigh,
-          borderRadius: KRadius.md,
-        ),
+        decoration: BoxDecoration(color: background, borderRadius: KRadius.md),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: KSpace.x9 + KSpace.x1),
           child: Padding(

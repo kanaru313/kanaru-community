@@ -16,6 +16,8 @@ export 'src/tokens/k_space.dart';
 export 'src/widgets/anchored_panel_layout.dart' show KAnchorAlign;
 export 'src/widgets/app_snack_bar.dart';
 export 'src/widgets/collections/collection_widgets.dart';
+export 'src/widgets/form/k_text_field_row.dart';
+export 'src/widgets/k_alert_dot.dart';
 export 'src/widgets/k_check_mark.dart';
 export 'src/widgets/k_chip.dart';
 export 'src/widgets/k_chip_line.dart';

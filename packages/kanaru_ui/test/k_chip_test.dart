@@ -48,4 +48,30 @@ void main() {
     expect(find.bySemanticsLabel('15 ph'), findsOneWidget);
     semantics.dispose();
   });
+
+  testWidgets('onRaised lifts only the unselected chip', (tester) async {
+    Color fill(Finder chip) => tester
+        .widget<Material>(
+          find.descendant(of: chip, matching: find.byType(Material)).first,
+        )
+        .color!;
+    await tester.pumpWidget(
+      host(
+        const Column(
+          children: [
+            KChip(label: Text('a'), onRaised: true, dense: true),
+            KChip(label: Text('b'), onRaised: true, selected: true),
+            KChip(label: Text('c')),
+          ],
+        ),
+      ),
+    );
+    final scheme = Theme.of(tester.element(find.text('a'))).colorScheme;
+    expect(
+      fill(find.widgetWithText(KChip, 'a')),
+      scheme.surfaceContainerHighest,
+    );
+    expect(fill(find.widgetWithText(KChip, 'b')), scheme.secondaryContainer);
+    expect(fill(find.widgetWithText(KChip, 'c')), scheme.surfaceContainerHigh);
+  });
 }
