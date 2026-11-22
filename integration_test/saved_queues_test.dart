@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/rendering.dart' show OffsetLayer;
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
-import 'package:flutter/widgets.dart' show Offset, Size, Text;
+import 'package:flutter/widgets.dart' show FocusManager, Offset, Size, Text;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
@@ -145,8 +145,13 @@ void main() {
 
     Future<void> closeMenuWithEscape(Finder item, String name) async {
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(item, findsNothing, reason: 'Esc closes the $name [${diag()}]');
+      // The dialog's exit animation outlasts a fixed pump: wait for it.
+      await waitFor(
+        () => item.evaluate().isEmpty,
+        'Esc to close the $name '
+        '(focus: ${FocusManager.instance.primaryFocus})',
+        timeout: const Duration(seconds: 5),
+      );
     }
 
     Finder firstRowMore() => find
@@ -242,7 +247,14 @@ void main() {
     expect(find.byType(SavedQueueHero), findsOneWidget);
     // The 2-song queue: stats line and the bar `N songs, in played order`.
     expect(find.text(l10n().savedQueueBar(2)), findsOneWidget);
-    expect(find.textContaining(l10n().librarySongCount(2)), findsWidgets);
+    expect(
+      find.descendant(
+        of: find.byType(SavedQueueHero),
+        matching: find.textContaining(l10n().librarySongCount(2)),
+      ),
+      findsWidgets,
+      reason: 'the hero counts 2 songs',
+    );
     await shot('page-1400');
     await resize(1000);
     await shot('page-1000');
@@ -288,6 +300,23 @@ void main() {
     );
     // The queue replaced by the play (the 3-song one) is saved too.
     await waitFor(() => tileCount() == 3, 'three rows after the replay');
+    // Replaying re-stamps the 2-song queue first; then the queue it replaced
+    // (the 3-song one that was playing) is saved newer: it is now on top, the
+    // replayed one second, the album queue last.
+    Finder songCountInTile(int tile, int n) => find.descendant(
+      of: find.byType(SavedQueueTile).at(tile),
+      matching: find.textContaining(l10n().librarySongCount(n)),
+    );
+    expect(songCountInTile(0, 3), findsWidgets, reason: 'replaced queue first');
+    expect(songCountInTile(1, 2), findsWidgets, reason: 'replayed one second');
+    expect(
+      find.descendant(
+        of: find.byType(SavedQueueTile).at(2),
+        matching: fromAlbum,
+      ),
+      findsOneWidget,
+      reason: 'album queue last [${diag()}]',
+    );
 
     // ---- 6. delete: cancel keeps it, confirm removes it ----
     await tester.tap(firstRowMore());
