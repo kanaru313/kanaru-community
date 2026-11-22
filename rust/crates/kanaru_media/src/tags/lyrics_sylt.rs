@@ -4,7 +4,7 @@
 //! worth showing.
 
 use lofty::id3::v2::{
-    Frame, Id3v2Tag, SyncTextContentType, SynchronizedTextFrame, TimestampFormat,
+    Frame, FrameFlags, Id3v2Tag, SyncTextContentType, SynchronizedTextFrame, TimestampFormat,
 };
 
 use super::lyrics_reader::SyncedLine;
@@ -28,20 +28,26 @@ pub(super) const MAX_SYLT_FRAME_BYTES: usize = 4 * 1024 * 1024;
 /// events, trivia) is ignored, as are frames timed in MPEG frames, which
 /// need the stream's frame length to turn into milliseconds.
 pub(super) fn synced_lines(tag: &Id3v2Tag) -> Vec<SyncedLine> {
+    let bodies = tag.into_iter().filter_map(|frame| match frame {
+        Frame::Binary(binary) if frame.id_str() == "SYLT" => {
+            Some((binary.data.as_ref(), frame.flags()))
+        }
+        _ => None,
+    });
+    best_synced(bodies)
+}
+
+/// Like [`synced_lines`], over the bodies of `SYLT` frames (flags as
+/// stored) in frame order.
+pub(super) fn best_synced<'a>(
+    bodies: impl Iterator<Item = (&'a [u8], FrameFlags)>,
+) -> Vec<SyncedLine> {
     let mut other: Option<SynchronizedTextFrame<'static>> = None;
-    for frame in tag {
-        let Frame::Binary(binary) = frame else {
-            continue;
-        };
-        if frame.id_str() != "SYLT" {
+    for (data, flags) in bodies {
+        if data.len() > MAX_SYLT_FRAME_BYTES {
             continue;
         }
-        if binary.data.len() > MAX_SYLT_FRAME_BYTES {
-            continue;
-        }
-        let Ok(parsed) =
-            SynchronizedTextFrame::parse(&with_valid_language(&binary.data), frame.flags())
-        else {
+        let Ok(parsed) = SynchronizedTextFrame::parse(&with_valid_language(data), flags) else {
             continue;
         };
         if parsed.timestamp_format != TimestampFormat::MS || parsed.content.is_empty() {

@@ -172,3 +172,52 @@ pub fn write_vorbis_key(path: &Path, key: &str, text: &str) {
         other => panic!("no Vorbis comments in .{other}"),
     }
 }
+
+/// One ID3v2.4 frame: id, syncsafe size, no flags.
+pub fn id3v2_frame(id: &str, body: &[u8]) -> Vec<u8> {
+    id3v2_frame_with_size(id, body.len(), 0, body)
+}
+
+/// Like [`id3v2_frame`] with the size and flag fields chosen by the caller.
+pub fn id3v2_frame_with_size(id: &str, size: usize, flags: u16, body: &[u8]) -> Vec<u8> {
+    let mut frame = id.as_bytes().to_vec();
+    frame.extend_from_slice(&syncsafe(size));
+    frame.extend_from_slice(&flags.to_be_bytes());
+    frame.extend_from_slice(body);
+    frame
+}
+
+/// A `USLT` frame body in UTF-8, as symphonia and lofty both read it.
+pub fn uslt_frame(text: &str) -> Vec<u8> {
+    let mut body = b"\x03eng\x00".to_vec();
+    body.extend_from_slice(text.as_bytes());
+    id3v2_frame("USLT", &body)
+}
+
+/// A frame lofty refuses (compressed, no data length indicator) and
+/// symphonia treats as a structural error: it ends the readable part of the
+/// tag.
+pub fn frame_that_ends_the_tag() -> Vec<u8> {
+    id3v2_frame_with_size("TIT2", 4, 0x0008, b"\x03abc")
+}
+
+/// A `TXXX` frame with an unknown text encoding byte: lofty refuses it,
+/// symphonia skips just this frame and goes on.
+pub fn frame_with_a_bad_encoding() -> Vec<u8> {
+    id3v2_frame("TXXX", b"\x09d\x00t")
+}
+
+/// An ID3v2.4 tag made of `frames` (declaring exactly their length, or
+/// `declared` when given) in front of the in-memory MP3.
+pub fn broken_id3v2(frames: &[Vec<u8>], declared: Option<usize>) -> Vec<u8> {
+    let body: Vec<u8> = frames.concat();
+    let mut bytes = b"ID3\x04\x00\x00".to_vec();
+    bytes.extend_from_slice(&syncsafe(declared.unwrap_or(body.len())));
+    bytes.extend_from_slice(&body);
+    bytes.extend_from_slice(&mp3_bytes());
+    bytes
+}
+
+fn syncsafe(size: usize) -> [u8; 4] {
+    [21, 14, 7, 0].map(|shift| ((size >> shift) & 0x7f) as u8)
+}

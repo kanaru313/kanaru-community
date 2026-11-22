@@ -19,3 +19,7 @@ Vorbis comments with keys lofty does not map (foobar2000's `UNSYNCED LYRICS`)
 are written by `write_vorbis_key` through lofty's concrete `FlacFile`,
 `VorbisFile` and `OpusFile`. An ID3v2 tag in front of a FLAC stream is made by
 dumping an `Id3v2Tag` and prepending its bytes to the file.
+
+ID3v2 tags with a damaged frame are built from bytes in `mod.rs` (helper
+`broken_id3v2`, with `frame_that_ends_the_tag`: a frame lofty refuses and
+symphonia treats as the end of the readable tag).

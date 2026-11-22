@@ -108,9 +108,10 @@ impl From<EmbeddedLyrics> for EmbeddedLyricsDto {
 }
 
 /// Reads the lyrics embedded in the audio file at `path`: `Ok(None)` when the
-/// file holds none. For MP3, WAV and AIFF any non-transient read failure,
-/// including an empty or truncated file, also gives `Ok(None)` (a broken ID3
-/// tag means no lyrics); an empty or truncated file of any other format is
+/// file holds none. An MP3 with a broken ID3v2 tag gives the lyrics read before
+/// the first fatal frame (else `Ok(None)`); any other non-transient failure of
+/// a WAV or AIFF, including an empty or truncated file, gives `Ok(None)`; an
+/// empty or truncated file of any other format is
 /// `Io` (`UnexpectedEof`, permanent). Errors: `NotFound`, `PermissionDenied`, `Unsupported`
 /// (not a regular file; a FIFO is never waited on), `Corrupt`, `Io`,
 /// `Panic` (parser panic, permanent) and `Timeout` (no answer in 10 s,

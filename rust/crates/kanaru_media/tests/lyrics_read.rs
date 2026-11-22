@@ -13,9 +13,10 @@ use lofty::id3::v2::{ExtendedTextFrame, Frame, Id3v2Tag, SyncTextContentType, Ti
 use lofty::tag::{ItemKey, Tag, TagExt, TagType};
 use lofty::TextEncoding;
 use lyrics_fixtures::{
-    read, sample, sylt, sylt_with, uslt, write_generic, write_id3v2, write_vorbis_key,
+    broken_id3v2, frame_that_ends_the_tag, frame_with_a_bad_encoding, id3v2_frame, read, sample,
+    sylt, sylt_with, uslt, uslt_frame, write_generic, write_id3v2, write_vorbis_key,
 };
-use tags_fixtures::TempDir;
+use tags_fixtures::{flac_bytes, mp3_bytes, TempDir};
 
 fn line(time_ms: u32, text: &str) -> SyncedLine {
     SyncedLine {
@@ -410,4 +411,111 @@ fn blank_or_oversized_unsynced_lyrics_count_as_none() {
             assert_eq!(read(&path), Ok(None), "{name}");
         }
     }
+}
+
+#[test]
+fn lyrics_before_a_broken_id3_frame_are_kept() {
+    let dir = TempDir::new();
+    let bytes = broken_id3v2(
+        &[
+            uslt_frame("Kept first\nKept second"),
+            frame_that_ends_the_tag(),
+        ],
+        None,
+    );
+    let path = dir.write("broken.mp3", &bytes);
+    // lofty refuses the whole tag, so only the fallback can give this text.
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Kept first\nKept second"));
+}
+
+#[test]
+fn lyrics_after_a_broken_id3_frame_are_lost() {
+    let dir = TempDir::new();
+    let bytes = broken_id3v2(&[frame_that_ends_the_tag(), uslt_frame("Lost")], None);
+    let path = dir.write("broken.mp3", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    assert_eq!(read(&path), Ok(None));
+}
+
+#[test]
+fn a_frame_skipped_alone_does_not_hide_the_lyrics_after_it() {
+    let dir = TempDir::new();
+    let bytes = broken_id3v2(&[frame_with_a_bad_encoding(), uslt_frame("Later")], None);
+    let path = dir.write("broken.mp3", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Later"));
+}
+
+#[test]
+fn a_txxx_before_a_broken_id3_frame_is_kept_when_there_is_no_uslt() {
+    let dir = TempDir::new();
+    let mut body = b"\x03Lyrics\x00".to_vec();
+    body.extend_from_slice(b"From TXXX");
+    let bytes = broken_id3v2(
+        &[id3v2_frame("TXXX", &body), frame_that_ends_the_tag()],
+        None,
+    );
+    let path = dir.write("broken.mp3", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("From TXXX"));
+}
+
+#[test]
+fn a_huge_declared_id3_tag_is_read_within_the_cap() {
+    let dir = TempDir::new();
+    let bytes = broken_id3v2(&[uslt_frame("Small")], Some(250 * 1024 * 1024));
+    let path = dir.write("huge.mp3", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    // The frame is whole and the declared tag is far past the end of the file: the text
+    // before the cut is kept, and no allocation follows the declared size.
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Small"));
+
+    let empty_body = dir.write(
+        "huge_empty.mp3",
+        &broken_id3v2(&[], Some(250 * 1024 * 1024)),
+    );
+    assert_eq!(read(&empty_body), Ok(None));
+}
+
+#[test]
+fn synced_lines_before_a_broken_id3_frame_are_kept() {
+    let dir = TempDir::new();
+    let Frame::Binary(sylt_frame) = sylt(
+        SyncTextContentType::Lyrics,
+        TimestampFormat::MS,
+        &[(2500, "Second"), (1000, "First")],
+    ) else {
+        panic!("SYLT is a binary frame");
+    };
+    let bytes = broken_id3v2(
+        &[
+            id3v2_frame("SYLT", &sylt_frame.data),
+            frame_that_ends_the_tag(),
+        ],
+        None,
+    );
+    let path = dir.write("broken.mp3", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text, None);
+    assert_eq!(
+        lyrics.synced,
+        vec![line(1000, "First"), line(2500, "Second")]
+    );
+}
+
+#[test]
+fn a_flac_with_a_broken_id3v2_prefix_is_an_error() {
+    let dir = TempDir::new();
+    let mut bytes = broken_id3v2(&[uslt_frame("Not read"), frame_that_ends_the_tag()], None);
+    bytes.truncate(bytes.len() - mp3_bytes().len());
+    bytes.extend(flac_bytes());
+    let path = dir.write("broken.flac", &bytes);
+    let result = read(&path);
+    assert!(matches!(result, Err(MediaError::Corrupt(_))), "{result:?}");
 }
