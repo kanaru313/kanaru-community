@@ -5,10 +5,12 @@ import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:kanaru/src/playback/domain/now_playing.dart';
+import 'package:kanaru/src/playback/domain/replaced_queue.dart';
 import 'package:kanaru/src/playback/state/listen_recorder_provider.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
 import 'package:kanaru/src/playback/state/player_controller.dart';
 import 'package:kanaru/src/playback/state/player_ready.dart';
+import 'package:kanaru/src/playback/state/saved_queue_recorder_provider.dart';
 
 import '../../database/support/test_db.dart';
 import '../../support/memory_settings_store.dart';
@@ -95,4 +97,55 @@ void main() {
     await pumpEventQueue();
     expect(seen, {tracks[0].value: 1, tracks[1].value: 1});
   });
+
+  test('a rebuilt player still saves the queues it loses', () async {
+    c.read(playerControllerProvider);
+    c.invalidate(playerControllerProvider);
+    final player = c.read(playerControllerProvider);
+    await player.playTracks(tracks.sublist(0, 3), context: ctx);
+    await player.clearQueue();
+    await c.read(savedQueueRecorderProvider).idle;
+    final rows = await db
+        .customSelect("SELECT id FROM playlists WHERE kind = 'queue'")
+        .get();
+    expect(rows, hasLength(1));
+  });
+
+  test(
+    'clearing the queue saves it; disposing the container stops saving',
+    () async {
+      final player = c.read(playerControllerProvider);
+      final recorder = c.read(savedQueueRecorderProvider);
+      Future<int> saved() async =>
+          (await db
+                  .customSelect("SELECT id FROM playlists WHERE kind = 'queue'")
+                  .get())
+              .length;
+
+      await player.playTracks(tracks.sublist(0, 3), context: ctx);
+      await player.clearQueue();
+      await recorder.idle;
+      expect(await saved(), 1);
+
+      // The recorder stops with its container: an event arriving later is
+      // ignored.
+      c.dispose();
+      recorder.onReplaced(
+        ReplacedQueue(
+          tracks: tracks.sublist(1, 4),
+          userOrder: tracks.sublist(1, 4),
+          context: ctx,
+        ),
+      );
+      await recorder.idle;
+      expect(await saved(), 1);
+      // Rebuild a container so tearDown can dispose twice safely.
+      c = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          settingsStoreProvider.overrideWithValue(MemorySettingsStore()),
+        ],
+      );
+    },
+  );
 }

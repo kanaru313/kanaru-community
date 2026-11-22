@@ -26,6 +26,10 @@ typedef $$PlaylistsTableCreateCompanionBuilder =
       required int createdAt,
       required int updatedAt,
       i0.Value<int?> deletedAt,
+      i0.Value<int?> savedAt,
+      i0.Value<String?> contextKind,
+      i0.Value<String?> contextRef,
+      i0.Value<String?> contextLabel,
     });
 typedef $$PlaylistsTableUpdateCompanionBuilder =
     i1.PlaylistsCompanion Function({
@@ -41,6 +45,10 @@ typedef $$PlaylistsTableUpdateCompanionBuilder =
       i0.Value<int> createdAt,
       i0.Value<int> updatedAt,
       i0.Value<int?> deletedAt,
+      i0.Value<int?> savedAt,
+      i0.Value<String?> contextKind,
+      i0.Value<String?> contextRef,
+      i0.Value<String?> contextLabel,
     });
 
 final class $$PlaylistsTableReferences
@@ -166,6 +174,26 @@ class $$PlaylistsTableFilterComposer
     builder: (column) => i0.ColumnFilters(column),
   );
 
+  i0.ColumnFilters<int> get savedAt => $composableBuilder(
+    column: $table.savedAt,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<String> get contextKind => $composableBuilder(
+    column: $table.contextKind,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<String> get contextRef => $composableBuilder(
+    column: $table.contextRef,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<String> get contextLabel => $composableBuilder(
+    column: $table.contextLabel,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
   i4.$$SourcesTableFilterComposer get originSourceId {
     final i4.$$SourcesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -283,6 +311,26 @@ class $$PlaylistsTableOrderingComposer
     builder: (column) => i0.ColumnOrderings(column),
   );
 
+  i0.ColumnOrderings<int> get savedAt => $composableBuilder(
+    column: $table.savedAt,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<String> get contextKind => $composableBuilder(
+    column: $table.contextKind,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<String> get contextRef => $composableBuilder(
+    column: $table.contextRef,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<String> get contextLabel => $composableBuilder(
+    column: $table.contextLabel,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
   i4.$$SourcesTableOrderingComposer get originSourceId {
     final i4.$$SourcesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -356,6 +404,24 @@ class $$PlaylistsTableAnnotationComposer
 
   i0.GeneratedColumn<int> get deletedAt =>
       $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  i0.GeneratedColumn<int> get savedAt =>
+      $composableBuilder(column: $table.savedAt, builder: (column) => column);
+
+  i0.GeneratedColumn<String> get contextKind => $composableBuilder(
+    column: $table.contextKind,
+    builder: (column) => column,
+  );
+
+  i0.GeneratedColumn<String> get contextRef => $composableBuilder(
+    column: $table.contextRef,
+    builder: (column) => column,
+  );
+
+  i0.GeneratedColumn<String> get contextLabel => $composableBuilder(
+    column: $table.contextLabel,
+    builder: (column) => column,
+  );
 
   i4.$$SourcesTableAnnotationComposer get originSourceId {
     final i4.$$SourcesTableAnnotationComposer composer = $composerBuilder(
@@ -456,6 +522,10 @@ class $$PlaylistsTableTableManager
                 i0.Value<int> createdAt = const i0.Value.absent(),
                 i0.Value<int> updatedAt = const i0.Value.absent(),
                 i0.Value<int?> deletedAt = const i0.Value.absent(),
+                i0.Value<int?> savedAt = const i0.Value.absent(),
+                i0.Value<String?> contextKind = const i0.Value.absent(),
+                i0.Value<String?> contextRef = const i0.Value.absent(),
+                i0.Value<String?> contextLabel = const i0.Value.absent(),
               }) => i1.PlaylistsCompanion(
                 id: id,
                 uid: uid,
@@ -469,6 +539,10 @@ class $$PlaylistsTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
+                savedAt: savedAt,
+                contextKind: contextKind,
+                contextRef: contextRef,
+                contextLabel: contextLabel,
               ),
           createCompanionCallback:
               ({
@@ -484,6 +558,10 @@ class $$PlaylistsTableTableManager
                 required int createdAt,
                 required int updatedAt,
                 i0.Value<int?> deletedAt = const i0.Value.absent(),
+                i0.Value<int?> savedAt = const i0.Value.absent(),
+                i0.Value<String?> contextKind = const i0.Value.absent(),
+                i0.Value<String?> contextRef = const i0.Value.absent(),
+                i0.Value<String?> contextLabel = const i0.Value.absent(),
               }) => i1.PlaylistsCompanion.insert(
                 id: id,
                 uid: uid,
@@ -497,6 +575,10 @@ class $$PlaylistsTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
+                savedAt: savedAt,
+                contextKind: contextKind,
+                contextRef: contextRef,
+                contextLabel: contextLabel,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -1623,6 +1705,51 @@ class $PlaylistsTable extends i2.Playlists
     type: i0.DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const i0.VerificationMeta _savedAtMeta = const i0.VerificationMeta(
+    'savedAt',
+  );
+  @override
+  late final i0.GeneratedColumn<int> savedAt = i0.GeneratedColumn<int>(
+    'saved_at',
+    aliasedName,
+    true,
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const i0.VerificationMeta _contextKindMeta = const i0.VerificationMeta(
+    'contextKind',
+  );
+  @override
+  late final i0.GeneratedColumn<String> contextKind =
+      i0.GeneratedColumn<String>(
+        'context_kind',
+        aliasedName,
+        true,
+        type: i0.DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const i0.VerificationMeta _contextRefMeta = const i0.VerificationMeta(
+    'contextRef',
+  );
+  @override
+  late final i0.GeneratedColumn<String> contextRef = i0.GeneratedColumn<String>(
+    'context_ref',
+    aliasedName,
+    true,
+    type: i0.DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const i0.VerificationMeta _contextLabelMeta =
+      const i0.VerificationMeta('contextLabel');
+  @override
+  late final i0.GeneratedColumn<String> contextLabel =
+      i0.GeneratedColumn<String>(
+        'context_label',
+        aliasedName,
+        true,
+        type: i0.DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<i0.GeneratedColumn> get $columns => [
     id,
@@ -1637,6 +1764,10 @@ class $PlaylistsTable extends i2.Playlists
     createdAt,
     updatedAt,
     deletedAt,
+    savedAt,
+    contextKind,
+    contextRef,
+    contextLabel,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1739,6 +1870,36 @@ class $PlaylistsTable extends i2.Playlists
         deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
       );
     }
+    if (data.containsKey('saved_at')) {
+      context.handle(
+        _savedAtMeta,
+        savedAt.isAcceptableOrUnknown(data['saved_at']!, _savedAtMeta),
+      );
+    }
+    if (data.containsKey('context_kind')) {
+      context.handle(
+        _contextKindMeta,
+        contextKind.isAcceptableOrUnknown(
+          data['context_kind']!,
+          _contextKindMeta,
+        ),
+      );
+    }
+    if (data.containsKey('context_ref')) {
+      context.handle(
+        _contextRefMeta,
+        contextRef.isAcceptableOrUnknown(data['context_ref']!, _contextRefMeta),
+      );
+    }
+    if (data.containsKey('context_label')) {
+      context.handle(
+        _contextLabelMeta,
+        contextLabel.isAcceptableOrUnknown(
+          data['context_label']!,
+          _contextLabelMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1796,6 +1957,22 @@ class $PlaylistsTable extends i2.Playlists
         i0.DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
       ),
+      savedAt: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}saved_at'],
+      ),
+      contextKind: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}context_kind'],
+      ),
+      contextRef: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}context_ref'],
+      ),
+      contextLabel: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}context_label'],
+      ),
     );
   }
 
@@ -1830,6 +2007,17 @@ class Playlist extends i0.DataClass implements i0.Insertable<i1.Playlist> {
   final int createdAt;
   final int updatedAt;
   final int? deletedAt;
+
+  /// Saved queues only (`kind = 'queue'`): epoch ms of the save or of the last
+  /// time it was played again. Orders the saved queues, newest first.
+  final int? savedAt;
+
+  /// Saved queues only: `PlayContextKind` name of what the queue was playing
+  /// from, its reference and its display label at that time. All null when
+  /// unknown.
+  final String? contextKind;
+  final String? contextRef;
+  final String? contextLabel;
   const Playlist({
     required this.id,
     required this.uid,
@@ -1843,6 +2031,10 @@ class Playlist extends i0.DataClass implements i0.Insertable<i1.Playlist> {
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
+    this.savedAt,
+    this.contextKind,
+    this.contextRef,
+    this.contextLabel,
   });
   @override
   Map<String, i0.Expression> toColumns(bool nullToAbsent) {
@@ -1870,6 +2062,18 @@ class Playlist extends i0.DataClass implements i0.Insertable<i1.Playlist> {
     map['updated_at'] = i0.Variable<int>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = i0.Variable<int>(deletedAt);
+    }
+    if (!nullToAbsent || savedAt != null) {
+      map['saved_at'] = i0.Variable<int>(savedAt);
+    }
+    if (!nullToAbsent || contextKind != null) {
+      map['context_kind'] = i0.Variable<String>(contextKind);
+    }
+    if (!nullToAbsent || contextRef != null) {
+      map['context_ref'] = i0.Variable<String>(contextRef);
+    }
+    if (!nullToAbsent || contextLabel != null) {
+      map['context_label'] = i0.Variable<String>(contextLabel);
     }
     return map;
   }
@@ -1900,6 +2104,18 @@ class Playlist extends i0.DataClass implements i0.Insertable<i1.Playlist> {
       deletedAt: deletedAt == null && nullToAbsent
           ? const i0.Value.absent()
           : i0.Value(deletedAt),
+      savedAt: savedAt == null && nullToAbsent
+          ? const i0.Value.absent()
+          : i0.Value(savedAt),
+      contextKind: contextKind == null && nullToAbsent
+          ? const i0.Value.absent()
+          : i0.Value(contextKind),
+      contextRef: contextRef == null && nullToAbsent
+          ? const i0.Value.absent()
+          : i0.Value(contextRef),
+      contextLabel: contextLabel == null && nullToAbsent
+          ? const i0.Value.absent()
+          : i0.Value(contextLabel),
     );
   }
 
@@ -1921,6 +2137,10 @@ class Playlist extends i0.DataClass implements i0.Insertable<i1.Playlist> {
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+      savedAt: serializer.fromJson<int?>(json['savedAt']),
+      contextKind: serializer.fromJson<String?>(json['contextKind']),
+      contextRef: serializer.fromJson<String?>(json['contextRef']),
+      contextLabel: serializer.fromJson<String?>(json['contextLabel']),
     );
   }
   @override
@@ -1939,6 +2159,10 @@ class Playlist extends i0.DataClass implements i0.Insertable<i1.Playlist> {
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
+      'savedAt': serializer.toJson<int?>(savedAt),
+      'contextKind': serializer.toJson<String?>(contextKind),
+      'contextRef': serializer.toJson<String?>(contextRef),
+      'contextLabel': serializer.toJson<String?>(contextLabel),
     };
   }
 
@@ -1955,6 +2179,10 @@ class Playlist extends i0.DataClass implements i0.Insertable<i1.Playlist> {
     int? createdAt,
     int? updatedAt,
     i0.Value<int?> deletedAt = const i0.Value.absent(),
+    i0.Value<int?> savedAt = const i0.Value.absent(),
+    i0.Value<String?> contextKind = const i0.Value.absent(),
+    i0.Value<String?> contextRef = const i0.Value.absent(),
+    i0.Value<String?> contextLabel = const i0.Value.absent(),
   }) => i1.Playlist(
     id: id ?? this.id,
     uid: uid ?? this.uid,
@@ -1974,6 +2202,10 @@ class Playlist extends i0.DataClass implements i0.Insertable<i1.Playlist> {
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    savedAt: savedAt.present ? savedAt.value : this.savedAt,
+    contextKind: contextKind.present ? contextKind.value : this.contextKind,
+    contextRef: contextRef.present ? contextRef.value : this.contextRef,
+    contextLabel: contextLabel.present ? contextLabel.value : this.contextLabel,
   );
   Playlist copyWithCompanion(i1.PlaylistsCompanion data) {
     return Playlist(
@@ -1997,6 +2229,16 @@ class Playlist extends i0.DataClass implements i0.Insertable<i1.Playlist> {
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      savedAt: data.savedAt.present ? data.savedAt.value : this.savedAt,
+      contextKind: data.contextKind.present
+          ? data.contextKind.value
+          : this.contextKind,
+      contextRef: data.contextRef.present
+          ? data.contextRef.value
+          : this.contextRef,
+      contextLabel: data.contextLabel.present
+          ? data.contextLabel.value
+          : this.contextLabel,
     );
   }
 
@@ -2014,7 +2256,11 @@ class Playlist extends i0.DataClass implements i0.Insertable<i1.Playlist> {
           ..write('originRevision: $originRevision, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('savedAt: $savedAt, ')
+          ..write('contextKind: $contextKind, ')
+          ..write('contextRef: $contextRef, ')
+          ..write('contextLabel: $contextLabel')
           ..write(')'))
         .toString();
   }
@@ -2033,6 +2279,10 @@ class Playlist extends i0.DataClass implements i0.Insertable<i1.Playlist> {
     createdAt,
     updatedAt,
     deletedAt,
+    savedAt,
+    contextKind,
+    contextRef,
+    contextLabel,
   );
   @override
   bool operator ==(Object other) =>
@@ -2049,7 +2299,11 @@ class Playlist extends i0.DataClass implements i0.Insertable<i1.Playlist> {
           other.originRevision == this.originRevision &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt);
+          other.deletedAt == this.deletedAt &&
+          other.savedAt == this.savedAt &&
+          other.contextKind == this.contextKind &&
+          other.contextRef == this.contextRef &&
+          other.contextLabel == this.contextLabel);
 }
 
 class PlaylistsCompanion extends i0.UpdateCompanion<i1.Playlist> {
@@ -2065,6 +2319,10 @@ class PlaylistsCompanion extends i0.UpdateCompanion<i1.Playlist> {
   final i0.Value<int> createdAt;
   final i0.Value<int> updatedAt;
   final i0.Value<int?> deletedAt;
+  final i0.Value<int?> savedAt;
+  final i0.Value<String?> contextKind;
+  final i0.Value<String?> contextRef;
+  final i0.Value<String?> contextLabel;
   const PlaylistsCompanion({
     this.id = const i0.Value.absent(),
     this.uid = const i0.Value.absent(),
@@ -2078,6 +2336,10 @@ class PlaylistsCompanion extends i0.UpdateCompanion<i1.Playlist> {
     this.createdAt = const i0.Value.absent(),
     this.updatedAt = const i0.Value.absent(),
     this.deletedAt = const i0.Value.absent(),
+    this.savedAt = const i0.Value.absent(),
+    this.contextKind = const i0.Value.absent(),
+    this.contextRef = const i0.Value.absent(),
+    this.contextLabel = const i0.Value.absent(),
   });
   PlaylistsCompanion.insert({
     this.id = const i0.Value.absent(),
@@ -2092,6 +2354,10 @@ class PlaylistsCompanion extends i0.UpdateCompanion<i1.Playlist> {
     required int createdAt,
     required int updatedAt,
     this.deletedAt = const i0.Value.absent(),
+    this.savedAt = const i0.Value.absent(),
+    this.contextKind = const i0.Value.absent(),
+    this.contextRef = const i0.Value.absent(),
+    this.contextLabel = const i0.Value.absent(),
   }) : uid = i0.Value(uid),
        name = i0.Value(name),
        createdAt = i0.Value(createdAt),
@@ -2109,6 +2375,10 @@ class PlaylistsCompanion extends i0.UpdateCompanion<i1.Playlist> {
     i0.Expression<int>? createdAt,
     i0.Expression<int>? updatedAt,
     i0.Expression<int>? deletedAt,
+    i0.Expression<int>? savedAt,
+    i0.Expression<String>? contextKind,
+    i0.Expression<String>? contextRef,
+    i0.Expression<String>? contextLabel,
   }) {
     return i0.RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2123,6 +2393,10 @@ class PlaylistsCompanion extends i0.UpdateCompanion<i1.Playlist> {
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
+      if (savedAt != null) 'saved_at': savedAt,
+      if (contextKind != null) 'context_kind': contextKind,
+      if (contextRef != null) 'context_ref': contextRef,
+      if (contextLabel != null) 'context_label': contextLabel,
     });
   }
 
@@ -2139,6 +2413,10 @@ class PlaylistsCompanion extends i0.UpdateCompanion<i1.Playlist> {
     i0.Value<int>? createdAt,
     i0.Value<int>? updatedAt,
     i0.Value<int?>? deletedAt,
+    i0.Value<int?>? savedAt,
+    i0.Value<String?>? contextKind,
+    i0.Value<String?>? contextRef,
+    i0.Value<String?>? contextLabel,
   }) {
     return i1.PlaylistsCompanion(
       id: id ?? this.id,
@@ -2153,6 +2431,10 @@ class PlaylistsCompanion extends i0.UpdateCompanion<i1.Playlist> {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
+      savedAt: savedAt ?? this.savedAt,
+      contextKind: contextKind ?? this.contextKind,
+      contextRef: contextRef ?? this.contextRef,
+      contextLabel: contextLabel ?? this.contextLabel,
     );
   }
 
@@ -2195,6 +2477,18 @@ class PlaylistsCompanion extends i0.UpdateCompanion<i1.Playlist> {
     if (deletedAt.present) {
       map['deleted_at'] = i0.Variable<int>(deletedAt.value);
     }
+    if (savedAt.present) {
+      map['saved_at'] = i0.Variable<int>(savedAt.value);
+    }
+    if (contextKind.present) {
+      map['context_kind'] = i0.Variable<String>(contextKind.value);
+    }
+    if (contextRef.present) {
+      map['context_ref'] = i0.Variable<String>(contextRef.value);
+    }
+    if (contextLabel.present) {
+      map['context_label'] = i0.Variable<String>(contextLabel.value);
+    }
     return map;
   }
 
@@ -2212,7 +2506,11 @@ class PlaylistsCompanion extends i0.UpdateCompanion<i1.Playlist> {
           ..write('originRevision: $originRevision, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('savedAt: $savedAt, ')
+          ..write('contextKind: $contextKind, ')
+          ..write('contextRef: $contextRef, ')
+          ..write('contextLabel: $contextLabel')
           ..write(')'))
         .toString();
   }

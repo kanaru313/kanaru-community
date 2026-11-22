@@ -488,6 +488,31 @@ list page, the playlist page and their behaviour:
 - Known gap: the dialogs use `AlertDialog` inside `showKDialog` because
   `kanaru_ui` has no form-dialog frame yet (only `confirmAction`).
 
+## Saved queues (data)
+
+Domain `library/domain/saved_queues/` (`SavedQueueStore`, `SavedQueueRow`:
+summary plus `missingCount`, distinct tracks missing or hidden now), data
+`library/data/saved_queues/`, state `library/state/saved_queues/`
+(`savedQueueStoreProvider`). Rows are `playlists.kind = 'queue'`; the write
+that creates them is `recordSavedQueue` in `database/` (see the database
+doc), called by the player. `PlaylistSummary.savedQueue` (`SavedQueueInfo`:
+`savedAt`, `contextKind`, `contextRef`, `contextLabel`) is set only for them
+and is part of the summary's equality, so a watching page sees a new `savedAt`.
+
+- **Reads.** `watchSavedQueues` (newest first; counts, duration and covers from
+  `playlistStatsSql`, shared with the playlist list), `watchSavedQueue(uid)`
+  (null unless `kind = 'queue'`).
+- **Writes.** `touch(uid)` (move to the front, call right before playing it, so
+  saving the queue it replaces cannot prune it), `deleteSavedQueue` (only
+  `kind = 'queue'`), `removeMissingFromSavedQueue` (reads statuses at call
+  time, hard delete, `saved_at` untouched).
+- **Not a playlist.** Every playlist read and write already filters the kind.
+  `loadDetail` / `loadPlaylist` do not (M3U export reads a queue through them),
+  so a caller that must not show a queue checks `summary.savedQueue`;
+  `playlistDetailProvider` does, so `/playlists/<queue uid>` is "not found".
+  `PlaylistPageController` only runs on a page that opened, which a queue uid
+  cannot.
+
 ## M3U import and export
 
 Playlists to and from `.m3u` / `.m3u8` files. Entry points

@@ -35,9 +35,8 @@ PlaylistSummary _emptyFavorites() => PlaylistSummary(
 /// `sqlite3` package bundles a precompiled SQLite (3.54.x) on Android and
 /// Linux. Never switch to the system SQLite: Android 11-13 ships 3.32, which
 /// has no aggregate `ORDER BY`.
-const summarySql =
+const playlistStatsSql =
     '''
-SELECT p.uid, p.name, p.description, p.kind, p.created_at, p.updated_at,
   CASE WHEN p.kind IS 'favorites' THEN
     (SELECT COUNT(DISTINCT e.track_id) FROM playlist_entries e
       JOIN tracks t ON t.id = e.track_id
@@ -61,10 +60,45 @@ SELECT p.uid, p.name, p.description, p.kind, p.created_at, p.updated_at,
        AND t.cover_key IS NOT NULL
        AND (p.kind IS NOT 'favorites' OR t.dup_hidden = 0)
      ORDER BY e.sort_key, e.uid LIMIT $_coverCandidates) x) AS covers
+''';
+
+/// The playlist list: user playlists and Favorites, never mood or queue rows.
+const summarySql =
+    '''
+SELECT p.uid, p.name, p.description, p.kind, p.created_at, p.updated_at,
+$playlistStatsSql
 FROM playlists p
 WHERE p.deleted_at IS NULL AND (p.kind IS NULL OR p.kind = 'favorites')
 ORDER BY p.created_at, p.id
 ''';
+
+/// A [PlaylistSummary] from a row of [summarySql]-shaped columns (`uid`,
+/// `name`, `description`, `created_at`, `updated_at`, `cnt`, `dur`, `covers`
+/// of [playlistStatsSql]). [covers] replaces the row's own cover candidates
+/// (Favorites).
+PlaylistSummary summaryOfRow(
+  QueryRow r, {
+  bool isFavorites = false,
+  SavedQueueInfo? savedQueue,
+  Iterable<({String group, String? coverKey})>? covers,
+}) {
+  final candidates =
+      covers ??
+      ((jsonDecode(r.read<String>('covers')) as List).cast<List<Object?>>())
+          .map((c) => (group: c[1] as String, coverKey: c[0] as String?));
+  return PlaylistSummary(
+    uid: r.read<String>('uid'),
+    name: r.read<String>('name'),
+    description: r.read<String>('description'),
+    isFavorites: isFavorites,
+    trackCount: r.read<int>('cnt'),
+    durationMs: r.read<int>('dur'),
+    createdAt: r.read<int>('created_at'),
+    updatedAt: r.read<int>('updated_at'),
+    autoCoverKeys: pickAutoCoverKeys(candidates),
+    savedQueue: savedQueue,
+  );
+}
 
 /// Cover candidates of Favorites, newest added first (equal times keep list
 /// order); the first 64 with a cover, as the summary query does for the other
@@ -89,7 +123,7 @@ Future<PlaylistSummaries> loadSummaries(AppDatabase db) async {
   for (final r in rows) {
     final isFavorites =
         r.readNullable<String>('kind') == PlaylistKind.favorites;
-    final covers = isFavorites
+    final favoriteCovers = isFavorites
         ? (await db
                   .customSelect(
                     favoriteCoverSql,
@@ -102,19 +136,8 @@ Future<PlaylistSummaries> loadSummaries(AppDatabase db) async {
                   coverKey: c.readNullable<String>('cover_key'),
                 ),
               )
-        : ((jsonDecode(r.read<String>('covers')) as List).cast<List<Object?>>())
-              .map((c) => (group: c[1] as String, coverKey: c[0] as String?));
-    final s = PlaylistSummary(
-      uid: r.read<String>('uid'),
-      name: r.read<String>('name'),
-      description: r.read<String>('description'),
-      isFavorites: isFavorites,
-      trackCount: r.read<int>('cnt'),
-      durationMs: r.read<int>('dur'),
-      createdAt: r.read<int>('created_at'),
-      updatedAt: r.read<int>('updated_at'),
-      autoCoverKeys: pickAutoCoverKeys(covers),
-    );
+        : null;
+    final s = summaryOfRow(r, isFavorites: isFavorites, covers: favoriteCovers);
     if (isFavorites) {
       favorites = s;
     } else {
@@ -128,14 +151,17 @@ Future<PlaylistSummaries> loadSummaries(AppDatabase db) async {
 }
 
 /// One playlist with its entries, read in one transaction so a write cannot
-/// land between the entries and their tracks.
+/// land between the entries and their tracks. Also reads a saved queue row
+/// (`summary.savedQueue` set; M3U export needs it): a caller that must not
+/// show one checks that field.
 Future<PlaylistDetail?> loadDetail(
   AppDatabase db,
   String uid,
 ) => db.transaction(() async {
   final rows = await db
       .customSelect(
-        'SELECT id, uid, name, description, kind, created_at, updated_at '
+        'SELECT id, uid, name, description, kind, created_at, updated_at, '
+        'saved_at, context_kind, context_ref, context_label '
         'FROM playlists WHERE uid = ? AND deleted_at IS NULL',
         variables: [Variable.withString(uid)],
       )
@@ -188,6 +214,15 @@ Future<PlaylistDetail?> loadDetail(
       durationMs: distinct.values.fold(0, (a, b) => a + b),
       createdAt: p.read<int>('created_at'),
       updatedAt: p.read<int>('updated_at'),
+      savedQueue: p.readNullable<String>('kind') == PlaylistKind.queue
+          ? SavedQueueInfo(
+              savedAt:
+                  p.readNullable<int>('saved_at') ?? p.read<int>('created_at'),
+              contextKind: p.readNullable<String>('context_kind'),
+              contextRef: p.readNullable<String>('context_ref'),
+              contextLabel: p.readNullable<String>('context_label'),
+            )
+          : null,
       autoCoverKeys: pickAutoCoverKeys(
         (isFavorites ? _newestFirst(entries, addedAt) : entries)
             .where((e) => e.info.coverKey != null)

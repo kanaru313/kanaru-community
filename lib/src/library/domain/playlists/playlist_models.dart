@@ -10,6 +10,41 @@ bool _sameList<T>(List<T> a, List<T> b) {
   return true;
 }
 
+/// What a saved queue (`PlaylistKind.queue`) adds to its [PlaylistSummary]:
+/// when it was saved and what it was playing from. The context fields are the
+/// `PlayContextKind` name, its reference and its label at save time, null when
+/// unknown (read them back through the playback model, an unknown kind name
+/// means "no source line").
+class SavedQueueInfo {
+  const SavedQueueInfo({
+    required this.savedAt,
+    this.contextKind,
+    this.contextRef,
+    this.contextLabel,
+  });
+
+  /// Epoch milliseconds of the save, or of the last time it was played again.
+  final int savedAt;
+  final String? contextKind;
+  final String? contextRef;
+  final String? contextLabel;
+
+  @override
+  bool operator ==(Object other) =>
+      other is SavedQueueInfo &&
+      other.savedAt == savedAt &&
+      other.contextKind == contextKind &&
+      other.contextRef == contextRef &&
+      other.contextLabel == contextLabel;
+
+  @override
+  int get hashCode =>
+      Object.hash(savedAt, contextKind, contextRef, contextLabel);
+
+  @override
+  String toString() => 'SavedQueueInfo($savedAt, $contextKind)';
+}
+
 /// A playlist as the list page shows it.
 class PlaylistSummary {
   PlaylistSummary({
@@ -22,6 +57,7 @@ class PlaylistSummary {
     required this.createdAt,
     required this.updatedAt,
     required List<String> autoCoverKeys,
+    this.savedQueue,
   }) : autoCoverKeys = List.unmodifiable(autoCoverKeys);
 
   final String uid;
@@ -40,6 +76,10 @@ class PlaylistSummary {
   /// 0..4 cover keys of the automatic cover (`pickAutoCoverKeys`).
   final List<String> autoCoverKeys;
 
+  /// Set only for a saved queue; part of the equality so a page that watches
+  /// it sees a new `savedAt` (the queue was played again).
+  final SavedQueueInfo? savedQueue;
+
   @override
   bool operator ==(Object other) =>
       other is PlaylistSummary &&
@@ -51,6 +91,7 @@ class PlaylistSummary {
       other.durationMs == durationMs &&
       other.createdAt == createdAt &&
       other.updatedAt == updatedAt &&
+      other.savedQueue == savedQueue &&
       _sameList(other.autoCoverKeys, autoCoverKeys);
 
   @override
@@ -63,6 +104,7 @@ class PlaylistSummary {
     durationMs,
     createdAt,
     updatedAt,
+    savedQueue,
     Object.hashAll(autoCoverKeys),
   );
 
