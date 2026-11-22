@@ -46,7 +46,6 @@ void main() {
     tester.view.physicalSize = const Size(1400, 900);
     addTearDown(tester.view.reset);
     final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
 
     final app = await startKanaru(tester);
     final container = app.container;
@@ -369,5 +368,7 @@ void main() {
     await resize(1400);
 
     // Dark theme pass skipped: the harness has no cheap theme switch.
+    // Disposed in the body: the end-of-test check runs before tear-downs.
+    semantics.dispose();
   });
 }
