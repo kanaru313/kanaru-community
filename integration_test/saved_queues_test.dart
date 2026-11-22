@@ -19,12 +19,7 @@ import 'package:kanaru/src/playback/state/playback_providers.dart';
 import 'package:kanaru/src/playback/state/saved_queue_recorder_provider.dart';
 import 'package:kanaru/src/router/state/router_provider.dart';
 import 'package:material_ui/material_ui.dart'
-    show
-        AlertDialog,
-        MaterialLocalizations,
-        Navigator,
-        SnackBarAction,
-        TextButton;
+    show AlertDialog, MaterialLocalizations, Navigator, SnackBarAction;
 
 import 'support/harness.dart';
 
@@ -357,7 +352,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: dialog,
-        matching: find.widgetWithText(TextButton, l10n().playlistDeleteConfirm),
+        matching: find.text(l10n().playlistDeleteConfirm),
       ),
     );
     await waitFor(() => tileCount() == 2, 'one row fewer after the delete');
