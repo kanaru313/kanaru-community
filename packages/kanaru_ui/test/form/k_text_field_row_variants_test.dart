@@ -35,6 +35,25 @@ void main() {
       expect(spec.stepped('1e999', 1), '0.1');
     });
 
+    test('format is safe for huge, negative and whole values', () {
+      expect(spec.format(1e9 + 1), '1000000001');
+      expect(spec.format(1e300), isNotEmpty);
+      expect(spec.format(-2.5), '-2.5');
+      expect(spec.format(-0.0), '0');
+      expect(spec.format(0.1 + 0.2), '0.3');
+      expect(spec.format(double.infinity), 'Infinity');
+      expect(spec.stepped('1e300', -1), isNotNull);
+      const big = KNumberSpec(
+        decreaseTooltip: '-',
+        increaseTooltip: '+',
+        onStepped: _ignore,
+        integer: true,
+      );
+      expect(big.stepped('1000000000', 1), '1000000001');
+      expect(big.stepped('-1000000000', -1), '-1000000001');
+      expect(big.stepped('1e300', 1), isNull); // no change at that magnitude
+    });
+
     test('integer rounds and filters', () {
       const whole = KNumberSpec(
         decreaseTooltip: '-',

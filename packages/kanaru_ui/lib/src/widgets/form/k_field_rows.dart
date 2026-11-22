@@ -21,7 +21,8 @@ import 'k_field_row_view.dart';
 /// when a row loses focus, on Enter in a field and after a remove, only when
 /// they differ from the last ones sent. The widget keeps the text being edited:
 /// a new [values] from outside replaces the rows only when the content really
-/// changed and no field has focus.
+/// changed and no field has focus; one arriving during focus waits for the
+/// blur and is dropped if the user committed an edit meanwhile.
 ///
 /// **Errors** use the position among the non-blank rows, the same order as
 /// [onCommit] and [values]: [rowErrors] (a map: under the name field, with its
@@ -98,6 +99,9 @@ class _KFieldRowsState extends State<KFieldRows> {
   /// What [KFieldRows.onCommit] got last (or the initial values).
   List<List<String>> _sent = const [];
 
+  /// An outside [KFieldRows.values] change arrived while a row had focus.
+  var _outsidePending = false;
+
   int get _columns => widget.labels?.length ?? 1;
 
   @override
@@ -109,13 +113,23 @@ class _KFieldRowsState extends State<KFieldRows> {
   @override
   void didUpdateWidget(KFieldRows old) {
     super.didUpdateWidget(old);
-    if (!sameRows(old.values, widget.values) &&
-        !sameRows(_texts(), widget.values) &&
-        !_rows.any((r) => r.hasFocus)) {
-      _discard(_rows.toList());
-      _rows.clear();
-      _load();
+    if (sameRows(old.values, widget.values)) return;
+    if (sameRows(_texts(), widget.values)) {
+      _outsidePending = false;
+    } else if (_rows.any((r) => r.hasFocus)) {
+      // Never replace what is being typed: apply on blur unless the user's
+      // own commit wins by then.
+      _outsidePending = true;
+    } else {
+      _reload();
     }
+  }
+
+  void _reload() {
+    _outsidePending = false;
+    _discard(_rows.toList());
+    _rows.clear();
+    _load();
   }
 
   @override
@@ -161,7 +175,11 @@ class _KFieldRowsState extends State<KFieldRows> {
   /// that step, not during it.
   void _focusChanged(FieldRowModel row) {
     scheduleMicrotask(() {
-      if (mounted && _rows.contains(row) && !row.hasFocus) _commit();
+      if (!mounted || !_rows.contains(row) || row.hasFocus) return;
+      _commit();
+      if (_outsidePending && !_rows.any((r) => r.hasFocus)) {
+        setState(_reload);
+      }
     });
   }
 
@@ -169,6 +187,7 @@ class _KFieldRowsState extends State<KFieldRows> {
     final rows = _texts();
     if (sameRows(rows, _sent)) return;
     _sent = rows;
+    _outsidePending = false; // the user's edit wins
     widget.onCommit(rows);
   }
 

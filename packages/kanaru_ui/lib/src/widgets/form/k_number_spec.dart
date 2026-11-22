@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 /// which move the value by [step] inside [min]…[max].
 ///
 /// Every step, from a tap or a key, writes the new text into the field and
-/// calls [onStepped] with it at once, so the caller can save per step. A
+/// calls [onStepped] with it at once, so the caller can save per step.
+/// [KTextFieldRow.onChanged] is not fired by a step: [onStepped] is the save
+/// path, the controller text is already updated. A
 /// button is disabled when the value already sits at its bound. The text is
 /// plain: no grouping, a whole value has no decimal point.
 class KNumberSpec {
@@ -70,12 +72,15 @@ class KNumberSpec {
     return format(next);
   }
 
-  /// [value] as field text: rounded to 10 decimals (no `0.30000000000000004`),
-  /// without a decimal point when whole.
+  /// [value] as field text: at most 10 decimals (no `0.30000000000000004`),
+  /// no trailing zeros, no decimal point when whole. Never throws: huge or
+  /// non-finite values use [double.toString].
   String format(double value) {
-    final rounded = (value * 1e10).round() / 1e10;
-    return rounded == rounded.truncateToDouble() && rounded.abs() < 1e15
-        ? rounded.toInt().toString()
-        : rounded.toString();
+    if (!value.isFinite || value.abs() >= 1e21) return value.toString();
+    var text = value.toStringAsFixed(10);
+    if (text.contains('.')) {
+      text = text.replaceFirst(RegExp(r'\.?0+$'), '');
+    }
+    return text == '-0' || text.isEmpty ? '0' : text;
   }
 }

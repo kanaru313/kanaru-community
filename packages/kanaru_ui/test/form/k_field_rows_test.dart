@@ -164,6 +164,66 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
 
+    testWidgets('an outside change during focus applies on blur', (
+      tester,
+    ) async {
+      final sent = <List<String>>[];
+      await tester.pumpWidget(list(onCommit: sent.add));
+      await tester.tap(field(0));
+      await tester.pump();
+      await tester.pumpWidget(
+        list(values: const ['y', 'z'], onCommit: sent.add),
+      );
+      expect(find.text('y'), findsNothing);
+      await leave(tester);
+      await tester.pump();
+      expect(find.text('y'), findsOneWidget);
+      expect(find.text('z'), findsOneWidget);
+      expect(sent, isEmpty);
+    });
+
+    testWidgets('a user commit discards the pending outside change', (
+      tester,
+    ) async {
+      final sent = <List<String>>[];
+      await tester.pumpWidget(list(onCommit: sent.add));
+      await tester.tap(field(0));
+      await tester.enterText(field(0), 'mine');
+      await tester.pumpWidget(list(values: const ['y'], onCommit: sent.add));
+      await leave(tester);
+      await tester.pump();
+      expect(sent, [
+        ['mine', 'b'],
+      ]);
+      expect(find.text('mine'), findsOneWidget);
+      expect(find.text('y'), findsNothing);
+    });
+
+    testWidgets('removing, reloading and disposing rows throws nothing', (
+      tester,
+    ) async {
+      await tester.pumpWidget(list());
+      await tester.tap(field(1));
+      await tester.pump();
+      // Remove the focused row.
+      await tester.tap(byIconButton('Xoá').last);
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(TextField), findsOneWidget);
+      // Outside reload with no focus.
+      await leave(tester);
+      await tester.pumpWidget(list(values: const ['p', 'q', 'r']));
+      await tester.pump();
+      expect(find.byType(TextField), findsNWidgets(3));
+      // Add focuses the new row, then dispose the whole widget.
+      await tester.tap(find.text('Thêm'));
+      await tester.pump();
+      await tester.pump();
+      await tester.pumpWidget(host(const SizedBox()));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets(
       'one error line under the block; invalid item has a red outline',
       (tester) async {

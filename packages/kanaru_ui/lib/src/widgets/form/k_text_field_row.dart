@@ -63,6 +63,9 @@ class KTextFieldRow extends StatelessWidget {
   final bool enabled;
   final TextInputType? keyboard;
   final ValueChanged<String>? onSubmitted;
+
+  /// Typing only. A [number] step does not call it: it reports through
+  /// [KNumberSpec.onStepped] (the save path) and updates the controller.
   final ValueChanged<String>? onChanged;
   final FocusNode? focusNode;
   final bool autofocus;
