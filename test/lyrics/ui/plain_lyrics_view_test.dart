@@ -73,4 +73,17 @@ void main() {
     await host.pump(tester, _view(lyrics), textScale: 2);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('10 000 lines: only the lines near the viewport are built', (
+    tester,
+  ) async {
+    final host = LyricsUiHost();
+    await host.pump(tester, _view(plainLyrics(10000)));
+    int built() =>
+        find.textContaining('Plain ', skipOffstage: false).evaluate().length;
+    expect(built(), lessThan(100));
+    await tester.fling(find.byType(Scrollable), const Offset(0, -600), 4000);
+    await tester.pumpAndSettle();
+    expect(built(), lessThan(100));
+  });
 }

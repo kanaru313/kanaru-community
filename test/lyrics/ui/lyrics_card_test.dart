@@ -165,4 +165,20 @@ void main() {
           .surfaceContainerHigh,
     );
   });
+
+  testWidgets('10 000 synced lines: three rows, following line 9000', (
+    tester,
+  ) async {
+    final host = LyricsUiHost(
+      lyrics: LyricsShown(syncedLyrics(10000)),
+      line: 9000,
+    );
+    await host.pump(tester, _card());
+    expect(find.textContaining('Line ', skipOffstage: false), findsNWidgets(3));
+    expect(find.text('Line 9000'), findsOneWidget);
+    host.setLine(9001);
+    await tester.pump();
+    expect(find.text('Line 9002'), findsOneWidget);
+    expect(find.textContaining('Line ', skipOffstage: false), findsNWidgets(3));
+  });
 }

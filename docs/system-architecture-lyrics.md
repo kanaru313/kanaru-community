@@ -220,17 +220,23 @@ Code: `lib/src/lyrics/` (`domain/`, `data/`, `state/`). Only `data/` imports
   `SyncedLyricsView`, `PlainLyricsView` or `LyricsStateView`. Loading is blank. The views are keyed by (entry id, lyrics): a new track
   builds a fresh view, equal lyrics keep their scroll. `onOpenChoice` is the off state's "Lời cho bài này" button (null hides it; the
   owner of the lyrics source wires it).
-- **`SyncedLyricsView`**: a `SingleChildScrollView` over a `Column` of `LyricsLine`s inside one `RepaintBoundary` (lines are capped at
-  10 000, so every line exists and any can be scrolled to); edge fade 12 % (`ShaderMask`), no scrollbar. One
-  `ref.listen(playingLyricsLineProvider)` flips two per-line `ValueNotifier<bool>`s, so a line change rebuilds two lines and a position
+- **`SyncedLyricsView`**: a lazy `SuperListView.builder` (package `super_sliver_list`, MIT): only the lines near the viewport are
+  built, whatever the length (up to the 10 000-line cap; a 10 000-line file froze the app when every line was built at once, including
+  after a reopen, since the audio service keeps the engine and the open lyrics screen alive). Edge fade 12 % (`ShaderMask`), no
+  scrollbar. One `ref.listen(playingLyricsLineProvider)` moves one shared `ValueNotifier<int>`; each built `LyricsLine` rebuilds only
+  when it becomes or stops being the current line, so a line change rebuilds two lines and a position
   tick none. Lines are all the same size and w700; the current one is `onSurface` and scaled 1.02, the others `onSurface` at the `lyrics.dim`
   alpha; colour and scale animate `KMotion.slow`. A timed blank line is a gap: three dots (`LyricsGapDots`) that pulse only while it is
   current and animations are on (the ticker exists only then). Pressing a line (gaps too) seeks through `playerControllerProvider` and
   makes it current at once.
 - **Scrolling** (`SyncedLyricsScroll` mixin, ported from the old app): the current line is kept at 40 % of the height with the view's own
   `ScrollController` only (`getOffsetToReveal`, never `ensureVisible`; an enclosing scrollable never moves), a generation counter so an
-  overlapped glide cannot clear the "scrolling itself" flag of a newer one, glide `KMotion.normal`. A scroll the view did not start
-  (drag, wheel, trackpad, keyboard) takes over: auto-scroll stops and the tonal pill "Về dòng đang hát" (`BackToLineButton`) shows;
+  overlapped glide cannot clear the "scrolling itself" flag of a newer one, glide `KMotion.normal`. A line that is built is revealed
+  through its render object (found in a map of the built lines, no key per line); one that is not (a seek or a return from far away)
+  is reached through the list's `ListController.jumpToItem`, which jumps on estimated heights and corrects them as lines lay out,
+  without building the lines between: an animated move jumps three lines short of it and glides the rest. The pill's arrow side
+  comes from the line's index against the list's visible range when the line is not built. A scroll the view did not start
+  (drag, wheel, trackpad, keyboard) takes over: auto-scroll stops and the shared round `KLocateButton` (bottom right, arrow toward the line, tooltip "Về dòng đang hát") shows;
   the pill, or `lyrics.auto_return` (3 / 5 / 10 s, default off) after that long without input, glides back. A resize or a font-scale
   change puts the line back without a glide; with animations off every move is a jump.
 - **`PlainLyricsView`**: the note "Lời thường, không có mốc thời gian: không tự cuộn." then a lazy `ListView.builder` (a blank line is

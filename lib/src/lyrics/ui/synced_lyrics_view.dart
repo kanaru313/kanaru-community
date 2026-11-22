@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../playback/state/playback_providers.dart';
@@ -23,10 +24,10 @@ const double _edgeFade = 0.12;
 /// button "Về dòng đang hát"; pressing a line seeks to it.
 ///
 /// A position tick costs nothing here: [playingLyricsLineProvider] notifies
-/// only when the line changes, and that flips two per-line notifiers, so two
-/// lines rebuild and nothing else. Every line is built (lyrics are capped),
-/// so any line can be scrolled to. Only this view's own scroll moves, never
-/// an enclosing one. The view is built for one [Lyrics] of one queue entry:
+/// only when the line changes, and that moves one shared index, so two lines
+/// rebuild and nothing else. Lines are built lazily, only near the viewport
+/// (a file may hold thousands); [SyncedLyricsScroll] reaches a line that is
+/// not built yet. Only this view's own scroll moves, never an enclosing one. The view is built for one [Lyrics] of one queue entry:
 /// the owner keys it by them.
 class SyncedLyricsView extends ConsumerStatefulWidget {
   const SyncedLyricsView({
@@ -58,17 +59,24 @@ class SyncedLyricsView extends ConsumerStatefulWidget {
 
 class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     with SyncedLyricsScroll<SyncedLyricsView> {
-  late final List<ValueNotifier<bool>> _current;
+  /// The current line, shared by every built line.
+  final ValueNotifier<int> _active = ValueNotifier(-1);
+
+  /// The elements of the lines built now (near the viewport), by index.
+  final Map<int, BuildContext> _built = {};
 
   @override
   Duration? get autoReturnDelay => widget.autoReturn.delay;
 
   @override
+  int get lineCount => widget.lyrics.lines.length;
+
+  @override
+  BuildContext? builtLine(int index) => _built[index];
+
+  @override
   void initState() {
     super.initState();
-    final count = widget.lyrics.lines.length;
-    lineKeys = List.generate(count, (_) => GlobalKey());
-    _current = List.generate(count, (_) => ValueNotifier(false));
     _setIndex(ref.read(playingLyricsLineProvider));
     revealAfterLayout();
   }
@@ -79,24 +87,25 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     if (oldWidget.viewportHeight != widget.viewportHeight) {
       onViewportHeight(widget.viewportHeight);
     }
-    // Sizes changed (font scale setting): lines may have grown or shrunk.
-    if (oldWidget.lineSize != widget.lineSize) revealAfterLayout();
+    // Sizes changed (font scale setting): lines may have grown or shrunk,
+    // the measured heights of lines not on screen are stale.
+    if (oldWidget.lineSize != widget.lineSize) {
+      if (listController.isAttached) listController.invalidateAllExtents();
+      revealAfterLayout();
+    }
   }
 
   @override
   void dispose() {
     disposeScroll();
-    for (final notifier in _current) {
-      notifier.dispose();
-    }
+    _active.dispose();
     super.dispose();
   }
 
   void _setIndex(int index) {
-    if (index >= _current.length) index = _current.length - 1;
-    if (lineIndex >= 0) _current[lineIndex].value = false;
+    if (index >= lineCount) index = lineCount - 1;
     lineIndex = index;
-    if (index >= 0) _current[index].value = true;
+    _active.value = index;
   }
 
   void _onLineChanged(int index) {
@@ -126,11 +135,22 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     );
   }
 
+  /// Height of a one-row line before it is measured: the text row plus the
+  /// line's own padding; set in build, read by the list during layout.
+  /// Wrapped lines are measured when they lay out.
+  double _estimatedLine = 0;
+
+  double _estimateExtent(int? index, double crossAxisExtent) => _estimatedLine;
+
   @override
   Widget build(BuildContext context) {
     final lyrics = widget.lyrics;
     ref.listen<int>(playingLyricsLineProvider, (_, i) => _onLineChanged(i));
     final height = widget.viewportHeight;
+    _estimatedLine =
+        MediaQuery.textScalerOf(context).scale(widget.lineSize) * 1.3 +
+        2 * KSpace.x2 +
+        KSpace.x1;
     final side = (widget.sidePadding - lyricsLineInset).clamp(
       0.0,
       double.infinity,
@@ -164,8 +184,14 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                       ],
                       stops: [0, _edgeFade, 1 - _edgeFade, 1],
                     ).createShader(rect),
-                    child: SingleChildScrollView(
+                    child: SuperListView.builder(
                       controller: scroll,
+                      listController: listController,
+                      extentEstimation: _estimateExtent,
+                      // Each line has its own repaint boundary, and nothing
+                      // off screen is worth keeping.
+                      addAutomaticKeepAlives: false,
+                      addRepaintBoundaries: false,
                       // Room above and below so the first and last lines can
                       // reach the anchor.
                       padding: EdgeInsets.fromLTRB(
@@ -174,23 +200,18 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                         side,
                         height * (1 - lyricsAnchor),
                       ),
-                      // One cached layer for the column: a scroll moves it
-                      // instead of walking every line again.
-                      child: RepaintBoundary(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (var i = 0; i < lyrics.lines.length; i++)
-                              LyricsLine(
-                                key: lineKeys[i],
-                                line: lyrics.lines[i],
-                                current: _current[i],
-                                onTap: () => _seek(i),
-                                size: widget.lineSize,
-                                dim: widget.dim,
-                                align: widget.align,
-                              ),
-                          ],
+                      itemCount: lyrics.lines.length,
+                      itemBuilder: (context, i) => _BuiltLine(
+                        index: i,
+                        built: _built,
+                        child: LyricsLine(
+                          index: i,
+                          line: lyrics.lines[i],
+                          active: _active,
+                          onTap: () => _seek(i),
+                          size: widget.lineSize,
+                          dim: widget.dim,
+                          align: widget.align,
                         ),
                       ),
                     ),
@@ -215,4 +236,51 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
       ),
     );
   }
+}
+
+/// Records its element in [built] under [index] while it is mounted, so the
+/// view finds the render object of a built line without a key per line.
+class _BuiltLine extends StatefulWidget {
+  const _BuiltLine({
+    required this.index,
+    required this.built,
+    required this.child,
+  });
+
+  final int index;
+  final Map<int, BuildContext> built;
+  final Widget child;
+
+  @override
+  State<_BuiltLine> createState() => _BuiltLineState();
+}
+
+class _BuiltLineState extends State<_BuiltLine> {
+  @override
+  void initState() {
+    super.initState();
+    widget.built[widget.index] = context;
+  }
+
+  @override
+  void didUpdateWidget(_BuiltLine oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.index != widget.index || oldWidget.built != widget.built) {
+      _forget(oldWidget);
+      widget.built[widget.index] = context;
+    }
+  }
+
+  @override
+  void dispose() {
+    _forget(widget);
+    super.dispose();
+  }
+
+  void _forget(_BuiltLine of) {
+    if (identical(of.built[of.index], context)) of.built.remove(of.index);
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

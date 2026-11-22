@@ -12,6 +12,7 @@ import 'lyrics_ui_host.dart';
 const _label = 'Back to current line';
 final _back = find.byType(IconButton);
 final _arrow = find.descendant(of: _back, matching: find.byType(Icon));
+final _list = find.byType(Scrollable);
 
 Widget _view(
   Lyrics lyrics, {
@@ -34,7 +35,7 @@ double _offset(WidgetTester tester) =>
     tester.state<ScrollableState>(find.byType(Scrollable)).position.pixels;
 
 Future<void> _dragLyrics(WidgetTester tester) async {
-  await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -150));
+  await tester.drag(_list, const Offset(0, -150));
   await tester.pump();
 }
 
@@ -78,10 +79,14 @@ void main() {
   ) async {
     await open(tester, syncedLyrics(50));
     var rebuilds = 0;
-    // Only rebuilds of existing lines are counted: nothing is mounted here.
+    // Only rebuilds of lines that existed before count: the glide may bring
+    // a new line into the list's cache area, which is a first build.
+    final existing = find
+        .byType(LyricsLine, skipOffstage: false)
+        .evaluate()
+        .toSet();
     debugOnRebuildDirtyWidget = (element, _) {
-      if (element.widget is ValueListenableBuilder<bool> &&
-          element.findAncestorWidgetOfExactType<LyricsLine>() != null) {
+      if (element.widget is LyricsLine && existing.contains(element)) {
         rebuilds++;
       }
     };
@@ -122,9 +127,7 @@ void main() {
   testWidgets('the mouse wheel does the same', (tester) async {
     await open(tester, syncedLyrics(50));
     final pointer = TestPointer(1, PointerDeviceKind.mouse);
-    await tester.sendEventToBinding(
-      pointer.hover(tester.getCenter(find.byType(SingleChildScrollView))),
-    );
+    await tester.sendEventToBinding(pointer.hover(tester.getCenter(_list)));
     await tester.sendEventToBinding(pointer.scroll(const Offset(0, 120)));
     await tester.pump();
     expect(_back, findsOneWidget);
@@ -158,7 +161,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(arrow(), KIcons.arrowUp);
     // Dragged back down past where it was: the line is below.
-    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, 400));
+    await tester.drag(_list, const Offset(0, 400));
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(const Duration(seconds: 1));
     expect(arrow(), KIcons.arrowDown);

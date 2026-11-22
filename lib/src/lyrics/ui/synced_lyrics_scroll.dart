@@ -4,14 +4,26 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 /// Where the current line sits in the view: 40 % down from the top.
 const double lyricsAnchor = 0.4;
 
+/// Lines short of the target a far glide jumps to before gliding the rest:
+/// close enough to be built, far enough to read as movement.
+const int _approachLines = 3;
+
 /// The scrolling of the synced lyrics view: keeping the current line at
 /// [lyricsAnchor] and telling the user's scrolling from the view's own. The
-/// state that mixes it in sets [lineKeys] and [lineIndex] and answers
-/// [autoReturnDelay].
+/// state that mixes it in sets [lineIndex], answers [lineCount],
+/// [builtLine] and [autoReturnDelay], and gives [listController] to its lazy
+/// list.
+///
+/// Only the lines near the viewport exist. A line that is built is revealed
+/// through its render object, so the glide is exact; one that is not (a seek
+/// or a return from far away) is reached through [listController], which
+/// jumps on estimated heights and corrects them as the lines lay out, without
+/// building the lines in between.
 ///
 /// Only [scroll] moves, never an enclosing scrollable. A scroll the view did
 /// not start (drag, wheel, trackpad, keyboard) stops auto-scroll and turns
@@ -19,9 +31,7 @@ const double lyricsAnchor = 0.4;
 /// [autoReturnDelay] is set, by itself after that long without input.
 mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
   final scroll = ScrollController();
-
-  /// One key per line, to find its render object.
-  late List<GlobalKey> lineKeys;
+  final listController = ListController();
 
   /// The current line, -1 before the first.
   int lineIndex = -1;
@@ -45,25 +55,48 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
   Timer? _autoReturn;
   double? _viewportHeight;
 
+  /// Number of lines in the list.
+  int get lineCount;
+
+  /// The element of line [index] when it is built (near the viewport), else
+  /// null.
+  BuildContext? builtLine(int index);
+
   /// Seconds without input before the view returns by itself; null = never.
   Duration? get autoReturnDelay;
 
   bool get paused => showBack.value;
 
-  /// Cancels the timer and the controller; call from `dispose`.
+  int get _target => lineIndex < 0 ? 0 : lineIndex;
+
+  /// Cancels the timer and the controllers; call from `dispose`.
   void disposeScroll() {
     _autoReturn?.cancel();
     showBack.dispose();
     locateSide.dispose();
+    listController.dispose();
     scroll.dispose();
   }
 
+  RenderObject? _renderOf(int index) {
+    final object = builtLine(index)?.findRenderObject();
+    return object != null && object.attached ? object : null;
+  }
+
   /// Scrolls so the current line (the first before any) sits at the anchor.
-  void reveal({required bool animate}) {
-    if (!scroll.hasClients || lineKeys.isEmpty) return;
-    final object = lineKeys[lineIndex < 0 ? 0 : lineIndex].currentContext
-        ?.findRenderObject();
-    if (object == null || !object.attached) return;
+  void reveal({required bool animate}) => _reveal(animate: animate);
+
+  void _reveal({required bool animate, bool approached = false}) {
+    if (!scroll.hasClients || lineCount == 0 || !listController.isAttached) {
+      return;
+    }
+    final index = _target;
+    final instant = !animate || MediaQuery.disableAnimationsOf(context);
+    final object = _renderOf(index);
+    if (object == null) {
+      _revealUnbuilt(index, instant: instant || approached);
+      return;
+    }
     final position = scroll.position;
     final target = RenderAbstractViewport.of(object)
         .getOffsetToReveal(object, lyricsAnchor)
@@ -72,7 +105,7 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
     if ((target - position.pixels).abs() < 0.5) return;
     scrollingItself = true;
     final generation = ++_scrollGeneration;
-    if (!animate || MediaQuery.disableAnimationsOf(context)) {
+    if (instant) {
       scroll.jumpTo(target);
       scrollingItself = false;
       return;
@@ -85,6 +118,33 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
         });
   }
 
+  /// The line is far from the viewport. Instant: jump onto it. Otherwise jump
+  /// a few lines short of it, on the side the view comes from, and glide the
+  /// rest on the next frame once the line is built.
+  void _revealUnbuilt(int index, {required bool instant}) {
+    var jumpTo = index;
+    if (!instant) {
+      final range = listController.visibleRange;
+      final fromBelow = range != null && index < range.$1;
+      jumpTo = (fromBelow ? index + _approachLines : index - _approachLines)
+          .clamp(0, lineCount - 1);
+    }
+    final generation = ++_scrollGeneration;
+    scrollingItself = true;
+    listController.jumpToItem(
+      index: jumpTo,
+      scrollController: scroll,
+      alignment: lyricsAnchor,
+    );
+    // The list corrects its estimates in the next layout and may move the
+    // position again: that is still this view's own scroll.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || generation != _scrollGeneration) return;
+      scrollingItself = false;
+      if (!instant && !paused) _reveal(animate: true, approached: true);
+    });
+  }
+
   /// Puts the current line back at the anchor after this frame, without a
   /// glide, unless the user has taken over.
   void revealAfterLayout() {
@@ -95,15 +155,25 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
 
   /// Sets [locateSide] from where the current line would sit at the anchor
   /// against the scroll position now; cheap, called on scroll and line change.
+  /// A line that is not built lies beyond the visible range, so its side
+  /// comes from its index alone.
   void updateDirection() {
     if (!paused) {
       locateSide.value = KLocateSide.none;
       return;
     }
-    if (!scroll.hasClients || lineKeys.isEmpty) return;
-    final object = lineKeys[lineIndex < 0 ? 0 : lineIndex].currentContext
-        ?.findRenderObject();
-    if (object == null || !object.attached) return;
+    if (!scroll.hasClients || lineCount == 0) return;
+    final index = _target;
+    final object = _renderOf(index);
+    if (object == null) {
+      final range = listController.isAttached
+          ? listController.visibleRange
+          : null;
+      if (range == null) return;
+      if (index < range.$1) locateSide.value = KLocateSide.above;
+      if (index > range.$2) locateSide.value = KLocateSide.below;
+      return;
+    }
     final target = RenderAbstractViewport.of(object)
         .getOffsetToReveal(object, lyricsAnchor)
         .offset;
