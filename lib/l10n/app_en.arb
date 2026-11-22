@@ -3327,5 +3327,513 @@
       }
     }
   },
-  "pluginsRootAlertLabel": "A plugin has a problem or an update needs review"
+  "pluginsRootAlertLabel": "A plugin has a problem or an update needs review",
+  "pluginsPkgClose": "Close",
+  "pluginsPkgLoading": "Loading and checking the package…",
+  "pluginsPkgProgress": "{done} / {total} KB · checking plugin.json, file names, hosts, scripts",
+  "@pluginsPkgProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPkgProgressUnknown": "{done} KB · checking plugin.json, file names, hosts, scripts",
+  "@pluginsPkgProgressUnknown": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPkgChecking": "Checking plugin.json, file names, hosts, scripts",
+  "pluginsPkgInstallTitle": "Install {name}?",
+  "@pluginsPkgInstallTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgUpdateTitle": "Update {name}",
+  "@pluginsPkgUpdateTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgInstallSubtitle": "Plugin {kind} · version {version} · {author}",
+  "@pluginsPkgInstallSubtitle": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "version": {
+        "type": "int"
+      },
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgUpdateSubtitle": "{kind} · {author}",
+  "@pluginsPkgUpdateSubtitle": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgAuthorDeclared": "{author} (self-declared)",
+  "@pluginsPkgAuthorDeclared": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgFromRepo": "From repository {name}",
+  "@pluginsPkgFromRepo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgFromFile": "From file {name} · {size}",
+  "@pluginsPkgFromFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgFromLink": "From link",
+  "pluginsPkgSendTo": "Sends data to",
+  "pluginsPkgWildcard": "{labels}: only music source plugins may declare this (up to 10).",
+  "@pluginsPkgWildcard": {
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgWildcardHost": "Every subdomain of {domain}",
+  "@pluginsPkgWildcardHost": {
+    "placeholders": {
+      "domain": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgUserEndpoint": "Address you enter in {field}",
+  "@pluginsPkgUserEndpoint": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgNoHosts": "No fixed address.",
+  "pluginsPkgNewBadge": "NEW",
+  "pluginsPkgConsentInstall": "Installing a plugin means you agree to let it send data to these addresses. Kanaru does not ask again when the plugin runs.",
+  "pluginsPkgConsentUpdate": "Updating means you agree to let the plugin send data to the new addresses too. Kanaru does not ask again when the plugin runs.",
+  "pluginsPkgFacts": "Static facts",
+  "pluginsPkgFactsUpdate": "Static facts · compared with the installed version",
+  "pluginsPkgAskAi": "Ask AI about this plugin",
+  "pluginsPkgAskAiUpdate": "Ask AI what the new version changes",
+  "pluginsPkgLater": "Later",
+  "pluginsPkgInstall": "Install",
+  "pluginsPkgUpdate": "Update",
+  "pluginsPkgInstalling": "Installing…",
+  "pluginsPkgUpdating": "Updating…",
+  "pluginsPkgInstalled": "Installed {name}",
+  "@pluginsPkgInstalled": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgUpdated": "Updated {name} to version {version}",
+  "@pluginsPkgUpdated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPkgErrDownload": "Couldn’t download the plugin package: {reason}",
+  "@pluginsPkgErrDownload": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgErrFile": "Couldn’t read the file: {reason}",
+  "@pluginsPkgErrFile": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgNothingNetwork": "Check your connection and try again. Nothing has been installed.",
+  "pluginsPkgNothing": "Nothing has been installed.",
+  "pluginsPkgReasonNetwork": "network error",
+  "pluginsPkgReasonTimeout": "timed out",
+  "pluginsPkgReasonStatus": "the server answered {status}",
+  "@pluginsPkgReasonStatus": {
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPkgReasonTooLarge": "the package is too large",
+  "pluginsPkgReasonBlocked": "the address is blocked",
+  "pluginsPkgReasonInvalidUrl": "invalid URL",
+  "pluginsPkgReasonCancelled": "cancelled",
+  "pluginsPkgReasonNotZip": "not a .zip file",
+  "pluginsPkgReasonFileLarge": "the file is too large",
+  "pluginsPkgReasonUnreadable": "it can’t be read",
+  "pluginsPkgReasonFileSlow": "the file provider did not answer in time",
+  "pluginsPkgErrGone": "This plugin is no longer in its repository’s list.",
+  "pluginsPkgErrUnexpected": "Something went wrong while checking the package. Nothing has been installed.",
+  "pluginsPkgErrWrite": "The plugin could not be saved on this device. Nothing has changed.",
+  "pluginsPkgNoticeStale": "The plugin changed while you were looking. Kanaru checked the package again: review it before installing.",
+  "pluginsPkgNoticeExpired": "The package waited too long, so Kanaru checked it again.",
+  "pluginsPkgProTitle": "Needs Kanaru Pro",
+  "pluginsPkgFilePickerFailed": "Couldn’t open the file picker.",
+  "pluginsProblemTitle": "Can’t install",
+  "pluginsProblemFileBody": "The file {name} isn’t a valid plugin.",
+  "@pluginsProblemFileBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsProblemPluginBody": "{name} can’t be installed.",
+  "@pluginsProblemPluginBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsProblemReasons": "Reasons",
+  "pluginsProblemHostsNote": "Plugins may only declare public domain names (https).",
+  "pluginsProblemNewerTitle": "Needs a newer Kanaru",
+  "pluginsProblemNewerBody": "{name} uses a newer plugin API than this Kanaru supports. Update Kanaru, then install it again.",
+  "@pluginsProblemNewerBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsProblemNewerBodyVersion": "{name} uses a newer plugin API than this Kanaru supports (apiVersion {version}, this version supports up to {max}). Update Kanaru, then install it again.",
+  "@pluginsProblemNewerBodyVersion": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsReasonTooLarge": "The package, or an entry in it, is too large",
+  "pluginsReasonNotZip": "The file isn’t a readable zip package",
+  "pluginsReasonUnsafeEntry": "The package has an unsafe entry name ({detail})",
+  "@pluginsReasonUnsafeEntry": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonTooManyEntries": "The package has too many files",
+  "pluginsReasonMissingManifest": "plugin.json not found at the top of the package",
+  "pluginsReasonInvalidManifest": "“{detail}” in plugin.json is not valid",
+  "@pluginsReasonInvalidManifest": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonInvalidManifestPlain": "plugin.json is not valid",
+  "pluginsReasonUnknownFormat": "{detail}: this kind of field is not supported",
+  "@pluginsReasonUnknownFormat": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonNeedsNewerApp": "Needs a newer Kanaru: the plugin uses a newer plugin API than this version supports",
+  "pluginsReasonUnsupportedKind": "plugin.json: type is not a kind of plugin this Kanaru runs",
+  "pluginsReasonBadHost": "hosts: “{detail}” is not a public domain name",
+  "@pluginsReasonBadHost": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonBadWildcard": "hosts: “{detail}” is not a valid wildcard: write *. and then a public domain name",
+  "@pluginsReasonBadWildcard": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonWildcardNotAllowed": "hosts: “{detail}”: only music source plugins may use a wildcard host",
+  "@pluginsReasonWildcardNotAllowed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonSharedHosting": "hosts: “{detail}” covers a shared-hosting domain, where anyone can get a subdomain",
+  "@pluginsReasonSharedHosting": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonTooManyWildcards": "hosts: “{detail}” is over the limit of {max} wildcard hosts",
+  "@pluginsReasonTooManyWildcards": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsReasonMissingScript": "src/{detail} not found in the package",
+  "@pluginsReasonMissingScript": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonScriptNotUtf8": "Script {detail} is not valid UTF-8",
+  "@pluginsReasonScriptNotUtf8": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonScriptError": "Script {detail} has an error",
+  "@pluginsReasonScriptError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonScriptErrorLine": "Script {detail} has an error at line {line}",
+  "@pluginsReasonScriptErrorLine": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      },
+      "line": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsReasonCheckUnavailable": "Kanaru can’t check scripts right now (the plugin runtime did not load), so it can’t tell whether the package is valid",
+  "pluginsReasonSameVersion": "This package is the same version as the installed one.",
+  "pluginsReasonOlderVersion": "This package is older than the installed version, so it can’t be used.",
+  "pluginsReasonKindChange": "This package is another kind of plugin than the installed one, so it can’t be used. Remove the plugin, then install the new one.",
+  "pluginsReasonOtherOrigin": "This plugin is already installed from {source}. A package from another place can’t replace it: remove the installed plugin, then install again.",
+  "@pluginsReasonOtherOrigin": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsOriginRepo": "repository {url}",
+  "@pluginsOriginRepo": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsOriginFile": "file {name}",
+  "@pluginsOriginFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsOriginLink": "a link",
+  "pluginsOriginOther": "another source",
+  "pluginsMismatchTitle": "Package doesn’t match the list",
+  "pluginsMismatchBody": "{name} · Repository: {repo}",
+  "@pluginsMismatchBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "repo": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsMismatchDiffs": "Differences",
+  "pluginsMismatchKind": "The plugin type of the package differs from the list",
+  "pluginsMismatchVersion": "The version of the package differs from the list",
+  "pluginsMismatchHosts": "The hosts of the package differ from the list",
+  "pluginsMismatchSha": "The checksum (sha256) of the package differs from the list",
+  "pluginsMismatchSize": "The size of the package differs from the list",
+  "pluginsMismatchHint": "This usually happens when the repository was just updated and its cache has not caught up. Refresh the list and try again in a few minutes. If it still differs, tell the repository owner.",
+  "pluginsMismatchRetry": "Refresh and try again",
+  "pluginsLinkTitle": "Install from link",
+  "pluginsLinkLabel": "Link to the .zip package",
+  "pluginsLinkHint": "https://…/plugin.zip",
+  "pluginsLinkHelper": "Kanaru downloads the package and checks it, then shows the install screen. Nothing is installed until you tap Install.",
+  "pluginsLinkHelperCatalog": "This is a plugin list (plugins.json), not a package. Add it as a repository?",
+  "pluginsLinkErrInvalid": "Invalid URL",
+  "pluginsLinkContinue": "Continue",
+  "pluginsLinkAddRepo": "Add repository",
+  "pluginsUpdating": "Updating…",
+  "pluginsUpdateAllRunning": "Updating {done} / {total}…",
+  "@pluginsUpdateAllRunning": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsUpdateFailedLine": "Couldn’t update: {reason}",
+  "@pluginsUpdateFailedLine": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsUpdateReasonNetwork": "network error",
+  "pluginsUpdateReasonProblems": "the new package is not valid",
+  "pluginsUpdateReasonGone": "the plugin or its repository is gone",
+  "pluginsUpdateReasonNoNewer": "no newer version",
+  "pluginsUpdateReasonStorage": "it could not be saved on this device",
+  "pluginsUpdateReasonPro": "needs Kanaru Pro",
+  "pluginsUpdateReasonOther": "something went wrong",
+  "pluginsUpdateNeedsReview": "The new version of {name} adds hosts or permissions: tap Review.",
+  "@pluginsUpdateNeedsReview": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsUpdateAllUpdated": "{count, plural, one{Updated 1 plugin} other{Updated {count} plugins}}",
+  "@pluginsUpdateAllUpdated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsUpdateAllReview": "{count, plural, one{1 version to review (new hosts or permissions): open it} other{{count} versions to review (new hosts or permissions): open each one}}",
+  "@pluginsUpdateAllReview": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsUpdateAllFailed": "{count, plural, one{1 could not be updated} other{{count} could not be updated}}",
+  "@pluginsUpdateAllFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsUpdateAllNone": "Nothing to update.",
+  "pluginsRemoveTitle": "Remove {name}?",
+  "@pluginsRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsRemoveBy": "{author} · version {version}",
+  "@pluginsRemoveBy": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsRemoveWillDelete": "Will be removed",
+  "pluginsRemoveCode": "The plugin’s code",
+  "pluginsRemoveSettings": "The plugin’s settings",
+  "pluginsRemoveConfirm": "Remove",
+  "pluginsRemoved": "Removed {name}",
+  "@pluginsRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsRemoveFailed": "Couldn’t remove {name}",
+  "@pluginsRemoveFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgLoadingTitle": "Install plugin",
+  "pluginsUpdatedNoVersion": "Updated {name}",
+  "@pluginsUpdatedNoVersion": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -246,5 +246,513 @@
       }
     }
   },
-  "pluginsRootAlertLabel": "Có plugin lỗi hoặc bản cập nhật cần xem"
+  "pluginsRootAlertLabel": "Có plugin lỗi hoặc bản cập nhật cần xem",
+  "pluginsPkgClose": "Đóng",
+  "pluginsPkgLoading": "Đang tải và kiểm gói…",
+  "pluginsPkgProgress": "{done} / {total} KB · kiểm plugin.json, tên tệp, host, script",
+  "@pluginsPkgProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPkgProgressUnknown": "{done} KB · kiểm plugin.json, tên tệp, host, script",
+  "@pluginsPkgProgressUnknown": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPkgChecking": "Kiểm plugin.json, tên tệp, host, script",
+  "pluginsPkgInstallTitle": "Cài {name}?",
+  "@pluginsPkgInstallTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgUpdateTitle": "Cập nhật {name}",
+  "@pluginsPkgUpdateTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgInstallSubtitle": "Plugin {kind} · bản {version} · {author}",
+  "@pluginsPkgInstallSubtitle": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "version": {
+        "type": "int"
+      },
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgUpdateSubtitle": "{kind} · {author}",
+  "@pluginsPkgUpdateSubtitle": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgAuthorDeclared": "{author} (tự khai báo)",
+  "@pluginsPkgAuthorDeclared": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgFromRepo": "Từ repository {name}",
+  "@pluginsPkgFromRepo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgFromFile": "Từ tệp {name} · {size}",
+  "@pluginsPkgFromFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgFromLink": "Từ đường dẫn",
+  "pluginsPkgSendTo": "Gửi dữ liệu tới",
+  "pluginsPkgWildcard": "{labels}: chỉ plugin nguồn nhạc được khai kiểu này (tối đa 10).",
+  "@pluginsPkgWildcard": {
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgWildcardHost": "Mọi tên miền con của {domain}",
+  "@pluginsPkgWildcardHost": {
+    "placeholders": {
+      "domain": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgUserEndpoint": "Địa chỉ bạn nhập ở ô {field}",
+  "@pluginsPkgUserEndpoint": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgNoHosts": "Không có địa chỉ cố định.",
+  "pluginsPkgNewBadge": "MỚI",
+  "pluginsPkgConsentInstall": "Cài plugin là bạn đồng ý cho nó gửi dữ liệu tới các địa chỉ này. Kanaru không hỏi thêm khi plugin chạy.",
+  "pluginsPkgConsentUpdate": "Cập nhật là bạn đồng ý cho plugin gửi dữ liệu tới cả các địa chỉ mới. Kanaru không hỏi thêm khi plugin chạy.",
+  "pluginsPkgFacts": "Dữ kiện tĩnh",
+  "pluginsPkgFactsUpdate": "Dữ kiện tĩnh · so với bản đang cài",
+  "pluginsPkgAskAi": "Hỏi AI về plugin này",
+  "pluginsPkgAskAiUpdate": "Hỏi AI xem bản mới đổi gì",
+  "pluginsPkgLater": "Để sau",
+  "pluginsPkgInstall": "Cài",
+  "pluginsPkgUpdate": "Cập nhật",
+  "pluginsPkgInstalling": "Đang cài…",
+  "pluginsPkgUpdating": "Đang cập nhật…",
+  "pluginsPkgInstalled": "Đã cài {name}",
+  "@pluginsPkgInstalled": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgUpdated": "Đã cập nhật {name} lên bản {version}",
+  "@pluginsPkgUpdated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPkgErrDownload": "Không tải được gói plugin: {reason}",
+  "@pluginsPkgErrDownload": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgErrFile": "Không đọc được tệp: {reason}",
+  "@pluginsPkgErrFile": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgNothingNetwork": "Kiểm tra kết nối rồi thử lại. Chưa có gì được cài.",
+  "pluginsPkgNothing": "Chưa có gì được cài.",
+  "pluginsPkgReasonNetwork": "lỗi mạng",
+  "pluginsPkgReasonTimeout": "quá thời gian chờ",
+  "pluginsPkgReasonStatus": "máy chủ trả lời {status}",
+  "@pluginsPkgReasonStatus": {
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPkgReasonTooLarge": "gói quá lớn",
+  "pluginsPkgReasonBlocked": "địa chỉ bị chặn",
+  "pluginsPkgReasonInvalidUrl": "URL không hợp lệ",
+  "pluginsPkgReasonCancelled": "đã huỷ",
+  "pluginsPkgReasonNotZip": "không phải tệp .zip",
+  "pluginsPkgReasonFileLarge": "tệp quá lớn",
+  "pluginsPkgReasonUnreadable": "không đọc được",
+  "pluginsPkgReasonFileSlow": "nơi lưu tệp không trả lời kịp",
+  "pluginsPkgErrGone": "Plugin này không còn trong danh sách của repository.",
+  "pluginsPkgErrUnexpected": "Có lỗi khi kiểm gói. Chưa có gì được cài.",
+  "pluginsPkgErrWrite": "Không ghi được plugin vào máy. Chưa có gì thay đổi.",
+  "pluginsPkgNoticeStale": "Plugin đã thay đổi trong lúc bạn xem. Kanaru đã kiểm lại gói: hãy xem lại trước khi cài.",
+  "pluginsPkgNoticeExpired": "Gói chờ quá lâu nên Kanaru đã kiểm lại.",
+  "pluginsPkgProTitle": "Cần Kanaru Pro",
+  "pluginsPkgFilePickerFailed": "Không mở được hộp chọn tệp.",
+  "pluginsProblemTitle": "Không cài được",
+  "pluginsProblemFileBody": "Tệp {name} không phải plugin hợp lệ.",
+  "@pluginsProblemFileBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsProblemPluginBody": "Không cài được {name}.",
+  "@pluginsProblemPluginBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsProblemReasons": "Lý do",
+  "pluginsProblemHostsNote": "Plugin chỉ được khai tên miền công khai (https).",
+  "pluginsProblemNewerTitle": "Cần Kanaru mới hơn",
+  "pluginsProblemNewerBody": "{name} dùng API plugin mới hơn bản Kanaru này hỗ trợ. Hãy cập nhật Kanaru rồi cài lại.",
+  "@pluginsProblemNewerBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsProblemNewerBodyVersion": "{name} dùng API plugin mới hơn bản Kanaru này hỗ trợ (apiVersion {version}, bản này hỗ trợ tới {max}). Hãy cập nhật Kanaru rồi cài lại.",
+  "@pluginsProblemNewerBodyVersion": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsReasonTooLarge": "Gói, hoặc một mục trong gói, quá lớn",
+  "pluginsReasonNotZip": "File không phải gói zip đọc được",
+  "pluginsReasonUnsafeEntry": "Gói có tên mục không an toàn ({detail})",
+  "@pluginsReasonUnsafeEntry": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonTooManyEntries": "Gói có quá nhiều file",
+  "pluginsReasonMissingManifest": "Không thấy plugin.json ở đầu gói",
+  "pluginsReasonInvalidManifest": "Mục “{detail}” trong plugin.json không hợp lệ",
+  "@pluginsReasonInvalidManifest": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonInvalidManifestPlain": "plugin.json không hợp lệ",
+  "pluginsReasonUnknownFormat": "{detail}: kiểu ô này không được hỗ trợ",
+  "@pluginsReasonUnknownFormat": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonNeedsNewerApp": "Cần Kanaru mới hơn: plugin dùng API plugin mới hơn bản này hỗ trợ",
+  "pluginsReasonUnsupportedKind": "plugin.json: type không phải loại plugin Kanaru này chạy được",
+  "pluginsReasonBadHost": "hosts: “{detail}” không phải tên miền công khai",
+  "@pluginsReasonBadHost": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonBadWildcard": "hosts: “{detail}” không phải wildcard hợp lệ: hãy viết *. rồi một tên miền công khai",
+  "@pluginsReasonBadWildcard": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonWildcardNotAllowed": "hosts: “{detail}”: chỉ plugin nguồn nhạc mới được dùng host wildcard",
+  "@pluginsReasonWildcardNotAllowed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonSharedHosting": "hosts: “{detail}” bao cả một tên miền hosting dùng chung, nơi ai cũng lấy được tên miền con",
+  "@pluginsReasonSharedHosting": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonTooManyWildcards": "hosts: “{detail}” vượt giới hạn {max} host wildcard",
+  "@pluginsReasonTooManyWildcards": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsReasonMissingScript": "Không thấy src/{detail} trong gói",
+  "@pluginsReasonMissingScript": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonScriptNotUtf8": "Script {detail} không phải UTF-8",
+  "@pluginsReasonScriptNotUtf8": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonScriptError": "Script {detail} bị lỗi",
+  "@pluginsReasonScriptError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonScriptErrorLine": "Script {detail} bị lỗi ở dòng {line}",
+  "@pluginsReasonScriptErrorLine": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      },
+      "line": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsReasonCheckUnavailable": "Kanaru chưa kiểm tra được script lúc này (thành phần chạy plugin không tải được) nên chưa biết gói có hợp lệ không",
+  "pluginsReasonSameVersion": "Gói này cùng phiên bản với bản đã cài.",
+  "pluginsReasonOlderVersion": "Gói này cũ hơn bản đã cài nên không được dùng.",
+  "pluginsReasonKindChange": "Gói này thuộc loại plugin khác với bản đã cài nên không được dùng. Hãy xoá plugin rồi cài bản mới.",
+  "pluginsReasonOtherOrigin": "Plugin này đã được cài từ {source}. Gói từ nơi khác không thay được nó: hãy xoá plugin đã cài rồi cài lại.",
+  "@pluginsReasonOtherOrigin": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsOriginRepo": "repository {url}",
+  "@pluginsOriginRepo": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsOriginFile": "tệp {name}",
+  "@pluginsOriginFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsOriginLink": "một đường dẫn",
+  "pluginsOriginOther": "một nguồn khác",
+  "pluginsMismatchTitle": "Gói không khớp danh sách",
+  "pluginsMismatchBody": "{name} · Repository: {repo}",
+  "@pluginsMismatchBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "repo": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsMismatchDiffs": "Điểm khác biệt",
+  "pluginsMismatchKind": "Loại plugin của gói khác với danh sách",
+  "pluginsMismatchVersion": "Phiên bản của gói khác với danh sách",
+  "pluginsMismatchHosts": "Host của gói khác với danh sách",
+  "pluginsMismatchSha": "Mã sha256 của gói khác với danh sách",
+  "pluginsMismatchSize": "Kích thước của gói khác với danh sách",
+  "pluginsMismatchHint": "Thường do repository vừa được cập nhật và cache chưa kịp đổi. Hãy làm mới danh sách rồi thử lại sau vài phút. Nếu vẫn khác, hãy báo cho chủ repository.",
+  "pluginsMismatchRetry": "Làm mới rồi thử lại",
+  "pluginsLinkTitle": "Cài từ đường dẫn",
+  "pluginsLinkLabel": "Đường dẫn tới gói .zip",
+  "pluginsLinkHint": "https://…/plugin.zip",
+  "pluginsLinkHelper": "Kanaru tải gói, kiểm rồi hiện màn cài; chưa cài gì cho tới khi bạn bấm Cài.",
+  "pluginsLinkHelperCatalog": "Đây là danh sách plugin (plugins.json), không phải gói. Thêm nó làm repository?",
+  "pluginsLinkErrInvalid": "URL không hợp lệ",
+  "pluginsLinkContinue": "Tiếp tục",
+  "pluginsLinkAddRepo": "Thêm repository",
+  "pluginsUpdating": "Đang cập nhật…",
+  "pluginsUpdateAllRunning": "Đang cập nhật {done} / {total}…",
+  "@pluginsUpdateAllRunning": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsUpdateFailedLine": "Không cập nhật được: {reason}",
+  "@pluginsUpdateFailedLine": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsUpdateReasonNetwork": "lỗi mạng",
+  "pluginsUpdateReasonProblems": "gói mới không hợp lệ",
+  "pluginsUpdateReasonGone": "plugin hoặc repository không còn",
+  "pluginsUpdateReasonNoNewer": "chưa có bản mới hơn",
+  "pluginsUpdateReasonStorage": "không ghi được vào máy",
+  "pluginsUpdateReasonPro": "cần Kanaru Pro",
+  "pluginsUpdateReasonOther": "có lỗi xảy ra",
+  "pluginsUpdateNeedsReview": "Bản mới của {name} thêm host hoặc quyền mới: bấm Xem để duyệt.",
+  "@pluginsUpdateNeedsReview": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsUpdateAllUpdated": "Đã cập nhật {count} plugin",
+  "@pluginsUpdateAllUpdated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsUpdateAllReview": "{count} bản cần xem (host hoặc quyền mới): mở từng bản",
+  "@pluginsUpdateAllReview": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsUpdateAllFailed": "{count} bản không cập nhật được",
+  "@pluginsUpdateAllFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsUpdateAllNone": "Không có bản nào để cập nhật.",
+  "pluginsRemoveTitle": "Xoá {name}?",
+  "@pluginsRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsRemoveBy": "{author} · bản {version}",
+  "@pluginsRemoveBy": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsRemoveWillDelete": "Sẽ bị xoá",
+  "pluginsRemoveCode": "Code của plugin",
+  "pluginsRemoveSettings": "Cài đặt của plugin",
+  "pluginsRemoveConfirm": "Xoá",
+  "pluginsRemoved": "Đã xoá {name}",
+  "@pluginsRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsRemoveFailed": "Không xoá được {name}",
+  "@pluginsRemoveFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgLoadingTitle": "Cài plugin",
+  "pluginsUpdatedNoVersion": "Đã cập nhật {name}",
+  "@pluginsUpdatedNoVersion": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

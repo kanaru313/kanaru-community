@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../plugins/state/store_view_models.dart';
+import 'store_actions_wiring.dart';
 
 /// What a row or the menu of the store does for the flows that own a whole
 /// screen of their own (install, update, remove, the plugin page). A flow
@@ -44,6 +45,4 @@ class StoreActions {
   final void Function(BuildContext context)? onInstallFromLink;
 }
 
-final storeActionsProvider = Provider<StoreActions>(
-  (ref) => const StoreActions(),
-);
+final storeActionsProvider = Provider<StoreActions>(wiredStoreActions);

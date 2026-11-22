@@ -7163,6 +7163,804 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A plugin has a problem or an update needs review'**
   String get pluginsRootAlertLabel;
+
+  /// No description provided for @pluginsPkgClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get pluginsPkgClose;
+
+  /// No description provided for @pluginsPkgLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading and checking the package…'**
+  String get pluginsPkgLoading;
+
+  /// No description provided for @pluginsPkgProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} / {total} KB · checking plugin.json, file names, hosts, scripts'**
+  String pluginsPkgProgress(int done, int total);
+
+  /// No description provided for @pluginsPkgProgressUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} KB · checking plugin.json, file names, hosts, scripts'**
+  String pluginsPkgProgressUnknown(int done);
+
+  /// No description provided for @pluginsPkgChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking plugin.json, file names, hosts, scripts'**
+  String get pluginsPkgChecking;
+
+  /// No description provided for @pluginsPkgInstallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Install {name}?'**
+  String pluginsPkgInstallTitle(String name);
+
+  /// No description provided for @pluginsPkgUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update {name}'**
+  String pluginsPkgUpdateTitle(String name);
+
+  /// No description provided for @pluginsPkgInstallSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin {kind} · version {version} · {author}'**
+  String pluginsPkgInstallSubtitle(String kind, int version, String author);
+
+  /// No description provided for @pluginsPkgUpdateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} · {author}'**
+  String pluginsPkgUpdateSubtitle(String kind, String author);
+
+  /// No description provided for @pluginsPkgAuthorDeclared.
+  ///
+  /// In en, this message translates to:
+  /// **'{author} (self-declared)'**
+  String pluginsPkgAuthorDeclared(String author);
+
+  /// No description provided for @pluginsPkgFromRepo.
+  ///
+  /// In en, this message translates to:
+  /// **'From repository {name}'**
+  String pluginsPkgFromRepo(String name);
+
+  /// No description provided for @pluginsPkgFromFile.
+  ///
+  /// In en, this message translates to:
+  /// **'From file {name} · {size}'**
+  String pluginsPkgFromFile(String name, String size);
+
+  /// No description provided for @pluginsPkgFromLink.
+  ///
+  /// In en, this message translates to:
+  /// **'From link'**
+  String get pluginsPkgFromLink;
+
+  /// No description provided for @pluginsPkgSendTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends data to'**
+  String get pluginsPkgSendTo;
+
+  /// No description provided for @pluginsPkgWildcard.
+  ///
+  /// In en, this message translates to:
+  /// **'{labels}: only music source plugins may declare this (up to 10).'**
+  String pluginsPkgWildcard(String labels);
+
+  /// No description provided for @pluginsPkgWildcardHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Every subdomain of {domain}'**
+  String pluginsPkgWildcardHost(String domain);
+
+  /// No description provided for @pluginsPkgUserEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Address you enter in {field}'**
+  String pluginsPkgUserEndpoint(String field);
+
+  /// No description provided for @pluginsPkgNoHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'No fixed address.'**
+  String get pluginsPkgNoHosts;
+
+  /// No description provided for @pluginsPkgNewBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW'**
+  String get pluginsPkgNewBadge;
+
+  /// No description provided for @pluginsPkgConsentInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing a plugin means you agree to let it send data to these addresses. Kanaru does not ask again when the plugin runs.'**
+  String get pluginsPkgConsentInstall;
+
+  /// No description provided for @pluginsPkgConsentUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating means you agree to let the plugin send data to the new addresses too. Kanaru does not ask again when the plugin runs.'**
+  String get pluginsPkgConsentUpdate;
+
+  /// No description provided for @pluginsPkgFacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Static facts'**
+  String get pluginsPkgFacts;
+
+  /// No description provided for @pluginsPkgFactsUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Static facts · compared with the installed version'**
+  String get pluginsPkgFactsUpdate;
+
+  /// No description provided for @pluginsPkgAskAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI about this plugin'**
+  String get pluginsPkgAskAi;
+
+  /// No description provided for @pluginsPkgAskAiUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI what the new version changes'**
+  String get pluginsPkgAskAiUpdate;
+
+  /// No description provided for @pluginsPkgLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get pluginsPkgLater;
+
+  /// No description provided for @pluginsPkgInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get pluginsPkgInstall;
+
+  /// No description provided for @pluginsPkgUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get pluginsPkgUpdate;
+
+  /// No description provided for @pluginsPkgInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing…'**
+  String get pluginsPkgInstalling;
+
+  /// No description provided for @pluginsPkgUpdating.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating…'**
+  String get pluginsPkgUpdating;
+
+  /// No description provided for @pluginsPkgInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed {name}'**
+  String pluginsPkgInstalled(String name);
+
+  /// No description provided for @pluginsPkgUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {name} to version {version}'**
+  String pluginsPkgUpdated(String name, int version);
+
+  /// No description provided for @pluginsPkgErrDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t download the plugin package: {reason}'**
+  String pluginsPkgErrDownload(String reason);
+
+  /// No description provided for @pluginsPkgErrFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t read the file: {reason}'**
+  String pluginsPkgErrFile(String reason);
+
+  /// No description provided for @pluginsPkgNothingNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again. Nothing has been installed.'**
+  String get pluginsPkgNothingNetwork;
+
+  /// No description provided for @pluginsPkgNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has been installed.'**
+  String get pluginsPkgNothing;
+
+  /// No description provided for @pluginsPkgReasonNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'network error'**
+  String get pluginsPkgReasonNetwork;
+
+  /// No description provided for @pluginsPkgReasonTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'timed out'**
+  String get pluginsPkgReasonTimeout;
+
+  /// No description provided for @pluginsPkgReasonStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'the server answered {status}'**
+  String pluginsPkgReasonStatus(int status);
+
+  /// No description provided for @pluginsPkgReasonTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'the package is too large'**
+  String get pluginsPkgReasonTooLarge;
+
+  /// No description provided for @pluginsPkgReasonBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'the address is blocked'**
+  String get pluginsPkgReasonBlocked;
+
+  /// No description provided for @pluginsPkgReasonInvalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'invalid URL'**
+  String get pluginsPkgReasonInvalidUrl;
+
+  /// No description provided for @pluginsPkgReasonCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'cancelled'**
+  String get pluginsPkgReasonCancelled;
+
+  /// No description provided for @pluginsPkgReasonNotZip.
+  ///
+  /// In en, this message translates to:
+  /// **'not a .zip file'**
+  String get pluginsPkgReasonNotZip;
+
+  /// No description provided for @pluginsPkgReasonFileLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'the file is too large'**
+  String get pluginsPkgReasonFileLarge;
+
+  /// No description provided for @pluginsPkgReasonUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'it can’t be read'**
+  String get pluginsPkgReasonUnreadable;
+
+  /// No description provided for @pluginsPkgReasonFileSlow.
+  ///
+  /// In en, this message translates to:
+  /// **'the file provider did not answer in time'**
+  String get pluginsPkgReasonFileSlow;
+
+  /// No description provided for @pluginsPkgErrGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This plugin is no longer in its repository’s list.'**
+  String get pluginsPkgErrGone;
+
+  /// No description provided for @pluginsPkgErrUnexpected.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong while checking the package. Nothing has been installed.'**
+  String get pluginsPkgErrUnexpected;
+
+  /// No description provided for @pluginsPkgErrWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin could not be saved on this device. Nothing has changed.'**
+  String get pluginsPkgErrWrite;
+
+  /// No description provided for @pluginsPkgNoticeStale.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin changed while you were looking. Kanaru checked the package again: review it before installing.'**
+  String get pluginsPkgNoticeStale;
+
+  /// No description provided for @pluginsPkgNoticeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'The package waited too long, so Kanaru checked it again.'**
+  String get pluginsPkgNoticeExpired;
+
+  /// No description provided for @pluginsPkgProTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs Kanaru Pro'**
+  String get pluginsPkgProTitle;
+
+  /// No description provided for @pluginsPkgFilePickerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t open the file picker.'**
+  String get pluginsPkgFilePickerFailed;
+
+  /// No description provided for @pluginsProblemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Can’t install'**
+  String get pluginsProblemTitle;
+
+  /// No description provided for @pluginsProblemFileBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The file {name} isn’t a valid plugin.'**
+  String pluginsProblemFileBody(String name);
+
+  /// No description provided for @pluginsProblemPluginBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} can’t be installed.'**
+  String pluginsProblemPluginBody(String name);
+
+  /// No description provided for @pluginsProblemReasons.
+  ///
+  /// In en, this message translates to:
+  /// **'Reasons'**
+  String get pluginsProblemReasons;
+
+  /// No description provided for @pluginsProblemHostsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins may only declare public domain names (https).'**
+  String get pluginsProblemHostsNote;
+
+  /// No description provided for @pluginsProblemNewerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a newer Kanaru'**
+  String get pluginsProblemNewerTitle;
+
+  /// No description provided for @pluginsProblemNewerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} uses a newer plugin API than this Kanaru supports. Update Kanaru, then install it again.'**
+  String pluginsProblemNewerBody(String name);
+
+  /// No description provided for @pluginsProblemNewerBodyVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} uses a newer plugin API than this Kanaru supports (apiVersion {version}, this version supports up to {max}). Update Kanaru, then install it again.'**
+  String pluginsProblemNewerBodyVersion(String name, String version, int max);
+
+  /// No description provided for @pluginsReasonTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The package, or an entry in it, is too large'**
+  String get pluginsReasonTooLarge;
+
+  /// No description provided for @pluginsReasonNotZip.
+  ///
+  /// In en, this message translates to:
+  /// **'The file isn’t a readable zip package'**
+  String get pluginsReasonNotZip;
+
+  /// No description provided for @pluginsReasonUnsafeEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'The package has an unsafe entry name ({detail})'**
+  String pluginsReasonUnsafeEntry(String detail);
+
+  /// No description provided for @pluginsReasonTooManyEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'The package has too many files'**
+  String get pluginsReasonTooManyEntries;
+
+  /// No description provided for @pluginsReasonMissingManifest.
+  ///
+  /// In en, this message translates to:
+  /// **'plugin.json not found at the top of the package'**
+  String get pluginsReasonMissingManifest;
+
+  /// No description provided for @pluginsReasonInvalidManifest.
+  ///
+  /// In en, this message translates to:
+  /// **'“{detail}” in plugin.json is not valid'**
+  String pluginsReasonInvalidManifest(String detail);
+
+  /// No description provided for @pluginsReasonInvalidManifestPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'plugin.json is not valid'**
+  String get pluginsReasonInvalidManifestPlain;
+
+  /// No description provided for @pluginsReasonUnknownFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'{detail}: this kind of field is not supported'**
+  String pluginsReasonUnknownFormat(String detail);
+
+  /// No description provided for @pluginsReasonNeedsNewerApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a newer Kanaru: the plugin uses a newer plugin API than this version supports'**
+  String get pluginsReasonNeedsNewerApp;
+
+  /// No description provided for @pluginsReasonUnsupportedKind.
+  ///
+  /// In en, this message translates to:
+  /// **'plugin.json: type is not a kind of plugin this Kanaru runs'**
+  String get pluginsReasonUnsupportedKind;
+
+  /// No description provided for @pluginsReasonBadHost.
+  ///
+  /// In en, this message translates to:
+  /// **'hosts: “{detail}” is not a public domain name'**
+  String pluginsReasonBadHost(String detail);
+
+  /// No description provided for @pluginsReasonBadWildcard.
+  ///
+  /// In en, this message translates to:
+  /// **'hosts: “{detail}” is not a valid wildcard: write *. and then a public domain name'**
+  String pluginsReasonBadWildcard(String detail);
+
+  /// No description provided for @pluginsReasonWildcardNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'hosts: “{detail}”: only music source plugins may use a wildcard host'**
+  String pluginsReasonWildcardNotAllowed(String detail);
+
+  /// No description provided for @pluginsReasonSharedHosting.
+  ///
+  /// In en, this message translates to:
+  /// **'hosts: “{detail}” covers a shared-hosting domain, where anyone can get a subdomain'**
+  String pluginsReasonSharedHosting(String detail);
+
+  /// No description provided for @pluginsReasonTooManyWildcards.
+  ///
+  /// In en, this message translates to:
+  /// **'hosts: “{detail}” is over the limit of {max} wildcard hosts'**
+  String pluginsReasonTooManyWildcards(String detail, int max);
+
+  /// No description provided for @pluginsReasonMissingScript.
+  ///
+  /// In en, this message translates to:
+  /// **'src/{detail} not found in the package'**
+  String pluginsReasonMissingScript(String detail);
+
+  /// No description provided for @pluginsReasonScriptNotUtf8.
+  ///
+  /// In en, this message translates to:
+  /// **'Script {detail} is not valid UTF-8'**
+  String pluginsReasonScriptNotUtf8(String detail);
+
+  /// No description provided for @pluginsReasonScriptError.
+  ///
+  /// In en, this message translates to:
+  /// **'Script {detail} has an error'**
+  String pluginsReasonScriptError(String detail);
+
+  /// No description provided for @pluginsReasonScriptErrorLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Script {detail} has an error at line {line}'**
+  String pluginsReasonScriptErrorLine(String detail, int line);
+
+  /// No description provided for @pluginsReasonCheckUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru can’t check scripts right now (the plugin runtime did not load), so it can’t tell whether the package is valid'**
+  String get pluginsReasonCheckUnavailable;
+
+  /// No description provided for @pluginsReasonSameVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'This package is the same version as the installed one.'**
+  String get pluginsReasonSameVersion;
+
+  /// No description provided for @pluginsReasonOlderVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'This package is older than the installed version, so it can’t be used.'**
+  String get pluginsReasonOlderVersion;
+
+  /// No description provided for @pluginsReasonKindChange.
+  ///
+  /// In en, this message translates to:
+  /// **'This package is another kind of plugin than the installed one, so it can’t be used. Remove the plugin, then install the new one.'**
+  String get pluginsReasonKindChange;
+
+  /// No description provided for @pluginsReasonOtherOrigin.
+  ///
+  /// In en, this message translates to:
+  /// **'This plugin is already installed from {source}. A package from another place can’t replace it: remove the installed plugin, then install again.'**
+  String pluginsReasonOtherOrigin(String source);
+
+  /// No description provided for @pluginsOriginRepo.
+  ///
+  /// In en, this message translates to:
+  /// **'repository {url}'**
+  String pluginsOriginRepo(String url);
+
+  /// No description provided for @pluginsOriginFile.
+  ///
+  /// In en, this message translates to:
+  /// **'file {name}'**
+  String pluginsOriginFile(String name);
+
+  /// No description provided for @pluginsOriginLink.
+  ///
+  /// In en, this message translates to:
+  /// **'a link'**
+  String get pluginsOriginLink;
+
+  /// No description provided for @pluginsOriginOther.
+  ///
+  /// In en, this message translates to:
+  /// **'another source'**
+  String get pluginsOriginOther;
+
+  /// No description provided for @pluginsMismatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Package doesn’t match the list'**
+  String get pluginsMismatchTitle;
+
+  /// No description provided for @pluginsMismatchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · Repository: {repo}'**
+  String pluginsMismatchBody(String name, String repo);
+
+  /// No description provided for @pluginsMismatchDiffs.
+  ///
+  /// In en, this message translates to:
+  /// **'Differences'**
+  String get pluginsMismatchDiffs;
+
+  /// No description provided for @pluginsMismatchKind.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin type of the package differs from the list'**
+  String get pluginsMismatchKind;
+
+  /// No description provided for @pluginsMismatchVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'The version of the package differs from the list'**
+  String get pluginsMismatchVersion;
+
+  /// No description provided for @pluginsMismatchHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'The hosts of the package differ from the list'**
+  String get pluginsMismatchHosts;
+
+  /// No description provided for @pluginsMismatchSha.
+  ///
+  /// In en, this message translates to:
+  /// **'The checksum (sha256) of the package differs from the list'**
+  String get pluginsMismatchSha;
+
+  /// No description provided for @pluginsMismatchSize.
+  ///
+  /// In en, this message translates to:
+  /// **'The size of the package differs from the list'**
+  String get pluginsMismatchSize;
+
+  /// No description provided for @pluginsMismatchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This usually happens when the repository was just updated and its cache has not caught up. Refresh the list and try again in a few minutes. If it still differs, tell the repository owner.'**
+  String get pluginsMismatchHint;
+
+  /// No description provided for @pluginsMismatchRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh and try again'**
+  String get pluginsMismatchRetry;
+
+  /// No description provided for @pluginsLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Install from link'**
+  String get pluginsLinkTitle;
+
+  /// No description provided for @pluginsLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Link to the .zip package'**
+  String get pluginsLinkLabel;
+
+  /// No description provided for @pluginsLinkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://…/plugin.zip'**
+  String get pluginsLinkHint;
+
+  /// No description provided for @pluginsLinkHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru downloads the package and checks it, then shows the install screen. Nothing is installed until you tap Install.'**
+  String get pluginsLinkHelper;
+
+  /// No description provided for @pluginsLinkHelperCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a plugin list (plugins.json), not a package. Add it as a repository?'**
+  String get pluginsLinkHelperCatalog;
+
+  /// No description provided for @pluginsLinkErrInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid URL'**
+  String get pluginsLinkErrInvalid;
+
+  /// No description provided for @pluginsLinkContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get pluginsLinkContinue;
+
+  /// No description provided for @pluginsLinkAddRepo.
+  ///
+  /// In en, this message translates to:
+  /// **'Add repository'**
+  String get pluginsLinkAddRepo;
+
+  /// No description provided for @pluginsUpdating.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating…'**
+  String get pluginsUpdating;
+
+  /// No description provided for @pluginsUpdateAllRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating {done} / {total}…'**
+  String pluginsUpdateAllRunning(int done, int total);
+
+  /// No description provided for @pluginsUpdateFailedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t update: {reason}'**
+  String pluginsUpdateFailedLine(String reason);
+
+  /// No description provided for @pluginsUpdateReasonNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'network error'**
+  String get pluginsUpdateReasonNetwork;
+
+  /// No description provided for @pluginsUpdateReasonProblems.
+  ///
+  /// In en, this message translates to:
+  /// **'the new package is not valid'**
+  String get pluginsUpdateReasonProblems;
+
+  /// No description provided for @pluginsUpdateReasonGone.
+  ///
+  /// In en, this message translates to:
+  /// **'the plugin or its repository is gone'**
+  String get pluginsUpdateReasonGone;
+
+  /// No description provided for @pluginsUpdateReasonNoNewer.
+  ///
+  /// In en, this message translates to:
+  /// **'no newer version'**
+  String get pluginsUpdateReasonNoNewer;
+
+  /// No description provided for @pluginsUpdateReasonStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'it could not be saved on this device'**
+  String get pluginsUpdateReasonStorage;
+
+  /// No description provided for @pluginsUpdateReasonPro.
+  ///
+  /// In en, this message translates to:
+  /// **'needs Kanaru Pro'**
+  String get pluginsUpdateReasonPro;
+
+  /// No description provided for @pluginsUpdateReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'something went wrong'**
+  String get pluginsUpdateReasonOther;
+
+  /// No description provided for @pluginsUpdateNeedsReview.
+  ///
+  /// In en, this message translates to:
+  /// **'The new version of {name} adds hosts or permissions: tap Review.'**
+  String pluginsUpdateNeedsReview(String name);
+
+  /// No description provided for @pluginsUpdateAllUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Updated 1 plugin} other{Updated {count} plugins}}'**
+  String pluginsUpdateAllUpdated(int count);
+
+  /// No description provided for @pluginsUpdateAllReview.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 version to review (new hosts or permissions): open it} other{{count} versions to review (new hosts or permissions): open each one}}'**
+  String pluginsUpdateAllReview(int count);
+
+  /// No description provided for @pluginsUpdateAllFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 could not be updated} other{{count} could not be updated}}'**
+  String pluginsUpdateAllFailed(int count);
+
+  /// No description provided for @pluginsUpdateAllNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to update.'**
+  String get pluginsUpdateAllNone;
+
+  /// No description provided for @pluginsRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String pluginsRemoveTitle(String name);
+
+  /// No description provided for @pluginsRemoveBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{author} · version {version}'**
+  String pluginsRemoveBy(String author, int version);
+
+  /// No description provided for @pluginsRemoveWillDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Will be removed'**
+  String get pluginsRemoveWillDelete;
+
+  /// No description provided for @pluginsRemoveCode.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin’s code'**
+  String get pluginsRemoveCode;
+
+  /// No description provided for @pluginsRemoveSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin’s settings'**
+  String get pluginsRemoveSettings;
+
+  /// No description provided for @pluginsRemoveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get pluginsRemoveConfirm;
+
+  /// No description provided for @pluginsRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {name}'**
+  String pluginsRemoved(String name);
+
+  /// No description provided for @pluginsRemoveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t remove {name}'**
+  String pluginsRemoveFailed(String name);
+
+  /// No description provided for @pluginsPkgLoadingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Install plugin'**
+  String get pluginsPkgLoadingTitle;
+
+  /// No description provided for @pluginsUpdatedNoVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {name}'**
+  String pluginsUpdatedNoVersion(String name);
 }
 
 class _AppLocalizationsDelegate

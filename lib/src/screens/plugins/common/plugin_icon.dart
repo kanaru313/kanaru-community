@@ -30,7 +30,7 @@ class PluginIcon extends ConsumerWidget {
     final glyph = ColoredBox(
       color: scheme.secondaryContainer,
       child: Icon(
-        _glyph(kind),
+        glyphOf(kind),
         size: KIconSize.md,
         color: scheme.onSecondaryContainer,
       ),
@@ -58,7 +58,8 @@ class PluginIcon extends ConsumerWidget {
     );
   }
 
-  static IconData _glyph(PluginKind? kind) => switch (kind) {
+  /// The glyph shown for a plugin that has no picture of its own.
+  static IconData glyphOf(PluginKind? kind) => switch (kind) {
     PluginKind.lyrics => KIcons.lyrics,
     PluginKind.translate || PluginKind.aiTranslate => KIcons.languages,
     PluginKind.streaming => KIcons.online,

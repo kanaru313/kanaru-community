@@ -4453,4 +4453,517 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pluginsRootAlertLabel => 'Có plugin lỗi hoặc bản cập nhật cần xem';
+
+  @override
+  String get pluginsPkgClose => 'Đóng';
+
+  @override
+  String get pluginsPkgLoading => 'Đang tải và kiểm gói…';
+
+  @override
+  String pluginsPkgProgress(int done, int total) {
+    return '$done / $total KB · kiểm plugin.json, tên tệp, host, script';
+  }
+
+  @override
+  String pluginsPkgProgressUnknown(int done) {
+    return '$done KB · kiểm plugin.json, tên tệp, host, script';
+  }
+
+  @override
+  String get pluginsPkgChecking => 'Kiểm plugin.json, tên tệp, host, script';
+
+  @override
+  String pluginsPkgInstallTitle(String name) {
+    return 'Cài $name?';
+  }
+
+  @override
+  String pluginsPkgUpdateTitle(String name) {
+    return 'Cập nhật $name';
+  }
+
+  @override
+  String pluginsPkgInstallSubtitle(String kind, int version, String author) {
+    return 'Plugin $kind · bản $version · $author';
+  }
+
+  @override
+  String pluginsPkgUpdateSubtitle(String kind, String author) {
+    return '$kind · $author';
+  }
+
+  @override
+  String pluginsPkgAuthorDeclared(String author) {
+    return '$author (tự khai báo)';
+  }
+
+  @override
+  String pluginsPkgFromRepo(String name) {
+    return 'Từ repository $name';
+  }
+
+  @override
+  String pluginsPkgFromFile(String name, String size) {
+    return 'Từ tệp $name · $size';
+  }
+
+  @override
+  String get pluginsPkgFromLink => 'Từ đường dẫn';
+
+  @override
+  String get pluginsPkgSendTo => 'Gửi dữ liệu tới';
+
+  @override
+  String pluginsPkgWildcard(String labels) {
+    return '$labels: chỉ plugin nguồn nhạc được khai kiểu này (tối đa 10).';
+  }
+
+  @override
+  String pluginsPkgWildcardHost(String domain) {
+    return 'Mọi tên miền con của $domain';
+  }
+
+  @override
+  String pluginsPkgUserEndpoint(String field) {
+    return 'Địa chỉ bạn nhập ở ô $field';
+  }
+
+  @override
+  String get pluginsPkgNoHosts => 'Không có địa chỉ cố định.';
+
+  @override
+  String get pluginsPkgNewBadge => 'MỚI';
+
+  @override
+  String get pluginsPkgConsentInstall =>
+      'Cài plugin là bạn đồng ý cho nó gửi dữ liệu tới các địa chỉ này. Kanaru không hỏi thêm khi plugin chạy.';
+
+  @override
+  String get pluginsPkgConsentUpdate =>
+      'Cập nhật là bạn đồng ý cho plugin gửi dữ liệu tới cả các địa chỉ mới. Kanaru không hỏi thêm khi plugin chạy.';
+
+  @override
+  String get pluginsPkgFacts => 'Dữ kiện tĩnh';
+
+  @override
+  String get pluginsPkgFactsUpdate => 'Dữ kiện tĩnh · so với bản đang cài';
+
+  @override
+  String get pluginsPkgAskAi => 'Hỏi AI về plugin này';
+
+  @override
+  String get pluginsPkgAskAiUpdate => 'Hỏi AI xem bản mới đổi gì';
+
+  @override
+  String get pluginsPkgLater => 'Để sau';
+
+  @override
+  String get pluginsPkgInstall => 'Cài';
+
+  @override
+  String get pluginsPkgUpdate => 'Cập nhật';
+
+  @override
+  String get pluginsPkgInstalling => 'Đang cài…';
+
+  @override
+  String get pluginsPkgUpdating => 'Đang cập nhật…';
+
+  @override
+  String pluginsPkgInstalled(String name) {
+    return 'Đã cài $name';
+  }
+
+  @override
+  String pluginsPkgUpdated(String name, int version) {
+    return 'Đã cập nhật $name lên bản $version';
+  }
+
+  @override
+  String pluginsPkgErrDownload(String reason) {
+    return 'Không tải được gói plugin: $reason';
+  }
+
+  @override
+  String pluginsPkgErrFile(String reason) {
+    return 'Không đọc được tệp: $reason';
+  }
+
+  @override
+  String get pluginsPkgNothingNetwork =>
+      'Kiểm tra kết nối rồi thử lại. Chưa có gì được cài.';
+
+  @override
+  String get pluginsPkgNothing => 'Chưa có gì được cài.';
+
+  @override
+  String get pluginsPkgReasonNetwork => 'lỗi mạng';
+
+  @override
+  String get pluginsPkgReasonTimeout => 'quá thời gian chờ';
+
+  @override
+  String pluginsPkgReasonStatus(int status) {
+    return 'máy chủ trả lời $status';
+  }
+
+  @override
+  String get pluginsPkgReasonTooLarge => 'gói quá lớn';
+
+  @override
+  String get pluginsPkgReasonBlocked => 'địa chỉ bị chặn';
+
+  @override
+  String get pluginsPkgReasonInvalidUrl => 'URL không hợp lệ';
+
+  @override
+  String get pluginsPkgReasonCancelled => 'đã huỷ';
+
+  @override
+  String get pluginsPkgReasonNotZip => 'không phải tệp .zip';
+
+  @override
+  String get pluginsPkgReasonFileLarge => 'tệp quá lớn';
+
+  @override
+  String get pluginsPkgReasonUnreadable => 'không đọc được';
+
+  @override
+  String get pluginsPkgReasonFileSlow => 'nơi lưu tệp không trả lời kịp';
+
+  @override
+  String get pluginsPkgErrGone =>
+      'Plugin này không còn trong danh sách của repository.';
+
+  @override
+  String get pluginsPkgErrUnexpected =>
+      'Có lỗi khi kiểm gói. Chưa có gì được cài.';
+
+  @override
+  String get pluginsPkgErrWrite =>
+      'Không ghi được plugin vào máy. Chưa có gì thay đổi.';
+
+  @override
+  String get pluginsPkgNoticeStale =>
+      'Plugin đã thay đổi trong lúc bạn xem. Kanaru đã kiểm lại gói: hãy xem lại trước khi cài.';
+
+  @override
+  String get pluginsPkgNoticeExpired =>
+      'Gói chờ quá lâu nên Kanaru đã kiểm lại.';
+
+  @override
+  String get pluginsPkgProTitle => 'Cần Kanaru Pro';
+
+  @override
+  String get pluginsPkgFilePickerFailed => 'Không mở được hộp chọn tệp.';
+
+  @override
+  String get pluginsProblemTitle => 'Không cài được';
+
+  @override
+  String pluginsProblemFileBody(String name) {
+    return 'Tệp $name không phải plugin hợp lệ.';
+  }
+
+  @override
+  String pluginsProblemPluginBody(String name) {
+    return 'Không cài được $name.';
+  }
+
+  @override
+  String get pluginsProblemReasons => 'Lý do';
+
+  @override
+  String get pluginsProblemHostsNote =>
+      'Plugin chỉ được khai tên miền công khai (https).';
+
+  @override
+  String get pluginsProblemNewerTitle => 'Cần Kanaru mới hơn';
+
+  @override
+  String pluginsProblemNewerBody(String name) {
+    return '$name dùng API plugin mới hơn bản Kanaru này hỗ trợ. Hãy cập nhật Kanaru rồi cài lại.';
+  }
+
+  @override
+  String pluginsProblemNewerBodyVersion(String name, String version, int max) {
+    return '$name dùng API plugin mới hơn bản Kanaru này hỗ trợ (apiVersion $version, bản này hỗ trợ tới $max). Hãy cập nhật Kanaru rồi cài lại.';
+  }
+
+  @override
+  String get pluginsReasonTooLarge => 'Gói, hoặc một mục trong gói, quá lớn';
+
+  @override
+  String get pluginsReasonNotZip => 'File không phải gói zip đọc được';
+
+  @override
+  String pluginsReasonUnsafeEntry(String detail) {
+    return 'Gói có tên mục không an toàn ($detail)';
+  }
+
+  @override
+  String get pluginsReasonTooManyEntries => 'Gói có quá nhiều file';
+
+  @override
+  String get pluginsReasonMissingManifest => 'Không thấy plugin.json ở đầu gói';
+
+  @override
+  String pluginsReasonInvalidManifest(String detail) {
+    return 'Mục “$detail” trong plugin.json không hợp lệ';
+  }
+
+  @override
+  String get pluginsReasonInvalidManifestPlain => 'plugin.json không hợp lệ';
+
+  @override
+  String pluginsReasonUnknownFormat(String detail) {
+    return '$detail: kiểu ô này không được hỗ trợ';
+  }
+
+  @override
+  String get pluginsReasonNeedsNewerApp =>
+      'Cần Kanaru mới hơn: plugin dùng API plugin mới hơn bản này hỗ trợ';
+
+  @override
+  String get pluginsReasonUnsupportedKind =>
+      'plugin.json: type không phải loại plugin Kanaru này chạy được';
+
+  @override
+  String pluginsReasonBadHost(String detail) {
+    return 'hosts: “$detail” không phải tên miền công khai';
+  }
+
+  @override
+  String pluginsReasonBadWildcard(String detail) {
+    return 'hosts: “$detail” không phải wildcard hợp lệ: hãy viết *. rồi một tên miền công khai';
+  }
+
+  @override
+  String pluginsReasonWildcardNotAllowed(String detail) {
+    return 'hosts: “$detail”: chỉ plugin nguồn nhạc mới được dùng host wildcard';
+  }
+
+  @override
+  String pluginsReasonSharedHosting(String detail) {
+    return 'hosts: “$detail” bao cả một tên miền hosting dùng chung, nơi ai cũng lấy được tên miền con';
+  }
+
+  @override
+  String pluginsReasonTooManyWildcards(String detail, int max) {
+    return 'hosts: “$detail” vượt giới hạn $max host wildcard';
+  }
+
+  @override
+  String pluginsReasonMissingScript(String detail) {
+    return 'Không thấy src/$detail trong gói';
+  }
+
+  @override
+  String pluginsReasonScriptNotUtf8(String detail) {
+    return 'Script $detail không phải UTF-8';
+  }
+
+  @override
+  String pluginsReasonScriptError(String detail) {
+    return 'Script $detail bị lỗi';
+  }
+
+  @override
+  String pluginsReasonScriptErrorLine(String detail, int line) {
+    return 'Script $detail bị lỗi ở dòng $line';
+  }
+
+  @override
+  String get pluginsReasonCheckUnavailable =>
+      'Kanaru chưa kiểm tra được script lúc này (thành phần chạy plugin không tải được) nên chưa biết gói có hợp lệ không';
+
+  @override
+  String get pluginsReasonSameVersion =>
+      'Gói này cùng phiên bản với bản đã cài.';
+
+  @override
+  String get pluginsReasonOlderVersion =>
+      'Gói này cũ hơn bản đã cài nên không được dùng.';
+
+  @override
+  String get pluginsReasonKindChange =>
+      'Gói này thuộc loại plugin khác với bản đã cài nên không được dùng. Hãy xoá plugin rồi cài bản mới.';
+
+  @override
+  String pluginsReasonOtherOrigin(String source) {
+    return 'Plugin này đã được cài từ $source. Gói từ nơi khác không thay được nó: hãy xoá plugin đã cài rồi cài lại.';
+  }
+
+  @override
+  String pluginsOriginRepo(String url) {
+    return 'repository $url';
+  }
+
+  @override
+  String pluginsOriginFile(String name) {
+    return 'tệp $name';
+  }
+
+  @override
+  String get pluginsOriginLink => 'một đường dẫn';
+
+  @override
+  String get pluginsOriginOther => 'một nguồn khác';
+
+  @override
+  String get pluginsMismatchTitle => 'Gói không khớp danh sách';
+
+  @override
+  String pluginsMismatchBody(String name, String repo) {
+    return '$name · Repository: $repo';
+  }
+
+  @override
+  String get pluginsMismatchDiffs => 'Điểm khác biệt';
+
+  @override
+  String get pluginsMismatchKind => 'Loại plugin của gói khác với danh sách';
+
+  @override
+  String get pluginsMismatchVersion => 'Phiên bản của gói khác với danh sách';
+
+  @override
+  String get pluginsMismatchHosts => 'Host của gói khác với danh sách';
+
+  @override
+  String get pluginsMismatchSha => 'Mã sha256 của gói khác với danh sách';
+
+  @override
+  String get pluginsMismatchSize => 'Kích thước của gói khác với danh sách';
+
+  @override
+  String get pluginsMismatchHint =>
+      'Thường do repository vừa được cập nhật và cache chưa kịp đổi. Hãy làm mới danh sách rồi thử lại sau vài phút. Nếu vẫn khác, hãy báo cho chủ repository.';
+
+  @override
+  String get pluginsMismatchRetry => 'Làm mới rồi thử lại';
+
+  @override
+  String get pluginsLinkTitle => 'Cài từ đường dẫn';
+
+  @override
+  String get pluginsLinkLabel => 'Đường dẫn tới gói .zip';
+
+  @override
+  String get pluginsLinkHint => 'https://…/plugin.zip';
+
+  @override
+  String get pluginsLinkHelper =>
+      'Kanaru tải gói, kiểm rồi hiện màn cài; chưa cài gì cho tới khi bạn bấm Cài.';
+
+  @override
+  String get pluginsLinkHelperCatalog =>
+      'Đây là danh sách plugin (plugins.json), không phải gói. Thêm nó làm repository?';
+
+  @override
+  String get pluginsLinkErrInvalid => 'URL không hợp lệ';
+
+  @override
+  String get pluginsLinkContinue => 'Tiếp tục';
+
+  @override
+  String get pluginsLinkAddRepo => 'Thêm repository';
+
+  @override
+  String get pluginsUpdating => 'Đang cập nhật…';
+
+  @override
+  String pluginsUpdateAllRunning(int done, int total) {
+    return 'Đang cập nhật $done / $total…';
+  }
+
+  @override
+  String pluginsUpdateFailedLine(String reason) {
+    return 'Không cập nhật được: $reason';
+  }
+
+  @override
+  String get pluginsUpdateReasonNetwork => 'lỗi mạng';
+
+  @override
+  String get pluginsUpdateReasonProblems => 'gói mới không hợp lệ';
+
+  @override
+  String get pluginsUpdateReasonGone => 'plugin hoặc repository không còn';
+
+  @override
+  String get pluginsUpdateReasonNoNewer => 'chưa có bản mới hơn';
+
+  @override
+  String get pluginsUpdateReasonStorage => 'không ghi được vào máy';
+
+  @override
+  String get pluginsUpdateReasonPro => 'cần Kanaru Pro';
+
+  @override
+  String get pluginsUpdateReasonOther => 'có lỗi xảy ra';
+
+  @override
+  String pluginsUpdateNeedsReview(String name) {
+    return 'Bản mới của $name thêm host hoặc quyền mới: bấm Xem để duyệt.';
+  }
+
+  @override
+  String pluginsUpdateAllUpdated(int count) {
+    return 'Đã cập nhật $count plugin';
+  }
+
+  @override
+  String pluginsUpdateAllReview(int count) {
+    return '$count bản cần xem (host hoặc quyền mới): mở từng bản';
+  }
+
+  @override
+  String pluginsUpdateAllFailed(int count) {
+    return '$count bản không cập nhật được';
+  }
+
+  @override
+  String get pluginsUpdateAllNone => 'Không có bản nào để cập nhật.';
+
+  @override
+  String pluginsRemoveTitle(String name) {
+    return 'Xoá $name?';
+  }
+
+  @override
+  String pluginsRemoveBy(String author, int version) {
+    return '$author · bản $version';
+  }
+
+  @override
+  String get pluginsRemoveWillDelete => 'Sẽ bị xoá';
+
+  @override
+  String get pluginsRemoveCode => 'Code của plugin';
+
+  @override
+  String get pluginsRemoveSettings => 'Cài đặt của plugin';
+
+  @override
+  String get pluginsRemoveConfirm => 'Xoá';
+
+  @override
+  String pluginsRemoved(String name) {
+    return 'Đã xoá $name';
+  }
+
+  @override
+  String pluginsRemoveFailed(String name) {
+    return 'Không xoá được $name';
+  }
+
+  @override
+  String get pluginsPkgLoadingTitle => 'Cài plugin';
+
+  @override
+  String pluginsUpdatedNoVersion(String name) {
+    return 'Đã cập nhật $name';
+  }
 }

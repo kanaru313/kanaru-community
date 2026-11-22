@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/state/store_view_models.dart';
+import '../updates/update_all_button.dart';
 import 'store_actions.dart';
 import 'store_empty.dart';
 import 'store_rows.dart';
@@ -23,14 +24,7 @@ List<Widget> storeSectionWidgets(
         hint: l10n.pluginsUpdatesHint,
         hintTooltip: l10n.pluginsUpdatesHintTooltip,
         hintTitle: l10n.pluginsSectionUpdates(view.updates.length),
-        action: view.updateAllCount == 0
-            ? null
-            : TextButton(
-                onPressed: actions.onUpdateAll == null
-                    ? null
-                    : () => actions.onUpdateAll!(context),
-                child: Text(l10n.pluginsUpdateAll(view.updateAllCount)),
-              ),
+        action: UpdateAllButton(count: view.updateAllCount, actions: actions),
         children: [
           for (final row in view.updates)
             UpdateRow(key: ValueKey(row.installId), row: row, actions: actions),

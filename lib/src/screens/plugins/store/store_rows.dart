@@ -1,27 +1,33 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/state/store_filter.dart';
 import '../../../plugins/state/store_view_models.dart';
+import '../../../plugins/state/updates_provider.dart';
+import '../updates/update_failures.dart';
 import 'store_actions.dart';
 import 'store_row.dart';
 
 /// A row of the Cập nhật block: one button, [Xem] when the update adds hosts
 /// or permissions, else [Cập nhật]. A tap on the row opens the update screen.
-class UpdateRow extends StatelessWidget {
+class UpdateRow extends ConsumerWidget {
   const UpdateRow({super.key, required this.row, required this.actions});
 
   final StoreRowView row;
   final StoreActions actions;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final review = row.needsReview;
     final run = review ? actions.onReview : actions.onUpdate;
+    final busy = ref.watch(updatingIdsProvider).contains(row.installId);
+    final failure = ref.watch(updateFailuresProvider)[row.installId];
     return StoreRowFrame(
       row: row,
+      errorLine: failure,
       onTap: actions.onReview == null
           ? null
           : () => actions.onReview!(context, row),
@@ -29,8 +35,20 @@ class UpdateRow extends StatelessWidget {
         style: FilledButton.styleFrom(
           minimumSize: const Size(0, KLayout.compactButton),
         ),
-        onPressed: run == null ? null : () => run(context, row),
-        child: Text(review ? l10n.pluginsReview : l10n.pluginsUpdate),
+        onPressed: run == null || busy ? null : () => run(context, row),
+        child: busy
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: KSpace.x2,
+                children: [
+                  const SizedBox.square(
+                    dimension: KIconSize.sm,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  Text(l10n.pluginsUpdating),
+                ],
+              )
+            : Text(review ? l10n.pluginsReview : l10n.pluginsUpdate),
       ),
     );
   }
