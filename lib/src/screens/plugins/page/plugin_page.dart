@@ -6,12 +6,14 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../plugins/state/alerts_provider.dart';
 import '../../../plugins/state/install_ops.dart';
 import '../../../plugins/state/plugin_page_provider.dart';
 import '../../../plugins/state/plugin_store_providers.dart';
 import '../../settings/ui/settings_scaffold.dart';
 import '../plugin_paths.dart';
 import '../remove/remove_flow.dart';
+import '../config/config_form.dart';
 import 'config_slot.dart';
 import 'details_block.dart';
 import 'error_band.dart';
@@ -207,13 +209,28 @@ class _PluginPageState extends ConsumerState<PluginPage>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           DetailsBlock(data: data),
-          if (hasConfig) ConfigSlot(key: _slotKey),
+          if (hasConfig)
+            ConfigSlot(
+              key: _slotKey,
+              child: ConfigForm(
+                installId: widget.installId,
+                locked: _formLocked(data),
+              ),
+            ),
         ],
       ),
       const ConnectionBlock(),
       DataBlock(kind: data.kind),
     ];
   }
+
+  /// The form is dimmed only while the package is broken or this plugin is
+  /// being updated in place.
+  bool _formLocked(PluginPageData data) =>
+      data.updating ||
+      data.alerts.contains(PluginAlert.packageMissing) ||
+      data.alerts.contains(PluginAlert.broken) ||
+      data.alerts.contains(PluginAlert.reinstallFromFile);
 
   void _retry() {
     ref.invalidate(installedPluginsProvider);

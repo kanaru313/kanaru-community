@@ -4,10 +4,12 @@ import 'package:kanaru/src/database/tables.dart';
 import 'package:kanaru/src/plugins/data/install/sweep_and_restore.dart';
 import 'package:kanaru/src/plugins/domain/package/plugin_manifest.dart';
 import 'package:kanaru/src/plugins/state/alerts_provider.dart';
+import 'package:kanaru/src/plugins/state/config_form_provider.dart';
 import 'package:kanaru/src/plugins/state/install_ops.dart';
 import 'package:kanaru/src/plugins/state/plugin_page_provider.dart';
 
 import '../../../plugins/domain/plugin_test_support.dart';
+import '../config/support/config_harness.dart';
 import 'install_fixtures.dart';
 
 const repoAddress = 'https://repo1.example.com/plugins.json';
@@ -97,6 +99,16 @@ List<Override> pageOverrides(
     onBuild?.call();
     return ref.watch(pageHolder);
   }),
+  // The settings form of the page reads its own providers: an empty store.
+  configFormProvider.overrideWith((ref, id) {
+    final manifest = ref.watch(pageHolder).value?.manifest;
+    return AsyncData(
+      manifest == null
+          ? null
+          : ConfigFormData(fields: manifest.config, values: const {}),
+    );
+  }),
+  configOpsProvider.overrideWithValue(const NoopConfigOps()),
   if (ops != null) installOpsProvider.overrideWithValue(ops),
 ];
 

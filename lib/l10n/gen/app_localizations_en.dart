@@ -4568,9 +4568,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginsPageSettingsTitle => 'The plugin’s settings';
 
   @override
-  String get pluginsPageSettingsSoon => 'Plugin configuration';
-
-  @override
   String get pluginsPageRefreshFailed => 'Could not refresh the list';
 
   @override
@@ -5606,4 +5603,131 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pluginsRepoCopyAddress => 'Copy address';
+
+  @override
+  String get pluginsCfgReadFailed => 'Couldn’t read the plugin’s settings';
+
+  @override
+  String get pluginsCfgRequired => 'This setting is required';
+
+  @override
+  String get pluginsCfgNotNumber => 'Enter a number';
+
+  @override
+  String get pluginsCfgNotInteger => 'Enter a whole number';
+
+  @override
+  String pluginsCfgMin(String min) {
+    return 'Must be $min or more';
+  }
+
+  @override
+  String pluginsCfgMax(String max) {
+    return 'Must be $max or less';
+  }
+
+  @override
+  String pluginsCfgMinLength(String n) {
+    return 'Enter at least $n characters';
+  }
+
+  @override
+  String pluginsCfgMaxLength(String n) {
+    return 'Enter at most $n characters';
+  }
+
+  @override
+  String get pluginsCfgBadUrl => 'Enter an https address';
+
+  @override
+  String pluginsCfgTooFew(String n) {
+    return 'Choose or add at least $n items';
+  }
+
+  @override
+  String pluginsCfgTooMany(String n) {
+    return 'At most $n items';
+  }
+
+  @override
+  String get pluginsCfgBadItem => 'One of the items is not valid';
+
+  @override
+  String get pluginsCfgBadName =>
+      'Enter a name of 1 to 100 characters with no space at either end';
+
+  @override
+  String get pluginsCfgDuplicateName => 'Another row already uses this name';
+
+  @override
+  String get pluginsCfgRefusedValue =>
+      'This setting doesn’t accept that value.';
+
+  @override
+  String get pluginsCfgRefusedTooLarge =>
+      'The plugin’s settings are too large to save.';
+
+  @override
+  String get pluginsCfgRefusedGone =>
+      'This setting no longer exists. The plugin may have been removed or changed.';
+
+  @override
+  String get pluginsCfgRefusedOther =>
+      'Couldn’t save the setting (try again later)';
+
+  @override
+  String get pluginsCfgNotChosen => 'Not chosen';
+
+  @override
+  String get pluginsCfgNoModel => 'No model';
+
+  @override
+  String get pluginsCfgOwnTag => 'Added by you';
+
+  @override
+  String get pluginsCfgRemoveModel => 'Remove this model';
+
+  @override
+  String get pluginsCfgAddModel => 'Add model…';
+
+  @override
+  String get pluginsCfgAddModelTitle => 'Add model';
+
+  @override
+  String get pluginsCfgModelNameHint =>
+      'Model name, exactly as the server expects it';
+
+  @override
+  String get pluginsCfgModelNoteHint =>
+      'Note (optional), for example: Ollama at home';
+
+  @override
+  String get pluginsCfgAddAndChoose => 'Add and choose';
+
+  @override
+  String pluginsCfgMaxChosen(String n) {
+    return 'At most $n';
+  }
+
+  @override
+  String get pluginsCfgAddRow => 'Add';
+
+  @override
+  String get pluginsCfgRemoveRow => 'Remove';
+
+  @override
+  String get pluginsCfgNameLabel => 'Name';
+
+  @override
+  String get pluginsCfgValueLabel => 'Value';
+
+  @override
+  String pluginsCfgStepDown(String step) {
+    return 'Decrease by $step';
+  }
+
+  @override
+  String pluginsCfgStepUp(String step) {
+    return 'Increase by $step';
+  }
 }

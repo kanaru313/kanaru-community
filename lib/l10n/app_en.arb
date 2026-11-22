@@ -3158,7 +3158,6 @@
     }
   },
   "pluginsPageSettingsTitle": "The plugin’s settings",
-  "pluginsPageSettingsSoon": "Plugin configuration",
   "pluginsPageRefreshFailed": "Could not refresh the list",
   "pluginsInstallTooltip": "Install {name}",
   "@pluginsInstallTooltip": {
@@ -4021,5 +4020,102 @@
   "pluginsPageOpen": "Open",
   "pluginsPageBadgeAi": "AI",
   "pluginsRepoAddressCopied": "Repository address copied",
-  "pluginsRepoCopyAddress": "Copy address"
+  "pluginsRepoCopyAddress": "Copy address",
+  "pluginsCfgReadFailed": "Couldn’t read the plugin’s settings",
+  "pluginsCfgRequired": "This setting is required",
+  "pluginsCfgNotNumber": "Enter a number",
+  "pluginsCfgNotInteger": "Enter a whole number",
+  "pluginsCfgMin": "Must be {min} or more",
+  "@pluginsCfgMin": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgMax": "Must be {max} or less",
+  "@pluginsCfgMax": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgMinLength": "Enter at least {n} characters",
+  "@pluginsCfgMinLength": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgMaxLength": "Enter at most {n} characters",
+  "@pluginsCfgMaxLength": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgBadUrl": "Enter an https address",
+  "pluginsCfgTooFew": "Choose or add at least {n} items",
+  "@pluginsCfgTooFew": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgTooMany": "At most {n} items",
+  "@pluginsCfgTooMany": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgBadItem": "One of the items is not valid",
+  "pluginsCfgBadName": "Enter a name of 1 to 100 characters with no space at either end",
+  "pluginsCfgDuplicateName": "Another row already uses this name",
+  "pluginsCfgRefusedValue": "This setting doesn’t accept that value.",
+  "pluginsCfgRefusedTooLarge": "The plugin’s settings are too large to save.",
+  "pluginsCfgRefusedGone": "This setting no longer exists. The plugin may have been removed or changed.",
+  "pluginsCfgRefusedOther": "Couldn’t save the setting (try again later)",
+  "pluginsCfgNotChosen": "Not chosen",
+  "pluginsCfgNoModel": "No model",
+  "pluginsCfgOwnTag": "Added by you",
+  "pluginsCfgRemoveModel": "Remove this model",
+  "pluginsCfgAddModel": "Add model…",
+  "pluginsCfgAddModelTitle": "Add model",
+  "pluginsCfgModelNameHint": "Model name, exactly as the server expects it",
+  "pluginsCfgModelNoteHint": "Note (optional), for example: Ollama at home",
+  "pluginsCfgAddAndChoose": "Add and choose",
+  "pluginsCfgMaxChosen": "At most {n}",
+  "@pluginsCfgMaxChosen": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgAddRow": "Add",
+  "pluginsCfgRemoveRow": "Remove",
+  "pluginsCfgNameLabel": "Name",
+  "pluginsCfgValueLabel": "Value",
+  "pluginsCfgStepDown": "Decrease by {step}",
+  "@pluginsCfgStepDown": {
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgStepUp": "Increase by {step}",
+  "@pluginsCfgStepUp": {
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  }
 }

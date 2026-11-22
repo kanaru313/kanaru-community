@@ -235,9 +235,9 @@ void main() {
         find.text('The plugin can’t run until it has: Token, API key.'),
         findsOneWidget,
       );
-      // The target of the button is visible: the section with its dimmed row.
+      // The target of the button is visible: the section with its field.
       expect(find.text('The plugin’s settings'), findsOneWidget);
-      expect(find.text('Plugin configuration'), findsOneWidget);
+      expect(find.text('Token *'), findsOneWidget);
       await tester.tap(find.text('Open settings'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
