@@ -45,9 +45,20 @@ class _TextFieldEditorState extends State<TextFieldEditor>
   /// that arrived while the box was focused wins over it.
   late String _synced;
 
-  /// The last value handed to the store: the same one is not sent twice.
+  /// The store's value changed (an outside change or the echo of our own
+  /// save) since the box was last synced, and the box has not looked at it
+  /// yet. Set on every change of `stored`, cleared once the box shows it or
+  /// the user's own edit wins. Explicit, so a store that goes back to an old
+  /// value is still seen as a change.
+  bool _storedMoved = false;
+
+  /// The last value handed to the store, and whether its echo (the store
+  /// showing it) is still awaited. Set on send; cleared when `stored` changes,
+  /// when the user types again, and a refusal ends it. While set, the same
+  /// value is not sent twice (Enter, then the blur it causes). Once cleared,
+  /// the same value is a new edit and is sent even if it equals the last one.
   Object? _sent;
-  bool _hasSent = false;
+  bool _awaitingEcho = false;
 
   @override
   ConfigEnv get env => widget.env;
@@ -78,11 +89,15 @@ class _TextFieldEditorState extends State<TextFieldEditor>
     super.didUpdateWidget(old);
     // A change made elsewhere shows up, but never over a box being typed in
     // or one whose own save is still going.
-    if (old.stored == widget.stored || _focus.hasFocus || commit.busy) return;
+    if (old.stored == widget.stored) return;
+    _storedMoved = true;
+    _awaitingEcho = false;
+    if (_focus.hasFocus || commit.busy) return;
     // A box holding an edit the store refused keeps the user's text, even
     // when something else changed the stored value meanwhile.
     if (commit.refusal != null) return;
     final text = _shown(widget.stored);
+    _storedMoved = false;
     // What this box saved comes back the same: nothing to change then.
     if (_controller.text == text) {
       _synced = text;
@@ -101,6 +116,8 @@ class _TextFieldEditorState extends State<TextFieldEditor>
     // typing must not swap it for the stored value.
     if (commit.busy || commit.refusal != null) return false;
     if (_controller.text != _synced) return false;
+    if (!_storedMoved) return false;
+    _storedMoved = false;
     final text = _shown(widget.stored);
     if (text == _controller.text) return false;
     setState(() {
@@ -164,14 +181,21 @@ class _TextFieldEditorState extends State<TextFieldEditor>
       _issue = decision.issue;
     });
     // A text that must not be sent stays unsynced, so leaving again checks it.
-    if (!(decision.issue?.blocks ?? false)) _synced = _controller.text;
+    if (!(decision.issue?.blocks ?? false)) {
+      _synced = _controller.text;
+      _storedMoved = false; // the user's edit wins over what moved meanwhile
+    }
     _send(decision);
   }
 
   void _send(({ConfigIssue? issue, bool send, Object? value}) decision) {
     if ((decision.issue?.blocks ?? false) || !decision.send) return;
-    if (_hasSent && _sent == decision.value && commit.busy) return;
-    _hasSent = true;
+    // Enter, then the blur it causes, leave twice: the second must not send
+    // again what is still on its way (no echo yet). A refused value is retried.
+    if (_awaitingEcho && _sent == decision.value && commit.refusal == null) {
+      return;
+    }
+    _awaitingEcho = true;
     _sent = decision.value;
     commit.submit(decision.value);
   }
@@ -184,6 +208,7 @@ class _TextFieldEditorState extends State<TextFieldEditor>
 
   void _onChanged(String _) {
     commit.dismiss();
+    _awaitingEcho = false; // a new edit: the last send is no longer "this"
     if (!_touched) return;
     setState(() => _issue = _decide().issue);
   }
