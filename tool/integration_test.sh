@@ -24,11 +24,13 @@
 #          loop keeps granting READ_MEDIA_AUDIO / READ_MEDIA_IMAGES with
 #          `pm grant` until the test ends (no system dialog). The Nix SDK
 #          package is copied through a temporary pubspec_overrides.yaml (the
-#          script refuses to start if one exists).
+#          script refuses to start if one exists; tool/android_writable_sdk.sh).
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
+# shellcheck source=tool/android_writable_sdk.sh
+. "$ROOT/tool/android_writable_sdk.sh"
 
 CLEAR=0
 KEEP=0
@@ -81,10 +83,6 @@ case "$PLATFORM" in
     SERIAL=${ANDROID_SERIAL:-12f5c1bf0505}
     ADB=(adb -s "$SERIAL")
     "${ADB[@]}" get-state >/dev/null
-    if [ -e pubspec_overrides.yaml ]; then
-      echo "integration_test: pubspec_overrides.yaml already exists; remove it first" >&2
-      exit 1
-    fi
     echo "integration_test: WARNING: the installed Kanaru app and its data on $SERIAL will be removed" >&2
 
     DIR=/sdcard/Music/kanaru-it
@@ -95,16 +93,12 @@ case "$PLATFORM" in
         "${ADB[@]}" shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE \
           -d "file://$DIR" >/dev/null 2>&1 || true
     }
-    OVERRIDE_MADE=0
     granter=""
     cleanup() {
       rc=$?
       trap - EXIT
       [ -n "$granter" ] && kill "$granter" 2>/dev/null
-      if [ "$OVERRIDE_MADE" = 1 ]; then
-        command rm -f pubspec_overrides.yaml
-        flutter pub get >/dev/null || echo "integration_test: pub get failed while restoring" >&2
-      fi
+      kanaru_sdk_restore
       if [ "$KEEP" = 0 ]; then
         "${ADB[@]}" shell "rm -rf $DIR" >/dev/null 2>&1 || true
         scan_media
@@ -112,19 +106,12 @@ case "$PLATFORM" in
       exit $rc
     }
     trap cleanup EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
 
-    # The Nix Flutter SDK is read-only and Gradle 9 refuses a plugin project
-    # directory it cannot write ("Configuring project ':integration_test'
-    # without an existing directory is not allowed"). Use a writable copy of
-    # the SDK package through a gitignored pubspec_overrides.yaml, for this
-    # run only; cleanup removes it and restores the pub state.
-    SDK_PKG=$(dirname "$(dirname "$(readlink -f "$(command -v flutter)")")")/packages/integration_test
-    COPY=/tmp/kanaru-it-sdk/integration_test
-    command rm -rf /tmp/kanaru-it-sdk && mkdir -p /tmp/kanaru-it-sdk
-    cp -rL "$SDK_PKG" "$COPY" && chmod -R u+w "$COPY"
-    printf 'dependency_overrides:\n  integration_test:\n    path: %s\n' "$COPY" >pubspec_overrides.yaml
-    OVERRIDE_MADE=1
-    flutter pub get >/dev/null
+    # The Nix Flutter SDK is read-only and Gradle 9 refuses it: use a writable
+    # copy of the integration_test package for this run (tool/android_writable_sdk.sh).
+    kanaru_sdk_setup
 
     "${ADB[@]}" shell "rm -rf $DIR && mkdir -p $DIR"
     "${ADB[@]}" push "$FIXTURES/." "$DIR/" >/dev/null

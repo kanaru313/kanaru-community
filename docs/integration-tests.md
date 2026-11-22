@@ -33,11 +33,29 @@ Debug mode is fine for these runs. `tool/integration_test.sh [--clear] [--keep-f
   rescans (`--keep-fixtures` leaves it). `--clear` runs `pm clear` first when
   the app is installed (for the schema guard). The Nix SDK package is
   read-only and Gradle 9 refuses it, so the script builds from a writable copy
-  through a temporary, gitignored `pubspec_overrides.yaml`; it refuses to start
-  if one already exists and removes it on exit. MIUI may refuse the install
+  through a temporary, gitignored `pubspec_overrides.yaml` (helper
+  `tool/android_writable_sdk.sh`, see "Building the APK" below); it refuses to
+  start if one already exists and removes it on exit. MIUI may refuse the install
   (`INSTALL_FAILED_USER_RESTRICTED`) until "Install via USB" is enabled.
 - **linux:** also waits up to 30 s for a previous `kanaru` process and fails
   naming its pid; it never kills one.
+
+## Building the APK
+
+`integration_test` is a dev dependency taken from the Flutter SDK. With the
+read-only Nix SDK, Gradle 9 fails at configuration for every `flutter build
+apk` ("Configuring project ':integration_test' without an existing directory is
+not allowed"). Build APKs with `tool/build_apk.sh [--release|--profile|--debug]
+[flutter args]` (default release): it copies the SDK package to
+`${TMPDIR:-/tmp}/kanaru-sdk-<uid>/<checkout hash>/`, writes a temporary
+`pubspec_overrides.yaml`, builds, then removes the override, runs `pub get` and
+puts `pubspec.lock` back, so the checkout stays clean. On a writable SDK it
+changes nothing. CI is unaffected (its SDK is writable; it does not use the
+script).
+
+```bash
+/home/hieunm/dev/apps/kanaru/.claude/scripts/main-build.sh <branch> tool/build_apk.sh --release
+```
 
 ## What the harness does
 
