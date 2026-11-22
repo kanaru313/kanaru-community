@@ -37,7 +37,7 @@ import 'support/harness.dart';
 
 /// "Lời cho bài này" (the lyrics source modal), the source button, the intro
 /// gap and the `L` key on the real app, Linux. One launch: the window starts
-/// narrow (mobile shell: bottom sheet) and is widened at the end (desktop
+/// narrow, under 600 (mobile shell: bottom sheet) and is widened at the end (desktop
 /// shell: dialog). Asserts state (semantics, providers, widget types), never
 /// pixels; the screenshots (app window only) are for comparing with
 /// `mockups/screens/07-lyrics.md` by eye.
@@ -51,7 +51,7 @@ void main() {
     tester,
   ) async {
     tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(800, 900);
+    tester.view.physicalSize = const Size(500, 900);
     addTearDown(tester.view.reset);
     final semantics = tester.ensureSemantics();
 
@@ -203,7 +203,7 @@ void main() {
       expect(modal, findsOneWidget);
     }
 
-    // ================= mobile shell: 800 dp wide =================
+    // ================= mobile shell: 500 dp wide (a sheet below KBreakpoints.compactSheet, 600) =================
     final syltId = TrackId(ids['IT Sylt Tag']!);
     final usltId = TrackId(ids['IT Uslt Tag']!);
     final noneId = (await idByPath('none.mp3'))!;
