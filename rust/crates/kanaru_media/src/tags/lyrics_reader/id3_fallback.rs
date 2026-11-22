@@ -13,9 +13,8 @@
 //!
 //! symphonia logs a warning for every frame it skips and keeps reading, so a
 //! hostile tag of millions of empty frames would flood the log. The copy
-//! handed to it is therefore cut first (see `id3_bound`): at the first
-//! empty frame or padding, after `MAX_ID3_FALLBACK_FRAMES` frames, or where a
-//! frame header does not fit.
+//! handed to it is therefore cut first (see `id3_bound`): at padding, after
+//! `MAX_ID3_FALLBACK_FRAMES` frames, or where a frame header does not fit.
 
 use std::fs::File;
 use std::io::{BufReader, Cursor, Read, Seek};

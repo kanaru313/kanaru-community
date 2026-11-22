@@ -77,8 +77,8 @@ for each frame it skips and a hostile tag can hold millions of them:
 - the declared size is lowered to the bytes held (a hostile header, or a file
   cut short), so no size check inside the parser trusts the header;
 - a tag-level unsynchronisation (ID3v2.3 and older) is undone in the copy;
-- the frames are walked by their on-disk sizes, and the tag is cut before the
-  first empty frame or padding, after `MAX_ID3_FALLBACK_FRAMES` (1024) frames,
+- the frames are walked by their on-disk sizes, and the tag is cut before
+  padding, after `MAX_ID3_FALLBACK_FRAMES` (1024) frames (empty frames count),
   or before a frame header that does not fit. Lyrics frames after that point
   are not recovered.
 

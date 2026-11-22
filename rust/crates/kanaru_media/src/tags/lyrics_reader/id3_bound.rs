@@ -3,8 +3,8 @@
 //! limit. A pure function of the bytes: no I/O, no symphonia.
 //!
 //! Frames are walked by their on-disk sizes: after the last of at most
-//! [`MAX_ID3_FALLBACK_FRAMES`] frames, before the first empty frame, padding
-//! or frame header that does not fit.
+//! [`MAX_ID3_FALLBACK_FRAMES`] frames (empty frames count), before padding or
+//! a frame header that does not fit.
 
 /// Most frames the fallback looks at. Lyrics frames sit near the start of a
 /// tag; the cap keeps a tag of millions of tiny frames cheap.
@@ -70,7 +70,12 @@ fn undo_unsynchronisation(body: &[u8]) -> Vec<u8> {
 
 /// Where the part of `body` worth parsing ends: after the last of at most
 /// [`MAX_ID3_FALLBACK_FRAMES`] frames, stopping before the first frame that
-/// is empty, starts with a zero byte (padding) or does not fit in `body`.
+/// starts with a zero byte (padding) or does not fit in `body`. An empty
+/// frame (non-zero id, size 0) is skipped by the parsers; it counts toward the
+/// cap and the walk goes on.
+///
+/// Sizes come from the tag, so every addition is checked (a 32-bit `usize`
+/// overflows on a hostile 4 GiB size).
 /// Frames are walked by their sizes on disk (per-frame unsynchronisation of
 /// ID3v2.4 keeps the on-disk size). An unknown version is left whole:
 /// symphonia refuses it at once.
@@ -87,14 +92,14 @@ fn walk_end(major: u8, flags: u8, body: &[u8]) -> usize {
             return 0;
         };
         let size = if major == 3 {
-            4 + be_size(field)
+            be_size(field).checked_add(4)
         } else {
-            syncsafe_size(field)
+            Some(syncsafe_size(field))
         };
-        if size > body.len() {
-            return 0;
+        match size {
+            Some(size) if size <= body.len() => pos = size,
+            _ => return 0,
         }
-        pos = size;
     }
     let mut end = pos;
     for _ in 0..MAX_ID3_FALLBACK_FRAMES {
@@ -109,12 +114,13 @@ fn walk_end(major: u8, flags: u8, body: &[u8]) -> usize {
             3 => be_size(&header[4..8]),
             _ => syncsafe_size(&header[4..8]),
         };
-        let next = pos.saturating_add(header_len).saturating_add(size);
-        if size == 0 || next > body.len() {
-            break;
+        let next = pos
+            .checked_add(header_len)
+            .and_then(|n| n.checked_add(size));
+        match next {
+            Some(next) if next <= body.len() => (pos, end) = (next, next),
+            _ => break,
         }
-        pos = next;
-        end = next;
     }
     end
 }
@@ -197,15 +203,50 @@ mod tests {
     }
 
     #[test]
-    fn the_walk_stops_before_the_first_empty_frame() {
+    fn an_empty_frame_is_counted_and_the_walk_goes_on() {
         for major in [2u8, 3, 4] {
             let id = if major == 2 { "TT2" } else { "TIT2" };
-            let first = frame(major, id, 2, 2);
-            let mut body = first.clone();
+            let mut body = frame(major, id, 2, 2);
             body.extend(frame(major, id, 0, 0));
             body.extend(frame(major, id, 2, 2));
-            assert_eq!(walk_end(major, 0, &body), first.len(), "v2.{major}");
+            assert_eq!(walk_end(major, 0, &body), body.len(), "v2.{major}");
         }
+    }
+
+    #[test]
+    fn a_flood_of_empty_frames_is_cut_at_the_frame_cap() {
+        let lyrics = frame(4, "USLT", 6, 6);
+        let bad_content = frame(4, "TXXX", 4, 4);
+        let empty = frame(4, "TIT2", 0, 0);
+        let mut body = lyrics.clone();
+        body.extend(&bad_content);
+        body.extend(empty.repeat(100_000));
+        let end = walk_end(4, 0, &body);
+        let frames_after = (end - lyrics.len() - bad_content.len()) / empty.len();
+        assert_eq!(frames_after, MAX_ID3_FALLBACK_FRAMES - 2);
+        assert!(end > lyrics.len());
+        // The same through the whole step, for tiny non-empty frames.
+        let tiny = frame(4, "TIT2", 1, 1);
+        let mut body = lyrics.clone();
+        body.extend(&bad_content);
+        body.extend(tiny.repeat(100_000));
+        let bounded = bound_tag(tag(4, 0, body.len(), &body));
+        let kept = declared_size(&bounded);
+        assert_eq!(
+            kept,
+            lyrics.len() + bad_content.len() + tiny.len() * (MAX_ID3_FALLBACK_FRAMES - 2)
+        );
+        assert_eq!(bounded.len(), HEADER_LEN + kept);
+    }
+
+    #[test]
+    fn a_hostile_size_does_not_overflow_the_walk() {
+        // A v2.3 extended header size of 0xffffffff, and a v2.3 frame size of
+        // the same: both are refused without adding past `usize::MAX`.
+        assert_eq!(walk_end(3, 0x40, &[0xff, 0xff, 0xff, 0xff, 0, 0]), 0);
+        let mut body = b"TIT2".to_vec();
+        body.extend_from_slice(&[0xff, 0xff, 0xff, 0xff, 0, 0, b'x']);
+        assert_eq!(walk_end(3, 0, &body), 0);
     }
 
     #[test]

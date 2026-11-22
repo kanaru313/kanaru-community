@@ -552,12 +552,14 @@ fn a_tag_level_unsynchronised_id3v2_3_tag_is_recovered() {
     assert_eq!(lyrics.text.as_deref(), Some("Kept \u{ff} lines"));
 }
 
-/// 16 MiB of frames after the lyrics and the frame lofty refuses: the read
-/// must stay quick and keep the lyrics.
+/// 16 MiB of frames after the lyrics and a frame with bad content (lofty
+/// refuses it, symphonia skips it and reads on, so it does parse the flood
+/// unless the tag was cut first): the lyrics are kept and the read stays
+/// quick. The cut itself is asserted in `id3_bound`'s unit tests.
 fn assert_flood_is_read_fast(flood: Vec<u8>) {
     let dir = TempDir::new();
     let mut body = uslt_frame("Before the flood");
-    body.extend(frame_that_ends_the_tag());
+    body.extend(frame_with_a_bad_encoding());
     body.extend(flood);
     let path = dir.write("flood.mp3", &broken_id3v2(&[body], None));
     assert!(lofty::read_from_path(&path).is_err());
