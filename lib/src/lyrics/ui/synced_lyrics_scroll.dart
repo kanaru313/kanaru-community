@@ -30,6 +30,11 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
   /// do not scroll.
   final ValueNotifier<bool> showBack = ValueNotifier(false);
 
+  /// Which way the current line lies from the anchor while the user has the
+  /// scroll (the back button's arrow); none otherwise. Notifies only on a
+  /// change, so a scroll does not rebuild anything unless the arrow flips.
+  final ValueNotifier<KLocateSide> locateSide = ValueNotifier(KLocateSide.none);
+
   /// Set while this view moves its own scroll position, so that move is not
   /// taken for the user's.
   bool scrollingItself = false;
@@ -49,6 +54,7 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
   void disposeScroll() {
     _autoReturn?.cancel();
     showBack.dispose();
+    locateSide.dispose();
     scroll.dispose();
   }
 
@@ -87,10 +93,30 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
     });
   }
 
+  /// Sets [locateSide] from where the current line would sit at the anchor
+  /// against the scroll position now; cheap, called on scroll and line change.
+  void updateDirection() {
+    if (!paused) {
+      locateSide.value = KLocateSide.none;
+      return;
+    }
+    if (!scroll.hasClients || lineKeys.isEmpty) return;
+    final object = lineKeys[lineIndex < 0 ? 0 : lineIndex].currentContext
+        ?.findRenderObject();
+    if (object == null || !object.attached) return;
+    final target = RenderAbstractViewport.of(object)
+        .getOffsetToReveal(object, lyricsAnchor)
+        .offset;
+    locateSide.value = target >= scroll.position.pixels
+        ? KLocateSide.below
+        : KLocateSide.above;
+  }
+
   /// The user took over: stop auto-scroll, show the pill, start the
   /// auto-return timer when the setting asks for one.
   void takeOver() {
     showBack.value = true;
+    updateDirection();
     _autoReturn?.cancel();
     final delay = autoReturnDelay;
     _autoReturn = delay == null
@@ -105,6 +131,7 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
   bool onScrollUpdate(ScrollUpdateNotification notification) {
     final byUser = notification.dragDetails != null || !scrollingItself;
     if (notification.depth == 0 && byUser) takeOver();
+    if (notification.depth == 0 && paused) updateDirection();
     return false;
   }
 
@@ -129,6 +156,7 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
     _autoReturn?.cancel();
     _autoReturn = null;
     showBack.value = false;
+    locateSide.value = KLocateSide.none;
     reveal(animate: true);
   }
 

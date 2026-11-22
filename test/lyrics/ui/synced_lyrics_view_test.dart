@@ -1,15 +1,17 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/widgets.dart' hide Element;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_display_prefs.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_line.dart';
 import 'package:kanaru/src/lyrics/ui/synced_lyrics_view.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'lyrics_ui_host.dart';
 
-const _back = 'Back to current line';
+const _label = 'Back to current line';
+final _back = find.byType(IconButton);
+final _arrow = find.descendant(of: _back, matching: find.byType(Icon));
 
 Widget _view(
   Lyrics lyrics, {
@@ -108,9 +110,9 @@ void main() {
 
   testWidgets('a drag stops auto-scroll and shows the pill', (tester) async {
     await open(tester, syncedLyrics(50));
-    expect(find.text(_back), findsNothing);
+    expect(_back, findsNothing);
     await _dragLyrics(tester);
-    expect(find.text(_back), findsOneWidget);
+    expect(_back, findsOneWidget);
     final before = _offset(tester);
     host.setLine(10);
     await settleScroll(tester);
@@ -125,7 +127,42 @@ void main() {
     );
     await tester.sendEventToBinding(pointer.scroll(const Offset(0, 120)));
     await tester.pump();
-    expect(find.text(_back), findsOneWidget);
+    expect(_back, findsOneWidget);
+  });
+
+  testWidgets('the button is icon only, labelled, at the bottom right', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await open(tester, syncedLyrics(50));
+    await _dragLyrics(tester);
+    expect(find.text(_label), findsNothing);
+    expect(find.byTooltip(_label), findsOneWidget);
+    await tester.pump(const Duration(seconds: 1));
+    final area = tester.getRect(find.byType(SyncedLyricsView));
+    final button = tester.getRect(find.byType(IconButton));
+    expect(button.size, const Size.square(48));
+    expect(area.right - button.right, closeTo(16, 0.5));
+    expect(area.bottom - button.bottom, closeTo(16, 0.5));
+    handle.dispose();
+  });
+
+  testWidgets('the arrow points to the current line and flips with scroll', (
+    tester,
+  ) async {
+    await open(tester, syncedLyrics(50));
+    IconData arrow() => tester.widgetList<Icon>(_arrow).last.icon!;
+    // Content dragged up: the current line is now above the anchor.
+    await _dragLyrics(tester);
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    expect(arrow(), KIcons.arrowUp);
+    // Dragged back down past where it was: the line is below.
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, 400));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    expect(arrow(), KIcons.arrowDown);
+    expect(tester.widgetList(_arrow), hasLength(1));
   });
 
   testWidgets('the pill brings the line back and goes away', (tester) async {
@@ -133,10 +170,10 @@ void main() {
     final anchored = _offset(tester);
     await _dragLyrics(tester);
     expect(_offset(tester), isNot(closeTo(anchored, 1)));
-    await tester.tap(find.text(_back));
+    await tester.tap(_back);
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(const Duration(seconds: 1));
-    expect(find.text(_back), findsNothing);
+    expect(_back, findsNothing);
     expect(_offset(tester), closeTo(anchored, 1));
   });
 
@@ -145,10 +182,10 @@ void main() {
     final anchored = _offset(tester);
     await _dragLyrics(tester);
     await tester.pump(const Duration(milliseconds: 2900));
-    expect(find.text(_back), findsOneWidget);
+    expect(_back, findsOneWidget);
     await tester.pump(const Duration(milliseconds: 200));
     await tester.pump(const Duration(seconds: 1));
-    expect(find.text(_back), findsNothing);
+    expect(_back, findsNothing);
     expect(_offset(tester), closeTo(anchored, 1));
   });
 
@@ -158,7 +195,7 @@ void main() {
     await open(tester, syncedLyrics(50));
     await _dragLyrics(tester);
     await tester.pump(const Duration(seconds: 30));
-    expect(find.text(_back), findsOneWidget);
+    expect(_back, findsOneWidget);
   });
 
   testWidgets('two line changes 100 ms apart are not the user', (tester) async {
@@ -170,7 +207,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(seconds: 1));
-    expect(find.text(_back), findsNothing);
+    expect(_back, findsNothing);
     expect(find.text('Line 6'), findsOneWidget);
   });
 

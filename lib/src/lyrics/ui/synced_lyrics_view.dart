@@ -5,11 +5,11 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../l10n/gen/app_localizations.dart';
 import '../../playback/state/playback_providers.dart';
 import '../domain/lyrics.dart';
 import '../domain/lyrics_display_prefs.dart';
 import '../state/playing_lyrics_providers.dart';
-import 'back_to_line_button.dart';
 import 'lyrics_line.dart';
 import 'synced_lyrics_scroll.dart';
 
@@ -19,8 +19,8 @@ final _log = Logger('lyrics_view');
 const double _edgeFade = 0.12;
 
 /// Synced lyrics that follow playback: the current line is highlighted and
-/// kept at [lyricsAnchor]; a scroll by hand stops that and shows the pill
-/// "Về dòng đang hát"; pressing a line seeks to it.
+/// kept at [lyricsAnchor]; a scroll by hand stops that and shows the round
+/// button "Về dòng đang hát"; pressing a line seeks to it.
 ///
 /// A position tick costs nothing here: [playingLyricsLineProvider] notifies
 /// only when the line changes, and that flips two per-line notifiers, so two
@@ -102,7 +102,11 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
   void _onLineChanged(int index) {
     if (index == lineIndex) return;
     _setIndex(index);
-    if (!paused) reveal(animate: true);
+    if (paused) {
+      updateDirection();
+    } else {
+      reveal(animate: true);
+    }
   }
 
   void _seek(int index) {
@@ -196,14 +200,14 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
             ),
           ),
           Positioned(
-            left: 0,
-            right: 0,
+            right: KSpace.x4,
             bottom: KSpace.x4,
-            child: Center(
-              child: ValueListenableBuilder<bool>(
-                valueListenable: showBack,
-                builder: (context, visible, _) =>
-                    BackToLineButton(visible: visible, onPressed: backToLine),
+            child: ValueListenableBuilder<KLocateSide>(
+              valueListenable: locateSide,
+              builder: (context, side, _) => KLocateButton(
+                side: side,
+                tooltip: AppLocalizations.of(context).lyricsBackToLine,
+                onPressed: backToLine,
               ),
             ),
           ),
