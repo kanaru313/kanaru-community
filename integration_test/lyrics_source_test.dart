@@ -385,7 +385,13 @@ void main() {
         findsWidgets,
       );
       expect(line(), 0);
-      expect(find.text('Gap first line'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(SyncedLyricsView),
+          matching: find.text('Gap first line'),
+        ),
+        findsOneWidget,
+      );
       await shot('mobile-08-screen-intro-gap');
       await back(
         () => find.byType(LyricsScreen).evaluate().isEmpty,
