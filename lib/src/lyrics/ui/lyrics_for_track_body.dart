@@ -47,13 +47,34 @@ class LyricsForTrackBody extends ConsumerWidget {
                   padding: EdgeInsets.symmetric(vertical: KSpace.x2),
                   child: Divider(height: 1),
                 ),
-                _SoonRow(icon: KIcons.online, title: l10n.lyricsFindOnline),
-                _SoonRow(
-                  icon: KIcons.ai,
-                  title: l10n.lyricsFromAudio,
-                  subtitle: l10n.lyricsFromAudioSub,
+                // KListRow has no plain variant yet and fills with
+                // surfaceContainerLow, which shows as a box on the dialog
+                // surface; these inert rows must read as plain rows.
+                Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: Theme.of(context).colorScheme
+                        .copyWith(surfaceContainerLow: Colors.transparent),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _SoonRow(
+                        icon: KIcons.online,
+                        title: l10n.lyricsFindOnline,
+                      ),
+                      _SoonRow(
+                        icon: KIcons.ai,
+                        title: l10n.lyricsFromAudio,
+                        subtitle: l10n.lyricsFromAudioSub,
+                      ),
+                      _SoonRow(
+                        icon: KIcons.fileExport,
+                        title: l10n.lyricsSaveLyrics,
+                      ),
+                    ],
+                  ),
                 ),
-                _SoonRow(icon: KIcons.fileExport, title: l10n.lyricsSaveLyrics),
                 const KGap(KSpace.x2),
               ],
             ),
