@@ -1,0 +1,131 @@
+{
+  "savedQueueExplain": "Khi bạn phát thứ khác, hàng đợi bị thay được giữ ở đây (tối đa 20, cũ nhất bị bỏ).",
+  "savedQueueEmpty": "Chưa có hàng đợi nào được lưu. Khi bạn phát thứ khác, hàng đợi bị thay sẽ được giữ ở đây.",
+  "savedQueueName": "{day} · {time}",
+  "@savedQueueName": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueExportName": "Hàng đợi {date}",
+  "@savedQueueExportName": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueMissing": "{count, plural, other{{count} bài không còn}}",
+  "@savedQueueMissing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savedQueueFromAlbum": "Từ album {name}",
+  "@savedQueueFromAlbum": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueFromArtist": "Từ nghệ sĩ {name}",
+  "@savedQueueFromArtist": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueFromGenre": "Từ thể loại {name}",
+  "@savedQueueFromGenre": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueFromLanguage": "Từ ngôn ngữ {name}",
+  "@savedQueueFromLanguage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueFromFolder": "Từ thư mục {name}",
+  "@savedQueueFromFolder": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueFromPlaylist": "Từ playlist {name}",
+  "@savedQueueFromPlaylist": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueFromFavorites": "Từ Yêu thích",
+  "savedQueueFromSongs": "Từ Bài hát",
+  "savedQueueFromSelection": "Từ các bài đã chọn",
+  "savedQueueFromList": "Từ {name}",
+  "@savedQueueFromList": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueNoSongs": "Hàng đợi này không còn bài nào.",
+  "savedQueuePlayRow": "Phát hàng đợi này",
+  "savedQueueBar": "{count, plural, other{{count} bài, theo thứ tự đã phát}}",
+  "@savedQueueBar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savedQueuePlaying": "Đang phát hàng đợi {name} ({count} bài). Hàng đợi cũ đã được lưu.",
+  "@savedQueuePlaying": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savedQueueNotFoundTitle": "Không tìm thấy hàng đợi",
+  "savedQueueNotFoundMessage": "Hàng đợi này đã bị xoá, hoặc bị bỏ khi có hơn 20 hàng đợi.",
+  "savedQueueMenuPlay": "Phát (thay hàng đợi hiện tại)",
+  "savedQueueMenuAppend": "Thêm vào cuối hàng đợi",
+  "savedQueueMenuSaveAsPlaylist": "Lưu thành playlist…",
+  "savedQueueMenuRemoveMissing": "Bỏ các bài không còn",
+  "savedQueueMenuDelete": "Xoá hàng đợi này",
+  "savedQueueDeleteTitle": "Xoá hàng đợi này?",
+  "savedQueueDeleteBody": "Các bài vẫn còn trong thư viện.",
+  "savedQueueDeleted": "Đã xoá hàng đợi",
+  "savedQueueDeleteFailed": "Không xoá được hàng đợi",
+  "savedQueueRemovedMissing": "{count, plural, other{Đã bỏ {count} bài}}",
+  "@savedQueueRemovedMissing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savedQueueRemoveFailed": "Không bỏ được các bài không còn"
+}

@@ -4180,6 +4180,155 @@ class AppLocalizationsEn extends AppLocalizations {
   String get historyMostPlayedFavoriteFailed => 'Couldn\'t add to Favorites';
 
   @override
+  String get savedQueueExplain =>
+      'When you play something else, the queue it replaces is kept here (up to 20, the oldest is dropped).';
+
+  @override
+  String get savedQueueEmpty =>
+      'No saved queues yet. When you play something else, the queue it replaces is kept here.';
+
+  @override
+  String savedQueueName(String day, String time) {
+    return '$day · $time';
+  }
+
+  @override
+  String savedQueueExportName(String date) {
+    return 'Queue $date';
+  }
+
+  @override
+  String savedQueueMissing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs gone',
+      one: '1 song gone',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String savedQueueFromAlbum(String name) {
+    return 'From album $name';
+  }
+
+  @override
+  String savedQueueFromArtist(String name) {
+    return 'From artist $name';
+  }
+
+  @override
+  String savedQueueFromGenre(String name) {
+    return 'From genre $name';
+  }
+
+  @override
+  String savedQueueFromLanguage(String name) {
+    return 'From language $name';
+  }
+
+  @override
+  String savedQueueFromFolder(String name) {
+    return 'From folder $name';
+  }
+
+  @override
+  String savedQueueFromPlaylist(String name) {
+    return 'From playlist $name';
+  }
+
+  @override
+  String get savedQueueFromFavorites => 'From Favorites';
+
+  @override
+  String get savedQueueFromSongs => 'From Songs';
+
+  @override
+  String get savedQueueFromSelection => 'From the selected songs';
+
+  @override
+  String savedQueueFromList(String name) {
+    return 'From $name';
+  }
+
+  @override
+  String get savedQueueNoSongs => 'This queue has no songs left.';
+
+  @override
+  String get savedQueuePlayRow => 'Play this queue';
+
+  @override
+  String savedQueueBar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs, in played order',
+      one: '1 song, in played order',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String savedQueuePlaying(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'Playing queue $name ($_temp0). The previous queue was saved.';
+  }
+
+  @override
+  String get savedQueueNotFoundTitle => 'Queue not found';
+
+  @override
+  String get savedQueueNotFoundMessage =>
+      'This queue was deleted, or dropped when there were more than 20.';
+
+  @override
+  String get savedQueueMenuPlay => 'Play (replace the current queue)';
+
+  @override
+  String get savedQueueMenuAppend => 'Add to the end of the queue';
+
+  @override
+  String get savedQueueMenuSaveAsPlaylist => 'Save as playlist…';
+
+  @override
+  String get savedQueueMenuRemoveMissing => 'Remove songs that are gone';
+
+  @override
+  String get savedQueueMenuDelete => 'Delete this queue';
+
+  @override
+  String get savedQueueDeleteTitle => 'Delete this queue?';
+
+  @override
+  String get savedQueueDeleteBody => 'The songs stay in your library.';
+
+  @override
+  String get savedQueueDeleted => 'Queue deleted';
+
+  @override
+  String get savedQueueDeleteFailed => 'Couldn\'t delete the queue';
+
+  @override
+  String savedQueueRemovedMissing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Removed $count songs',
+      one: 'Removed 1 song',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedQueueRemoveFailed => 'Couldn\'t remove the missing songs';
+
+  @override
   String get lyricsLabelTagSynced => 'Lyrics in tag · Synced';
 
   @override

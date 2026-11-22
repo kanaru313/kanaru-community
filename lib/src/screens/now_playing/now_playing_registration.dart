@@ -6,7 +6,6 @@ import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
-import '../../../l10n/gen/app_localizations.dart';
 import '../../extension/state/extension_registry.dart';
 import '../../extension/state/registry_entries.dart';
 import '../../platform/state/media_controls_provider.dart';
@@ -21,8 +20,7 @@ final _log = Logger('now_playing.registration');
 const mediaSessionStartTimeout = Duration(seconds: 3);
 
 /// Registers the playback module's seams: the exit hook that pauses, the
-/// flush hook that saves the session, the Android media session start and
-/// the dimmed "Queue" nav item (saved queues, not built yet).
+/// flush hook that saves the session and the Android media session start.
 void registerNowPlaying(ExtensionRegistry registry) {
   registry
     ..addRoute(
@@ -39,21 +37,7 @@ void registerNowPlaying(ExtensionRegistry registry) {
     )
     ..addBeforeExitHook(pausePlaybackOnExitHook)
     ..addFlushHook(playbackFlushHook)
-    ..addStartupHook(mediaSessionStartHook())
-    ..addNavItem(
-      NavItem(
-        id: 'queue',
-        path: '/queue',
-        icon: KIcons.queue,
-        selectedIcon: KIcons.queue,
-        label: (c) => AppLocalizations.of(c).playbackNavQueue,
-        order: 230,
-        mobileTab: false,
-        // Saved queues; not built yet. The live queue is the right panel
-        // (desktop) and the sheet from the mini player (mobile).
-        comingSoon: true,
-      ),
-    );
+    ..addStartupHook(mediaSessionStartHook());
 }
 
 /// Startup hook for the media session. It must run once per process (the

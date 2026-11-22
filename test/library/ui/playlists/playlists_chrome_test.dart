@@ -308,12 +308,19 @@ void main() {
       final history = find.bySemanticsLabel('History');
       final queue = find.bySemanticsLabel(RegExp('Queue'));
       expect(canTap(t, history.first), isTrue);
-      expect(canTap(t, queue.first), isFalse);
+      expect(canTap(t, queue.first), isTrue);
       expect(h.router.state.uri.path, '/playlists');
 
       await t.tap(find.text('History'));
       await settlePage(t);
       expect(h.router.state.uri.path, '/playlists/history');
+    });
+
+    pageTest('the Queue tile is live and opens the saved queues', (t) async {
+      final h = await pumpPlaylistsPage(t);
+      await t.tap(find.text('Queue'));
+      await settlePage(t);
+      expect(h.router.state.uri.path, '/playlists/queues');
     });
 
     pageTest('Favorites tile opens the Favorites page', (t) async {

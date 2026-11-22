@@ -7,6 +7,7 @@ import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/library_extension.dart';
 import 'package:kanaru/src/library/ui/playlist_common/playlist_labels.dart';
 import 'package:kanaru/src/library/ui/playlists/playlist_page.dart';
+import 'package:kanaru/src/library/ui/saved_queues/saved_queues_page.dart';
 import 'package:kanaru/src/shell/state/mobile_sidebar_state.dart';
 import 'package:kanaru/src/shell/ui/mobile_sidebar.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
@@ -31,6 +32,8 @@ void main() {
   test('locations match the registered paths', () {
     expect(LibraryLocations.playlists, '/playlists');
     expect(LibraryLocations.playlist('abc'), '/playlists/abc');
+    expect(LibraryLocations.savedQueues, '/playlists/queues');
+    expect(LibraryLocations.savedQueue('abc'), '/playlists/queues/abc');
   });
 
   group('nav', () {
@@ -56,6 +59,16 @@ void main() {
       expect(item('most_played').comingSoon, isFalse);
       expect(item('history').order, 240);
       expect(item('most_played').order, 250);
+    });
+
+    test('Queue is live, a sidebar child of Playlists after Favorites', () {
+      final queue = item('queue');
+      expect(queue.comingSoon, isFalse);
+      expect(queue.path, '/playlists/queues');
+      expect(queue.parentId, 'playlists');
+      expect(queue.order, 230);
+      expect(queue.order, greaterThan(item('favorites').order));
+      expect(queue.mobileTab, isFalse);
     });
   });
 
@@ -109,6 +122,27 @@ void main() {
     router.pop();
     await tester.pumpAndSettle();
     expect(_location(tester), '/playlists');
+    handle.dispose();
+  });
+
+  testWidgets('/playlists/queues is the saved queues, not a playlist uid', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await pumpKanaruApp(tester);
+    final router = GoRouter.of(tester.element(find.byType(Scaffold).first));
+    router.go(LibraryLocations.savedQueues);
+    await tester.pumpAndSettle();
+    expect(_location(tester), '/playlists/queues');
+    expect(find.byType(SavedQueuesPage), findsOneWidget);
+    expect(find.byType(PlaylistPage), findsNothing);
+    // The sidebar item is lit, the Playlists tab is not.
+    expect(
+      tester.getSemantics(inSidebar('Queue')),
+      isSemantics(isSelected: true, isButton: true, isEnabled: true),
+    );
+    // Let the pages' query cooldown run out before the test ends.
+    await tester.pump(const Duration(seconds: 2));
     handle.dispose();
   });
 
@@ -231,6 +265,22 @@ void main() {
       l10n.playlistFavoritesName,
     );
     expect(playlistDisplayName(l10n, summary('p1', 'Road trip')), 'Road trip');
+    // A saved queue is named by the day it was saved, never "Today".
+    final queue = PlaylistSummary(
+      uid: 'q',
+      name: 'Queue',
+      description: '',
+      isFavorites: false,
+      trackCount: 2,
+      durationMs: 0,
+      createdAt: 0,
+      updatedAt: 0,
+      autoCoverKeys: const [],
+      savedQueue: SavedQueueInfo(
+        savedAt: DateTime(2026, 11, 21, 21, 17).millisecondsSinceEpoch,
+      ),
+    );
+    expect(playlistDisplayName(l10n, queue), 'Queue 21/11/2026 21:17');
   });
 
   testWidgets('the import progress sliver draws nothing while no import runs', (

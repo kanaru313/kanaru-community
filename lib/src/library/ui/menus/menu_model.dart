@@ -55,6 +55,7 @@ enum MenuItemId {
   playlistExportM3u,
   playlistExportM3uRelative,
   playlistAskAi,
+  queueAppend,
 }
 
 /// A chip under a row: one of several targets.
