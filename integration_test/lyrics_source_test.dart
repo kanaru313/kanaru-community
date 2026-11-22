@@ -31,7 +31,7 @@ import 'package:kanaru/src/screens/now_playing/ui/mobile/lyrics_screen.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/mobile_now_playing.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/more_sheet.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
-import 'package:material_ui/material_ui.dart' show Dialog;
+import 'package:material_ui/material_ui.dart' show Dialog, Navigator;
 
 import 'support/harness.dart';
 
@@ -123,7 +123,7 @@ void main() {
     TrackLyrics lyricsOf(TrackId id) => container.read(trackLyricsProvider(id));
 
     AppLocalizations l10n() =>
-        AppLocalizations.of(tester.element(find.byType(LyricsSourceButton)));
+        AppLocalizations.of(tester.element(find.byType(Navigator).first));
 
     final modal = find.byType(LyricsForTrackBody);
 
