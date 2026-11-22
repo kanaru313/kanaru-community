@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/state/library_settings_focus.dart';
 import 'package:kanaru/src/library/ui/library_settings_links.dart';
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
-import 'package:kanaru/src/screens/settings/ui/library/settings_focus_pulse.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -36,7 +35,7 @@ double _scrolled(WidgetTester tester) => tester
     .pixels;
 
 bool _pulsing(WidgetTester tester) => tester
-    .state<SettingsFocusPulseState>(find.byType(SettingsFocusPulse))
+    .state<SetupSectionPulseState>(find.byType(SetupSectionPulse))
     .isPulsing;
 
 void main() {

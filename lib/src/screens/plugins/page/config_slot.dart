@@ -3,7 +3,6 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
-import '../../settings/ui/library/settings_focus_pulse.dart';
 import '../../settings/ui/soon_row.dart';
 
 /// Where the "Cài đặt của plugin" form sits on the page: between Chi tiết
@@ -22,7 +21,7 @@ class ConfigSlot extends StatefulWidget {
 }
 
 class ConfigSlotState extends State<ConfigSlot> {
-  final _pulse = GlobalKey<SettingsFocusPulseState>();
+  final _pulse = GlobalKey<SetupSectionPulseState>();
 
   /// Scrolls the slot into view and plays one pulse. [animate] false jumps.
   Future<void> reveal({required bool animate}) async {
@@ -41,7 +40,7 @@ class ConfigSlotState extends State<ConfigSlot> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return SettingsFocusPulse(
+    return SetupSectionPulse(
       key: _pulse,
       child:
           widget.child ??

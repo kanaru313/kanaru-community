@@ -4,6 +4,7 @@ import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
 import '../k_help_icon.dart';
+import 'setup_section_pulse.dart';
 
 /// A group of a setup page: a heading, an optional caption and a rounded
 /// tonal card holding [children] (rows). Rows are separated by space and
@@ -76,18 +77,32 @@ class SetupSection extends StatelessWidget {
         ],
         const KGap(KSpace.x2),
         if (card)
-          Material(
-            color: scheme.surfaceContainerLow,
-            shape: KShape.of(KRadius.lg),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: children,
+          _pulsing(
+            context,
+            Material(
+              color: scheme.surfaceContainerLow,
+              shape: KShape.of(KRadius.lg),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: children,
+              ),
             ),
           )
         else
           ...children,
       ],
+    );
+  }
+
+  /// Wraps the card in the pulse border when a [SetupSectionPulse] is above.
+  Widget _pulsing(BuildContext context, Widget cardWidget) {
+    final animation = SetupSectionPulse.maybeOf(context);
+    if (animation == null) return cardWidget;
+    return SetupCardPulse(
+      animation: animation,
+      radius: KRadius.lg,
+      child: cardWidget,
     );
   }
 

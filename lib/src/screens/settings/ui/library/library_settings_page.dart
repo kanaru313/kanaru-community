@@ -17,7 +17,6 @@ import '../settings_scaffold.dart';
 import 'library_overview_card.dart';
 import 'organise_block.dart';
 import 'scan_rules_block.dart';
-import 'settings_focus_pulse.dart';
 
 /// Settings › Library: the overview, the permissions (Android), the first-run
 /// blocks for folders, exclusions and tabs, then the scan rules, the
@@ -36,7 +35,7 @@ class LibrarySettingsPage extends ConsumerStatefulWidget {
 
 class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
   final _foldersKey = GlobalKey();
-  final _foldersPulse = GlobalKey<SettingsFocusPulseState>();
+  final _foldersPulse = GlobalKey<SetupSectionPulseState>();
   Timer? _settle;
 
   /// Captured while mounted: `dispose` cannot use the widget ref.
@@ -119,7 +118,7 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
           const PermissionsSection(mode: SetupMode.settings),
         KeyedSubtree(
           key: _foldersKey,
-          child: SettingsFocusPulse(
+          child: SetupSectionPulse(
             key: _foldersPulse,
             child: const MusicFoldersSection(mode: SetupMode.settings),
           ),
