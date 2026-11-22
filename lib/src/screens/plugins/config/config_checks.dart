@@ -227,3 +227,38 @@ String configNumberText(num value) {
       ? '${rounded.toInt()}'
       : '$rounded';
 }
+
+/// What to store for [value] of [field]: null (no override, the default
+/// applies) when it equals the default the form already shows, else [value].
+/// A toggle without a default reads as off; an emptied list, table or choice
+/// set is still stored (empty is a value the plugin's required check sees).
+/// With [anyOrder] lists match as sets (a multiple select's chips).
+Object? configOverride(
+  ConfigField field,
+  Object? value, {
+  bool anyOrder = false,
+}) {
+  final effective = field.defaultValue ?? (field is ToggleField ? false : null);
+  return _sameValue(value, effective, anyOrder) ? null : value;
+}
+
+bool _sameValue(Object? a, Object? b, bool anyOrder) {
+  if (a is List && b is List) {
+    if (a.length != b.length) return false;
+    if (anyOrder) return a.toSet().containsAll(b);
+    for (var i = 0; i < a.length; i++) {
+      if (!_sameValue(a[i], b[i], false)) return false;
+    }
+    return true;
+  }
+  if (a is Map && b is Map) {
+    if (a.length != b.length) return false;
+    for (final e in a.entries) {
+      if (!b.containsKey(e.key) || !_sameValue(e.value, b[e.key], false)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return a == b || (a != null && b != null && '$a' == '$b');
+}

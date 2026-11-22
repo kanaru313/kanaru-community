@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show ValueListenable;
+import 'package:flutter/foundation.dart'
+    show ErrorDescription, FlutterError, FlutterErrorDetails, ValueListenable;
 import 'package:material_ui/material_ui.dart';
 
 import '../icons/k_icons.dart';
@@ -10,7 +11,6 @@ import '../tokens/k_space.dart';
 import 'anchored_panel_layout.dart';
 import 'k_anchored_panel.dart';
 import 'k_gap.dart';
-import 'k_icon_button.dart';
 import 'k_sheet.dart';
 import 'picker_footer.dart';
 import 'k_row_edges.dart';
@@ -128,7 +128,10 @@ enum SelectionPickerPresentation {
 /// list and its choice).
 /// [footerAction] is a button under the options (not with [confirmLabel]).
 /// The error line under the options shows what a removal or the action
-/// reported. Resolves to the chosen value, or null when dismissed.
+/// reported. A throw from an option's `onRemove` or the footer action never
+/// escapes: it is reported through [FlutterError.reportError] and the line
+/// shows [errorText] (null: no line), the picker stays usable. Resolves to the
+/// chosen value, or null when dismissed.
 Future<T?> showSelectionPicker<T>(
   BuildContext context, {
   required List<SelectionOption<T>> options,
@@ -138,6 +141,7 @@ Future<T?> showSelectionPicker<T>(
   Future<bool> Function(T value)? confirm,
   ValueListenable<SelectionPickerState<T>>? live,
   SelectionPickerAction? footerAction,
+  String? errorText,
   GlobalKey? anchor,
   String? confirmLabel,
   String? cancelLabel,
@@ -160,6 +164,7 @@ Future<T?> showSelectionPicker<T>(
     confirm: confirm,
     live: live,
     footerAction: footerAction,
+    errorText: errorText,
     confirmLabel: confirmLabel,
     cancelLabel: cancelLabel,
     compact: compact,
@@ -217,6 +222,7 @@ class _PickerBody<T> extends StatefulWidget {
     required this.confirm,
     required this.live,
     required this.footerAction,
+    required this.errorText,
     required this.confirmLabel,
     required this.cancelLabel,
     required this.compact,
@@ -229,6 +235,9 @@ class _PickerBody<T> extends StatefulWidget {
   final Future<bool> Function(T value)? confirm;
   final ValueListenable<SelectionPickerState<T>>? live;
   final SelectionPickerAction? footerAction;
+
+  /// The line shown when a removal or the footer action throws.
+  final String? errorText;
   final String? confirmLabel;
   final String? cancelLabel;
 
@@ -293,15 +302,26 @@ class _PickerBodyState<T> extends State<_PickerBody<T>> {
     String? error;
     try {
       error = await o.onRemove!();
-    } finally {
-      if (mounted) {
-        setState(() {
-          _busy = false;
-          _error = error;
-        });
-      }
+    } catch (e, stack) {
+      _report(e, stack, 'removing a picker option');
+      error = widget.errorText;
     }
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _error = error;
+    });
   }
+
+  void _report(Object error, StackTrace stack, String doing) =>
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'kanaru_ui',
+          context: ErrorDescription(doing),
+        ),
+      );
 
   Future<void> _runAction() async {
     final action = widget.footerAction!;
@@ -313,9 +333,15 @@ class _PickerBodyState<T> extends State<_PickerBody<T>> {
     SelectionActionResult result;
     try {
       result = await action.onPressed(context);
-    } catch (_) {
-      if (mounted) setState(() => _busy = false);
-      rethrow;
+    } catch (e, stack) {
+      _report(e, stack, 'running the picker footer action');
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = widget.errorText;
+        });
+      }
+      return;
     }
     if (!mounted) return;
     setState(() {
@@ -330,12 +356,22 @@ class _PickerBodyState<T> extends State<_PickerBody<T>> {
     final confirm = widget.confirm;
     if (confirm != null) {
       setState(() => _busy = true);
+      setState(() => _error = null);
       bool ok;
       try {
         ok = await confirm(value);
-      } finally {
-        if (mounted) setState(() => _busy = false);
+      } catch (e, stack) {
+        // A throwing confirm keeps the picker open with the error line.
+        _report(e, stack, 'confirming a picker choice');
+        if (mounted) {
+          setState(() {
+            _busy = false;
+            _error = widget.errorText;
+          });
+        }
+        return;
       }
+      if (mounted) setState(() => _busy = false);
       if (!ok || !mounted) return;
     }
     if (mounted) Navigator.of(context).pop(value);
@@ -424,31 +460,25 @@ class _PickerBodyState<T> extends State<_PickerBody<T>> {
       : _textRow(o);
 
   Widget _textRow(SelectionOption<T> o) {
-    final row = _selectionRow(o);
-    if (o.onRemove == null) return row;
-    return Row(
-      children: [
-        Expanded(child: row),
-        KIconButton(
-          icon: KIcons.close,
-          tooltip: o.removeTooltip!,
-          onPressed: _busy ? null : () => _remove(o),
-        ),
-      ],
+    return SelectionRow(
+      dense: widget.compact,
+      trailingAction: o.onRemove == null
+          ? null
+          : SelectionRowAction(
+              icon: KIcons.close,
+              tooltip: o.removeTooltip!,
+              onPressed: _busy ? null : () => _remove(o),
+            ),
+      title: o.title,
+      subtitle: o.subtitle,
+      leading: o.leading,
+      enabled: o.enabled && !_busy,
+      selected: o.value == (widget.footer ? _pending : _selected),
+      onTap: widget.footer
+          ? () => setState(() => _pending = o.value)
+          : () => _pick(o.value),
     );
   }
-
-  Widget _selectionRow(SelectionOption<T> o) => SelectionRow(
-    dense: widget.compact,
-    title: o.title,
-    subtitle: o.subtitle,
-    leading: o.leading,
-    enabled: o.enabled && !_busy,
-    selected: o.value == (widget.footer ? _pending : _selected),
-    onTap: widget.footer
-        ? () => setState(() => _pending = o.value)
-        : () => _pick(o.value),
-  );
 
   Widget _errorLine(BuildContext context, String message) {
     final theme = Theme.of(context);

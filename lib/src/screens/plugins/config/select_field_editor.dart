@@ -51,6 +51,22 @@ class _SelectFieldEditorState extends State<SelectFieldEditor>
   String get fieldKey => widget.field.key;
 
   @override
+  void didUpdateWidget(SelectFieldEditor old) {
+    super.didUpdateWidget(old);
+    // Choices that appear from anywhere (an outside change too) end "none
+    // left".
+    if (widget.field.options.isNotEmpty) _noneLeft = false;
+  }
+
+  /// Waits for the saves of this field (a pick may still be queued), so a
+  /// choice add or remove is ordered after them.
+  Future<void> _afterSaves() async {
+    while (commit.busy) {
+      await commit.idle;
+    }
+  }
+
+  @override
   void dispose() {
     detachCommit();
     super.dispose();
@@ -105,6 +121,7 @@ class _SelectFieldEditorState extends State<SelectFieldEditor>
 
   /// Removes one of the user's choices. Returns the refusal, if any.
   Future<ConfigWrite> _remove(String value) async {
+    await _afterSaves();
     final last = widget.field.options.length == 1;
     final result = await widget.env.ops.removeChoice(
       widget.env.installId,
@@ -121,7 +138,10 @@ class _SelectFieldEditorState extends State<SelectFieldEditor>
   /// added (and selected), false when the user gave up, the refusal else.
   Future<ConfigWrite?> _add(BuildContext pickerContext) async {
     final entry = await showAddChoiceDialog(pickerContext);
-    if (entry == null || !mounted) return null;
+    if (entry == null) return null;
+    // The confirmed add is sent even if this row went away meanwhile; only
+    // the UI below is guarded.
+    await _afterSaves();
     final result = await widget.env.ops.addChoice(
       widget.env.installId,
       widget.field.key,

@@ -208,6 +208,30 @@ void main() {
         );
       });
 
+      testWidgets('a refused edit stays in the box after focus and blur', (
+        tester,
+      ) async {
+        const line = 'This setting doesn’t accept that value.';
+        final h = ConfigHarness([_host, _token]);
+        h.refusals['host'] = ConfigWrite.invalidValue;
+        await pumpConfigForm(tester, h, size: size);
+        await typeAndLeave(tester, 'Host', 'x.example.com');
+        expect(find.text(line), findsOneWidget);
+        // Focus the box again and leave it without typing (leaving retries
+        // the save; the store refuses again).
+        h.refusals['host'] = ConfigWrite.invalidValue;
+        await tester.tap(boxOf('Host'));
+        await tester.pump();
+        await leaveBox(tester);
+        expect(textIn(tester, 'Host'), 'x.example.com');
+        expect(find.text(line), findsOneWidget);
+        // Something else changing the stored value does not replace the
+        // refused text either: the user's edit stays until they change it.
+        h.setOutside('host', 'elsewhere.example.com');
+        await tester.pumpAndSettle();
+        expect(textIn(tester, 'Host'), 'x.example.com');
+      });
+
       for (final (result, text) in [
         (ConfigWrite.tooLarge, 'The plugin’s settings are too large to save.'),
         (
@@ -240,6 +264,48 @@ void main() {
           expect(textIn(tester, 'Token *'), 'typing');
         },
       );
+
+      testWidgets('typing the default back clears the stored override', (
+        tester,
+      ) async {
+        final h = ConfigHarness([_host], values: {'host': 'x.example.com'});
+        await pumpConfigForm(tester, h, size: size);
+        await typeAndLeave(tester, 'Host', 'api.example.com');
+        expect(h.calls, ['set:host=null']);
+        expect(h.values, isEmpty);
+      });
+
+      testWidgets(
+        'an outside change that came while the box was focused wins when '
+        'nothing was typed',
+        (tester) async {
+          final h = ConfigHarness([_host]);
+          await pumpConfigForm(tester, h, size: size);
+          await tester.tap(boxOf('Host'));
+          await tester.pump();
+          h.setOutside('host', 'elsewhere.example.com');
+          await tester.pumpAndSettle();
+          await leaveBox(tester);
+          expect(textIn(tester, 'Host'), 'elsewhere.example.com');
+          expect(h.calls, isEmpty);
+          expect(h.values['host'], 'elsewhere.example.com');
+        },
+      );
+
+      testWidgets('an edit typed while an outside change waits still wins', (
+        tester,
+      ) async {
+        final h = ConfigHarness([_host]);
+        await pumpConfigForm(tester, h, size: size);
+        await tester.tap(boxOf('Host'));
+        await tester.pump();
+        h.setOutside('host', 'elsewhere.example.com');
+        await tester.pumpAndSettle();
+        await tester.enterText(boxOf('Host'), 'mine.example.com');
+        await leaveBox(tester);
+        expect(h.calls, ['set:host="mine.example.com"']);
+        expect(h.values['host'], 'mine.example.com');
+      });
 
       testWidgets(
         'leaving the page with the box still focused saves the last edit',

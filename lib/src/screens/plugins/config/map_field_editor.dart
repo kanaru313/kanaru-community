@@ -49,7 +49,7 @@ class _MapFieldEditorState extends State<MapFieldEditor>
     commit.dismiss();
     final check = checkMap(widget.field, rows);
     setState(() => _check = check);
-    if (check.canSend) commit.submit(check.value);
+    if (check.canSend) commit.submit(configOverride(widget.field, check.value));
   }
 
   @override

@@ -66,12 +66,16 @@ class ConfigHarness extends ChangeNotifier implements ConfigOps {
   /// real one (a Retry invalidates it). The test overrides that provider.
   bool followsStore = false;
 
+  /// Same for the installed plugins stream the real form also reads.
+  bool followsRows = false;
+
   ConfigFormData get data =>
       ConfigFormData(fields: fields, values: values, ownChoices: own);
 
   List<Override> get overrides => [
     configFormProvider.overrideWith((ref, id) {
       if (followsStore) ref.watch(pluginConfigProvider(id));
+      if (followsRows) ref.watch(installedPluginsProvider);
       void changed() => ref.invalidateSelf();
       addListener(changed);
       ref.onDispose(() => removeListener(changed));

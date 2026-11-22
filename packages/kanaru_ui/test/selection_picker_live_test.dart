@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -12,6 +13,10 @@ class _Case {
   String? removeError;
   SelectionActionResult added = const SelectionActionResult.stay();
   var adds = 0;
+  bool removeThrows = false;
+  bool addThrows = false;
+  bool confirmThrows = false;
+  int confirms = 0;
   Future<String?>? result;
   int? chosen;
 
@@ -30,6 +35,7 @@ class _Case {
           onRemove: n == 'a'
               ? null
               : () async {
+                  if (removeThrows) throw StateError('boom');
                   if (removeError != null) return removeError;
                   names.value = [...names.value]..remove(n);
                   return null;
@@ -45,11 +51,18 @@ class _Case {
         options: live.value.options,
         selected: 'a',
         live: live,
+        confirm: (v) async {
+          confirms++;
+          if (confirmThrows) throw StateError('boom');
+          return true;
+        },
+        errorText: 'Something went wrong',
         title: const Text('Pick'),
         footerAction: SelectionPickerAction(
           label: 'Add model',
           onPressed: (_) async {
             adds++;
+            if (addThrows) throw StateError('boom');
             return added;
           },
         ),
@@ -94,6 +107,102 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Could not remove'), findsOneWidget);
         expect(find.text('b'), findsOneWidget);
+      });
+
+      testWidgets(
+        'a throwing removal is reported, shows the line, stays usable',
+        (tester) async {
+          final c = await open(tester, size);
+          c.removeThrows = true;
+          await tester.tap(byIconButton('Remove b'));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isA<StateError>());
+          expect(find.text('Something went wrong'), findsOneWidget);
+          expect(find.text('b'), findsOneWidget);
+          c.removeThrows = false;
+          await tester.tap(byIconButton('Remove b'));
+          await tester.pumpAndSettle();
+          expect(find.text('b'), findsNothing);
+          expect(find.text('Something went wrong'), findsNothing);
+        },
+      );
+
+      testWidgets('the ✕ is inside the row and never selects it', (
+        tester,
+      ) async {
+        final c = await open(tester, size);
+        final row = find.ancestor(
+          of: byIconButton('Remove b'),
+          matching: find.byType(SelectionRow),
+        );
+        expect(row, findsOneWidget);
+        await tester.tap(byIconButton('Remove b'));
+        await tester.pumpAndSettle();
+        expect(c.confirms, 0);
+        expect(find.text('Pick'), findsOneWidget);
+      });
+
+      testWidgets('Tab reaches the ✕ of a row', (tester) async {
+        await open(tester, size);
+        final handle = tester.ensureSemantics();
+        expect(
+          tester.getSemantics(byIconButton('Remove b')),
+          matchesSemantics(
+            label: 'Remove b',
+            isButton: true,
+            hasTapAction: true,
+            hasEnabledState: true,
+            isEnabled: true,
+            isFocusable: true,
+            hasFocusAction: true,
+          ),
+        );
+        var reached = false;
+        for (var i = 0; i < 12 && !reached; i++) {
+          await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+          await tester.pump();
+          reached =
+              FocusManager.instance.primaryFocus?.context
+                  ?.findAncestorWidgetOfExactType<KIconButton>()
+                  ?.tooltip ==
+              'Remove b';
+        }
+        expect(reached, isTrue);
+        handle.dispose();
+      });
+
+      testWidgets('a throwing confirm is reported, shows the line, stays', (
+        tester,
+      ) async {
+        final c = await open(tester, size);
+        c.confirmThrows = true;
+        await tester.tap(find.text('c'));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isA<StateError>());
+        expect(find.text('Something went wrong'), findsOneWidget);
+        expect(find.text('Pick'), findsOneWidget);
+        c.confirmThrows = false;
+        await tester.tap(find.text('c'));
+        await tester.pumpAndSettle();
+        expect(find.text('Pick'), findsNothing);
+        expect(await c.result, 'c');
+      });
+
+      testWidgets('a throwing footer action is reported and the picker stays', (
+        tester,
+      ) async {
+        final c = await open(tester, size);
+        c.addThrows = true;
+        await tester.tap(find.text('Add model'));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isA<StateError>());
+        expect(find.text('Something went wrong'), findsOneWidget);
+        expect(find.text('Pick'), findsOneWidget);
+        c.addThrows = false;
+        await tester.tap(find.text('Add model'));
+        await tester.pumpAndSettle();
+        expect(c.adds, 2);
+        expect(find.text('Something went wrong'), findsNothing);
       });
 
       testWidgets('choosing closes with the value', (tester) async {

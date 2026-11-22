@@ -75,6 +75,7 @@ Future<void> showCustomChoicePicker(
       options: live.value.options,
       selected: live.value.selected,
       live: live,
+      errorText: configRefusalText(l10n, ConfigWrite.failed),
       footerAction: SelectionPickerAction(
         label: l10n.pluginsCfgAddModel,
         onPressed: (pickerContext) async {

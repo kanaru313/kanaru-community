@@ -40,6 +40,11 @@ class _TextFieldEditorState extends State<TextFieldEditor>
   bool _touched = false;
   ConfigIssue? _issue;
 
+  /// The text the box was last synced to: what the store showed it, or what
+  /// it last sent. Text still equal to it is untouched, so an outside change
+  /// that arrived while the box was focused wins over it.
+  late String _synced;
+
   /// The last value handed to the store: the same one is not sent twice.
   Object? _sent;
   bool _hasSent = false;
@@ -53,6 +58,7 @@ class _TextFieldEditorState extends State<TextFieldEditor>
   @override
   void initState() {
     super.initState();
+    _synced = _controller.text;
     _focus.addListener(_onFocus);
   }
 
@@ -73,12 +79,37 @@ class _TextFieldEditorState extends State<TextFieldEditor>
     // A change made elsewhere shows up, but never over a box being typed in
     // or one whose own save is still going.
     if (old.stored == widget.stored || _focus.hasFocus || commit.busy) return;
+    // A box holding an edit the store refused keeps the user's text, even
+    // when something else changed the stored value meanwhile.
+    if (commit.refusal != null) return;
     final text = _shown(widget.stored);
     // What this box saved comes back the same: nothing to change then.
-    if (_controller.text == text) return;
+    if (_controller.text == text) {
+      _synced = text;
+      return;
+    }
     _controller.text = text;
+    _synced = text;
     _touched = false;
     _issue = null;
+  }
+
+  /// The box is untouched and the store holds something else (an outside
+  /// change that came while it was focused): show that. Returns whether it did.
+  bool _applyOutside() {
+    // A refused edit stays in the box: refocusing and leaving it without
+    // typing must not swap it for the stored value.
+    if (commit.busy || commit.refusal != null) return false;
+    if (_controller.text != _synced) return false;
+    final text = _shown(widget.stored);
+    if (text == _controller.text) return false;
+    setState(() {
+      _controller.text = text;
+      _synced = text;
+      _touched = false;
+      _issue = null;
+    });
+    return true;
   }
 
   @override
@@ -116,12 +147,14 @@ class _TextFieldEditorState extends State<TextFieldEditor>
       );
     }
     if (!check.ok) return (issue: check.issue, send: false, value: null);
-    final effective = widget.stored ?? field.defaultValue;
-    return (issue: null, send: check.value != effective, value: check.value);
+    // The default is no override: a value equal to it clears the stored one.
+    final wanted = configOverride(field, check.value);
+    return (issue: null, send: wanted != widget.stored, value: wanted);
   }
 
   /// The user left the box, pressed Enter or stepped a number.
   void _commit() {
+    if (_applyOutside()) return;
     final decision = _decide();
     if (_controller.text.trim().isEmpty && widget.field.defaultValue != null) {
       _controller.text = _shown(null);
@@ -130,6 +163,8 @@ class _TextFieldEditorState extends State<TextFieldEditor>
       _touched = true;
       _issue = decision.issue;
     });
+    // A text that must not be sent stays unsynced, so leaving again checks it.
+    if (!(decision.issue?.blocks ?? false)) _synced = _controller.text;
     _send(decision);
   }
 
@@ -143,7 +178,7 @@ class _TextFieldEditorState extends State<TextFieldEditor>
 
   /// The page closes: send the last edit when it is valid, without drawing.
   void _leave() {
-    if (!_touched && _controller.text == _shown(widget.stored)) return;
+    if (_controller.text == _synced) return;
     _send(_decide());
   }
 

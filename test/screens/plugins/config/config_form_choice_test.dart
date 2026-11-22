@@ -87,6 +87,39 @@ void main() {
         );
       });
 
+      testWidgets('a toggle set back to its default stores no override', (
+        tester,
+      ) async {
+        final h = ConfigHarness([_stream]);
+        await pumpConfigForm(tester, h, size: size);
+        await tester.tap(find.text('Stream replies'));
+        await tester.pumpAndSettle();
+        expect(h.values['stream'], false);
+        await tester.tap(find.text('Stream replies'));
+        await tester.pumpAndSettle();
+        expect(h.calls, ['set:stream=false', 'set:stream=null']);
+        expect(h.values, isEmpty);
+        expect(
+          tester.getSemantics(find.byType(KSwitch)),
+          isSemantics(hasToggledState: true, isToggled: true),
+        );
+      });
+
+      testWidgets('a toggle without default turned off again stores nothing', (
+        tester,
+      ) async {
+        final h = ConfigHarness([
+          const ToggleField(key: 'loud', title: 'Loud'),
+        ]);
+        await pumpConfigForm(tester, h, size: size);
+        await tester.tap(find.text('Loud'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Loud'));
+        await tester.pumpAndSettle();
+        expect(h.calls, ['set:loud=true', 'set:loud=null']);
+        expect(h.values, isEmpty);
+      });
+
       testWidgets(
         'a refused toggle goes back to the stored value and says why',
         (tester) async {
@@ -331,6 +364,21 @@ void main() {
         await tester.pumpAndSettle();
         expect(h.calls, ['set:langs=["vi","en"]']);
         expect(_chipOn(tester, 'English'), isTrue);
+      });
+
+      testWidgets('chips: back to the default set stores no override', (
+        tester,
+      ) async {
+        final h = ConfigHarness([_langs]);
+        await pumpConfigForm(tester, h, size: size);
+        await tester.tap(find.text('English'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('English'));
+        await tester.pumpAndSettle();
+        expect(h.calls, ['set:langs=["vi","en"]', 'set:langs=null']);
+        expect(h.values, isEmpty);
+        expect(_chipOn(tester, 'Vietnamese'), isTrue);
+        expect(_chipOn(tester, 'English'), isFalse);
       });
 
       testWidgets(

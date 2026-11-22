@@ -37,7 +37,11 @@ class ConfigForm extends ConsumerWidget {
           SetupRowFrame(
             title: Text(l10n.pluginsCfgReadFailed),
             trailing: TextButton(
-              onPressed: () => ref.invalidate(pluginConfigProvider(installId)),
+              // The form reads the row and the stored config: either can fail.
+              onPressed: () {
+                ref.invalidate(installedPluginsProvider);
+                ref.invalidate(pluginConfigProvider(installId));
+              },
               child: Text(l10n.pluginsRetry),
             ),
           ),

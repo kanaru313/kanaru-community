@@ -2,11 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../support/finders.dart';
 import '../support/host.dart';
 
 /// The selected row's tint inside a real picker: full width with square
 /// corners in a mobile bottom sheet, rounded and inset in a desktop anchored
 /// panel.
+Future<String?> _noRemove() async => null;
+
 void main() {
   final anchor = GlobalKey();
 
@@ -18,7 +21,12 @@ void main() {
         onPressed: () => showSelectionPicker<int>(
           context,
           options: const [
-            SelectionOption<int>(value: 1, title: Text('One')),
+            SelectionOption<int>(
+              value: 1,
+              title: Text('One'),
+              removeTooltip: 'Remove one',
+              onRemove: _noRemove,
+            ),
             SelectionOption<int>(value: 2, title: Text('Two')),
           ],
           selected: 1,
@@ -73,4 +81,22 @@ void main() {
     expect(m.row.right - m.tint.right, greaterThanOrEqualTo(KSpace.x2));
     expect(m.radius.topLeft.x, greaterThan(0));
   });
+
+  for (final (name, size, presentation) in [
+    ('mobile', const Size(400, 800), SelectionPickerPresentation.auto),
+    ('desktop', const Size(1400, 900), SelectionPickerPresentation.anchored),
+  ]) {
+    testWidgets('$name: the tint of a removable row covers its ✕', (
+      tester,
+    ) async {
+      useWindow(tester, size);
+      await tester.pumpWidget(host(opener(presentation)));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      final m = measure(tester);
+      final x = tester.getRect(byIconButton('Remove one'));
+      expect(m.tint.right, greaterThanOrEqualTo(x.right));
+      expect(m.tint.left, lessThanOrEqualTo(x.left));
+    });
+  }
 }

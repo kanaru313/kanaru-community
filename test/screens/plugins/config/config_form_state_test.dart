@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/database/tables.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_config_values.dart';
 import 'package:kanaru/src/plugins/domain/config/config_field.dart';
 import 'package:kanaru/src/plugins/state/plugin_store_providers.dart';
@@ -91,6 +92,36 @@ void main() {
         await tester.tap(find.text('Retry'));
         await tester.pumpAndSettle();
         expect(builds, before + 1);
+        expect(find.text('Alpha'), findsOneWidget);
+      });
+
+      testWidgets('Retry also reads the installed plugins again', (
+        tester,
+      ) async {
+        var reads = 0;
+        final h = ConfigHarness(_mixed)
+          ..followsRows = true
+          ..answer = AsyncError('db', StackTrace.empty);
+        await pumpConfigForm(
+          tester,
+          h,
+          size: size,
+          extra: [
+            installedPluginsProvider.overrideWith(
+              (ref) => reads++ == 0
+                  ? Stream<List<PluginRow>>.error('db')
+                  : Stream.value(const <PluginRow>[]),
+            ),
+          ],
+        );
+        expect(
+          find.text('Couldn’t read the plugin’s settings'),
+          findsOneWidget,
+        );
+        h.answer = null;
+        await tester.tap(find.text('Retry'));
+        await tester.pumpAndSettle();
+        expect(reads, 2);
         expect(find.text('Alpha'), findsOneWidget);
       });
 

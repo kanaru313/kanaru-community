@@ -50,7 +50,7 @@ class _ListFieldEditorState extends State<ListFieldEditor>
     commit.dismiss();
     final check = checkList(widget.field, rows);
     setState(() => _check = check);
-    if (check.canSend) commit.submit(check.value);
+    if (check.canSend) commit.submit(configOverride(widget.field, check.value));
   }
 
   @override

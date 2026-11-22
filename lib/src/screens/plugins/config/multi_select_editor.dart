@@ -75,8 +75,11 @@ class _MultiSelectEditorState extends State<MultiSelectEditor>
       _chosen = next;
       _touched = true;
     });
-    final issue = checkChoices(widget.field, ordered.length);
-    if (issue == null || !issue.blocks) commit.submit(ordered);
+    final field = widget.field;
+    final issue = checkChoices(field, ordered.length);
+    if (issue == null || !issue.blocks) {
+      commit.submit(configOverride(field, ordered, anyOrder: true));
+    }
   }
 
   @override

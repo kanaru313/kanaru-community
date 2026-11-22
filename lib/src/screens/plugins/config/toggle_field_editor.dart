@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/domain/config/config_field.dart';
+import 'config_checks.dart';
 import 'config_env.dart';
 import 'config_texts.dart';
 
@@ -51,7 +52,8 @@ class _ToggleFieldEditorState extends State<ToggleFieldEditor>
   void _toggle(bool value) {
     commit.dismiss();
     setState(() => _on = value);
-    commit.submit(value);
+    // On the default there is no override to keep.
+    commit.submit(configOverride(widget.field, value));
   }
 
   @override

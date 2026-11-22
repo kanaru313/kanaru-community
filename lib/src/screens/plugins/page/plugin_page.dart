@@ -225,7 +225,8 @@ class _PluginPageState extends ConsumerState<PluginPage>
   }
 
   /// The form is dimmed only while the package is broken or this plugin is
-  /// being updated in place.
+  /// being updated in place. `reinstallFromFile` is a broken package too (a
+  /// file-installed plugin whose package folder is missing), so it locks.
   bool _formLocked(PluginPageData data) =>
       data.updating ||
       data.alerts.contains(PluginAlert.packageMissing) ||
