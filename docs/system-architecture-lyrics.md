@@ -192,7 +192,7 @@ Code: `lib/src/lyrics/` (`domain/`, `data/`, `state/`). Only `data/` imports
   shown synced lyrics, uses it only when its entry id matches, notifies only
   when the index changes), `lyricsChoiceCommandsProvider` (`setOff`, `clear`,
   `toggle`). Every family and both playing providers are `isAutoDispose: true` and every future / stream
-  provider has `retry: null`. Nothing in the UI watches them yet.
+  provider has `retry: null`. The views below are what watches them.
 - **Settings** (`state/lyrics_settings.dart`): `lyrics.font_scale`
   (small 0.85 / medium 1.0 / large 1.2), `lyrics.align` (start / center),
   `lyrics.auto_return` (off / 3 / 5 / 10 s), `lyrics.dim` (light 0.36 /
@@ -200,3 +200,53 @@ Code: `lib/src/lyrics/` (`domain/`, `data/`, `state/`). Only `data/` imports
   lrc). Enum names; an unknown stored name falls back to the default.
 - **Table:** `track_lyrics_choices` (see
   [system-architecture-database.md](./system-architecture-database.md)).
+
+## Dart side: views (`lyrics/ui/`)
+
+- **Sizes** (`kanaru_ui` `KLyricsMetrics`, `KLyricsMetricsBuilder`): the only place a width becomes a lyrics size, so `lib/src/` has no
+  `LayoutBuilder`. The builder also hands the viewport height (anchor room, resize re-reveal). Line size, side padding (the caller
+  multiplies the size by the font scale setting):
+
+  | Surface | Rule | Line | Side padding |
+  |---|---|---|---|
+  | `screen` (mobile lyrics screen) | width < 600 / >= 600 | 25 / 34 | 24 / 56 |
+  | `tab` (desktop pane) | pane < 900 | 22 | 24 |
+  | | pane >= 900, cover column shown | 28 | 40 |
+  | | pane >= 900, cover column hidden | 36 | 12 % of the pane |
+  | `card` | any | 18 (plain 15) | none (card padding 16) |
+
+  Plain lyrics are 0.7 of the line size (`KLyricsMetrics.plainScale`), line height 1.5.
+- **`LyricsBody(surface, coverColumnShown, onOpenChoice)`**: watches `playingLyricsProvider` and the four display settings and picks
+  `SyncedLyricsView`, `PlainLyricsView` or `LyricsStateView`. Loading is blank. The views are keyed by (entry id, lyrics): a new track
+  builds a fresh view, equal lyrics keep their scroll. `onOpenChoice` is the off state's "Lời cho bài này" button (null hides it; the
+  owner of the lyrics source wires it).
+- **`SyncedLyricsView`**: a lazy `SuperListView.builder` (package `super_sliver_list`, MIT): only the lines near the viewport are
+  built, whatever the length (up to the 10 000-line cap; a 10 000-line file froze the app when every line was built at once, including
+  after a reopen, since the audio service keeps the engine and the open lyrics screen alive). Edge fade 12 % (`ShaderMask`), no
+  scrollbar. One `ref.listen(playingLyricsLineProvider)` moves one shared `ValueNotifier<int>`; each built `LyricsLine` rebuilds only
+  when it becomes or stops being the current line, so a line change rebuilds two lines and a position
+  tick none. Lines are all the same size and w700; the current one is `onSurface` and scaled 1.02, the others `onSurface` at the `lyrics.dim`
+  alpha; colour and scale animate `KMotion.slow`. A timed blank line is a gap: three dots (`LyricsGapDots`) that pulse only while it is
+  current and animations are on (the ticker exists only then). Pressing a line (gaps too) seeks through `playerControllerProvider` and
+  makes it current at once.
+- **Scrolling** (`SyncedLyricsScroll` mixin, ported from the old app): the current line is kept at 40 % of the height with the view's own
+  `ScrollController` only (`getOffsetToReveal`, never `ensureVisible`; an enclosing scrollable never moves), a generation counter so an
+  overlapped glide cannot clear the "scrolling itself" flag of a newer one, glide `KMotion.normal`. A line that is built is revealed
+  through its render object (found in a map of the built lines, no key per line); one that is not (a seek or a return from far away)
+  is reached through the list's `ListController.jumpToItem`, which jumps on estimated heights and corrects them as lines lay out,
+  without building the lines between: an animated move jumps three lines short of it and glides the rest. The pill's arrow side
+  comes from the line's index against the list's visible range when the line is not built. A scroll the view did not start
+  (drag, wheel, trackpad, keyboard) takes over: auto-scroll stops and the shared round `KLocateButton` (bottom right, arrow toward the line, tooltip "Về dòng đang hát") shows;
+  the pill, or `lyrics.auto_return` (3 / 5 / 10 s, default off) after that long without input, glides back. A resize or a font-scale
+  change puts the line back without a glide; with animations off every move is a jump.
+- **`PlainLyricsView`**: the note "Lời thường, không có mốc thời gian: không tự cuộn." then a lazy `ListView.builder` (a blank line is
+  a break); no highlight, no seek, no auto-scroll.
+- **`LyricsStateView`**: none ("Không có lời trong tệp hay tệp .lrc cạnh bài.", no button; a track with no local file reads the same)
+  and off (title, then the desktop or mobile sentence, and the tonal button when `onOpenChoice` is given), both `KEmpty`.
+- **`LyricsCard`** (mobile Now Playing): `surfaceContainerHigh`, radius 20, padding 16; title, short source label and an open icon;
+  body = previous (dim) / current / next lines of synced lyrics at 18 (one line each, ellipsis, a gap or the time before the first line
+  reads as a note), the first three lines of plain lyrics at 15, or one status line. One button (semantics label "title · source").
+- **Labels**: `lyricsSummaryLabel(l10n, summary, short:)`; strings are the `lyrics*` keys of `lib/l10n/parts/lyrics_*.arb`.
+
+Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens/now_playing/ui/mobile/lyrics_screen*.dart`, see
+[system-architecture-playback.md](./system-architecture-playback.md) Now Playing mobile) and the desktop `DesktopSidePane`.

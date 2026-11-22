@@ -4178,4 +4178,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historyMostPlayedFavoriteFailed => 'Couldn\'t add to Favorites';
+
+  @override
+  String get lyricsLabelTagSynced => 'Lyrics in tag · Synced';
+
+  @override
+  String get lyricsLabelTagPlain => 'Lyrics in tag · Plain';
+
+  @override
+  String get lyricsLabelLrcSynced => 'LRC file · Synced';
+
+  @override
+  String get lyricsLabelLrcPlain => 'LRC file · Plain';
+
+  @override
+  String get lyricsLabelOff => 'Lyrics off';
+
+  @override
+  String get lyricsLabelNone => 'No lyrics';
+
+  @override
+  String get lyricsLabelShortTag => 'In tag';
+
+  @override
+  String get lyricsLabelShortLrc => 'LRC file';
+
+  @override
+  String get lyricsLabelShortOff => 'Off';
+
+  @override
+  String get lyricsPlainNote =>
+      'Plain lyrics, no time marks: they do not scroll by themselves.';
+
+  @override
+  String get lyricsNoneTitle => 'No lyrics';
+
+  @override
+  String get lyricsNoneMessage =>
+      'No lyrics in the file or in an .lrc file next to the song.';
+
+  @override
+  String get lyricsOffTitle => 'Lyrics are off for this song';
+
+  @override
+  String get lyricsOffMessageDesktop =>
+      'Right-click the lyrics button to turn them back on.';
+
+  @override
+  String get lyricsOffMessageMobile =>
+      'You chose “Don’t show lyrics” in Lyrics for this song.';
+
+  @override
+  String get lyricsOffOpenChoice => 'Lyrics for this song';
+
+  @override
+  String get lyricsBackToLine => 'Back to current line';
+
+  @override
+  String lyricsSeekHint(String time) {
+    return 'Seek to $time';
+  }
+
+  @override
+  String get lyricsGapLabel => 'Instrumental break';
+
+  @override
+  String get lyricsCardNone => 'No lyrics for this song';
+
+  @override
+  String get lyricsCardOff => 'Lyrics are off for this song';
+
+  @override
+  String get lyricsCardOpenHint => 'Open the lyrics screen';
+
+  @override
+  String lyricsCardLabel(String title, String source) {
+    return '$title · $source';
+  }
+
+  @override
+  String get lyricsTranslateSoon => 'Translate lyrics · Coming soon';
 }

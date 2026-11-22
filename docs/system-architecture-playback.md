@@ -879,9 +879,19 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
 - `MobileNowPlaying` (`ui/mobile/`): header (56, 72 from 200 % text; `[⌄]` left, `[ring slot][⋮]` right, the title block
   centred on the full width; the ring slot is always reserved so the title never moves) with a drag-to-close area covering all of
   the space between the side slots (release past 120 dp closes, less
-  springs back; the ring shows while a sleep timer runs), cover, title row, `NowPlayingSeekSlot` (48 dp; flat bar for now), controls, button row, dimmed lyrics
-  card, info card. It sits on `CoverTintBackground` fed by `playingCoverColorsProvider`; the seed of the playing cover also themes the app (see "Playing cover and app theme").
+  springs back; the ring shows while a sleep timer runs), cover, title row, `NowPlayingSeekSlot` (48 dp; flat bar for now), controls, button row, lyrics
+  card (`LyricsCard`, a button that opens the lyrics screen through `NowPlayingPage`), info card. It sits on `CoverTintBackground` fed by `playingCoverColorsProvider`; the seed of the playing cover also themes the app (see "Playing cover and app theme").
   It owns a `FlightSource` (cover, text, play, next pieces) for the queue flights.
+- **Lyrics screen** (`ui/mobile/lyrics_screen_route.dart`, `lyrics_screen.dart`, `lyrics_screen_header.dart`): an opaque full-screen
+  `ModalRoute` on the root navigator that slides up (`KMotion.pageIn`, none under reduced motion) over `/now-playing`, on the cover tint.
+  Header 56 (`[⌄]`, cover 40, title / artist, [source button slot, empty until the lyrics source lands], the Translate button dimmed and
+  inert with the tooltip "Dịch lời · Sắp có", `[♥]`), `LyricsBody(surface: screen)`, footer (waveform seek slot, then
+  elapsed / previous / play 64 / next / total). Closing: ⌄, Back, a pull down on the header or footer, or a pull down past the top of the
+  lyrics (overscroll only; scrolling the lyrics never closes it); past 100 dp the screen closes, less springs back (`KSpring.gentle`).
+  **One close path**: `closeLyricsScreen(route, {animated})` (route still active and not already closing; pops when it is the top route and
+  animated, else `removeRoute`, so it never pops another route). It is used by the screen's own ways out, by its "no track" listener, and by
+  `NowPlayingPage._pop` (animated false) before the page leaves for the desktop panel or for "no track", so `GoRouter.pop()` always takes
+  `/now-playing`. `NowPlayingPage` keeps the route it opened (`_openLyrics`) and passes `onOpenLyrics` to `MobileNowPlaying`.
 - The cover box is `kanaru_ui` `NowPlayingCoverBox` (`min(420, width - 64)`, radius 20); the page gives it the full
   width and pads the other rows.
 - `CoverSwiper` is a plain widget (entry id, has previous/next, callbacks): left = next, right = previous; 25 % of the
@@ -948,12 +958,12 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
   reserve is fixed, so a wrapping title or a late album moves nothing; a window too short even for 96 scales the block down
   (`FittedBox`). `DesktopTrackColumn` draws cover (radius 32, shadow), title, artist and album lines (each a link to the library),
   the 48 dp seek slot, and elapsed | previous, play, next | total.
-- **Side pane** (`desktop_side_pane.dart`): only the lyrics, titled like one tab with no other tab; the body is a "coming soon"
-  placeholder. The queue is not here: it is the shell's right panel (see UI: widgets and shell). The player bar's Lyrics, cover and
+- **Side pane** (`desktop_side_pane.dart`): only the lyrics, titled like one tab with no other tab; the body is `LyricsBody(surface: tab,
+  coverColumnShown: coverColumnShownProvider)`: sizes 28 / 40 with the cover column, 36 / 12 % without, 22 / 24 below a 900 dp pane. The queue is not here: it is the shell's right panel (see UI: widgets and shell). The player bar's Lyrics, cover and
   expand buttons open the screen.
 - **Queue nav item**: a dimmed "Coming soon" on both shells (saved queues, no mockup yet). The live queue is the right panel (desktop;
   top bar or player bar button) and the sheet (mobile; mini player long press, Queue button of Now Playing).
-- **Left out of the port**: the cover-only mode, the lyrics keys `L` and `T`, the narrow tabs layout (it is the mobile page).
+- **Left out of the port**: the cover-only mode, the lyrics keys `L` and `T` (`L` comes with the lyrics source button), the narrow tabs layout (it is the mobile page).
 - **Waveform**: `NowPlayingSeekSlot` holds `PlaybackWaveformSeekBar` in the same 48 dp slot (see Waveform).
 
 ## Waveform

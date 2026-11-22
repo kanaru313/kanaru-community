@@ -2961,5 +2961,46 @@
     }
   },
   "historyMostPlayedOpenDay": "Open in Most played",
-  "historyMostPlayedFavoriteFailed": "Couldn't add to Favorites"
+  "historyMostPlayedFavoriteFailed": "Couldn't add to Favorites",
+  "lyricsLabelTagSynced": "Lyrics in tag · Synced",
+  "lyricsLabelTagPlain": "Lyrics in tag · Plain",
+  "lyricsLabelLrcSynced": "LRC file · Synced",
+  "lyricsLabelLrcPlain": "LRC file · Plain",
+  "lyricsLabelOff": "Lyrics off",
+  "lyricsLabelNone": "No lyrics",
+  "lyricsLabelShortTag": "In tag",
+  "lyricsLabelShortLrc": "LRC file",
+  "lyricsLabelShortOff": "Off",
+  "lyricsPlainNote": "Plain lyrics, no time marks: they do not scroll by themselves.",
+  "lyricsNoneTitle": "No lyrics",
+  "lyricsNoneMessage": "No lyrics in the file or in an .lrc file next to the song.",
+  "lyricsOffTitle": "Lyrics are off for this song",
+  "lyricsOffMessageDesktop": "Right-click the lyrics button to turn them back on.",
+  "lyricsOffMessageMobile": "You chose “Don’t show lyrics” in Lyrics for this song.",
+  "lyricsOffOpenChoice": "Lyrics for this song",
+  "lyricsBackToLine": "Back to current line",
+  "lyricsSeekHint": "Seek to {time}",
+  "@lyricsSeekHint": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsGapLabel": "Instrumental break",
+  "lyricsCardNone": "No lyrics for this song",
+  "lyricsCardOff": "Lyrics are off for this song",
+  "lyricsCardOpenHint": "Open the lyrics screen",
+  "lyricsCardLabel": "{title} · {source}",
+  "@lyricsCardLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateSoon": "Translate lyrics · Coming soon"
 }

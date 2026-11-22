@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_card.dart';
+import 'package:kanaru/src/screens/now_playing/ui/mobile/lyrics_screen.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/mobile_now_playing.dart';
 import 'package:kanaru/src/screens/now_playing/ui/now_playing_page.dart';
 import 'package:kanaru/src/playback/state/now_playing_panel.dart';
@@ -79,6 +81,41 @@ void main() {
     expect(find.byType(MobileNowPlaying), findsNothing);
     expect(host.container.read(nowPlayingPanelProvider).open, isTrue);
     expect(host.router!.canPop(), isFalse);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('widening with the lyrics screen open removes it with the page', (
+    tester,
+  ) async {
+    final host = await pumpWithPlayer(
+      tester,
+      const Text('home'),
+      routes: _routes,
+      size: const Size(800, 900),
+    );
+    host.router!.push('/now-playing');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await host.letStreamsArrive(tester);
+    await tester.scrollUntilVisible(
+      find.byType(LyricsCard),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byType(LyricsCard));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(LyricsScreen), findsOneWidget);
+
+    await _resize(tester, 1300);
+    expect(find.byType(LyricsScreen), findsNothing);
+    expect(find.byType(MobileNowPlaying), findsNothing);
+    expect(host.container.read(nowPlayingPanelProvider).open, isTrue);
+    // The pop took `/now-playing`, not the lyrics route: back on the page
+    // under it, nothing blank left behind.
+    expect(host.router!.canPop(), isFalse);
+    expect(find.text('home'), findsOneWidget);
+    expect(tester.takeException(), isNull);
     await tester.pump(const Duration(seconds: 1));
   });
 }

@@ -11,9 +11,6 @@ const int queueLeadRows = 1;
 double queueOffsetFor(int index, double extent) =>
     ((index - queueLeadRows) * extent).clamp(0, double.infinity);
 
-/// Which side the current row is on, as seen from the viewport.
-enum QueueLocateSide { none, above, below }
-
 /// The round "Go to current track" button at the bottom right of the list.
 /// Shown only while the current row is out of view; the arrow points the way.
 /// Rebuilds only when the side changes, not on every scroll event.
@@ -25,8 +22,6 @@ class QueueLocateButton extends StatefulWidget {
     required this.extent,
   });
 
-  static const double size = 48;
-
   final ScrollController controller;
   final int? currentIndex;
   final double extent;
@@ -36,7 +31,7 @@ class QueueLocateButton extends StatefulWidget {
 }
 
 class QueueLocateButtonState extends State<QueueLocateButton> {
-  QueueLocateSide _side = QueueLocateSide.none;
+  KLocateSide _side = KLocateSide.none;
 
   @override
   void initState() {
@@ -67,15 +62,15 @@ class QueueLocateButtonState extends State<QueueLocateButton> {
     if (!mounted) return;
     final c = widget.controller;
     final cur = widget.currentIndex;
-    var side = QueueLocateSide.none;
+    var side = KLocateSide.none;
     if (cur != null && c.hasClients) {
       final top = cur * widget.extent;
       final bottom = top + widget.extent;
       final p = c.position;
       if (bottom <= p.pixels) {
-        side = QueueLocateSide.above;
+        side = KLocateSide.above;
       } else if (top >= p.pixels + p.viewportDimension) {
-        side = QueueLocateSide.below;
+        side = KLocateSide.below;
       }
     }
     if (side != _side) setState(() => _side = side);
@@ -94,18 +89,10 @@ class QueueLocateButtonState extends State<QueueLocateButton> {
 
   @override
   Widget build(BuildContext context) {
-    if (_side == QueueLocateSide.none) return const SizedBox.shrink();
-    return SizedBox.square(
-      dimension: QueueLocateButton.size,
-      child: KIconButton.yieldSpace(
-        child: IconButton.filled(
-          icon: Icon(
-            _side == QueueLocateSide.above ? KIcons.arrowUp : KIcons.arrowDown,
-          ),
-          tooltip: AppLocalizations.of(context).playbackQueueLocate,
-          onPressed: _go,
-        ),
-      ),
+    return KLocateButton(
+      side: _side,
+      tooltip: AppLocalizations.of(context).playbackQueueLocate,
+      onPressed: _go,
     );
   }
 }

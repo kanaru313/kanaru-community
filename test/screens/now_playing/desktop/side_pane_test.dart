@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/lyrics/ui/lyrics_body.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_row.dart';
-import 'package:kanaru/src/screens/now_playing/ui/desktop/lyrics_tab_placeholder.dart';
 import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru/src/shell/ui/player_bar.dart';
 import 'package:material_ui/material_ui.dart';
@@ -24,8 +24,8 @@ void main() {
     final host = await pumpDesktopShell(tester);
     host.container.read(nowPlayingPanelProvider.notifier).open();
     await _settle(tester, host);
-    expect(find.byType(LyricsTabPlaceholder), findsOneWidget);
-    expect(find.text('Lyrics: coming soon'), findsOneWidget);
+    expect(find.byType(LyricsBody), findsOneWidget);
+    expect(find.text('Lyrics: coming soon'), findsNothing);
     // One tab, no Queue tab, and no queue rows inside Now Playing.
     expect(find.byType(Tab), findsOneWidget);
     expect(find.widgetWithText(Tab, 'Lyrics'), findsOneWidget);
@@ -41,7 +41,7 @@ void main() {
     await tester.tap(byIconButton('Lyrics'));
     await _settle(tester, host);
     expect(_state(host).open, isTrue);
-    expect(find.byType(LyricsTabPlaceholder), findsOneWidget);
+    expect(find.byType(LyricsBody), findsOneWidget);
     host.container.read(nowPlayingPanelProvider.notifier).close();
     await _settle(tester, host);
     await tester.tap(find.byTooltip('Open Now Playing').first);
