@@ -326,9 +326,14 @@ void main() {
     await tester.tap(find.text('$_title (Live)'));
     await waitOpen(find.byType(PickerPreviewPage), 'the preview page again');
     final use = find.widgetWithText(KModalButton, l10n().lyricsPickerUse);
+    // Enabled is not enough: the fake answers at once, so the button can be
+    // on before the preview sheet has finished sliding in (still below the
+    // screen edge, where a tap misses).
     await app.pumpUntil(
-      () => isSemantics(isEnabled: true).matches(tester.getSemantics(use), {}),
-      what: 'Dùng lời này to be enabled',
+      () =>
+          use.hitTestable().evaluate().isNotEmpty &&
+          isSemantics(isEnabled: true).matches(tester.getSemantics(use), {}),
+      what: 'Dùng lời này to be enabled and on screen',
     );
     await tester.tap(use);
     await waitGone(find.text(l10n().lyricsPickerTitle), 'the picker to close');
@@ -369,9 +374,10 @@ void main() {
     );
     await app.pumpUntil(
       () =>
+          useDesktop.hitTestable().evaluate().isNotEmpty &&
           isSemantics(isEnabled: true)
               .matches(tester.getSemantics(useDesktop), {}),
-      what: 'Dùng lời này to be enabled (desktop)',
+      what: 'Dùng lời này to be enabled and on screen (desktop)',
     );
     await tester.tap(useDesktop);
     await waitGone(

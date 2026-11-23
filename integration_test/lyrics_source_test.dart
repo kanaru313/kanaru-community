@@ -242,6 +242,7 @@ void main() {
       reason: 'the file row says where the lyrics come from',
     );
     expect(find.text(l10n().lyricsModalNoneOnDevice), findsNothing);
+    expect(find.text(l10n().lyricsStatusNoSource), findsNothing);
     await shot('mobile-01-sheet-file-chosen');
 
     // "Không hiện lời": closes, off state with the button.
@@ -313,7 +314,14 @@ void main() {
     );
     await tester.tap(find.text(l10n().playbackLyricsSource));
     await waitOpen('mobile, track without lyrics');
-    expect(find.text(l10n().lyricsModalNoneOnDevice), findsOneWidget);
+    // No lyrics plugin is installed, so the line also says there is no
+    // online source yet ("Không có lời trên máy · chưa có nguồn trực tuyến").
+    await app.pumpUntil(
+      () => find.text(l10n().lyricsStatusNoSource).evaluate().isNotEmpty,
+      what: 'the "no lyrics, no online source" status line',
+      timeout: const Duration(seconds: 15),
+    );
+    expect(find.text(l10n().lyricsModalNoneOnDevice), findsNothing);
     expect(find.text(l10n().lyricsChoiceFileNone), findsOneWidget);
     await shot('mobile-06-sheet-none-on-device');
     await tester.tap(iconButton(l10n().lyricsModalClose));
