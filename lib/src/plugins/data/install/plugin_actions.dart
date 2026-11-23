@@ -1,3 +1,5 @@
+import '../logs/plugin_log_reader.dart';
+import '../logs/plugin_run_log.dart';
 import '../repos/catalog_cache.dart';
 import '../store/plugin_config_store.dart';
 import '../store/plugin_files.dart';
@@ -28,6 +30,7 @@ class PluginActions {
     required PluginFiles files,
     required PluginConfigStore config,
     required this._storage,
+    required PluginRunLog logs,
     required HeldPackages held,
     required CatalogCache catalogs,
     required RunGate runGate,
@@ -76,7 +79,9 @@ class PluginActions {
       config: config,
       runGate: runGate,
       activity: activity,
+      logs: logs,
     );
+    logReader = PluginLogReader(logs);
     restorer = PluginRestorer(
       startup: startupRestore,
       scan: findMissing,
@@ -91,6 +96,9 @@ class PluginActions {
   /// Empties what the plugin's scripts stored. A run that began before the
   /// clear does not write its result back afterwards.
   Future<void> clearStorage(String installId) => _storage.clear(installId);
+
+  /// Reads and clears the run logs of the plugins (the screens' Nhật ký).
+  late final PluginLogReader logReader;
 
   final activity = PluginActivity();
   late final StreamingGate gate;

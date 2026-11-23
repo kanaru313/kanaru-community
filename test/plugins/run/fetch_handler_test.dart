@@ -442,6 +442,77 @@ void main() {
     });
   });
 
+  group('request records', () {
+    test(
+      'an answered request keeps method, host, path, status, time',
+      () async {
+        server.handler = (r) async {
+          r.response.statusCode = 404;
+          await r.response.close();
+        };
+        final ctx = job();
+        await handler().handle(
+          req(
+            onServer('/v2/search?token=abc123&q=song'),
+            method: 'POST',
+            body: utf8.encode('secret body'),
+            headers: [('Authorization', 'Bearer tok-123456')],
+          ),
+          ctx,
+        );
+        final record = ctx.requests.single;
+        expect(record.method, 'POST');
+        expect(record.host, _host);
+        expect(record.path, '/v2/search');
+        expect(record.status, 404);
+        expect(record.ms, greaterThanOrEqualTo(0));
+        expect(record.blocked, isFalse);
+        // Nothing of the query, headers or body is in what is kept.
+        expect(record.toJson().toString(), isNot(contains('abc123')));
+        expect(record.toJson().toString(), isNot(contains('tok-123456')));
+        expect(record.toJson().toString(), isNot(contains('secret body')));
+      },
+    );
+
+    test('refused requests are recorded without a status', () async {
+      final ctx = job();
+      await handler().handle(
+        req(onServer('/x?k=v', host: 'private.example.test')),
+        ctx,
+      );
+      await handler().handle(req('not a url'), ctx);
+      await handler().handle(req(onServer('/'), method: 'DELETE'), ctx);
+      expect(ctx.requests, hasLength(3));
+      expect(ctx.requests.every((r) => r.status == null), isTrue);
+      expect(ctx.requests.first.host, 'private.example.test');
+      expect(ctx.requests.first.path, '/x');
+      expect(ctx.requests[1].host, '');
+    });
+
+    test('a blocked address is flagged', () async {
+      final ctx = job(
+        manifest: {'private.example.test'},
+        consented: {'private.example.test'},
+      );
+      final r = await handler().handle(
+        req(onServer('/', host: 'private.example.test')),
+        ctx,
+      );
+      expect(r.outcome, EngineFetchOutcome.blockedHost);
+      expect(ctx.requests.single.blocked, isTrue);
+    });
+
+    test('a run keeps at most 100 records', () async {
+      // Refused requests are recorded too and never reach the network.
+      final ctx = job(consented: {});
+      final h = handler();
+      for (var i = 0; i < 105; i++) {
+        await h.handle(req(onServer('/')), ctx);
+      }
+      expect(ctx.requests, hasLength(100));
+    });
+  });
+
   test('a snapshot is not changed by later changes of its sources', () async {
     server.handler = (r) async => r.response.close();
     final manifest = {_host};

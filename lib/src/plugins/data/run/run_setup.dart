@@ -30,6 +30,10 @@ class PreparedRun {
     required this.storageJson,
     required this.storageRev,
     required this.rowUpdatedAt,
+    required this.pluginName,
+    required this.pluginVersion,
+    required this.configSchema,
+    required this.storedConfig,
   });
 
   final List<EngineFile> files;
@@ -46,6 +50,13 @@ class PreparedRun {
   /// here: the write-back of this run holds only while both are unchanged.
   final int storageRev;
   final int rowUpdatedAt;
+
+  /// The plugin's name and version, and its settings as stored (with the
+  /// manifest's fields): what the run log needs to hide the user's values.
+  final String pluginName;
+  final String pluginVersion;
+  final List<ConfigField> configSchema;
+  final Map<String, Object?> storedConfig;
 }
 
 /// Either what the run needs, or the outcome that ends it before anything
@@ -136,6 +147,10 @@ Future<RunSetup> prepareRun(
       storageJson: kept.json,
       storageRev: kept.rev,
       rowUpdatedAt: row.updatedAt,
+      pluginName: row.name,
+      pluginVersion: row.version.toString(),
+      configSchema: manifest.config,
+      storedConfig: Map.unmodifiable(stored.values),
     ),
   );
 }

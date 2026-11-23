@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/plugins/data/install/remover.dart';
 import 'package:kanaru/src/plugins/domain/install/install_id.dart';
+import 'package:kanaru/src/plugins/domain/logs/run_log_event.dart';
 import 'package:kanaru/src/plugins/domain/install/install_result.dart';
 import 'package:kanaru/src/plugins/domain/run/plugin_engine.dart';
 import 'package:kanaru/src/plugins/domain/run/run_outcome.dart';
@@ -51,6 +53,31 @@ void main() {
       RemoveResult.missing,
     );
   });
+
+  test(
+    'remove deletes the run log and drops writes queued before it',
+    () async {
+      await installDemo();
+      RunLogEvent ev() => RunLogEvent(
+        time: DateTime.now(),
+        installId: id,
+        pluginName: 'Demo',
+        version: '3',
+        script: 'search',
+        kind: 'server',
+      );
+      h.logs.append(ev());
+      await h.logs.whenIdle();
+      final file = File('${h.dir.path}-logs/$id.jsonl');
+      expect(file.existsSync(), isTrue);
+
+      h.logs.append(ev());
+      expect(await h.actions.remover.remove(id), RemoveResult.removed);
+      await h.logs.whenIdle();
+
+      expect(file.existsSync(), isFalse);
+    },
+  );
 
   test('the summary is read fresh', () async {
     await installDemo(config: form);

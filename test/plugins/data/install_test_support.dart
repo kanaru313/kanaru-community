@@ -10,6 +10,7 @@ import 'package:kanaru/src/plugins/data/install/package_sources.dart';
 import 'package:kanaru/src/plugins/data/install/plugin_actions.dart';
 import 'package:kanaru/src/plugins/data/install/sweep_and_restore.dart';
 import 'package:kanaru/src/plugins/data/install/write_queue.dart';
+import 'package:kanaru/src/plugins/data/logs/plugin_run_log.dart';
 import 'package:kanaru/src/plugins/data/repos/catalog_cache.dart';
 import 'package:kanaru/src/plugins/data/repos/catalog_codec.dart';
 import 'package:kanaru/src/plugins/data/repos/repo_address_guard.dart';
@@ -85,7 +86,8 @@ class InstallHarness {
     });
     checker = FakeChecker();
     picker = FakePicker((doc, max) async => Ok(pickedBytes));
-    sweeper = PluginSweeper(rows, files);
+    logs = PluginRunLog(Directory('${dir.path}-logs'));
+    sweeper = PluginSweeper(rows, files, logs);
     final restore = Completer<List<RestoreCandidate>>();
     queue = PluginWriteQueue(
       firstJob: () async {
@@ -112,6 +114,7 @@ class InstallHarness {
       files: files,
       config: config,
       storage: storage,
+      logs: logs,
       held: held,
       catalogs: catalogs,
       runGate: runGate,
@@ -142,6 +145,7 @@ class InstallHarness {
   late final PluginSweeper sweeper;
   late final PluginWriteQueue queue;
   late final PluginStorageStore storage;
+  late final PluginRunLog logs;
   late final HeldPackages held;
   late final PluginActions actions;
 
@@ -254,7 +258,10 @@ class InstallHarness {
   );
 
   Future<void> dispose() async {
+    await logs.whenIdle();
     await db.close();
     dir.deleteSync(recursive: true);
+    final logDir = Directory('${dir.path}-logs');
+    if (logDir.existsSync()) logDir.deleteSync(recursive: true);
   }
 }

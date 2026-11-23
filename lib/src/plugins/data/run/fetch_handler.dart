@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 
 import '../../../foundation/result.dart';
+import '../../domain/logs/run_log_event.dart';
 import '../../domain/net/plugin_fetch_rules.dart';
 import '../../domain/run/plugin_engine.dart';
 import '../net/plugin_http.dart';
@@ -51,7 +52,14 @@ class JobContext {
   /// Strings to hide in the run log: values the handler saw that look like
   /// secrets (authorization headers and the like).
   final Set<String> maskValues = {};
+
+  /// What the log keeps of each request of the run (no query string, header
+  /// or body), refused ones included.
+  final List<RunLogRequest> requests = [];
 }
+
+/// Most requests one run's record keeps.
+const _maxRecordedRequests = 100;
 
 /// Answers the host `fetch` calls of one run. Never throws: every failure is
 /// an answer with the matching outcome.
@@ -77,13 +85,43 @@ class HttpPluginFetchHandler implements PluginFetchHandler {
     EngineFetchRequest request,
     JobContext context,
   ) async {
+    final clock = Stopwatch()..start();
+    EngineFetchResponse response;
     try {
-      return await _handle(request, context);
+      response = await _handle(request, context);
     } on Object catch (error) {
       _log.warning('A plugin fetch failed: ${error.runtimeType}');
-      return _fail(EngineFetchOutcome.network);
+      response = _fail(EngineFetchOutcome.network);
     }
+    _record(request, context, response, clock.elapsedMilliseconds);
+    return response;
   }
+
+  /// Notes the request for the run log: method, host, path, status (null
+  /// when no answer came) and time.
+  void _record(
+    EngineFetchRequest request,
+    JobContext context,
+    EngineFetchResponse response,
+    int ms,
+  ) {
+    if (context.requests.length >= _maxRecordedRequests) return;
+    final uri = Uri.tryParse(request.url);
+    final answered = response.outcome == EngineFetchOutcome.ok;
+    context.requests.add(
+      RunLogRequest(
+        method: _cut(request.method.toUpperCase(), 16),
+        host: _cut(uri?.host ?? '', 253),
+        path: _cut(uri?.path ?? '', 300),
+        status: answered ? response.status : null,
+        ms: ms,
+        blocked: response.outcome == EngineFetchOutcome.blockedHost,
+      ),
+    );
+  }
+
+  String _cut(String text, int max) =>
+      text.length <= max ? text : text.substring(0, max);
 
   Future<EngineFetchResponse> _handle(
     EngineFetchRequest request,

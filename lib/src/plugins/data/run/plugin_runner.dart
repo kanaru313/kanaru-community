@@ -18,6 +18,7 @@ import 'plugin_pauses.dart';
 import 'run_admission.dart';
 import 'run_cancel.dart';
 import 'run_gate.dart';
+import 'run_log_recorder.dart';
 import 'run_setup.dart';
 
 final _log = Logger('plugin_run');
@@ -47,6 +48,7 @@ class PluginRunner {
     required this._files,
     required this._config,
     required this._storage,
+    required this._recorder,
     RunAdmission? admission,
     this.spacing = pluginSpacing,
     this.grace = outerDeadlineGrace,
@@ -60,6 +62,7 @@ class PluginRunner {
   final PluginFiles _files;
   final PluginConfigStore _config;
   final PluginStorageStore _storage;
+  final RunLogRecorder _recorder;
   final RunAdmission _admission;
   final Duration spacing;
   final Duration grace;
@@ -87,13 +90,14 @@ class PluginRunner {
     }
   }
 
-  /// A caller's reader or validator refused a [RunOk] output. One log line
-  /// with the plugin, the script and the caller's fixed [reason]; the output
-  /// itself is never written.
+  /// A caller's reader or validator refused a [RunOk] output. One app log
+  /// line and one run log event with the plugin, the script and the caller's
+  /// fixed [reason]; the output itself is never written.
   void reportRejectedOutput(String installId, String script, String reason) {
     _log.info(
       'Plugin output rejected: plugin=$installId script=$script reason=$reason',
     );
+    unawaited(_recorder.recordRejected(installId, script, reason));
   }
 
   /// One pass under a lease; null when the plugin was switched before the
@@ -252,6 +256,16 @@ class PluginRunner {
           cause == RunCancelCause.none &&
           !lease.changed.isCancelled) {
         await _writeBack(id, newStorage, prepared);
+      }
+      // A run the plugin switch stopped is not a plugin fault: not logged.
+      if (cause != RunCancelCause.pluginChanged && !lease.changed.isCancelled) {
+        _recorder.recordRun(
+          request: request,
+          prepared: prepared,
+          context: context,
+          outcome: outcome,
+          result: result,
+        );
       }
       _pauseFrom(id, outcome);
       return outcome;

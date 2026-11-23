@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../database/state/database_providers.dart';
 import '../../platform/state/document_picker_provider.dart';
+import '../../platform/state/platform_providers.dart';
 import '../data/install/held_packages.dart';
 import '../data/install/package_sources.dart';
 import '../data/install/sweep_and_restore.dart';
 import '../data/install/write_queue.dart';
+import '../data/logs/plugin_run_log.dart';
 import '../data/native/rust_script_checker.dart';
 import '../data/net/fetcher.dart';
 import '../data/repos/catalog_cache.dart';
@@ -72,6 +75,14 @@ class PluginServices {
   );
 }
 
+/// The run log files of every plugin, `<data>/plugin-logs`. One writer for
+/// the process: its queue and delete markers are per instance.
+final pluginRunLogProvider = Provider<PluginRunLog>(
+  (ref) => PluginRunLog(
+    Directory('${ref.read(appPathsProvider).dataDir.path}/plugin-logs'),
+  ),
+);
+
 // The inputs are read once, not watched: they live as long as the process.
 // A rebuild would create a second write queue whose sweep could delete a
 // folder the first queue's install has written but not yet recorded.
@@ -81,7 +92,7 @@ final pluginServicesProvider = Provider<PluginServices>((ref) {
   final files = ref.read(pluginFilesProvider);
   final fetcher = ref.read(pluginFetcherProvider);
   final clock = ref.read(pluginClockProvider);
-  final sweeper = PluginSweeper(rows, files);
+  final sweeper = PluginSweeper(rows, files, ref.read(pluginRunLogProvider));
   final restore = Completer<List<RestoreCandidate>>();
   final queue = PluginWriteQueue(
     firstJob: () async {
