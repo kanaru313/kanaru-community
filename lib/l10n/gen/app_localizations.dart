@@ -8645,6 +8645,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Increase by {step}'**
   String pluginsCfgStepUp(String step);
+
+  /// No description provided for @pluginsPageUseLyricsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'In use · {position} of {total} · change in Settings › Lyrics › Sources'**
+  String pluginsPageUseLyricsOn(int position, int total);
+
+  /// No description provided for @pluginsPageUseLyricsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: searches only when you tap “Find lyrics online…” · change in Settings › Lyrics › Sources'**
+  String get pluginsPageUseLyricsOff;
+
+  /// No description provided for @pluginsDataStorageValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} KB / {quota} KB'**
+  String pluginsDataStorageValue(int used, int quota);
+
+  /// No description provided for @pluginsDataClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get pluginsDataClear;
+
+  /// No description provided for @pluginsDataClearStorageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the plugin’s own storage?'**
+  String get pluginsDataClearStorageTitle;
+
+  /// No description provided for @pluginsDataClearStorageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin may need to sign in or be set up again.'**
+  String get pluginsDataClearStorageBody;
+
+  /// No description provided for @pluginsDataStorageCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Own storage cleared'**
+  String get pluginsDataStorageCleared;
+
+  /// No description provided for @pluginsDataSavedLyricsValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} · {size}'**
+  String pluginsDataSavedLyricsValue(int count, String size);
+
+  /// No description provided for @pluginsDataSavedLyricsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None yet'**
+  String get pluginsDataSavedLyricsNone;
+
+  /// No description provided for @pluginsDataClearLyricsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the lyrics saved from this source?'**
+  String get pluginsDataClearLyricsTitle;
+
+  /// No description provided for @pluginsDataClearLyricsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics saved from this source will be deleted. Pinned lyrics and .lrc files are kept.'**
+  String get pluginsDataClearLyricsBody;
+
+  /// No description provided for @pluginsDataLyricsCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved lyrics cleared'**
+  String get pluginsDataLyricsCleared;
+
+  /// No description provided for @pluginsDataClearFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t clear the data'**
+  String get pluginsDataClearFailed;
+
+  /// No description provided for @pluginsDataLogSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{errors, plural, =1{1 error today} other{{errors} errors today}} · {total, plural, =1{1 entry} other{{total} entries}}'**
+  String pluginsDataLogSummary(int errors, int total);
+
+  /// No description provided for @pluginsDataLogNoErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'No errors'**
+  String get pluginsDataLogNoErrors;
+
+  /// No description provided for @pluginsPausedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused for {minutes, plural, =1{1 minute} other{{minutes} minutes}}: the server says too many requests (429)'**
+  String pluginsPausedTitle(int minutes);
+
+  /// No description provided for @pluginsPausedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru asks this source again after {time}. Other sources still search as usual.'**
+  String pluginsPausedBody(String time);
+
+  /// No description provided for @pluginsLogsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log'**
+  String get pluginsLogsTitle;
+
+  /// No description provided for @pluginsLogsFilterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter the log'**
+  String get pluginsLogsFilterLabel;
+
+  /// No description provided for @pluginsLogsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get pluginsLogsAll;
+
+  /// No description provided for @pluginsLogsErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'Errors'**
+  String get pluginsLogsErrors;
+
+  /// No description provided for @pluginsLogsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Every time the plugin fails or writes to the console. Kanaru hides the settings values, own storage and tokens it knows of. A plugin can still write other information: look before you share.'**
+  String get pluginsLogsCaption;
+
+  /// No description provided for @pluginsLogsFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept for the last 7 days (at most 1 MB per plugin). File: {path}'**
+  String pluginsLogsFooter(String path);
+
+  /// No description provided for @pluginsLogsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries yet'**
+  String get pluginsLogsEmpty;
+
+  /// No description provided for @pluginsLogsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t read the log'**
+  String get pluginsLogsLoadFailed;
+
+  /// No description provided for @pluginsLogsOpenFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the log folder'**
+  String get pluginsLogsOpenFolder;
+
+  /// No description provided for @pluginsLogsOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t open the log folder'**
+  String get pluginsLogsOpenFailed;
+
+  /// No description provided for @pluginsLogsShareSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Share · {soon}'**
+  String pluginsLogsShareSoon(String soon);
+
+  /// No description provided for @pluginsLogsClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the log'**
+  String get pluginsLogsClear;
+
+  /// No description provided for @pluginsLogsClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the plugin’s log?'**
+  String get pluginsLogsClearTitle;
+
+  /// No description provided for @pluginsLogsClearBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The log entries of {name} will be deleted. The plugin is not affected.'**
+  String pluginsLogsClearBody(String name);
+
+  /// No description provided for @pluginsLogsCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Log cleared'**
+  String get pluginsLogsCleared;
+
+  /// No description provided for @pluginsLogsJobTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'{job} · {target}'**
+  String pluginsLogsJobTarget(String job, String target);
+
+  /// No description provided for @pluginsLogsResultOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Console output only'**
+  String get pluginsLogsResultOk;
+
+  /// No description provided for @pluginsLogsResultError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {reason}'**
+  String pluginsLogsResultError(String reason);
+
+  /// No description provided for @pluginsLogsResultErrorWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {reason} · {message}'**
+  String pluginsLogsResultErrorWith(String reason, String message);
+
+  /// No description provided for @pluginsLogsKindRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'too many requests (429)'**
+  String get pluginsLogsKindRateLimited;
+
+  /// No description provided for @pluginsLogsKindInvalidResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'invalid response'**
+  String get pluginsLogsKindInvalidResponse;
+
+  /// No description provided for @pluginsLogsKindServer.
+  ///
+  /// In en, this message translates to:
+  /// **'server error'**
+  String get pluginsLogsKindServer;
+
+  /// No description provided for @pluginsLogsKindAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'sign-in needed or wrong key'**
+  String get pluginsLogsKindAuth;
+
+  /// No description provided for @pluginsLogsKindQuota.
+  ///
+  /// In en, this message translates to:
+  /// **'quota used up'**
+  String get pluginsLogsKindQuota;
+
+  /// No description provided for @pluginsLogsKindTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'timed out'**
+  String get pluginsLogsKindTimeout;
+
+  /// No description provided for @pluginsLogsKindMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'out of memory'**
+  String get pluginsLogsKindMemory;
+
+  /// No description provided for @pluginsLogsKindStack.
+  ///
+  /// In en, this message translates to:
+  /// **'code nested too deep'**
+  String get pluginsLogsKindStack;
+
+  /// No description provided for @pluginsLogsKindOutputTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'result too large'**
+  String get pluginsLogsKindOutputTooLarge;
+
+  /// No description provided for @pluginsLogsKindInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'internal error'**
+  String get pluginsLogsKindInternal;
+
+  /// No description provided for @pluginsLogsKindOther.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind}'**
+  String pluginsLogsKindOther(String kind);
+
+  /// No description provided for @pluginsRemoveStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Own storage ({size} KB)'**
+  String pluginsRemoveStorage(int size);
+
+  /// No description provided for @pluginsRemoveLog.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin’s log'**
+  String get pluginsRemoveLog;
+
+  /// No description provided for @pluginsRemoveKeepLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved lyrics of {count, plural, =1{1 song} other{{count} songs}} and pinned lyrics from this source'**
+  String pluginsRemoveKeepLyrics(int count);
+
+  /// No description provided for @pluginsRemoveKeepPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned lyrics from this source (if any)'**
+  String get pluginsRemoveKeepPinned;
+
+  /// No description provided for @pluginsRemoveKeepLrc.
+  ///
+  /// In en, this message translates to:
+  /// **'The .lrc files written next to songs'**
+  String get pluginsRemoveKeepLrc;
+
+  /// No description provided for @pluginsRemoveKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept'**
+  String get pluginsRemoveKeep;
 }
 
 class _AppLocalizationsDelegate

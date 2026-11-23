@@ -9,12 +9,15 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/state/alerts_provider.dart';
 import '../../../plugins/state/install_ops.dart';
 import '../../../plugins/state/plugin_page_provider.dart';
+import '../../../plugins/state/plugin_run_provider.dart'
+    show pluginPauseProvider;
 import '../../../plugins/state/plugin_store_providers.dart';
 import '../../settings/ui/settings_scaffold.dart';
 import '../plugin_paths.dart';
 import '../remove/remove_flow.dart';
 import '../config/config_form.dart';
 import 'config_slot.dart';
+import 'data_block.dart';
 import 'details_block.dart';
 import 'error_band.dart';
 import 'plugin_head_card.dart';
@@ -191,6 +194,7 @@ class _PluginPageState extends ConsumerState<PluginPage>
       ];
     }
     final hasConfig = data.manifest?.config.isNotEmpty ?? false;
+    final pausedUntil = ref.watch(pluginPauseProvider(widget.installId));
     return [
       Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -198,11 +202,14 @@ class _PluginPageState extends ConsumerState<PluginPage>
         children: [
           PluginHeadCard(data: data, nameKey: _nameKey),
           if (data.update != null) UpdateBand(data: data),
+          // One red band: a problem of the plugin first, the 429 pause last.
           if (PluginErrorBand.applies(data))
             PluginErrorBand(
               data: data,
               onOpenConfig: () => unawaited(_openConfig()),
-            ),
+            )
+          else if (pausedUntil != null)
+            PluginPausedBand(installId: widget.installId, until: pausedUntil),
         ],
       ),
       Column(
@@ -220,7 +227,7 @@ class _PluginPageState extends ConsumerState<PluginPage>
         ],
       ),
       const ConnectionBlock(),
-      DataBlock(kind: data.kind),
+      DataBlock(installId: widget.installId, kind: data.kind),
     ];
   }
 

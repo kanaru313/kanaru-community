@@ -11,6 +11,7 @@ import 'package:material_ui/material_ui.dart' show ListView;
 
 import '../../../support/icon_button_finders.dart';
 import '../support/plugin_fixtures.dart';
+import '../support/run_fixtures.dart';
 
 const _wide = Size(1400, 1000);
 
@@ -533,5 +534,52 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Update all (1)'), findsOneWidget);
     expect(byIconButton('Remove Installed one'), findsOneWidget);
+  });
+
+  group('the log entry of the ⋮ menu', () {
+    Future<FakeFileManager> openMenu(WidgetTester tester, Size size) async {
+      final files = FakeFileManager();
+      await pumpPlugins(
+        tester,
+        _full(),
+        size: size,
+        overrides: RunState(files: files).overrides,
+      );
+      await tester.tap(byIconButton('More options'));
+      await tester.pumpAndSettle();
+      return files;
+    }
+
+    testWidgets('desktop: "Open log folder" shows the folder', (tester) async {
+      final files = await openMenu(tester, _wide);
+      expect(find.text('Share plugin logs…'), findsNothing);
+      expect(find.text('Coming soon'), findsNothing);
+      await tester.tap(find.text('Open log folder'));
+      await tester.pumpAndSettle();
+      expect(files.revealed, ['/data/plugin-logs']);
+    });
+
+    testWidgets('desktop: a folder that cannot be opened says so', (
+      tester,
+    ) async {
+      final files = await openMenu(tester, _wide);
+      files.fails = true;
+      await tester.tap(find.text('Open log folder'));
+      await tester.pumpAndSettle();
+      expect(find.text('Couldn’t open the log folder'), findsOneWidget);
+    });
+
+    testWidgets('phone: sharing is dimmed "Coming soon" and does nothing', (
+      tester,
+    ) async {
+      final files = await openMenu(tester, const Size(400, 1000));
+      expect(find.text('Open log folder'), findsNothing);
+      // The only dimmed row of the menu is the share entry.
+      expect(find.text('Coming soon'), findsOneWidget);
+      await tester.tap(find.text('Share plugin logs…'));
+      await tester.pumpAndSettle();
+      expect(files.revealed, isEmpty);
+      expect(find.text('Share plugin logs…'), findsOneWidget, reason: 'open');
+    });
   });
 }

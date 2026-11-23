@@ -1,8 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
 import 'package:kanaru/src/plugins/state/install_ops.dart';
+import 'package:kanaru/src/plugins/state/plugin_run_info_provider.dart';
 import 'package:kanaru/src/screens/plugins/remove/remove_flow.dart';
 
 import '../support/install_fixtures.dart';
+import '../support/run_fixtures.dart';
+
+const _lyricsPreview = RemovePreview(
+  installId: 'id-demo',
+  name: 'Demo',
+  author: 'someone',
+  version: 3,
+  kind: PluginKind.lyrics,
+);
 
 void main() {
   for (final (name, size) in [('narrow', narrowWindow), ('wide', wideWindow)]) {
@@ -22,7 +33,68 @@ void main() {
         expect(find.text('Will be removed'), findsOneWidget);
         expect(find.text('The plugin’s code'), findsOneWidget);
         expect(find.text('The plugin’s settings'), findsOneWidget);
+        expect(find.text('The plugin’s log'), findsOneWidget);
+        expect(find.text('Own storage (0 KB)'), findsOneWidget);
+        expect(find.text('Kept'), findsNothing, reason: 'not a lyrics plugin');
         expect(ops.removed, isEmpty, reason: 'nothing before Remove');
+      });
+
+      testWidgets('names the size of the own storage that goes', (
+        tester,
+      ) async {
+        final ops = FakeInstallOps();
+        await pumpFlowHost(
+          tester,
+          ops: ops,
+          size: size,
+          overrides: RunState(storageBytes: 38 * 1024).overrides,
+          onTap: (c) => removePluginFlow(c, ops, 'id-demo'),
+        );
+        expect(find.text('Own storage (38 KB)'), findsOneWidget);
+      });
+
+      testWidgets('a lyrics plugin lists the saved lyrics it leaves', (
+        tester,
+      ) async {
+        final ops = FakeInstallOps()..preview = _lyricsPreview;
+        await pumpFlowHost(
+          tester,
+          ops: ops,
+          size: size,
+          overrides: RunState(
+            savedLyrics: const SavedLyricsStats(count: 86, bytes: 5000),
+          ).overrides,
+          onTap: (c) => removePluginFlow(c, ops, 'id-demo'),
+        );
+        expect(find.text('Kept'), findsOneWidget);
+        expect(
+          find.text(
+            'Saved lyrics of 86 songs and pinned lyrics from this source',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.text('The .lrc files written next to songs'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('a lyrics plugin with nothing saved still keeps pins', (
+        tester,
+      ) async {
+        final ops = FakeInstallOps()..preview = _lyricsPreview;
+        await pumpFlowHost(
+          tester,
+          ops: ops,
+          size: size,
+          overrides: RunState().overrides,
+          onTap: (c) => removePluginFlow(c, ops, 'id-demo'),
+        );
+        expect(
+          find.text('Pinned lyrics from this source (if any)'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Saved lyrics of'), findsNothing);
       });
 
       testWidgets('Cancel removes nothing', (tester) async {

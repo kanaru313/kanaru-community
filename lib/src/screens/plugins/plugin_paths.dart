@@ -9,6 +9,9 @@ abstract final class PluginPaths {
   static String plugin(String installId) =>
       '$store/p/${Uri.encodeComponent(installId)}';
 
+  /// The run log of the installed plugin [installId].
+  static String pluginLogs(String installId) => '${plugin(installId)}/logs';
+
   /// The store filtered to [kind], for the "Thêm …" rows of other pages.
   static String storeForKind(String kind) => '$store?kind=$kind';
 }
