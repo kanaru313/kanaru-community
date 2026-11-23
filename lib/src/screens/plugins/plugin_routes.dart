@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
+import 'logs/plugin_logs_page.dart';
 import 'page/plugin_page.dart';
 import 'repos/repositories_page.dart';
 import 'store/store_page.dart';
@@ -26,6 +27,15 @@ GoRoute buildPluginsRoute() => GoRoute(
           installId: state.pathParameters['installId']!,
         ),
       ),
+      routes: [
+        GoRoute(
+          path: 'logs',
+          pageBuilder: (_, state) => _page(
+            state,
+            PluginLogsPage(installId: state.pathParameters['installId']!),
+          ),
+        ),
+      ],
     ),
   ],
 );

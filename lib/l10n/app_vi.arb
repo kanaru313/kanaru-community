@@ -4104,8 +4104,6 @@
   "pluginsPageUseLyrics": "Tự tìm lời",
   "pluginsPageUseTranslate": "Dịch vụ dịch mặc định",
   "pluginsPageConnection": "Kết nối",
-  "pluginsPageConcurrent": "Yêu cầu cùng lúc",
-  "pluginsPageSpacing": "Giãn cách giữa các yêu cầu",
   "pluginsPageData": "Dữ liệu",
   "pluginsPageOwnStorage": "Bộ nhớ riêng của plugin",
   "pluginsPageSavedLyrics": "Lời đã lưu từ nguồn này",
@@ -4212,6 +4210,183 @@
       }
     }
   },
+  "pluginsPageUseLyricsOn": "Đang dùng · thứ {position} / {total} · đổi ở Cài đặt › Lời bài › Nguồn lời",
+  "@pluginsPageUseLyricsOn": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPageUseLyricsOff": "Tắt: chỉ tìm khi bạn bấm “Tìm lời trực tuyến…” · đổi ở Cài đặt › Lời bài › Nguồn lời",
+  "pluginsDataStorageValue": "{used} KB / {quota} KB",
+  "@pluginsDataStorageValue": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "quota": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsDataClear": "Xoá",
+  "pluginsDataClearStorageTitle": "Xoá bộ nhớ riêng của plugin?",
+  "pluginsDataClearStorageBody": "Plugin có thể phải đăng nhập hoặc thiết lập lại.",
+  "pluginsDataStorageCleared": "Đã xoá bộ nhớ riêng",
+  "pluginsDataSavedLyricsValue": "{count} bài · {size}",
+  "@pluginsDataSavedLyricsValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsDataSavedLyricsNone": "Chưa có",
+  "pluginsDataClearLyricsTitle": "Xoá lời đã lưu từ nguồn này?",
+  "pluginsDataClearLyricsBody": "Lời đã lưu từ nguồn này sẽ bị xoá. Lời đã ghim và file .lrc vẫn giữ.",
+  "pluginsDataLyricsCleared": "Đã xoá lời đã lưu",
+  "pluginsDataClearFailed": "Không xoá được dữ liệu",
+  "pluginsDataLogSummary": "{errors} lỗi hôm nay · {total} mục",
+  "@pluginsDataLogSummary": {
+    "placeholders": {
+      "errors": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsDataLogNoErrors": "Không có lỗi",
+  "pluginsPausedTitle": "Tạm dừng {minutes} phút: máy chủ báo quá nhiều yêu cầu (429)",
+  "@pluginsPausedTitle": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPausedBody": "Kanaru hỏi lại nguồn này sau {time}. Các nguồn khác vẫn tìm bình thường.",
+  "@pluginsPausedBody": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsTitle": "Nhật ký",
+  "pluginsLogsFilterLabel": "Lọc nhật ký",
+  "pluginsLogsAll": "Tất cả",
+  "pluginsLogsErrors": "Lỗi",
+  "pluginsLogsCaption": "Mỗi lần plugin chạy lỗi hoặc ghi ra console. Kanaru che giá trị cài đặt, bộ nhớ riêng và token mà nó biết. Plugin vẫn có thể tự ghi thông tin khác: xem lại trước khi chia sẻ.",
+  "pluginsLogsFooter": "Giữ 7 ngày gần nhất (tối đa 1 MB mỗi plugin). Tệp: {path}",
+  "@pluginsLogsFooter": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsEmpty": "Chưa có mục nào",
+  "pluginsLogsLoadFailed": "Không đọc được nhật ký",
+  "pluginsLogsOpenFolder": "Mở thư mục log",
+  "pluginsLogsOpenFailed": "Không mở được thư mục log",
+  "pluginsLogsShareSoon": "Chia sẻ · {soon}",
+  "@pluginsLogsShareSoon": {
+    "placeholders": {
+      "soon": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsClear": "Xoá nhật ký",
+  "pluginsLogsClearTitle": "Xoá nhật ký của plugin?",
+  "pluginsLogsClearBody": "Các mục nhật ký của {name} bị xoá. Không ảnh hưởng tới plugin.",
+  "@pluginsLogsClearBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsCleared": "Đã xoá nhật ký",
+  "pluginsLogsJobTarget": "{job} · {target}",
+  "@pluginsLogsJobTarget": {
+    "placeholders": {
+      "job": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsResultOk": "Chỉ ghi ra console",
+  "pluginsLogsResultError": "Lỗi: {reason}",
+  "@pluginsLogsResultError": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsResultErrorWith": "Lỗi: {reason} · {message}",
+  "@pluginsLogsResultErrorWith": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsKindRateLimited": "quá nhiều yêu cầu (429)",
+  "pluginsLogsKindInvalidResponse": "dữ liệu trả về không hợp lệ",
+  "pluginsLogsKindServer": "máy chủ lỗi",
+  "pluginsLogsKindAuth": "cần đăng nhập hoặc key sai",
+  "pluginsLogsKindQuota": "hết hạn mức",
+  "pluginsLogsKindTimeout": "hết thời gian chờ",
+  "pluginsLogsKindMemory": "hết bộ nhớ",
+  "pluginsLogsKindStack": "mã lặp quá sâu",
+  "pluginsLogsKindOutputTooLarge": "kết quả quá lớn",
+  "pluginsLogsKindInternal": "lỗi nội bộ",
+  "pluginsLogsKindOther": "{kind}",
+  "@pluginsLogsKindOther": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsRemoveStorage": "Bộ nhớ riêng ({size} KB)",
+  "@pluginsRemoveStorage": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsRemoveLog": "Nhật ký của plugin",
+  "pluginsRemoveKeepLyrics": "Lời đã lưu của {count} bài và lời đã ghim từ nguồn này",
+  "@pluginsRemoveKeepLyrics": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsRemoveKeepPinned": "Lời đã ghim từ nguồn này (nếu có)",
+  "pluginsRemoveKeepLrc": "File .lrc đã ghi cạnh bài",
+  "pluginsRemoveKeep": "Vẫn giữ",
+  "pluginsPageConnectionRow": "Yêu cầu cùng lúc, giãn cách",
   "fontsBuiltInTitle": "Có sẵn",
   "fontsBuiltInHint": "Chữ Hán, Hàn, Nhật và emoji luôn dùng phông của hệ thống.",
   "fontsDefaultSuffix": " · mặc định",
