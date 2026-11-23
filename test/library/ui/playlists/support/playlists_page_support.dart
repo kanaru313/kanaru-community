@@ -18,7 +18,8 @@ import '../../../../support/fake_playback_commands.dart';
 import 'playlist_menu_support.dart';
 import 'playlist_ui_harness.dart';
 
-/// Navigation items the hub reads: the three pages that are not built yet.
+/// Navigation items the hub reads: History and Most played (soon unless
+/// [historySoon] is false) and the live Queue.
 ExtensionRegistry hubRegistry({bool historySoon = true}) => ExtensionRegistry()
   ..addNavItem(
     NavItem(
@@ -47,13 +48,12 @@ ExtensionRegistry hubRegistry({bool historySoon = true}) => ExtensionRegistry()
   ..addNavItem(
     NavItem(
       id: 'queue',
-      path: '/queue',
+      path: '/playlists/queues',
       icon: KIcons.queue,
       selectedIcon: KIcons.queue,
       label: (_) => 'Queue',
       order: 230,
       mobileTab: false,
-      comingSoon: true,
     ),
   );
 

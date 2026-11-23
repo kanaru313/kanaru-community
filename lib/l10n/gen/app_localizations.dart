@@ -5988,6 +5988,198 @@ abstract class AppLocalizations {
   /// **'Couldn\'t add to Favorites'**
   String get historyMostPlayedFavoriteFailed;
 
+  /// No description provided for @savedQueueExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'When you play something else, the queue it replaces is kept here (up to 20, the oldest is dropped).'**
+  String get savedQueueExplain;
+
+  /// No description provided for @savedQueueEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved queues yet. When you play something else, the queue it replaces is kept here.'**
+  String get savedQueueEmpty;
+
+  /// No description provided for @savedQueueName.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} · {time}'**
+  String savedQueueName(String day, String time);
+
+  /// No description provided for @savedQueueExportName.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue {date}'**
+  String savedQueueExportName(String date);
+
+  /// No description provided for @savedQueueMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song gone} other{{count} songs gone}}'**
+  String savedQueueMissing(int count);
+
+  /// No description provided for @savedQueueFromAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'From album {name}'**
+  String savedQueueFromAlbum(String name);
+
+  /// No description provided for @savedQueueFromArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'From artist {name}'**
+  String savedQueueFromArtist(String name);
+
+  /// No description provided for @savedQueueFromGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'From genre {name}'**
+  String savedQueueFromGenre(String name);
+
+  /// No description provided for @savedQueueFromLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'From language {name}'**
+  String savedQueueFromLanguage(String name);
+
+  /// No description provided for @savedQueueFromFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'From folder {name}'**
+  String savedQueueFromFolder(String name);
+
+  /// No description provided for @savedQueueFromPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'From playlist {name}'**
+  String savedQueueFromPlaylist(String name);
+
+  /// No description provided for @savedQueueFromFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'From Favorites'**
+  String get savedQueueFromFavorites;
+
+  /// No description provided for @savedQueueFromSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'From Songs'**
+  String get savedQueueFromSongs;
+
+  /// No description provided for @savedQueueFromSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'From the selected songs'**
+  String get savedQueueFromSelection;
+
+  /// No description provided for @savedQueueFromList.
+  ///
+  /// In en, this message translates to:
+  /// **'From {name}'**
+  String savedQueueFromList(String name);
+
+  /// No description provided for @savedQueueNoSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'This queue has no songs left.'**
+  String get savedQueueNoSongs;
+
+  /// No description provided for @savedQueuePlayRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Play this queue'**
+  String get savedQueuePlayRow;
+
+  /// No description provided for @savedQueueBar.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song, in played order} other{{count} songs, in played order}}'**
+  String savedQueueBar(int count);
+
+  /// No description provided for @savedQueuePlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing queue {name} ({count, plural, =1{1 song} other{{count} songs}}). The previous queue was saved.'**
+  String savedQueuePlaying(String name, int count);
+
+  /// No description provided for @savedQueueNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue not found'**
+  String get savedQueueNotFoundTitle;
+
+  /// No description provided for @savedQueueNotFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This queue was deleted, or dropped when there were more than 20.'**
+  String get savedQueueNotFoundMessage;
+
+  /// No description provided for @savedQueueMenuPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play (replace the current queue)'**
+  String get savedQueueMenuPlay;
+
+  /// No description provided for @savedQueueMenuAppend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to the end of the queue'**
+  String get savedQueueMenuAppend;
+
+  /// No description provided for @savedQueueMenuSaveAsPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as playlist…'**
+  String get savedQueueMenuSaveAsPlaylist;
+
+  /// No description provided for @savedQueueMenuRemoveMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove songs that are gone'**
+  String get savedQueueMenuRemoveMissing;
+
+  /// No description provided for @savedQueueMenuDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this queue'**
+  String get savedQueueMenuDelete;
+
+  /// No description provided for @savedQueueDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this queue?'**
+  String get savedQueueDeleteTitle;
+
+  /// No description provided for @savedQueueDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The songs stay in your library.'**
+  String get savedQueueDeleteBody;
+
+  /// No description provided for @savedQueueDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue deleted'**
+  String get savedQueueDeleted;
+
+  /// No description provided for @savedQueueDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the queue'**
+  String get savedQueueDeleteFailed;
+
+  /// No description provided for @savedQueueRemovedMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Removed 1 song} other{Removed {count} songs}}'**
+  String savedQueueRemovedMissing(int count);
+
+  /// No description provided for @savedQueueRemoveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t remove the missing songs'**
+  String get savedQueueRemoveFailed;
+
   /// No description provided for @lyricsLabelTagSynced.
   ///
   /// In en, this message translates to:

@@ -9,10 +9,13 @@ import '../history/history_routes.dart';
 import '../library_locations.dart';
 import '../playlists/playlist_page.dart';
 import '../playlists/playlists_page.dart';
+import '../saved_queues/saved_queue_registration.dart';
+import '../saved_queues/saved_queue_routes.dart';
 
 /// Playlists tab, the Favorites sidebar item under it, and the playlist
 /// routes. Static children go before `:uid`, so a fixed name is never taken
-/// for a playlist id: `favorites` and History (`historyRoutes`). Most played
+/// for a playlist id: `favorites`, History (`historyRoutes`) and the saved
+/// queues (`savedQueueRoutes`). Most played
 /// (`most-played`) matches `:uid` until it is a real page, and a page asked
 /// for an unknown uid shows "not found".
 void registerPlaylists(ExtensionRegistry registry) {
@@ -40,12 +43,14 @@ void registerPlaylists(ExtensionRegistry registry) {
         parentId: 'playlists',
       ),
     )
+    ..addNavItem(savedQueuesNavItem())
     ..addRoute(
       GoRoute(
         path: LibraryLocations.playlists,
         builder: (_, _) => const PlaylistsPage(),
         routes: [
           ...historyRoutes(),
+          ...savedQueueRoutes(),
           GoRoute(
             path: PlaylistUids.favorites,
             pageBuilder: (context, state) => KDetailPage(

@@ -27,6 +27,7 @@ const Map<String, String?> arbParts = {
   'settings': 'settings',
   'sleep': 'sleepTimer',
   'history': 'history',
+  'savedqueue': 'savedQueue',
   'lyrics': 'lyrics',
   'plugins': 'plugins',
 };

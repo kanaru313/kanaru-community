@@ -12,6 +12,12 @@ abstract final class LibraryLocations {
 
   static String playlist(String uid) => '$playlists/$uid';
 
+  /// The saved queues and one of them (a ULID). Static children of
+  /// `/playlists`, so `queues` is never taken for a playlist id.
+  static const savedQueues = '$playlists/queues';
+
+  static String savedQueue(String uid) => '$savedQueues/$uid';
+
   /// Root page of one list: `/library/songs` … `/library/folders`.
   static String list(LibraryTab tab) => '$root/${tab.name}';
 

@@ -3764,6 +3764,146 @@ class AppLocalizationsVi extends AppLocalizations {
   String get historyMostPlayedFavoriteFailed => 'Không thêm được vào Yêu thích';
 
   @override
+  String get savedQueueExplain =>
+      'Khi bạn phát thứ khác, hàng đợi bị thay được giữ ở đây (tối đa 20, cũ nhất bị bỏ).';
+
+  @override
+  String get savedQueueEmpty =>
+      'Chưa có hàng đợi nào được lưu. Khi bạn phát thứ khác, hàng đợi bị thay sẽ được giữ ở đây.';
+
+  @override
+  String savedQueueName(String day, String time) {
+    return '$day · $time';
+  }
+
+  @override
+  String savedQueueExportName(String date) {
+    return 'Hàng đợi $date';
+  }
+
+  @override
+  String savedQueueMissing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bài không còn',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String savedQueueFromAlbum(String name) {
+    return 'Từ album $name';
+  }
+
+  @override
+  String savedQueueFromArtist(String name) {
+    return 'Từ nghệ sĩ $name';
+  }
+
+  @override
+  String savedQueueFromGenre(String name) {
+    return 'Từ thể loại $name';
+  }
+
+  @override
+  String savedQueueFromLanguage(String name) {
+    return 'Từ ngôn ngữ $name';
+  }
+
+  @override
+  String savedQueueFromFolder(String name) {
+    return 'Từ thư mục $name';
+  }
+
+  @override
+  String savedQueueFromPlaylist(String name) {
+    return 'Từ playlist $name';
+  }
+
+  @override
+  String get savedQueueFromFavorites => 'Từ Yêu thích';
+
+  @override
+  String get savedQueueFromSongs => 'Từ Bài hát';
+
+  @override
+  String get savedQueueFromSelection => 'Từ các bài đã chọn';
+
+  @override
+  String savedQueueFromList(String name) {
+    return 'Từ $name';
+  }
+
+  @override
+  String get savedQueueNoSongs => 'Hàng đợi này không còn bài nào.';
+
+  @override
+  String get savedQueuePlayRow => 'Phát hàng đợi này';
+
+  @override
+  String savedQueueBar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bài, theo thứ tự đã phát',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String savedQueuePlaying(String name, int count) {
+    return 'Đang phát hàng đợi $name ($count bài). Hàng đợi cũ đã được lưu.';
+  }
+
+  @override
+  String get savedQueueNotFoundTitle => 'Không tìm thấy hàng đợi';
+
+  @override
+  String get savedQueueNotFoundMessage =>
+      'Hàng đợi này đã bị xoá, hoặc bị bỏ khi có hơn 20 hàng đợi.';
+
+  @override
+  String get savedQueueMenuPlay => 'Phát (thay hàng đợi hiện tại)';
+
+  @override
+  String get savedQueueMenuAppend => 'Thêm vào cuối hàng đợi';
+
+  @override
+  String get savedQueueMenuSaveAsPlaylist => 'Lưu thành playlist…';
+
+  @override
+  String get savedQueueMenuRemoveMissing => 'Bỏ các bài không còn';
+
+  @override
+  String get savedQueueMenuDelete => 'Xoá hàng đợi này';
+
+  @override
+  String get savedQueueDeleteTitle => 'Xoá hàng đợi này?';
+
+  @override
+  String get savedQueueDeleteBody => 'Các bài vẫn còn trong thư viện.';
+
+  @override
+  String get savedQueueDeleted => 'Đã xoá hàng đợi';
+
+  @override
+  String get savedQueueDeleteFailed => 'Không xoá được hàng đợi';
+
+  @override
+  String savedQueueRemovedMissing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã bỏ $count bài',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get savedQueueRemoveFailed => 'Không bỏ được các bài không còn';
+
+  @override
   String get lyricsLabelTagSynced => 'Lời trong tag · Đồng bộ';
 
   @override

@@ -2962,6 +2962,135 @@
   },
   "historyMostPlayedOpenDay": "Open in Most played",
   "historyMostPlayedFavoriteFailed": "Couldn't add to Favorites",
+  "savedQueueExplain": "When you play something else, the queue it replaces is kept here (up to 20, the oldest is dropped).",
+  "savedQueueEmpty": "No saved queues yet. When you play something else, the queue it replaces is kept here.",
+  "savedQueueName": "{day} · {time}",
+  "@savedQueueName": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueExportName": "Queue {date}",
+  "@savedQueueExportName": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueMissing": "{count, plural, =1{1 song gone} other{{count} songs gone}}",
+  "@savedQueueMissing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savedQueueFromAlbum": "From album {name}",
+  "@savedQueueFromAlbum": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueFromArtist": "From artist {name}",
+  "@savedQueueFromArtist": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueFromGenre": "From genre {name}",
+  "@savedQueueFromGenre": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueFromLanguage": "From language {name}",
+  "@savedQueueFromLanguage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueFromFolder": "From folder {name}",
+  "@savedQueueFromFolder": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueFromPlaylist": "From playlist {name}",
+  "@savedQueueFromPlaylist": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueFromFavorites": "From Favorites",
+  "savedQueueFromSongs": "From Songs",
+  "savedQueueFromSelection": "From the selected songs",
+  "savedQueueFromList": "From {name}",
+  "@savedQueueFromList": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedQueueNoSongs": "This queue has no songs left.",
+  "savedQueuePlayRow": "Play this queue",
+  "savedQueueBar": "{count, plural, =1{1 song, in played order} other{{count} songs, in played order}}",
+  "@savedQueueBar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savedQueuePlaying": "Playing queue {name} ({count, plural, =1{1 song} other{{count} songs}}). The previous queue was saved.",
+  "@savedQueuePlaying": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savedQueueNotFoundTitle": "Queue not found",
+  "savedQueueNotFoundMessage": "This queue was deleted, or dropped when there were more than 20.",
+  "savedQueueMenuPlay": "Play (replace the current queue)",
+  "savedQueueMenuAppend": "Add to the end of the queue",
+  "savedQueueMenuSaveAsPlaylist": "Save as playlist…",
+  "savedQueueMenuRemoveMissing": "Remove songs that are gone",
+  "savedQueueMenuDelete": "Delete this queue",
+  "savedQueueDeleteTitle": "Delete this queue?",
+  "savedQueueDeleteBody": "The songs stay in your library.",
+  "savedQueueDeleted": "Queue deleted",
+  "savedQueueDeleteFailed": "Couldn't delete the queue",
+  "savedQueueRemovedMissing": "{count, plural, =1{Removed 1 song} other{Removed {count} songs}}",
+  "@savedQueueRemovedMissing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savedQueueRemoveFailed": "Couldn't remove the missing songs",
   "lyricsLabelTagSynced": "Lyrics in tag · Synced",
   "lyricsLabelTagPlain": "Lyrics in tag · Plain",
   "lyricsLabelLrcSynced": "LRC file · Synced",

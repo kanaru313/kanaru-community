@@ -219,12 +219,13 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
 `library/ui/playlist_common/` (shared) and the seed pages below.
 
 - **Routes** (`playlist_registration.dart`, called from `LibraryExtension`):
-  nav items `playlists` (210, mobile 30) and `favorites` (220, `parentId:
-  'playlists'`, not a tab); route `/playlists` (`PlaylistsPage`) with the child
-  `favorites` first, then `:uid`, both through `KDetailPage` (`kanaru_ui`: the
-  detail transition and surface ground). A static child always goes
-  before `:uid`, so a fixed name is never read as a playlist id (History and Most
-  played have their routes, see "History" and "Most played").
+  nav items `playlists` (210, mobile 30), `favorites` (220, `parentId:
+  'playlists'`, not a tab) and `queue` (230, see "Saved queues (pages)"); route
+  `/playlists` (`PlaylistsPage`) with the child `favorites` first, then `:uid`,
+  both through `KDetailPage` (`kanaru_ui`: the detail transition and surface
+  ground). A static child always goes before `:uid`, so a fixed name is never
+  read as a playlist id (History, Most played and the saved queues have their
+  routes, see "History", "Most played" and "Saved queues (pages)").
 - **Seeds** (the placeholder body is replaced by the owner lane, the
   declaration stays): `PlaylistsPage`, `PlaylistPage({uid})` (playlist screens)
   were seeds (placeholder bodies replaced by
@@ -512,6 +513,60 @@ and is part of the summary's equality, so a watching page sees a new `savedAt`.
   `playlistDetailProvider` does, so `/playlists/<queue uid>` is "not found".
   `PlaylistPageController` only runs on a page that opened, which a queue uid
   cannot.
+
+## Saved queues (pages)
+
+The Queue item of the sidebar and the hub tile open `/playlists/queues`, the
+queues the player replaced or cleared; a row opens `/playlists/queues/<uid>`.
+Files in `library/ui/saved_queues/`; state in `library/state/saved_queues/`
+(`savedQueuesProvider`, `savedQueueDetailProvider(uid)`, both streams of the
+store). Strings: arb part `savedqueue` (prefix `savedQueue`); the nav label is
+`playbackNavQueue`. Specs: `mockups/screens/05d-history.md` (Hàng đợi).
+
+- **Registration.** `saved_queue_registration.dart` (`savedQueuesNavItem()`:
+  `id: 'queue'`, order 230, `parentId: 'playlists'`, `mobileTab: false`; Now
+  Playing no longer registers one) and `saved_queue_routes.dart`
+  (`savedQueueRoutes()`: `queues` with the child `:uid`, both `KDetailPage`),
+  nested by `registerPlaylists` before `:uid`. `LibraryLocations.savedQueues`
+  and `savedQueue(uid)` build the paths.
+- **List** (`saved_queues_page.dart`): `HistoryPageFrame` (plain, untinted; the
+  header names it, a back button on mobile only), a visible line saying what
+  the list is (no ⓘ outside Settings), then `SavedQueueTile` rows (the playlist
+  row shape: automatic cover 56, name, stats, `From …`, ▶, ⋮). Empty: the empty
+  message alone. Loading: skeleton rows under the same line.
+- **Name.** `savedQueueName(l10n, savedAt, today)`: `Today · 21:17`,
+  `Yesterday`, the weekday up to 6 days back, `dd/MM`, `dd/MM/yyyy` for another
+  year. Calendar days (`dayLabelKind`), so a 23 or 25 hour day is one day;
+  `localDayProvider` rebuilds the page at midnight. The M3U name
+  (`playlistDisplayName` for a queue) is `Queue dd/MM/yyyy HH:mm`, never
+  "Today".
+- **Source line.** `savedQueueSourceLine`: `From album|artist|genre|language|
+  folder|playlist <name>`, `From Favorites`, `From Songs`, `From the selected
+  songs`, History / Most played by their label; none for a plain queue, an
+  unknown kind or a source without its name.
+- **One queue** (`saved_queue_page.dart`): `HistoryPageFrame.layout` with
+  `showBack: true` (a sub-page on both shells), tinted by the first cover. The
+  hero (`saved_queue_hero.dart`) is the playlist hero without a description:
+  name, `N songs · length`, source, `[▶ Play] [shuffle] [⋮]`. The bar says
+  `N songs, in played order` (no sort, filter or edit). Rows
+  (`saved_queue_rows.dart`) are `SongTile`s; a missing song is dimmed, answers a
+  tap with a toast and has no ✕. A tap on a song that can play starts the
+  playable songs from it under the saved source. Deleted, dropped or not a
+  queue: "not found" (`saved_queue_states.dart`).
+- **Replay** (`saved_queue_play.dart`, `playSavedQueue`): takes a play request
+  number, reads the queue now, keeps the songs with `status = present` (the
+  rule of the match), `touch`es the queue (it moves to the top and is renamed by
+  the time), then `playTracks` under the saved `PlayContext` (a plain queue
+  context when none), shuffle as for any play. The toast is `Playing queue
+  <name> (N songs). The previous queue was saved.` with no Undo. Nothing
+  playable or a queue that is gone: toast, no play.
+- **Menu** (`saved_queue_menu.dart`, one spec for the list row and the page):
+  Play, Shuffle, Add to the end of the queue, Save as playlist, Add all to
+  Favorites, Export M3U, Remove missing songs (only when some are missing), a
+  group apart with the red Delete. Actions (`saved_queue_actions.dart`) read the
+  queue when chosen, never from the menu's snapshot. Delete
+  (`saved_queue_delete.dart`) confirms in a dialog, and on the queue's own page
+  leaves for the list before deleting, so the page never flashes "not found".
 
 ## M3U import and export
 
@@ -1066,6 +1121,7 @@ the `TrackId` anchor of this provider, because a track can be queued twice.
 | Songs to Folders | 110-160 | Children of `library` (`parentId`, `mobileTab: false`), paths `LibraryLocations.list(tab)`; always all six in the sidebar, in default order (the tab setting steers the mobile sub-tabs only) |
 | Playlists | 210 (mobile 30) | Tab, route `/playlists`; registered in `library/ui/playlist_common/playlist_registration.dart` (see "Playlists") |
 | Favorites | 220 | Child of `playlists` (`parentId`, `mobileTab: false`), path `/playlists/favorites` |
+| Queue | 230 | Child of `playlists` (`parentId`, `mobileTab: false`), path `/playlists/queues`, live; registered by `registerPlaylists` through `savedQueuesNavItem()` (see "Saved queues (pages)"). Its id `queue` is the one the hub tile looks up |
 | History | 240 | Child of `playlists` (`parentId`, `mobileTab: false`), path `/playlists/history`, live; registered in `library/ui/history/history_registration.dart` (see "History") |
 | Most played | 250 | Same parent and registration file, path `/playlists/most-played`, live (see "Most played") |
 
@@ -1483,7 +1539,6 @@ Dimmed and inert, with the tooltip or subtitle "Coming soon" (`appComingSoon`,
 | Context menus | "Show in file manager" where `FileManager.canReveal` is false (Android) | a platform implementation |
 | Selection panel | Edit | tag editor |
 | Scan banner (failed scan) | "Grant permission" | the Android permission flow |
-| Sidebar (`comingSoon: true`) | Queue | its page |
 
 The empty state scrolls (centred when there is room), so a short window or
 large text never overflows.

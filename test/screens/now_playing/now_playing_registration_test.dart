@@ -25,13 +25,10 @@ void main() {
     expect(r.startupHooks, hasLength(1));
   });
 
-  test('the Queue nav item is a dimmed "coming soon" item', () {
+  test('the Queue nav item is the library\'s, not registered here', () {
     final r = ExtensionRegistry();
     registerNowPlaying(r);
-    final queue = r.navItems.singleWhere((n) => n.id == 'queue');
-    expect(queue.comingSoon, isTrue);
-    expect(queue.onSelect, isNull);
-    expect(queue.isBranch, isFalse);
+    expect(r.navItems.where((n) => n.id == 'queue'), isEmpty);
   });
 
   test('the Now Playing page is a registered route', () {
