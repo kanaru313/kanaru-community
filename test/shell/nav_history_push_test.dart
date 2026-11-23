@@ -173,6 +173,27 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets('going to the list from its pushed detail is a new visit', (
+      tester,
+    ) async {
+      await setUp(tester);
+      _router(tester).go('/beta');
+      await tester.pumpAndSettle();
+      _router(tester).go('/albums');
+      await tester.pumpAndSettle();
+      await _push(tester, '/albums/a/1');
+      // Same places as a pop, but a navigation (a sidebar tap, a link).
+      _router(tester).go('/albums');
+      await tester.pumpAndSettle();
+      expect(history!.canGoForward, isFalse);
+      await back(tester);
+      expect(_top(tester), '/albums/a/1');
+      await back(tester);
+      expect(_top(tester), '/albums');
+      await back(tester);
+      expect(_top(tester), '/beta');
+    });
+
     testWidgets('pop, forward, pop again: fresh completer, no throw', (
       tester,
     ) async {

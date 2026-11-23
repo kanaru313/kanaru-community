@@ -51,11 +51,13 @@ class NavHistory extends ChangeNotifier {
     if (_index > 0 &&
         here.length == parts.length + 1 &&
         key == _keyOf(_entries[_index - 1]) &&
-        _isPrefix(parts, here)) {
+        _isPrefix(parts, here) &&
+        _sameBase(current, _entries[_index])) {
       // A real pop: the new place is the current one minus its last pushed
       // page and equals the previous entry. One step back, forward stays.
       // Anything else that lands on the previous place (tab ping-pong,
-      // X -> A -> B -> A) is a new visit.
+      // X -> A -> B -> A, `go` to the list from its pushed detail) is a new
+      // visit.
       _index--;
       _entries[_index] = current;
       notifyListeners();
@@ -77,6 +79,27 @@ class NavHistory extends ChangeNotifier {
   static bool _isPrefix(List<String> prefix, List<String> full) {
     for (var i = 0; i < prefix.length; i++) {
       if (prefix[i] != full[i]) return false;
+    }
+    return true;
+  }
+
+  /// Whether [a] and [b] share their base route matches object for object.
+  /// A pop removes the last pushed page from the router's list and keeps the
+  /// other matches; `go` parses a new list, so the same places reached by a
+  /// navigation come with new objects.
+  static bool _sameBase(RouteMatchList a, RouteMatchList b) {
+    List<RouteMatch> base(List<RouteMatchBase> matches) => [
+      for (final m in matches)
+        if (m is ShellRouteMatch)
+          ...base(m.matches)
+        else if (m is RouteMatch && m is! ImperativeRouteMatch)
+          m,
+    ];
+    final x = base(a.matches);
+    final y = base(b.matches);
+    if (x.length != y.length) return false;
+    for (var i = 0; i < x.length; i++) {
+      if (!identical(x[i], y[i])) return false;
     }
     return true;
   }
