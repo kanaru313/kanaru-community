@@ -17,12 +17,13 @@ database    -> foundation
 extension   -> foundation
 media       -> extension, foundation
 plugins     -> media, database, platform, foundation
+fonts       -> plugins, platform, foundation
 playback    -> media, platform, database
 storage     -> media, platform
 library     -> playback, storage, media, database, extension, platform
 lyrics      -> library, playback, plugins
 online      -> library, playback, plugins
-screens     -> lyrics, online, library, playback, plugins, storage, extension, platform
+screens     -> fonts, lyrics, online, library, playback, plugins, storage, extension, platform
 shell       -> screens
 router      -> shell, screens
 ```
@@ -113,6 +114,8 @@ and shows `KanaruErrorApp`. On success the results are injected as `ProviderScop
 overrides (`nativeVersionsProvider`, `appPathsProvider`, `settingsStoreProvider`,
 `deviceIdProvider`, `appDatabaseProvider`, `extensionRegistryProvider`) and
 `KanaruApp` starts.
+
+Between `bootstrap` and `runApp`, `prepareStartupFont` (`fonts/data/startup_font.dart`) repairs leftovers of an interrupted font install, loads the stored font into the engine and rewrites `app.font` to the default when it is unusable. It never throws; its `FontRegistrar` is passed as the `fontLoaderProvider` override.
 
 ## Shared files: frozen (F) and seeded (S)
 
@@ -332,6 +335,7 @@ never 1000 or more, which belongs to the Settings footer.
 | `app.language` | `AppLanguage` (`vi`, `en`) | device locale (`vi` or `en`) | same |
 | `app.pure_black` | bool | false (dark theme only) | `screens/settings/state/display_settings.dart` |
 | `app.motion` | bool | true (false forces `MediaQuery.disableAnimations`: widgets that honour it stop animating, and `kanaru_ui` pages, sheets, dialogs and popovers open without a transition, see Settings pages) | same |
+| `app.font` | font id string (`nunito`, `inter`, `system`, catalog ids, `custom_*`; matches `^[a-zA-Z0-9_-]{1,128}$`) | `nunito` (an invalid value falls back and is rewritten at startup) | `fonts/domain/font_setting.dart` |
 | `playback.seek_bar_style` | `SeekBarStyle` (`waveform`, `flat`) | `waveform` | `playback/domain/seek_bar_style.dart` |
 | `app.text_scale` | int percent: 80, 90, 100, 110, 125, 150 | 100 (another whole number snaps to the nearest step; the app caps system x factor at 2.0) | same |
 | `library.tabs` | `LibraryTabsConfig` | all tabs, default order | `library/state/library_tabs_providers.dart` |

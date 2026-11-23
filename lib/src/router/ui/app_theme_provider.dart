@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../fonts/state/font_providers.dart';
 import '../../playback/state/app_cover_seed.dart';
 import '../../screens/settings/state/display_settings.dart';
 
@@ -19,7 +20,11 @@ final appThemeProvider = Provider.family<ThemeData, Brightness>((
 ) {
   final stored = ref.watch(appCoverSeedProvider);
   final seed = stored == null ? kanaruSeed : Color(stored);
-  var theme = buildKanaruTheme(brightness: brightness, seed: seed);
+  var theme = buildKanaruTheme(
+    brightness: brightness,
+    seed: seed,
+    fontFamily: ref.watch(activeFontFamilyProvider),
+  );
   // Motion off: page routes get zero durations too (they read the theme).
   if (!ref.watch(appMotionProvider)) {
     theme = theme.copyWith(
