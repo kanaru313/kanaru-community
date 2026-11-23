@@ -107,7 +107,10 @@ class _KNavRowState extends State<KNavRow> {
                         ? null
                         : Colors.transparent,
                   ),
+                  // Expand: the row fills the 48 dp height, so icon and
+                  // label stay centred with or without the accent bar.
                   child: Stack(
+                    fit: StackFit.expand,
                     children: [
                       Row(
                         children: [

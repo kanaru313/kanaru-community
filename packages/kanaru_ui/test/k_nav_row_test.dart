@@ -102,4 +102,18 @@ void main() {
     );
     expect(ink.overlayColor!.resolve({WidgetState.pressed}), isNull);
   });
+
+  for (final selected in [false, true]) {
+    testWidgets('icon and label are vertically centred (selected: $selected)', (
+      t,
+    ) async {
+      await t.pumpWidget(_row(selected: selected));
+      final row = t.getCenter(find.byType(KNavRow)).dy;
+      expect(t.getCenter(find.byType(Icon)).dy, moreOrLessEquals(row));
+      expect(
+        t.getCenter(find.text('Trang chủ')).dy,
+        moreOrLessEquals(row, epsilon: 1),
+      );
+    });
+  }
 }
