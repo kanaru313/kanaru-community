@@ -128,6 +128,85 @@ void main() {
     }
   });
 
+  testWidgets('a third line and the badge fit the extent, no overflow', (
+    tester,
+  ) async {
+    for (final scale in [1.0, 2.0]) {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          Builder(
+            builder: (context) {
+              final scaler = MediaQuery.textScalerOf(context);
+              return Align(
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: 180,
+                  height:
+                      180 +
+                      KGridCard.footerExtent(
+                        scaler,
+                        filled: true,
+                        detail: true,
+                      ),
+                  child: KGridCard(
+                    filled: true,
+                    title: 'T',
+                    subtitle: 'S',
+                    detail: 'D',
+                    coverBadge: const SizedBox.square(
+                      key: ValueKey('badge'),
+                      dimension: 32,
+                    ),
+                    coverBuilder: (context, side) =>
+                        SizedBox.square(dimension: side),
+                  ),
+                ),
+              );
+            },
+          ),
+          textScale: scale,
+        ),
+      );
+      expect(find.text('D'), findsOneWidget);
+      expect(find.byKey(const ValueKey('badge')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('selected and playing states reach screen readers', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    final handle = tester.ensureSemantics();
+    Widget card({required bool selected, required bool current}) => host(
+      SizedBox(
+        width: 180,
+        child: KGridCard(
+          filled: true,
+          title: 'T',
+          selected: selected,
+          selecting: true,
+          current: current,
+          currentLabel: 'Now playing',
+          coverBuilder: (context, side) => SizedBox.square(dimension: side),
+          onTap: () {},
+        ),
+      ),
+    );
+    await tester.pumpWidget(card(selected: true, current: false));
+    expect(
+      tester.getSemantics(find.byType(KGridCard)),
+      isSemantics(isSelected: true),
+    );
+    await tester.pumpWidget(card(selected: false, current: true));
+    expect(
+      tester.getSemantics(find.byType(KGridCard)),
+      isSemantics(isSelected: false, value: 'Now playing'),
+    );
+    handle.dispose();
+  });
+
   testWidgets('tap and long press reach the callbacks', (tester) async {
     useWindow(tester, const Size(400, 800));
     var taps = 0;

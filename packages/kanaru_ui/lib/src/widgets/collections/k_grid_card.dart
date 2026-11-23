@@ -1,8 +1,10 @@
 import 'package:flutter/semantics.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../theme/k_row_colors.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
+import 'k_media_card_frame.dart' show KMediaCardCoverCheck;
 
 /// Tile of an album or artist grid: a square cover (or a round photo) as wide
 /// as the tile, a title and a subtitle under it. Both texts take one line, so
@@ -13,6 +15,9 @@ import '../../tokens/k_space.dart';
 /// corners around the cover and the texts, the cover inset by [filledInset]
 /// and rounded by [filledCoverRadius] (concentric with the card), the texts
 /// indented and the title bolder. Tap and hover ink cover the whole card.
+/// Only a filled card takes a third line ([detail]), the playing / selected
+/// states and a [coverBadge] (song grid): those look like the song rows
+/// (playing gradient, selected tint, the cover check of `KMediaCard`).
 ///
 /// The cover is drawn by [coverBuilder] with the side it may use, so the
 /// caller keeps the music types (cover files, seeds) and this widget the
@@ -25,12 +30,27 @@ class KGridCard extends StatelessWidget {
     this.subtitle,
     this.circle = false,
     this.filled = false,
+    this.detail,
+    this.current = false,
+    this.currentLabel,
+    this.selected = false,
+    this.selecting = false,
+    this.coverBadge,
     this.onTap,
     this.onLongPress,
     this.onMenu,
     this.menuLabel,
   }) : assert(onMenu == null || menuLabel != null, 'onMenu needs menuLabel'),
-       assert(!(circle && filled), 'a round photo has no card');
+       assert(!(circle && filled), 'a round photo has no card'),
+       assert(
+         filled ||
+             (detail == null &&
+                 !current &&
+                 !selected &&
+                 !selecting &&
+                 coverBadge == null),
+         'only a filled card has a third line, states and a badge',
+       );
 
   /// Draws the cover in a square of the given side.
   final Widget Function(BuildContext context, double side) coverBuilder;
@@ -42,6 +62,26 @@ class KGridCard extends StatelessWidget {
 
   /// Album card: fill around the cover and texts (see the class doc).
   final bool filled;
+
+  /// Third text line under [subtitle] (filled cards only; the song grid's
+  /// `album • length`). Give the same to [footerExtent].
+  final String? detail;
+
+  /// The item is the one playing: the playing gradient and its ink.
+  final bool current;
+
+  /// Screen-reader text for [current] (for example "Now playing").
+  final String? currentLabel;
+
+  /// The item is in a multi-select: the selected tint and the cover check.
+  final bool selected;
+
+  /// A multi-select is active: unselected covers show the ring.
+  final bool selecting;
+
+  /// Small control at the cover's bottom-end corner, on a round backing the
+  /// card draws (the song grid's heart). Null shows none.
+  final Widget? coverBadge;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
@@ -72,11 +112,16 @@ class KGridCard extends StatelessWidget {
   static const double _filledTextInset = KSpace.x2;
   static const double _filledBottom = KSpace.x3;
   static const BorderRadius _filledRadius = KRadius.sm;
+  static const double _badgeInset = 6;
 
   /// Height of the tile beyond its width for [scaler]: gap, title line,
   /// subtitle line; when [filled], also the card's padding (its cover is
   /// `2 * filledInset` narrower than the tile, so that part is subtracted).
-  static double footerExtent(TextScaler scaler, {bool filled = false}) {
+  static double footerExtent(
+    TextScaler scaler, {
+    bool filled = false,
+    bool detail = false,
+  }) {
     if (!filled) {
       return _gap +
           scaler.scale(_titleSize) * _lineHeight +
@@ -85,7 +130,7 @@ class KGridCard extends StatelessWidget {
     // Top inset + cover = tile width - filledInset; then gap, lines, bottom.
     return _gap +
         scaler.scale(_titleSize) * _filledTitleHeight +
-        scaler.scale(_subtitleSize) * _filledSubtitleHeight +
+        scaler.scale(_subtitleSize) * _filledSubtitleHeight * (detail ? 2 : 1) +
         _filledBottom -
         filledInset;
   }
@@ -95,6 +140,8 @@ class KGridCard extends StatelessWidget {
     final menuLabel = this.menuLabel;
     return Semantics(
       button: onTap != null,
+      selected: filled && (selected || selecting) ? selected : null,
+      value: current ? currentLabel : null,
       customSemanticsActions: onMenu == null || menuLabel == null
           ? null
           : {CustomSemanticsAction(label: menuLabel): onMenu!},
@@ -153,8 +200,23 @@ class KGridCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     const shape = RoundedRectangleBorder(borderRadius: _filledRadius);
-    return Material(
-      color: scheme.onSurface.withValues(alpha: 0.06),
+    // Same colours as a song row in the same state.
+    final ink = current
+        ? scheme.onPrimaryContainer
+        : selected
+        ? scheme.onSecondaryContainer
+        : scheme.onSurface;
+    final soft = current || selected
+        ? ink.withValues(alpha: KRowColors.containerSoftAlpha)
+        : scheme.onSurfaceVariant;
+    final detail = this.detail;
+    final badge = coverBadge;
+    final card = Material(
+      color: current
+          ? Colors.transparent
+          : selected
+          ? scheme.secondaryContainer
+          : scheme.onSurface.withValues(alpha: 0.06),
       shape: shape,
       child: InkWell(
         onTap: onTap,
@@ -175,7 +237,32 @@ class KGridCard extends StatelessWidget {
                 children: [
                   SizedBox.square(
                     dimension: side,
-                    child: coverBuilder(context, side),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(child: coverBuilder(context, side)),
+                        if (selected || selecting)
+                          Positioned.fill(
+                            child: KMediaCardCoverCheck(
+                              circle: false,
+                              selected: selected,
+                              selecting: selecting,
+                              radius: filledCoverRadius,
+                            ),
+                          ),
+                        if (badge != null)
+                          PositionedDirectional(
+                            end: _badgeInset,
+                            bottom: _badgeInset,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: scheme.surface.withValues(alpha: 0.78),
+                              ),
+                              child: badge,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: _gap),
                   Padding(
@@ -192,18 +279,19 @@ class KGridCard extends StatelessWidget {
                             fontSize: _titleSize,
                             height: _filledTitleHeight,
                             fontWeight: FontWeight.w700,
-                            color: scheme.onSurface,
+                            color: ink,
                           ),
                         ),
-                        _line(
-                          subtitle ?? '',
-                          TextAlign.start,
-                          textTheme.bodySmall?.copyWith(
-                            fontSize: _subtitleSize,
-                            height: _filledSubtitleHeight,
-                            color: scheme.onSurfaceVariant,
+                        for (final line in [subtitle ?? '', ?detail])
+                          _line(
+                            line,
+                            TextAlign.start,
+                            textTheme.bodySmall?.copyWith(
+                              fontSize: _subtitleSize,
+                              height: _filledSubtitleHeight,
+                              color: soft,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -213,6 +301,14 @@ class KGridCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+    if (!current) return card;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: KRowColors.playingGradient(scheme),
+        borderRadius: _filledRadius,
+      ),
+      child: card,
     );
   }
 

@@ -24,6 +24,7 @@ class KCollectionGrid extends StatelessWidget {
     this.mobileMinTileWidth,
     this.desktopMinTileWidth,
     this.maxTileWidth,
+    this.onLayout,
     this.tileAspect = 1,
     this.footerExtent = 0,
     this.spacing = KSpace.x3,
@@ -41,6 +42,10 @@ class KCollectionGrid extends StatelessWidget {
 
   /// Widest a tile may be; wins over the minimums when set.
   final double? maxTileWidth;
+
+  /// Called after each layout with the first and last index built (cache
+  /// extent included), for grids that load their items a page at a time.
+  final void Function(int first, int last)? onLayout;
   final double tileAspect;
   final double footerExtent;
   final double spacing;
@@ -77,9 +82,8 @@ class KCollectionGrid extends StatelessWidget {
         final tileWidth = (inner - spacing * (columns - 1)) / columns;
         return SliverPadding(
           padding: padding,
-          sliver: SliverGrid.builder(
-            itemCount: itemCount,
-            itemBuilder: itemBuilder,
+          sliver: SliverGrid(
+            delegate: _RangeDelegate(itemBuilder, itemCount, onLayout),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columns,
               mainAxisSpacing: spacing,
@@ -91,4 +95,16 @@ class KCollectionGrid extends StatelessWidget {
       },
     );
   }
+}
+
+/// Builds tiles lazily and reports the range it built after each layout.
+class _RangeDelegate extends SliverChildBuilderDelegate {
+  _RangeDelegate(super.builder, int count, this.onLayout)
+    : super(childCount: count, addAutomaticKeepAlives: false);
+
+  final void Function(int first, int last)? onLayout;
+
+  @override
+  void didFinishLayout(int firstIndex, int lastIndex) =>
+      onLayout?.call(firstIndex, lastIndex);
 }

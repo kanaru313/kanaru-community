@@ -260,9 +260,13 @@ class KMediaCardCoverCheck extends StatelessWidget {
     required this.circle,
     required this.selected,
     required this.selecting,
+    this.radius = KRadius.sm,
   });
 
   final bool circle;
+
+  /// Corners of a square cover (ignored for [circle]).
+  final BorderRadius radius;
   final bool selected;
 
   /// A selection is active. Without it and without [selected] the overlay
@@ -279,7 +283,7 @@ class KMediaCardCoverCheck extends StatelessWidget {
             ? Colors.black.withValues(alpha: 0.35)
             : Colors.transparent,
         shape: circle ? BoxShape.circle : BoxShape.rectangle,
-        borderRadius: circle ? null : KRadius.sm,
+        borderRadius: circle ? null : radius,
       ),
       child: Center(
         child: AnimatedOpacity(
