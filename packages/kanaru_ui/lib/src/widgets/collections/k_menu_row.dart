@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:material_ui/material_ui.dart';
 
 import '../../icons/k_icons.dart';
@@ -59,6 +60,9 @@ class KMenuRow {
     this.danger = false,
     this.proLabel,
     this.hint,
+    this.on,
+    this.onTitle,
+    this.onIcon,
   });
 
   final String title;
@@ -83,6 +87,14 @@ class KMenuRow {
 
   /// Accessible description of what the row does (no visible text).
   final String? hint;
+
+  /// Live toggle row: while `on.value` is true the row shows [onTitle] and
+  /// [onIcon] (each falls back to [title] / [icon]), else [title] and [icon];
+  /// it follows the notifier while the menu is open. Tapping runs [onTap] and
+  /// keeps the menu open so the change is seen at once. Semantics: toggled.
+  final ValueListenable<bool>? on;
+  final String? onTitle;
+  final IconData? onIcon;
 
   bool get active => enabled && soonLabel == null;
 }
@@ -116,7 +128,12 @@ class KMenuPage {
     this.note,
     this.groupTitles = const [],
     this.headerOpens,
-  });
+    this.onHeaderTap,
+    this.headerHint,
+  }) : assert(
+         onHeaderTap == null || headerOpens == null,
+         'give onHeaderTap or headerOpens, not both',
+       );
 
   final String? title;
   final Widget? header;
@@ -128,6 +145,15 @@ class KMenuPage {
 
   /// Makes the [header] a button (with a `›`) that shows this page.
   final KMenuPage? headerOpens;
+
+  /// Makes the [header] a button (with a `›`) that runs this and keeps the
+  /// menu open; its argument is true when the menu was driven by the keyboard
+  /// (Alt+Enter on the menu always passes true). Not together with
+  /// [headerOpens].
+  final void Function(bool viaKeyboard)? onHeaderTap;
+
+  /// Spoken description of what the header button does (no visible text).
+  final String? headerHint;
 
   /// Explanatory line above the groups (sub-pages).
   final String? note;
@@ -157,7 +183,19 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
 
   @override
   Widget build(BuildContext context) {
+    final live = widget.row.on;
+    if (live == null) return _tile(context, null);
+    return ValueListenableBuilder<bool>(
+      valueListenable: live,
+      builder: (context, on, _) => _tile(context, on),
+    );
+  }
+
+  /// The row drawn for [on] (null = not a live toggle row).
+  Widget _tile(BuildContext context, bool? on) {
     final row = widget.row;
+    final title = on == true ? row.onTitle ?? row.title : row.title;
+    final icon = on == true ? row.onIcon ?? row.icon : row.icon;
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final mobile = FormFactor.of(context) == FormFactor.mobile;
@@ -170,6 +208,8 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
         ? () => widget.onActivate(() {})
         : foldable
         ? () => setState(() => _expanded = !_expanded)
+        : on != null
+        ? () => row.onTap?.call()
         : () => widget.onActivate(row.onTap ?? () {});
     final trailing = row.trailing;
     final edges = KRowEdgesScope.maybeOf(context);
@@ -181,6 +221,7 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
           Semantics(
             button: true,
             enabled: row.active,
+            toggled: on,
             hint: row.hint,
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: edges.sideGap),
@@ -204,8 +245,8 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
                         if (row.leading != null) ...[
                           row.leading!,
                           const KGap(KSpace.x4),
-                        ] else if (row.icon != null) ...[
-                          Icon(row.icon, size: KIconSize.sm, color: soft),
+                        ] else if (icon != null) ...[
+                          Icon(icon, size: KIconSize.sm, color: soft),
                           const KGap(KSpace.x4),
                         ],
                         Expanded(
@@ -214,7 +255,7 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                row.title,
+                                title,
                                 style: textTheme.bodyLarge?.copyWith(
                                   color: color,
                                 ),
@@ -269,9 +310,7 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
           if (foldable && _expanded)
             Padding(
               padding: EdgeInsets.fromLTRB(
-                row.icon == null
-                    ? KSpace.x4
-                    : KSpace.x4 + KIconSize.sm + KSpace.x4,
+                icon == null ? KSpace.x4 : KSpace.x4 + KIconSize.sm + KSpace.x4,
                 0,
                 KSpace.x4,
                 KSpace.x2,

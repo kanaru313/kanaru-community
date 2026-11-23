@@ -716,4 +716,190 @@ void main() {
     );
     handle.dispose();
   });
+
+  group('header action', () {
+    KMenuPage withHeader(void Function(bool) onTap) => KMenuPage(
+      header: const Text('Header'),
+      onHeaderTap: onTap,
+      groups: [
+        [KMenuRow(title: 'Play', onTap: () {})],
+      ],
+    );
+
+    testWidgets('a tap runs onHeaderTap and keeps the menu open', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1300, 900));
+      final calls = <bool>[];
+      await tester.pumpWidget(host(_opener(withHeader(calls.add))));
+      await _open(tester);
+      await tester.tap(find.text('Header'));
+      await tester.pumpAndSettle();
+      expect(calls, [false]);
+      expect(find.text('Play'), findsOneWidget, reason: 'menu still open');
+      expect(find.byIcon(KIcons.chevronRight), findsOneWidget);
+    });
+
+    testWidgets('opened from the keyboard, the tap passes viaKeyboard', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1300, 900));
+      final calls = <bool>[];
+      await tester.pumpWidget(
+        host(_opener(withHeader(calls.add), viaKeyboard: true)),
+      );
+      await _open(tester);
+      await tester.tap(find.text('Header'));
+      expect(calls, [true]);
+    });
+
+    testWidgets('Alt+Enter calls it once, however long the keys are held', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1300, 900));
+      final calls = <bool>[];
+      await tester.pumpWidget(host(_opener(withHeader(calls.add))));
+      await _open(tester);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyRepeatEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyRepeatEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+      await tester.pumpAndSettle();
+      expect(calls, [true]);
+      expect(find.text('Play'), findsOneWidget);
+    });
+
+    testWidgets('a menu without onHeaderTap ignores Alt+Enter', (tester) async {
+      useWindow(tester, const Size(1300, 900));
+      final log = <String>[];
+      await tester.pumpWidget(host(_opener(_page(log: log))));
+      await _open(tester);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+      await tester.pumpAndSettle();
+      expect(log, isEmpty);
+      expect(find.text('Play'), findsOneWidget);
+    });
+
+    testWidgets('the header is a button with its hint in semantics', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      useWindow(tester, const Size(1300, 900));
+      await tester.pumpWidget(
+        host(
+          _opener(
+            KMenuPage(
+              header: const Text('Header'),
+              onHeaderTap: (_) {},
+              headerHint: 'Open song info',
+              groups: [
+                [KMenuRow(title: 'Play')],
+              ],
+            ),
+          ),
+        ),
+      );
+      await _open(tester);
+      expect(
+        tester.getSemantics(find.text('Header')),
+        isSemantics(
+          label: 'Header',
+          hint: 'Open song info',
+          isButton: true,
+          hasTapAction: true,
+        ),
+      );
+      handle.dispose();
+    });
+
+    test('onHeaderTap and headerOpens together is a mistake', () {
+      expect(
+        () => KMenuPage(
+          onHeaderTap: (_) {},
+          headerOpens: const KMenuPage(groups: []),
+          groups: const [],
+        ),
+        throwsAssertionError,
+      );
+    });
+
+    testWidgets('headerOpens still shows its page', (tester) async {
+      useWindow(tester, const Size(1300, 900));
+      final page = KMenuPage(
+        header: const Text('Header'),
+        headerOpens: KMenuPage(
+          title: 'Info',
+          groups: [
+            [KMenuRow(title: 'Detail')],
+          ],
+        ),
+        groups: [
+          [KMenuRow(title: 'Play')],
+        ],
+      );
+      await tester.pumpWidget(host(_opener(page)));
+      await _open(tester);
+      await tester.tap(find.text('Header'));
+      await tester.pumpAndSettle();
+      expect(find.text('Detail'), findsOneWidget);
+    });
+  });
+
+  group('live toggle row', () {
+    testWidgets('follows the notifier, stays open, reports toggled', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      useWindow(tester, const Size(1300, 900));
+      final liked = ValueNotifier(false);
+      addTearDown(liked.dispose);
+      final page = KMenuPage(
+        groups: [
+          [
+            KMenuRow(
+              title: 'Like',
+              icon: KIcons.favorites,
+              onTitle: 'Liked',
+              onIcon: KIcons.favoritesSelected,
+              on: liked,
+              onTap: () => liked.value = !liked.value,
+            ),
+          ],
+        ],
+      );
+      await tester.pumpWidget(host(_opener(page)));
+      await _open(tester);
+      expect(find.text('Like'), findsOneWidget);
+      expect(
+        tester.getSemantics(find.text('Like')),
+        isSemantics(
+          label: 'Like',
+          isButton: true,
+          hasToggledState: true,
+          isToggled: false,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+          isFocusable: true,
+        ),
+      );
+      await tester.tap(find.text('Like'));
+      await tester.pumpAndSettle();
+      expect(liked.value, isTrue);
+      expect(find.text('Liked'), findsOneWidget, reason: 'menu stayed open');
+      expect(
+        tester.getSemantics(find.text('Liked')),
+        isSemantics(label: 'Liked', hasToggledState: true, isToggled: true),
+      );
+
+      liked.value = false; // changed from outside while the menu is open
+      await tester.pump();
+      expect(find.text('Like'), findsOneWidget);
+      handle.dispose();
+    });
+  });
 }

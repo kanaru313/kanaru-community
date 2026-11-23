@@ -36,6 +36,10 @@ abstract final class KMotion {
   /// for cards and rows; icon buttons only change opacity.
   static const Duration press = Duration(milliseconds: 200);
 
+  /// How long a row stays tinted after a long-press copy (`KInfoRow`); it
+  /// fades in and out over [fast].
+  static const Duration flash = Duration(milliseconds: 600);
+
   /// `KCheckMark` off -> on: disc pops in, tick draws, one pulse ring.
   static const Duration checkOn = Duration(milliseconds: 480);
 
