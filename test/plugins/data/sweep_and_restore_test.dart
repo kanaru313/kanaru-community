@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/app_database.dart';
 import 'package:kanaru/src/database/tables.dart';
 import 'package:kanaru/src/plugins/data/install/sweep_and_restore.dart';
+import 'package:kanaru/src/plugins/data/logs/plugin_run_log.dart';
+import 'package:kanaru/src/plugins/domain/logs/run_log_event.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_files.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_row_types.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_rows.dart';
@@ -11,6 +13,8 @@ import 'package:kanaru/src/plugins/data/store/plugin_rows.dart';
 import '../../database/support/test_db.dart';
 import 'services_test_support.dart';
 import 'store_test_support.dart';
+
+Directory _noLogs(Directory dir) => Directory('${dir.path}-nologs');
 
 void main() {
   late AppDatabase db;
@@ -26,7 +30,7 @@ void main() {
     rows = PluginRows(db, clock: () => now);
     dir = tempDir();
     files = PluginFiles(dir, clock: () => ++now);
-    sweeper = PluginSweeper(rows, files);
+    sweeper = PluginSweeper(rows, files, logs: PluginRunLog(_noLogs(dir)));
   });
   tearDown(() async {
     await db.close();
@@ -73,11 +77,94 @@ void main() {
     test('deletes nothing when the live rows cannot be read', () async {
       await install(1, repo);
       await files.write(testInstallId(2), packageOf());
-      sweeper = PluginSweeper(_BrokenRows(db), files);
+      sweeper = PluginSweeper(
+        _BrokenRows(db),
+        files,
+        logs: PluginRunLog(_noLogs(dir)),
+      );
       expect(await sweeper.sweep(), 0);
       expect(await files.listFolders(), hasLength(2));
     });
   });
+
+  group('run logs', () {
+    RunLogEvent ev(String id) => RunLogEvent(
+      time: DateTime.now(),
+      installId: id,
+      pluginName: 'Demo',
+      version: '1',
+      script: 'search',
+      kind: 'server',
+    );
+
+    late Directory logDir;
+    late PluginRunLog logs;
+    File logOf(int n) => File('${logDir.path}/${testInstallId(n)}.jsonl');
+
+    setUp(() async {
+      logDir = Directory('${dir.path}-logs');
+      logs = PluginRunLog(logDir);
+      await install(1, repo);
+      logs.append(ev(testInstallId(1)));
+      logs.append(ev(testInstallId(2)));
+      logs.append(ev(testInstallId(3)));
+      await logs.whenIdle();
+      await rows.remove(testInstallId(3));
+    });
+    tearDown(() {
+      if (logDir.existsSync()) logDir.deleteSync(recursive: true);
+    });
+
+    test(
+      'deletes the logs of ids that are not live and keeps live ones',
+      () async {
+        sweeper = PluginSweeper(rows, files, logs: logs);
+        await sweeper.sweep();
+        expect(logOf(1).existsSync(), isTrue);
+        expect(logOf(2).existsSync(), isFalse);
+        expect(logOf(3).existsSync(), isFalse);
+      },
+    );
+
+    test('deletes nothing when the live rows cannot be read', () async {
+      sweeper = PluginSweeper(_BrokenRows(db), files, logs: logs);
+      await sweeper.sweep();
+      expect(logOf(1).existsSync(), isTrue);
+      expect(logOf(2).existsSync(), isTrue);
+    });
+  });
+
+  test(
+    'the log sweep still runs when the package folders cannot be listed',
+    () async {
+      final logDir = Directory('${dir.path}-logs2');
+      addTearDown(() {
+        if (logDir.existsSync()) logDir.deleteSync(recursive: true);
+      });
+      final logs = PluginRunLog(logDir);
+      logs.append(
+        RunLogEvent(
+          time: DateTime.now(),
+          installId: testInstallId(9),
+          pluginName: 'Demo',
+          version: '1',
+          script: 'search',
+          kind: 'server',
+        ),
+      );
+      await logs.whenIdle();
+      final sweeper = PluginSweeper(
+        rows,
+        _UnlistableFiles(Directory('${dir.path}-gone')),
+        logs: logs,
+      );
+      await sweeper.sweep();
+      expect(
+        File('${logDir.path}/${testInstallId(9)}.jsonl').existsSync(),
+        isFalse,
+      );
+    },
+  );
 
   group('findMissing', () {
     Future<void> lose(int n, String folder) async {
@@ -118,13 +205,25 @@ void main() {
     });
 
     test('empty when the rows cannot be read', () async {
-      sweeper = PluginSweeper(_BrokenRows(db), files);
+      sweeper = PluginSweeper(
+        _BrokenRows(db),
+        files,
+        logs: PluginRunLog(_noLogs(dir)),
+      );
       expect(await sweeper.findMissing(), isEmpty);
     });
   });
 }
 
 /// Rows whose reads fail, as a broken database would.
+/// Package folders that cannot be listed.
+class _UnlistableFiles extends PluginFiles {
+  _UnlistableFiles(super.dataDir) : super(clock: () => 1);
+
+  @override
+  Future<List<PluginFolder>> listFolders() => throw StateError('listing');
+}
+
 class _BrokenRows extends PluginRows {
   _BrokenRows(super.db);
 

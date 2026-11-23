@@ -6,6 +6,7 @@ import '../data/run/plugin_limiter.dart';
 import '../data/run/plugin_pauses.dart';
 import '../data/run/plugin_runner.dart';
 import '../data/run/rust_plugin_engine.dart';
+import '../data/run/run_log_recorder.dart';
 import '../domain/run/plugin_engine.dart';
 import 'plugin_services_provider.dart';
 import 'plugin_store_providers.dart';
@@ -54,5 +55,12 @@ final pluginRunnerProvider = Provider<PluginRunner>(
     rows: ref.watch(pluginRowsProvider),
     files: ref.watch(pluginFilesProvider),
     config: ref.watch(pluginConfigStoreProvider),
+    storage: ref.watch(pluginStorageStoreProvider),
+    recorder: RunLogRecorder(
+      log: ref.watch(pluginRunLogProvider),
+      rows: ref.watch(pluginRowsProvider),
+      config: ref.watch(pluginConfigStoreProvider),
+      storage: ref.watch(pluginStorageStoreProvider),
+    ),
   ),
 );

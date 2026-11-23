@@ -437,8 +437,133 @@ void main() {
       );
       expect(
         ctx.maskValues,
-        containsAll(['Bearer tok-123456', 'tok-123456', 'sid=cookiesecret']),
+        containsAll([
+          'Bearer tok-123456',
+          'tok-123456',
+          'sid=cookiesecret',
+          'cookiesecret',
+        ]),
       );
+    });
+  });
+
+  group('request records', () {
+    test('header secrets of a refused request are collected', () async {
+      final ctx = job();
+      await handler().handle(
+        req(
+          onServer('/', host: 'private.example.test'),
+          headers: [('X-Api-Key', 'refused-key-123456')],
+        ),
+        ctx,
+      );
+      expect(ctx.maskValues, contains('refused-key-123456'));
+    });
+
+    test('secrets are collected when another header is invalid', () async {
+      final ctx = job();
+      await handler().handle(
+        req(
+          onServer('/', host: 'private.example.test'),
+          headers: [
+            ('Bad Name', 'x'),
+            ('Authorization', 'Bearer invalid-set-123'),
+          ],
+        ),
+        ctx,
+      );
+      expect(ctx.maskValues, contains('invalid-set-123'));
+    });
+
+    test('the mask set is capped and flags the overflow', () async {
+      final ctx = job();
+      for (var i = 0; i < 300; i++) {
+        await handler().handle(
+          req(
+            onServer('/', host: 'private.example.test'),
+            headers: [('X-Api-Key', 'refused-key-${i + 100000}')],
+          ),
+          ctx,
+        );
+      }
+      expect(ctx.maskValues.length, JobContext.maxMaskValues);
+      expect(ctx.maskOverflow, isTrue);
+    });
+
+    test('the whole path is kept for the log to cut after redaction', () async {
+      final ctx = job();
+      final long = '/${'p' * 400}';
+      await handler().handle(req(onServer(long)), ctx);
+      expect(ctx.requests.single.path, long);
+    });
+
+    test(
+      'an answered request keeps method, host, path, status, time',
+      () async {
+        server.handler = (r) async {
+          r.response.statusCode = 404;
+          await r.response.close();
+        };
+        final ctx = job();
+        await handler().handle(
+          req(
+            onServer('/v2/search?token=abc123&q=song'),
+            method: 'POST',
+            body: utf8.encode('secret body'),
+            headers: [('Authorization', 'Bearer tok-123456')],
+          ),
+          ctx,
+        );
+        final record = ctx.requests.single;
+        expect(record.method, 'POST');
+        expect(record.host, _host);
+        expect(record.path, '/v2/search');
+        expect(record.status, 404);
+        expect(record.ms, greaterThanOrEqualTo(0));
+        expect(record.blocked, isFalse);
+        // Nothing of the query, headers or body is in what is kept.
+        expect(record.toJson().toString(), isNot(contains('abc123')));
+        expect(record.toJson().toString(), isNot(contains('tok-123456')));
+        expect(record.toJson().toString(), isNot(contains('secret body')));
+      },
+    );
+
+    test('refused requests are recorded without a status', () async {
+      final ctx = job();
+      await handler().handle(
+        req(onServer('/x?k=v', host: 'private.example.test')),
+        ctx,
+      );
+      await handler().handle(req('not a url'), ctx);
+      await handler().handle(req(onServer('/'), method: 'DELETE'), ctx);
+      expect(ctx.requests, hasLength(3));
+      expect(ctx.requests.every((r) => r.status == null), isTrue);
+      expect(ctx.requests.first.host, 'private.example.test');
+      expect(ctx.requests.first.path, '/x');
+      expect(ctx.requests[1].host, '');
+    });
+
+    test('a blocked address is flagged', () async {
+      final ctx = job(
+        manifest: {'private.example.test'},
+        consented: {'private.example.test'},
+      );
+      final r = await handler().handle(
+        req(onServer('/', host: 'private.example.test')),
+        ctx,
+      );
+      expect(r.outcome, EngineFetchOutcome.blockedHost);
+      expect(ctx.requests.single.blocked, isTrue);
+    });
+
+    test('a run keeps at most 100 records', () async {
+      // Refused requests are recorded too and never reach the network.
+      final ctx = job(consented: {});
+      final h = handler();
+      for (var i = 0; i < 105; i++) {
+        await h.handle(req(onServer('/')), ctx);
+      }
+      expect(ctx.requests, hasLength(100));
     });
   });
 

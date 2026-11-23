@@ -869,6 +869,8 @@ typedef $$PluginDataTableCreateCompanionBuilder =
       required String installId,
       i0.Value<String> configJson,
       i0.Value<String> customChoicesJson,
+      i0.Value<String> storageJson,
+      i0.Value<int> storageRev,
       i0.Value<int> rowid,
     });
 typedef $$PluginDataTableUpdateCompanionBuilder =
@@ -876,6 +878,8 @@ typedef $$PluginDataTableUpdateCompanionBuilder =
       i0.Value<String> installId,
       i0.Value<String> configJson,
       i0.Value<String> customChoicesJson,
+      i0.Value<String> storageJson,
+      i0.Value<int> storageRev,
       i0.Value<int> rowid,
     });
 
@@ -929,6 +933,16 @@ class $$PluginDataTableFilterComposer
     builder: (column) => i0.ColumnFilters(column),
   );
 
+  i0.ColumnFilters<String> get storageJson => $composableBuilder(
+    column: $table.storageJson,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<int> get storageRev => $composableBuilder(
+    column: $table.storageRev,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
   i1.$$PluginsTableFilterComposer get installId {
     final i1.$$PluginsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -974,6 +988,16 @@ class $$PluginDataTableOrderingComposer
     builder: (column) => i0.ColumnOrderings(column),
   );
 
+  i0.ColumnOrderings<String> get storageJson => $composableBuilder(
+    column: $table.storageJson,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
+  i0.ColumnOrderings<int> get storageRev => $composableBuilder(
+    column: $table.storageRev,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
   i1.$$PluginsTableOrderingComposer get installId {
     final i1.$$PluginsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -1016,6 +1040,16 @@ class $$PluginDataTableAnnotationComposer
 
   i0.GeneratedColumn<String> get customChoicesJson => $composableBuilder(
     column: $table.customChoicesJson,
+    builder: (column) => column,
+  );
+
+  i0.GeneratedColumn<String> get storageJson => $composableBuilder(
+    column: $table.storageJson,
+    builder: (column) => column,
+  );
+
+  i0.GeneratedColumn<int> get storageRev => $composableBuilder(
+    column: $table.storageRev,
     builder: (column) => column,
   );
 
@@ -1078,11 +1112,15 @@ class $$PluginDataTableTableManager
                 i0.Value<String> installId = const i0.Value.absent(),
                 i0.Value<String> configJson = const i0.Value.absent(),
                 i0.Value<String> customChoicesJson = const i0.Value.absent(),
+                i0.Value<String> storageJson = const i0.Value.absent(),
+                i0.Value<int> storageRev = const i0.Value.absent(),
                 i0.Value<int> rowid = const i0.Value.absent(),
               }) => i1.PluginDataCompanion(
                 installId: installId,
                 configJson: configJson,
                 customChoicesJson: customChoicesJson,
+                storageJson: storageJson,
+                storageRev: storageRev,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -1090,11 +1128,15 @@ class $$PluginDataTableTableManager
                 required String installId,
                 i0.Value<String> configJson = const i0.Value.absent(),
                 i0.Value<String> customChoicesJson = const i0.Value.absent(),
+                i0.Value<String> storageJson = const i0.Value.absent(),
+                i0.Value<int> storageRev = const i0.Value.absent(),
                 i0.Value<int> rowid = const i0.Value.absent(),
               }) => i1.PluginDataCompanion.insert(
                 installId: installId,
                 configJson: configJson,
                 customChoicesJson: customChoicesJson,
+                storageJson: storageJson,
+                storageRev: storageRev,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -2814,11 +2856,38 @@ class $PluginDataTable extends i2.PluginData
         requiredDuringInsert: false,
         defaultValue: const i3.Constant('{}'),
       );
+  static const i0.VerificationMeta _storageJsonMeta = const i0.VerificationMeta(
+    'storageJson',
+  );
+  @override
+  late final i0.GeneratedColumn<String> storageJson =
+      i0.GeneratedColumn<String>(
+        'storage_json',
+        aliasedName,
+        false,
+        type: i0.DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const i3.Constant(''),
+      );
+  static const i0.VerificationMeta _storageRevMeta = const i0.VerificationMeta(
+    'storageRev',
+  );
+  @override
+  late final i0.GeneratedColumn<int> storageRev = i0.GeneratedColumn<int>(
+    'storage_rev',
+    aliasedName,
+    false,
+    type: i0.DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const i3.Constant(0),
+  );
   @override
   List<i0.GeneratedColumn> get $columns => [
     installId,
     configJson,
     customChoicesJson,
+    storageJson,
+    storageRev,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2855,6 +2924,21 @@ class $PluginDataTable extends i2.PluginData
         ),
       );
     }
+    if (data.containsKey('storage_json')) {
+      context.handle(
+        _storageJsonMeta,
+        storageJson.isAcceptableOrUnknown(
+          data['storage_json']!,
+          _storageJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('storage_rev')) {
+      context.handle(
+        _storageRevMeta,
+        storageRev.isAcceptableOrUnknown(data['storage_rev']!, _storageRevMeta),
+      );
+    }
     return context;
   }
 
@@ -2876,6 +2960,14 @@ class $PluginDataTable extends i2.PluginData
         i0.DriftSqlType.string,
         data['${effectivePrefix}custom_choices_json'],
       )!,
+      storageJson: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.string,
+        data['${effectivePrefix}storage_json'],
+      )!,
+      storageRev: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.int,
+        data['${effectivePrefix}storage_rev'],
+      )!,
     );
   }
 
@@ -2895,10 +2987,24 @@ class PluginDataRow extends i0.DataClass
   /// JSON object, field key to the list of `{value, subtitle?}` choices the
   /// user added to a `custom` select (at most 64 KiB). Never read by a script.
   final String customChoicesJson;
+
+  /// The map the plugin's scripts keep between runs, as a JSON object of
+  /// strings; '' means nothing stored. The runtime enforces the size quota.
+  /// Written back only by a run that still matches the plugin's row, and
+  /// emptied by the user's clear (see `storage_rev`). Kept on an update,
+  /// deleted with the row on remove.
+  final String storageJson;
+
+  /// Counts the clears of the storage. A run writes its result back only if
+  /// the number is still the one it read at its start, so a clear made while
+  /// a run was working is never undone by that run.
+  final int storageRev;
   const PluginDataRow({
     required this.installId,
     required this.configJson,
     required this.customChoicesJson,
+    required this.storageJson,
+    required this.storageRev,
   });
   @override
   Map<String, i0.Expression> toColumns(bool nullToAbsent) {
@@ -2906,6 +3012,8 @@ class PluginDataRow extends i0.DataClass
     map['install_id'] = i0.Variable<String>(installId);
     map['config_json'] = i0.Variable<String>(configJson);
     map['custom_choices_json'] = i0.Variable<String>(customChoicesJson);
+    map['storage_json'] = i0.Variable<String>(storageJson);
+    map['storage_rev'] = i0.Variable<int>(storageRev);
     return map;
   }
 
@@ -2914,6 +3022,8 @@ class PluginDataRow extends i0.DataClass
       installId: i0.Value(installId),
       configJson: i0.Value(configJson),
       customChoicesJson: i0.Value(customChoicesJson),
+      storageJson: i0.Value(storageJson),
+      storageRev: i0.Value(storageRev),
     );
   }
 
@@ -2926,6 +3036,8 @@ class PluginDataRow extends i0.DataClass
       installId: serializer.fromJson<String>(json['installId']),
       configJson: serializer.fromJson<String>(json['configJson']),
       customChoicesJson: serializer.fromJson<String>(json['customChoicesJson']),
+      storageJson: serializer.fromJson<String>(json['storageJson']),
+      storageRev: serializer.fromJson<int>(json['storageRev']),
     );
   }
   @override
@@ -2935,6 +3047,8 @@ class PluginDataRow extends i0.DataClass
       'installId': serializer.toJson<String>(installId),
       'configJson': serializer.toJson<String>(configJson),
       'customChoicesJson': serializer.toJson<String>(customChoicesJson),
+      'storageJson': serializer.toJson<String>(storageJson),
+      'storageRev': serializer.toJson<int>(storageRev),
     };
   }
 
@@ -2942,10 +3056,14 @@ class PluginDataRow extends i0.DataClass
     String? installId,
     String? configJson,
     String? customChoicesJson,
+    String? storageJson,
+    int? storageRev,
   }) => i1.PluginDataRow(
     installId: installId ?? this.installId,
     configJson: configJson ?? this.configJson,
     customChoicesJson: customChoicesJson ?? this.customChoicesJson,
+    storageJson: storageJson ?? this.storageJson,
+    storageRev: storageRev ?? this.storageRev,
   );
   PluginDataRow copyWithCompanion(i1.PluginDataCompanion data) {
     return PluginDataRow(
@@ -2956,6 +3074,12 @@ class PluginDataRow extends i0.DataClass
       customChoicesJson: data.customChoicesJson.present
           ? data.customChoicesJson.value
           : this.customChoicesJson,
+      storageJson: data.storageJson.present
+          ? data.storageJson.value
+          : this.storageJson,
+      storageRev: data.storageRev.present
+          ? data.storageRev.value
+          : this.storageRev,
     );
   }
 
@@ -2964,49 +3088,69 @@ class PluginDataRow extends i0.DataClass
     return (StringBuffer('PluginDataRow(')
           ..write('installId: $installId, ')
           ..write('configJson: $configJson, ')
-          ..write('customChoicesJson: $customChoicesJson')
+          ..write('customChoicesJson: $customChoicesJson, ')
+          ..write('storageJson: $storageJson, ')
+          ..write('storageRev: $storageRev')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(installId, configJson, customChoicesJson);
+  int get hashCode => Object.hash(
+    installId,
+    configJson,
+    customChoicesJson,
+    storageJson,
+    storageRev,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is i1.PluginDataRow &&
           other.installId == this.installId &&
           other.configJson == this.configJson &&
-          other.customChoicesJson == this.customChoicesJson);
+          other.customChoicesJson == this.customChoicesJson &&
+          other.storageJson == this.storageJson &&
+          other.storageRev == this.storageRev);
 }
 
 class PluginDataCompanion extends i0.UpdateCompanion<i1.PluginDataRow> {
   final i0.Value<String> installId;
   final i0.Value<String> configJson;
   final i0.Value<String> customChoicesJson;
+  final i0.Value<String> storageJson;
+  final i0.Value<int> storageRev;
   final i0.Value<int> rowid;
   const PluginDataCompanion({
     this.installId = const i0.Value.absent(),
     this.configJson = const i0.Value.absent(),
     this.customChoicesJson = const i0.Value.absent(),
+    this.storageJson = const i0.Value.absent(),
+    this.storageRev = const i0.Value.absent(),
     this.rowid = const i0.Value.absent(),
   });
   PluginDataCompanion.insert({
     required String installId,
     this.configJson = const i0.Value.absent(),
     this.customChoicesJson = const i0.Value.absent(),
+    this.storageJson = const i0.Value.absent(),
+    this.storageRev = const i0.Value.absent(),
     this.rowid = const i0.Value.absent(),
   }) : installId = i0.Value(installId);
   static i0.Insertable<i1.PluginDataRow> custom({
     i0.Expression<String>? installId,
     i0.Expression<String>? configJson,
     i0.Expression<String>? customChoicesJson,
+    i0.Expression<String>? storageJson,
+    i0.Expression<int>? storageRev,
     i0.Expression<int>? rowid,
   }) {
     return i0.RawValuesInsertable({
       if (installId != null) 'install_id': installId,
       if (configJson != null) 'config_json': configJson,
       if (customChoicesJson != null) 'custom_choices_json': customChoicesJson,
+      if (storageJson != null) 'storage_json': storageJson,
+      if (storageRev != null) 'storage_rev': storageRev,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3015,12 +3159,16 @@ class PluginDataCompanion extends i0.UpdateCompanion<i1.PluginDataRow> {
     i0.Value<String>? installId,
     i0.Value<String>? configJson,
     i0.Value<String>? customChoicesJson,
+    i0.Value<String>? storageJson,
+    i0.Value<int>? storageRev,
     i0.Value<int>? rowid,
   }) {
     return i1.PluginDataCompanion(
       installId: installId ?? this.installId,
       configJson: configJson ?? this.configJson,
       customChoicesJson: customChoicesJson ?? this.customChoicesJson,
+      storageJson: storageJson ?? this.storageJson,
+      storageRev: storageRev ?? this.storageRev,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3037,6 +3185,12 @@ class PluginDataCompanion extends i0.UpdateCompanion<i1.PluginDataRow> {
     if (customChoicesJson.present) {
       map['custom_choices_json'] = i0.Variable<String>(customChoicesJson.value);
     }
+    if (storageJson.present) {
+      map['storage_json'] = i0.Variable<String>(storageJson.value);
+    }
+    if (storageRev.present) {
+      map['storage_rev'] = i0.Variable<int>(storageRev.value);
+    }
     if (rowid.present) {
       map['rowid'] = i0.Variable<int>(rowid.value);
     }
@@ -3049,6 +3203,8 @@ class PluginDataCompanion extends i0.UpdateCompanion<i1.PluginDataRow> {
           ..write('installId: $installId, ')
           ..write('configJson: $configJson, ')
           ..write('customChoicesJson: $customChoicesJson, ')
+          ..write('storageJson: $storageJson, ')
+          ..write('storageRev: $storageRev, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();

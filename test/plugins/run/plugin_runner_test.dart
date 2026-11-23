@@ -545,6 +545,8 @@ void main() {
     final sub = Logger('plugin_run').onRecord
         .listen((rec) => lines.add(rec.message));
     addTearDown(sub.cancel);
+    final oldLevel = Logger.root.level;
+    addTearDown(() => Logger.root.level = oldLevel);
     Logger.root.level = Level.ALL;
     r.runner.reportRejectedOutput(
       demoPluginId,
@@ -567,11 +569,3 @@ EngineFetchRequest _request(String installId) => EngineFetchRequest(
   deadlineMs: 1000,
   maxSends: 10,
 );
-
-/// Spins the event loop until [done] (at most ~2 s).
-Future<void> waitFor(bool Function() done) async {
-  for (var i = 0; i < 400 && !done(); i++) {
-    await Future<void>.delayed(const Duration(milliseconds: 5));
-  }
-  expect(done(), isTrue, reason: 'the condition was never met');
-}

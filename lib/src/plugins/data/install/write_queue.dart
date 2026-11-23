@@ -14,7 +14,8 @@ final _log = Logger('plugin_queue');
 /// run on the event loop and may await the network, so keep a long download
 /// outside the queue and queue only the write that follows it.
 ///
-/// A job must never call [run] and await it (it would wait for itself).
+/// A job must never call [run] and await it (it would wait for itself), nor
+/// wait on a plugin run: a run's storage write-back is a job of this queue.
 class PluginWriteQueue {
   PluginWriteQueue({required Future<void> Function() firstJob}) {
     _tail = _guarded(firstJob);

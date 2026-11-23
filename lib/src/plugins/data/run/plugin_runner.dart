@@ -12,11 +12,13 @@ import '../../domain/run/run_request.dart';
 import '../store/plugin_config_store.dart';
 import '../store/plugin_files.dart';
 import '../store/plugin_rows.dart';
+import '../store/plugin_storage_store.dart';
 import 'fetch_handler.dart';
 import 'plugin_pauses.dart';
 import 'run_admission.dart';
 import 'run_cancel.dart';
 import 'run_gate.dart';
+import 'run_log_recorder.dart';
 import 'run_setup.dart';
 
 final _log = Logger('plugin_run');
@@ -45,6 +47,8 @@ class PluginRunner {
     required this._rows,
     required this._files,
     required this._config,
+    required this._storage,
+    required this._recorder,
     RunAdmission? admission,
     this.spacing = pluginSpacing,
     this.grace = outerDeadlineGrace,
@@ -57,6 +61,8 @@ class PluginRunner {
   final PluginRows _rows;
   final PluginFiles _files;
   final PluginConfigStore _config;
+  final PluginStorageStore _storage;
+  final RunLogRecorder _recorder;
   final RunAdmission _admission;
   final Duration spacing;
   final Duration grace;
@@ -84,14 +90,23 @@ class PluginRunner {
     }
   }
 
-  /// A caller's reader or validator refused a [RunOk] output. One log line
-  /// with the plugin, the script and the caller's fixed [reason]; the output
-  /// itself is never written.
+  /// A caller's reader or validator refused a [RunOk] output. One app log
+  /// line and one run log event with the plugin, the script and the caller's
+  /// fixed [reason]; the output itself is never written.
   void reportRejectedOutput(String installId, String script, String reason) {
     _log.info(
       'Plugin output rejected: plugin=$installId script=$script reason=$reason',
     );
+    _lastRejection = _recorder.recordRejected(installId, script, reason);
+    unawaited(_lastRejection);
   }
+
+  var _lastRejection = Future<void>.value();
+
+  /// Completes when the run log work of the latest [reportRejectedOutput]
+  /// call has finished (the event is queued for its file). For tests; callers
+  /// never wait for it.
+  Future<void> get lastRejectionLogged => _lastRejection;
 
   /// One pass under a lease; null when the plugin was switched before the
   /// engine started (the caller starts over).
@@ -112,6 +127,7 @@ class PluginRunner {
       rows: _rows,
       files: _files,
       config: _config,
+      storage: _storage,
     );
     // Switched while setup ran: what was read may be of the old version, so
     // whatever it says (a refusal included) is dropped and the run starts over.
@@ -229,7 +245,10 @@ class PluginRunner {
         ?cancel?.listen(() => stop(RunCancelCause.caller)),
         lease.changed.listen(() => stop(RunCancelCause.pluginChanged)),
       ]);
-      timer = Timer(wall + grace, () => stop(RunCancelCause.deadline));
+      final deadlineTimer = timer = Timer(
+        wall + grace,
+        () => stop(RunCancelCause.deadline),
+      );
       final result = await Future.any<EngineResult?>([
         running,
         deadlineHit.future.then((_) => null),
@@ -241,6 +260,32 @@ class PluginRunner {
               cause: cause,
               rateLimitSeen: context.rateLimitSeen,
             );
+      // Read before the listeners go: a cause after the result is ignored.
+      final switched =
+          cause == RunCancelCause.pluginChanged || lease.changed.isCancelled;
+      final storageWritable = cause == RunCancelCause.none && !switched;
+      // The job is over: a late cancel or the deadline must not reach it
+      // while the write-back waits in the queue.
+      deadlineTimer.cancel();
+      for (final off in unlisten) {
+        off();
+      }
+      // A run the gate or the caller stopped, or that hit its deadline, leaves
+      // the storage as it was.
+      final newStorage = result?.storageJson;
+      if (newStorage != null && storageWritable) {
+        await _writeBack(id, newStorage, prepared);
+      }
+      // A run the plugin switch stopped is not a plugin fault: not logged.
+      if (!switched) {
+        _recorder.recordRun(
+          request: request,
+          prepared: prepared,
+          context: context,
+          outcome: outcome,
+          result: result,
+        );
+      }
       _pauseFrom(id, outcome);
       return outcome;
     } finally {
@@ -249,6 +294,31 @@ class PluginRunner {
         off();
       }
       jobCancel.cancel();
+    }
+  }
+
+  /// Saves the storage the script changed, before the outcome is returned, so
+  /// the next run of the plugin reads it. The slot is already free (it goes
+  /// with the engine job). A refused write (the plugin was updated, removed or
+  /// its storage cleared meanwhile) is silent; a failed one logs its type and
+  /// the outcome still stands.
+  ///
+  /// The write is a job of the plugin write queue and the run waits for it, so
+  /// no queue job may ever wait on a plugin run (it would wait for itself).
+  Future<void> _writeBack(
+    String installId,
+    String storageJson,
+    PreparedRun prepared,
+  ) async {
+    try {
+      await _storage.writeBack(
+        installId,
+        storageJson,
+        expectedRev: prepared.storageRev,
+        expectedUpdatedAt: prepared.rowUpdatedAt,
+      );
+    } on Object catch (error) {
+      _log.warning('Plugin storage was not saved: ${error.runtimeType}');
     }
   }
 

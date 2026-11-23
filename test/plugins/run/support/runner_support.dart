@@ -1,10 +1,13 @@
 import 'dart:typed_data';
 
+import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/plugins/data/run/fetch_handler.dart';
 import 'package:kanaru/src/plugins/data/run/plugin_pauses.dart';
 import 'package:kanaru/src/plugins/data/run/plugin_runner.dart';
 import 'package:kanaru/src/plugins/data/run/run_admission.dart';
+import 'package:kanaru/src/plugins/data/run/run_log_recorder.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_config_store.dart';
+import 'package:kanaru/src/plugins/data/store/plugin_storage_store.dart';
 import 'package:kanaru/src/plugins/domain/install/install_id.dart';
 import 'package:kanaru/src/plugins/domain/install/install_result.dart';
 import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
@@ -55,6 +58,8 @@ class RunnerHarness {
     Duration grace = const Duration(milliseconds: 80),
     int slots = 4,
     PluginConfigStore? config,
+    PluginStorageStore? storage,
+    DateTime Function()? clock,
   }) : engine = engine ?? FakePluginEngine(),
        handler = handler ?? RecordingFetchHandler(),
        pauses = PluginPauses() {
@@ -66,6 +71,14 @@ class RunnerHarness {
       rows: h.rows,
       files: h.files,
       config: config ?? h.config,
+      storage: storage ?? h.storage,
+      recorder: RunLogRecorder(
+        log: h.logs,
+        rows: h.rows,
+        config: config ?? h.config,
+        storage: storage ?? h.storage,
+        clock: clock,
+      ),
       admission: RunAdmission(slots: slots),
       spacing: spacing,
       grace: grace,
@@ -108,3 +121,11 @@ PluginRunRequest runRequest({
   configAppend: configAppend,
   kinds: kinds,
 );
+
+/// Spins the event loop until [done] (at most ~2 s).
+Future<void> waitFor(bool Function() done) async {
+  for (var i = 0; i < 400 && !done(); i++) {
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+  }
+  expect(done(), isTrue, reason: 'the condition was never met');
+}

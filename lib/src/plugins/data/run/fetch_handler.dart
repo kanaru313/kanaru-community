@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 
 import '../../../foundation/result.dart';
+import '../../domain/logs/run_log_event.dart';
 import '../../domain/net/plugin_fetch_rules.dart';
 import '../../domain/run/plugin_engine.dart';
 import '../net/plugin_http.dart';
@@ -51,7 +52,33 @@ class JobContext {
   /// Strings to hide in the run log: values the handler saw that look like
   /// secrets (authorization headers and the like).
   final Set<String> maskValues = {};
+
+  /// Most values [maskValues] keeps: a script cannot grow it without bound.
+  static const maxMaskValues = 256;
+
+  /// Set once a value did not fit in [maskValues]: the log then drops free
+  /// text, since it cannot be masked reliably.
+  bool maskOverflow = false;
+
+  /// Adds [values] to [maskValues] up to [maxMaskValues].
+  void addMask(Iterable<String> values) {
+    for (final value in values) {
+      if (maskValues.contains(value)) continue;
+      if (maskValues.length >= maxMaskValues) {
+        maskOverflow = true;
+        return;
+      }
+      maskValues.add(value);
+    }
+  }
+
+  /// What the log keeps of each request of the run (no query string, header
+  /// or body), refused ones included.
+  final List<RunLogRequest> requests = [];
 }
+
+/// Most requests one run's record keeps.
+const _maxRecordedRequests = 100;
 
 /// Answers the host `fetch` calls of one run. Never throws: every failure is
 /// an answer with the matching outcome.
@@ -77,19 +104,53 @@ class HttpPluginFetchHandler implements PluginFetchHandler {
     EngineFetchRequest request,
     JobContext context,
   ) async {
+    final clock = Stopwatch()..start();
+    EngineFetchResponse response;
     try {
-      return await _handle(request, context);
+      response = await _handle(request, context);
     } on Object catch (error) {
       _log.warning('A plugin fetch failed: ${error.runtimeType}');
-      return _fail(EngineFetchOutcome.network);
+      response = _fail(EngineFetchOutcome.network);
     }
+    _record(request, context, response, clock.elapsedMilliseconds);
+    return response;
   }
+
+  /// Notes the request for the run log: method, host, path, status (null
+  /// when no answer came) and time.
+  void _record(
+    EngineFetchRequest request,
+    JobContext context,
+    EngineFetchResponse response,
+    int ms,
+  ) {
+    if (context.requests.length >= _maxRecordedRequests) return;
+    final uri = Uri.tryParse(request.url);
+    final answered = response.outcome == EngineFetchOutcome.ok;
+    context.requests.add(
+      RunLogRequest(
+        method: _cut(request.method.toUpperCase(), 16),
+        host: _cut(uri?.host ?? '', 253),
+        path: uri?.path ?? '',
+        status: answered ? response.status : null,
+        ms: ms,
+        blocked: response.outcome == EngineFetchOutcome.blockedHost,
+      ),
+    );
+  }
+
+  String _cut(String text, int max) =>
+      text.length <= max ? text : text.substring(0, max);
 
   Future<EngineFetchResponse> _handle(
     EngineFetchRequest request,
     JobContext context,
   ) async {
     final clock = Stopwatch()..start();
+    // Credential headers are noted for every request, refused ones too: the
+    // script may print them whatever the answer was.
+    context.addMask(headerSecretsOf(request.headers));
+    final requested = pluginRequestHeaders(request.headers);
     // 1 job
     if (request.installId != context.installId) {
       return _fail(EngineFetchOutcome.invalidRequest);
@@ -117,14 +178,13 @@ class HttpPluginFetchHandler implements PluginFetchHandler {
     }
     // 5 method, body, headers
     final method = request.method.toUpperCase();
-    final headers = pluginRequestHeaders(request.headers);
+    final headers = requested;
     if (url == null ||
         headers == null ||
         (method != 'GET' && method != 'POST') ||
         (method == 'GET' && request.body.isNotEmpty)) {
       return _fail(EngineFetchOutcome.invalidRequest);
     }
-    context.maskValues.addAll(headers.secrets);
     // 6 spacing; the wait counts against the deadline
     final deadline = Duration(milliseconds: request.deadlineMs);
     final granted = await _limiter.acquire(
@@ -181,7 +241,7 @@ class HttpPluginFetchHandler implements PluginFetchHandler {
     }
     for (final (name, value) in response.headers) {
       if (name == 'set-cookie') {
-        context.maskValues.addAll(setCookieSecrets(value));
+        context.addMask(setCookieSecrets(value));
       }
     }
     return EngineFetchResponse(

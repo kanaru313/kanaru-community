@@ -156,6 +156,18 @@ class PluginData extends Table {
   TextColumn get customChoicesJson =>
       text().withDefault(const Constant('{}'))();
 
+  /// The map the plugin's scripts keep between runs, as a JSON object of
+  /// strings; '' means nothing stored. The runtime enforces the size quota.
+  /// Written back only by a run that still matches the plugin's row, and
+  /// emptied by the user's clear (see `storage_rev`). Kept on an update,
+  /// deleted with the row on remove.
+  TextColumn get storageJson => text().withDefault(const Constant(''))();
+
+  /// Counts the clears of the storage. A run writes its result back only if
+  /// the number is still the one it read at its start, so a clear made while
+  /// a run was working is never undone by that run.
+  IntColumn get storageRev => integer().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {installId};
 }

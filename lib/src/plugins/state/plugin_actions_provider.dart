@@ -5,6 +5,7 @@ import '../../extension/state/extension_providers.dart';
 import '../data/install/plugin_actions.dart';
 import '../data/install/plugin_activity.dart';
 import '../data/install/restore_reinstall.dart';
+import '../data/logs/plugin_log_reader.dart';
 import 'plugin_services_provider.dart';
 import 'plugin_store_providers.dart';
 
@@ -30,6 +31,8 @@ final pluginActionsProvider = Provider<PluginActions>((ref) {
     repoRows: ref.watch(pluginRepoRowsProvider),
     files: ref.watch(pluginFilesProvider),
     config: ref.watch(pluginConfigStoreProvider),
+    storage: ref.watch(pluginStorageStoreProvider),
+    logs: ref.watch(pluginRunLogProvider),
     held: services.held,
     catalogs: services.catalogs,
     runGate: services.runGate,
@@ -44,6 +47,11 @@ final pluginActionsProvider = Provider<PluginActions>((ref) {
   ref.onDispose(actions.activity.dispose);
   return actions;
 });
+
+/// Reads and clears a plugin's run log (`readLog`, `clearLog`, `logFolder`).
+final pluginLogReaderProvider = Provider<PluginLogReader>(
+  (ref) => ref.watch(pluginActionsProvider).logReader,
+);
 
 /// The startup restore: nothing reads it yet. The shell (phase 9 / app root)
 /// must read it once at startup (it reinstalls plugins whose folder is

@@ -1,5 +1,6 @@
 import 'package:logging/logging.dart';
 
+import '../logs/plugin_run_log.dart';
 import '../run/run_gate.dart';
 import '../store/plugin_config_store.dart';
 import '../store/plugin_files.dart';
@@ -37,8 +38,8 @@ class RemoveSummary {
 }
 
 /// Removes a plugin: one transaction (data deleted, `removed_at` set,
-/// `package_dir` cleared), then the folder; a folder that cannot be deleted is
-/// left to the sweep.
+/// `package_dir` cleared), then the folder and the run log; a folder that
+/// cannot be deleted is left to the sweep.
 class PluginRemover {
   PluginRemover({
     required this._queue,
@@ -47,6 +48,7 @@ class PluginRemover {
     required this._config,
     required this._activity,
     required this._runGate,
+    required this._logs,
   });
 
   final PluginWriteQueue _queue;
@@ -55,6 +57,7 @@ class PluginRemover {
   final PluginConfigStore _config;
   final PluginActivity _activity;
   final RunGate _runGate;
+  final PluginRunLog _logs;
 
   /// Never throws. The lease is outside the queue job (see the installer).
   Future<RemoveResult> remove(String installId) => _runGate.exclusive(
@@ -63,6 +66,8 @@ class PluginRemover {
       () async {
         final (removal, dir) = await _rows.remove(installId);
         if (dir != null) await _files.deleteFolder(installId, dir);
+        // The run log goes with the plugin (never throws; drops queued writes).
+        await _logs.delete(installId);
         _activity.clearFor(installId);
         return switch (removal) {
           PluginRemoval.removed => RemoveResult.removed,

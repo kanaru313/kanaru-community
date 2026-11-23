@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../database/state/database_providers.dart';
 import '../../platform/state/document_picker_provider.dart';
+import '../../platform/state/platform_providers.dart';
 import '../data/install/held_packages.dart';
 import '../data/install/package_sources.dart';
 import '../data/install/sweep_and_restore.dart';
 import '../data/install/write_queue.dart';
+import '../data/logs/plugin_run_log.dart';
 import '../data/native/rust_script_checker.dart';
 import '../data/net/fetcher.dart';
 import '../data/repos/catalog_cache.dart';
@@ -15,6 +19,7 @@ import '../data/repos/repo_address_guard.dart';
 import '../data/repos/repo_refresher.dart';
 import '../data/repos/repo_store.dart';
 import '../data/run/run_gate.dart';
+import '../data/store/plugin_storage_store.dart';
 import '../domain/install/script_checker.dart';
 import 'plugin_store_providers.dart';
 
@@ -70,6 +75,14 @@ class PluginServices {
   );
 }
 
+/// The run log files of every plugin, `<data>/plugin-logs`. One writer for
+/// the process: its queue and delete markers are per instance.
+final pluginRunLogProvider = Provider<PluginRunLog>(
+  (ref) => PluginRunLog(
+    Directory('${ref.read(appPathsProvider).dataDir.path}/plugin-logs'),
+  ),
+);
+
 // The inputs are read once, not watched: they live as long as the process.
 // A rebuild would create a second write queue whose sweep could delete a
 // folder the first queue's install has written but not yet recorded.
@@ -79,7 +92,11 @@ final pluginServicesProvider = Provider<PluginServices>((ref) {
   final files = ref.read(pluginFilesProvider);
   final fetcher = ref.read(pluginFetcherProvider);
   final clock = ref.read(pluginClockProvider);
-  final sweeper = PluginSweeper(rows, files);
+  final sweeper = PluginSweeper(
+    rows,
+    files,
+    logs: ref.read(pluginRunLogProvider),
+  );
   final restore = Completer<List<RestoreCandidate>>();
   final queue = PluginWriteQueue(
     firstJob: () async {
@@ -132,3 +149,13 @@ final pluginServicesProvider = Provider<PluginServices>((ref) {
     startupRestore: restore.future,
   );
 });
+
+/// What plugin scripts keep between runs; its writes go through the services'
+/// write queue. It sits here, not with the other stores, because it needs
+/// `services.queue`.
+final pluginStorageStoreProvider = Provider<PluginStorageStore>(
+  (ref) => PluginStorageStore(
+    ref.watch(appDatabaseProvider),
+    ref.watch(pluginServicesProvider).queue,
+  ),
+);

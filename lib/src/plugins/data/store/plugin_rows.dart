@@ -138,6 +138,10 @@ class PluginRows {
               (_) => const PluginDataCompanion(
                 configJson: Value('{}'),
                 customChoicesJson: Value('{}'),
+                // A stray data row must not bring back an earlier storage.
+                // Rev 0 is safe: the updated_at guard refuses older runs.
+                storageJson: Value(''),
+                storageRev: Value(0),
               ),
             ),
           );

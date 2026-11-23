@@ -12,6 +12,7 @@ import '../store/plugin_config_store.dart';
 import '../store/plugin_config_values.dart';
 import '../store/plugin_files.dart';
 import '../store/plugin_row_types.dart';
+import '../store/plugin_storage_store.dart';
 import '../store/plugin_rows.dart';
 
 final _log = Logger('plugin_run');
@@ -27,6 +28,12 @@ class PreparedRun {
     required this.consentedHosts,
     required this.userEndpoints,
     required this.storageJson,
+    required this.storageRev,
+    required this.rowUpdatedAt,
+    required this.pluginName,
+    required this.pluginVersion,
+    required this.configSchema,
+    required this.storedConfig,
   });
 
   final List<EngineFile> files;
@@ -38,6 +45,18 @@ class PreparedRun {
   final Set<String> consentedHosts;
   final Set<String> userEndpoints;
   final String storageJson;
+
+  /// The storage's clear counter and the plugin row's `updated_at` as read
+  /// here: the write-back of this run holds only while both are unchanged.
+  final int storageRev;
+  final int rowUpdatedAt;
+
+  /// The plugin's name and version, and its settings as stored (with the
+  /// manifest's fields): what the run log needs to hide the user's values.
+  final String pluginName;
+  final String pluginVersion;
+  final List<ConfigField> configSchema;
+  final Map<String, Object?> storedConfig;
 }
 
 /// Either what the run needs, or the outcome that ends it before anything
@@ -57,6 +76,7 @@ Future<RunSetup> prepareRun(
   required PluginRows rows,
   required PluginFiles files,
   required PluginConfigStore config,
+  required PluginStorageStore storage,
 }) async {
   final row = await rows.byId(request.installId);
   if (row == null || !row.isLive) {
@@ -103,6 +123,7 @@ Future<RunSetup> prepareRun(
   // One read of the stored values: the run config (stored, then defaults) and
   // the user's saved endpoints come from the same snapshot.
   final stored = await config.read(request.installId);
+  final kept = await storage.read(request.installId);
   final values = resolveRunConfig(manifest.config, stored);
   final missing = missingRequiredConfig(manifest.config, values);
   if (missing.isNotEmpty) {
@@ -123,7 +144,13 @@ Future<RunSetup> prepareRun(
       manifestHosts: manifest.hosts.toSet(),
       consentedHosts: row.consentedHosts.toSet(),
       userEndpoints: _savedEndpoints(manifest.config, stored.values),
-      storageJson: '',
+      storageJson: kept.json,
+      storageRev: kept.rev,
+      rowUpdatedAt: row.updatedAt,
+      pluginName: row.name,
+      pluginVersion: row.version.toString(),
+      configSchema: manifest.config,
+      storedConfig: Map.unmodifiable(stored.values),
     ),
   );
 }
