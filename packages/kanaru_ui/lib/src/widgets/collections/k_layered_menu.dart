@@ -1,14 +1,13 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../icons/k_icons.dart';
 import '../../layout/form_factor.dart';
 import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
-import '../k_icon_button.dart';
 import '../k_row_edges.dart';
+import 'k_layered_menu_header.dart';
 import 'k_menu_row.dart';
 
 export 'k_menu_row.dart'
@@ -236,26 +235,6 @@ class _MenuBodyState extends State<_MenuBody> {
     effect();
   }
 
-  /// The header; a button with a `›` when it opens a page.
-  Widget _header(KMenuPage page) {
-    final opens = page.headerOpens;
-    final header = page.header!;
-    if (opens == null) return header;
-    return InkWell(
-      borderRadius: KRadius.sm,
-      onTap: () => _push(opens),
-      child: Row(
-        children: [
-          Expanded(child: header),
-          Icon(
-            KIcons.chevronRight,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -336,6 +315,7 @@ class _MenuBodyState extends State<_MenuBody> {
         bindings: {
           const SingleActivator(LogicalKeyboardKey.escape): () =>
               Navigator.of(context).maybePop(),
+          ...kMenuHeaderBindings(page: page, sub: sub),
         },
         child: Focus(
           focusNode: _wrapper,
@@ -347,7 +327,7 @@ class _MenuBodyState extends State<_MenuBody> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (sub)
-                  _SubPageTitle(
+                  KMenuSubPageTitle(
                     title: page.title ?? '',
                     backTooltip: widget.backTooltip,
                     onBack: _back,
@@ -360,7 +340,13 @@ class _MenuBodyState extends State<_MenuBody> {
                       KSpace.x4,
                       KSpace.x2,
                     ),
-                    child: _header(page),
+                    child: KMenuHeader(
+                      page: page,
+                      onOpen: _push,
+                      onTap: page.onHeaderTap == null
+                          ? null
+                          : () => page.onHeaderTap!(_keyboard),
+                    ),
                   ),
                 Flexible(
                   child: AnimatedSwitcher(
@@ -451,45 +437,6 @@ class _MenuBodyState extends State<_MenuBody> {
       padding: padding,
       itemCount: items.length,
       itemBuilder: (_, i) => items[i],
-    );
-  }
-}
-
-class _SubPageTitle extends StatelessWidget {
-  const _SubPageTitle({
-    required this.title,
-    required this.onBack,
-    this.backTooltip,
-  });
-
-  final String title;
-  final VoidCallback onBack;
-  final String? backTooltip;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
-      child: Row(
-        children: [
-          KIconButton(
-            tooltip:
-                backTooltip ??
-                MaterialLocalizations.of(context).backButtonTooltip,
-            onPressed: onBack,
-            icon: KIcons.back,
-          ),
-          Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
