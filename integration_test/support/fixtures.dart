@@ -7,7 +7,8 @@ class FixtureTrack {
     required this.lrc,
   });
 
-  /// The tag title, which is what the library lists.
+  /// The title the library lists: the tag title, or the file stem when the
+  /// tag cannot be read.
   final String title;
 
   /// Expected tag lyrics, or null when the file has none.
@@ -56,6 +57,17 @@ const List<FixtureTrack> fixtureTracks = [
     ),
     lrc: null,
   ),
+  // The tag is broken after the lyrics: the library lists the file stem.
+  FixtureTrack(
+    title: 'it_broken_id3_tag',
+    tag: ExpectedLyrics(
+      synced: false,
+      firstText: 'Broken tag first line',
+      firstTime: Duration.zero,
+      secondText: 'Broken tag second line',
+    ),
+    lrc: null,
+  ),
   FixtureTrack(
     title: 'IT Flac Lrc Tag',
     tag: ExpectedLyrics(
@@ -63,6 +75,16 @@ const List<FixtureTrack> fixtureTracks = [
       firstText: 'Flac first line',
       firstTime: _syncedAt500,
       secondText: 'Flac second line',
+    ),
+    lrc: null,
+  ),
+  FixtureTrack(
+    title: 'IT Flac Unsynced Space',
+    tag: ExpectedLyrics(
+      synced: false,
+      firstText: 'Unsynced first line',
+      firstTime: Duration.zero,
+      secondText: 'Unsynced second line',
     ),
     lrc: null,
   ),

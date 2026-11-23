@@ -10,11 +10,14 @@ use std::path::{Path, PathBuf};
 use kanaru_media::tags::lyrics_reader::{read_lyrics, EmbeddedLyrics};
 use kanaru_media::MediaError;
 use lofty::config::WriteOptions;
-use lofty::file::TaggedFileExt;
+use lofty::file::{AudioFile, TaggedFileExt};
+use lofty::flac::FlacFile;
 use lofty::id3::v2::{
     BinaryFrame, Frame, FrameId, Id3v2Tag, SyncTextContentType, SynchronizedTextFrame,
     TimestampFormat, UnsynchronizedTextFrame,
 };
+use lofty::ogg::tag::VorbisComments;
+use lofty::ogg::{OpusFile, VorbisFile};
 use lofty::tag::{ItemKey, Tag, TagExt};
 use lofty::TextEncoding;
 
@@ -135,4 +138,141 @@ pub fn write_id3v2(path: &Path, frames: Vec<Frame<'static>>) {
     }
     tag.save_to_path(path, WriteOptions::default())
         .expect("save ID3v2");
+}
+
+/// Writes a raw Vorbis comment (`key` kept as given, no mapping to an
+/// `ItemKey`) into a FLAC, Ogg Vorbis or Opus file, replacing earlier ones of
+/// that key.
+pub fn write_vorbis_key(path: &Path, key: &str, text: &str) {
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .expect("extension");
+    let mut file = File::open(path).expect("open fixture");
+    let options = lofty::config::ParseOptions::new();
+    macro_rules! write_key {
+        ($file_type:ty, |$f:ident| $comments:expr) => {{
+            let mut $f = <$file_type>::read_from(&mut file, options).expect("read fixture");
+            let comments: &mut VorbisComments = $comments;
+            comments.insert(key.to_owned(), text.to_owned());
+            comments
+                .save_to_path(path, WriteOptions::default())
+                .expect("save Vorbis comments");
+        }};
+    }
+    match ext {
+        "flac" => write_key!(FlacFile, |f| {
+            if f.vorbis_comments().is_none() {
+                f.set_vorbis_comments(VorbisComments::default());
+            }
+            f.vorbis_comments_mut().expect("just set")
+        }),
+        "ogg" => write_key!(VorbisFile, |f| f.vorbis_comments_mut()),
+        "opus" => write_key!(OpusFile, |f| f.vorbis_comments_mut()),
+        other => panic!("no Vorbis comments in .{other}"),
+    }
+}
+
+/// One ID3v2.4 frame: id, syncsafe size, no flags.
+pub fn id3v2_frame(id: &str, body: &[u8]) -> Vec<u8> {
+    id3v2_frame_with_size(id, body.len(), 0, body)
+}
+
+/// Like [`id3v2_frame`] with the size and flag fields chosen by the caller.
+pub fn id3v2_frame_with_size(id: &str, size: usize, flags: u16, body: &[u8]) -> Vec<u8> {
+    let mut frame = id.as_bytes().to_vec();
+    frame.extend_from_slice(&syncsafe(size));
+    frame.extend_from_slice(&flags.to_be_bytes());
+    frame.extend_from_slice(body);
+    frame
+}
+
+/// A `USLT` frame body in UTF-8, as symphonia and lofty both read it.
+pub fn uslt_frame(text: &str) -> Vec<u8> {
+    let mut body = b"\x03eng\x00".to_vec();
+    body.extend_from_slice(text.as_bytes());
+    id3v2_frame("USLT", &body)
+}
+
+/// A frame lofty refuses (compressed, no data length indicator) and
+/// symphonia treats as a structural error: it ends the readable part of the
+/// tag.
+pub fn frame_that_ends_the_tag() -> Vec<u8> {
+    id3v2_frame_with_size("TIT2", 4, 0x0008, b"\x03abc")
+}
+
+/// A `TXXX` frame with an unknown text encoding byte: lofty refuses it,
+/// symphonia skips just this frame and goes on.
+pub fn frame_with_a_bad_encoding() -> Vec<u8> {
+    id3v2_frame("TXXX", b"\x09d\x00t")
+}
+
+/// An ID3v2.4 tag made of `frames` (declaring exactly their length, or
+/// `declared` when given) in front of the in-memory MP3.
+pub fn broken_id3v2(frames: &[Vec<u8>], declared: Option<usize>) -> Vec<u8> {
+    let body: Vec<u8> = frames.concat();
+    let mut bytes = b"ID3\x04\x00\x00".to_vec();
+    bytes.extend_from_slice(&syncsafe(declared.unwrap_or(body.len())));
+    bytes.extend_from_slice(&body);
+    bytes.extend_from_slice(&mp3_bytes());
+    bytes
+}
+
+fn syncsafe(size: usize) -> [u8; 4] {
+    [21, 14, 7, 0].map(|shift| ((size >> shift) & 0x7f) as u8)
+}
+
+/// A frame of ID3v2.`version` (2, 3 or 4): `id` is the four-letter id, cut to
+/// its three-letter legacy form for 2.2 (`USLT` -> `ULT`, `TXXX` -> `TXX`).
+pub fn versioned_frame(version: u8, id: &str, body: &[u8]) -> Vec<u8> {
+    let mut frame = Vec::new();
+    match version {
+        2 => {
+            let legacy = match id {
+                "USLT" => "ULT",
+                "TXXX" => "TXX",
+                "TIT2" => "TT2",
+                other => panic!("no legacy id for {other}"),
+            };
+            frame.extend_from_slice(legacy.as_bytes());
+            frame.extend_from_slice(&(body.len() as u32).to_be_bytes()[1..]);
+        }
+        3 => {
+            frame.extend_from_slice(id.as_bytes());
+            frame.extend_from_slice(&(body.len() as u32).to_be_bytes());
+            frame.extend_from_slice(&[0, 0]);
+        }
+        _ => return id3v2_frame(id, body),
+    }
+    frame.extend_from_slice(body);
+    frame
+}
+
+/// A `USLT` (`ULT` in 2.2) frame in ISO-8859-1.
+pub fn versioned_uslt(version: u8, text: &str) -> Vec<u8> {
+    let mut body = b"\x00eng\x00".to_vec();
+    body.extend(text.chars().map(|c| c as u8));
+    versioned_frame(version, "USLT", &body)
+}
+
+/// A `TXXX` (`TXX` in 2.2) frame lofty refuses (unknown encoding byte).
+pub fn versioned_bad_frame(version: u8) -> Vec<u8> {
+    versioned_frame(version, "TXXX", b"\x09d\x00t")
+}
+
+/// An ID3v2.`version` tag with `flags` made of `body` (declaring its length)
+/// in front of the in-memory MP3.
+pub fn id3v2_tag_bytes(version: u8, flags: u8, body: &[u8]) -> Vec<u8> {
+    let mut bytes = vec![b'I', b'D', b'3', version, 0, flags];
+    bytes.extend_from_slice(&syncsafe(body.len()));
+    bytes.extend_from_slice(body);
+    bytes.extend_from_slice(&mp3_bytes());
+    bytes
+}
+
+/// `body` with a `00` inserted after every `FF` (tag-level unsynchronisation).
+pub fn unsynchronised(body: &[u8]) -> Vec<u8> {
+    body.iter()
+        .flat_map(|&b| if b == 0xff { vec![b, 0] } else { vec![b] })
+        .collect()
 }

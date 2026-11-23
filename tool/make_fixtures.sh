@@ -22,8 +22,10 @@ tone() {
     -ac 1 -ar 22050 -map_metadata -1 "$@" "$file"
 }
 
-# id3 <file> <title> [uslt <text> | sylt <ms|text;ms|text>]
+# id3 <file> <title> [uslt <text> | sylt <ms|text;ms|text> | uslt-broken <text>]
 # Prepends an ID3v2.4 tag (UTF-8) with TIT2, TPE1 and optionally USLT or SYLT.
+# `uslt-broken` adds USLT, then a frame lofty refuses (compressed, no data
+# length indicator): the readable part of the tag ends there.
 id3() {
   python3 -I - "$@" <<'PY'
 import struct, sys
@@ -42,8 +44,10 @@ def text_frame(frame_id, text):
     return frame(frame_id, b"\x03" + text.encode("utf-8"))
 
 frames = [text_frame("TIT2", title), text_frame("TPE1", "Kanaru Fixture")]
-if kind == "uslt":
+if kind in ("uslt", "uslt-broken"):
     frames.append(frame("USLT", b"\x03eng\x00" + value.encode("utf-8")))
+    if kind == "uslt-broken":
+        frames.append(b"TIT2" + syncsafe(4) + b"\x00\x08" + b"\x03abc")
 elif kind == "sylt":
     body = b"\x03eng\x02\x01\x00"  # UTF-8, ms timestamps, lyrics, no description
     for pair in value.split(";"):
@@ -69,6 +73,12 @@ id3 "$OUT/sylt.mp3" "IT Sylt Tag" sylt "500|Sylt first line;1500|Sylt second lin
 mp3 "$OUT/uslt.mp3"
 id3 "$OUT/uslt.mp3" "IT Uslt Tag" uslt $'Uslt first line\nUslt second line'
 
+# MP3 whose ID3v2 tag breaks after a USLT frame: lofty fails the whole tag, so
+# the scan lists the file stem as the title (TIT2 equals it, so a reader that
+# parses TIT2 by itself agrees) and only the fallback finds the lyrics (plain).
+mp3 "$OUT/it_broken_id3_tag.mp3"
+id3 "$OUT/it_broken_id3_tag.mp3" "it_broken_id3_tag" uslt-broken $'Broken tag first line\nBroken tag second line'
+
 # FLAC with LRC text in the LYRICS comment (synced, tag).
 tone "$OUT/flac_lrc.flac" -c:a flac -compression_level 8 \
   -metadata title="IT Flac Lrc Tag" -metadata artist="Kanaru Fixture" \
@@ -78,6 +88,12 @@ tone "$OUT/flac_lrc.flac" -c:a flac -compression_level 8 \
 tone "$OUT/ogg_plain.ogg" -c:a libvorbis -q:a -1 \
   -metadata title="IT Ogg Plain Tag" -metadata artist="Kanaru Fixture" \
   -metadata LYRICS=$'Ogg first line\nOgg second line'
+
+# FLAC with foobar2000's `UNSYNCED LYRICS` comment (key with a space) and no
+# `LYRICS` key (plain, tag).
+tone "$OUT/flac_unsynced_space.flac" -c:a flac -compression_level 8 \
+  -metadata title="IT Flac Unsynced Space" -metadata artist="Kanaru Fixture" \
+  -metadata "UNSYNCED LYRICS"=$'Unsynced first line\nUnsynced second line'
 
 # Tracks without tag lyrics, with `.lrc` sidecars.
 mp3 "$OUT/lrc_utf8.mp3"

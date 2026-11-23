@@ -9,11 +9,15 @@ use std::fs::File;
 use kanaru_media::tags::lyrics_reader::{read_lyrics, SyncedLine};
 use kanaru_media::MediaError;
 use lofty::config::WriteOptions;
-use lofty::id3::v2::{ExtendedTextFrame, Frame, SyncTextContentType, TimestampFormat};
+use lofty::id3::v2::{ExtendedTextFrame, Frame, Id3v2Tag, SyncTextContentType, TimestampFormat};
 use lofty::tag::{ItemKey, Tag, TagExt, TagType};
 use lofty::TextEncoding;
-use lyrics_fixtures::{read, sample, sylt, sylt_with, uslt, write_generic, write_id3v2};
-use tags_fixtures::TempDir;
+use lyrics_fixtures::{
+    broken_id3v2, frame_that_ends_the_tag, frame_with_a_bad_encoding, id3v2_frame, id3v2_tag_bytes,
+    read, sample, sylt, sylt_with, unsynchronised, uslt, uslt_frame, versioned_bad_frame,
+    versioned_uslt, write_generic, write_id3v2, write_vorbis_key,
+};
+use tags_fixtures::{flac_bytes, mp3_bytes, TempDir};
 
 fn line(time_ms: u32, text: &str) -> SyncedLine {
     SyncedLine {
@@ -267,7 +271,7 @@ fn an_oversized_primary_tag_falls_to_the_next_tag() {
 }
 
 #[test]
-fn a_broken_id3_tag_means_no_lyrics_for_the_whole_file() {
+fn a_broken_id3_tag_with_nothing_recoverable_gives_no_lyrics() {
     let dir = TempDir::new();
     let path = dir.write(
         "garbage.mp3",
@@ -349,4 +353,230 @@ fn an_mp3_cut_inside_its_id3_tag_means_no_lyrics() {
     let bytes = std::fs::read(&path).unwrap();
     let cut = dir.write("cut.mp3", &bytes[..30]);
     assert_eq!(read(&cut), Ok(None));
+}
+
+const FOOBAR_KEY: &str = "UNSYNCED LYRICS";
+
+#[test]
+fn reads_foobar_unsynced_lyrics_from_flac_ogg_and_opus() {
+    let dir = TempDir::new();
+    for name in ["sample.flac", "sample.ogg", "sample.opus"] {
+        for key in [FOOBAR_KEY, "unsynced lyrics"] {
+            let path = sample(&dir, name);
+            write_vorbis_key(&path, key, "Foobar words");
+            let lyrics = read(&path)
+                .unwrap()
+                .unwrap_or_else(|| panic!("{name} {key}: none"));
+            assert_eq!(lyrics.text.as_deref(), Some("Foobar words"), "{name} {key}");
+            assert!(lyrics.synced.is_empty(), "{name} {key}");
+        }
+    }
+}
+
+#[test]
+fn generic_lyrics_win_over_unsynced_lyrics_with_a_space() {
+    let dir = TempDir::new();
+    for name in ["sample.flac", "sample.ogg", "sample.opus"] {
+        let path = sample(&dir, name);
+        write_vorbis_key(&path, FOOBAR_KEY, "Second");
+        write_vorbis_key(&path, "LYRICS", "First");
+        let lyrics = read(&path).unwrap().expect("lyrics");
+        assert_eq!(lyrics.text.as_deref(), Some("First"), "{name}");
+    }
+}
+
+#[test]
+fn an_id3v2_uslt_in_flac_wins_over_unsynced_lyrics_with_a_space() {
+    let dir = TempDir::new();
+    let path = sample(&dir, "sample.flac");
+    write_vorbis_key(&path, FOOBAR_KEY, "From Vorbis");
+    // lofty only reads an ID3v2 tag in front of a FLAC stream: prepend one.
+    let mut id3 = Id3v2Tag::new();
+    id3.insert(uslt("From USLT"));
+    let mut bytes = Vec::new();
+    id3.dump_to(&mut bytes, WriteOptions::default())
+        .expect("encode ID3v2");
+    bytes.extend(std::fs::read(&path).unwrap());
+    let path = dir.write("with_id3.flac", &bytes);
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("From USLT"));
+}
+
+#[test]
+fn blank_or_oversized_unsynced_lyrics_count_as_none() {
+    let dir = TempDir::new();
+    for name in ["sample.flac", "sample.ogg", "sample.opus"] {
+        for text in ["  \n ".to_owned(), "a".repeat(1024 * 1024 + 1)] {
+            let path = sample(&dir, name);
+            write_vorbis_key(&path, FOOBAR_KEY, &text);
+            assert_eq!(read(&path), Ok(None), "{name}");
+        }
+    }
+}
+
+#[test]
+fn lyrics_before_a_broken_id3_frame_are_kept() {
+    let dir = TempDir::new();
+    let bytes = broken_id3v2(
+        &[
+            uslt_frame("Kept first\nKept second"),
+            frame_that_ends_the_tag(),
+        ],
+        None,
+    );
+    let path = dir.write("broken.mp3", &bytes);
+    // lofty refuses the whole tag, so only the fallback can give this text.
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Kept first\nKept second"));
+}
+
+#[test]
+fn lyrics_after_a_broken_id3_frame_are_lost() {
+    let dir = TempDir::new();
+    let bytes = broken_id3v2(&[frame_that_ends_the_tag(), uslt_frame("Lost")], None);
+    let path = dir.write("broken.mp3", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    assert_eq!(read(&path), Ok(None));
+}
+
+#[test]
+fn a_frame_skipped_alone_does_not_hide_the_lyrics_after_it() {
+    let dir = TempDir::new();
+    let bytes = broken_id3v2(&[frame_with_a_bad_encoding(), uslt_frame("Later")], None);
+    let path = dir.write("broken.mp3", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Later"));
+}
+
+#[test]
+fn a_txxx_before_a_broken_id3_frame_is_kept_when_there_is_no_uslt() {
+    let dir = TempDir::new();
+    let mut body = b"\x03Lyrics\x00".to_vec();
+    body.extend_from_slice(b"From TXXX");
+    let bytes = broken_id3v2(
+        &[id3v2_frame("TXXX", &body), frame_that_ends_the_tag()],
+        None,
+    );
+    let path = dir.write("broken.mp3", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("From TXXX"));
+}
+
+#[test]
+fn a_huge_declared_id3_tag_is_read_within_the_cap() {
+    let dir = TempDir::new();
+    let bytes = broken_id3v2(&[uslt_frame("Small")], Some(250 * 1024 * 1024));
+    let path = dir.write("huge.mp3", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    // The tag declares far more than the file holds. The declared size is
+    // lowered to the bytes held, so the frame read before it is recovered
+    // instead of the read failing at the end of the file.
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Small"));
+
+    let empty_body = dir.write(
+        "huge_empty.mp3",
+        &broken_id3v2(&[], Some(250 * 1024 * 1024)),
+    );
+    assert_eq!(read(&empty_body), Ok(None));
+}
+
+#[test]
+fn synced_lines_before_a_broken_id3_frame_are_kept() {
+    let dir = TempDir::new();
+    let Frame::Binary(sylt_frame) = sylt(
+        SyncTextContentType::Lyrics,
+        TimestampFormat::MS,
+        &[(2500, "Second"), (1000, "First")],
+    ) else {
+        panic!("SYLT is a binary frame");
+    };
+    let bytes = broken_id3v2(
+        &[
+            id3v2_frame("SYLT", &sylt_frame.data),
+            frame_that_ends_the_tag(),
+        ],
+        None,
+    );
+    let path = dir.write("broken.mp3", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text, None);
+    assert_eq!(
+        lyrics.synced,
+        vec![line(1000, "First"), line(2500, "Second")]
+    );
+}
+
+#[test]
+fn a_flac_with_a_broken_id3v2_prefix_is_an_error() {
+    let dir = TempDir::new();
+    let mut bytes = broken_id3v2(&[uslt_frame("Not read"), frame_that_ends_the_tag()], None);
+    bytes.truncate(bytes.len() - mp3_bytes().len());
+    bytes.extend(flac_bytes());
+    let path = dir.write("broken.flac", &bytes);
+    let result = read(&path);
+    assert!(matches!(result, Err(MediaError::Corrupt(_))), "{result:?}");
+}
+
+#[test]
+fn lyrics_before_the_damage_are_kept_in_id3v2_2_and_2_3() {
+    let dir = TempDir::new();
+    for version in [2u8, 3] {
+        let mut body = versioned_uslt(version, "Kept lines");
+        body.extend(versioned_bad_frame(version));
+        let path = dir.write("old.mp3", &id3v2_tag_bytes(version, 0, &body));
+        assert!(lofty::read_from_path(&path).is_err(), "v2.{version}");
+        let lyrics = read(&path)
+            .unwrap()
+            .unwrap_or_else(|| panic!("v2.{version}: none"));
+        assert_eq!(lyrics.text.as_deref(), Some("Kept lines"), "v2.{version}");
+    }
+}
+
+#[test]
+fn a_tag_level_unsynchronised_id3v2_3_tag_is_recovered() {
+    let dir = TempDir::new();
+    // The Latin-1 `\u{ff}` makes an FF byte that unsynchronisation escapes.
+    let mut body = versioned_uslt(3, "Kept \u{ff} lines");
+    body.extend(versioned_bad_frame(3));
+    let path = dir.write(
+        "unsync.mp3",
+        &id3v2_tag_bytes(3, 0x80, &unsynchronised(&body)),
+    );
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Kept \u{ff} lines"));
+}
+
+/// 16 MiB of frames after the lyrics and a frame with bad content (lofty
+/// refuses it, symphonia skips it and reads on, so it does parse the flood
+/// unless the tag was cut first): the lyrics are kept and the read stays
+/// quick. The cut itself is asserted in `id3_bound`'s unit tests.
+fn assert_flood_is_read_fast(flood: Vec<u8>) {
+    let dir = TempDir::new();
+    let mut body = uslt_frame("Before the flood");
+    body.extend(frame_with_a_bad_encoding());
+    body.extend(flood);
+    let path = dir.write("flood.mp3", &broken_id3v2(&[body], None));
+    assert!(lofty::read_from_path(&path).is_err());
+    let started = std::time::Instant::now();
+    let lyrics = read(&path).expect("read").expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Before the flood"));
+    assert!(started.elapsed() < std::time::Duration::from_secs(3));
+}
+
+#[test]
+fn a_flood_of_empty_id3_frames_is_read_fast() {
+    let empty = id3v2_frame("TIT2", b"");
+    assert_flood_is_read_fast(empty.repeat(16 * 1024 * 1024 / empty.len()));
+}
+
+#[test]
+fn a_flood_of_tiny_junk_id3_frames_is_read_fast() {
+    let junk = id3v2_frame("TIT2", b"\x09");
+    assert_flood_is_read_fast(junk.repeat(16 * 1024 * 1024 / junk.len()));
 }
