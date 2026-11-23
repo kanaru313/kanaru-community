@@ -4,18 +4,12 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../soon_row.dart';
 
-/// Sections whose rows all wait for plugins or the engine: online sources,
-/// where lyrics show, translation, lyrics from audio.
+/// Sections whose rows all wait for plugins or the engine: where lyrics
+/// show, translation, lyrics from audio.
 List<Widget> lyricsSoonSections(BuildContext context) {
   final l10n = AppLocalizations.of(context);
   final desktop = FormFactor.of(context) == FormFactor.desktop;
   return [
-    SetupSection(
-      title: Text(l10n.lyricsSettingsSources),
-      children: [
-        SoonRow(icon: KIcons.add, title: Text(l10n.lyricsSettingsAddSource)),
-      ],
-    ),
     SetupSection(
       title: Text(l10n.lyricsSettingsWhere),
       children: [

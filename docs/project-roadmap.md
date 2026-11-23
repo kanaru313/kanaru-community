@@ -83,7 +83,7 @@ Wave 1 follow-ups (not in wave 1 by decision; each needs its own design):
 - Favorites page done. History and Most played: pages, menus, routes, M3U track-list export and l10n done.
 - Android "Open in file manager": needs a `MainActivity` change.
 - Settings › Library screen (tabs, folders, exclusions, short-file skip).
-- Offline lyrics (LYR-01 to LYR-04) done: parser, readers, views, card and tab, source button, "Lời cho bài này" modal, song-menu entry and Settings › Lyrics (online search, translation, transliteration and the other plugin-dependent rows are coming-soon rows). Sleep timer: modal and entries (mobile ring button and ⋮ item, desktop pill and ⋮ item) and the desktop player bar pill are built; Android notification button is pending.
+- Offline lyrics (LYR-01 to LYR-04) done: parser, readers, views, card and tab, source button, "Lời cho bài này" modal, song-menu entry and Settings › Lyrics (translation, transliteration, saving found lyrics and the other engine-dependent rows are coming-soon rows). Online lyrics settings done: the "Tự tìm lời" switch and the "Nguồn lời trực tuyến" block (order, switches, problem lines, deep link `?focus=sources`). Sleep timer: modal and entries (mobile ring button and ⋮ item, desktop pill and ⋮ item) and the desktop player bar pill are built; Android notification button is pending.
 - Add-to-playlist (done).
 - Font picker done (SET-03 font part): Settings › Appearance › Fonts with built-in, downloadable catalog (release `fonts-v1`) and custom imported fonts; spec: `docs/system-architecture-fonts.md`.
 - Golden tests for `kanaru_ui` widgets once a golden setup exists.

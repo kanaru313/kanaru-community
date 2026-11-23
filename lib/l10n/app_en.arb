@@ -3626,6 +3626,86 @@
       }
     }
   },
+  "lyricsSettingsAutoFindNone": "No lyrics source is on · turn one on below",
+  "lyricsSettingsSourcesCount": "{on} / {total} sources on",
+  "@lyricsSettingsSourcesCount": {
+    "placeholders": {
+      "on": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsSettingsSourcesHint": "Order of the search when it runs by itself: drag to sort. A source that is off is only searched when you tap “Search online lyrics…”. A plugin installed from a repository starts on and goes to the end of the list. A plugin installed from a file or a link starts off (searched only when you tap) until you turn it on.",
+  "lyricsSettingsSourceRepo": "Plugin · v{version}",
+  "@lyricsSettingsSourceRepo": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsSettingsSourceFile": "Installed from a file · v{version}",
+  "@lyricsSettingsSourceFile": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsSettingsSourceLink": "Installed from a link · v{version}",
+  "@lyricsSettingsSourceLink": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsSettingsSourceOff": "{line} · only searched when you tap",
+  "@lyricsSettingsSourceOff": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSettingsSourceNeedsConfig": "Needs setup · open the plugin page to fill it in",
+  "lyricsSettingsSourcePaused": "Paused until {time}",
+  "@lyricsSettingsSourcePaused": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSettingsSourceBroken": "Broken package · open the plugin page",
+  "lyricsSettingsSourceSwitch": "{name}: use for automatic search",
+  "@lyricsSettingsSourceSwitch": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSettingsSourceDrag": "Drag to reorder",
+  "lyricsSettingsSourceOnToast": "{name}: on for automatic search",
+  "@lyricsSettingsSourceOnToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSettingsSourceOffToast": "{name}: off · only searched when you tap",
+  "@lyricsSettingsSourceOffToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "pluginsStoreTitle": "Plugin store",
   "pluginsFilterTooltip": "Filter",
   "pluginsFilterActiveLabel": "{count} on",

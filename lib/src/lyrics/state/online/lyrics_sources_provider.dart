@@ -77,3 +77,35 @@ final lyricsSourcesProvider = Provider<List<LyricsSource>>((ref) {
   }
   return applySourcePrefs(saved, installed);
 });
+
+/// What the user can do to the source list: switch one source and move one.
+/// Each writes the whole list as it will be (`[{id, on}]`), so a plugin that
+/// was never saved gets its place and switch fixed from then on.
+class LyricsSourceActions {
+  LyricsSourceActions(this._ref);
+
+  final Ref _ref;
+
+  Future<void> setEnabled(String id, bool on) {
+    final prefs = prefsOf(_ref.read(lyricsSourcesProvider));
+    final at = prefs.indexWhere((p) => p.id == id);
+    if (at < 0) return Future.value();
+    prefs[at] = SourcePref(id, on: on);
+    return _ref.read(lyricsOnlineSourcesProvider.notifier).set(prefs);
+  }
+
+  /// Moves the source at [from]; [to] is the index it ends at in the new
+  /// order (already corrected for the removal).
+  Future<void> reorder(int from, int to) {
+    final prefs = prefsOf(_ref.read(lyricsSourcesProvider));
+    if (from < 0 || from >= prefs.length || to < 0 || to >= prefs.length) {
+      return Future.value();
+    }
+    prefs.insert(to, prefs.removeAt(from));
+    return _ref.read(lyricsOnlineSourcesProvider.notifier).set(prefs);
+  }
+}
+
+final lyricsSourceActionsProvider = Provider<LyricsSourceActions>(
+  LyricsSourceActions.new,
+);

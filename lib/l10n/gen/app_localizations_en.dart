@@ -5128,6 +5128,70 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get lyricsSettingsAutoFindNone =>
+      'No lyrics source is on · turn one on below';
+
+  @override
+  String lyricsSettingsSourcesCount(int on, int total) {
+    return '$on / $total sources on';
+  }
+
+  @override
+  String get lyricsSettingsSourcesHint =>
+      'Order of the search when it runs by itself: drag to sort. A source that is off is only searched when you tap “Search online lyrics…”. A plugin installed from a repository starts on and goes to the end of the list. A plugin installed from a file or a link starts off (searched only when you tap) until you turn it on.';
+
+  @override
+  String lyricsSettingsSourceRepo(int version) {
+    return 'Plugin · v$version';
+  }
+
+  @override
+  String lyricsSettingsSourceFile(int version) {
+    return 'Installed from a file · v$version';
+  }
+
+  @override
+  String lyricsSettingsSourceLink(int version) {
+    return 'Installed from a link · v$version';
+  }
+
+  @override
+  String lyricsSettingsSourceOff(String line) {
+    return '$line · only searched when you tap';
+  }
+
+  @override
+  String get lyricsSettingsSourceNeedsConfig =>
+      'Needs setup · open the plugin page to fill it in';
+
+  @override
+  String lyricsSettingsSourcePaused(String time) {
+    return 'Paused until $time';
+  }
+
+  @override
+  String get lyricsSettingsSourceBroken =>
+      'Broken package · open the plugin page';
+
+  @override
+  String lyricsSettingsSourceSwitch(String name) {
+    return '$name: use for automatic search';
+  }
+
+  @override
+  String get lyricsSettingsSourceDrag => 'Drag to reorder';
+
+  @override
+  String lyricsSettingsSourceOnToast(String name) {
+    return '$name: on for automatic search';
+  }
+
+  @override
+  String lyricsSettingsSourceOffToast(String name) {
+    return '$name: off · only searched when you tap';
+  }
+
+  @override
   String get pluginsStoreTitle => 'Plugin store';
 
   @override

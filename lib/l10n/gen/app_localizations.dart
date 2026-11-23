@@ -7404,6 +7404,90 @@ abstract class AppLocalizations {
   /// **'Chose the lyrics from {plugin} for this song'**
   String lyricsToastChosen(String plugin);
 
+  /// No description provided for @lyricsSettingsAutoFindNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics source is on · turn one on below'**
+  String get lyricsSettingsAutoFindNone;
+
+  /// No description provided for @lyricsSettingsSourcesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{on} / {total} sources on'**
+  String lyricsSettingsSourcesCount(int on, int total);
+
+  /// No description provided for @lyricsSettingsSourcesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Order of the search when it runs by itself: drag to sort. A source that is off is only searched when you tap “Search online lyrics…”. A plugin installed from a repository starts on and goes to the end of the list. A plugin installed from a file or a link starts off (searched only when you tap) until you turn it on.'**
+  String get lyricsSettingsSourcesHint;
+
+  /// No description provided for @lyricsSettingsSourceRepo.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin · v{version}'**
+  String lyricsSettingsSourceRepo(int version);
+
+  /// No description provided for @lyricsSettingsSourceFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed from a file · v{version}'**
+  String lyricsSettingsSourceFile(int version);
+
+  /// No description provided for @lyricsSettingsSourceLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed from a link · v{version}'**
+  String lyricsSettingsSourceLink(int version);
+
+  /// No description provided for @lyricsSettingsSourceOff.
+  ///
+  /// In en, this message translates to:
+  /// **'{line} · only searched when you tap'**
+  String lyricsSettingsSourceOff(String line);
+
+  /// No description provided for @lyricsSettingsSourceNeedsConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs setup · open the plugin page to fill it in'**
+  String get lyricsSettingsSourceNeedsConfig;
+
+  /// No description provided for @lyricsSettingsSourcePaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused until {time}'**
+  String lyricsSettingsSourcePaused(String time);
+
+  /// No description provided for @lyricsSettingsSourceBroken.
+  ///
+  /// In en, this message translates to:
+  /// **'Broken package · open the plugin page'**
+  String get lyricsSettingsSourceBroken;
+
+  /// No description provided for @lyricsSettingsSourceSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: use for automatic search'**
+  String lyricsSettingsSourceSwitch(String name);
+
+  /// No description provided for @lyricsSettingsSourceDrag.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get lyricsSettingsSourceDrag;
+
+  /// No description provided for @lyricsSettingsSourceOnToast.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: on for automatic search'**
+  String lyricsSettingsSourceOnToast(String name);
+
+  /// No description provided for @lyricsSettingsSourceOffToast.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: off · only searched when you tap'**
+  String lyricsSettingsSourceOffToast(String name);
+
   /// No description provided for @pluginsStoreTitle.
   ///
   /// In en, this message translates to:

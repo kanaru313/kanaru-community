@@ -228,4 +228,62 @@ void main() {
       expect(bad.read(lyricsOnlineSourcesProvider), isEmpty);
     },
   );
+
+  group('source actions', () {
+    List<String> names() => [
+      for (final s in container.read(lyricsSourcesProvider)) s.name,
+    ];
+
+    test('switching writes the whole list and the lookup sees it', () async {
+      await install(1, _lyricsManifest('One'));
+      await install(2, _lyricsManifest('Two'));
+      await settled();
+      final actions = container.read(lyricsSourceActionsProvider);
+      await actions.setEnabled(testInstallId(2), true);
+      expect(settings.read('lyrics.online_sources'), [
+        {'id': testInstallId(1), 'on': false},
+        {'id': testInstallId(2), 'on': true},
+      ]);
+      expect(
+        [
+          for (final s in container.read(lyricsSourcesProvider))
+            if (s.enabled && s.askable) s.name,
+        ],
+        ['Two'],
+      );
+      await actions.setEnabled(testInstallId(2), false);
+      expect(
+        container.read(lyricsSourcesProvider).any((s) => s.enabled),
+        isFalse,
+      );
+    });
+
+    test(
+      'reordering moves one source; "to" is the index after removal',
+      () async {
+        await install(1, _lyricsManifest('One'));
+        await install(2, _lyricsManifest('Two'));
+        await install(3, _lyricsManifest('Three'));
+        await settled();
+        final actions = container.read(lyricsSourceActionsProvider);
+        await actions.reorder(0, 2);
+        expect(names(), ['Two', 'Three', 'One']);
+        await actions.reorder(2, 0);
+        expect(names(), ['One', 'Two', 'Three']);
+        expect(settings.read('lyrics.online_sources'), [
+          for (final n in [1, 2, 3]) {'id': testInstallId(n), 'on': false},
+        ]);
+      },
+    );
+
+    test('an unknown id or a bad index writes nothing', () async {
+      await install(1, _lyricsManifest('One'));
+      await settled();
+      final actions = container.read(lyricsSourceActionsProvider);
+      await actions.setEnabled('nope', true);
+      await actions.reorder(0, 5);
+      await actions.reorder(-1, 0);
+      expect(settings.read('lyrics.online_sources'), isNull);
+    });
+  });
 }

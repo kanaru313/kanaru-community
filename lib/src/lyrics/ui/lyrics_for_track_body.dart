@@ -85,7 +85,7 @@ class _Header extends ConsumerWidget {
     final panel = ref.read(nowPlayingPanelProvider.notifier);
     if (!onClose()) return;
     panel.close();
-    router.go(lyricsSettingsLocation);
+    router.go(lyricsSourcesSettingsLocation);
   }
 
   @override
