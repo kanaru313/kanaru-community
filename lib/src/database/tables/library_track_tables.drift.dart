@@ -3771,12 +3771,12 @@ class Track extends i0.DataClass implements i0.Insertable<i1.Track> {
   /// Error kind of the last failed pass; NULL = ok.
   final String? scanError;
 
-  /// `groupKey` of the file name without folder and extension; NULL until the
-  /// duplicate pass computes it, '' for an empty name. Derived from `locator`,
-  /// which never changes, so it is filled once per row.
+  /// `groupKey` of the file name without folder and extension, written with
+  /// the row by the scanner on every read; NULL = never merges, '' for an
+  /// empty name.
   final String? nameKey;
 
-  /// 1 = another present copy with the same `name_key` is shown instead (the
+  /// Written by `applyDuplicateHiding` only. 1 = another present copy with the same `name_key` is shown instead (the
   /// user switched on "merge tracks with the same file name"). Library views
   /// skip such rows; playlists and the queue still resolve them.
   final int dupHidden;
