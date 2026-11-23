@@ -15,7 +15,8 @@ import 'package:kanaru/src/plugins/domain/install/install_result.dart';
 import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
 import 'package:kanaru/src/plugins/domain/run/run_request.dart';
 import 'package:kanaru/src/plugins/state/plugin_actions_provider.dart';
-import 'package:kanaru/src/plugins/domain/logs/log_redaction.dart' show redactionMask;
+import 'package:kanaru/src/plugins/domain/logs/log_redaction.dart'
+    show redactionMask;
 import 'package:kanaru/src/plugins/state/plugin_logs_provider.dart';
 import 'package:kanaru/src/plugins/state/plugin_run_provider.dart';
 import 'package:kanaru/src/plugins/state/plugin_services_provider.dart';
