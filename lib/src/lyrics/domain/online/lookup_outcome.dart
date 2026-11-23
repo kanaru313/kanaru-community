@@ -35,9 +35,7 @@ class LookupFailed extends LookupOutcome {
 /// track's miss). The track shows "not found". Nothing is scheduled: the end
 /// lives until the sources or settings change or the reject set changes.
 class LookupNotFound extends LookupOutcome {
-  const LookupNotFound({required this.asked});
-
-  final int asked;
+  const LookupNotFound();
 }
 
 /// Every enabled source is paused (a rate-limit answer) until [until].

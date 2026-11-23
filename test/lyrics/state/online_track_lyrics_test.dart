@@ -10,6 +10,7 @@ import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
 import 'package:kanaru/src/lyrics/state/lyrics_choice_commands.dart';
 import 'package:kanaru/src/lyrics/state/lyrics_settings.dart';
 import 'package:kanaru/src/lyrics/state/online/lyrics_sources_provider.dart';
+import 'package:kanaru/src/lyrics/state/online/online_commands_provider.dart';
 import 'package:kanaru/src/lyrics/state/online/online_lookup_providers.dart';
 import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
@@ -374,4 +375,73 @@ void main() {
       expect(rows.single.remoteId, 'x', reason: 'the shared row stays');
     },
   );
+
+  group('a not-found end over a refused shared row', () {
+    Future<(String, ProviderSubscription<TrackLyrics>)> reach() async {
+      final plugin = await h.installLyrics('lrclib');
+      final b = await song('b.flac');
+      await OnlineCacheStore(h.db).putFound(
+        songTarget().cacheKey,
+        plugin,
+        remoteId: 'x',
+        syncedText: '[00:01.00] shared',
+        remoteDurationMs: 200000,
+        now: h.clock.millisecondsSinceEpoch,
+      );
+      h.runner.answer(plugin, 'search', searchAnswer([]));
+      await h.container
+          .read(rejectStoreProvider)
+          .add(b, providerId: plugin, remoteId: 'x', now: 1);
+      h.play(b);
+      final sub = watch(b);
+      await h.until(() => sub.read() is LyricsNotFound);
+      return (plugin, sub);
+    }
+
+    test('a new source drops the end and is asked', () async {
+      final (_, sub) = await reach();
+      final two = await h.installLyrics('two');
+      h.runner.answer(
+        two,
+        'search',
+        searchAnswer([searchItem(lyrics: '[00:01.00] two')]),
+      );
+      await h.until(() => sub.read() is LyricsShown);
+      expect((sub.read() as LyricsShown).lyrics.online!.providerId, two);
+    });
+
+    test(
+      'another track rejecting the shared row makes this one ask again',
+      () async {
+        final (plugin, sub) = await reach();
+        final a = await song('a.flac');
+        final subA = watch(a);
+        await h.until(() => subA.read() is LyricsShown);
+        final before = h.runner.calls.length;
+        h.runner.answer(
+          plugin,
+          'search',
+          searchAnswer([searchItem(id: 'y', lyrics: '[00:01.00] y')]),
+        );
+        await h.container.read(onlineLyricsCommandsProvider).reject(a);
+        await h.until(() => sub.read() is LyricsShown);
+        expect(h.runner.calls.length, greaterThan(before));
+      },
+    );
+
+    test('auto search off then on asks once, no loop', () async {
+      final (_, sub) = await reach();
+      final before = h.runner.calls.length;
+      final auto = h.container.read(lyricsAutoSearchProvider.notifier);
+      await auto.set(false);
+      await h.until(() => sub.read() is LyricsNone);
+      await auto.set(true);
+      await h.until(() => h.runner.calls.length > before);
+      await h.until(() => sub.read() is LyricsNotFound);
+      for (var i = 0; i < 10; i++) {
+        await pumpEventQueue();
+      }
+      expect(h.runner.calls.length, before + 1);
+    });
+  });
 }

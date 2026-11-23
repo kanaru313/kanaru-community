@@ -357,7 +357,7 @@ class OnlineLookups {
       // refused: no cache write closes it, so the end is recorded (a lookup
       // must end with a write or an end whenever the resolution would still
       // ask).
-      return refusedMiss ? LookupNotFound(asked: enabled.length) : null;
+      return refusedMiss ? const LookupNotFound() : null;
     }
     final state = stateWithoutRun(open, enabled.length, {
       ...backoff.snapshot(),
