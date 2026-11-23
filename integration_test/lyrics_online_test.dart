@@ -234,6 +234,13 @@ void main() {
     final player = container.read(playerControllerProvider);
     container.read(lyricsAutoSearchProvider.notifier).set(true);
     final noneId = TrackId((await app.trackIdsByTitle())[_title]!);
+    // The automatic lookup runs only while something watches the playing
+    // track's lyrics (in the app: the Now Playing card or the lyrics screen).
+    // The library page shown here watches nothing, and a bare `read` of the
+    // auto-dispose provider drops it at once, which cancels the lookup's
+    // start timer. This listener stands in for the Now Playing card.
+    final watching = container.listen(trackLyricsProvider(noneId), (_, _) {});
+    addTearDown(watching.close);
 
     AppLocalizations l10n() =>
         AppLocalizations.of(tester.element(find.byType(Navigator).first));

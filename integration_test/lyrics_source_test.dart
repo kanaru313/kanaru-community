@@ -191,30 +191,30 @@ void main() {
     }
 
     /// Assertions shared by the sheet and the dialog: the two choice rows,
-    /// the two inert "coming soon" rows, the close button.
+    /// the "add a source" row, the two inert "coming soon" rows, the close
+    /// button.
     Future<void> expectModalContent({required bool fileSelected}) async {
       final t = l10n();
+      Finder inModal(String text) =>
+          find.descendant(of: modal, matching: find.text(text));
       expect(find.text(t.lyricsForTrackTitle), findsWidgets);
       expect(find.text(t.lyricsChoiceFile), findsOneWidget);
       expect(find.text(t.lyricsChoiceOff), findsOneWidget);
       expect(rowSelected(t.lyricsChoiceFile), fileSelected);
       expect(rowSelected(t.lyricsChoiceOff), !fileSelected);
-      expect(find.text(t.appComingSoon), findsNWidgets(2));
+      // No lyrics plugin is installed here: once the plugin list is read the
+      // search row becomes "Thêm nguồn lời trực tuyến" (it opens the plugin
+      // store, so it is not tapped). The Chọn lời picker reached from
+      // "Tìm lời trực tuyến…" is covered by lyrics_online_test.dart.
+      await app.pumpUntil(
+        () => inModal(t.lyricsAddSource).evaluate().isNotEmpty,
+        what: 'the "add an online source" row',
+        timeout: const Duration(seconds: 15),
+      );
+      expect(inModal(t.lyricsAddSourceSub), findsOneWidget);
+      expect(inModal(t.lyricsFindOnline), findsNothing);
+      expect(inModal(t.appComingSoon), findsNWidgets(2));
       expect(iconButton(t.lyricsModalClose), findsOneWidget);
-      // The search row opens the Chọn lời picker in the modal's place; ← of
-      // the picker brings the modal back.
-      await tester.tap(find.text(t.lyricsFindOnline));
-      await app.pumpUntil(
-        () => find.text(t.lyricsPickerTitle).evaluate().isNotEmpty,
-        what: 'the Chọn lời picker',
-        timeout: const Duration(seconds: 15),
-      );
-      await tester.tap(iconButton(t.lyricsPickerBack));
-      await app.pumpUntil(
-        () => modal.evaluate().isNotEmpty,
-        what: 'the modal back after ← of the picker',
-        timeout: const Duration(seconds: 15),
-      );
       expect(modal, findsOneWidget);
     }
 
