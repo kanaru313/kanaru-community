@@ -10,6 +10,7 @@ import '../../domain/online/lyrics_source.dart';
 import '../../domain/online/online_cache_pick.dart';
 import '../../domain/online/online_resolution_skips.dart';
 import '../../domain/lyrics_status.dart';
+import '../lyrics_parse_jobs.dart';
 import 'online_backoff.dart';
 import 'online_cache_store.dart';
 import '../../domain/online/lyrics_candidate.dart';
@@ -54,7 +55,6 @@ class _Job {
   int epoch = 0;
   RunCancel cancel = RunCancel();
   Timer? start;
-  Timer? retry;
   bool running = false;
 }
 
@@ -64,9 +64,10 @@ class _Job {
 ///
 /// One lookup per cache key: watchers of the same key join it. Sources are
 /// asked one at a time in the user's order and the first result wins. When no
-/// source gave a result the end is recorded in [outcomes] (never cached), and
-/// one timer starts the lookup again at its retry time while the track is
-/// still watched.
+/// source gave a result the end is recorded in [outcomes] (never cached) with
+/// its retry time. The caller that shows the end owns the wake-up: it watches
+/// again at that time (the lookup service keeps no clock of its own, so a
+/// retry cannot depend on a job that has already gone).
 class OnlineLookups {
   OnlineLookups({
     required this.client,
@@ -79,6 +80,7 @@ class OnlineLookups {
     this.debounce = Duration.zero,
     this.skipRetry = const Duration(seconds: 30),
     this._timer = _realTimer,
+    this._parse = runInIsolate,
   });
 
   final LyricsRunClient client;
@@ -89,6 +91,7 @@ class OnlineLookups {
   final List<LyricsSource> Function() _sources;
   final void Function(Map<String, LookupOutcome>) _onOutcomes;
   final TimerFactory _timer;
+  final IsolateRunner _parse;
 
   /// How long a track stays watched before its lookup starts, so skipping
   /// through a queue sends nothing.
@@ -129,8 +132,6 @@ class OnlineLookups {
     _outcomes.clear();
     for (final entry in _jobs.entries) {
       final job = entry.value;
-      job.retry?.cancel();
-      job.retry = null;
       if (job.running) {
         job.epoch++;
         job.cancel.cancel();
@@ -153,9 +154,6 @@ class OnlineLookups {
   /// goes on with the next candidate).
   void forget(String cacheKey) {
     if (_disposed) return;
-    final job = _jobs[cacheKey];
-    job?.retry?.cancel();
-    job?.retry = null;
     if (_outcomes.remove(cacheKey) != null) _publish();
   }
 
@@ -163,7 +161,6 @@ class OnlineLookups {
     _disposed = true;
     for (final job in _jobs.values) {
       job.start?.cancel();
-      job.retry?.cancel();
       job.cancel.cancel();
     }
     _jobs.clear();
@@ -187,7 +184,6 @@ class OnlineLookups {
       _jobs.remove(key);
       job.epoch++;
       job.start?.cancel();
-      job.retry?.cancel();
       job.cancel.cancel();
     });
   }
@@ -200,12 +196,7 @@ class OnlineLookups {
       unawaited(_run(key, job, epoch));
     }
 
-    final wait = first ? debounce : Duration.zero;
-    if (wait == Duration.zero) {
-      job.start = _timer(Duration.zero, go);
-    } else {
-      job.start = _timer(wait, go);
-    }
+    job.start = _timer(first ? debounce : Duration.zero, go);
   }
 
   bool _stale(_Job job, int epoch) =>
@@ -214,6 +205,8 @@ class OnlineLookups {
   Future<void> _run(String key, _Job job, int epoch) async {
     if (_stale(job, epoch)) return;
     job.running = true;
+    // A recorded end that is over: this lookup replaces it.
+    if (_outcomes.remove(key) != null) _publish();
     try {
       await _lookup(key, job, epoch);
     } on Object catch (e) {
@@ -242,7 +235,7 @@ class OnlineLookups {
     final now = _now();
     final rejected = await _rejectedOf(job);
     final rows = await cache.readFresh(key, now: now.millisecondsSinceEpoch);
-    final entries = [for (final r in rows) await entryOfRow(r)];
+    final entries = [for (final r in rows) await entryOfRow(r, _parse)];
     if (_stale(job, epoch)) return;
     // Sources that failed or were skipped in this lookup.
     final transient = <String, SourceBackoff>{};
@@ -287,11 +280,15 @@ class OnlineLookups {
             network: false,
           );
         case LookupMiss():
-          await cache.putNotFound(
-            key,
-            source.id,
-            now: _now().millisecondsSinceEpoch,
-          );
+          // A found row of this source (shared with another track of the key,
+          // which may use it) is never replaced by a miss of this track.
+          if (!entries.any((e) => e.providerId == source.id && e.found)) {
+            await cache.putNotFound(
+              key,
+              source.id,
+              now: _now().millisecondsSinceEpoch,
+            );
+          }
           answered.add(source.id);
         case LookupSourceFailed(:final kind, :final retryAfter):
           backoff.failed(
@@ -299,7 +296,7 @@ class OnlineLookups {
             network: kind != SourceFailKind.invalid,
             retryAfter: retryAfter,
           );
-        case LookupSourceSkipped(:final reason):
+        case LookupSourceSkipped(:final reason, :final until):
           switch (reason) {
             case SourceSkip.busy ||
                 SourceSkip.pluginChanged ||
@@ -308,9 +305,19 @@ class OnlineLookups {
                 until: _now().add(skipRetry),
                 network: reason == SourceSkip.busy,
               );
-            // Needs configuration or paused: the sources list says so.
-            case SourceSkip.needsConfig || SourceSkip.paused:
-              break;
+            // The runner knows better than the sources snapshot (a pause or a
+            // missing setting began after it): wait for the pause end, or
+            // look again later; a configuration change resets sooner.
+            case SourceSkip.needsConfig:
+              transient[source.id] = SourceBackoff(
+                until: _now().add(skipRetry),
+                network: false,
+              );
+            case SourceSkip.paused:
+              transient[source.id] = SourceBackoff(
+                until: until ?? _now().add(skipRetry),
+                network: true,
+              );
           }
       }
     }
@@ -348,21 +355,6 @@ class OnlineLookups {
     if (outcome == null) return;
     _outcomes[key] = outcome;
     _publish();
-    final at = switch (outcome) {
-      LookupFailed(:final retryAt) => retryAt,
-      LookupPaused(:final until) => until,
-    };
-    job.retry?.cancel();
-    job.retry = null;
-    if (at == null || job.watchers == 0) return;
-    final wait = at.difference(_now());
-    job.retry = _timer(wait.isNegative ? Duration.zero : wait, () {
-      job.retry = null;
-      if (_disposed || job.watchers == 0) return;
-      _outcomes.remove(key);
-      _publish();
-      _schedule(key, job, first: false);
-    });
   }
 
   Future<RejectedResults> _rejectedOf(_Job job) async {

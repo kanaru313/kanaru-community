@@ -101,7 +101,6 @@ void main() {
     // Nothing failed, but the track must not spin: a later retry is set.
     final outcome = r.outcomes[key] as LookupFailed;
     expect(outcome.retryAt, r.clock.add(const Duration(seconds: 30)));
-    expect(r.timers.single.after, const Duration(seconds: 30));
   });
 
   test(
@@ -137,30 +136,33 @@ void main() {
   );
 
   test(
-    'all in backoff: failed, then one retry at the end; network back finds it',
+    'all in backoff: failed with the end; watched again after it, found',
     () async {
       r.sources = [fakeSource('a'), fakeSource('b')];
       r.runner.answer('a', 'search', const RunFailed(RunFailReason.timeout));
       r.runner.answer('b', 'search', const RunFailed(RunFailReason.timeout));
-      r.lookups.watch(songTarget());
+      final w = r.lookups.watch(songTarget());
       await r.settle();
       expect(r.runner.calls, hasLength(2));
-      expect(r.outcomes[key], isA<LookupFailed>());
-      expect(r.timers, hasLength(1));
-      expect(r.timers.single.after, const Duration(seconds: 60));
+      expect(
+        (r.outcomes[key] as LookupFailed).retryAt,
+        r.clock.add(const Duration(seconds: 60)),
+      );
+      expect(r.timers, isEmpty, reason: 'the service keeps no retry clock');
+      w.release();
+      await r.settle();
 
-      // Network is back; time passes; the one timer fires.
+      // Network is back; the end has passed; the caller watches again.
       found('a');
       found('b');
       r.clock = r.clock.add(const Duration(seconds: 61));
-      r.timers.single.fire();
+      r.lookups.watch(songTarget());
       await r.settle();
       expect(r.runner.calls, hasLength(3));
       expect((await rows()).single.providerId, 'a');
       expect(r.outcomes, isEmpty);
     },
   );
-
   test('watching again inside the backoff asks nobody', () async {
     r.sources = [fakeSource('a')];
     r.runner.answer('a', 'search', const RunFailed(RunFailReason.timeout));
@@ -330,6 +332,73 @@ void main() {
       await r.settle();
       final saved = await rows();
       expect(saved.single.remoteId, 'new');
+    },
+  );
+
+  test('a miss never replaces a found row this track refused', () async {
+    r.sources = [fakeSource('a')];
+    await r.cache.putFound(
+      key,
+      'a',
+      remoteId: 'x',
+      syncedText: inlineLyrics,
+      remoteDurationMs: 200000,
+      now: r.nowMs,
+    );
+    final track = await _addTrack(r);
+    await r.rejects.add(track, providerId: 'a', remoteId: 'x', now: r.nowMs);
+    miss('a');
+    r.lookups.watch(songTarget(id: track.value));
+    await r.settle();
+    expect(r.runner.callsOf('a'), 1);
+    final saved = await rows();
+    expect(saved.single.status, OnlineLyricsStatus.found);
+    expect(saved.single.remoteId, 'x');
+  });
+
+  test('a runner pause or missing setting still leaves a retry time', () async {
+    r.sources = [fakeSource('a'), fakeSource('b')];
+    final until = r.clock.add(const Duration(minutes: 3));
+    r.runner.answer('a', 'search', RunPaused(until));
+    r.runner.answer('b', 'search', const RunNeedsConfig(['Key']));
+    r.lookups.watch(songTarget());
+    await r.settle();
+    expect(
+      (r.outcomes[key] as LookupFailed).retryAt,
+      r.clock.add(const Duration(seconds: 30)),
+    );
+    expect(r.backoff.snapshot(), isEmpty);
+
+    final other = LookupRig();
+    addTearDown(other.dispose);
+    other.sources = [fakeSource('a')];
+    other.runner.answer('a', 'search', RunPaused(until));
+    other.lookups.watch(songTarget());
+    await other.settle();
+    expect((other.outcomes[key] as LookupFailed).retryAt, until);
+  });
+
+  test(
+    'the debounce: skipping within it sends nothing, staying sends',
+    () async {
+      final d = LookupRig(debounce: const Duration(seconds: 1));
+      addTearDown(d.dispose);
+      d.sources = [fakeSource('a')];
+      d.runner.answer('a', 'search', searchAnswer([]));
+      final one = d.lookups.watch(songTarget(title: 'One'));
+      await d.settle();
+      one.release();
+      await d.settle();
+      d.lookups.watch(songTarget(title: 'Two'));
+      await d.settle();
+      expect(d.runner.calls, isEmpty);
+      for (final t in d.timers) {
+        expect(t.after, const Duration(seconds: 1));
+        t.fire();
+      }
+      await d.settle();
+      expect(d.runner.calls, hasLength(1));
+      expect(d.runner.calls.single.input['title'], 'Two');
     },
   );
 

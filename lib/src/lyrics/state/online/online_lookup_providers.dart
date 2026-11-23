@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +17,7 @@ import '../../data/online/pin_store.dart';
 import '../../data/online/reject_store.dart';
 import '../../data/online/lyrics_run_client.dart';
 import '../../domain/online/lookup_outcome.dart';
+import '../../domain/online/lyrics_source.dart';
 import '../../domain/online/lookup_target.dart';
 import '../../domain/online/online_cache_pick.dart';
 import '../../domain/online/online_rows.dart';
@@ -77,6 +79,12 @@ class LookupOutcomes extends Notifier<Map<String, LookupOutcome>> {
   Map<String, LookupOutcome> build() => const {};
 
   void publish(Map<String, LookupOutcome> outcomes) => state = outcomes;
+
+  /// Forgets every end once the building code is done: the service that
+  /// recorded them is gone, so they must not show any more.
+  void clearSoon() => scheduleMicrotask(() {
+    if (ref.mounted) state = const {};
+  });
 }
 
 final lookupOutcomesProvider =
@@ -88,6 +96,7 @@ final lookupOutcomesProvider =
 /// auto-search setting or of a plugin's configuration drops the recorded ends
 /// and restarts what is running.
 final onlineLookupsProvider = Provider<OnlineLookups>((ref) {
+  final sink = ref.read(lookupOutcomesProvider.notifier);
   final lookups = OnlineLookups(
     client: ref.watch(lyricsRunClientProvider),
     cache: ref.watch(onlineCacheStoreProvider),
@@ -96,18 +105,38 @@ final onlineLookupsProvider = Provider<OnlineLookups>((ref) {
     now: _clockOf(ref),
     sources: () => ref.read(lyricsSourcesProvider),
     debounce: ref.watch(lookupDebounceProvider),
+    parse: ref.watch(lyricsParseRunnerProvider),
     onOutcomes: (outcomes) {
-      if (ref.mounted) {
-        ref.read(lookupOutcomesProvider.notifier).publish(outcomes);
-      }
+      if (ref.mounted) sink.publish(outcomes);
     },
   );
-  ref.onDispose(lookups.dispose);
-  ref.listen(lyricsSourcesProvider, (_, _) => lookups.reset());
+  ref.onDispose(() {
+    lookups.dispose();
+    sink.clearSoon();
+  });
+  // By value: a recompute that changes no source (a plugin row touched, a
+  // storage write) must not cancel and restart a running lookup.
+  ref.listen(lyricsSourcesProvider, (previous, next) {
+    if (previous == null || !_sameSources(previous, next)) lookups.reset();
+  });
   ref.listen(lyricsAutoSearchProvider, (_, _) => lookups.reset());
   ref.listen(lyricsSourcesLoadedProvider, (_, _) => lookups.reset());
   return lookups;
 });
+
+bool _sameSources(List<LyricsSource> a, List<LyricsSource> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
+/// Starts a timer; tests replace it to fire the wake-up by hand.
+final lyricsWakeTimerProvider = Provider<TimerFactory>(
+  (ref) =>
+      (after, run) => Timer(after, run),
+);
 
 /// Keeps the lookup of [target] alive while something watches it (only the
 /// resolution of the playing track does).

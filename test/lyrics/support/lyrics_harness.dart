@@ -31,6 +31,7 @@ import '../../plugins/data/store_test_support.dart';
 import '../../plugins/domain/plugin_test_support.dart';
 import 'fake_local_lyrics_reader.dart';
 import 'fake_plugin_runner.dart';
+import 'online_lookup_rig.dart' show ManualTimer;
 
 class _Paths implements AppPaths {
   _Paths(this.dataDir);
@@ -80,6 +81,11 @@ class LyricsHarness {
           (ref) => nowPlayingStream ?? _nowPlayingStream(),
         ),
         lookupDebounceProvider.overrideWithValue(Duration.zero),
+        lyricsWakeTimerProvider.overrideWithValue((after, run) {
+          final timer = ManualTimer(after, run);
+          wakeTimers.add(timer);
+          return timer;
+        }),
         lyricsParseRunnerProvider.overrideWithValue(<R>(f) async => await f()),
         lyricsClockProvider.overrideWithValue(
           () => clock.millisecondsSinceEpoch,
@@ -96,6 +102,9 @@ class LyricsHarness {
   final reader = FakeLocalLyricsReader();
   final resolver = FakeResolver();
   final FakePluginRunner runner;
+
+  /// The wake-up timers the resolution armed; fire them by hand.
+  final wakeTimers = <ManualTimer>[];
 
   /// What the player publishes; [play] makes a track "playing". A listener
   /// that comes later still gets the last value.

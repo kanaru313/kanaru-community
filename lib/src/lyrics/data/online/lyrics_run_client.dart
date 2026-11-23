@@ -124,7 +124,10 @@ class LyricsRunClient {
 
 /// The input of the `lyrics` script for a result id.
 ///
-/// The `lyrics` plugins of the catalogue read `execute(id)` as the bare id
-/// string, while a run request carries a JSON object; the id travels as
-/// `{id}` until the runner can pass a bare value.
+/// The lyrics plugins of the catalogue read `execute(id)` with `id` the bare
+/// id string, but a run request carries its input as a JSON object
+/// (`PluginRunRequest.input` is a `Map`), which cannot hold a bare string. Until
+/// the runner takes any JSON value (tracked outside this change) the id travels
+/// as `{id}`, and plugins that need the `lyrics` script do not get their id.
+/// This is the one place that knows the shape.
 Map<String, Object?> lyricsScriptInput(String remoteId) => {'id': remoteId};

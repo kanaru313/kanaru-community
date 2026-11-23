@@ -153,6 +153,7 @@ final trackLyricsProvider = Provider.family<TrackLyrics, TrackId>((ref, id) {
     }
     ref.watch(lookupDriverProvider(target));
   }
+  if (playing) _armWake(ref, state, now);
   return switch (state) {
     LyricsShown(:final lyrics) => LyricsShown(_withGap(lyrics)),
     _ => state,
@@ -169,4 +170,23 @@ Lyrics _withGap(Lyrics lyrics) {
     origin: lyrics.origin,
     online: lyrics.online,
   );
+}
+
+/// A failed or paused lookup of the playing track is tried again when its
+/// retry time comes, though nothing else changes by then: one timer
+/// recomputes the state, which by then no longer holds the old end, so the
+/// lookup starts again. Cancelled when the state is recomputed or disposed.
+void _armWake(Ref ref, TrackLyrics state, DateTime now) {
+  final at = switch (state) {
+    LyricsLookupFailed(:final retryAt) => retryAt,
+    LyricsLookupPaused(:final until) => until,
+    _ => null,
+  };
+  if (at == null) return;
+  final wait = at.difference(now) + const Duration(milliseconds: 1);
+  final timer = ref.read(lyricsWakeTimerProvider)(
+    wait.isNegative ? Duration.zero : wait,
+    ref.invalidateSelf,
+  );
+  ref.onDispose(timer.cancel);
 }

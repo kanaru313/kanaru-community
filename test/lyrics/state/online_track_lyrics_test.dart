@@ -9,6 +9,7 @@ import 'package:kanaru/src/lyrics/domain/lyrics.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
 import 'package:kanaru/src/lyrics/state/lyrics_choice_commands.dart';
 import 'package:kanaru/src/lyrics/state/lyrics_settings.dart';
+import 'package:kanaru/src/lyrics/state/online/lyrics_sources_provider.dart';
 import 'package:kanaru/src/lyrics/state/online/online_lookup_providers.dart';
 import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
@@ -263,5 +264,86 @@ void main() {
     final subTwo = watch(two);
     await h.until(() => subTwo.read() is LyricsShown);
     expect(subOne.read(), isNot(isA<LyricsShown>()));
+  });
+
+  group('retry', () {
+    test(
+      'a failed lookup of the playing track is retried at retryAt',
+      () async {
+        final plugin = await h.installLyrics('a');
+        h.runner.answer(
+          plugin,
+          'search',
+          const RunFailed(RunFailReason.timeout),
+        );
+        final id = await song('a.flac');
+        h.play(id);
+        final sub = watch(id);
+        await h.until(() => sub.read() is LyricsLookupFailed);
+        expect(h.runner.calls, hasLength(1));
+        final wake = h.wakeTimers.where((t) => t.isActive).single;
+        expect(wake.after, const Duration(seconds: 60, milliseconds: 1));
+
+        // Nobody holds the lookup: the timer alone brings it back.
+        h.runner.answer(
+          plugin,
+          'search',
+          searchAnswer([searchItem(lyrics: '[00:01.00] back')]),
+        );
+        h.clock = h.clock.add(const Duration(seconds: 61));
+        wake.fire();
+        await h.until(() => sub.read() is LyricsShown);
+        expect(h.runner.calls, hasLength(2));
+        expect(h.wakeTimers.where((t) => t.isActive), isEmpty);
+      },
+    );
+
+    test('a track that is not playing arms nothing', () async {
+      final plugin = await h.installLyrics('a');
+      h.runner.answer(plugin, 'search', const RunFailed(RunFailReason.timeout));
+      final one = await song('a.flac', title: 'One');
+      final two = await song('b.flac', title: 'Two');
+      h.play(one);
+      final sub = watch(one);
+      await h.until(() => sub.read() is LyricsLookupFailed);
+      expect(h.wakeTimers.where((t) => t.isActive), hasLength(1));
+      h.play(two, entryId: 2);
+      await h.until(() => h.wakeTimers.every((t) => !t.isActive));
+      expect(sub.read(), isNot(isA<LyricsSearching>()));
+      expect(h.runner.calls, hasLength(1));
+    });
+
+    test('a rebuilt lookups service starts with no recorded end', () async {
+      final plugin = await h.installLyrics('a');
+      h.runner.answer(plugin, 'search', const RunFailed(RunFailReason.timeout));
+      final id = await song('a.flac');
+      h.play(id);
+      final sub = watch(id);
+      await h.until(() => sub.read() is LyricsLookupFailed);
+      expect(h.container.read(lookupOutcomesProvider), isNotEmpty);
+      h.container.invalidate(onlineLookupsProvider);
+      await pumpEventQueue();
+      expect(h.container.read(lookupOutcomesProvider), isEmpty);
+    });
+  });
+
+  test('plugin rows touched without a source change keep the run', () async {
+    final plugin = await h.installLyrics('a');
+    h.runner.blockUntilCancelled(plugin, 'search');
+    final id = await song('a.flac');
+    h.play(id);
+    watch(id);
+    await h.until(() => h.runner.calls.length == 1);
+    await h.db.customStatement(
+      'UPDATE plugins SET updated_at = updated_at + 1',
+    );
+    // The list is rebuilt (a new list with the same sources).
+    final before = h.container.read(lyricsSourcesProvider);
+    h.container.invalidate(lyricsSourcesProvider);
+    expect(identical(h.container.read(lyricsSourcesProvider), before), isFalse);
+    await pumpEventQueue();
+    await pumpEventQueue();
+    expect(h.runner.cancelled, isEmpty);
+    expect(h.runner.calls, hasLength(1));
   });
 }

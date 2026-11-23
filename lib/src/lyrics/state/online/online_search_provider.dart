@@ -135,12 +135,22 @@ class OnlineSearchNotifier extends Notifier<OnlineSearchState> {
   /// The lyrics of [candidate]: its own, or a `lyrics` run whose state shows
   /// in [OnlineSearchState.bodyFetches]. Null when there are none or the
   /// fetch failed.
-  Future<LyricsBody?> fetchLyrics(LyricsCandidate candidate) async {
+  Future<LyricsBody?> fetchLyrics(LyricsCandidate candidate) {
     final own = candidate.body;
-    if (own != null && own.isUsable) return own;
+    if (own != null && own.isUsable) return Future.value(own);
+    // A second ask while the first runs gets the same answer.
+    final running = _fetches[candidate.ref];
+    if (running != null) return running;
+    final fetch = _fetchLyrics(candidate);
+    _fetches[candidate.ref] = fetch;
+    return fetch.whenComplete(() => _fetches.remove(candidate.ref));
+  }
+
+  final _fetches = <ResultRef, Future<LyricsBody?>>{};
+
+  Future<LyricsBody?> _fetchLyrics(LyricsCandidate candidate) async {
     final generation = _generation;
     final ref0 = candidate.ref;
-    if (state.bodyFetches[ref0]?.phase == BodyFetchPhase.loading) return null;
     _setFetch(ref0, const BodyFetch(BodyFetchPhase.loading));
     final run = await _search.fetchBody(candidate, cancel: _cancel);
     if (!_current(generation)) return null;
@@ -226,17 +236,21 @@ class OnlineSearchNotifier extends Notifier<OnlineSearchState> {
     );
   }
 
+  Completer<void>? _loadedWait;
+
   Future<bool> _sourcesLoaded(int generation) async {
     if (!ref.read(lyricsSourcesLoadedProvider)) {
-      final done = Completer<void>();
-      final sub = ref.listen(lyricsSourcesLoadedProvider, (_, loaded) {
-        if (loaded && !done.isCompleted) done.complete();
-      });
-      ref.onDispose(() {
-        if (!done.isCompleted) done.complete();
-      });
+      final done = _loadedWait ??= () {
+        final c = Completer<void>();
+        ref.listen(lyricsSourcesLoadedProvider, (_, loaded) {
+          if (loaded && !c.isCompleted) c.complete();
+        });
+        ref.onDispose(() {
+          if (!c.isCompleted) c.complete();
+        });
+        return c;
+      }();
       await done.future;
-      sub.close();
     }
     return _current(generation);
   }

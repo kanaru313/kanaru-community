@@ -73,7 +73,8 @@ const inlineLyrics = '[00:01.00] hello';
 /// and the long timers (retry) under the test's hand. Debounce-free: a zero
 /// timer is a real one.
 class LookupRig {
-  LookupRig({int? slots}) : runner = FakePluginRunner(slots: slots) {
+  LookupRig({int? slots, Duration debounce = Duration.zero})
+    : runner = FakePluginRunner(slots: slots) {
     db = openTestDb();
     cache = OnlineCacheStore(db);
     rejects = RejectStore(db);
@@ -84,6 +85,7 @@ class LookupRig {
       rejects: rejects,
       backoff: backoff,
       now: () => clock,
+      debounce: debounce,
       sources: () => sources,
       onOutcomes: (m) => outcomes = m,
       timer: (after, run) {
