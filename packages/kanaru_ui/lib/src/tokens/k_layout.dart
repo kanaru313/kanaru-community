@@ -3,6 +3,10 @@ abstract final class KLayout {
   static const double gutterMobile = 16;
   static const double gutterDesktop = 24;
 
+  /// Height of the mobile bottom navigation bar (icons only, no labels;
+  /// M3's default 80 leaves too much empty room), without the gesture inset.
+  static const double navigationBar = 64;
+
   /// Max width of reading content and of settings pages.
   static const double readable = 720;
   static const double settings = 720;

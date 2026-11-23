@@ -114,4 +114,25 @@ void main() {
       }
     }
   });
+
+  testWidgets('bottom navigation bar is 64 dp tall', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildKanaruTheme(brightness: Brightness.light),
+        home: Scaffold(
+          bottomNavigationBar: NavigationBar(
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+            destinations: const [
+              NavigationDestination(icon: Icon(Icons.home), label: 'a'),
+              NavigationDestination(icon: Icon(Icons.search), label: 'b'),
+            ],
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.getSize(find.byType(NavigationBar)).height,
+      KLayout.navigationBar,
+    );
+  });
 }
