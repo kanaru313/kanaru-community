@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_storage_store.dart';
 
 import '../run/support/runner_support.dart';
+import '../domain/plugin_test_support.dart';
 import 'install_test_support.dart';
 
 void main() {
@@ -62,15 +63,18 @@ void main() {
     expect((await store.read(demoPluginId)).json, '');
   });
 
-  test('a write that began before an update is refused', () async {
-    final before = await updatedAt();
-    await h.db.customStatement(
-      'UPDATE plugins SET updated_at = updated_at + 1 WHERE install_id = ?',
-      [demoPluginId],
-    );
-    expect(await write('{"a":"1"}', at: before), isFalse);
-    expect((await store.read(demoPluginId)).json, '');
-  });
+  test(
+    'an install-over keeps the storage and refuses an older write',
+    () async {
+      await write('{"t":"1"}');
+      final before = await updatedAt();
+      await r.install(manifest: withMeta((m) => m['version'] = 4));
+      expect(await updatedAt(), greaterThan(before));
+      expect((await store.read(demoPluginId)).json, '{"t":"1"}');
+      expect(await write('{"a":"x"}', at: before), isFalse);
+      expect((await store.read(demoPluginId)).json, '{"t":"1"}');
+    },
+  );
 
   test(
     'clear empties the storage and refuses writes at the old revision',

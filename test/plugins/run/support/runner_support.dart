@@ -1,7 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'dart:typed_data';
 
+import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/plugins/data/run/fetch_handler.dart';
 import 'package:kanaru/src/plugins/data/run/plugin_pauses.dart';
 import 'package:kanaru/src/plugins/data/run/plugin_runner.dart';

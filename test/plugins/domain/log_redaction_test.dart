@@ -302,48 +302,46 @@ void main() {
       expect(line, isNot(contains('querysecret1')));
     });
 
-    test('a path longer than the cap is redacted before it is cut', () {
-      final token = 'T0kenAbcdefghijklmnopqrstuvwxyz12';
-      final path = '/${'a' * 290}/$token';
-      final out = capRunLogEvent(
-        redactor().apply(
-          event(
-            requests: [
-              RunLogRequest(
-                method: 'GET',
-                host: 'h',
-                path: path,
-                status: 200,
-                ms: 1,
-              ),
-            ],
-          ),
+    // Short segments with dots: the long-token rule never applies, so only the
+    // saved value can hide the secret, and it must be found before the cut.
+    String pathWithSecretAt(int start, String secret) {
+      final filler = List.filled(start, 'a.').join().substring(0, start - 1);
+      return '/$filler/$secret';
+    }
+
+    RunLogEvent cappedPath(String path) => capRunLogEvent(
+      redactor(append: const ['sec.ret.abcdef12345']).apply(
+        event(
+          requests: [
+            RunLogRequest(
+              method: 'GET',
+              host: 'h',
+              path: path,
+              status: 200,
+              ms: 1,
+            ),
+          ],
         ),
-      );
-      final kept = out.requests.single.path;
-      expect(kept, contains('…'));
-      expect(kept, isNot(contains('T0ken')));
+      ),
+    );
+
+    test('a path longer than the cap is redacted before it is cut', () {
+      final path = '${pathWithSecretAt(280, 'sec.ret.abcdef12345')}/tail.end';
+      expect(path.length, greaterThan(300));
+      final kept = cappedPath(path).requests.single.path;
+      expect(kept, contains('***'));
+      expect(kept, isNot(contains('sec.re')));
       expect(kept.length, lessThanOrEqualTo(301));
     });
 
     test('a secret that straddles the old cut is masked whole', () {
-      final path = '/${'a' * 296}/$apiKey';
-      final out = capRunLogEvent(
-        redactor().apply(
-          event(
-            requests: [
-              RunLogRequest(
-                method: 'GET',
-                host: 'h',
-                path: path,
-                status: 200,
-                ms: 1,
-              ),
-            ],
-          ),
-        ),
-      );
-      expect(out.requests.single.path, isNot(contains('mega-key')));
+      // The secret starts at index 291 and would be cut at 300 by a cut that
+      // ran first, leaving nine characters of it visible.
+      final path = pathWithSecretAt(290, 'sec.ret.abcdef12345');
+      expect(path.indexOf('sec.ret'), inInclusiveRange(285, 295));
+      final kept = cappedPath(path).requests.single.path;
+      expect(kept, isNot(contains('sec.re')));
+      expect(kept, endsWith('***'));
     });
 
     test('overlapping secrets leave no tail visible', () {

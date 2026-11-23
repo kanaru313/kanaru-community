@@ -153,15 +153,11 @@ void main() {
         ),
       );
       await logs.whenIdle();
-      final broken = Directory('${dir.path}-gone');
       final sweeper = PluginSweeper(
         rows,
-        PluginFiles(broken, clock: () => 1),
+        _UnlistableFiles(Directory('${dir.path}-gone')),
         logs: logs,
       );
-      // The package folder root is a file: listing it fails.
-      File(broken.path).writeAsStringSync('in the way');
-      addTearDown(() => File(broken.path).deleteSync());
       await sweeper.sweep();
       expect(
         File('${logDir.path}/${testInstallId(9)}.jsonl').existsSync(),
@@ -220,6 +216,14 @@ void main() {
 }
 
 /// Rows whose reads fail, as a broken database would.
+/// Package folders that cannot be listed.
+class _UnlistableFiles extends PluginFiles {
+  _UnlistableFiles(super.dataDir) : super(clock: () => 1);
+
+  @override
+  Future<List<PluginFolder>> listFolders() => throw StateError('listing');
+}
+
 class _BrokenRows extends PluginRows {
   _BrokenRows(super.db);
 

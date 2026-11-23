@@ -250,6 +250,41 @@ void main() {
     });
   });
 
+  group('mask overflow', () {
+    test('free text is dropped once the secrets did not fit', () async {
+      final engine = FakePluginEngine();
+      final handler = RecordingFetchHandler((req, ctx) async {
+        ctx.addMask([for (var i = 0; i < 300; i++) 'secret-value-${i + 1000}']);
+        return EngineFetchResponse.failure(EngineFetchOutcome.network);
+      });
+      await start(engine: engine, handler: handler);
+      engine.script = (req, fetch) async {
+        await fetch(
+          EngineFetchRequest(
+            installId: req.installId,
+            method: 'GET',
+            url: 'https://music.example.com/some/path',
+            headers: const [],
+            body: Uint8List(0),
+            deadlineMs: 1000,
+            maxSends: 1,
+          ),
+        );
+        return scriptError('failed with secret-value-1299 inside');
+      };
+      await r.runner.run(
+        PluginRunRequest(
+          installId: demoPluginId,
+          script: 'search',
+          timeout: const Duration(seconds: 5),
+        ),
+      );
+      final e = (await events()).single;
+      expect(e.message, '…');
+      expect(e.script, 'search');
+    });
+  });
+
   group('app log line', () {
     test('one INFO line without song data, console or stack', () async {
       final engine = FakePluginEngine(

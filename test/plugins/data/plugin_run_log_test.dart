@@ -93,21 +93,39 @@ void main() {
     File(logDir.path).writeAsStringSync('in the way');
     log.append(ev());
     await log.whenIdle();
-    expect(lines.where((l) => l.contains('Could not write')), hasLength(1));
+    // The oversize line has its own report; the later write failure still gets
+    // the write-failure one, with the real error.
+    expect(
+      lines.where((l) => l.startsWith('A plugin log line over the size limit')),
+      hasLength(1),
+    );
+    expect(
+      lines.where((l) => l.contains('Could not write')).single,
+      isNot(contains('FormatException')),
+    );
     File(logDir.path).deleteSync();
   });
 
   test('newest first, seven days only, capped at 500', () async {
     log = make();
     reader = PluginLogReader(log, clock: () => now);
-    for (var i = 0; i < 520; i++) {
-      log.append(
-        ev(
-          time: now.subtract(Duration(seconds: 520 - i)),
-          message: '$i',
+    // One write for the bulk (a flushed append per line is slow under load),
+    // then one append through the writer, which the reader must wait for.
+    await logDir.create(recursive: true);
+    final seeded = [
+      for (var i = 0; i < 519; i++)
+        jsonEncode(
+          ev(
+            time: now.subtract(Duration(seconds: 520 - i)),
+            message: '$i',
+          ).toJson(),
         ),
-      );
-    }
+    ];
+    await File('${logDir.path}/$id.jsonl')
+        .writeAsString('${seeded.join('\n')}\n');
+    log.append(
+      ev(time: now.subtract(const Duration(seconds: 1)), message: '519'),
+    );
     log.append(ev(time: now.subtract(const Duration(days: 8)), message: 'old'));
     final events = await reader.readLog(id);
     expect(events, hasLength(500));
@@ -141,7 +159,18 @@ void main() {
   test('rotation keeps both files under the limit and replaces .1', () async {
     log = make(maxBytes: 4000);
     reader = PluginLogReader(log, clock: () => now);
-    for (var i = 0; i < 200; i++) {
+    String line(int i) => jsonEncode(
+      ev(
+        time: now.subtract(Duration(seconds: 200 - i)),
+        message: 'line $i ${'x' * 100}',
+      ).toJson(),
+    );
+    // Seed most lines in one write, then append the ones that rotate.
+    await logDir.create(recursive: true);
+    await File(
+      '${logDir.path}/$id.jsonl',
+    ).writeAsString('${[for (var i = 0; i < 180; i++) line(i)].join('\n')}\n');
+    for (var i = 180; i < 200; i++) {
       log.append(
         ev(
           time: now.subtract(Duration(seconds: 200 - i)),

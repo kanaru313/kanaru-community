@@ -460,6 +460,36 @@ void main() {
       expect(ctx.maskValues, contains('refused-key-123456'));
     });
 
+    test('secrets are collected when another header is invalid', () async {
+      final ctx = job();
+      await handler().handle(
+        req(
+          onServer('/', host: 'private.example.test'),
+          headers: [
+            ('Bad Name', 'x'),
+            ('Authorization', 'Bearer invalid-set-123'),
+          ],
+        ),
+        ctx,
+      );
+      expect(ctx.maskValues, contains('invalid-set-123'));
+    });
+
+    test('the mask set is capped and flags the overflow', () async {
+      final ctx = job();
+      for (var i = 0; i < 300; i++) {
+        await handler().handle(
+          req(
+            onServer('/', host: 'private.example.test'),
+            headers: [('X-Api-Key', 'refused-key-${i + 100000}')],
+          ),
+          ctx,
+        );
+      }
+      expect(ctx.maskValues.length, JobContext.maxMaskValues);
+      expect(ctx.maskOverflow, isTrue);
+    });
+
     test('the whole path is kept for the log to cut after redaction', () async {
       final ctx = job();
       final long = '/${'p' * 400}';

@@ -53,6 +53,25 @@ class JobContext {
   /// secrets (authorization headers and the like).
   final Set<String> maskValues = {};
 
+  /// Most values [maskValues] keeps: a script cannot grow it without bound.
+  static const maxMaskValues = 256;
+
+  /// Set once a value did not fit in [maskValues]: the log then drops free
+  /// text, since it cannot be masked reliably.
+  bool maskOverflow = false;
+
+  /// Adds [values] to [maskValues] up to [maxMaskValues].
+  void addMask(Iterable<String> values) {
+    for (final value in values) {
+      if (maskValues.contains(value)) continue;
+      if (maskValues.length >= maxMaskValues) {
+        maskOverflow = true;
+        return;
+      }
+      maskValues.add(value);
+    }
+  }
+
   /// What the log keeps of each request of the run (no query string, header
   /// or body), refused ones included.
   final List<RunLogRequest> requests = [];
@@ -130,8 +149,8 @@ class HttpPluginFetchHandler implements PluginFetchHandler {
     final clock = Stopwatch()..start();
     // Credential headers are noted for every request, refused ones too: the
     // script may print them whatever the answer was.
+    context.addMask(headerSecretsOf(request.headers));
     final requested = pluginRequestHeaders(request.headers);
-    if (requested != null) context.maskValues.addAll(requested.secrets);
     // 1 job
     if (request.installId != context.installId) {
       return _fail(EngineFetchOutcome.invalidRequest);
@@ -222,7 +241,7 @@ class HttpPluginFetchHandler implements PluginFetchHandler {
     }
     for (final (name, value) in response.headers) {
       if (name == 'set-cookie') {
-        context.maskValues.addAll(setCookieSecrets(value));
+        context.addMask(setCookieSecrets(value));
       }
     }
     return EngineFetchResponse(

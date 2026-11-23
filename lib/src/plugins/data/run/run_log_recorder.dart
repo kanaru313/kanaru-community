@@ -76,7 +76,13 @@ class RunLogRecorder {
         console: console,
         requests: context.requests,
       );
-      _log.append(capRunLogEvent(redactor.apply(event)));
+      _log.append(
+        capRunLogEvent(
+          redactor.apply(
+            context.maskOverflow ? _withoutFreeText(event) : event,
+          ),
+        ),
+      );
       if (kind == runLogKindOk) return;
       final blocked =
           _fetchFailureOf(outcome)?.kind == FetchFailureKind.blockedHost
@@ -95,6 +101,23 @@ class RunLogRecorder {
       _applog.warning('A plugin run was not logged: ${error.runtimeType}');
     }
   }
+
+  /// [event] with message, stack, console and request paths replaced by `…`
+  /// (kind, script and counts stay): used when the run's secrets did not all
+  /// fit in the mask set, so free text cannot be masked reliably.
+  RunLogEvent _withoutFreeText(RunLogEvent event) => RunLogEvent(
+    time: event.time,
+    installId: event.installId,
+    pluginName: event.pluginName,
+    version: event.version,
+    script: event.script,
+    query: event.query,
+    kind: event.kind,
+    message: event.message == null ? null : '…',
+    stack: event.stack == null ? null : '…',
+    console: [for (final _ in event.console) '…'],
+    requests: [for (final r in event.requests) r.copyWith(path: '…')],
+  );
 
   /// Notes that a caller refused the output of a run of [script]: one
   /// failure event with the caller's fixed [reason] (never the output). Never

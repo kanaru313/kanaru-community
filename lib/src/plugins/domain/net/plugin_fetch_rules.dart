@@ -153,8 +153,17 @@ PluginRequestHeaders? pluginRequestHeaders(List<(String, String)> requested) {
     if (_droppedHeaders.contains(name) || name.startsWith('proxy-')) continue;
     headers[name] = value;
   }
+  final secrets = headerSecretsOf(requested);
+  return PluginRequestHeaders(headers, secrets);
+}
+
+/// The values of [requested] worth hiding in logs: `authorization`, `cookie`
+/// and names holding `token` or `key`, 8 or more characters. Needs no valid
+/// header set: a refused request's credentials are still known to the script.
+Set<String> headerSecretsOf(List<(String, String)> requested) {
   final secrets = <String>{};
-  for (final MapEntry(key: name, value: value) in headers.entries) {
+  for (final (rawName, value) in requested) {
+    final name = rawName.toLowerCase();
     if (value.length < _minSecretLength) continue;
     if (name == 'authorization' ||
         name == 'cookie' ||
@@ -170,7 +179,7 @@ PluginRequestHeaders? pluginRequestHeaders(List<(String, String)> requested) {
       }
     }
   }
-  return PluginRequestHeaders(headers, secrets);
+  return secrets;
 }
 
 /// The part of a `Set-Cookie` value worth hiding: the whole line and its
