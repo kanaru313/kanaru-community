@@ -134,7 +134,7 @@ LyricsResolution resolveTrackLyrics({
   final off = sources.length - enabled.length;
   final open = [
     for (final s in enabled)
-      if (!cache.any((e) => e.providerId == s.id && isCacheMiss(e, now))) s,
+      if (!isSourceClosed(cache, s.id, now, trackDuration, rejected)) s,
   ];
   if (open.isEmpty) {
     return LyricsResolution(LyricsNotFound(asked: enabled.length, off: off));

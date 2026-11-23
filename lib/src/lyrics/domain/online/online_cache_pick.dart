@@ -28,7 +28,9 @@ class RejectedResults {
   }
 }
 
-bool _deltaOk(int? remoteMs, Duration? trackDuration) {
+/// Whether a result of [remoteMs] fits a track of [trackDuration]: within
+/// [maxDurationDelta], or one of them unknown.
+bool durationFits(int? remoteMs, Duration? trackDuration) {
   if (remoteMs == null || trackDuration == null) return true;
   final diff = Duration(milliseconds: remoteMs) - trackDuration;
   return (diff.isNegative ? -diff : diff) <= maxDurationDelta;
@@ -39,6 +41,25 @@ bool _deltaOk(int? remoteMs, Duration? trackDuration) {
 /// its age, so it never causes a new lookup).
 bool isCacheMiss(OnlineCacheEntry e, DateTime now) =>
     e.found ? !e.hasResult : now.difference(e.fetchedAt) < notFoundTtl;
+
+/// Whether the row of a source needs no new question for this track: a still
+/// valid miss, or a result the track cannot use because of its duration
+/// (another track with the same key may; the row is never overwritten). A
+/// result the track [rejected] is not closed: the source is asked again.
+bool isSourceClosed(
+  Iterable<OnlineCacheEntry> cache,
+  String providerId,
+  DateTime now,
+  Duration? trackDuration,
+  RejectedResults rejected,
+) => cache.any(
+  (e) =>
+      e.providerId == providerId &&
+      (isCacheMiss(e, now) ||
+          (e.hasResult &&
+              !rejected.refuses(e) &&
+              !durationFits(e.remoteDurationMs, trackDuration))),
+);
 
 /// The state a cached result of a known source gives, or null. Lyrics beat
 /// instrumental, sources keep their order, a duration further than
@@ -63,7 +84,7 @@ TrackLyrics? lyricsFromCache(
         if (e.providerId == s.id &&
             e.hasResult &&
             !rejected.refuses(e) &&
-            _deltaOk(e.remoteDurationMs, trackDuration))
+            durationFits(e.remoteDurationMs, trackDuration))
           (e, s),
   ];
   for (final (e, s) in usable) {

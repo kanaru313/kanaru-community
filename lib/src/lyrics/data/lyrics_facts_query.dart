@@ -13,13 +13,23 @@ Stream<LyricsFacts?> watchLyricsFacts(AppDatabase db, TrackId id) {
   return db
       .customSelect(
         'SELECT t.revision AS revision, d.lrc_locator AS lrc_locator, '
-        'd.lrc_revision AS lrc_revision, c.mode AS mode '
+        'd.lrc_revision AS lrc_revision, c.mode AS mode, '
+        't.title AS title, t.artist AS artist, t.album AS album, '
+        't.duration_ms AS duration_ms, '
+        '(SELECT group_concat(artist_name, char(31)) FROM '
+        '(SELECT artist_name FROM track_artists WHERE track_id = t.id '
+        'ORDER BY position)) AS artists '
         'FROM tracks t '
         'LEFT JOIN track_details d ON d.track_id = t.id '
         'LEFT JOIN track_lyrics_choices c ON c.track_id = t.id '
         'WHERE t.id = ?',
         variables: [Variable.withInt(id.value)],
-        readsFrom: {db.tracks, db.trackDetails, db.trackLyricsChoices},
+        readsFrom: {
+          db.tracks,
+          db.trackDetails,
+          db.trackLyricsChoices,
+          db.trackArtists,
+        },
       )
       .watchSingleOrNull()
       .map(
@@ -31,6 +41,17 @@ Stream<LyricsFacts?> watchLyricsFacts(AppDatabase db, TrackId id) {
                 lrcLocator: row.readNullable<String>('lrc_locator'),
                 lrcRevision: row.readNullable<String>('lrc_revision'),
                 off: row.readNullable<String>('mode') == lyricsModeOff,
+                file: row.readNullable<String>('mode') == lyricsModeFile,
+                title: row.readNullable<String>('title'),
+                artist: row.readNullable<String>('artist'),
+                artists: [
+                  ...?row.readNullable<String>('artists')?.split('\u001f'),
+                ],
+                album: row.readNullable<String>('album'),
+                duration: switch (row.readNullable<int>('duration_ms')) {
+                  final ms? when ms > 0 => Duration(milliseconds: ms),
+                  _ => null,
+                },
               ),
       )
       .distinct();

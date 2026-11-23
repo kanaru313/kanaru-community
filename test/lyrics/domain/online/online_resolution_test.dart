@@ -203,16 +203,33 @@ void main() {
           _resolve(cache: [_found('a', durationMs: 203000)]).state,
           isA<LyricsShown>(),
         );
-        expect(
-          _resolve(cache: [_found('a', durationMs: 203001)]).state,
-          isA<LyricsSearching>(),
+        // Another track of the song may use that row: this one neither shows
+        // it nor asks the source again (it would overwrite the row).
+        final far = _resolve(
+          sources: [_source('a')],
+          cache: [_found('a', durationMs: 203001)],
         );
+        expect(far.state, const LyricsNotFound(asked: 1, off: 0));
+        expect(far.needsLookup, isFalse);
         expect(
           _resolve(cache: [_found('a')], trackDuration: null).state,
           isA<LyricsShown>(),
         );
       },
     );
+
+    test('a far result this track refused opens its source again', () {
+      final far = _found('a', durationMs: 210000);
+      final r = _resolve(
+        sources: [_source('a')],
+        cache: [far],
+        rejected: const RejectedResults(
+          refs: {(providerId: 'a', remoteId: 'r-a')},
+        ),
+      );
+      expect(r.state, isA<LyricsSearching>());
+      expect(r.sourcesToAsk, ['a']);
+    });
 
     test('a found row with no text and no flag is a miss', () {
       final r = _resolve(

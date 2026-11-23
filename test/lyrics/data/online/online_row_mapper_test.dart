@@ -37,9 +37,9 @@ void main() {
       ),
     ];
     final entries = [
-      for (final r in await cache.readFresh('k', now: 3)) entryOfRow(r),
+      for (final r in await cache.readFresh('k', now: 3)) await entryOfRow(r),
     ];
-    final pin = pickOfRow((await PinStore(db).read(track))!);
+    final pin = await pickOfRow((await PinStore(db).read(track))!);
     LyricsResolution resolve({bool withPin = true}) => resolveTrackLyrics(
       choice: null,
       pin: withPin ? pin : null,

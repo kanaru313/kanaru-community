@@ -50,13 +50,16 @@ void main() {
     expect((sub.read() as LyricsShown).lyrics.origin, LyricsOrigin.lrc);
   });
 
-  test('loading first; nothing found is LyricsNone', () async {
-    final id = await h.addTrackRow('a.flac');
-    final sub = h.container.listen(trackLyricsProvider(id), (_, _) {});
-    expect(sub.read(), isA<LyricsLoading>());
-    await h.until(() => sub.read() is! LyricsLoading);
-    expect(sub.read(), isA<LyricsNone>());
-  });
+  test(
+    'loading first; no file lyrics and no plugin is LyricsNoSource',
+    () async {
+      final id = await h.addTrackRow('a.flac');
+      final sub = h.container.listen(trackLyricsProvider(id), (_, _) {});
+      expect(sub.read(), isA<LyricsLoading>());
+      await h.until(() => sub.read() is! LyricsLoading);
+      expect(sub.read(), isA<LyricsNoSource>());
+    },
+  );
 
   test('one read per key, however often it is watched', () async {
     final id = await h.addTrackRow('a.flac');
@@ -111,7 +114,7 @@ void main() {
     await commands.toggle(id, currentlyOff: false);
     await h.until(() => sub.read() is LyricsOff);
     await commands.toggle(id, currentlyOff: true);
-    await h.until(() => sub.read() is LyricsNone);
+    await h.until(() => sub.read() is LyricsNoSource);
   });
 
   test('an unplayable track is unavailable and nothing is read', () async {
@@ -259,7 +262,7 @@ void main() {
     final id = await h.addTrackRow('a.flac');
     h.reader.lrcs['/m/a.lrc'] = '[00:01.00]lrc';
     final sub = await watch(id);
-    expect(sub.read(), isA<LyricsNone>());
+    expect(sub.read(), isA<LyricsNoSource>());
     await h.db
         .into(h.db.trackDetails)
         .insert(

@@ -11,10 +11,17 @@ import '../data/local_lyrics_read.dart';
 import '../data/lyrics_facts_query.dart';
 import '../domain/local_lyrics_pick.dart';
 import '../domain/lyrics_facts.dart';
+import '../domain/lyrics.dart';
 import '../domain/lyrics_intro_gap.dart';
 import '../domain/lyrics_status.dart';
+import '../domain/online/lookup_target.dart';
+import '../domain/online/online_cache_pick.dart';
+import '../domain/online/online_resolution.dart';
 import 'lyrics_loader_provider.dart';
+import 'lyrics_choice_commands.dart';
 import 'lyrics_settings.dart';
+import 'online/lyrics_sources_provider.dart';
+import 'online/online_lookup_providers.dart';
 
 final _log = Logger('lyrics_state');
 
@@ -74,7 +81,10 @@ final localLyricsReadProvider = FutureProvider.family<LocalLyricsRead, TrackId>(
 );
 
 /// The lyrics state of one track: loading until facts and files are read,
-/// then the selection order and the user's choice applied. A change of the
+/// then the selection order applied (`resolveTrackLyrics`: the user's choice,
+/// a kept online copy, the local lyrics, a cached online result, the lookup
+/// state). Reading is local and free for every track; only the playing track
+/// whose resolution needs a lookup starts one. A change of the
 /// `lyrics.local_first` setting or of the choice recomputes this without any
 /// read.
 final trackLyricsProvider = Provider.family<TrackLyrics, TrackId>((ref, id) {
@@ -90,9 +100,73 @@ final trackLyricsProvider = Provider.family<TrackLyrics, TrackId>((ref, id) {
     return const LyricsNone();
   }
   final pick = pickLocalLyrics(tag: result.tag, lrc: result.lrc, first: first);
-  if (facts.value?.off ?? false) return LyricsOff(pick.shown);
+  final f = facts.value;
+  final target = f == null
+      ? null
+      : LookupTarget(trackId: id, query: f.query, artists: f.artists);
+  final key = target?.cacheKey ?? '';
+  final pin = ref.watch(lyricsPinProvider(id));
+  final cache = ref.watch(onlineCacheEntriesProvider(key));
+  final rejects = ref.watch(lyricsRejectsProvider(id));
+  for (final online in [pin, cache, rejects]) {
+    if (online.isLoading && !online.hasValue) return const LyricsLoading();
+  }
+  final sourcesLoaded = ref.watch(lyricsSourcesLoadedProvider);
+  final outcome = ref.watch(lookupOutcomesProvider.select((m) => m[key]));
+  final playing = ref.watch(playingTrackIdProvider.select((p) => p == id));
+  final now = DateTime.fromMillisecondsSinceEpoch(
+    ref.read(lyricsClockProvider)(),
+  );
+  final resolution = resolveTrackLyrics(
+    choice: f == null
+        ? null
+        : f.off
+        ? LyricsChoice.off
+        : f.file
+        ? LyricsChoice.file
+        : null,
+    pin: pin.value,
+    local: pick.shown,
+    cache: cache.value ?? const [],
+    sources: sourcesLoaded ? ref.watch(lyricsSourcesProvider) : const [],
+    autoOn: ref.watch(lyricsAutoSearchProvider),
+    autoSearchable: target?.searchable ?? false,
+    now: now,
+    trackDuration: f?.duration,
+    backoff: ref.read(onlineBackoffProvider).snapshot(),
+    lookup: outcome,
+    rejected: rejects.value ?? const RejectedResults(),
+    sourcesLoaded: sourcesLoaded,
+  );
+  final state = resolution.state;
   final unavailable = result.unavailable;
-  if (unavailable != null) return LyricsUnavailable(unavailable);
-  final shown = pick.shown;
-  return shown == null ? const LyricsNone() : LyricsShown(withIntroGap(shown));
+  if (unavailable != null &&
+      state is! LyricsShown &&
+      state is! LyricsInstrumental &&
+      state is! LyricsOff) {
+    return LyricsUnavailable(unavailable);
+  }
+  if (resolution.needsLookup && target != null) {
+    if (!playing) {
+      // Only the playing track is looked up; the others show what is stored.
+      return const LyricsNone(reason: LyricsNoneReason.notPlaying);
+    }
+    ref.watch(lookupDriverProvider(target));
+  }
+  return switch (state) {
+    LyricsShown(:final lyrics) => LyricsShown(_withGap(lyrics)),
+    _ => state,
+  };
 }, isAutoDispose: true);
+
+/// [lyrics] with the intro gap of `withIntroGap`, keeping the online source.
+Lyrics _withGap(Lyrics lyrics) {
+  final gapped = withIntroGap(lyrics);
+  if (identical(gapped, lyrics)) return lyrics;
+  return Lyrics(
+    lines: gapped.lines,
+    synced: gapped.synced,
+    origin: lyrics.origin,
+    online: lyrics.online,
+  );
+}

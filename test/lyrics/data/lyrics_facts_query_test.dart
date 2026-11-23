@@ -38,6 +38,7 @@ void main() {
         lrcLocator: null,
         lrcRevision: null,
         off: false,
+        title: 'Title',
       ),
     ]);
   });

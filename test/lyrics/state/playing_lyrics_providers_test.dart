@@ -9,7 +9,6 @@ import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/domain/now_playing.dart';
 import 'package:kanaru/src/playback/domain/playback_views.dart';
 import 'package:kanaru/src/playback/state/playback_position_provider.dart';
-import 'package:kanaru/src/playback/state/playback_providers.dart';
 import 'package:kanaru/src/playback/state/player_ready.dart';
 
 import '../support/lyrics_harness.dart';
@@ -40,10 +39,8 @@ void main() {
       onListen: () => positionListens++,
     );
     h = LyricsHarness(
-      extra: [
-        nowPlayingProvider.overrideWith((ref) => nowPlaying.stream),
-        playbackPositionProvider.overrideWith((ref) => position.stream),
-      ],
+      nowPlayingStream: nowPlaying.stream,
+      extra: [playbackPositionProvider.overrideWith((ref) => position.stream)],
     );
   });
   tearDown(() async {
@@ -187,10 +184,8 @@ void main() {
   test('nothing is read before the player exists', () async {
     final early = LyricsHarness(
       phase: PlayerPhase.notCreated,
-      extra: [
-        nowPlayingProvider.overrideWith((ref) => nowPlaying.stream),
-        playbackPositionProvider.overrideWith((ref) => position.stream),
-      ],
+      nowPlayingStream: nowPlaying.stream,
+      extra: [playbackPositionProvider.overrideWith((ref) => position.stream)],
     );
     addTearDown(early.dispose);
     final id = await early.addTrackRow('a.flac');

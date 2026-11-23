@@ -52,6 +52,9 @@ enum LyricsNoneReason {
   /// Automatic search is on but the song has no title, real artist or
   /// duration to search by.
   notSearchable,
+
+  /// The track is not the one playing: only the playing track is looked up.
+  notPlaying,
 }
 
 /// No lyrics in the file or next to it, and no automatic lookup (see
