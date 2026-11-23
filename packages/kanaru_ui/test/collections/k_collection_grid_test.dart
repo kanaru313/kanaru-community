@@ -36,6 +36,35 @@ void main() {
     expect(KCollectionGrid.columnsFor(1268, 160, 12), 7);
   });
 
+  test('columnsForMax keeps tiles at most the maximum wide', () {
+    // Cells of 200 with an 8 gap: ⌈(width + 8) / 200⌉.
+    expect(KCollectionGrid.columnsForMax(368, 192, 8), 2);
+    expect(KCollectionGrid.columnsForMax(392, 192, 8), 2);
+    expect(KCollectionGrid.columnsForMax(393, 192, 8), 3);
+    expect(KCollectionGrid.columnsForMax(100, 192, 8), 1);
+    expect(KCollectionGrid.columnsForMax(0, 192, 8), 1);
+  });
+
+  testWidgets('maxTileWidth wins over the minimums', (tester) async {
+    useWindow(tester, const Size(1300, 900));
+    await tester.pumpWidget(
+      host(
+        CustomScrollView(
+          slivers: [
+            KCollectionGrid(
+              itemCount: 20,
+              maxTileWidth: 192,
+              spacing: 8,
+              itemBuilder: (context, i) => Text('tile $i', key: ValueKey(i)),
+            ),
+          ],
+        ),
+      ),
+    );
+    // inner 1268: ⌈1276 / 200⌉ = 7.
+    expect(_columns(tester), 7);
+  });
+
   for (final (name, brightness, scale) in hostVariants) {
     testWidgets('lays out tiles ($name)', (tester) async {
       useWindow(tester, const Size(400, 800));

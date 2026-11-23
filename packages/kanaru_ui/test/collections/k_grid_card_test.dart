@@ -8,6 +8,7 @@ import '../support/host.dart';
 Widget _grid({
   required double scale,
   bool circle = false,
+  bool filled = false,
   VoidCallback? onTap,
   VoidCallback? onLongPress,
 }) {
@@ -20,9 +21,11 @@ Widget _grid({
           desktopMinTileWidth: 160,
           footerExtent: KGridCard.footerExtent(
             MediaQuery.textScalerOf(context),
+            filled: filled,
           ),
           itemBuilder: (context, i) => KGridCard(
             circle: circle,
+            filled: filled,
             title: 'Title $i',
             subtitle: 'Sub $i',
             onTap: onTap,
@@ -75,6 +78,52 @@ void main() {
       expect(
         column.height - cover.height,
         closeTo(KGridCard.footerExtent(TextScaler.linear(scale)), 0.5),
+      );
+    }
+  });
+
+  for (final (name, brightness, scale) in hostVariants) {
+    testWidgets('a filled card insets its cover, no overflow ($name)', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          _grid(scale: scale, filled: true),
+          brightness: brightness,
+          textScale: scale,
+        ),
+      );
+      final cover = tester.getRect(find.byKey(const ValueKey('cover0')));
+      final tile = tester.getRect(find.byType(KGridCard).first);
+      expect(cover.width, cover.height);
+      expect(cover.width, tile.width - 2 * KGridCard.filledInset);
+      expect(cover.top - tile.top, KGridCard.filledInset);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('footerExtent of a filled card pins the tile height', (
+    tester,
+  ) async {
+    for (final scale in [1.0, 1.5]) {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(_grid(scale: scale, filled: true), textScale: scale),
+      );
+      final tile = tester.getRect(find.byType(KGridCard).first);
+      final card = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(KGridCard).first,
+              matching: find.byType(Padding),
+            )
+            .first,
+      );
+      final scaler = TextScaler.linear(scale);
+      expect(
+        card.height - tile.width,
+        closeTo(KGridCard.footerExtent(scaler, filled: true), 0.5),
       );
     }
   });
