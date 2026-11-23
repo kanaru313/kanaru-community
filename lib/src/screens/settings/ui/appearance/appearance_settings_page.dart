@@ -4,6 +4,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
+import '../../../../fonts/state/font_selector.dart';
 import '../../../../playback/domain/seek_bar_style.dart';
 import '../../../../playback/state/seek_bar_style_provider.dart';
 import '../../settings_routes.dart';
@@ -11,10 +12,8 @@ import '../../state/appearance_settings.dart';
 import '../../state/display_settings.dart';
 import '../settings_scaffold.dart';
 import '../soon_row.dart';
+import 'fonts/font_labels.dart';
 import 'theme_language_rows.dart';
-
-/// The font in use until the font page exists (the built-in default).
-const String _defaultFontName = 'Nunito';
 
 /// Text size step shown as "Default".
 const int _defaultTextScale = 100;
@@ -63,6 +62,7 @@ class _AppearanceSettingsPageState
     final motion = ref.watch(appMotionProvider);
     final textScale = ref.watch(appTextScaleProvider);
     final seekStyle = ref.watch(seekBarStyleProvider);
+    final font = ref.watch(activeFontProvider);
     final desktop = FormFactor.of(context) == FormFactor.desktop;
     // Pure black only changes the dark theme.
     final pureBlackLocked = theme == ThemeChoice.light;
@@ -106,10 +106,11 @@ class _AppearanceSettingsPageState
         SetupSection(
           title: Text(l10n.settingsAppearanceTextTitle),
           children: [
-            SoonRow(
+            SetupValueRow(
               icon: KIcons.font,
               title: Text(l10n.settingsAppearanceFont),
-              desc: _defaultFontName,
+              value: Text(fontLabel(l10n, font)),
+              onTap: () => context.push(SettingsPaths.fonts),
             ),
             SetupValueRow(
               anchorKey: _textSizeKey,

@@ -11,11 +11,12 @@ const Color kanaruSeed = Color(0xFFFFB4A2);
 
 final _noAnimation = ButtonStyle(animationDuration: Duration.zero);
 
-/// Soft Material 3 theme. The Nunito font asset is declared by the app; the
-/// theme only names the family.
+/// Soft Material 3 theme. Font assets are declared or loaded by the app; the
+/// theme only names the [fontFamily].
 ThemeData buildKanaruTheme({
   required Brightness brightness,
   Color seed = kanaruSeed,
+  String fontFamily = 'Nunito',
 }) {
   final scheme = _withDistinctError(
     ColorScheme.fromSeed(
@@ -27,7 +28,7 @@ ThemeData buildKanaruTheme({
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
-    fontFamily: 'Nunito',
+    fontFamily: fontFamily,
     chipTheme: const ChipThemeData(
       shape: StadiumBorder(),
       side: BorderSide.none,

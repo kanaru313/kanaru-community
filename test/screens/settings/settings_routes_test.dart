@@ -35,6 +35,7 @@ void main() {
       subs.map((r) => r.path),
       containsAll([
         'appearance',
+        'fonts',
         'seek-bar',
         'playback',
         'lyrics',

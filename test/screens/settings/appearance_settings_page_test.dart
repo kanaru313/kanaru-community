@@ -1,10 +1,24 @@
+import 'dart:io';
 import 'dart:ui' show Size;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/fonts/data/font_storage.dart';
+import 'package:kanaru/src/fonts/state/font_providers.dart';
+import 'package:kanaru/src/platform/domain/app_paths.dart';
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
 
 import '../../support/icon_button_finders.dart';
 import 'support/settings_host.dart';
+
+class _Paths implements AppPaths {
+  _Paths(this.dataDir);
+  @override
+  final Directory dataDir;
+  @override
+  Directory get cacheDir => dataDir;
+  @override
+  Directory get configDir => dataDir;
+}
 
 void main() {
   const tall = Size(400, 1600);
@@ -37,8 +51,34 @@ void main() {
       size: const Size(1400, 1600),
     );
     expect(find.text('System window frame'), findsOneWidget);
-    // Font and the window frame.
-    expect(find.text('Coming soon'), findsNWidgets(2));
+    // Only the window frame is not built yet.
+    expect(find.text('Coming soon'), findsOneWidget);
+  });
+
+  testWidgets('Font row shows the active font and opens the font page', (
+    tester,
+  ) async {
+    final h = await pumpSettings(
+      tester,
+      location: SettingsPaths.appearance,
+      size: tall,
+      overrides: [
+        fontStorageProvider.overrideWithValue(
+          FontStorage(_Paths(Directory.systemTemp)),
+        ),
+      ],
+    );
+    expect(find.text('Nunito'), findsOneWidget);
+    await h.store.write('app.font', 'system');
+    await tester.pumpAndSettle();
+    expect(find.text('System font'), findsOneWidget);
+    await tester.tap(find.text('Font'));
+    await tester.pumpAndSettle();
+    expect(
+      h.router.routerDelegate.currentConfiguration.last.matchedLocation,
+      SettingsPaths.fonts,
+    );
+    expect(find.text('Built in'), findsOneWidget);
   });
 
   testWidgets('Animations switch writes app.motion', (tester) async {

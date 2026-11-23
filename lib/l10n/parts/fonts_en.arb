@@ -1,0 +1,153 @@
+{
+  "fontsBuiltInTitle": "Built in",
+  "@fontsBuiltInTitle": {
+    "description": "Title of the block of fonts shipped with the app."
+  },
+  "fontsBuiltInHint": "Chinese, Korean and Japanese characters and emoji always use the system font.",
+  "@fontsBuiltInHint": {
+    "description": "Note about the whole Built in block, shown behind the info icon."
+  },
+  "fontsDefaultSuffix": " · default",
+  "@fontsDefaultSuffix": {
+    "description": "Soft suffix after the name of the default font."
+  },
+  "fontsSystemFont": "System font",
+  "@fontsSystemFont": {
+    "description": "Name of the font entry that follows the operating system font."
+  },
+  "fontsChanged": "Font changed",
+  "@fontsChanged": {
+    "description": "Snack bar after the font was switched."
+  },
+  "fontsUseFailed": "Couldn't use the font {name}.",
+  "@fontsUseFailed": {
+    "description": "Snack bar when a chosen font could not be loaded; the old font stays.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsCatalogTitle": "Online fonts",
+  "@fontsCatalogTitle": {
+    "description": "Title of the block of fonts that can be downloaded."
+  },
+  "fontsCatalogHint": "Download once, then use without a connection.",
+  "@fontsCatalogHint": {
+    "description": "Note about the whole online fonts block, shown behind the info icon."
+  },
+  "fontsDownloadTooltip": "Download {name}",
+  "@fontsDownloadTooltip": {
+    "description": "Label of the button that downloads a font.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsDeleteTooltip": "Delete {name}",
+  "@fontsDeleteTooltip": {
+    "description": "Label of the button that deletes a downloaded font.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsDownloaded": "Font downloaded",
+  "@fontsDownloaded": {
+    "description": "Snack bar after a font finished downloading; it is not applied."
+  },
+  "fontsDeleted": "Font deleted (you can download it again)",
+  "@fontsDeleted": {
+    "description": "Snack bar after a downloaded font was deleted."
+  },
+  "fontsDownloadFailed": "Couldn't download the font {name}. Check your connection and try again.",
+  "@fontsDownloadFailed": {
+    "description": "Snack bar when a font download failed; nothing was installed.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsCustomTitle": "Custom",
+  "@fontsCustomTitle": {
+    "description": "Title of the block of fonts the user imported."
+  },
+  "fontsCustomHint": "Fonts you import from a .ttf or .otf file.",
+  "@fontsCustomHint": {
+    "description": "Note about the whole custom fonts block, shown behind the info icon."
+  },
+  "fontsImportRow": "Import font",
+  "@fontsImportRow": {
+    "description": "Row that starts importing a font (mobile)."
+  },
+  "fontsImportRowDialog": "Import font…",
+  "@fontsImportRowDialog": {
+    "description": "Row that starts importing a font (desktop, opens a file dialog)."
+  },
+  "fontsImportTitle": "Import font",
+  "@fontsImportTitle": {
+    "description": "Title of the dialog before the file picker."
+  },
+  "fontsImportBody": "Only import fonts you have the right to use. Kanaru copies the .ttf / .otf file into the app's data folder.",
+  "@fontsImportBody": {
+    "description": "Body of the import dialog."
+  },
+  "fontsImportPick": "Choose file…",
+  "@fontsImportPick": {
+    "description": "Button of the import dialog that opens the file picker."
+  },
+  "fontsImported": "Imported “{name}” · tap to use",
+  "@fontsImported": {
+    "description": "Snack bar after a font was imported; it is not applied.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsImportTooLarge": "The font file is too large (20 MB at most).",
+  "@fontsImportTooLarge": {
+    "description": "Snack bar when the picked font file is over the size limit."
+  },
+  "fontsImportInvalid": "This file is not a .ttf or .otf font.",
+  "@fontsImportInvalid": {
+    "description": "Snack bar when the picked file is not a usable font or cannot be read."
+  },
+  "fontsImportFileTypes": "Fonts",
+  "@fontsImportFileTypes": {
+    "description": "Name of the file type in the system dialog that picks a font."
+  },
+  "fontsDownloading": "Downloading {name}",
+  "@fontsDownloading": {
+    "description": "Screen-reader label of the progress spinner on a font that is downloading.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsRemoveTitle": "Delete the font “{name}”?",
+  "@fontsRemoveTitle": {
+    "description": "Title of the confirmation before deleting an imported font.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsRemoveBody": "The imported font file is deleted from Kanaru. To use it again you have to import it again.",
+  "@fontsRemoveBody": {
+    "description": "Body of the delete confirmation."
+  },
+  "fontsRemoveConfirm": "Delete",
+  "@fontsRemoveConfirm": {
+    "description": "Destructive button of the delete confirmation."
+  },
+  "fontsRemoved": "Font deleted",
+  "@fontsRemoved": {
+    "description": "Snack bar after an imported font was deleted."
+  }
+}

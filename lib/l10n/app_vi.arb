@@ -4386,5 +4386,103 @@
   "pluginsRemoveKeepPinned": "Lời đã ghim từ nguồn này (nếu có)",
   "pluginsRemoveKeepLrc": "File .lrc đã ghi cạnh bài",
   "pluginsRemoveKeep": "Vẫn giữ",
-  "pluginsPageConnectionRow": "Yêu cầu cùng lúc, giãn cách"
+  "pluginsPageConnectionRow": "Yêu cầu cùng lúc, giãn cách",
+  "fontsBuiltInTitle": "Có sẵn",
+  "fontsBuiltInHint": "Chữ Hán, Hàn, Nhật và emoji luôn dùng phông của hệ thống.",
+  "fontsDefaultSuffix": " · mặc định",
+  "fontsSystemFont": "Phông của hệ thống",
+  "fontsChanged": "Đã đổi phông",
+  "fontsUseFailed": "Không dùng được phông {name}.",
+  "@fontsUseFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsCatalogTitle": "Kho phông trực tuyến",
+  "@fontsCatalogTitle": {},
+  "fontsCatalogHint": "Tải một lần, sau đó dùng không cần mạng.",
+  "@fontsCatalogHint": {},
+  "fontsDownloadTooltip": "Tải {name}",
+  "@fontsDownloadTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsDeleteTooltip": "Xoá {name}",
+  "@fontsDeleteTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsDownloaded": "Đã tải phông",
+  "@fontsDownloaded": {},
+  "fontsDeleted": "Đã xoá phông (tải lại được)",
+  "@fontsDeleted": {},
+  "fontsDownloadFailed": "Không tải được phông {name}. Kiểm tra mạng rồi thử lại.",
+  "@fontsDownloadFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsCustomTitle": "Tuỳ chỉnh",
+  "@fontsCustomTitle": {},
+  "fontsCustomHint": "Phông bạn nhập từ tệp .ttf hoặc .otf.",
+  "@fontsCustomHint": {},
+  "fontsImportRow": "Nhập phông",
+  "@fontsImportRow": {},
+  "fontsImportRowDialog": "Nhập phông…",
+  "@fontsImportRowDialog": {},
+  "fontsImportTitle": "Nhập phông",
+  "@fontsImportTitle": {},
+  "fontsImportBody": "Chỉ nhập phông bạn có quyền dùng. Kanaru chép tệp .ttf / .otf vào thư mục dữ liệu của app.",
+  "@fontsImportBody": {},
+  "fontsImportPick": "Chọn tệp…",
+  "@fontsImportPick": {},
+  "fontsImported": "Đã nhập “{name}” · bấm để dùng",
+  "@fontsImported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsImportTooLarge": "Tệp phông quá lớn (tối đa 20 MB).",
+  "@fontsImportTooLarge": {},
+  "fontsImportInvalid": "Tệp này không phải phông .ttf hoặc .otf.",
+  "@fontsImportInvalid": {},
+  "fontsImportFileTypes": "Phông chữ",
+  "@fontsImportFileTypes": {
+    "description": "Name of the file type in the system dialog that picks a font."
+  },
+  "fontsDownloading": "Đang tải {name}",
+  "@fontsDownloading": {
+    "description": "Screen-reader label of the progress spinner on a font that is downloading.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsRemoveTitle": "Xoá phông “{name}”?",
+  "@fontsRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsRemoveBody": "Tệp phông đã nhập bị xoá khỏi Kanaru. Muốn dùng lại phải nhập lại.",
+  "@fontsRemoveBody": {},
+  "fontsRemoveConfirm": "Xoá",
+  "@fontsRemoveConfirm": {},
+  "fontsRemoved": "Đã xoá phông",
+  "@fontsRemoved": {}
 }

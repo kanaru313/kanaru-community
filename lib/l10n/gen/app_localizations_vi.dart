@@ -5603,4 +5603,108 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pluginsPageConnectionRow => 'Yêu cầu cùng lúc, giãn cách';
+
+  @override
+  String get fontsBuiltInTitle => 'Có sẵn';
+
+  @override
+  String get fontsBuiltInHint =>
+      'Chữ Hán, Hàn, Nhật và emoji luôn dùng phông của hệ thống.';
+
+  @override
+  String get fontsDefaultSuffix => ' · mặc định';
+
+  @override
+  String get fontsSystemFont => 'Phông của hệ thống';
+
+  @override
+  String get fontsChanged => 'Đã đổi phông';
+
+  @override
+  String fontsUseFailed(String name) {
+    return 'Không dùng được phông $name.';
+  }
+
+  @override
+  String get fontsCatalogTitle => 'Kho phông trực tuyến';
+
+  @override
+  String get fontsCatalogHint => 'Tải một lần, sau đó dùng không cần mạng.';
+
+  @override
+  String fontsDownloadTooltip(String name) {
+    return 'Tải $name';
+  }
+
+  @override
+  String fontsDeleteTooltip(String name) {
+    return 'Xoá $name';
+  }
+
+  @override
+  String get fontsDownloaded => 'Đã tải phông';
+
+  @override
+  String get fontsDeleted => 'Đã xoá phông (tải lại được)';
+
+  @override
+  String fontsDownloadFailed(String name) {
+    return 'Không tải được phông $name. Kiểm tra mạng rồi thử lại.';
+  }
+
+  @override
+  String get fontsCustomTitle => 'Tuỳ chỉnh';
+
+  @override
+  String get fontsCustomHint => 'Phông bạn nhập từ tệp .ttf hoặc .otf.';
+
+  @override
+  String get fontsImportRow => 'Nhập phông';
+
+  @override
+  String get fontsImportRowDialog => 'Nhập phông…';
+
+  @override
+  String get fontsImportTitle => 'Nhập phông';
+
+  @override
+  String get fontsImportBody =>
+      'Chỉ nhập phông bạn có quyền dùng. Kanaru chép tệp .ttf / .otf vào thư mục dữ liệu của app.';
+
+  @override
+  String get fontsImportPick => 'Chọn tệp…';
+
+  @override
+  String fontsImported(String name) {
+    return 'Đã nhập “$name” · bấm để dùng';
+  }
+
+  @override
+  String get fontsImportTooLarge => 'Tệp phông quá lớn (tối đa 20 MB).';
+
+  @override
+  String get fontsImportInvalid => 'Tệp này không phải phông .ttf hoặc .otf.';
+
+  @override
+  String get fontsImportFileTypes => 'Phông chữ';
+
+  @override
+  String fontsDownloading(String name) {
+    return 'Đang tải $name';
+  }
+
+  @override
+  String fontsRemoveTitle(String name) {
+    return 'Xoá phông “$name”?';
+  }
+
+  @override
+  String get fontsRemoveBody =>
+      'Tệp phông đã nhập bị xoá khỏi Kanaru. Muốn dùng lại phải nhập lại.';
+
+  @override
+  String get fontsRemoveConfirm => 'Xoá';
+
+  @override
+  String get fontsRemoved => 'Đã xoá phông';
 }

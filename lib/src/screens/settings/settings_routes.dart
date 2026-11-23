@@ -6,6 +6,7 @@ import '../../lyrics/ui/lyrics_settings_link.dart';
 import '../plugins/plugin_routes.dart';
 import 'ui/about/about_settings_page.dart';
 import 'ui/appearance/appearance_settings_page.dart';
+import 'ui/appearance/fonts/fonts_settings_page.dart';
 import 'ui/appearance/seek_bar_style_page.dart';
 import 'ui/library/artist_split_page.dart';
 import 'ui/library/library_settings_page.dart';
@@ -14,11 +15,12 @@ import 'ui/playback/playback_settings_page.dart';
 import 'ui/root/settings_root_page.dart';
 
 /// Locations of the Settings pages. A page's header back arrow leads to its
-/// parent: [seekBar] to [appearance], every other page to [root]; [artistSplit] to [library].
+/// parent: [fonts] and [seekBar] to [appearance], every other page to [root]; [artistSplit] to [library].
 /// The plugin store and its repositories live in `PluginPaths`.
 abstract final class SettingsPaths {
   static const root = '/settings';
   static const appearance = '/settings/appearance';
+  static const fonts = '/settings/appearance/fonts';
   static const seekBar = '/settings/appearance/seek-bar';
   static const library = '/settings/library';
   static const artistSplit = '/settings/library/artist-split';
@@ -36,6 +38,10 @@ GoRoute buildSettingsRoute() => GoRoute(
       path: 'appearance',
       pageBuilder: (_, s) => _page(s, const AppearanceSettingsPage()),
       routes: [
+        GoRoute(
+          path: 'fonts',
+          pageBuilder: (_, s) => _page(s, const FontsSettingsPage()),
+        ),
         GoRoute(
           path: 'seek-bar',
           pageBuilder: (_, s) => _page(s, const SeekBarStylePage()),

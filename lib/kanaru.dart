@@ -15,6 +15,11 @@ import 'src/database/app_database.dart';
 import 'src/database/state/database_providers.dart';
 import 'src/extension/kanaru_extension.dart';
 import 'src/extension/state/extension_providers.dart';
+import 'src/fonts/data/font_downloader.dart';
+import 'src/fonts/data/font_registrar.dart';
+import 'src/fonts/data/font_storage.dart';
+import 'src/fonts/data/startup_font.dart';
+import 'src/fonts/state/font_providers.dart';
 import 'src/foundation/app_logger.dart';
 import 'src/library/library_extension.dart';
 import 'src/library/ui/menus/song_lyrics_entry.dart';
@@ -62,14 +67,37 @@ Future<void> runKanaru({List<KanaruExtension> extensions = const []}) async {
       createPaths: createAppPaths,
       openSettings: (paths) =>
           JsonSettingsStore.open(File('${paths.configDir.path}/settings.json')),
-      loadDeviceId: (paths) => FileDeviceId(File('${paths.dataDir.path}/device_id')).load(),
-      openDatabase: (paths) => AppDatabase.file(File('${paths.dataDir.path}/$databaseFileName')),
+      loadDeviceId: (paths) =>
+          FileDeviceId(File('${paths.dataDir.path}/device_id')).load(),
+      openDatabase: (paths) =>
+          AppDatabase.file(File('${paths.dataDir.path}/$databaseFileName')),
     );
   } on Object catch (e, st) {
     Logger('startup').severe('Startup failed', e, st);
     runApp(KanaruErrorApp(error: e));
     return;
   }
+
+  // The chosen font must be in the engine before the first frame. Never
+  // throws: an unusable font falls back to the default.
+  final fontRegistrar = FontRegistrar();
+  final fontWatch = Stopwatch()..start();
+  try {
+    final fontId = await prepareStartupFont(
+      paths: started.paths,
+      settings: started.settings,
+      registrar: fontRegistrar,
+    );
+    Logger('startup')
+        .info('Font "$fontId" ready in ${fontWatch.elapsedMilliseconds} ms');
+  } on Object catch (e, st) {
+    Logger('startup').warning('Startup font failed', e, st);
+  }
+
+  // Licences of downloaded fonts: not needed for the first frame.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    registerInstalledCatalogLicenses(FontStorage(started.paths), fontRegistrar);
+  });
 
   runApp(
     ProviderScope(
@@ -78,6 +106,7 @@ Future<void> runKanaru({List<KanaruExtension> extensions = const []}) async {
         appPathsProvider.overrideWithValue(started.paths),
         settingsStoreProvider.overrideWithValue(started.settings),
         deviceIdProvider.overrideWithValue(started.deviceId),
+        fontLoaderProvider.overrideWithValue(fontRegistrar),
         appDatabaseProvider.overrideWithValue(started.database),
         extensionRegistryProvider.overrideWithValue(started.registry),
         localLyricsReaderProvider.overrideWithValue(NativeLocalLyricsReader()),
