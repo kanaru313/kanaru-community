@@ -24,10 +24,11 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 | DATA-03 One tracks table for every source | `tracks`; [Track status](#track-status) |
 | DATA-04 uid, tombstones, device id | [uid](#uid), [Deletes, tombstones and revive](#deletes-tombstones-and-revive) |
 | DATA-05 Playlist order | `playlist_entries.sort_key` |
-| DATA-06 Song key | `tracks.song_key`, `online_lyrics.cache_key` |
+| DATA-06 Song key | `tracks.song_key` (the online lyrics cache has its own key, see [online_lyrics](#online_lyrics-coded-with-online-lyrics)) |
 | DATA-09 Track details | `track_details` |
 | Artists of a track, play queue, cover colours | `track_artists`, `queue_entries`, `cover_colors` |
 | Lyrics choice of the user per track | `track_lyrics_choices`; [track_lyrics_choices](#track_lyrics_choices-coded-with-offline-lyrics) |
+| Kept online lyrics, rejected results, lookup cache | `lyrics_pins`, `lyrics_rejects`, `online_lyrics`; [online lyrics tables](#lyrics_pins-coded-with-online-lyrics) |
 | Cover chosen by the user (playlist, album, artist) | `custom_covers`; [custom_covers](#custom_covers-coded-in-wave-1) |
 | DATA-10 Rating and mood playlists | `tracks.rating`, `playlists.name_key` |
 | DATA-11 Plugin install ids | `plugins.install_id`, 128-bit, derived from the install source; [plugins](#plugins-coded-with-the-plugin-store) |
@@ -84,7 +85,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 
 - Every foreign key into `tracks` (public and Pro) is `ON DELETE RESTRICT`. No `CASCADE` and no `SET NULL` into `tracks`.
 - `CASCADE` only runs from a parent to a pure child outside `tracks`: playlist to entries, source to mount, source to excluded folders.
-- Owned one-to-one children of a track (`track_details`, `play_stats`, `track_artists` and `track_lyrics_choices`) are `RESTRICT` too. The track GC deletes them before the track. Nothing may reference an owned child: the GC throws when a foreign key points at one.
+- Owned one-to-one children of a track (`track_details`, `play_stats`, `track_artists`, `track_lyrics_choices`, `lyrics_pins` and `lyrics_rejects`) are `RESTRICT` too. The track GC deletes them before the track. Nothing may reference an owned child: the GC throws when a foreign key points at one.
 - Every `*track_id` column has a foreign key into `tracks` and an index whose first column is that column. A single `INTEGER PRIMARY KEY` counts as that index.
 - Every foreign key column is the first column of an index, or the primary key.
 
@@ -132,7 +133,7 @@ The full list is in [Foreign key list](#foreign-key-list).
 1. Refuse to run when `PRAGMA foreign_keys` is 0.
 2. Find every foreign key into `tracks` at run time (`sqlite_master` joined with `pragma_foreign_key_list`). Pro tables are included.
 3. Throw if any of them is not `RESTRICT`.
-4. Ignore the owned-child tables `trackOwnedChildTables` = `{track_details, play_stats, track_artists, track_lyrics_choices}` when deciding whether a track is referenced. Delete their rows before the track rows, in the same transaction.
+4. Ignore the owned-child tables `trackOwnedChildTables` = `{track_details, play_stats, track_artists, track_lyrics_choices, lyrics_pins, lyrics_rejects}` when deciding whether a track is referenced. Delete their rows before the track rows, in the same transaction.
 5. Delete a track only if no other foreign key row points at it (tombstoned rows count), `rating IS NULL AND lyrics_offset_ms = 0`, and one of:
 
    | Status | Condition |
@@ -142,7 +143,7 @@ The full list is in [Foreign key list](#foreign-key-list).
    | `remote` | `updated_at <= now - remoteGraceMs` (24 h). Keeps the now-playing and queued online track. |
 
 6. `present` rows are never deleted.
-7. The helper notifies streams for `tracks`, `track_details`, `play_stats`, `track_artists`, `track_lyrics_choices` and `track_search` (the FTS delete trigger writes it), only when rows were deleted. It returns the number of deleted tracks.
+7. The helper notifies streams for `tracks`, `track_details`, `play_stats`, `track_artists`, `lyrics_pins`, `lyrics_rejects` and `track_search` (the FTS delete trigger writes it), only when rows were deleted. It returns the number of deleted tracks.
 
 Details: the checks and the candidate set are computed once per run (a `TEMP` table inside the transaction, dropped at the end), so the owned-children delete and the track delete use the same ids. A foreign key whose parent column is not named in the schema refers to `tracks.id`. Only the main schema is inspected. A composite foreign key into `tracks` throws like a non-`RESTRICT` one. Tables are addressed as `main.<table>`, so a temp table of the same name cannot hide a reference. A foreign key into an owned child table throws too. A `missing` row with `missing_since IS NULL` is never collected, so the scanner must set `missing_since` when it marks a row missing. Any failure leaves the database unchanged.
 
@@ -228,7 +229,8 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 | `queue_entries.track_id` | `tracks.id` | RESTRICT | playback (coded) |
 | `custom_covers.item_key` | none | none | library (coded): not a foreign key, see [custom_covers](#custom_covers-coded-in-wave-1) |
 | `plugin_data.install_id` | `plugins.install_id` | RESTRICT | plugins (coded) |
-| `lyrics_pins.track_id` | `tracks.id` | RESTRICT | lyrics (spec only) |
+| `lyrics_pins.track_id` | `tracks.id` | RESTRICT | lyrics (coded) |
+| `lyrics_rejects.track_id` | `tracks.id` | RESTRICT | lyrics (coded) |
 | Any other track reference (lyrics, Pro) | `tracks.id` | RESTRICT | rule |
 
 ## Coded groups
@@ -428,10 +430,10 @@ Owner: lyrics (the table file `tables/lyrics_tables.dart` is in `database/`, whi
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `track_id` | INTEGER | PK, FK | | `tracks.id` RESTRICT. |
-| `mode` | TEXT | NOT NULL | | `CHECK (mode IN ('off'))`: the user turned lyrics off for this track. Raw strings (`LyricsChoiceMode`); a later kind is a table rebuild. |
+| `mode` | TEXT | NOT NULL | | `CHECK (mode IN ('off', 'file'))`: `off` = the user turned lyrics off for this track; `file` = the user picked "Lời trong file" while a kept online copy exists, so the file's lyrics win over the copy until the user picks the online one again. Raw strings (`LyricsChoiceMode`); a later kind is a table rebuild. |
 | `updated_at` | INTEGER | NOT NULL | | Epoch ms of the write. |
 
-No other indexes (the primary key is the lookup). The lyrics module writes it through `lyrics/data/lyrics_choice_store.dart` (`setLyricsOff` upserts, `clearLyricsChoice` deletes) and reads it with the facts query that joins `tracks`, `track_details` and this table.
+No other indexes (the primary key is the lookup). The lyrics module writes it through `lyrics/data/lyrics_choice_store.dart` (`setLyricsOff` and `setLyricsFile` upsert, `clearLyricsChoice` deletes) and reads it with the facts query that joins `tracks`, `track_details` and this table.
 
 The schema is still v1 and changed in place. The schema guard runs only in debug builds, so a release build over an older dev database opens without this table and the GC run then fails (and is only logged): clear dev data after updating (phone: `pm clear`, Linux: isolated XDG dirs).
 
@@ -696,18 +698,61 @@ Each group below is added by its owning module before the first release. The sch
 
 **Spec-only tracks columns** are listed under `tracks`.
 
-### lyrics: Spec only, added by lyrics before first release
+### lyrics_pins: Coded with online lyrics
 
-**lyrics_pins** (synced). `uid` TEXT NOT NULL UNIQUE (`pin:` + hash(track uid)). `track_id` INTEGER NOT NULL UNIQUE, FK `tracks.id` RESTRICT (one pin per track). `provider_id` (the lyrics provider's install id). Lyric texts (plain and synced), `instrumental`, `pinned_at`, `mode`.
-**lyrics_rejects** (synced). Rejected lyric candidates of a track. Keys and columns set by the lyrics module. Any track reference is `RESTRICT`.
+Owner: lyrics (`tables/lyrics_tables.dart`). Sync: synced by `uid` (not wired yet). The copy of a track's lyrics the user kept ("Bản đã giữ"); one per track. Owned child of `tracks` (joins `trackOwnedChildTables`): it is deleted with the track, so a file the scanner loses and the GC collects loses its copy too (a rescan makes a new track that looks lyrics up again).
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `track_id` | INTEGER | PK, FK | | `tracks.id` RESTRICT. |
+| `uid` | TEXT | NOT NULL | | UNIQUE. `pin:` + hash(track uid), computed when the copy is first kept and never changed. |
+| `provider_id` | TEXT | NOT NULL | | The lyrics plugin's install id. No foreign key: the copy survives removing the plugin. |
+| `provider_name` | TEXT | NOT NULL | | The plugin's name when the copy was kept, shown after the plugin is gone. |
+| `remote_id` | TEXT | NOT NULL | | The result id inside the plugin. |
+| `synced_text`, `plain_text` | TEXT | NULL | | At most 1 MiB each (checked by the store). |
+| `instrumental` | INTEGER | NOT NULL | 0 | |
+| `remote_duration_ms` | INTEGER | NULL | | The duration the result declared. |
+| `pinned_at`, `updated_at` | INTEGER | NOT NULL | | Epoch ms. Keeping again replaces the copy and keeps `uid` and `pinned_at`. |
+
+`CHECK (synced_text IS NOT NULL OR plain_text IS NOT NULL OR instrumental = 1)`. Written through `lyrics/data/online/pin_store.dart`.
+
+### lyrics_rejects: Coded with online lyrics
+
+Owner: lyrics. Sync: device-local for now. "Không đúng bài": results of a plugin the user refused for one track. Owned child of `tracks`.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `track_id` | INTEGER | PK, FK | | `tracks.id` RESTRICT. |
+| `provider_id`, `remote_id` | TEXT | PK | | Primary key `(track_id, provider_id, remote_id)`. |
+| `content_hash` | TEXT | NULL | | Hash of the refused words (timestamps ignored), so the same text under another id is refused too. |
+| `rejected_at` | INTEGER | NOT NULL | | Epoch ms; a repeat refreshes it. |
+
+Written through `lyrics/data/online/reject_store.dart`.
+
+Both stores write with `INSERT ... SELECT ... FROM tracks WHERE id = ?`: a write for a track that no longer exists (collected while a lookup ran) writes nothing and returns `StoreResult.notStored`; it never throws.
+
+### lyrics: Spec only, added by lyrics before first release
 
 **lyrics_translations** (cache). Keyed by `content_hash`, `provider` and `target_lang`. Safe to drop. Per-track translation settings are not here: they belong to Pro.
 
 **lyrics_search** (derived). FTS5 table, contentless (`contentless_delete = 1`), with stale triggers. Invariant: `tracks.lyrics_version = 0` means the track has no tokens in `lyrics_search`. The stale triggers set `lyrics_version` back to 0 when the audio `revision`, the sidecar `lrc_revision` or the pin changes. This depends on the scanner's `lyrics_version` column (see `tracks`).
 
-### cache: Spec only, added by the owning module before first release
+### online_lyrics: Coded with online lyrics
 
-**online_lyrics** (cache). `cache_key` = `song_key` (DATA-06). Columns set by the lyrics module. Safe to drop.
+Owner: lyrics. Sync: cache (safe to drop at any time). One row per song key and lyrics plugin; no foreign key, so it needs neither a track nor a plugin row.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `cache_key` | TEXT | PK | | sha256 hex of `v1\|folded primary artist\|normalised title\|folded album\|rounded seconds` (`onlineLyricsCacheKey`). |
+| `provider_id` | TEXT | PK | | The plugin's install id. |
+| `status` | TEXT | NOT NULL | | `CHECK (status IN ('found', 'not_found'))`. |
+| `remote_id` | TEXT | NULL | | Null for `not_found`. |
+| `synced_text`, `plain_text` | TEXT | NULL | | At most 1 MiB each. |
+| `instrumental` | INTEGER | NOT NULL | 0 | |
+| `remote_duration_ms` | INTEGER | NULL | | |
+| `fetched_at` | INTEGER | NOT NULL | | Epoch ms. |
+
+Decision: the key is not `tracks.song_key`. `song_key` has no album and no duration, so a live take with the same title and artist would reuse the studio lyrics; the cache key has both. A found row never expires; a `not_found` row is trusted for 14 days (`notFoundTtl`), and a song counts as not found only when every enabled plugin has a fresh `not_found` row. A failed lookup is never cached. `OnlineCacheStore` also deletes by plugin ("Xoá lời đã lưu") and counts rows and UTF-8 bytes per plugin for the plugin page.
 
 ### Pro: Spec only, added by kanaru-pro before first release
 

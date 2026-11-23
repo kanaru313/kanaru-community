@@ -1,4 +1,5 @@
 import '../../media/domain/track_id.dart';
+import 'online/lyrics_candidate.dart';
 
 /// What the database knows about the lyrics of one track. The audio path and
 /// whether the track is playable come from the playback resolver, never from
@@ -10,6 +11,12 @@ class LyricsFacts {
     required this.lrcLocator,
     required this.lrcRevision,
     required this.off,
+    this.file = false,
+    this.title,
+    this.artist,
+    this.artists = const [],
+    this.album,
+    this.duration,
   });
 
   final TrackId trackId;
@@ -24,6 +31,29 @@ class LyricsFacts {
   /// The user turned lyrics off for this track.
   final bool off;
 
+  /// The user chose "Lời trong file": the file's lyrics win over a kept
+  /// online copy.
+  final bool file;
+
+  /// Tags the online search is made from (never a path or a file name).
+  final String? title;
+
+  /// The library artist tag, possibly several names (`A; B`).
+  final String? artist;
+
+  /// The artists in tag order.
+  final List<String> artists;
+  final String? album;
+  final Duration? duration;
+
+  /// The online search key of the track.
+  LyricsQuery get query => LyricsQuery(
+    title: title,
+    artist: artist,
+    album: album,
+    duration: duration,
+  );
+
   /// What changes the lyrics read from files; not the choice, so a choice
   /// write never re-reads.
   (String?, String?, String?) get readKey =>
@@ -36,11 +66,28 @@ class LyricsFacts {
       other.trackRevision == trackRevision &&
       other.lrcLocator == lrcLocator &&
       other.lrcRevision == lrcRevision &&
-      other.off == off;
+      other.off == off &&
+      other.file == file &&
+      other.title == title &&
+      other.artist == artist &&
+      _sameList(other.artists, artists) &&
+      other.album == album &&
+      other.duration == duration;
 
   @override
-  int get hashCode =>
-      Object.hash(trackId, trackRevision, lrcLocator, lrcRevision, off);
+  int get hashCode => Object.hash(
+    trackId,
+    trackRevision,
+    lrcLocator,
+    lrcRevision,
+    off,
+    file,
+    title,
+    artist,
+    Object.hashAll(artists),
+    album,
+    duration,
+  );
 }
 
 /// The `.lrc` file of a track: the folder of its resolved audio path plus the
@@ -60,4 +107,12 @@ List<String> lrcProbeCandidates(String audioPath) {
   final dot = audioPath.lastIndexOf('.');
   final stem = dot > slash + 1 ? audioPath.substring(0, dot) : audioPath;
   return ['$stem.lrc', '$stem.LRC'];
+}
+
+bool _sameList(List<String> a, List<String> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
 }

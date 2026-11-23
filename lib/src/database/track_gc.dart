@@ -10,6 +10,8 @@ const trackOwnedChildTables = {
   'play_stats',
   'track_artists',
   'track_lyrics_choices',
+  'lyrics_pins',
+  'lyrics_rejects',
 };
 
 /// A `missing` track is kept this long (ms) after `missing_since`.
@@ -146,6 +148,8 @@ Future<int> collectOrphanTracks(
         'track_details',
         'play_stats',
         'track_artists',
+        'lyrics_pins',
+        'lyrics_rejects',
         'track_search',
       ])
         TableUpdate(t),

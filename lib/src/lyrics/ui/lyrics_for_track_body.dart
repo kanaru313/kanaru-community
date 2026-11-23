@@ -30,7 +30,7 @@ class LyricsForTrackBody extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final lyrics = ref.watch(trackLyricsProvider(trackId));
     final fileHasNone =
-        lyrics is LyricsNone ||
+        lyrics.isEmpty ||
         lyrics is LyricsUnavailable ||
         (lyrics is LyricsOff && lyrics.available == null);
     return Column(

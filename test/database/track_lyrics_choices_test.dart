@@ -63,7 +63,17 @@ void main() {
     expect(seen, [0, 1, 0]);
   });
 
-  test('the CHECK refuses a mode other than off', () async {
+  test('setLyricsFile writes the file mode and replaces an off row', () async {
+    await setLyricsOff(db, track, now: 1);
+    await setLyricsFile(db, track, now: 2);
+    expect(await rows(), [
+      {'track_id': track.value, 'mode': 'file', 'updated_at': 2},
+    ]);
+    await setLyricsOff(db, track, now: 3);
+    expect((await rows()).single['mode'], 'off');
+  });
+
+  test('the CHECK refuses a mode other than off and file', () async {
     await expectLater(
       db.customStatement(
         "INSERT INTO track_lyrics_choices (track_id, mode, updated_at) VALUES (?, 'kept', 1)",

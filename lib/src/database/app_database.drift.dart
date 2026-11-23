@@ -45,6 +45,11 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
       .$ExtensionSchemaTable(this);
   late final i10.$TrackLyricsChoicesTable trackLyricsChoices = i10
       .$TrackLyricsChoicesTable(this);
+  late final i10.$LyricsPinsTable lyricsPins = i10.$LyricsPinsTable(this);
+  late final i10.$LyricsRejectsTable lyricsRejects = i10.$LyricsRejectsTable(
+    this,
+  );
+  late final i10.$OnlineLyricsTable onlineLyrics = i10.$OnlineLyricsTable(this);
   late final i11.$PluginReposTable pluginRepos = i11.$PluginReposTable(this);
   late final i11.$PluginsTable plugins = i11.$PluginsTable(this);
   late final i11.$PluginDataTable pluginData = i11.$PluginDataTable(this);
@@ -113,6 +118,9 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
     i6.savedItemsLookup,
     extensionSchema,
     trackLyricsChoices,
+    lyricsPins,
+    lyricsRejects,
+    onlineLyrics,
     pluginRepos,
     plugins,
     pluginData,
@@ -258,6 +266,12 @@ class $AppDatabaseManager {
       i9.$$ExtensionSchemaTableTableManager(_db, _db.extensionSchema);
   i10.$$TrackLyricsChoicesTableTableManager get trackLyricsChoices =>
       i10.$$TrackLyricsChoicesTableTableManager(_db, _db.trackLyricsChoices);
+  i10.$$LyricsPinsTableTableManager get lyricsPins =>
+      i10.$$LyricsPinsTableTableManager(_db, _db.lyricsPins);
+  i10.$$LyricsRejectsTableTableManager get lyricsRejects =>
+      i10.$$LyricsRejectsTableTableManager(_db, _db.lyricsRejects);
+  i10.$$OnlineLyricsTableTableManager get onlineLyrics =>
+      i10.$$OnlineLyricsTableTableManager(_db, _db.onlineLyrics);
   i11.$$PluginReposTableTableManager get pluginRepos =>
       i11.$$PluginReposTableTableManager(_db, _db.pluginRepos);
   i11.$$PluginsTableTableManager get plugins =>

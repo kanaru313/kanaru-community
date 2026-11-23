@@ -1,3 +1,5 @@
+import 'online/online_lyrics_ref.dart';
+
 /// Where a track's lyrics were read from.
 enum LyricsOrigin {
   /// Stored in the audio file's tags.
@@ -5,6 +7,9 @@ enum LyricsOrigin {
 
   /// A `.lrc` file next to the audio file.
   lrc,
+
+  /// A lyrics plugin's result, found automatically or kept by the user.
+  online,
 }
 
 /// One word of an enhanced-LRC line: [start] is the absolute time in the
@@ -70,11 +75,18 @@ class Lyrics {
     required this.lines,
     required this.synced,
     required this.origin,
-  });
+    this.online,
+  }) : assert(
+         (origin == LyricsOrigin.online) == (online != null),
+         'online lyrics carry their reference, other lyrics do not',
+       );
 
   final List<LyricLine> lines;
   final bool synced;
   final LyricsOrigin origin;
+
+  /// Where the lyrics came from; set exactly for [LyricsOrigin.online].
+  final OnlineLyricsRef? online;
 
   /// Index of the line being sung at [position]: the last line starting at
   /// or before it, `-1` before the first line or when not [synced].
@@ -109,11 +121,12 @@ class Lyrics {
       other is Lyrics &&
       other.synced == synced &&
       other.origin == origin &&
+      other.online == online &&
       other.lines.length == lines.length &&
       _sameLines(other.lines, lines);
 
   @override
-  int get hashCode => Object.hash(synced, origin, lines.length);
+  int get hashCode => Object.hash(synced, origin, online, lines.length);
 
   @override
   String toString() =>

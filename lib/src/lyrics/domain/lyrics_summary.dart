@@ -7,6 +7,10 @@ enum LyricsSummary {
   tagPlain,
   lrcSynced,
   lrcPlain,
+  onlineSynced,
+  onlinePlain,
+  instrumental,
+  searching,
   none,
   off,
   unavailable,
@@ -19,12 +23,20 @@ LyricsSummary summaryOfLyrics(Lyrics lyrics) =>
       (LyricsOrigin.tag, false) => LyricsSummary.tagPlain,
       (LyricsOrigin.lrc, true) => LyricsSummary.lrcSynced,
       (LyricsOrigin.lrc, false) => LyricsSummary.lrcPlain,
+      (LyricsOrigin.online, true) => LyricsSummary.onlineSynced,
+      (LyricsOrigin.online, false) => LyricsSummary.onlinePlain,
     };
 
 LyricsSummary summaryOf(TrackLyrics lyrics) => switch (lyrics) {
   LyricsLoading() => LyricsSummary.loading,
   LyricsShown(:final lyrics) => summaryOfLyrics(lyrics),
-  LyricsNone() => LyricsSummary.none,
+  LyricsInstrumental() => LyricsSummary.instrumental,
+  LyricsSearching() => LyricsSummary.searching,
+  LyricsNone() ||
+  LyricsNotFound() ||
+  LyricsNoSource() ||
+  LyricsLookupFailed() ||
+  LyricsLookupPaused() => LyricsSummary.none,
   LyricsOff() => LyricsSummary.off,
   LyricsUnavailable() => LyricsSummary.unavailable,
 };
