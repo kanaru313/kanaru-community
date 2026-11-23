@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -8,6 +10,7 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/state/alerts_provider.dart';
 import '../../../plugins/state/install_ops.dart';
 import '../../../plugins/state/plugin_page_provider.dart';
+import '../plugin_paths.dart';
 import 'repair_flow.dart';
 
 /// The one red band under the update band, with one button. What it says,
@@ -97,5 +100,55 @@ class _PluginErrorBandState extends ConsumerState<PluginErrorBand> {
       name: widget.data.row.name,
     );
     if (mounted) setState(() => _repairing = false);
+  }
+}
+
+/// The red band of a plugin the server told to slow down (a 429): it says
+/// when Kanaru asks again and opens the log. The page shows it in place of
+/// [PluginErrorBand] and only while the pause lasts. The length in the title
+/// is read once per pause (it does not count down while the page is open).
+class PluginPausedBand extends StatefulWidget {
+  const PluginPausedBand({
+    super.key,
+    required this.installId,
+    required this.until,
+  });
+
+  final String installId;
+
+  /// When the pause ends.
+  final DateTime until;
+
+  @override
+  State<PluginPausedBand> createState() => _PluginPausedBandState();
+}
+
+class _PluginPausedBandState extends State<PluginPausedBand> {
+  late int _minutes = _minutesOf(widget.until);
+
+  static int _minutesOf(DateTime until) {
+    final seconds = until.difference(DateTime.now()).inSeconds;
+    return seconds <= 60 ? 1 : (seconds / 60).ceil();
+  }
+
+  @override
+  void didUpdateWidget(PluginPausedBand old) {
+    super.didUpdateWidget(old);
+    if (old.until != widget.until) _minutes = _minutesOf(widget.until);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return KInlineNotice(
+      icon: KIcons.warning,
+      tone: KInlineNoticeTone.errorFilled,
+      title: l10n.pluginsPausedTitle(_minutes),
+      message: l10n.pluginsPausedBody(
+        DateFormat('HH:mm').format(widget.until.toLocal()),
+      ),
+      actionLabel: l10n.pluginsPageLog,
+      onAction: () => context.push(PluginPaths.pluginLogs(widget.installId)),
+    );
   }
 }

@@ -4139,8 +4139,6 @@
   "pluginsPageUseLyrics": "Find lyrics automatically",
   "pluginsPageUseTranslate": "Default translation service",
   "pluginsPageConnection": "Connection",
-  "pluginsPageConcurrent": "Requests at once",
-  "pluginsPageSpacing": "Time between requests",
   "pluginsPageData": "Data",
   "pluginsPageOwnStorage": "Plugin’s own storage",
   "pluginsPageSavedLyrics": "Lyrics saved from this source",
@@ -4246,5 +4244,182 @@
         "type": "String"
       }
     }
-  }
+  },
+  "pluginsPageUseLyricsOn": "In use · {position} of {total} · change in Settings › Lyrics › Sources",
+  "@pluginsPageUseLyricsOn": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPageUseLyricsOff": "Off: searches only when you tap “Find lyrics online…” · change in Settings › Lyrics › Sources",
+  "pluginsDataStorageValue": "{used} KB / {quota} KB",
+  "@pluginsDataStorageValue": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "quota": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsDataClear": "Clear",
+  "pluginsDataClearStorageTitle": "Clear the plugin’s own storage?",
+  "pluginsDataClearStorageBody": "The plugin may need to sign in or be set up again.",
+  "pluginsDataStorageCleared": "Own storage cleared",
+  "pluginsDataSavedLyricsValue": "{count, plural, =1{1 song} other{{count} songs}} · {size}",
+  "@pluginsDataSavedLyricsValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsDataSavedLyricsNone": "None yet",
+  "pluginsDataClearLyricsTitle": "Clear the lyrics saved from this source?",
+  "pluginsDataClearLyricsBody": "Lyrics saved from this source will be deleted. Pinned lyrics and .lrc files are kept.",
+  "pluginsDataLyricsCleared": "Saved lyrics cleared",
+  "pluginsDataClearFailed": "Couldn’t clear the data",
+  "pluginsDataLogSummary": "{errors, plural, =1{1 error today} other{{errors} errors today}} · {total, plural, =1{1 entry} other{{total} entries}}",
+  "@pluginsDataLogSummary": {
+    "placeholders": {
+      "errors": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsDataLogNoErrors": "No errors",
+  "pluginsPausedTitle": "Paused for {minutes, plural, =1{1 minute} other{{minutes} minutes}}: the server says too many requests (429)",
+  "@pluginsPausedTitle": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPausedBody": "Kanaru asks this source again after {time}. Other sources still search as usual.",
+  "@pluginsPausedBody": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsTitle": "Log",
+  "pluginsLogsFilterLabel": "Filter the log",
+  "pluginsLogsAll": "All",
+  "pluginsLogsErrors": "Errors",
+  "pluginsLogsCaption": "Every time the plugin fails or writes to the console. Kanaru hides the settings values, own storage and tokens it knows of. A plugin can still write other information: look before you share.",
+  "pluginsLogsFooter": "Kept for the last 7 days (at most 1 MB per plugin). File: {path}",
+  "@pluginsLogsFooter": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsEmpty": "No entries yet",
+  "pluginsLogsLoadFailed": "Couldn’t read the log",
+  "pluginsLogsOpenFolder": "Open the log folder",
+  "pluginsLogsOpenFailed": "Couldn’t open the log folder",
+  "pluginsLogsShareSoon": "Share · {soon}",
+  "@pluginsLogsShareSoon": {
+    "placeholders": {
+      "soon": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsClear": "Clear the log",
+  "pluginsLogsClearTitle": "Clear the plugin’s log?",
+  "pluginsLogsClearBody": "The log entries of {name} will be deleted. The plugin is not affected.",
+  "@pluginsLogsClearBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsCleared": "Log cleared",
+  "pluginsLogsJobTarget": "{job} · {target}",
+  "@pluginsLogsJobTarget": {
+    "placeholders": {
+      "job": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsResultOk": "Console output only",
+  "pluginsLogsResultError": "Error: {reason}",
+  "@pluginsLogsResultError": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsResultErrorWith": "Error: {reason} · {message}",
+  "@pluginsLogsResultErrorWith": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsLogsKindRateLimited": "too many requests (429)",
+  "pluginsLogsKindInvalidResponse": "invalid response",
+  "pluginsLogsKindServer": "server error",
+  "pluginsLogsKindAuth": "sign-in needed or wrong key",
+  "pluginsLogsKindQuota": "quota used up",
+  "pluginsLogsKindTimeout": "timed out",
+  "pluginsLogsKindMemory": "out of memory",
+  "pluginsLogsKindStack": "code nested too deep",
+  "pluginsLogsKindOutputTooLarge": "result too large",
+  "pluginsLogsKindInternal": "internal error",
+  "pluginsLogsKindOther": "{kind}",
+  "@pluginsLogsKindOther": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsRemoveStorage": "Own storage ({size} KB)",
+  "@pluginsRemoveStorage": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsRemoveLog": "The plugin’s log",
+  "pluginsRemoveKeepLyrics": "Saved lyrics of {count, plural, =1{1 song} other{{count} songs}} and pinned lyrics from this source",
+  "@pluginsRemoveKeepLyrics": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsRemoveKeepPinned": "Pinned lyrics from this source (if any)",
+  "pluginsRemoveKeepLrc": "The .lrc files written next to songs",
+  "pluginsRemoveKeep": "Kept",
+  "pluginsPageConnectionRow": "Requests at once, spacing"
 }

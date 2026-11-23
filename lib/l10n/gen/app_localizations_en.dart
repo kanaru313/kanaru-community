@@ -5721,12 +5721,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginsPageConnection => 'Connection';
 
   @override
-  String get pluginsPageConcurrent => 'Requests at once';
-
-  @override
-  String get pluginsPageSpacing => 'Time between requests';
-
-  @override
   String get pluginsPageData => 'Data';
 
   @override
@@ -5879,4 +5873,232 @@ class AppLocalizationsEn extends AppLocalizations {
   String pluginsCfgStepUp(String step) {
     return 'Increase by $step';
   }
+
+  @override
+  String pluginsPageUseLyricsOn(int position, int total) {
+    return 'In use · $position of $total · change in Settings › Lyrics › Sources';
+  }
+
+  @override
+  String get pluginsPageUseLyricsOff =>
+      'Off: searches only when you tap “Find lyrics online…” · change in Settings › Lyrics › Sources';
+
+  @override
+  String pluginsDataStorageValue(int used, int quota) {
+    return '$used KB / $quota KB';
+  }
+
+  @override
+  String get pluginsDataClear => 'Clear';
+
+  @override
+  String get pluginsDataClearStorageTitle => 'Clear the plugin’s own storage?';
+
+  @override
+  String get pluginsDataClearStorageBody =>
+      'The plugin may need to sign in or be set up again.';
+
+  @override
+  String get pluginsDataStorageCleared => 'Own storage cleared';
+
+  @override
+  String pluginsDataSavedLyricsValue(int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0 · $size';
+  }
+
+  @override
+  String get pluginsDataSavedLyricsNone => 'None yet';
+
+  @override
+  String get pluginsDataClearLyricsTitle =>
+      'Clear the lyrics saved from this source?';
+
+  @override
+  String get pluginsDataClearLyricsBody =>
+      'Lyrics saved from this source will be deleted. Pinned lyrics and .lrc files are kept.';
+
+  @override
+  String get pluginsDataLyricsCleared => 'Saved lyrics cleared';
+
+  @override
+  String get pluginsDataClearFailed => 'Couldn’t clear the data';
+
+  @override
+  String pluginsDataLogSummary(int errors, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      errors,
+      locale: localeName,
+      other: '$errors errors today',
+      one: '1 error today',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total entries',
+      one: '1 entry',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String get pluginsDataLogNoErrors => 'No errors';
+
+  @override
+  String pluginsPausedTitle(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: '1 minute',
+    );
+    return 'Paused for $_temp0: the server says too many requests (429)';
+  }
+
+  @override
+  String pluginsPausedBody(String time) {
+    return 'Kanaru asks this source again after $time. Other sources still search as usual.';
+  }
+
+  @override
+  String get pluginsLogsTitle => 'Log';
+
+  @override
+  String get pluginsLogsFilterLabel => 'Filter the log';
+
+  @override
+  String get pluginsLogsAll => 'All';
+
+  @override
+  String get pluginsLogsErrors => 'Errors';
+
+  @override
+  String get pluginsLogsCaption =>
+      'Every time the plugin fails or writes to the console. Kanaru hides the settings values, own storage and tokens it knows of. A plugin can still write other information: look before you share.';
+
+  @override
+  String pluginsLogsFooter(String path) {
+    return 'Kept for the last 7 days (at most 1 MB per plugin). File: $path';
+  }
+
+  @override
+  String get pluginsLogsEmpty => 'No entries yet';
+
+  @override
+  String get pluginsLogsLoadFailed => 'Couldn’t read the log';
+
+  @override
+  String get pluginsLogsOpenFolder => 'Open the log folder';
+
+  @override
+  String get pluginsLogsOpenFailed => 'Couldn’t open the log folder';
+
+  @override
+  String pluginsLogsShareSoon(String soon) {
+    return 'Share · $soon';
+  }
+
+  @override
+  String get pluginsLogsClear => 'Clear the log';
+
+  @override
+  String get pluginsLogsClearTitle => 'Clear the plugin’s log?';
+
+  @override
+  String pluginsLogsClearBody(String name) {
+    return 'The log entries of $name will be deleted. The plugin is not affected.';
+  }
+
+  @override
+  String get pluginsLogsCleared => 'Log cleared';
+
+  @override
+  String pluginsLogsJobTarget(String job, String target) {
+    return '$job · $target';
+  }
+
+  @override
+  String get pluginsLogsResultOk => 'Console output only';
+
+  @override
+  String pluginsLogsResultError(String reason) {
+    return 'Error: $reason';
+  }
+
+  @override
+  String pluginsLogsResultErrorWith(String reason, String message) {
+    return 'Error: $reason · $message';
+  }
+
+  @override
+  String get pluginsLogsKindRateLimited => 'too many requests (429)';
+
+  @override
+  String get pluginsLogsKindInvalidResponse => 'invalid response';
+
+  @override
+  String get pluginsLogsKindServer => 'server error';
+
+  @override
+  String get pluginsLogsKindAuth => 'sign-in needed or wrong key';
+
+  @override
+  String get pluginsLogsKindQuota => 'quota used up';
+
+  @override
+  String get pluginsLogsKindTimeout => 'timed out';
+
+  @override
+  String get pluginsLogsKindMemory => 'out of memory';
+
+  @override
+  String get pluginsLogsKindStack => 'code nested too deep';
+
+  @override
+  String get pluginsLogsKindOutputTooLarge => 'result too large';
+
+  @override
+  String get pluginsLogsKindInternal => 'internal error';
+
+  @override
+  String pluginsLogsKindOther(String kind) {
+    return '$kind';
+  }
+
+  @override
+  String pluginsRemoveStorage(int size) {
+    return 'Own storage ($size KB)';
+  }
+
+  @override
+  String get pluginsRemoveLog => 'The plugin’s log';
+
+  @override
+  String pluginsRemoveKeepLyrics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'Saved lyrics of $_temp0 and pinned lyrics from this source';
+  }
+
+  @override
+  String get pluginsRemoveKeepPinned =>
+      'Pinned lyrics from this source (if any)';
+
+  @override
+  String get pluginsRemoveKeepLrc => 'The .lrc files written next to songs';
+
+  @override
+  String get pluginsRemoveKeep => 'Kept';
+
+  @override
+  String get pluginsPageConnectionRow => 'Requests at once, spacing';
 }

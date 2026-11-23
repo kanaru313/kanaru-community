@@ -5258,12 +5258,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pluginsPageConnection => 'Kết nối';
 
   @override
-  String get pluginsPageConcurrent => 'Yêu cầu cùng lúc';
-
-  @override
-  String get pluginsPageSpacing => 'Giãn cách giữa các yêu cầu';
-
-  @override
   String get pluginsPageData => 'Dữ liệu';
 
   @override
@@ -5413,4 +5407,200 @@ class AppLocalizationsVi extends AppLocalizations {
   String pluginsCfgStepUp(String step) {
     return 'Tăng $step';
   }
+
+  @override
+  String pluginsPageUseLyricsOn(int position, int total) {
+    return 'Đang dùng · thứ $position / $total · đổi ở Cài đặt › Lời bài › Nguồn lời';
+  }
+
+  @override
+  String get pluginsPageUseLyricsOff =>
+      'Tắt: chỉ tìm khi bạn bấm “Tìm lời trực tuyến…” · đổi ở Cài đặt › Lời bài › Nguồn lời';
+
+  @override
+  String pluginsDataStorageValue(int used, int quota) {
+    return '$used KB / $quota KB';
+  }
+
+  @override
+  String get pluginsDataClear => 'Xoá';
+
+  @override
+  String get pluginsDataClearStorageTitle => 'Xoá bộ nhớ riêng của plugin?';
+
+  @override
+  String get pluginsDataClearStorageBody =>
+      'Plugin có thể phải đăng nhập hoặc thiết lập lại.';
+
+  @override
+  String get pluginsDataStorageCleared => 'Đã xoá bộ nhớ riêng';
+
+  @override
+  String pluginsDataSavedLyricsValue(int count, String size) {
+    return '$count bài · $size';
+  }
+
+  @override
+  String get pluginsDataSavedLyricsNone => 'Chưa có';
+
+  @override
+  String get pluginsDataClearLyricsTitle => 'Xoá lời đã lưu từ nguồn này?';
+
+  @override
+  String get pluginsDataClearLyricsBody =>
+      'Lời đã lưu từ nguồn này sẽ bị xoá. Lời đã ghim và file .lrc vẫn giữ.';
+
+  @override
+  String get pluginsDataLyricsCleared => 'Đã xoá lời đã lưu';
+
+  @override
+  String get pluginsDataClearFailed => 'Không xoá được dữ liệu';
+
+  @override
+  String pluginsDataLogSummary(int errors, int total) {
+    return '$errors lỗi hôm nay · $total mục';
+  }
+
+  @override
+  String get pluginsDataLogNoErrors => 'Không có lỗi';
+
+  @override
+  String pluginsPausedTitle(int minutes) {
+    return 'Tạm dừng $minutes phút: máy chủ báo quá nhiều yêu cầu (429)';
+  }
+
+  @override
+  String pluginsPausedBody(String time) {
+    return 'Kanaru hỏi lại nguồn này sau $time. Các nguồn khác vẫn tìm bình thường.';
+  }
+
+  @override
+  String get pluginsLogsTitle => 'Nhật ký';
+
+  @override
+  String get pluginsLogsFilterLabel => 'Lọc nhật ký';
+
+  @override
+  String get pluginsLogsAll => 'Tất cả';
+
+  @override
+  String get pluginsLogsErrors => 'Lỗi';
+
+  @override
+  String get pluginsLogsCaption =>
+      'Mỗi lần plugin chạy lỗi hoặc ghi ra console. Kanaru che giá trị cài đặt, bộ nhớ riêng và token mà nó biết. Plugin vẫn có thể tự ghi thông tin khác: xem lại trước khi chia sẻ.';
+
+  @override
+  String pluginsLogsFooter(String path) {
+    return 'Giữ 7 ngày gần nhất (tối đa 1 MB mỗi plugin). Tệp: $path';
+  }
+
+  @override
+  String get pluginsLogsEmpty => 'Chưa có mục nào';
+
+  @override
+  String get pluginsLogsLoadFailed => 'Không đọc được nhật ký';
+
+  @override
+  String get pluginsLogsOpenFolder => 'Mở thư mục log';
+
+  @override
+  String get pluginsLogsOpenFailed => 'Không mở được thư mục log';
+
+  @override
+  String pluginsLogsShareSoon(String soon) {
+    return 'Chia sẻ · $soon';
+  }
+
+  @override
+  String get pluginsLogsClear => 'Xoá nhật ký';
+
+  @override
+  String get pluginsLogsClearTitle => 'Xoá nhật ký của plugin?';
+
+  @override
+  String pluginsLogsClearBody(String name) {
+    return 'Các mục nhật ký của $name bị xoá. Không ảnh hưởng tới plugin.';
+  }
+
+  @override
+  String get pluginsLogsCleared => 'Đã xoá nhật ký';
+
+  @override
+  String pluginsLogsJobTarget(String job, String target) {
+    return '$job · $target';
+  }
+
+  @override
+  String get pluginsLogsResultOk => 'Chỉ ghi ra console';
+
+  @override
+  String pluginsLogsResultError(String reason) {
+    return 'Lỗi: $reason';
+  }
+
+  @override
+  String pluginsLogsResultErrorWith(String reason, String message) {
+    return 'Lỗi: $reason · $message';
+  }
+
+  @override
+  String get pluginsLogsKindRateLimited => 'quá nhiều yêu cầu (429)';
+
+  @override
+  String get pluginsLogsKindInvalidResponse => 'dữ liệu trả về không hợp lệ';
+
+  @override
+  String get pluginsLogsKindServer => 'máy chủ lỗi';
+
+  @override
+  String get pluginsLogsKindAuth => 'cần đăng nhập hoặc key sai';
+
+  @override
+  String get pluginsLogsKindQuota => 'hết hạn mức';
+
+  @override
+  String get pluginsLogsKindTimeout => 'hết thời gian chờ';
+
+  @override
+  String get pluginsLogsKindMemory => 'hết bộ nhớ';
+
+  @override
+  String get pluginsLogsKindStack => 'mã lặp quá sâu';
+
+  @override
+  String get pluginsLogsKindOutputTooLarge => 'kết quả quá lớn';
+
+  @override
+  String get pluginsLogsKindInternal => 'lỗi nội bộ';
+
+  @override
+  String pluginsLogsKindOther(String kind) {
+    return '$kind';
+  }
+
+  @override
+  String pluginsRemoveStorage(int size) {
+    return 'Bộ nhớ riêng ($size KB)';
+  }
+
+  @override
+  String get pluginsRemoveLog => 'Nhật ký của plugin';
+
+  @override
+  String pluginsRemoveKeepLyrics(int count) {
+    return 'Lời đã lưu của $count bài và lời đã ghim từ nguồn này';
+  }
+
+  @override
+  String get pluginsRemoveKeepPinned => 'Lời đã ghim từ nguồn này (nếu có)';
+
+  @override
+  String get pluginsRemoveKeepLrc => 'File .lrc đã ghi cạnh bài';
+
+  @override
+  String get pluginsRemoveKeep => 'Vẫn giữ';
+
+  @override
+  String get pluginsPageConnectionRow => 'Yêu cầu cùng lúc, giãn cách';
 }

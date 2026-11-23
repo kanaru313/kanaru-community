@@ -1,17 +1,23 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/domain/package/plugin_kind.dart';
+import '../../../lyrics/state/online/lyrics_sources_provider.dart';
 import '../../../plugins/state/plugin_page_provider.dart';
+import '../../settings/settings_routes.dart';
 import '../../settings/ui/settings_scaffold.dart';
 import '../../settings/ui/soon_row.dart';
 import '../common/plugin_icon.dart';
 
 /// The head card: icon, name, "author (tự khai báo) · bản N", and under a
-/// divider the row that says how the kind is used. Those rows belong to
-/// features that are not built yet, so they are dimmed "Sắp có".
-class PluginHeadCard extends StatelessWidget {
+/// divider the row that says how the kind is used. The lyrics row shows the
+/// plugin's place in the lyrics sources and opens Settings › Lời bài; the
+/// translate row belongs to a feature that is not built yet, so it is dimmed
+/// "Sắp có".
+class PluginHeadCard extends ConsumerWidget {
   const PluginHeadCard({super.key, required this.data, required this.nameKey});
 
   final PluginPageData data;
@@ -22,7 +28,7 @@ class PluginHeadCard extends StatelessWidget {
   static const double _icon = KIconSize.hero;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
@@ -36,10 +42,7 @@ class PluginHeadCard extends StatelessWidget {
       row.version,
     );
     final use = switch (kind) {
-      PluginKind.lyrics => SoonRow(
-        icon: KIcons.lyrics,
-        title: Text(l10n.pluginsPageUseLyrics),
-      ),
+      PluginKind.lyrics => _LyricsUseRow(installId: row.installId),
       PluginKind.translate || PluginKind.aiTranslate => SoonRow(
         icon: KIcons.language,
         title: Text(l10n.pluginsPageUseTranslate),
@@ -96,6 +99,36 @@ class PluginHeadCard extends StatelessWidget {
         ),
         if (use != null) ...[const Divider(height: 1), use],
       ],
+    );
+  }
+}
+
+/// "Tự tìm lời": whether the lyrics module asks this plugin by itself and
+/// where it stands in the user's order. No switch: the order and the
+/// switches live in Settings › Lời bài, which the row opens.
+class _LyricsUseRow extends ConsumerWidget {
+  const _LyricsUseRow({required this.installId});
+
+  final String installId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final sources = ref.watch(lyricsSourcesProvider);
+    final at = sources.indexWhere((s) => s.id == installId);
+    // Until the sources are read the plugin is not in the list: no state yet.
+    final String? state = at < 0
+        ? null
+        : sources[at].enabled
+        ? l10n.pluginsPageUseLyricsOn(at + 1, sources.length)
+        : l10n.pluginsPageUseLyricsOff;
+    return SetupRowFrame(
+      leading: const Icon(KIcons.lyrics),
+      title: Text(l10n.pluginsPageUseLyrics),
+      subtitle: state == null ? null : Text(state),
+      trailing: Icon(KIcons.openInNew, color: scheme.onSurfaceVariant),
+      onTap: () => context.push(SettingsPaths.lyrics),
     );
   }
 }
