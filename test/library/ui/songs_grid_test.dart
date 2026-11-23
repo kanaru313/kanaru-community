@@ -1,4 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/database/state/database_providers.dart';
+import 'package:kanaru/src/library/state/browse/song_list_providers.dart';
+import 'package:kanaru/src/playback/data/track_info_rows.dart';
+import 'package:material_ui/material_ui.dart' show Scrollable, ScrollableState;
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
@@ -118,6 +122,79 @@ void main() {
     await h.settle(tester, rounds: 1);
     expect(h.container.read(favoriteTrackIdsProvider).value, {TrackId(ids[1])});
     expect(byIconButton('Remove from favorites'), findsOneWidget);
+    await unmountApp(tester);
+  });
+
+  testWidgets('a page that cannot be read shows retry cards', (tester) async {
+    var failures = 1;
+    final h = await pumpLibrary(
+      tester,
+      initial: '/library/songs',
+      overrides: [
+        trackRowLoaderProvider.overrideWith((ref) {
+          final db = ref.watch(appDatabaseProvider);
+          return (ids) async {
+            if (failures-- > 0) throw StateError('disk');
+            return loadTrackInfos(db, ids);
+          };
+        }),
+      ],
+    );
+    await h.container
+        .read(libraryListViewsProvider.notifier)
+        .setView(BrowseList.songs, CollectionView.grid);
+    await _addSongs(h, ['Alpha', 'Bravo']);
+    await h.settle(tester);
+    expect(find.byType(SongGridCard), findsNothing);
+    expect(byIconButton('Retry'), findsNWidgets(2));
+    await tester.tap(byIconButton('Retry').first);
+    await h.settle(tester);
+    expect(byIconButton('Retry'), findsNothing);
+    expect(find.byType(SongGridCard), findsNWidgets(2));
+    await unmountApp(tester);
+  });
+
+  testWidgets('scrolling the grid loads far pages; a failed one retries', (
+    tester,
+  ) async {
+    var failLast = false;
+    final h = await pumpLibrary(
+      tester,
+      initial: '/library/songs',
+      overrides: [
+        trackRowLoaderProvider.overrideWith((ref) {
+          final db = ref.watch(appDatabaseProvider);
+          return (ids) async {
+            // The last page holds the 60 songs after the second hundred.
+            if (failLast && ids.length == 60) throw StateError('disk');
+            return loadTrackInfos(db, ids);
+          };
+        }),
+      ],
+    );
+    for (var i = 0; i < 260; i++) {
+      await addLibraryTrack(
+        h.db,
+        source: h.sourceId,
+        locator: 's${i.toString().padLeft(4, '0')}.flac',
+        title: 'Song ${i.toString().padLeft(4, '0')}',
+      );
+    }
+    await h.settle(tester);
+    await tester.tap(byIconButton('Grid'));
+    await h.settle(tester);
+    final list = find.byType(Scrollable).last;
+    final position = tester.state<ScrollableState>(list).position;
+    failLast = true;
+    position.jumpTo(position.maxScrollExtent);
+    await h.settle(tester);
+    expect(byIconButton('Retry'), findsWidgets);
+    expect(find.text('Song 0259'), findsNothing);
+    failLast = false;
+    await tester.tap(byIconButton('Retry').last);
+    await h.settle(tester);
+    expect(byIconButton('Retry'), findsNothing);
+    expect(find.text('Song 0259'), findsOneWidget);
     await unmountApp(tester);
   });
 }
