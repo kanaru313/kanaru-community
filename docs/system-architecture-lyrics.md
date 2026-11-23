@@ -293,11 +293,20 @@ Code: `lib/src/lyrics/` (`domain/`, `data/`, `state/`). Only `data/` imports
 - **`PlainLyricsView`**: the note "Lời thường, không có mốc thời gian: không tự cuộn." then a lazy `ListView.builder` (a blank line is
   a break); no highlight, no seek, no auto-scroll.
 - **Intro gap**: `withIntroGap` (`domain/lyrics_intro_gap.dart`, applied once in `trackLyricsProvider`) adds a gap line at 0 s to synced lyrics whose first line is sung and starts at `introGapThreshold` (5 s) or later, so it is the current line during the intro (tap seeks to 0). Plain lyrics, a first line that is already a gap and mid-song silences are untouched. Line indexes always refer to this shown list. The gap exists only in the shown lyrics (`trackLyricsProvider`): saving or editing lyrics later must read the raw lyrics, not the shown list.
-- **`LyricsStateView`**: none ("Không có lời trong tệp hay tệp .lrc cạnh bài.", no button; a track with no local file reads the same)
-  and off (title, then the desktop or mobile sentence, and the tonal button when `onOpenChoice` is given), both `KEmpty`.
+- **`LyricsStateView(lyrics, desktop, onOpenChoice, onFindOnline, onAddSource)`**: one `switch` over every `TrackLyrics` state, so a
+  new state is a compile error. `KEmpty` (icon, title, sentence, tonal button; a button is drawn only when its callback is given):
+  none with the automatic search off ("Tự tìm đang tắt" + "Tìm thủ công…"); none for a song that cannot be searched, is not the
+  playing one, or has no local file (sentence only); off (desktop or mobile sentence + "Lời cho bài này"); not found ("Đã tìm ở N
+  nguồn đang bật. M nguồn khác đang tắt." + "Tìm lời trực tuyến…"; with every source off a one-line sentence instead); no plugin ("Thêm
+  nguồn lời trực tuyến"); instrumental ("Không phải? Tìm lời trực tuyến…"); lookup failed (error icon, "Chưa tìm được lời", the
+  reason and the retry time, `failedAreaMessage`); lookup paused (clock icon, "Nguồn lời đang tạm dừng", until when). Searching is
+  `LyricsSearchingView`: a `KEmpty` layout with a spinner in the icon slot (a still arc with animations off; `KEmpty` cannot hold a
+  widget). `LyricsBody` wires `onFindOnline` to `openFindOnline` and `onAddSource` to `openLyricsPluginStore`.
 - **`LyricsCard`** (mobile Now Playing): `surfaceContainerHigh`, radius 20, padding 16; title, short source label and an open icon;
-  body = previous (dim) / current / next lines of synced lyrics at 18 (one line each, ellipsis, a gap line, or the time before the first line, is the same `LyricsGapMark` (pulsing only as the current row); the slot before the first and after the last line is empty), the first three lines of plain lyrics at 15, or one status line. One button (semantics label "title · source").
-- **Labels**: `lyricsSummaryLabel(l10n, summary, short:)`; strings are the `lyrics*` keys of `lib/l10n/parts/lyrics_*.arb`.
+  body = previous (dim) / current / next lines of synced lyrics at 18 (one line each, ellipsis, a gap line, or the time before the first line, is the same `LyricsGapMark` (pulsing only as the current row); the slot before the first and after the last line is empty), the first three lines of plain lyrics at 15, or one status line (searching: small spinner + "Đang tìm lời…"; failed: "Chưa tìm được lời · thử lại lúc 21:05"; paused: "Nguồn lời tạm dừng tới 21:05"; not found; instrumental). Online lyrics: the plugin icon (`PluginAvatar`, 16) before the plugin name in the header. One button (semantics label "title · source").
+- **Labels**: `lyricsSummaryLabel(l10n, summary, short:)` for local lyrics; `lyricsLabelOf(l10n, trackLyrics, short:)` for what a track
+  shows (online: "NetEase · Đồng bộ", short = the plugin name; lookup states: "Đang tìm…", "Chưa tìm được lời", "Nguồn lời tạm dừng").
+  Strings are the `lyrics*` keys of `lib/l10n/parts/lyrics_*.arb`.
 
 Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens/now_playing/ui/mobile/lyrics_screen*.dart`, see
 [system-architecture-playback.md](./system-architecture-playback.md) Now Playing mobile) and the desktop `DesktopSidePane`.
@@ -309,20 +318,36 @@ Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens
   playing track changes or stops (Now Playing entry points); opened from a song menu it stays on its track. Every close goes through
   one guarded path: it pops only while the modal is the current route (a later pop waits for that), and a second request (a double tap,
   a track change during the exit animation) does nothing.
-- **Body** (`LyricsForTrackBody`): header "Lời cho bài này" and a settings button (`KIcons.settings`, tooltip "Cài đặt lời bài") and a close button, a status line "Không có lời trên
-  máy" only when the file has no lyrics, the two choice rows, a divider, then three dimmed inert "Sắp có" rows (find online, create
-  from audio, save).
-- **Choice rows** (`LyricsChoiceRows`, two single-choice icon `SelectionRow`s, marked by tint and bold title only): "Lời trong
-  file" (subtitle names tag or `.lrc` and synced or plain; disabled with "Không có lời trong file" when the file has none or the read
-  is loading) and "Không hiện lời" (always enabled, even while loading). Choosing reads `LyricsChoiceCommands`, closes, then writes
-  exactly once: file → `clear(id)`, off → `setOff(id)`. The chosen row only closes. A failed write is logged.
+- **Body** (`LyricsForTrackBody`, optional `onFindOnline`): header "Lời cho bài này" and a settings button (`KIcons.settings`, tooltip
+  "Cài đặt lời bài") and a close button; a status line (`LyricsStatusLine.of`, `surfaceContainerHighest` r16: searching with a spinner,
+  failed, paused, not found, no plugin, automatic search off, "Không có lời trên máy"; none for lyrics that show, off, instrumental);
+  the choice rows; a divider; `LyricsFindRows`; and, outside the scroll, `LyricsOnlineBar`. Watches `trackLyricsProvider` and
+  `lyricsPinProvider`; `onlineRowInfoOf(lyrics, pin)` decides the online row.
+- **Choice rows** (`LyricsChoiceRows`, single-choice icon `SelectionRow`s, marked by tint and bold title only): "Lời trong file"
+  (subtitle names tag or `.lrc` and synced or plain; disabled with "Không có lời trong file" when the file has none or the read is
+  loading), "Bản trực tuyến" (only when the track has an online copy: shown, what an off choice would show, or the kept copy; icon =
+  `PluginAvatar` 24; subtitle `onlineRowSubtitle`: "NetEase · Đồng bộ · 4:12 · tự tìm" / "… · đã giữ", a removed plugin adds "plugin đã
+  gỡ" after its name) and "Không hiện lời" (always enabled, even while loading). Choosing reads `LyricsChoiceCommands`, closes, then
+  writes exactly once: file → `setFile` while a kept copy exists (the file wins, the kept copy and its row stay), else `clear`;
+  online → `clear` (automatic selection shows the kept copy); off → `setOff`. The chosen row only closes. A failed write is logged.
+- **Find rows** (`LyricsFindRows`): after the divider "Tìm lời trực tuyến…" (subtitle "N nguồn đang bật · M đang tắt", or "Mọi nguồn
+  đang tắt (M) · chỉ tìm khi bạn bấm"; counts from `onlineSourceCountsProvider`) or, without a lyrics plugin, "Thêm nguồn lời trực
+  tuyến" (closes the modal and opens the plugin store at `lyricsPluginStoreLocation`, `?kind=lyrics`); then "Tạo lời từ âm thanh…" and
+  "Lưu lời…", dimmed, inert, "Sắp có". The search row is dimmed with "Sắp có" while `onFindOnline` is null (the picker is not built).
+- **Online bar** (`LyricsOnlineBar`): only when the online copy is what shows. Found automatically: "Tự tìm thấy trên <plugin> · Giữ để
+  lần sau không tìm lại" with "Không đúng bài" (`reject`) and "Giữ bản này" (`keepAuto`); kept: "Đang dùng bản đã giữ · Chỉ cho bài này"
+  with "Không đúng bài". The words take the full width and the buttons sit under them, right-aligned. The command is taken and called in the
+  turn of the guarded close, while the modal still watches the track (the commands read what the track shows at that moment).
 - **Song menu entry** (`song_lyrics_entry_impl.dart`, `LyricsSongEntry`, implements the library's `SongLyricsEntry`; the app overrides
   `songLyricsEntryProvider` in `lib/kanaru.dart`): `label` makes the subtitle of "Nguồn lời bài" with one one-shot read of the
-  song's choice (`watchLyricsFacts(...).first`): off → "Tắt lời"; else `LyricsLoader.peek` (memory cache) with `pickLocalLyrics` and
-  the `lyrics.local_first` setting → the summary label; else null (never a file read, never a subscription). `open` calls
+  song's choice (`watchLyricsFacts(...).first`): off → "Tắt lời"; a kept online copy (`PinStore.read`) unless the file was chosen →
+  "NetEase · Đồng bộ"; the playing song showing online lyrics → the same; else `LyricsLoader.peek` (memory cache) with `pickLocalLyrics`
+  and the `lyrics.local_first` setting → the summary label; else null (never a file read, never a subscription). `open` calls
   `showLyricsForTrack(context, id, followsPlaying: false)`.
-- **`LyricsSourceButton`**: watches only `playingLyricsProvider`. Icon: file lyrics = `KIcons.lyrics` in `primary`; none, loading =
-  the same at 38 %; off = `KIcons.lyricsOff`. 48 dp wide on mobile, 40 on desktop. Semantics label = the summary label (the modal
+- **`LyricsSourceButton`**: watches only `playingLyricsProvider`. Icon: file lyrics = `KIcons.lyrics` in `primary`; none, loading,
+  failed, paused, not found = the same at 38 %; off = `KIcons.lyricsOff`; online lyrics = the plugin's `PluginAvatar` at 22 (a grey
+  initial when the plugin is removed; on the desktop shell the 40 dp target is a `surfaceContainerHigh` disc behind it); searching = the
+  lyrics icon with a ring turning around it (a still arc with animations off). 48 dp wide on mobile, 40 on desktop. Semantics label = `lyricsLabelOf` (the modal
   title while loading). Disabled only without a track: a track whose file cannot be read keeps the dimmed look of "none" but still opens the modal (and the right-click toggle works), the same rule as every other entry, because the song menu cannot know a file is unreadable without file I/O; the modal then says the file has no lyrics and still offers "Không hiện lời". Desktop tooltip "<label> (L)" plus the
   right-click line when `onToggle` is given; right-click (`KContextRegion`, no long press) calls `onToggle`, built by
   `toggleLyricsOfPlaying(ref)` (off ↔ automatic through `LyricsChoiceCommands.toggle`).
@@ -379,6 +404,19 @@ Lyrics plugins (`metadata.type = lyrics`: `search` and `lyrics` scripts) add a s
 ### Commands (`data/online/online_lyrics_commands.dart`)
 
 `onlineLyricsCommandsProvider`: `keep(track, result)` pins the fetched result and drops a `file` choice; `keepAuto(track)` pins the cached copy the track shows; `reject(track)` records the reject (id and text hash) for the online copy shown, deletes its cache row (and the pin when the kept copy was the one shown), then forgets the recorded lookup end, so the playing track looks the song up again and the gate skips the refused result; `useFile` / `useOnline` set and clear the `file` choice. Every write is database-only; the text was fetched before and no network call runs inside a transaction.
+
+### UI › Online (`lyrics/ui/online/`)
+
+- `KSourceAvatar(imageBytes, label, size, removed)` (`kanaru_ui`): the plugin's icon or its first letter on `secondaryContainer`; `removed` is
+  always the letter on `outlineVariant`. Radius is a quarter of the size. `PluginAvatar(providerId, name, size)` feeds it from
+  `pluginIconProvider` and `onlineSourceRemovedProvider` (a plugin not among `lyricsSourcesProvider` once `lyricsSourcesLoadedProvider` is
+  true); the name comes from the lyrics reference, so a removed plugin keeps its name.
+- `online_labels.dart`: `onlineRowSubtitle`, `onlineSourceLabel`, failure reasons (`failReasonLong` / `failReasonShort`), `failedAreaMessage`,
+  `formatClock` (the user's 12 / 24 hour clock). `online_row_info.dart`: `OnlineRowInfo`, `onlineRowInfoOf`. `online_source_of.dart`:
+  `onlineShownOf(trackLyrics)`. `online_source_providers.dart`: `onlineSourceRemovedProvider`, `onlineSourceCountsProvider`.
+- `open_online_targets.dart` `openFindOnline(context, trackId)` is the single place that decides what "Tìm lời trực tuyến…" and "Tìm thủ
+  công…" of the lyrics area open (today "Lời cho bài này"; the Chọn lời picker replaces it). `open_lyrics_plugin_store.dart`
+  `openLyricsPluginStore` closes the desktop Now Playing panel and goes to `lyricsPluginStoreLocation`.
 
 ## Settings › Lyrics (`screens/settings/ui/lyrics/`)
 

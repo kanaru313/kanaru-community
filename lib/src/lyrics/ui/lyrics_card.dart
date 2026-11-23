@@ -6,10 +6,12 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../domain/lyrics.dart';
 import '../domain/lyrics_display_prefs.dart';
 import '../domain/lyrics_status.dart';
-import '../domain/lyrics_summary.dart';
 import '../state/lyrics_settings.dart';
 import '../state/playing_lyrics_providers.dart';
 import 'lyrics_labels.dart';
+import 'online/online_labels.dart';
+import 'online/online_source_of.dart';
+import 'online/plugin_avatar.dart';
 import 'lyrics_gap_mark.dart';
 import 'lyrics_text_styles.dart';
 
@@ -32,7 +34,8 @@ class LyricsCard extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final playing = ref.watch(playingLyricsProvider).lyrics;
-    final source = lyricsSummaryLabel(l10n, summaryOf(playing), short: true);
+    final source = lyricsLabelOf(l10n, playing, short: true);
+    final online = onlineShownOf(playing);
     final label = source.isEmpty
         ? l10n.playbackLyricsCard
         : l10n.lyricsCardLabel(l10n.playbackLyricsCard, source);
@@ -58,19 +61,42 @@ class LyricsCard extends ConsumerWidget {
                 Row(
                   spacing: KSpace.x2,
                   children: [
-                    Expanded(
+                    Flexible(
                       child: Text(
                         l10n.playbackLyricsCard,
                         style: text.titleSmall,
                       ),
                     ),
-                    if (source.isNotEmpty)
-                      Text(
-                        source,
-                        style: text.labelMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
+                    // The source (plugin icon and name, or the short label)
+                    // sits against the open icon, whatever the title's width.
+                    Expanded(
+                      child: Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          spacing: KSpace.x2,
+                          children: [
+                            if (online != null)
+                              PluginAvatar(
+                                providerId: online.providerId,
+                                name: online.providerName,
+                                size: KIconSize.xs,
+                              ),
+                            if (source.isNotEmpty)
+                              Flexible(
+                                child: Text(
+                                  source,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: text.labelMedium?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
+                    ),
                     Icon(
                       KIcons.openFull,
                       size: KIconSize.sm,
@@ -128,22 +154,60 @@ class _CardBody extends ConsumerWidget {
               _OneLine(text: line.text, style: style, textAlign: textAlign),
           ],
         );
-      case LyricsNone() ||
-          LyricsUnavailable() ||
-          LyricsNotFound() ||
-          LyricsNoSource() ||
-          LyricsInstrumental() ||
-          LyricsLookupFailed() ||
-          LyricsLookupPaused():
+      case LyricsNone() || LyricsUnavailable() || LyricsNoSource():
         status = l10n.lyricsCardNone;
+      case LyricsNotFound():
+        status = l10n.lyricsNotFoundTitle;
+      case LyricsInstrumental():
+        status = l10n.lyricsInstrumentalTitle;
+      case LyricsLookupFailed(:final retryAt):
+        status = retryAt == null
+            ? l10n.lyricsFailedTitle
+            : l10n.lyricsCardFailedRetry(formatClock(context, retryAt));
+      case LyricsLookupPaused(:final until):
+        status = l10n.lyricsCardPaused(formatClock(context, until));
       case LyricsOff():
         status = l10n.lyricsCardOff;
-      case LyricsLoading() || LyricsSearching():
+      case LyricsSearching():
+        return _SearchingLine(text: l10n.lyricsSearchingTitle);
+      case LyricsLoading():
         status = _blank;
     }
     return Text(
       status,
       style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+    );
+  }
+}
+
+/// "Đang tìm lời…" with a small spinner (a still arc with animations off).
+class _SearchingLine extends StatelessWidget {
+  const _SearchingLine({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      spacing: KSpace.x2,
+      children: [
+        SizedBox.square(
+          dimension: KIconSize.xs,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            value: MediaQuery.disableAnimationsOf(context) ? 0.3 : null,
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }

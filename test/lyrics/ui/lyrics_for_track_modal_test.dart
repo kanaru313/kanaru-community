@@ -193,7 +193,10 @@ void main() {
         await _open(tester, const LyricsNone(), size: size);
         expect(_enabled(tester, 'Lyrics in file'), isFalse);
         expect(find.text('No lyrics in the file'), findsOneWidget);
-        expect(find.text('No lyrics on this device'), findsOneWidget);
+        expect(
+          find.text('No lyrics on this device · automatic search is off'),
+          findsOneWidget,
+        );
         expect(_enabled(tester, 'Don’t show lyrics'), isTrue);
         handle.dispose();
       });

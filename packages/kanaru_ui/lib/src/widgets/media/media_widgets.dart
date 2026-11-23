@@ -17,6 +17,7 @@ export 'k_repeat_icon.dart';
 export 'k_shared_flight.dart';
 export 'k_seek_bar.dart';
 export 'k_seek_gesture_area.dart';
+export 'k_source_avatar.dart';
 export 'k_waveform_seek_bar.dart';
 export 'waveform_bars.dart';
 export 'waveform_painter.dart';

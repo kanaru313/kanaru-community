@@ -116,5 +116,197 @@
   "lyricsSettingsTrAhead": "Translate ahead",
   "lyricsSettingsTrAheadNow": "Current song only",
   "lyricsSettingsAddTrService": "Add a translation service",
-  "lyricsSettingsAddSpeech": "Add a speech-to-text plugin"
+  "lyricsSettingsAddSpeech": "Add a speech-to-text plugin",
+  "lyricsSearchingTitle": "Searching for lyrics…",
+  "lyricsSearchingMessage": "No lyrics on this device yet · searching {count, plural, =1{1 enabled source} other{{count} enabled sources}}.",
+  "@lyricsSearchingMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsNoneAutoOffMessage": "No lyrics in the file or in an .lrc file next to the song. Automatic search is off.",
+  "lyricsFindManually": "Search manually…",
+  "lyricsNotFoundTitle": "Lyrics not found",
+  "lyricsNotFoundAsked": "Searched {count, plural, =1{1 enabled source} other{{count} enabled sources}}.",
+  "@lyricsNotFoundAsked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsNotFoundOff": "{count, plural, =1{1 other source is off.} other{{count} other sources are off.}}",
+  "@lyricsNotFoundOff": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsNotFoundAllOff": "No lyrics on this device · every online lyrics source is off.",
+  "lyricsNoSourceMessage": "No lyrics on this device and no online lyrics source yet.",
+  "lyricsAddSource": "Add an online lyrics source",
+  "lyricsInstrumentalTitle": "Instrumental",
+  "lyricsInstrumentalMessage": "The lyrics source says this song is instrumental.",
+  "lyricsInstrumentalFindOnline": "Not right? Find lyrics online…",
+  "lyricsFailedTitle": "Couldn’t find lyrics",
+  "lyricsFailNetwork": "Network error searching {count, plural, =1{1 enabled source} other{{count} enabled sources}}",
+  "@lyricsFailNetwork": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsFailNeedsConfig": "The sources need setting up",
+  "lyricsFailNoAnswer": "The lyrics sources did not answer",
+  "lyricsFailedMessage": "{reason}.",
+  "@lyricsFailedMessage": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsFailedMessageRetry": "{reason} · trying again at {time}.",
+  "@lyricsFailedMessageRetry": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPausedTitle": "Lyrics sources are paused",
+  "lyricsPausedMessage": "The lyrics sources are paused until {time}: the server reported too many requests. Kanaru searches again then.",
+  "@lyricsPausedMessage": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsKindSynced": "Synced",
+  "lyricsKindPlain": "Plain",
+  "lyricsOnlineLabel": "{plugin} · {kind}",
+  "@lyricsOnlineLabel": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLabelSearching": "Searching…",
+  "lyricsLabelFailed": "Couldn’t find lyrics",
+  "lyricsLabelPaused": "Lyrics sources paused",
+  "lyricsCardFailedRetry": "Couldn’t find lyrics · trying again at {time}",
+  "@lyricsCardFailedRetry": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsCardPaused": "Lyrics sources paused until {time}",
+  "@lyricsCardPaused": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsChoiceOnline": "Online lyrics",
+  "lyricsOnlineAuto": "found automatically",
+  "lyricsOnlineRemoved": "plugin removed",
+  "lyricsOnlineInstrumental": "Instrumental",
+  "lyricsStatusSearching": "No lyrics on this device · searching {count, plural, =1{1 enabled source} other{{count} enabled sources}}",
+  "@lyricsStatusSearching": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsStatusNotFound": "No lyrics found, even in {count, plural, =1{1 enabled source} other{{count} enabled sources}}",
+  "@lyricsStatusNotFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsStatusAutoOff": "No lyrics on this device · automatic search is off",
+  "lyricsStatusNoSource": "No lyrics on this device · no online source yet",
+  "lyricsStatusAllOff": "No lyrics on this device · every online source is off",
+  "lyricsStatusFailed": "Couldn’t find lyrics · {reason}",
+  "@lyricsStatusFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsStatusFailedRetry": "Couldn’t find lyrics · {reason} · trying again at {time}",
+  "@lyricsStatusFailedRetry": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsFailShortNetwork": "network error",
+  "lyricsFailShortNeedsConfig": "needs setting up",
+  "lyricsFailShortNoAnswer": "no answer",
+  "lyricsStatusPaused": "The lyrics sources are paused until {time} (the server reported too many requests)",
+  "@lyricsStatusPaused": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsFindOnlineSub": "{on} on · {off} off",
+  "@lyricsFindOnlineSub": {
+    "placeholders": {
+      "on": {
+        "type": "int"
+      },
+      "off": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsFindOnlineSubAllOff": "Every source is off ({off}) · searches only when you tap",
+  "@lyricsFindOnlineSubAllOff": {
+    "placeholders": {
+      "off": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsAddSourceSub": "No lyrics plugin installed · open the plugin store",
+  "lyricsBarAutoTitle": "Found automatically on {plugin}",
+  "@lyricsBarAutoTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsBarAutoSub": "Keep it so Kanaru does not search again",
+  "lyricsBarKeptTitle": "Using the kept copy",
+  "lyricsBarKeptSub": "For this song only",
+  "lyricsBarReject": "Wrong song",
+  "lyricsBarKeep": "Keep this copy",
+  "lyricsStatusEnableAuto": "Turn on auto search"
 }
