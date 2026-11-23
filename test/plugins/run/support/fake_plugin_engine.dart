@@ -21,6 +21,10 @@ class FakePluginEngine implements PluginEngine {
   final requests = <EngineRequest>[];
   final _cancelWaiters = <int, Completer<void>>{};
   var active = 0;
+  final _started = Completer<void>();
+
+  /// Completes when the first run reaches the engine.
+  Future<void> get started => _started.future;
   var maxActive = 0;
   final startOrder = <int>[];
   var cancelCalls = 0;
@@ -64,6 +68,7 @@ class FakePluginEngine implements PluginEngine {
     requests.add(request);
     startOrder.add(request.job);
     active++;
+    if (!_started.isCompleted) _started.complete();
     if (active > maxActive) maxActive = active;
     try {
       return await script(request, fetch);

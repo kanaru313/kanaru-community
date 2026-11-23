@@ -437,12 +437,36 @@ void main() {
       );
       expect(
         ctx.maskValues,
-        containsAll(['Bearer tok-123456', 'tok-123456', 'sid=cookiesecret']),
+        containsAll([
+          'Bearer tok-123456',
+          'tok-123456',
+          'sid=cookiesecret',
+          'cookiesecret',
+        ]),
       );
     });
   });
 
   group('request records', () {
+    test('header secrets of a refused request are collected', () async {
+      final ctx = job();
+      await handler().handle(
+        req(
+          onServer('/', host: 'private.example.test'),
+          headers: [('X-Api-Key', 'refused-key-123456')],
+        ),
+        ctx,
+      );
+      expect(ctx.maskValues, contains('refused-key-123456'));
+    });
+
+    test('the whole path is kept for the log to cut after redaction', () async {
+      final ctx = job();
+      final long = '/${'p' * 400}';
+      await handler().handle(req(onServer(long)), ctx);
+      expect(ctx.requests.single.path, long);
+    });
+
     test(
       'an answered request keeps method, host, path, status, time',
       () async {

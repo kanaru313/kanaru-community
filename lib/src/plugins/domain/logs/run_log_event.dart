@@ -138,24 +138,4 @@ class RunLogEvent {
           : const [],
     );
   }
-
-  RunLogEvent copyWith({
-    Object? query,
-    String? message,
-    String? stack,
-    List<String>? console,
-    List<RunLogRequest>? requests,
-  }) => RunLogEvent(
-    time: time,
-    installId: installId,
-    pluginName: pluginName,
-    version: version,
-    script: script,
-    query: query ?? this.query,
-    kind: kind,
-    message: message ?? this.message,
-    stack: stack ?? this.stack,
-    console: console ?? this.console,
-    requests: requests ?? this.requests,
-  );
 }

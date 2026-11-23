@@ -11,6 +11,8 @@ const _maxConsoleLines = 50;
 const _maxConsoleLine = 500;
 const _maxRequests = 100;
 const _maxQueryText = 8000;
+const _maxPath = 300;
+const _maxHost = 253;
 
 String _cut(String text, int max) =>
     text.length <= max ? text : '${text.substring(0, max)}…';
@@ -38,6 +40,9 @@ RunLogEvent capRunLogEvent(RunLogEvent event) {
       for (final line in event.console.take(_maxConsoleLines))
         _cut(line, _maxConsoleLine),
     ],
-    requests: event.requests.take(_maxRequests).toList(),
+    requests: [
+      for (final r in event.requests.take(_maxRequests))
+        r.copyWith(host: _cut(r.host, _maxHost), path: _cut(r.path, _maxPath)),
+    ],
   );
 }

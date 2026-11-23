@@ -54,30 +54,27 @@ void main() {
     );
   });
 
-  test(
-    'remove deletes the run log and drops writes queued before it',
-    () async {
-      await installDemo();
-      RunLogEvent ev() => RunLogEvent(
-        time: DateTime.now(),
-        installId: id,
-        pluginName: 'Demo',
-        version: '3',
-        script: 'search',
-        kind: 'server',
-      );
-      h.logs.append(ev());
-      await h.logs.whenIdle();
-      final file = File('${h.dir.path}-logs/$id.jsonl');
-      expect(file.existsSync(), isTrue);
+  test('remove deletes the run log', () async {
+    await installDemo();
+    RunLogEvent ev() => RunLogEvent(
+      time: DateTime.now(),
+      installId: id,
+      pluginName: 'Demo',
+      version: '3',
+      script: 'search',
+      kind: 'server',
+    );
+    h.logs.append(ev());
+    await h.logs.whenIdle();
+    final file = File('${h.dir.path}-logs/$id.jsonl');
+    expect(file.existsSync(), isTrue);
 
-      h.logs.append(ev());
-      expect(await h.actions.remover.remove(id), RemoveResult.removed);
-      await h.logs.whenIdle();
+    h.logs.append(ev());
+    expect(await h.actions.remover.remove(id), RemoveResult.removed);
+    await h.logs.whenIdle();
 
-      expect(file.existsSync(), isFalse);
-    },
-  );
+    expect(file.existsSync(), isFalse);
+  });
 
   test('the summary is read fresh', () async {
     await installDemo(config: form);

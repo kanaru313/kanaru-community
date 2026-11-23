@@ -177,9 +177,7 @@ void main() {
       };
       await start(engine: engine);
       final run = r.runner.run(runRequest());
-      for (var i = 0; i < 100 && engine.active == 0; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 5));
-      }
+      await engine.started;
       // A switch (update, repair) holds the gate; the run is stopped.
       await h.runGate.exclusive(demoPluginId, () async {});
       await run;
@@ -337,12 +335,9 @@ void main() {
 
   group('reportRejectedOutput', () {
     Future<List<RunLogEvent>> eventsWhenWritten() async {
-      for (var i = 0; i < 200; i++) {
-        final list = await events();
-        if (list.isNotEmpty) return list;
-        await Future<void>.delayed(const Duration(milliseconds: 5));
-      }
-      return const [];
+      await r.runner.lastRejectionLogged;
+      await h.logs.whenIdle();
+      return events();
     }
 
     test('writes one invalidResponse event with the fixed reason', () async {
@@ -368,8 +363,12 @@ void main() {
 
     test('a plugin that is not live writes nothing', () async {
       await start();
-      r.runner.reportRejectedOutput('plugin-${'0' * 32}', 'search', 'x');
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+      final ghost = 'plugin-${'0' * 32}';
+      r.runner.reportRejectedOutput(ghost, 'search', 'x');
+      await r.runner.lastRejectionLogged;
+      await h.logs.whenIdle();
+      expect(await reader.readLog(ghost), isEmpty);
+      expect(h.logs.fileOf(ghost)!.existsSync(), isFalse);
       expect(await events(), isEmpty);
     });
   });

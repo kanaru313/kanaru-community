@@ -105,6 +105,8 @@ class RunLogRecorder {
     String reason,
   ) async {
     try {
+      // Before the first await: a remove that lands meanwhile drops the event.
+      final deletions = _log.deletionsOf(installId);
       final row = await _rows.liveById(installId);
       final manifest = row == null ? null : _rows.manifestOf(row);
       if (row == null || manifest == null) return;
@@ -124,7 +126,10 @@ class RunLogRecorder {
         kind: runLogKindInvalidResponse,
         message: reason,
       );
-      _log.append(capRunLogEvent(redactor.apply(event)));
+      _log.append(
+        capRunLogEvent(redactor.apply(event)),
+        deletionsAtStart: deletions,
+      );
     } on Object catch (error) {
       _applog.warning('A rejected output was not logged: ${error.runtimeType}');
     }

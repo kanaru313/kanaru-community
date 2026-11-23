@@ -174,12 +174,17 @@ PluginRequestHeaders? pluginRequestHeaders(List<(String, String)> requested) {
 }
 
 /// The part of a `Set-Cookie` value worth hiding: the whole line and its
-/// `name=value` pair, when long enough to be a secret.
+/// `name=value` pair and its value, when long enough to be a secret.
 Set<String> setCookieSecrets(String value) {
   final out = <String>{};
   if (value.length >= _minSecretLength) out.add(value);
   final pair = value.split(';').first.trim();
   if (pair.length >= _minSecretLength) out.add(pair);
+  // The cookie's value alone.
+  final eq = pair.indexOf('=');
+  if (eq > 0 && pair.length - eq - 1 >= _minSecretLength) {
+    out.add(pair.substring(eq + 1));
+  }
   return out;
 }
 

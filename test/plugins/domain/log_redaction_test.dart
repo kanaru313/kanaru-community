@@ -271,6 +271,89 @@ void main() {
     }
   });
 
+  group('urls, overlaps and the path cut', () {
+    LogRedactor withUrl(String url) => LogRedactor(
+      schema: const [InputField(key: 'u', title: 'U', format: InputFormat.url)],
+      storedConfig: {'u': url},
+    );
+
+    test('a saved endpoint is hidden by host, path, segment and query', () {
+      final out =
+          withUrl(
+            'https://My-Proxy.Example.com/v1/abc:defghijk?token=querysecret1',
+          ).apply(
+            event(
+              message: 'blocked my-proxy.example.com and My-Proxy.Example.com',
+              requests: [
+                const RunLogRequest(
+                  method: 'GET',
+                  host: 'my-proxy.example.com',
+                  path: '/v1/abc:defghijk/chat',
+                  status: 200,
+                  ms: 1,
+                ),
+              ],
+              console: ['q=querysecret1'],
+            ),
+          );
+      final line = jsonEncode(out.toJson()).toLowerCase();
+      expect(line, isNot(contains('my-proxy')));
+      expect(line, isNot(contains('defghijk')));
+      expect(line, isNot(contains('querysecret1')));
+    });
+
+    test('a path longer than the cap is redacted before it is cut', () {
+      final token = 'T0kenAbcdefghijklmnopqrstuvwxyz12';
+      final path = '/${'a' * 290}/$token';
+      final out = capRunLogEvent(
+        redactor().apply(
+          event(
+            requests: [
+              RunLogRequest(
+                method: 'GET',
+                host: 'h',
+                path: path,
+                status: 200,
+                ms: 1,
+              ),
+            ],
+          ),
+        ),
+      );
+      final kept = out.requests.single.path;
+      expect(kept, contains('…'));
+      expect(kept, isNot(contains('T0ken')));
+      expect(kept.length, lessThanOrEqualTo(301));
+    });
+
+    test('a secret that straddles the old cut is masked whole', () {
+      final path = '/${'a' * 296}/$apiKey';
+      final out = capRunLogEvent(
+        redactor().apply(
+          event(
+            requests: [
+              RunLogRequest(
+                method: 'GET',
+                host: 'h',
+                path: path,
+                status: 200,
+                ms: 1,
+              ),
+            ],
+          ),
+        ),
+      );
+      expect(out.requests.single.path, isNot(contains('mega-key')));
+    });
+
+    test('overlapping secrets leave no tail visible', () {
+      final r = LogRedactor(
+        configAppend: const ['XXXXabcdefgh', 'abcdefghYYYY'],
+      );
+      expect(r.text('see XXXXabcdefghYYYY now'), 'see *** now');
+    });
+  });
+
   group('event json', () {
     test('round trips, and tolerates a bad line', () {
       final original = event(

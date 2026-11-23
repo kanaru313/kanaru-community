@@ -92,7 +92,11 @@ final pluginServicesProvider = Provider<PluginServices>((ref) {
   final files = ref.read(pluginFilesProvider);
   final fetcher = ref.read(pluginFetcherProvider);
   final clock = ref.read(pluginClockProvider);
-  final sweeper = PluginSweeper(rows, files, ref.read(pluginRunLogProvider));
+  final sweeper = PluginSweeper(
+    rows,
+    files,
+    logs: ref.read(pluginRunLogProvider),
+  );
   final restore = Completer<List<RestoreCandidate>>();
   final queue = PluginWriteQueue(
     firstJob: () async {

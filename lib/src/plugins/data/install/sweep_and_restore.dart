@@ -34,11 +34,11 @@ class RestoreCandidate {
 /// list the live rows whose folder is missing. Reinstalling them is the
 /// restore hook's work (it runs after this job, one queue job per plugin).
 class PluginSweeper {
-  PluginSweeper(this._rows, this._files, [this._logs]);
+  PluginSweeper(this._rows, this._files, {required this._logs});
 
   final PluginRows _rows;
   final PluginFiles _files;
-  final PluginRunLog? _logs;
+  final PluginRunLog _logs;
 
   /// Deletes every package folder that no live row points to: the folder of
   /// a removed plugin, an older version left by a crash, a half-written
@@ -48,28 +48,29 @@ class PluginSweeper {
   /// many folders were deleted. Never throws; when the live rows cannot be
   /// read nothing is deleted.
   Future<int> sweep() async {
-    final Set<String> keep;
-    final List<PluginFolder> found;
     final Set<String> liveIds;
     try {
       liveIds = {for (final row in await _rows.live()) row.installId};
-      keep = await _rows.livePackageFolders();
-      found = await _files.listFolders();
     } on Object catch (error) {
       _log.warning('Plugin sweep skipped: ${error.runtimeType}');
       return 0;
     }
     var deleted = 0;
-    for (final folder in found) {
-      if (keep.contains(folder.key)) continue;
-      if (await _files.deleteFolder(folder.installId, folder.packageDir)) {
-        deleted++;
+    try {
+      final keep = await _rows.livePackageFolders();
+      for (final folder in await _files.listFolders()) {
+        if (keep.contains(folder.key)) continue;
+        if (await _files.deleteFolder(folder.installId, folder.packageDir)) {
+          deleted++;
+        }
       }
+    } on Object catch (error) {
+      _log.warning('Plugin folder sweep stopped: ${error.runtimeType}');
     }
     if (deleted > 0) _log.info('Plugin sweep deleted $deleted folders');
     // Run logs of plugins that are gone (a remove that crashed before the
-    // delete, a restored backup).
-    final cleared = await _logs?.deleteOrphans(liveIds) ?? 0;
+    // delete, a restored backup); needs only the live ids.
+    final cleared = await _logs.deleteOrphans(liveIds);
     if (cleared > 0) _log.info('Plugin sweep deleted $cleared run logs');
     return deleted;
   }

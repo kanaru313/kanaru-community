@@ -61,10 +61,40 @@ void main() {
     expect(jsonDecode(text.trim()), isA<Map>());
   });
 
-  test('a write is not awaited by the caller', () {
-    // append returns void: nothing to await, nothing thrown.
-    log.append(ev());
+  test('append returns before the write finishes', () async {
+    // Nothing is on disk when append returns: the write is only queued.
+    log.append(ev(message: 'queued'));
+    expect(File('${logDir.path}/$id.jsonl').existsSync(), isFalse);
+    await log.whenIdle();
+    expect(File('${logDir.path}/$id.jsonl').existsSync(), isTrue);
     log.append(ev(installId: 'not-an-id'));
+  });
+
+  test('an event started before a delete is dropped at append', () async {
+    final started = log.deletionsOf(id);
+    await log.delete(id);
+    log.append(ev(message: 'stale'), deletionsAtStart: started);
+    log.append(ev(message: 'fresh'));
+    await log.whenIdle();
+    final events = await reader.readLog(id);
+    expect(events.map((e) => e.message), ['fresh']);
+  });
+
+  test('an oversize line does not spend the write-failure report', () async {
+    final lines = <String>[];
+    final sub = Logger.root.onRecord.listen((r) => lines.add(r.message));
+    addTearDown(sub.cancel);
+    final oldLevel = Logger.root.level;
+    addTearDown(() => Logger.root.level = oldLevel);
+    Logger.root.level = Level.ALL;
+    log = make(maxBytes: 500);
+    log.append(ev(message: 'z' * 2000));
+    await log.whenIdle();
+    File(logDir.path).writeAsStringSync('in the way');
+    log.append(ev());
+    await log.whenIdle();
+    expect(lines.where((l) => l.contains('Could not write')), hasLength(1));
+    File(logDir.path).deleteSync();
   });
 
   test('newest first, seven days only, capped at 500', () async {

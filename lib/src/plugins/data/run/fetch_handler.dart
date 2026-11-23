@@ -112,7 +112,7 @@ class HttpPluginFetchHandler implements PluginFetchHandler {
       RunLogRequest(
         method: _cut(request.method.toUpperCase(), 16),
         host: _cut(uri?.host ?? '', 253),
-        path: _cut(uri?.path ?? '', 300),
+        path: uri?.path ?? '',
         status: answered ? response.status : null,
         ms: ms,
         blocked: response.outcome == EngineFetchOutcome.blockedHost,
@@ -128,6 +128,10 @@ class HttpPluginFetchHandler implements PluginFetchHandler {
     JobContext context,
   ) async {
     final clock = Stopwatch()..start();
+    // Credential headers are noted for every request, refused ones too: the
+    // script may print them whatever the answer was.
+    final requested = pluginRequestHeaders(request.headers);
+    if (requested != null) context.maskValues.addAll(requested.secrets);
     // 1 job
     if (request.installId != context.installId) {
       return _fail(EngineFetchOutcome.invalidRequest);
@@ -155,14 +159,13 @@ class HttpPluginFetchHandler implements PluginFetchHandler {
     }
     // 5 method, body, headers
     final method = request.method.toUpperCase();
-    final headers = pluginRequestHeaders(request.headers);
+    final headers = requested;
     if (url == null ||
         headers == null ||
         (method != 'GET' && method != 'POST') ||
         (method == 'GET' && request.body.isNotEmpty)) {
       return _fail(EngineFetchOutcome.invalidRequest);
     }
-    context.maskValues.addAll(headers.secrets);
     // 6 spacing; the wait counts against the deadline
     final deadline = Duration(milliseconds: request.deadlineMs);
     final granted = await _limiter.acquire(

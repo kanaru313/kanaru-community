@@ -59,11 +59,39 @@ class LogRedactor {
 
   /// [text] with every known secret replaced by [redactionMask].
   String text(String text) {
-    var out = text;
+    // Spans of every secret on the original text, merged, so the tail of a
+    // second secret that overlaps the first is hidden too.
+    final spans = <(int, int)>[];
     for (final secret in _secrets) {
-      if (out.contains(secret)) out = out.replaceAll(secret, redactionMask);
+      var at = text.indexOf(secret);
+      while (at >= 0) {
+        spans.add((at, at + secret.length));
+        at = text.indexOf(secret, at + 1);
+      }
     }
-    return out;
+    if (spans.isEmpty) return text;
+    spans.sort((a, b) => a.$1.compareTo(b.$1));
+    final out = StringBuffer();
+    var cursor = 0;
+    var (start, end) = spans.first;
+    void flush() {
+      out
+        ..write(text.substring(cursor, start))
+        ..write(redactionMask);
+      cursor = end;
+    }
+
+    for (final (s, e) in spans.skip(1)) {
+      if (s <= end) {
+        if (e > end) end = e;
+      } else {
+        flush();
+        (start, end) = (s, e);
+      }
+    }
+    flush();
+    out.write(text.substring(cursor));
+    return out.toString();
   }
 
   /// Every string of a JSON-like [value] through [text].
@@ -136,6 +164,7 @@ List<String> _build(
   final values = <String>{};
   for (final value in config) {
     if (value.length >= _minConfigLength) values.add(value);
+    values.addAll(_urlParts(value));
     for (final token in value.split(_tokenSplit)) {
       if (token.length >= _minOtherLength) values.add(token);
     }
@@ -158,6 +187,34 @@ List<String> _build(
     for (final v in values) ...[v, Uri.encodeComponent(v), Uri.encodeFull(v)],
   };
   return all.toList()..sort((a, b) => b.length.compareTo(a.length));
+}
+
+final _hostOfUrl = RegExp(r'^https?://(?:[^/?#@]*@)?([^/?#:]+)');
+
+/// For a value that is an absolute http(s) URL: its host (as stored and
+/// lowercased, the form a request record holds), its path, each path segment
+/// and each query value, so a saved endpoint cannot be read back from the
+/// pieces a request record keeps.
+Iterable<String> _urlParts(String value) sync* {
+  final uri = Uri.tryParse(value.trim());
+  if (uri == null ||
+      !uri.hasAuthority ||
+      uri.host.isEmpty ||
+      (uri.scheme != 'http' && uri.scheme != 'https')) {
+    return;
+  }
+  final stored = _hostOfUrl.firstMatch(value.trim())?.group(1);
+  for (final host in {?stored, uri.host, uri.host.toLowerCase()}) {
+    if (host.length >= _minConfigLength) yield host;
+  }
+  final path = uri.path;
+  if (path.length >= _minConfigLength && path != '/') yield path;
+  for (final segment in uri.pathSegments) {
+    if (segment.length >= _minOtherLength) yield segment;
+  }
+  for (final v in uri.queryParameters.values) {
+    if (v.length >= _minOtherLength) yield v;
+  }
 }
 
 /// The string values of a storage map text; nothing for text that is empty or

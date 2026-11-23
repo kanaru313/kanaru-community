@@ -47,6 +47,7 @@ class PluginRunLog {
   // its id) sees the new number and goes through.
   final _deletions = <String, int>{};
   bool _reportedFailure = false;
+  bool _reportedOversize = false;
 
   /// The current file of [installId]; null when the id has no install-id
   /// shape (so it can never name another path).
@@ -60,16 +61,23 @@ class PluginRunLog {
     return file == null ? null : File('${file.path}.1');
   }
 
+  /// How many times the logs of [installId] were deleted so far. A caller
+  /// that reads state before an async gap takes it first and passes it to
+  /// [append], so an event started before a delete never brings the file back.
+  int deletionsOf(String installId) => _deletions[installId] ?? 0;
+
   /// Queues [event] for its plugin's file and returns at once. Never throws.
-  void append(RunLogEvent event) {
+  /// [deletionsAtStart] is [deletionsOf] taken when the event was started
+  /// (default: now).
+  void append(RunLogEvent event, {int? deletionsAtStart}) {
     final file = fileOf(event.installId);
     if (file == null) return;
     final id = event.installId;
     final bytes = utf8.encode('${jsonEncode(event.toJson())}\n');
-    final queuedUnder = _deletions[id] ?? 0;
+    final queuedUnder = deletionsAtStart ?? deletionsOf(id);
     unawaited(
       _enqueue(id, () async {
-        if ((_deletions[id] ?? 0) != queuedUnder) return;
+        if (deletionsOf(id) != queuedUnder) return;
         await _write(file, bytes);
       }),
     );
@@ -146,7 +154,10 @@ class PluginRunLog {
   Future<void> _write(File file, List<int> bytes) async {
     // A line of its own over the limit would break the size bound.
     if (bytes.length > maxBytes) {
-      _reportFailure(const FormatException('log line over the size limit'));
+      if (!_reportedOversize) {
+        _reportedOversize = true;
+        _log.warning('A plugin log line over the size limit was dropped');
+      }
       return;
     }
     try {

@@ -97,8 +97,16 @@ class PluginRunner {
     _log.info(
       'Plugin output rejected: plugin=$installId script=$script reason=$reason',
     );
-    unawaited(_recorder.recordRejected(installId, script, reason));
+    _lastRejection = _recorder.recordRejected(installId, script, reason);
+    unawaited(_lastRejection);
   }
+
+  var _lastRejection = Future<void>.value();
+
+  /// Completes when the run log work of the latest [reportRejectedOutput]
+  /// call has finished (the event is queued for its file). For tests; callers
+  /// never wait for it.
+  Future<void> get lastRejectionLogged => _lastRejection;
 
   /// One pass under a lease; null when the plugin was switched before the
   /// engine started (the caller starts over).

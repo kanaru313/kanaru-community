@@ -87,7 +87,7 @@ class InstallHarness {
     checker = FakeChecker();
     picker = FakePicker((doc, max) async => Ok(pickedBytes));
     logs = PluginRunLog(Directory('${dir.path}-logs'));
-    sweeper = PluginSweeper(rows, files, logs);
+    sweeper = PluginSweeper(rows, files, logs: logs);
     final restore = Completer<List<RestoreCandidate>>();
     queue = PluginWriteQueue(
       firstJob: () async {
