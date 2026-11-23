@@ -180,7 +180,7 @@ final onlineCacheEntriesProvider =
         final run = ref.watch(lyricsParseRunnerProvider);
         return ref
             .watch(onlineCacheStoreProvider)
-            .watch(key)
+            .watchByKey(key)
             .asyncMap(
               (list) async => [
                 for (final row in list) await rows.entryOfRow(row, run),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart';
 
 import '../../../database/app_database.dart';
@@ -84,6 +86,42 @@ class OnlineCacheStore {
             ..where((t) => t.cacheKey.equals(cacheKey))
             ..orderBy([(t) => OrderingTerm.asc(t.providerId)]))
           .watch();
+
+  /// Like [watch], but built on the table-update signal instead of a drift
+  /// query stream: a screen whose key changes with a tag edit swaps streams
+  /// without leaving a drift stream closing behind it. Emits the rows of
+  /// [cacheKey] once on listen and again after every write to the table.
+  Stream<List<OnlineLyricsRow>> watchByKey(String cacheKey) {
+    final controller = StreamController<List<OnlineLyricsRow>>();
+    StreamSubscription<Set<TableUpdate>>? updates;
+    var round = 0;
+    Future<void> refresh() async {
+      final mine = ++round;
+      try {
+        final rows =
+            await (_db.select(_db.onlineLyrics)
+                  ..where((t) => t.cacheKey.equals(cacheKey))
+                  ..orderBy([(t) => OrderingTerm.asc(t.providerId)]))
+                .get();
+        // A newer read supersedes this one; a closed stream takes nothing.
+        if (mine == round && !controller.isClosed) controller.add(rows);
+      } on Object catch (e, st) {
+        if (!controller.isClosed) controller.addError(e, st);
+      }
+    }
+
+    controller.onListen = () {
+      updates = _db
+          .tableUpdates(TableUpdateQuery.onTable(_db.onlineLyrics))
+          .listen((_) => unawaited(refresh()));
+      unawaited(refresh());
+    };
+    controller.onCancel = () async {
+      await updates?.cancel();
+      await controller.close();
+    };
+    return controller.stream;
+  }
 
   /// Drops one source's answer for [cacheKey] (a rejected result).
   Future<void> deleteRow(String cacheKey, String providerId) =>
