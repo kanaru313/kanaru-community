@@ -17,6 +17,7 @@ import 'package:kanaru/src/plugins/data/run/run_gate.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_config_store.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_files.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_repo_rows.dart';
+import 'package:kanaru/src/plugins/data/store/plugin_storage_store.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_rows.dart';
 import 'package:kanaru/src/plugins/domain/install/held_package.dart';
 import 'package:kanaru/src/plugins/domain/install/install_id.dart';
@@ -92,6 +93,7 @@ class InstallHarness {
         restore.complete(await sweeper.findMissing());
       },
     );
+    storage = PluginStorageStore(db, queue);
     held = HeldPackages(
       sources: PackageSources(
         fetcher: fetcher,
@@ -109,6 +111,7 @@ class InstallHarness {
       repoRows: repoRows,
       files: files,
       config: config,
+      storage: storage,
       held: held,
       catalogs: catalogs,
       runGate: runGate,
@@ -138,6 +141,7 @@ class InstallHarness {
   late final FakePicker picker;
   late final PluginSweeper sweeper;
   late final PluginWriteQueue queue;
+  late final PluginStorageStore storage;
   late final HeldPackages held;
   late final PluginActions actions;
 

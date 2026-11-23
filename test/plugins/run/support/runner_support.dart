@@ -5,6 +5,7 @@ import 'package:kanaru/src/plugins/data/run/plugin_pauses.dart';
 import 'package:kanaru/src/plugins/data/run/plugin_runner.dart';
 import 'package:kanaru/src/plugins/data/run/run_admission.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_config_store.dart';
+import 'package:kanaru/src/plugins/data/store/plugin_storage_store.dart';
 import 'package:kanaru/src/plugins/domain/install/install_id.dart';
 import 'package:kanaru/src/plugins/domain/install/install_result.dart';
 import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
@@ -55,6 +56,7 @@ class RunnerHarness {
     Duration grace = const Duration(milliseconds: 80),
     int slots = 4,
     PluginConfigStore? config,
+    PluginStorageStore? storage,
   }) : engine = engine ?? FakePluginEngine(),
        handler = handler ?? RecordingFetchHandler(),
        pauses = PluginPauses() {
@@ -66,6 +68,7 @@ class RunnerHarness {
       rows: h.rows,
       files: h.files,
       config: config ?? h.config,
+      storage: storage ?? h.storage,
       admission: RunAdmission(slots: slots),
       spacing: spacing,
       grace: grace,

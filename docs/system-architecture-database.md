@@ -677,6 +677,10 @@ Constraints `plugins_origin_repo` (`origin = 'repo'` exactly when `repo_url` and
 | `install_id` | TEXT | PK, FK | | `plugins.install_id` RESTRICT. |
 | `config_json` | TEXT | NOT NULL | `'{}'` | Field key to value, at most 64 KiB (`PluginConfigStore` returns `tooLarge`). |
 | `custom_choices_json` | TEXT | NOT NULL | `'{}'` | Field key to `[{value, subtitle?}]`, the choices the user added to a `custom` select, at most 64 KiB. Never read by a script. |
+| `storage_json` | TEXT | NOT NULL | `''` | The map the plugin's scripts keep between runs: a JSON object of strings, `''` = nothing stored. Size quota (64 KiB) enforced by the runtime. Never synced; it is part of the Android auto-backup with the database. |
+| `storage_rev` | INTEGER | NOT NULL | `0` | Counts the user's clears. A run's write-back is one guarded `UPDATE` that holds only while `storage_rev` is the value read at the run's start and the live `plugins` row still has the `updated_at` read then; a clear (`storage_json = ''`, `storage_rev + 1`) therefore wins over a run that began earlier. |
+
+The storage is kept when the plugin is updated or repaired (the row is not touched by `switchPackage`) and deleted with the row on remove; a revive starts with empty storage.
 
 **Tombstone.** A plugin row is never deleted. Remove, in one transaction, deletes the `plugin_data` row, sets `removed_at` and clears `package_dir`; the package folder is deleted after the commit (a failure is left to the sweep). Installing the same id again revives the row: `removed_at` cleared, new source and package columns, new consented hosts, `installed_at` = now, an empty `plugin_data` row. `PluginRows.installOrRevive` leaves a live row alone. `lyrics_source_prefs` of the first spec is not a table of this group: source order and enabled flags belong to the modules that consume plugins.
 

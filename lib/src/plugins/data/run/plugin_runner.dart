@@ -12,6 +12,7 @@ import '../../domain/run/run_request.dart';
 import '../store/plugin_config_store.dart';
 import '../store/plugin_files.dart';
 import '../store/plugin_rows.dart';
+import '../store/plugin_storage_store.dart';
 import 'fetch_handler.dart';
 import 'plugin_pauses.dart';
 import 'run_admission.dart';
@@ -45,6 +46,7 @@ class PluginRunner {
     required this._rows,
     required this._files,
     required this._config,
+    required this._storage,
     RunAdmission? admission,
     this.spacing = pluginSpacing,
     this.grace = outerDeadlineGrace,
@@ -57,6 +59,7 @@ class PluginRunner {
   final PluginRows _rows;
   final PluginFiles _files;
   final PluginConfigStore _config;
+  final PluginStorageStore _storage;
   final RunAdmission _admission;
   final Duration spacing;
   final Duration grace;
@@ -112,6 +115,7 @@ class PluginRunner {
       rows: _rows,
       files: _files,
       config: _config,
+      storage: _storage,
     );
     // Switched while setup ran: what was read may be of the old version, so
     // whatever it says (a refusal included) is dropped and the run starts over.
@@ -241,6 +245,14 @@ class PluginRunner {
               cause: cause,
               rateLimitSeen: context.rateLimitSeen,
             );
+      // A run the gate or the caller stopped, or that hit its deadline, leaves
+      // the storage as it was.
+      final newStorage = result?.storageJson;
+      if (newStorage != null &&
+          cause == RunCancelCause.none &&
+          !lease.changed.isCancelled) {
+        await _writeBack(id, newStorage, prepared);
+      }
       _pauseFrom(id, outcome);
       return outcome;
     } finally {
@@ -249,6 +261,28 @@ class PluginRunner {
         off();
       }
       jobCancel.cancel();
+    }
+  }
+
+  /// Saves the storage the script changed, before the outcome is returned, so
+  /// the next run of the plugin reads it. The slot is already free (it goes
+  /// with the engine job). A refused write (the plugin was updated, removed or
+  /// its storage cleared meanwhile) is silent; a failed one logs its type and
+  /// the outcome still stands.
+  Future<void> _writeBack(
+    String installId,
+    String storageJson,
+    PreparedRun prepared,
+  ) async {
+    try {
+      await _storage.writeBack(
+        installId,
+        storageJson,
+        expectedRev: prepared.storageRev,
+        expectedUpdatedAt: prepared.rowUpdatedAt,
+      );
+    } on Object catch (error) {
+      _log.warning('Plugin storage was not saved: ${error.runtimeType}');
     }
   }
 

@@ -30,6 +30,7 @@ final pluginActionsProvider = Provider<PluginActions>((ref) {
     repoRows: ref.watch(pluginRepoRowsProvider),
     files: ref.watch(pluginFilesProvider),
     config: ref.watch(pluginConfigStoreProvider),
+    storage: ref.watch(pluginStorageStoreProvider),
     held: services.held,
     catalogs: services.catalogs,
     runGate: services.runGate,

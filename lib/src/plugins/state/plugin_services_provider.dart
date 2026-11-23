@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../database/state/database_providers.dart';
 import '../../platform/state/document_picker_provider.dart';
 import '../data/install/held_packages.dart';
 import '../data/install/package_sources.dart';
@@ -15,6 +16,7 @@ import '../data/repos/repo_address_guard.dart';
 import '../data/repos/repo_refresher.dart';
 import '../data/repos/repo_store.dart';
 import '../data/run/run_gate.dart';
+import '../data/store/plugin_storage_store.dart';
 import '../domain/install/script_checker.dart';
 import 'plugin_store_providers.dart';
 
@@ -132,3 +134,12 @@ final pluginServicesProvider = Provider<PluginServices>((ref) {
     startupRestore: restore.future,
   );
 });
+
+/// What plugin scripts keep between runs; its writes go through the services'
+/// write queue.
+final pluginStorageStoreProvider = Provider<PluginStorageStore>(
+  (ref) => PluginStorageStore(
+    ref.watch(appDatabaseProvider),
+    ref.watch(pluginServicesProvider).queue,
+  ),
+);

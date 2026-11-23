@@ -54,5 +54,6 @@ final pluginRunnerProvider = Provider<PluginRunner>(
     rows: ref.watch(pluginRowsProvider),
     files: ref.watch(pluginFilesProvider),
     config: ref.watch(pluginConfigStoreProvider),
+    storage: ref.watch(pluginStorageStoreProvider),
   ),
 );

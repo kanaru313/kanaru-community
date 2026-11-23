@@ -4,6 +4,7 @@ import '../store/plugin_files.dart';
 import '../store/plugin_repo_rows.dart';
 import '../run/run_gate.dart';
 import '../store/plugin_rows.dart';
+import '../store/plugin_storage_store.dart';
 import 'config_writes.dart';
 import 'held_packages.dart';
 import 'installer.dart';
@@ -26,6 +27,7 @@ class PluginActions {
     required PluginRepoRows repoRows,
     required PluginFiles files,
     required PluginConfigStore config,
+    required this._storage,
     required HeldPackages held,
     required CatalogCache catalogs,
     required RunGate runGate,
@@ -83,6 +85,12 @@ class PluginActions {
     );
     configWrites = PluginConfigWrites(queue: queue, store: config);
   }
+
+  final PluginStorageStore _storage;
+
+  /// Empties what the plugin's scripts stored. A run that began before the
+  /// clear does not write its result back afterwards.
+  Future<void> clearStorage(String installId) => _storage.clear(installId);
 
   final activity = PluginActivity();
   late final StreamingGate gate;

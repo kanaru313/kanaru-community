@@ -167,6 +167,17 @@ void main() {
       expect(row.configJson, '{}');
       expect(row.customChoicesJson, '{}');
     });
+
+    test('the storage columns default to empty text and revision 0', () async {
+      await _insertPlugin(db);
+      await db.customStatement(
+        'INSERT INTO plugin_data (install_id) VALUES (?)',
+        [_id],
+      );
+      final row = (await db.select(db.pluginData).get()).single;
+      expect(row.storageJson, '');
+      expect(row.storageRev, 0);
+    });
   });
 
   group('plugin_repos', () {
