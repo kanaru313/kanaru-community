@@ -236,7 +236,7 @@ void main() {
       await client.fetchLyrics(_id, '42');
       expect(runner.calls[0].input, {'text': 'artist song'});
       expect(runner.calls[1].script, 'lyrics');
-      expect(runner.calls[1].input, {'id': '42'});
+      expect(runner.calls[1].input, '42');
     });
   });
 }

@@ -109,7 +109,7 @@ class RunnerHarness {
 PluginRunRequest runRequest({
   String? installId,
   String script = 'search',
-  Map<String, Object?> input = const {'title': 'x'},
+  Object? input = const {'title': 'x'},
   Duration timeout = const Duration(seconds: 30),
   Map<String, String> configAppend = const {},
   Set<PluginKind> kinds = const {},

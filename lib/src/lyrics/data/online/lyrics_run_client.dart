@@ -76,7 +76,7 @@ class LyricsRunClient {
   Future<SourceRun<T>> _call<T>(
     String installId,
     String script,
-    Map<String, Object?> input,
+    Object? input,
     RunCancel? cancel,
     Future<T> Function(String json) read,
     bool Function(T value) isEmpty,
@@ -124,10 +124,7 @@ class LyricsRunClient {
 
 /// The input of the `lyrics` script for a result id.
 ///
-/// The lyrics plugins of the catalogue read `execute(id)` with `id` the bare
-/// id string, but a run request carries its input as a JSON object
-/// (`PluginRunRequest.input` is a `Map`), which cannot hold a bare string. Until
-/// the runner takes any JSON value (tracked outside this change) the id travels
-/// as `{id}`, and plugins that need the `lyrics` script do not get their id.
+/// The lyrics plugins read `execute(id)` with `id` the bare id string of the
+/// chosen search result, so the id travels as a JSON string, not an object.
 /// This is the one place that knows the shape.
-Map<String, Object?> lyricsScriptInput(String remoteId) => {'id': remoteId};
+String lyricsScriptInput(String remoteId) => remoteId;

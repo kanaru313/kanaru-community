@@ -47,7 +47,7 @@ void main() {
     final found = await lookup() as LookupFound;
     expect(found.chosen.remoteId, '9');
     expect(found.chosen.body!.instrumental, isTrue);
-    expect(runner.calls.last.input, {'id': '9'});
+    expect(runner.calls.last.input, '9');
   });
 
   test('at most three lyrics calls, then a miss', () async {
@@ -144,13 +144,13 @@ void main() {
   test('the search sends only the tags of the song', () async {
     runner.answer(_id, 'search', searchAnswer([]));
     await lookup();
-    expect(runner.calls.single.input.keys, {
+    expect((runner.calls.single.input! as Map).keys, {
       'title',
       'artist',
       'artists',
       'album',
       'durationMs',
     });
-    expect(runner.calls.single.input['album'], isNull);
+    expect((runner.calls.single.input! as Map)['album'], isNull);
   });
 }

@@ -90,7 +90,10 @@ void main() {
     await h.until(() => sub.read() is! LyricsSearching);
     await pumpEventQueue();
     expect(sub.read(), const LyricsNone(reason: LyricsNoneReason.notPlaying));
-    expect(h.runner.calls.where((c) => c.input['title'] == 'Song'), isEmpty);
+    expect(
+      h.runner.calls.where((c) => (c.input! as Map)['title'] == 'Song'),
+      isEmpty,
+    );
     expect(h.runner.calls, isEmpty);
   });
 
@@ -221,7 +224,7 @@ void main() {
     final subTwo = watch(two);
     await h.until(() => h.runner.cancelled.length == 1);
     await h.until(() => h.runner.calls.length == 2);
-    expect(h.runner.calls.last.input['title'], 'Two');
+    expect((h.runner.calls.last.input! as Map)['title'], 'Two');
     subTwo.close();
   });
 

@@ -19,7 +19,7 @@ only wait). Promises can be created but are never resolved: nothing runs the
 job queue.
 
 After the entry file ran, the host calls the global `execute(input)` once.
-`input` is the request's JSON, parsed. It must return a value made by
+`input` is the request's JSON, parsed: any JSON value the caller sends (object, array, string, number, boolean or `null`). It must return a value made by
 `Response`:
 
 | Call | Result |
@@ -286,7 +286,7 @@ an `Html` native ends the call `Internal` even if the script catches the error.
 
 ## Lyrics scripts
 
-A plugin of type `lyrics` declares two scripts, `search` and `lyrics`. Each is an ordinary script (above) whose `execute(input)` receives **one object** (not a string) and returns `Response.success(...)` or `Response.error(message, { kind, retryAfterSec })`. Plugins keep their own state in `localStorage` (a token, a cookie) and read settings with `localConfig`; the app sends nothing for them.
+A plugin of type `lyrics` declares two scripts, `search` and `lyrics`. Each is an ordinary script (above) whose `execute(input)` receives **one object** for `search` and the chosen result's `id` as a **bare string** for `lyrics`. It returns `Response.success(...)` or `Response.error(message, { kind, retryAfterSec })`. Plugins keep their own state in `localStorage` (a token, a cookie) and read settings with `localConfig`; the app sends nothing for them.
 
 **`search`.** Input, automatic lookup of the playing track: `{ title, artist, artists, album, durationMs }`; a missing tag is `null`, `artist` is the primary artist, `durationMs` is in milliseconds. Input, a search typed by the user: `{ text }`. Output: an array of up to 20 items `{ id, title, artist, album?, durationMs?, lyrics? }`: `id` a stable string of 1-256 characters, `title` and `artist` non-empty, `durationMs` an integer above 0 and under 24 h, `lyrics` (when the search already returned it) a string of at most 1 MiB. An invalid item is dropped, not the whole list.
 

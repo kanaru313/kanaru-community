@@ -6,7 +6,9 @@
 
 mod common;
 
-use common::run_script;
+use std::sync::Arc;
+
+use common::{block_on, file, ok_response, request_with, rt, run_script, runtime, FakeHost};
 use kanaru_plugin_runtime::ScriptStatus as S;
 
 #[test]
@@ -89,4 +91,46 @@ fn word_array_message_hmac_equals_the_hex_message_hmac() {
     );
     assert_eq!(r.status, S::Ok, "{r:?}");
     assert_eq!(r.output_json, "[true,40,8]");
+}
+
+/// The shape of the two-step lyrics plugins: `execute(id)` wants the bare id.
+const TWO_STEP: &str = "var HOST = 'https://lyrics.test';
+function execute(id) {
+  if (typeof id !== 'string' || !id.trim()) return Response.success(null);
+  var res = fetch(HOST + '/posts/' + encodeURIComponent(id.trim()));
+  if (!res.ok) return Response.error('http ' + res.status);
+  return Response.success({ data: res.json().content, type: 'txt' });
+}";
+
+fn run_two_step(input_json: &str, host: Arc<FakeHost>) -> kanaru_plugin_runtime::ScriptResult {
+    let job = rt::begin_job();
+    let request = request_with(job, vec![file("search.js", TWO_STEP)], input_json, 0);
+    block_on(runtime().run(request, host))
+}
+
+#[test]
+fn two_step_lyrics_script_gets_the_bare_id_string() {
+    let _t = common::test();
+    let host = FakeHost::answering(|_| ok_response(200, br#"{"content":"la la"}"#));
+    let r = run_two_step("\"123\"", host.clone());
+    assert_eq!(r.status, S::Ok, "{r:?}");
+    let requests = host.requests();
+    assert_eq!(requests.len(), 1);
+    assert!(
+        requests[0].url.ends_with("/posts/123"),
+        "{}",
+        requests[0].url
+    );
+    assert_ne!(r.output_json, "null");
+    assert!(r.output_json.contains("la la"), "{}", r.output_json);
+}
+
+#[test]
+fn two_step_lyrics_script_ignores_an_object_input() {
+    let _t = common::test();
+    let host = FakeHost::answering(|_| ok_response(200, br#"{"content":"la la"}"#));
+    let r = run_two_step(r#"{"id":"123"}"#, host.clone());
+    assert_eq!(r.status, S::Ok, "{r:?}");
+    assert_eq!(r.output_json, "null");
+    assert!(host.requests().is_empty());
 }

@@ -203,6 +203,19 @@ void main() {
       'context': 'first line of context\nsecond line of context',
     };
 
+    test('a top-level string input is hidden too', () {
+      final out = redactor(hiddenInput: 'Translate this exact sentence').apply(
+        event(
+          message: 'bad: Translate this exact sentence',
+          stack: 'at Translate this exact sentence',
+          console: ['sent Translate this exact sentence'],
+        ),
+      );
+      expect(out.message, 'bad: ***');
+      expect(out.stack, 'at ***');
+      expect(out.console, ['sent ***']);
+    });
+
     test('every input string of 8 or more characters is hidden', () {
       final r = redactor(hiddenInput: input);
       final out = r.apply(
