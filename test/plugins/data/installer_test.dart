@@ -12,8 +12,11 @@ import 'package:kanaru/src/plugins/domain/install/install_id.dart';
 import 'package:kanaru/src/plugins/domain/install/install_result.dart';
 import 'package:kanaru/src/plugins/domain/install/install_rules.dart';
 import 'package:kanaru/src/plugins/domain/install/script_checker.dart';
+import 'package:kanaru/src/plugins/domain/run/run_outcome.dart';
 
 import '../domain/plugin_test_support.dart';
+import '../run/support/fake_plugin_engine.dart';
+import '../run/support/runner_support.dart';
 import '../fixtures/zip_builders.dart';
 import 'install_test_support.dart';
 import 'store_test_support.dart';
@@ -368,6 +371,62 @@ void main() {
         InstallFailure.diskFailed,
       );
       expect(await bad.rows.live(), isEmpty);
+    });
+  });
+  group('run gate', () {
+    Future<HeldPackage> v4(InstallHarness at) => at.prepareFile(
+      validZip(
+        manifest: withMeta((m) => m['version'] = 4),
+        extra: {'src/search.js': 'function execute() { return "v4"; }'},
+      ),
+    );
+
+    test(
+      'a run asked during an update waits and runs on the new version',
+      () async {
+        final blocked = BlockedWrites();
+        final local = InstallHarness(writeFile: blocked.write);
+        final runs = RunnerHarness(local);
+        addTearDown(() async {
+          runs.dispose();
+          await local.dispose();
+        });
+        await runs.install();
+
+        final held = await v4(local);
+        blocked.arm();
+        final update = local.actions.installer.install(held.token);
+        await blocked.entered;
+
+        final run = runs.runner.run(runRequest());
+        await turns(40);
+        expect(runs.engine.beginCalls, 0, reason: 'the gate is closed');
+
+        blocked.release();
+        expect(await update, isA<Installed>());
+        expect(await run, isA<RunOk>());
+        final search = runs.engine.requests.single.files.firstWhere(
+          (f) => f.name == 'search.js',
+        );
+        expect(search.code, contains('v4'));
+      },
+    );
+
+    test('a run in flight is cancelled by an update', () async {
+      final engine = FakePluginEngine();
+      engine.script = (req, _) => engine.untilCancelled(req.job);
+      final runs = RunnerHarness(h, engine: engine);
+      addTearDown(runs.dispose);
+      await runs.install();
+      final run = runs.runner.run(runRequest());
+      for (var i = 0; i < 100 && engine.active == 0; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+      expect(engine.active, 1);
+
+      expect(await install(await v4(h)), isA<Installed>());
+      final outcome = await run;
+      expect((outcome as RunCancelled).reason, RunCancelReason.pluginChanged);
     });
   });
 }

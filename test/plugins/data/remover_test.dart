@@ -4,8 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/plugins/data/install/remover.dart';
 import 'package:kanaru/src/plugins/domain/install/install_id.dart';
 import 'package:kanaru/src/plugins/domain/install/install_result.dart';
+import 'package:kanaru/src/plugins/domain/run/plugin_engine.dart';
+import 'package:kanaru/src/plugins/domain/run/run_outcome.dart';
 
 import '../domain/plugin_test_support.dart';
+import '../run/support/fake_plugin_engine.dart';
+import '../run/support/runner_support.dart';
 import '../fixtures/zip_builders.dart';
 import 'install_test_support.dart';
 import 'services_test_support.dart';
@@ -88,4 +92,63 @@ void main() {
       expect(await h.files.listFolders(), isEmpty);
     },
   );
+
+  group('run gate', () {
+    Future<void> untilRunning(FakePluginEngine engine) async {
+      for (var i = 0; i < 100 && engine.active == 0; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+      expect(engine.active, 1);
+    }
+
+    test('a remove cancels the run in flight and completes', () async {
+      await installDemo();
+      final engine = FakePluginEngine();
+      engine.script = (req, _) => engine.untilCancelled(req.job);
+      final runs = RunnerHarness(h, engine: engine);
+      addTearDown(runs.dispose);
+      final run = runs.runner.run(runRequest());
+      await untilRunning(engine);
+
+      expect(await h.actions.remover.remove(id), RemoveResult.removed);
+
+      final outcome = await run;
+      expect((outcome as RunCancelled).reason, RunCancelReason.pluginChanged);
+      expect(await h.files.listFolders(), isEmpty);
+      expect(h.runGate.isClosed(id), isFalse);
+      expect(
+        (await runs.runner.run(runRequest())) is RunUnavailable,
+        isTrue,
+        reason: 'the plugin is gone',
+      );
+    });
+
+    test(
+      'a run that ignores the cancel does not hold the remove for ever',
+      () async {
+        final slow = InstallHarness(
+          exclusiveWait: const Duration(milliseconds: 100),
+        );
+        final runs = RunnerHarness(
+          slow,
+          engine: FakePluginEngine((req, _) async {
+            await Future<void>.delayed(const Duration(milliseconds: 600));
+            return const EngineResult(status: EngineStatus.cancelled);
+          }),
+        );
+        addTearDown(() async {
+          runs.dispose();
+          await slow.dispose();
+        });
+        await runs.install();
+        final run = runs.runner.run(runRequest());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        final watch = Stopwatch()..start();
+        expect(await slow.actions.remover.remove(id), RemoveResult.removed);
+        expect(watch.elapsedMilliseconds, lessThan(500));
+        expect(await run, isA<RunCancelled>());
+      },
+    );
+  });
 }

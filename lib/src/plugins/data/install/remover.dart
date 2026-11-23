@@ -1,5 +1,6 @@
 import 'package:logging/logging.dart';
 
+import '../run/run_gate.dart';
 import '../store/plugin_config_store.dart';
 import '../store/plugin_files.dart';
 import '../store/plugin_row_types.dart';
@@ -45,6 +46,7 @@ class PluginRemover {
     required this._files,
     required this._config,
     required this._activity,
+    required this._runGate,
   });
 
   final PluginWriteQueue _queue;
@@ -52,24 +54,28 @@ class PluginRemover {
   final PluginFiles _files;
   final PluginConfigStore _config;
   final PluginActivity _activity;
+  final RunGate _runGate;
 
-  /// Never throws.
-  Future<RemoveResult> remove(String installId) => _queue.run<RemoveResult>(
-    () async {
-      final (removal, dir) = await _rows.remove(installId);
-      if (dir != null) await _files.deleteFolder(installId, dir);
-      _activity.clearFor(installId);
-      return switch (removal) {
-        PluginRemoval.removed => RemoveResult.removed,
-        PluginRemoval.alreadyRemoved => RemoveResult.alreadyRemoved,
-        PluginRemoval.missing => RemoveResult.missing,
-      };
-    },
-    key: 'remove:$installId',
-    onError: (error, _) {
-      _log.warning('Remove failed: ${error.runtimeType}');
-      return RemoveResult.failed;
-    },
+  /// Never throws. The lease is outside the queue job (see the installer).
+  Future<RemoveResult> remove(String installId) => _runGate.exclusive(
+    installId,
+    () => _queue.run<RemoveResult>(
+      () async {
+        final (removal, dir) = await _rows.remove(installId);
+        if (dir != null) await _files.deleteFolder(installId, dir);
+        _activity.clearFor(installId);
+        return switch (removal) {
+          PluginRemoval.removed => RemoveResult.removed,
+          PluginRemoval.alreadyRemoved => RemoveResult.alreadyRemoved,
+          PluginRemoval.missing => RemoveResult.missing,
+        };
+      },
+      key: 'remove:$installId',
+      onError: (error, _) {
+        _log.warning('Remove failed: ${error.runtimeType}');
+        return RemoveResult.failed;
+      },
+    ),
   );
 
   /// Read fresh, when the dialog opens; null when the plugin is not live or

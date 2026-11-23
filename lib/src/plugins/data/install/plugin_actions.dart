@@ -2,6 +2,7 @@ import '../repos/catalog_cache.dart';
 import '../store/plugin_config_store.dart';
 import '../store/plugin_files.dart';
 import '../store/plugin_repo_rows.dart';
+import '../run/run_gate.dart';
 import '../store/plugin_rows.dart';
 import 'config_writes.dart';
 import 'held_packages.dart';
@@ -27,6 +28,7 @@ class PluginActions {
     required PluginConfigStore config,
     required HeldPackages held,
     required CatalogCache catalogs,
+    required RunGate runGate,
     required bool Function() streamingUnlocked,
     required Future<List<RestoreCandidate>> startupRestore,
     required Future<List<RestoreCandidate>> Function() findMissing,
@@ -38,6 +40,7 @@ class PluginActions {
       held: held,
       writer: PackageWriter(rows: rows, files: files, config: config),
       gate: gate,
+      runGate: runGate,
       activity: activity,
     );
     updater = PluginUpdater(
@@ -69,6 +72,7 @@ class PluginActions {
       rows: rows,
       files: files,
       config: config,
+      runGate: runGate,
       activity: activity,
     );
     restorer = PluginRestorer(

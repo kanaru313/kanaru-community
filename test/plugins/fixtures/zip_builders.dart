@@ -18,6 +18,9 @@ Uint8List pngHeader(int width, int height) {
   return bytes;
 }
 
+/// Seconds since the epoch stamped on every entry (2025-01-01 UTC).
+const _fixedTime = 1735689600;
+
 /// Zip of [entries] (name to String or bytes); a name ending in `/` is a
 /// folder. [modes] sets the Unix mode of chosen entries.
 Uint8List buildZip(
@@ -34,6 +37,10 @@ Uint8List buildZip(
             name,
             value is String ? utf8.encode(value) : value as List<int>,
           );
+    // A fixed time: zips built a second apart must be byte-identical, or a
+    // test that compares package hashes flakes on a second boundary.
+    file.lastModTime = _fixedTime;
+    file.creationTime = _fixedTime;
     final mode = modes[name];
     if (mode != null) file.mode = mode;
     archive.add(file);

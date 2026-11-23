@@ -5,6 +5,7 @@ import '../../domain/install/held_package.dart';
 import '../../domain/install/install_result.dart';
 import '../../domain/install/install_rules.dart';
 import '../../domain/package/plugin_kind.dart';
+import '../run/run_gate.dart';
 import '../store/plugin_row_types.dart';
 import '../store/plugin_rows.dart';
 import 'held_packages.dart';
@@ -46,6 +47,7 @@ class PluginInstaller {
     required this._writer,
     required this._gate,
     required this._activity,
+    required this._runGate,
   });
 
   final PluginWriteQueue _queue;
@@ -54,6 +56,7 @@ class PluginInstaller {
   final PackageWriter _writer;
   final StreamingGate _gate;
   final PluginActivity _activity;
+  final RunGate _runGate;
 
   /// Installs the package held under [token]. A second call for one plugin
   /// while the first is queued or running shares its result. Never throws.
@@ -84,12 +87,18 @@ class PluginInstaller {
     // the second is judged against the row the first left.
     return _activity.track(
       held.installId,
-      () => _queue.run<InstallResult>(
-        () => _install(held, options),
-        onError: (error, _) {
-          _log.warning('Install failed: ${error.runtimeType}');
-          return const InstallRefused(InstallFailure.unexpected);
-        },
+      // The lease is outside the queue job: a slow run never holds the queue,
+      // and runs of this plugin wait (or are cancelled) while the package
+      // switches.
+      () => _runGate.exclusive(
+        held.installId,
+        () => _queue.run<InstallResult>(
+          () => _install(held, options),
+          onError: (error, _) {
+            _log.warning('Install failed: ${error.runtimeType}');
+            return const InstallRefused(InstallFailure.unexpected);
+          },
+        ),
       ),
     );
   }
