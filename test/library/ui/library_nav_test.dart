@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show Tristate;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -16,12 +17,17 @@ import 'support/ui_harness.dart';
 Finder _byTooltip(String message) =>
     find.byWidgetPredicate((w) => w is Tooltip && w.message == message);
 
-Color? _rowColor(WidgetTester tester, String label) {
-  final material = find
-      .ancestor(of: find.text(label), matching: find.byType(Material))
-      .first;
-  return tester.widget<Material>(material).color;
-}
+/// Selection state of the sidebar row [label], read from semantics.
+bool _isSelected(WidgetTester tester, String label) =>
+    tester
+        .getSemantics(
+          find
+              .ancestor(of: find.text(label), matching: find.byType(KNavRow))
+              .first,
+        )
+        .flagsCollection
+        .isSelected ==
+    Tristate.isTrue;
 
 void main() {
   group('desktop sidebar', () {
@@ -72,9 +78,7 @@ void main() {
       // The dimmed "Coming soon" state is covered with a synthetic navigation
       // in `test/shell`; the shipped navigation has no such item left.
       expect(_byTooltip('Coming soon'), findsNothing);
-      final scheme = Theme.of(tester.element(find.byType(Scaffold).first))
-          .colorScheme;
-      expect(_rowColor(tester, 'Queue'), Colors.transparent);
+      expect(_isSelected(tester, 'Queue'), isFalse);
       await tester.tap(find.text('Queue'));
       await tester.pumpAndSettle();
       expect(
@@ -85,22 +89,20 @@ void main() {
             .path,
         LibraryLocations.savedQueues,
       );
-      expect(_rowColor(tester, 'Queue'), scheme.secondaryContainer);
-      expect(_rowColor(tester, 'Home'), Colors.transparent);
+      expect(_isSelected(tester, 'Queue'), isTrue);
+      expect(_isSelected(tester, 'Home'), isFalse);
       await unmountApp(tester);
     });
 
-    testWidgets('the item of the open page is tinted', (tester) async {
+    testWidgets('the item of the open page is selected', (tester) async {
       await pumpKanaruApp(tester);
-      final scheme = Theme.of(tester.element(find.byType(Scaffold).first))
-          .colorScheme;
-      expect(_rowColor(tester, 'Home'), scheme.secondaryContainer);
-      expect(_rowColor(tester, 'Songs'), Colors.transparent);
+      expect(_isSelected(tester, 'Home'), isTrue);
+      expect(_isSelected(tester, 'Songs'), isFalse);
       await tester.tap(find.text('Songs'));
       await tester.pumpAndSettle();
-      expect(_rowColor(tester, 'Songs'), scheme.secondaryContainer);
-      expect(_rowColor(tester, 'Albums'), Colors.transparent);
-      expect(_rowColor(tester, 'Home'), Colors.transparent);
+      expect(_isSelected(tester, 'Songs'), isTrue);
+      expect(_isSelected(tester, 'Albums'), isFalse);
+      expect(_isSelected(tester, 'Home'), isFalse);
       await unmountApp(tester);
     });
 
@@ -108,8 +110,6 @@ void main() {
       tester,
     ) async {
       await pumpKanaruApp(tester);
-      final scheme = Theme.of(tester.element(find.byType(Scaffold).first))
-          .colorScheme;
       final router = GoRouter.of(tester.element(find.byType(Scaffold).first));
       for (final (location, label) in [
         (LibraryLocations.album(AlbumKey('a', 'b')), 'Albums'),
@@ -120,12 +120,8 @@ void main() {
       ]) {
         unawaited(router.push(location));
         await tester.pumpAndSettle();
-        expect(
-          _rowColor(tester, label),
-          scheme.secondaryContainer,
-          reason: location,
-        );
-        expect(_rowColor(tester, 'Songs'), Colors.transparent);
+        expect(_isSelected(tester, label), isTrue, reason: location);
+        expect(_isSelected(tester, 'Songs'), isFalse);
       }
       await unmountApp(tester);
     });

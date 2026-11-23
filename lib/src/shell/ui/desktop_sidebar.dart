@@ -98,59 +98,21 @@ class _SidebarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final label = item.label(context);
     final soon = AppLocalizations.of(context).appComingSoon;
-    final color = onTap == null
-        ? scheme.onSurface.withValues(alpha: 0.38)
-        : selected
-        ? scheme.onSecondaryContainer
-        : scheme.onSurfaceVariant;
     final tooltip = item.comingSoon
         ? (expanded ? soon : '$label · $soon')
         : (expanded ? '' : label);
     return Tooltip(
       message: tooltip,
-      child: Semantics(
-        button: true,
-        enabled: onTap != null,
+      child: KNavRow(
+        icon: item.icon,
+        selectedIcon: item.selectedIcon,
+        label: label,
+        semanticLabel: item.comingSoon ? '$label, $soon' : null,
         selected: selected,
-        label: item.comingSoon ? '$label, $soon' : label,
-        child: ExcludeSemantics(
-          child: Material(
-            color: selected ? scheme.secondaryContainer : Colors.transparent,
-            borderRadius: KRadius.full,
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onTap,
-              child: SizedBox(
-                height: KLayout.minTarget,
-                child: Row(
-                  children: [
-                    // Rail: the 48 dp icon cell is centred in the 48 dp content.
-                    const SizedBox(width: KSpace.x3),
-                    Icon(
-                      selected ? item.selectedIcon : item.icon,
-                      color: color,
-                    ),
-                    if (expanded) ...[
-                      const SizedBox(width: KSpace.x3),
-                      Expanded(
-                        child: Text(
-                          label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.labelLarge
-                              ?.copyWith(color: color),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+        expanded: expanded,
+        onTap: onTap,
       ),
     );
   }

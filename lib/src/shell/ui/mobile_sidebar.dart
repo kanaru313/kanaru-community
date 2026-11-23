@@ -105,63 +105,31 @@ class _Row extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final label = item.label(context);
     final soon = AppLocalizations.of(context).appComingSoon;
     final enabled = !item.comingSoon;
-    final color = !enabled
-        ? scheme.onSurface.withValues(alpha: 0.38)
-        : selected
-        ? scheme.onSecondaryContainer
-        : scheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.only(bottom: KSpace.x1),
-      child: Semantics(
-        button: true,
-        enabled: enabled,
+      child: KNavRow(
+        icon: item.icon,
+        selectedIcon: item.selectedIcon,
+        label: label,
+        semanticLabel: enabled ? null : '$label, $soon',
         selected: selected,
-        label: enabled ? label : '$label, $soon',
-        child: ExcludeSemantics(
-          child: Material(
-            color: selected ? scheme.secondaryContainer : Colors.transparent,
-            borderRadius: KRadius.sm,
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: enabled ? () => onSelect(item) : null,
-              child: SizedBox(
-                height: KLayout.minTarget,
-                child: Row(
-                  spacing: KSpace.x3,
-                  children: [
-                    const SizedBox(width: KSpace.x1),
-                    Icon(
-                      selected ? item.selectedIcon : item.icon,
-                      color: color,
-                    ),
-                    Expanded(
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelLarge
-                            ?.copyWith(color: color),
-                      ),
-                    ),
-                    if (!enabled)
-                      Padding(
-                        padding: const EdgeInsets.only(right: KSpace.x3),
-                        child: Text(
-                          soon,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: color),
-                        ),
-                      ),
-                  ],
+        leadingInset: KSpace.x4,
+        onTap: enabled ? () => onSelect(item) : null,
+        trailing: enabled
+            ? null
+            : Padding(
+                padding: const EdgeInsets.only(right: KSpace.x3),
+                child: Text(
+                  soon,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface
+                        .withValues(alpha: 0.38),
+                  ),
                 ),
               ),
-            ),
-          ),
-        ),
       ),
     );
   }

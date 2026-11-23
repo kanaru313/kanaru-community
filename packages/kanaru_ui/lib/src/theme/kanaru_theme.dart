@@ -2,6 +2,7 @@ import 'package:material_color_utilities/material_color_utilities.dart'
     show Cam16, Hct;
 import 'package:material_ui/material_ui.dart';
 
+import '../tokens/k_layout.dart';
 import '../tokens/k_shape.dart';
 import 'k_page_transitions.dart';
 
@@ -64,6 +65,9 @@ ThemeData buildKanaruTheme({
     // Groups are separated by space, not by lines.
     dividerTheme: const DividerThemeData(space: 0, thickness: 0),
     pageTransitionsTheme: kanaruPageTransitionsTheme(instant: false),
+    navigationBarTheme: const NavigationBarThemeData(
+      height: KLayout.navigationBar,
+    ),
   );
 }
 
