@@ -48,6 +48,7 @@ export 'src/widgets/k_inline_notice.dart';
 export 'src/widgets/k_locate_button.dart';
 export 'src/widgets/k_list_row.dart';
 export 'src/widgets/k_more_button.dart';
+export 'src/widgets/k_nav_row.dart';
 export 'src/widgets/k_page.dart';
 export 'src/widgets/k_pill.dart' show KPill, KPillPlacement;
 export 'src/widgets/k_pressable.dart';

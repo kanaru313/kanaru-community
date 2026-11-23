@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show Tristate;
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,12 +71,13 @@ String _location(WidgetTester tester) =>
         .uri
         .path;
 
-Color? _rowColor(WidgetTester tester, String label) {
-  final material = find
-      .ancestor(of: find.text(label), matching: find.byType(Material))
-      .first;
-  return tester.widget<Material>(material).color;
-}
+/// Selected state of the sidebar row labelled [label], read from semantics.
+bool _isSelected(WidgetTester tester, String label) =>
+    tester
+        .getSemantics(find.bySemanticsLabel(label))
+        .flagsCollection
+        .isSelected ==
+    Tristate.isTrue;
 
 void main() {
   group('desktop sidebar', () {
@@ -110,16 +112,14 @@ void main() {
       },
     );
 
-    testWidgets('the item of the open page is tinted', (tester) async {
+    testWidgets('the item of the open page is selected', (tester) async {
       await _pump(tester, 1280);
-      final scheme = Theme.of(tester.element(find.byType(Scaffold).first))
-          .colorScheme;
-      expect(_rowColor(tester, 'Alpha'), scheme.secondaryContainer);
-      expect(_rowColor(tester, 'Beta'), Colors.transparent);
+      expect(_isSelected(tester, 'Alpha'), isTrue);
+      expect(_isSelected(tester, 'Beta'), isFalse);
       await tester.tap(find.text('Beta'));
       await tester.pumpAndSettle();
-      expect(_rowColor(tester, 'Beta'), scheme.secondaryContainer);
-      expect(_rowColor(tester, 'Alpha'), Colors.transparent);
+      expect(_isSelected(tester, 'Beta'), isTrue);
+      expect(_isSelected(tester, 'Alpha'), isFalse);
     });
 
     testWidgets('a child item is selected under its path and navigates', (
@@ -168,9 +168,7 @@ void main() {
       await tester.tap(find.text('KidSongs'));
       await tester.pumpAndSettle();
       expect(find.text('kid songs page'), findsOneWidget);
-      final scheme = Theme.of(tester.element(find.byType(Scaffold).first))
-          .colorScheme;
-      expect(_rowColor(tester, 'KidSongs'), scheme.secondaryContainer);
+      expect(_isSelected(tester, 'KidSongs'), isTrue);
     });
 
     testWidgets('an item with onSelect runs it instead of navigating', (
