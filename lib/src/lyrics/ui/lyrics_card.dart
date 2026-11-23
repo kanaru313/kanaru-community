@@ -14,6 +14,10 @@ import 'lyrics_card_lines.dart';
 import 'lyrics_text_styles.dart';
 import 'lyrics_spinner.dart';
 
+/// Widest the source (icon and name) may grow in the header; the title
+/// keeps the rest, so the open icon always ends at the right edge.
+const double _sourceMaxWidth = 160;
+
 /// A blank that still takes the height of a line.
 const String cardBlankLine = ' ';
 
@@ -60,17 +64,19 @@ class LyricsCard extends ConsumerWidget {
                 Row(
                   spacing: KSpace.x2,
                   children: [
-                    Flexible(
+                    Expanded(
                       child: Text(
                         l10n.playbackLyricsCard,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: text.titleSmall,
                       ),
                     ),
                     // The source (plugin icon and name, or the short label)
-                    // sits against the open icon, whatever the title's width.
-                    Expanded(
-                      child: Align(
-                        alignment: AlignmentDirectional.centerEnd,
+                    // sits against the open icon; a long name ellipsizes.
+                    if (online != null || source.isNotEmpty)
+                      ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: _sourceMaxWidth),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           spacing: KSpace.x2,
@@ -95,7 +101,6 @@ class LyricsCard extends ConsumerWidget {
                           ],
                         ),
                       ),
-                    ),
                     Icon(
                       KIcons.openFull,
                       size: KIconSize.sm,

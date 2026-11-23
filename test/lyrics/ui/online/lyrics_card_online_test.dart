@@ -152,4 +152,31 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  // The open icon ends at the card's inner right edge and the source sits
+  // against it, whatever the title or the source.
+  for (final (name, lyrics, label) in <(String, TrackLyrics, String?)>[
+    ('online', LyricsShown(onlineLyrics()), 'NetEase'),
+    (
+      'online with a long name',
+      LyricsShown(
+        onlineLyrics(name: 'Một nguồn lời có cái tên rất dài để thử cắt chữ'),
+      ),
+      null,
+    ),
+    ('tag', LyricsShown(syncedLyrics(3)), 'In tag'),
+    ('no source', const LyricsNoSource(), null),
+  ]) {
+    testWidgets('header: icon at the right edge, $name', (tester) async {
+      await _pump(tester, lyrics, textScale: name.contains('long') ? 2 : 1);
+      final inner = tester.getRect(find.byType(LyricsCard)).right - KSpace.x4;
+      final icon = tester.getRect(find.byIcon(KIcons.openFull));
+      expect(icon.right, closeTo(inner, 1));
+      if (label != null) {
+        final src = tester.getRect(find.text(label));
+        expect(src.right, closeTo(icon.left - KSpace.x2, 1));
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
