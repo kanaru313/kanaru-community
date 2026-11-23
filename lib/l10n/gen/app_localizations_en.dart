@@ -5928,4 +5928,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String fontsDownloadFailed(String name) {
     return 'Couldn\'t download the font $name. Check your connection and try again.';
   }
+
+  @override
+  String get fontsCustomTitle => 'Custom';
+
+  @override
+  String get fontsCustomHint => 'Fonts you import from a .ttf or .otf file.';
+
+  @override
+  String get fontsImportRow => 'Import font';
+
+  @override
+  String get fontsImportRowDialog => 'Import font…';
+
+  @override
+  String get fontsImportTitle => 'Import font';
+
+  @override
+  String get fontsImportBody =>
+      'Only import fonts you have the right to use. Kanaru copies the .ttf / .otf file into the app\'s data folder.';
+
+  @override
+  String get fontsImportPick => 'Choose file…';
+
+  @override
+  String fontsImported(String name) {
+    return 'Imported “$name” · tap to use';
+  }
+
+  @override
+  String get fontsImportTooLarge =>
+      'The font file is too large (20 MB at most).';
+
+  @override
+  String get fontsImportInvalid => 'This file is not a .ttf or .otf font.';
+
+  @override
+  String fontsRemoveTitle(String name) {
+    return 'Delete the font “$name”?';
+  }
+
+  @override
+  String get fontsRemoveBody =>
+      'The imported font file is deleted from Kanaru. To use it again you have to import it again.';
+
+  @override
+  String get fontsRemoveConfirm => 'Delete';
+
+  @override
+  String get fontsRemoved => 'Font deleted';
 }

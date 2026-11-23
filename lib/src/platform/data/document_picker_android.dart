@@ -59,18 +59,7 @@ class AndroidDocumentPicker implements DocumentPicker {
 
   @override
   Future<PickedDocument?> openDocument(DocumentFilter filter) async {
-    // Providers often misreport a playlist's MIME type (octet-stream,
-    // text/plain), so the list is widened; the caller checks the name.
-    final map = await _pick('open', {
-      'mimeTypes': [
-        ...filter.mimeTypes,
-        'audio/x-mpegurl',
-        'audio/mpegurl',
-        'application/vnd.apple.mpegurl',
-        'application/octet-stream',
-        'text/plain',
-      ],
-    });
+    final map = await _pick('open', {'mimeTypes': _mimeTypesFor(filter)});
     if (map == null) return null;
     final uri = map['uri'] as String;
     final name = (map['name'] as String?) ?? uri;
@@ -79,6 +68,27 @@ class AndroidDocumentPicker implements DocumentPicker {
       handle: uri,
       localPath: await _pathOf(map),
     );
+  }
+
+  /// The MIME types offered for [filter]. Providers often report a file as
+  /// `application/octet-stream`, so that one is always added. Playlist and
+  /// plain-text types are added only for a playlist filter (it lists `m3u` /
+  /// `m3u8`): offering them to every dialog would show `.m3u` and `.txt`
+  /// files in, say, the font picker. The caller checks the name anyway.
+  static List<String> _mimeTypesFor(DocumentFilter filter) {
+    final isPlaylist = filter.extensions
+        .map((e) => e.toLowerCase())
+        .any((e) => e == 'm3u' || e == 'm3u8');
+    return [
+      ...filter.mimeTypes,
+      if (isPlaylist) ...[
+        'audio/x-mpegurl',
+        'audio/mpegurl',
+        'application/vnd.apple.mpegurl',
+        'text/plain',
+      ],
+      'application/octet-stream',
+    ];
   }
 
   @override

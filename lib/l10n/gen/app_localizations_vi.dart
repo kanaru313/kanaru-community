@@ -5461,4 +5461,52 @@ class AppLocalizationsVi extends AppLocalizations {
   String fontsDownloadFailed(String name) {
     return 'Không tải được phông $name. Kiểm tra mạng rồi thử lại.';
   }
+
+  @override
+  String get fontsCustomTitle => 'Tuỳ chỉnh';
+
+  @override
+  String get fontsCustomHint => 'Phông bạn nhập từ tệp .ttf hoặc .otf.';
+
+  @override
+  String get fontsImportRow => 'Nhập phông';
+
+  @override
+  String get fontsImportRowDialog => 'Nhập phông…';
+
+  @override
+  String get fontsImportTitle => 'Nhập phông';
+
+  @override
+  String get fontsImportBody =>
+      'Chỉ nhập phông bạn có quyền dùng. Kanaru chép tệp .ttf / .otf vào thư mục dữ liệu của app.';
+
+  @override
+  String get fontsImportPick => 'Chọn tệp…';
+
+  @override
+  String fontsImported(String name) {
+    return 'Đã nhập “$name” · bấm để dùng';
+  }
+
+  @override
+  String get fontsImportTooLarge => 'Tệp phông quá lớn (tối đa 20 MB).';
+
+  @override
+  String get fontsImportInvalid => 'Tệp này không phải phông .ttf hoặc .otf.';
+
+  @override
+  String fontsRemoveTitle(String name) {
+    return 'Xoá phông “$name”?';
+  }
+
+  @override
+  String get fontsRemoveBody =>
+      'Tệp phông đã nhập bị xoá khỏi Kanaru. Muốn dùng lại phải nhập lại.';
+
+  @override
+  String get fontsRemoveConfirm => 'Xoá';
+
+  @override
+  String get fontsRemoved => 'Đã xoá phông';
 }

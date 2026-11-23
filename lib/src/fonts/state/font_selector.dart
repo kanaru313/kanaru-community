@@ -3,6 +3,7 @@ import 'package:logging/logging.dart';
 
 import '../domain/app_font.dart';
 import '../domain/builtin_fonts.dart';
+import 'custom_fonts.dart';
 import 'font_providers.dart';
 
 final _log = Logger('font_selector');
@@ -62,7 +63,14 @@ class FontSelector {
 
 final fontSelectorProvider = Provider<FontSelector>(FontSelector.new);
 
-/// The font in use (`app.font`; an unknown id gives the default font).
-final activeFontProvider = Provider<AppFont>(
-  (ref) => appFontFor(ref.watch(activeFontIdProvider)),
-);
+/// The font in use (`app.font`; an unknown id gives the default font). An
+/// imported font carries the name read from its file.
+final activeFontProvider = Provider<AppFont>((ref) {
+  final id = ref.watch(activeFontIdProvider);
+  if (isCustomFontId(id)) {
+    for (final font in ref.watch(customFontsProvider)) {
+      if (font.id == id) return font.asAppFont;
+    }
+  }
+  return appFontFor(id);
+});

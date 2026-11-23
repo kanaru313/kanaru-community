@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/fonts/data/custom_font_store.dart';
 import 'package:kanaru/src/fonts/data/font_registrar.dart';
 import 'package:kanaru/src/fonts/data/font_storage.dart';
 import 'package:kanaru/src/fonts/data/startup_font.dart';
@@ -8,6 +9,7 @@ import 'package:kanaru/src/fonts/domain/app_font.dart';
 import 'package:kanaru/src/platform/domain/app_paths.dart';
 
 import '../support/memory_settings_store.dart';
+import 'support/font_bytes.dart';
 
 class _Paths implements AppPaths {
   _Paths(this.dataDir);
@@ -79,6 +81,14 @@ void main() {
     await settings.write('app.font', customId);
     expect(await run(), customId);
     expect(loaded, ['Lora', customId]);
+  });
+
+  test('an imported font is the startup font after a restart', () async {
+    final font = await CustomFontStore(FontStorage(paths))
+        .importBytes('x.ttf', nunitoBytes());
+    await settings.write('app.font', font.id);
+    expect(await run(), font.id);
+    expect(loaded, [font.id]);
   });
 
   test('missing files fall back and rewrite the setting', () async {

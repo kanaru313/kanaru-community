@@ -8723,6 +8723,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t download the font {name}. Check your connection and try again.'**
   String fontsDownloadFailed(String name);
+
+  /// Title of the block of fonts the user imported.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get fontsCustomTitle;
+
+  /// Note about the whole custom fonts block, shown behind the info icon.
+  ///
+  /// In en, this message translates to:
+  /// **'Fonts you import from a .ttf or .otf file.'**
+  String get fontsCustomHint;
+
+  /// Row that starts importing a font (mobile).
+  ///
+  /// In en, this message translates to:
+  /// **'Import font'**
+  String get fontsImportRow;
+
+  /// Row that starts importing a font (desktop, opens a file dialog).
+  ///
+  /// In en, this message translates to:
+  /// **'Import font…'**
+  String get fontsImportRowDialog;
+
+  /// Title of the dialog before the file picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Import font'**
+  String get fontsImportTitle;
+
+  /// Body of the import dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Only import fonts you have the right to use. Kanaru copies the .ttf / .otf file into the app\'s data folder.'**
+  String get fontsImportBody;
+
+  /// Button of the import dialog that opens the file picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose file…'**
+  String get fontsImportPick;
+
+  /// Snack bar after a font was imported; it is not applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported “{name}” · tap to use'**
+  String fontsImported(String name);
+
+  /// Snack bar when the picked font file is over the size limit.
+  ///
+  /// In en, this message translates to:
+  /// **'The font file is too large (20 MB at most).'**
+  String get fontsImportTooLarge;
+
+  /// Snack bar when the picked file is not a usable font or cannot be read.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is not a .ttf or .otf font.'**
+  String get fontsImportInvalid;
+
+  /// Title of the confirmation before deleting an imported font.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the font “{name}”?'**
+  String fontsRemoveTitle(String name);
+
+  /// Body of the delete confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'The imported font file is deleted from Kanaru. To use it again you have to import it again.'**
+  String get fontsRemoveBody;
+
+  /// Destructive button of the delete confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get fontsRemoveConfirm;
+
+  /// Snack bar after an imported font was deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Font deleted'**
+  String get fontsRemoved;
 }
 
 class _AppLocalizationsDelegate

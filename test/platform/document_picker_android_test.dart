@@ -95,6 +95,38 @@ void main() {
       expect(_filter.matchesName(doc.name), isFalse);
     });
 
+    group('MIME types sent to the dialog', () {
+      late List<String> sent;
+      setUp(() {
+        handler = (c) async {
+          sent = List<String>.from((c.arguments as Map)['mimeTypes'] as List);
+          return null;
+        };
+      });
+
+      test('a playlist filter also gets playlist and text types', () async {
+        await picker.openDocument(_filter);
+        expect(sent, containsAll(['audio/x-mpegurl', 'text/plain']));
+        expect(sent, contains('application/octet-stream'));
+      });
+
+      test(
+        'another filter gets only its own types and the generic one',
+        () async {
+          await picker.openDocument(
+            const DocumentFilter(
+              label: 'Font',
+              extensions: ['ttf', 'otf'],
+              mimeTypes: ['font/ttf'],
+            ),
+          );
+          expect(sent, ['font/ttf', 'application/octet-stream']);
+          expect(sent, isNot(contains('text/plain')));
+          expect(sent, isNot(contains('audio/x-mpegurl')));
+        },
+      );
+    });
+
     test('create returns the provider name', () async {
       handler = (c) async => {
         'uri': 'content://x/3',
