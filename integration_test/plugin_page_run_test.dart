@@ -15,6 +15,7 @@ import 'package:kanaru/src/plugins/domain/install/install_result.dart';
 import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
 import 'package:kanaru/src/plugins/domain/run/run_request.dart';
 import 'package:kanaru/src/plugins/state/plugin_actions_provider.dart';
+import 'package:kanaru/src/plugins/domain/logs/log_redaction.dart' show redactionMask;
 import 'package:kanaru/src/plugins/state/plugin_logs_provider.dart';
 import 'package:kanaru/src/plugins/state/plugin_run_provider.dart';
 import 'package:kanaru/src/plugins/state/plugin_services_provider.dart';
@@ -154,7 +155,11 @@ void main() {
     );
     expect(entries.length, 2, reason: 'one console run, one failed run');
     final consoleText = entries.expand((e) => e.console).join('\n');
-    expect(consoleText, contains('key='), reason: 'console line is logged');
+    expect(
+      consoleText,
+      contains('key=$redactionMask'),
+      reason: 'console line is logged with the value masked',
+    );
     expect(
       jsonEncode([for (final e in entries) e.toJson()]),
       isNot(contains(_secret)),
@@ -220,6 +225,7 @@ void main() {
       what: 'the log page',
     );
     await tester.pumpAndSettle();
+    expect(find.textContaining('key='), findsOneWidget, reason: 'line shown');
     expect(find.textContaining(_secret), findsNothing);
     expect(find.text(t.pluginsLogsEmpty), findsNothing);
     await shot('05-logs-all');
@@ -230,7 +236,7 @@ void main() {
     expect(find.textContaining(_secret), findsNothing);
     await shot('06-logs-errors');
 
-    // 6. The 429 band: a real pause on the plugin's pauses.
+    // 5. The 429 band: a real pause on the plugin's pauses.
     container
         .read(pluginPausesProvider)
         .pause(installId, const Duration(minutes: 5));
@@ -244,7 +250,7 @@ void main() {
     expect(find.textContaining('(429)'), findsOneWidget);
     await shot('07-paused-band');
 
-    // 5. The remove dialog, then cancel.
+    // 6. The remove dialog, then cancel.
     await tester.tap(
       find.byWidgetPredicate(
         (w) =>
