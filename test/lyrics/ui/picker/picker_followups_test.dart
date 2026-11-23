@@ -76,6 +76,24 @@ void main() {
     });
   });
 
+  testWidgets('a kept result says where the lyrics came from', (tester) async {
+    final picker = await openPicker(
+      tester,
+      script: _script(),
+      overrides: _sources(),
+      size: desktopSize,
+    );
+    await settle(tester);
+    await tester.tap(_use());
+    await tester.pumpAndSettle();
+    expect(picker.online.calls, ['keep:1:lrclib:a:LRCLIB']);
+    expect(
+      find.text('Chose the lyrics from LRCLIB for this song'),
+      findsOneWidget,
+    );
+    expect(find.textContaining("Couldn't save"), findsNothing);
+  });
+
   group('a refused keep is visible', () {
     for (final (name, size, prepare) in [
       ('refused, mobile', const Size(400, 800), false),

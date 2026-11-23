@@ -4668,6 +4668,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lyricsKeepFailed => 'Không lưu được lời. Thử lại sau.';
 
   @override
+  String lyricsToastKept(String plugin) {
+    return 'Đã giữ bản $plugin cho bài này';
+  }
+
+  @override
+  String get lyricsToastRefusedAuto => 'Đã bỏ bản này, đang tìm lại…';
+
+  @override
+  String get lyricsToastRefusedKept => 'Đã bỏ bản đã giữ';
+
+  @override
+  String lyricsToastChosen(String plugin) {
+    return 'Đã chọn lời từ $plugin cho bài này';
+  }
+
+  @override
   String get pluginsStoreTitle => 'Kho plugin';
 
   @override

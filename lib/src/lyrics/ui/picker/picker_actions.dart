@@ -9,6 +9,7 @@ import '../../data/online/online_lyrics_commands.dart';
 import '../../data/online/store_result.dart';
 import '../../domain/online/lyrics_candidate.dart';
 import '../../state/online/online_commands_provider.dart';
+import '../lyrics_keep_notice.dart';
 
 final _log = Logger('lyrics_picker');
 
@@ -24,11 +25,11 @@ typedef PickerUse = Future<void> Function(
 /// The default use: keeps the result as the song's own copy, so the lyrics
 /// show at once. The commands are taken now, while the picker is alive: it is
 /// called after the picker has closed. A refused or failed write is logged and
-/// reported through [onFailed]; the picker is gone by then.
+/// reported through [notices] (success too); the picker is gone by then.
 PickerUse keepForTrack(
   WidgetRef ref,
   TrackId trackId, {
-  required VoidCallback onFailed,
+  required LyricsNotices notices,
 }) {
   final OnlineLyricsCommands commands = ref.read(onlineLyricsCommandsProvider);
   return (result, providerName) async {
@@ -40,11 +41,13 @@ PickerUse keepForTrack(
       );
       if (stored == StoreResult.notStored) {
         _log.warning('picked lyrics were not stored');
-        onFailed();
+        notices.failed();
+      } else {
+        notices.chosen(providerName);
       }
     } on Object catch (error, stack) {
       _log.warning('picked lyrics write failed', error, stack);
-      onFailed();
+      notices.failed();
     }
   };
 }

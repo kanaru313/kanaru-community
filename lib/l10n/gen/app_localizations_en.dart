@@ -5112,6 +5112,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsKeepFailed => 'Couldn\'t save the lyrics. Try again.';
 
   @override
+  String lyricsToastKept(String plugin) {
+    return 'Kept the $plugin copy for this song';
+  }
+
+  @override
+  String get lyricsToastRefusedAuto => 'Dropped this copy, searching again…';
+
+  @override
+  String get lyricsToastRefusedKept => 'Dropped the kept copy';
+
+  @override
+  String lyricsToastChosen(String plugin) {
+    return 'Chose the lyrics from $plugin for this song';
+  }
+
+  @override
   String get pluginsStoreTitle => 'Plugin store';
 
   @override

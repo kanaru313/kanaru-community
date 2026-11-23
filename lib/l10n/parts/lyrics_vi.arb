@@ -515,5 +515,23 @@
   },
   "lyricsPickerSourcesNotAsked": "Chưa tìm",
   "lyricsPickerClearSearch": "Xoá chữ trong ô tìm",
-  "lyricsKeepFailed": "Không lưu được lời. Thử lại sau."
+  "lyricsKeepFailed": "Không lưu được lời. Thử lại sau.",
+  "lyricsToastKept": "Đã giữ bản {plugin} cho bài này",
+  "@lyricsToastKept": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsToastRefusedAuto": "Đã bỏ bản này, đang tìm lại…",
+  "lyricsToastRefusedKept": "Đã bỏ bản đã giữ",
+  "lyricsToastChosen": "Đã chọn lời từ {plugin} cho bài này",
+  "@lyricsToastChosen": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  }
 }

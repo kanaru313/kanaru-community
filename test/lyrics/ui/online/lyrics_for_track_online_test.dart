@@ -311,6 +311,46 @@ void main() {
           await tester.pumpAndSettle();
           expect(m.online.calls, ['keepAuto:1']);
           expect(find.byType(LyricsForTrackBody), findsNothing);
+          expect(
+            find.text('Kept the NetEase copy for this song'),
+            findsOneWidget,
+          );
+        });
+
+        testWidgets(
+          '"Wrong song" on an automatic copy says it searches again',
+          (tester) async {
+            final m = await openModal(
+              tester,
+              LyricsShown(onlineLyrics()),
+              overrides: onlineUiOverrides(sources: _sources),
+              size: size,
+            );
+            await tester.tap(_button('Wrong song'));
+            await tester.pumpAndSettle();
+            expect(m.online.calls, ['reject:1']);
+            expect(
+              find.text('Dropped this copy, searching again…'),
+              findsOneWidget,
+            );
+          },
+        );
+
+        testWidgets('a refused write shows no success toast', (tester) async {
+          final m = await openModal(
+            tester,
+            LyricsShown(onlineLyrics()),
+            overrides: onlineUiOverrides(sources: _sources),
+            size: size,
+          );
+          m.online.keepResult = StoreResult.notStored;
+          await tester.tap(_button('Keep this copy'));
+          await tester.pumpAndSettle();
+          expect(find.textContaining('Kept the'), findsNothing);
+          expect(
+            find.text("Couldn't save the lyrics. Try again."),
+            findsOneWidget,
+          );
         });
 
         testWidgets('"Wrong song" refuses the copy and closes', (tester) async {
@@ -324,6 +364,7 @@ void main() {
           await tester.pumpAndSettle();
           expect(m.online.calls, ['reject:1']);
           expect(find.byType(LyricsForTrackBody), findsNothing);
+          expect(find.text('Dropped the kept copy'), findsOneWidget);
         });
 
         testWidgets('a failed write is absorbed: the modal still closes', (
@@ -522,6 +563,28 @@ void main() {
         await tester.tap(_button('Turn on auto search'));
         await tester.pump();
         expect(m.container.read(lyricsAutoSearchProvider), isTrue);
+      });
+
+      testWidgets('bar at 360 dp, normal text: no label wraps, the words do', (
+        tester,
+      ) async {
+        await openModal(
+          tester,
+          LyricsShown(onlineLyrics(name: 'NetEase Cloud Music')),
+          overrides: onlineUiOverrides(sources: _sources),
+          size: const Size(360, 800),
+        );
+        for (final label in ['Keep this copy', 'Wrong song']) {
+          final line = tester.getSize(find.text(label)).height;
+          final one = tester.getSize(find.text('Wrong song')).height;
+          expect(line, one, reason: '"$label" is one line');
+        }
+        expect(
+          tester.getSize(find.text('Wrong song')).height,
+          lessThan(24),
+          reason: 'one line of label text',
+        );
+        expect(tester.takeException(), isNull);
       });
 
       testWidgets(

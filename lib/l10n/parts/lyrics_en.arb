@@ -515,5 +515,23 @@
   },
   "lyricsPickerSourcesNotAsked": "Not searched",
   "lyricsPickerClearSearch": "Clear the search text",
-  "lyricsKeepFailed": "Couldn't save the lyrics. Try again."
+  "lyricsKeepFailed": "Couldn't save the lyrics. Try again.",
+  "lyricsToastKept": "Kept the {plugin} copy for this song",
+  "@lyricsToastKept": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsToastRefusedAuto": "Dropped this copy, searching again…",
+  "lyricsToastRefusedKept": "Dropped the kept copy",
+  "lyricsToastChosen": "Chose the lyrics from {plugin} for this song",
+  "@lyricsToastChosen": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  }
 }

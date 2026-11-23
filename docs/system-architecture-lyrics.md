@@ -336,7 +336,7 @@ Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens
   "Lưu lời…", dimmed, inert, "Sắp có". The search row opens the Chọn lời picker (see "UI › Chọn lời"); it is dimmed with "Sắp có" only while `onFindOnline` is null.
 - **Online bar** (`LyricsOnlineBar`): only when the online copy is what shows. Found automatically: "Tự tìm thấy trên <plugin> · Giữ để
   lần sau không tìm lại" with "Không đúng bài" (`reject`) and "Giữ bản này" (`keepAuto`); kept: "Đang dùng bản đã giữ · Chỉ cho bài này"
-  with "Không đúng bài". One row: the words take the room, the buttons sit beside them and wrap their labels when the sheet is narrow. The command is taken and called in the
+  with "Không đúng bài". One `Wrap`: the buttons sit beside the words when both fit on a line, else under them; a label never wraps. After the write a snack bar says what happened (`LyricsNotices`: "Đã giữ bản … cho bài này", "Đã bỏ bản này, đang tìm lại…", "Đã bỏ bản đã giữ", and for the picker "Đã chọn lời từ … cho bài này"; a refused or failed write says "Không lưu được lời" instead). The right-click / L toggle shows no toast. The command is taken and called in the
   turn of the guarded close, while the modal still watches the track (the commands read what the track shows at that moment).
 - **Song menu entry** (`song_lyrics_entry_impl.dart`, `LyricsSongEntry`, implements the library's `SongLyricsEntry`; the app overrides
   `songLyricsEntryProvider` in `lib/kanaru.dart`): `label` makes the subtitle of "Nguồn lời bài" with one one-shot read of the

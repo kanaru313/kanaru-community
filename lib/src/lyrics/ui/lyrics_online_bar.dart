@@ -37,27 +37,32 @@ class LyricsOnlineBar extends ConsumerWidget {
   final OnlineRowInfo? info;
   final bool Function() close;
 
+  /// Closes the modal, runs [command], then tells the user how it went:
+  /// [done] on success, the failed notice when the write was refused or threw.
   void _write(
     BuildContext context,
     WidgetRef ref,
     Future<Object?> Function(OnlineLyricsCommands commands) command,
+    void Function(LyricsNotices notices) done,
   ) {
     final commands = ref.read(onlineLyricsCommandsProvider);
-    final failed = keepFailedNoticeOf(context);
+    final notices = LyricsNotices.of(context);
     if (!close()) return;
     unawaited(
       command(commands)
           .then((result) {
             // A refused write (the track is gone, no text) is a result, not
-            // an error: say so in the log instead of dropping it.
+            // an error: say so in the log and to the user.
             if (result == StoreResult.notStored) {
               _log.warning('online lyrics copy was not stored');
-              failed();
+              notices.failed();
+            } else {
+              done(notices);
             }
           })
           .catchError((Object error, StackTrace stack) {
             _log.warning('online lyrics write failed', error, stack);
-            failed();
+            notices.failed();
           }),
     );
   }
@@ -87,12 +92,22 @@ class LyricsOnlineBar extends ConsumerWidget {
     );
     final buttons = [
       TextButton(
-        onPressed: () => _write(context, ref, (c) => c.reject(trackId)),
+        onPressed: () => _write(
+          context,
+          ref,
+          (c) => c.reject(trackId),
+          auto ? (n) => n.refusedAuto() : (n) => n.refusedKept(),
+        ),
         child: Text(l10n.lyricsBarReject),
       ),
       if (auto)
         FilledButton.tonal(
-          onPressed: () => _write(context, ref, (c) => c.keepAuto(trackId)),
+          onPressed: () => _write(
+            context,
+            ref,
+            (c) => c.keepAuto(trackId),
+            (n) => n.kept(info.providerName),
+          ),
           child: Text(l10n.lyricsBarKeep),
         ),
     ];
@@ -107,13 +122,21 @@ class LyricsOnlineBar extends ConsumerWidget {
             KSpace.x4,
             KSpace.x4,
           ),
-          child: Row(
-            spacing: KSpace.x2,
-            // Every child may shrink, so the row never overflows: the words wrap
-            // and a button label wraps at large text or on a narrow sheet.
+          // The buttons sit beside the words when both fit on one line, else
+          // under them; a label never wraps (the buttons wrap as a group
+          // first), and nothing overflows at large text.
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: KSpace.x3,
+            runSpacing: KSpace.x2,
             children: [
-              Expanded(flex: 3, child: words),
-              for (final b in buttons) Flexible(flex: 2, child: b),
+              words,
+              Wrap(
+                spacing: KSpace.x2,
+                runSpacing: KSpace.x1,
+                children: buttons,
+              ),
             ],
           ),
         ),

@@ -7380,6 +7380,30 @@ abstract class AppLocalizations {
   /// **'Couldn\'t save the lyrics. Try again.'**
   String get lyricsKeepFailed;
 
+  /// No description provided for @lyricsToastKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept the {plugin} copy for this song'**
+  String lyricsToastKept(String plugin);
+
+  /// No description provided for @lyricsToastRefusedAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped this copy, searching again…'**
+  String get lyricsToastRefusedAuto;
+
+  /// No description provided for @lyricsToastRefusedKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped the kept copy'**
+  String get lyricsToastRefusedKept;
+
+  /// No description provided for @lyricsToastChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Chose the lyrics from {plugin} for this song'**
+  String lyricsToastChosen(String plugin);
+
   /// No description provided for @pluginsStoreTitle.
   ///
   /// In en, this message translates to:

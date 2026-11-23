@@ -140,11 +140,7 @@ class _LyricsPickerHostState extends ConsumerState<LyricsPickerHost> {
     // The notice is taken before the route closes.
     final use =
         widget.use ??
-        keepForTrack(
-          ref,
-          widget.trackId,
-          onFailed: keepFailedNoticeOf(context),
-        );
+        keepForTrack(ref, widget.trackId, notices: LyricsNotices.of(context));
     if (_requestClose()) runPickerUse(use, picked);
   }
 
