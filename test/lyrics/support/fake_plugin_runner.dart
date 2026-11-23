@@ -20,6 +20,9 @@ class FakePluginRunner implements PluginRunner {
   FakePluginRunner({this.slots});
 
   @override
+  Future<void> get lastRejectionLogged => Future.value();
+
+  @override
   Duration get spacing => Duration.zero;
 
   @override
