@@ -77,6 +77,39 @@ void main() {
     expect(rows, hasLength(1));
   });
 
+  test('the kept lyrics and rejects of a live track stay', () async {
+    final id = await addAgedTrack(db, local, 'q', TrackStatus.present);
+    await db.customStatement(
+      'INSERT INTO lyrics_pins (track_id, uid, provider_id, provider_name, '
+      "remote_id, plain_text, pinned_at, updated_at) VALUES (?, 'pin:a', 'p', 'P', 'r', 'w', 1, 1)",
+      [id],
+    );
+    await db.customStatement(
+      'INSERT INTO lyrics_rejects (track_id, provider_id, remote_id, rejected_at) '
+      "VALUES (?, 'p', 'r', 1)",
+      [id],
+    );
+    expect(await collectOrphanTracks(db, now: _now), 0);
+    for (final t in ['lyrics_pins', 'lyrics_rejects']) {
+      expect(await db.customSelect('SELECT 1 FROM $t').get(), hasLength(1));
+    }
+  });
+
+  test(
+    'a missing track past grace is collected despite its kept lyrics',
+    () async {
+      final id = await addAgedTrack(db, local, 'g', TrackStatus.missing);
+      await db.customStatement(
+        'INSERT INTO lyrics_pins (track_id, uid, provider_id, provider_name, '
+        "remote_id, plain_text, pinned_at, updated_at) VALUES (?, 'pin:b', 'p', 'P', 'r', 'w', 1, 1)",
+        [id],
+      );
+      expect(await collectOrphanTracks(db, now: _now), 1);
+      expect(await remaining(), isEmpty);
+      expect(await db.customSelect('SELECT 1 FROM lyrics_pins').get(), isEmpty);
+    },
+  );
+
   test('referenced by a playlist, even past grace', () async {
     final pl = await addPlaylist(db);
     final r = await addAgedTrack(db, plugin, 'r', TrackStatus.remote);

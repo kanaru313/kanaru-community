@@ -18,8 +18,12 @@ final _log = Logger('lyrics_choice_rows');
 /// "Lời trong file" row describes. Null when the file has none or the read
 /// has not finished.
 LyricsSummary? fileLyricsSummary(TrackLyrics lyrics) => switch (lyrics) {
-  LyricsShown(:final lyrics) => summaryOfLyrics(lyrics),
-  LyricsOff(:final available?) => summaryOfLyrics(available),
+  LyricsShown(:final lyrics) when lyrics.online == null => summaryOfLyrics(
+    lyrics,
+  ),
+  LyricsOff(:final available?) when available.online == null => summaryOfLyrics(
+    available,
+  ),
   _ => null,
 };
 
@@ -57,7 +61,7 @@ class LyricsChoiceRows extends ConsumerWidget {
     final lyrics = ref.watch(trackLyricsProvider(trackId));
     final fileSummary = fileLyricsSummary(lyrics);
     final isOff = lyrics is LyricsOff;
-    final fileChosen = lyrics is LyricsShown;
+    final fileChosen = lyrics is LyricsShown && lyrics.lyrics.online == null;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

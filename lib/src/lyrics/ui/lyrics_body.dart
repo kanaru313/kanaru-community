@@ -45,8 +45,14 @@ class LyricsBody extends ConsumerWidget {
     final autoReturn = ref.watch(lyricsAutoReturnProvider);
     final desktop = surface == KLyricsSurface.tab;
     return switch (playing.lyrics) {
-      LyricsLoading() => const SizedBox.expand(),
-      LyricsNone() || LyricsUnavailable() => LyricsStateView(
+      LyricsLoading() || LyricsSearching() => const SizedBox.expand(),
+      LyricsNone() ||
+      LyricsUnavailable() ||
+      LyricsNotFound() ||
+      LyricsNoSource() ||
+      LyricsInstrumental() ||
+      LyricsLookupFailed() ||
+      LyricsLookupPaused() => LyricsStateView(
         kind: LyricsStateKind.none,
         desktop: desktop,
       ),

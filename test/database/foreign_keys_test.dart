@@ -59,6 +59,16 @@ void main() {
           "INSERT INTO track_lyrics_choices (track_id, mode, updated_at) VALUES (?, 'off', 1)",
           [id],
         ),
+        'lyrics_pins': (id) => db.customStatement(
+          'INSERT INTO lyrics_pins (track_id, uid, provider_id, provider_name, '
+          "remote_id, plain_text, pinned_at, updated_at) VALUES (?, 'pin:x', 'p', 'P', 'r', 'w', 1, 1)",
+          [id],
+        ),
+        'lyrics_rejects': (id) => db.customStatement(
+          'INSERT INTO lyrics_rejects (track_id, provider_id, remote_id, rejected_at) '
+          "VALUES (?, 'p', 'r', 1)",
+          [id],
+        ),
       };
       var n = 0;
       for (final entry in cases.entries) {

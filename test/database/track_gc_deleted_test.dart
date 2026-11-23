@@ -110,11 +110,23 @@ void main() {
       "INSERT INTO track_lyrics_choices (track_id, mode, updated_at) VALUES (?, 'off', 1)",
       [id],
     );
+    await db.customStatement(
+      'INSERT INTO lyrics_pins (track_id, uid, provider_id, provider_name, '
+      "remote_id, plain_text, pinned_at, updated_at) VALUES (?, 'pin:a', 'p', 'P', 'r', 'w', 1, 1)",
+      [id],
+    );
+    await db.customStatement(
+      'INSERT INTO lyrics_rejects (track_id, provider_id, remote_id, rejected_at) '
+      "VALUES (?, 'p', 'r', 1)",
+      [id],
+    );
     expect(await collectOrphanTracks(db, now: _now), 1);
     for (final t in [
       'track_details',
       'play_stats',
       'track_lyrics_choices',
+      'lyrics_pins',
+      'lyrics_rejects',
       'tracks',
     ]) {
       expect(

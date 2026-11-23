@@ -17,6 +17,10 @@ String lyricsSummaryLabel(
       LyricsSummary.lrcSynced ||
       LyricsSummary.lrcPlain => l10n.lyricsLabelShortLrc,
       LyricsSummary.off => l10n.lyricsLabelShortOff,
+      LyricsSummary.onlineSynced ||
+      LyricsSummary.onlinePlain ||
+      LyricsSummary.instrumental ||
+      LyricsSummary.searching ||
       LyricsSummary.none ||
       LyricsSummary.unavailable ||
       LyricsSummary.loading => '',
@@ -29,6 +33,10 @@ String lyricsSummaryLabel(
     LyricsSummary.lrcPlain => l10n.lyricsLabelLrcPlain,
     LyricsSummary.off => l10n.lyricsLabelOff,
     LyricsSummary.none || LyricsSummary.unavailable => l10n.lyricsLabelNone,
+    LyricsSummary.onlineSynced ||
+    LyricsSummary.onlinePlain ||
+    LyricsSummary.instrumental ||
+    LyricsSummary.searching ||
     LyricsSummary.loading => '',
   };
 }

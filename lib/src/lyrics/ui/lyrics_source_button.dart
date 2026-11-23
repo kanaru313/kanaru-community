@@ -59,7 +59,9 @@ class LyricsSourceButton extends ConsumerWidget {
         LyricsSummary.tagSynced ||
         LyricsSummary.tagPlain ||
         LyricsSummary.lrcSynced ||
-        LyricsSummary.lrcPlain => scheme.primary,
+        LyricsSummary.lrcPlain ||
+        LyricsSummary.onlineSynced ||
+        LyricsSummary.onlinePlain => scheme.primary,
         LyricsSummary.off => null,
         _ => scheme.onSurface.withValues(alpha: 0.38),
       },

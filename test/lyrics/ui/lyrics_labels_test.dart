@@ -7,14 +7,18 @@ import 'package:kanaru/src/lyrics/ui/lyrics_labels.dart';
 void main() {
   final en = AppLocalizationsEn();
 
-  test('every summary has a full label, only loading is empty', () {
+  test('every summary has a full label, loading and online ones are empty', () {
+    // The online summaries get their words with the online lyrics screens.
+    const empty = {
+      LyricsSummary.loading,
+      LyricsSummary.onlineSynced,
+      LyricsSummary.onlinePlain,
+      LyricsSummary.instrumental,
+      LyricsSummary.searching,
+    };
     for (final summary in LyricsSummary.values) {
       final label = lyricsSummaryLabel(en, summary);
-      expect(
-        label.isEmpty,
-        summary == LyricsSummary.loading,
-        reason: '$summary',
-      );
+      expect(label.isEmpty, empty.contains(summary), reason: '$summary');
     }
   });
 

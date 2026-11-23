@@ -22,6 +22,9 @@ class LyricsChoiceCommands {
   /// "Không hiện lời" for [id].
   Future<void> setOff(TrackId id) => setLyricsOff(_db, id, now: _nowMs());
 
+  /// "Lời trong file": the file's lyrics win over a kept online copy.
+  Future<void> setFile(TrackId id) => setLyricsFile(_db, id, now: _nowMs());
+
   /// Back to automatic selection.
   Future<void> clear(TrackId id) => clearLyricsChoice(_db, id);
 

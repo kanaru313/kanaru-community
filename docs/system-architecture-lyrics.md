@@ -276,6 +276,39 @@ Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens
   right-click line when `onToggle` is given; right-click (`KContextRegion`, no long press) calls `onToggle`, built by
   `toggleLyricsOfPlaying(ref)` (off ↔ automatic through `LyricsChoiceCommands.toggle`).
 
+## Online lyrics (`lyrics/*/online/`)
+
+Lyrics plugins (`metadata.type = lyrics`: `search` and `lyrics` scripts) add a source between the file and "no lyrics". This part is the model, the match gate, the stored data and the source settings; the lookup that calls the plugins and the pickers are separate.
+
+### Model
+
+- `LyricsOrigin.online`; `Lyrics.online: OnlineLyricsRef?` (set exactly for online lyrics): `providerId` (install id), `providerName` (a kept copy keeps the name it had), `remoteId`, `remoteDurationMs?`, `how` (`kept` = "Bản đã giữ", `auto` = found by the lookup).
+- `TrackLyrics` gains `LyricsSearching(sourceCount)`, `LyricsNotFound(asked, off)` (automatic search on, every enabled plugin has a fresh "not found"; `asked == 0` = no plugin is enabled), `LyricsNoSource` (no lyrics plugin installed), `LyricsInstrumental(ref)`, `LyricsLookupFailed(reason, asked, retryAt?)` and `LyricsLookupPaused(until)`. `LyricsNone` keeps its meaning: nothing local and no automatic search (off, or the song has no usable tags). `LookupFailReason` = `network` (network, timeout, server or rate-limit failures; a retry is scheduled), `needsConfig` (every asked plugin needs configuration), `noAnswer` (broken plugin, bad output); a mix takes the most frequent reason, a tie goes to `network`. `LyricsSummary` gains `onlineSynced`, `onlinePlain`, `instrumental`, `searching`.
+- `track_lyrics_choices.mode` is `off` or `file` (see the database doc); no row = automatic.
+
+### Reading plugin output (`domain/online/candidate_reader.dart`)
+
+`readSearchOutput` takes the JSON of `search` (an array of `{id, title, artist, album?, durationMs?, lyrics?}`): at most 20 results are kept; an item that breaks the shape is dropped with a numbered reason (`result #4: "artist" must be a non-empty string`; ids of 1 to 256 characters, a duration of 0 or below is refused, 24 h or more is ignored, inline lyrics over 1 MiB drop the item); labels lose control and bidi characters; a repeated id keeps the first. A non-array, or a non-empty array with no valid item, throws `PluginOutputException` (an invalid response, not "no lyrics"); its `reason` and `dropped` (and `SearchRead.rejectionSummary`) are runtime-made text for `PluginRunner.reportRejectedOutput`. `readLyricsOutput` takes the JSON of `lyrics`: `null`, `{instrumental: true}` (wins) or `{data, type?}`; `lrc` and no type are synced only when the text parses as timed lyrics (through `parseLyricsText`, the one LRC parser), `txt` is plain.
+
+### Match gate and rank (`domain/online/lyrics_match.dart`)
+
+- Automatic search needs a title, a real artist (not "Unknown Artist", "Various Artists" and the like) and a duration above 0 (`isAutoSearchable`); other songs only get the manual search.
+- A result matches when: duration within `maxDurationDelta` = 3 s (inclusive; also the picker's "khớp" threshold; skipped for a query with no duration), title equal after `normalizeTitle` (brackets and ` - ` suffixes that are only noise such as remaster, feat., official video are dropped; live, remix, acoustic stay), joined-equal or at least 0.85 similar, any artist of the tag equal or at least 0.85 similar to any artist of the result (names of 2 characters or fewer must be equal), and a body with lyrics or the instrumental flag (a result with no body is judged on its metadata and its body is fetched next). A result with no duration is accepted only when title and artist are exactly equal after normalisation, and ranks after every result that has one. A rejected id, or a text whose content hash is rejected, never matches.
+- Rank: good matches first, then synced, plain, instrumental, no body; a result with a duration before one without; smaller difference; higher title similarity; source order. The manual rank (no title) is body rank, then the difference to the song's duration when known, then source order.
+
+### Stored data (`data/online/`)
+
+`PinStore` (kept copy), `RejectStore` ("Không đúng bài") and `OnlineCacheStore` (lookup cache) write the tables described in the database doc. Pin and reject writes refuse a deleted track and return `StoreResult.notStored`; they never throw for it. The cache key is `onlineLyricsCacheKey` (sha256 over the folded artist, normalised title, folded album and rounded seconds). A `not_found` answer is trusted for 14 days. `online_row_mapper.dart` turns rows into the resolver's inputs (text parsed).
+
+### Resolution (`domain/online/online_resolution.dart`)
+
+`resolveTrackLyrics(...)` is pure and returns a `LyricsResolution(state, sourcesToAsk)`. The order is fixed: choice `off`; choice `file` (with local lyrics; the file wins over a kept copy); the kept copy; local lyrics; a cached result of a known plugin (lyrics before instrumental, plugin order, ignored when its declared duration is more than 3 s from the track's); no lyrics plugin installed (`LyricsNoSource`); automatic search off or the song not searchable (`LyricsNone`); every enabled plugin has a fresh miss, or none is enabled (`LyricsNotFound`); an in-memory `LookupOutcome` of this track while its retry time is ahead (`LyricsLookupPaused` / `LyricsLookupFailed`); else the plugins to ask (enabled, no fresh miss, not paused, not in backoff, not needing configuration, not broken) give `LyricsSearching`. With none left to ask and no run to make, all paused gives `LyricsLookupPaused(earliest end)`, anything else `LyricsLookupFailed` (reason by the rule above, `retryAt` = earliest end of a backoff or pause, null when only configuration is missing).
+
+### Sources and their settings
+
+- `lyrics.auto_search` (bool, default on) and `lyrics.online_sources` (JSON `[{id, on}]`, device-local; the list order is the user's order) in `state/lyrics_settings.dart`. They live here, not in `plugins/`.
+- `lyricsSourcesProvider` (`state/online/lyrics_sources_provider.dart`) merges the live lyrics plugins (`installedPluginsProvider`) with the saved list: saved ids first in saved order with the saved switch, plugins never saved follow in install order and start **on** when installed from a repository and **off** when installed from a file or a link; a removed plugin drops out. Each `LyricsSource` has id (also the icon id), name, version, origin, switch and `problem` (`broken` when `plugin.json` no longer parses, `needsConfig` when a required field has no value, `paused` while a rate-limit pause runs; most severe first) plus `pausedUntil`. The list is empty until `lyricsSourcesLoadedProvider` is true (the plugin stream has its first value; the settings are read synchronously): a lookup waits for it, because an empty list before it is not "no plugin". `prefsOf(sources)` builds the value to store after the user reorders or switches.
+
 ## Settings › Lyrics (`screens/settings/ui/lyrics/`)
 
 Route `/settings/lyrics`: `lyricsSettingsLocation` (`lyrics/ui/lyrics_settings_link.dart`) is the single copy of the path;

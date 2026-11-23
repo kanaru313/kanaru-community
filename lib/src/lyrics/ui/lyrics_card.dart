@@ -128,11 +128,17 @@ class _CardBody extends ConsumerWidget {
               _OneLine(text: line.text, style: style, textAlign: textAlign),
           ],
         );
-      case LyricsNone() || LyricsUnavailable():
+      case LyricsNone() ||
+          LyricsUnavailable() ||
+          LyricsNotFound() ||
+          LyricsNoSource() ||
+          LyricsInstrumental() ||
+          LyricsLookupFailed() ||
+          LyricsLookupPaused():
         status = l10n.lyricsCardNone;
       case LyricsOff():
         status = l10n.lyricsCardOff;
-      case LyricsLoading():
+      case LyricsLoading() || LyricsSearching():
         status = _blank;
     }
     return Text(
