@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:logging/logging.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
@@ -17,7 +17,6 @@ final _log = Logger('settings.lyrics_sources');
 /// search asks them, each with its switch. Reorder and switches apply at once.
 class LyricsSourcesSection extends ConsumerWidget {
   const LyricsSourcesSection({super.key});
-
 
   static const double _iconSize = 24;
 
@@ -82,7 +81,9 @@ class LyricsSourcesSection extends ConsumerWidget {
     String id,
     bool enabled,
   ) async {
-    final name = shown.firstWhere((s) => s.id == id).name;
+    final source = shown.where((s) => s.id == id).firstOrNull;
+    if (source == null) return;
+    final name = source.name;
     // Taken before the await: the context may be gone when the write ends.
     final messenger = ScaffoldMessenger.maybeOf(context);
     final on = l10n.lyricsSettingsSourceOnToast(name);
