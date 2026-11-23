@@ -929,8 +929,6 @@
   "pluginsPageUseLyrics": "Find lyrics automatically",
   "pluginsPageUseTranslate": "Default translation service",
   "pluginsPageConnection": "Connection",
-  "pluginsPageConcurrent": "Requests at once",
-  "pluginsPageSpacing": "Time between requests",
   "pluginsPageData": "Data",
   "pluginsPageOwnStorage": "Plugin’s own storage",
   "pluginsPageSavedLyrics": "Lyrics saved from this source",
@@ -1212,5 +1210,6 @@
   },
   "pluginsRemoveKeepPinned": "Pinned lyrics from this source (if any)",
   "pluginsRemoveKeepLrc": "The .lrc files written next to songs",
-  "pluginsRemoveKeep": "Kept"
+  "pluginsRemoveKeep": "Kept",
+  "pluginsPageConnectionRow": "Requests at once, spacing"
 }

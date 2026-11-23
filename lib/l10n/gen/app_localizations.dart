@@ -8376,18 +8376,6 @@ abstract class AppLocalizations {
   /// **'Connection'**
   String get pluginsPageConnection;
 
-  /// No description provided for @pluginsPageConcurrent.
-  ///
-  /// In en, this message translates to:
-  /// **'Requests at once'**
-  String get pluginsPageConcurrent;
-
-  /// No description provided for @pluginsPageSpacing.
-  ///
-  /// In en, this message translates to:
-  /// **'Time between requests'**
-  String get pluginsPageSpacing;
-
   /// No description provided for @pluginsPageData.
   ///
   /// In en, this message translates to:
@@ -8963,6 +8951,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kept'**
   String get pluginsRemoveKeep;
+
+  /// No description provided for @pluginsPageConnectionRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests at once, spacing'**
+  String get pluginsPageConnectionRow;
 }
 
 class _AppLocalizationsDelegate

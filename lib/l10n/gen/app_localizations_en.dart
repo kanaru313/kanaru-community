@@ -5721,12 +5721,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginsPageConnection => 'Connection';
 
   @override
-  String get pluginsPageConcurrent => 'Requests at once';
-
-  @override
-  String get pluginsPageSpacing => 'Time between requests';
-
-  @override
   String get pluginsPageData => 'Data';
 
   @override
@@ -6104,4 +6098,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pluginsRemoveKeep => 'Kept';
+
+  @override
+  String get pluginsPageConnectionRow => 'Requests at once, spacing';
 }

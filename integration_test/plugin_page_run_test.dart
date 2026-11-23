@@ -183,7 +183,7 @@ void main() {
       'the plugin page',
     );
     await shot('02-page-1');
-    await scrollTo(find.text(t.pluginsPageSpacing));
+    await scrollTo(find.text(t.pluginsPageConnectionRow));
     expect(find.text(t.pluginsPageConnection), findsOneWidget);
     expect(find.text(t.appComingSoon), findsWidgets);
     await shot('03-page-connection');

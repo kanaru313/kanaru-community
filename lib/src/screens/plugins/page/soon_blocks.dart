@@ -4,7 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../settings/ui/soon_row.dart';
 
-/// "Kết nối": the two limits of requests, dimmed "Sắp có" (the runtime uses
+/// "Kết nối": one dimmed row for the request limits "Sắp có" (the runtime uses
 /// fixed limits for now).
 class ConnectionBlock extends StatelessWidget {
   const ConnectionBlock({super.key});
@@ -15,8 +15,7 @@ class ConnectionBlock extends StatelessWidget {
     return SetupSection(
       title: Text(l10n.pluginsPageConnection),
       children: [
-        SoonRow(icon: KIcons.bolt, title: Text(l10n.pluginsPageConcurrent)),
-        SoonRow(icon: KIcons.duration, title: Text(l10n.pluginsPageSpacing)),
+        SoonRow(icon: KIcons.bolt, title: Text(l10n.pluginsPageConnectionRow)),
       ],
     );
   }

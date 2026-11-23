@@ -4104,8 +4104,6 @@
   "pluginsPageUseLyrics": "Tự tìm lời",
   "pluginsPageUseTranslate": "Dịch vụ dịch mặc định",
   "pluginsPageConnection": "Kết nối",
-  "pluginsPageConcurrent": "Yêu cầu cùng lúc",
-  "pluginsPageSpacing": "Giãn cách giữa các yêu cầu",
   "pluginsPageData": "Dữ liệu",
   "pluginsPageOwnStorage": "Bộ nhớ riêng của plugin",
   "pluginsPageSavedLyrics": "Lời đã lưu từ nguồn này",
@@ -4387,5 +4385,6 @@
   },
   "pluginsRemoveKeepPinned": "Lời đã ghim từ nguồn này (nếu có)",
   "pluginsRemoveKeepLrc": "File .lrc đã ghi cạnh bài",
-  "pluginsRemoveKeep": "Vẫn giữ"
+  "pluginsRemoveKeep": "Vẫn giữ",
+  "pluginsPageConnectionRow": "Yêu cầu cùng lúc, giãn cách"
 }

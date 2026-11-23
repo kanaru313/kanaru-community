@@ -5258,12 +5258,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pluginsPageConnection => 'Kết nối';
 
   @override
-  String get pluginsPageConcurrent => 'Yêu cầu cùng lúc';
-
-  @override
-  String get pluginsPageSpacing => 'Giãn cách giữa các yêu cầu';
-
-  @override
   String get pluginsPageData => 'Dữ liệu';
 
   @override
@@ -5606,4 +5600,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pluginsRemoveKeep => 'Vẫn giữ';
+
+  @override
+  String get pluginsPageConnectionRow => 'Yêu cầu cùng lúc, giãn cách';
 }

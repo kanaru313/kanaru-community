@@ -155,8 +155,7 @@ void main() {
     for (final title in [
       'Static facts',
       'Source code',
-      'Requests at once',
-      'Time between requests',
+      'Requests at once, spacing',
       'Plugin’s own storage',
       'Lyrics saved from this source',
       'Log',

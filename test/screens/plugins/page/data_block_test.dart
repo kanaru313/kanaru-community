@@ -60,7 +60,7 @@ void main() {
           of: find.byType(ConnectionBlock),
           matching: find.text('Coming soon'),
         );
-        expect(soon, findsNWidgets(2));
+        expect(soon, findsOneWidget);
       });
 
       testWidgets('empty storage: value shown, Clear dimmed', (tester) async {
