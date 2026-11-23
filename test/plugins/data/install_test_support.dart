@@ -13,6 +13,7 @@ import 'package:kanaru/src/plugins/data/install/write_queue.dart';
 import 'package:kanaru/src/plugins/data/repos/catalog_cache.dart';
 import 'package:kanaru/src/plugins/data/repos/catalog_codec.dart';
 import 'package:kanaru/src/plugins/data/repos/repo_address_guard.dart';
+import 'package:kanaru/src/plugins/data/run/run_gate.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_config_store.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_files.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_repo_rows.dart';
@@ -64,7 +65,12 @@ Future<void> turns([int n = 10]) async {
 /// The install services over an in-memory database, a temp folder and fakes.
 /// [zips] maps a download address to the zip served for it.
 class InstallHarness {
-  InstallHarness({this.unlocked = false, WriteFileBytes? writeFile}) {
+  InstallHarness({
+    this.unlocked = false,
+    WriteFileBytes? writeFile,
+    Duration exclusiveWait = defaultExclusiveWait,
+  }) {
+    runGate = RunGate(exclusiveWait: exclusiveWait);
     db = openTestDb();
     dir = tempDir();
     rows = PluginRows(db, clock: () => ++now);
@@ -105,6 +111,7 @@ class InstallHarness {
       config: config,
       held: held,
       catalogs: catalogs,
+      runGate: runGate,
       streamingUnlocked: () => unlocked,
       startupRestore: restore.future,
       findMissing: () => queue.run(
@@ -118,6 +125,7 @@ class InstallHarness {
   var now = 1000;
   final zips = <String, Uint8List>{};
   Uint8List pickedBytes = validZip();
+  late final RunGate runGate;
   late final AppDatabase db;
   late final Directory dir;
   late final PluginRows rows;

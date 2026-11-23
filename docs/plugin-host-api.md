@@ -162,7 +162,7 @@ host can keep per-plugin state (cookies, consent) without the script knowing it.
 looking at the cancel flag every 50 ms. A host that never answers ends the call
 as `Timeout`; a host call that panics is answered as `Network`; a cancel ends
 the call `Cancelled` within about 100 ms. The request carries `deadline_ms`
-(what is left of the call).
+(what is left of the call). The app uses it as the overall timeout of the HTTP exchange, as given: connect is bounded separately (10 s) and there is no extra shorter cap, so a long request (an AI translation, 80 s) completes inside it. Time the host spends waiting between request starts of one plugin counts against `deadline_ms`.
 
 **Memory.** Unread response bodies are charged to one 16 MiB Rust-side budget per
 call (the heap cap does not see Rust memory). Going over throws `RangeError` and
@@ -266,6 +266,18 @@ flag and the deadline are looked at every 65 536 steps, so a cancel or timeout
 ends even a selector that needs minutes (many alternatives, `:has(x span)`, long
 class lists on a large page); the call ends `Cancelled` / `Timeout`. A panic in
 an `Html` native ends the call `Internal` even if the script catches the error.
+
+## Lyrics scripts
+
+A plugin of type `lyrics` declares two scripts, `search` and `lyrics`. Each is an ordinary script (above) whose `execute(input)` receives **one object** (not a string) and returns `Response.success(...)` or `Response.error(message, { kind, retryAfterSec })`. Plugins keep their own state in `localStorage` (a token, a cookie) and read settings with `localConfig`; the app sends nothing for them.
+
+**`search`.** Input, automatic lookup of the playing track: `{ title, artist, artists, album, durationMs }`; a missing tag is `null`, `artist` is the primary artist, `durationMs` is in milliseconds. Input, a search typed by the user: `{ text }`. Output: an array of up to 20 items `{ id, title, artist, album?, durationMs?, lyrics? }`: `id` a stable string of 1-256 characters, `title` and `artist` non-empty, `durationMs` an integer above 0 and under 24 h, `lyrics` (when the search already returned it) a string of at most 1 MiB. An invalid item is dropped, not the whole list.
+
+**`lyrics`.** Input: the chosen item's `id` as a string. Output: `null` (no lyrics), `{ instrumental: true }` (wins over data) or `{ data, type? }` with `type` `lrc` or `txt`. Anything else is an invalid response.
+
+**Errors.** `Response.error` kinds: `rateLimited` (with `retryAfterSec` when the server said so), `invalidResponse`, `server`, `auth`, `quota`; an unknown kind is `server`. A failed `fetch` is a sticky failure (above): a script that catches it and returns an empty list still ends `Ok` with a `fetch_failure`, and the app treats "empty result + failure" as a failure, never as "no lyrics". For lyrics the app folds `auth` into a server failure and `quota` into a rate limit.
+
+**Time.** The app runs `search` and `lyrics` with a 30 s script wall (plus 0.9 s for the pauses between requests); the chain of a token fetch, a search and a lyrics fetch fits in it. A run that needs more fails as a timeout.
 
 ## Streaming runs
 

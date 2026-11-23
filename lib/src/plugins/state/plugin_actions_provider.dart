@@ -32,6 +32,7 @@ final pluginActionsProvider = Provider<PluginActions>((ref) {
     config: ref.watch(pluginConfigStoreProvider),
     held: services.held,
     catalogs: services.catalogs,
+    runGate: services.runGate,
     // Asked at every check, never cached, so a change of license applies at
     // once.
     streamingUnlocked: () =>

@@ -14,6 +14,7 @@ import '../data/repos/icon_cache.dart';
 import '../data/repos/repo_address_guard.dart';
 import '../data/repos/repo_refresher.dart';
 import '../data/repos/repo_store.dart';
+import '../data/run/run_gate.dart';
 import '../domain/install/script_checker.dart';
 import 'plugin_store_providers.dart';
 
@@ -36,6 +37,7 @@ class PluginServices {
     required this.icons,
     required this.held,
     required this.catalogs,
+    required this.runGate,
     required this._startupRestore,
   });
 
@@ -46,6 +48,11 @@ class PluginServices {
   final PluginIconCache icons;
   final HeldPackages held;
   final CatalogCache catalogs;
+
+  /// Keeps plugin runs and package switches apart (install-over, update,
+  /// repair, remove). One per process: runs and switches must meet in the
+  /// same gate.
+  final RunGate runGate;
   final Future<List<RestoreCandidate>> _startupRestore;
 
   /// The live plugins whose package folder was missing when the first queue
@@ -121,6 +128,7 @@ final pluginServicesProvider = Provider<PluginServices>((ref) {
       catalogs: catalogs,
       refreshRepo: refresher.refresh,
     ),
+    runGate: RunGate(),
     startupRestore: restore.future,
   );
 });
