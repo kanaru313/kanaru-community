@@ -4283,6 +4283,19 @@
   "@fontsImportTooLarge": {},
   "fontsImportInvalid": "Tệp này không phải phông .ttf hoặc .otf.",
   "@fontsImportInvalid": {},
+  "fontsImportFileTypes": "Phông chữ",
+  "@fontsImportFileTypes": {
+    "description": "Name of the file type in the system dialog that picks a font."
+  },
+  "fontsDownloading": "Đang tải {name}",
+  "@fontsDownloading": {
+    "description": "Screen-reader label of the progress spinner on a font that is downloading.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "fontsRemoveTitle": "Xoá phông “{name}”?",
   "@fontsRemoveTitle": {
     "placeholders": {

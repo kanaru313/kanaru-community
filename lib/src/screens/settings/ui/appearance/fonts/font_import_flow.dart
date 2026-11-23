@@ -9,6 +9,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../../l10n/gen/app_localizations.dart';
 import '../../../../../foundation/result.dart';
+import '../../../../../fonts/domain/app_font.dart';
 import '../../../../../fonts/domain/custom_font.dart';
 import '../../../../../fonts/domain/font_label.dart';
 import '../../../../../fonts/state/custom_fonts.dart';
@@ -27,7 +28,7 @@ Future<void> importCustomFont(BuildContext context, WidgetRef ref) async {
   final picker = ref.read(documentPickerProvider);
   final fonts = ref.read(customFontsProvider.notifier);
   final filter = customFontDocumentFilter(
-    label: 'Font',
+    label: l10n.fontsImportFileTypes,
     withMimeTypes: defaultTargetPlatform == TargetPlatform.android,
   );
 
@@ -104,6 +105,9 @@ Future<void> deleteCustomFont(
     await fonts.delete(font.id);
   } on StateError catch (e) {
     _log.warning('Delete of "${font.id}" refused: $e');
+    return;
+  } on FontDeleteException catch (e) {
+    _log.warning('Delete of "${font.id}" failed: $e');
     return;
   }
   showAppSnackBarOn(messenger, l10n.fontsRemoved);

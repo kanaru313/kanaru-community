@@ -155,13 +155,12 @@ void main() {
   testWidgets('download shows a spinner, then the delete button and a note', (
     tester,
   ) async {
+    final semantics = tester.ensureSemantics();
     final h = await pump(tester);
     await tester.tap(download('Lora'));
     await tester.pump();
-    expect(
-      inRow('Lora', find.byType(CircularProgressIndicator)),
-      findsOneWidget,
-    );
+    expect(find.bySemanticsLabel(RegExp('Downloading Lora')), findsOneWidget);
+    semantics.dispose();
     expect(download('Lora'), findsNothing);
     expect(h.container.read(fontDownloadsProvider), {'lora'});
     downloader.gate.complete();
@@ -177,6 +176,7 @@ void main() {
   testWidgets('a failed download says so and can be tried again', (
     tester,
   ) async {
+    final semantics = tester.ensureSemantics();
     await pump(tester);
     downloader.error = const FontDownloadException('network');
     await tester.tap(download('Lora'));
@@ -190,7 +190,8 @@ void main() {
       findsOneWidget,
     );
     expect(download('Lora'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.bySemanticsLabel(RegExp('Downloading ')), findsNothing);
+    semantics.dispose();
   });
 
   testWidgets('a second tap on the button while downloading is ignored', (
@@ -239,6 +240,20 @@ void main() {
       expect(h.container.read(installedCatalogFontsProvider), isEmpty);
     },
   );
+
+  testWidgets('a delete that fails on disk shows no success note', (
+    tester,
+  ) async {
+    install('lora');
+    final h = await pump(tester);
+    final dir = storage.fontDir(AppFontKind.catalog, 'lora');
+    Process.runSync('chmod', ['555', dir.path]);
+    addTearDown(() => Process.runSync('chmod', ['755', dir.path]));
+    await tester.tap(delete('Lora'));
+    await tester.pumpAndSettle();
+    expect(find.text('Font deleted (you can download it again)'), findsNothing);
+    expect(h.container.read(installedCatalogFontsProvider), {'lora'});
+  }, skip: Process.runSync('id', ['-u']).stdout.toString().trim() == '0');
 
   testWidgets('the active font has no delete and the state layer refuses it', (
     tester,

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/fonts/data/custom_font_store.dart';
 import 'package:kanaru/src/fonts/data/font_storage.dart';
+import 'package:kanaru/src/fonts/domain/app_font.dart';
 import 'package:kanaru/src/fonts/domain/custom_font.dart';
 import 'package:kanaru/src/fonts/domain/font_label.dart';
 import 'package:kanaru/src/platform/domain/app_paths.dart';
@@ -150,7 +151,7 @@ void main() {
       File('${custom.path}/custom_fonts.json').writeAsStringSync('{ not json');
       final listed = store.list();
       expect(listed.map((f) => f.id), [font.id]);
-      expect(listed.single.label, 'nunito');
+      expect(listed.single.label, 'Nunito');
       expect(
         entries().where((n) => n.startsWith('custom_fonts.json.corrupt.')),
         hasLength(1),
@@ -159,7 +160,7 @@ void main() {
       final other = await store.importBytes('y.ttf', _named('Other'));
       expect(
         jsonDecode(File('${custom.path}/custom_fonts.json').readAsStringSync()),
-        {other.id: 'Other'},
+        {font.id: 'Nunito', other.id: 'Other'},
       );
     },
   );
@@ -174,4 +175,43 @@ void main() {
     ) as Map;
     expect(manifest.keys, containsAll(results.map((f) => f.id)));
   });
+
+  test('a corrupt manifest: labels are re-read from the font files, '
+      'diacritics and non-Latin names included, and written back', () async {
+    final names = ['Phông Việt', 'Шрифт Тест'];
+    final fonts = [
+      for (final n in names) await store.importBytes('x.ttf', _named(n)),
+    ];
+    final manifestFile = File('${custom.path}/custom_fonts.json');
+    manifestFile.writeAsStringSync('{ not json');
+    final listed = store.list();
+    expect(
+      {for (final f in listed) f.id: f.label},
+      {for (var i = 0; i < names.length; i++) fonts[i].id: names[i]},
+    );
+    // Something that goes through the serial queue ends after the write-back.
+    await store.delete('custom_missing_00000000');
+    expect(jsonDecode(manifestFile.readAsStringSync()), {
+      for (var i = 0; i < names.length; i++) fonts[i].id: names[i],
+    });
+  });
+
+  test(
+    'delete throws a typed error when the folder cannot be removed',
+    () async {
+      final font = await store.importBytes('x.ttf', _named('Locked'));
+      // A read-only parent folder refuses to unlink the child.
+      await Process.run('chmod', ['555', custom.path]);
+      addTearDown(() => Process.run('chmod', ['755', custom.path]));
+      await expectLater(
+        store.delete(font.id),
+        throwsA(isA<FontDeleteException>()),
+      );
+    },
+    skip:
+        Platform.isWindows ||
+            Process.runSync('id', ['-u']).stdout.toString().trim() == '0'
+        ? 'needs a non-root POSIX user'
+        : false,
+  );
 }

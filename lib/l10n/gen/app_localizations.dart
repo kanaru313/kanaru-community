@@ -8784,6 +8784,18 @@ abstract class AppLocalizations {
   /// **'This file is not a .ttf or .otf font.'**
   String get fontsImportInvalid;
 
+  /// Name of the file type in the system dialog that picks a font.
+  ///
+  /// In en, this message translates to:
+  /// **'Fonts'**
+  String get fontsImportFileTypes;
+
+  /// Screen-reader label of the progress spinner on a font that is downloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading {name}'**
+  String fontsDownloading(String name);
+
   /// Title of the confirmation before deleting an imported font.
   ///
   /// In en, this message translates to:

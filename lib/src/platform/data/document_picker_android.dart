@@ -79,7 +79,8 @@ class AndroidDocumentPicker implements DocumentPicker {
     final isPlaylist = filter.extensions
         .map((e) => e.toLowerCase())
         .any((e) => e == 'm3u' || e == 'm3u8');
-    return [
+    // A set keeps the order and drops a type the filter already lists.
+    return {
       ...filter.mimeTypes,
       if (isPlaylist) ...[
         'audio/x-mpegurl',
@@ -88,7 +89,7 @@ class AndroidDocumentPicker implements DocumentPicker {
         'text/plain',
       ],
       'application/octet-stream',
-    ];
+    }.toList();
   }
 
   @override

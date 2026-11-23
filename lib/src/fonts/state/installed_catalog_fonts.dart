@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../domain/app_font.dart';
 import '../domain/font_catalog.dart';
 import 'font_downloads.dart';
 import 'font_providers.dart';
@@ -14,7 +17,8 @@ class InstalledCatalogFonts extends Notifier<Set<String>> {
 
   /// Deletes the downloaded font [id]; it can be downloaded again. Throws
   /// [StateError] for the font in use, one that is downloading, or an id that
-  /// is not in the catalog.
+  /// is not in the catalog, and [FontDeleteException] when the files cannot
+  /// be removed.
   void delete(String id) {
     final font = catalogFontById(id);
     if (font == null) throw StateError('"$id" is not a catalog font');
@@ -24,8 +28,13 @@ class InstalledCatalogFonts extends Notifier<Set<String>> {
     if (ref.read(fontDownloadsProvider).contains(id)) {
       throw StateError('"$id" is downloading');
     }
-    ref.read(fontStorageProvider).deleteFont(font.asAppFont);
-    refresh();
+    try {
+      ref.read(fontStorageProvider).deleteFont(font.asAppFont);
+    } on FileSystemException catch (e) {
+      throw FontDeleteException(id, '$e');
+    } finally {
+      refresh();
+    }
   }
 }
 

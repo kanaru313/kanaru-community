@@ -116,6 +116,19 @@
   "@fontsImportInvalid": {
     "description": "Snack bar when the picked file is not a usable font or cannot be read."
   },
+  "fontsImportFileTypes": "Fonts",
+  "@fontsImportFileTypes": {
+    "description": "Name of the file type in the system dialog that picks a font."
+  },
+  "fontsDownloading": "Downloading {name}",
+  "@fontsDownloading": {
+    "description": "Screen-reader label of the progress spinner on a font that is downloading.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "fontsRemoveTitle": "Delete the font “{name}”?",
   "@fontsRemoveTitle": {
     "description": "Title of the confirmation before deleting an imported font.",

@@ -51,6 +51,21 @@ class _FailingStore extends MemorySettingsStore {
   }
 }
 
+/// A store whose write of `inter` waits for [gate] and then fails; every other
+/// write works.
+class _SlowFailingInterStore extends MemorySettingsStore {
+  final gate = Completer<void>();
+
+  @override
+  Future<void> write(String key, Object? value) async {
+    if (value == 'inter') {
+      await gate.future;
+      throw const FileSystemException('read-only');
+    }
+    await super.write(key, value);
+  }
+}
+
 /// The row of the font named [name].
 Finder _row(String name) => find.ancestor(
   of: find.textContaining(name),
@@ -167,6 +182,32 @@ void main() {
     expect(h.container.read(activeFontIdProvider), 'nunito');
     expect(find.text("Couldn't use the font Inter."), findsOneWidget);
     expect(find.text('Font changed'), findsNothing);
+  });
+
+  testWidgets('a failed save does not undo a newer tap', (tester) async {
+    final store = _SlowFailingInterStore();
+    final h = await pumpSettings(
+      tester,
+      location: SettingsPaths.fonts,
+      size: tall,
+      scaffold: true,
+      store: store,
+      overrides: [
+        fontStorageProvider.overrideWithValue(
+          FontStorage(_Paths(Directory.systemTemp)),
+        ),
+      ],
+    );
+    await tester.tap(find.text('Inter'));
+    await tester.pump();
+    await tester.tap(find.text('System font'));
+    await tester.pumpAndSettle();
+    expect(h.container.read(activeFontIdProvider), 'system');
+    store.gate.complete();
+    await tester.pumpAndSettle();
+    expect(h.container.read(activeFontIdProvider), 'system');
+    expect(store.read('app.font'), 'system');
+    expect(find.text("Couldn't use the font Inter."), findsNothing);
   });
 
   testWidgets('desktop header arrow leads to Appearance', (tester) async {

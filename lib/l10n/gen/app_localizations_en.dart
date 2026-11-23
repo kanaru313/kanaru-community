@@ -5964,6 +5964,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fontsImportInvalid => 'This file is not a .ttf or .otf font.';
 
   @override
+  String get fontsImportFileTypes => 'Fonts';
+
+  @override
+  String fontsDownloading(String name) {
+    return 'Downloading $name';
+  }
+
+  @override
   String fontsRemoveTitle(String name) {
     return 'Delete the font “$name”?';
   }

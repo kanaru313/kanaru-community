@@ -284,6 +284,22 @@ void main() {
     expect(row('Alpha'), findsOneWidget);
   });
 
+  testWidgets('a delete that fails on disk shows no success note', (
+    tester,
+  ) async {
+    final fonts = await seed(tester, ['Alpha']);
+    final dir = '${storage.customDir.path}/${fonts.single.id}';
+    await pump(tester);
+    Process.runSync('chmod', ['555', dir]);
+    addTearDown(() => Process.runSync('chmod', ['755', dir]));
+    await tester.tap(byIconButton('Delete Alpha'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await settle(tester);
+    expect(find.text('Font deleted'), findsNothing);
+    expect(row('Alpha'), findsOneWidget);
+  }, skip: Process.runSync('id', ['-u']).stdout.toString().trim() == '0');
+
   testWidgets('confirming deletes the font and its folder', (tester) async {
     final fonts = await seed(tester, ['Alpha', 'Beta']);
     await pump(tester);

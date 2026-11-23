@@ -65,4 +65,42 @@ void main() {
       throwsA(isA<FontZipException>()),
     );
   });
+
+  test('refuses files that add up to more than the zip cap', () {
+    final big = Uint8List(maxFontZipBytes ~/ 2 + 1024);
+    expect(
+      () => extractFontZip(_zip({'a.ttf': big, 'b.otf': big})),
+      throwsA(
+        isA<FontZipException>().having(
+          (e) => e.message,
+          'message',
+          contains('too large'),
+        ),
+      ),
+    );
+  });
+
+  test('refuses an entry whose unpacked size is not the declared one', () {
+    final zip = _zip({'a.ttf': Uint8List.fromList(List.filled(64, 7))});
+    final data = ByteData.sublistView(zip);
+    // Lie about the uncompressed size in the central directory entry
+    // (signature 0x02014b50, size field at +24) and the local header (+22).
+    for (var i = 0; i + 30 < zip.length; i++) {
+      if (data.getUint32(i, Endian.little) == 0x02014b50) {
+        data.setUint32(i + 24, 128, Endian.little);
+      } else if (data.getUint32(i, Endian.little) == 0x04034b50) {
+        data.setUint32(i + 22, 128, Endian.little);
+      }
+    }
+    expect(
+      () => extractFontZip(zip),
+      throwsA(
+        isA<FontZipException>().having(
+          (e) => e.message,
+          'message',
+          contains('does not match'),
+        ),
+      ),
+    );
+  });
 }

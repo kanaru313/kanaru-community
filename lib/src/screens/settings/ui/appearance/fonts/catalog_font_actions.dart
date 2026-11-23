@@ -1,11 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../../l10n/gen/app_localizations.dart';
+import '../../../../../fonts/domain/app_font.dart';
 import '../../../../../fonts/domain/font_catalog.dart';
 import '../../../../../fonts/state/font_downloads.dart';
 import '../../../../../fonts/state/installed_catalog_fonts.dart';
+
+final _log = Logger('catalog_font_actions');
 
 /// Downloads [font] and tells the user how it went. The download goes on when
 /// the page is closed, so the snack bar goes through a messenger taken before
@@ -36,6 +40,9 @@ void deleteCatalogFont(BuildContext context, WidgetRef ref, CatalogFont font) {
     ref.read(installedCatalogFontsProvider.notifier).delete(font.id);
   } on StateError {
     return; // in use or downloading: the row offers no delete anyway
+  } on FontDeleteException catch (e) {
+    _log.warning('Delete of "${font.id}" failed: $e');
+    return;
   }
   showAppSnackBarOn(messenger, l10n.fontsDeleted);
 }

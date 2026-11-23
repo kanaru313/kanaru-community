@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
@@ -29,6 +30,7 @@ class CustomFontStore {
   /// Imported fonts, sorted by name (case-insensitive). Never throws.
   List<CustomFont> list() {
     final manifest = _readManifest();
+    final rebuilt = <String, String>{};
     final fonts = <CustomFont>[];
     try {
       if (_storage.customDir.existsSync()) {
@@ -36,21 +38,53 @@ class CustomFontStore {
           if (e is! Directory) continue;
           final id = e.uri.pathSegments.lastWhere((s) => s.isNotEmpty);
           if (!isCustomFontId(id) || _filesOf(id).isEmpty) continue;
-          fonts.add(
-            CustomFont(
-              id: id,
-              label: manifest[id] ?? customFontFallbackLabel(id),
-            ),
-          );
+          var label = manifest[id];
+          if (label == null) {
+            final family = _familyFromFile(id);
+            if (family != null) rebuilt[id] = family;
+            label = family ?? customFontFallbackLabel(id);
+          }
+          fonts.add(CustomFont(id: id, label: label));
         }
       }
     } on FileSystemException catch (e) {
       _log.warning('Cannot scan ${_storage.customDir.path}', e);
     }
+    if (rebuilt.isNotEmpty) _persistRebuilt(rebuilt);
     fonts.sort(
       (a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()),
     );
     return fonts;
+  }
+
+  /// Writes labels re-read from the font files back to the manifest, in the
+  /// serial queue, so a lost manifest is not lost for good.
+  void _persistRebuilt(Map<String, String> rebuilt) {
+    _serial(() async {
+      final manifest = _readManifest();
+      var changed = false;
+      for (final e in rebuilt.entries) {
+        if (manifest.containsKey(e.key)) continue;
+        if (_filesOf(e.key).isEmpty) continue; // deleted meanwhile
+        manifest[e.key] = e.value;
+        changed = true;
+      }
+      if (changed) await _writeManifest(manifest);
+    }).catchError((Object e, StackTrace st) {
+      _log.warning('Cannot save the rebuilt font manifest', e, st);
+    });
+  }
+
+  /// The family name stored in the font file of [id]; null when unreadable.
+  String? _familyFromFile(String id) {
+    try {
+      final files = _filesOf(id);
+      if (files.isEmpty) return null;
+      return parseFontHeader(files.first.readAsBytesSync())?.family;
+    } on FileSystemException catch (e) {
+      _log.warning('Cannot read the font file of "$id"', e);
+      return null;
+    }
   }
 
   /// Validates and stores [bytes]; the same bytes again give the existing
@@ -60,9 +94,14 @@ class CustomFontStore {
       _serial(() => _import(fileName, bytes));
 
   /// Deletes the folder of [id] and its manifest entry. Missing is fine.
+  /// Throws [FontDeleteException] when the folder cannot be removed.
   Future<void> delete(String id) => _serial(() async {
     final dir = _storage.fontDir(AppFontKind.custom, id);
-    if (dir.existsSync()) dir.deleteSync(recursive: true);
+    try {
+      if (dir.existsSync()) dir.deleteSync(recursive: true);
+    } on FileSystemException catch (e) {
+      throw FontDeleteException(id, '$e');
+    }
     final manifest = _readManifest()..remove(id);
     try {
       await _writeManifest(manifest);
@@ -86,14 +125,12 @@ class CustomFontStore {
     if (bytes.length > maxCustomFontBytes) {
       throw const CustomFontException(CustomFontError.tooLarge);
     }
-    final header = parseFontHeader(bytes);
+    final inspected = await _inspect(fileName, bytes);
+    final header = inspected.header;
     if (header == null) {
       throw const CustomFontException(CustomFontError.invalid);
     }
-    final id = _idFor(
-      header.family ?? sanitizeFontLabel(fontFileStem(fileName)),
-      bytes,
-    );
+    final id = inspected.id;
     final label = header.family ?? _fileLabel(fileName, id);
     final manifest = _readManifest();
     if (_filesOf(id).isNotEmpty) {
@@ -169,6 +206,23 @@ class CustomFontStore {
       rethrow;
     }
   }
+
+  /// Parses the header and works out the id off the UI isolate: hashing up to
+  /// 20 MB in Dart would freeze frames.
+  static Future<({FontHeader? header, String id})> _inspect(
+    String fileName,
+    Uint8List bytes,
+  ) => Isolate.run(() {
+    final header = parseFontHeader(bytes);
+    if (header == null) return (header: null, id: '');
+    return (
+      header: header,
+      id: _idFor(
+        header.family ?? sanitizeFontLabel(fontFileStem(fileName)),
+        bytes,
+      ),
+    );
+  });
 
   static String _idFor(String label, Uint8List bytes) {
     final slug = label

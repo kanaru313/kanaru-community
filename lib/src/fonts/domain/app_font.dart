@@ -55,3 +55,14 @@ String customFontFallbackLabel(String id) {
       .trim();
   return label.isEmpty ? id : label;
 }
+
+/// The files of a font could not be deleted (busy, permission, I/O error).
+class FontDeleteException implements Exception {
+  const FontDeleteException(this.id, [this.detail]);
+
+  final String id;
+  final String? detail;
+
+  @override
+  String toString() => 'FontDeleteException($id, $detail)';
+}

@@ -86,9 +86,13 @@ class _CatalogFontsBlockState extends ConsumerState<CatalogFontsBlock> {
     final scheme = Theme.of(context).colorScheme;
     Widget? trailing;
     if (busy) {
-      trailing = const SizedBox.square(
-        dimension: 20,
-        child: CircularProgressIndicator(strokeWidth: 2),
+      trailing = Semantics(
+        label: l10n.fontsDownloading(font.label),
+        liveRegion: true,
+        child: const SizedBox.square(
+          dimension: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
       );
     } else if (!have) {
       trailing = Row(

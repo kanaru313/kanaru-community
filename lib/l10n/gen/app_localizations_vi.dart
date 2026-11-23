@@ -5496,6 +5496,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get fontsImportInvalid => 'Tệp này không phải phông .ttf hoặc .otf.';
 
   @override
+  String get fontsImportFileTypes => 'Phông chữ';
+
+  @override
+  String fontsDownloading(String name) {
+    return 'Đang tải $name';
+  }
+
+  @override
   String fontsRemoveTitle(String name) {
     return 'Xoá phông “$name”?';
   }

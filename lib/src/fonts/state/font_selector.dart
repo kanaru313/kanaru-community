@@ -50,10 +50,13 @@ class FontSelector {
       // The notifier shows the new id before the write: put the old one back
       // so the screen matches what is stored.
       _log.warning('cannot save font "${font.id}"', e, st);
+      // A newer tap owns the state now: rolling back would undo it.
+      if (request != _latest) return FontSelectResult.superseded;
       try {
         await setting.set(previous);
-      } on Object catch (_) {
+      } on Object catch (err, errSt) {
         // Memory is already back on the old id; the store is unwritable.
+        _log.warning('cannot restore font "$previous"', err, errSt);
       }
       return FontSelectResult.failed;
     }

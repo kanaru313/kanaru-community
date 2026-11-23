@@ -38,7 +38,8 @@ class CustomFontException implements Exception {
 }
 
 /// Filter of the import dialog. Android providers report font MIME types
-/// inconsistently, so [withMimeTypes] lists the usual ones; on Linux the
+/// inconsistently, so [withMimeTypes] lists the usual ones (the picker adds
+/// the generic one); on Linux the
 /// extensions alone are used (a generic MIME type would show every binary).
 /// The extension check stays the final word.
 DocumentFilter customFontDocumentFilter({
@@ -57,7 +58,6 @@ DocumentFilter customFontDocumentFilter({
           'application/font-sfnt',
           'application/vnd.ms-opentype',
           'application/x-font-opentype',
-          'application/octet-stream',
         ]
       : const [],
 );
