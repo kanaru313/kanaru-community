@@ -8681,6 +8681,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t use the font {name}.'**
   String fontsUseFailed(String name);
+
+  /// Title of the block of fonts that can be downloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Online fonts'**
+  String get fontsCatalogTitle;
+
+  /// Note about the whole online fonts block, shown behind the info icon.
+  ///
+  /// In en, this message translates to:
+  /// **'Download once, then use without a connection.'**
+  String get fontsCatalogHint;
+
+  /// Label of the button that downloads a font.
+  ///
+  /// In en, this message translates to:
+  /// **'Download {name}'**
+  String fontsDownloadTooltip(String name);
+
+  /// Label of the button that deletes a downloaded font.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}'**
+  String fontsDeleteTooltip(String name);
+
+  /// Snack bar after a font finished downloading; it is not applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Font downloaded'**
+  String get fontsDownloaded;
+
+  /// Snack bar after a downloaded font was deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Font deleted (you can download it again)'**
+  String get fontsDeleted;
+
+  /// Snack bar when a font download failed; nothing was installed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t download the font {name}. Check your connection and try again.'**
+  String fontsDownloadFailed(String name);
 }
 
 class _AppLocalizationsDelegate

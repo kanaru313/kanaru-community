@@ -4224,5 +4224,37 @@
         "type": "String"
       }
     }
+  },
+  "fontsCatalogTitle": "Kho phông trực tuyến",
+  "@fontsCatalogTitle": {},
+  "fontsCatalogHint": "Tải một lần, sau đó dùng không cần mạng.",
+  "@fontsCatalogHint": {},
+  "fontsDownloadTooltip": "Tải {name}",
+  "@fontsDownloadTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsDeleteTooltip": "Xoá {name}",
+  "@fontsDeleteTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsDownloaded": "Đã tải phông",
+  "@fontsDownloaded": {},
+  "fontsDeleted": "Đã xoá phông (tải lại được)",
+  "@fontsDeleted": {},
+  "fontsDownloadFailed": "Không tải được phông {name}. Kiểm tra mạng rồi thử lại.",
+  "@fontsDownloadFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

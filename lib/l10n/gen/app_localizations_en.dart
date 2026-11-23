@@ -5900,4 +5900,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String fontsUseFailed(String name) {
     return 'Couldn\'t use the font $name.';
   }
+
+  @override
+  String get fontsCatalogTitle => 'Online fonts';
+
+  @override
+  String get fontsCatalogHint =>
+      'Download once, then use without a connection.';
+
+  @override
+  String fontsDownloadTooltip(String name) {
+    return 'Download $name';
+  }
+
+  @override
+  String fontsDeleteTooltip(String name) {
+    return 'Delete $name';
+  }
+
+  @override
+  String get fontsDownloaded => 'Font downloaded';
+
+  @override
+  String get fontsDeleted => 'Font deleted (you can download it again)';
+
+  @override
+  String fontsDownloadFailed(String name) {
+    return 'Couldn\'t download the font $name. Check your connection and try again.';
+  }
 }

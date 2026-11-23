@@ -18,11 +18,10 @@ Future<String> resolveStartupFont({
   required String fontId,
   required FontStorage storage,
   required FontRegistrar registrar,
-  Iterable<AppFont> catalog = const [],
 }) async {
   try {
     if (!isValidFontId(fontId)) return defaultFontId;
-    final font = appFontFor(fontId, catalog: catalog);
+    final font = appFontFor(fontId);
     if (font.id != fontId) return defaultFontId;
     await registrar.ensureLoaded(font, storage);
     return font.id;
@@ -40,7 +39,6 @@ Future<String> prepareStartupFont({
   required SettingsStore settings,
   required FontRegistrar registrar,
   FontStorage? storage,
-  Iterable<AppFont> catalog = const [],
 }) async {
   try {
     final store = storage ?? FontStorage(paths);
@@ -58,7 +56,6 @@ Future<String> prepareStartupFont({
       fontId: stored,
       storage: store,
       registrar: registrar,
-      catalog: catalog,
     );
     if (raw != null && raw != id) {
       try {

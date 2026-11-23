@@ -1,10 +1,24 @@
+import 'dart:io';
 import 'dart:ui' show Size;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/fonts/data/font_storage.dart';
+import 'package:kanaru/src/fonts/state/font_providers.dart';
+import 'package:kanaru/src/platform/domain/app_paths.dart';
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
 
 import '../../support/icon_button_finders.dart';
 import 'support/settings_host.dart';
+
+class _Paths implements AppPaths {
+  _Paths(this.dataDir);
+  @override
+  final Directory dataDir;
+  @override
+  Directory get cacheDir => dataDir;
+  @override
+  Directory get configDir => dataDir;
+}
 
 void main() {
   const tall = Size(400, 1600);
@@ -48,6 +62,11 @@ void main() {
       tester,
       location: SettingsPaths.appearance,
       size: tall,
+      overrides: [
+        fontStorageProvider.overrideWithValue(
+          FontStorage(_Paths(Directory.systemTemp)),
+        ),
+      ],
     );
     expect(find.text('Nunito'), findsOneWidget);
     await h.store.write('app.font', 'system');

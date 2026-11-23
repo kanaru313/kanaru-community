@@ -51,6 +51,50 @@ class FontStorage {
     return files;
   }
 
+  /// Staging folder `<id>.tmp` of a catalog install; renamed to the font
+  /// folder once complete. Throws [ArgumentError] for an invalid id.
+  Directory stagingDir(String id) {
+    final dir = fontDir(AppFontKind.catalog, id);
+    return Directory('${dir.path}.tmp');
+  }
+
+  /// Ids of the catalog fonts on disk (a folder with at least one font file).
+  Set<String> installedCatalogIds() {
+    final ids = <String>{};
+    try {
+      if (!catalogDir.existsSync()) return ids;
+      for (final e in catalogDir.listSync(followLinks: false)) {
+        if (e is! Directory) continue;
+        final id = e.uri.pathSegments.lastWhere((s) => s.isNotEmpty);
+        if (!isValidFontId(id)) continue;
+        if (fontFiles(
+          AppFont(id: id, label: id, family: id, kind: AppFontKind.catalog),
+        ).isNotEmpty) {
+          ids.add(id);
+        }
+      }
+    } on FileSystemException catch (err) {
+      _log.warning('Cannot scan ${catalogDir.path}', err);
+    }
+    return ids;
+  }
+
+  /// Licence files (`OFL.txt`, `LICENSE*`) kept next to the fonts of [font].
+  List<File> licenseFiles(AppFont font) {
+    final dir = fontDir(font.kind, font.id);
+    if (!dir.existsSync()) return const [];
+    return [
+      for (final e in dir.listSync(followLinks: false))
+        if (e is File && _isLicenseFile(e.path)) e,
+    ]..sort((a, b) => a.path.compareTo(b.path));
+  }
+
+  /// Deletes the folder of [font] and everything in it. Missing is fine.
+  void deleteFont(AppFont font) {
+    final dir = fontDir(font.kind, font.id);
+    if (dir.existsSync()) dir.deleteSync(recursive: true);
+  }
+
   /// Deletes half-written leftovers (`*.tmp` files and folders) of an
   /// interrupted install under the catalog and custom folders. Never throws.
   void repairTmpLeftovers() {
@@ -69,6 +113,11 @@ class FontStorage {
         _log.warning('Cannot scan ${dir.path}', err);
       }
     }
+  }
+
+  static bool _isLicenseFile(String path) {
+    final name = path.split('/').last;
+    return name == 'OFL.txt' || name.toUpperCase().startsWith('LICENSE');
   }
 
   static bool _isFontFile(String path) {

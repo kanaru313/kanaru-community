@@ -5,6 +5,7 @@ import '../../../../../../l10n/gen/app_localizations.dart';
 import '../../../settings_routes.dart';
 import '../../settings_scaffold.dart';
 import 'builtin_fonts_block.dart';
+import 'catalog_fonts_block.dart';
 
 /// Font sub-page of Appearance: the font used for all app text.
 class FontsSettingsPage extends ConsumerWidget {
@@ -16,7 +17,7 @@ class FontsSettingsPage extends ConsumerWidget {
     return SettingsScaffold(
       title: l10n.settingsAppearanceFont,
       parentPath: SettingsPaths.appearance,
-      children: const [BuiltInFontsBlock()],
+      children: const [BuiltInFontsBlock(), CatalogFontsBlock()],
     );
   }
 }

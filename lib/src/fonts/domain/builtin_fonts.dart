@@ -1,4 +1,5 @@
 import 'app_font.dart';
+import 'font_catalog.dart';
 
 const systemFontId = 'system';
 const defaultFontId = 'nunito';
@@ -28,16 +29,15 @@ const systemFont = AppFont(
 
 const builtInFonts = <AppFont>[systemFont, interFont, nunitoFont];
 
-/// The font with [id] among built-in fonts, [catalog] fonts and custom ids.
+/// The font with [id] among built-in fonts, catalog fonts and custom ids.
 /// An unknown or invalid id gives the default font.
-AppFont appFontFor(String id, {Iterable<AppFont> catalog = const []}) {
+AppFont appFontFor(String id) {
   if (!isValidFontId(id)) return nunitoFont;
   for (final f in builtInFonts) {
     if (f.id == id) return f;
   }
-  for (final f in catalog) {
-    if (f.id == id) return f;
-  }
+  final catalogFont = catalogFontById(id);
+  if (catalogFont != null) return catalogFont.asAppFont;
   if (isCustomFontId(id)) {
     return AppFont(
       id: id,

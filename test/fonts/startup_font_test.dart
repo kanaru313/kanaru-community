@@ -35,12 +35,6 @@ void main() {
   late MemorySettingsStore settings;
   late List<String> loaded;
   late FontRegistrar registrar;
-  const lato = AppFont(
-    id: 'lato',
-    label: 'Lato',
-    family: 'Lato',
-    kind: AppFontKind.catalog,
-  );
   const customId = 'custom_my_font_1a2b3c4d';
 
   Future<String> run({FontRegistrar? r, MemorySettingsStore? store}) =>
@@ -48,7 +42,6 @@ void main() {
         paths: paths,
         settings: store ?? settings,
         registrar: r ?? registrar,
-        catalog: const [lato],
       );
 
   void install(AppFontKind kind, String id) {
@@ -79,17 +72,17 @@ void main() {
   });
 
   test('installed catalog and custom fonts load', () async {
-    install(AppFontKind.catalog, 'lato');
-    await settings.write('app.font', 'lato');
-    expect(await run(), 'lato');
+    install(AppFontKind.catalog, 'lora');
+    await settings.write('app.font', 'lora');
+    expect(await run(), 'lora');
     install(AppFontKind.custom, customId);
     await settings.write('app.font', customId);
     expect(await run(), customId);
-    expect(loaded, ['Lato', customId]);
+    expect(loaded, ['Lora', customId]);
   });
 
   test('missing files fall back and rewrite the setting', () async {
-    await settings.write('app.font', 'lato');
+    await settings.write('app.font', 'lora');
     expect(await run(), 'nunito');
     expect(settings.read('app.font'), 'nunito');
   });
@@ -109,8 +102,8 @@ void main() {
   });
 
   test('registrar failure falls back', () async {
-    install(AppFontKind.catalog, 'lato');
-    await settings.write('app.font', 'lato');
+    install(AppFontKind.catalog, 'lora');
+    await settings.write('app.font', 'lora');
     final r = FontRegistrar(
       registrar: (_, _) async => throw StateError('bad font'),
     );
@@ -127,9 +120,38 @@ void main() {
 
   test('leftover .tmp folders are removed before resolving', () async {
     final storage = FontStorage(paths);
-    final leftover = Directory('${storage.catalogDir.path}/lato.tmp')
+    final leftover = Directory('${storage.catalogDir.path}/lora.tmp')
       ..createSync(recursive: true);
     await run();
     expect(leftover.existsSync(), isFalse);
+  });
+
+  test(
+    'a leftover .tmp next to the installed font keeps the stored id',
+    () async {
+      install(AppFontKind.catalog, 'lora');
+      Directory('${FontStorage(paths).catalogDir.path}/lora.tmp')
+          .createSync(recursive: true);
+      await settings.write('app.font', 'lora');
+      expect(await run(), 'lora');
+      expect(settings.read('app.font'), 'lora');
+      expect(
+        Directory('${FontStorage(paths).catalogDir.path}/lora.tmp')
+            .existsSync(),
+        isFalse,
+      );
+    },
+  );
+
+  test('a real catalog id resolves without passing the catalog', () async {
+    install(AppFontKind.catalog, 'lora');
+    await settings.write('app.font', 'lora');
+    final id = await prepareStartupFont(
+      paths: paths,
+      settings: settings,
+      registrar: registrar,
+    );
+    expect(id, 'lora');
+    expect(loaded, ['Lora']);
   });
 }

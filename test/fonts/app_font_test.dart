@@ -38,13 +38,9 @@ void main() {
     });
 
     test('catalog entry is found', () {
-      const c = AppFont(
-        id: 'lato',
-        label: 'Lato',
-        family: 'Lato',
-        kind: AppFontKind.catalog,
-      );
-      expect(appFontFor('lato', catalog: const [c]), c);
+      final f = appFontFor('lora');
+      expect(f.kind, AppFontKind.catalog);
+      expect(f.family, 'Lora');
     });
 
     test('unknown or invalid ids give the default', () {

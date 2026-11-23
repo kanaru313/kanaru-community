@@ -27,5 +27,48 @@
         "type": "String"
       }
     }
+  },
+  "fontsCatalogTitle": "Online fonts",
+  "@fontsCatalogTitle": {
+    "description": "Title of the block of fonts that can be downloaded."
+  },
+  "fontsCatalogHint": "Download once, then use without a connection.",
+  "@fontsCatalogHint": {
+    "description": "Note about the whole online fonts block, shown behind the info icon."
+  },
+  "fontsDownloadTooltip": "Download {name}",
+  "@fontsDownloadTooltip": {
+    "description": "Label of the button that downloads a font.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsDeleteTooltip": "Delete {name}",
+  "@fontsDeleteTooltip": {
+    "description": "Label of the button that deletes a downloaded font.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fontsDownloaded": "Font downloaded",
+  "@fontsDownloaded": {
+    "description": "Snack bar after a font finished downloading; it is not applied."
+  },
+  "fontsDeleted": "Font deleted (you can download it again)",
+  "@fontsDeleted": {
+    "description": "Snack bar after a downloaded font was deleted."
+  },
+  "fontsDownloadFailed": "Couldn't download the font {name}. Check your connection and try again.",
+  "@fontsDownloadFailed": {
+    "description": "Snack bar when a font download failed; nothing was installed.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

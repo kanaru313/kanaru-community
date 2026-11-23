@@ -15,7 +15,9 @@ import 'src/database/app_database.dart';
 import 'src/database/state/database_providers.dart';
 import 'src/extension/kanaru_extension.dart';
 import 'src/extension/state/extension_providers.dart';
+import 'src/fonts/data/font_downloader.dart';
 import 'src/fonts/data/font_registrar.dart';
+import 'src/fonts/data/font_storage.dart';
 import 'src/fonts/data/startup_font.dart';
 import 'src/fonts/state/font_providers.dart';
 import 'src/foundation/app_logger.dart';
@@ -91,6 +93,11 @@ Future<void> runKanaru({List<KanaruExtension> extensions = const []}) async {
   } on Object catch (e, st) {
     Logger('startup').warning('Startup font failed', e, st);
   }
+
+  // Licences of downloaded fonts: not needed for the first frame.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    registerInstalledCatalogLicenses(FontStorage(started.paths), fontRegistrar);
+  });
 
   runApp(
     ProviderScope(

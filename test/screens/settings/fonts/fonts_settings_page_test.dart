@@ -79,7 +79,7 @@ void main() {
     expect(find.textContaining('Nunito'), findsOneWidget);
     expect(find.text('Inter'), findsOneWidget);
     expect(find.text('System font'), findsOneWidget);
-    expect(find.text('Aa Bb Cc Gg Qq Rr Yy 0123456789'), findsNWidgets(3));
+    expect(find.text('Aa Bb Cc Gg Qq Rr Yy 0123456789'), findsNWidgets(10));
     _expectSelected(tester, 'Nunito', true);
     _expectSelected(tester, 'Inter', false);
     _expectSelected(tester, 'System font', false);
@@ -140,6 +140,11 @@ void main() {
       location: SettingsPaths.fonts,
       size: const Size(1400, 900),
       scaffold: true,
+      overrides: [
+        fontStorageProvider.overrideWithValue(
+          FontStorage(_Paths(Directory.systemTemp)),
+        ),
+      ],
     );
     expect(find.text('Built in'), findsOneWidget);
     expect(find.text('Inter'), findsOneWidget);

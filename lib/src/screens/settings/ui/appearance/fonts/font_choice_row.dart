@@ -12,7 +12,7 @@ class FontChoiceRow extends StatelessWidget {
     super.key,
     required this.title,
     required this.sample,
-    required this.family,
+    this.family,
     this.defaultSuffix,
     this.selected = false,
     this.trailing,
@@ -22,8 +22,9 @@ class FontChoiceRow extends StatelessWidget {
   final String title;
   final String sample;
 
-  /// Family the name and the sample are drawn in.
-  final String family;
+  /// Family the name and the sample are drawn in; null keeps the app font
+  /// (a font that is not on the device yet).
+  final String? family;
 
   /// Soft text after the name (for example "· default").
   final String? defaultSuffix;

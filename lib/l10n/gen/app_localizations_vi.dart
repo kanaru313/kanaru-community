@@ -5434,4 +5434,31 @@ class AppLocalizationsVi extends AppLocalizations {
   String fontsUseFailed(String name) {
     return 'Không dùng được phông $name.';
   }
+
+  @override
+  String get fontsCatalogTitle => 'Kho phông trực tuyến';
+
+  @override
+  String get fontsCatalogHint => 'Tải một lần, sau đó dùng không cần mạng.';
+
+  @override
+  String fontsDownloadTooltip(String name) {
+    return 'Tải $name';
+  }
+
+  @override
+  String fontsDeleteTooltip(String name) {
+    return 'Xoá $name';
+  }
+
+  @override
+  String get fontsDownloaded => 'Đã tải phông';
+
+  @override
+  String get fontsDeleted => 'Đã xoá phông (tải lại được)';
+
+  @override
+  String fontsDownloadFailed(String name) {
+    return 'Không tải được phông $name. Kiểm tra mạng rồi thử lại.';
+  }
 }
