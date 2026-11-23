@@ -74,7 +74,12 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         if (i.isBranch) i,
     ].indexOf(item);
     if (branch < 0) return;
-    shell.goBranch(branch, initialLocation: branch == shell.currentIndex);
+    // Another tab keeps the sub-page it last showed; re-selecting the open tab
+    // goes to its root. The footer item (Settings) always opens its root.
+    shell.goBranch(
+      branch,
+      initialLocation: item.footer || branch == shell.currentIndex,
+    );
   }
 
   @override

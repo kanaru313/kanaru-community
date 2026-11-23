@@ -56,10 +56,13 @@ class MobileShell extends ConsumerWidget {
     WidgetRef ref,
     NavItem item,
     String? current,
+    String location,
   ) {
     ref.read(mobileSidebarOpenProvider.notifier).close();
-    // The highlighted item only closes the sidebar.
-    if (item.id == current) return;
+    // The highlighted item at its root page only closes the sidebar; with a
+    // detail pushed over it (a push keeps the base location, so the item stays
+    // highlighted) it goes back to the root.
+    if (item.id == current && _atItemRoot(item, location)) return;
     final onSelect = item.onSelect;
     if (onSelect != null) {
       onSelect(context);
@@ -71,6 +74,17 @@ class MobileShell extends ConsumerWidget {
       final branch = items.indexOf(item);
       if (branch >= 0) navigationShell.goBranch(branch, initialLocation: true);
     }
+  }
+
+  /// Whether the visible page is [item]'s own root: at its path and with no
+  /// page pushed over it on the current branch.
+  bool _atItemRoot(NavItem item, String location) {
+    final atPath = item.parentId != null
+        ? location == item.path
+        : item.atRoot(location);
+    final pushed =
+        _branchNavigator(navigationShell.currentIndex)?.canPop() ?? false;
+    return atPath && !pushed;
   }
 
   /// The navigator of the branch at [index] (null before it is built).
@@ -207,14 +221,16 @@ class MobileShell extends ConsumerWidget {
               KIconButton(
                 icon: KIcons.settings,
                 tooltip: settings.label(context),
-                onPressed: () => _select(context, ref, settings, current),
+                onPressed: () =>
+                    _select(context, ref, settings, current, location),
               ),
           ],
           child: MobilePushLayout(
             sidebar: MobileSidebar(
               items: listed,
               selectedId: current,
-              onSelect: (item) => _select(context, ref, item, current),
+              onSelect: (item) =>
+                  _select(context, ref, item, current, location),
             ),
             content: Scaffold(
               // The selection bar slot and the mini player float over the page
