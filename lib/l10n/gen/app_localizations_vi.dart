@@ -4148,9 +4148,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pluginsPageSettingsTitle => 'Cài đặt của plugin';
 
   @override
-  String get pluginsPageSettingsSoon => 'Cấu hình của plugin';
-
-  @override
   String get pluginsPageRefreshFailed => 'Không làm mới được danh sách';
 
   @override
@@ -5152,4 +5149,128 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pluginsRepoCopyAddress => 'Chép địa chỉ';
+
+  @override
+  String get pluginsCfgReadFailed => 'Không đọc được cài đặt của plugin';
+
+  @override
+  String get pluginsCfgRequired => 'Cài đặt này là bắt buộc';
+
+  @override
+  String get pluginsCfgNotNumber => 'Nhập một số';
+
+  @override
+  String get pluginsCfgNotInteger => 'Nhập một số nguyên';
+
+  @override
+  String pluginsCfgMin(String min) {
+    return 'Phải từ $min trở lên';
+  }
+
+  @override
+  String pluginsCfgMax(String max) {
+    return 'Phải từ $max trở xuống';
+  }
+
+  @override
+  String pluginsCfgMinLength(String n) {
+    return 'Nhập ít nhất $n ký tự';
+  }
+
+  @override
+  String pluginsCfgMaxLength(String n) {
+    return 'Nhập tối đa $n ký tự';
+  }
+
+  @override
+  String get pluginsCfgBadUrl => 'Nhập địa chỉ https';
+
+  @override
+  String pluginsCfgTooFew(String n) {
+    return 'Chọn hoặc thêm ít nhất $n mục';
+  }
+
+  @override
+  String pluginsCfgTooMany(String n) {
+    return 'Chỉ được tối đa $n mục';
+  }
+
+  @override
+  String get pluginsCfgBadItem => 'Một trong các mục không hợp lệ';
+
+  @override
+  String get pluginsCfgBadName =>
+      'Nhập tên dài 1 đến 100 ký tự, không có khoảng trắng ở hai đầu';
+
+  @override
+  String get pluginsCfgDuplicateName => 'Một dòng khác đã dùng tên này';
+
+  @override
+  String get pluginsCfgRefusedValue => 'Cài đặt này không nhận giá trị đó.';
+
+  @override
+  String get pluginsCfgRefusedTooLarge =>
+      'Cài đặt của plugin quá lớn, không lưu được.';
+
+  @override
+  String get pluginsCfgRefusedGone =>
+      'Cài đặt này không còn nữa. Plugin có thể đã bị gỡ hoặc đổi.';
+
+  @override
+  String get pluginsCfgRefusedOther => 'Không lưu được cài đặt (thử lại sau)';
+
+  @override
+  String get pluginsCfgNotChosen => 'Chưa chọn';
+
+  @override
+  String get pluginsCfgNoModel => 'Chưa có model';
+
+  @override
+  String get pluginsCfgOwnTag => 'Tự thêm';
+
+  @override
+  String get pluginsCfgRemoveModel => 'Xoá model này';
+
+  @override
+  String get pluginsCfgAddModel => 'Thêm model…';
+
+  @override
+  String get pluginsCfgAddModelTitle => 'Thêm model';
+
+  @override
+  String get pluginsCfgModelNameHint => 'Tên model, đúng như máy chủ yêu cầu';
+
+  @override
+  String get pluginsCfgModelNoteHint =>
+      'Ghi chú (tuỳ chọn), ví dụ: Ollama máy nhà';
+
+  @override
+  String get pluginsCfgAddAndChoose => 'Thêm và chọn';
+
+  @override
+  String pluginsCfgMaxChosen(String n) {
+    return 'Tối đa $n';
+  }
+
+  @override
+  String get pluginsCfgAddRow => 'Thêm';
+
+  @override
+  String get pluginsCfgRemoveRow => 'Xoá';
+
+  @override
+  String get pluginsCfgNameLabel => 'Tên';
+
+  @override
+  String get pluginsCfgValueLabel => 'Giá trị';
+
+  @override
+  String pluginsCfgStepDown(String step) {
+    return 'Giảm $step';
+  }
+
+  @override
+  String pluginsCfgStepUp(String step) {
+    return 'Tăng $step';
+  }
 }

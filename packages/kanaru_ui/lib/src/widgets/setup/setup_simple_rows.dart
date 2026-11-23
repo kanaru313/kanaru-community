@@ -8,7 +8,7 @@ import '../k_gap.dart';
 import 'setup_row_frame.dart';
 
 /// A row that shows the current value of a choice and opens its picker when
-/// tapped: leading icon, title, the value as the line under the title (with
+/// tapped: optional leading icon, title, the value as the line under the title (with
 /// an optional small [valueLeading] icon) and a chevron. Pass [anchorKey] to
 /// let a desktop picker open anchored under the row.
 ///
@@ -19,7 +19,7 @@ import 'setup_row_frame.dart';
 class SetupValueRow extends StatelessWidget {
   const SetupValueRow({
     super.key,
-    required this.icon,
+    this.icon,
     required this.title,
     required this.value,
     required this.onTap,
@@ -36,7 +36,8 @@ class SetupValueRow extends StatelessWidget {
          'a dot needs the words a screen reader says for it',
        );
 
-  final IconData icon;
+  /// Leading icon; without it the row has no leading slot.
+  final IconData? icon;
   final Widget title;
   final Widget value;
   final VoidCallback? onTap;
@@ -60,7 +61,7 @@ class SetupValueRow extends StatelessWidget {
     return KeyedSubtree(
       key: anchorKey,
       child: SetupRowFrame(
-        leading: Icon(icon),
+        leading: icon == null ? null : Icon(icon),
         title: alert ? _titleWithDot() : title,
         enabled: enabled,
         comingSoon: comingSoon,

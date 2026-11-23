@@ -3123,7 +3123,6 @@
     }
   },
   "pluginsPageSettingsTitle": "Cài đặt của plugin",
-  "pluginsPageSettingsSoon": "Cấu hình của plugin",
   "pluginsPageRefreshFailed": "Không làm mới được danh sách",
   "pluginsInstallTooltip": "Cài {name}",
   "@pluginsInstallTooltip": {
@@ -3986,5 +3985,102 @@
   "pluginsPageOpen": "Mở",
   "pluginsPageBadgeAi": "AI",
   "pluginsRepoAddressCopied": "Đã chép địa chỉ repository",
-  "pluginsRepoCopyAddress": "Chép địa chỉ"
+  "pluginsRepoCopyAddress": "Chép địa chỉ",
+  "pluginsCfgReadFailed": "Không đọc được cài đặt của plugin",
+  "pluginsCfgRequired": "Cài đặt này là bắt buộc",
+  "pluginsCfgNotNumber": "Nhập một số",
+  "pluginsCfgNotInteger": "Nhập một số nguyên",
+  "pluginsCfgMin": "Phải từ {min} trở lên",
+  "@pluginsCfgMin": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgMax": "Phải từ {max} trở xuống",
+  "@pluginsCfgMax": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgMinLength": "Nhập ít nhất {n} ký tự",
+  "@pluginsCfgMinLength": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgMaxLength": "Nhập tối đa {n} ký tự",
+  "@pluginsCfgMaxLength": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgBadUrl": "Nhập địa chỉ https",
+  "pluginsCfgTooFew": "Chọn hoặc thêm ít nhất {n} mục",
+  "@pluginsCfgTooFew": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgTooMany": "Chỉ được tối đa {n} mục",
+  "@pluginsCfgTooMany": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgBadItem": "Một trong các mục không hợp lệ",
+  "pluginsCfgBadName": "Nhập tên dài 1 đến 100 ký tự, không có khoảng trắng ở hai đầu",
+  "pluginsCfgDuplicateName": "Một dòng khác đã dùng tên này",
+  "pluginsCfgRefusedValue": "Cài đặt này không nhận giá trị đó.",
+  "pluginsCfgRefusedTooLarge": "Cài đặt của plugin quá lớn, không lưu được.",
+  "pluginsCfgRefusedGone": "Cài đặt này không còn nữa. Plugin có thể đã bị gỡ hoặc đổi.",
+  "pluginsCfgRefusedOther": "Không lưu được cài đặt (thử lại sau)",
+  "pluginsCfgNotChosen": "Chưa chọn",
+  "pluginsCfgNoModel": "Chưa có model",
+  "pluginsCfgOwnTag": "Tự thêm",
+  "pluginsCfgRemoveModel": "Xoá model này",
+  "pluginsCfgAddModel": "Thêm model…",
+  "pluginsCfgAddModelTitle": "Thêm model",
+  "pluginsCfgModelNameHint": "Tên model, đúng như máy chủ yêu cầu",
+  "pluginsCfgModelNoteHint": "Ghi chú (tuỳ chọn), ví dụ: Ollama máy nhà",
+  "pluginsCfgAddAndChoose": "Thêm và chọn",
+  "pluginsCfgMaxChosen": "Tối đa {n}",
+  "@pluginsCfgMaxChosen": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgAddRow": "Thêm",
+  "pluginsCfgRemoveRow": "Xoá",
+  "pluginsCfgNameLabel": "Tên",
+  "pluginsCfgValueLabel": "Giá trị",
+  "pluginsCfgStepDown": "Giảm {step}",
+  "@pluginsCfgStepDown": {
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsCfgStepUp": "Tăng {step}",
+  "@pluginsCfgStepUp": {
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -38,6 +38,24 @@ void main() {
     });
   }
 
+  testWidgets('a value row without an icon has no leading slot', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    await tester.pumpWidget(
+      host(
+        SetupValueRow(
+          title: const Text('Model'),
+          value: const Text('gpt'),
+          onTap: () {},
+        ),
+      ),
+    );
+    final row = tester.getTopLeft(find.byType(SetupValueRow)).dx;
+    expect(tester.getTopLeft(find.text('Model')).dx - row, lessThan(20));
+    expect(find.text('gpt'), findsOneWidget);
+  });
+
   testWidgets('a value row shows its value and reports taps', (tester) async {
     useWindow(tester, const Size(400, 800));
     var taps = 0;

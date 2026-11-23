@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
+import '../tokens/k_icon_size.dart';
 import '../tokens/k_layout.dart';
 import '../tokens/k_motion.dart';
 import '../tokens/k_shape.dart';
@@ -8,9 +9,27 @@ import '../tokens/k_space.dart';
 import 'k_check_mark.dart';
 import 'collections/k_media_card.dart';
 import 'k_gap.dart';
+import 'k_icon_button.dart';
 import 'k_inset_shape.dart';
 import 'k_row_edges.dart';
 import 'selection_action_row.dart';
+
+/// A small action at the end of a [SelectionRow] (a ✕ that removes the
+/// option). It sits inside the row, so the row's tint covers it; tapping it
+/// never selects the row.
+class SelectionRowAction {
+  const SelectionRowAction({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+
+  /// Null: shown dimmed and inert.
+  final VoidCallback? onPressed;
+}
 
 /// One option of a choice list, tonal rounded fill and bold title when
 /// selected. No radio buttons.
@@ -40,6 +59,7 @@ class SelectionRow extends StatelessWidget {
     this.autofocus = false,
     this.hint,
     this.onTap,
+    this.trailingAction,
   }) : action = false,
        disabledReason = null,
        opensMore = false,
@@ -79,7 +99,8 @@ class SelectionRow extends StatelessWidget {
        mediaTitle = null,
        mediaLine2 = null,
        mediaTag = null,
-       circleCover = false;
+       circleCover = false,
+       trailingAction = null;
 
   /// A row with a cover (song, album, artist, playlist, image): the library's
   /// [KMediaCard] row (size, cover, text styles, padding, gap below) with the
@@ -109,7 +130,8 @@ class SelectionRow extends StatelessWidget {
        action = false,
        disabledReason = null,
        opensMore = false,
-       running = false;
+       running = false,
+       trailingAction = null;
 
   /// Set only by [SelectionRow.media]: the card's title, second line and tag.
   final String? mediaTitle;
@@ -150,6 +172,10 @@ class SelectionRow extends StatelessWidget {
   /// hover, press, focus) is 36 dp, centred, with a transparent band above and
   /// below that still takes taps. Pass the icon at `KIconSize.sm`.
   final bool dense;
+
+  /// A small action after the title (text and icon rows only), drawn inside
+  /// the row so the selected / hover / pressed tint covers it.
+  final SelectionRowAction? trailingAction;
 
   /// Takes keyboard focus when its route opens (the chosen row of a menu).
   final bool autofocus;
@@ -367,6 +393,13 @@ class SelectionRow extends StatelessWidget {
                               style: KCheckMarkStyle.plain,
                             ),
                           ],
+                          if (trailingAction case final a?)
+                            KIconButton(
+                              icon: a.icon,
+                              tooltip: a.tooltip,
+                              size: dense ? KIconSize.sm : KIconSize.md,
+                              onPressed: a.onPressed,
+                            ),
                         ],
                       ),
                     ),

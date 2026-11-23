@@ -18,6 +18,8 @@ export 'src/widgets/k_anchored_panel.dart'
     show kAnchorRectOf, showKAnchoredPanel;
 export 'src/widgets/app_snack_bar.dart';
 export 'src/widgets/collections/collection_widgets.dart';
+export 'src/widgets/form/k_field_rows.dart';
+export 'src/widgets/form/k_number_spec.dart';
 export 'src/widgets/form/k_text_field_row.dart';
 export 'src/widgets/k_alert_dot.dart';
 export 'src/widgets/k_check_mark.dart';

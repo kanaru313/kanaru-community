@@ -6684,12 +6684,6 @@ abstract class AppLocalizations {
   /// **'The plugin’s settings'**
   String get pluginsPageSettingsTitle;
 
-  /// No description provided for @pluginsPageSettingsSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Plugin configuration'**
-  String get pluginsPageSettingsSoon;
-
   /// No description provided for @pluginsPageRefreshFailed.
   ///
   /// In en, this message translates to:
@@ -8255,6 +8249,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy address'**
   String get pluginsRepoCopyAddress;
+
+  /// No description provided for @pluginsCfgReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t read the plugin’s settings'**
+  String get pluginsCfgReadFailed;
+
+  /// No description provided for @pluginsCfgRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This setting is required'**
+  String get pluginsCfgRequired;
+
+  /// No description provided for @pluginsCfgNotNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number'**
+  String get pluginsCfgNotNumber;
+
+  /// No description provided for @pluginsCfgNotInteger.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number'**
+  String get pluginsCfgNotInteger;
+
+  /// No description provided for @pluginsCfgMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be {min} or more'**
+  String pluginsCfgMin(String min);
+
+  /// No description provided for @pluginsCfgMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be {max} or less'**
+  String pluginsCfgMax(String max);
+
+  /// No description provided for @pluginsCfgMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least {n} characters'**
+  String pluginsCfgMinLength(String n);
+
+  /// No description provided for @pluginsCfgMaxLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at most {n} characters'**
+  String pluginsCfgMaxLength(String n);
+
+  /// No description provided for @pluginsCfgBadUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an https address'**
+  String get pluginsCfgBadUrl;
+
+  /// No description provided for @pluginsCfgTooFew.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose or add at least {n} items'**
+  String pluginsCfgTooFew(String n);
+
+  /// No description provided for @pluginsCfgTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {n} items'**
+  String pluginsCfgTooMany(String n);
+
+  /// No description provided for @pluginsCfgBadItem.
+  ///
+  /// In en, this message translates to:
+  /// **'One of the items is not valid'**
+  String get pluginsCfgBadItem;
+
+  /// No description provided for @pluginsCfgBadName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name of 1 to 100 characters with no space at either end'**
+  String get pluginsCfgBadName;
+
+  /// No description provided for @pluginsCfgDuplicateName.
+  ///
+  /// In en, this message translates to:
+  /// **'Another row already uses this name'**
+  String get pluginsCfgDuplicateName;
+
+  /// No description provided for @pluginsCfgRefusedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'This setting doesn’t accept that value.'**
+  String get pluginsCfgRefusedValue;
+
+  /// No description provided for @pluginsCfgRefusedTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin’s settings are too large to save.'**
+  String get pluginsCfgRefusedTooLarge;
+
+  /// No description provided for @pluginsCfgRefusedGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This setting no longer exists. The plugin may have been removed or changed.'**
+  String get pluginsCfgRefusedGone;
+
+  /// No description provided for @pluginsCfgRefusedOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t save the setting (try again later)'**
+  String get pluginsCfgRefusedOther;
+
+  /// No description provided for @pluginsCfgNotChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Not chosen'**
+  String get pluginsCfgNotChosen;
+
+  /// No description provided for @pluginsCfgNoModel.
+  ///
+  /// In en, this message translates to:
+  /// **'No model'**
+  String get pluginsCfgNoModel;
+
+  /// No description provided for @pluginsCfgOwnTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Added by you'**
+  String get pluginsCfgOwnTag;
+
+  /// No description provided for @pluginsCfgRemoveModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this model'**
+  String get pluginsCfgRemoveModel;
+
+  /// No description provided for @pluginsCfgAddModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add model…'**
+  String get pluginsCfgAddModel;
+
+  /// No description provided for @pluginsCfgAddModelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add model'**
+  String get pluginsCfgAddModelTitle;
+
+  /// No description provided for @pluginsCfgModelNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Model name, exactly as the server expects it'**
+  String get pluginsCfgModelNameHint;
+
+  /// No description provided for @pluginsCfgModelNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional), for example: Ollama at home'**
+  String get pluginsCfgModelNoteHint;
+
+  /// No description provided for @pluginsCfgAddAndChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Add and choose'**
+  String get pluginsCfgAddAndChoose;
+
+  /// No description provided for @pluginsCfgMaxChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {n}'**
+  String pluginsCfgMaxChosen(String n);
+
+  /// No description provided for @pluginsCfgAddRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get pluginsCfgAddRow;
+
+  /// No description provided for @pluginsCfgRemoveRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get pluginsCfgRemoveRow;
+
+  /// No description provided for @pluginsCfgNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get pluginsCfgNameLabel;
+
+  /// No description provided for @pluginsCfgValueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get pluginsCfgValueLabel;
+
+  /// No description provided for @pluginsCfgStepDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease by {step}'**
+  String pluginsCfgStepDown(String step);
+
+  /// No description provided for @pluginsCfgStepUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase by {step}'**
+  String pluginsCfgStepUp(String step);
 }
 
 class _AppLocalizationsDelegate
