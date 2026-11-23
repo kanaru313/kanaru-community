@@ -15,6 +15,7 @@ main.dart
       AppDatabase         (database/, dataDir/kanaru.db, migrated)
       ExtensionRegistry   (extension/): built-in extensions, then bundled ones
       startup hooks       (receive the database connection)
+      startup font        (fonts/, loads app.font, falls back to Nunito)
     ProviderScope(overrides: paths, settings, device id, database, registry, native versions)
       KanaruApp           (router/)
         GoRouter built from the registry
@@ -32,6 +33,7 @@ main.dart
 - [system-architecture-lyrics.md](./system-architecture-lyrics.md): embedded lyrics reader and its bridge API.
 - [system-architecture-plugin-runtime.md](./system-architecture-plugin-runtime.md): plugin runtime instance, threads and thread budget, `PluginHost`, park and waker, cancel, late drain, bindgen on Android.
 - [system-architecture-plugins.md](./system-architecture-plugins.md): plugin package, catalog and install rules, network seams (address rules, pinned fetcher), backup rules.
+- [system-architecture-fonts.md](./system-architecture-fonts.md): font setting, catalog and custom fonts, data layout `dataDir/fonts`, startup resolution.
 - [plugin-host-api.md](./plugin-host-api.md): what a plugin script sees (globals, errors, limits, streaming runs, what is absent).
 
 ## Runtime pieces

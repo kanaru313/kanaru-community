@@ -380,6 +380,7 @@ Strings live in parts, one file per part and locale:
 | `library` | `library_en.arb`, `library_vi.arb` | `library` | lane C |
 | `playlist` | `playlist_en.arb`, `playlist_vi.arb` | `playlist` | playlist foundation (frozen) |
 | `settings` | `settings_en.arb`, `settings_vi.arb` | `settings` | Settings lane (every Settings string) |
+| `fonts` | `fonts_en.arb`, `fonts_vi.arb` | `fonts` | font picker |
 | `plscreens`, `pladd`, `m3u` | `plscreens_*.arb`, `pladd_*.arb`, `m3u_*.arb` (created by the lane that needs one) | `plScreens`, `plAdd`, `m3u` | spare parts of the playlist screens, add-to-playlist and M3U lanes, so a lane never edits `playlist_*` |
 
 `dart run tool/merge_arb.dart` merges the parts into `lib/l10n/app_<locale>.arb`,
