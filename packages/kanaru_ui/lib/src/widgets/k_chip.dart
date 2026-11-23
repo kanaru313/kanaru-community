@@ -7,6 +7,13 @@ import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 import 'k_gap.dart';
 
+/// Meaning of a [KChip.tag]: [neutral] is the default (`secondaryContainer`);
+/// [highlight] marks a good or special state (`tertiaryContainer`, "Đồng
+/// bộ"); [muted] a plain value (`surfaceContainerHighest`, "Thường");
+/// [problem] a warning (`errorContainer`, "Nguồn đang tắt"). Ignored with
+/// `outlined`.
+enum KTagTone { neutral, highlight, muted, problem }
+
 /// Tonal pill. 48 dp tall on touch shells, 40 on desktop; [dense] makes it
 /// 40 r12 on touch shells and 32 on desktop (a chip row that must fit).
 class KChip extends StatelessWidget {
@@ -22,6 +29,7 @@ class KChip extends StatelessWidget {
     this.onRaised = false,
   }) : trailing = null,
        outlined = false,
+       tone = KTagTone.neutral,
        _interactive = true,
        _tag = false;
 
@@ -37,6 +45,7 @@ class KChip extends StatelessWidget {
       semanticLabel = null,
       onRaised = false,
       outlined = false,
+      tone = KTagTone.neutral,
       _interactive = false,
       _tag = false;
 
@@ -45,17 +54,21 @@ class KChip extends StatelessWidget {
   /// never a button. Filled with `secondaryContainer`, or only outlined when
   /// [outlined]; one line, a long label ends with an ellipsis. Put it in a
   /// [KTagRow]. At 1.5x text it grows with the label.
-  const KChip.tag({super.key, required this.label, this.outlined = false})
-    : icon = null,
-      selected = false,
-      enabled = true,
-      onTap = null,
-      dense = true,
-      semanticLabel = null,
-      onRaised = false,
-      trailing = null,
-      _interactive = false,
-      _tag = true;
+  const KChip.tag({
+    super.key,
+    required this.label,
+    this.outlined = false,
+    this.tone = KTagTone.neutral,
+  }) : icon = null,
+       selected = false,
+       enabled = true,
+       onTap = null,
+       dense = true,
+       semanticLabel = null,
+       onRaised = false,
+       trailing = null,
+       _interactive = false,
+       _tag = true;
 
   final Widget label;
   final Widget? icon;
@@ -82,6 +95,9 @@ class KChip extends StatelessWidget {
 
   /// Outline instead of fill ([KChip.tag] only).
   final bool outlined;
+
+  /// What the fill says ([KChip.tag] only).
+  final KTagTone tone;
   final bool _interactive;
   final bool _tag;
 
@@ -148,11 +164,26 @@ class KChip extends StatelessWidget {
   }
 
   Widget _buildTag(BuildContext context, ColorScheme scheme) {
-    final fg = outlined ? scheme.onSurfaceVariant : scheme.onSecondaryContainer;
+    final (Color fill, Color on) = switch (tone) {
+      KTagTone.neutral => (
+        scheme.secondaryContainer,
+        scheme.onSecondaryContainer,
+      ),
+      KTagTone.highlight => (
+        scheme.tertiaryContainer,
+        scheme.onTertiaryContainer,
+      ),
+      KTagTone.muted => (
+        scheme.surfaceContainerHighest,
+        scheme.onSurfaceVariant,
+      ),
+      KTagTone.problem => (scheme.errorContainer, scheme.onErrorContainer),
+    };
+    final fg = outlined ? scheme.onSurfaceVariant : on;
     final large = KTagRow.isLarge(context);
     return DecoratedBox(
       decoration: ShapeDecoration(
-        color: outlined ? null : scheme.secondaryContainer,
+        color: outlined ? null : fill,
         shape: RoundedRectangleBorder(
           borderRadius: _tagRadius,
           side: outlined

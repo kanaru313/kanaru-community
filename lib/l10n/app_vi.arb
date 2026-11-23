@@ -3174,6 +3174,423 @@
   "lyricsSettingsTrAheadNow": "Chỉ bài đang phát",
   "lyricsSettingsAddTrService": "Thêm dịch vụ dịch",
   "lyricsSettingsAddSpeech": "Thêm plugin chuyển giọng nói",
+  "lyricsSearchingTitle": "Đang tìm lời…",
+  "lyricsSearchingMessage": "{count, plural, other{Bài này chưa có lời trong máy · đang tìm ở {count} nguồn đang bật.}}",
+  "@lyricsSearchingMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsNoneAutoOffMessage": "Không có lời trong tệp hay tệp .lrc cạnh bài. Tự tìm đang tắt.",
+  "lyricsFindManually": "Tìm thủ công…",
+  "lyricsNotFoundTitle": "Không tìm thấy lời",
+  "lyricsNotFoundAsked": "{count, plural, other{Đã tìm ở {count} nguồn đang bật.}}",
+  "@lyricsNotFoundAsked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsNotFoundOff": "{count, plural, other{{count} nguồn khác đang tắt.}}",
+  "@lyricsNotFoundOff": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsNotFoundAllOff": "Không có lời trong máy · mọi nguồn lời trực tuyến đang tắt.",
+  "lyricsNoSourceMessage": "Bài này không có lời trong máy và chưa có nguồn lời trực tuyến.",
+  "lyricsAddSource": "Thêm nguồn lời trực tuyến",
+  "lyricsInstrumentalTitle": "Nhạc không lời",
+  "lyricsInstrumentalMessage": "Nguồn lời ghi bài này là nhạc không lời.",
+  "lyricsInstrumentalFindOnline": "Không phải? Tìm lời trực tuyến…",
+  "lyricsFailedTitle": "Chưa tìm được lời",
+  "lyricsFailNetwork": "{count, plural, other{Lỗi mạng khi tìm ở {count} nguồn đang bật}}",
+  "@lyricsFailNetwork": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsFailNeedsConfig": "Các nguồn cần cấu hình",
+  "lyricsFailNoAnswer": "Nguồn lời không trả lời",
+  "lyricsFailedMessage": "{reason}.",
+  "@lyricsFailedMessage": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsFailedMessageRetry": "{reason} · tự thử lại lúc {time}.",
+  "@lyricsFailedMessageRetry": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPausedTitle": "Nguồn lời đang tạm dừng",
+  "lyricsPausedMessage": "Các nguồn lời đang tạm dừng tới {time}: máy chủ báo quá nhiều yêu cầu. Tới giờ đó Kanaru tự tìm lại.",
+  "@lyricsPausedMessage": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsKindSynced": "Đồng bộ",
+  "lyricsKindPlain": "Thường",
+  "lyricsOnlineLabel": "{plugin} · {kind}",
+  "@lyricsOnlineLabel": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLabelSearching": "Đang tìm…",
+  "lyricsLabelFailed": "Chưa tìm được lời",
+  "lyricsLabelPaused": "Nguồn lời tạm dừng",
+  "lyricsCardFailedRetry": "Chưa tìm được lời · thử lại lúc {time}",
+  "@lyricsCardFailedRetry": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsCardPaused": "Nguồn lời tạm dừng tới {time}",
+  "@lyricsCardPaused": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsChoiceOnline": "Bản trực tuyến",
+  "lyricsOnlineAuto": "tự tìm",
+  "lyricsOnlineRemoved": "plugin đã gỡ",
+  "lyricsOnlineInstrumental": "Nhạc không lời",
+  "lyricsStatusSearching": "{count, plural, other{Không có lời trên máy · đang tìm ở {count} nguồn đang bật}}",
+  "@lyricsStatusSearching": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsStatusNotFound": "{count, plural, other{Không tìm thấy lời, kể cả ở {count} nguồn đang bật}}",
+  "@lyricsStatusNotFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsStatusAutoOff": "Không có lời trên máy · tự tìm đang tắt",
+  "lyricsStatusNoSource": "Không có lời trên máy · chưa có nguồn trực tuyến",
+  "lyricsStatusAllOff": "Không có lời trên máy · mọi nguồn trực tuyến đang tắt",
+  "lyricsStatusFailed": "Chưa tìm được lời · {reason}",
+  "@lyricsStatusFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsStatusFailedRetry": "Chưa tìm được lời · {reason} · thử lại lúc {time}",
+  "@lyricsStatusFailedRetry": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsFailShortNetwork": "lỗi mạng",
+  "lyricsFailShortNeedsConfig": "cần cấu hình",
+  "lyricsFailShortNoAnswer": "nguồn không trả lời",
+  "lyricsStatusPaused": "Các nguồn lời đang tạm dừng tới {time} (máy chủ báo quá nhiều yêu cầu)",
+  "@lyricsStatusPaused": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsFindOnlineSub": "{on} nguồn đang bật · {off} đang tắt",
+  "@lyricsFindOnlineSub": {
+    "placeholders": {
+      "on": {
+        "type": "int"
+      },
+      "off": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsFindOnlineSubAllOff": "Mọi nguồn đang tắt ({off}) · chỉ tìm khi bạn bấm",
+  "@lyricsFindOnlineSubAllOff": {
+    "placeholders": {
+      "off": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsAddSourceSub": "Chưa cài plugin lời nào · mở kho plugin",
+  "lyricsBarAutoTitle": "Tự tìm thấy trên {plugin}",
+  "@lyricsBarAutoTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsBarAutoSub": "Giữ để lần sau không tìm lại",
+  "lyricsBarKeptTitle": "Đang dùng bản đã giữ",
+  "lyricsBarKeptSub": "Chỉ cho bài này",
+  "lyricsBarReject": "Không đúng bài",
+  "lyricsBarKeep": "Giữ bản này",
+  "lyricsStatusEnableAuto": "Bật tự tìm",
+  "lyricsPickerTitle": "Chọn lời",
+  "lyricsPickerBack": "Về Lời cho bài này",
+  "lyricsPickerSearchHint": "Tên bài hát, nghệ sĩ",
+  "lyricsPickerFilterAll": "Tất cả nguồn",
+  "lyricsPickerGroup": "{name} · {count}",
+  "@lyricsPickerGroup": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerGroupOff": "{name} · đang tắt · {count}",
+  "@lyricsPickerGroupOff": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerBadgeOff": "Nguồn đang tắt",
+  "lyricsPickerDeltaMatch": "khớp",
+  "lyricsPickerDeltaMatchTip": "Thời lượng khớp với bài",
+  "lyricsPickerDeltaLonger": "+{seconds} s",
+  "@lyricsPickerDeltaLonger": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerDeltaShorter": "−{seconds} s",
+  "@lyricsPickerDeltaShorter": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerDeltaLongerTip": "Dài hơn bài {seconds} giây: có thể là bản khác (live, remix…)",
+  "@lyricsPickerDeltaLongerTip": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerDeltaShorterTip": "Ngắn hơn bài {seconds} giây: có thể là bản khác (live, remix…)",
+  "@lyricsPickerDeltaShorterTip": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerSearching": "Đang tìm trong {name}…",
+  "@lyricsPickerSearching": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerFailNetwork": "{name}: lỗi mạng hoặc hết thời gian chờ",
+  "@lyricsPickerFailNetwork": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerFailServer": "{name}: máy chủ trả lỗi",
+  "@lyricsPickerFailServer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerFailRateLimited": "{name}: máy chủ báo quá nhiều yêu cầu",
+  "@lyricsPickerFailRateLimited": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerFailInvalid": "{name}: câu trả lời không đọc được",
+  "@lyricsPickerFailInvalid": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerNeedsConfig": "{name} · Cần cấu hình",
+  "@lyricsPickerNeedsConfig": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerOpenPlugin": "Mở trang plugin",
+  "lyricsPickerPaused": "{name} tạm dừng tới {time}",
+  "@lyricsPickerPaused": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerMoreTitle": "Chưa thấy lời ưng ý?",
+  "lyricsPickerMoreBody": "{count, plural, other{Còn {count} nguồn đang tắt: {names}. Chỉ tìm khi bạn bấm, cài đặt không đổi.}}",
+  "@lyricsPickerMoreBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerMoreAction": "Tìm",
+  "lyricsPickerEmptyNone": "Chưa có nguồn nào đang bật",
+  "lyricsPickerEmptyNotFound": "{count, plural, other{Không tìm thấy trong {count} nguồn đang bật}}",
+  "@lyricsPickerEmptyNotFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerEmptyOff": "{count, plural, other{Còn {count} nguồn đang tắt ({names}). Chỉ tìm khi bạn bấm.}}",
+  "@lyricsPickerEmptyOff": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerEmptyAction": "{count, plural, other{Tìm trong {count} nguồn đang tắt}}",
+  "@lyricsPickerEmptyAction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerAllAsked": "Đã tìm cả nguồn đang tắt cho bài này. Cài đặt nguồn không đổi.",
+  "lyricsPickerPreview": "Xem trước",
+  "lyricsPickerPreviewFrom": "Xem trước · {name}",
+  "@lyricsPickerPreviewFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerPickOne": "Chọn một kết quả",
+  "lyricsPickerPreviewBack": "Về danh sách",
+  "lyricsPickerPreviewBackLabel": "Về danh sách kết quả",
+  "lyricsPickerPlainNote": "Lời thường, không có mốc thời gian",
+  "lyricsPickerPreviewLoading": "Đang tải lời…",
+  "lyricsPickerPreviewFailed": "Không tải được lời của kết quả này",
+  "lyricsPickerPreviewMissing": "Kết quả này không có lời",
+  "lyricsPickerPreviewInstrumental": "Bài không lời",
+  "lyricsPickerFootNote": "Chỉ áp dụng cho bài này",
+  "lyricsPickerCancel": "Huỷ",
+  "lyricsPickerUse": "Dùng lời này",
+  "lyricsPickerSourcesTitle": "Nguồn tìm kiếm",
+  "lyricsPickerSourcesAll": "Tất cả nguồn",
+  "lyricsPickerSourcesResults": "{count, plural, other{{count} kết quả}}",
+  "@lyricsPickerSourcesResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerSourcesNone": "Không có kết quả",
+  "lyricsPickerSourcesOff": "ĐANG TẮT",
+  "lyricsPickerSourcesOffCaption": "Chỉ được tìm khi bạn bấm Tìm.",
+  "lyricsPickerSourcesOffResults": "{count, plural, other{{count} kết quả · nguồn đang tắt}}",
+  "@lyricsPickerSourcesOffResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerSourcesNotAsked": "Chưa tìm",
+  "lyricsPickerClearSearch": "Xoá chữ trong ô tìm",
+  "lyricsKeepFailed": "Không lưu được lời. Thử lại sau.",
+  "lyricsToastKept": "Đã giữ bản {plugin} cho bài này",
+  "@lyricsToastKept": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsToastRefusedAuto": "Đã bỏ bản này, đang tìm lại…",
+  "lyricsToastRefusedKept": "Đã bỏ bản đã giữ",
+  "lyricsToastChosen": "Đã chọn lời từ {plugin} cho bài này",
+  "@lyricsToastChosen": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
   "pluginsStoreTitle": "Kho plugin",
   "pluginsFilterTooltip": "Lọc",
   "pluginsFilterActiveLabel": "{count} đang bật",

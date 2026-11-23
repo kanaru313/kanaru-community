@@ -9,8 +9,13 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../media/domain/track_id.dart';
 import '../domain/lyrics_status.dart';
 import '../domain/lyrics_summary.dart';
+import '../domain/online/online_lyrics_ref.dart';
 import '../state/lyrics_choice_commands.dart';
 import '../state/track_lyrics_providers.dart';
+import 'online/online_labels.dart';
+import 'online/online_row_info.dart';
+import 'online/online_source_providers.dart';
+import 'online/plugin_avatar.dart';
 
 final _log = Logger('lyrics_choice_rows');
 
@@ -27,29 +32,40 @@ LyricsSummary? fileLyricsSummary(TrackLyrics lyrics) => switch (lyrics) {
   _ => null,
 };
 
-/// The two single-choice rows of "Lời cho bài này": lyrics from the file and
-/// no lyrics. The chosen row is shown by its tint and bold title only.
+/// The single-choice rows of "Lời cho bài này": lyrics from the file, the
+/// online copy (only when the track has one: shown, kept, or what automatic
+/// selection would show) and no lyrics. The chosen row is shown by its tint
+/// and bold title only.
 ///
 /// Choosing reads the commands, closes the modal through [close], then writes
 /// one choice. The row that is already chosen only closes. [close] returns
 /// false when the modal is already closing: nothing is written then, so a
-/// double tap writes once.
+/// double tap writes once. "Lời trong file" while a kept copy exists is a
+/// choice of its own (the file wins, the kept copy stays and its row stays);
+/// without one it is plain automatic selection.
 class LyricsChoiceRows extends ConsumerWidget {
   const LyricsChoiceRows({
     super.key,
     required this.trackId,
     required this.close,
+    this.online,
   });
 
   final TrackId trackId;
   final bool Function() close;
 
-  void _choose(WidgetRef ref, {required bool off, required bool chosen}) {
+  /// The online row's data, from [onlineRowInfoOf]; null hides the row.
+  final OnlineRowInfo? online;
+
+  void _choose(
+    WidgetRef ref,
+    Future<void> Function(LyricsChoiceCommands commands) write, {
+    required bool chosen,
+  }) {
     final commands = ref.read(lyricsChoiceCommandsProvider);
     if (!close() || chosen) return;
-    final write = off ? commands.setOff(trackId) : commands.clear(trackId);
     unawaited(
-      write.catchError((Object error, StackTrace stack) {
+      write(commands).catchError((Object error, StackTrace stack) {
         _log.warning('lyrics choice write failed', error, stack);
       }),
     );
@@ -62,6 +78,8 @@ class LyricsChoiceRows extends ConsumerWidget {
     final fileSummary = fileLyricsSummary(lyrics);
     final isOff = lyrics is LyricsOff;
     final fileChosen = lyrics is LyricsShown && lyrics.lyrics.online == null;
+    final online = this.online;
+    final keptCopy = online != null && online.how == OnlineHow.kept;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -75,13 +93,38 @@ class LyricsChoiceRows extends ConsumerWidget {
           ),
           selected: fileChosen,
           enabled: fileSummary != null,
-          onTap: () => _choose(ref, off: false, chosen: fileChosen),
+          onTap: () => _choose(
+            ref,
+            (c) => keptCopy ? c.setFile(trackId) : c.clear(trackId),
+            chosen: fileChosen,
+          ),
         ),
+        if (online != null)
+          SelectionRow(
+            leading: PluginAvatar(
+              providerId: online.providerId,
+              name: online.providerName,
+              size: KIconSize.md,
+            ),
+            title: Text(l10n.lyricsChoiceOnline),
+            subtitle: Text(
+              onlineRowSubtitle(
+                l10n,
+                online,
+                removed: ref.watch(
+                  onlineSourceRemovedProvider(online.providerId),
+                ),
+              ),
+            ),
+            selected: online.selected,
+            onTap: () =>
+                _choose(ref, (c) => c.clear(trackId), chosen: online.selected),
+          ),
         SelectionRow(
           leading: const Icon(KIcons.lyricsOff),
           title: Text(l10n.lyricsChoiceOff),
           selected: isOff,
-          onTap: () => _choose(ref, off: true, chosen: isOff),
+          onTap: () => _choose(ref, (c) => c.setOff(trackId), chosen: isOff),
         ),
       ],
     );

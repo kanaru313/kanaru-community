@@ -50,6 +50,28 @@ void main() {
     );
   });
 
+  testWidgets('Enter reports the text as submitted', (tester) async {
+    useWindow(tester, const Size(400, 800));
+    final submitted = <String>[];
+    await tester.pumpWidget(
+      host(
+        Align(
+          alignment: Alignment.topCenter,
+          child: KFilterField(
+            controller: controller,
+            hint: 'Search',
+            onClose: () {},
+            onSubmitted: submitted.add,
+            persistent: true,
+          ),
+        ),
+      ),
+    );
+    await tester.enterText(find.byType(TextField), 'vu');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    expect(submitted, ['vu']);
+  });
+
   testWidgets('typing reports the text', (tester) async {
     useWindow(tester, const Size(400, 800));
     final seen = <String>[];

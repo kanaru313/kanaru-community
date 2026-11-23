@@ -116,5 +116,422 @@
   "lyricsSettingsTrAhead": "Translate ahead",
   "lyricsSettingsTrAheadNow": "Current song only",
   "lyricsSettingsAddTrService": "Add a translation service",
-  "lyricsSettingsAddSpeech": "Add a speech-to-text plugin"
+  "lyricsSettingsAddSpeech": "Add a speech-to-text plugin",
+  "lyricsSearchingTitle": "Searching for lyrics…",
+  "lyricsSearchingMessage": "No lyrics on this device yet · searching {count, plural, =1{1 enabled source} other{{count} enabled sources}}.",
+  "@lyricsSearchingMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsNoneAutoOffMessage": "No lyrics in the file or in an .lrc file next to the song. Automatic search is off.",
+  "lyricsFindManually": "Search manually…",
+  "lyricsNotFoundTitle": "Lyrics not found",
+  "lyricsNotFoundAsked": "Searched {count, plural, =1{1 enabled source} other{{count} enabled sources}}.",
+  "@lyricsNotFoundAsked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsNotFoundOff": "{count, plural, =1{1 other source is off.} other{{count} other sources are off.}}",
+  "@lyricsNotFoundOff": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsNotFoundAllOff": "No lyrics on this device · every online lyrics source is off.",
+  "lyricsNoSourceMessage": "No lyrics on this device and no online lyrics source yet.",
+  "lyricsAddSource": "Add an online lyrics source",
+  "lyricsInstrumentalTitle": "Instrumental",
+  "lyricsInstrumentalMessage": "The lyrics source says this song is instrumental.",
+  "lyricsInstrumentalFindOnline": "Not right? Find lyrics online…",
+  "lyricsFailedTitle": "Couldn’t find lyrics",
+  "lyricsFailNetwork": "Network error searching {count, plural, =1{1 enabled source} other{{count} enabled sources}}",
+  "@lyricsFailNetwork": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsFailNeedsConfig": "The sources need setting up",
+  "lyricsFailNoAnswer": "The lyrics sources did not answer",
+  "lyricsFailedMessage": "{reason}.",
+  "@lyricsFailedMessage": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsFailedMessageRetry": "{reason} · trying again at {time}.",
+  "@lyricsFailedMessageRetry": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPausedTitle": "Lyrics sources are paused",
+  "lyricsPausedMessage": "The lyrics sources are paused until {time}: the server reported too many requests. Kanaru searches again then.",
+  "@lyricsPausedMessage": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsKindSynced": "Synced",
+  "lyricsKindPlain": "Plain",
+  "lyricsOnlineLabel": "{plugin} · {kind}",
+  "@lyricsOnlineLabel": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLabelSearching": "Searching…",
+  "lyricsLabelFailed": "Couldn’t find lyrics",
+  "lyricsLabelPaused": "Lyrics sources paused",
+  "lyricsCardFailedRetry": "Couldn’t find lyrics · trying again at {time}",
+  "@lyricsCardFailedRetry": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsCardPaused": "Lyrics sources paused until {time}",
+  "@lyricsCardPaused": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsChoiceOnline": "Online lyrics",
+  "lyricsOnlineAuto": "found automatically",
+  "lyricsOnlineRemoved": "plugin removed",
+  "lyricsOnlineInstrumental": "Instrumental",
+  "lyricsStatusSearching": "No lyrics on this device · searching {count, plural, =1{1 enabled source} other{{count} enabled sources}}",
+  "@lyricsStatusSearching": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsStatusNotFound": "No lyrics found, even in {count, plural, =1{1 enabled source} other{{count} enabled sources}}",
+  "@lyricsStatusNotFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsStatusAutoOff": "No lyrics on this device · automatic search is off",
+  "lyricsStatusNoSource": "No lyrics on this device · no online source yet",
+  "lyricsStatusAllOff": "No lyrics on this device · every online source is off",
+  "lyricsStatusFailed": "Couldn’t find lyrics · {reason}",
+  "@lyricsStatusFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsStatusFailedRetry": "Couldn’t find lyrics · {reason} · trying again at {time}",
+  "@lyricsStatusFailedRetry": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsFailShortNetwork": "network error",
+  "lyricsFailShortNeedsConfig": "needs setting up",
+  "lyricsFailShortNoAnswer": "no answer",
+  "lyricsStatusPaused": "The lyrics sources are paused until {time} (the server reported too many requests)",
+  "@lyricsStatusPaused": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsFindOnlineSub": "{on} on · {off} off",
+  "@lyricsFindOnlineSub": {
+    "placeholders": {
+      "on": {
+        "type": "int"
+      },
+      "off": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsFindOnlineSubAllOff": "Every source is off ({off}) · searches only when you tap",
+  "@lyricsFindOnlineSubAllOff": {
+    "placeholders": {
+      "off": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsAddSourceSub": "No lyrics plugin installed · open the plugin store",
+  "lyricsBarAutoTitle": "Found automatically on {plugin}",
+  "@lyricsBarAutoTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsBarAutoSub": "Keep it so Kanaru does not search again",
+  "lyricsBarKeptTitle": "Using the kept copy",
+  "lyricsBarKeptSub": "For this song only",
+  "lyricsBarReject": "Wrong song",
+  "lyricsBarKeep": "Keep this copy",
+  "lyricsStatusEnableAuto": "Turn on auto search",
+  "lyricsPickerTitle": "Choose lyrics",
+  "lyricsPickerBack": "Back to Lyrics for this song",
+  "lyricsPickerSearchHint": "Song, artist",
+  "lyricsPickerFilterAll": "All sources",
+  "lyricsPickerGroup": "{name} · {count}",
+  "@lyricsPickerGroup": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerGroupOff": "{name} · off · {count}",
+  "@lyricsPickerGroupOff": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerBadgeOff": "Source is off",
+  "lyricsPickerDeltaMatch": "match",
+  "lyricsPickerDeltaMatchTip": "Length matches the song",
+  "lyricsPickerDeltaLonger": "+{seconds} s",
+  "@lyricsPickerDeltaLonger": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerDeltaShorter": "−{seconds} s",
+  "@lyricsPickerDeltaShorter": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerDeltaLongerTip": "{seconds} seconds longer than the song: may be another version (live, remix…)",
+  "@lyricsPickerDeltaLongerTip": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerDeltaShorterTip": "{seconds} seconds shorter than the song: may be another version (live, remix…)",
+  "@lyricsPickerDeltaShorterTip": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerSearching": "Searching {name}…",
+  "@lyricsPickerSearching": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerFailNetwork": "{name}: network error or timed out",
+  "@lyricsPickerFailNetwork": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerFailServer": "{name}: the server returned an error",
+  "@lyricsPickerFailServer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerFailRateLimited": "{name}: the server says too many requests",
+  "@lyricsPickerFailRateLimited": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerFailInvalid": "{name}: the answer could not be read",
+  "@lyricsPickerFailInvalid": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerNeedsConfig": "{name} · Needs setup",
+  "@lyricsPickerNeedsConfig": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerOpenPlugin": "Open plugin page",
+  "lyricsPickerPaused": "{name} is paused until {time}",
+  "@lyricsPickerPaused": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerMoreTitle": "Not the lyrics you wanted?",
+  "lyricsPickerMoreBody": "{count, plural, =1{One source is off: {names}. Searched only when you tap, settings stay as they are.} other{{count} sources are off: {names}. Searched only when you tap, settings stay as they are.}}",
+  "@lyricsPickerMoreBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerMoreAction": "Search",
+  "lyricsPickerEmptyNone": "No source is on",
+  "lyricsPickerEmptyNotFound": "{count, plural, =1{Nothing found in the source that is on} other{Nothing found in {count} sources that are on}}",
+  "@lyricsPickerEmptyNotFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerEmptyOff": "{count, plural, =1{One source is off ({names}). Searched only when you tap.} other{{count} sources are off ({names}). Searched only when you tap.}}",
+  "@lyricsPickerEmptyOff": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerEmptyAction": "{count, plural, =1{Search the source that is off} other{Search {count} sources that are off}}",
+  "@lyricsPickerEmptyAction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerAllAsked": "Sources that are off were searched too for this song. Source settings are unchanged.",
+  "lyricsPickerPreview": "Preview",
+  "lyricsPickerPreviewFrom": "Preview · {name}",
+  "@lyricsPickerPreviewFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsPickerPickOne": "Choose a result",
+  "lyricsPickerPreviewBack": "Back to the list",
+  "lyricsPickerPreviewBackLabel": "Back to the results",
+  "lyricsPickerPlainNote": "Plain lyrics, no timestamps",
+  "lyricsPickerPreviewLoading": "Loading lyrics…",
+  "lyricsPickerPreviewFailed": "Could not load the lyrics of this result",
+  "lyricsPickerPreviewMissing": "This result has no lyrics",
+  "lyricsPickerPreviewInstrumental": "Instrumental",
+  "lyricsPickerFootNote": "For this song only",
+  "lyricsPickerCancel": "Cancel",
+  "lyricsPickerUse": "Use these lyrics",
+  "lyricsPickerSourcesTitle": "Search sources",
+  "lyricsPickerSourcesAll": "All sources",
+  "lyricsPickerSourcesResults": "{count, plural, =1{1 result} other{{count} results}}",
+  "@lyricsPickerSourcesResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerSourcesNone": "No results",
+  "lyricsPickerSourcesOff": "OFF",
+  "lyricsPickerSourcesOffCaption": "Searched only when you tap Search.",
+  "lyricsPickerSourcesOffResults": "{count, plural, =1{1 result · source is off} other{{count} results · source is off}}",
+  "@lyricsPickerSourcesOffResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsPickerSourcesNotAsked": "Not searched",
+  "lyricsPickerClearSearch": "Clear the search text",
+  "lyricsKeepFailed": "Couldn't save the lyrics. Try again.",
+  "lyricsToastKept": "Kept the {plugin} copy for this song",
+  "@lyricsToastKept": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsToastRefusedAuto": "Dropped this copy, searching again…",
+  "lyricsToastRefusedKept": "Dropped the kept copy",
+  "lyricsToastChosen": "Chose the lyrics from {plugin} for this song",
+  "@lyricsToastChosen": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  }
 }

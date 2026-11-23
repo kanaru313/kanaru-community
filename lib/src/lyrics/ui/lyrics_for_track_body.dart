@@ -6,33 +6,39 @@ import 'package:material_ui/material_ui.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../media/domain/track_id.dart';
 import '../../playback/state/now_playing_panel.dart';
-import '../domain/lyrics_status.dart';
+import '../state/online/online_lookup_providers.dart';
 import '../state/track_lyrics_providers.dart';
 import 'lyrics_choice_rows.dart';
+import 'lyrics_find_rows.dart';
+import 'lyrics_online_bar.dart';
 import 'lyrics_settings_link.dart';
+import 'lyrics_status_line.dart';
+import 'online/online_row_info.dart';
 
-/// The content of "Lời cho bài này": header with a close button, a status
-/// line when the file has no lyrics, the two choice rows, then the online
-/// features that are not built yet (dimmed, inert, "Sắp có"). [close] is the
-/// modal's guarded close.
+/// The content of "Lời cho bài này": header with a close button, a status line
+/// when the track has no lyrics to show, the choice rows (file, online copy,
+/// none), the online and not-yet-built features, and, when there is something
+/// to do with the online copy that shows, the bar to keep or refuse it.
+/// [close] is the modal's guarded close; [onFindOnline] is what the "Tìm lời
+/// trực tuyến…" row opens (null leaves it dimmed until the search exists).
 class LyricsForTrackBody extends ConsumerWidget {
   const LyricsForTrackBody({
     super.key,
     required this.trackId,
     required this.close,
+    this.onFindOnline,
   });
 
   final TrackId trackId;
   final bool Function() close;
+  final VoidCallback? onFindOnline;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final lyrics = ref.watch(trackLyricsProvider(trackId));
-    final fileHasNone =
-        lyrics.isEmpty ||
-        lyrics is LyricsUnavailable ||
-        (lyrics is LyricsOff && lyrics.available == null);
+    final pin = ref.watch(lyricsPinProvider(trackId)).value;
+    final online = onlineRowInfoOf(lyrics, pin);
+    final status = LyricsStatusLine.of(context, ref, lyrics);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -44,45 +50,23 @@ class LyricsForTrackBody extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (fileHasNone) const _StatusLine(),
-                LyricsChoiceRows(trackId: trackId, close: close),
+                ?status,
+                LyricsChoiceRows(
+                  trackId: trackId,
+                  close: close,
+                  online: online,
+                ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: KSpace.x2),
                   child: Divider(height: 1),
                 ),
-                // KListRow has no plain variant yet and fills with
-                // surfaceContainerLow, which shows as a box on the dialog
-                // surface; these inert rows must read as plain rows.
-                Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: Theme.of(context).colorScheme
-                        .copyWith(surfaceContainerLow: Colors.transparent),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _SoonRow(
-                        icon: KIcons.online,
-                        title: l10n.lyricsFindOnline,
-                      ),
-                      _SoonRow(
-                        icon: KIcons.ai,
-                        title: l10n.lyricsFromAudio,
-                        subtitle: l10n.lyricsFromAudioSub,
-                      ),
-                      _SoonRow(
-                        icon: KIcons.fileExport,
-                        title: l10n.lyricsSaveLyrics,
-                      ),
-                    ],
-                  ),
-                ),
+                LyricsFindRows(close: close, onFindOnline: onFindOnline),
                 const KGap(KSpace.x2),
               ],
             ),
           ),
         ),
+        LyricsOnlineBar(trackId: trackId, info: online, close: close),
       ],
     );
   }
@@ -136,63 +120,6 @@ class _Header extends ConsumerWidget {
             onPressed: onClose,
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// "Không có lời trên máy" in a `surfaceContainerHighest` box.
-class _StatusLine extends StatelessWidget {
-  const _StatusLine();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(KSpace.x4, 0, KSpace.x4, KSpace.x2),
-      padding: const EdgeInsets.all(KSpace.x3),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: KRadius.md,
-      ),
-      child: Row(
-        spacing: KSpace.x3,
-        children: [
-          Icon(
-            KIcons.lyrics,
-            size: KIconSize.sm,
-            color: scheme.onSurfaceVariant,
-          ),
-          Expanded(
-            child: Text(
-              AppLocalizations.of(context).lyricsModalNoneOnDevice,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A feature that is not built yet: dimmed, never tappable, with its marker.
-class _SoonRow extends StatelessWidget {
-  const _SoonRow({required this.icon, required this.title, this.subtitle});
-
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return KListRow(
-      enabled: false,
-      leading: Icon(icon),
-      title: Text(title),
-      subtitle: subtitle == null ? null : Text(subtitle!),
-      trailing: Text(
-        AppLocalizations.of(context).appComingSoon,
-        style: Theme.of(context).textTheme.labelMedium,
       ),
     );
   }

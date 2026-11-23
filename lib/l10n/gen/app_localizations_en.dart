@@ -4633,6 +4633,501 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSettingsAddSpeech => 'Add a speech-to-text plugin';
 
   @override
+  String get lyricsSearchingTitle => 'Searching for lyrics…';
+
+  @override
+  String lyricsSearchingMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count enabled sources',
+      one: '1 enabled source',
+    );
+    return 'No lyrics on this device yet · searching $_temp0.';
+  }
+
+  @override
+  String get lyricsNoneAutoOffMessage =>
+      'No lyrics in the file or in an .lrc file next to the song. Automatic search is off.';
+
+  @override
+  String get lyricsFindManually => 'Search manually…';
+
+  @override
+  String get lyricsNotFoundTitle => 'Lyrics not found';
+
+  @override
+  String lyricsNotFoundAsked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count enabled sources',
+      one: '1 enabled source',
+    );
+    return 'Searched $_temp0.';
+  }
+
+  @override
+  String lyricsNotFoundOff(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count other sources are off.',
+      one: '1 other source is off.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsNotFoundAllOff =>
+      'No lyrics on this device · every online lyrics source is off.';
+
+  @override
+  String get lyricsNoSourceMessage =>
+      'No lyrics on this device and no online lyrics source yet.';
+
+  @override
+  String get lyricsAddSource => 'Add an online lyrics source';
+
+  @override
+  String get lyricsInstrumentalTitle => 'Instrumental';
+
+  @override
+  String get lyricsInstrumentalMessage =>
+      'The lyrics source says this song is instrumental.';
+
+  @override
+  String get lyricsInstrumentalFindOnline => 'Not right? Find lyrics online…';
+
+  @override
+  String get lyricsFailedTitle => 'Couldn’t find lyrics';
+
+  @override
+  String lyricsFailNetwork(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count enabled sources',
+      one: '1 enabled source',
+    );
+    return 'Network error searching $_temp0';
+  }
+
+  @override
+  String get lyricsFailNeedsConfig => 'The sources need setting up';
+
+  @override
+  String get lyricsFailNoAnswer => 'The lyrics sources did not answer';
+
+  @override
+  String lyricsFailedMessage(String reason) {
+    return '$reason.';
+  }
+
+  @override
+  String lyricsFailedMessageRetry(String reason, String time) {
+    return '$reason · trying again at $time.';
+  }
+
+  @override
+  String get lyricsPausedTitle => 'Lyrics sources are paused';
+
+  @override
+  String lyricsPausedMessage(String time) {
+    return 'The lyrics sources are paused until $time: the server reported too many requests. Kanaru searches again then.';
+  }
+
+  @override
+  String get lyricsKindSynced => 'Synced';
+
+  @override
+  String get lyricsKindPlain => 'Plain';
+
+  @override
+  String lyricsOnlineLabel(String plugin, String kind) {
+    return '$plugin · $kind';
+  }
+
+  @override
+  String get lyricsLabelSearching => 'Searching…';
+
+  @override
+  String get lyricsLabelFailed => 'Couldn’t find lyrics';
+
+  @override
+  String get lyricsLabelPaused => 'Lyrics sources paused';
+
+  @override
+  String lyricsCardFailedRetry(String time) {
+    return 'Couldn’t find lyrics · trying again at $time';
+  }
+
+  @override
+  String lyricsCardPaused(String time) {
+    return 'Lyrics sources paused until $time';
+  }
+
+  @override
+  String get lyricsChoiceOnline => 'Online lyrics';
+
+  @override
+  String get lyricsOnlineAuto => 'found automatically';
+
+  @override
+  String get lyricsOnlineRemoved => 'plugin removed';
+
+  @override
+  String get lyricsOnlineInstrumental => 'Instrumental';
+
+  @override
+  String lyricsStatusSearching(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count enabled sources',
+      one: '1 enabled source',
+    );
+    return 'No lyrics on this device · searching $_temp0';
+  }
+
+  @override
+  String lyricsStatusNotFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count enabled sources',
+      one: '1 enabled source',
+    );
+    return 'No lyrics found, even in $_temp0';
+  }
+
+  @override
+  String get lyricsStatusAutoOff =>
+      'No lyrics on this device · automatic search is off';
+
+  @override
+  String get lyricsStatusNoSource =>
+      'No lyrics on this device · no online source yet';
+
+  @override
+  String get lyricsStatusAllOff =>
+      'No lyrics on this device · every online source is off';
+
+  @override
+  String lyricsStatusFailed(String reason) {
+    return 'Couldn’t find lyrics · $reason';
+  }
+
+  @override
+  String lyricsStatusFailedRetry(String reason, String time) {
+    return 'Couldn’t find lyrics · $reason · trying again at $time';
+  }
+
+  @override
+  String get lyricsFailShortNetwork => 'network error';
+
+  @override
+  String get lyricsFailShortNeedsConfig => 'needs setting up';
+
+  @override
+  String get lyricsFailShortNoAnswer => 'no answer';
+
+  @override
+  String lyricsStatusPaused(String time) {
+    return 'The lyrics sources are paused until $time (the server reported too many requests)';
+  }
+
+  @override
+  String lyricsFindOnlineSub(int on, int off) {
+    return '$on on · $off off';
+  }
+
+  @override
+  String lyricsFindOnlineSubAllOff(int off) {
+    return 'Every source is off ($off) · searches only when you tap';
+  }
+
+  @override
+  String get lyricsAddSourceSub =>
+      'No lyrics plugin installed · open the plugin store';
+
+  @override
+  String lyricsBarAutoTitle(String plugin) {
+    return 'Found automatically on $plugin';
+  }
+
+  @override
+  String get lyricsBarAutoSub => 'Keep it so Kanaru does not search again';
+
+  @override
+  String get lyricsBarKeptTitle => 'Using the kept copy';
+
+  @override
+  String get lyricsBarKeptSub => 'For this song only';
+
+  @override
+  String get lyricsBarReject => 'Wrong song';
+
+  @override
+  String get lyricsBarKeep => 'Keep this copy';
+
+  @override
+  String get lyricsStatusEnableAuto => 'Turn on auto search';
+
+  @override
+  String get lyricsPickerTitle => 'Choose lyrics';
+
+  @override
+  String get lyricsPickerBack => 'Back to Lyrics for this song';
+
+  @override
+  String get lyricsPickerSearchHint => 'Song, artist';
+
+  @override
+  String get lyricsPickerFilterAll => 'All sources';
+
+  @override
+  String lyricsPickerGroup(String name, int count) {
+    return '$name · $count';
+  }
+
+  @override
+  String lyricsPickerGroupOff(String name, int count) {
+    return '$name · off · $count';
+  }
+
+  @override
+  String get lyricsPickerBadgeOff => 'Source is off';
+
+  @override
+  String get lyricsPickerDeltaMatch => 'match';
+
+  @override
+  String get lyricsPickerDeltaMatchTip => 'Length matches the song';
+
+  @override
+  String lyricsPickerDeltaLonger(int seconds) {
+    return '+$seconds s';
+  }
+
+  @override
+  String lyricsPickerDeltaShorter(int seconds) {
+    return '−$seconds s';
+  }
+
+  @override
+  String lyricsPickerDeltaLongerTip(int seconds) {
+    return '$seconds seconds longer than the song: may be another version (live, remix…)';
+  }
+
+  @override
+  String lyricsPickerDeltaShorterTip(int seconds) {
+    return '$seconds seconds shorter than the song: may be another version (live, remix…)';
+  }
+
+  @override
+  String lyricsPickerSearching(String name) {
+    return 'Searching $name…';
+  }
+
+  @override
+  String lyricsPickerFailNetwork(String name) {
+    return '$name: network error or timed out';
+  }
+
+  @override
+  String lyricsPickerFailServer(String name) {
+    return '$name: the server returned an error';
+  }
+
+  @override
+  String lyricsPickerFailRateLimited(String name) {
+    return '$name: the server says too many requests';
+  }
+
+  @override
+  String lyricsPickerFailInvalid(String name) {
+    return '$name: the answer could not be read';
+  }
+
+  @override
+  String lyricsPickerNeedsConfig(String name) {
+    return '$name · Needs setup';
+  }
+
+  @override
+  String get lyricsPickerOpenPlugin => 'Open plugin page';
+
+  @override
+  String lyricsPickerPaused(String name, String time) {
+    return '$name is paused until $time';
+  }
+
+  @override
+  String get lyricsPickerMoreTitle => 'Not the lyrics you wanted?';
+
+  @override
+  String lyricsPickerMoreBody(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count sources are off: $names. Searched only when you tap, settings stay as they are.',
+      one:
+          'One source is off: $names. Searched only when you tap, settings stay as they are.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsPickerMoreAction => 'Search';
+
+  @override
+  String get lyricsPickerEmptyNone => 'No source is on';
+
+  @override
+  String lyricsPickerEmptyNotFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Nothing found in $count sources that are on',
+      one: 'Nothing found in the source that is on',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String lyricsPickerEmptyOff(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sources are off ($names). Searched only when you tap.',
+      one: 'One source is off ($names). Searched only when you tap.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String lyricsPickerEmptyAction(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Search $count sources that are off',
+      one: 'Search the source that is off',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsPickerAllAsked =>
+      'Sources that are off were searched too for this song. Source settings are unchanged.';
+
+  @override
+  String get lyricsPickerPreview => 'Preview';
+
+  @override
+  String lyricsPickerPreviewFrom(String name) {
+    return 'Preview · $name';
+  }
+
+  @override
+  String get lyricsPickerPickOne => 'Choose a result';
+
+  @override
+  String get lyricsPickerPreviewBack => 'Back to the list';
+
+  @override
+  String get lyricsPickerPreviewBackLabel => 'Back to the results';
+
+  @override
+  String get lyricsPickerPlainNote => 'Plain lyrics, no timestamps';
+
+  @override
+  String get lyricsPickerPreviewLoading => 'Loading lyrics…';
+
+  @override
+  String get lyricsPickerPreviewFailed =>
+      'Could not load the lyrics of this result';
+
+  @override
+  String get lyricsPickerPreviewMissing => 'This result has no lyrics';
+
+  @override
+  String get lyricsPickerPreviewInstrumental => 'Instrumental';
+
+  @override
+  String get lyricsPickerFootNote => 'For this song only';
+
+  @override
+  String get lyricsPickerCancel => 'Cancel';
+
+  @override
+  String get lyricsPickerUse => 'Use these lyrics';
+
+  @override
+  String get lyricsPickerSourcesTitle => 'Search sources';
+
+  @override
+  String get lyricsPickerSourcesAll => 'All sources';
+
+  @override
+  String lyricsPickerSourcesResults(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results',
+      one: '1 result',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsPickerSourcesNone => 'No results';
+
+  @override
+  String get lyricsPickerSourcesOff => 'OFF';
+
+  @override
+  String get lyricsPickerSourcesOffCaption =>
+      'Searched only when you tap Search.';
+
+  @override
+  String lyricsPickerSourcesOffResults(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results · source is off',
+      one: '1 result · source is off',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsPickerSourcesNotAsked => 'Not searched';
+
+  @override
+  String get lyricsPickerClearSearch => 'Clear the search text';
+
+  @override
+  String get lyricsKeepFailed => 'Couldn\'t save the lyrics. Try again.';
+
+  @override
+  String lyricsToastKept(String plugin) {
+    return 'Kept the $plugin copy for this song';
+  }
+
+  @override
+  String get lyricsToastRefusedAuto => 'Dropped this copy, searching again…';
+
+  @override
+  String get lyricsToastRefusedKept => 'Dropped the kept copy';
+
+  @override
+  String lyricsToastChosen(String plugin) {
+    return 'Chose the lyrics from $plugin for this song';
+  }
+
+  @override
   String get pluginsStoreTitle => 'Plugin store';
 
   @override

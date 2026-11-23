@@ -4205,6 +4205,485 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lyricsSettingsAddSpeech => 'Thêm plugin chuyển giọng nói';
 
   @override
+  String get lyricsSearchingTitle => 'Đang tìm lời…';
+
+  @override
+  String lyricsSearchingMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Bài này chưa có lời trong máy · đang tìm ở $count nguồn đang bật.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsNoneAutoOffMessage =>
+      'Không có lời trong tệp hay tệp .lrc cạnh bài. Tự tìm đang tắt.';
+
+  @override
+  String get lyricsFindManually => 'Tìm thủ công…';
+
+  @override
+  String get lyricsNotFoundTitle => 'Không tìm thấy lời';
+
+  @override
+  String lyricsNotFoundAsked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã tìm ở $count nguồn đang bật.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String lyricsNotFoundOff(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nguồn khác đang tắt.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsNotFoundAllOff =>
+      'Không có lời trong máy · mọi nguồn lời trực tuyến đang tắt.';
+
+  @override
+  String get lyricsNoSourceMessage =>
+      'Bài này không có lời trong máy và chưa có nguồn lời trực tuyến.';
+
+  @override
+  String get lyricsAddSource => 'Thêm nguồn lời trực tuyến';
+
+  @override
+  String get lyricsInstrumentalTitle => 'Nhạc không lời';
+
+  @override
+  String get lyricsInstrumentalMessage =>
+      'Nguồn lời ghi bài này là nhạc không lời.';
+
+  @override
+  String get lyricsInstrumentalFindOnline => 'Không phải? Tìm lời trực tuyến…';
+
+  @override
+  String get lyricsFailedTitle => 'Chưa tìm được lời';
+
+  @override
+  String lyricsFailNetwork(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Lỗi mạng khi tìm ở $count nguồn đang bật',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsFailNeedsConfig => 'Các nguồn cần cấu hình';
+
+  @override
+  String get lyricsFailNoAnswer => 'Nguồn lời không trả lời';
+
+  @override
+  String lyricsFailedMessage(String reason) {
+    return '$reason.';
+  }
+
+  @override
+  String lyricsFailedMessageRetry(String reason, String time) {
+    return '$reason · tự thử lại lúc $time.';
+  }
+
+  @override
+  String get lyricsPausedTitle => 'Nguồn lời đang tạm dừng';
+
+  @override
+  String lyricsPausedMessage(String time) {
+    return 'Các nguồn lời đang tạm dừng tới $time: máy chủ báo quá nhiều yêu cầu. Tới giờ đó Kanaru tự tìm lại.';
+  }
+
+  @override
+  String get lyricsKindSynced => 'Đồng bộ';
+
+  @override
+  String get lyricsKindPlain => 'Thường';
+
+  @override
+  String lyricsOnlineLabel(String plugin, String kind) {
+    return '$plugin · $kind';
+  }
+
+  @override
+  String get lyricsLabelSearching => 'Đang tìm…';
+
+  @override
+  String get lyricsLabelFailed => 'Chưa tìm được lời';
+
+  @override
+  String get lyricsLabelPaused => 'Nguồn lời tạm dừng';
+
+  @override
+  String lyricsCardFailedRetry(String time) {
+    return 'Chưa tìm được lời · thử lại lúc $time';
+  }
+
+  @override
+  String lyricsCardPaused(String time) {
+    return 'Nguồn lời tạm dừng tới $time';
+  }
+
+  @override
+  String get lyricsChoiceOnline => 'Bản trực tuyến';
+
+  @override
+  String get lyricsOnlineAuto => 'tự tìm';
+
+  @override
+  String get lyricsOnlineRemoved => 'plugin đã gỡ';
+
+  @override
+  String get lyricsOnlineInstrumental => 'Nhạc không lời';
+
+  @override
+  String lyricsStatusSearching(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Không có lời trên máy · đang tìm ở $count nguồn đang bật',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String lyricsStatusNotFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Không tìm thấy lời, kể cả ở $count nguồn đang bật',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsStatusAutoOff => 'Không có lời trên máy · tự tìm đang tắt';
+
+  @override
+  String get lyricsStatusNoSource =>
+      'Không có lời trên máy · chưa có nguồn trực tuyến';
+
+  @override
+  String get lyricsStatusAllOff =>
+      'Không có lời trên máy · mọi nguồn trực tuyến đang tắt';
+
+  @override
+  String lyricsStatusFailed(String reason) {
+    return 'Chưa tìm được lời · $reason';
+  }
+
+  @override
+  String lyricsStatusFailedRetry(String reason, String time) {
+    return 'Chưa tìm được lời · $reason · thử lại lúc $time';
+  }
+
+  @override
+  String get lyricsFailShortNetwork => 'lỗi mạng';
+
+  @override
+  String get lyricsFailShortNeedsConfig => 'cần cấu hình';
+
+  @override
+  String get lyricsFailShortNoAnswer => 'nguồn không trả lời';
+
+  @override
+  String lyricsStatusPaused(String time) {
+    return 'Các nguồn lời đang tạm dừng tới $time (máy chủ báo quá nhiều yêu cầu)';
+  }
+
+  @override
+  String lyricsFindOnlineSub(int on, int off) {
+    return '$on nguồn đang bật · $off đang tắt';
+  }
+
+  @override
+  String lyricsFindOnlineSubAllOff(int off) {
+    return 'Mọi nguồn đang tắt ($off) · chỉ tìm khi bạn bấm';
+  }
+
+  @override
+  String get lyricsAddSourceSub => 'Chưa cài plugin lời nào · mở kho plugin';
+
+  @override
+  String lyricsBarAutoTitle(String plugin) {
+    return 'Tự tìm thấy trên $plugin';
+  }
+
+  @override
+  String get lyricsBarAutoSub => 'Giữ để lần sau không tìm lại';
+
+  @override
+  String get lyricsBarKeptTitle => 'Đang dùng bản đã giữ';
+
+  @override
+  String get lyricsBarKeptSub => 'Chỉ cho bài này';
+
+  @override
+  String get lyricsBarReject => 'Không đúng bài';
+
+  @override
+  String get lyricsBarKeep => 'Giữ bản này';
+
+  @override
+  String get lyricsStatusEnableAuto => 'Bật tự tìm';
+
+  @override
+  String get lyricsPickerTitle => 'Chọn lời';
+
+  @override
+  String get lyricsPickerBack => 'Về Lời cho bài này';
+
+  @override
+  String get lyricsPickerSearchHint => 'Tên bài hát, nghệ sĩ';
+
+  @override
+  String get lyricsPickerFilterAll => 'Tất cả nguồn';
+
+  @override
+  String lyricsPickerGroup(String name, int count) {
+    return '$name · $count';
+  }
+
+  @override
+  String lyricsPickerGroupOff(String name, int count) {
+    return '$name · đang tắt · $count';
+  }
+
+  @override
+  String get lyricsPickerBadgeOff => 'Nguồn đang tắt';
+
+  @override
+  String get lyricsPickerDeltaMatch => 'khớp';
+
+  @override
+  String get lyricsPickerDeltaMatchTip => 'Thời lượng khớp với bài';
+
+  @override
+  String lyricsPickerDeltaLonger(int seconds) {
+    return '+$seconds s';
+  }
+
+  @override
+  String lyricsPickerDeltaShorter(int seconds) {
+    return '−$seconds s';
+  }
+
+  @override
+  String lyricsPickerDeltaLongerTip(int seconds) {
+    return 'Dài hơn bài $seconds giây: có thể là bản khác (live, remix…)';
+  }
+
+  @override
+  String lyricsPickerDeltaShorterTip(int seconds) {
+    return 'Ngắn hơn bài $seconds giây: có thể là bản khác (live, remix…)';
+  }
+
+  @override
+  String lyricsPickerSearching(String name) {
+    return 'Đang tìm trong $name…';
+  }
+
+  @override
+  String lyricsPickerFailNetwork(String name) {
+    return '$name: lỗi mạng hoặc hết thời gian chờ';
+  }
+
+  @override
+  String lyricsPickerFailServer(String name) {
+    return '$name: máy chủ trả lỗi';
+  }
+
+  @override
+  String lyricsPickerFailRateLimited(String name) {
+    return '$name: máy chủ báo quá nhiều yêu cầu';
+  }
+
+  @override
+  String lyricsPickerFailInvalid(String name) {
+    return '$name: câu trả lời không đọc được';
+  }
+
+  @override
+  String lyricsPickerNeedsConfig(String name) {
+    return '$name · Cần cấu hình';
+  }
+
+  @override
+  String get lyricsPickerOpenPlugin => 'Mở trang plugin';
+
+  @override
+  String lyricsPickerPaused(String name, String time) {
+    return '$name tạm dừng tới $time';
+  }
+
+  @override
+  String get lyricsPickerMoreTitle => 'Chưa thấy lời ưng ý?';
+
+  @override
+  String lyricsPickerMoreBody(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Còn $count nguồn đang tắt: $names. Chỉ tìm khi bạn bấm, cài đặt không đổi.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsPickerMoreAction => 'Tìm';
+
+  @override
+  String get lyricsPickerEmptyNone => 'Chưa có nguồn nào đang bật';
+
+  @override
+  String lyricsPickerEmptyNotFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Không tìm thấy trong $count nguồn đang bật',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String lyricsPickerEmptyOff(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Còn $count nguồn đang tắt ($names). Chỉ tìm khi bạn bấm.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String lyricsPickerEmptyAction(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tìm trong $count nguồn đang tắt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsPickerAllAsked =>
+      'Đã tìm cả nguồn đang tắt cho bài này. Cài đặt nguồn không đổi.';
+
+  @override
+  String get lyricsPickerPreview => 'Xem trước';
+
+  @override
+  String lyricsPickerPreviewFrom(String name) {
+    return 'Xem trước · $name';
+  }
+
+  @override
+  String get lyricsPickerPickOne => 'Chọn một kết quả';
+
+  @override
+  String get lyricsPickerPreviewBack => 'Về danh sách';
+
+  @override
+  String get lyricsPickerPreviewBackLabel => 'Về danh sách kết quả';
+
+  @override
+  String get lyricsPickerPlainNote => 'Lời thường, không có mốc thời gian';
+
+  @override
+  String get lyricsPickerPreviewLoading => 'Đang tải lời…';
+
+  @override
+  String get lyricsPickerPreviewFailed => 'Không tải được lời của kết quả này';
+
+  @override
+  String get lyricsPickerPreviewMissing => 'Kết quả này không có lời';
+
+  @override
+  String get lyricsPickerPreviewInstrumental => 'Bài không lời';
+
+  @override
+  String get lyricsPickerFootNote => 'Chỉ áp dụng cho bài này';
+
+  @override
+  String get lyricsPickerCancel => 'Huỷ';
+
+  @override
+  String get lyricsPickerUse => 'Dùng lời này';
+
+  @override
+  String get lyricsPickerSourcesTitle => 'Nguồn tìm kiếm';
+
+  @override
+  String get lyricsPickerSourcesAll => 'Tất cả nguồn';
+
+  @override
+  String lyricsPickerSourcesResults(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kết quả',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsPickerSourcesNone => 'Không có kết quả';
+
+  @override
+  String get lyricsPickerSourcesOff => 'ĐANG TẮT';
+
+  @override
+  String get lyricsPickerSourcesOffCaption => 'Chỉ được tìm khi bạn bấm Tìm.';
+
+  @override
+  String lyricsPickerSourcesOffResults(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kết quả · nguồn đang tắt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsPickerSourcesNotAsked => 'Chưa tìm';
+
+  @override
+  String get lyricsPickerClearSearch => 'Xoá chữ trong ô tìm';
+
+  @override
+  String get lyricsKeepFailed => 'Không lưu được lời. Thử lại sau.';
+
+  @override
+  String lyricsToastKept(String plugin) {
+    return 'Đã giữ bản $plugin cho bài này';
+  }
+
+  @override
+  String get lyricsToastRefusedAuto => 'Đã bỏ bản này, đang tìm lại…';
+
+  @override
+  String get lyricsToastRefusedKept => 'Đã bỏ bản đã giữ';
+
+  @override
+  String lyricsToastChosen(String plugin) {
+    return 'Đã chọn lời từ $plugin cho bài này';
+  }
+
+  @override
   String get pluginsStoreTitle => 'Kho plugin';
 
   @override

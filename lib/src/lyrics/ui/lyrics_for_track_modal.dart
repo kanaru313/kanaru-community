@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -5,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../media/domain/track_id.dart';
 import '../state/playing_lyrics_providers.dart';
 import 'lyrics_for_track_body.dart';
+import 'picker/lyrics_picker.dart';
 
 /// Opens "Lời cho bài này" for [id]: a bottom sheet on the mobile shell, a
 /// dialog of [KLayout.dialog] on the desktop shell, over every navigator.
@@ -98,10 +101,44 @@ class _LyricsForTrackModalState extends ConsumerState<_LyricsForTrackModal> {
     return true;
   }
 
+  /// "Tìm lời trực tuyến…": the modal closes and the picker opens in its
+  /// place; ← of the picker opens this modal again. The navigator's context
+  /// is kept because this one is gone once the modal pops.
+  void _openPicker() {
+    final navigator = Navigator.of(context);
+    final id = widget.trackId;
+    final follows = widget.followsPlaying;
+    if (!_requestClose()) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!navigator.mounted) return;
+      unawaited(
+        showLyricsPicker(
+          navigator.context,
+          id,
+          followsPlaying: follows,
+          onBack: () {
+            if (!navigator.mounted) return;
+            unawaited(
+              showLyricsForTrack(
+                navigator.context,
+                id,
+                followsPlaying: follows,
+              ),
+            );
+          },
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) => Semantics(
     scopesRoute: true,
     explicitChildNodes: true,
-    child: LyricsForTrackBody(trackId: widget.trackId, close: _requestClose),
+    child: LyricsForTrackBody(
+      trackId: widget.trackId,
+      close: _requestClose,
+      onFindOnline: _openPicker,
+    ),
   );
 }

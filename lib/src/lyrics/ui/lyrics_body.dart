@@ -8,6 +8,8 @@ import '../domain/lyrics_status.dart';
 import '../state/lyrics_settings.dart';
 import '../state/playing_lyrics_providers.dart';
 import 'lyrics_state_view.dart';
+import 'online/open_lyrics_plugin_store.dart';
+import 'online/open_online_targets.dart';
 import 'plain_lyrics_view.dart';
 import 'synced_lyrics_view.dart';
 
@@ -16,7 +18,9 @@ import 'synced_lyrics_view.dart';
 /// the track's lyrics, and sizes them through [KLyricsMetricsBuilder] and the
 /// user's font scale, alignment, dim level and auto-return.
 ///
-/// Loading is blank (never the previous track's lines). The synced view is
+/// Loading is blank (never the previous track's lines). Every other state
+/// without lyrics is a [LyricsStateView]; its "find online" buttons open
+/// `openFindOnline`, "add a source" the lyrics plugin store. The synced view is
 /// keyed by the entry and its lyrics, so a new track builds a fresh view and
 /// the same lyrics keep their scroll.
 class LyricsBody extends ConsumerWidget {
@@ -44,28 +48,25 @@ class LyricsBody extends ConsumerWidget {
     final dim = ref.watch(lyricsDimProvider);
     final autoReturn = ref.watch(lyricsAutoReturnProvider);
     final desktop = surface == KLyricsSurface.tab;
+    final trackId = playing.trackId;
     return switch (playing.lyrics) {
-      LyricsLoading() || LyricsSearching() => const SizedBox.expand(),
-      LyricsNone() ||
-      LyricsUnavailable() ||
-      LyricsNotFound() ||
-      LyricsNoSource() ||
-      LyricsInstrumental() ||
-      LyricsLookupFailed() ||
-      LyricsLookupPaused() => LyricsStateView(
-        kind: LyricsStateKind.none,
-        desktop: desktop,
-      ),
-      LyricsOff() => LyricsStateView(
-        kind: LyricsStateKind.off,
-        desktop: desktop,
-        onOpenChoice: onOpenChoice,
-      ),
+      LyricsLoading() => const SizedBox.expand(),
       LyricsShown(:final lyrics) => KLyricsMetricsBuilder(
         surface: surface,
         coverColumnShown: coverColumnShown,
         builder: (context, metrics) =>
             _shown(playing, lyrics, metrics, fontScale, align, dim, autoReturn),
+      ),
+      // The state view switches over every state itself, so a new state is a
+      // compile error there, not a silent blank here.
+      final state => LyricsStateView(
+        lyrics: state,
+        desktop: desktop,
+        onOpenChoice: onOpenChoice,
+        onFindOnline: trackId == null
+            ? null
+            : () => openFindOnline(context, trackId),
+        onAddSource: () => openLyricsPluginStore(context, ref),
       ),
     };
   }

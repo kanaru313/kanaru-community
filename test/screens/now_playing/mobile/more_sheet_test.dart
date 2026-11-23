@@ -194,6 +194,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(LyricsForTrackBody), findsNothing);
     expect(_location(host), '/now-playing');
+    await tester.pump(const Duration(milliseconds: 1));
   });
 
   testWidgets('unbuilt items are dimmed with "Coming soon"; Pro has a badge', (

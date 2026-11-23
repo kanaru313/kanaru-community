@@ -97,6 +97,39 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('tag tone picks the fill', (tester) async {
+    await tester.pumpWidget(
+      host(
+        const Column(
+          children: [
+            KChip.tag(label: Text('a')),
+            KChip.tag(label: Text('b'), tone: KTagTone.highlight),
+            KChip.tag(label: Text('c'), tone: KTagTone.muted),
+            KChip.tag(label: Text('d'), tone: KTagTone.problem),
+          ],
+        ),
+      ),
+    );
+    final scheme = Theme.of(tester.element(find.text('a'))).colorScheme;
+    Color? fill(String label) =>
+        (tester
+                    .widget<DecoratedBox>(
+                      find
+                          .descendant(
+                            of: find.widgetWithText(KChip, label),
+                            matching: find.byType(DecoratedBox),
+                          )
+                          .first,
+                    )
+                    .decoration
+                as ShapeDecoration)
+            .color;
+    expect(fill('a'), scheme.secondaryContainer);
+    expect(fill('b'), scheme.tertiaryContainer);
+    expect(fill('c'), scheme.surfaceContainerHighest);
+    expect(fill('d'), scheme.errorContainer);
+  });
+
   testWidgets('tag labels sit at the same height in both looks', (
     tester,
   ) async {
