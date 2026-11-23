@@ -326,7 +326,9 @@ void main() {
     );
 
     test('a path longer than the cap is redacted before it is cut', () {
-      final path = '${pathWithSecretAt(280, 'sec.ret.abcdef12345')}/tail.end';
+      final path = '${pathWithSecretAt(296, 'sec.ret.abcdef12345')}/tail.end';
+      // The secret starts at 297, so the cut at 300 falls inside it.
+      expect(path.indexOf('sec.ret'), inInclusiveRange(296, 299));
       expect(path.length, greaterThan(300));
       final kept = cappedPath(path).requests.single.path;
       expect(kept, contains('***'));

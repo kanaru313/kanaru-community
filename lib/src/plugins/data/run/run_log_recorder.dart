@@ -94,7 +94,10 @@ class RunLogRecorder {
           installId: request.installId,
           script: request.script,
           kind: kind,
-          blockedHost: blocked == null ? null : redactor.text(blocked),
+          // On overflow the redactor is incomplete: print no script-chosen text.
+          blockedHost: blocked == null
+              ? null
+              : (context.maskOverflow ? '…' : redactor.text(blocked)),
         ),
       );
     } on Object catch (error) {

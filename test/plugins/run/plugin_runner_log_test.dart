@@ -366,6 +366,61 @@ void main() {
       // The file never holds the blocked flag or a path of its own.
       expect((await events()).single.requests.single.host, '10.0.0.1');
     });
+
+    test(
+      'a blocked host is printed as an ellipsis after mask overflow',
+      () async {
+        final engine = FakePluginEngine((req, fetch) async {
+          await fetch(
+            EngineFetchRequest(
+              installId: req.installId,
+              method: 'GET',
+              url: 'https://10.0.0.1/x',
+              headers: const [],
+              body: Uint8List(0),
+              deadlineMs: 1000,
+              maxSends: 1,
+            ),
+          );
+          return const EngineResult(
+            status: EngineStatus.scriptError,
+            errorKind: EngineErrorKind.none,
+            errorMessage: 'blocked',
+            fetchFailure: FetchFailureInfo(kind: FetchFailureKind.blockedHost),
+          );
+        });
+        final handler = RecordingFetchHandler((req, ctx) async {
+          ctx.addMask([
+            for (var i = 0; i < 300; i++) 'secret-value-${i + 1000}',
+          ]);
+          ctx.requests.add(
+            const RunLogRequest(
+              method: 'GET',
+              host: '10.0.0.1',
+              path: '/x',
+              status: null,
+              ms: 1,
+              blocked: true,
+            ),
+          );
+          return EngineFetchResponse.failure(EngineFetchOutcome.blockedHost);
+        });
+        await start(engine: engine, handler: handler);
+        final lines = <String>[];
+        final sub = Logger.root.onRecord.listen(
+          (rec) => lines.add(rec.message),
+        );
+        addTearDown(sub.cancel);
+        final oldLevel = Logger.root.level;
+        addTearDown(() => Logger.root.level = oldLevel);
+        Logger.root.level = Level.ALL;
+
+        await r.runner.run(runRequest());
+
+        expect(lines.where((l) => l.contains('host=…')), hasLength(1));
+        expect(lines.where((l) => l.contains('10.0.0.1')), isEmpty);
+      },
+    );
   });
 
   group('reportRejectedOutput', () {
