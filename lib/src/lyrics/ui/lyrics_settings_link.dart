@@ -6,3 +6,9 @@ const String lyricsSettingsLocation = '/settings/lyrics';
 /// nguồn lời trực tuyến" leads. Same reason as [lyricsSettingsLocation]: the
 /// store route belongs to `screens/plugins`, which this module cannot import.
 const String lyricsPluginStoreLocation = '/settings/plugins?kind=lyrics';
+
+/// The page of the installed plugin [installId] (its settings and status),
+/// where "needs setup" leads. Same reason as the two above: the route belongs
+/// to `screens/plugins`.
+String lyricsPluginPageLocation(String installId) =>
+    '/settings/plugins/p/${Uri.encodeComponent(installId)}';

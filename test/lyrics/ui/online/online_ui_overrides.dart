@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/misc.dart' show Override;
+import 'package:kanaru/src/database/tables.dart' show PluginRow;
 import 'package:kanaru/src/lyrics/domain/online/lyrics_source.dart';
 import 'package:kanaru/src/lyrics/domain/online/online_lyrics_ref.dart';
 import 'package:kanaru/src/lyrics/domain/online/online_rows.dart';
@@ -8,7 +9,10 @@ import 'package:kanaru/src/lyrics/domain/online/online_text.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics.dart';
 import 'package:kanaru/src/lyrics/state/online/lyrics_sources_provider.dart';
 import 'package:kanaru/src/lyrics/state/online/online_lookup_providers.dart';
+import 'package:kanaru/src/plugins/state/plugin_store_providers.dart';
 import 'package:kanaru/src/plugins/state/store_ops.dart';
+
+import '../../../screens/plugins/support/plugin_fixtures.dart' show liveRow;
 
 /// A lyrics plugin as the lyrics module sees it.
 LyricsSource lyricsSource(String id, {String? name, bool enabled = true}) =>
@@ -61,6 +65,12 @@ List<Override> onlineUiOverrides({
   OnlinePick? pin,
   Map<String, Uint8List> icons = const {},
 }) => [
+  // "Removed" is decided from the installed list alone.
+  installedPluginsProvider.overrideWith(
+    (ref) => loaded
+        ? Stream.value([for (final s in sources) liveRow(s.id, name: s.name)])
+        : const Stream<List<PluginRow>>.empty(),
+  ),
   lyricsSourcesLoadedProvider.overrideWithValue(loaded),
   lyricsSourcesProvider.overrideWithValue(sources),
   lyricsPinProvider.overrideWith((ref, id) => Stream.value(pin)),

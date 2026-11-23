@@ -7068,6 +7068,312 @@ abstract class AppLocalizations {
   /// **'Turn on auto search'**
   String get lyricsStatusEnableAuto;
 
+  /// No description provided for @lyricsPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose lyrics'**
+  String get lyricsPickerTitle;
+
+  /// No description provided for @lyricsPickerBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Lyrics for this song'**
+  String get lyricsPickerBack;
+
+  /// No description provided for @lyricsPickerSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Song, artist'**
+  String get lyricsPickerSearchHint;
+
+  /// No description provided for @lyricsPickerFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All sources'**
+  String get lyricsPickerFilterAll;
+
+  /// No description provided for @lyricsPickerGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · {count}'**
+  String lyricsPickerGroup(String name, int count);
+
+  /// No description provided for @lyricsPickerGroupOff.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · off · {count}'**
+  String lyricsPickerGroupOff(String name, int count);
+
+  /// No description provided for @lyricsPickerBadgeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Source is off'**
+  String get lyricsPickerBadgeOff;
+
+  /// No description provided for @lyricsPickerDeltaMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'match'**
+  String get lyricsPickerDeltaMatch;
+
+  /// No description provided for @lyricsPickerDeltaMatchTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Length matches the song'**
+  String get lyricsPickerDeltaMatchTip;
+
+  /// No description provided for @lyricsPickerDeltaLonger.
+  ///
+  /// In en, this message translates to:
+  /// **'+{seconds} s'**
+  String lyricsPickerDeltaLonger(int seconds);
+
+  /// No description provided for @lyricsPickerDeltaShorter.
+  ///
+  /// In en, this message translates to:
+  /// **'−{seconds} s'**
+  String lyricsPickerDeltaShorter(int seconds);
+
+  /// No description provided for @lyricsPickerDeltaLongerTip.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} seconds longer than the song: may be another version (live, remix…)'**
+  String lyricsPickerDeltaLongerTip(int seconds);
+
+  /// No description provided for @lyricsPickerDeltaShorterTip.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} seconds shorter than the song: may be another version (live, remix…)'**
+  String lyricsPickerDeltaShorterTip(int seconds);
+
+  /// No description provided for @lyricsPickerSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching {name}…'**
+  String lyricsPickerSearching(String name);
+
+  /// No description provided for @lyricsPickerFailNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: network error or timed out'**
+  String lyricsPickerFailNetwork(String name);
+
+  /// No description provided for @lyricsPickerFailServer.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: the server returned an error'**
+  String lyricsPickerFailServer(String name);
+
+  /// No description provided for @lyricsPickerFailRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: the server says too many requests'**
+  String lyricsPickerFailRateLimited(String name);
+
+  /// No description provided for @lyricsPickerFailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: the answer could not be read'**
+  String lyricsPickerFailInvalid(String name);
+
+  /// No description provided for @lyricsPickerNeedsConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · Needs setup'**
+  String lyricsPickerNeedsConfig(String name);
+
+  /// No description provided for @lyricsPickerOpenPlugin.
+  ///
+  /// In en, this message translates to:
+  /// **'Open plugin page'**
+  String get lyricsPickerOpenPlugin;
+
+  /// No description provided for @lyricsPickerPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is paused until {time}'**
+  String lyricsPickerPaused(String name, String time);
+
+  /// No description provided for @lyricsPickerMoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not the lyrics you wanted?'**
+  String get lyricsPickerMoreTitle;
+
+  /// No description provided for @lyricsPickerMoreBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{One source is off: {names}. Searched only when you tap, settings stay as they are.} other{{count} sources are off: {names}. Searched only when you tap, settings stay as they are.}}'**
+  String lyricsPickerMoreBody(int count, String names);
+
+  /// No description provided for @lyricsPickerMoreAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get lyricsPickerMoreAction;
+
+  /// No description provided for @lyricsPickerEmptyNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No source is on'**
+  String get lyricsPickerEmptyNone;
+
+  /// No description provided for @lyricsPickerEmptyNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Nothing found in the source that is on} other{Nothing found in {count} sources that are on}}'**
+  String lyricsPickerEmptyNotFound(int count);
+
+  /// No description provided for @lyricsPickerEmptyOff.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{One source is off ({names}). Searched only when you tap.} other{{count} sources are off ({names}). Searched only when you tap.}}'**
+  String lyricsPickerEmptyOff(int count, String names);
+
+  /// No description provided for @lyricsPickerEmptyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Search the source that is off} other{Search {count} sources that are off}}'**
+  String lyricsPickerEmptyAction(int count);
+
+  /// No description provided for @lyricsPickerAllAsked.
+  ///
+  /// In en, this message translates to:
+  /// **'Sources that are off were searched too for this song. Source settings are unchanged.'**
+  String get lyricsPickerAllAsked;
+
+  /// No description provided for @lyricsPickerPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get lyricsPickerPreview;
+
+  /// No description provided for @lyricsPickerPreviewFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview · {name}'**
+  String lyricsPickerPreviewFrom(String name);
+
+  /// No description provided for @lyricsPickerPickOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a result'**
+  String get lyricsPickerPickOne;
+
+  /// No description provided for @lyricsPickerPreviewBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the list'**
+  String get lyricsPickerPreviewBack;
+
+  /// No description provided for @lyricsPickerPreviewBackLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the results'**
+  String get lyricsPickerPreviewBackLabel;
+
+  /// No description provided for @lyricsPickerPlainNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain lyrics, no timestamps'**
+  String get lyricsPickerPlainNote;
+
+  /// No description provided for @lyricsPickerPreviewLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading lyrics…'**
+  String get lyricsPickerPreviewLoading;
+
+  /// No description provided for @lyricsPickerPreviewFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the lyrics of this result'**
+  String get lyricsPickerPreviewFailed;
+
+  /// No description provided for @lyricsPickerPreviewMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This result has no lyrics'**
+  String get lyricsPickerPreviewMissing;
+
+  /// No description provided for @lyricsPickerPreviewInstrumental.
+  ///
+  /// In en, this message translates to:
+  /// **'Instrumental'**
+  String get lyricsPickerPreviewInstrumental;
+
+  /// No description provided for @lyricsPickerFootNote.
+  ///
+  /// In en, this message translates to:
+  /// **'For this song only'**
+  String get lyricsPickerFootNote;
+
+  /// No description provided for @lyricsPickerCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get lyricsPickerCancel;
+
+  /// No description provided for @lyricsPickerUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use these lyrics'**
+  String get lyricsPickerUse;
+
+  /// No description provided for @lyricsPickerSourcesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search sources'**
+  String get lyricsPickerSourcesTitle;
+
+  /// No description provided for @lyricsPickerSourcesAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All sources'**
+  String get lyricsPickerSourcesAll;
+
+  /// No description provided for @lyricsPickerSourcesResults.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 result} other{{count} results}}'**
+  String lyricsPickerSourcesResults(int count);
+
+  /// No description provided for @lyricsPickerSourcesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No results'**
+  String get lyricsPickerSourcesNone;
+
+  /// No description provided for @lyricsPickerSourcesOff.
+  ///
+  /// In en, this message translates to:
+  /// **'OFF'**
+  String get lyricsPickerSourcesOff;
+
+  /// No description provided for @lyricsPickerSourcesOffCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Searched only when you tap Search.'**
+  String get lyricsPickerSourcesOffCaption;
+
+  /// No description provided for @lyricsPickerSourcesOffResults.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 result · source is off} other{{count} results · source is off}}'**
+  String lyricsPickerSourcesOffResults(int count);
+
+  /// No description provided for @lyricsPickerSourcesNotAsked.
+  ///
+  /// In en, this message translates to:
+  /// **'Not searched'**
+  String get lyricsPickerSourcesNotAsked;
+
+  /// No description provided for @lyricsPickerClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the search text'**
+  String get lyricsPickerClearSearch;
+
   /// No description provided for @pluginsStoreTitle.
   ///
   /// In en, this message translates to:

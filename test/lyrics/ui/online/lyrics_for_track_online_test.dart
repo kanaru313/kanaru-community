@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 import 'package:kanaru/src/lyrics/data/online/store_result.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
 import 'package:kanaru/src/lyrics/state/lyrics_settings.dart';
@@ -15,8 +16,10 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../lyrics_ui_host.dart' show syncedLyrics;
+import '../picker/picker_harness.dart' show pickerOverrides;
 import 'modal_harness.dart';
 import 'online_ui_overrides.dart';
+import '../lyrics_spinner_finders.dart';
 
 Finder _row(String title) =>
     find.ancestor(of: find.text(title), matching: find.byType(SelectionRow));
@@ -231,7 +234,7 @@ void main() {
             overrides: onlineUiOverrides(sources: _sources),
             size: size,
           );
-          expect(find.byType(CircularProgressIndicator), findsOneWidget);
+          expect(byLyricsSpinner(), findsOneWidget);
         });
 
         testWidgets('no status line for lyrics that show', (tester) async {
@@ -340,6 +343,41 @@ void main() {
           expect(tester.takeException(), isNull);
         });
 
+        for (final (button, call, how) in [
+          ('Keep this copy', 'keepAuto:1', OnlineHow.auto),
+          ('Wrong song', 'reject:1', OnlineHow.kept),
+        ]) {
+          testWidgets('"$button" throwing is logged, the modal still closes', (
+            tester,
+          ) async {
+            final records = <LogRecord>[];
+            Logger.root.level = Level.ALL;
+            final sub = Logger.root.onRecord.listen(records.add);
+            addTearDown(sub.cancel);
+            final m = await openModal(
+              tester,
+              LyricsShown(onlineLyrics(how: how)),
+              overrides: onlineUiOverrides(sources: _sources),
+              size: size,
+            );
+            m.online.error = StateError('database is gone');
+            await tester.tap(_button(button));
+            await tester.pumpAndSettle();
+            expect(m.online.calls, [call]);
+            expect(find.byType(LyricsForTrackBody), findsNothing);
+            expect(tester.takeException(), isNull);
+            expect(
+              records.where(
+                (r) =>
+                    r.loggerName == 'lyrics_online_bar' &&
+                    r.level >= Level.WARNING &&
+                    r.error is StateError,
+              ),
+              hasLength(1),
+            );
+          });
+        }
+
         testWidgets('a copy that could not be stored is absorbed too', (
           tester,
         ) async {
@@ -430,18 +468,32 @@ void main() {
           expect(find.text('store lyrics'), findsOneWidget);
         });
 
-        testWidgets('the search row has no picker to open yet: dimmed, inert', (
+        testWidgets('the search row opens the picker and ← comes back', (
           tester,
         ) async {
           final m = await openModal(
             tester,
             const LyricsNone(),
-            overrides: onlineUiOverrides(sources: _sources),
+            overrides: [
+              ...onlineUiOverrides(sources: _sources),
+              ...pickerOverrides(),
+            ],
             size: size,
           );
-          expect(find.text('Coming soon'), findsNWidgets(3));
+          expect(find.text('Coming soon'), findsNWidgets(2));
           await tester.tap(find.text('Find lyrics online…'));
-          await tester.pumpAndSettle();
+          await tester.pumpAndSettle(const Duration(milliseconds: 100));
+          expect(find.byType(LyricsForTrackBody), findsNothing);
+          expect(find.text('Choose lyrics'), findsOneWidget);
+          await tester.tap(
+            find.byWidgetPredicate(
+              (w) =>
+                  w is KIconButton &&
+                  w.tooltip == 'Back to Lyrics for this song',
+            ),
+          );
+          await tester.pumpAndSettle(const Duration(milliseconds: 100));
+          expect(find.text('Choose lyrics'), findsNothing);
           expect(find.byType(LyricsForTrackBody), findsOneWidget);
           expect(m.choices.calls, isEmpty);
         });
@@ -535,14 +587,8 @@ void main() {
           size: size,
           disableAnimations: true,
         );
-        expect(
-          tester
-              .widget<CircularProgressIndicator>(
-                find.byType(CircularProgressIndicator),
-              )
-              .value,
-          isNotNull,
-        );
+        expect(byLyricsSpinner(), findsOneWidget);
+        await expectStill(tester);
       });
     });
   }

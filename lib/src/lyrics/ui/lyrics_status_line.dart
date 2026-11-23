@@ -6,6 +6,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../domain/lyrics_status.dart';
 import '../state/lyrics_settings.dart';
 import 'online/online_labels.dart';
+import 'lyrics_spinner.dart';
 
 /// The status line of "Lời cho bài này" for a track with no lyrics to show:
 /// what the search is doing or why it found nothing ("Không có lời trên máy ·
@@ -84,7 +85,6 @@ class LyricsStatusLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final still = MediaQuery.disableAnimationsOf(context);
     return Semantics(
       container: true,
       liveRegion: true,
@@ -99,15 +99,10 @@ class LyricsStatusLine extends StatelessWidget {
           spacing: KSpace.x3,
           children: [
             icon == null
-                ? SizedBox.square(
-                    dimension: KIconSize.sm,
-                    child: ExcludeSemantics(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        value: still ? 0.3 : null,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
+                ? LyricsSpinner(
+                    size: KIconSize.sm,
+                    color: scheme.onSurfaceVariant,
+                    label: AppLocalizations.of(context).lyricsSearchingTitle,
                   )
                 : Icon(
                     icon,

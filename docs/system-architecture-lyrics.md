@@ -326,17 +326,17 @@ Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens
 - **Choice rows** (`LyricsChoiceRows`, single-choice icon `SelectionRow`s, marked by tint and bold title only): "Lời trong file"
   (subtitle names tag or `.lrc` and synced or plain; disabled with "Không có lời trong file" when the file has none or the read is
   loading), "Bản trực tuyến" (only when the track has an online copy: shown, what an off choice would show, or the kept copy; icon =
-  `PluginAvatar` 24; subtitle `onlineRowSubtitle`: "NetEase · Đồng bộ · 4:12 · tự tìm" / "… · đã giữ", a removed plugin adds "plugin đã
+  `PluginAvatar` 24; subtitle `onlineRowSubtitle`: "NetEase · Đồng bộ · 4:12 · tự tìm" (a kept copy has no suffix), a removed plugin adds "plugin đã
   gỡ" after its name) and "Không hiện lời" (always enabled, even while loading). Choosing reads `LyricsChoiceCommands`, closes, then
   writes exactly once: file → `setFile` while a kept copy exists (the file wins, the kept copy and its row stay), else `clear`;
   online → `clear` (automatic selection shows the kept copy); off → `setOff`. The chosen row only closes. A failed write is logged.
 - **Find rows** (`LyricsFindRows`): after the divider "Tìm lời trực tuyến…" (subtitle "N nguồn đang bật · M đang tắt", or "Mọi nguồn
   đang tắt (M) · chỉ tìm khi bạn bấm"; counts from `onlineSourceCountsProvider`) or, without a lyrics plugin, "Thêm nguồn lời trực
   tuyến" (closes the modal and opens the plugin store at `lyricsPluginStoreLocation`, `?kind=lyrics`); then "Tạo lời từ âm thanh…" and
-  "Lưu lời…", dimmed, inert, "Sắp có". The search row is dimmed with "Sắp có" while `onFindOnline` is null (the picker is not built).
+  "Lưu lời…", dimmed, inert, "Sắp có". The search row opens the Chọn lời picker (see "UI › Chọn lời"); it is dimmed with "Sắp có" only while `onFindOnline` is null.
 - **Online bar** (`LyricsOnlineBar`): only when the online copy is what shows. Found automatically: "Tự tìm thấy trên <plugin> · Giữ để
   lần sau không tìm lại" with "Không đúng bài" (`reject`) and "Giữ bản này" (`keepAuto`); kept: "Đang dùng bản đã giữ · Chỉ cho bài này"
-  with "Không đúng bài". The words take the full width and the buttons sit under them, right-aligned. The command is taken and called in the
+  with "Không đúng bài". One row: the words take the room, the buttons sit beside them and wrap their labels when the sheet is narrow. The command is taken and called in the
   turn of the guarded close, while the modal still watches the track (the commands read what the track shows at that moment).
 - **Song menu entry** (`song_lyrics_entry_impl.dart`, `LyricsSongEntry`, implements the library's `SongLyricsEntry`; the app overrides
   `songLyricsEntryProvider` in `lib/kanaru.dart`): `label` makes the subtitle of "Nguồn lời bài" with one one-shot read of the
@@ -409,14 +409,45 @@ Lyrics plugins (`metadata.type = lyrics`: `search` and `lyrics` scripts) add a s
 
 - `KSourceAvatar(imageBytes, label, size, removed)` (`kanaru_ui`): the plugin's icon or its first letter on `secondaryContainer`; `removed` is
   always the letter on `outlineVariant`. Radius is a quarter of the size. `PluginAvatar(providerId, name, size)` feeds it from
-  `pluginIconProvider` and `onlineSourceRemovedProvider` (a plugin not among `lyricsSourcesProvider` once `lyricsSourcesLoadedProvider` is
-  true); the name comes from the lyrics reference, so a removed plugin keeps its name.
+  `pluginIconProvider` and `onlineSourceRemovedProvider` (no installed lyrics plugin with that id in `installedPluginsProvider`; decided from the list alone); the name comes from the lyrics reference, so a removed plugin keeps its name.
 - `online_labels.dart`: `onlineRowSubtitle`, `onlineSourceLabel`, failure reasons (`failReasonLong` / `failReasonShort`), `failedAreaMessage`,
   `formatClock` (the user's 12 / 24 hour clock). `online_row_info.dart`: `OnlineRowInfo`, `onlineRowInfoOf`. `online_source_of.dart`:
   `onlineShownOf(trackLyrics)`. `online_source_providers.dart`: `onlineSourceRemovedProvider`, `onlineSourceCountsProvider`.
 - `open_online_targets.dart` `openFindOnline(context, trackId)` is the single place that decides what "Tìm lời trực tuyến…" and "Tìm thủ
-  công…" of the lyrics area open (today "Lời cho bài này"; the Chọn lời picker replaces it). `open_lyrics_plugin_store.dart`
+  công…" of the lyrics area open: the Chọn lời picker, with ← back to "Lời cho bài này". `open_lyrics_plugin_store.dart`
   `openLyricsPluginStore` closes the desktop Now Playing panel and goes to `lyricsPluginStoreLocation`.
+
+### UI › Chọn lời (`lyrics/ui/picker/`)
+
+`showLyricsPicker(context, trackId, {onBack, use, followsPlaying})` (`lyrics_picker.dart`): a 780 dp dialog on the desktop shell, a full-height
+sheet on the touch shells. "Lời cho bài này" closes and opens it when its "Tìm lời trực tuyến…" row is tapped; ← of the picker closes it and
+`onBack` opens "Lời cho bài này" again (without `onBack` ← only closes). `LyricsPickerHost` closes the route once, follows the playing track
+(`followsPlaying`) and passes `PickerActions` (`close`, `back`, `pick`) to the two layouts. `PickerUse` (`picker_actions.dart`) is what
+"Dùng lời này" does with the chosen result and its plugin name: the default `keepForTrack` calls `onlineLyricsCommandsProvider.keep` (the
+commands are taken while the picker is alive; a refused or failed write is logged), another screen (the tag editor, later) passes its own.
+
+- **State** (`picker_controller.dart`, `picker_view.dart`): `pickerControllerProvider(trackId)` holds the source filter, the chosen result (desktop) and whether the
+  first search started; `boot()` searches "title artist" of `lyricsFactsProvider` at once. `pickerViewProvider(trackId)` joins
+  `onlineSearchProvider`, `lyricsSourcesProvider` and the song's duration into `PickerView`: groups (enabled sources first, then disabled ones
+  asked on request; a removed plugin has no group), the disabled sources not asked yet (`pending`), `visible` (the filter) and `find(ref)`. A
+  choice that no longer matches a result reads as none; stale results cannot show because `OnlineSearchNotifier` drops a cancelled search.
+- **Layout.** `picker_desktop.dart`: header (← title ✕), `PickerSearchBar` (chip then field), the results left and the preview (330 dp) right,
+  `PickerFooter` "Chỉ áp dụng cho bài này" [Huỷ] [Dùng lời này]; the first result starts chosen, the button is on only once the chosen result's
+  lyrics are there. `picker_mobile.dart`: header, search bar (field, the chip on its own row), results as rows with `›`, no footer; a tap opens
+  `PickerPreviewPage` (`picker_preview_page.dart`, a second full-height sheet: ← "Xem trước" ✕, plugin line, whole lyrics, footer with a
+  full-width button) that completes with the picked result. Back: preview, then list, then "Lời cho bài này": the host's `PopScope` turns Back and Esc into ← (the way back), Huỷ does the same, ✕ closes for good.
+- **Parts.** `picker_search_bar.dart` (`KFilterField` persistent with `onSubmitted`, `KChip` for the filter), `picker_results.dart` (groups,
+  loading / failure lines, end card, empty state), `picker_result_row.dart` (`SelectionRow` on desktop, `KListRow` with `›` on touch;
+  `KChip.tag` with `KTagTone` for "Đồng bộ" / "Thường" / "Nguồn đang tắt"; the length difference), `picker_source_notes.dart`,
+  `picker_more_cards.dart`, `picker_preview.dart` (fetch of the lyrics when a result first shows; state in `bodyFetches`),
+  `picker_lyrics_text.dart` (timestamps column when synced, ♪ for a gap, parsed once), `search_sources_sheet.dart` ("Nguồn tìm kiếm": all,
+  enabled sources with counts, "ĐANG TẮT" with [Tìm] per source), `picker_format.dart`.
+- **Length difference** (`resultDelta`): |Δ| up to `maxDurationDelta` (3 s) is "khớp" (`primary`); beyond it "+5 s" / "−5 s" in bold `error`
+  with tabular figures, rounded up, and a tooltip that it may be another version. No difference when either length is unknown. The sign
+  comes from the candidate's duration against `LyricsFacts.duration` (the match's own `delta` is absolute).
+- **Failure lines** per source: network, server, rate limited, unreadable answer, needs setup (opens the plugin page through
+  `lyricsPluginPageLocation` and closes the picker), paused until a time. Sources that are off are asked only by [Tìm] (end card, empty
+  state, or "Nguồn tìm kiếm"); `OnlineSearchNotifier.searchDisabled` keeps settings as they are.
 
 ## Settings › Lyrics (`screens/settings/ui/lyrics/`)
 

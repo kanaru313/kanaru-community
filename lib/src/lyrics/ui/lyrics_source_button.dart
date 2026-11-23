@@ -13,6 +13,7 @@ import '../state/playing_lyrics_providers.dart';
 import 'lyrics_labels.dart';
 import 'online/online_source_of.dart';
 import 'online/plugin_avatar.dart';
+import 'lyrics_spinner.dart';
 
 final _log = Logger('lyrics_source_button');
 
@@ -144,7 +145,6 @@ class _SearchingGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final still = MediaQuery.disableAnimationsOf(context);
     return SizedBox.square(
       dimension: KIconSize.md,
       child: OverflowBox(
@@ -154,15 +154,10 @@ class _SearchingGlyph extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             Icon(KIcons.lyrics, size: KIconSize.md, color: color),
-            SizedBox.square(
-              dimension: _ring,
-              child: ExcludeSemantics(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  value: still ? 0.3 : null,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
+            LyricsSpinner(
+              size: _ring,
+              color: Theme.of(context).colorScheme.primary,
+              label: AppLocalizations.of(context).lyricsSearchingTitle,
             ),
           ],
         ),

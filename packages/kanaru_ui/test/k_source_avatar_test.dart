@@ -42,6 +42,17 @@ void main() {
     expect(find.text('N'), findsNothing);
   });
 
+  testWidgets('the picture is decoded at the size it is drawn', (tester) async {
+    useWindow(tester, const Size(200, 200));
+    tester.view.devicePixelRatio = 2;
+    await tester.pumpWidget(
+      host(KSourceAvatar(label: 'NetEase', size: 24, imageBytes: _png)),
+    );
+    final image = tester.widget<Image>(find.byType(Image)).image;
+    expect(image, isA<ResizeImage>());
+    expect((image as ResizeImage).width, 48);
+  });
+
   testWidgets('removed: the letter on grey even when a picture is known', (
     tester,
   ) async {

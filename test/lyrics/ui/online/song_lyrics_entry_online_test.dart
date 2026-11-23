@@ -76,6 +76,15 @@ void main() {
     expect(await entry.label(db, container(), track, vi), 'NetEase · Thường');
   });
 
+  test(
+    'the kind comes from the parsed copy, not from which column holds it',
+    () async {
+      // Stored as "synced" but without a single time tag: it parses as plain.
+      await keep(synced: 'just words');
+      expect(await entry.label(db, container(), track, vi), 'NetEase · Thường');
+    },
+  );
+
   test('a kept instrumental copy says so', () async {
     await keep(instrumental: true);
     expect(await entry.label(db, container(), track, en), 'Instrumental');

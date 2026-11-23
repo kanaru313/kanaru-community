@@ -191,7 +191,7 @@ void main() {
     }
 
     /// Assertions shared by the sheet and the dialog: the two choice rows,
-    /// the three inert "coming soon" rows, the close button.
+    /// the two inert "coming soon" rows, the close button.
     Future<void> expectModalContent({required bool fileSelected}) async {
       final t = l10n();
       expect(find.text(t.lyricsForTrackTitle), findsWidgets);
@@ -199,11 +199,22 @@ void main() {
       expect(find.text(t.lyricsChoiceOff), findsOneWidget);
       expect(rowSelected(t.lyricsChoiceFile), fileSelected);
       expect(rowSelected(t.lyricsChoiceOff), !fileSelected);
-      expect(find.text(t.appComingSoon), findsNWidgets(3));
+      expect(find.text(t.appComingSoon), findsNWidgets(2));
       expect(iconButton(t.lyricsModalClose), findsOneWidget);
-      // A "coming soon" row is inert: a tap leaves the modal open.
+      // The search row opens the Chọn lời picker in the modal's place; ← of
+      // the picker brings the modal back.
       await tester.tap(find.text(t.lyricsFindOnline));
-      await tester.pump(const Duration(milliseconds: 300));
+      await app.pumpUntil(
+        () => find.text(t.lyricsPickerTitle).evaluate().isNotEmpty,
+        what: 'the Chọn lời picker',
+        timeout: const Duration(seconds: 15),
+      );
+      await tester.tap(iconButton(t.lyricsPickerBack));
+      await app.pumpUntil(
+        () => modal.evaluate().isNotEmpty,
+        what: 'the modal back after ← of the picker',
+        timeout: const Duration(seconds: 15),
+      );
       expect(modal, findsOneWidget);
     }
 

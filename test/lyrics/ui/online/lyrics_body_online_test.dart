@@ -7,7 +7,10 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../lyrics_ui_host.dart';
+import '../picker/picker_harness.dart' show pickerOverrides;
+import 'modal_harness.dart' show RecordingOnlineCommands;
 import 'online_ui_overrides.dart';
+import '../lyrics_spinner_finders.dart';
 
 const _body = LyricsBody(surface: KLyricsSurface.screen);
 
@@ -20,8 +23,9 @@ LyricsUiHost _host(TrackLyrics lyrics) => LyricsUiHost(
   lyrics: lyrics,
   extra: [
     ...onlineUiOverrides(sources: [lyricsSource('netease')]),
-    // The modal the buttons open reads the track's own state.
+    // The picker and the modal the buttons open read the track's own state.
     trackLyricsProvider.overrideWith((ref, id) => lyrics),
+    ...pickerOverrides(online: RecordingOnlineCommands()),
   ],
 );
 
@@ -31,16 +35,17 @@ void main() {
   ) async {
     await _host(const LyricsSearching(2)).pump(tester, _body);
     expect(find.text('Searching for lyrics…'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(byLyricsSpinner(), findsOneWidget);
   });
 
-  testWidgets('"Find lyrics online…" opens "Lyrics for this song" of the '
-      'playing track', (tester) async {
+  testWidgets('"Find lyrics online…" opens the picker of the playing '
+      'track', (tester) async {
     await _host(const LyricsNotFound(asked: 2, off: 0)).pump(tester, _body);
     await tester.tap(_button('Find lyrics online…'));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
-    expect(find.byType(LyricsForTrackBody), findsOneWidget);
+    expect(find.text('Choose lyrics'), findsOneWidget);
+    expect(find.byType(LyricsForTrackBody), findsNothing);
   });
 
   testWidgets('"Search manually…" opens it too', (tester) async {
@@ -48,7 +53,7 @@ void main() {
     await tester.tap(_button('Search manually…'));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
-    expect(find.byType(LyricsForTrackBody), findsOneWidget);
+    expect(find.text('Choose lyrics'), findsOneWidget);
   });
 
   testWidgets('failed and paused keep the find button', (tester) async {

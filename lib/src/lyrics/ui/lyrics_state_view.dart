@@ -58,6 +58,9 @@ class LyricsStateView extends StatelessWidget {
         title: l10n.lyricsNoneTitle,
         message: l10n.lyricsNoneMessage,
       ),
+      // `asked == 0` means every installed plugin is off: with none installed
+      // the resolution answers `LyricsNoSource` first, so `(0, 0)` never
+      // reaches here (`online_resolution.dart`: `sources.isEmpty`).
       LyricsNotFound(:final asked, :final off) => KEmpty(
         icon: KIcons.search,
         title: l10n.lyricsNotFoundTitle,

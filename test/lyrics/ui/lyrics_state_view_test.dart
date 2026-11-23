@@ -6,6 +6,7 @@ import 'package:kanaru/src/lyrics/ui/lyrics_state_view.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'lyrics_ui_host.dart';
+import 'lyrics_spinner_finders.dart';
 
 const _instrumental = LyricsInstrumental(
   OnlineLyricsRef(
@@ -95,20 +96,14 @@ void main() {
       find.text('No lyrics on this device yet · searching 2 enabled sources.'),
       findsOneWidget,
     );
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(byLyricsSpinner(), findsOneWidget);
     expect(find.bySubtype<ButtonStyleButton>(), findsNothing);
   });
 
   testWidgets('searching with animations off: a still arc', (tester) async {
     await _pump(tester, const LyricsSearching(1), disableAnimations: true);
-    expect(
-      tester
-          .widget<CircularProgressIndicator>(
-            find.byType(CircularProgressIndicator),
-          )
-          .value,
-      isNotNull,
-    );
+    expect(byLyricsSpinner(), findsOneWidget);
+    await expectStill(tester);
     expect(
       find.text('No lyrics on this device yet · searching 1 enabled source.'),
       findsOneWidget,
@@ -185,7 +180,7 @@ void main() {
         findsOneWidget,
       );
       // The spinner has stopped: a failed state shows no progress.
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(byLyricsSpinner(), findsNothing);
       await tester.tap(_button('Find lyrics online…'));
       expect(pressed, ['find']);
     });

@@ -1,16 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../plugins/domain/package/plugin_kind.dart';
+import '../../../plugins/state/plugin_store_providers.dart';
 import '../../state/online/lyrics_sources_provider.dart';
 
-/// Whether the plugin [id] behind an online lyrics copy is gone. False until
-/// the plugin list is known, so a source is never shown as removed while it
-/// is still loading.
+/// Whether the plugin [id] behind an online lyrics copy is gone: no installed
+/// lyrics plugin has that install id. Decided from the installed list alone
+/// (not from configuration or pauses, and an origin this build does not know
+/// is still installed). False until the list is known, so a source is never
+/// shown as removed while it is still loading.
+final _lyricsKind = PluginKind.lyrics.wire;
+
 final onlineSourceRemovedProvider = Provider.autoDispose.family<bool, String>((
   ref,
   id,
 ) {
-  if (!ref.watch(lyricsSourcesLoadedProvider)) return false;
-  return !ref.watch(lyricsSourcesProvider).any((source) => source.id == id);
+  final rows = ref.watch(installedPluginsProvider).value;
+  if (rows == null) return false;
+  return !rows.any((row) => row.installId == id && row.kind == _lyricsKind);
 });
 
 /// How many lyrics plugins are installed, and how many of them are on or off

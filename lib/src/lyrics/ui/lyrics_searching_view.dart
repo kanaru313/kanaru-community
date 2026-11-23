@@ -1,6 +1,8 @@
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'lyrics_spinner.dart';
+
 /// The "Đang tìm lời…" state: laid out like a [KEmpty] (hero slot, title, one
 /// sentence, centred, scrolls when the text outgrows the space) with a
 /// spinner in the icon slot, which [KEmpty] cannot hold. With animations off
@@ -19,7 +21,6 @@ class LyricsSearchingView extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final still = MediaQuery.disableAnimationsOf(context);
     // Centred while it fits, scrolls when the text outgrows the space (large
     // text on a short screen): a shrink-wrapped list inside a Center.
     return Center(
@@ -36,10 +37,11 @@ class LyricsSearchingView extends StatelessWidget {
                 dimension: KIconSize.hero,
                 child: Padding(
                   padding: const EdgeInsets.all(KSpace.x2),
-                  child: CircularProgressIndicator(
+                  child: LyricsSpinner(
+                    size: KIconSize.hero - KSpace.x4,
                     strokeWidth: 3,
-                    value: still ? 0.3 : null,
                     color: scheme.onSurfaceVariant,
+                    label: title,
                   ),
                 ),
               ),

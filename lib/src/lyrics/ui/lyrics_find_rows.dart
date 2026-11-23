@@ -3,6 +3,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
+import 'lyrics_plain_rows.dart';
 import 'online/online_source_providers.dart';
 import 'online/open_lyrics_plugin_store.dart';
 
@@ -21,14 +22,7 @@ class LyricsFindRows extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    // KListRow has no plain variant yet and fills with surfaceContainerLow,
-    // which shows as a box on the dialog surface; these rows must read as
-    // plain rows.
-    return Theme(
-      data: Theme.of(context).copyWith(
-        colorScheme: Theme.of(context).colorScheme
-            .copyWith(surfaceContainerLow: Colors.transparent),
-      ),
+    return LyricsPlainRows(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -71,6 +71,9 @@ class KSourceAvatar extends StatelessWidget {
                     bytes,
                     fit: BoxFit.cover,
                     gaplessPlayback: true,
+                    // Decoded at the size it is drawn, not the picture's own.
+                    cacheWidth: (size * MediaQuery.devicePixelRatioOf(context))
+                        .round(),
                     // A damaged picture falls back to the initial.
                     errorBuilder: (_, _, _) => initial,
                   ),

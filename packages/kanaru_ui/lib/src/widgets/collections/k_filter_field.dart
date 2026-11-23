@@ -18,6 +18,7 @@ class KFilterField extends StatelessWidget {
     required this.onClose,
     this.closeTooltip,
     this.onChanged,
+    this.onSubmitted,
     this.autofocus,
     this.persistent = false,
   });
@@ -27,6 +28,10 @@ class KFilterField extends StatelessWidget {
   final VoidCallback onClose;
   final String? closeTooltip;
   final ValueChanged<String>? onChanged;
+
+  /// Enter (or the keyboard's search key): for a field that runs a search
+  /// instead of filtering as it is typed.
+  final ValueChanged<String>? onSubmitted;
 
   /// Takes the keyboard when it appears. Null means yes for a field that is
   /// opened on demand and no for a [persistent] one (a field that is always on
@@ -79,6 +84,7 @@ class KFilterField extends StatelessWidget {
             controller: controller,
             autofocus: autofocus ?? !persistent,
             onChanged: onChanged,
+            onSubmitted: onSubmitted,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
               hintText: hint,

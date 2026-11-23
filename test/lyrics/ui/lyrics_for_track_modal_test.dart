@@ -270,13 +270,9 @@ void main() {
       testWidgets('soon rows are dimmed and inert', (tester) async {
         final handle = tester.ensureSemantics();
         final setup = await _open(tester, const LyricsNone(), size: size);
-        expect(find.text('Coming soon'), findsNWidgets(3));
+        expect(find.text('Coming soon'), findsNWidgets(2));
         expect(find.text('Groq Whisper'), findsOneWidget);
-        for (final title in [
-          'Find lyrics online…',
-          'Create lyrics from audio…',
-          'Save lyrics…',
-        ]) {
+        for (final title in ['Create lyrics from audio…', 'Save lyrics…']) {
           await tester.tap(find.text(title));
           await tester.pumpAndSettle();
           expect(find.byType(LyricsForTrackBody), findsOneWidget);

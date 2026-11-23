@@ -8,6 +8,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../lyrics_ui_host.dart';
 import 'online_ui_overrides.dart';
+import '../lyrics_spinner_finders.dart';
 
 Future<LyricsUiHost> _pump(
   WidgetTester tester,
@@ -77,20 +78,14 @@ void main() {
   ) async {
     await _pump(tester, const LyricsSearching(2));
     expect(find.text('Searching for lyrics…'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(byLyricsSpinner(), findsOneWidget);
     expect(find.byType(KSourceAvatar), findsNothing);
   });
 
   testWidgets('searching with animations off: a still arc', (tester) async {
     await _pump(tester, const LyricsSearching(2), disableAnimations: true);
-    expect(
-      tester
-          .widget<CircularProgressIndicator>(
-            find.byType(CircularProgressIndicator),
-          )
-          .value,
-      isNotNull,
-    );
+    expect(byLyricsSpinner(), findsOneWidget);
+    await expectStill(tester);
   });
 
   testWidgets('failed: one line with the retry time, no spinner', (
@@ -108,7 +103,7 @@ void main() {
       find.text('Couldn’t find lyrics · trying again at 9:05 PM'),
       findsOneWidget,
     );
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(byLyricsSpinner(), findsNothing);
   });
 
   testWidgets('failed with nothing scheduled: no time', (tester) async {

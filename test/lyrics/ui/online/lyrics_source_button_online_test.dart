@@ -11,6 +11,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../lyrics_ui_host.dart' show syncedLyrics;
 import 'online_ui_overrides.dart';
+import '../lyrics_spinner_finders.dart';
 
 Future<void> _pump(
   WidgetTester tester,
@@ -120,7 +121,7 @@ void main() {
 
       testWidgets('searching: a ring turns, the label says so', (tester) async {
         await _pump(tester, const LyricsSearching(2), desktop: desktop);
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(byLyricsSpinner(), findsOneWidget);
         expect(
           _button(tester).tooltip,
           desktop ? 'Searching… (L)' : 'Searching…',
@@ -134,14 +135,8 @@ void main() {
           desktop: desktop,
           disableAnimations: true,
         );
-        expect(
-          tester
-              .widget<CircularProgressIndicator>(
-                find.byType(CircularProgressIndicator),
-              )
-              .value,
-          isNotNull,
-        );
+        expect(byLyricsSpinner(), findsOneWidget);
+        await expectStill(tester);
       });
 
       for (final (name, lyrics, label) in <(String, TrackLyrics, String)>[
@@ -157,7 +152,7 @@ void main() {
         testWidgets('$name: dimmed to 38 % and named', (tester) async {
           await _pump(tester, lyrics, desktop: desktop);
           expect(_alpha(tester), closeTo(0.38, 1e-6));
-          expect(find.byType(CircularProgressIndicator), findsNothing);
+          expect(byLyricsSpinner(), findsNothing);
           expect(_button(tester).tooltip, desktop ? '$label (L)' : label);
         });
       }

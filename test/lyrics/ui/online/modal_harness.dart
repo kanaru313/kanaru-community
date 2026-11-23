@@ -6,6 +6,7 @@ import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/lyrics/data/online/online_lyrics_commands.dart';
 import 'package:kanaru/src/lyrics/data/online/store_result.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
+import 'package:kanaru/src/lyrics/domain/online/lyrics_candidate.dart';
 import 'package:kanaru/src/lyrics/state/lyrics_choice_commands.dart';
 import 'package:kanaru/src/lyrics/state/online/online_commands_provider.dart';
 import 'package:kanaru/src/lyrics/state/playing_lyrics_providers.dart';
@@ -49,6 +50,21 @@ class RecordingOnlineCommands implements OnlineLyricsCommands {
   @override
   Future<StoreResult> keepAuto(TrackId track) async {
     calls.add('keepAuto:${track.value}');
+    if (error != null) throw error!;
+    return keepResult;
+  }
+
+  /// The writes of "Dùng lời này": track, plugin, remote id, plugin name.
+  @override
+  Future<StoreResult> keep(
+    TrackId track,
+    LyricsCandidate result, {
+    required String providerName,
+  }) async {
+    calls.add(
+      'keep:${track.value}:${result.providerId}:${result.remoteId}:'
+      '$providerName',
+    );
     if (error != null) throw error!;
     return keepResult;
   }

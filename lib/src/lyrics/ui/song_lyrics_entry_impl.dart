@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../database/app_database.dart';
-import '../../database/tables.dart' show LyricsPinRow;
 import '../../library/ui/menus/song_lyrics_entry.dart';
 import '../../media/domain/track_id.dart';
 import '../data/lyrics_facts_query.dart';
+import '../data/online/online_row_mapper.dart' as rows;
 import '../data/online/pin_store.dart';
+import '../domain/online/online_rows.dart';
+import '../state/online/online_lookup_providers.dart';
 import '../domain/local_lyrics_pick.dart';
 import '../domain/lyrics_summary.dart';
 import '../state/lyrics_loader_provider.dart';
@@ -38,7 +40,15 @@ class LyricsSongEntry implements SongLyricsEntry {
     // A kept online copy shows unless the user chose the file's lyrics.
     if (facts == null || !facts.file) {
       final pin = await PinStore(db).read(id);
-      if (pin != null) return _pinLabel(l10n, pin);
+      if (pin != null) {
+        // The same copy and the same rule as the modal's online row: text
+        // parsed once, and a copy with nothing usable is no copy.
+        final pick = await rows.pickOfRow(
+          pin,
+          container.read(lyricsParseRunnerProvider),
+        );
+        if (pick.usable) return _pinLabel(l10n, pick);
+      }
     }
     // The playing song may show online lyrics found automatically.
     final playing = container.read(playingLyricsProvider);
@@ -65,18 +75,14 @@ class LyricsSongEntry implements SongLyricsEntry {
     return lyricsSummaryLabel(l10n, summary);
   }
 
-  /// "NetEase · Đồng bộ" for the kept copy of the song; the kind is read from
-  /// which text the copy holds, without parsing it.
-  String _pinLabel(AppLocalizations l10n, LyricsPinRow pin) {
-    final synced = (pin.syncedText ?? '').trim().isNotEmpty;
-    final plain = (pin.plainText ?? '').trim().isNotEmpty;
-    return onlineSourceLabel(
-      l10n,
-      plugin: pin.providerName,
-      synced: synced,
-      instrumental: pin.instrumental && !synced && !plain,
-    );
-  }
+  /// "NetEase · Đồng bộ" for the kept copy of the song, the kind from what
+  /// the parsed copy holds.
+  String _pinLabel(AppLocalizations l10n, OnlinePick pick) => onlineSourceLabel(
+    l10n,
+    plugin: pick.providerName,
+    synced: pick.text?.synced ?? false,
+    instrumental: pick.text == null && pick.instrumental,
+  );
 
   @override
   Future<void> open(BuildContext context, TrackId id) =>
