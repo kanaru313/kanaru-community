@@ -140,6 +140,9 @@ LyricsResolution resolveTrackLyrics({
     return LyricsResolution(LyricsNotFound(asked: enabled.length, off: off));
   }
   final outcome = _liveOutcome(lookup, now);
+  if (outcome is LookupNotFound) {
+    return LyricsResolution(LyricsNotFound(asked: enabled.length, off: off));
+  }
   if (outcome is LookupPaused) {
     return LyricsResolution(LyricsLookupPaused(outcome.until));
   }

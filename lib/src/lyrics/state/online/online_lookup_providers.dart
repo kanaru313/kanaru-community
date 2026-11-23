@@ -78,7 +78,9 @@ class LookupOutcomes extends Notifier<Map<String, LookupOutcome>> {
   @override
   Map<String, LookupOutcome> build() => const {};
 
-  void publish(Map<String, LookupOutcome> outcomes) => state = outcomes;
+  void publish(Map<String, LookupOutcome> outcomes) {
+    if (ref.mounted) state = outcomes;
+  }
 
   /// Forgets every end once the building code is done: the service that
   /// recorded them is gone, so they must not show any more.
@@ -92,10 +94,12 @@ final lookupOutcomesProvider =
       LookupOutcomes.new,
     );
 
-/// The automatic lookups of the app. A change of the sources, of the
-/// auto-search setting or of a plugin's configuration drops the recorded ends
-/// and restarts what is running.
+/// The automatic lookups of the app. A change of the sources (by value), of
+/// the auto-search setting or of the loaded flag drops the recorded ends and
+/// restarts what is running.
 final onlineLookupsProvider = Provider<OnlineLookups>((ref) {
+  // Only for the dispose path (guarded in the notifier); publishing reads the
+  // notifier each time.
   final sink = ref.read(lookupOutcomesProvider.notifier);
   final lookups = OnlineLookups(
     client: ref.watch(lyricsRunClientProvider),
@@ -107,7 +111,9 @@ final onlineLookupsProvider = Provider<OnlineLookups>((ref) {
     debounce: ref.watch(lookupDebounceProvider),
     parse: ref.watch(lyricsParseRunnerProvider),
     onOutcomes: (outcomes) {
-      if (ref.mounted) sink.publish(outcomes);
+      if (ref.mounted) {
+        ref.read(lookupOutcomesProvider.notifier).publish(outcomes);
+      }
     },
   );
   ref.onDispose(() {

@@ -47,6 +47,8 @@ class OnlineSearchNotifier extends Notifier<OnlineSearchState> {
     final query = text.trim();
     if (query.isEmpty) return;
     final generation = ++_generation;
+    // A fetch of the older search is never joined by the newer one.
+    _fetches.clear();
     _cancel.cancel();
     final cancel = _cancel = RunCancel();
     // A search by the user lifts the failure pauses of the sources.
@@ -141,9 +143,13 @@ class OnlineSearchNotifier extends Notifier<OnlineSearchState> {
     // A second ask while the first runs gets the same answer.
     final running = _fetches[candidate.ref];
     if (running != null) return running;
-    final fetch = _fetchLyrics(candidate);
-    _fetches[candidate.ref] = fetch;
-    return fetch.whenComplete(() => _fetches.remove(candidate.ref));
+    final ref0 = candidate.ref;
+    late final Future<LyricsBody?> tracked;
+    tracked = _fetchLyrics(candidate).whenComplete(() {
+      if (identical(_fetches[ref0], tracked)) _fetches.remove(ref0);
+    });
+    _fetches[ref0] = tracked;
+    return tracked;
   }
 
   final _fetches = <ResultRef, Future<LyricsBody?>>{};
@@ -242,11 +248,17 @@ class OnlineSearchNotifier extends Notifier<OnlineSearchState> {
     if (!ref.read(lyricsSourcesLoadedProvider)) {
       final done = _loadedWait ??= () {
         final c = Completer<void>();
-        ref.listen(lyricsSourcesLoadedProvider, (_, loaded) {
+        final sub = ref.listen(lyricsSourcesLoadedProvider, (_, loaded) {
           if (loaded && !c.isCompleted) c.complete();
         });
         ref.onDispose(() {
           if (!c.isCompleted) c.complete();
+        });
+        // The next wait starts fresh: the flag can go false again (a plugin
+        // just installed).
+        c.future.whenComplete(() {
+          sub.close();
+          if (identical(_loadedWait, c)) _loadedWait = null;
         });
         return c;
       }();

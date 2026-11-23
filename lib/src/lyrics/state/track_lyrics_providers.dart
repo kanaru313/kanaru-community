@@ -183,10 +183,11 @@ void _armWake(Ref ref, TrackLyrics state, DateTime now) {
     _ => null,
   };
   if (at == null) return;
-  final wait = at.difference(now) + const Duration(milliseconds: 1);
-  final timer = ref.read(lyricsWakeTimerProvider)(
-    wait.isNegative ? Duration.zero : wait,
-    ref.invalidateSelf,
-  );
+  // A time already past (a pause that has not notified yet) is not waited on
+  // at zero: that could spin.
+  final wait = at.isAfter(now)
+      ? at.difference(now) + const Duration(milliseconds: 1)
+      : const Duration(seconds: 1);
+  final timer = ref.read(lyricsWakeTimerProvider)(wait, ref.invalidateSelf);
   ref.onDispose(timer.cancel);
 }

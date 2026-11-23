@@ -30,6 +30,16 @@ class LookupFailed extends LookupOutcome {
   final DateTime? retryAt;
 }
 
+/// The lookup ended with every open source answering "no match" while a found
+/// row it refused stays in the shared cache (never overwritten by this
+/// track's miss). The track shows "not found". Nothing is scheduled: the end
+/// lives until the sources or settings change or the reject set changes.
+class LookupNotFound extends LookupOutcome {
+  const LookupNotFound({required this.asked});
+
+  final int asked;
+}
+
 /// Every enabled source is paused (a rate-limit answer) until [until].
 class LookupPaused extends LookupOutcome {
   const LookupPaused(this.until);

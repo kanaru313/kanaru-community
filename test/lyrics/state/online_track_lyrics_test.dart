@@ -346,4 +346,32 @@ void main() {
     expect(h.runner.cancelled, isEmpty);
     expect(h.runner.calls, hasLength(1));
   });
+
+  test(
+    'a miss over a found row this track refused ends as not found',
+    () async {
+      final plugin = await h.installLyrics('lrclib');
+      final id = await song('a.flac');
+      await OnlineCacheStore(h.db).putFound(
+        songTarget().cacheKey,
+        plugin,
+        remoteId: 'x',
+        syncedText: '[00:01.00] shared',
+        remoteDurationMs: 200000,
+        now: h.clock.millisecondsSinceEpoch,
+      );
+      h.runner.answer(plugin, 'search', searchAnswer([]));
+      await h.container
+          .read(rejectStoreProvider)
+          .add(id, providerId: plugin, remoteId: 'x', now: 1);
+      h.play(id);
+      final sub = watch(id);
+      await h.until(() => sub.read() is LyricsNotFound);
+      expect(h.runner.calls, hasLength(1));
+      await pumpEventQueue();
+      expect(h.runner.calls, hasLength(1), reason: 'no loop');
+      final rows = await h.db.select(h.db.onlineLyrics).get();
+      expect(rows.single.remoteId, 'x', reason: 'the shared row stays');
+    },
+  );
 }

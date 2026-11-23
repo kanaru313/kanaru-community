@@ -123,9 +123,8 @@ class OnlineLookups {
     return LookupWatch._(() => _release(key, job, target.trackId));
   }
 
-  /// Drops every recorded end, the retry timers of the watched keys and
-  /// restarts the running lookups: the sources, the settings or a plugin's
-  /// configuration changed.
+  /// Drops every recorded end and restarts the running lookups: the sources
+  /// (by value), `lyrics.auto_search` or the loaded flag changed.
   void reset() {
     if (_disposed) return;
     final had = _outcomes.isNotEmpty;
@@ -168,7 +167,18 @@ class OnlineLookups {
   }
 
   void _publish() {
-    if (!_disposed) _onOutcomes(Map.unmodifiable(_outcomes));
+    if (_disposed) return;
+    // Ends whose time has passed are dead weight (the resolution ignores
+    // them): drop them so the map does not grow over a session.
+    final now = _now();
+    _outcomes.removeWhere(
+      (_, o) => switch (o) {
+        LookupFailed(:final retryAt?) => !retryAt.isAfter(now),
+        LookupPaused(:final until) => !until.isAfter(now),
+        LookupFailed() || LookupNotFound() => false,
+      },
+    );
+    _onOutcomes(Map.unmodifiable(_outcomes));
   }
 
   void _release(String key, _Job job, TrackId track) {
@@ -240,6 +250,7 @@ class OnlineLookups {
     // Sources that failed or were skipped in this lookup.
     final transient = <String, SourceBackoff>{};
     final answered = <String>{};
+    var refusedMiss = false;
     final all = _sources();
     for (final source in all) {
       if (_stale(job, epoch)) return;
@@ -282,7 +293,9 @@ class OnlineLookups {
         case LookupMiss():
           // A found row of this source (shared with another track of the key,
           // which may use it) is never replaced by a miss of this track.
-          if (!entries.any((e) => e.providerId == source.id && e.found)) {
+          if (entries.any((e) => e.providerId == source.id && e.found)) {
+            refusedMiss = true;
+          } else {
             await cache.putNotFound(
               key,
               source.id,
@@ -307,7 +320,7 @@ class OnlineLookups {
               );
             // The runner knows better than the sources snapshot (a pause or a
             // missing setting began after it): wait for the pause end, or
-            // look again later; a configuration change resets sooner.
+            // look again later; a change of a source's problem resets sooner.
             case SourceSkip.needsConfig:
               transient[source.id] = SourceBackoff(
                 until: _now().add(skipRetry),
@@ -322,13 +335,14 @@ class OnlineLookups {
       }
     }
     if (_stale(job, epoch)) return;
-    _record(key, job, _endOf(all, answered, transient));
+    _record(key, job, _endOf(all, answered, transient, refusedMiss));
   }
 
   LookupOutcome? _endOf(
     List<LyricsSource> all,
     Set<String> answered,
     Map<String, SourceBackoff> transient,
+    bool refusedMiss,
   ) {
     final enabled = [
       for (final s in all)
@@ -338,7 +352,13 @@ class OnlineLookups {
       for (final s in enabled)
         if (!answered.contains(s.id)) s,
     ];
-    if (open.isEmpty) return null;
+    if (open.isEmpty) {
+      // Every open source answered, one of them over a found row this track
+      // refused: no cache write closes it, so the end is recorded (a lookup
+      // must end with a write or an end whenever the resolution would still
+      // ask).
+      return refusedMiss ? LookupNotFound(asked: enabled.length) : null;
+    }
     final state = stateWithoutRun(open, enabled.length, {
       ...backoff.snapshot(),
       ...transient,

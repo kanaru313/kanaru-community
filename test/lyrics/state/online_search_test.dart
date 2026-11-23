@@ -226,4 +226,47 @@ void main() {
     expect(sub.read().bySource, isEmpty);
     expect(p, isNotEmpty);
   });
+
+  test('two asks for one result share one fetch', () async {
+    await start();
+    final p = await h.installLyrics('p');
+    h.runner.answer(p, 'search', searchAnswer([searchItem(id: 'a')]));
+    h.runner.on(p, 'lyrics', (_, _) async {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      return lyricsAnswer(plain: 'fetched');
+    });
+    final sub = listen();
+    await notifier().search('x');
+    final cand = sub.read().bySource[p]!.matches.single.candidate;
+    final both = await Future.wait([
+      notifier().fetchLyrics(cand),
+      notifier().fetchLyrics(cand),
+    ]);
+    expect(both.map((b) => b?.plain), ['fetched', 'fetched']);
+    expect(h.runner.callsOf(p, 'lyrics'), 1);
+  });
+
+  test(
+    'a new search does not join the cancelled fetch of the old one',
+    () async {
+      await start();
+      final p = await h.installLyrics('p');
+      h.runner.answer(p, 'search', searchAnswer([searchItem(id: 'a')]));
+      var round = 0;
+      h.runner.on(p, 'lyrics', (_, _) {
+        round++;
+        if (round == 1) return Completer<RunOutcome>().future;
+        return lyricsAnswer(plain: 'second');
+      });
+      final sub = listen();
+      await notifier().search('x');
+      final cand = sub.read().bySource[p]!.matches.single.candidate;
+      final old = notifier().fetchLyrics(cand);
+      await h.until(() => round == 1);
+      await notifier().search('y');
+      final fresh = await notifier().fetchLyrics(cand);
+      expect(fresh?.plain, 'second');
+      expect(await old, isNull);
+    },
+  );
 }

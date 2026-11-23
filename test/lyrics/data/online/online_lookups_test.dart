@@ -412,6 +412,20 @@ void main() {
       watch.release();
     },
   );
+
+  test('ends whose time has passed are pruned from the map', () async {
+    r.sources = [fakeSource('a')];
+    r.runner.answer('a', 'search', const RunBusy());
+    final w = r.lookups.watch(songTarget(title: 'One'));
+    await r.settle();
+    expect(r.outcomes, hasLength(1));
+    w.release();
+    await r.settle();
+    r.clock = r.clock.add(const Duration(minutes: 5));
+    r.lookups.watch(songTarget(title: 'Two'));
+    await r.settle();
+    expect(r.outcomes.keys, [songTarget(title: 'Two').cacheKey]);
+  });
 }
 
 Future<TrackId> _addTrack(LookupRig r) async {
