@@ -4246,5 +4246,34 @@
         "type": "String"
       }
     }
+  },
+  "fontsBuiltInTitle": "Built in",
+  "@fontsBuiltInTitle": {
+    "description": "Title of the block of fonts shipped with the app."
+  },
+  "fontsBuiltInHint": "Chinese, Korean and Japanese characters and emoji always use the system font.",
+  "@fontsBuiltInHint": {
+    "description": "Note about the whole Built in block, shown behind the info icon."
+  },
+  "fontsDefaultSuffix": " · default",
+  "@fontsDefaultSuffix": {
+    "description": "Soft suffix after the name of the default font."
+  },
+  "fontsSystemFont": "System font",
+  "@fontsSystemFont": {
+    "description": "Name of the font entry that follows the operating system font."
+  },
+  "fontsChanged": "Font changed",
+  "@fontsChanged": {
+    "description": "Snack bar after the font was switched."
+  },
+  "fontsUseFailed": "Couldn't use the font {name}.",
+  "@fontsUseFailed": {
+    "description": "Snack bar when a chosen font could not be loaded; the old font stays.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

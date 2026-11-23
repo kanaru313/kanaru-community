@@ -1,0 +1,15 @@
+{
+  "fontsBuiltInTitle": "Có sẵn",
+  "fontsBuiltInHint": "Chữ Hán, Hàn, Nhật và emoji luôn dùng phông của hệ thống.",
+  "fontsDefaultSuffix": " · mặc định",
+  "fontsSystemFont": "Phông của hệ thống",
+  "fontsChanged": "Đã đổi phông",
+  "fontsUseFailed": "Không dùng được phông {name}.",
+  "@fontsUseFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
+}

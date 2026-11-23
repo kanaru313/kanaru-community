@@ -5879,4 +5879,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String pluginsCfgStepUp(String step) {
     return 'Increase by $step';
   }
+
+  @override
+  String get fontsBuiltInTitle => 'Built in';
+
+  @override
+  String get fontsBuiltInHint =>
+      'Chinese, Korean and Japanese characters and emoji always use the system font.';
+
+  @override
+  String get fontsDefaultSuffix => ' · default';
+
+  @override
+  String get fontsSystemFont => 'System font';
+
+  @override
+  String get fontsChanged => 'Font changed';
+
+  @override
+  String fontsUseFailed(String name) {
+    return 'Couldn\'t use the font $name.';
+  }
 }

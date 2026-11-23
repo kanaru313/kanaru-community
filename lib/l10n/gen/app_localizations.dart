@@ -8645,6 +8645,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Increase by {step}'**
   String pluginsCfgStepUp(String step);
+
+  /// Title of the block of fonts shipped with the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Built in'**
+  String get fontsBuiltInTitle;
+
+  /// Note about the whole Built in block, shown behind the info icon.
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese, Korean and Japanese characters and emoji always use the system font.'**
+  String get fontsBuiltInHint;
+
+  /// Soft suffix after the name of the default font.
+  ///
+  /// In en, this message translates to:
+  /// **' · default'**
+  String get fontsDefaultSuffix;
+
+  /// Name of the font entry that follows the operating system font.
+  ///
+  /// In en, this message translates to:
+  /// **'System font'**
+  String get fontsSystemFont;
+
+  /// Snack bar after the font was switched.
+  ///
+  /// In en, this message translates to:
+  /// **'Font changed'**
+  String get fontsChanged;
+
+  /// Snack bar when a chosen font could not be loaded; the old font stays.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t use the font {name}.'**
+  String fontsUseFailed(String name);
 }
 
 class _AppLocalizationsDelegate

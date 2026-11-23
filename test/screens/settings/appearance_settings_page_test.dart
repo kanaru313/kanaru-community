@@ -37,8 +37,29 @@ void main() {
       size: const Size(1400, 1600),
     );
     expect(find.text('System window frame'), findsOneWidget);
-    // Font and the window frame.
-    expect(find.text('Coming soon'), findsNWidgets(2));
+    // Only the window frame is not built yet.
+    expect(find.text('Coming soon'), findsOneWidget);
+  });
+
+  testWidgets('Font row shows the active font and opens the font page', (
+    tester,
+  ) async {
+    final h = await pumpSettings(
+      tester,
+      location: SettingsPaths.appearance,
+      size: tall,
+    );
+    expect(find.text('Nunito'), findsOneWidget);
+    await h.store.write('app.font', 'system');
+    await tester.pumpAndSettle();
+    expect(find.text('System font'), findsOneWidget);
+    await tester.tap(find.text('Font'));
+    await tester.pumpAndSettle();
+    expect(
+      h.router.routerDelegate.currentConfiguration.last.matchedLocation,
+      SettingsPaths.fonts,
+    );
+    expect(find.text('Built in'), findsOneWidget);
   });
 
   testWidgets('Animations switch writes app.motion', (tester) async {

@@ -5413,4 +5413,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String pluginsCfgStepUp(String step) {
     return 'Tăng $step';
   }
+
+  @override
+  String get fontsBuiltInTitle => 'Có sẵn';
+
+  @override
+  String get fontsBuiltInHint =>
+      'Chữ Hán, Hàn, Nhật và emoji luôn dùng phông của hệ thống.';
+
+  @override
+  String get fontsDefaultSuffix => ' · mặc định';
+
+  @override
+  String get fontsSystemFont => 'Phông của hệ thống';
+
+  @override
+  String get fontsChanged => 'Đã đổi phông';
+
+  @override
+  String fontsUseFailed(String name) {
+    return 'Không dùng được phông $name.';
+  }
 }

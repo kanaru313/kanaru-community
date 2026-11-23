@@ -30,6 +30,7 @@ const Map<String, String?> arbParts = {
   'savedqueue': 'savedQueue',
   'lyrics': 'lyrics',
   'plugins': 'plugins',
+  'fonts': 'fonts',
 };
 
 /// Locale whose key set every other locale must match.
