@@ -41,13 +41,6 @@ class _SyncThrowEngine extends FakePluginEngine {
       throw StateError('sync');
 }
 
-Future<void> waitFor(bool Function() done) async {
-  for (var i = 0; i < 400 && !done(); i++) {
-    await Future<void>.delayed(const Duration(milliseconds: 5));
-  }
-  expect(done(), isTrue, reason: 'the condition was never met');
-}
-
 void main() {
   late InstallHarness h;
   late RunnerHarness r;

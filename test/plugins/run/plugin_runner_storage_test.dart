@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/plugins/data/run/run_cancel.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_storage_store.dart';
 import 'package:kanaru/src/plugins/domain/run/plugin_engine.dart';
 import 'package:kanaru/src/plugins/domain/run/run_outcome.dart';
@@ -34,13 +35,6 @@ class _SpyStore extends PluginStorageStore {
       expectedUpdatedAt: expectedUpdatedAt,
     );
   }
-}
-
-Future<void> waitFor(bool Function() done) async {
-  for (var i = 0; i < 400 && !done(); i++) {
-    await Future<void>.delayed(const Duration(milliseconds: 5));
-  }
-  expect(done(), isTrue, reason: 'the condition was never met');
 }
 
 void main() {
@@ -110,6 +104,45 @@ void main() {
     expect(spy.writes, 0);
   });
 
+  test('a caller cancel keeps the run from writing back', () async {
+    final engine = FakePluginEngine();
+    engine.script = (req, _) async {
+      await engine.untilCancelled(req.job);
+      return const EngineResult(
+        status: EngineStatus.ok,
+        outputJson: '[]',
+        storageJson: '{"late":"x"}',
+      );
+    };
+    await start(engine);
+    final cancel = RunCancel();
+    final run = r.runner.run(runRequest(), cancel: cancel);
+    await waitFor(() => engine.active == 1);
+
+    cancel.cancel();
+    await run;
+    expect(spy.writes, 0);
+    expect((await spy.read(demoPluginId)).json, '');
+  });
+
+  test('a run past its deadline does not write back', () async {
+    final engine = FakePluginEngine();
+    engine.script = (req, _) async {
+      await engine.untilCancelled(req.job);
+      return const EngineResult(
+        status: EngineStatus.ok,
+        outputJson: '[]',
+        storageJson: '{"late":"x"}',
+      );
+    };
+    await start(engine);
+    final outcome = await r.runner.run(
+      runRequest(timeout: const Duration(milliseconds: 30)),
+    );
+    expect((outcome as RunFailed).reason, RunFailReason.timeout);
+    expect(spy.writes, 0);
+  });
+
   test('a clear during a run keeps the run from writing back', () async {
     final engine = FakePluginEngine();
     final release = Completer<void>();
@@ -149,6 +182,8 @@ void main() {
     final sub = Logger('plugin_run').onRecord
         .listen((e) => lines.add(e.message));
     addTearDown(sub.cancel);
+    final oldLevel = Logger.root.level;
+    addTearDown(() => Logger.root.level = oldLevel);
     Logger.root.level = Level.ALL;
 
     final outcome = await r.runner.run(runRequest());

@@ -206,6 +206,8 @@ void main() {
     final lines = <String>[];
     final sub = Logger.root.onRecord.listen((r) => lines.add(r.message));
     addTearDown(sub.cancel);
+    final oldLevel = Logger.root.level;
+    addTearDown(() => Logger.root.level = oldLevel);
     Logger.root.level = Level.ALL;
 
     log.append(ev());

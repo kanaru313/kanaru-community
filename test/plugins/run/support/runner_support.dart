@@ -1,3 +1,5 @@
+import 'package:flutter_test/flutter_test.dart';
+
 import 'dart:typed_data';
 
 import 'package:kanaru/src/plugins/data/run/fetch_handler.dart';
@@ -120,3 +122,11 @@ PluginRunRequest runRequest({
   configAppend: configAppend,
   kinds: kinds,
 );
+
+/// Spins the event loop until [done] (at most ~2 s).
+Future<void> waitFor(bool Function() done) async {
+  for (var i = 0; i < 400 && !done(); i++) {
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+  }
+  expect(done(), isTrue, reason: 'the condition was never met');
+}

@@ -237,7 +237,10 @@ class PluginRunner {
         ?cancel?.listen(() => stop(RunCancelCause.caller)),
         lease.changed.listen(() => stop(RunCancelCause.pluginChanged)),
       ]);
-      timer = Timer(wall + grace, () => stop(RunCancelCause.deadline));
+      final deadlineTimer = timer = Timer(
+        wall + grace,
+        () => stop(RunCancelCause.deadline),
+      );
       final result = await Future.any<EngineResult?>([
         running,
         deadlineHit.future.then((_) => null),
@@ -249,16 +252,24 @@ class PluginRunner {
               cause: cause,
               rateLimitSeen: context.rateLimitSeen,
             );
+      // Read before the listeners go: a cause after the result is ignored.
+      final switched =
+          cause == RunCancelCause.pluginChanged || lease.changed.isCancelled;
+      final storageWritable = cause == RunCancelCause.none && !switched;
+      // The job is over: a late cancel or the deadline must not reach it
+      // while the write-back waits in the queue.
+      deadlineTimer.cancel();
+      for (final off in unlisten) {
+        off();
+      }
       // A run the gate or the caller stopped, or that hit its deadline, leaves
       // the storage as it was.
       final newStorage = result?.storageJson;
-      if (newStorage != null &&
-          cause == RunCancelCause.none &&
-          !lease.changed.isCancelled) {
+      if (newStorage != null && storageWritable) {
         await _writeBack(id, newStorage, prepared);
       }
       // A run the plugin switch stopped is not a plugin fault: not logged.
-      if (cause != RunCancelCause.pluginChanged && !lease.changed.isCancelled) {
+      if (!switched) {
         _recorder.recordRun(
           request: request,
           prepared: prepared,
@@ -283,6 +294,9 @@ class PluginRunner {
   /// with the engine job). A refused write (the plugin was updated, removed or
   /// its storage cleared meanwhile) is silent; a failed one logs its type and
   /// the outcome still stands.
+  ///
+  /// The write is a job of the plugin write queue and the run waits for it, so
+  /// no queue job may ever wait on a plugin run (it would wait for itself).
   Future<void> _writeBack(
     String installId,
     String storageJson,

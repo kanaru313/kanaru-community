@@ -269,6 +269,8 @@ void main() {
           .where((rec) => rec.loggerName == 'plugin_run')
           .listen((rec) => lines.add(rec.message));
       addTearDown(sub.cancel);
+      final oldLevel = Logger.root.level;
+      addTearDown(() => Logger.root.level = oldLevel);
       Logger.root.level = Level.ALL;
 
       await r.runner.run(runRequest(input: const {'title': 'Private Song'}));
@@ -321,6 +323,8 @@ void main() {
       final lines = <String>[];
       final sub = Logger.root.onRecord.listen((rec) => lines.add(rec.message));
       addTearDown(sub.cancel);
+      final oldLevel = Logger.root.level;
+      addTearDown(() => Logger.root.level = oldLevel);
       Logger.root.level = Level.ALL;
 
       await r.runner.run(runRequest());

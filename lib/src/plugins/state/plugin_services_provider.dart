@@ -147,7 +147,8 @@ final pluginServicesProvider = Provider<PluginServices>((ref) {
 });
 
 /// What plugin scripts keep between runs; its writes go through the services'
-/// write queue.
+/// write queue. It sits here, not with the other stores, because it needs
+/// `services.queue`.
 final pluginStorageStoreProvider = Provider<PluginStorageStore>(
   (ref) => PluginStorageStore(
     ref.watch(appDatabaseProvider),

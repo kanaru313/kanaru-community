@@ -162,6 +162,25 @@ void main() {
       expect(data.customChoicesJson, '{}');
     });
 
+    test('revive over a stray data row empties its storage', () async {
+      await installed();
+      now = 2000;
+      await rows.remove(id);
+      await db.customStatement(
+        'INSERT INTO plugin_data (install_id, storage_json, storage_rev) '
+        "VALUES (?, '{\"t\":\"stale\"}', 3)",
+        [id],
+      );
+      now = 3000;
+      await rows.installOrRevive(
+        id,
+        draftOf(packageOf(withMeta((_) {})), 'v3-3000'),
+        const PluginSource.link('https://x.example.com/p.zip'),
+      );
+      final data = (await db.select(db.pluginData).get()).single;
+      expect((data.storageJson, data.storageRev), ('', 0));
+    });
+
     test('updated_at keeps rising through remove and revive', () async {
       await installed();
       final seen = <int>[1000];

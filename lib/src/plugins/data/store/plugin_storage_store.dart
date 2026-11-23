@@ -34,7 +34,9 @@ int storageSizeBytes(String json) {
 
 /// The key-value map a plugin's scripts keep between runs, in `plugin_data`.
 /// Both writers run as jobs of the plugin write queue, so they never
-/// interleave with an update or a remove.
+/// interleave with an update or a remove. Unlike the config store (a plain
+/// store wrapped by `PluginConfigWrites`), this one holds the queue itself:
+/// its only callers are the runner and the clear action, both queued writes.
 class PluginStorageStore {
   PluginStorageStore(this._db, this._queue);
 

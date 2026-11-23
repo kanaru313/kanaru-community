@@ -96,10 +96,7 @@ void main() {
     'the storage survives a config write and is gone with the plugin',
     () async {
       await write('{"a":"1"}');
-      await h.db.customStatement(
-        "UPDATE plugin_data SET config_json = '{}' WHERE install_id = ?",
-        [demoPluginId],
-      );
+      await h.actions.configWrites.setValue(demoPluginId, 'region', 'vn');
       expect((await store.read(demoPluginId)).json, '{"a":"1"}');
 
       await h.actions.remover.remove(demoPluginId);
