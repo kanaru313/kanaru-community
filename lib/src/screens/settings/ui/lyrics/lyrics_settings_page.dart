@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
+import '../../../../lyrics/state/online/lyrics_sources_provider.dart';
 import '../../settings_routes.dart';
 import '../settings_scaffold.dart';
 import 'lyrics_display_section.dart';
@@ -16,14 +18,14 @@ import 'lyrics_sources_section.dart';
 /// "coming soon" row for everything that waits for the engine.
 ///
 /// `?focus=sources` scrolls to the online sources and pulses them once.
-class LyricsSettingsPage extends StatefulWidget {
+class LyricsSettingsPage extends ConsumerStatefulWidget {
   const LyricsSettingsPage({super.key});
 
   @override
-  State<LyricsSettingsPage> createState() => _LyricsSettingsPageState();
+  ConsumerState<LyricsSettingsPage> createState() => _LyricsSettingsPageState();
 }
 
-class _LyricsSettingsPageState extends State<LyricsSettingsPage> {
+class _LyricsSettingsPageState extends ConsumerState<LyricsSettingsPage> {
   /// Always built (first section): finds the page's scrollable.
   final _topKey = GlobalKey();
   final _sourcesKey = GlobalKey();
@@ -37,7 +39,11 @@ class _LyricsSettingsPageState extends State<LyricsSettingsPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final uri = GoRouterState.of(context).uri;
-    if (uri.queryParameters['focus'] != 'sources') return;
+    if (uri.queryParameters['focus'] != 'sources') {
+      // A later visit with the param on this same page scrolls again.
+      _handled = null;
+      return;
+    }
     final location = uri.toString();
     if (_handled == location) return;
     _handled = location;
@@ -77,7 +83,18 @@ class _LyricsSettingsPageState extends State<LyricsSettingsPage> {
     return null;
   }
 
+  /// The rows decide the section's height: scroll only once they exist (a
+  /// page with no plugin stream value still goes on after about two seconds).
+  Future<void> _waitForRows() async {
+    for (var i = 0; i < 40 && mounted; i++) {
+      if (ref.read(lyricsSourcesLoadedProvider)) return;
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+  }
+
   Future<void> _reveal() async {
+    await _waitForRows();
+    if (!mounted) return;
     final target = await _targetContext();
     if (target == null || !mounted || !target.mounted) return;
     final reduce = MediaQuery.disableAnimationsOf(context);

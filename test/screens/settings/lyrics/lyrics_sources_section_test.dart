@@ -9,6 +9,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/icon_button_finders.dart';
+import '../../../support/memory_settings_store.dart';
 import '../../plugins/support/plugin_fixtures.dart';
 import '../support/settings_host.dart';
 
@@ -76,6 +77,13 @@ Finder _switchOf(String name) => find.descendant(
 
 List<Object?>? _saved(SettingsHarness h) =>
     h.store.read('lyrics.online_sources') as List<Object?>?;
+
+/// A store whose writes fail, as a full disk would.
+class _FailingStore extends MemorySettingsStore {
+  @override
+  Future<void> write(String key, Object? value) =>
+      Future.error(StateError('disk full'));
+}
 
 void main() {
   testWidgets('no lyrics plugin: only the Add row, no count', (tester) async {
@@ -167,6 +175,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Zing: on for automatic search'), findsOneWidget);
     expect((_saved(h)!.first! as Map)['on'], isTrue);
+  });
+
+  testWidgets('a failed write throws nothing and shows no toast', (
+    tester,
+  ) async {
+    final fixture = StoreFixture();
+    await pumpSettings(
+      tester,
+      location: SettingsPaths.lyrics,
+      size: _mobile,
+      scaffold: true,
+      quietPlugins: false,
+      store: _FailingStore(),
+      overrides: [...fixture.overrides, ..._sources([_src(1, name: 'Zing')])],
+    );
+    await tester.tap(_switchOf('Zing'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Zing: off · only searched when you tap'), findsNothing);
   });
 
   testWidgets('the last source can be switched off too', (tester) async {
@@ -379,6 +406,31 @@ void main() {
       await settle(tester);
       expect(find.byType(SetupSectionPulse), findsOneWidget);
       expect(pulsing(tester), isFalse);
+      expect(offset(tester), greaterThan(0));
+    });
+
+    testWidgets('a later ?focus=sources on the same page scrolls again', (
+      tester,
+    ) async {
+      final h = await _open(
+        tester,
+        [for (var i = 1; i <= 8; i++) _src(i)],
+        size: small,
+      );
+      expect(offset(tester), 0);
+      h.router.go('/settings/lyrics?focus=sources');
+      await settle(tester);
+      expect(offset(tester), greaterThan(0));
+      await tester.pumpAndSettle();
+      h.router.go('/settings/lyrics');
+      await tester.pumpAndSettle();
+      tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .jumpTo(0);
+      await tester.pump();
+      h.router.go('/settings/lyrics?focus=sources');
+      await settle(tester);
       expect(offset(tester), greaterThan(0));
     });
 

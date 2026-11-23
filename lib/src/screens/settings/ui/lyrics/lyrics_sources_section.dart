@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logging/logging.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -10,10 +11,13 @@ import '../../../../lyrics/ui/lyrics_settings_link.dart';
 import '../../../../lyrics/ui/online/online_labels.dart';
 import '../../../../lyrics/ui/online/plugin_avatar.dart';
 
+final _log = Logger('settings.lyrics_sources');
+
 /// "Nguồn lời trực tuyến": the lyrics plugins in the order the automatic
 /// search asks them, each with its switch. Reorder and switches apply at once.
 class LyricsSourcesSection extends ConsumerWidget {
   const LyricsSourcesSection({super.key});
+
 
   static const double _iconSize = 24;
 
@@ -40,17 +44,9 @@ class LyricsSourcesSection extends ConsumerWidget {
             dragLabel: l10n.lyricsSettingsSourceDrag,
             keepOneOn: false,
             items: [for (final s in sources) _item(context, l10n, s)],
-            onReorder: actions.reorder,
-            onToggle: (id, enabled) {
-              final name = sources.firstWhere((s) => s.id == id).name;
-              actions.setEnabled(id, enabled);
-              _toast(
-                context,
-                enabled
-                    ? l10n.lyricsSettingsSourceOnToast(name)
-                    : l10n.lyricsSettingsSourceOffToast(name),
-              );
-            },
+            onReorder: (from, to) => _reorder(actions, sources, from, to),
+            onToggle: (id, enabled) =>
+                _toggle(actions, context, l10n, sources, id, enabled),
           ),
         SetupAddRow(
           icon: KIcons.add,
@@ -59,6 +55,47 @@ class LyricsSourcesSection extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  /// Sends the order on screen with the move applied; the actions merge it
+  /// with the list as it is when the write happens.
+  Future<void> _reorder(
+    LyricsSourceActions actions,
+    List<LyricsSource> shown,
+    int from,
+    int to,
+  ) async {
+    final ids = [for (final s in shown) s.id];
+    ids.insert(to, ids.removeAt(from));
+    try {
+      await actions.reorder(ids);
+    } on Object catch (e, st) {
+      _log.warning('saving the source order failed', e, st);
+    }
+  }
+
+  Future<void> _toggle(
+    LyricsSourceActions actions,
+    BuildContext context,
+    AppLocalizations l10n,
+    List<LyricsSource> shown,
+    String id,
+    bool enabled,
+  ) async {
+    final name = shown.firstWhere((s) => s.id == id).name;
+    // Taken before the await: the context may be gone when the write ends.
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final on = l10n.lyricsSettingsSourceOnToast(name);
+    final off = l10n.lyricsSettingsSourceOffToast(name);
+    try {
+      final changed = await actions.setEnabled(id, enabled);
+      if (changed && messenger != null && messenger.mounted) {
+        showAppSnackBarOn(messenger, enabled ? on : off);
+      }
+    } on Object catch (e, st) {
+      // The settings store reports a failing write on the page banner.
+      _log.warning('saving the source switch failed', e, st);
+    }
   }
 
   ReorderableToggleItem<String> _item(
@@ -91,11 +128,5 @@ class LyricsSourcesSection extends ConsumerWidget {
           ? null
           : () => context.push(lyricsPluginPageLocation(s.id)),
     );
-  }
-
-  /// The messenger may be missing in a bare host; the change is made anyway.
-  void _toast(BuildContext context, String message) {
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger != null) showAppSnackBarOn(messenger, message);
   }
 }
