@@ -48,7 +48,10 @@ void main() {
     });
     expect(h.runner.maxInFlight, 4);
     expect(h.runner.calls, hasLength(12));
-    expect(h.runner.calls.every((c) => c.input.keys.single == 'text'), isTrue);
+    expect(
+      h.runner.calls.every((c) => (c.input! as Map).keys.single == 'text'),
+      isTrue,
+    );
   });
 
   test(

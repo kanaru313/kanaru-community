@@ -186,6 +186,15 @@ void main() {
     });
   });
 
+  group('input that is logged', () {
+    test('a string input of a logged script is the query', () async {
+      final engine = FakePluginEngine((_, _) async => scriptError('boom'));
+      await start(engine: engine);
+      await r.runner.run(runRequest(script: 'lyrics', input: '42'));
+      expect((await events()).single.query, '42');
+    });
+  });
+
   group('input that is not logged', () {
     test('query is never written and input strings are masked', () async {
       final engine = FakePluginEngine(

@@ -23,8 +23,11 @@ class PluginRunRequest {
   /// A script key of the manifest (`search`, `lyrics`, `translate`, ...).
   final String script;
 
-  /// What the script's `execute(input)` receives, as JSON.
-  final Map<String, Object?> input;
+  /// What the script's `execute(input)` receives: any JSON value (null, bool,
+  /// num, String, List, or Map with String keys, nested). It is JSON-encoded
+  /// for the engine; a value `jsonEncode` refuses makes the run
+  /// `RunFailed(internal)`.
+  final Object? input;
 
   /// Base time limit of the script, before the allowance for the pause
   /// between its requests.

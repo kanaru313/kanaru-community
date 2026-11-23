@@ -398,7 +398,7 @@ void main() {
       }
       await d.settle();
       expect(d.runner.calls, hasLength(1));
-      expect(d.runner.calls.single.input['title'], 'Two');
+      expect((d.runner.calls.single.input! as Map)['title'], 'Two');
     },
   );
 

@@ -108,11 +108,25 @@ void main() {
       },
     );
 
+    test('any JSON value is the input the engine receives', () async {
+      await start();
+      for (final (input, json) in <(Object?, String)>[
+        ('abc', '"abc"'),
+        (null, 'null'),
+        (['a', 1], '["a",1]'),
+      ]) {
+        await r.runner.run(runRequest(input: input));
+        expect(r.engine.requests.last.inputJson, json);
+      }
+    });
+
     test('an input that cannot be encoded leaves no job behind', () async {
       await start(slots: 1);
-      final bad = runRequest(input: {'x': Object()});
-      expect(await r.runner.run(bad), isA<RunFailed>());
+      final bad = runRequest(input: Object());
+      final outcome = await r.runner.run(bad);
+      expect((outcome as RunFailed).reason, RunFailReason.internal);
       expect(r.engine.beginCalls, 0);
+      expect(r.engine.requests, isEmpty);
       expect(await r.runner.run(runRequest()), isA<RunOk>());
     });
   });
