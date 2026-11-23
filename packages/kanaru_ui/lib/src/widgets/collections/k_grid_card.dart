@@ -312,6 +312,9 @@ class KGridCard extends StatelessWidget {
     );
   }
 
+  /// One text line, exactly `fontSize * height` tall: a fallback font (CJK
+  /// titles on Android) has taller metrics than the theme font and would
+  /// make the line, and so the card, taller than [footerExtent].
   static Widget _line(String text, TextAlign align, TextStyle? style) =>
       SizedBox(
         width: double.infinity,
@@ -321,6 +324,9 @@ class KGridCard extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           textAlign: align,
           style: style,
+          strutStyle: style == null
+              ? null
+              : StrutStyle.fromTextStyle(style, forceStrutHeight: true),
         ),
       );
 }

@@ -279,4 +279,32 @@ void main() {
     expect(data.customSemanticsActionIds, anyOf(isNull, isEmpty));
     handle.dispose();
   });
+
+  for (final filled in [false, true]) {
+    testWidgets('every text line has a forced height (filled: $filled)', (
+      tester,
+    ) async {
+      // A fallback font (CJK on Android) is taller than the theme font; only
+      // a forced strut keeps the card at its footerExtent.
+      await tester.pumpWidget(
+        host(
+          SizedBox(
+            width: 180,
+            child: KGridCard(
+              filled: filled,
+              title: 'ありがとう',
+              subtitle: 'Artist',
+              detail: filled ? 'Album • 3:00' : null,
+              coverBuilder: (context, side) => SizedBox.square(dimension: side),
+            ),
+          ),
+        ),
+      );
+      final lines = tester.widgetList<Text>(find.byType(Text)).toList();
+      expect(lines, hasLength(filled ? 3 : 2));
+      for (final line in lines) {
+        expect(line.strutStyle?.forceStrutHeight, isTrue, reason: line.data);
+      }
+    });
+  }
 }

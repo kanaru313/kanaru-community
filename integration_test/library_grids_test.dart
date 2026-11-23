@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart' show Offset, Size, Text;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
+import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/library/domain/browse/list_sort.dart';
 import 'package:kanaru/src/library/domain/browse/list_view_prefs.dart';
 import 'package:kanaru/src/library/state/browse/list_prefs_providers.dart';
@@ -97,18 +98,20 @@ void main() {
       );
       expect(find.byType(SongTile), findsNothing);
       await shot('songs-grid');
-      // Every text line of a card is 20 (title) or 16 tall; log the odd ones.
-      for (final e
-          in find
-              .descendant(
-                of: find.byType(SongGridCard),
-                matching: find.byType(Text),
-              )
-              .evaluate()) {
-        final text = e.widget as Text;
-        final h = e.size!.height;
-        if (h != 20 && h != 16) debugPrint('KANARU_LINE h=$h "${text.data}"');
-      }
+      // Every text line of a card is 20 (title) or 16 tall, whatever font
+      // draws it (CJK titles use a fallback font on Android).
+      final odd = [
+        for (final e
+            in find
+                .descendant(
+                  of: find.byType(SongGridCard),
+                  matching: find.byType(Text),
+                )
+                .evaluate())
+          if (e.size!.height != 20 && e.size!.height != 16)
+            '${(e.widget as Text).data}: ${e.size!.height}',
+      ];
+      expect(odd, isEmpty);
 
       final cards = find.byType(SongGridCard);
       final first = tester.widget<SongGridCard>(cards.first);
@@ -133,6 +136,16 @@ void main() {
     }
 
     Future<void> albumsRound() async {
+      // The Linux fixtures carry no album tag, so there is no album to show;
+      // the phone's real library has them.
+      final db = container.read(appDatabaseProvider);
+      final withAlbum = await (db.select(
+        db.tracks,
+      )..where((t) => t.album.isNotNull())).get();
+      if (withAlbum.isEmpty) {
+        debugPrint('no album in the library: album grid not checked here');
+        return;
+      }
       await container
           .read(libraryListViewsProvider.notifier)
           .setView(BrowseList.albums, CollectionView.grid);
