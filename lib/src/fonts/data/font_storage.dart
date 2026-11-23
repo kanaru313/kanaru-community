@@ -122,6 +122,6 @@ class FontStorage {
 
   static bool _isFontFile(String path) {
     final p = path.toLowerCase();
-    return p.endsWith('.ttf') || p.endsWith('.otf') || p.endsWith('.ttc');
+    return p.endsWith('.ttf') || p.endsWith('.otf');
   }
 }

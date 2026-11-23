@@ -40,24 +40,26 @@ class FontRegistrar {
     if (font.isBuiltIn || _loaded.contains(font.family)) return Future.value();
     final pending = _inFlight[font.family];
     if (pending != null) return pending;
-    final load = _load(font, storage);
+    // Cleared only after the entry is stored: a load that fails before its
+    // first await would otherwise leave its failure cached for good.
+    final load = _load(font, storage).whenComplete(() {
+      // A block, not an arrow: whenComplete waits on a returned future, and
+      // Map.remove would return this very load.
+      _inFlight.remove(font.family);
+    });
     _inFlight[font.family] = load;
     return load;
   }
 
   Future<void> _load(AppFont font, FontStorage storage) async {
-    try {
-      final files = storage.fontFiles(font);
-      if (files.isEmpty) {
-        throw StateError('Font "${font.id}" is not installed on disk');
-      }
-      final bytes = <Uint8List>[for (final f in files) await f.readAsBytes()];
-      await _registrar(font.family, bytes);
-      _loaded.add(font.family);
-      _log.info('Loaded family "${font.family}" (${files.length} files)');
-    } finally {
-      _inFlight.remove(font.family);
+    final files = storage.fontFiles(font);
+    if (files.isEmpty) {
+      throw StateError('Font "${font.id}" is not installed on disk');
     }
+    final bytes = <Uint8List>[for (final f in files) await f.readAsBytes()];
+    await _registrar(font.family, bytes);
+    _loaded.add(font.family);
+    _log.info('Loaded family "${font.family}" (${files.length} files)');
   }
 
   /// Adds [licenseText] to the licenses page, once per [label].

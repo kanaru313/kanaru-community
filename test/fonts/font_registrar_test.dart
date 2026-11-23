@@ -88,15 +88,25 @@ void main() {
     expect(r.isFamilyLoaded('Lato'), isTrue);
   });
 
-  test('missing files throw StateError and stay retryable', () async {
-    const other = AppFont(
-      id: 'gone',
-      label: 'Gone',
-      family: 'Gone',
-      kind: AppFontKind.catalog,
-    );
-    final r = FontRegistrar(registrar: (_, _) async {});
-    await expectLater(r.ensureLoaded(other, storage), throwsStateError);
-    await expectLater(r.ensureLoaded(other, storage), throwsStateError);
-  });
+  test(
+    'a font whose files are missing loads once they are installed',
+    () async {
+      const other = AppFont(
+        id: 'gone',
+        label: 'Gone',
+        family: 'Gone',
+        kind: AppFontKind.catalog,
+      );
+      var calls = 0;
+      final r = FontRegistrar(registrar: (_, _) async => calls++);
+      await expectLater(r.ensureLoaded(other, storage), throwsStateError);
+      expect(calls, 0);
+      final dir = storage.fontDir(AppFontKind.catalog, 'gone')
+        ..createSync(recursive: true);
+      File('${dir.path}/g.ttf').writeAsBytesSync([9]);
+      await r.ensureLoaded(other, storage);
+      expect(calls, 1);
+      expect(r.isFamilyLoaded('Gone'), isTrue);
+    },
+  );
 }

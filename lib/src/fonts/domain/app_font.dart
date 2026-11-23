@@ -48,9 +48,10 @@ bool isCustomFontId(String id) =>
 /// `my font`. Used only when the imported font has no stored label.
 String customFontFallbackLabel(String id) {
   if (!id.startsWith(customFontIdPrefix)) return id;
-  return id
+  final label = id
       .substring(customFontIdPrefix.length)
       .replaceFirst(RegExp(r'_[0-9a-f]{8}$'), '')
       .replaceAll('_', ' ')
       .trim();
+  return label.isEmpty ? id : label;
 }

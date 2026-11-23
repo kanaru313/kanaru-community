@@ -11,6 +11,8 @@ import 'package:kanaru/src/screens/settings/settings_routes.dart';
 import 'package:kanaru/src/screens/settings/ui/appearance/fonts/font_choice_row.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../support/icon_button_finders.dart';
+import '../../../support/memory_settings_store.dart';
 import '../support/settings_host.dart';
 
 class _Paths implements AppPaths {
@@ -35,6 +37,17 @@ class _GatedRegistrar extends FontRegistrar {
     final e = error;
     if (e != null) return Future.error(e);
     return gate.future;
+  }
+}
+
+/// A store whose writes fail once [failWrites] is set.
+class _FailingStore extends MemorySettingsStore {
+  bool failWrites = false;
+
+  @override
+  Future<void> write(String key, Object? value) async {
+    if (failWrites) throw const FileSystemException('read-only');
+    await super.write(key, value);
   }
 }
 
@@ -132,6 +145,48 @@ void main() {
     expect(h.store.read('app.font'), isNull);
     expect(find.text("Couldn't use the font Inter."), findsOneWidget);
     expect(find.text('Font changed'), findsNothing);
+  });
+
+  testWidgets('a font that cannot be saved keeps the old one', (tester) async {
+    final store = _FailingStore();
+    final h = await pumpSettings(
+      tester,
+      location: SettingsPaths.fonts,
+      size: tall,
+      scaffold: true,
+      store: store,
+      overrides: [
+        fontStorageProvider.overrideWithValue(
+          FontStorage(_Paths(Directory.systemTemp)),
+        ),
+      ],
+    );
+    store.failWrites = true;
+    await tester.tap(find.text('Inter'));
+    await tester.pumpAndSettle();
+    expect(h.container.read(activeFontIdProvider), 'nunito');
+    expect(find.text("Couldn't use the font Inter."), findsOneWidget);
+    expect(find.text('Font changed'), findsNothing);
+  });
+
+  testWidgets('desktop header arrow leads to Appearance', (tester) async {
+    final h = await pumpSettings(
+      tester,
+      location: SettingsPaths.fonts,
+      size: const Size(1400, 900),
+      scaffold: true,
+      overrides: [
+        fontStorageProvider.overrideWithValue(
+          FontStorage(_Paths(Directory.systemTemp)),
+        ),
+      ],
+    );
+    await tester.tap(byIconButton('Back'));
+    await tester.pumpAndSettle();
+    expect(
+      h.router.routerDelegate.currentConfiguration.last.matchedLocation,
+      SettingsPaths.appearance,
+    );
   });
 
   testWidgets('desktop shows the same block', (tester) async {

@@ -3,6 +3,8 @@ import 'package:kanaru/src/screens/settings/ui/appearance/fonts/font_choice_row.
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../support/icon_button_finders.dart';
+
 Future<void> _pump(
   WidgetTester tester,
   FontChoiceRow row, {
@@ -41,7 +43,12 @@ void main() {
     );
     expect(
       tester.getSemantics(find.byType(FontChoiceRow)),
-      isSemantics(label: 'Inter\nAa', isButton: true, isSelected: true),
+      isSemantics(
+        label: 'Inter\nAa',
+        isButton: true,
+        isSelected: true,
+        hasTapAction: false,
+      ),
     );
     semantics.dispose();
   });
@@ -73,9 +80,10 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('an inert row keeps full contrast and shows the trailing slot', (
+  testWidgets('an inert row is not disabled and shows the trailing slot', (
     tester,
   ) async {
+    final semantics = tester.ensureSemantics();
     await _pump(
       tester,
       const FontChoiceRow(
@@ -86,7 +94,50 @@ void main() {
       ),
     );
     expect(find.text('120 KB'), findsOneWidget);
-    expect(find.byType(Opacity), findsNothing);
+    expect(
+      tester.getSemantics(find.byType(FontChoiceRow)),
+      isSemantics(isButton: true, isSelected: false, hasTapAction: false),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('buttons in the trailing slot are their own nodes', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    var taps = 0;
+    var deletes = 0;
+    await _pump(
+      tester,
+      FontChoiceRow(
+        title: 'Inter',
+        sample: 'Aa',
+        family: 'Inter',
+        onTap: () => taps++,
+        trailing: KIconButton(
+          icon: KIcons.delete,
+          tooltip: 'Delete Inter',
+          onPressed: () => deletes++,
+        ),
+      ),
+    );
+    expect(
+      tester.getSemantics(find.byType(FontChoiceRow)),
+      isSemantics(
+        isButton: true,
+        isSelected: false,
+        hasTapAction: true,
+        label: 'Inter\nAa',
+      ),
+    );
+    expect(
+      tester.getSemantics(byIconButton('Delete Inter')),
+      isSemantics(isButton: true, hasTapAction: true, label: 'Delete Inter'),
+    );
+    await tester.tap(byIconButton('Delete Inter'));
+    expect(deletes, 1);
+    expect(taps, 0);
+    semantics.dispose();
   });
 
   testWidgets('the selected row replaces the trailing slot', (tester) async {

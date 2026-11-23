@@ -12,7 +12,7 @@ enum FontSelectResult {
   /// The font is now the active one.
   applied,
 
-  /// The font could not be loaded; the previous font stays.
+  /// The font could not be loaded or saved; the previous font stays.
   failed,
 
   /// A newer request came in while this one was loading; it decides.
@@ -41,7 +41,21 @@ class FontSelector {
           : FontSelectResult.superseded;
     }
     if (request != _latest) return FontSelectResult.superseded;
-    await _ref.read(activeFontIdProvider.notifier).set(font.id);
+    final setting = _ref.read(activeFontIdProvider.notifier);
+    final previous = _ref.read(activeFontIdProvider);
+    try {
+      await setting.set(font.id);
+    } on Object catch (e, st) {
+      // The notifier shows the new id before the write: put the old one back
+      // so the screen matches what is stored.
+      _log.warning('cannot save font "${font.id}"', e, st);
+      try {
+        await setting.set(previous);
+      } on Object catch (_) {
+        // Memory is already back on the old id; the store is unwritable.
+      }
+      return FontSelectResult.failed;
+    }
     return FontSelectResult.applied;
   }
 }

@@ -67,11 +67,14 @@ Future<SettingsHarness> pumpSettings(
   /// Replaces the plugin store's data with an empty one (the root page reads
   /// it for its dot). False when [overrides] bring their own.
   bool quietPlugins = true,
+
+  /// Replaces the in-memory store (a test that needs writes to fail).
+  MemorySettingsStore? store,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
   addTearDown(tester.view.reset);
-  final store = MemorySettingsStore();
+  store ??= MemorySettingsStore();
   final container = ProviderContainer(
     overrides: [
       settingsStoreProvider.overrideWithValue(store),

@@ -47,43 +47,46 @@ class FontChoiceRow extends StatelessWidget {
       color: selected ? scheme.primary : null,
     );
     final suffix = defaultSuffix;
-    return MergeSemantics(
-      child: Semantics(
-        button: true,
-        selected: selected,
-        child: SetupRowFrame(
-          title: Text.rich(
-            TextSpan(
-              text: title,
-              children: [
-                if (suffix != null)
-                  TextSpan(
-                    text: suffix,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w400,
-                      color: scheme.onSurfaceVariant,
-                    ),
+    // No MergeSemantics: the buttons in [trailing] stay nodes of their own.
+    return Semantics(
+      container: true,
+      button: true,
+      selected: selected,
+      child: SetupRowFrame(
+        title: Text.rich(
+          TextSpan(
+            text: title,
+            children: [
+              if (suffix != null)
+                TextSpan(
+                  text: suffix,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w400,
+                    color: scheme.onSurfaceVariant,
                   ),
-              ],
-            ),
-            style: nameStyle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+                ),
+            ],
           ),
-          subtitle: Text(
-            sample,
-            style: textTheme.bodyMedium!.copyWith(
-              fontFamily: family,
-              color: scheme.onSurfaceVariant,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: selected
-              ? Icon(KIcons.check, color: scheme.primary)
-              : trailing,
-          onTap: onTap,
+          style: nameStyle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
+        subtitle: Text(
+          sample,
+          style: textTheme.bodyMedium!.copyWith(
+            fontFamily: family,
+            color: scheme.onSurfaceVariant,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: selected
+            ? const KCheckMark(
+                state: KCheckState.on,
+                style: KCheckMarkStyle.plain,
+              )
+            : trailing,
+        onTap: onTap,
       ),
     );
   }

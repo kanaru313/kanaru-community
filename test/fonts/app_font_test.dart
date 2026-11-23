@@ -37,6 +37,12 @@ void main() {
       expect(f.label, 'my font');
     });
 
+    test('custom id with no readable name falls back to the id', () {
+      expect(customFontFallbackLabel('custom_'), 'custom_');
+      expect(customFontFallbackLabel('custom__1a2b3c4d'), 'custom__1a2b3c4d');
+      expect(appFontFor('custom_').label, 'custom_');
+    });
+
     test('catalog entry is found', () {
       final f = appFontFor('lora');
       expect(f.kind, AppFontKind.catalog);
