@@ -13,6 +13,8 @@ import '../../state/browse/song_list_providers.dart';
 import '../browse/library_list_frame.dart';
 import '../browse/library_list_scaffold.dart';
 import '../browse/play_actions.dart';
+import '../collections/collection_parts.dart' show CollectionViewSwitch;
+import '../../domain/browse/list_view_prefs.dart';
 import 'song_list.dart';
 
 /// The Songs list: every visible track, in the remembered sort.
@@ -31,6 +33,8 @@ class SongsPage extends StatelessWidget {
       child: LibraryListFrame(
         list: BrowseList.songs,
         filterHint: l10n.libraryFilterSongsHint,
+        viewBuilder: (context, input) =>
+            CollectionViewSwitch(list: BrowseList.songs, view: input.view),
         builder: (context, input) => (
           leading: _SongsBarLeading(input: input, playContext: playContext),
           body: SongList(
@@ -38,6 +42,7 @@ class SongsPage extends StatelessWidget {
             sort: input.sort,
             filter: input.filter,
             playContext: playContext,
+            grid: input.view == CollectionView.grid,
           ),
         ),
       ),

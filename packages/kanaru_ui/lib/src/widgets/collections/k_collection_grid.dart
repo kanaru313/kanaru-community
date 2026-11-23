@@ -9,6 +9,10 @@ import '../../tokens/k_space.dart';
 /// tiles of at least [mobileMinTileWidth] (mobile shell) or
 /// [desktopMinTileWidth] (desktop shell), which then share the room evenly.
 ///
+/// With [maxTileWidth] the rule is the other way round: the fewest columns
+/// whose tiles are at most that wide (album grid), and the minimums are not
+/// needed.
+///
 /// A tile is `tileWidth * tileAspect + footerExtent` tall: a square cover
 /// (aspect 1) plus the text below it. The caller adds its text scale to
 /// [footerExtent].
@@ -17,18 +21,31 @@ class KCollectionGrid extends StatelessWidget {
     super.key,
     required this.itemCount,
     required this.itemBuilder,
-    required this.mobileMinTileWidth,
-    required this.desktopMinTileWidth,
+    this.mobileMinTileWidth,
+    this.desktopMinTileWidth,
+    this.maxTileWidth,
+    this.onLayout,
     this.tileAspect = 1,
     this.footerExtent = 0,
     this.spacing = KSpace.x3,
     this.padding = const EdgeInsets.symmetric(horizontal: KSpace.x4),
-  });
+  }) : assert(
+         maxTileWidth != null ||
+             (mobileMinTileWidth != null && desktopMinTileWidth != null),
+         'give maxTileWidth or both minimum widths',
+       );
 
   final int itemCount;
   final IndexedWidgetBuilder itemBuilder;
-  final double mobileMinTileWidth;
-  final double desktopMinTileWidth;
+  final double? mobileMinTileWidth;
+  final double? desktopMinTileWidth;
+
+  /// Widest a tile may be; wins over the minimums when set.
+  final double? maxTileWidth;
+
+  /// Called after each layout with the first and last index built (cache
+  /// extent included), for grids that load their items a page at a time.
+  final void Function(int first, int last)? onLayout;
   final double tileAspect;
   final double footerExtent;
   final double spacing;
@@ -41,21 +58,32 @@ class KCollectionGrid extends StatelessWidget {
     return math.max(1, ((width + spacing) / (minTileWidth + spacing)).floor());
   }
 
+  /// Fewest columns that keep tiles of [width] at most [maxTileWidth] wide.
+  @visibleForTesting
+  static int columnsForMax(double width, double maxTileWidth, double spacing) {
+    if (width <= 0) return 1;
+    return math.max(1, ((width + spacing) / (maxTileWidth + spacing)).ceil());
+  }
+
   @override
   Widget build(BuildContext context) {
-    final minTile = FormFactor.of(context) == FormFactor.mobile
-        ? mobileMinTileWidth
-        : desktopMinTileWidth;
+    final mobile = FormFactor.of(context) == FormFactor.mobile;
     return SliverLayoutBuilder(
       builder: (context, constraints) {
         final inner = constraints.crossAxisExtent - padding.horizontal;
-        final columns = columnsFor(inner, minTile, spacing);
+        final max = maxTileWidth;
+        final columns = max != null
+            ? columnsForMax(inner, max, spacing)
+            : columnsFor(
+                inner,
+                (mobile ? mobileMinTileWidth : desktopMinTileWidth)!,
+                spacing,
+              );
         final tileWidth = (inner - spacing * (columns - 1)) / columns;
         return SliverPadding(
           padding: padding,
-          sliver: SliverGrid.builder(
-            itemCount: itemCount,
-            itemBuilder: itemBuilder,
+          sliver: SliverGrid(
+            delegate: _RangeDelegate(itemBuilder, itemCount, onLayout),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columns,
               mainAxisSpacing: spacing,
@@ -67,4 +95,16 @@ class KCollectionGrid extends StatelessWidget {
       },
     );
   }
+}
+
+/// Builds tiles lazily and reports the range it built after each layout.
+class _RangeDelegate extends SliverChildBuilderDelegate {
+  _RangeDelegate(super.builder, int count, this.onLayout)
+    : super(childCount: count, addAutomaticKeepAlives: false);
+
+  final void Function(int first, int last)? onLayout;
+
+  @override
+  void didFinishLayout(int firstIndex, int lastIndex) =>
+      onLayout?.call(firstIndex, lastIndex);
 }

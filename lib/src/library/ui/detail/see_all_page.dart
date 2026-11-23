@@ -171,14 +171,10 @@ class _AlbumGrid extends StatelessWidget {
   Widget build(BuildContext context) => CustomScrollView(
     slivers: [
       _gridHeading(context, title, caption),
-      KCollectionGrid(
-        itemCount: albums.length,
-        mobileMinTileWidth: 150,
-        desktopMinTileWidth: 160,
-        footerExtent: KGridCard.footerExtent(MediaQuery.textScalerOf(context)),
+      AlbumGrid(
+        albums: albums,
+        origin: origin,
         padding: EdgeInsets.symmetric(horizontal: libraryGutter(context)),
-        itemBuilder: (context, i) =>
-            AlbumCard(album: albums[i], origin: origin),
       ),
       const SelectionInsetSliver(),
     ],

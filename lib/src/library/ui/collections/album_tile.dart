@@ -109,7 +109,42 @@ class AlbumTile extends ConsumerWidget {
   }
 }
 
-/// Album tile of the grid: square cover, title, `artist · year`.
+/// Widest an album card may be: cells of at most 200 with an 8 gap, so
+/// columns = ⌈width / 200⌉ like the old app.
+const double albumCardMaxWidth = 192;
+
+/// Gap between album cards.
+const double albumCardSpacing = KSpace.x2;
+
+/// Every album grid (Albums page, See all): filled [AlbumCard]s, at most
+/// [albumCardMaxWidth] wide.
+class AlbumGrid extends StatelessWidget {
+  const AlbumGrid({
+    super.key,
+    required this.albums,
+    required this.padding,
+    this.origin = const MenuOrigin.list(),
+  });
+
+  final List<AlbumSummary> albums;
+  final EdgeInsets padding;
+  final MenuOrigin origin;
+
+  @override
+  Widget build(BuildContext context) => KCollectionGrid(
+    itemCount: albums.length,
+    maxTileWidth: albumCardMaxWidth,
+    spacing: albumCardSpacing,
+    footerExtent: KGridCard.footerExtent(
+      MediaQuery.textScalerOf(context),
+      filled: true,
+    ),
+    padding: padding,
+    itemBuilder: (context, i) => AlbumCard(album: albums[i], origin: origin),
+  );
+}
+
+/// Album card of the grid: filled card, square cover, title, `artist · year`.
 class AlbumCard extends StatelessWidget {
   const AlbumCard({
     super.key,
@@ -127,6 +162,7 @@ class AlbumCard extends StatelessWidget {
     return KContextRegion(
       onOpen: (at) => _menu(context, album, origin, viaKeyboard: at == null),
       child: KGridCard(
+        filled: true,
         title: album.title,
         subtitle: albumByLine(album, separator: ' · '),
         onTap: () => _open(context, album),
@@ -136,7 +172,7 @@ class AlbumCard extends StatelessWidget {
           itemKey: album.key,
           coverKey: album.coverKey,
           dimension: side,
-          radius: BorderRadius.circular(14),
+          radius: KGridCard.filledCoverRadius,
         ),
       ),
     );

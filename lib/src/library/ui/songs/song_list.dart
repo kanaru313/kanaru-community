@@ -10,9 +10,12 @@ import '../../state/browse/selection_providers.dart';
 import '../../state/browse/song_list_providers.dart';
 import '../../state/browse/track_window.dart';
 import '../browse/library_list_scaffold.dart';
+import '../collections/album_tile.dart'
+    show albumCardMaxWidth, albumCardSpacing;
 import '../menus/menu_origin.dart';
 import '../selection/selection_inset.dart';
 import '../selection/selection_shortcuts.dart';
+import 'song_grid_card.dart';
 import 'song_row_placeholder.dart';
 import 'song_tile.dart';
 
@@ -35,6 +38,7 @@ class SongList extends StatelessWidget {
     required this.filter,
     required this.playContext,
     this.showNumber = false,
+    this.grid = false,
     this.leadingSlivers = const [],
   });
 
@@ -43,6 +47,9 @@ class SongList extends StatelessWidget {
   final String filter;
   final PlayContext playContext;
   final bool showNumber;
+
+  /// Song cards in a grid (the Songs tab's grid view) instead of rows.
+  final bool grid;
   final List<Widget> leadingSlivers;
 
   @override
@@ -55,6 +62,7 @@ class SongList extends StatelessWidget {
         filter: filter,
         playContext: playContext,
         showNumber: showNumber,
+        grid: grid,
       ),
       const SelectionInsetSliver(),
     ],
@@ -73,6 +81,7 @@ class SongSlivers extends ConsumerStatefulWidget {
     required this.filter,
     required this.playContext,
     this.showNumber = false,
+    this.grid = false,
   });
 
   final SongScope scope;
@@ -80,6 +89,9 @@ class SongSlivers extends ConsumerStatefulWidget {
   final String filter;
   final PlayContext playContext;
   final bool showNumber;
+
+  /// Song cards in a grid instead of rows (same window, same selection).
+  final bool grid;
 
   @override
   ConsumerState<SongSlivers> createState() => _SongSliversState();
@@ -172,6 +184,7 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
     );
 
     final ids = _window.ids;
+    if (widget.grid) return _grid(context, ids);
     final extent = KMediaCard.extentOf(MediaQuery.textScalerOf(context));
     final gutter = libraryRowGutter(context);
     final origin = MenuOrigin.ofScope(widget.scope);
@@ -211,6 +224,47 @@ class _SongSliversState extends ConsumerState<SongSlivers> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The grid half of [_SongSliversState]: filled song cards sized like the
+/// album grid, in the page gutter.
+extension on _SongSliversState {
+  Widget _grid(BuildContext context, List<TrackId> ids) {
+    final gutter = libraryGutter(context);
+    final origin = MenuOrigin.ofScope(widget.scope);
+    return SliverPadding(
+      padding: const EdgeInsets.only(bottom: KSpace.x4),
+      sliver: KCollectionGrid(
+        itemCount: ids.length,
+        maxTileWidth: albumCardMaxWidth,
+        spacing: albumCardSpacing,
+        footerExtent: KGridCard.footerExtent(
+          MediaQuery.textScalerOf(context),
+          filled: true,
+          detail: true,
+        ),
+        padding: EdgeInsets.symmetric(horizontal: gutter),
+        onLayout: _window.viewport,
+        itemBuilder: (context, i) {
+          final info = _window.rowAt(i);
+          if (info == null) {
+            return SongGridCardPlaceholder(
+              onRetry: _window.isFailed(i) ? _window.invalidate : null,
+            );
+          }
+          // Keyed by track, as the rows are.
+          return SongGridCard(
+            key: ValueKey(info.id),
+            info: info,
+            index: i,
+            ids: ids,
+            playContext: widget.playContext,
+            origin: origin,
+          );
+        },
+      ),
     );
   }
 }

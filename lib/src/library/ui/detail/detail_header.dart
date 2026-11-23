@@ -225,6 +225,7 @@ class AlbumShelf extends StatelessWidget {
     icon: icon,
     count: albums.length,
     onSeeAll: onSeeAll,
+    filled: true,
     card: (i) => AlbumCard(album: albums[i], origin: origin),
   );
 }
@@ -265,11 +266,15 @@ class _Shelf extends ConsumerWidget {
     required this.count,
     required this.onSeeAll,
     required this.card,
+    this.filled = false,
   });
 
   final String title;
   final String kind;
   final IconData icon;
+
+  /// The cards are filled [KGridCard]s (albums), which changes their height.
+  final bool filled;
 
   /// Number of cards; the head shows it too.
   final int count;
@@ -295,7 +300,7 @@ class _Shelf extends ConsumerWidget {
       seeAllLabel: AppLocalizations.of(context).libraryShelfSeeAll,
       itemCount: count,
       itemWidth: width,
-      height: width + KGridCard.footerExtent(scaler),
+      height: width + KGridCard.footerExtent(scaler, filled: filled),
       // Desktop: same side inset as the song rows below (card edges line up
       // with the row cards). Mobile rows are flat full-width; the block keeps
       // the page gutter there, as the mockup shows.

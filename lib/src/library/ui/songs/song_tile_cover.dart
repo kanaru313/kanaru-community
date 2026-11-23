@@ -60,20 +60,7 @@ class SongTileCover extends StatelessWidget {
             radius: radius,
           ),
         if (current && !missing)
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.scrim
-                    .withValues(alpha: 0.45),
-                borderRadius: radius,
-              ),
-              child: Center(
-                child: _PlayingMark(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-              ),
-            ),
-          ),
+          const Positioned.fill(child: SongPlayingOverlay(radius: radius)),
         if (rank != null)
           PositionedDirectional(
             key: songTileBadgeKey,
@@ -94,6 +81,26 @@ class SongTileCover extends StatelessWidget {
 }
 
 const double _badgeInset = 4;
+
+/// Over the cover of the playing song (rows and grid cards): a 45 % scrim
+/// with the equalizer bars.
+class SongPlayingOverlay extends StatelessWidget {
+  const SongPlayingOverlay({super.key, required this.radius});
+
+  final BorderRadius radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.scrim.withValues(alpha: 0.45),
+        borderRadius: radius,
+      ),
+      child: Center(child: _PlayingMark(color: scheme.onPrimary)),
+    );
+  }
+}
 
 /// Key of the track number badge (tests find it by this).
 const Key songTileBadgeKey = ValueKey('song-tile-number-badge');

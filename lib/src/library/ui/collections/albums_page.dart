@@ -80,13 +80,9 @@ class _AlbumsBody extends ConsumerWidget {
         return CustomScrollView(
           slivers: [
             if (grid)
-              KCollectionGrid(
-                itemCount: albums.length,
-                mobileMinTileWidth: 150,
-                desktopMinTileWidth: 160,
-                footerExtent: KGridCard.footerExtent(scaler),
+              AlbumGrid(
+                albums: albums,
                 padding: EdgeInsets.symmetric(horizontal: gutter),
-                itemBuilder: (context, i) => AlbumCard(album: albums[i]),
               )
             else
               SliverPadding(
