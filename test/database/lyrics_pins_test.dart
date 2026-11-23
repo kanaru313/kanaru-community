@@ -94,6 +94,15 @@ void main() {
       },
     );
 
+    test('text that parses to no line is not kept', () async {
+      expect(await keep(plain: '[ar:Foo]\n[ti:Bar]'), StoreResult.notStored);
+      expect(
+        await keep(plain: null, synced: '[00:01.00]'),
+        StoreResult.notStored,
+      );
+      expect(await pins.read(track), isNull);
+    });
+
     test('the table refuses a row with no body, whatever the store does', () async {
       await expectLater(
         db.customStatement(

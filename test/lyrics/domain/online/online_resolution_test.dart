@@ -3,6 +3,7 @@ import 'package:kanaru/src/lyrics/domain/lyrics.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
 import 'package:kanaru/src/lyrics/domain/online/lookup_outcome.dart';
 import 'package:kanaru/src/lyrics/domain/online/lyrics_source.dart';
+import 'package:kanaru/src/lyrics/domain/online/online_cache_pick.dart';
 import 'package:kanaru/src/lyrics/domain/online/online_lyrics_ref.dart';
 import 'package:kanaru/src/lyrics/domain/online/online_resolution.dart';
 import 'package:kanaru/src/lyrics/domain/online/online_rows.dart';
@@ -70,6 +71,8 @@ LyricsResolution _resolve({
   Duration? trackDuration = const Duration(seconds: 200),
   Map<String, SourceBackoff> backoff = const {},
   LookupOutcome? lookup,
+  RejectedResults rejected = const RejectedResults(),
+  bool sourcesLoaded = true,
 }) => resolveTrackLyrics(
   choice: choice,
   pin: pin,
@@ -82,6 +85,8 @@ LyricsResolution _resolve({
   trackDuration: trackDuration,
   backoff: backoff,
   lookup: lookup,
+  rejected: rejected,
+  sourcesLoaded: sourcesLoaded,
 );
 
 OnlineLyricsRef _ref(TrackLyrics state) => switch (state) {
@@ -480,6 +485,133 @@ void main() {
           asked: 2,
         ),
       );
+    });
+  });
+
+  group('off shows what automatic would', () {
+    test('a cached result counts, after a kept copy and local lyrics', () {
+      final cached = _resolve(choice: LyricsChoice.off, cache: [_found('a')]);
+      expect(
+        (cached.state as LyricsOff).available!.online!.how,
+        OnlineHow.auto,
+      );
+      final local = _resolve(
+        choice: LyricsChoice.off,
+        local: _local,
+        cache: [_found('a')],
+      );
+      expect((local.state as LyricsOff).available, _local);
+      final pin = _resolve(
+        choice: LyricsChoice.off,
+        pin: _pin,
+        cache: [_found('a')],
+      );
+      expect((pin.state as LyricsOff).available!.online!.how, OnlineHow.kept);
+    });
+
+    test('a cached instrumental result is not lyrics to show', () {
+      final r = _resolve(
+        choice: LyricsChoice.off,
+        cache: [_found('a', text: null, instrumental: true)],
+      );
+      expect((r.state as LyricsOff).available, isNull);
+    });
+  });
+
+  group('none has a reason', () {
+    test('auto off and a song without usable tags differ', () {
+      expect(
+        _resolve(autoOn: false).state,
+        const LyricsNone(reason: LyricsNoneReason.autoOff),
+      );
+      expect(
+        _resolve(autoSearchable: false).state,
+        const LyricsNone(reason: LyricsNoneReason.notSearchable),
+      );
+      expect(
+        _resolve(autoOn: false, autoSearchable: false).state,
+        const LyricsNone(reason: LyricsNoneReason.autoOff),
+      );
+      expect(
+        const LyricsNone(),
+        const LyricsNone(reason: LyricsNoneReason.autoOff),
+      );
+    });
+  });
+
+  group('sources not loaded', () {
+    test('is loading: no "no plugin", nothing asked', () {
+      final r = _resolve(sources: const [], sourcesLoaded: false);
+      expect(r.state, isA<LyricsLoading>());
+      expect(r.needsLookup, isFalse);
+      final withSources = _resolve(sourcesLoaded: false);
+      expect(withSources.state, isA<LyricsLoading>());
+      expect(withSources.sourcesToAsk, isEmpty);
+    });
+
+    test('local lyrics, a kept copy and the choice need no sources', () {
+      expect(
+        _resolve(local: _local, sourcesLoaded: false).state,
+        const LyricsShown(_local),
+      );
+      expect(
+        _resolve(pin: _pin, sourcesLoaded: false).state,
+        isA<LyricsShown>(),
+      );
+      expect(
+        _resolve(choice: LyricsChoice.off, sourcesLoaded: false).state,
+        isA<LyricsOff>(),
+      );
+    });
+  });
+
+  group('rejected results', () {
+    const refused = RejectedResults(refs: {(providerId: 'a', remoteId: 'r-a')});
+
+    test('a refused cached result is not shown and its source is open', () {
+      final r = _resolve(cache: [_found('a')], rejected: refused);
+      expect(r.state, const LyricsSearching(2));
+      expect(r.sourcesToAsk, ['a', 'b']);
+    });
+
+    test('another source result still shows', () {
+      final r = _resolve(cache: [_found('a'), _found('b')], rejected: refused);
+      expect(_ref(r.state).providerId, 'b');
+    });
+
+    test('a refused text is refused under another id', () {
+      final hash = lyricsContentHash(_text.lines);
+      final r = _resolve(
+        cache: [_found('a')],
+        rejected: RejectedResults(hashes: {hash}),
+      );
+      expect(r.state, isA<LyricsSearching>());
+    });
+
+    test('a refused result is no miss: the song is never "not found"', () {
+      final r = _resolve(
+        cache: [_found('a'), _missed('b')],
+        sources: [_source('a'), _source('b')],
+        rejected: refused,
+      );
+      expect(r.sourcesToAsk, ['a']);
+    });
+
+    test('a refused result does not hide a not-found of the same source', () {
+      final r = _resolve(
+        cache: [_missed('a'), _missed('b')],
+        rejected: refused,
+      );
+      expect(r.state, isA<LyricsNotFound>());
+    });
+
+    test('off no longer offers a refused result', () {
+      final r = _resolve(
+        choice: LyricsChoice.off,
+        cache: [_found('a')],
+        rejected: refused,
+      );
+      expect((r.state as LyricsOff).available, isNull);
     });
   });
 

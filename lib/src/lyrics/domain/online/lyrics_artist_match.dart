@@ -1,3 +1,4 @@
+import '../../../library/domain/scan/artist_split.dart';
 import '../../../media/domain/library_keys.dart';
 import 'lyrics_match_keys.dart';
 import 'lyrics_match_similarity.dart';
@@ -27,6 +28,14 @@ bool isUnknownArtist(String artist) {
       _unknownArtists.contains(sortForm(artist));
 }
 
+final _comma = RegExp(r'\s*,\s*');
+
+List<String> _tagNames(String tag) => [
+  for (final part in splitArtists([tag]))
+    for (final name in part.split(_comma))
+      if (name.trim().isNotEmpty) name.trim(),
+];
+
 bool _namesMatch(String mine, String theirs) {
   if (mine == theirs) return true;
   if (mine.runes.length <= _shortNameMax ||
@@ -50,9 +59,9 @@ bool artistMatches(String? local, String remote) {
     for (final name in remoteArtistNames(remote))
       if (!isUnknownArtist(name)) foldArtist(name),
   ]..removeWhere((n) => n.isEmpty);
-  // The tag is read like the remote string: library separators, then `,`,
-  // ` & ` and ` x `, so "A, B" in a tag names both artists.
-  for (final name in remoteArtistNames(local)) {
+  // The old app's tag split: library separators, then `,` (it was one of
+  // its default separators); never `&` or ` x `.
+  for (final name in _tagNames(local)) {
     if (isUnknownArtist(name)) continue;
     final mine = foldArtist(name);
     if (mine.isEmpty) continue;

@@ -19,15 +19,14 @@ class SourcePref {
 }
 
 /// Reads the stored list `[{id, on}]`. Throws [FormatException] when the value
-/// is not that shape; a repeated id keeps its first entry.
+/// is not a list; a malformed item is skipped (the rest of the list stays) and
+/// a repeated id keeps its first entry.
 List<SourcePref> decodeSourcePrefs(Object? json) {
   if (json is! List) throw const FormatException('source prefs: not a list');
   final seen = <String>{};
   final prefs = <SourcePref>[];
   for (final item in json) {
-    if (item is! Map || item['id'] is! String || item['on'] is! bool) {
-      throw const FormatException('source prefs: bad item');
-    }
+    if (item is! Map || item['id'] is! String || item['on'] is! bool) continue;
     final id = item['id'] as String;
     if (seen.add(id)) prefs.add(SourcePref(id, on: item['on'] as bool));
   }

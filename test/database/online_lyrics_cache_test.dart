@@ -135,6 +135,50 @@ void main() {
     );
   });
 
+  test('the table ties the status to its columns', () async {
+    Future<void> insert(
+      String columns,
+      String values, {
+      String provider = 'p',
+    }) => db.customStatement(
+      'INSERT INTO online_lyrics (cache_key, provider_id, fetched_at, $columns) '
+      "VALUES ('k', '$provider', 1, $values)",
+    );
+    await expectLater(
+      insert('status, plain_text', "'not_found', 'words'"),
+      throwsConstraint('CHECK'),
+    );
+    await expectLater(
+      insert('status, instrumental', "'not_found', 1"),
+      throwsConstraint('CHECK'),
+    );
+    await expectLater(
+      insert('status, plain_text', "'found', 'words'"),
+      throwsConstraint('CHECK'),
+    );
+    await expectLater(
+      insert('status, remote_id', "'found', 'r'"),
+      throwsConstraint('CHECK'),
+    );
+    await insert('status, remote_id, plain_text', "'found', 'r', 'w'");
+    await insert(
+      'status, remote_id, instrumental',
+      "'found', 'r2', 1",
+      provider: 'q',
+    );
+  });
+
+  test('text that parses to no line is not cached', () async {
+    for (final text in ['[ar:Foo]', '[00:01.00]\n[00:02.00]']) {
+      expect(await found('k', 'p1', plain: text), StoreResult.notStored);
+      expect(
+        await found('k', 'p1', plain: null, synced: text),
+        StoreResult.notStored,
+      );
+    }
+    expect(await cache.readFresh('k', now: _now), isEmpty);
+  });
+
   test('the cache has no foreign key and needs no track or plugin', () async {
     await found('k', 'unknown-plugin');
     expect(await cache.readFresh('k', now: _now), hasLength(1));

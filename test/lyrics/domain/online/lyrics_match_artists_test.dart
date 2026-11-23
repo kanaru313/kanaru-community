@@ -58,6 +58,12 @@ void main() {
       test('rejects: $name', () => expect(_good(c.$1, c.$2), isFalse));
     });
 
+    test('a comma in the tag separates names (old app), & does not', () {
+      expect(_good('Tyler, The Creator', 'Tyler'), isTrue);
+      expect(_good('Crosby, Stills & Nash', 'Nash'), isFalse);
+      expect(_good('Ngân Ngân, Châu Khải Phong', 'Chau Khai Phong'), isTrue);
+    });
+
     test('equal short names match', () => expect(_good('B', 'B'), isTrue));
 
     test('a placeholder beside a real name does not hide the name', () {

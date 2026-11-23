@@ -91,19 +91,28 @@ void main() {
       );
     });
 
+    test('a malformed item is skipped, the rest of the list stays', () {
+      expect(
+        decodeSourcePrefs([
+          {'id': 'a', 'on': true},
+          {'id': 3, 'on': true},
+          {'id': 'b'},
+          {'id': 'c', 'on': 'yes'},
+          1,
+          'x',
+          {'id': 'd', 'on': false},
+        ]),
+        [const SourcePref('a', on: true), const SourcePref('d', on: false)],
+      );
+    });
+
     for (final bad in <Object?>[
       null,
       'x',
-      {'id': 'a'},
-      [1],
-      [
-        {'id': 3, 'on': true},
-      ],
-      [
-        {'id': 'a', 'on': 'yes'},
-      ],
+      3,
+      {'id': 'a', 'on': true},
     ]) {
-      test('$bad is refused', () {
+      test('$bad is not a list and is refused', () {
         expect(() => decodeSourcePrefs(bad), throwsFormatException);
       });
     }

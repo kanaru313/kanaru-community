@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../plugins/data/store/plugin_row_types.dart';
+import '../../../database/tables.dart' show PluginRow;
 import '../../../plugins/domain/package/plugin_kind.dart';
 import '../../../plugins/state/plugin_run_provider.dart';
 import '../../../plugins/state/plugin_store_providers.dart';
@@ -16,12 +17,25 @@ LyricsSourceOrigin? _originOf(String wire) =>
       null => null,
     };
 
-/// Whether the lists of plugins and settings have their first value. Lookups
-/// wait for it: before it the source list is empty, which is not "no plugin".
-/// (The prefs are read synchronously, so only the plugin stream can lag.)
-final lyricsSourcesLoadedProvider = Provider<bool>(
-  (ref) => ref.watch(installedPluginsProvider).hasValue,
-);
+bool _isLyrics(PluginRow row) => row.kind == PluginKind.lyrics.wire;
+
+/// Whether the plugin list and the configuration status of every lyrics
+/// plugin have a value. Until then the source list is empty or a plugin looks
+/// askable, which is not "no plugin" or "ready": callers show loading and
+/// ask nobody. A failing plugin stream stays "not loaded" (the lyrics stay in
+/// the loading state); a failing status of one plugin counts as loaded and
+/// that plugin is shown as broken.
+final lyricsSourcesLoadedProvider = Provider<bool>((ref) {
+  final rows = ref.watch(installedPluginsProvider).value;
+  if (rows == null) return false;
+  for (final row in rows) {
+    if (!_isLyrics(row)) continue;
+    if (ref.watch(pluginConfigStatusProvider(row.installId)).isLoading) {
+      return false;
+    }
+  }
+  return true;
+});
 
 /// The live lyrics plugins in the user's order, each with its switch and
 /// problem. Empty until [lyricsSourcesLoadedProvider]. A plugin that was never
@@ -33,13 +47,14 @@ final lyricsSourcesProvider = Provider<List<LyricsSource>>((ref) {
   final saved = ref.watch(lyricsOnlineSourcesProvider);
   final installed = <LyricsSource>[];
   for (final row in rows) {
-    if (row.kind != PluginKind.lyrics.wire) continue;
+    if (!_isLyrics(row)) continue;
     final origin = _originOf(row.origin);
     if (origin == null) continue;
     final pausedUntil = ref.watch(pluginPauseProvider(row.installId));
-    final status = ref.watch(pluginConfigStatusProvider(row.installId)).value;
+    final statusValue = ref.watch(pluginConfigStatusProvider(row.installId));
+    final status = statusValue.value;
     final SourceProblem? problem;
-    if (status != null && status.manifest == null) {
+    if (statusValue.hasError || (status != null && status.manifest == null)) {
       problem = SourceProblem.broken;
     } else if (status != null && status.missingRequired.isNotEmpty) {
       problem = SourceProblem.needsConfig;

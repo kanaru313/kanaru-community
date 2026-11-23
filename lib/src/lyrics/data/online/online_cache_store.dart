@@ -27,8 +27,8 @@ class OnlineCacheStore {
     int? remoteDurationMs,
     required int now,
   }) async {
-    final synced = storableText(syncedText);
-    final plain = storableText(plainText);
+    final synced = storableLyrics(syncedText);
+    final plain = storableLyrics(plainText);
     if (synced == null && plain == null && !instrumental) {
       return StoreResult.notStored;
     }

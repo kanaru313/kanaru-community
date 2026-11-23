@@ -46,8 +46,11 @@ LyricsBody? lyricsBodyOf(String raw, String? type) {
     'txt' => false,
     _ => null,
   };
-  if (wantsSynced == false) return LyricsBody(plain: text);
+  // Text the LRC parser reads as no line (header tags only, blank timed
+  // lines) is no lyrics: kept, it would look like a body and never show.
   final parsed = parseOnlineText(synced: text);
-  if (parsed != null && parsed.synced) return LyricsBody(syncedLrc: text);
+  if (parsed == null) return null;
+  if (wantsSynced == false) return LyricsBody(plain: text);
+  if (parsed.synced) return LyricsBody(syncedLrc: text);
   return LyricsBody(plain: text);
 }

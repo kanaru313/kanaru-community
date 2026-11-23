@@ -59,6 +59,17 @@ void main() {
       );
     });
 
+    test(
+      'inline lyrics that parse to no line leave the item without a body',
+      () {
+        final out = _search([
+          {'id': '1', 'title': 'a', 'artist': 'b', 'lyrics': '[ar:Foo]'},
+        ]);
+        expect(out.candidates.single.body, isNull);
+        expect(out.candidates.single.hasBody, isFalse);
+      },
+    );
+
     test('album null or blank is no album', () {
       final out = _search([
         {'id': '1', 'title': 'a', 'artist': 'b', 'album': null},
@@ -249,6 +260,18 @@ void main() {
         isNotNull,
       );
       expect(read({'data': 'no stamps [ar:x]'})!.plain, 'no stamps [ar:x]');
+    });
+
+    test('text that parses to no line is no lyrics', () {
+      for (final text in [
+        '[ar:Foo]\n[ti:Bar]',
+        '[00:01.00]\n[00:02.00]',
+        '[length:03:20]',
+      ]) {
+        expect(read({'data': text}), isNull, reason: text);
+        expect(read({'data': text, 'type': 'lrc'}), isNull, reason: text);
+        expect(read({'data': text, 'type': 'txt'}), isNull, reason: text);
+      }
     });
 
     test('blank data and instrumental false is no lyrics', () {

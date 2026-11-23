@@ -120,4 +120,15 @@ class OnlineLyrics extends Table {
 
   @override
   Set<Column> get primaryKey => {cacheKey, providerId};
+
+  @override
+  List<String> get customConstraints => [
+    // A result names itself and carries lyrics or the instrumental flag; a
+    // miss carries nothing.
+    'CONSTRAINT online_lyrics_status_columns CHECK ('
+        "(status = 'found' AND remote_id IS NOT NULL AND (synced_text IS NOT NULL "
+        'OR plain_text IS NOT NULL OR instrumental = 1)) '
+        "OR (status = 'not_found' AND remote_id IS NULL AND synced_text IS NULL "
+        'AND plain_text IS NULL AND instrumental = 0))',
+  ];
 }

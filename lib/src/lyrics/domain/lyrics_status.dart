@@ -44,9 +44,29 @@ class LyricsShown extends TrackLyrics {
   int get hashCode => lyrics.hashCode;
 }
 
-/// No lyrics in the file or next to it.
+/// Why a track with no lyrics is not being looked up.
+enum LyricsNoneReason {
+  /// Automatic online search is switched off.
+  autoOff,
+
+  /// Automatic search is on but the song has no title, real artist or
+  /// duration to search by.
+  notSearchable,
+}
+
+/// No lyrics in the file or next to it, and no automatic lookup (see
+/// [reason]).
 class LyricsNone extends TrackLyrics {
-  const LyricsNone();
+  const LyricsNone({this.reason = LyricsNoneReason.autoOff});
+
+  final LyricsNoneReason reason;
+
+  @override
+  bool operator ==(Object other) =>
+      other is LyricsNone && other.reason == reason;
+
+  @override
+  int get hashCode => Object.hash('none', reason);
 }
 
 /// The user turned lyrics off for this track; [available] is what automatic
