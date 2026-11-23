@@ -514,5 +514,6 @@
     }
   },
   "lyricsPickerSourcesNotAsked": "Not searched",
-  "lyricsPickerClearSearch": "Clear the search text"
+  "lyricsPickerClearSearch": "Clear the search text",
+  "lyricsKeepFailed": "Couldn't save the lyrics. Try again."
 }

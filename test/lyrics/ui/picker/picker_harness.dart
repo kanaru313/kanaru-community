@@ -203,10 +203,13 @@ List<Override> pickerOverrides({
   SearchScript? script,
   LyricsFacts? facts,
   RecordingOnlineCommands? online,
+  bool factsFail = false,
 }) => [
   if (online != null) onlineLyricsCommandsProvider.overrideWithValue(online),
   lyricsFactsProvider.overrideWith(
-    (ref, id) => Stream.value(facts ?? songFacts()),
+    (ref, id) => factsFail
+        ? Stream.error(StateError('facts are gone'))
+        : Stream.value(facts ?? songFacts()),
   ),
   onlineSearchProvider.overrideWith2(
     (id) => FakeSearch(id, script ?? SearchScript()),
@@ -263,6 +266,7 @@ Future<OpenedPicker> openPicker(
   bool disableAnimations = false,
   LyricsFacts? facts,
   bool withBack = true,
+  bool factsFail = false,
 }) async {
   final online = RecordingOnlineCommands();
   final log = <String>[];
@@ -270,7 +274,12 @@ Future<OpenedPicker> openPicker(
     overrides: [
       settingsStoreProvider.overrideWithValue(MemorySettingsStore()),
       playingLyricsProvider.overrideWith((ref) => ref.watch(_playing)),
-      ...pickerOverrides(script: script, facts: facts, online: online),
+      ...pickerOverrides(
+        script: script,
+        facts: facts,
+        online: online,
+        factsFail: factsFail,
+      ),
       ...overrides,
     ],
   );

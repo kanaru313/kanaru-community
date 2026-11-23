@@ -10,6 +10,7 @@ import '../../media/domain/track_id.dart';
 import '../data/online/online_lyrics_commands.dart';
 import '../data/online/store_result.dart';
 import '../state/online/online_commands_provider.dart';
+import 'lyrics_keep_notice.dart';
 import 'online/online_row_info.dart';
 
 final _log = Logger('lyrics_online_bar');
@@ -37,10 +38,12 @@ class LyricsOnlineBar extends ConsumerWidget {
   final bool Function() close;
 
   void _write(
+    BuildContext context,
     WidgetRef ref,
     Future<Object?> Function(OnlineLyricsCommands commands) command,
   ) {
     final commands = ref.read(onlineLyricsCommandsProvider);
+    final failed = keepFailedNoticeOf(context);
     if (!close()) return;
     unawaited(
       command(commands)
@@ -49,10 +52,12 @@ class LyricsOnlineBar extends ConsumerWidget {
             // an error: say so in the log instead of dropping it.
             if (result == StoreResult.notStored) {
               _log.warning('online lyrics copy was not stored');
+              failed();
             }
           })
           .catchError((Object error, StackTrace stack) {
             _log.warning('online lyrics write failed', error, stack);
+            failed();
           }),
     );
   }
@@ -82,12 +87,12 @@ class LyricsOnlineBar extends ConsumerWidget {
     );
     final buttons = [
       TextButton(
-        onPressed: () => _write(ref, (c) => c.reject(trackId)),
+        onPressed: () => _write(context, ref, (c) => c.reject(trackId)),
         child: Text(l10n.lyricsBarReject),
       ),
       if (auto)
         FilledButton.tonal(
-          onPressed: () => _write(ref, (c) => c.keepAuto(trackId)),
+          onPressed: () => _write(context, ref, (c) => c.keepAuto(trackId)),
           child: Text(l10n.lyricsBarKeep),
         ),
     ];

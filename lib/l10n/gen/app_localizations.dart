@@ -7374,6 +7374,12 @@ abstract class AppLocalizations {
   /// **'Clear the search text'**
   String get lyricsPickerClearSearch;
 
+  /// No description provided for @lyricsKeepFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the lyrics. Try again.'**
+  String get lyricsKeepFailed;
+
   /// No description provided for @pluginsStoreTitle.
   ///
   /// In en, this message translates to:

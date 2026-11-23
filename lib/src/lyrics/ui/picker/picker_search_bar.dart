@@ -27,11 +27,15 @@ class PickerSearchBar extends ConsumerStatefulWidget {
 }
 
 class _PickerSearchBarState extends ConsumerState<PickerSearchBar> {
-  final _text = TextEditingController();
+  late final TextEditingController _text;
 
   @override
   void initState() {
     super.initState();
+    // A rebuilt layout starts from what the user had typed.
+    _text = TextEditingController(
+      text: ref.read(pickerControllerProvider(widget.trackId)).text,
+    );
     unawaited(_boot());
   }
 
@@ -66,6 +70,9 @@ class _PickerSearchBarState extends ConsumerState<PickerSearchBar> {
       persistent: true,
       autofocus: false,
       onClose: () {},
+      onChanged: ref
+          .read(pickerControllerProvider(widget.trackId).notifier)
+          .setText,
       onSubmitted: _submit,
     );
     final chip = KChip(

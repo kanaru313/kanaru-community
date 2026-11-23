@@ -9,12 +9,16 @@ class PickerHeader extends StatelessWidget {
     super.key,
     required this.title,
     required this.backTooltip,
+    this.backLabel,
     required this.onBack,
     required this.onClose,
   });
 
   final String title;
   final String backTooltip;
+
+  /// What a screen reader says for ←, when it is longer than the tooltip.
+  final String? backLabel;
   final VoidCallback onBack;
   final VoidCallback onClose;
 
@@ -26,6 +30,7 @@ class PickerHeader extends StatelessWidget {
         KIconButton(
           icon: KIcons.back,
           tooltip: backTooltip,
+          semanticLabel: backLabel,
           padding: const EdgeInsets.all(KSpace.x3),
           onPressed: onBack,
         ),

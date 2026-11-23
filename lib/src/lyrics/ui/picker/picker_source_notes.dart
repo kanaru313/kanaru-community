@@ -65,21 +65,7 @@ class PickerFailureNote extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final needsConfig = part.phase == SourceSearchPhase.needsConfig;
-    final message = switch (part.phase) {
-      SourceSearchPhase.needsConfig => l10n.lyricsPickerNeedsConfig(name),
-      SourceSearchPhase.paused => l10n.lyricsPickerPaused(
-        name,
-        part.until == null ? '' : formatClock(context, part.until!),
-      ),
-      _ => switch (part.failure) {
-        SourceSearchFailure.server => l10n.lyricsPickerFailServer(name),
-        SourceSearchFailure.rateLimited => l10n.lyricsPickerFailRateLimited(
-          name,
-        ),
-        SourceSearchFailure.invalid => l10n.lyricsPickerFailInvalid(name),
-        _ => l10n.lyricsPickerFailNetwork(name),
-      },
-    };
+    final message = pickerFailureMessage(context, part, name);
     final router = GoRouter.of(context);
     final panel = ref.read(nowPlayingPanelProvider.notifier);
     return KInlineNotice(
@@ -99,4 +85,26 @@ class PickerFailureNote extends ConsumerWidget {
           : null,
     );
   }
+}
+
+/// The one line for a source that failed, needs setup or is paused.
+String pickerFailureMessage(
+  BuildContext context,
+  SourceSearch part,
+  String name,
+) {
+  final l10n = AppLocalizations.of(context);
+  return switch (part.phase) {
+    SourceSearchPhase.needsConfig => l10n.lyricsPickerNeedsConfig(name),
+    SourceSearchPhase.paused => l10n.lyricsPickerPaused(
+      name,
+      part.until == null ? '' : formatClock(context, part.until!),
+    ),
+    _ => switch (part.failure) {
+      SourceSearchFailure.server => l10n.lyricsPickerFailServer(name),
+      SourceSearchFailure.rateLimited => l10n.lyricsPickerFailRateLimited(name),
+      SourceSearchFailure.invalid => l10n.lyricsPickerFailInvalid(name),
+      _ => l10n.lyricsPickerFailNetwork(name),
+    },
+  };
 }

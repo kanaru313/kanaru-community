@@ -23,9 +23,13 @@ typedef PickerUse = Future<void> Function(
 
 /// The default use: keeps the result as the song's own copy, so the lyrics
 /// show at once. The commands are taken now, while the picker is alive: it is
-/// called after the picker has closed. A refused or failed write is logged;
-/// the picker is gone by then.
-PickerUse keepForTrack(WidgetRef ref, TrackId trackId) {
+/// called after the picker has closed. A refused or failed write is logged and
+/// reported through [onFailed]; the picker is gone by then.
+PickerUse keepForTrack(
+  WidgetRef ref,
+  TrackId trackId, {
+  required VoidCallback onFailed,
+}) {
   final OnlineLyricsCommands commands = ref.read(onlineLyricsCommandsProvider);
   return (result, providerName) async {
     try {
@@ -36,9 +40,11 @@ PickerUse keepForTrack(WidgetRef ref, TrackId trackId) {
       );
       if (stored == StoreResult.notStored) {
         _log.warning('picked lyrics were not stored');
+        onFailed();
       }
     } on Object catch (error, stack) {
       _log.warning('picked lyrics write failed', error, stack);
+      onFailed();
     }
   };
 }

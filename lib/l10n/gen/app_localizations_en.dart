@@ -5109,6 +5109,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsPickerClearSearch => 'Clear the search text';
 
   @override
+  String get lyricsKeepFailed => 'Couldn\'t save the lyrics. Try again.';
+
+  @override
   String get pluginsStoreTitle => 'Plugin store';
 
   @override

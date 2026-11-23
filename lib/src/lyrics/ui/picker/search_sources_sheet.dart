@@ -93,6 +93,7 @@ class SearchSourcesSheet extends ConsumerWidget {
                   if (s.enabled)
                     SourceChoiceRow(
                       source: s,
+                      part: byId[s.id],
                       count: count(s.id),
                       selected: view.filter == s.id,
                       onTap: () => choose(s.id),

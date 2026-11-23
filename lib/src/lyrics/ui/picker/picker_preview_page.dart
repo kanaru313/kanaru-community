@@ -76,7 +76,8 @@ class PickerPreviewPage extends ConsumerWidget {
       children: [
         PickerHeader(
           title: l10n.lyricsPickerPreview,
-          backTooltip: l10n.lyricsPickerPreviewBackLabel,
+          backTooltip: l10n.lyricsPickerPreviewBack,
+          backLabel: l10n.lyricsPickerPreviewBackLabel,
           onBack: () => Navigator.of(context).pop(),
           onClose: () => Navigator.of(context).pop(),
         ),

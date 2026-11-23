@@ -107,7 +107,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(
       find.byWidgetPredicate(
-        (w) => w is KIconButton && w.tooltip == 'Back to the results',
+        (w) => w is KIconButton && w.tooltip == 'Back to the list',
       ),
     );
     await tester.pumpAndSettle();

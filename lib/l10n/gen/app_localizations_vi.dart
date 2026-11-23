@@ -4665,6 +4665,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lyricsPickerClearSearch => 'Xoá chữ trong ô tìm';
 
   @override
+  String get lyricsKeepFailed => 'Không lưu được lời. Thử lại sau.';
+
+  @override
   String get pluginsStoreTitle => 'Kho plugin';
 
   @override

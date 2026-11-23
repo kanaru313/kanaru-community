@@ -514,5 +514,6 @@
     }
   },
   "lyricsPickerSourcesNotAsked": "Chưa tìm",
-  "lyricsPickerClearSearch": "Xoá chữ trong ô tìm"
+  "lyricsPickerClearSearch": "Xoá chữ trong ô tìm",
+  "lyricsKeepFailed": "Không lưu được lời. Thử lại sau."
 }

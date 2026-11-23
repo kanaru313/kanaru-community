@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 
 import '../../../media/domain/track_id.dart';
 import '../../domain/lyrics_facts.dart';
 import '../../domain/online/online_search_state.dart';
 import '../../state/online/online_search_provider.dart';
 import '../../state/track_lyrics_providers.dart';
+
+final _log = Logger('lyrics_picker');
 
 /// The text the picker starts from: "title artist" of the song, empty when it
 /// has neither.
@@ -22,7 +25,12 @@ String defaultQueryText(LyricsFacts? facts) {
 /// `onlineSearchProvider` state; a choice that no longer matches a result
 /// (a newer search, a removed plugin) reads as none.
 class PickerState {
-  const PickerState({this.filter, this.selected, this.booted = false});
+  const PickerState({
+    this.filter,
+    this.selected,
+    this.booted = false,
+    this.text = '',
+  });
 
   /// Install id of the one source shown; null shows every source.
   final String? filter;
@@ -33,14 +41,20 @@ class PickerState {
   /// The first search was started (before that the picker only waits).
   final bool booted;
 
+  /// What the search field holds. Kept here so it survives a change of
+  /// layout (the window crossing the desktop breakpoint rebuilds the picker).
+  final String text;
+
   PickerState copyWith({
     String? Function()? filter,
     ResultRef? Function()? selected,
     bool? booted,
+    String? text,
   }) => PickerState(
     filter: filter == null ? this.filter : filter(),
     selected: selected == null ? this.selected : selected(),
     booted: booted ?? this.booted,
+    text: text ?? this.text,
   );
 }
 
@@ -56,21 +70,34 @@ class PickerController extends Notifier<PickerState> {
   OnlineSearchNotifier get _search =>
       ref.read(onlineSearchProvider(trackId).notifier);
 
-  /// Starts the first search from the song's tags and returns the text it
-  /// searched (to fill the field). Does nothing twice.
+  /// Starts the first search from the song's tags and returns the text the
+  /// field holds. Does nothing twice, and never replaces a search the user
+  /// already made (a `submit` while the song's facts were loading). A failed
+  /// facts read searches with nothing: the picker leaves its loading state
+  /// and the user types the query.
   Future<String> boot() async {
-    final facts = await ref.read(lyricsFactsProvider(trackId).future);
+    if (state.booted) return state.text;
+    LyricsFacts? facts;
+    try {
+      facts = await ref.read(lyricsFactsProvider(trackId).future);
+    } on Object catch (e) {
+      _log.warning('picker facts read failed: ${e.runtimeType}');
+    }
+    if (!ref.mounted || state.booted) return state.text;
     final text = defaultQueryText(facts);
-    if (!ref.mounted) return text;
-    if (state.booted) return text;
-    state = state.copyWith(booted: true);
+    state = state.copyWith(booted: true, text: text);
     unawaited(_search.search(text));
     return text;
   }
 
+  /// Remembers what the field holds.
+  void setText(String text) {
+    if (text != state.text) state = state.copyWith(text: text);
+  }
+
   /// Searches [text] (a newer search replaces the older one).
   Future<void> submit(String text) {
-    state = state.copyWith(selected: () => null);
+    state = state.copyWith(booted: true, text: text, selected: () => null);
     return _search.search(text);
   }
 

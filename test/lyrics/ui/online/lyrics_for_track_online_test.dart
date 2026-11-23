@@ -367,6 +367,10 @@ void main() {
             expect(find.byType(LyricsForTrackBody), findsNothing);
             expect(tester.takeException(), isNull);
             expect(
+              find.text("Couldn't save the lyrics. Try again."),
+              findsOneWidget,
+            );
+            expect(
               records.where(
                 (r) =>
                     r.loggerName == 'lyrics_online_bar' &&
@@ -391,6 +395,10 @@ void main() {
           await tester.tap(_button('Keep this copy'));
           await tester.pumpAndSettle();
           expect(find.byType(LyricsForTrackBody), findsNothing);
+          expect(
+            find.text("Couldn't save the lyrics. Try again."),
+            findsOneWidget,
+          );
           expect(tester.takeException(), isNull);
         });
 

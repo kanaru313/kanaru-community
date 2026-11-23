@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -34,6 +33,11 @@ class PickerPreview extends ConsumerStatefulWidget {
   final bool plainNote;
   final EdgeInsetsGeometry padding;
 
+  /// How long a result must stay shown before its lyrics are fetched: moving
+  /// through the list with the arrow keys must not send one plugin run per
+  /// row passed over. A result that goes before this ends is never fetched.
+  static const Duration fetchRest = Duration(milliseconds: 250);
+
   @override
   ConsumerState<PickerPreview> createState() => _PickerPreviewState();
 }
@@ -51,15 +55,24 @@ class _PickerPreviewState extends ConsumerState<PickerPreview> {
     if (old.candidate.ref != widget.candidate.ref) _ensure();
   }
 
-  /// Starts the fetch after this frame: it writes provider state, which must
-  /// not happen while the tree builds.
+  Timer? _rest;
+
+  /// Starts the fetch once the result has rested for [fetchRest]. The timer
+  /// fires outside the build, where writing provider state is allowed.
   void _ensure() {
+    _rest?.cancel();
     final candidate = widget.candidate;
     if (candidate.body?.isUsable ?? false) return;
     final notifier = ref.read(onlineSearchProvider(widget.trackId).notifier);
-    SchedulerBinding.instance.addPostFrameCallback((_) {
+    _rest = Timer(PickerPreview.fetchRest, () {
       if (mounted) unawaited(notifier.fetchLyrics(candidate));
     });
+  }
+
+  @override
+  void dispose() {
+    _rest?.cancel();
+    super.dispose();
   }
 
   @override

@@ -3572,6 +3572,7 @@
   },
   "lyricsPickerSourcesNotAsked": "Chưa tìm",
   "lyricsPickerClearSearch": "Xoá chữ trong ô tìm",
+  "lyricsKeepFailed": "Không lưu được lời. Thử lại sau.",
   "pluginsStoreTitle": "Kho plugin",
   "pluginsFilterTooltip": "Lọc",
   "pluginsFilterActiveLabel": "{count} đang bật",

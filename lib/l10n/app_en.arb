@@ -3607,6 +3607,7 @@
   },
   "lyricsPickerSourcesNotAsked": "Not searched",
   "lyricsPickerClearSearch": "Clear the search text",
+  "lyricsKeepFailed": "Couldn't save the lyrics. Try again.",
   "pluginsStoreTitle": "Plugin store",
   "pluginsFilterTooltip": "Filter",
   "pluginsFilterActiveLabel": "{count} on",

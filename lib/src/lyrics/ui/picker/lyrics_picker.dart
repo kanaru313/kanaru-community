@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../media/domain/track_id.dart';
 import '../../state/playing_lyrics_providers.dart';
+import '../lyrics_keep_notice.dart';
 import 'picker_actions.dart';
 import 'picker_desktop.dart';
 import 'picker_mobile.dart';
@@ -21,10 +22,10 @@ const double _dialogWidth = 780;
 /// the user taps Tìm.
 ///
 /// [onBack] runs after ← (also Back, Esc and Huỷ) closed the picker: it opens
-/// "Lời cho bài này" again; without it they only close. ✕ closes for good. [use] is what "Dùng lời này" does with the
-/// chosen result; the default keeps it as the song's own copy. With
-/// [followsPlaying] it closes, once, when the playing track changes or
-/// playback stops.
+/// "Lời cho bài này" again; without it they only close. ✕ closes for good.
+/// [use] is what "Dùng lời này" does with the chosen result; the default
+/// keeps it as the song's own copy. With [followsPlaying] it closes, once,
+/// when the playing track changes or playback stops.
 Future<void> showLyricsPicker(
   BuildContext context,
   TrackId trackId, {
@@ -79,8 +80,6 @@ class LyricsPickerHost extends ConsumerStatefulWidget {
 }
 
 class _LyricsPickerHostState extends ConsumerState<LyricsPickerHost> {
-  late final PickerUse _use;
-
   /// One pop only, whatever asks to close first.
   bool _closing = false;
 
@@ -91,7 +90,6 @@ class _LyricsPickerHostState extends ConsumerState<LyricsPickerHost> {
   @override
   void initState() {
     super.initState();
-    _use = widget.use ?? keepForTrack(ref, widget.trackId);
     if (widget.followsPlaying) {
       ref.listenManual(playingLyricsProvider.select((p) => p.trackId), (
         _,
@@ -139,7 +137,15 @@ class _LyricsPickerHostState extends ConsumerState<LyricsPickerHost> {
   }
 
   void _pick(PickedLyrics picked) {
-    if (_requestClose()) runPickerUse(_use, picked);
+    // The notice is taken before the route closes.
+    final use =
+        widget.use ??
+        keepForTrack(
+          ref,
+          widget.trackId,
+          onFailed: keepFailedNoticeOf(context),
+        );
+    if (_requestClose()) runPickerUse(use, picked);
   }
 
   @override
