@@ -171,6 +171,70 @@ void main() {
       expect(_isSelected(tester, 'KidSongs'), isTrue);
     });
 
+    testWidgets(
+      'a child item re-selected over a pushed detail opens its list',
+      (tester) async {
+        final ext = _Ext((r) {
+          r
+            ..addNavItem(
+              NavItem(
+                id: 'kids',
+                path: '/kids',
+                icon: KIcons.placeholder,
+                selectedIcon: KIcons.placeholder,
+                label: (_) => 'KidsTab',
+                order: 106,
+                sidebar: false,
+              ),
+            )
+            ..addNavItem(
+              NavItem(
+                id: 'kid_songs',
+                path: '/kids/songs',
+                icon: KIcons.placeholder,
+                selectedIcon: KIcons.placeholder,
+                label: (_) => 'KidSongs',
+                order: 110,
+                mobileTab: false,
+                parentId: 'kids',
+              ),
+            )
+            ..addRoute(
+              GoRoute(
+                path: '/kids',
+                builder: (_, _) => const Text('kids page'),
+                routes: [
+                  GoRoute(
+                    path: 'songs',
+                    builder: (_, _) => const Text('kid songs page'),
+                  ),
+                  // A detail sibling of the list, like the library details.
+                  GoRoute(
+                    path: 'songs/:id',
+                    builder: (_, s) =>
+                        Text('kid detail ${s.pathParameters['id']}'),
+                  ),
+                ],
+              ),
+            );
+        });
+        await _pump(tester, 1280, extra: [ext]);
+        await tester.tap(find.text('KidSongs'));
+        await tester.pumpAndSettle();
+        unawaited(
+          GoRouter.of(tester.element(find.text('kid songs page')))
+              .push('/kids/songs/7'),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('kid detail 7'), findsOneWidget);
+        expect(_isSelected(tester, 'KidSongs'), isTrue);
+        await tester.tap(find.text('KidSongs'));
+        await tester.pumpAndSettle();
+        expect(find.text('kid detail 7'), findsNothing);
+        expect(find.text('kid songs page'), findsOneWidget);
+      },
+    );
+
     testWidgets('an item with onSelect runs it instead of navigating', (
       tester,
     ) async {
