@@ -17,6 +17,7 @@ import '../../state/browse/selection_providers.dart';
 import '../../state/favorites_providers.dart';
 import '../browse/play_actions.dart';
 import '../favorite_toggle.dart';
+import '../info/open_song_info.dart';
 import '../menus/menu_action_runner.dart';
 import '../menus/menu_model.dart' show MenuItemSpec;
 import '../menus/menu_origin.dart';
@@ -299,7 +300,16 @@ class SongTile extends ConsumerWidget {
       start: KSwipeAction(
         icon: KIcons.info,
         label: l10n.libraryMenuSongInfo,
-        onTrigger: () => unawaited(openSongInfo(context, info, origin: origin)),
+        // Same page rows as the tile's menu, so the info's ⋮ keeps them.
+        onTrigger: () => unawaited(
+          openSongInfo(
+            context,
+            info,
+            origin: origin,
+            playlistGroup: menuExtras,
+            favoriteRow: menuFavoriteRow,
+          ),
+        ),
       ),
       child: child,
     );

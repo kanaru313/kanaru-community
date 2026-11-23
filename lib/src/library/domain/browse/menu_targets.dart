@@ -58,6 +58,7 @@ class TrackLinks {
     required this.artists,
     required this.albumArtists,
     required this.folder,
+    this.filePath,
   });
 
   /// Null when the track has no album.
@@ -70,6 +71,10 @@ class TrackLinks {
   /// Album artists that are not among [artists]; empty when all are.
   final List<ArtistRef> albumArtists;
   final FolderRef folder;
+
+  /// Absolute path of the file (no CUE `#n`); null for a source without a
+  /// local root. "Show in file manager" on the song's own folder page.
+  final String? filePath;
 }
 
 /// An artist's albums split by who owns them.
@@ -90,30 +95,6 @@ class ArtistAlbums {
 
   @override
   int get hashCode => Object.hash(Object.hashAll(own), Object.hashAll(appears));
-}
-
-/// File facts of the song info page (the title, artists and album come from
-/// `TrackInfo`).
-class SongInfo {
-  const SongInfo({
-    required this.format,
-    required this.bitrate,
-    required this.sampleRate,
-    required this.bitDepth,
-    required this.sizeBytes,
-    required this.path,
-    required this.playCount,
-  });
-
-  final String? format;
-  final int? bitrate;
-  final int? sampleRate;
-  final int? bitDepth;
-  final int? sizeBytes;
-
-  /// Absolute path of the file; null for a source without a local root.
-  final String? path;
-  final int playCount;
 }
 
 bool _same<T>(List<T> a, List<T> b) {

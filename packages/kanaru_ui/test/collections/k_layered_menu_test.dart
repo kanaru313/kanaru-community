@@ -4,7 +4,6 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:kanaru_ui/src/widgets/collections/k_menu_row.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../support/finders.dart';
 import '../support/host.dart';
 
 KMenuPage _page({List<String>? log, int filler = 0, bool footer = true}) {
@@ -93,18 +92,13 @@ KMenuPage _page({List<String>? log, int filler = 0, bool footer = true}) {
   );
 }
 
-Widget _opener(
-  KMenuPage page, {
-  bool viaKeyboard = false,
-  KMenuPage? initialPage,
-}) => Builder(
+Widget _opener(KMenuPage page, {bool viaKeyboard = false}) => Builder(
   builder: (context) => Align(
     alignment: Alignment.topLeft,
     child: TextButton(
       onPressed: () => showKLayeredMenu(
         context,
         root: page,
-        initialPage: initialPage,
         backTooltip: 'Back',
         viaKeyboard: viaKeyboard,
       ),
@@ -296,28 +290,6 @@ void main() {
     expect(find.byType(Dialog), findsNothing);
   });
 
-  testWidgets('an initial page opens first; Back goes to the root', (
-    tester,
-  ) async {
-    useWindow(tester, const Size(400, 800));
-    final info = KMenuPage(
-      title: 'Info page',
-      groups: [
-        [KMenuRow(title: 'Detail row', onTap: () {})],
-      ],
-    );
-    await tester.pumpWidget(host(_opener(_page(), initialPage: info)));
-    await _open(tester);
-    expect(find.text('Detail row'), findsOneWidget);
-    expect(find.text('Header'), findsNothing);
-    await tester.tap(find.byIcon(KIcons.back));
-    await tester.pumpAndSettle();
-    expect(find.text('Header'), findsOneWidget);
-    expect(find.text('Detail row'), findsNothing);
-    // Back on the root closes nothing by itself; Esc-free check: still open.
-    expect(find.byType(BottomSheet), findsOneWidget);
-  });
-
   testWidgets('Esc on a sub-page goes back, on the root closes', (
     tester,
   ) async {
@@ -419,38 +391,6 @@ void main() {
     expect(find.text('Albums'), findsOneWidget);
     expect(find.text('Appears on'), findsOneWidget);
     expect(find.text('Hidden'), findsNothing);
-  });
-
-  testWidgets('the header opens its page and Back returns', (tester) async {
-    useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(
-      host(
-        _opener(
-          KMenuPage(
-            header: const Text('Song'),
-            headerOpens: KMenuPage(
-              title: 'Song info',
-              groups: [
-                [KMenuRow(title: 'Format', subtitle: 'FLAC')],
-              ],
-            ),
-            groups: [
-              [KMenuRow(title: 'Play')],
-            ],
-          ),
-        ),
-      ),
-    );
-    await _open(tester);
-    expect(find.byIcon(KIcons.chevronRight), findsOneWidget);
-    await tester.tap(find.text('Song'));
-    await tester.pumpAndSettle();
-    expect(find.text('Song info'), findsOneWidget);
-    expect(find.text('Format'), findsOneWidget);
-    expect(find.text('Play'), findsNothing);
-    await tester.tap(byIconButton('Back'));
-    await tester.pumpAndSettle();
-    expect(find.text('Play'), findsOneWidget);
   });
 
   testWidgets('a row can show a picture in place of its icon', (tester) async {
@@ -814,38 +754,6 @@ void main() {
         ),
       );
       handle.dispose();
-    });
-
-    test('onHeaderTap and headerOpens together is a mistake', () {
-      expect(
-        () => KMenuPage(
-          onHeaderTap: (_) {},
-          headerOpens: const KMenuPage(groups: []),
-          groups: const [],
-        ),
-        throwsAssertionError,
-      );
-    });
-
-    testWidgets('headerOpens still shows its page', (tester) async {
-      useWindow(tester, const Size(1300, 900));
-      final page = KMenuPage(
-        header: const Text('Header'),
-        headerOpens: KMenuPage(
-          title: 'Info',
-          groups: [
-            [KMenuRow(title: 'Detail')],
-          ],
-        ),
-        groups: [
-          [KMenuRow(title: 'Play')],
-        ],
-      );
-      await tester.pumpWidget(host(_opener(page)));
-      await _open(tester);
-      await tester.tap(find.text('Header'));
-      await tester.pumpAndSettle();
-      expect(find.text('Detail'), findsOneWidget);
     });
   });
 

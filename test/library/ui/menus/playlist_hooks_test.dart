@@ -24,7 +24,6 @@ MenuSpec _song({MenuOrigin origin = const MenuOrigin.list()}) => buildSongMenu(
   SongMenuData(
     info: trackInfo(),
     links: trackLinks(),
-    file: songFile,
     favorite: false,
     selected: false,
   ),

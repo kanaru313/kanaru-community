@@ -324,4 +324,46 @@ void main() {
     // One pop returns to home: no duplicate of the page was pushed.
     expect(find.text('home'), findsOneWidget);
   });
+
+  testWidgets('beforeNavigate runs first on every Go, also to the open page', (
+    tester,
+  ) async {
+    final rig = await _pump(tester);
+    var calls = 0;
+    var pagesWhenCalled = -1;
+    final runner = MenuActionRunner(
+      rig.container,
+      tester.element(find.text('home')),
+      beforeNavigate: () {
+        calls++;
+        pagesWhenCalled = find.text('album page').evaluate().length;
+      },
+    );
+    await runner.run(const MenuAction.go('/library/albums/x'));
+    await tester.pumpAndSettle();
+    expect(calls, 1);
+    expect(pagesWhenCalled, 0); // before the page was pushed
+    expect(find.text('album page'), findsOneWidget);
+    // The page is open now: the host still gets to close what covers it.
+    await runner.run(const MenuAction.go('/library/albums/x'));
+    expect(calls, 2);
+    rig.router.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('home'), findsOneWidget);
+  });
+
+  testWidgets('beforeNavigate is not called for actions that stay', (
+    tester,
+  ) async {
+    final rig = await _pump(tester);
+    var calls = 0;
+    final runner = MenuActionRunner(
+      rig.container,
+      tester.element(find.text('home')),
+      beforeNavigate: () => calls++,
+    );
+    await runner.run(MenuAction.favorite([TrackId(5)], on: true));
+    await runner.run(MenuAction.select(TrackId(5), on: true));
+    expect(calls, 0);
+  });
 }

@@ -80,7 +80,51 @@ Finder _barrier() => find.byWidgetPredicate(
   description: '45 % barrier',
 );
 
+/// Opens a layer whose body has a button that shows a snack bar.
+Widget _toastOpener(void Function(Route<void>) onRoute) => Builder(
+  builder: (context) => TextButton(
+    onPressed: () => showKOverlayPage<void>(
+      context,
+      title: 'Toast',
+      onRoute: onRoute,
+      builder: (_) => Builder(
+        builder: (inner) => TextButton(
+          onPressed: () => showAppSnackBar(inner, 'Hello toast'),
+          child: const Text('toast'),
+        ),
+      ),
+    ),
+    child: const Text('open'),
+  ),
+);
+
 void main() {
+  for (final (name, size) in [
+    ('page', const Size(360, 800)),
+    ('box', const Size(1300, 900)),
+  ]) {
+    testWidgets('a snack bar shown inside the $name is drawn above it', (
+      tester,
+    ) async {
+      useWindow(tester, size);
+      Route<void>? route;
+      await tester.pumpWidget(host(_toastOpener((r) => route = r)));
+      await _show(tester);
+      expect(route?.isActive, isTrue); // handed over before the push ends
+      await tester.tap(find.text('toast'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      final text = find.text('Hello toast');
+      final hit = tester.hitTestOnBinding(tester.getCenter(text));
+      expect(
+        hit.path.any((e) => identical(e.target, tester.renderObject(text))),
+        isTrue,
+        reason: 'the barrier or the page is drawn over the toast',
+      );
+      await tester.pump(const Duration(seconds: 5));
+    });
+  }
+
   testWidgets('360 wide: a full-screen page with a back arrow, no barrier', (
     tester,
   ) async {

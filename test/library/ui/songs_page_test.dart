@@ -563,7 +563,7 @@ void swipeTests() {
       await unmountApp(tester);
     });
 
-    testWidgets('right past the trigger opens the info page of the song', (
+    testWidgets('right past the trigger opens the info of the song', (
       tester,
     ) async {
       final (h, playback, _) = await _pumpSwipe(tester, ['Alpha', 'Bravo']);
@@ -572,14 +572,13 @@ void swipeTests() {
         () => Future<void>.delayed(const Duration(milliseconds: 100)),
       );
       await tester.pumpAndSettle();
-      expect(find.byType(BottomSheet), findsOneWidget);
-      // On the info page: the back arrow is there, the footer is not.
-      expect(find.byIcon(KIcons.back), findsOneWidget);
-      expect(find.text('Play next'), findsNothing);
+      // The info route straight over the list: no menu under it.
+      expect(find.byType(KOverlayPageScope), findsOneWidget);
+      expect(find.byType(BottomSheet), findsNothing);
       expect(playback.calls, isEmpty);
-      await tester.tap(find.byIcon(KIcons.back));
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
-      expect(find.text('Play next'), findsOneWidget);
+      expect(find.byType(KOverlayPageScope), findsNothing);
       expect(h.location, '/library/songs');
       await unmountApp(tester);
     });

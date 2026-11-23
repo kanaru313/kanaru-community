@@ -27,6 +27,7 @@ class KChip extends StatelessWidget {
     this.dense = false,
     this.semanticLabel,
     this.onRaised = false,
+    this.tintWhenSelected = true,
   }) : trailing = null,
        outlined = false,
        tone = KTagTone.neutral,
@@ -45,6 +46,7 @@ class KChip extends StatelessWidget {
       semanticLabel = null,
       onRaised = false,
       outlined = false,
+      tintWhenSelected = true,
       tone = KTagTone.neutral,
       _interactive = false,
       _tag = false;
@@ -67,6 +69,7 @@ class KChip extends StatelessWidget {
        semanticLabel = null,
        onRaised = false,
        trailing = null,
+       tintWhenSelected = true,
        _interactive = false,
        _tag = true;
 
@@ -90,6 +93,11 @@ class KChip extends StatelessWidget {
   /// not sink into the background.
   final bool onRaised;
 
+  /// A [selected] chip is tinted `secondaryContainer`; false keeps the
+  /// plain pill and says the state only to screen readers (a caller that
+  /// shows it another way, such as an icon turning `primary`).
+  final bool tintWhenSelected;
+
   /// Widget after the label of a [KChip.static] (its own action).
   final Widget? trailing;
 
@@ -112,7 +120,8 @@ class KChip extends StatelessWidget {
     final minHeight = dense
         ? (touch ? _denseTouchHeight : _denseDesktopHeight)
         : (touch ? KLayout.minTarget : KLayout.minTargetDesktop);
-    final fg = selected ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
+    final tinted = selected && tintWhenSelected;
+    final fg = tinted ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
     final content = ConstrainedBox(
       constraints: BoxConstraints(minHeight: minHeight),
       child: Padding(
@@ -142,7 +151,7 @@ class KChip extends StatelessWidget {
       ),
     );
     final pill = Material(
-      color: selected
+      color: tinted
           ? scheme.secondaryContainer
           : onRaised
           ? scheme.surfaceContainerHighest

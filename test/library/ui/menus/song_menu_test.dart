@@ -32,7 +32,6 @@ MenuSpec _menu({
       album: album,
       folder: folder,
     ),
-    file: songFile,
     favorite: favorite,
     selected: selected,
     lyricsLabel: lyricsLabel,
@@ -225,25 +224,6 @@ void main() {
       expect(row.action, isA<GoAction>());
     },
   );
-
-  test('song info page is attached and opened by the header', () {
-    const page = MenuPageSpec(title: 'Song info', groups: []);
-    final spec = buildSongMenu(
-      SongMenuData(
-        info: trackInfo(),
-        links: trackLinks(),
-        file: songFile,
-        favorite: false,
-        selected: false,
-      ),
-      const MenuOrigin.list(),
-      env(),
-      infoPage: page,
-    );
-    expect(spec.header.infoPage, infoPageKey);
-    expect(spec.pages[infoPageKey], same(page));
-    expect(_menu().header.infoPage, isNull);
-  });
 
   group('origin', () {
     test('album page: no "Go to album"', () {

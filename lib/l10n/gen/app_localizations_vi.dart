@@ -1445,13 +1445,239 @@ class AppLocalizationsVi extends AppLocalizations {
   String get libraryInfoSize => 'Kích thước';
 
   @override
-  String get libraryInfoPath => 'Tệp';
+  String get libraryInfoPath => 'Đường dẫn';
 
   @override
   String get libraryInfoPlayCount => 'Số lần nghe';
 
   @override
   String get libraryInfoUnknown => 'Không rõ';
+
+  @override
+  String get libraryInfoGroupTags => 'Thẻ';
+
+  @override
+  String get libraryInfoGroupAudio => 'Âm thanh';
+
+  @override
+  String get libraryInfoGroupFile => 'Tệp';
+
+  @override
+  String get libraryInfoGroupYou => 'Của bạn';
+
+  @override
+  String get libraryInfoTitle => 'Tiêu đề';
+
+  @override
+  String get libraryInfoArtist => 'Nghệ sĩ';
+
+  @override
+  String get libraryInfoAlbum => 'Album';
+
+  @override
+  String get libraryInfoAlbumArtist => 'Nghệ sĩ album';
+
+  @override
+  String get libraryInfoGenre => 'Thể loại';
+
+  @override
+  String get libraryInfoComposer => 'Nhà soạn nhạc';
+
+  @override
+  String get libraryInfoReleased => 'Ngày phát hành';
+
+  @override
+  String get libraryInfoTrackNo => 'Số bài';
+
+  @override
+  String get libraryInfoDisc => 'Đĩa';
+
+  @override
+  String get libraryInfoLanguage => 'Ngôn ngữ';
+
+  @override
+  String get libraryInfoComment => 'Bình luận';
+
+  @override
+  String get libraryInfoDescription => 'Mô tả';
+
+  @override
+  String get libraryInfoDuration => 'Thời lượng';
+
+  @override
+  String get libraryInfoCodec => 'Codec';
+
+  @override
+  String get libraryInfoChannels => 'Kênh';
+
+  @override
+  String get libraryInfoReplayGain => 'ReplayGain';
+
+  @override
+  String get libraryInfoMusicFolder => 'Thư mục nhạc';
+
+  @override
+  String get libraryInfoModified => 'Ngày sửa tệp';
+
+  @override
+  String get libraryInfoAdded => 'Ngày thêm';
+
+  @override
+  String get libraryInfoFavorite => 'Yêu thích';
+
+  @override
+  String get libraryInfoRating => 'Đánh giá';
+
+  @override
+  String get libraryInfoSkips => 'Bỏ qua';
+
+  @override
+  String get libraryInfoFirstPlayed => 'Nghe lần đầu';
+
+  @override
+  String get libraryInfoLastPlayed => 'Nghe gần nhất';
+
+  @override
+  String get libraryInfoNeverPlayed => 'Chưa nghe lần nào';
+
+  @override
+  String get libraryInfoFavoriteOn => 'Đã thích';
+
+  @override
+  String get libraryInfoFavoriteOff => 'Chưa thích';
+
+  @override
+  String get libraryInfoUnknownArtist => 'Không rõ nghệ sĩ';
+
+  @override
+  String get libraryInfoAutoDetected => 'tự nhận';
+
+  @override
+  String get libraryInfoThisYear => 'năm nay';
+
+  @override
+  String get libraryInfoMono => 'Mono';
+
+  @override
+  String get libraryInfoStereo => 'Stereo';
+
+  @override
+  String libraryInfoYearsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count năm trước',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryInfoChannelCount(int count) {
+    return '$count kênh';
+  }
+
+  @override
+  String libraryInfoTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lần',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryInfoBitrateAverage(int kbps) {
+    return '$kbps kbps (trung bình)';
+  }
+
+  @override
+  String libraryInfoDateWithAge(String date, String age) {
+    return '$date · $age';
+  }
+
+  @override
+  String libraryInfoShowEmpty(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hiện $count trường trống',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get libraryInfoHideEmpty => 'Ẩn trường trống';
+
+  @override
+  String get libraryInfoNoEmpty => 'Không có trường trống';
+
+  @override
+  String libraryInfoEmptyBadge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trường trống',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get libraryInfoMissingTitle => 'Không tìm thấy tệp';
+
+  @override
+  String libraryInfoMissingBody(String date) {
+    return 'Mất từ $date. Bài vẫn trong thư viện với thông tin lần đọc cuối; sẽ có lại khi tệp quay về và quét lại.';
+  }
+
+  @override
+  String get libraryInfoMissingBodyNoDate =>
+      'Bài vẫn trong thư viện với thông tin lần đọc cuối; sẽ có lại khi tệp quay về và quét lại.';
+
+  @override
+  String get libraryInfoScanErrorTitle => 'Không đọc được thẻ';
+
+  @override
+  String get libraryInfoScanErrorBody =>
+      'Tệp hỏng hoặc có định dạng Kanaru chưa đọc được thẻ.';
+
+  @override
+  String get libraryInfoTaglessTitle => 'Tệp này thiếu hầu hết thẻ';
+
+  @override
+  String get libraryInfoTaglessBody =>
+      'Không có nghệ sĩ, album, thể loại, năm. Tiêu đề lấy từ tên tệp. Sửa thẻ ở menu bài › Sửa thông tin bài.';
+
+  @override
+  String libraryInfoCopied(String value) {
+    return 'Đã chép: $value';
+  }
+
+  @override
+  String libraryInfoGoArtist(String name) {
+    return 'Mở trang nghệ sĩ $name';
+  }
+
+  @override
+  String libraryInfoGoAlbum(String name) {
+    return 'Mở trang album $name';
+  }
+
+  @override
+  String libraryInfoGoGenre(String name) {
+    return 'Mở trang thể loại $name';
+  }
+
+  @override
+  String libraryInfoGoLanguage(String name) {
+    return 'Mở trang ngôn ngữ $name';
+  }
+
+  @override
+  String get libraryInfoMore => 'Tùy chọn khác';
+
+  @override
+  String get libraryInfoClose => 'Đóng';
 
   @override
   String get libraryPanelLabel => 'Các bài đã chọn';

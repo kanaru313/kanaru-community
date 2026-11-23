@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/database/app_database.dart';
 import 'package:kanaru/src/database/state/database_providers.dart';
+import 'package:kanaru/src/extension/state/extension_providers.dart';
+import 'package:kanaru/src/extension/state/extension_registry.dart';
 import 'package:kanaru/src/library/domain/music_folder.dart';
 import 'package:kanaru/src/library/domain/scan_status.dart';
 import 'package:kanaru/src/library/state/browse/song_list_providers.dart';
@@ -189,6 +191,7 @@ Future<LibraryHarness> pumpLibrary(
   final container = ProviderContainer(
     overrides: [
       appDatabaseProvider.overrideWithValue(db),
+      extensionRegistryProvider.overrideWithValue(ExtensionRegistry()),
       settingsStoreProvider.overrideWithValue(
         settings ?? MemorySettingsStore(),
       ),

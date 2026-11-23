@@ -8,15 +8,7 @@ import '../../domain/browse/menu_targets.dart';
 import '../../domain/info/release_date.dart';
 import '../../domain/info/song_details.dart';
 import '../../domain/tags/extra_tags.dart';
-
-final _cueSuffix = RegExp(r'#\d+$');
-
-/// Folder key of `t.locator`: everything before the last `/`, `''` when
-/// there is none.
-const _dirSql =
-    "CASE WHEN instr(t.locator, '/') = 0 THEN '' ELSE "
-    "substr(rtrim(t.locator, replace(t.locator, '/', '')), 1, "
-    "length(rtrim(t.locator, replace(t.locator, '/', ''))) - 1) END";
+import '../track_path_sql.dart';
 
 /// One row per track; the artists come from a second query.
 ///
@@ -27,7 +19,7 @@ const _dirSql =
 const _detailsSql =
     'SELECT t.*, td.comment, td.extra_tags, td.lrc_locator, '
     's.uid AS source_uid, s.name AS source_name, m.root AS mount_root, '
-    '$_dirSql AS dir, ps.play_count, ps.skip_count, ps.first_played_at, '
+    '$trackDirSql AS dir, ps.play_count, ps.skip_count, ps.first_played_at, '
     'ps.last_played_at FROM tracks t '
     'JOIN sources s ON s.id = t.source_id '
     'LEFT JOIN source_mounts m ON m.source_id = t.source_id '
@@ -78,9 +70,7 @@ Stream<SongDetails?> watchSongDetails(AppDatabase db, TrackId id) {
 SongDetails _build(QueryRow r, List<ArtistRef> artists) {
   final locator = r.read<String>('locator');
   final root = r.readNullable<String>('mount_root');
-  final base = root == null
-      ? null
-      : (root.endsWith('/') ? root.substring(0, root.length - 1) : root);
+  final base = trimMountRoot(root);
   final dir = r.read<String>('dir');
   final sourceName = r.read<String>('source_name');
   final extra = decodeExtraTags(r.readNullable<String>('extra_tags'));
@@ -125,7 +115,7 @@ SongDetails _build(QueryRow r, List<ArtistRef> artists) {
     sampleRate: r.readNullable<int>('sample_rate'),
     bitDepth: r.readNullable<int>('bit_depth'),
     channels: r.readNullable<int>('channels'),
-    path: base == null ? null : '$base/${locator.replaceFirst(_cueSuffix, '')}',
+    path: trackFilePath(root, locator),
     // The page only links to the folder; it never shows a song count.
     folder: FolderRef(
       sourceId: r.read<int>('source_id'),

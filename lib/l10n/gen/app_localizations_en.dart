@@ -1558,13 +1558,243 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryInfoSize => 'Size';
 
   @override
-  String get libraryInfoPath => 'File';
+  String get libraryInfoPath => 'Path';
 
   @override
   String get libraryInfoPlayCount => 'Plays';
 
   @override
   String get libraryInfoUnknown => 'Unknown';
+
+  @override
+  String get libraryInfoGroupTags => 'Tags';
+
+  @override
+  String get libraryInfoGroupAudio => 'Audio';
+
+  @override
+  String get libraryInfoGroupFile => 'File';
+
+  @override
+  String get libraryInfoGroupYou => 'Yours';
+
+  @override
+  String get libraryInfoTitle => 'Title';
+
+  @override
+  String get libraryInfoArtist => 'Artist';
+
+  @override
+  String get libraryInfoAlbum => 'Album';
+
+  @override
+  String get libraryInfoAlbumArtist => 'Album artist';
+
+  @override
+  String get libraryInfoGenre => 'Genre';
+
+  @override
+  String get libraryInfoComposer => 'Composer';
+
+  @override
+  String get libraryInfoReleased => 'Release date';
+
+  @override
+  String get libraryInfoTrackNo => 'Track';
+
+  @override
+  String get libraryInfoDisc => 'Disc';
+
+  @override
+  String get libraryInfoLanguage => 'Language';
+
+  @override
+  String get libraryInfoComment => 'Comment';
+
+  @override
+  String get libraryInfoDescription => 'Description';
+
+  @override
+  String get libraryInfoDuration => 'Duration';
+
+  @override
+  String get libraryInfoCodec => 'Codec';
+
+  @override
+  String get libraryInfoChannels => 'Channels';
+
+  @override
+  String get libraryInfoReplayGain => 'ReplayGain';
+
+  @override
+  String get libraryInfoMusicFolder => 'Music folder';
+
+  @override
+  String get libraryInfoModified => 'File modified';
+
+  @override
+  String get libraryInfoAdded => 'Added';
+
+  @override
+  String get libraryInfoFavorite => 'Favorite';
+
+  @override
+  String get libraryInfoRating => 'Rating';
+
+  @override
+  String get libraryInfoSkips => 'Skipped';
+
+  @override
+  String get libraryInfoFirstPlayed => 'First played';
+
+  @override
+  String get libraryInfoLastPlayed => 'Last played';
+
+  @override
+  String get libraryInfoNeverPlayed => 'Never played';
+
+  @override
+  String get libraryInfoFavoriteOn => 'Favorite';
+
+  @override
+  String get libraryInfoFavoriteOff => 'Not a favorite';
+
+  @override
+  String get libraryInfoUnknownArtist => 'Unknown artist';
+
+  @override
+  String get libraryInfoAutoDetected => 'detected';
+
+  @override
+  String get libraryInfoThisYear => 'this year';
+
+  @override
+  String get libraryInfoMono => 'Mono';
+
+  @override
+  String get libraryInfoStereo => 'Stereo';
+
+  @override
+  String libraryInfoYearsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count years ago',
+      one: '1 year ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryInfoChannelCount(int count) {
+    return '$count channels';
+  }
+
+  @override
+  String libraryInfoTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '1 time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String libraryInfoBitrateAverage(int kbps) {
+    return '$kbps kbps (average)';
+  }
+
+  @override
+  String libraryInfoDateWithAge(String date, String age) {
+    return '$date · $age';
+  }
+
+  @override
+  String libraryInfoShowEmpty(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Show $count empty fields',
+      one: 'Show 1 empty field',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get libraryInfoHideEmpty => 'Hide empty fields';
+
+  @override
+  String get libraryInfoNoEmpty => 'No empty fields';
+
+  @override
+  String libraryInfoEmptyBadge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count empty fields',
+      one: '1 empty field',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get libraryInfoMissingTitle => 'File not found';
+
+  @override
+  String libraryInfoMissingBody(String date) {
+    return 'Missing since $date. The song stays in the library with what was read last; it returns when the file is back and scanned again.';
+  }
+
+  @override
+  String get libraryInfoMissingBodyNoDate =>
+      'The song stays in the library with what was read last; it returns when the file is back and scanned again.';
+
+  @override
+  String get libraryInfoScanErrorTitle => 'Tags could not be read';
+
+  @override
+  String get libraryInfoScanErrorBody =>
+      'The file is damaged or in a format Kanaru cannot read tags from.';
+
+  @override
+  String get libraryInfoTaglessTitle => 'This file has almost no tags';
+
+  @override
+  String get libraryInfoTaglessBody =>
+      'No artist, album, genre or year. The title comes from the file name. Edit tags in the song menu › Edit song info.';
+
+  @override
+  String libraryInfoCopied(String value) {
+    return 'Copied: $value';
+  }
+
+  @override
+  String libraryInfoGoArtist(String name) {
+    return 'Open artist page $name';
+  }
+
+  @override
+  String libraryInfoGoAlbum(String name) {
+    return 'Open album page $name';
+  }
+
+  @override
+  String libraryInfoGoGenre(String name) {
+    return 'Open genre page $name';
+  }
+
+  @override
+  String libraryInfoGoLanguage(String name) {
+    return 'Open language page $name';
+  }
+
+  @override
+  String get libraryInfoMore => 'More options';
+
+  @override
+  String get libraryInfoClose => 'Close';
 
   @override
   String get libraryPanelLabel => 'Selected songs';

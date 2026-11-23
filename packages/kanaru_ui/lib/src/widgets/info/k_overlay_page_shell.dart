@@ -86,37 +86,44 @@ class _KOverlayPageShellState extends State<KOverlayPageShell> {
           namesRoute: true,
           explicitChildNodes: true,
           label: widget.title,
-          child: FocusTraversalGroup(
-            child: LayoutBuilder(
-              builder: (context, c) {
-                final page = c.maxWidth < KBreakpoints.compactSheet;
-                return KOverlayPageScope(
-                  kind: page ? KOverlayKind.page : KOverlayKind.box,
-                  child: page
-                      ? KOverlayPageFrame(
-                          headerNode: _pageHeader,
-                          title: widget.title,
-                          actions: widget.actions,
-                          backTooltip: widget.backTooltip,
-                          onClose: _close,
-                          body: body,
-                        )
-                      : KOverlayBoxFrame(
-                          headerNode: _boxHeader,
-                          title: widget.title,
-                          header: widget.boxHeader?.call(context),
-                          actions: widget.actions,
-                          closeTooltip: widget.closeTooltip,
-                          onClose: _close,
-                          maxWidth: widget.maxWidth,
-                          // 85 % of the window; under 760 high, all but 48.
-                          maxHeight: c.maxHeight < 760
-                              ? c.maxHeight - 48
-                              : c.maxHeight * 0.85,
-                          body: body,
-                        ),
-                );
-              },
+          // One messenger and a see-through Scaffold for the whole route,
+          // for both kinds: snack bars draw above the page or the box.
+          child: ScaffoldMessenger(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: FocusTraversalGroup(
+                child: LayoutBuilder(
+                  builder: (context, c) {
+                    final page = c.maxWidth < KBreakpoints.compactSheet;
+                    return KOverlayPageScope(
+                      kind: page ? KOverlayKind.page : KOverlayKind.box,
+                      child: page
+                          ? KOverlayPageFrame(
+                              headerNode: _pageHeader,
+                              title: widget.title,
+                              actions: widget.actions,
+                              backTooltip: widget.backTooltip,
+                              onClose: _close,
+                              body: body,
+                            )
+                          : KOverlayBoxFrame(
+                              headerNode: _boxHeader,
+                              title: widget.title,
+                              header: widget.boxHeader?.call(context),
+                              actions: widget.actions,
+                              closeTooltip: widget.closeTooltip,
+                              onClose: _close,
+                              maxWidth: widget.maxWidth,
+                              // 85 % of the window; under 760 high, all but 48.
+                              maxHeight: c.maxHeight < 760
+                                  ? c.maxHeight - 48
+                                  : c.maxHeight * 0.85,
+                              body: body,
+                            ),
+                    );
+                  },
+                ),
+              ),
             ),
           ),
         ),

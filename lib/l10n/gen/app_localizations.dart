@@ -2471,7 +2471,7 @@ abstract class AppLocalizations {
   /// No description provided for @libraryInfoPath.
   ///
   /// In en, this message translates to:
-  /// **'File'**
+  /// **'Path'**
   String get libraryInfoPath;
 
   /// No description provided for @libraryInfoPlayCount.
@@ -2485,6 +2485,360 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown'**
   String get libraryInfoUnknown;
+
+  /// No description provided for @libraryInfoGroupTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get libraryInfoGroupTags;
+
+  /// No description provided for @libraryInfoGroupAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get libraryInfoGroupAudio;
+
+  /// No description provided for @libraryInfoGroupFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get libraryInfoGroupFile;
+
+  /// No description provided for @libraryInfoGroupYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Yours'**
+  String get libraryInfoGroupYou;
+
+  /// No description provided for @libraryInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get libraryInfoTitle;
+
+  /// No description provided for @libraryInfoArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get libraryInfoArtist;
+
+  /// No description provided for @libraryInfoAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get libraryInfoAlbum;
+
+  /// No description provided for @libraryInfoAlbumArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Album artist'**
+  String get libraryInfoAlbumArtist;
+
+  /// No description provided for @libraryInfoGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre'**
+  String get libraryInfoGenre;
+
+  /// No description provided for @libraryInfoComposer.
+  ///
+  /// In en, this message translates to:
+  /// **'Composer'**
+  String get libraryInfoComposer;
+
+  /// No description provided for @libraryInfoReleased.
+  ///
+  /// In en, this message translates to:
+  /// **'Release date'**
+  String get libraryInfoReleased;
+
+  /// No description provided for @libraryInfoTrackNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Track'**
+  String get libraryInfoTrackNo;
+
+  /// No description provided for @libraryInfoDisc.
+  ///
+  /// In en, this message translates to:
+  /// **'Disc'**
+  String get libraryInfoDisc;
+
+  /// No description provided for @libraryInfoLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get libraryInfoLanguage;
+
+  /// No description provided for @libraryInfoComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get libraryInfoComment;
+
+  /// No description provided for @libraryInfoDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get libraryInfoDescription;
+
+  /// No description provided for @libraryInfoDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get libraryInfoDuration;
+
+  /// No description provided for @libraryInfoCodec.
+  ///
+  /// In en, this message translates to:
+  /// **'Codec'**
+  String get libraryInfoCodec;
+
+  /// No description provided for @libraryInfoChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'Channels'**
+  String get libraryInfoChannels;
+
+  /// No description provided for @libraryInfoReplayGain.
+  ///
+  /// In en, this message translates to:
+  /// **'ReplayGain'**
+  String get libraryInfoReplayGain;
+
+  /// No description provided for @libraryInfoMusicFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Music folder'**
+  String get libraryInfoMusicFolder;
+
+  /// No description provided for @libraryInfoModified.
+  ///
+  /// In en, this message translates to:
+  /// **'File modified'**
+  String get libraryInfoModified;
+
+  /// No description provided for @libraryInfoAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get libraryInfoAdded;
+
+  /// No description provided for @libraryInfoFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get libraryInfoFavorite;
+
+  /// No description provided for @libraryInfoRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get libraryInfoRating;
+
+  /// No description provided for @libraryInfoSkips.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get libraryInfoSkips;
+
+  /// No description provided for @libraryInfoFirstPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'First played'**
+  String get libraryInfoFirstPlayed;
+
+  /// No description provided for @libraryInfoLastPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last played'**
+  String get libraryInfoLastPlayed;
+
+  /// No description provided for @libraryInfoNeverPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Never played'**
+  String get libraryInfoNeverPlayed;
+
+  /// No description provided for @libraryInfoFavoriteOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get libraryInfoFavoriteOn;
+
+  /// No description provided for @libraryInfoFavoriteOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a favorite'**
+  String get libraryInfoFavoriteOff;
+
+  /// No description provided for @libraryInfoUnknownArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown artist'**
+  String get libraryInfoUnknownArtist;
+
+  /// No description provided for @libraryInfoAutoDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'detected'**
+  String get libraryInfoAutoDetected;
+
+  /// No description provided for @libraryInfoThisYear.
+  ///
+  /// In en, this message translates to:
+  /// **'this year'**
+  String get libraryInfoThisYear;
+
+  /// No description provided for @libraryInfoMono.
+  ///
+  /// In en, this message translates to:
+  /// **'Mono'**
+  String get libraryInfoMono;
+
+  /// No description provided for @libraryInfoStereo.
+  ///
+  /// In en, this message translates to:
+  /// **'Stereo'**
+  String get libraryInfoStereo;
+
+  /// No description provided for @libraryInfoYearsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 year ago} other{{count} years ago}}'**
+  String libraryInfoYearsAgo(int count);
+
+  /// No description provided for @libraryInfoChannelCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} channels'**
+  String libraryInfoChannelCount(int count);
+
+  /// No description provided for @libraryInfoTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 time} other{{count} times}}'**
+  String libraryInfoTimes(int count);
+
+  /// No description provided for @libraryInfoBitrateAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'{kbps} kbps (average)'**
+  String libraryInfoBitrateAverage(int kbps);
+
+  /// No description provided for @libraryInfoDateWithAge.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} · {age}'**
+  String libraryInfoDateWithAge(String date, String age);
+
+  /// No description provided for @libraryInfoShowEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Show 1 empty field} other{Show {count} empty fields}}'**
+  String libraryInfoShowEmpty(int count);
+
+  /// No description provided for @libraryInfoHideEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide empty fields'**
+  String get libraryInfoHideEmpty;
+
+  /// No description provided for @libraryInfoNoEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No empty fields'**
+  String get libraryInfoNoEmpty;
+
+  /// No description provided for @libraryInfoEmptyBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 empty field} other{{count} empty fields}}'**
+  String libraryInfoEmptyBadge(int count);
+
+  /// No description provided for @libraryInfoMissingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'File not found'**
+  String get libraryInfoMissingTitle;
+
+  /// No description provided for @libraryInfoMissingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing since {date}. The song stays in the library with what was read last; it returns when the file is back and scanned again.'**
+  String libraryInfoMissingBody(String date);
+
+  /// No description provided for @libraryInfoMissingBodyNoDate.
+  ///
+  /// In en, this message translates to:
+  /// **'The song stays in the library with what was read last; it returns when the file is back and scanned again.'**
+  String get libraryInfoMissingBodyNoDate;
+
+  /// No description provided for @libraryInfoScanErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags could not be read'**
+  String get libraryInfoScanErrorTitle;
+
+  /// No description provided for @libraryInfoScanErrorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is damaged or in a format Kanaru cannot read tags from.'**
+  String get libraryInfoScanErrorBody;
+
+  /// No description provided for @libraryInfoTaglessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This file has almost no tags'**
+  String get libraryInfoTaglessTitle;
+
+  /// No description provided for @libraryInfoTaglessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No artist, album, genre or year. The title comes from the file name. Edit tags in the song menu › Edit song info.'**
+  String get libraryInfoTaglessBody;
+
+  /// No description provided for @libraryInfoCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied: {value}'**
+  String libraryInfoCopied(String value);
+
+  /// No description provided for @libraryInfoGoArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Open artist page {name}'**
+  String libraryInfoGoArtist(String name);
+
+  /// No description provided for @libraryInfoGoAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Open album page {name}'**
+  String libraryInfoGoAlbum(String name);
+
+  /// No description provided for @libraryInfoGoGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'Open genre page {name}'**
+  String libraryInfoGoGenre(String name);
+
+  /// No description provided for @libraryInfoGoLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open language page {name}'**
+  String libraryInfoGoLanguage(String name);
+
+  /// No description provided for @libraryInfoMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get libraryInfoMore;
+
+  /// No description provided for @libraryInfoClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get libraryInfoClose;
 
   /// No description provided for @libraryPanelLabel.
   ///

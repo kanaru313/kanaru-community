@@ -506,9 +506,162 @@
     }
   },
   "libraryInfoSize": "Kích thước",
-  "libraryInfoPath": "Tệp",
+  "libraryInfoPath": "Đường dẫn",
   "libraryInfoPlayCount": "Số lần nghe",
   "libraryInfoUnknown": "Không rõ",
+  "libraryInfoGroupTags": "Thẻ",
+  "libraryInfoGroupAudio": "Âm thanh",
+  "libraryInfoGroupFile": "Tệp",
+  "libraryInfoGroupYou": "Của bạn",
+  "libraryInfoTitle": "Tiêu đề",
+  "libraryInfoArtist": "Nghệ sĩ",
+  "libraryInfoAlbum": "Album",
+  "libraryInfoAlbumArtist": "Nghệ sĩ album",
+  "libraryInfoGenre": "Thể loại",
+  "libraryInfoComposer": "Nhà soạn nhạc",
+  "libraryInfoReleased": "Ngày phát hành",
+  "libraryInfoTrackNo": "Số bài",
+  "libraryInfoDisc": "Đĩa",
+  "libraryInfoLanguage": "Ngôn ngữ",
+  "libraryInfoComment": "Bình luận",
+  "libraryInfoDescription": "Mô tả",
+  "libraryInfoDuration": "Thời lượng",
+  "libraryInfoCodec": "Codec",
+  "libraryInfoChannels": "Kênh",
+  "libraryInfoReplayGain": "ReplayGain",
+  "libraryInfoMusicFolder": "Thư mục nhạc",
+  "libraryInfoModified": "Ngày sửa tệp",
+  "libraryInfoAdded": "Ngày thêm",
+  "libraryInfoFavorite": "Yêu thích",
+  "libraryInfoRating": "Đánh giá",
+  "libraryInfoSkips": "Bỏ qua",
+  "libraryInfoFirstPlayed": "Nghe lần đầu",
+  "libraryInfoLastPlayed": "Nghe gần nhất",
+  "libraryInfoNeverPlayed": "Chưa nghe lần nào",
+  "libraryInfoFavoriteOn": "Đã thích",
+  "libraryInfoFavoriteOff": "Chưa thích",
+  "libraryInfoUnknownArtist": "Không rõ nghệ sĩ",
+  "libraryInfoAutoDetected": "tự nhận",
+  "libraryInfoThisYear": "năm nay",
+  "libraryInfoMono": "Mono",
+  "libraryInfoStereo": "Stereo",
+  "libraryInfoYearsAgo": "{count, plural, other{{count} năm trước}}",
+  "@libraryInfoYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoChannelCount": "{count} kênh",
+  "@libraryInfoChannelCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoTimes": "{count, plural, other{{count} lần}}",
+  "@libraryInfoTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoBitrateAverage": "{kbps} kbps (trung bình)",
+  "@libraryInfoBitrateAverage": {
+    "placeholders": {
+      "kbps": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoDateWithAge": "{date} · {age}",
+  "@libraryInfoDateWithAge": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoShowEmpty": "{count, plural, other{Hiện {count} trường trống}}",
+  "@libraryInfoShowEmpty": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoHideEmpty": "Ẩn trường trống",
+  "libraryInfoNoEmpty": "Không có trường trống",
+  "libraryInfoEmptyBadge": "{count, plural, other{{count} trường trống}}",
+  "@libraryInfoEmptyBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoMissingTitle": "Không tìm thấy tệp",
+  "libraryInfoMissingBody": "Mất từ {date}. Bài vẫn trong thư viện với thông tin lần đọc cuối; sẽ có lại khi tệp quay về và quét lại.",
+  "@libraryInfoMissingBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoMissingBodyNoDate": "Bài vẫn trong thư viện với thông tin lần đọc cuối; sẽ có lại khi tệp quay về và quét lại.",
+  "libraryInfoScanErrorTitle": "Không đọc được thẻ",
+  "libraryInfoScanErrorBody": "Tệp hỏng hoặc có định dạng Kanaru chưa đọc được thẻ.",
+  "libraryInfoTaglessTitle": "Tệp này thiếu hầu hết thẻ",
+  "libraryInfoTaglessBody": "Không có nghệ sĩ, album, thể loại, năm. Tiêu đề lấy từ tên tệp. Sửa thẻ ở menu bài › Sửa thông tin bài.",
+  "libraryInfoCopied": "Đã chép: {value}",
+  "@libraryInfoCopied": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoGoArtist": "Mở trang nghệ sĩ {name}",
+  "@libraryInfoGoArtist": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoGoAlbum": "Mở trang album {name}",
+  "@libraryInfoGoAlbum": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoGoGenre": "Mở trang thể loại {name}",
+  "@libraryInfoGoGenre": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoGoLanguage": "Mở trang ngôn ngữ {name}",
+  "@libraryInfoGoLanguage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoMore": "Tùy chọn khác",
+  "libraryInfoClose": "Đóng",
   "libraryPanelLabel": "Các bài đã chọn",
   "libraryPanelClear": "Bỏ chọn tất cả",
   "libraryPanelPlayAll": "Phát tất cả bài đã chọn",

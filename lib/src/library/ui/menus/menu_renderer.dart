@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart' show BorderRadius;
 
@@ -10,11 +11,17 @@ import 'menu_model.dart';
 /// Turns a [MenuSpec] into the pages `showKLayeredMenu` shows: one renderer
 /// for every kind of item and both shells. Rows run through [runner] once the
 /// menu has closed.
+///
+/// [onHeaderTap] makes the header a button (the `›` of a song menu, Alt+Enter
+/// too) that runs it and keeps the menu open. [favorite] makes the heart row
+/// a live toggle that follows it and keeps the menu open when pressed.
 KMenuPage renderMenu(
   MenuSpec spec,
   AppLocalizations l10n,
-  MenuActionRunner runner,
-) {
+  MenuActionRunner runner, {
+  void Function(bool viaKeyboard)? onHeaderTap,
+  ValueListenable<bool>? favorite,
+}) {
   final pages = <String, KMenuPage>{};
   KMenuPage? pageOf(String? key) {
     if (key == null) return null;
@@ -55,8 +62,9 @@ KMenuPage renderMenu(
         _ => null,
       },
     ),
-    headerOpens: pageOf(header.infoPage),
-    groups: _groups(spec.groups, pageOf, l10n, runner),
+    onHeaderTap: onHeaderTap,
+    headerHint: onHeaderTap == null ? null : l10n.libraryMenuSongInfo,
+    groups: _groups(spec.groups, pageOf, l10n, runner, favorite: favorite),
     footer: spec.queueIds.isEmpty
         ? const []
         : [
@@ -90,19 +98,37 @@ List<List<KMenuRow>> _groups(
   List<List<MenuItemSpec>> groups,
   KMenuPage? Function(String? key) pageOf,
   AppLocalizations l10n,
-  MenuActionRunner runner,
-) => [
+  MenuActionRunner runner, {
+  ValueListenable<bool>? favorite,
+}) => [
   for (final group in groups)
-    [for (final item in group) _row(item, pageOf, l10n, runner)],
+    [
+      for (final item in group)
+        _row(item, pageOf, l10n, runner, favorite: favorite),
+    ],
 ];
 
 KMenuRow _row(
   MenuItemSpec item,
   KMenuPage? Function(String? key) pageOf,
   AppLocalizations l10n,
-  MenuActionRunner runner,
-) {
+  MenuActionRunner runner, {
+  ValueListenable<bool>? favorite,
+}) {
   final action = item.action;
+  if (favorite != null &&
+      item.id == MenuItemId.favorite &&
+      action is FavoriteAction) {
+    return KMenuRow(
+      title: l10n.libraryFavoriteAdd,
+      onTitle: l10n.libraryFavoriteRemove,
+      icon: KIcons.heart,
+      onIcon: KIcons.heartFilled,
+      on: favorite,
+      onTap: () =>
+          runner.run(MenuAction.favorite(action.ids, on: !favorite.value)),
+    );
+  }
   // Over-the-menu actions are header-only until KLayeredMenu rows support
   // them; on a row the menu would close first, the opposite of the intent.
   assert(

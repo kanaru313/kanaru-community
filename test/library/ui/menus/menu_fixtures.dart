@@ -82,16 +82,7 @@ TrackLinks trackLinks({
   artists: [for (final a in artists) artistRef(a)],
   albumArtists: [for (final a in albumArtists) artistRef(a)],
   folder: folderRef(folder, songs: 5),
-);
-
-const songFile = SongInfo(
-  format: 'FLAC',
-  bitrate: 900,
-  sampleRate: 44100,
-  bitDepth: 16,
-  sizeBytes: 30000000,
-  path: '/home/u/Music/Blue/1.flac',
-  playCount: 4,
+  filePath: '/home/u/Music/Blue/1.flac',
 );
 
 List<TrackId> trackIds(int count) => [

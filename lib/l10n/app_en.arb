@@ -983,9 +983,162 @@
     }
   },
   "libraryInfoSize": "Size",
-  "libraryInfoPath": "File",
+  "libraryInfoPath": "Path",
   "libraryInfoPlayCount": "Plays",
   "libraryInfoUnknown": "Unknown",
+  "libraryInfoGroupTags": "Tags",
+  "libraryInfoGroupAudio": "Audio",
+  "libraryInfoGroupFile": "File",
+  "libraryInfoGroupYou": "Yours",
+  "libraryInfoTitle": "Title",
+  "libraryInfoArtist": "Artist",
+  "libraryInfoAlbum": "Album",
+  "libraryInfoAlbumArtist": "Album artist",
+  "libraryInfoGenre": "Genre",
+  "libraryInfoComposer": "Composer",
+  "libraryInfoReleased": "Release date",
+  "libraryInfoTrackNo": "Track",
+  "libraryInfoDisc": "Disc",
+  "libraryInfoLanguage": "Language",
+  "libraryInfoComment": "Comment",
+  "libraryInfoDescription": "Description",
+  "libraryInfoDuration": "Duration",
+  "libraryInfoCodec": "Codec",
+  "libraryInfoChannels": "Channels",
+  "libraryInfoReplayGain": "ReplayGain",
+  "libraryInfoMusicFolder": "Music folder",
+  "libraryInfoModified": "File modified",
+  "libraryInfoAdded": "Added",
+  "libraryInfoFavorite": "Favorite",
+  "libraryInfoRating": "Rating",
+  "libraryInfoSkips": "Skipped",
+  "libraryInfoFirstPlayed": "First played",
+  "libraryInfoLastPlayed": "Last played",
+  "libraryInfoNeverPlayed": "Never played",
+  "libraryInfoFavoriteOn": "Favorite",
+  "libraryInfoFavoriteOff": "Not a favorite",
+  "libraryInfoUnknownArtist": "Unknown artist",
+  "libraryInfoAutoDetected": "detected",
+  "libraryInfoThisYear": "this year",
+  "libraryInfoMono": "Mono",
+  "libraryInfoStereo": "Stereo",
+  "libraryInfoYearsAgo": "{count, plural, =1{1 year ago} other{{count} years ago}}",
+  "@libraryInfoYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoChannelCount": "{count} channels",
+  "@libraryInfoChannelCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoTimes": "{count, plural, =1{1 time} other{{count} times}}",
+  "@libraryInfoTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoBitrateAverage": "{kbps} kbps (average)",
+  "@libraryInfoBitrateAverage": {
+    "placeholders": {
+      "kbps": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoDateWithAge": "{date} · {age}",
+  "@libraryInfoDateWithAge": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoShowEmpty": "{count, plural, =1{Show 1 empty field} other{Show {count} empty fields}}",
+  "@libraryInfoShowEmpty": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoHideEmpty": "Hide empty fields",
+  "libraryInfoNoEmpty": "No empty fields",
+  "libraryInfoEmptyBadge": "{count, plural, =1{1 empty field} other{{count} empty fields}}",
+  "@libraryInfoEmptyBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryInfoMissingTitle": "File not found",
+  "libraryInfoMissingBody": "Missing since {date}. The song stays in the library with what was read last; it returns when the file is back and scanned again.",
+  "@libraryInfoMissingBody": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoMissingBodyNoDate": "The song stays in the library with what was read last; it returns when the file is back and scanned again.",
+  "libraryInfoScanErrorTitle": "Tags could not be read",
+  "libraryInfoScanErrorBody": "The file is damaged or in a format Kanaru cannot read tags from.",
+  "libraryInfoTaglessTitle": "This file has almost no tags",
+  "libraryInfoTaglessBody": "No artist, album, genre or year. The title comes from the file name. Edit tags in the song menu › Edit song info.",
+  "libraryInfoCopied": "Copied: {value}",
+  "@libraryInfoCopied": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoGoArtist": "Open artist page {name}",
+  "@libraryInfoGoArtist": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoGoAlbum": "Open album page {name}",
+  "@libraryInfoGoAlbum": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoGoGenre": "Open genre page {name}",
+  "@libraryInfoGoGenre": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoGoLanguage": "Open language page {name}",
+  "@libraryInfoGoLanguage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryInfoMore": "More options",
+  "libraryInfoClose": "Close",
   "libraryPanelLabel": "Selected songs",
   "libraryPanelClear": "Clear selection",
   "libraryPanelPlayAll": "Play all selected",

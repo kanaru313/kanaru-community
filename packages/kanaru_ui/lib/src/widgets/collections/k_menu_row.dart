@@ -117,8 +117,8 @@ class KMenuButton {
 /// One page of a layered menu: optional [header] (cover, name), groups of
 /// rows split by lines (empty groups are skipped) and a [footer] pinned below
 /// the scrolling groups. A sub-page shows `[←] title` instead of the header.
-/// A group may have a heading ([groupTitles]); the header may open a sub-page
-/// ([headerOpens]).
+/// A group may have a heading ([groupTitles]); the header may be a button
+/// ([onHeaderTap]).
 class KMenuPage {
   const KMenuPage({
     this.title,
@@ -127,13 +127,9 @@ class KMenuPage {
     this.footer = const [],
     this.note,
     this.groupTitles = const [],
-    this.headerOpens,
     this.onHeaderTap,
     this.headerHint,
-  }) : assert(
-         onHeaderTap == null || headerOpens == null,
-         'give onHeaderTap or headerOpens, not both',
-       );
+  });
 
   final String? title;
   final Widget? header;
@@ -143,13 +139,9 @@ class KMenuPage {
   /// Heading above each group by index; missing or null = none.
   final List<String?> groupTitles;
 
-  /// Makes the [header] a button (with a `›`) that shows this page.
-  final KMenuPage? headerOpens;
-
   /// Makes the [header] a button (with a `›`) that runs this and keeps the
   /// menu open; its argument is true when the menu was driven by the keyboard
-  /// (Alt+Enter on the menu always passes true). Not together with
-  /// [headerOpens].
+  /// (Alt+Enter on the menu always passes true).
   final void Function(bool viaKeyboard)? onHeaderTap;
 
   /// Spoken description of what the header button does (no visible text).
