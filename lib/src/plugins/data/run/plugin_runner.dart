@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:logging/logging.dart';
 
 import '../../domain/net/cancel_token.dart';
+import '../../domain/net/plugin_fetch_rules.dart';
 import '../../domain/run/plugin_engine.dart';
 import '../../domain/run/run_failure_mapping.dart';
 import '../../domain/run/run_outcome.dart';
@@ -22,10 +23,6 @@ final _log = Logger('plugin_run');
 
 /// Longest wall time of one run, whatever its request asks for.
 const maxRunWall = Duration(seconds: 90);
-
-/// The fixed pause between the request starts of one plugin; a run's wall
-/// time grows by nine of them (the sends after the first of a call's ten).
-const requestSpacing = Duration(milliseconds: 100);
 
 /// Time the runtime gets after the run wall before the runner gives up on it.
 const outerDeadlineGrace = Duration(seconds: 30);
@@ -49,7 +46,7 @@ class PluginRunner {
     required this._files,
     required this._config,
     RunAdmission? admission,
-    this.spacing = requestSpacing,
+    this.spacing = pluginSpacing,
     this.grace = outerDeadlineGrace,
   }) : _admission = admission ?? RunAdmission();
 

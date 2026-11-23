@@ -187,7 +187,7 @@ The only Dart caller is `PluginRunner` (`lib/src/plugins/data/run/`, see [system
 - **Reset once.** The runner calls `engine.reset()` before its first job and `RustPluginEngine.reset()` calls `resetPluginRuntime()` once per process (a static flag; a hot restart resets Dart statics, so it runs again then, which is what the runtime needs: workers held by the dead isolate are cancelled). It must only be called from the main isolate.
 - **Admission.** The runner lets at most 4 jobs (the worker count) into the runtime at once, first come first served, so the Rust queue stays empty and `Busy` does not happen. The run wall (`timeout_ms`) therefore starts when the job is dispatched; the runner keeps an outer deadline of the wall plus 30 s and cancels the job when it passes.
 - **Cancel.** The runner calls `cancelPluginJob` for a caller's cancel, a plugin switch (run gate) and the outer deadline. A job that ends `Cancelled` is mapped by who stopped it.
-- **Fetch.** Each run passes its own fetch closure (the callback is per call; a request carries `install_id` but no job id), so the handler judges a request against the snapshot of its own run.
+- **Fetch.** Each run passes its own fetch closure (the callback is per call; a request carries `install_id` but no job id), so the handler judges a request against the snapshot of its own run. The Dart handler (`HttpPluginFetchHandler`, see [system-architecture-plugins.md](./system-architecture-plugins.md) Runs) is the only network path: allowlist, public-only address check, header drops, no redirects, 4 MiB cap, 100 ms spacing per plugin.
 
 ## Tests
 

@@ -1,5 +1,13 @@
+import 'package:logging/logging.dart';
+
+import '../../../foundation/result.dart';
+import '../../domain/net/plugin_fetch_rules.dart';
 import '../../domain/run/plugin_engine.dart';
+import '../net/plugin_http.dart';
+import 'plugin_limiter.dart';
 import 'run_cancel.dart';
+
+final _log = Logger('plugin_run');
 
 /// What the host knows about one run, fixed when the run starts: the fetch
 /// handler judges every request of the run against this snapshot, so a change
@@ -54,13 +62,146 @@ abstract interface class PluginFetchHandler {
   );
 }
 
-/// Refuses every request as a host that is not allowed.
-class BlockAllFetchHandler implements PluginFetchHandler {
-  const BlockAllFetchHandler();
+/// The one network path of a plugin run: judges each request (job, consent,
+/// URL and allowlist, headers), waits for the plugin's spacing slot, then makes
+/// exactly one exchange. Redirects are not followed and 429 / 503 are answers
+/// like any other: the script decides what they mean.
+class HttpPluginFetchHandler implements PluginFetchHandler {
+  HttpPluginFetchHandler({required this._http, required this._limiter});
+
+  final PluginHttpClient _http;
+  final PluginLimiter _limiter;
 
   @override
   Future<EngineFetchResponse> handle(
     EngineFetchRequest request,
     JobContext context,
-  ) async => EngineFetchResponse.failure(EngineFetchOutcome.blockedHost);
+  ) async {
+    try {
+      return await _handle(request, context);
+    } on Object catch (error) {
+      _log.warning('A plugin fetch failed: ${error.runtimeType}');
+      return _fail(EngineFetchOutcome.network);
+    }
+  }
+
+  Future<EngineFetchResponse> _handle(
+    EngineFetchRequest request,
+    JobContext context,
+  ) async {
+    final clock = Stopwatch()..start();
+    // 1 job
+    if (request.installId != context.installId) {
+      return _fail(EngineFetchOutcome.invalidRequest);
+    }
+    if (context.cancel.isCancelled) return _fail(EngineFetchOutcome.abandoned);
+    // 2 consent, from the run's snapshot
+    if (context.consentedHosts.isEmpty) {
+      return _fail(EngineFetchOutcome.notConsented);
+    }
+    // 3 + 4 URL shape, allowlist, saved endpoints
+    final judged = judgePluginUrl(
+      request.url,
+      manifestHosts: context.manifestHosts,
+      consentedHosts: context.consentedHosts,
+      userEndpoints: context.userEndpoints,
+    );
+    final url = judged.uri;
+    switch (judged.verdict) {
+      case PluginUrlVerdict.invalid:
+        return _fail(EngineFetchOutcome.invalidRequest);
+      case PluginUrlVerdict.blocked:
+        return _fail(EngineFetchOutcome.blockedHost);
+      case PluginUrlVerdict.allowed:
+        break;
+    }
+    // 5 method, body, headers
+    final method = request.method.toUpperCase();
+    final headers = pluginRequestHeaders(request.headers);
+    if (url == null ||
+        headers == null ||
+        (method != 'GET' && method != 'POST') ||
+        (method == 'GET' && request.body.isNotEmpty)) {
+      return _fail(EngineFetchOutcome.invalidRequest);
+    }
+    context.maskValues.addAll(headers.secrets);
+    // 6 spacing; the wait counts against the deadline
+    final deadline = Duration(milliseconds: request.deadlineMs);
+    final granted = await _limiter.acquire(
+      context.installId,
+      timeLeft: deadline - clock.elapsed,
+      cancel: context.cancel,
+    );
+    switch (granted) {
+      case LimiterResult.cancelled:
+        return _fail(EngineFetchOutcome.abandoned);
+      case LimiterResult.tooLate:
+        _log.info('Plugin fetch not sent: spacing wait exceeds deadline');
+        return _fail(EngineFetchOutcome.network);
+      case LimiterResult.granted:
+        break;
+    }
+    final left = deadline - clock.elapsed;
+    if (left <= Duration.zero) return _fail(EngineFetchOutcome.network);
+    // 7 - 9 one exchange
+    final answer = await _http.send(
+      PluginHttpRequest(
+        method: method,
+        url: url,
+        headers: headers.headers,
+        body: request.body,
+      ),
+      deadline: left,
+      cancel: context.cancel,
+    );
+    switch (answer) {
+      case Err(:final error):
+        return _fail(switch (error) {
+          PluginHttpFailure.blockedAddress => EngineFetchOutcome.blockedHost,
+          PluginHttpFailure.tooLarge => EngineFetchOutcome.invalidResponse,
+          PluginHttpFailure.cancelled => EngineFetchOutcome.abandoned,
+          PluginHttpFailure.network ||
+          PluginHttpFailure.timeout => EngineFetchOutcome.network,
+        });
+      case Ok(:final value):
+        return _answer(request, context, value);
+    }
+  }
+
+  /// 10, 11: every status is an answer; a 429 / 503 is only noted.
+  EngineFetchResponse _answer(
+    EngineFetchRequest request,
+    JobContext context,
+    PluginHttpResponse response,
+  ) {
+    if (response.status == 429 || response.status == 503) {
+      final wait = parseRetryAfter(_header(response, 'retry-after'));
+      final seen = context.rateLimitSeen;
+      if (seen == null || wait > seen) context.rateLimitSeen = wait;
+    }
+    for (final (name, value) in response.headers) {
+      if (name == 'set-cookie') {
+        context.maskValues.addAll(setCookieSecrets(value));
+      }
+    }
+    return EngineFetchResponse(
+      outcome: EngineFetchOutcome.ok,
+      status: response.status,
+      // The requested URL: nothing is followed, so it is also the final one.
+      url: request.url,
+      headers: response.headers,
+      body: response.body,
+      sends: 1,
+    );
+  }
+
+  String? _header(PluginHttpResponse response, String name) {
+    for (final (key, value) in response.headers) {
+      if (key == name) return value;
+    }
+    return null;
+  }
+
+  EngineFetchResponse _fail(EngineFetchOutcome outcome) =>
+      EngineFetchResponse.failure(outcome);
 }

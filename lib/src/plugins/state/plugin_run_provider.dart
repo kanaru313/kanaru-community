@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/net/plugin_http.dart';
 import '../data/run/fetch_handler.dart';
+import '../data/run/plugin_limiter.dart';
 import '../data/run/plugin_pauses.dart';
 import '../data/run/plugin_runner.dart';
 import '../data/run/rust_plugin_engine.dart';
@@ -13,10 +15,15 @@ final pluginEngineProvider = Provider<PluginEngine>(
   (ref) => const RustPluginEngine(),
 );
 
-/// The host `fetch` of a run. Refuses everything until the real handler is
-/// wired in; tests override it.
+/// The request spacing clock of every plugin, shared by all runs.
+final pluginLimiterProvider = Provider<PluginLimiter>((ref) => PluginLimiter());
+
+/// The host `fetch` of a run: the only network path of a plugin.
 final pluginFetchHandlerProvider = Provider<PluginFetchHandler>(
-  (ref) => const BlockAllFetchHandler(),
+  (ref) => HttpPluginFetchHandler(
+    http: PluginHttpClient(),
+    limiter: ref.watch(pluginLimiterProvider),
+  ),
 );
 
 /// The per-plugin pauses after a rate-limited run.

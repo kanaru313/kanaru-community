@@ -114,6 +114,23 @@ is ignored). A body over 256 KiB throws `InvalidRequestError` without crossing
 to the host. The host does the authoritative checks (host allowlist, consent,
 header and body rules) and answers with an outcome.
 
+**Host rules.** The URL must be `https`, without user info, a port or an IP
+literal, and its host must be on the plugin's `hosts` and consented by the user;
+the exception is an address the user typed into a `format: url` setting of the
+plugin (saved, not a default), which is allowed with its port. A name that
+resolves to a private, loopback, link-local or mixed address is refused
+(`BlockedHostError`) before anything is sent. The header drops above are done by
+the host, so a script cannot forge `Host` or `Content-Length`. Redirects are not
+followed: a 3xx is returned as the answer and the script may `fetch` its
+`location` header (a new, checked request). A body over 4 MiB is
+`InvalidResponseError`. A 429 or 503 is a normal answer (status, headers, body)
+that the script reads itself; the host neither retries nor blocks later
+requests, and only a script that ends with `Response.error(rateLimited)` pauses
+the plugin. The overall timeout of one request is its `deadline_ms`, with no
+shorter cap. Requests of one plugin start at least 100 ms apart. A `Network` answer for a
+request that was never sent (spacing wait, no time left, DNS failure) still counts
+as one of the script's sends.
+
 On success `fetch` returns a frozen object `{status, ok (200-299), url (after
 redirects), headers, header(name), text(charset?), json(), base64()}`. Header
 names are lower case, repeated names joined with `, `; `header(name)` is
