@@ -30,6 +30,17 @@ class PluginLogsPage extends ConsumerStatefulWidget {
 class _PluginLogsPageState extends ConsumerState<PluginLogsPage> {
   bool _errorsOnly = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // A run may have logged since the providers last read the files.
+    Future.microtask(() {
+      if (!mounted) return;
+      ref.invalidate(pluginLogEntriesProvider);
+      ref.invalidate(pluginLogSummaryProvider(widget.installId));
+    });
+  }
+
   PluginLogQuery get _query =>
       (installId: widget.installId, errorsOnly: _errorsOnly);
 
@@ -91,6 +102,8 @@ class _PluginLogsPageState extends ConsumerState<PluginLogsPage> {
   Future<void> _clear() async {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context);
+    // Everything from `ref` before the dialog: the page may be gone after it.
+    final ops = ref.read(pluginLogOpsProvider);
     final name = ref.read(pluginPageProvider(widget.installId)).value?.row.name;
     final ok = await confirmDelete(
       context,
@@ -99,12 +112,16 @@ class _PluginLogsPageState extends ConsumerState<PluginLogsPage> {
       confirmLabel: l10n.pluginsDataClear,
     );
     if (!ok) return;
+    var succeeded = true;
     try {
-      await ref.read(pluginLogOpsProvider).clear(widget.installId);
-      showAppSnackBarOn(messenger, l10n.pluginsLogsCleared);
+      await ops.clear(widget.installId);
     } on Object {
-      showAppSnackBarOn(messenger, l10n.pluginsDataClearFailed);
+      succeeded = false;
     }
+    showAppSnackBarOn(
+      messenger,
+      succeeded ? l10n.pluginsLogsCleared : l10n.pluginsDataClearFailed,
+    );
   }
 }
 

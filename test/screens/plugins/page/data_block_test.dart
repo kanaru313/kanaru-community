@@ -6,12 +6,13 @@ import 'package:kanaru/src/screens/plugins/page/soon_blocks.dart';
 import 'package:kanaru_ui/kanaru_ui.dart' show SetupRowFrame;
 import 'package:material_ui/material_ui.dart' show TextButton;
 
+import '../../settings/support/settings_host.dart' show SettingsHarness;
 import '../support/install_fixtures.dart';
 import '../support/page_fixtures.dart';
 import '../support/plugin_fixtures.dart';
 import '../support/run_fixtures.dart';
 
-Future<void> _pump(
+Future<SettingsHarness> _pump(
   WidgetTester tester, {
   required RunState run,
   String kind = 'lyrics',
@@ -19,7 +20,7 @@ Future<void> _pump(
 }) async {
   tester.view.devicePixelRatio = 1;
   final fixture = StoreFixture();
-  await pumpPlugins(
+  return pumpPlugins(
     tester,
     fixture,
     location: pagePath,
@@ -85,6 +86,23 @@ void main() {
         await tester.pumpAndSettle();
         expect(run.ops.storageCleared, ['id-demo']);
         expect(find.text('Own storage cleared'), findsOneWidget);
+      });
+
+      testWidgets('leaving the page while the dialog is open still clears', (
+        tester,
+      ) async {
+        final run = RunState(storageBytes: 2048);
+        final h = await _pump(tester, run: run, size: size);
+        await tester.tap(find.widgetWithText(TextButton, 'Clear').first);
+        await tester.pumpAndSettle();
+        // The plugin disappears: the page goes while the dialog stays.
+        h.container.read(pageHolder.notifier).set(const AsyncData(null));
+        await tester.pump();
+        await tester.tap(find.text('Clear').last);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(run.ops.storageCleared, ['id-demo']);
+        expect(find.text('Couldn’t clear the data'), findsNothing);
       });
 
       testWidgets('Cancel clears nothing', (tester) async {

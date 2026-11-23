@@ -171,4 +171,38 @@ void main() {
       expect(find.textContaining('(429)'), findsNothing);
     });
   });
+
+  testWidgets('the log summary is read again when a pause starts', (
+    tester,
+  ) async {
+    var reads = 0;
+    final now = DateTime(2026, 11, 23, 21);
+    final pauses = PluginPauses(now: () => now);
+    addTearDown(pauses.dispose);
+    final run = RunState(
+      pauses: pauses,
+      summaryOf: (_) async {
+        reads++;
+        return (errorsToday: reads, total: reads);
+      },
+    );
+    tester.view.devicePixelRatio = 1;
+    await pumpPlugins(
+      tester,
+      StoreFixture(),
+      location: pagePath,
+      size: const Size(400, 2400),
+      overrides: [
+        ...pageOverrides(AsyncData(pageData()), ops: FakeInstallOps()),
+        ...run.overrides,
+      ],
+    );
+    expect(find.text('1 error today · 1 entry'), findsOneWidget);
+    pauses.pause('id-demo', const Duration(seconds: 60));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('2 errors today · 2 entries'), findsOneWidget);
+    // Ends the pending pause timer before the test does.
+    pauses.dispose();
+  });
 }

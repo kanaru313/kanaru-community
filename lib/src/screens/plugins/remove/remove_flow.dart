@@ -22,9 +22,9 @@ Future<bool> removePluginFlow(
 }) async {
   final messenger = ScaffoldMessenger.of(context);
   final l10n = AppLocalizations.of(context);
+  final container = ProviderScope.containerOf(context, listen: false);
   final preview = await ops.removePreview(installId);
   if (preview == null || !context.mounted) return false;
-  final container = ProviderScope.containerOf(context, listen: false);
   final storageBytes = await _readOr(
     container.read(pluginStorageBytesProvider(installId).future),
     0,

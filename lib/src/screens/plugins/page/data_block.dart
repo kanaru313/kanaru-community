@@ -10,6 +10,8 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/domain/package/plugin_kind.dart';
 import '../../../plugins/state/plugin_logs_provider.dart';
 import '../../../plugins/state/plugin_run_info_provider.dart';
+import '../../../plugins/state/plugin_run_provider.dart'
+    show pluginPauseProvider;
 import '../../settings/ui/soon_row.dart';
 import '../plugin_paths.dart';
 import 'confirm_delete_dialog.dart';
@@ -31,6 +33,11 @@ class DataBlock extends ConsumerWidget {
     final lyrics = kind == PluginKind.lyrics
         ? ref.watch(savedLyricsStatsProvider(installId))
         : null;
+    // A pause starts when a run failed with a 429: that run just logged.
+    ref.listen(
+      pluginPauseProvider(installId),
+      (_, _) => ref.invalidate(pluginLogSummaryProvider(installId)),
+    );
     final log = ref.watch(pluginLogSummaryProvider(installId));
     final bytes = storage.value;
     final saved = lyrics?.value;
@@ -52,7 +59,7 @@ class DataBlock extends ConsumerWidget {
             title: l10n.pluginsDataClearStorageTitle,
             body: l10n.pluginsDataClearStorageBody,
             done: l10n.pluginsDataStorageCleared,
-            run: () => ref.read(pluginDataOpsProvider).clearStorage(installId),
+            run: ref.read(pluginDataOpsProvider).clearStorage,
           ),
         ),
         if (kind == PluginKind.lyrics)
@@ -73,8 +80,7 @@ class DataBlock extends ConsumerWidget {
               title: l10n.pluginsDataClearLyricsTitle,
               body: l10n.pluginsDataClearLyricsBody,
               done: l10n.pluginsDataLyricsCleared,
-              run: () =>
-                  ref.read(pluginDataOpsProvider).clearSavedLyrics(installId),
+              run: ref.read(pluginDataOpsProvider).clearSavedLyrics,
             ),
           ),
         if (kind == PluginKind.streaming)
@@ -94,7 +100,12 @@ class DataBlock extends ConsumerWidget {
                     log.value!.total,
                   ),
           ),
-          onTap: () => context.push(PluginPaths.pluginLogs(installId)),
+          onTap: () async {
+            await context.push(PluginPaths.pluginLogs(installId));
+            if (!context.mounted) return;
+            // The log may have been cleared or have grown meanwhile.
+            ref.invalidate(pluginLogSummaryProvider(installId));
+          },
         ),
       ],
     );
@@ -108,23 +119,26 @@ class DataBlock extends ConsumerWidget {
     required String title,
     required String body,
     required String done,
-    required Future<void> Function() run,
+    required Future<void> Function(String installId) run,
   }) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final confirmLabel = l10n.pluginsDataClear;
+    final failed = l10n.pluginsDataClearFailed;
     final ok = await confirmDelete(
       context,
       title: title,
       body: body,
-      confirmLabel: l10n.pluginsDataClear,
+      confirmLabel: confirmLabel,
     );
     if (!ok) return;
+    var succeeded = true;
     try {
-      await run();
-      showAppSnackBarOn(messenger, done);
+      await run(installId);
     } on Object {
-      showAppSnackBarOn(messenger, l10n.pluginsDataClearFailed);
+      succeeded = false;
     }
+    showAppSnackBarOn(messenger, succeeded ? done : failed);
   }
 }
 

@@ -55,6 +55,7 @@ class RunState {
     this.entries = const [],
     this.pausedUntil,
     this.pauses,
+    this.summaryOf,
     this.sources = const [],
     FakeDataOps? ops,
     FakeFileManager? files,
@@ -69,6 +70,9 @@ class RunState {
 
   /// Real pauses (a test that lets one end); [pausedUntil] is then unused.
   final PluginPauses? pauses;
+
+  /// Replaces the fixed log summary (to count reads).
+  final Future<PluginLogSummary> Function(String installId)? summaryOf;
   final List<LyricsSource> sources;
   final FakeDataOps ops;
   final FakeFileManager files;
@@ -79,7 +83,9 @@ class RunState {
     pluginStorageBytesProvider.overrideWith((ref, id) async => storageBytes),
     savedLyricsStatsProvider.overrideWith((ref, id) async => savedLyrics),
     pluginLogSummaryProvider.overrideWith(
-      (ref, id) async => (errorsToday: errorsToday, total: entries.length),
+      (ref, id) =>
+          summaryOf?.call(id) ??
+          Future.value((errorsToday: errorsToday, total: entries.length)),
     ),
     pluginLogEntriesProvider.overrideWith(
       (ref, q) async => q.errorsOnly
