@@ -128,6 +128,13 @@ void main() {
     await shot('03-np-menu-closed-focus-on-more');
 
     // ---- queue row ⋮ ----
+    // The queue panel lives in the shell, which Now Playing covers: close the
+    // page first, or the rows are in the tree but taps never reach them.
+    container.read(nowPlayingPanelProvider.notifier).close();
+    await app.pumpUntil(
+      () => !container.read(nowPlayingPanelProvider).covered,
+      what: 'Now Playing to stop covering the shell',
+    );
     container.read(rightPanelProvider.notifier).show(RightPanelKind.queue);
     await app.pumpUntil(
       () => find.byType(QueueList).evaluate().isNotEmpty,
@@ -141,7 +148,7 @@ void main() {
       () => rowMore.evaluate().length >= 2,
       what: 'queue rows with their ⋮',
     );
-    await tester.tap(rowMore.at(1));
+    await tester.tap(rowMore.hitTestable().at(1));
     await app.pumpUntil(
       () => find.text(l10n().playbackRowPlay).evaluate().isNotEmpty,
       what: 'the song menu of the queue entry',
