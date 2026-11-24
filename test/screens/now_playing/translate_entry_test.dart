@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart' show SemanticsNode;
 import 'package:flutter/services.dart';
@@ -589,6 +591,17 @@ void main() {
       await tester.tap(find.byIcon(KIcons.moreVert));
       await tester.pumpAndSettle();
       expect(find.text('Translating into Vietnamese'), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('the ⋮ item shows the T key hint', (tester) async {
+      await open(tester);
+      await tester.tap(find.byIcon(KIcons.moreVert));
+      await tester.pumpAndSettle();
+      expect(find.text('T'), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
     });
 
     testWidgets('the ⋮ item opens the modal', (tester) async {
@@ -602,13 +615,22 @@ void main() {
 
     testWidgets('the ⋮ item is disabled without lyrics', (tester) async {
       await open(tester, lyrics: false);
+      final handle = tester.ensureSemantics();
       await tester.tap(find.byIcon(KIcons.moreVert));
       await tester.pumpAndSettle();
-      final item = find.ancestor(
-        of: find.text('Translate lyrics…'),
-        matching: find.byType(MenuItemButton),
+      expect(
+        tester
+            .getSemantics(find.text('Translate lyrics…'))
+            .flagsCollection
+            .isEnabled,
+        Tristate.isFalse,
       );
-      expect(tester.widget<MenuItemButton>(item).onPressed, isNull);
+      await tester.tap(find.text('Translate lyrics…'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(find.byType(TranslateBody), findsNothing);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      handle.dispose();
     });
   });
 }

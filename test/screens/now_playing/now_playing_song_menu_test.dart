@@ -161,15 +161,18 @@ void main() {
     expect(find.text('Art One · Alb'), findsOneWidget);
   });
 
-  testWidgets('sleep timer is live; translate is soon, effects are Pro', (
+  testWidgets('sleep timer is live; translate is live, effects are Pro', (
     tester,
   ) async {
     await _pump(tester);
     final handle = tester.ensureSemantics();
     expect(_enabled(tester, 'Sleep timer'), isTrue);
     expect(_enabled(tester, 'Lyrics source'), isTrue);
-    expect(_enabled(tester, 'Translate lyrics…'), isFalse);
-    expect(_spoken(tester, 'Translate lyrics…'), contains('Coming soon'));
+    expect(_enabled(tester, 'Translate lyrics…'), isTrue);
+    expect(
+      _spoken(tester, 'Translate lyrics…'),
+      isNot(contains('Coming soon')),
+    );
     // Effects: dimmed, Pro, no "Coming soon". Ask AI: soon, no Pro.
     expect(_enabled(tester, 'Visual effects'), isFalse);
     expect(_spoken(tester, 'Visual effects'), isNot(contains('Coming soon')));

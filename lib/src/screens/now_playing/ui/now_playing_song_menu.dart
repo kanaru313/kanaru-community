@@ -6,7 +6,6 @@ import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
-import '../../../library/ui/menus/menu_items.dart';
 import '../../../library/ui/menus/menu_model.dart';
 import '../../../library/ui/menus/open_menu.dart';
 import '../../../library/ui/menus/song_lyrics_entry.dart';
@@ -53,6 +52,7 @@ Future<void> openNowPlayingSongMenu(
     closeNowPlaying: closeNowPlaying,
     returnFocus: returnFocus,
     viaKeyboard: viaKeyboard,
+    keyHints: chrome != null,
   );
   final root = Navigator.of(context, rootNavigator: true).context;
   final l10n = AppLocalizations.of(context);
@@ -75,6 +75,7 @@ Future<void> _open(
   required VoidCallback? closeNowPlaying,
   required FocusNode? returnFocus,
   required bool viaKeyboard,
+  required bool keyHints,
 }) async {
   final container = ProviderScope.containerOf(context, listen: false);
   final root = Navigator.of(context, rootNavigator: true).context;
@@ -140,7 +141,7 @@ Future<void> _open(
             subtitle: translateSubtitle.value,
             liveSubtitle: translateSubtitle,
             // Desktop only: the `T` key toggles translation there.
-            shortcut: chrome == null ? null : 'T',
+            shortcut: keyHints ? 'T' : null,
             // Dimmed while the playing song has no lyrics.
             enabled: container.read(translateMenuAvailableProvider),
             action: MenuAction.run(

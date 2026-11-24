@@ -166,12 +166,14 @@ void main() {
     expect(button.onPressed, isNotNull);
     // The song has lyrics: the pill is enabled, no "Coming soon" anywhere.
     expect(
-      tester.widget<InkWell>(
-        find.descendant(
-          of: find.byType(TranslatePill),
-          matching: find.byType(InkWell),
-        ),
-      ).onTap,
+      tester
+          .widget<InkWell>(
+            find.descendant(
+              of: find.byType(TranslatePill),
+              matching: find.byType(InkWell),
+            ),
+          )
+          .onTap,
       isNotNull,
     );
     expect(find.textContaining('Coming soon'), findsNothing);
