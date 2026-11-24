@@ -1,7 +1,9 @@
 import 'package:flutter/painting.dart';
 
-/// Corner radii by role (xs 8 ... xl 28, full = stadium).
+/// Corner radii by role (xxs 4 ... xl 28, full = stadium).
 abstract final class KRadius {
+  /// Small marks around text, such as a link's focus ring.
+  static const BorderRadius xxs = BorderRadius.all(Radius.circular(4));
   static const BorderRadius xs = BorderRadius.all(Radius.circular(8));
   static const BorderRadius sm = BorderRadius.all(Radius.circular(12));
   static const BorderRadius md = BorderRadius.all(Radius.circular(16));

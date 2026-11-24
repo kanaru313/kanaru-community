@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../layout/form_factor.dart';
 import '../tokens/k_layout.dart';
 import '../tokens/k_motion.dart';
+import '../tokens/k_shape.dart';
 import 'k_link_underline.dart';
 import 'k_vertical_hit_extension.dart';
 
@@ -62,7 +63,7 @@ class KTextLink extends StatefulWidget {
   static const double sideReach = 4;
 
   /// Corner radius of the focus ring.
-  static const BorderRadius ringRadius = BorderRadius.all(Radius.circular(4));
+  static const BorderRadius ringRadius = KRadius.xxs;
 
   @override
   State<KTextLink> createState() => _KTextLinkState();
