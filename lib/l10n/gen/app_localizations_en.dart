@@ -31,9 +31,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emptyHome => 'Nothing here yet. Your music will show up here.';
 
   @override
-  String get emptyLibrary => 'Your library is empty.';
-
-  @override
   String get emptyPlaylists => 'No playlists yet.';
 
   @override

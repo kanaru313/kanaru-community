@@ -31,9 +31,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get emptyHome => 'Chưa có gì ở đây. Nhạc của bạn sẽ hiện ở đây.';
 
   @override
-  String get emptyLibrary => 'Thư viện đang trống.';
-
-  @override
   String get emptyPlaylists => 'Chưa có playlist nào.';
 
   @override

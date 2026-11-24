@@ -140,12 +140,6 @@ abstract class AppLocalizations {
   /// **'Nothing here yet. Your music will show up here.'**
   String get emptyHome;
 
-  /// No description provided for @emptyLibrary.
-  ///
-  /// In en, this message translates to:
-  /// **'Your library is empty.'**
-  String get emptyLibrary;
-
   /// No description provided for @emptyPlaylists.
   ///
   /// In en, this message translates to:
