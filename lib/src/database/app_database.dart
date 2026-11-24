@@ -40,6 +40,8 @@ void configureConnection(CommonDatabase db) {
     LyricsPins,
     LyricsRejects,
     OnlineLyrics,
+    LyricsTranslations,
+    TrackTranslationPrefs,
     QueueEntries,
     Playlists,
     PlaylistEntries,

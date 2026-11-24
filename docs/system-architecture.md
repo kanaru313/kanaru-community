@@ -31,6 +31,7 @@ main.dart
 - [system-architecture-library.md](./system-architecture-library.md): library keys, track info, lists, favorites, tabs, folders, exclusions (contract stub until lane C lands).
 - [system-architecture-library-scan.md](./system-architecture-library-scan.md): scanner, pass versions, covers, first run, Rust pools, custom cover import (lane A, merged).
 - [system-architecture-lyrics.md](./system-architecture-lyrics.md): embedded lyrics reader and its bridge API.
+- [system-architecture-lyrics-translation.md](./system-architecture-lyrics-translation.md): translation engine on the plugin runner: gate, chunk cache and resume, failures, providers.
 - [system-architecture-plugin-runtime.md](./system-architecture-plugin-runtime.md): plugin runtime instance, threads and thread budget, `PluginHost`, park and waker, cancel, late drain, bindgen on Android.
 - [system-architecture-plugins.md](./system-architecture-plugins.md): plugin package, catalog and install rules, network seams (address rules, pinned fetcher), backup rules.
 - [system-architecture-fonts.md](./system-architecture-fonts.md): font setting, catalog and custom fonts, data layout `dataDir/fonts`, startup resolution.

@@ -77,6 +77,19 @@ void main() {
     expect(rows, hasLength(1));
   });
 
+  test('the translation language of a live track stays', () async {
+    final id = await addAgedTrack(db, local, 'tp', TrackStatus.present);
+    await db.customStatement(
+      "INSERT INTO track_translation_prefs (track_id, target_lang, updated_at) VALUES (?, 'vi', 1)",
+      [id],
+    );
+    expect(await collectOrphanTracks(db, now: _now), 0);
+    expect(
+      await db.customSelect('SELECT 1 FROM track_translation_prefs').get(),
+      hasLength(1),
+    );
+  });
+
   test('the kept lyrics and rejects of a live track stay', () async {
     final id = await addAgedTrack(db, local, 'q', TrackStatus.present);
     await db.customStatement(

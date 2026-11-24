@@ -29,6 +29,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 | Artists of a track, play queue, cover colours | `track_artists`, `queue_entries`, `cover_colors` |
 | Lyrics choice of the user per track | `track_lyrics_choices`; [track_lyrics_choices](#track_lyrics_choices-coded-with-offline-lyrics) |
 | Kept online lyrics, rejected results, lookup cache | `lyrics_pins`, `lyrics_rejects`, `online_lyrics`; [online lyrics tables](#lyrics_pins-coded-with-online-lyrics) |
+| Lyrics translation cache, translation language per track | `lyrics_translations`, `track_translation_prefs`; [lyrics translation tables](#lyrics_translations-coded-with-lyrics-translation) |
 | Cover chosen by the user (playlist, album, artist) | `custom_covers`; [custom_covers](#custom_covers-coded-in-wave-1) |
 | DATA-10 Rating and mood playlists | `tracks.rating`, `playlists.name_key` |
 | DATA-11 Plugin install ids | `plugins.install_id`, 128-bit, derived from the install source; [plugins](#plugins-coded-with-the-plugin-store) |
@@ -85,7 +86,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 
 - Every foreign key into `tracks` (public and Pro) is `ON DELETE RESTRICT`. No `CASCADE` and no `SET NULL` into `tracks`.
 - `CASCADE` only runs from a parent to a pure child outside `tracks`: playlist to entries, source to mount, source to excluded folders.
-- Owned one-to-one children of a track (`track_details`, `play_stats`, `track_artists`, `track_lyrics_choices`, `lyrics_pins` and `lyrics_rejects`) are `RESTRICT` too. The track GC deletes them before the track. Nothing may reference an owned child: the GC throws when a foreign key points at one.
+- Owned one-to-one children of a track (`track_details`, `play_stats`, `track_artists`, `track_lyrics_choices`, `lyrics_pins`, `lyrics_rejects` and `track_translation_prefs`) are `RESTRICT` too. The track GC deletes them before the track. Nothing may reference an owned child: the GC throws when a foreign key points at one.
 - Every `*track_id` column has a foreign key into `tracks` and an index whose first column is that column. A single `INTEGER PRIMARY KEY` counts as that index.
 - Every foreign key column is the first column of an index, or the primary key.
 
@@ -133,7 +134,7 @@ The full list is in [Foreign key list](#foreign-key-list).
 1. Refuse to run when `PRAGMA foreign_keys` is 0.
 2. Find every foreign key into `tracks` at run time (`sqlite_master` joined with `pragma_foreign_key_list`). Pro tables are included.
 3. Throw if any of them is not `RESTRICT`.
-4. Ignore the owned-child tables `trackOwnedChildTables` = `{track_details, play_stats, track_artists, track_lyrics_choices, lyrics_pins, lyrics_rejects}` when deciding whether a track is referenced. Delete their rows before the track rows, in the same transaction.
+4. Ignore the owned-child tables `trackOwnedChildTables` = `{track_details, play_stats, track_artists, track_lyrics_choices, lyrics_pins, lyrics_rejects, track_translation_prefs}` when deciding whether a track is referenced. Delete their rows before the track rows, in the same transaction.
 5. Delete a track only if no other foreign key row points at it (tombstoned rows count), `rating IS NULL AND lyrics_offset_ms = 0`, and one of:
 
    | Status | Condition |
@@ -143,7 +144,7 @@ The full list is in [Foreign key list](#foreign-key-list).
    | `remote` | `updated_at <= now - remoteGraceMs` (24 h). Keeps the now-playing and queued online track. |
 
 6. `present` rows are never deleted.
-7. The helper notifies streams for `tracks`, `track_details`, `play_stats`, `track_artists`, `lyrics_pins`, `lyrics_rejects` and `track_search` (the FTS delete trigger writes it), only when rows were deleted. It returns the number of deleted tracks.
+7. The helper notifies streams for `tracks`, `track_details`, `play_stats`, `track_artists`, `lyrics_pins`, `lyrics_rejects`, `track_translation_prefs` and `track_search` (the FTS delete trigger writes it), only when rows were deleted. It returns the number of deleted tracks.
 
 Details: the checks and the candidate set are computed once per run (a `TEMP` table inside the transaction, dropped at the end), so the owned-children delete and the track delete use the same ids. A foreign key whose parent column is not named in the schema refers to `tracks.id`. Only the main schema is inspected. A composite foreign key into `tracks` throws like a non-`RESTRICT` one. Tables are addressed as `main.<table>`, so a temp table of the same name cannot hide a reference. A foreign key into an owned child table throws too. A `missing` row with `missing_since IS NULL` is never collected, so the scanner must set `missing_since` when it marks a row missing. Any failure leaves the database unchanged.
 
@@ -231,6 +232,8 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 | `plugin_data.install_id` | `plugins.install_id` | RESTRICT | plugins (coded) |
 | `lyrics_pins.track_id` | `tracks.id` | RESTRICT | lyrics (coded) |
 | `lyrics_rejects.track_id` | `tracks.id` | RESTRICT | lyrics (coded) |
+| `track_translation_prefs.track_id` | `tracks.id` | RESTRICT | lyrics (coded) |
+| `lyrics_translations.install_id` | none | none | lyrics (coded): not a foreign key, see [lyrics_translations](#lyrics_translations-coded-with-lyrics-translation) |
 | Any other track reference (lyrics, Pro) | `tracks.id` | RESTRICT | rule |
 
 ## Coded groups
@@ -733,9 +736,36 @@ Both stores write with `INSERT ... SELECT ... FROM tracks WHERE id = ?`: a write
 
 ### lyrics: Spec only, added by lyrics before first release
 
-**lyrics_translations** (cache). Keyed by `content_hash`, `provider` and `target_lang`. Safe to drop. Per-track translation settings are not here: they belong to Pro.
+Per-song translation note and per-song translation service stay Pro (spec in `kanaru-pro`); the per-track target language is public, see `track_translation_prefs`.
 
 **lyrics_search** (derived). FTS5 table, contentless (`contentless_delete = 1`), with stale triggers. Invariant: `tracks.lyrics_version = 0` means the track has no tokens in `lyrics_search`. The stale triggers set `lyrics_version` back to 0 when the audio `revision`, the sidecar `lrc_revision` or the pin changes. This depends on the scanner's `lyrics_version` column (see `tracks`).
+
+### lyrics_translations: Coded with lyrics translation
+
+Owner: lyrics (`tables/lyrics_translation_tables.dart`). Sync: cache (safe to drop at any time). One row per lyrics text, translate plugin and target language. No foreign key and no uid: the row survives removing the plugin and collecting the track; `install_id` is a plugin install id only by convention.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `content_hash` | TEXT | PK | | Hash of the source lines (`lyricsContentHash`), not a track id. |
+| `install_id` | TEXT | PK | | The translate plugin's install id. |
+| `target_lang` | TEXT | PK | | `CHECK (length(target_lang) BETWEEN 2 AND 7)`. Only the shape is checked: the code list lives in the plugins module (`translationLanguageCodes`) and `database/` may not import it. |
+| `source_lang` | TEXT | NULL | | Dominant source language the plugin saw. |
+| `lines_json` | TEXT | NOT NULL | | JSON object, source line to translation. `CHECK (length(lines_json) <= 2097152)`: the cap counts characters, not bytes (CJK or Vietnamese rows can take more on disk). |
+| `settings_json` | TEXT | NOT NULL | | `{pluginVersion, model, style, instructionHash}` of the run. |
+| `complete` | INTEGER | NOT NULL | 0 | `CHECK (complete IN (0, 1))`. Chunks merge into `lines_json` with `complete = 0`; only a complete row is reused. |
+| `created_at` | INTEGER | NOT NULL | | Epoch ms, set when the row is created. |
+
+Index `lyrics_translations_lookup (content_hash, target_lang, created_at)`. Written through `lyrics/data/translation/translation_cache_store.dart`: `mergeChunk` merges in one transaction, `markComplete` finishes the row, `replace` swaps the whole row after a forced re-run. `newestOther` reads the newest `complete = 1` row of another plugin that is still installed (`plugins.removed_at IS NULL`) and of kind `translate` or `ai-translate`, so a removed plugin's copy is never offered.
+
+### track_translation_prefs: Coded with lyrics translation
+
+Owner: lyrics. Sync: device-local for now. The translation language the user picked for one track; no row = the global target applies. Owned child of `tracks` (joins `trackOwnedChildTables`): deleted with the track.
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `track_id` | INTEGER | PK, FK | | `tracks.id` RESTRICT. |
+| `target_lang` | TEXT | NULL | | Same shape check as `lyrics_translations.target_lang`; `TranslationPrefsStore` refuses codes outside `translationLanguageCodes` and deletes the row for "no choice". |
+| `updated_at` | INTEGER | NOT NULL | | Epoch ms. |
 
 ### online_lyrics: Coded with online lyrics
 
@@ -756,7 +786,7 @@ Decision: the key is not `tracks.song_key`. `song_key` has no album and no durat
 
 ### Pro: Spec only, added by kanaru-pro before first release
 
-AI chat, per-track translation config and smart playlists. Their spec lives in `kanaru-pro`. They are versioned in `extension_schema`, and any foreign key into `tracks` is `RESTRICT`. See [Pro contract](#pro-contract).
+AI chat, per-song translation note and service, and smart playlists. Their spec lives in `kanaru-pro`. They are versioned in `extension_schema`, and any foreign key into `tracks` is `RESTRICT`. See [Pro contract](#pro-contract).
 
 ## Helpers
 
