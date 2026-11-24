@@ -1,0 +1,146 @@
+# System architecture: lyrics translation
+
+Translation of the shown lyrics through installed `translate` / `ai-translate`
+plugins. Code: `lib/src/lyrics/{domain,data,state}/translation/`. This page
+covers the engine and its providers (no UI watches them yet). Tables:
+[system-architecture-database.md](./system-architecture-database.md)
+(`lyrics_translations`, `track_translation_prefs`). Running a plugin (bridge,
+fetch, consent, deadline, logs, 429 pause, run gate) is the plugin runner's:
+[system-architecture-plugins.md](./system-architecture-plugins.md).
+
+## Flow
+
+```
+trackLyricsProvider(track) (shown lines) ─┐
+translation on / service / target (settings) ─┤
+track_translation_prefs (per-song target) ─┤
+effectiveTranslationServiceProvider ─────────┘
+        ▼ trackTranslationProvider(track)   autoDispose, listens, never owns a run
+  content hash → saved row of the service, complete       → ready (or same)
+                 else newest complete row of another live plugin → other(id), no run
+                 else no service                          → failed(noService)
+                 else 1 s debounce → TranslationJobs.request
+        ▼ translationJobsProvider            keep-alive, owns every run
+  gate (one run at a time, FIFO) → TranslateRunner → PluginRunner.run
+        ▼ each finished chunk is merged into the row at once (complete = 0);
+          after the last chunk the row is completed (source language, settings)
+```
+
+The view provider only subscribes. Its inputs are `ref.listen`ed, never
+`watch`ed, so a change never rebuilds it and never lets go of a running job.
+The jobs owner is `TranslationJobsNotifier` (`translation_engine_providers.dart`);
+its state is `Map<JobKey, JobStatus>`: only keys that run or failed have an
+entry, the result of a finished job is the saved row.
+
+## Cache and job identity
+
+- Row key: `(content_hash, install_id, target_lang)`; the hash is the sha256 of
+  the non-blank lines joined by `\n` (timestamps, gaps and words ignored).
+- Job key: the same triple. One job per key; a second request joins it.
+- Lines sent: the unique trimmed non-blank lines, chunked by the plugin's
+  `translate.maxLines` / `maxChars`. Caps: 1000 lines, 20 000 characters, 20
+  chunks per song; above them nothing is sent (`tooLong`).
+- A resume reads the row and sends only the lines it lacks, so a dispose, a
+  kill or a failed chunk never loses billed work. After a restart the
+  detected-language votes of the earlier chunks are gone: the source language
+  is voted from the chunks of that run (a complete row keeps what was voted).
+- `settings_json` = `{pluginVersion, model, style, instructionHash}` read from
+  the plugin's stored config for the run (`PluginTranslationServices`); the
+  instruction text is never stored. A saved row whose settings differ from the
+  plugin's now shows `settingsDiffer`; nothing re-runs by itself.
+- Model, style and the note ("Lời dặn thêm") are the plugin's own settings
+  (`model`, `style`, `customInstruction`), written by the commands through
+  `PluginActions.configWrites`; a key the manifest does not declare is
+  `ConfigWrite.unknownKey`. A run never carries `configAppend`.
+
+## Gate and cancellation
+
+- `TranslationGate` lets one translate run through at a time, app-wide, in the
+  order asked. At the front of the line a waiter that is no longer wanted is
+  dropped before it sends.
+- Wanted = the job has a watching view, translation is on, and the job's plugin
+  is the chosen live service (`mayRun`), checked at the top of each step, at
+  the front of the gate and again after the plugin was re-read, right before
+  the send.
+- A chunk that was sent is never cancelled by translation: its result is
+  cached even when every view went away (the owner, not the view, holds the
+  run). Only a forced re-run ("Dịch lại") passes a `RunCancel`; cancelling it
+  keeps the old row.
+- The platform may still cancel a sent chunk (plugin update or remove):
+  `RunCancelled(pluginChanged)`; that chunk is lost and sent again (at most
+  three switches in a row, then `server`).
+- Before each send the plugin is read again: a changed version sends nothing
+  for the old plan and plans again; the in-memory partial of the old version
+  (detected languages, forced lines) is dropped.
+- Forced re-run: ignores the saved row, keeps it on screen
+  (`loading(background: true)`), collects the lines in memory and replaces the
+  row only when every chunk is done (a kill in between loses that run).
+
+## Failures
+
+`TranslateRunner` is the only code that calls the plugin runner: one
+exhaustive `switch` over `RunOutcome` (no `default`), after the run contract's
+consumer table (PLUG-02 C3, Translation column):
+
+| Outcome | Result |
+|---|---|
+| `RunOk` valid | chunk, cached |
+| `RunOk` rejected by the output rules | `reportRejectedOutput(id, 'translate', reason)` + `invalidResponse` (the sticky failure below when there is one) |
+| `RunOk` echo (every text equals its source) + `fetchFailure` / `rateLimitSeen` | failure of that kind, not cached |
+| `RunScriptError` auth / quota / rateLimited / invalidResponse / server | `badKey` / `quota` / `rateLimited(until)` / `invalidResponse` / `server` |
+| `RunFailed` timeout / memory, stack, outputTooLarge / internal | `network` / `invalidResponse` / `server` |
+| `RunCancelled(caller)` | nothing |
+| `RunCancelled(pluginChanged)` | sent again |
+| `RunBusy` | sent again once, then `server` |
+| `RunPaused(until)` | `rateLimited(until)` |
+| `RunNeedsConfig(fields)` | `needsConfig(fields)` |
+| `RunUnavailable` notInstalled / others | `pluginGone` / `server` |
+
+Sticky fetch failure (`RunOk` echo): `rateLimitSeen` or fetch kind
+`rateLimited` → `rateLimited`; `network`, `abandoned` → `network`;
+`blockedHost`, `notConsented`, `invalidRequest` → `server` (host or plugin
+setup, a retry does not fix it); `invalidResponse` → `invalidResponse`.
+`rateLimited(until)` is the plugin's pause end (`PluginPauses.until`), else now
+plus the script's wait, else the runner's default pause.
+
+- A failed job stays failed: no automatic retry (it would bill again). It is
+  tried again by `retry` ("Thử lại", sends only the missing lines), by a forced
+  re-run, by a newer plugin version (once), and by a save of that plugin's
+  settings (once per save).
+- A save is counted while the plugin has a job (`PluginConfigEpochs`; the first
+  emission of the store's stream is the baseline). A job that fails in a later
+  epoch than it started in is tried once more at once; failed jobs that a view
+  watches are retried once per save while their failure stays visible until
+  the retry answers; failed jobs nobody watches are forgotten (they run when
+  the song is shown). A running chunk is kept.
+- A database read failure (cache, plugin store) is a `server` failure with a
+  retry, never "no translation" and never switches translation off.
+- Logs carry the error type only, never lyric text, titles, keys or settings.
+
+## Interface to the plugin runner (PLUG-02)
+
+`PluginRunner.run(PluginRunRequest(installId, script: 'translate', input:
+{lines, to, song: {title, artist, lyrics}}, timeout: spec.timeoutSec, kinds:
+{translate, aiTranslate}, logInput: false), cancel: RunCancel?)` and
+`reportRejectedOutput`. Nothing else of the runner is used.
+
+## Providers and commands
+
+- `trackTranslationProvider(TrackId)` → `TranslationView{status, map,
+  sourceLang, installId, settingsDiffer}`; a watcher is what asks for the
+  translation, so the UI must keep it watched while it shows or edits it.
+- `playingTranslationProvider`: the playing track's view, idle when nothing
+  plays.
+- `translationCommandsProvider`: `toggle`, `setService`, `setDisplay`,
+  `setTarget(track, lang)`, `retranslate(track)`, `retry(track)`,
+  `cancelRetranslate(track)`, `setModel`, `setStyle`, `setNote`.
+- Seams: `translationAppLanguageProvider` (default `en`; the app overrides it
+  from the appearance setting where it wires the screens, the lyrics module
+  cannot read it), `translationDebounceProvider` (1 s) and
+  `translationTimerProvider` (tests).
+
+## Not here (Pro or later)
+
+Per-song or per-queue service and note, translate ahead ("Dịch trước"), the
+source-language picker, streaming translate, transliteration and the cache
+clear on the Data page. Public code only holds the locked surface.
