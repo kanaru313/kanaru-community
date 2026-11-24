@@ -21,6 +21,9 @@ String detectedLanguageName(AppLocalizations l10n, String code) {
   return translationLanguageName(l10n, base == 'zh' ? 'zh-Hans' : base);
 }
 
+/// Widest the target `<ngôn ngữ> ▾` may grow before it ellipsizes.
+const double _maxTargetWidth = 220;
+
 /// `[<ngôn ngữ> · tự nhận] [switch] [<đích> ▾]`: the source language is a
 /// read-only label (auto-detect), the switch turns translation on or off for
 /// every song, the target opens "Dịch sang".
@@ -68,12 +71,11 @@ class TranslateLanguageRow extends ConsumerWidget {
       child: Row(
         children: [
           Expanded(
-            flex: 3,
             child: Tooltip(
               message: l10n.lyricsTranslateSourceHint,
               child: Text(
                 label,
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.start,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyMedium
                     ?.copyWith(color: scheme.onSurfaceVariant),
@@ -87,13 +89,18 @@ class TranslateLanguageRow extends ConsumerWidget {
             onChanged: (_) => ref.read(translationCommandsProvider).toggle(),
           ),
           const KGap(KSpace.x2),
-          Expanded(
-            flex: 2,
+          // The target keeps its natural width (capped so a huge text scale
+          // still leaves room for the switch); the source label takes the rest.
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: _maxTargetWidth),
             child: Semantics(
               label: l10n.lyricsTranslateTarget(targetName),
               excludeSemantics: true,
               button: true,
               child: TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
+                ),
                 onPressed: onOpenTarget,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
