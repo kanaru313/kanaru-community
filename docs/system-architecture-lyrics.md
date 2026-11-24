@@ -469,8 +469,8 @@ The song info page (`library`) draws a "Lời bài hát" group right after Tags.
 Route `/settings/lyrics`: `lyricsSettingsLocation` (`lyrics/ui/lyrics_settings_link.dart`) is the single copy of the path;
 `SettingsPaths.lyrics` points at it and `buildSettingsRoute` has one `GoRoute(path: 'lyrics')`. The root row "Lời bài" opens it.
 The ⚙ of "Lời cho bài này" takes the router and the Now Playing panel notifier first, closes the modal through its guarded close
-(nothing happens when it is already closing), closes the desktop Now Playing panel, then `go`es to `lyricsSourcesSettingsLocation`
-(`/settings/lyrics?focus=sources`). The lyrics row of a plugin page (`plugin_head_card.dart`) opens the same location. It works from
+(nothing happens when it is already closing), closes the desktop Now Playing panel, then `go`es to `lyricsSettingsLocation` (the page top).
+The lyrics row of a plugin page (`plugin_head_card.dart`) opens `lyricsSourcesSettingsLocation` (`?focus=sources`). It works from
 Now Playing (mobile route and desktop panel) and from a song menu.
 
 **Deep link.** `LyricsSettingsPage` reads `?focus=sources` or `?focus=translation` (no route change: the query reaches the page

@@ -401,6 +401,45 @@ void main() {
       expect(insideBlock(FocusManager.instance.primaryFocus), isTrue);
     });
 
+    testWidgets('a later visit without the param does not scroll', (
+      tester,
+    ) async {
+      final h = await open(tester);
+      await settle(tester);
+      double offset() => tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .pixels;
+      final after = offset();
+      expect(after, greaterThan(0));
+      h.router.go('/settings/lyrics');
+      await settle(tester);
+      expect(offset(), after);
+      final pulse = find.ancestor(
+        of: find.byType(LyricsTranslationSection),
+        matching: find.byType(SetupSectionPulse),
+      );
+      expect(pulse, findsOneWidget);
+      expect(tester.state<SetupSectionPulseState>(pulse).isPulsing, isFalse);
+    });
+
+    testWidgets('a plain visit opens at the top', (tester) async {
+      await pumpSettings(
+        tester,
+        location: SettingsPaths.lyrics,
+        size: const Size(400, 600),
+        overrides: _services(const [_google]),
+      );
+      await settle(tester);
+      expect(
+        tester
+            .state<ScrollableState>(find.byType(Scrollable).first)
+            .position
+            .pixels,
+        0,
+      );
+    });
+
     testWidgets('mobile: the focus does not move', (tester) async {
       await open(tester);
       await settle(tester);
