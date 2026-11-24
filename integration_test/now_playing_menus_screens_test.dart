@@ -149,6 +149,7 @@ void main() {
       what: 'queue rows with their ⋮',
     );
     await tester.tap(rowMore.hitTestable().at(1));
+    await shot('04a-after-row-more-tap');
     await app.pumpUntil(
       () => find.text(l10n().playbackRowPlay).evaluate().isNotEmpty,
       what: 'the song menu of the queue entry',
