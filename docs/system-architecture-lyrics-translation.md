@@ -277,7 +277,10 @@ Now Playing only places these widgets; what they show comes from one provider.
   `StatusLoading`, forced re-run included), `failed` (every
   `TranslationFailure`, a half-done run too), `translated` (a copy with lines
   and an installed plugin, not working), the plugin and the target language.
-  With no lyrics view mounted it is on / off from the settings only.
+  With no lyrics view mounted it is on / off from the settings only. The
+  modal's preview counts as a lyrics view the user opened on purpose, so
+  opening "Dịch lời" with translation on may run a translation while it is
+  open (it publishes like any lyrics view and stops when it closes).
 - **Mobile button** (`TranslateButton`, in `lyrics_screen_header.dart`): icon;
   on = primary icon + 6 dp primary dot under it; working = ring; failed =
   `KAlertDot.corner`; no lyrics = disabled (dimmed by `KIconButton`). Tap =

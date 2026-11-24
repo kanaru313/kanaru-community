@@ -329,6 +329,15 @@ void main() {
       what: 'the synced lyrics on screen',
     );
     final pill = find.byType(TranslatePill);
+    // The Now Playing header hides after 3 s without input: it ignores the
+    // pointer and its Riverpod consumers stop rebuilding (muted tickers), so
+    // the pill would show stale state. Any key shows it again (Shift is not
+    // one of the page's shortcuts).
+    Future<void> showHeader() async {
+      await tester.sendKeyEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump(const Duration(milliseconds: 600));
+    }
+
     expect(pill, findsOneWidget);
     await shot('tr-pill-off');
 
@@ -379,6 +388,7 @@ void main() {
       isTrue,
     );
     // The pill names the language of the translation.
+    await showHeader();
     expect(
       find.descendant(
         of: pill,
@@ -400,6 +410,7 @@ void main() {
         .set(TranslationDisplay.under);
 
     // ===== the modal: default, service page, target page ====================
+    await showHeader();
     await tester.tap(pill);
     await app.pumpUntil(
       () => find.byType(TranslateBody).evaluate().isNotEmpty,
@@ -430,6 +441,7 @@ void main() {
     );
 
     // ===== a song change closes the modal ===================================
+    await showHeader();
     await tester.tap(pill);
     await app.pumpUntil(
       () => find.byType(TranslateBody).evaluate().isNotEmpty,
@@ -490,6 +502,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text(l10n().lyricsTranslateToastOff), findsOneWidget);
     await shot('tr-toast-off');
+    await showHeader();
     await tester.tap(pill, buttons: kSecondaryButton);
     await app.pumpUntil(
       () => container.read(translationOnProvider),

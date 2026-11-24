@@ -31,7 +31,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../lyrics/ui/lyrics_ui_host.dart' show syncedLyrics;
 import '../../lyrics/ui/translation/modal/translate_modal_host.dart'
-    show Box, box;
+    show Box, box, TranslateHost, trackOne;
 import '../../playback/support/ui_host.dart';
 import '../../playback/ui/sleep_timer/sleep_timer_modal_host.dart';
 import '../../shell/support/desktop_now_playing_host.dart';
@@ -339,6 +339,135 @@ void main() {
       await tester.tap(find.byType(TranslatePill));
       await tester.pump();
       expect(opened, [_track, _track]);
+    });
+  });
+
+  group('shown translations board', () {
+    test('two holders of one track: the entry stays until the last leaves', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final board = c.read(shownTranslationProvider.notifier);
+      final a = Object();
+      final b = Object();
+      board.publish(a, _track, _ready);
+      board.publish(b, _track, _ready);
+      board.release(a, _track);
+      expect(c.read(shownTranslationProvider), contains(_track));
+      board.release(b, _track);
+      expect(c.read(shownTranslationProvider), isEmpty);
+    });
+
+    for (final (name, first) in [
+      ('first view first', true),
+      ('second first', false),
+    ]) {
+      testWidgets('two views of one track unmount ($name)', (tester) async {
+        final feed = _Feed();
+        final shown = ValueNotifier<(bool, bool)>((true, true));
+        final host = await pumpWithPlayer(
+          tester,
+          ValueListenableBuilder<(bool, bool)>(
+            valueListenable: shown,
+            builder: (_, v, _) => Column(
+              children: [
+                if (v.$1)
+                  const TranslationPresence(
+                    key: ValueKey('a'),
+                    trackId: _track,
+                    active: true,
+                    child: SizedBox.shrink(),
+                  ),
+                if (v.$2)
+                  const TranslationPresence(
+                    key: ValueKey('b'),
+                    trackId: _track,
+                    active: true,
+                    child: SizedBox.shrink(),
+                  ),
+              ],
+            ),
+          ),
+          overrides: feed.overrides,
+          play: false,
+        );
+        host.container.read(feed.view.notifier).set(_ready);
+        await tester.pump();
+        await tester.pump();
+        expect(host.container.read(shownTranslationProvider), contains(_track));
+        shown.value = first ? (false, true) : (true, false);
+        await tester.pump();
+        await tester.pump();
+        expect(
+          host.container.read(shownTranslationProvider),
+          contains(_track),
+          reason: 'one view is still mounted',
+        );
+        shown.value = (false, false);
+        await tester.pump();
+        await tester.pump();
+        expect(host.container.read(shownTranslationProvider), isEmpty);
+      });
+    }
+
+    testWidgets('a track change under a mounted view moves the entry', (
+      tester,
+    ) async {
+      final feed = _Feed();
+      final state = ValueNotifier<(TrackId, bool)>((_track, true));
+      final host = await pumpWithPlayer(
+        tester,
+        ValueListenableBuilder<(TrackId, bool)>(
+          valueListenable: state,
+          builder: (_, v, _) => TranslationPresence(
+            trackId: v.$1,
+            active: v.$2,
+            child: const SizedBox.shrink(),
+          ),
+        ),
+        overrides: feed.overrides,
+        play: false,
+      );
+      host.container.read(feed.view.notifier).set(_ready);
+      await tester.pump();
+      await tester.pump();
+      Set<TrackId> keys() =>
+          host.container.read(shownTranslationProvider).keys.toSet();
+      expect(keys(), {_track});
+      // Changed in the same frame as the first publish could still be queued.
+      state.value = (const TrackId(2), true);
+      await tester.pump();
+      await tester.pump();
+      expect(keys(), {const TrackId(2)});
+      state.value = (const TrackId(2), false);
+      await tester.pump();
+      await tester.pump();
+      expect(keys(), isEmpty);
+    });
+
+    testWidgets('the modal alone publishes while open and clears on close', (
+      tester,
+    ) async {
+      final host = TranslateHost();
+      await host.turnOn();
+      await host.open(tester);
+      expect(host.container.read(shownTranslationProvider), contains(trackOne));
+      await host.esc(tester);
+      await tester.pump();
+      expect(host.container.read(shownTranslationProvider), isEmpty);
+    });
+  });
+
+  group('no lyrics view mounted', () {
+    testWidgets('a right click on the pill toggles and starts no job', (
+      tester,
+    ) async {
+      final feed = _Feed();
+      final host = await _pumpEntries(tester, feed, on: false);
+      await tester.tap(find.byType(TranslatePill), buttons: kSecondaryButton);
+      await tester.pump();
+      await host.letStreamsArrive(tester);
+      expect(host.container.read(translationOnProvider), isTrue);
+      expect(feed.builds, 0);
     });
   });
 

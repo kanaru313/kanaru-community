@@ -75,8 +75,11 @@ class _TranslationPresenceState extends ConsumerState<TranslationPresence> {
 
   Object get _holder => this;
 
+  /// Publishes [view] of [id] unless the widget moved on: a publish queued
+  /// before `didUpdateWidget` changed the track or switched [active] off must
+  /// not land after it (it would leave a holder nobody releases).
   void _publish(TrackId id, TranslationView view) {
-    if (!mounted) return;
+    if (!mounted || widget.trackId != id || !widget.active) return;
     _published = id;
     ref.read(shownTranslationProvider.notifier).publish(_holder, id, view);
   }
