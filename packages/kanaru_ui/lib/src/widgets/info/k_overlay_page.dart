@@ -26,12 +26,16 @@ import 'k_overlay_page_shell.dart';
 /// [onRoute] receives the route before it is pushed, so a caller can close
 /// it later without looking for it in the navigator.
 ///
+/// [subtitle] is a quiet line under the title in the page bar and in the
+/// default box header (a custom [boxHeader] draws its own).
+///
 /// [title] is the page bar title, the default box header and the route's
 /// semantics label. [builder] draws the body below the header; it gives its
 /// own scrolling. Read the current kind with [KOverlayPageScope].
 Future<T?> showKOverlayPage<T>(
   BuildContext context, {
   required String title,
+  String? subtitle,
   required WidgetBuilder builder,
   List<Widget> actions = const [],
   WidgetBuilder? boxHeader,
@@ -57,6 +61,7 @@ Future<T?> showKOverlayPage<T>(
     pageBuilder: (routeContext, _, _) => themes.wrap(
       KOverlayPageShell(
         title: title,
+        subtitle: subtitle,
         builder: builder,
         actions: actions,
         boxHeader: boxHeader,

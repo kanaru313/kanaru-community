@@ -4973,6 +4973,69 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get lyricsInfoGroup => 'Lời bài hát';
+
+  @override
+  String get lyricsInfoSourceRow => 'Nguồn lời';
+
+  @override
+  String get lyricsInfoSourceTag => 'Trong tag của tệp';
+
+  @override
+  String lyricsInfoSourceLrc(String name) {
+    return 'Tệp .lrc cạnh bài · $name';
+  }
+
+  @override
+  String get lyricsInfoSourceLrcBare => 'Tệp .lrc cạnh bài';
+
+  @override
+  String lyricsInfoSourceKept(String plugin) {
+    return 'Bản trực tuyến đã giữ · $plugin';
+  }
+
+  @override
+  String get lyricsInfoNone => 'Chưa có lời';
+
+  @override
+  String get lyricsInfoNoneHint => 'Thêm lời ở menu bài › Nguồn lời bài';
+
+  @override
+  String lyricsInfoLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dòng',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsInfoSeeAll => 'Xem cả lời';
+
+  @override
+  String get lyricsInfoCopy => 'Chép lời';
+
+  @override
+  String lyricsInfoCopied(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã chép lời ($count dòng)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsInfoShowStamps => 'Hiện mốc thời gian';
+
+  @override
+  String get lyricsInfoHideStamps => 'Ẩn mốc thời gian';
+
+  @override
+  String get lyricsInfoUnreadable => 'Không đọc được lời';
+
+  @override
   String get pluginsStoreTitle => 'Kho plugin';
 
   @override

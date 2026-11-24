@@ -52,6 +52,9 @@ abstract final class KIcons {
   static const IconData ai = FluentIcons.sparkle_24_regular;
   static const IconData comingSoon = FluentIcons.clock_24_regular;
 
+  /// Show or hide the time marks of lyrics.
+  static const IconData timestamps = FluentIcons.clock_24_regular;
+
   // Playback.
   static const IconData play = FluentIcons.play_24_filled;
   static const IconData pause = FluentIcons.pause_24_filled;

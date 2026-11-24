@@ -5422,6 +5422,72 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get lyricsInfoGroup => 'Lyrics';
+
+  @override
+  String get lyricsInfoSourceRow => 'Lyrics source';
+
+  @override
+  String get lyricsInfoSourceTag => 'In the file\'s tags';
+
+  @override
+  String lyricsInfoSourceLrc(String name) {
+    return '.lrc file next to the song · $name';
+  }
+
+  @override
+  String get lyricsInfoSourceLrcBare => '.lrc file next to the song';
+
+  @override
+  String lyricsInfoSourceKept(String plugin) {
+    return 'Kept online copy · $plugin';
+  }
+
+  @override
+  String get lyricsInfoNone => 'No lyrics yet';
+
+  @override
+  String get lyricsInfoNoneHint =>
+      'Add lyrics from the song menu › Lyrics source';
+
+  @override
+  String lyricsInfoLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lines',
+      one: '1 line',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsInfoSeeAll => 'See all lyrics';
+
+  @override
+  String get lyricsInfoCopy => 'Copy lyrics';
+
+  @override
+  String lyricsInfoCopied(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Lyrics copied ($count lines)',
+      one: 'Lyrics copied (1 line)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lyricsInfoShowStamps => 'Show timestamps';
+
+  @override
+  String get lyricsInfoHideStamps => 'Hide timestamps';
+
+  @override
+  String get lyricsInfoUnreadable => 'Couldn\'t read the lyrics';
+
+  @override
   String get pluginsStoreTitle => 'Plugin store';
 
   @override

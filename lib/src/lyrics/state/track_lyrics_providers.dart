@@ -87,7 +87,17 @@ final localLyricsReadProvider = FutureProvider.family<LocalLyricsRead, TrackId>(
 /// whose resolution needs a lookup starts one. A change of the
 /// `lyrics.local_first` setting or of the choice recomputes this without any
 /// read.
-final trackLyricsProvider = Provider.family<TrackLyrics, TrackId>((ref, id) {
+final trackLyricsProvider = Provider.family<TrackLyrics, TrackId>(
+  (ref, id) => resolveLyricsState(ref, id, lookup: true),
+  isAutoDispose: true,
+);
+
+/// The body of [trackLyricsProvider] and `storedTrackLyricsProvider`. With
+/// [lookup] false nothing is ever started: no lookup driver is watched, no
+/// retry timer is armed and the playing track is not special, so the result is
+/// only what is stored (a lookup still running for Now Playing reads as
+/// `LyricsNone(notPlaying)` until its result is cached).
+TrackLyrics resolveLyricsState(Ref ref, TrackId id, {required bool lookup}) {
   final facts = ref.watch(lyricsFactsProvider(id));
   final read = ref.watch(localLyricsReadProvider(id));
   final first = ref.watch(lyricsLocalFirstProvider);
@@ -113,7 +123,8 @@ final trackLyricsProvider = Provider.family<TrackLyrics, TrackId>((ref, id) {
   }
   final sourcesLoaded = ref.watch(lyricsSourcesLoadedProvider);
   final outcome = ref.watch(lookupOutcomesProvider.select((m) => m[key]));
-  final playing = ref.watch(playingTrackIdProvider.select((p) => p == id));
+  final playing =
+      lookup && ref.watch(playingTrackIdProvider.select((p) => p == id));
   final now = DateTime.fromMillisecondsSinceEpoch(
     ref.read(lyricsClockProvider)(),
   );
@@ -148,7 +159,8 @@ final trackLyricsProvider = Provider.family<TrackLyrics, TrackId>((ref, id) {
   }
   if (resolution.needsLookup && target != null) {
     if (!playing) {
-      // Only the playing track is looked up; the others show what is stored.
+      // Only the playing track is looked up (and only by a caller that wants
+      // lookups); the others show what is stored.
       return const LyricsNone(reason: LyricsNoneReason.notPlaying);
     }
     ref.watch(lookupDriverProvider(target));
@@ -158,7 +170,7 @@ final trackLyricsProvider = Provider.family<TrackLyrics, TrackId>((ref, id) {
     LyricsShown(:final lyrics) => LyricsShown(_withGap(lyrics)),
     _ => state,
   };
-}, isAutoDispose: true);
+}
 
 /// [lyrics] with the intro gap of `withIntroGap`, keeping the online source.
 Lyrics _withGap(Lyrics lyrics) {
