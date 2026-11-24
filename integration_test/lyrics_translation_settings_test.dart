@@ -26,6 +26,7 @@ import 'package:kanaru/src/plugins/state/store_ops.dart'
     show pluginIconProvider;
 import 'package:kanaru/src/screens/plugins/remove/remove_flow.dart';
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
+import 'package:kanaru/src/screens/settings/ui/lyrics/lyrics_translation_section.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -509,5 +510,44 @@ void main() {
         await _shot(tester, 'prc-m-card-${size.name}');
       });
     }
+  });
+
+  group('deep link ?focus=translation', () {
+    Future<void> open(WidgetTester tester, Size size) async {
+      await pumpSettings(
+        tester,
+        location: '${SettingsPaths.lyrics}?focus=translation',
+        size: size,
+        overrides: _services(const [_google]),
+      );
+      await tester.pump(KMotion.focusSettle);
+      for (var i = 0; i < 60; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    }
+
+    void expectTitleInView(WidgetTester tester, Size size) {
+      final rect = tester.getRect(find.text('Translation'));
+      expect(rect.top, greaterThanOrEqualTo(0));
+      expect(rect.bottom, lessThanOrEqualTo(size.height));
+    }
+
+    testWidgets('desktop: block in view, focus inside it', (tester) async {
+      await open(tester, _desktop);
+      expectTitleInView(tester, _desktop);
+      final node = FocusManager.instance.primaryFocus;
+      expect(
+        node?.context
+            ?.findAncestorWidgetOfExactType<LyricsTranslationSection>(),
+        isNotNull,
+      );
+      await _shot(tester, 'prc-anchor-translation');
+    });
+
+    testWidgets('mobile: block in view', (tester) async {
+      await open(tester, _mobile);
+      expectTitleInView(tester, _mobile);
+      await _shot(tester, 'prc-m-anchor-translation');
+    });
   });
 }
