@@ -177,7 +177,7 @@ void main() {
     expect(_builtLines(), lessThan(_maxBuilt));
   });
 
-  testWidgets('the pill brings back a line thousands of lines away', (
+  testWidgets('the back button brings back a line thousands of lines away', (
     tester,
   ) async {
     await open(tester, syncedLyrics(_count), line: 9000);

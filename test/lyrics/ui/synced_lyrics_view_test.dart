@@ -115,7 +115,9 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('a drag stops auto-scroll and shows the pill', (tester) async {
+  testWidgets('a drag stops auto-scroll and shows the back button', (
+    tester,
+  ) async {
     await open(tester, syncedLyrics(50));
     expect(_back, findsNothing);
     await _dragLyrics(tester);
@@ -170,7 +172,9 @@ void main() {
     expect(tester.widgetList(_arrow), hasLength(1));
   });
 
-  testWidgets('the pill brings the line back and goes away', (tester) async {
+  testWidgets('the back button brings the line back and goes away', (
+    tester,
+  ) async {
     await open(tester, syncedLyrics(50));
     final anchored = _offset(tester);
     await _dragLyrics(tester);
@@ -194,7 +198,7 @@ void main() {
     expect(_offset(tester), closeTo(anchored, 1));
   });
 
-  testWidgets('auto-return off: the pill stays however long we wait', (
+  testWidgets('auto-return off: the back button stays however long we wait', (
     tester,
   ) async {
     await open(tester, syncedLyrics(50));
