@@ -1292,12 +1292,6 @@ abstract class AppLocalizations {
   /// **'Lyrics'**
   String get playbackTabLyrics;
 
-  /// No description provided for @playbackLyricsTabSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Lyrics: coming soon'**
-  String get playbackLyricsTabSoon;
-
   /// No description provided for @playbackPanelClose.
   ///
   /// In en, this message translates to:
@@ -2215,12 +2209,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Advanced'**
   String get libraryMenuAdvanced;
-
-  /// No description provided for @libraryMenuFindLyrics.
-  ///
-  /// In en, this message translates to:
-  /// **'Find lyrics online…'**
-  String get libraryMenuFindLyrics;
 
   /// No description provided for @libraryMenuHide.
   ///

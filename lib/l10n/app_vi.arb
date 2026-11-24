@@ -446,7 +446,6 @@
   "playbackToggleCoverColumn": "Ẩn/hiện cột bìa",
   "playbackTranslate": "Dịch",
   "playbackTabLyrics": "Lời bài",
-  "playbackLyricsTabSoon": "Lời bài: sắp có",
   "playbackPanelClose": "Đóng khung",
   "playbackQueuePanelCounts": "{total} bài · còn {remaining}",
   "@playbackQueuePanelCounts": {
@@ -892,7 +891,6 @@
   "libraryMenuAskAiArtist": "Hỏi AI về nghệ sĩ này",
   "libraryMenuAskAiSongs": "Hỏi AI về các bài này",
   "libraryMenuAdvanced": "Nâng cao",
-  "libraryMenuFindLyrics": "Tìm lời online…",
   "libraryMenuHide": "Loại khỏi thư viện",
   "libraryMenuHideNote": "Giữ nguyên tệp; bỏ loại trong Cài đặt › Thư viện",
   "libraryMenuDeleteFiles": "Xoá tệp khỏi thiết bị",

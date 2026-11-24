@@ -773,9 +773,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackTabLyrics => 'Lyrics';
 
   @override
-  String get playbackLyricsTabSoon => 'Lyrics: coming soon';
-
-  @override
   String get playbackPanelClose => 'Close panel';
 
   @override
@@ -1394,9 +1391,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryMenuAdvanced => 'Advanced';
-
-  @override
-  String get libraryMenuFindLyrics => 'Find lyrics online…';
 
   @override
   String get libraryMenuHide => 'Remove from library';

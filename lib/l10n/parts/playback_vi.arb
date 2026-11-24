@@ -183,7 +183,6 @@
   "playbackToggleCoverColumn": "Ẩn/hiện cột bìa",
   "playbackTranslate": "Dịch",
   "playbackTabLyrics": "Lời bài",
-  "playbackLyricsTabSoon": "Lời bài: sắp có",
   "playbackPanelClose": "Đóng khung",
   "playbackQueuePanelCounts": "{total} bài · còn {remaining}",
   "@playbackQueuePanelCounts": {

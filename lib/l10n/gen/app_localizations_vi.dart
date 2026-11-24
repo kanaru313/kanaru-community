@@ -717,9 +717,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playbackTabLyrics => 'Lời bài';
 
   @override
-  String get playbackLyricsTabSoon => 'Lời bài: sắp có';
-
-  @override
   String get playbackPanelClose => 'Đóng khung';
 
   @override
@@ -1284,9 +1281,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get libraryMenuAdvanced => 'Nâng cao';
-
-  @override
-  String get libraryMenuFindLyrics => 'Tìm lời online…';
 
   @override
   String get libraryMenuHide => 'Loại khỏi thư viện';
