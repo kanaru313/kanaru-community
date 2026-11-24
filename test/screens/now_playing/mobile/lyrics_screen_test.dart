@@ -4,10 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
 import 'package:kanaru/src/lyrics/state/playing_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
+import 'package:kanaru/src/lyrics/state/translation/track_translation_notifier.dart';
+import 'package:kanaru/src/lyrics/state/translation/translation_providers.dart';
+import 'package:kanaru/src/lyrics/state/translation/translation_view.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_body.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_for_track_body.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_settings_link.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_source_button.dart';
+import 'package:kanaru/src/lyrics/ui/translation/modal/translate_body.dart';
+import 'package:kanaru/src/lyrics/ui/translation/translate_button.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
@@ -23,6 +28,13 @@ import 'package:material_ui/material_ui.dart';
 import '../../../lyrics/ui/lyrics_ui_host.dart' show plainLyrics, syncedLyrics;
 import '../../../playback/support/ui_host.dart';
 import '../../../support/icon_button_finders.dart';
+
+class _IdleTranslation extends TrackTranslation {
+  _IdleTranslation(super.trackId);
+
+  @override
+  TranslationView build() => TranslationView.idle;
+}
 
 final _routes = <RouteBase>[
   GoRoute(
@@ -54,6 +66,9 @@ Future<UiHost> _openScreen(
     ),
     playingLyricsLineProvider.overrideWithValue(line),
     trackLyricsProvider.overrideWith((ref, id) => lyrics),
+    // The modal of the translate button reads the translation of the song;
+    // its engine is the app root's, not this host's.
+    trackTranslationProvider.overrideWith2((id) => _IdleTranslation(id)),
   ];
   final host = await pumpWithPlayer(
     tester,
@@ -97,14 +112,26 @@ void main() {
     expect(find.text('Line 5'), findsOneWidget);
   });
 
-  testWidgets('Dịch is dimmed and inert, with a "coming soon" tooltip', (
+  testWidgets('Dịch is inert without lyrics and live with them', (
     tester,
   ) async {
     await _openScreen(tester);
-    final button = tester.widget<KIconButton>(
-      byIconButton('Translate lyrics · Coming soon'),
+    final none = tester.widget<KIconButton>(
+      byIconButton('Translate lyrics · No lyrics to translate'),
     );
-    expect(button.onPressed, isNull);
+    expect(none.onPressed, isNull);
+  });
+
+  testWidgets('Dịch opens "Translate lyrics" over the screen', (tester) async {
+    await _openScreen(tester, lyrics: LyricsShown(syncedLyrics(40)));
+    final button = tester.widget<KIconButton>(
+      byIconButton('Translate lyrics · Off'),
+    );
+    expect(button.onPressed, isNotNull);
+    await tester.tap(find.byType(TranslateButton));
+    await tester.pumpAndSettle();
+    expect(find.byType(TranslateBody), findsOneWidget);
+    expect(find.byType(LyricsScreen), findsOneWidget);
   });
 
   testWidgets('the source button opens the modal over the screen', (
@@ -140,6 +167,9 @@ void main() {
       lyricsSettingsLocation,
     );
     expect(tester.takeException(), isNull);
+    // The translate button's database stream ends with the screen: let its
+    // zero-length timer fire.
+    await tester.pump(const Duration(milliseconds: 1));
   });
 
   testWidgets('the trailing buttons touch: no gap between them', (
@@ -148,7 +178,7 @@ void main() {
     await _openScreen(tester, lyrics: LyricsShown(syncedLyrics(40)));
     Rect rect(Finder f) => tester.getRect(f);
     final source = rect(find.byType(LyricsSourceButton));
-    final translate = rect(byIconButton('Translate lyrics · Coming soon'));
+    final translate = rect(find.byType(TranslateButton));
     final favourite = rect(find.byType(FavoriteButton));
     expect(translate.left, closeTo(source.right, 0.01));
     expect(favourite.left, closeTo(translate.right, 0.01));

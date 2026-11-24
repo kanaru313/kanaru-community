@@ -238,6 +238,72 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('a disabled segment is dimmed, inert and skipped by arrows', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final chosen = <String>[];
+    await tester.pumpWidget(
+      host(
+        Center(
+          child: SizedBox(
+            width: 360,
+            child: KSegmented<String>(
+              segments: const [
+                KSegment(value: 'a', label: 'Một'),
+                KSegment(value: 'b', label: 'Hai', enabled: false),
+                KSegment(value: 'c', label: 'Ba'),
+              ],
+              value: 'a',
+              onChanged: chosen.add,
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.getSemantics(find.text('Hai')),
+      isSemantics(
+        label: 'Hai',
+        isButton: true,
+        hasEnabledState: true,
+        isEnabled: false,
+        isFocusable: false,
+      ),
+    );
+    expect(
+      tester.getSemantics(find.text('Ba')),
+      isSemantics(
+        label: 'Ba',
+        isButton: true,
+        hasEnabledState: true,
+        isEnabled: true,
+        isFocusable: true,
+      ),
+    );
+    final dim = tester.widget<Opacity>(
+      find.ancestor(of: find.text('Hai'), matching: find.byType(Opacity)).first,
+    );
+    expect(dim.opacity, 0.38);
+
+    await tester.tap(find.text('Hai'));
+    await tester.pump();
+    expect(chosen, isEmpty);
+
+    FocusNode node(String l) =>
+        tester.widget<FocusableActionDetector>(_seg(l)).focusNode!;
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    expect(node('Một').hasFocus, isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pump();
+    expect(node('Ba').hasFocus, isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pump();
+    expect(node('Một').hasFocus, isTrue);
+    semantics.dispose();
+  });
+
   testWidgets('reduced motion: the tint moves at once', (tester) async {
     await tester.pumpWidget(host(_segmented(), reduceMotion: true));
     await tester.pumpWidget(

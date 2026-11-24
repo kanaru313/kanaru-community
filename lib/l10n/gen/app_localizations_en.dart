@@ -4636,9 +4636,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get lyricsTranslateSoon => 'Translate lyrics · Coming soon';
-
-  @override
   String get lyricsForTrackTitle => 'Lyrics for this song';
 
   @override
@@ -6021,6 +6018,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsTranslateWriteFailed => 'Could not save the setting';
+
+  @override
+  String lyricsTranslateMenuOn(String language) {
+    return 'Translating into $language';
+  }
+
+  @override
+  String get lyricsTranslateMenuOff => 'Off';
+
+  @override
+  String get lyricsTranslateEntryFailed => 'Translation failed';
+
+  @override
+  String get lyricsTranslateEntryNoLyrics => 'No lyrics to translate';
+
+  @override
+  String get lyricsTranslatePillWorking => 'Translating';
+
+  @override
+  String lyricsTranslateToastOn(String language) {
+    return 'Translation: $language';
+  }
+
+  @override
+  String get lyricsTranslateToastOff => 'Translation off';
+
+  @override
+  String get lyricsTranslateEntryHintDesktop =>
+      'Right-click or T: turn translation on or off';
 
   @override
   String get pluginsStoreTitle => 'Plugin store';

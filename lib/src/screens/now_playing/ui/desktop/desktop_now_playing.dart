@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../lyrics/state/playing_lyrics_providers.dart';
 import '../../../../lyrics/ui/lyrics_for_track_modal.dart';
+import '../../../../lyrics/ui/translation/translate_entry.dart';
 import '../../../../playback/state/playing_cover_colors.dart';
 import '../../../../playback/state/now_playing_panel.dart';
 import '../../state/desktop_view.dart';
@@ -18,8 +19,8 @@ import 'now_playing_chrome.dart';
 /// of it, and its own focus scope: Esc closes it here, before the history
 /// input could take Esc as "go back".
 ///
-/// Keys: Esc closes; `V` shows or hides the cover column and `L` opens the
-/// lyrics modal (no modifier, no text field focused, no menu open); any key shows the hidden header.
+/// Keys: Esc closes; `V` shows or hides the cover column, `L` opens the
+/// lyrics modal and `T` turns translation on or off (no modifier, no text field focused, no menu open); any key shows the hidden header.
 class DesktopNowPlaying extends ConsumerStatefulWidget {
   const DesktopNowPlaying({super.key});
 
@@ -67,7 +68,9 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
       _close();
       return KeyEventResult.handled;
     }
-    if (key != LogicalKeyboardKey.keyV && key != LogicalKeyboardKey.keyL) {
+    if (key != LogicalKeyboardKey.keyV &&
+        key != LogicalKeyboardKey.keyL &&
+        key != LogicalKeyboardKey.keyT) {
       return KeyEventResult.ignored;
     }
     final keyboard = HardwareKeyboard.instance;
@@ -90,6 +93,14 @@ class _DesktopNowPlayingState extends ConsumerState<DesktopNowPlaying> {
           stillOwned: () => mounted,
         ),
       );
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.keyT) {
+      // Without lyrics there is nothing to translate: the key is not taken.
+      if (!ref.read(translateMenuAvailableProvider)) {
+        return KeyEventResult.ignored;
+      }
+      toggleTranslationNow(context, ref);
       return KeyEventResult.handled;
     }
     ref.read(coverColumnShownProvider.notifier).toggle();

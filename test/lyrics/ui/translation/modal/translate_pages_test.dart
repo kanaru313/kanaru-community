@@ -11,6 +11,12 @@ import 'package:material_ui/material_ui.dart';
 
 import 'translate_modal_host.dart';
 
+/// The segment [label] as a screen reader sees it: enabled or not.
+bool _segmentEnabled(WidgetTester tester, String label) => isSemantics(
+  hasEnabledState: true,
+  isEnabled: true,
+).matches(tester.getSemantics(find.bySemanticsLabel(label)), {});
+
 bool _segmentSelected(WidgetTester tester, String label) =>
     isSemantics(isSelected: true)
         .matches(tester.getSemantics(find.bySemanticsLabel(label)), {});
@@ -88,6 +94,17 @@ void main() {
       expect(isSelectedRow(tester, 'Gemini Translate'), isFalse);
       expect(find.text('AI'), findsOneWidget);
       expect(find.text('Get more translation plugins'), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('"This song" and "Queue" are disabled, "Every song" is not', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await _openService(tester);
+      expect(_segmentEnabled(tester, 'This song'), isFalse);
+      expect(_segmentEnabled(tester, 'Queue'), isFalse);
+      expect(_segmentEnabled(tester, 'Every song'), isTrue);
       handle.dispose();
     });
 

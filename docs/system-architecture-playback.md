@@ -905,8 +905,8 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
   It owns a `FlightSource` (cover, text, play, next pieces) for the queue flights.
 - **Lyrics screen** (`ui/mobile/lyrics_screen_route.dart`, `lyrics_screen.dart`, `lyrics_screen_header.dart`): an opaque full-screen
   `ModalRoute` on the root navigator that slides up (`KMotion.pageIn`, none under reduced motion) over `/now-playing`, on the cover tint.
-  Header 56 (`[⌄]`, cover 40, title / artist, [source button slot, empty until the lyrics source lands], the Translate button dimmed and
-  inert with the tooltip "Dịch lời · Sắp có", `[♥]`), `LyricsBody(surface: screen)`, footer (waveform seek slot, then
+  Header 56 (`[⌄]`, cover 40, title / artist, the lyrics source button, the live `TranslateButton` (opens "Dịch lời"; see
+  `system-architecture-lyrics-translation.md` § Entry points), `[♥]`), `LyricsBody(surface: screen)`, footer (waveform seek slot, then
   elapsed / previous / play 64 / next / total). Closing: ⌄, Back, a pull down on the header or footer, or a pull down past the top of the
   lyrics (overscroll only; scrolling the lyrics never closes it); past 100 dp the screen closes, less springs back (`KSpring.gentle`).
   **One close path**: `closeLyricsScreen(route, {animated})` (route still active and not already closing; pops when it is the top route and
@@ -975,7 +975,7 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
 - **Screen** (`screens/now_playing/ui/desktop/`): `DesktopNowPlaying` (focus, Esc, `V`, tint, transparent `Scaffold`) over
   `DesktopNowPlayingBody` (auto-hiding header, then the split or the side pane alone, 300 ms cross-fade, the outgoing body ignores
   pointer and focus). `V` flips the cover column only with no modifier, no menu open and no text field focused; the choice lives in
-  `coverColumnShownProvider` for the session.
+  `coverColumnShownProvider` for the session. `T` turns lyrics translation on or off with the same guards (ignored without lyrics).
 - **Header** (`desktop_now_playing_header.dart`, 64 dp): `[⌄] [cover column] | [♥] [add to playlist] [Translate chip, soon]`
   and `[repeat] [sleep timer] [volume] [⋮]`. No Shuffle, no window buttons. The ⋮ (a `KIconButton`) opens the song menu (a 400 dp dialog) inside `NowPlayingChrome.whilePinned`,
   so the header stays shown until the menu and any dialog opened from it close (dismissed, chosen, or the header disposed). `now_playing_auto_hide.dart` is the old controller
@@ -992,7 +992,7 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
   expand buttons open the screen.
 - **Queue nav item**: a dimmed "Coming soon" on both shells (saved queues, no mockup yet). The live queue is the right panel (desktop;
   top bar or player bar button) and the sheet (mobile; mini player long press, Queue button of Now Playing).
-- **Left out of the port**: the cover-only mode, the lyrics keys `L` and `T` (`L` comes with the lyrics source button), the narrow tabs layout (it is the mobile page).
+- **Left out of the port**: the cover-only mode, the narrow tabs layout (it is the mobile page).
 - **Waveform**: `NowPlayingSeekSlot` holds `PlaybackWaveformSeekBar` in the same 48 dp slot (see Waveform).
 
 ## Waveform

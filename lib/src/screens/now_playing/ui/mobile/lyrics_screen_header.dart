@@ -8,6 +8,7 @@ import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../lyrics/state/playing_lyrics_providers.dart';
 import '../../../../lyrics/ui/lyrics_for_track_modal.dart';
 import '../../../../lyrics/ui/lyrics_source_button.dart';
+import '../../../../lyrics/ui/translation/translate_entry.dart';
 import '../../../../media/domain/cover_files.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/state/track_info_providers.dart';
@@ -18,7 +19,8 @@ import 'now_playing_header.dart'
 
 /// Header of the lyrics screen: `[⌄] · cover 40 · title / artist · [source]
 /// [Dịch] · [♥]`. The source button opens "Lời cho bài này" for the playing
-/// song; the translate button is dimmed and inert until translation exists.
+/// song; the translate button opens "Dịch lời" (dimmed and inert without
+/// lyrics).
 /// The three action buttons sit together, with no gap but their own padding.
 class LyricsScreenHeader extends ConsumerWidget {
   const LyricsScreenHeader({super.key, required this.onClose});
@@ -93,11 +95,7 @@ class LyricsScreenHeader extends ConsumerWidget {
                     );
                   },
                 ),
-                KIconButton(
-                  icon: KIcons.languages,
-                  tooltip: l10n.lyricsTranslateSoon,
-                  onPressed: null,
-                ),
+                const TranslateButton(),
                 if (id != null) FavoriteButton(trackId: id),
               ],
             ),

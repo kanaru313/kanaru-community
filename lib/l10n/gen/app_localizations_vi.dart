@@ -4206,9 +4206,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get lyricsTranslateSoon => 'Dịch lời · Sắp có';
-
-  @override
   String get lyricsForTrackTitle => 'Lời cho bài này';
 
   @override
@@ -5563,6 +5560,35 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lyricsTranslateWriteFailed => 'Không lưu được cài đặt';
+
+  @override
+  String lyricsTranslateMenuOn(String language) {
+    return 'Đang dịch sang $language';
+  }
+
+  @override
+  String get lyricsTranslateMenuOff => 'Đang tắt';
+
+  @override
+  String get lyricsTranslateEntryFailed => 'Dịch lỗi';
+
+  @override
+  String get lyricsTranslateEntryNoLyrics => 'Chưa có lời để dịch';
+
+  @override
+  String get lyricsTranslatePillWorking => 'Đang dịch';
+
+  @override
+  String lyricsTranslateToastOn(String language) {
+    return 'Bản dịch: $language';
+  }
+
+  @override
+  String get lyricsTranslateToastOff => 'Đã tắt bản dịch';
+
+  @override
+  String get lyricsTranslateEntryHintDesktop =>
+      'Chuột phải hoặc T: bật hoặc tắt bản dịch';
 
   @override
   String get pluginsStoreTitle => 'Kho plugin';

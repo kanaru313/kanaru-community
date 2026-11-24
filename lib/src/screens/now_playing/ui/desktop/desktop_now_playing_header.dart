@@ -8,6 +8,8 @@ import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../lyrics/state/playing_lyrics_providers.dart';
 import '../../../../lyrics/ui/lyrics_for_track_modal.dart';
 import '../../../../lyrics/ui/lyrics_source_button.dart';
+import '../../../../lyrics/ui/translation/translate_entry.dart';
+import '../../../../media/domain/track_id.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/state/track_info_providers.dart';
 import '../../../../playback/ui/sleep_timer/sleep_timer_entries.dart';
@@ -23,11 +25,11 @@ import 'now_playing_chrome.dart';
 const double desktopNowPlayingHeaderHeight = 64;
 
 /// Left: close, show/hide the cover column | favourite, add to playlist,
-/// translate chip (soon). Right: repeat, sleep timer, volume, more.
+/// translate pill. Right: repeat, sleep timer, volume, more.
 /// There is no Shuffle (it is on the queue panel and the player bar) and no
 /// window buttons (they are on the top bar).
 ///
-/// The ⋮ song menu, the sleep timer modal and the lyrics modal pin [chrome] while open, so
+/// The ⋮ song menu, the sleep timer, lyrics and translate modals pin [chrome] while open, so
 /// whoever hides the header keeps it shown.
 class DesktopNowPlayingHeader extends ConsumerStatefulWidget {
   const DesktopNowPlayingHeader({
@@ -79,11 +81,17 @@ class _DesktopNowPlayingHeaderState
     );
   }
 
+  /// Opens "Dịch lời" for the playing song with the header pinned, the same
+  /// way as the lyrics modal.
+  Future<void> _openTranslate(BuildContext context, TrackId id) =>
+      widget.chrome.whilePinned(
+        () => showTranslateModal(context, id, followsPlaying: true),
+        stillOwned: () => mounted,
+      );
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
-    final soon = l10n.appComingSoon;
     final trackId = ref.watch(
       nowPlayingProvider.select((n) => n.value?.trackId),
     );
@@ -125,32 +133,7 @@ class _DesktopNowPlayingHeaderState
             ),
             Padding(
               padding: const EdgeInsets.only(left: KSpace.x1),
-              child: Tooltip(
-                message: '${l10n.playbackTranslate} · $soon',
-                child: Opacity(
-                  opacity: 0.5,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHigh,
-                      borderRadius: KRadius.full,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: KSpace.x3,
-                        vertical: KSpace.x2,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        spacing: KSpace.x1,
-                        children: [
-                          const Icon(KIcons.language, size: KIconSize.xs),
-                          Text(l10n.playbackTranslate),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              child: TranslatePill(opener: _openTranslate),
             ),
             const Spacer(),
             const RepeatButton(),

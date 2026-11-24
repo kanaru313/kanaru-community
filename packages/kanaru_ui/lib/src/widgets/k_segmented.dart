@@ -9,19 +9,30 @@ import 'k_press_surface.dart';
 
 const double _kTrackPad = KSpace.x1 / 2;
 
+/// M3 disabled content opacity.
+const double _kDisabledOpacity = 0.38;
+
 /// One segment of a [KSegmented].
 class KSegment<T> {
-  const KSegment({required this.value, required this.label});
+  const KSegment({
+    required this.value,
+    required this.label,
+    this.enabled = true,
+  });
 
   final T value;
   final String label;
+
+  /// False dims the segment (M3 disabled opacity); it cannot be tapped, takes
+  /// no focus and the arrow keys step over it. Semantics report it disabled.
+  final bool enabled;
 }
 
 /// 2 to 4 short text values, always visible, one chosen: only the chosen
 /// segment is tinted (tonal fill), no check mark. At least 48 dp tall on touch
 /// shells, 36 on desktop; taller when the text scale needs it.
 ///
-/// Tab walks the segments, the arrow keys move focus to the neighbour
+/// Tab walks the segments, the arrow keys move focus to the next enabled
 /// segment, Enter / Space choose the focused one. Semantics: one node per
 /// segment, `selected` for the chosen, all in one mutually exclusive group.
 class KSegmented<T> extends StatefulWidget {
@@ -86,8 +97,15 @@ class _KSegmentedState<T> extends State<KSegmented<T>> {
   }
 
   void _move(int from, int delta) {
-    final to = from + delta;
-    if (to >= 0 && to < _nodes.length) _nodes[to].requestFocus();
+    // Steps over disabled segments: they cannot take focus.
+    var to = from + delta;
+    while (to >= 0 && to < _nodes.length) {
+      if (widget.segments[to].enabled) {
+        _nodes[to].requestFocus();
+        return;
+      }
+      to += delta;
+    }
   }
 
   @override
@@ -130,7 +148,9 @@ class _KSegmentedState<T> extends State<KSegmented<T>> {
                       label: widget.segments[i].label,
                       selected: widget.segments[i].value == widget.value,
                       focusNode: _nodes[i],
-                      onTap: () => widget.onChanged(widget.segments[i].value),
+                      onTap: widget.segments[i].enabled
+                          ? () => widget.onChanged(widget.segments[i].value)
+                          : null,
                       minHeight: height - 2 * _kTrackPad,
                     ),
                   ),
@@ -155,7 +175,9 @@ class _Segment extends StatelessWidget {
   final String label;
   final bool selected;
   final FocusNode focusNode;
-  final VoidCallback onTap;
+
+  /// Null: the segment is disabled.
+  final VoidCallback? onTap;
   final double minHeight;
 
   @override
@@ -165,7 +187,7 @@ class _Segment extends StatelessWidget {
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : KMotion.fast;
-    return KPressSurface(
+    final face = KPressSurface(
       onPressed: onTap,
       radius: KRadius.full,
       semanticLabel: label,
@@ -202,5 +224,8 @@ class _Segment extends StatelessWidget {
         ),
       ),
     );
+    return onTap == null
+        ? Opacity(opacity: _kDisabledOpacity, child: face)
+        : face;
   }
 }

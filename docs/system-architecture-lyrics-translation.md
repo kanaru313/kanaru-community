@@ -212,8 +212,7 @@ legend **Dịch**.
 ## UI: the Dịch lời modal (`lyrics/ui/translation/modal/`)
 
 Mockup: `mockups/screens/07-lyrics.md` (Modal Dịch lời, T1–T9), legend **Modal**
-and **Modal lỗi dịch**. Entry points (header button, pill, `T`, ⋮) are a later
-change; they call `showTranslateModal`.
+and **Modal lỗi dịch**. The entry points are in "Entry points" below.
 
 - **Frame.** `showTranslateModal(context, trackId, {followsPlaying})` opens a
   sheet (mobile) or a 440 dp dialog (desktop) through `showTranslateFrame`.
@@ -248,7 +247,8 @@ change; they call `showTranslateModal`.
   the run held) shows "Đã dịch lại · <style or plugin>" when the forced run
   ends ready, and lets go when it fails or never starts (5 s).
 - **Free limits.** "Áp dụng cho" is always on "Mọi bài" (the other two segments
-  are inert with the Pro caption and `ProBadge`); the model, style and
+  are disabled: `KSegment.enabled: false`, dimmed, not focusable, with the Pro
+  caption and `ProBadge`); the model, style and
   "Lời dặn thêm" write the plugin's own settings (`customInstruction`) through
   `TranslationCommands`, one note for every song. A refused `ConfigWrite`
   shows its error line under the field; the note saves on focus loss, on
@@ -256,6 +256,40 @@ change; they call `showTranslateModal`.
 - Links (`translate_links.dart`): store `/settings/plugins?kind=translate`,
   plugin page, ⚙ `/settings/lyrics`; the modal closes (and the desktop Now
   Playing panel) before the router moves.
+
+## Entry points (`lyrics/ui/translation/translate_entry.dart`)
+
+Now Playing only places these widgets; what they show comes from one provider.
+
+- **State.** `translateEntryProvider` (autoDispose) reads `playingLyricsProvider`
+  (`available` = lyrics shown), `translationOnProvider`,
+  `effectiveTranslationTargetProvider` and, only while translation is on and
+  the song has lyrics, `trackTranslationProvider` + `translationCreditProvider`
+  (so a closed header never starts a run): `working` (any `StatusLoading`,
+  forced re-run included), `failed` (every `TranslationFailure`, a half-done
+  run too), `translated` (credit present and not working: ready, another
+  plugin's copy, half done), the plugin and the target language.
+- **Mobile button** (`TranslateButton`, in `lyrics_screen_header.dart`): icon;
+  on = primary icon + 6 dp primary dot under it; working = ring; failed =
+  `KAlertDot.corner`; no lyrics = disabled (dimmed by `KIconButton`). Tap =
+  `showTranslateModal(followsPlaying: true)`.
+- **Desktop pill** (`TranslatePill`, in `desktop_now_playing_header.dart`):
+  off "Dịch"; on `secondaryContainer`; translated [plugin icon · language];
+  working ring + "Đang dịch"; failed alert dot on the corner; no lyrics 0.5 and
+  inert. Click opens the modal through the header's `whilePinned` opener (the
+  header stays shown); right click = `toggleTranslation`.
+- **Toggle** (`translate_toggle.dart`): `toggleTranslation(context, ref)` turns
+  translation on or off for every song and shows "Bản dịch: <ngôn ngữ>" /
+  "Đã tắt bản dịch" through `showAppSnackBar`; no-op without lyrics. Used by the
+  pill's right click and the `T` key of `DesktopNowPlaying` (same guards as `L`:
+  no modifier, no text field focused, no floating surface; ignored without
+  lyrics).
+- **⋮ item** ("Dịch lời…" in `now_playing_song_menu.dart`, `MenuItemId.translate`):
+  `liveSubtitle` ("Đang dịch sang <ngôn ngữ>" / "Đang tắt", from
+  `translateEntryProvider`), key hint `T` on the desktop; dimmed without lyrics
+  (`translateMenuAvailableProvider`); opens `openTranslateModalForPlaying`.
+- Integration test: `integration_test/lyrics_translation_test.dart` (live
+  `google-translate`, cache replay, `T`, right click, screenshots).
 
 ## Not here (Pro or later)
 

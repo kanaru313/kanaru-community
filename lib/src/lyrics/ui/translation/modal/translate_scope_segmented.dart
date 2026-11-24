@@ -11,10 +11,7 @@ enum TranslateScope { song, queue, all }
 /// and one tuning for every song, so it is always on "Mọi bài": a tap on the
 /// other two does nothing, and the caption says they are Pro. No Pro logic
 /// lives here; the Pro build replaces this widget's job through the same
-/// place.
-///
-/// Gap: `KSegmented` cannot dim or disable one segment, so the two Pro
-/// segments look enabled; they are inert only.
+/// place. The two Pro segments are disabled (dimmed, inert).
 class TranslateScopeSegmented extends StatelessWidget {
   const TranslateScopeSegmented({super.key});
 
@@ -34,17 +31,19 @@ class TranslateScopeSegmented extends StatelessWidget {
               KSegment(
                 value: TranslateScope.song,
                 label: l10n.lyricsTranslateScopeSong,
+                enabled: false,
               ),
               KSegment(
                 value: TranslateScope.queue,
                 label: l10n.lyricsTranslateScopeQueue,
+                enabled: false,
               ),
               KSegment(
                 value: TranslateScope.all,
                 label: l10n.lyricsTranslateScopeAll,
               ),
             ],
-            // Locked in the free app: every choice stays on "Mọi bài".
+            // Only "Mọi bài" is enabled in the free app.
             onChanged: (_) {},
           ),
         ),

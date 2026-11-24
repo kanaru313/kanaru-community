@@ -3249,7 +3249,6 @@
       }
     }
   },
-  "lyricsTranslateSoon": "Dịch lời · Sắp có",
   "lyricsForTrackTitle": "Lời cho bài này",
   "lyricsModalClose": "Đóng",
   "lyricsModalNoneOnDevice": "Không có lời trên máy",
@@ -4283,6 +4282,28 @@
   "lyricsTranslateWriteTooLarge": "Lời dặn quá dài",
   "lyricsTranslateWriteUnknown": "Plugin này không có ô này",
   "lyricsTranslateWriteFailed": "Không lưu được cài đặt",
+  "lyricsTranslateMenuOn": "Đang dịch sang {language}",
+  "@lyricsTranslateMenuOn": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateMenuOff": "Đang tắt",
+  "lyricsTranslateEntryFailed": "Dịch lỗi",
+  "lyricsTranslateEntryNoLyrics": "Chưa có lời để dịch",
+  "lyricsTranslatePillWorking": "Đang dịch",
+  "lyricsTranslateToastOn": "Bản dịch: {language}",
+  "@lyricsTranslateToastOn": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateToastOff": "Đã tắt bản dịch",
+  "lyricsTranslateEntryHintDesktop": "Chuột phải hoặc T: bật hoặc tắt bản dịch",
   "pluginsStoreTitle": "Kho plugin",
   "pluginsFilterTooltip": "Lọc",
   "pluginsFilterActiveLabel": "{count} đang bật",

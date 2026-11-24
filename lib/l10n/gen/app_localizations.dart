@@ -6672,12 +6672,6 @@ abstract class AppLocalizations {
   /// **'{title} · {source}'**
   String lyricsCardLabel(String title, String source);
 
-  /// No description provided for @lyricsTranslateSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Translate lyrics · Coming soon'**
-  String get lyricsTranslateSoon;
-
   /// No description provided for @lyricsForTrackTitle.
   ///
   /// In en, this message translates to:
@@ -8830,6 +8824,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save the setting'**
   String get lyricsTranslateWriteFailed;
+
+  /// No description provided for @lyricsTranslateMenuOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Translating into {language}'**
+  String lyricsTranslateMenuOn(String language);
+
+  /// No description provided for @lyricsTranslateMenuOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get lyricsTranslateMenuOff;
+
+  /// No description provided for @lyricsTranslateEntryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation failed'**
+  String get lyricsTranslateEntryFailed;
+
+  /// No description provided for @lyricsTranslateEntryNoLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics to translate'**
+  String get lyricsTranslateEntryNoLyrics;
+
+  /// No description provided for @lyricsTranslatePillWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Translating'**
+  String get lyricsTranslatePillWorking;
+
+  /// No description provided for @lyricsTranslateToastOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation: {language}'**
+  String lyricsTranslateToastOn(String language);
+
+  /// No description provided for @lyricsTranslateToastOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation off'**
+  String get lyricsTranslateToastOff;
+
+  /// No description provided for @lyricsTranslateEntryHintDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click or T: turn translation on or off'**
+  String get lyricsTranslateEntryHintDesktop;
 
   /// No description provided for @pluginsStoreTitle.
   ///

@@ -387,6 +387,9 @@ void main() {
         );
         expect(find.text('lyrics settings page'), findsOneWidget);
         expect(tester.takeException(), isNull);
+        // The translate pill's database stream ends with the panel: let its
+        // zero-length timer fire.
+        await tester.pump(const Duration(milliseconds: 1));
       });
 
       testWidgets('L opens it with the header pinned', (tester) async {

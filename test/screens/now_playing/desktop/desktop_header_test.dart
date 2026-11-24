@@ -7,6 +7,7 @@ import 'package:kanaru/src/lyrics/state/playing_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_source_button.dart';
 import 'package:kanaru/src/lyrics/ui/song_lyrics_entry_impl.dart';
+import 'package:kanaru/src/lyrics/ui/translation/translate_pill.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
@@ -157,18 +158,23 @@ void main() {
     expect(_in(header, find.byIcon(KIcons.shuffle)), findsNothing);
   });
 
-  testWidgets('the sleep timer is a live entry; only translate is dimmed', (
+  testWidgets('the sleep timer and the translate pill are live entries', (
     tester,
   ) async {
     await _open(tester);
     final button = tester.widget<KIconButton>(byIconButton('Sleep timer'));
     expect(button.onPressed, isNotNull);
-    final chip = find.ancestor(
-      of: find.text('Translate'),
-      matching: find.byType(Opacity),
+    // The song has lyrics: the pill is enabled, no "Coming soon" anywhere.
+    expect(
+      tester.widget<InkWell>(
+        find.descendant(
+          of: find.byType(TranslatePill),
+          matching: find.byType(InkWell),
+        ),
+      ).onTap,
+      isNotNull,
     );
-    expect(tester.widget<Opacity>(chip.first).opacity, lessThan(1));
-    expect(find.byTooltip('Translate · Coming soon'), findsOneWidget);
+    expect(find.textContaining('Coming soon'), findsNothing);
   });
 
   testWidgets('a running timer shows its pill in the header, not the icon', (
