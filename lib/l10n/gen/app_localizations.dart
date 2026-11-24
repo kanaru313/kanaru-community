@@ -2840,6 +2840,12 @@ abstract class AppLocalizations {
   /// **'Close'**
   String get libraryInfoClose;
 
+  /// No description provided for @libraryInfoLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the song info'**
+  String get libraryInfoLoadFailed;
+
   /// No description provided for @libraryPanelLabel.
   ///
   /// In en, this message translates to:

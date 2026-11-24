@@ -1139,6 +1139,7 @@
   },
   "libraryInfoMore": "Tùy chọn khác",
   "libraryInfoClose": "Đóng",
+  "libraryInfoLoadFailed": "Không đọc được thông tin bài",
   "libraryPanelLabel": "Các bài đã chọn",
   "libraryPanelClear": "Bỏ chọn tất cả",
   "libraryPanelPlayAll": "Phát tất cả bài đã chọn",

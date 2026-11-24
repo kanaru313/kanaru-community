@@ -1797,6 +1797,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryInfoClose => 'Close';
 
   @override
+  String get libraryInfoLoadFailed => 'Could not read the song info';
+
+  @override
   String get libraryPanelLabel => 'Selected songs';
 
   @override

@@ -53,7 +53,7 @@ void main() {
       final h = await pumpInfo(tester);
       h.details.addError(StateError('boom'));
       await tester.pump();
-      expect(find.text('Could not open the menu'), findsOneWidget);
+      expect(find.text('Could not read the song info'), findsOneWidget);
       // The mockup draws no Back button for a failed read.
       expect(find.text('Back'), findsNothing);
     });

@@ -1680,6 +1680,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get libraryInfoClose => 'Đóng';
 
   @override
+  String get libraryInfoLoadFailed => 'Không đọc được thông tin bài';
+
+  @override
   String get libraryPanelLabel => 'Các bài đã chọn';
 
   @override
