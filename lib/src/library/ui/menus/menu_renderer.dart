@@ -168,5 +168,7 @@ KMenuRow _row(
     danger: item.danger,
     proLabel: item.pro ? l10n.proBadge : null,
     hint: item.hint,
+    liveTitle: item.liveTitle,
+    liveSubtitle: item.liveSubtitle,
   );
 }

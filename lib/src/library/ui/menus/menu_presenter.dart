@@ -42,6 +42,7 @@ Future<void> presentMenu(
   final desktop = FormFactor.of(context) == FormFactor.desktop;
   final MenuSpec spec;
   final KMenuPage page;
+  final MenuActionRunner runner;
   ValueNotifier<bool>? live;
   ProviderSubscription<bool>? watching;
   try {
@@ -61,10 +62,11 @@ Future<void> presentMenu(
             isFavoriteProvider(favoriteOf),
             (_, on) => live!.value = on,
           );
+    runner = MenuActionRunner(container, root, beforeNavigate: beforeNavigate);
     page = renderMenu(
       spec,
       l10n,
-      MenuActionRunner(container, root, beforeNavigate: beforeNavigate),
+      runner,
       onHeaderTap: onHeaderTap == null
           ? null
           : (viaKeyboard) => onHeaderTap(root, viaKeyboard),
@@ -92,6 +94,9 @@ Future<void> presentMenu(
       backTooltip: l10n.libraryMenuBack,
       viaKeyboard: viaKeyboard,
     );
+    // A row's action starts as the menu closes; wait for a caller's own
+    // action (a dialog) to finish before the future completes.
+    await runner.settled();
   } finally {
     // The live heart row stops following the favorites when the menu is gone.
     watching?.close();

@@ -11,7 +11,7 @@ import 'menu_loaders.dart';
 import 'menu_model.dart';
 import 'menu_origin.dart';
 import 'menu_presenter.dart';
-import 'song_menu.dart' show withSongPageRows;
+import 'song_menu.dart' show SongMenuAroundLyrics, withSongPageRows;
 
 /// Opens a menu built by [build] (data loading and spec building, off the
 /// widget tree). Throwing `ItemGoneException` shows the "not found" toast and
@@ -28,6 +28,14 @@ Future<void> openMenu(
 /// heart row. The header's `›` (and Alt+Enter) opens the song info over the
 /// menu; the heart row follows the favorite mark while the menu is open.
 ///
+/// For a caller that knows more than the library (the Now Playing screen):
+/// [aroundLyrics] puts its rows before / after the lyrics row, [selectRow] and
+/// [queueButtons] false leave out "Select" and the "Play next" / "Add to queue"
+/// footer, [openLyrics] replaces what the lyrics row opens (for example "Lyrics
+/// for this song" that follows the playing track). The returned future also
+/// waits for a `MenuAction.run` chosen in the menu to finish, so a caller can
+/// keep something pinned while its dialog is open.
+///
 /// A menu opened over the song info ([headerCloses]) has a `›` that only
 /// closes the menu (the info is right under it), and [beforeNavigate] runs
 /// before a "Go to" row opens its page so the info can close first.
@@ -40,12 +48,19 @@ Future<void> openSongMenu(
   bool favoriteRow = true,
   bool headerCloses = false,
   VoidCallback? beforeNavigate,
+  SongMenuAroundLyrics? aroundLyrics,
+  bool selectRow = true,
+  bool queueButtons = true,
+  Future<void> Function(BuildContext context)? openLyrics,
 }) => presentMenu(
   context,
   (container, env) async => withSongPageRows(
-    await songMenuSpec(container, env, info, origin),
+    await songMenuSpec(container, env, info, origin, openLyrics: openLyrics),
     playlistGroup: playlistGroup,
     favoriteRow: favoriteRow,
+    aroundLyrics: aroundLyrics,
+    selectRow: selectRow,
+    queueButtons: queueButtons,
   ),
   viaKeyboard: viaKeyboard,
   beforeNavigate: beforeNavigate,

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart' show BuildContext;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
@@ -108,8 +109,9 @@ Future<MenuSpec> songMenuSpec(
   ProviderContainer container,
   MenuEnv env,
   TrackInfo info,
-  MenuOrigin origin,
-) async {
+  MenuOrigin origin, {
+  Future<void> Function(BuildContext context)? openLyrics,
+}) async {
   final db = container.read(appDatabaseProvider);
   final links = await trackLinks(db, info.id);
   if (links == null) throw ItemGoneException('track ${info.id}');
@@ -131,7 +133,9 @@ Future<MenuSpec> songMenuSpec(
       favorite: favorites.contains(info.id),
       selected: container.read(librarySelectionProvider).set.contains(info.id),
       lyricsLabel: lyricsLabel,
-      openLyrics: entry == null ? null : (ctx) => entry.open(ctx, info.id),
+      openLyrics:
+          openLyrics ??
+          (entry == null ? null : (ctx) => entry.open(ctx, info.id)),
     ),
     origin,
     env,

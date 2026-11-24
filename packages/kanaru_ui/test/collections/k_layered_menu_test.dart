@@ -810,4 +810,104 @@ void main() {
       handle.dispose();
     });
   });
+
+  group('live labels', () {
+    testWidgets('title and subtitle follow their notifiers', (tester) async {
+      useWindow(tester, const Size(1300, 900));
+      final title = ValueNotifier('Timer - off');
+      final subtitle = ValueNotifier('none');
+      addTearDown(title.dispose);
+      addTearDown(subtitle.dispose);
+      final page = KMenuPage(
+        groups: [
+          [
+            KMenuRow(
+              title: 'Timer',
+              subtitle: 'static',
+              icon: KIcons.favorites,
+              liveTitle: title,
+              liveSubtitle: subtitle,
+              onTap: () {},
+            ),
+          ],
+        ],
+      );
+      await tester.pumpWidget(host(_opener(page)));
+      await _open(tester);
+      expect(find.text('Timer - off'), findsOneWidget);
+      expect(find.text('none'), findsOneWidget);
+      expect(find.text('Timer'), findsNothing);
+      expect(find.text('static'), findsNothing);
+
+      title.value = 'Timer - 23:41';
+      subtitle.value = 'running';
+      await tester.pump();
+      expect(find.text('Timer - 23:41'), findsOneWidget);
+      expect(find.text('running'), findsOneWidget);
+    });
+
+    testWidgets('an empty live subtitle takes no line', (tester) async {
+      useWindow(tester, const Size(1300, 900));
+      final sub = ValueNotifier('');
+      addTearDown(sub.dispose);
+      final page = KMenuPage(
+        groups: [
+          [KMenuRow(title: 'Timer', liveSubtitle: sub, onTap: () {})],
+        ],
+      );
+      await tester.pumpWidget(host(_opener(page)));
+      await _open(tester);
+      final empty = tester.getSize(find.byType(KMenuRowTile)).height;
+      expect(
+        find.byType(Text).evaluate().where((e) {
+          final t = e.widget as Text;
+          return t.data == '';
+        }),
+        isEmpty,
+      );
+      sub.value = 'ends at 21:00';
+      await tester.pump();
+      expect(find.text('ends at 21:00'), findsOneWidget);
+      expect(
+        tester.getSize(find.byType(KMenuRowTile)).height,
+        greaterThanOrEqualTo(empty),
+      );
+    });
+
+    testWidgets('semantics read the current title', (tester) async {
+      final handle = tester.ensureSemantics();
+      useWindow(tester, const Size(1300, 900));
+      final title = ValueNotifier('Timer - off');
+      addTearDown(title.dispose);
+      final page = KMenuPage(
+        groups: [
+          [KMenuRow(title: 'Timer', liveTitle: title, onTap: () {})],
+        ],
+      );
+      await tester.pumpWidget(host(_opener(page)));
+      await _open(tester);
+      title.value = 'Timer - 10:00';
+      await tester.pump();
+      expect(
+        tester.getSemantics(find.text('Timer - 10:00')),
+        isSemantics(label: 'Timer - 10:00', isButton: true),
+      );
+      handle.dispose();
+    });
+
+    testWidgets('a row without live labels shows title and subtitle', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(1300, 900));
+      final page = KMenuPage(
+        groups: [
+          [KMenuRow(title: 'Plain', subtitle: 'sub', onTap: () {})],
+        ],
+      );
+      await tester.pumpWidget(host(_opener(page)));
+      await _open(tester);
+      expect(find.text('Plain'), findsOneWidget);
+      expect(find.text('sub'), findsOneWidget);
+    });
+  });
 }

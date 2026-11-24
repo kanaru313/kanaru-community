@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/widgets.dart' show IconData;
 
 import '../../../../l10n/gen/app_localizations.dart';
@@ -53,6 +54,9 @@ enum MenuItemId {
   playlistExportM3uRelative,
   playlistAskAi,
   queueAppend,
+  sleepTimer,
+  translate,
+  visualEffects,
 }
 
 /// A chip under a row: one of several targets.
@@ -114,6 +118,8 @@ class MenuItemSpec {
     this.pro = false,
     this.cover,
     this.hint,
+    this.liveTitle,
+    this.liveSubtitle,
   });
 
   final MenuItemId id;
@@ -138,6 +144,12 @@ class MenuItemSpec {
   /// Explanation of the row (ui-hints): the row's accessible description,
   /// never shown as the subtitle.
   final String? hint;
+
+  /// Title / subtitle that change while the menu is open (a ticking timer);
+  /// each shows instead of [title] / [subtitle] (keep those as the label at
+  /// build time).
+  final ValueListenable<String>? liveTitle;
+  final ValueListenable<String>? liveSubtitle;
 
   /// Whether the row does anything when chosen.
   bool get active => enabled && !soon;
@@ -232,13 +244,17 @@ class MenuSpec {
   /// (a song's "Add to playlist" leaves out the playlist it is listed in).
   final MenuOrigin? origin;
 
-  /// A copy with [groups] replaced; every other field is kept.
-  MenuSpec copyWith({List<List<MenuItemSpec>>? groups}) => MenuSpec(
+  /// A copy with [groups] and / or [queueIds] replaced; every other field is
+  /// kept.
+  MenuSpec copyWith({
+    List<List<MenuItemSpec>>? groups,
+    List<TrackId>? queueIds,
+  }) => MenuSpec(
     header: header,
     groups: groups ?? this.groups,
     advanced: advanced,
     pages: pages,
-    queueIds: queueIds,
+    queueIds: queueIds ?? this.queueIds,
     origin: origin,
   );
 }
