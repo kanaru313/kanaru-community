@@ -30,10 +30,14 @@ final _log = Logger('library.menu');
 /// Every call is awaited; a failure is logged and shown as a toast, never
 /// swallowed.
 class MenuActionRunner {
-  MenuActionRunner(this._container, this._context);
+  MenuActionRunner(this._container, this._context, {this.beforeNavigate});
 
   final ProviderContainer _container;
   final BuildContext _context;
+
+  /// Runs before any navigation (`GoAction`): the host closes what covers the
+  /// page, such as the song info route the menu was opened over.
+  final VoidCallback? beforeNavigate;
 
   /// The location on top of the router, an imperatively pushed page
   /// included; null without a router.
@@ -51,6 +55,7 @@ class MenuActionRunner {
   Future<void> run(MenuAction action) async {
     switch (action) {
       case GoAction(:final location):
+        beforeNavigate?.call();
         // The page is already open (an artist's own page lists that artist
         // in "Go to artist"): the menu has closed, nothing more to do.
         if (_openLocation() == Uri.parse(location)) return;

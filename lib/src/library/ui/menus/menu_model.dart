@@ -11,9 +11,6 @@ export 'menu_actions.dart';
 /// Key of the "Nâng cao" sub-page in [MenuSpec.pages].
 const String advancedPageKey = 'advanced';
 
-/// Key of the song info sub-page in [MenuSpec.pages].
-const String infoPageKey = 'info';
-
 /// Stable name of a menu row, so tests and callers do not match on text.
 enum MenuItemId {
   goAlbum,
@@ -176,7 +173,6 @@ class MenuHeader {
     this.coverKey,
     this.seed = '',
     this.tileIcon,
-    this.infoPage,
     this.autoCoverKeys = const [],
     this.note,
     this.action,
@@ -195,9 +191,6 @@ class MenuHeader {
 
   /// Icon of a [MenuImage.tile].
   final IconData? tileIcon;
-
-  /// Key of the page the header opens (`›`), the song info of a song.
-  final String? infoPage;
 
   /// Cover keys of the first tracks of a playlist ([MenuImage.playlist]):
   /// the automatic cover when it has no custom one.

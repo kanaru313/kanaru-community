@@ -31,7 +31,6 @@ import 'group_menu.dart';
 import 'menu_model.dart';
 import 'menu_origin.dart';
 import 'selection_menu.dart';
-import 'song_info_page.dart';
 import 'song_lyrics_entry.dart';
 import 'song_menu.dart';
 
@@ -114,7 +113,6 @@ Future<MenuSpec> songMenuSpec(
   final db = container.read(appDatabaseProvider);
   final links = await trackLinks(db, info.id);
   if (links == null) throw ItemGoneException('track ${info.id}');
-  final file = await songInfo(db, info.id);
   final favorites = await _first(container, favoriteTrackIdsProvider);
   final entry = container.read(songLyricsEntryProvider);
   String? lyricsLabel;
@@ -130,7 +128,6 @@ Future<MenuSpec> songMenuSpec(
     SongMenuData(
       info: info,
       links: links,
-      file: file,
       favorite: favorites.contains(info.id),
       selected: container.read(librarySelectionProvider).set.contains(info.id),
       lyricsLabel: lyricsLabel,
@@ -138,7 +135,6 @@ Future<MenuSpec> songMenuSpec(
     ),
     origin,
     env,
-    infoPage: songInfoPage(file, env),
   );
 }
 

@@ -931,9 +931,11 @@ provider), never live: a menu acts on what it showed.
   after its source). Null for a gone or hidden track.
 - `foldersOf(db, scope)`: the distinct folders holding the scope's tracks with
   how many sit directly in each, most first.
-- `songInfo(db, id)`: format (codec, else the file extension), bitrate, sample
-  rate, bit depth, `size_bytes` (null when unknown), absolute path (mount root
-  + locator without a CUE `#n` suffix; null without a local root), play count.
+- `TrackLinks.filePath`: absolute path of the song's file (mount root + locator
+  without a CUE `#n`; null without a local root), for "Show in file manager"
+  on the song's own folder page. `data/track_path_sql.dart` holds the SQL
+  (`trackDirSql`) and the path rule (`trackFilePath`) that `trackLinks` and the
+  song details query share.
 - `selectionDuration(db, ids)`: one chunked (500) read of `id, duration_ms`;
   returns the total and the ids that are not visible.
 
@@ -1015,23 +1017,29 @@ what the menu showed.
 
 - `open_menu.dart`: `openSongMenu`, `openAlbumMenu`, `openArtistMenu`,
   `openGenreMenu`, `openLanguageMenu`, `openFolderMenu`, `openSelectionMenu`,
-  `openMenu` (any builder, same load guard; the playlist menu uses it) and
-  `openSongInfo` (the song menu opened straight on its info page, the page
-  its header opens, through the same load guard and limit; Back goes to the
-  song menu). A song that left the library (`ItemGoneException` from
-  `songMenuSpec`; albums, artists and playlists throw it too) is the toast `libraryNotFoundMessage`, not a failed load;
-  this holds for every song menu (⋮, right click, Menu key, selection panel
-  ⋮), not only `openSongInfo`.
+  `openMenu` (any builder, same load guard; the playlist menu uses it). A song
+  that left the library (`ItemGoneException` from `songMenuSpec`; albums,
+  artists and playlists throw it too) is the toast `libraryNotFoundMessage`,
+  not a failed load; this holds for every song menu (⋮, right click, Menu key,
+  selection panel ⋮).
+  `openSongMenu` also wires the song info: the header `›` (and Alt+Enter) calls
+  `showSongInfo` over the menu, and the heart row follows
+  `isFavoriteProvider` while the menu is open (a live `KMenuRow`, the menu stays
+  open when it is pressed). Asked with `headerCloses` (the menu was opened from
+  the info's ⋮) its `›` only closes the menu, and `beforeNavigate` closes the
+  info before a "Go to" row pushes its page.
   Each loads its data once (`menu_loaders.dart`: direct one-shot reads), builds
-  the spec, and shows it with `showKLayeredMenu` on the root navigator (sheet
+  the spec, and `presentMenu` (`menu_presenter.dart`) shows it with
+  `showKLayeredMenu` on the root navigator (sheet
   on the mobile shell, centred dialog on desktop). A second tap while one is
   loading opens nothing; a failed load is a toast. `viaKeyboard` (a tile's
   Menu key or Shift+F10, `KContextRegion.onOpen(null)`) focuses the first row at
   once; a pointer-opened menu shows no focus ring until an arrow key (Linux
   always reports the traditional highlight mode, so autofocus would draw one).
 - `menu_renderer.dart` maps a `MenuSpec` to `KMenuPage`s (`menu_header.dart`
-  draws the picture and names). `KMenuPage` got `groupTitles` (headings) and
-  `headerOpens` (the song header opens the song info page).
+  draws the picture and names). `KMenuPage` has `groupTitles` (headings) and
+  `onHeaderTap` (the song header is a button that opens the song info over the
+  menu).
 - Triggers: a ⋮ on every row and page (`LibraryMoreButton`, a thin wrapper of
   `KMoreButton`; grid cards have no ⋮, they give screen readers a "More
   options" custom action), right click / Menu / Shift+F10 (`KContextRegion`),
@@ -1042,10 +1050,45 @@ what the menu showed.
   root navigator, so an action chosen after its tile scrolled away still runs
   and its toast still shows. Every call is awaited; a failure is logged and
   shown as a toast. Navigation is a push (Back returns to the page the menu
-  was opened from). Exclusion is immediate with a toast whose undo holds the
-  `FolderExclusions` instance and the key, not the page.
-- `song_info_page.dart`: the song info sub-page (format, bitrate, sample rate,
-  bit depth, size, copyable path, play count) built from `songInfo`.
+  was opened from); an optional `beforeNavigate` runs first on every `GoAction`
+  so the host can close what covers the page (the song info route).
+  Exclusion is immediate with a toast whose undo holds the `FolderExclusions`
+  instance and the key, not the page.
+
+### Song info
+
+`lib/src/library/ui/info/`; data in `domain/info/` (`SongDetails`),
+`data/info/song_details_query.dart`, `state/info/song_details_providers.dart`
+(`songDetailsProvider(id)` live stream, `songInfoShowEmptyProvider`).
+
+- `open_song_info.dart`: `openSongInfo(context, info, {origin, playlistGroup,
+  favoriteRow})` (a swipe right on a `SongTile`, with the tile's own menu
+  parameters) and `showSongInfo(..., menuBelow, viaKeyboard)` (the menu's `›`).
+  Both push one `showKOverlayPage` route on the root navigator (full-screen page
+  under 600 dp, 620 box from there up, live on resize) and are guarded: while
+  the last opened route is active a second call opens nothing. Straight-open
+  headers have a ⋮ that opens the song menu over the info with the same
+  parameters; with the menu below there is no ⋮ and closing returns to the
+  menu. A link closes the route with `SongInfoResult.open(location)`; the
+  opener then removes the menu below (if any) and runs `GoAction` through a
+  `MenuActionRunner` (a push; a link to the page already open only closes), so
+  Back returns to the page the user came from.
+- `song_info_groups.dart` (pure): `buildSongInfoGroups(l10n, details, now,
+  {showEmpty, canReveal, desktop})` gives `InfoGroupSpec`s of `InfoRowSpec`s
+  (`song_info_spec.dart`); rows in `song_info_tag_rows.dart` and
+  `song_info_other_rows.dart`. Empty fields hide unless the eye is on;
+  `songInfoEmptyCount` is the eye's badge (it leaves out the soon rows, the
+  Description and the Codec). The Codec row shows only when its family differs
+  from the format's (`codecDiffersFromFormat`, a table in `song_info_formats.dart`).
+  The release date is the full date only when its year equals `tracks.year`.
+- `song_info_view.dart` draws the states (loading bars, gone message, read
+  error, groups) with `KInfoGroup` / `KInfoRow` / `KTextLink`; `song_info_rows.dart`
+  and `song_info_path_row.dart` map a row spec to a `KInfoRow`;
+  `song_info_hero.dart`, `song_info_notice.dart` (missing file > tag read
+  error > few tags, at most one), `song_info_actions.dart` (eye and ⋮).
+- `ExtensionRegistry.songDetailSections` (`SongDetailSection {id, order,
+  build(context, trackId)}`): drawn right after the Tags group; empty until the
+  lyrics module registers its section.
 
 ## Multi-select
 
@@ -1616,9 +1659,14 @@ Sizes that the mockups give and the tokens lack (card radius 14, panel radius
 | `KDetailTitleHost` | Wraps a page's header and content; tells `PageHeader(titleInContent: true)` whether the name in the content (`KDetailTitle`) is scrolled out of sight, so the header shows it then |
 | `KGridHeading` | Name (up to two lines) and one-line caption at the head of a "see all" grid |
 | `KStickyBarSliver` | Pinned sliver bar, opaque: painted with the page ground (`KPageGround` of the `CoverTintBackground` above: base + tint gradient shifted by the bar's place) or `surface` without one. No blur |
-| `showKLayeredMenu` | `KMenuPage` (optional `initialPage`: opens on that sub-page, Back goes to the root; header, groups of `KMenuRow`, footer of two `KMenuButton`s, note). A row either runs `onTap`, opens a sub-page (`opens`), or folds chips (`chips`); `soonLabel` or `enabled: false` dims it and makes it inert; `danger`, `proLabel`, `trailing` icon button. A chosen row closes the menu first and then runs its callback. Back, the arrow and Esc on a sub-page return one page; on the root they close |
+| `showKLayeredMenu` | `KMenuPage` (header, groups of `KMenuRow`, footer of two `KMenuButton`s, note). A row either runs `onTap`, opens a sub-page (`opens`), or folds chips (`chips`); `soonLabel` or `enabled: false` dims it and makes it inert; `danger`, `proLabel`, `trailing` icon button. A chosen row closes the menu first and then runs its callback. Back, the arrow and Esc on a sub-page return one page; on the root they close |
 | `KMenuRow.leading` | A picture (an album cover) in place of the row's icon |
-| `KMenuPage` extras | `groupTitles` (a heading above each group; an empty group loses its heading) and `headerOpens` (the header becomes a button with a `›` that shows that page) |
+| `KMenuPage` extras | `groupTitles` (a heading above each group; an empty group loses its heading) and `onHeaderTap` / `headerHint` (the header becomes a button with a `›` that runs the callback and keeps the menu open; Alt+Enter on the menu runs it with `viaKeyboard` true) |
+| `KMenuRow.on` | Live toggle row: `on` (a `ValueListenable<bool>`) picks `onTitle` / `onIcon`; pressing runs `onTap` and keeps the menu open (the song menu's heart row) |
+| `KTextLink` | The one link look of the app: `onSurface` text with a 1 px underline (hover 2 px, pressed 50 %), keyboard focus ring, touch area at least 48 dp (40 on desktop) without growing the row; `KTextLinkOverflow.wrap` for info values, `ellipsis` for hero lines |
+| `showKOverlayPage`, `KOverlayPageScope` | One route on the root navigator that is a full-screen page under 600 dp and a centred box (620, at most 85 % of the height) from there up, switching live on resize; Back, Esc, ← / ✕ and the barrier close one layer. `KOverlayPageScope` tells its content which it is |
+| `KInfoGroup`, `KInfoRow` | A titled card of label + value rows (label column 112 / 148, stacked at 200 % text); the row decides copy (selectable and a hover button on desktop, long press elsewhere), the "soon", unknown and missing looks; links go in `valueWidget` |
+| `KInfoToggleButton` | Icon button that is an on / off switch with an optional count badge (the info page's eye) |
 | `KSelectionPanel` | Frame of the multi-select panel: `header`, optional expanded `body` clamped to 460 dp (`bodyHeight`), no state. Mobile: full width minus 8, radius 20. Desktop: 440 wide, centred, radius 22, shadow. The frame is only as high as its content, so a full-width slot does not take taps beside it |
 
 A menu page of more than 24 rows is a lazy list in the height the sheet or

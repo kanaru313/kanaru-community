@@ -125,6 +125,26 @@ class PanelSurface {
   final WidgetBuilder? menu;
 }
 
+/// A block the song info page draws right after its Tags group (the saved
+/// lyrics of the song, say). One section per id; sections run by ascending
+/// [order].
+class SongDetailSection {
+  const SongDetailSection({
+    required this.id,
+    required this.order,
+    required this.build,
+  });
+
+  /// Stable id, unique across extensions.
+  final String id;
+  final int order;
+
+  /// Draws the section for the track with id [trackId] (a plain int: this
+  /// module only knows `foundation`). It should draw nothing, not fail, when
+  /// it has nothing to show.
+  final Widget Function(BuildContext context, int trackId) build;
+}
+
 /// Widget in the right side of the desktop top bar.
 class TopBarAction {
   const TopBarAction({

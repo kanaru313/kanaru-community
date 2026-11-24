@@ -9,17 +9,11 @@ import 'k_menu_row.dart';
 
 /// Header of a menu's root page. A plain widget when the page has no action;
 /// else a button with a `›`: [KMenuPage.onHeaderTap] runs [onTap] and keeps
-/// the menu open, [KMenuPage.headerOpens] shows that page through [onOpen].
+/// the menu open.
 class KMenuHeader extends StatelessWidget {
-  const KMenuHeader({
-    super.key,
-    required this.page,
-    required this.onOpen,
-    required this.onTap,
-  });
+  const KMenuHeader({super.key, required this.page, required this.onTap});
 
   final KMenuPage page;
-  final void Function(KMenuPage page) onOpen;
 
   /// Runs [KMenuPage.onHeaderTap] with the menu's keyboard mode; null when the
   /// page has none.
@@ -27,10 +21,8 @@ class KMenuHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final opens = page.headerOpens;
     final header = page.header!;
-    final VoidCallback? tap =
-        onTap ?? (opens == null ? null : () => onOpen(opens));
+    final tap = onTap;
     if (tap == null) return header;
     return Semantics(
       button: true,

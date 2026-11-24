@@ -14,7 +14,6 @@ class SongMenuData {
   const SongMenuData({
     required this.info,
     required this.links,
-    required this.file,
     required this.favorite,
     required this.selected,
     this.lyricsLabel,
@@ -24,8 +23,6 @@ class SongMenuData {
   final TrackInfo info;
   final TrackLinks links;
 
-  /// File facts; null when the track vanished from the table meanwhile.
-  final SongInfo? file;
   final bool favorite;
   final bool selected;
 
@@ -40,18 +37,13 @@ class SongMenuData {
 /// Menu of a song. [origin] is the page the song is listed on: a song on its
 /// album page has no "Go to album", on its folder's page "Show in file
 /// manager" replaces "Go to folder", on an artist's page that artist is left
-/// out of the artist chips. [infoPage] is the song info sub-page.
-MenuSpec buildSongMenu(
-  SongMenuData data,
-  MenuOrigin origin,
-  MenuEnv env, {
-  MenuPageSpec? infoPage,
-}) {
+/// out of the artist chips. The header opens the song info (the caller wires
+/// it when it renders the menu).
+MenuSpec buildSongMenu(SongMenuData data, MenuOrigin origin, MenuEnv env) {
   final l10n = env.l10n;
   final info = data.info;
   final links = data.links;
   final id = info.id;
-  final pages = <String, MenuPageSpec>{};
 
   // Every artist is a link, the page's own artist included (old app: "always
   // show all artists in Go to artist"); only the album and the folder have a
@@ -96,7 +88,7 @@ MenuSpec buildSongMenu(
   final MenuItemSpec folderRow;
   if (ownFolder) {
     // Show the file itself when its path is known, else its folder.
-    folderRow = revealRow(env, data.file?.path ?? folderPath);
+    folderRow = revealRow(env, links.filePath ?? folderPath);
   } else {
     folderRow = folderLinks(
       env,
@@ -108,7 +100,6 @@ MenuSpec buildSongMenu(
 
   final advanced = <List<MenuItemSpec>>[removeRows(env, 1)];
 
-  if (infoPage != null) pages[infoPageKey] = infoPage;
   return MenuSpec(
     header: MenuHeader(
       image: MenuImage.track,
@@ -121,7 +112,6 @@ MenuSpec buildSongMenu(
       ].whereType<String>().where((s) => s.isNotEmpty).join(' · '),
       coverKey: info.coverKey,
       seed: info.coverSeed,
-      infoPage: infoPage == null ? null : infoPageKey,
     ),
     groups: withAdvanced(
       [
@@ -158,7 +148,6 @@ MenuSpec buildSongMenu(
       l10n.libraryMenuAdvanced,
     ),
     advanced: advanced,
-    pages: pages,
     queueIds: [id],
     origin: origin,
   );

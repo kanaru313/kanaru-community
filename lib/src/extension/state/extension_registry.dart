@@ -16,6 +16,7 @@ class ExtensionRegistry {
   final _settingsSections = <SettingsSection>[];
   final _topBarActions = <TopBarAction>[];
   final _panelSurfaces = <PanelSurface>[];
+  final _songDetailSections = <SongDetailSection>[];
   final _startupHooks = <StartupHook>[];
   final _flushHooks = <FlushHook>[];
   final _beforeExitHooks = <FlushHook>[];
@@ -43,6 +44,11 @@ class ExtensionRegistry {
 
   List<PanelSurface> get panelSurfaces =>
       _byOrder(_panelSurfaces, (p) => p.order);
+
+  /// Sections of the song info page by ascending `order`; ties keep
+  /// registration order.
+  List<SongDetailSection> get songDetailSections =>
+      _byOrder(_songDetailSections, (s) => s.order);
 
   /// The surface registered under [id], or null.
   PanelSurface? panelSurface(String id) {
@@ -140,6 +146,14 @@ class ExtensionRegistry {
       throw StateError('Duplicate panel surface id "${surface.id}"');
     }
     _panelSurfaces.add(surface);
+  }
+
+  /// Throws [StateError] for a second section with the same id.
+  void addSongDetailSection(SongDetailSection section) {
+    if (_songDetailSections.any((s) => s.id == section.id)) {
+      throw StateError('Duplicate song detail section id "${section.id}"');
+    }
+    _songDetailSections.add(section);
   }
 
   void addStartupHook(StartupHook hook) => _startupHooks.add(hook);

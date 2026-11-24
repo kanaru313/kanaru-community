@@ -10,7 +10,6 @@ import 'package:kanaru/src/database/database.dart' show TrackStatus;
 import 'package:kanaru/src/library/state/favorites_providers.dart';
 import 'package:kanaru/src/library/state/folder_exclusion_providers.dart';
 import 'package:kanaru/src/library/ui/collections/album_tile.dart';
-import 'package:kanaru/src/library/ui/menus/open_menu.dart';
 import 'package:kanaru/src/library/ui/songs/song_tile.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/platform/state/file_manager_provider.dart';
@@ -369,49 +368,6 @@ void main() {
       await unmountApp(tester);
     },
   );
-
-  testWidgets('song info opens on the info page; Back shows the song menu', (
-    tester,
-  ) async {
-    await _pump(tester);
-    final tile = tester.widget<SongTile>(find.byType(SongTile).first);
-    unawaited(
-      openSongInfo(tester.element(find.byType(SongTile).first), tile.info),
-    );
-    await pumpMenu(tester);
-    expect(_sheet(), findsOneWidget);
-    expect(find.byIcon(KIcons.back), findsOneWidget);
-    expect(find.text('Go to album'), findsNothing);
-    await tester.tap(find.byIcon(KIcons.back));
-    await tester.pumpAndSettle();
-    expect(find.text('Go to album'), findsOneWidget);
-    expect(find.text('Play next'), findsOneWidget);
-    await unmountApp(tester);
-  });
-
-  testWidgets('song info of a song that is gone says so, opens nothing', (
-    tester,
-  ) async {
-    final h = await _pump(tester);
-    final tile = tester.widget<SongTile>(find.byType(SongTile).first);
-    final context = tester.element(find.byType(SongTile).first);
-    await h.db.customUpdate(
-      'UPDATE tracks SET status = ?, missing_since = ? WHERE id = ?',
-      variables: [
-        Variable.withString(TrackStatus.missing),
-        Variable.withInt(1),
-        Variable.withInt(tile.info.id.value),
-      ],
-      updates: {h.db.tracks},
-    );
-    unawaited(openSongInfo(context, tile.info));
-    await pumpMenu(tester);
-    expect(_sheet(), findsNothing);
-    expect(find.text('This is no longer in your library.'), findsOneWidget);
-    expect(find.text("Could not open the menu"), findsNothing);
-    await tester.pump(const Duration(seconds: 5));
-    await unmountApp(tester);
-  });
 
   testWidgets('the song menu shows the lyrics source row and opens it', (
     tester,

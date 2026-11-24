@@ -20,6 +20,12 @@ import 'k_overlay_page_shell.dart';
 /// it traps focus and hides the layers below from screen readers.
 /// [viaKeyboard] focuses the first button of the header.
 ///
+/// The route has its own `ScaffoldMessenger` and `Scaffold` over the whole
+/// screen, so a snack bar shown with a context inside it (a "copied" toast)
+/// appears above the page or the box, not under the route.
+/// [onRoute] receives the route before it is pushed, so a caller can close
+/// it later without looking for it in the navigator.
+///
 /// [title] is the page bar title, the default box header and the route's
 /// semantics label. [builder] draws the body below the header; it gives its
 /// own scrolling. Read the current kind with [KOverlayPageScope].
@@ -33,37 +39,38 @@ Future<T?> showKOverlayPage<T>(
   String? closeTooltip,
   String? backTooltip,
   bool viaKeyboard = false,
+  void Function(Route<T> route)? onRoute,
 }) {
   final navigator = Navigator.of(context, rootNavigator: true);
   final themes = InheritedTheme.capture(from: context, to: navigator.context);
   final l10n = MaterialLocalizations.of(context);
   final reduce = MediaQuery.disableAnimationsOf(context);
-  return navigator.push<T>(
-    RawDialogRoute<T>(
-      // The route draws no barrier: the shell paints its own, only in box
-      // mode, and the kind can change while the route is open.
-      barrierColor: null,
-      barrierDismissible: false,
-      barrierLabel: title,
-      // No route animation when the platform asks for reduced motion
-      // (`RawDialogRoute` does not read `disableAnimations` itself).
-      transitionDuration: reduce ? Duration.zero : KMotion.dialogIn,
-      pageBuilder: (routeContext, _, _) => themes.wrap(
-        KOverlayPageShell(
-          title: title,
-          builder: builder,
-          actions: actions,
-          boxHeader: boxHeader,
-          maxWidth: maxWidth,
-          closeTooltip: closeTooltip ?? l10n.closeButtonTooltip,
-          backTooltip: backTooltip ?? l10n.backButtonTooltip,
-          viaKeyboard: viaKeyboard,
-        ),
-      ),
-      transitionBuilder: (context, animation, _, child) => FadeTransition(
-        opacity: animation.drive(CurveTween(curve: KMotion.dialogCurve)),
-        child: child,
+  final route = RawDialogRoute<T>(
+    // The route draws no barrier: the shell paints its own, only in box
+    // mode, and the kind can change while the route is open.
+    barrierColor: null,
+    barrierDismissible: false,
+    barrierLabel: title,
+    // No route animation when the platform asks for reduced motion
+    // (`RawDialogRoute` does not read `disableAnimations` itself).
+    transitionDuration: reduce ? Duration.zero : KMotion.dialogIn,
+    pageBuilder: (routeContext, _, _) => themes.wrap(
+      KOverlayPageShell(
+        title: title,
+        builder: builder,
+        actions: actions,
+        boxHeader: boxHeader,
+        maxWidth: maxWidth,
+        closeTooltip: closeTooltip ?? l10n.closeButtonTooltip,
+        backTooltip: backTooltip ?? l10n.backButtonTooltip,
+        viaKeyboard: viaKeyboard,
       ),
     ),
+    transitionBuilder: (context, animation, _, child) => FadeTransition(
+      opacity: animation.drive(CurveTween(curve: KMotion.dialogCurve)),
+      child: child,
+    ),
   );
+  onRoute?.call(route);
+  return navigator.push<T>(route);
 }

@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart' show Variable;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/library/data/browse/menu_queries.dart';
@@ -113,40 +112,25 @@ void main() {
     ]);
   });
 
-  group('song info', () {
-    test('absolute path from the mount root, size null when unknown', () async {
+  group('track file path', () {
+    test('absolute path from the mount root', () async {
       await addMount(db, src, root: '/home/me/Music/');
       final id = await add('Rock/a.flac');
-      final i = (await songInfo(db, TrackId(id)))!;
-      expect(i.path, '/home/me/Music/Rock/a.flac');
-      expect(i.sizeBytes, isNull);
-      expect(i.format, 'FLAC');
-      expect(i.playCount, 0);
+      expect(
+        (await trackLinks(db, TrackId(id)))!.filePath,
+        '/home/me/Music/Rock/a.flac',
+      );
     });
 
-    test('codec, sizes, plays, CUE suffix', () async {
+    test('a CUE suffix is dropped', () async {
       await addMount(db, src, root: '/m');
       final id = await add('Rock/b.flac#2');
-      await db.customUpdate(
-        'UPDATE tracks SET codec = ?, size_bytes = 99, bitrate = 900, '
-        'sample_rate = 44100, bit_depth = 16 WHERE id = ?',
-        variables: [Variable.withString('ALAC'), Variable.withInt(id)],
-        updates: {db.tracks},
-      );
-      await addPlays(db, id, 3);
-      final i = (await songInfo(db, TrackId(id)))!;
-      expect(i.path, '/m/Rock/b.flac');
-      expect(
-        (i.format, i.sizeBytes, i.bitrate, i.sampleRate, i.bitDepth),
-        ('ALAC', 99, 900, 44100, 16),
-      );
-      expect(i.playCount, 3);
+      expect((await trackLinks(db, TrackId(id)))!.filePath, '/m/Rock/b.flac');
     });
 
-    test('no mount: no path; unknown track: null', () async {
+    test('no mount: no path', () async {
       final id = await add('a.flac');
-      expect((await songInfo(db, TrackId(id)))!.path, isNull);
-      expect(await songInfo(db, const TrackId(999)), isNull);
+      expect((await trackLinks(db, TrackId(id)))!.filePath, isNull);
     });
   });
 

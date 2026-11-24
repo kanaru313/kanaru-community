@@ -126,36 +126,43 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('a song swiped to info keeps the page origin: no link back', (
-    tester,
-  ) async {
-    await _pump(tester);
-    final row = tester.getCenter(find.byType(SongTile).first);
-    final g = await tester.startGesture(row);
-    for (var i = 0; i < 10; i++) {
-      await g.moveBy(const Offset(20, 0));
-      await tester.pump(const Duration(milliseconds: 16));
-    }
-    await g.up();
-    await pumpMenu(tester);
-    final sheet = find.byType(BottomSheet);
-    expect(sheet, findsOneWidget);
-    await tester.tap(
-      find.descendant(of: sheet, matching: find.byIcon(KIcons.back)),
-    );
-    await tester.pumpAndSettle();
-    expect(
-      find.descendant(of: sheet, matching: find.text('Go to artist')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: sheet, matching: find.text('Go to album')),
-      findsNothing,
-    );
-    await tester.tapAt(const Offset(195, 20));
-    await tester.pumpAndSettle();
-    await unmountApp(tester);
-  });
+  testWidgets(
+    'a song swiped to info opens it straight; its ⋮ keeps the page origin',
+    (tester) async {
+      await _pump(tester);
+      final row = tester.getCenter(find.byType(SongTile).first);
+      final g = await tester.startGesture(row);
+      for (var i = 0; i < 10; i++) {
+        await g.moveBy(const Offset(20, 0));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await g.up();
+      await pumpMenu(tester);
+      // The info page, with no menu under it.
+      expect(find.text('Song info'), findsWidgets);
+      expect(find.byType(BottomSheet), findsNothing);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(KOverlayPageScope),
+          matching: byIconButton('More options'),
+        ),
+      );
+      await pumpMenu(tester);
+      final sheet = find.byType(BottomSheet);
+      expect(sheet, findsOneWidget);
+      expect(
+        find.descendant(of: sheet, matching: find.text('Go to artist')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: sheet, matching: find.text('Go to album')),
+        findsNothing,
+      );
+      await tester.tapAt(const Offset(195, 20));
+      await tester.pumpAndSettle();
+      await unmountApp(tester);
+    },
+  );
 
   testWidgets('the page menu is the album menu of its own page', (
     tester,

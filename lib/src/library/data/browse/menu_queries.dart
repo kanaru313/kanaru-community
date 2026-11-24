@@ -3,23 +3,14 @@ import 'package:drift/drift.dart';
 import '../../../database/database.dart';
 import '../../../media/domain/library_keys.dart';
 import '../../../media/domain/track_id.dart';
-import '../../../media/domain/track_info.dart';
 import '../../domain/browse/menu_targets.dart';
 import '../../domain/browse/song_scope.dart';
+import '../track_path_sql.dart';
 import 'scope_sql.dart';
 
 const _chunk = 500;
-final _cueSuffix = RegExp(r'#\d+$');
 
 String _lastSegment(String key) => key.substring(key.lastIndexOf('/') + 1);
-
-/// Dir of `t.locator` as a key: everything before the last `/`, `''` when
-/// there is none. `rtrim` with the locator's own non-slash characters strips
-/// the file name.
-const _dirSql =
-    "CASE WHEN instr(t.locator, '/') = 0 THEN '' ELSE "
-    "substr(rtrim(t.locator, replace(t.locator, '/', '')), 1, "
-    "length(rtrim(t.locator, replace(t.locator, '/', ''))) - 1) END";
 
 /// Where "Đi tới" of [id] leads. Null when the track is gone or hidden.
 Future<TrackLinks?> trackLinks(AppDatabase db, TrackId id) async {
@@ -27,10 +18,12 @@ Future<TrackLinks?> trackLinks(AppDatabase db, TrackId id) async {
       .customSelect(
         'SELECT t.source_id, s.uid AS source_uid, s.name AS source_name, '
         't.album, t.album_artist, t.album_display_artist, t.album_artist_key, t.album_title_key, '
-        '$_dirSql AS dir FROM tracks t JOIN sources s ON s.id = t.source_id '
+        't.locator, m.root AS mount_root, '
+        '$trackDirSql AS dir FROM tracks t JOIN sources s ON s.id = t.source_id '
+        'LEFT JOIN source_mounts m ON m.source_id = t.source_id '
         'WHERE t.id = ? AND ${visibleTrackWhere('t')}',
         variables: [Variable.withInt(id.value)],
-        readsFrom: {db.tracks, db.sources},
+        readsFrom: {db.tracks, db.sources, db.sourceMounts},
       )
       .getSingleOrNull();
   if (row == null) return null;
@@ -81,6 +74,10 @@ Future<TrackLinks?> trackLinks(AppDatabase db, TrackId id) async {
       name: dir.isEmpty ? row.read<String>('source_name') : _lastSegment(dir),
       songCount: siblings,
     ),
+    filePath: trackFilePath(
+      row.readNullable<String>('mount_root'),
+      row.read<String>('locator'),
+    ),
   );
 }
 
@@ -105,7 +102,7 @@ Future<List<FolderRef>> foldersOf(AppDatabase db, SongScope scope) async {
   final rows = await db
       .customSelect(
         'SELECT t.source_id, s.uid AS source_uid, s.name AS source_name, '
-        '$_dirSql AS dir, COUNT(*) AS n '
+        '$trackDirSql AS dir, COUNT(*) AS n '
         'FROM tracks t JOIN sources s ON s.id = t.source_id '
         'WHERE ${where.sql} GROUP BY t.source_id, dir',
         variables: where.vars,
@@ -129,38 +126,6 @@ Future<List<FolderRef>> foldersOf(AppDatabase db, SongScope scope) async {
     return c != 0 ? c : a.folderKey.compareTo(b.folderKey);
   });
   return out;
-}
-
-/// File facts of [id] for the song info page; null when the track is gone.
-Future<SongInfo?> songInfo(AppDatabase db, TrackId id) async {
-  final row = await db
-      .customSelect(
-        'SELECT t.locator, t.rel_path, t.codec, t.bitrate, t.sample_rate, '
-        't.bit_depth, t.size_bytes, m.root AS mount_root, '
-        'coalesce(ps.play_count, 0) AS plays FROM tracks t '
-        'LEFT JOIN source_mounts m ON m.source_id = t.source_id '
-        'LEFT JOIN play_stats ps ON ps.track_id = t.id WHERE t.id = ?',
-        variables: [Variable.withInt(id.value)],
-        readsFrom: {db.tracks, db.sourceMounts, db.playStats},
-      )
-      .getSingleOrNull();
-  if (row == null) return null;
-  final locator = row.read<String>('locator');
-  final root = row.readNullable<String>('mount_root');
-  final base = root == null
-      ? null
-      : (root.endsWith('/') ? root.substring(0, root.length - 1) : root);
-  return SongInfo(
-    format:
-        row.readNullable<String>('codec') ??
-        formatFromLocator(row.read<String>('rel_path')),
-    bitrate: row.readNullable<int>('bitrate'),
-    sampleRate: row.readNullable<int>('sample_rate'),
-    bitDepth: row.readNullable<int>('bit_depth'),
-    sizeBytes: row.readNullable<int>('size_bytes'),
-    path: base == null ? null : '$base/${locator.replaceFirst(_cueSuffix, '')}',
-    playCount: row.read<int>('plays'),
-  );
 }
 
 /// Total duration of the visible tracks among [ids], and the ids that are

@@ -1,20 +1,17 @@
-import 'package:flutter/widgets.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kanaru_ui/kanaru_ui.dart';
-import 'package:logging/logging.dart';
+import 'dart:async';
 
-import '../../../../l10n/gen/app_localizations.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderContainer;
+
 import '../../../media/domain/library_keys.dart';
 import '../../../media/domain/track_info.dart';
 import '../../domain/music_folder.dart';
-import 'menu_action_runner.dart';
+import '../info/open_song_info.dart' show showSongInfo;
 import 'menu_loaders.dart';
 import 'menu_model.dart';
 import 'menu_origin.dart';
-import 'menu_renderer.dart';
+import 'menu_presenter.dart';
 import 'song_menu.dart' show withSongPageRows;
-
-final _log = Logger('library.menu');
 
 /// Opens a menu built by [build] (data loading and spec building, off the
 /// widget tree). Throwing `ItemGoneException` shows the "not found" toast and
@@ -23,12 +20,17 @@ Future<void> openMenu(
   BuildContext context,
   Future<MenuSpec> Function(ProviderContainer container, MenuEnv env) build, {
   bool viaKeyboard = false,
-}) => _open(context, build, viaKeyboard: viaKeyboard);
+}) => presentMenu(context, build, viaKeyboard: viaKeyboard);
 
 /// Opens the menu of a song. [origin] is the page the song is listed on.
 /// [playlistGroup] is a group of rows of the page's own (in a playlist: move,
 /// remove) placed after the "Go to" group; [favoriteRow] false leaves out the
-/// heart row.
+/// heart row. The header's `›` (and Alt+Enter) opens the song info over the
+/// menu; the heart row follows the favorite mark while the menu is open.
+///
+/// A menu opened over the song info ([headerCloses]) has a `›` that only
+/// closes the menu (the info is right under it), and [beforeNavigate] runs
+/// before a "Go to" row opens its page so the info can close first.
 Future<void> openSongMenu(
   BuildContext context,
   TrackInfo info, {
@@ -36,7 +38,9 @@ Future<void> openSongMenu(
   bool viaKeyboard = false,
   List<MenuItemSpec> playlistGroup = const [],
   bool favoriteRow = true,
-}) => _open(
+  bool headerCloses = false,
+  VoidCallback? beforeNavigate,
+}) => presentMenu(
   context,
   (container, env) async => withSongPageRows(
     await songMenuSpec(container, env, info, origin),
@@ -44,19 +48,25 @@ Future<void> openSongMenu(
     favoriteRow: favoriteRow,
   ),
   viaKeyboard: viaKeyboard,
-);
-
-/// Opens the menu of a song directly on its info page (the page its header
-/// opens); Back goes to the song's menu. A song that left the library says so
-/// instead of reporting a failed load.
-Future<void> openSongInfo(
-  BuildContext context,
-  TrackInfo info, {
-  MenuOrigin origin = const MenuOrigin.list(),
-}) => _open(
-  context,
-  (container, env) => songMenuSpec(container, env, info, origin),
-  onInfoPage: true,
+  beforeNavigate: beforeNavigate,
+  favoriteOf: favoriteRow ? info.id : null,
+  onHeaderTap: (root, viaKeyboard) {
+    if (headerCloses) {
+      Navigator.of(root, rootNavigator: true).pop();
+    } else {
+      unawaited(
+        showSongInfo(
+          root,
+          info,
+          origin: origin,
+          playlistGroup: playlistGroup,
+          favoriteRow: favoriteRow,
+          menuBelow: true,
+          viaKeyboard: viaKeyboard,
+        ),
+      );
+    }
+  },
 );
 
 /// Opens the menu of an album. On its own page pass [MenuOrigin.own].
@@ -65,7 +75,7 @@ Future<void> openAlbumMenu(
   AlbumKey key, {
   MenuOrigin origin = const MenuOrigin.list(),
   bool viaKeyboard = false,
-}) => _open(
+}) => presentMenu(
   context,
   (container, env) => albumMenuSpec(container, env, key, origin),
   viaKeyboard: viaKeyboard,
@@ -76,7 +86,7 @@ Future<void> openArtistMenu(
   ArtistKey key, {
   MenuOrigin origin = const MenuOrigin.list(),
   bool viaKeyboard = false,
-}) => _open(
+}) => presentMenu(
   context,
   (container, env) => artistMenuSpec(container, env, key, origin),
   viaKeyboard: viaKeyboard,
@@ -89,7 +99,7 @@ Future<void> openGenreMenu(
   required String name,
   MenuOrigin origin = const MenuOrigin.list(),
   bool viaKeyboard = false,
-}) => _open(
+}) => presentMenu(
   context,
   (container, env) => genreMenuSpec(container, env, genreKey, name, origin),
   viaKeyboard: viaKeyboard,
@@ -101,7 +111,7 @@ Future<void> openLanguageMenu(
   String? code, {
   MenuOrigin origin = const MenuOrigin.list(),
   bool viaKeyboard = false,
-}) => _open(
+}) => presentMenu(
   context,
   (container, env) => languageMenuSpec(container, env, code, origin),
   viaKeyboard: viaKeyboard,
@@ -118,7 +128,7 @@ Future<void> openFolderMenu(
   bool flat = false,
   MenuOrigin origin = const MenuOrigin.list(),
   bool viaKeyboard = false,
-}) => _open(
+}) => presentMenu(
   context,
   (container, env) => folderMenuSpec(
     container,
@@ -137,58 +147,4 @@ Future<void> openFolderMenu(
 Future<void> openSelectionMenu(
   BuildContext context, {
   bool viaKeyboard = false,
-}) => _open(context, selectionMenuSpec, viaKeyboard: viaKeyboard);
-
-/// A load that takes longer than this is given up, so one stuck read cannot
-/// leave every menu of the app dead.
-const _loadLimit = Duration(seconds: 10);
-
-/// A second tap while the first menu is still loading opens nothing.
-bool _loading = false;
-
-/// Loads the menu data, builds the spec and shows it on the root navigator.
-/// A failure is logged and shown as a toast. The menu is shown and acted on
-/// through the root navigator's context, so a tile that went away meanwhile
-/// changes nothing.
-Future<void> _open(
-  BuildContext context,
-  Future<MenuSpec> Function(ProviderContainer container, MenuEnv env) build, {
-  bool viaKeyboard = false,
-  bool onInfoPage = false,
-}) async {
-  if (_loading) return;
-  _loading = true;
-  final root = Navigator.of(context, rootNavigator: true).context;
-  final container = ProviderScope.containerOf(context, listen: false);
-  final l10n = AppLocalizations.of(context);
-  final desktop = FormFactor.of(context) == FormFactor.desktop;
-  final MenuSpec spec;
-  final KMenuPage page;
-  try {
-    final env = await loadMenuEnv(
-      container,
-      l10n,
-      trash: desktop,
-    ).timeout(_loadLimit);
-    spec = await build(container, env).timeout(_loadLimit);
-    if (!root.mounted) return;
-    page = renderMenu(spec, l10n, MenuActionRunner(container, root));
-  } on ItemGoneException catch (e) {
-    _log.info('menu of an item that is gone: $e');
-    if (root.mounted) showAppSnackBar(root, l10n.libraryNotFoundMessage);
-    return;
-  } on Object catch (e, s) {
-    _log.warning('opening a menu failed', e, s);
-    if (root.mounted) showAppSnackBar(root, l10n.libraryMenuLoadFailed);
-    return;
-  } finally {
-    _loading = false;
-  }
-  await showKLayeredMenu(
-    root,
-    root: page,
-    initialPage: onInfoPage ? page.headerOpens : null,
-    backTooltip: l10n.libraryMenuBack,
-    viaKeyboard: viaKeyboard,
-  );
-}
+}) => presentMenu(context, selectionMenuSpec, viaKeyboard: viaKeyboard);
