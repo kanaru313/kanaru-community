@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../media/domain/track_id.dart';
+import '../../../plugins/state/plugin_store_providers.dart';
 import '../../domain/lyrics_status.dart';
 import '../../domain/translation/translation_status.dart';
 import '../../state/playing_lyrics_providers.dart';
-import '../../state/translation/translation_credit_provider.dart';
 import '../../state/translation/translation_providers.dart';
 import '../../state/translation/translation_settings.dart';
+import 'shown_translation.dart';
 
 /// What the translate entry points (the lyrics-screen button, the desktop
 /// pill, the ⋮ item) show about the playing song. One place derives it, so
@@ -79,9 +80,11 @@ class TranslateEntryState {
   );
 }
 
-/// The entry state of the playing song. The translation of the song is
-/// watched (so asked for) only while translation is on and the song has lyrics:
-/// a closed header never starts a run of its own.
+/// The entry state of the playing song. It is passive: it reads what a
+/// mounted lyrics view publishes ([shownTranslationProvider]) and never
+/// watches `trackTranslationProvider`, so the entry points can never start (or
+/// bill) a translation. With no lyrics view of the song mounted they show on
+/// or off from the settings only.
 final translateEntryProvider = Provider.autoDispose<TranslateEntryState>((ref) {
   final playing = ref.watch(playingLyricsProvider);
   final id = playing.trackId;
@@ -97,9 +100,26 @@ final translateEntryProvider = Provider.autoDispose<TranslateEntryState>((ref) {
       target: target,
     );
   }
-  final view = ref.watch(trackTranslationProvider(id));
-  final credit = ref.watch(translationCreditProvider(id));
+  final view = ref.watch(shownTranslationProvider.select((m) => m[id]));
+  if (view == null) {
+    return TranslateEntryState(
+      trackId: id,
+      available: true,
+      on: true,
+      target: target,
+    );
+  }
   final status = view.status;
+  final installId = view.installId;
+  final plugin = installId == null
+      ? null
+      : ref.watch(installedPluginProvider(installId)).value;
+  final hasCopy =
+      view.map.isNotEmpty &&
+      plugin != null &&
+      (status is StatusReady ||
+          status is StatusOther ||
+          status is StatusFailed);
   return TranslateEntryState(
     trackId: id,
     available: true,
@@ -107,7 +127,7 @@ final translateEntryProvider = Provider.autoDispose<TranslateEntryState>((ref) {
     working: status is StatusLoading,
     failed: status is StatusFailed,
     target: target,
-    installId: credit == null ? null : view.installId,
-    pluginName: credit?.plugin,
+    installId: hasCopy ? installId : null,
+    pluginName: hasCopy ? plugin.name : null,
   );
 });

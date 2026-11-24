@@ -50,7 +50,8 @@ import 'package:kanaru/src/plugins/domain/run/plugin_engine.dart';
 import 'package:kanaru/src/plugins/data/run/rust_plugin_engine.dart';
 import 'package:kanaru/src/plugins/state/install_ops.dart';
 import 'package:kanaru/src/plugins/state/plugin_run_provider.dart';
-import 'package:kanaru/src/plugins/state/store_items_provider.dart';
+import 'package:kanaru/src/plugins/domain/install/install_id.dart';
+import 'package:kanaru/src/plugins/state/plugin_services_provider.dart';
 import 'package:kanaru/src/plugins/state/store_ops.dart';
 import 'package:kanaru/src/router/state/router_provider.dart';
 import 'package:kanaru/src/router/ui/kanaru_app.dart';
@@ -286,20 +287,25 @@ void main() {
 
     // ===== install google-translate from the live catalog ===================
     final added = await container.read(storeOpsProvider).add(_catalog);
-    expect(added, isA<RepoAdded>(), reason: 'the catalog could be added');
-    await app.pumpUntil(
-      () => (container.read(storeItemsProvider).value ?? const []).any(
-        (i) => i.entry.slug == _slug,
-      ),
-      what: 'the catalog to list $_slug',
-      timeout: const Duration(seconds: 30),
-    );
-    final item = container
-        .read(storeItemsProvider)
-        .requireValue
-        .firstWhere((i) => i.entry.slug == _slug);
+    if (added is! RepoAdded) {
+      throw TestFailure('the catalog could not be added: $added');
+    }
+    // The package is prepared straight from the repository row and its stored
+    // catalog (what the store page does on "Cài đặt"), not through the store
+    // list provider: nothing here watches that list, and the test must not
+    // depend on a screen.
+    final repo = await container.read(storeOpsProvider).describe(added.repoId);
+    if (repo == null) throw TestFailure('the added repository is not stored');
+    if (repo.pluginCount == 0) {
+      throw TestFailure('the stored catalog lists no plugin: $repo');
+    }
+    final installId = repoInstallId(repo.url, _slug);
     final installOps = container.read(installOpsProvider);
-    final prepared = await installOps.prepareInstall(item.installId).result;
+    final prepared = await container
+        .read(pluginServicesProvider)
+        .held
+        .prepareFromRepo(added.repoId, _slug)
+        .result;
     final held = switch (prepared) {
       Ok(:final value) => value,
       Err(:final error) => throw TestFailure(
@@ -310,9 +316,7 @@ void main() {
     expect(installed, isA<Installed>(), reason: '$installed');
 
     // ===== pick it, target Vietnamese, translation still off ================
-    await container
-        .read(translationServiceProvider.notifier)
-        .set(item.installId);
+    await container.read(translationServiceProvider.notifier).set(installId);
     await container.read(translationTargetProvider.notifier).set('vi');
     await playPaused(syncedId);
     container.read(nowPlayingPanelProvider.notifier).open();

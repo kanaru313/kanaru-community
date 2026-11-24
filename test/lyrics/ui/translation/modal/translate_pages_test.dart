@@ -232,6 +232,35 @@ void main() {
       expect(find.text('Model 3'), findsNothing);
     });
 
+    testWidgets('a searched pick saves, and the picker leaves without errors', (
+      tester,
+    ) async {
+      final host = await _openTune(
+        tester,
+        tune: tuneOf(model: modelField(count: 12)),
+      );
+      await tester.tap(find.text('Model 0'));
+      await host.settle(tester);
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(KFilterField),
+          matching: find.byType(TextField),
+        ),
+        'model 11',
+      );
+      await tester.pump();
+      await tester.tap(find.text('Model 11'));
+      // Frame by frame through the exit: the search box is still mounted
+      // while the route slides out and must not read a disposed controller.
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await host.settle(tester);
+      expect(host.calls, ['model:m11']);
+      expect(find.byType(KFilterField), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('a value of the user’s own is shown', (tester) async {
       await _openTune(tester, tune: tuneOf(modelValue: 'my-own-model'));
       expect(find.text('my-own-model'), findsOneWidget);

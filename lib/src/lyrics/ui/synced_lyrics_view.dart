@@ -11,14 +11,13 @@ import '../../media/domain/track_id.dart';
 import '../../playback/state/playback_providers.dart';
 import '../domain/lyrics.dart';
 import '../domain/lyrics_display_prefs.dart';
-import '../domain/translation/translation_status.dart';
 import '../state/playing_lyrics_providers.dart';
 import '../state/translation/translation_layout_provider.dart';
-import '../state/translation/translation_providers.dart';
 import 'lyrics_line.dart';
 import 'synced_lyrics_scroll.dart';
+import 'synced_lyrics_translation.dart';
 import 'translation/line_translation.dart';
-import 'translation/translation_credit.dart';
+import 'translation/shown_translation.dart';
 
 final _log = Logger('lyrics_view');
 
@@ -175,21 +174,6 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
   double _estimateExtent(int? index, double crossAxisExtent) =>
       index == lineCount ? _estimatedCredit : _estimatedLine;
 
-  /// Lines with a translation or a bar under them are taller: when what the
-  /// lines show changes, the view is anchored again.
-  void _watchTranslation(TrackId id) {
-    ref.listen(
-      trackTranslationProvider(id).select(
-        (v) => (
-          v.map.length,
-          v.status is StatusLoading && !(v.status as StatusLoading).background,
-        ),
-      ),
-      (_, _) => _reanchor(),
-    );
-    ref.listen(translationLayoutProvider(id), (_, _) => _reanchor());
-  }
-
   Widget _line(int i, TrackId? id, TranslationLayout? layout) {
     Widget make(LineTranslation? translation) => LyricsLine(
       index: i,
@@ -201,12 +185,11 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
       align: widget.align,
       translation: translation,
     );
-    if (id == null || layout == null) return make(null);
-    return TranslatedLineScope(
+    return translatedLine(
       trackId: id,
-      line: widget.lyrics.lines[i],
       layout: layout,
-      builder: (context, translation) => make(translation),
+      line: widget.lyrics.lines[i],
+      make: make,
     );
   }
 
@@ -217,7 +200,10 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     final height = widget.viewportHeight;
     final id = widget.trackId;
     final layout = id == null ? null : ref.watch(translationLayoutProvider(id));
-    if (id != null && layout != null) _watchTranslation(id);
+    if (id != null && layout != null) {
+      watchTranslationHeights(ref, id, _reanchor);
+      ref.listen(translationLayoutProvider(id), (_, _) => _reanchor());
+    }
     final scaler = MediaQuery.textScalerOf(context);
     _estimatedLine =
         scaler.scale(widget.lineSize) * 1.3 +
@@ -228,90 +214,90 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
       0.0,
       double.infinity,
     );
-    return Material(
-      type: MaterialType.transparency,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: Listener(
-              onPointerSignal: onPointerInput,
-              onPointerPanZoomUpdate: onPointerInput,
-              child: NotificationListener<ScrollUpdateNotification>(
-                onNotification: onScrollUpdate,
-                // Desktop platforms give every scrollable a scrollbar that
-                // fades in and out on each scroll; auto-scroll would flash it
-                // at every line. Wheel, touch and trackpad still work.
-                child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context)
-                      .copyWith(scrollbars: false),
-                  child: ShaderMask(
-                    blendMode: BlendMode.dstIn,
-                    shaderCallback: (rect) => const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color(0x00000000),
-                        Color(0xFF000000),
-                        Color(0xFF000000),
-                        Color(0x00000000),
-                      ],
-                      stops: [0, _edgeFade, 1 - _edgeFade, 1],
-                    ).createShader(rect),
-                    child: SuperListView.builder(
-                      controller: scroll,
-                      listController: listController,
-                      extentEstimation: _estimateExtent,
-                      // Each line has its own repaint boundary, and nothing
-                      // off screen is worth keeping.
-                      addAutomaticKeepAlives: false,
-                      addRepaintBoundaries: false,
-                      // Room above and below so the first and last lines can
-                      // reach the anchor.
-                      padding: EdgeInsets.fromLTRB(
-                        side,
-                        height * lyricsAnchor,
-                        side,
-                        height * (1 - lyricsAnchor),
-                      ),
-                      // With translation on, one more item: the credit line.
-                      itemCount: lyrics.lines.length + (layout == null ? 0 : 1),
-                      itemBuilder: (context, i) {
-                        if (i == lyrics.lines.length) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: lyricsLineInset,
-                            ),
-                            child: TranslationCreditLine(
-                              trackId: id!,
+    return TranslationPresence(
+      trackId: id,
+      active: layout != null,
+      child: Material(
+        type: MaterialType.transparency,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Listener(
+                onPointerSignal: onPointerInput,
+                onPointerPanZoomUpdate: onPointerInput,
+                child: NotificationListener<ScrollUpdateNotification>(
+                  onNotification: onScrollUpdate,
+                  // Desktop platforms give every scrollable a scrollbar that
+                  // fades in and out on each scroll; auto-scroll would flash it
+                  // at every line. Wheel, touch and trackpad still work.
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context)
+                        .copyWith(scrollbars: false),
+                    child: ShaderMask(
+                      blendMode: BlendMode.dstIn,
+                      shaderCallback: (rect) => const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0x00000000),
+                          Color(0xFF000000),
+                          Color(0xFF000000),
+                          Color(0x00000000),
+                        ],
+                        stops: [0, _edgeFade, 1 - _edgeFade, 1],
+                      ).createShader(rect),
+                      child: SuperListView.builder(
+                        controller: scroll,
+                        listController: listController,
+                        extentEstimation: _estimateExtent,
+                        // Each line has its own repaint boundary, and nothing
+                        // off screen is worth keeping.
+                        addAutomaticKeepAlives: false,
+                        addRepaintBoundaries: false,
+                        // Room above and below so the first and last lines can
+                        // reach the anchor.
+                        padding: EdgeInsets.fromLTRB(
+                          side,
+                          height * lyricsAnchor,
+                          side,
+                          height * (1 - lyricsAnchor),
+                        ),
+                        // With translation on, one more item: the credit line.
+                        itemCount:
+                            lyrics.lines.length + (layout == null ? 0 : 1),
+                        itemBuilder: (context, i) {
+                          if (i == lyrics.lines.length) {
+                            return translationCreditItem(
+                              id!,
                               centered: widget.align == LyricsAlign.center,
-                            ),
+                            );
+                          }
+                          return _BuiltLine(
+                            index: i,
+                            built: _built,
+                            child: _line(i, id, layout),
                           );
-                        }
-                        return _BuiltLine(
-                          index: i,
-                          built: _built,
-                          child: _line(i, id, layout),
-                        );
-                      },
+                        },
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            right: KSpace.x4,
-            bottom: KSpace.x4,
-            child: ValueListenableBuilder<KLocateSide>(
-              valueListenable: locateSide,
-              builder: (context, side, _) => KLocateButton(
-                side: side,
-                tooltip: AppLocalizations.of(context).lyricsBackToLine,
-                onPressed: backToLine,
+            Positioned(
+              right: KSpace.x4,
+              bottom: KSpace.x4,
+              child: ValueListenableBuilder<KLocateSide>(
+                valueListenable: locateSide,
+                builder: (context, side, _) => KLocateButton(
+                  side: side,
+                  tooltip: AppLocalizations.of(context).lyricsBackToLine,
+                  onPressed: backToLine,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

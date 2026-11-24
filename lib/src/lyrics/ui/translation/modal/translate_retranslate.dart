@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../domain/translation/translation_status.dart';
 import '../../../state/translation/translation_commands.dart';
+import '../../../../plugins/state/plugin_store_providers.dart';
 import '../../../state/translation/translation_credit_provider.dart';
 import '../../../state/translation/translation_providers.dart';
 import '../../../state/translation/translation_view.dart';
@@ -46,10 +47,18 @@ void retranslateInBackground(
     end();
     if (status is StatusReady) {
       final credit = container.read(translationCreditProvider(id));
-      showAppSnackBarOn(
-        messenger,
-        l10n.lyricsTranslateRetranslated(credit?.style ?? credit?.plugin ?? ''),
-      );
+      final installId = view.installId;
+      final plugin = installId == null
+          ? null
+          : container.read(installedPluginProvider(installId)).value;
+      // Never an empty name: the style, the plugin, else the modal's title.
+      final named = [credit?.style, credit?.plugin, plugin?.name]
+          .whereType<String>()
+          .firstWhere(
+            (n) => n.trim().isNotEmpty,
+            orElse: () => l10n.lyricsTranslateTitle,
+          );
+      showAppSnackBarOn(messenger, l10n.lyricsTranslateRetranslated(named));
     }
   });
   guard = Timer(retranslateStartWait, () {

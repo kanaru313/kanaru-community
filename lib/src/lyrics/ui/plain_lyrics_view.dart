@@ -9,6 +9,7 @@ import '../domain/lyrics_display_prefs.dart';
 import '../state/translation/translation_layout_provider.dart';
 import 'lyrics_text_styles.dart';
 import 'translation/line_translation.dart';
+import 'translation/shown_translation.dart';
 import 'translation/translated_line_text.dart';
 import 'translation/translation_credit.dart';
 import 'translation/translation_text_styles.dart';
@@ -49,87 +50,95 @@ class PlainLyricsView extends ConsumerWidget {
     final lines = lyrics.lines;
     final id = trackId;
     final layout = id == null ? null : ref.watch(translationLayoutProvider(id));
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: EdgeInsets.fromLTRB(
-            sidePadding,
-            KSpace.x1,
-            sidePadding,
-            KSpace.x2,
-          ),
-          child: Row(
-            spacing: KSpace.x2,
-            children: [
-              Icon(KIcons.lyricsNote, size: 18, color: scheme.onSurfaceVariant),
-              Expanded(
-                child: Text(
-                  l10n.lyricsPlainNote,
-                  style: lyricsNoteStyle(context),
+    return TranslationPresence(
+      trackId: id,
+      active: layout != null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              sidePadding,
+              KSpace.x1,
+              sidePadding,
+              KSpace.x2,
+            ),
+            child: Row(
+              spacing: KSpace.x2,
+              children: [
+                Icon(
+                  KIcons.lyricsNote,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
                 ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          // Desktop platforms add a scrollbar; lyrics scroll without one.
-          child: ScrollConfiguration(
-            behavior: ScrollConfiguration.of(context)
-                .copyWith(scrollbars: false),
-            child: ListView.builder(
-              padding: EdgeInsets.fromLTRB(
-                sidePadding,
-                0,
-                sidePadding,
-                KSpace.x6 + MediaQuery.paddingOf(context).bottom,
-              ),
-              // With translation on, one more item: the credit line.
-              itemCount: lines.length + (layout == null ? 0 : 1),
-              itemBuilder: (context, i) {
-                if (i == lines.length) {
-                  return TranslationCreditLine(
-                    trackId: id!,
-                    centered: align == LyricsAlign.center,
-                  );
-                }
-                final text = lines[i].text;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: KSpace.x3),
-                  // A blank line is the break between two stanzas.
-                  child: text.isEmpty
-                      ? SizedBox(height: style.fontSize! * 0.75)
-                      : id == null || layout == null
-                      ? Text(text, style: style, textAlign: textAlign)
-                      : TranslatedLineScope(
-                          trackId: id,
-                          line: lines[i],
-                          layout: layout,
-                          builder: (context, translation) => DefaultTextStyle(
-                            style: style,
-                            textAlign: textAlign,
-                            child: TranslatedLineText(
-                              original: text,
-                              translation: translation,
-                              translationStyle: plainTranslationStyle(
-                                context,
-                                style,
-                              ),
-                              originalStyle: plainReplacedOriginalStyle(
-                                context,
-                                style,
-                              ),
-                              textAlign: textAlign,
-                              duration: Duration.zero,
-                            ),
-                          ),
-                        ),
-                );
-              },
+                Expanded(
+                  child: Text(
+                    l10n.lyricsPlainNote,
+                    style: lyricsNoteStyle(context),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+          Expanded(
+            // Desktop platforms add a scrollbar; lyrics scroll without one.
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context)
+                  .copyWith(scrollbars: false),
+              child: ListView.builder(
+                padding: EdgeInsets.fromLTRB(
+                  sidePadding,
+                  0,
+                  sidePadding,
+                  KSpace.x6 + MediaQuery.paddingOf(context).bottom,
+                ),
+                // With translation on, one more item: the credit line.
+                itemCount: lines.length + (layout == null ? 0 : 1),
+                itemBuilder: (context, i) {
+                  if (i == lines.length) {
+                    return TranslationCreditLine(
+                      trackId: id!,
+                      centered: align == LyricsAlign.center,
+                    );
+                  }
+                  final text = lines[i].text;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: KSpace.x3),
+                    // A blank line is the break between two stanzas.
+                    child: text.isEmpty
+                        ? SizedBox(height: style.fontSize! * 0.75)
+                        : id == null || layout == null
+                        ? Text(text, style: style, textAlign: textAlign)
+                        : TranslatedLineScope(
+                            trackId: id,
+                            line: lines[i],
+                            layout: layout,
+                            builder: (context, translation) => DefaultTextStyle(
+                              style: style,
+                              textAlign: textAlign,
+                              child: TranslatedLineText(
+                                original: text,
+                                translation: translation,
+                                translationStyle: plainTranslationStyle(
+                                  context,
+                                  style,
+                                ),
+                                originalStyle: plainReplacedOriginalStyle(
+                                  context,
+                                  style,
+                                ),
+                                textAlign: textAlign,
+                                duration: Duration.zero,
+                              ),
+                            ),
+                          ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

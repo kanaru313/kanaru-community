@@ -79,7 +79,6 @@ Future<void> showTuneSelect(
       selected: selected,
     ),
   );
-  final search = TextEditingController();
   void filter(String query) {
     final matches = foldedQuery(query);
     live.value = SelectionPickerState<String>(
@@ -95,21 +94,9 @@ Future<void> showTuneSelect(
     context,
     title: Text(title),
     header: searchable
-        ? Padding(
-            padding: const EdgeInsets.fromLTRB(
-              KSpace.x4,
-              KSpace.x1,
-              KSpace.x4,
-              KSpace.x2,
-            ),
-            child: KFilterField(
-              controller: search,
-              hint: l10n.lyricsTranslateSearchHint(options.length),
-              persistent: true,
-              autofocus: false,
-              onChanged: filter,
-              onClose: () {},
-            ),
+        ? TuneSearchField(
+            hint: l10n.lyricsTranslateSearchHint(options.length),
+            onChanged: filter,
           )
         : null,
     options: live.value.options,
@@ -119,10 +106,54 @@ Future<void> showTuneSelect(
       await onPick(value);
       return true;
     },
-  ).whenComplete(() {
-    live.dispose();
-    search.dispose();
+  );
+  // [live] is a plain notifier with no resource behind it, and the picker
+  // still reads it while its route slides out (the future resolves at pop):
+  // it is left to the garbage collector instead of being disposed early.
+}
+
+/// The search box over a long list. It owns its controller, so the controller
+/// goes with the box when the route has finished leaving, never before.
+class TuneSearchField extends StatefulWidget {
+  const TuneSearchField({
+    super.key,
+    required this.hint,
+    required this.onChanged,
   });
+
+  final String hint;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<TuneSearchField> createState() => _TuneSearchFieldState();
+}
+
+class _TuneSearchFieldState extends State<TuneSearchField> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(
+      KSpace.x4,
+      KSpace.x1,
+      KSpace.x4,
+      KSpace.x2,
+    ),
+    child: KFilterField(
+      controller: _controller,
+      hint: widget.hint,
+      persistent: true,
+      autofocus: false,
+      onChanged: widget.onChanged,
+      onClose: () {},
+    ),
+  );
 }
 
 /// The test of a search box: every word of [query] is in the text, ignoring

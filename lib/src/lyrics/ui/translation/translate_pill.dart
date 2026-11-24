@@ -44,11 +44,14 @@ class TranslatePill extends ConsumerWidget {
       enabled: enabled,
       label: label,
       child: ExcludeSemantics(
-        child: Material(
-          color: fill,
-          shape: KShape.of(KRadius.full),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
+        // KPressable (kanaru_ui) gives the press, hover and focus looks.
+        child: DecoratedBox(
+          decoration: ShapeDecoration(
+            color: fill,
+            shape: KShape.of(KRadius.full),
+          ),
+          child: KPressable(
+            radius: KRadius.full,
             onTap: enabled ? () => unawaited(opener(context, id)) : null,
             child: Padding(
               padding: const EdgeInsets.symmetric(

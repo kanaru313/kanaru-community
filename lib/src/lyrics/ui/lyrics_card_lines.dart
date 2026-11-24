@@ -10,6 +10,7 @@ import '../state/translation/translation_providers.dart';
 import 'lyrics_gap_mark.dart';
 import 'lyrics_text_styles.dart';
 import 'translation/line_translation.dart';
+import 'translation/shown_translation.dart';
 import 'translation/translation_placeholder.dart';
 import 'translation/translation_text_styles.dart';
 
@@ -57,38 +58,42 @@ class CardSyncedLines extends ConsumerWidget {
     final next = index < 0 && (lineAt(0)?.isGap ?? false)
         ? null
         : lineAt(index + 1);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _CardRow(
-          line: index < 0 ? null : lineAt(index - 1),
-          active: false,
-          style: style(false),
-          textAlign: textAlign,
-        ),
-        _CardRow(
-          line: current,
-          active: true,
-          style: style(true),
-          textAlign: textAlign,
-        ),
-        // With translation on the row is always there, so the card keeps its
-        // height from line to line.
-        if (id != null && layout != null)
-          _CardTranslation(
-            trackId: id,
-            line: current,
-            rtl: layout.rtl,
-            style: cardTranslationStyle(context, style(true)),
+    return TranslationPresence(
+      trackId: id,
+      active: layout != null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _CardRow(
+            line: index < 0 ? null : lineAt(index - 1),
+            active: false,
+            style: style(false),
             textAlign: textAlign,
           ),
-        _CardRow(
-          line: next,
-          active: false,
-          style: style(false),
-          textAlign: textAlign,
-        ),
-      ],
+          _CardRow(
+            line: current,
+            active: true,
+            style: style(true),
+            textAlign: textAlign,
+          ),
+          // With translation on the row is always there, so the card keeps its
+          // height from line to line.
+          if (id != null && layout != null)
+            _CardTranslation(
+              trackId: id,
+              line: current,
+              rtl: layout.rtl,
+              style: cardTranslationStyle(context, style(true)),
+              textAlign: textAlign,
+            ),
+          _CardRow(
+            line: next,
+            active: false,
+            style: style(false),
+            textAlign: textAlign,
+          ),
+        ],
+      ),
     );
   }
 }

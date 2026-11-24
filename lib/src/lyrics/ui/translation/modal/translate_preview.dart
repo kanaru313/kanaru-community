@@ -73,10 +73,14 @@ class TranslatePreview extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                spacing: KSpace.x2,
                 children: [
-                  Expanded(
+                  Flexible(
                     child: Text(
                       l10n.lyricsTranslatePreview,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: scheme.primary,
                         fontWeight: FontWeight.w700,
@@ -84,23 +88,28 @@ class TranslatePreview extends ConsumerWidget {
                     ),
                   ),
                   if (on && canChoose)
-                    SizedBox(
-                      width: 200,
-                      child: KSegmented<TranslationDisplay>(
-                        semanticLabel: l10n.lyricsTranslateDisplay,
-                        value: display,
-                        segments: [
-                          KSegment(
-                            value: TranslationDisplay.under,
-                            label: l10n.lyricsTranslateDisplayUnder,
-                          ),
-                          KSegment(
-                            value: TranslationDisplay.replace,
-                            label: l10n.lyricsTranslateDisplayReplace,
-                          ),
-                        ],
-                        onChanged: (v) =>
-                            ref.read(translationCommandsProvider).setDisplay(v),
+                    // Width follows the two labels (and the text scale), and
+                    // gives way when the row is narrower.
+                    Flexible(
+                      flex: 3,
+                      child: IntrinsicWidth(
+                        child: KSegmented<TranslationDisplay>(
+                          semanticLabel: l10n.lyricsTranslateDisplay,
+                          value: display,
+                          segments: [
+                            KSegment(
+                              value: TranslationDisplay.under,
+                              label: l10n.lyricsTranslateDisplayUnder,
+                            ),
+                            KSegment(
+                              value: TranslationDisplay.replace,
+                              label: l10n.lyricsTranslateDisplayReplace,
+                            ),
+                          ],
+                          onChanged: (v) => ref
+                              .read(translationCommandsProvider)
+                              .setDisplay(v),
+                        ),
                       ),
                     ),
                 ],

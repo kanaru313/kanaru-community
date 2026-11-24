@@ -203,9 +203,11 @@ legend **Dịch**.
   plugin" for another plugin's saved translation, "… · dịch dở n/m dòng" for a
   partial run; centred with centred lyrics. Language names are the `lyricsLang*`
   keys (`translationLanguageName`).
-- **Anchor.** After a translation arrives, changes or goes away,
-  `SyncedLyricsView` invalidates the measured heights and re-anchors the sung
-  line once per frame without animating (the font size never animates).
+- **Anchor.** After a translation arrives, changes or goes away (the shown map,
+  the loading bars, the plugin or its settings change: `watchTranslationHeights`
+  in `synced_lyrics_translation.dart`), `SyncedLyricsView` invalidates the
+  measured heights and re-anchors the sung line once per frame without
+  animating (the font size never animates).
 - RTL: `Text.textDirection = rtl` on the translation when the target is in
   `rtlLanguages`.
 
@@ -261,19 +263,26 @@ and **Modal lỗi dịch**. The entry points are in "Entry points" below.
 
 Now Playing only places these widgets; what they show comes from one provider.
 
-- **State.** `translateEntryProvider` (autoDispose) reads `playingLyricsProvider`
+- **State (passive).** Entry points never ask for a translation: a run starts
+  only while a lyrics view of the playing track is open (user decision D11 /
+  V12), so the pill, the button and the ⋮ subtitle never watch
+  `trackTranslationProvider`. The lyrics views (`SyncedLyricsView`,
+  `PlainLyricsView`, `CardSyncedLines`) and the modal wrap themselves in
+  `TranslationPresence`, which, while translation is on and it is mounted,
+  publishes the view they show to `shownTranslationProvider` (keep-alive,
+  by track, cleared when the last view of the track unmounts).
+  `translateEntryProvider` (autoDispose) reads `playingLyricsProvider`
   (`available` = lyrics shown), `translationOnProvider`,
-  `effectiveTranslationTargetProvider` and, only while translation is on and
-  the song has lyrics, `trackTranslationProvider` + `translationCreditProvider`
-  (so a closed header never starts a run): `working` (any `StatusLoading`,
-  forced re-run included), `failed` (every `TranslationFailure`, a half-done
-  run too), `translated` (credit present and not working: ready, another
-  plugin's copy, half done), the plugin and the target language.
+  `effectiveTranslationTargetProvider` and that board: `working` (any
+  `StatusLoading`, forced re-run included), `failed` (every
+  `TranslationFailure`, a half-done run too), `translated` (a copy with lines
+  and an installed plugin, not working), the plugin and the target language.
+  With no lyrics view mounted it is on / off from the settings only.
 - **Mobile button** (`TranslateButton`, in `lyrics_screen_header.dart`): icon;
   on = primary icon + 6 dp primary dot under it; working = ring; failed =
   `KAlertDot.corner`; no lyrics = disabled (dimmed by `KIconButton`). Tap =
   `showTranslateModal(followsPlaying: true)`.
-- **Desktop pill** (`TranslatePill`, in `desktop_now_playing_header.dart`):
+- **Desktop pill** (`TranslatePill`, a `KPressable` over a tonal fill, in `desktop_now_playing_header.dart`):
   off "Dịch"; on `secondaryContainer`; translated [plugin icon · language];
   working ring + "Đang dịch"; failed alert dot on the corner; no lyrics 0.5 and
   inert. Click opens the modal through the header's `whilePinned` opener (the

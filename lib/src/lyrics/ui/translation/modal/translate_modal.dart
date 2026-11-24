@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../media/domain/track_id.dart';
 import '../../../state/playing_lyrics_providers.dart';
+import '../shown_translation.dart';
 import 'translate_body.dart';
 import 'translate_frame.dart';
 
@@ -58,5 +59,11 @@ class _TranslateModalState extends ConsumerState<_TranslateModal> {
   }
 
   @override
-  Widget build(BuildContext context) => TranslateBody(control: widget.control);
+  Widget build(BuildContext context) => TranslationPresence(
+    // The modal watches the translation of its song itself (preview, status
+    // line): it shows it to the entry points too.
+    trackId: widget.control.trackId,
+    active: true,
+    child: TranslateBody(control: widget.control),
+  );
 }

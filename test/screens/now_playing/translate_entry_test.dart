@@ -10,16 +10,18 @@ import 'package:kanaru/src/lyrics/domain/translation/translation_status.dart';
 import 'package:kanaru/src/lyrics/state/playing_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/state/translation/track_translation_notifier.dart';
-import 'package:kanaru/src/lyrics/state/translation/translation_credit_provider.dart';
 import 'package:kanaru/src/lyrics/state/translation/translation_providers.dart';
 import 'package:kanaru/src/lyrics/state/translation/translation_settings.dart';
 import 'package:kanaru/src/lyrics/state/translation/translation_view.dart';
 import 'package:kanaru/src/lyrics/ui/translation/modal/translate_body.dart';
+import 'package:kanaru/src/lyrics/ui/translation/shown_translation.dart';
 import 'package:kanaru/src/lyrics/ui/translation/translate_button.dart';
 import 'package:kanaru/src/lyrics/ui/translation/translate_pill.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru/src/playback/state/sleep_timer_provider.dart';
+import 'package:kanaru/src/plugins/state/plugin_store_providers.dart'
+    show installedPluginProvider;
 import 'package:kanaru/src/plugins/state/store_ops.dart'
     show pluginIconProvider;
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_now_playing.dart';
@@ -33,21 +35,21 @@ import '../../lyrics/ui/translation/modal/translate_modal_host.dart'
 import '../../playback/support/ui_host.dart';
 import '../../playback/ui/sleep_timer/sleep_timer_modal_host.dart';
 import '../../shell/support/desktop_now_playing_host.dart';
+import '../plugins/support/plugin_fixtures.dart' show liveRow;
 
 const _track = TrackId(1);
 
-/// What the entry points are fed with: the translation of the song and who
-/// made it, both set by the test.
+/// What the entry points and the lyrics views are fed with: the translation
+/// of the song, set by the test. [builds] counts how many times anything asked
+/// for it (built `trackTranslationProvider`): the entry points must never.
 class _Feed {
   _Feed({this.lyrics = true}) {
     view = box<TranslationView>(TranslationView.idle);
-    credit = box<TranslationCredit?>(null);
   }
 
   final bool lyrics;
   late final NotifierProvider<Box<TranslationView>, TranslationView> view;
-  late final NotifierProvider<Box<TranslationCredit?>, TranslationCredit?>
-  credit;
+  int builds = 0;
 
   List<Override> get overrides => [
     playingLyricsProvider.overrideWithValue(
@@ -60,9 +62,14 @@ class _Feed {
     trackLyricsProvider.overrideWith(
       (ref, id) => lyrics ? LyricsShown(syncedLyrics(2)) : const LyricsNone(),
     ),
-    trackTranslationProvider.overrideWith2((id) => _FakeTranslation(id, view)),
-    translationCreditProvider.overrideWith((ref, id) => ref.watch(credit)),
+    trackTranslationProvider.overrideWith2(
+      (id) => _FakeTranslation(id, view, () => builds++),
+    ),
     effectiveTranslationTargetProvider.overrideWith((ref, id) => 'vi'),
+    installedPluginProvider.overrideWith(
+      (ref, id) =>
+          AsyncData(liveRow(id, name: 'Google Translate', kind: 'translate')),
+    ),
     pluginIconProvider.overrideWith((ref, id) async => null),
     sleepTimerProvider.overrideWith(FakeSleepTimer.new),
     ...sleepEstimates(),
@@ -70,15 +77,18 @@ class _Feed {
 }
 
 class _FakeTranslation extends TrackTranslation {
-  _FakeTranslation(super.trackId, this.source);
+  _FakeTranslation(super.trackId, this.source, this.onBuild);
 
   final NotifierProvider<Box<TranslationView>, TranslationView> source;
+  final void Function() onBuild;
 
   @override
-  TranslationView build() => ref.watch(source);
+  TranslationView build() {
+    onBuild();
+    return ref.watch(source);
+  }
 }
 
-const _credit = TranslationCredit(plugin: 'Google Translate', target: 'vi');
 const _ready = TranslationView(
   status: TranslationStatus.ready(),
   map: {'Line 0': 'Dòng 0'},
@@ -91,6 +101,7 @@ Future<UiHost> _pumpEntries(
   _Feed feed, {
   bool on = true,
   List<TrackId>? opened,
+  bool lyricsView = false,
 }) async {
   final sink = opened ?? <TrackId>[];
   final host = await pumpWithPlayer(
@@ -98,6 +109,13 @@ Future<UiHost> _pumpEntries(
     Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // A lyrics view of the song (what asks for its translation).
+        if (lyricsView)
+          const TranslationPresence(
+            trackId: _track,
+            active: true,
+            child: SizedBox.shrink(),
+          ),
         TranslateButton(opener: (_, id) async => sink.add(id)),
         TranslatePill(opener: (_, id) async => sink.add(id)),
       ],
@@ -112,10 +130,10 @@ Future<UiHost> _pumpEntries(
   return host;
 }
 
-void _set(UiHost host, _Feed feed, TranslationView v, [TranslationCredit? c]) {
-  host.container.read(feed.view.notifier).set(v);
-  host.container.read(feed.credit.notifier).set(c);
-}
+/// What a mounted lyrics view shows, as the entry points see it.
+void _show(UiHost host, TranslationView v) => host.container
+    .read(shownTranslationProvider.notifier)
+    .publish(_show, _track, v);
 
 /// The semantics node of the entry [of]: its outermost button.
 SemanticsNode _node(WidgetTester tester, Type of) => tester.getSemantics(
@@ -164,7 +182,7 @@ void main() {
     ) async {
       final feed = _Feed();
       final host = await _pumpEntries(tester, feed);
-      _set(host, feed, _ready, _credit);
+      _show(host, _ready);
       await tester.pump();
       final handle = tester.ensureSemantics();
       const on = 'Translate lyrics · Translating into Vietnamese';
@@ -195,9 +213,8 @@ void main() {
     ) async {
       final feed = _Feed();
       final host = await _pumpEntries(tester, feed);
-      _set(
+      _show(
         host,
-        feed,
         const TranslationView(status: TranslationStatus.loading(0, 2)),
       );
       await tester.pump();
@@ -209,15 +226,13 @@ void main() {
       expect(find.text('Translating'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNWidgets(2));
       // A "Dịch lại" keeps the old lines on screen and still shows the ring.
-      _set(
+      _show(
         host,
-        feed,
         TranslationView(
           status: const TranslationStatus.loading(0, 2, background: true),
           map: _ready.map,
           installId: 'google',
         ),
-        _credit,
       );
       await tester.pump();
       expect(find.text('Translating'), findsOneWidget);
@@ -235,11 +250,7 @@ void main() {
       ) async {
         final feed = _Feed();
         final host = await _pumpEntries(tester, feed);
-        _set(
-          host,
-          feed,
-          TranslationView(status: TranslationStatus.failed(failure)),
-        );
+        _show(host, TranslationView(status: TranslationStatus.failed(failure)));
         await tester.pump();
         final handle = tester.ensureSemantics();
         expect(
@@ -257,19 +268,12 @@ void main() {
     ) async {
       final feed = _Feed();
       final host = await _pumpEntries(tester, feed);
-      _set(
+      _show(
         host,
-        feed,
         TranslationView(
           status: const TranslationStatus.failed(TranslationFailure.network()),
           map: _ready.map,
           installId: 'google',
-          linesDone: 1,
-          linesTotal: 2,
-        ),
-        const TranslationCredit(
-          plugin: 'Google Translate',
-          target: 'vi',
           linesDone: 1,
           linesTotal: 2,
         ),
@@ -297,6 +301,35 @@ void main() {
       expect(opened, isEmpty);
       handle.dispose();
     });
+
+    testWidgets('no lyrics view mounted: nothing asks for a translation', (
+      tester,
+    ) async {
+      final feed = _Feed();
+      await _pumpEntries(tester, feed);
+      await tester.pump(const Duration(seconds: 1));
+      // Translation is on, the song has lyrics, the button and the pill are
+      // mounted, and still no run is requested: they read settings only.
+      expect(feed.builds, 0);
+      expect(find.text('Translate'), findsOneWidget);
+    });
+
+    testWidgets(
+      'a mounted lyrics view asks, and the pill shows what it shows',
+      (tester) async {
+        final feed = _Feed();
+        final host = await _pumpEntries(tester, feed, lyricsView: true);
+        host.container.read(feed.view.notifier).set(_ready);
+        await tester.pump();
+        await tester.pump();
+        expect(feed.builds, greaterThan(0));
+        expect(find.text('Vietnamese'), findsOneWidget);
+        // The view unmounts: the entry points go back to the settings only.
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump();
+        expect(host.container.read(shownTranslationProvider), isEmpty);
+      },
+    );
 
     testWidgets('a tap opens the modal for the playing song', (tester) async {
       final feed = _Feed();
