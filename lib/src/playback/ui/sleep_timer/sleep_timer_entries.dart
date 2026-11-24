@@ -174,32 +174,3 @@ class _SleepTimerRingButtonState extends ConsumerState<SleepTimerRingButton> {
     );
   }
 }
-
-/// The label of the ⋮ item: "Hẹn giờ ngủ · còn 23:41" ticking while a timer
-/// runs, "Hẹn giờ ngủ" while off. A screen reader reads minutes ("còn 24
-/// phút"), so it does not talk every second.
-class SleepTimerMenuLabel extends ConsumerWidget {
-  const SleepTimerMenuLabel({super.key, this.style});
-
-  final TextStyle? style;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final s = ref.watch(sleepTimerProvider);
-    final texts = SleepTimerTexts.of(context);
-    return Semantics(
-      label: texts.menuLabel(s, minutePrecision: true),
-      excludeSemantics: true,
-      child: Text(
-        texts.menuLabel(s),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: style,
-      ),
-    );
-  }
-}
-
-/// [SleepTimerMenuLabel] as a `WidgetBuilder`, for a menu item's live label.
-Widget sleepTimerMenuLabelBuilder(BuildContext context) =>
-    const SleepTimerMenuLabel();

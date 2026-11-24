@@ -503,15 +503,14 @@ while a timer runs. Focus goes back to `returnFocus` when it closes.
 - **Entries** (`sleep_timer_entries.dart`, each watches small `select`s, so only the entries rebuild per second):
   `SleepTimerDesktopEntry` (player bar, desktop Now Playing header: the icon while off, a `KPill` while running, one
   `FocusNode` for both looks), `SleepTimerRingButton` (mobile header, running only: round button with a progress ring,
-  falls back to the ⋮ node when Tắt removes it) and `SleepTimerMenuLabel` / `sleepTimerMenuLabelBuilder` (the ⋮ item:
-  "Hẹn giờ ngủ · còn 23:41" ticking). `SleepEntryFocus` and `SleepReturnFocus` (`sleep_timer_return_focus.dart`) pick the
+  falls back to the ⋮ node when Tắt removes it). `SleepEntryFocus` and `SleepReturnFocus` (`sleep_timer_return_focus.dart`) pick the
   node to focus at close time, because the entry's own node may be gone.
 - **Announcements (policy)**: the modal says by itself when it closes on a timer that ended. The entries never announce an
   expiry (a bar, a header and the modal can be on screen together; each speaking would repeat it). Tooltips show seconds; the
   semantic labels round to minutes so a screen reader does not talk every second.
-- **⋮ item** (`now_playing_more_items.dart`): "Hẹn giờ ngủ" before "Nguồn lời bài", with `NowPlayingMoreItem.liveLabel`.
-  The mobile sheet pops before `onTap` runs, so the items capture the root `Navigator` while they are built and open the modal
-  on it. The desktop menu passes its own opener.
+- **⋮ row** (`now_playing_song_menu.dart`): "Hẹn giờ ngủ" sits before "Nguồn lời bài" (`MenuItemId.sleepTimer`, `aroundLyrics.before`); its title is live (`MenuItemSpec.liveTitle`, "· còn 23:41").
+  The row's action runs with the root navigator's context (`MenuActionRunner`), so the modal opens on the root after the
+  menu closed; on desktop `returnFocus` is the ⋮ button. The label is a `ValueNotifier` fed from `SleepTimerTexts.menuLabel`.
 - **Desktop chrome pin**: the menu item and the header entries open the modal between `NowPlayingChrome.pinFloating()` and
   `unpinFloating()` (skipped when the owner is gone), so the header stays shown while the modal is open; focus returns to the
   ⋮ button or the pill.
@@ -880,7 +879,7 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). 
 - **Row menu** (`screens/now_playing/ui/queue_row_menu.dart`): Play this | Play next (queues a **copy**) | Go to album,
   Go to artist (a `showSelectionPicker` when the track has several artists), Select / Deselect, Ask AI (dimmed) | Remove. A popup at the
   pointer on the panel, a sheet on mobile (⋮). Every action first checks the entry is still queued ("That track is
-  no longer in the queue"). Keep its item set in line with lane C's song menu.
+  no longer in the queue"). The menu starts with the song's row (`QueueRowMenuHeader`: cover 56 r10, title, artist, `album • year`; no `›`); the popup is 320 wide with a divider under it, the mobile sheet shows it instead of the title line.
 - **Undo** restores the entry that was current at removal time only if that removal took it out; if the player moved on
   meanwhile, the live current entry stays.
 
@@ -916,9 +915,10 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
   cover width or a fling over 160 dp/s commits; where there is no track to go to the cover moves at most 30 % and
   springs back (the buttons raise the notices). With either repeat-all mode the last entry's left swipe wraps to the first, like Next (reshuffled: a new pass); under plain repeat all the first entry's right swipe goes to the last, like Previous. The new cover slides in when the entry id changes; if it never does, the
   cover comes back after 800 ms.
-- `NowPlayingMoreSheet` (⋮): the head and `nowPlayingMoreItems`, shared with the desktop dropdown. Sleep timer (live label), Add to playlist, Go to album and Go
-  to artist and "Lyrics source" work (no subtitle); the rest is dimmed "Coming soon", Visual effects carries the Pro badge. `track_navigation.dart` goes
-  through `LibraryLocations` with `context.go`, and asks which artist first through `showSelectionPicker`.
+- **⋮ = the song menu** (`now_playing_song_menu.dart`, `openNowPlayingSongMenu`; both shells, the old "More" sheet and dropdown are gone): `openSongMenu` for the
+  playing song with `aroundLyrics` (Hẹn giờ ngủ before the lyrics row; Dịch lời… soon and Hiệu ứng hình ảnh Pro after it), no Select row, no queue footer.
+  The lyrics row opens "Lời cho bài này" with `followsPlaying: true`. "Đi tới …" closes Now Playing first (`beforeNavigate`). Sleep timer opens on the root navigator
+  with the ⋮ as `returnFocus`. A song not in the library (or nothing playing) shows the "not in your library" toast. The menu keeps the song it was opened for. The ♥ row is `isFavoriteProvider`, the same value as the Now Playing ♥.
 - **Lyrics source** (`LyricsSourceButton`, `lyrics/ui/`): opens "Lời cho bài này" (`showLyricsForTrack(followsPlaying: true)`).
   Mobile: first of the trailing buttons of the lyrics screen header (source, Dịch, heart sit together in one `Row`, no gap),
   the lyrics screen's off-state button, and the ⋮ sheet item; the sheet's opener is built from the page context before
@@ -973,8 +973,8 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
   pointer and focus). `V` flips the cover column only with no modifier, no menu open and no text field focused; the choice lives in
   `coverColumnShownProvider` for the session.
 - **Header** (`desktop_now_playing_header.dart`, 64 dp): `[⌄] [cover column] | [♥] [add to playlist] [Translate chip, soon]`
-  and `[repeat] [sleep timer] [volume] [⋮]`. No Shuffle, no window buttons. The ⋮ menu (`desktop_more_menu.dart`) is the head row
-  plus the shared items; while it is open the header stays shown (`NowPlayingChrome` pin). `now_playing_auto_hide.dart` is the old controller
+  and `[repeat] [sleep timer] [volume] [⋮]`. No Shuffle, no window buttons. The ⋮ (a `KIconButton`) opens the song menu (a 400 dp dialog) inside `NowPlayingChrome.whilePinned`,
+  so the header stays shown until the menu and any dialog opened from it close (dismissed, chosen, or the header disposed). `now_playing_auto_hide.dart` is the old controller
   as it was: hides after 3 s still, shows on a move (throttled to 300 ms) or any key, pinned while the pointer is on the header or the
   track column or a menu is open, hidden at once when the pointer leaves the window.
 - **Split geometry** (`kanaru_ui` `now_playing_split_geometry.dart`, `now_playing_split_layout.dart`): column 42 % of the body clamped

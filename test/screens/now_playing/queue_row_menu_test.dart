@@ -1,11 +1,14 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_row.dart';
+import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_host.dart';
+import 'package:kanaru/src/screens/now_playing/ui/queue_row_menu_header.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_panel.dart';
 import 'package:material_ui/material_ui.dart';
@@ -29,12 +32,14 @@ Future<UiHost> _pump(
   WidgetTester tester, {
   QueueHost host = QueueHost.panel,
   List<String> artists = const ['Art One'],
+  double textScale = 1,
 }) async {
   final h = await pumpWithPlayer(
     tester,
     QueuePanel(host: host),
     play: false,
     routes: _routes,
+    textScale: textScale,
     size: host == QueueHost.panel ? const Size(900, 800) : const Size(400, 800),
   );
   await h.run(tester, () async {
@@ -247,6 +252,87 @@ void main() {
     expect(find.text('Play this track'), findsOneWidget);
     expect(find.text('Go to artist'), findsOneWidget);
     expect(find.byType(PopupMenuItem<void>), findsNothing);
+  });
+
+  testWidgets('the popup starts with the song row, 320 wide, no ›', (
+    tester,
+  ) async {
+    await _pump(tester);
+    await _openMenu(tester, 'T1');
+    final header = find.byType(QueueRowMenuHeader);
+    expect(header, findsOneWidget);
+    expect(find.descendant(of: header, matching: find.text('T1')), findsOne);
+    expect(
+      find.descendant(of: header, matching: find.text('Art One')),
+      findsOne,
+    );
+    expect(find.descendant(of: header, matching: find.text('Alb')), findsOne);
+    expect(
+      find.descendant(of: header, matching: find.byType(KIconButton)),
+      findsNothing,
+    );
+    expect(tester.getSize(header).width, 320 - 2 * KSpace.x4);
+    // Items stay as they were.
+    expect(find.text('Play this track'), findsOneWidget);
+  });
+
+  testWidgets('at 200 % text the popup song row grows and nothing overflows', (
+    tester,
+  ) async {
+    await _pump(tester, textScale: 2);
+    await _openMenu(tester, 'T1');
+    final header = find.byType(QueueRowMenuHeader);
+    expect(header, findsOneWidget);
+    expect(tester.takeException(), isNull);
+    // Title, artist and `album` lines at 2x are taller than the 56 cover.
+    expect(tester.getSize(header).height, greaterThan(56));
+    expect(find.text('Play this track'), findsOneWidget);
+  });
+
+  testWidgets(
+    'at 1x a label next to a trailing text keeps the rest of the row',
+    (tester) async {
+      await _pump(tester);
+      await _openMenu(tester, 'T1');
+      final label = find.text('Remove from queue');
+      final row = find.ancestor(of: label, matching: find.byType(Row)).first;
+      final paragraph = tester.renderObject<RenderParagraph>(label);
+      expect(paragraph.didExceedMaxLines, isFalse);
+      expect(paragraph.size.height, lessThan(2 * 14 * 1.5));
+      expect(
+        tester.getSize(label).width,
+        greaterThan(tester.getSize(row).width / 2),
+      );
+    },
+  );
+
+  testWidgets('the mobile sheet starts with the song row instead of a title', (
+    tester,
+  ) async {
+    await _pump(tester, host: QueueHost.sheet);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(QueueRow).at(1),
+        matching: find.byIcon(KIcons.moreVert),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    final header = find.byType(QueueRowMenuHeader);
+    expect(header, findsOneWidget);
+    expect(
+      tester
+          .getSize(
+            find.descendant(of: header, matching: find.byType(TrackCover)),
+          )
+          .width,
+      56,
+    );
+    expect(
+      find.descendant(of: header, matching: find.byType(KIconButton)),
+      findsNothing,
+    );
+    expect(find.text('Play this track'), findsOneWidget);
   });
 
   for (final host in QueueHost.values) {

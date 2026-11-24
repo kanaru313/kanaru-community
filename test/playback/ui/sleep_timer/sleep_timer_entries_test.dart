@@ -56,7 +56,6 @@ Future<_Host> _pump(
                     : const SizedBox(),
               ),
               if (ring) SleepTimerRingButton(fallbackFocus: more),
-              const SleepTimerMenuLabel(),
               Focus(
                 focusNode: more,
                 child: const SizedBox(width: 24, height: 24),
@@ -395,32 +394,6 @@ void main() {
       expect(_ring, findsNothing);
       expect(tester.takeException(), isNull);
       expect(host.more.hasPrimaryFocus, isTrue);
-    });
-  });
-
-  group('menu label', () {
-    testWidgets('off: plain name; running: ticking, spoken in minutes', (
-      tester,
-    ) async {
-      final host = await _pump(tester);
-      final handle = tester.ensureSemantics();
-      expect(find.text('Sleep timer'), findsOneWidget);
-      host.timer.set(runningMinutes());
-      await tester.pump();
-      expect(find.text('Sleep timer · 23:41 left'), findsOneWidget);
-      expect(
-        find.bySemanticsLabel('Sleep timer · 24 minutes left'),
-        findsOneWidget,
-      );
-      host.timer.set(
-        runningMinutes(remaining: const Duration(minutes: 23, seconds: 40)),
-      );
-      await tester.pump();
-      expect(find.text('Sleep timer · 23:40 left'), findsOneWidget);
-      host.timer.set(runningTracks());
-      await tester.pump();
-      expect(find.text('Sleep timer · 3 tracks left'), findsOneWidget);
-      handle.dispose();
     });
   });
 }

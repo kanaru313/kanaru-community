@@ -1,10 +1,12 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/library/ui/menus/song_lyrics_entry.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
 import 'package:kanaru/src/lyrics/state/playing_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_source_button.dart';
+import 'package:kanaru/src/lyrics/ui/song_lyrics_entry_impl.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
@@ -17,6 +19,7 @@ import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../support/icon_button_finders.dart';
+import '../support/song_menu_pump.dart';
 
 import 'package:material_ui/material_ui.dart' hide RepeatMode;
 
@@ -43,6 +46,7 @@ Future<DesktopHost> _open(WidgetTester tester) async {
       sleepTimerProvider.overrideWith(FakeSleepTimer.new),
       ...sleepEstimates(),
       ..._lyricsOverrides(),
+      songLyricsEntryProvider.overrideWithValue(const LyricsSongEntry()),
     ],
   );
   host.container.read(nowPlayingPanelProvider.notifier).open();
@@ -50,6 +54,31 @@ Future<DesktopHost> _open(WidgetTester tester) async {
   await settleSlide(tester);
   return host;
 }
+
+/// Taps ⋮ and lets the menu load and open (its data comes from the database).
+Future<void> _openMore(WidgetTester tester) async {
+  await tester.tap(
+    find.ancestor(
+      of: find.descendant(
+        of: find.byType(DesktopNowPlayingHeader),
+        matching: find.byIcon(KIcons.moreVert),
+      ),
+      matching: find.byType(KIconButton),
+    ),
+  );
+  await menuLoads(tester);
+}
+
+double _headerOpacity(WidgetTester tester) => tester
+    .widget<AnimatedOpacity>(
+      find
+          .ancestor(
+            of: byIconButton('Minimise'),
+            matching: find.byType(AnimatedOpacity),
+          )
+          .first,
+    )
+    .opacity;
 
 double _x(WidgetTester tester, Finder f) => tester.getCenter(f.first).dx;
 
@@ -165,60 +194,61 @@ void main() {
     expect(tester.getSize(header).height, 64);
   });
 
-  testWidgets('the More menu has the track head and both item groups', (
+  testWidgets('the ⋮ opens the song menu of the playing song as a dialog', (
     tester,
   ) async {
     await _open(tester);
-    await tester.tap(_in(header, find.byIcon(KIcons.moreVert)));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    for (final label in [
-      'Add to playlist',
-      'Go to album',
-      'Go to artist',
-      'Sleep timer',
-      'Lyrics source',
-      'Translate lyrics…',
-      'Visual effects',
-      'Track info',
-    ]) {
-      expect(find.text(label), findsWidgets, reason: label);
-    }
-    expect(find.byType(ProBadge), findsOneWidget);
-    // Only the two unbuilt items say "Coming soon"; sleep is live.
-    expect(find.text('Coming soon'), findsNWidgets(2));
-    // The head row: the playing track.
+    await _openMore(tester);
+    final ys = [
+      for (final l in [
+        'Go to album',
+        'Sleep timer',
+        'Lyrics source',
+        'Translate lyrics…',
+        'Visual effects',
+        'Add to playlist…',
+      ])
+        tester.getTopLeft(find.text(l)).dy,
+    ];
+    expect(ys, [...ys]..sort());
+    expect(find.text('Select'), findsNothing);
+    expect(find.text('Play next'), findsNothing);
+    expect(find.text('Track info'), findsNothing);
+    expect(find.byType(ProBadge), findsWidgets);
+    // The header is the playing song's.
     expect(find.text('T0'), findsWidgets);
+    expect(find.byType(Dialog), findsOneWidget);
   });
 
-  testWidgets(
-    'the More menu puts the sleep timer right before the lyrics source, live, and ticking',
-    (tester) async {
-      final host = await _open(tester);
-      await tester.tap(_in(header, find.byIcon(KIcons.moreVert)));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      final sleepY = tester.getTopLeft(find.text('Sleep timer')).dy;
-      expect(
-        sleepY,
-        greaterThan(tester.getTopLeft(find.text('Go to artist')).dy),
-      );
-      expect(
-        sleepY,
-        lessThan(tester.getTopLeft(find.text('Lyrics source')).dy),
-      );
-      final timer =
-          host.container.read(sleepTimerProvider.notifier) as FakeSleepTimer;
-      timer.set(runningMinutes());
-      await tester.pump();
-      expect(find.text('Sleep timer · 23:41 left'), findsOneWidget);
-      timer.set(
-        runningMinutes(remaining: const Duration(minutes: 23, seconds: 40)),
-      );
-      await tester.pump();
-      expect(find.text('Sleep timer · 23:40 left'), findsOneWidget);
-    },
-  );
+  testWidgets('the sleep timer row is live and ticks', (tester) async {
+    final host = await _open(tester);
+    await _openMore(tester);
+    final timer =
+        host.container.read(sleepTimerProvider.notifier) as FakeSleepTimer;
+    timer.set(runningMinutes());
+    await tester.pump();
+    expect(find.text('Sleep timer · 23:41 left'), findsOneWidget);
+    timer.set(
+      runningMinutes(remaining: const Duration(minutes: 23, seconds: 40)),
+    );
+    await tester.pump();
+    expect(find.text('Sleep timer · 23:40 left'), findsOneWidget);
+  });
+
+  testWidgets('the header stays shown while the menu is open and hides after '
+      'it is dismissed without a choice', (tester) async {
+    await _open(tester);
+    await _openMore(tester);
+    await tester.pump(const Duration(seconds: 6));
+    expect(_headerOpacity(tester), 1);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.text('Sleep timer'), findsNothing);
+    // The pin is given back: the header hides after the usual stillness.
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(_headerOpacity(tester), 0);
+  });
 
   testWidgets('the More menu sleep item pins the header and returns to ⋮', (
     tester,
@@ -228,9 +258,7 @@ void main() {
       of: _in(header, find.byIcon(KIcons.moreVert)),
       matching: find.byType(KIconButton),
     );
-    await tester.tap(more);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    await _openMore(tester);
     await tester.tap(find.text('Sleep timer'));
     await tester.pumpAndSettle();
     expect(find.text('Tap an item to start right away.'), findsOneWidget);

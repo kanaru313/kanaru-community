@@ -1,6 +1,9 @@
-import 'package:flutter/widgets.dart' show Scrollable, ScrollableState;
+import 'package:flutter/widgets.dart'
+    show Navigator, Scrollable, ScrollableState, Semantics;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:kanaru/l10n/gen/app_localizations.dart';
+import 'package:kanaru/src/library/ui/info/song_info_view.dart';
 import 'package:kanaru/src/library/ui/songs/song_list.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/state/now_playing_panel.dart';
@@ -10,6 +13,7 @@ import 'package:kanaru/src/playback/ui/mini_player.dart';
 import 'package:kanaru/src/router/state/router_provider.dart';
 import 'package:kanaru/src/screens/now_playing/now_playing_path.dart';
 import 'package:kanaru/src/screens/now_playing/ui/now_playing_page.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 
 import 'support/harness.dart';
 
@@ -105,5 +109,55 @@ void main() {
         what: 'the Now Playing panel to open',
       );
     }
+
+    // The ⋮ of Now Playing opens the song menu of the playing song; its
+    // header's `›` opens the song info, and Back returns to the menu.
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(Navigator).first),
+    );
+    await app.pumpUntil(
+      () => find
+          .byWidgetPredicate(
+            (w) => w is KIconButton && w.tooltip == l10n.playbackMore,
+          )
+          .evaluate()
+          .isNotEmpty,
+      what: 'the ⋮ of Now Playing',
+    );
+    await tester.tap(
+      find.byWidgetPredicate(
+        (w) => w is KIconButton && w.tooltip == l10n.playbackMore,
+      ),
+    );
+    // The menu header is a button hinted "Song info" (its `›` is an icon).
+    final menuHeader = find.byWidgetPredicate(
+      (w) =>
+          w is Semantics &&
+          w.properties.button == true &&
+          w.properties.hint == l10n.libraryMenuSongInfo,
+    );
+    await app.pumpUntil(
+      () => menuHeader.evaluate().isNotEmpty,
+      what: 'the song menu of the playing song',
+    );
+    expect(find.text(l10n.playbackSleepTimer), findsOneWidget);
+    await tester.tap(menuHeader);
+    await app.pumpUntil(
+      () => find.byType(SongInfoView).evaluate().isNotEmpty,
+      what: 'the song info opened from the menu header',
+    );
+    expect(find.text(title), findsWidgets);
+    await tester.binding.handlePopRoute();
+    await app.pumpUntil(
+      () =>
+          find.byType(SongInfoView).evaluate().isEmpty &&
+          menuHeader.evaluate().isNotEmpty,
+      what: 'Back to return from the info to the menu',
+    );
+    await tester.binding.handlePopRoute();
+    await app.pumpUntil(
+      () => menuHeader.evaluate().isEmpty,
+      what: 'the song menu to close',
+    );
   }, timeout: const Timeout(Duration(minutes: 4)));
 }

@@ -12,6 +12,7 @@ import '../../playback/support/ui_host.dart';
 import '../../shell/support/desktop_now_playing_host.dart';
 import '../../support/icon_button_finders.dart';
 import 'support/add_to_playlist_support.dart';
+import 'support/song_menu_pump.dart';
 
 Future<UiHost> _openMobileSheet(
   WidgetTester tester, {
@@ -30,8 +31,7 @@ Future<UiHost> _openMobileSheet(
   await tester.pump(const Duration(milliseconds: 400));
   await host.letStreamsArrive(tester);
   await tester.tap(byIconButton('More'));
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 400));
+  await menuLoads(tester);
   return host;
 }
 
@@ -53,12 +53,12 @@ Finder get _headerAdd =>
     find.descendant(of: _header, matching: byIconButton('Add to playlist'));
 
 void main() {
-  group('mobile more sheet', () {
+  group('mobile song menu', () {
     testWidgets('the item opens the picker over Now Playing; cancel returns', (
       tester,
     ) async {
       final host = await _openMobileSheet(tester);
-      await tester.tap(find.text('Add to playlist'));
+      await tester.tap(find.text('Add to playlist…'));
       await tester.pump();
       await waitForPicker(tester);
 
@@ -79,7 +79,7 @@ void main() {
     ) async {
       final host = await _openMobileSheet(tester);
       final uid = await createPlaylist(tester, host, 'Chill');
-      await tester.tap(find.text('Add to playlist'));
+      await tester.tap(find.text('Add to playlist…'));
       await tester.pump();
       await waitForPicker(tester);
 
@@ -91,25 +91,16 @@ void main() {
       await drainAfterAdd(tester);
     });
 
-    testWidgets('the item is off and opens no picker without track info', (
-      tester,
-    ) async {
+    testWidgets('a song that is not in the library opens no menu, only the '
+        'toast', (tester) async {
       await _openMobileSheet(
         tester,
         overrides: [
           trackInfoProvider.overrideWith((ref, id) => Stream.value(null)),
         ],
       );
-      final row = tester.widget<KListRow>(
-        find.ancestor(
-          of: find.text('Add to playlist'),
-          matching: find.byType(KListRow),
-        ),
-      );
-      expect(row.enabled, isFalse);
-
-      await tester.tap(find.text('Add to playlist'));
-      await tester.pump();
+      expect(find.text('Add to playlist…'), findsNothing);
+      expect(toast('This is no longer in your library.'), isTrue);
       await settle(tester);
       expect(find.text('New playlist…'), findsNothing);
     });
@@ -134,22 +125,13 @@ void main() {
       expect(_header, findsOneWidget);
     });
 
-    testWidgets('the More menu item opens the picker', (tester) async {
+    testWidgets('the ⋮ menu item opens the picker', (tester) async {
       await _openDesktop(tester);
       await tester.tap(
         find.descendant(of: _header, matching: find.byIcon(KIcons.moreVert)),
       );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      final item = tester.widget<MenuItemButton>(
-        find.ancestor(
-          of: find.text('Add to playlist'),
-          matching: find.byType(MenuItemButton),
-        ),
-      );
-      expect(item.onPressed, isNotNull);
-
-      await tester.tap(find.text('Add to playlist'));
+      await menuLoads(tester);
+      await tester.tap(find.text('Add to playlist…'));
       await tester.pump();
       await waitForPicker(tester);
       expect(find.text('1 song · T0'), findsOneWidget);
@@ -166,24 +148,16 @@ void main() {
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('the More menu item is off and opens no picker without track '
-        'info', (tester) async {
+    testWidgets('without a current track the ⋮ opens no menu, only the toast', (
+      tester,
+    ) async {
       await _openDesktop(tester, play: false);
       await tester.tap(
         find.descendant(of: _header, matching: find.byIcon(KIcons.moreVert)),
       );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      final item = tester.widget<MenuItemButton>(
-        find.ancestor(
-          of: find.text('Add to playlist'),
-          matching: find.byType(MenuItemButton),
-        ),
-      );
-      expect(item.onPressed, isNull);
-
-      await tester.tap(find.text('Add to playlist'), warnIfMissed: false);
-      await tester.pump();
+      await menuLoads(tester);
+      expect(find.text('Add to playlist…'), findsNothing);
+      expect(toast('This is no longer in your library.'), isTrue);
       await settle(tester);
       expect(find.text('New playlist…'), findsNothing);
     });

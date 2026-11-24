@@ -11,6 +11,7 @@ import '../../../playback/state/playback_providers.dart';
 import '../../../playback/ui/queue/queue_remove_action.dart';
 import '../state/queue_selection.dart';
 import 'queue_host.dart';
+import 'queue_row_menu_header.dart';
 import 'track_navigation.dart';
 
 final _log = Logger('QueueRowMenu');
@@ -137,14 +138,11 @@ void openQueueRowMenu(
     showKSheet<void>(
       context,
       useRootNavigator: true,
-      builder: (sheet) => _SheetMenu(
-        groups: groups,
-        title: info?.title,
-        viaKeyboard: viaKeyboard,
-      ),
+      builder: (sheet) =>
+          _SheetMenu(groups: groups, info: info, viaKeyboard: viaKeyboard),
     );
   } else {
-    _showPopup(context, at, groups, viaKeyboard: viaKeyboard);
+    _showPopup(context, at, groups, info: info, viaKeyboard: viaKeyboard);
   }
 }
 
@@ -168,6 +166,7 @@ void _showPopup(
   BuildContext context,
   Offset? at,
   List<List<_Entry>> groups, {
+  required TrackInfo? info,
   required bool viaKeyboard,
 }) {
   final box = context.findRenderObject()! as RenderBox;
@@ -175,7 +174,9 @@ void _showPopup(
   final scheme = Theme.of(context).colorScheme;
   final soon = AppLocalizations.of(context).appComingSoon;
   final focused = _firstEnabled(groups, viaKeyboard);
-  final items = <PopupMenuEntry<void>>[];
+  final items = <PopupMenuEntry<void>>[
+    if (info != null) ...[_HeaderEntry(info), const PopupMenuDivider()],
+  ];
   for (var g = 0; g < groups.length; g++) {
     if (g > 0) items.add(const PopupMenuDivider());
     for (final e in groups[g]) {
@@ -197,8 +198,11 @@ void _showPopup(
                 Expanded(
                   child: Text(e.label, style: TextStyle(color: color)),
                 ),
-                if (e.soon) Text(soon),
-                if (e.hint != null) Text(e.hint!),
+                // Trailing texts keep their natural width (the label takes
+                // all the rest) but never more than 40 % of the popup, so a
+                // large text scale cannot push the row into overflow.
+                if (e.soon) _trailing(soon),
+                if (e.hint != null) _trailing(e.hint!),
               ],
             ),
           ),
@@ -216,18 +220,59 @@ void _showPopup(
       Offset.zero & overlay.size,
     ),
     items: items,
+    constraints: const BoxConstraints.tightFor(width: _popupWidth),
+  );
+}
+
+/// A trailing text of a popup item: natural width, capped (see [_showPopup]).
+Widget _trailing(String text) => ConstrainedBox(
+  constraints: BoxConstraints(maxWidth: _popupWidth * 0.4),
+  child: Text(text),
+);
+
+/// Width of the desktop popup (the header needs room for its three lines).
+const double _popupWidth = 320;
+
+/// The song's row at the top of the popup: not selectable.
+class _HeaderEntry extends PopupMenuEntry<void> {
+  const _HeaderEntry(this.info);
+
+  final TrackInfo info;
+
+  @override
+  double get height => queueRowMenuCoverSide + 2 * KSpace.x2;
+
+  @override
+  bool represents(void value) => false;
+
+  @override
+  State<_HeaderEntry> createState() => _HeaderEntryState();
+}
+
+class _HeaderEntryState extends State<_HeaderEntry> {
+  @override
+  // A minimum, not a fixed height: three lines at a large text scale grow it.
+  Widget build(BuildContext context) => ConstrainedBox(
+    constraints: BoxConstraints(minHeight: widget.height),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: KSpace.x4,
+        vertical: KSpace.x2,
+      ),
+      child: QueueRowMenuHeader(info: widget.info),
+    ),
   );
 }
 
 class _SheetMenu extends StatelessWidget {
   const _SheetMenu({
     required this.groups,
-    required this.title,
+    required this.info,
     required this.viaKeyboard,
   });
 
   final List<List<_Entry>> groups;
-  final String? title;
+  final TrackInfo? info;
   final bool viaKeyboard;
 
   @override
@@ -240,7 +285,7 @@ class _SheetMenu extends StatelessWidget {
       // Rows follow the host (full-bleed in the sheet): no side padding here.
       padding: const EdgeInsets.symmetric(vertical: KSpace.x4),
       children: [
-        if (title != null)
+        if (info != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(
               KSpace.x4,
@@ -248,12 +293,7 @@ class _SheetMenu extends StatelessWidget {
               KSpace.x4,
               KSpace.x3,
             ),
-            child: Text(
-              title!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            child: QueueRowMenuHeader(info: info!),
           ),
         for (final g in groups)
           for (final e in g)
