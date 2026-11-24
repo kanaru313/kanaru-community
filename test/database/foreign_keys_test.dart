@@ -69,6 +69,10 @@ void main() {
           "VALUES (?, 'p', 'r', 1)",
           [id],
         ),
+        'track_translation_prefs': (id) => db.customStatement(
+          "INSERT INTO track_translation_prefs (track_id, target_lang, updated_at) VALUES (?, 'vi', 1)",
+          [id],
+        ),
       };
       var n = 0;
       for (final entry in cases.entries) {

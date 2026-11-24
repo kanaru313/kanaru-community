@@ -17,8 +17,10 @@ import 'package:kanaru/src/database/tables/custom_cover_triggers.drift.dart'
     as i8;
 import 'package:kanaru/src/database/tables/extension_tables.drift.dart' as i9;
 import 'package:kanaru/src/database/tables/lyrics_tables.drift.dart' as i10;
-import 'package:kanaru/src/database/tables/plugin_tables.drift.dart' as i11;
-import 'package:drift/internal/modular.dart' as i12;
+import 'package:kanaru/src/database/tables/lyrics_translation_tables.drift.dart'
+    as i11;
+import 'package:kanaru/src/database/tables/plugin_tables.drift.dart' as i12;
+import 'package:drift/internal/modular.dart' as i13;
 
 abstract class $AppDatabase extends i0.GeneratedDatabase {
   $AppDatabase(i0.QueryExecutor e) : super(e);
@@ -50,11 +52,15 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
     this,
   );
   late final i10.$OnlineLyricsTable onlineLyrics = i10.$OnlineLyricsTable(this);
-  late final i11.$PluginReposTable pluginRepos = i11.$PluginReposTable(this);
-  late final i11.$PluginsTable plugins = i11.$PluginsTable(this);
-  late final i11.$PluginDataTable pluginData = i11.$PluginDataTable(this);
+  late final i11.$LyricsTranslationsTable lyricsTranslations = i11
+      .$LyricsTranslationsTable(this);
+  late final i11.$TrackTranslationPrefsTable trackTranslationPrefs = i11
+      .$TrackTranslationPrefsTable(this);
+  late final i12.$PluginReposTable pluginRepos = i12.$PluginReposTable(this);
+  late final i12.$PluginsTable plugins = i12.$PluginsTable(this);
+  late final i12.$PluginDataTable pluginData = i12.$PluginDataTable(this);
   i1.PlaybackStatsDrift get playbackStatsDrift =>
-      i12.ReadDatabaseContainer(this)
+      i13.ReadDatabaseContainer(this)
           .accessor<i1.PlaybackStatsDrift>(i1.PlaybackStatsDrift.new);
   @override
   Iterable<i0.TableInfo<i0.Table, Object?>> get allTables =>
@@ -121,10 +127,13 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
     lyricsPins,
     lyricsRejects,
     onlineLyrics,
+    lyricsTranslations,
+    trackTranslationPrefs,
     pluginRepos,
     plugins,
     pluginData,
-    i11.pluginsRepoEntry,
+    i11.lyricsTranslationsLookup,
+    i12.pluginsRepoEntry,
   ];
   @override
   i0.StreamQueryUpdateRules get streamUpdateRules =>
@@ -272,10 +281,14 @@ class $AppDatabaseManager {
       i10.$$LyricsRejectsTableTableManager(_db, _db.lyricsRejects);
   i10.$$OnlineLyricsTableTableManager get onlineLyrics =>
       i10.$$OnlineLyricsTableTableManager(_db, _db.onlineLyrics);
-  i11.$$PluginReposTableTableManager get pluginRepos =>
-      i11.$$PluginReposTableTableManager(_db, _db.pluginRepos);
-  i11.$$PluginsTableTableManager get plugins =>
-      i11.$$PluginsTableTableManager(_db, _db.plugins);
-  i11.$$PluginDataTableTableManager get pluginData =>
-      i11.$$PluginDataTableTableManager(_db, _db.pluginData);
+  i11.$$LyricsTranslationsTableTableManager get lyricsTranslations =>
+      i11.$$LyricsTranslationsTableTableManager(_db, _db.lyricsTranslations);
+  i11.$$TrackTranslationPrefsTableTableManager get trackTranslationPrefs => i11
+      .$$TrackTranslationPrefsTableTableManager(_db, _db.trackTranslationPrefs);
+  i12.$$PluginReposTableTableManager get pluginRepos =>
+      i12.$$PluginReposTableTableManager(_db, _db.pluginRepos);
+  i12.$$PluginsTableTableManager get plugins =>
+      i12.$$PluginsTableTableManager(_db, _db.plugins);
+  i12.$$PluginDataTableTableManager get pluginData =>
+      i12.$$PluginDataTableTableManager(_db, _db.pluginData);
 }

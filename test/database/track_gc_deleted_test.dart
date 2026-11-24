@@ -120,6 +120,10 @@ void main() {
       "VALUES (?, 'p', 'r', 1)",
       [id],
     );
+    await db.customStatement(
+      "INSERT INTO track_translation_prefs (track_id, target_lang, updated_at) VALUES (?, 'vi', 1)",
+      [id],
+    );
     expect(await collectOrphanTracks(db, now: _now), 1);
     for (final t in [
       'track_details',
@@ -127,6 +131,7 @@ void main() {
       'track_lyrics_choices',
       'lyrics_pins',
       'lyrics_rejects',
+      'track_translation_prefs',
       'tracks',
     ]) {
       expect(
