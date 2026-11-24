@@ -62,15 +62,10 @@ MenuItemSpec addToPlaylistRow(
   enabled: ids.isNotEmpty,
 );
 
-/// "Ask AI ...": a Pro surface, dimmed with the Pro badge until the Pro
-/// intro exists.
-MenuItemSpec proRow(AppLocalizations l10n, String title) => MenuItemSpec(
-  MenuItemId.ai,
-  icon: KIcons.ai,
-  title: title,
-  soon: true,
-  pro: true,
-);
+/// "Ask AI ...": dimmed "coming soon", no Pro badge (an ordinary row until
+/// the chat exists).
+MenuItemSpec proRow(AppLocalizations l10n, String title) =>
+    MenuItemSpec(MenuItemId.ai, icon: KIcons.ai, title: title, soon: true);
 
 /// Adds the "Advanced" row (a group of its own, last) to [groups] when the
 /// sub-page has anything in it.
