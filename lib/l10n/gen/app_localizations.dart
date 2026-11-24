@@ -7092,6 +7092,12 @@ abstract class AppLocalizations {
   /// **'The translation line under the lyrics, or the small original line when the translation replaces it. Applies to the lyrics screen, the Lyrics tab and the lyrics card.'**
   String get lyricsSettingsTrSizeCaption;
 
+  /// No description provided for @lyricsSettingsTrServiceNeedsConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs setup: {fields}'**
+  String lyricsSettingsTrServiceNeedsConfig(String fields);
+
   /// No description provided for @lyricsSettingsAddSpeech.
   ///
   /// In en, this message translates to:

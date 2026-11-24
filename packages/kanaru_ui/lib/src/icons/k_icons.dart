@@ -76,6 +76,7 @@ abstract final class KIcons {
   static const IconData playlistAdd =
       FluentIcons.text_bullet_list_add_24_regular;
   static const IconData playlistPlay = FluentIcons.music_note_2_play_20_regular;
+  static const IconData fastForward = FluentIcons.fast_forward_24_regular;
   static const IconData queueMusic =
       FluentIcons.text_bullet_list_square_24_regular;
   static const IconData lyrics = FluentIcons.subtitles_24_regular;

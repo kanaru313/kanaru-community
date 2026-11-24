@@ -105,12 +105,30 @@ Future<SettingsHarness> _openSettings(
   List<TranslateService> all = const [_google, _gemini],
   List<Override> extra = const [],
   Size size = _desktop,
+
+  /// False when [extra] brings its own `pluginConfigStatusProvider('id-g')`.
+  bool okStatus = true,
 }) async {
   final h = await pumpSettings(
     tester,
     location: SettingsPaths.lyrics,
     size: size,
-    overrides: [..._services(all), ...extra],
+    overrides: [
+      ..._services(all),
+      // A chosen service is a healthy plugin unless a test says otherwise.
+      if (okStatus)
+        pluginConfigStatusProvider('id-g').overrideWithValue(
+          AsyncData<PluginConfigStatus?>(
+            PluginConfigStatus(
+              row: pageRow(),
+              manifest: pageManifest(),
+              data: const PluginConfigData(),
+              missingRequired: const [],
+            ),
+          ),
+        ),
+      ...extra,
+    ],
   );
   // Scrolled to the translation block.
   final add = find.text('Add a translation service');
@@ -165,8 +183,10 @@ void main() {
       await _openSettings(tester, all: const []);
       expect(_inRow('Default translation service', 'Not chosen'), findsOne);
       expect(
-        tester.widget<SetupValueRow>(_row('Default translation service')).onTap,
-        isNull,
+        tester
+            .widget<SetupValueRow>(_row('Default translation service'))
+            .enabled,
+        isFalse,
       );
       expect(find.text('Add a translation service'), findsOneWidget);
       await _shot(tester, 'prc-settings-no-service');
@@ -205,7 +225,7 @@ void main() {
       (
         'needs configuration',
         'needs-config',
-        'The plugin can’t run until it has: API key.',
+        'Needs setup: API key',
         null,
         AsyncData<PluginConfigStatus?>(
           PluginConfigStatus(
@@ -245,6 +265,7 @@ void main() {
       ) async {
         final h = await _openSettings(
           tester,
+          okStatus: false,
           extra: [
             pluginPauseProvider('id-g').overrideWithValue(pause),
             pluginConfigStatusProvider('id-g').overrideWithValue(config),

@@ -41,7 +41,7 @@ class LyricsTranslationSection extends StatelessWidget {
           ],
         ),
         SoonRow(
-          icon: KIcons.playlistPlay,
+          icon: KIcons.fastForward,
           title: ProTitle(l10n.lyricsSettingsTrAhead),
           desc: l10n.lyricsSettingsTrAheadNow,
         ),

@@ -112,16 +112,17 @@ void main() {
     tester,
   ) async {
     await _open(tester, all: const []);
-    expect(
-      tester.widget<SetupValueRow>(_row('Default translation service')).onTap,
-      isNull,
+    final row = tester.widget<SetupValueRow>(
+      _row('Default translation service'),
     );
+    expect(row.enabled, isFalse);
+    expect(row.onTap, isNull);
   });
 
   for (final (name, expected, pause, config) in [
     (
       'needs setup',
-      'The plugin can’t run until it has: API key.',
+      'Needs setup: API key',
       null,
       AsyncData<PluginConfigStatus?>(
         PluginConfigStatus(

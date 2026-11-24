@@ -84,7 +84,7 @@ class _TranslationServiceRowState extends ConsumerState<TranslationServiceRow> {
       return l10n.pluginsPageBrokenTitle;
     }
     if (value != null && value.missingRequired.isNotEmpty) {
-      return l10n.pluginsPageNeedsConfigBody(
+      return l10n.lyricsSettingsTrServiceNeedsConfig(
         value.missingRequired.map((f) => f.title).join(', '),
       );
     }
@@ -135,7 +135,8 @@ class _TranslationServiceRowState extends ConsumerState<TranslationServiceRow> {
               ],
             ),
       // Nothing installed: an empty picker would say nothing; "Thêm dịch vụ
-      // dịch" below is the way forward.
+      // dịch" below is the way forward, so the row is dimmed.
+      enabled: services != null && !services.none,
       onTap: services == null || services.none ? null : () => _pick(services),
     );
   }

@@ -4432,6 +4432,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Dòng dịch dưới lời, hoặc dòng lời gốc nhỏ khi Thay dòng. Áp cho màn lời, tab Lời bài và thẻ lời.';
 
   @override
+  String lyricsSettingsTrServiceNeedsConfig(String fields) {
+    return 'Cần cấu hình: $fields';
+  }
+
+  @override
   String get lyricsSettingsAddSpeech => 'Thêm plugin chuyển giọng nói';
 
   @override

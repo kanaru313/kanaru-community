@@ -125,6 +125,14 @@
   "lyricsSettingsTrTargetCaption": "Dùng cho những bài chưa chọn ngôn ngữ riêng.",
   "lyricsSettingsTrSize": "Cỡ chữ bản dịch",
   "lyricsSettingsTrSizeCaption": "Dòng dịch dưới lời, hoặc dòng lời gốc nhỏ khi Thay dòng. Áp cho màn lời, tab Lời bài và thẻ lời.",
+  "lyricsSettingsTrServiceNeedsConfig": "Cần cấu hình: {fields}",
+  "@lyricsSettingsTrServiceNeedsConfig": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
   "lyricsSettingsAddSpeech": "Thêm plugin chuyển giọng nói",
   "lyricsSearchingTitle": "Đang tìm lời…",
   "lyricsSearchingMessage": "{count, plural, other{Bài này chưa có lời trong máy · đang tìm ở {count} nguồn đang bật.}}",
