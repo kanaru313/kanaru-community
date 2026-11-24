@@ -148,6 +148,18 @@ void main() {
       () => rowMore.evaluate().length >= 2,
       what: 'queue rows with their ⋮',
     );
+    // A row still loading its song has a ⋮ too but no info: wait for titles.
+    await app.pumpUntil(
+      () => find
+          .descendant(
+            of: find.byType(QueueList),
+            matching: find.text('IT Uslt Tag'),
+          )
+          .evaluate()
+          .isNotEmpty,
+      what: 'the queue rows to show their songs',
+    );
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(rowMore.hitTestable().at(1));
     await shot('04a-after-row-more-tap');
     await app.pumpUntil(
