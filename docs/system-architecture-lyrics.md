@@ -454,8 +454,14 @@ commands are taken while the picker is alive; a refused or failed write is logge
 Route `/settings/lyrics`: `lyricsSettingsLocation` (`lyrics/ui/lyrics_settings_link.dart`) is the single copy of the path;
 `SettingsPaths.lyrics` points at it and `buildSettingsRoute` has one `GoRoute(path: 'lyrics')`. The root row "Lời bài" opens it.
 The ⚙ of "Lời cho bài này" takes the router and the Now Playing panel notifier first, closes the modal through its guarded close
-(nothing happens when it is already closing), closes the desktop Now Playing panel, then `go`es to the location (the page opens at
-its top). It works from Now Playing (mobile route and desktop panel) and from a song menu.
+(nothing happens when it is already closing), closes the desktop Now Playing panel, then `go`es to `lyricsSourcesSettingsLocation`
+(`/settings/lyrics?focus=sources`). The lyrics row of a plugin page (`plugin_head_card.dart`) opens the same location. It works from
+Now Playing (mobile route and desktop panel) and from a song menu.
+
+**Deep link.** `LyricsSettingsPage` reads `?focus=sources` (no route change: the query reaches the page through `GoRouterState`),
+waits a first frame plus `KMotion.focusSettle`, scrolls down until the lazily built "Nguồn lời trực tuyến" section exists,
+`Scrollable.ensureVisible`s it and pulses it once (`SetupSectionPulse`; with animations off it only scrolls). A rebuild of the same
+location never scrolls again.
 
 `LyricsChoiceRow<T>` is one value row plus its picker (anchored on desktop, a caption as the picker header, "Mặc định" as the
 subtitle of the default option); a choice is written at once through the setting's notifier.
@@ -465,7 +471,20 @@ subtitle of the default option); a choice is written at once through the setting
 | Hiển thị lời | Cỡ chữ lời, Căn lời, Tự về dòng đang hát, Làm mờ dòng không hát | picker | `lyrics.font_scale`, `lyrics.align`, `lyrics.auto_return`, `lyrics.dim` |
 | | Phiên âm; Giữ màn hình sáng (mobile shell only) | coming soon | none |
 | Tìm và lưu lời | Lời trong máy | picker | `lyrics.local_first` |
-| | Tự tìm lời khi bài không có lời, Tự lưu lời tìm được thành .lrc | coming soon | none |
-| Nguồn lời trực tuyến, Dịch lời | Thêm nguồn lời trực tuyến; dịch vụ, ngôn ngữ, dịch trước, thêm dịch vụ | coming soon | none |
+| | Tự tìm lời khi bài không có lời | switch (`KSwitchRow`); with no source on it adds the line "Chưa có nguồn lời nào đang bật · bật một nguồn ở dưới" | `lyrics.auto_search` |
+| | Tự lưu lời tìm được thành .lrc | coming soon | none |
+| Nguồn lời trực tuyến | one row per lyrics plugin (drag handle, plugin icon, name, "Plugin · bản n" / "Cài từ tệp" / "Cài từ đường dẫn" + " · chỉ tìm khi bạn bấm" when off, switch; red problem line that opens the plugin page); last row "Thêm nguồn lời trực tuyến" opens the store at `?kind=lyrics` | reorder + switch, applied at once | `lyrics.online_sources` |
+| Dịch lời | dịch vụ, ngôn ngữ, dịch trước, thêm dịch vụ | coming soon | none |
 | Nơi hiện lời | Lời nổi trên màn hình + Pro (desktop shell); Lời trên màn khoá và thông báo (mobile shell) | coming soon | none |
 | Tạo lời từ âm thanh | Thêm plugin chuyển giọng nói (section ⓘ) | coming soon | none |
+
+### Nguồn lời trực tuyến block (`lyrics_sources_section.dart`)
+
+The block is a `ReorderableToggleList` (kanaru_ui) with `keepOneOn: false` (every source may be off). `ReorderableToggleItem` carries
+`leading` (the `PluginAvatar`, 24 dp), `subtitle`, `problem` and `onProblemTap` as intent; the first-run tabs list does not use them.
+The section subtitle "n / N nguồn đang bật" shows only when N > 0, and rows show only once `lyricsSourcesLoadedProvider` is true
+(no flash of the empty state). A switch or a drag calls `lyricsSourceActionsProvider` (`LyricsSourceActions.setEnabled` / `.reorder`),
+which writes the full `[{id, on}]` list in the new order to `lyrics.online_sources`; `lyricsSourcesProvider` (what the automatic
+lookup, the picker and the manual search read) reacts at once and the value survives a restart. A switch also shows a SnackBar
+("<Tên>: bật cho tự tìm" / "<Tên>: tắt · chỉ tìm khi bạn bấm"); a reorder shows none. The only ⓘ is on the section title.
+

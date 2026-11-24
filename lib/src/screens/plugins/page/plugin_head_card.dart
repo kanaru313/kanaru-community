@@ -6,8 +6,8 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/domain/package/plugin_kind.dart';
 import '../../../lyrics/state/online/lyrics_sources_provider.dart';
+import '../../../lyrics/ui/lyrics_settings_link.dart';
 import '../../../plugins/state/plugin_page_provider.dart';
-import '../../settings/settings_routes.dart';
 import '../../settings/ui/settings_scaffold.dart';
 import '../../settings/ui/soon_row.dart';
 import '../common/plugin_icon.dart';
@@ -128,7 +128,7 @@ class _LyricsUseRow extends ConsumerWidget {
       title: Text(l10n.pluginsPageUseLyrics),
       subtitle: state == null ? null : Text(state),
       trailing: Icon(KIcons.openInNew, color: scheme.onSurfaceVariant),
-      onTap: () => context.push(SettingsPaths.lyrics),
+      onTap: () => context.push(lyricsSourcesSettingsLocation),
     );
   }
 }

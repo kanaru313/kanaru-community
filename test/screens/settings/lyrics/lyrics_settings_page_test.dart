@@ -104,9 +104,7 @@ void main() {
     const soon = [
       'Transliteration',
       'Keep the screen on',
-      'Find lyrics for songs without any',
       'Save found lyrics as .lrc',
-      'Add an online lyrics source',
       'Lyrics on the lock screen and notification',
       'Default translation service',
       'Default translation language',
@@ -124,6 +122,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SelectionRow), findsNothing);
     expect(h.store.read('lyrics.font_scale'), isNull);
+  });
+
+  testWidgets('the auto search and sources rows are live, not coming soon', (
+    tester,
+  ) async {
+    await _open(tester);
+    expect(find.text('Find lyrics for songs without any'), findsOneWidget);
+    expect(_row('Find lyrics for songs without any'), findsNothing);
+    expect(find.text('Online sources'), findsOneWidget);
+    expect(find.text('Add an online lyrics source'), findsOneWidget);
+    expect(_row('Add an online lyrics source'), findsNothing);
   });
 
   testWidgets('mobile shows keep-screen-on and lock screen, not floating', (

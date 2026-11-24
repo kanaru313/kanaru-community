@@ -228,4 +228,90 @@ void main() {
       expect(bad.read(lyricsOnlineSourcesProvider), isEmpty);
     },
   );
+
+  group('source actions', () {
+    List<String> names() => [
+      for (final s in container.read(lyricsSourcesProvider)) s.name,
+    ];
+
+    test('switching writes the whole list and the lookup sees it', () async {
+      await install(1, _lyricsManifest('One'));
+      await install(2, _lyricsManifest('Two'));
+      await settled();
+      final actions = container.read(lyricsSourceActionsProvider);
+      await actions.setEnabled(testInstallId(2), true);
+      expect(settings.read('lyrics.online_sources'), [
+        {'id': testInstallId(1), 'on': false},
+        {'id': testInstallId(2), 'on': true},
+      ]);
+      expect(
+        [
+          for (final s in container.read(lyricsSourcesProvider))
+            if (s.enabled && s.askable) s.name,
+        ],
+        ['Two'],
+      );
+      await actions.setEnabled(testInstallId(2), false);
+      expect(
+        container.read(lyricsSourcesProvider).any((s) => s.enabled),
+        isFalse,
+      );
+    });
+
+    test('reordering applies the order of the given ids', () async {
+      await install(1, _lyricsManifest('One'));
+      await install(2, _lyricsManifest('Two'));
+      await install(3, _lyricsManifest('Three'));
+      await settled();
+      final actions = container.read(lyricsSourceActionsProvider);
+      await actions.reorder([
+        testInstallId(2),
+        testInstallId(3),
+        testInstallId(1),
+      ]);
+      expect(names(), ['Two', 'Three', 'One']);
+      await actions.reorder([
+        testInstallId(1),
+        testInstallId(2),
+        testInstallId(3),
+      ]);
+      expect(names(), ['One', 'Two', 'Three']);
+      expect(settings.read('lyrics.online_sources'), [
+        for (final n in [1, 2, 3]) {'id': testInstallId(n), 'on': false},
+      ]);
+    });
+
+    test(
+      'a plugin installed after the render stays put, a removed one drops',
+      () async {
+        await install(1, _lyricsManifest('One'));
+        await install(2, _lyricsManifest('Two'));
+        await settled();
+        final shown = [testInstallId(2), testInstallId(1)];
+        await install(3, _lyricsManifest('Three'));
+        await pumpEventQueue();
+        await container.read(lyricsSourceActionsProvider).reorder(shown);
+        expect(names(), ['Two', 'One', 'Three']);
+        await container.read(pluginRowsProvider).remove(testInstallId(2));
+        await pumpEventQueue();
+        await container.read(lyricsSourceActionsProvider).reorder([
+          testInstallId(2),
+          testInstallId(3),
+          testInstallId(1),
+        ]);
+        expect(names(), ['Three', 'One']);
+      },
+    );
+
+    test('an unknown id or the same value writes nothing', () async {
+      await install(1, _lyricsManifest('One'));
+      await settled();
+      final actions = container.read(lyricsSourceActionsProvider);
+      expect(await actions.setEnabled('nope', true), isFalse);
+      expect(await actions.setEnabled(testInstallId(1), false), isFalse);
+      await actions.reorder([testInstallId(1)]);
+      await actions.reorder(['gone']);
+      expect(settings.read('lyrics.online_sources'), isNull);
+    });
+  });
 }

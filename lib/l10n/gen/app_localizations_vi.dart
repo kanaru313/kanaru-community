@@ -4910,6 +4910,69 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get lyricsSettingsAutoFindNone =>
+      'Chưa có nguồn lời nào đang bật · bật một nguồn ở dưới';
+
+  @override
+  String lyricsSettingsSourcesCount(int on, int total) {
+    return '$on / $total nguồn đang bật';
+  }
+
+  @override
+  String get lyricsSettingsSourcesHint =>
+      'Thứ tự tìm khi tự tìm, kéo để sắp xếp. Nguồn tắt chỉ được tìm khi bạn bấm “Tìm lời trực tuyến…”. Plugin cài từ kho: bật, thêm cuối danh sách. Plugin cài từ tệp / đường dẫn: tắt (chỉ tìm khi bạn bấm) tới khi bạn bật.';
+
+  @override
+  String lyricsSettingsSourceRepo(int version) {
+    return 'Plugin · bản $version';
+  }
+
+  @override
+  String lyricsSettingsSourceFile(int version) {
+    return 'Cài từ tệp · bản $version';
+  }
+
+  @override
+  String lyricsSettingsSourceLink(int version) {
+    return 'Cài từ đường dẫn · bản $version';
+  }
+
+  @override
+  String lyricsSettingsSourceOff(String line) {
+    return '$line · chỉ tìm khi bạn bấm';
+  }
+
+  @override
+  String get lyricsSettingsSourceNeedsConfig =>
+      'Cần cấu hình · mở trang plugin để nhập';
+
+  @override
+  String lyricsSettingsSourcePaused(String time) {
+    return 'Tạm dừng tới $time';
+  }
+
+  @override
+  String get lyricsSettingsSourceBroken => 'Gói hỏng · mở trang plugin';
+
+  @override
+  String lyricsSettingsSourceSwitch(String name) {
+    return '$name: dùng khi tự tìm lời';
+  }
+
+  @override
+  String get lyricsSettingsSourceDrag => 'Kéo để sắp xếp';
+
+  @override
+  String lyricsSettingsSourceOnToast(String name) {
+    return '$name: bật cho tự tìm';
+  }
+
+  @override
+  String lyricsSettingsSourceOffToast(String name) {
+    return '$name: tắt · chỉ tìm khi bạn bấm';
+  }
+
+  @override
   String get pluginsStoreTitle => 'Kho plugin';
 
   @override

@@ -1,27 +1,42 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../lyrics/domain/local_lyrics_pick.dart';
 import '../../../../lyrics/state/lyrics_settings.dart';
+import '../../../../lyrics/state/online/lyrics_sources_provider.dart';
 import '../soon_row.dart';
 import 'lyrics_choice_row.dart';
 
-/// "Tìm và lưu lời": which local source wins is live; online search and
-/// saving wait for the lyrics plugins.
-class LyricsFindSection extends StatelessWidget {
+/// "Tìm và lưu lời": the automatic online search switch and which local
+/// source wins are live; saving found lyrics waits for its own work.
+class LyricsFindSection extends ConsumerWidget {
   const LyricsFindSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final autoSearch = ref.watch(lyricsAutoSearchProvider);
+    // Until the sources are read, "none on" would be a guess.
+    final noneOn =
+        ref.watch(lyricsSourcesLoadedProvider) &&
+        !ref.watch(lyricsSourcesProvider).any((s) => s.enabled);
     return SetupSection(
       title: Text(l10n.lyricsSettingsFind),
       children: [
-        SoonRow(
-          icon: KIcons.search,
+        KSwitchRow(
+          leading: const Icon(KIcons.search),
           title: Text(l10n.lyricsSettingsAutoFind),
-          desc: l10n.lyricsSettingsAutoFindDesc,
+          subtitle: Text(
+            noneOn
+                ? '${l10n.lyricsSettingsAutoFindDesc}\n'
+                      '${l10n.lyricsSettingsAutoFindNone}'
+                : l10n.lyricsSettingsAutoFindDesc,
+          ),
+          switchLabel: l10n.lyricsSettingsAutoFind,
+          value: autoSearch,
+          onChanged: (v) => ref.read(lyricsAutoSearchProvider.notifier).set(v),
         ),
         LyricsChoiceRow<LocalFirst>(
           icon: KIcons.musicFile,

@@ -12,3 +12,7 @@ const String lyricsPluginStoreLocation = '/settings/plugins?kind=lyrics';
 /// to `screens/plugins`.
 String lyricsPluginPageLocation(String installId) =>
     '/settings/plugins/p/${Uri.encodeComponent(installId)}';
+
+/// Settings › Lyrics scrolled to "Nguồn lời trực tuyến" with the section
+/// pulsed once. Where the ⚙ of the lyrics modals and a plugin page lead.
+const String lyricsSourcesSettingsLocation = '/settings/lyrics?focus=sources';

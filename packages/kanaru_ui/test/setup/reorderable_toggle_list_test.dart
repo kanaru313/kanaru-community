@@ -106,4 +106,92 @@ void main() {
     await tester.pump();
     expect(toggles, isEmpty);
   });
+
+  group('rich rows', () {
+    Widget rich({
+      required bool on,
+      String? problem,
+      VoidCallback? onProblemTap,
+      void Function(String, bool)? onToggle,
+      bool keepOneOn = false,
+    }) => SingleChildScrollView(
+      child: ReorderableToggleList<String>(
+        items: [
+          ReorderableToggleItem(
+            value: 'zing',
+            title: const Text('Zing'),
+            enabled: on,
+            switchLabel: 'Zing for auto search',
+            leading: const SizedBox.square(key: Key('icon'), dimension: 24),
+            subtitle: 'Plugin · v3',
+            problem: problem,
+            onProblemTap: onProblemTap,
+          ),
+        ],
+        dragLabel: 'Drag to reorder',
+        keepOneOn: keepOneOn,
+        onReorder: (_, _) {},
+        onToggle: onToggle ?? (_, _) {},
+      ),
+    );
+
+    testWidgets('shows leading, subtitle and exposes toggle state', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(rich(on: true)));
+      expect(find.byKey(const Key('icon')), findsOneWidget);
+      expect(find.text('Plugin · v3'), findsOneWidget);
+      expect(
+        tester.getSemantics(find.byType(KSwitch)),
+        isSemantics(hasToggledState: true, isToggled: true, hasTapAction: true),
+      );
+      expect(find.byTooltip('Drag to reorder'), findsOneWidget);
+    });
+
+    testWidgets('keepOneOn false lets the only row go off', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      final toggles = <(String, bool)>[];
+      await tester.pumpWidget(
+        host(rich(on: true, onToggle: (v, on) => toggles.add((v, on)))),
+      );
+      await tester.tap(find.byType(KSwitch));
+      expect(toggles, [('zing', false)]);
+    });
+
+    testWidgets('the problem line is a button that does not toggle', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      var taps = 0;
+      final toggles = <(String, bool)>[];
+      await tester.pumpWidget(
+        host(
+          rich(
+            on: true,
+            problem: 'Needs setup',
+            onProblemTap: () => taps++,
+            onToggle: (v, on) => toggles.add((v, on)),
+          ),
+        ),
+      );
+      expect(
+        tester.getSemantics(find.text('Needs setup')),
+        isSemantics(label: 'Needs setup', isButton: true, hasTapAction: true),
+      );
+      await tester.tap(find.text('Needs setup'));
+      expect(taps, 1);
+      expect(toggles, isEmpty);
+    });
+
+    testWidgets('a problem without a tap is plain text', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(rich(on: true, problem: 'Paused')));
+      expect(find.text('Paused'), findsOneWidget);
+      expect(
+        tester.getSemantics(find.text('Paused')),
+        isNot(isSemantics(isButton: true)),
+      );
+    });
+  });
 }

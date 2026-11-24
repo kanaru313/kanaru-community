@@ -77,3 +77,48 @@ final lyricsSourcesProvider = Provider<List<LyricsSource>>((ref) {
   }
   return applySourcePrefs(saved, installed);
 });
+
+/// What the user can do to the source list: switch one source and move one.
+/// Each writes the whole list as it will be (`[{id, on}]`), so a plugin that
+/// was never saved gets its place and switch fixed from then on.
+class LyricsSourceActions {
+  LyricsSourceActions(this._ref);
+
+  final Ref _ref;
+
+  /// Returns whether the switch changed (false for an unknown id or the same
+  /// value: nothing is written).
+  Future<bool> setEnabled(String id, bool on) async {
+    final prefs = prefsOf(_ref.read(lyricsSourcesProvider));
+    final at = prefs.indexWhere((p) => p.id == id);
+    if (at < 0 || prefs[at].on == on) return false;
+    prefs[at] = SourcePref(id, on: on);
+    await _ref.read(lyricsOnlineSourcesProvider.notifier).set(prefs);
+    return true;
+  }
+
+  /// Applies the order the user saw ([orderedIds], from the list on screen)
+  /// to the list as it is now: ids that are gone drop out, sources that
+  /// appeared since go after the others in their current order. Nothing is
+  /// written when the order does not change.
+  Future<void> reorder(List<String> orderedIds) async {
+    final fresh = prefsOf(_ref.read(lyricsSourcesProvider));
+    final byId = {for (final p in fresh) p.id: p};
+    final next = <SourcePref>[
+      for (final id in orderedIds.toSet())
+        if (byId.containsKey(id)) byId[id]!,
+    ];
+    final placed = {for (final p in next) p.id};
+    next.addAll(fresh.where((p) => !placed.contains(p.id)));
+    if (next.length == fresh.length &&
+        [for (final p in next) p.id].join('\u0000') ==
+            [for (final p in fresh) p.id].join('\u0000')) {
+      return;
+    }
+    await _ref.read(lyricsOnlineSourcesProvider.notifier).set(next);
+  }
+}
+
+final lyricsSourceActionsProvider = Provider<LyricsSourceActions>(
+  LyricsSourceActions.new,
+);

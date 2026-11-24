@@ -3744,6 +3744,86 @@
       }
     }
   },
+  "lyricsSettingsAutoFindNone": "Chưa có nguồn lời nào đang bật · bật một nguồn ở dưới",
+  "lyricsSettingsSourcesCount": "{on} / {total} nguồn đang bật",
+  "@lyricsSettingsSourcesCount": {
+    "placeholders": {
+      "on": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsSettingsSourcesHint": "Thứ tự tìm khi tự tìm, kéo để sắp xếp. Nguồn tắt chỉ được tìm khi bạn bấm “Tìm lời trực tuyến…”. Plugin cài từ kho: bật, thêm cuối danh sách. Plugin cài từ tệp / đường dẫn: tắt (chỉ tìm khi bạn bấm) tới khi bạn bật.",
+  "lyricsSettingsSourceRepo": "Plugin · bản {version}",
+  "@lyricsSettingsSourceRepo": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsSettingsSourceFile": "Cài từ tệp · bản {version}",
+  "@lyricsSettingsSourceFile": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsSettingsSourceLink": "Cài từ đường dẫn · bản {version}",
+  "@lyricsSettingsSourceLink": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsSettingsSourceOff": "{line} · chỉ tìm khi bạn bấm",
+  "@lyricsSettingsSourceOff": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSettingsSourceNeedsConfig": "Cần cấu hình · mở trang plugin để nhập",
+  "lyricsSettingsSourcePaused": "Tạm dừng tới {time}",
+  "@lyricsSettingsSourcePaused": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSettingsSourceBroken": "Gói hỏng · mở trang plugin",
+  "lyricsSettingsSourceSwitch": "{name}: dùng khi tự tìm lời",
+  "@lyricsSettingsSourceSwitch": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSettingsSourceDrag": "Kéo để sắp xếp",
+  "lyricsSettingsSourceOnToast": "{name}: bật cho tự tìm",
+  "@lyricsSettingsSourceOnToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSettingsSourceOffToast": "{name}: tắt · chỉ tìm khi bạn bấm",
+  "@lyricsSettingsSourceOffToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "pluginsStoreTitle": "Kho plugin",
   "pluginsFilterTooltip": "Lọc",
   "pluginsFilterActiveLabel": "{count} đang bật",
