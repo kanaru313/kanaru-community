@@ -6,6 +6,7 @@ import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../media/domain/track_id.dart';
 import '../../../domain/translation/translation_language.dart';
 import '../../../state/translation/translation_providers.dart';
+import 'translate_tune_select.dart' show TuneDefaultTag;
 
 /// Languages whose lyrics get "Phiên âm" once it is built.
 const Set<String> _phoneticLanguages = {'ja', 'zh', 'ko'};
@@ -54,11 +55,7 @@ class TranslatePhoneticRow extends ConsumerWidget {
           leading: const Icon(KIcons.languages),
           title: Text(l10n.lyricsTranslatePhoneticTitle),
           subtitle: Text(l10n.lyricsTranslatePhoneticDesc),
-          trailing: Text(
-            l10n.lyricsTranslateSoonTag,
-            style: Theme.of(context).textTheme.labelMedium
-                ?.copyWith(color: scheme.onSurfaceVariant),
-          ),
+          trailing: TuneDefaultTag(label: l10n.lyricsTranslateSoonTag),
         ),
       ],
     );

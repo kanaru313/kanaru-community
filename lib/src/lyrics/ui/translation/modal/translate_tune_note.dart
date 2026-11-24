@@ -113,7 +113,7 @@ class TranslateNoteFieldState extends ConsumerState<TranslateNoteField> {
       children: [
         TranslateSectionTitle(l10n.lyricsTranslateNoteTitle),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: KSpace.x4),
+          padding: const EdgeInsets.symmetric(horizontal: KSpace.x6),
           child: KTextFieldRow(
             controller: _text,
             focusNode: _focus,

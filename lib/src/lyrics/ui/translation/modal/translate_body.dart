@@ -54,6 +54,7 @@ class TranslateBody extends ConsumerWidget {
       children: [
         TranslatePageHeader(
           title: l10n.lyricsTranslateTitle,
+          root: true,
           onClose: control.closeAll,
           onSettings: () => openTranslateSettings(context, ref, control),
         ),

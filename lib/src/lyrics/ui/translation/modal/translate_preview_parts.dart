@@ -114,8 +114,11 @@ class TranslateCreditRow extends ConsumerWidget {
         : l10n.lyricsTranslateBy(by);
     final again = !credit.other && !credit.partial;
     return Padding(
-      padding: const EdgeInsets.only(top: KSpace.x1),
+      padding: const EdgeInsets.only(top: KSpace.x2),
+      // One centred line, the ⟳ right after the text; it wraps only when the
+      // text cannot fit the card.
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Flexible(

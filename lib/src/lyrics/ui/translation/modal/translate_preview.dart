@@ -52,6 +52,7 @@ class TranslatePreview extends ConsumerWidget {
     final sung = playsThis ? ref.watch(playingLyricsLineProvider) : -1;
     final line = shown is LyricsShown ? lineOf(shown.lyrics, sung) : null;
     final layout = ref.watch(translationLayoutProvider(id));
+    final choose = on && canChoose;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         KSpace.x2,
@@ -65,15 +66,19 @@ class TranslatePreview extends ConsumerWidget {
           shape: KShape.of(KRadius.lg),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: KSpace.x4,
-            vertical: KSpace.x3,
+          // With the choice shown, its 48 dp tap area supplies the top 12.
+          padding: EdgeInsets.fromLTRB(
+            KSpace.x4,
+            choose ? 0 : KSpace.x3,
+            KSpace.x4,
+            KSpace.x3,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 spacing: KSpace.x2,
                 children: [
                   Flexible(
@@ -91,7 +96,7 @@ class TranslatePreview extends ConsumerWidget {
                     // Gives way when the row is narrower (large text scale).
                     Flexible(
                       flex: 3,
-                      child: KSegmentedCompact<TranslationDisplay>(
+                      child: KSegmentedOutlined<TranslationDisplay>(
                         semanticLabel: l10n.lyricsTranslateDisplay,
                         value: display,
                         segments: [
@@ -111,7 +116,7 @@ class TranslatePreview extends ConsumerWidget {
                 ],
               ),
               // The 48 dp tap area of the segmented already spaces the row.
-              KGap(on && canChoose ? 0 : KSpace.x2),
+              KGap(choose ? 0 : KSpace.x1 + 2),
               if (line != null)
                 TranslatePreviewLine(trackId: id, line: line, layout: layout),
               if (on)

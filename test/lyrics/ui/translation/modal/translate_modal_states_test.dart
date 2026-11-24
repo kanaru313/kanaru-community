@@ -1,4 +1,3 @@
-import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/lyrics/domain/translation/translation_failure.dart';
 import 'package:kanaru/src/lyrics/domain/translation/translation_status.dart';
@@ -440,7 +439,7 @@ void main() {
     );
   });
 
-  testWidgets('392 dp phone: source label and target show whole', (
+  testWidgets('392 dp phone: both halves fit without an overflow', (
     tester,
   ) async {
     final host = TranslateHost();
@@ -448,14 +447,10 @@ void main() {
     host.setView(_ready(source: 'ja'));
     await host.open(tester, size: const Size(392, 800));
     expect(tester.takeException(), isNull);
-    // The target keeps its whole name; the source label takes what is left
-    // (the test font is far wider than the real one, so only the target is
-    // held to "no ellipsis" here).
-    final target = tester.renderObject<RenderParagraph>(
-      find.text('Vietnamese'),
-    );
-    expect(target.didExceedMaxLines, isFalse);
+    // Equal halves: the target may ellipsize when it does not fit its half
+    // (the test font is far wider than the real one).
     expect(find.text('Japanese · detected'), findsOneWidget);
+    expect(find.text('Vietnamese'), findsOneWidget);
   });
 }
 

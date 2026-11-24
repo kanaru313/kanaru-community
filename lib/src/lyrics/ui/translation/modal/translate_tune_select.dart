@@ -10,7 +10,10 @@ const int tuneSearchFrom = 8;
 
 /// The small "mặc định" tag after an option's title.
 class TuneDefaultTag extends StatelessWidget {
-  const TuneDefaultTag({super.key});
+  /// [label] replaces the "mặc định" text (the "Sắp có" tag of a dim row).
+  const TuneDefaultTag({super.key, this.label});
+
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -26,9 +29,11 @@ class TuneDefaultTag extends StatelessWidget {
           vertical: KSpace.x1 / 2,
         ),
         child: Text(
-          AppLocalizations.of(context).lyricsTranslateDefaultTag,
-          style: Theme.of(context).textTheme.labelSmall
-              ?.copyWith(color: scheme.onSurfaceVariant),
+          label ?? AppLocalizations.of(context).lyricsTranslateDefaultTag,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );

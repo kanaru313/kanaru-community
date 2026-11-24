@@ -21,8 +21,8 @@ String detectedLanguageName(AppLocalizations l10n, String code) {
   return translationLanguageName(l10n, base == 'zh' ? 'zh-Hans' : base);
 }
 
-/// Widest the target `<ngôn ngữ> ▾` may grow before it ellipsizes.
-const double _maxTargetWidth = 220;
+/// Row height of the mockup's `.lrow`.
+const double _rowHeight = 52;
 
 /// `[<ngôn ngữ> · tự nhận] [switch] [<đích> ▾]`: the source language is a
 /// read-only label (auto-detect), the switch turns translation on or off for
@@ -62,68 +62,80 @@ class TranslateLanguageRow extends ConsumerWidget {
             detectedLanguageName(l10n, detected),
           );
     final targetName = translationLanguageName(l10n, target);
-    final text = Theme.of(context).textTheme.bodyLarge;
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: KSpace.x4,
-        vertical: KSpace.x1,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Tooltip(
-              message: l10n.lyricsTranslateSourceHint,
-              child: Text(
-                label,
-                textAlign: TextAlign.start,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: scheme.onSurfaceVariant),
+    // Both halves use the same role; the mockup's 14 / 14.5 px both map here.
+    final text = Theme.of(context).textTheme.bodyMedium;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: _rowHeight),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: KSpace.x4,
+          vertical: KSpace.x1,
+        ),
+        // Two halves of equal width around the switch, so the switch sits at
+        // the centre of the row.
+        child: Row(
+          spacing: KSpace.x2,
+          children: [
+            Expanded(
+              child: Tooltip(
+                message: l10n.lyricsTranslateSourceHint,
+                child: SizedBox(
+                  height: KSpace.x8,
+                  child: Center(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: text?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-          const KGap(KSpace.x2),
-          KSwitch(
-            value: on,
-            semanticLabel: l10n.lyricsTranslateSwitch,
-            onChanged: (_) => ref.read(translationCommandsProvider).toggle(),
-          ),
-          const KGap(KSpace.x2),
-          // The target keeps its natural width (capped so a huge text scale
-          // still leaves room for the switch); the source label takes the rest.
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: _maxTargetWidth),
-            child: Semantics(
-              label: l10n.lyricsTranslateTarget(targetName),
-              excludeSemantics: true,
-              button: true,
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
-                ),
-                onPressed: onOpenTarget,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        targetName,
-                        overflow: TextOverflow.ellipsis,
-                        style: text,
+            KSwitch(
+              value: on,
+              semanticLabel: l10n.lyricsTranslateSwitch,
+              onChanged: (_) => ref.read(translationCommandsProvider).toggle(),
+            ),
+            Expanded(
+              child: Semantics(
+                label: l10n.lyricsTranslateTarget(targetName),
+                excludeSemantics: true,
+                button: true,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size.fromHeight(KSpace.x8),
+                    padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
+                    foregroundColor: scheme.onSurface,
+                    shape: const StadiumBorder(),
+                  ),
+                  onPressed: onOpenTarget,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          targetName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: text?.copyWith(color: scheme.onSurface),
+                        ),
                       ),
-                    ),
-                    const KGap(KSpace.x1),
-                    Icon(
-                      KIcons.collapse,
-                      size: KIconSize.sm,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ],
+                      const KGap(KSpace.x1),
+                      Icon(
+                        KIcons.collapse,
+                        size: KIconSize.md,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

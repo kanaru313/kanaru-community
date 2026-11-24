@@ -10,6 +10,7 @@ import 'package:kanaru/src/lyrics/state/translation/translation_view.dart';
 import 'package:kanaru/src/lyrics/ui/translation/modal/translate_retranslate.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:material_ui/material_ui.dart' show ConstrainedBox, Expanded;
 
 import 'translate_modal_host.dart';
 
@@ -106,6 +107,29 @@ void main() {
         await host.settle(tester);
         expect(find.text('Translate lyrics'), findsNothing);
         expect(host.location, '/');
+      });
+
+      testWidgets('the switch sits at the centre of two equal halves', (
+        tester,
+      ) async {
+        final host = TranslateHost();
+        await host.open(tester, size: size);
+        final row = find.ancestor(
+          of: find.byType(KSwitch),
+          matching: find.byType(ConstrainedBox),
+        );
+        final bounds = tester.getRect(row.first);
+        final switchRect = tester.getRect(find.byType(KSwitch));
+        expect(switchRect.center.dx, closeTo(bounds.center.dx, 0.5));
+        final halves = find.descendant(
+          of: row.first,
+          matching: find.byType(Expanded),
+        );
+        expect(halves, findsNWidgets(2));
+        expect(
+          tester.getSize(halves.at(0)).width,
+          closeTo(tester.getSize(halves.at(1)).width, 0.5),
+        );
       });
 
       testWidgets('the switch turns translation on and off', (tester) async {

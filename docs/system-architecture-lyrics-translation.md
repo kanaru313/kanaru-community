@@ -231,7 +231,7 @@ and **Modal lỗi dịch**. The entry points are in "Entry points" below.
   `translateSettingsDiff` compares `settingsJson` of the shown translation with
   the plugin now (model, style, note hash, version) for the bottom bar.
 - **Body.** Preview (sung line, else the first line with text, through
-  `TranslatedLineScope`; [Dưới dòng | Thay dòng] (`KSegmentedCompact`, beside the caption) writes `setDisplay`; credit and
+  `TranslatedLineScope`; [Dưới dòng | Thay dòng] (`KSegmentedOutlined` compact, beside the caption; "Áp dụng cho" uses its regular size) writes `setDisplay`; credit and
   ⟳) · language row (source = read-only label from the plugin's `detected`,
   `KSwitch`, target ▾) · service row · "Tinh chỉnh AI" row (AI plugins only) ·
   one status line · "Phiên âm" (dim, "Sắp có", only for ja / zh / ko lyrics) ·

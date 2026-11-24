@@ -24,7 +24,8 @@ class TranslateScopeSegmented extends StatelessWidget {
         TranslateSectionTitle(l10n.lyricsTranslateScopeTitle),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: KSpace.x6),
-          child: KSegmented<TranslateScope>(
+          child: KSegmentedOutlined<TranslateScope>(
+            size: KSegmentedOutlinedSize.regular,
             semanticLabel: l10n.lyricsTranslateScopeTitle,
             value: TranslateScope.all,
             segments: [
@@ -47,7 +48,6 @@ class TranslateScopeSegmented extends StatelessWidget {
             onChanged: (_) {},
           ),
         ),
-        const KGap(KSpace.x1),
         TranslateCaption(
           l10n.lyricsTranslateScopePro,
           trailing: const ProBadge(),

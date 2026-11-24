@@ -12,6 +12,7 @@ class TranslatePageHeader extends StatelessWidget {
     required this.onClose,
     this.onSettings,
     this.hint,
+    this.root = false,
   });
 
   final String title;
@@ -20,6 +21,9 @@ class TranslatePageHeader extends StatelessWidget {
   final String? hint;
   final VoidCallback onClose;
 
+  /// The modal's own page (a little more air under it than a sub-page).
+  final bool root;
+
   /// The ⚙ that opens Cài đặt › Lời bài; null leaves it out.
   final VoidCallback? onSettings;
 
@@ -27,11 +31,12 @@ class TranslatePageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      // 40 dp buttons (icon + 8 padding): 12 above, 6 / 4 below the row.
+      padding: EdgeInsets.fromLTRB(
         KSpace.x6,
-        KSpace.x2,
-        KSpace.x2,
-        KSpace.x2,
+        KSpace.x3,
+        root ? KSpace.x3 : KSpace.x2,
+        root ? KSpace.x1 + 2 : KSpace.x1,
       ),
       child: Row(
         children: [
@@ -62,13 +67,13 @@ class TranslatePageHeader extends StatelessWidget {
             KIconButton(
               icon: KIcons.settings,
               tooltip: l10n.lyricsTranslateSettings,
-              padding: const EdgeInsets.all(KSpace.x3),
+              padding: const EdgeInsets.all(KSpace.x2),
               onPressed: onSettings,
             ),
           KIconButton(
             icon: KIcons.close,
             tooltip: l10n.lyricsModalClose,
-            padding: const EdgeInsets.all(KSpace.x3),
+            padding: const EdgeInsets.all(KSpace.x2),
             onPressed: onClose,
           ),
         ],
