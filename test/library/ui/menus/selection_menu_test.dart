@@ -28,7 +28,7 @@ void main() {
     expect(rowIds(spec.advanced), [MenuItemId.hide, MenuItemId.delete]);
     expect(spec.queueIds, trackIds(4));
     expect(rowOf(spec, MenuItemId.delete).subtitle, '4 files');
-    expect(rowOf(spec, MenuItemId.ai).pro, isTrue);
+    expect(rowOf(spec, MenuItemId.ai).pro, isFalse);
   });
 
   test('shuffle plays the selection in a selection context', () {

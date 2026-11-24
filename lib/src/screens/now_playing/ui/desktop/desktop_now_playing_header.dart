@@ -16,7 +16,7 @@ import '../../../../playback/ui/transport_buttons.dart';
 import '../../../../playback/ui/volume_control.dart';
 import '../favorite_button.dart';
 import '../now_playing_playlist_actions.dart';
-import 'desktop_more_menu.dart';
+import '../now_playing_song_menu.dart';
 import 'now_playing_chrome.dart';
 
 /// Height of the header strip across the top of Now Playing.
@@ -27,7 +27,7 @@ const double desktopNowPlayingHeaderHeight = 64;
 /// There is no Shuffle (it is on the queue panel and the player bar) and no
 /// window buttons (they are on the top bar).
 ///
-/// The More menu, the sleep timer modal and the lyrics modal pin [chrome] while open, so
+/// The ⋮ song menu, the sleep timer modal and the lyrics modal pin [chrome] while open, so
 /// whoever hides the header keeps it shown.
 class DesktopNowPlayingHeader extends ConsumerStatefulWidget {
   const DesktopNowPlayingHeader({
@@ -50,6 +50,15 @@ class DesktopNowPlayingHeader extends ConsumerStatefulWidget {
 
 class _DesktopNowPlayingHeaderState
     extends ConsumerState<DesktopNowPlayingHeader> {
+  /// The ⋮ button: the sleep timer opened from its menu returns focus here.
+  final _moreFocus = FocusNode(debugLabel: 'desktop more menu');
+
+  @override
+  void dispose() {
+    _moreFocus.dispose();
+    super.dispose();
+  }
+
   /// Opens the modal with the header pinned. A header that left the tree
   /// meanwhile (Now Playing closed) leaves its controller alone: the screen
   /// disposes it.
@@ -147,9 +156,21 @@ class _DesktopNowPlayingHeaderState
             const RepeatButton(),
             SleepTimerDesktopEntry(opener: _openSleepTimer),
             const VolumeControl(),
-            DesktopMoreMenu(
-              chrome: widget.chrome,
-              onOpenLyrics: () => unawaited(_openLyrics()),
+            ViaKeyboardTracker(
+              builder: (context, viaKeyboard) => KIconButton(
+                icon: KIcons.moreVert,
+                tooltip: l10n.playbackMore,
+                focusNode: _moreFocus,
+                onPressed: () => unawaited(
+                  openNowPlayingSongMenu(
+                    context,
+                    closeNowPlaying: widget.onClose,
+                    chrome: widget.chrome,
+                    returnFocus: _moreFocus,
+                    viaKeyboard: viaKeyboard(),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

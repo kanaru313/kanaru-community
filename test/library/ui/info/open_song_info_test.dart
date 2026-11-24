@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/library/state/favorites_providers.dart';
 import 'package:kanaru/src/library/ui/info/open_song_info.dart';
 import 'package:kanaru/src/library/ui/menus/menu_model.dart';
+import 'package:kanaru/src/library/ui/menus/open_menu.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/library/ui/songs/song_tile.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
@@ -116,6 +117,32 @@ void main() {
       h.router.pop();
       await tester.pumpAndSettle();
       expect(h.location, '/library/songs');
+      await unmountApp(tester);
+    },
+  );
+
+  testWidgets(
+    'a link of the info runs the menu beforeNavigate once, then pushes',
+    (tester) async {
+      final h = await _pump(tester);
+      var calls = 0;
+      unawaited(
+        openSongMenu(
+          _tile(tester),
+          _firstTile(tester).info,
+          beforeNavigate: () => calls++,
+        ),
+      );
+      await pumpMenu(tester);
+      final title = _firstTile(tester).info.title;
+      await tester.tap(find.descendant(of: _sheet, matching: find.text(title)));
+      await pumpMenu(tester);
+      await tester.tap(link('Yan').first);
+      await pumpMenu(tester);
+      expect(calls, 1);
+      expect(h.location, LibraryLocations.artist(ArtistKey(groupKey('Yan'))));
+      h.router.pop();
+      await tester.pumpAndSettle();
       await unmountApp(tester);
     },
   );

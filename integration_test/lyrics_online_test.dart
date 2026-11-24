@@ -46,7 +46,6 @@ import 'package:kanaru/src/router/ui/kanaru_app.dart';
 import 'package:kanaru/src/screens/first_run/state/first_run_gate.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_now_playing.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/mobile_now_playing.dart';
-import 'package:kanaru/src/screens/now_playing/ui/mobile/more_sheet.dart';
 import 'package:kanaru_extensions/kanaru_extensions.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:logging/logging.dart';
@@ -289,7 +288,7 @@ void main() {
     await waitOpen(find.byType(MobileNowPlaying), 'mobile Now Playing');
     Future<void> openModalFromMore() async {
       await tester.tap(_iconButton(l10n().playbackMore));
-      await waitOpen(find.byType(NowPlayingMoreSheet), 'the more sheet');
+      await waitOpen(find.text(l10n().playbackLyricsSource), 'the song menu');
       await tester.tap(find.text(l10n().playbackLyricsSource));
       await waitOpen(modal, 'Lời cho bài này');
     }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -15,9 +17,9 @@ import '../../../../playback/ui/spring_to_rest.dart';
 import '../../../../playback/state/track_info_providers.dart';
 import '../../../../playback/ui/track_cover.dart';
 import '../favorite_button.dart';
+import '../now_playing_song_menu.dart';
 import '../now_playing_seek_slot.dart';
 import 'cover_swiper.dart';
-import 'more_sheet.dart';
 import 'now_playing_button_row.dart';
 import 'now_playing_controls.dart';
 import 'now_playing_header.dart';
@@ -104,7 +106,12 @@ class _MobileNowPlayingState extends ConsumerState<MobileNowPlaying>
               children: [
                 NowPlayingHeader(
                   onClose: widget.onClose,
-                  onMore: () => showNowPlayingMoreSheet(context),
+                  onMore: () => unawaited(
+                    openNowPlayingSongMenu(
+                      context,
+                      closeNowPlaying: widget.onClose,
+                    ),
+                  ),
                   dragHandle: (child) => GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     dragStartBehavior: DragStartBehavior.down,

@@ -67,7 +67,6 @@ class QueuePanel extends ConsumerWidget {
         ctx,
         item,
         info,
-        at,
         host: host,
         beforeNavigate: beforeNavigate,
         onEmptied: onEmptied,

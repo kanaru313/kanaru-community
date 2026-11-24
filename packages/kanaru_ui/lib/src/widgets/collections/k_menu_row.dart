@@ -59,10 +59,13 @@ class KMenuRow {
     this.soonLabel,
     this.danger = false,
     this.proLabel,
+    this.shortcutLabel,
     this.hint,
     this.on,
     this.onTitle,
     this.onIcon,
+    this.liveTitle,
+    this.liveSubtitle,
   });
 
   final String title;
@@ -85,6 +88,9 @@ class KMenuRow {
   /// Shows a Pro badge with this text.
   final String? proLabel;
 
+  /// Key hint shown at the row's end (desktop: "Delete"); plain text.
+  final String? shortcutLabel;
+
   /// Accessible description of what the row does (no visible text).
   final String? hint;
 
@@ -95,6 +101,15 @@ class KMenuRow {
   final ValueListenable<bool>? on;
   final String? onTitle;
   final IconData? onIcon;
+
+  /// Title that changes while the menu is open (a ticking timer): when set it
+  /// is shown instead of [title] and follows the notifier. It is plain text
+  /// (no live region), so a screen reader reads it on focus and does not talk
+  /// at every change.
+  final ValueListenable<String>? liveTitle;
+
+  /// Like [liveTitle] for the second line; shown instead of [subtitle].
+  final ValueListenable<String>? liveSubtitle;
 
   bool get active => enabled && soonLabel == null;
 }
@@ -183,6 +198,26 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
     );
   }
 
+  /// A line of the row: follows [live] when set, else shows [fixed].
+  Widget _text(ValueListenable<String>? live, String fixed, TextStyle? style) {
+    if (live == null) return Text(fixed, style: style);
+    return ValueListenableBuilder<String>(
+      valueListenable: live,
+      builder: (_, text, _) => Text(text, style: style),
+    );
+  }
+
+  /// The second line: like [_text], but a live value that is empty takes no
+  /// line.
+  Widget _line(ValueListenable<String>? live, String fixed, TextStyle? style) {
+    if (live == null) return Text(fixed, style: style);
+    return ValueListenableBuilder<String>(
+      valueListenable: live,
+      builder: (_, text, _) =>
+          text.isEmpty ? const SizedBox.shrink() : Text(text, style: style),
+    );
+  }
+
   /// The row drawn for [on] (null = not a live toggle row).
   Widget _tile(BuildContext context, bool? on) {
     final row = widget.row;
@@ -246,18 +281,17 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              _text(
+                                row.liveTitle,
                                 title,
-                                style: textTheme.bodyLarge?.copyWith(
-                                  color: color,
-                                ),
+                                textTheme.bodyLarge?.copyWith(color: color),
                               ),
-                              if (row.subtitle != null)
-                                Text(
-                                  row.subtitle!,
-                                  style: textTheme.bodySmall?.copyWith(
-                                    color: soft,
-                                  ),
+                              if (row.liveSubtitle != null ||
+                                  row.subtitle != null)
+                                _line(
+                                  row.liveSubtitle,
+                                  row.subtitle ?? '',
+                                  textTheme.bodySmall?.copyWith(color: soft),
                                 ),
                             ],
                           ),
@@ -265,6 +299,13 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
                         if (row.proLabel != null) ...[
                           const KGap(KSpace.x2),
                           ProBadge(label: row.proLabel!),
+                        ],
+                        if (row.shortcutLabel != null) ...[
+                          const KGap(KSpace.x2),
+                          Text(
+                            row.shortcutLabel!,
+                            style: textTheme.labelSmall?.copyWith(color: soft),
+                          ),
                         ],
                         if (row.soonLabel != null) ...[
                           const KGap(KSpace.x2),

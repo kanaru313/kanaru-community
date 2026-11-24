@@ -77,6 +77,9 @@ Future<void> _tapAdvanced(WidgetTester tester) async {
         .descendant(of: find.byType(Dialog), matching: find.byType(Scrollable))
         .first,
   );
+  // Visible can still mean half under the footer: bring it fully into view.
+  await tester.ensureVisible(find.text('Advanced'));
+  await tester.pump();
   await tester.tap(find.text('Advanced'));
   await pumpMenu(tester);
 }

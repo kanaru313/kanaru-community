@@ -157,7 +157,7 @@ void main() {
       expect(rowOf(spec, id).soon, isTrue, reason: '$id');
       expect(rowOf(spec, id).active, isFalse);
     }
-    expect(rowOf(spec, MenuItemId.ai).pro, isTrue);
+    expect(rowOf(spec, MenuItemId.ai).pro, isFalse);
     expect(rowOf(spec, MenuItemId.delete).danger, isTrue);
     expect(rowOf(spec, MenuItemId.playlist).soon, isFalse);
     expect(rowOf(spec, MenuItemId.playlist).active, isTrue);

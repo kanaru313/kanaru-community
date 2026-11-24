@@ -366,4 +366,43 @@ void main() {
     await runner.run(MenuAction.select(TrackId(5), on: true));
     expect(calls, 0);
   });
+
+  testWidgets('settled waits for a started caller action to finish', (
+    tester,
+  ) async {
+    final rig = await _pump(tester);
+    final gate = Completer<void>();
+    var settled = false;
+    unawaited(rig.runner.run(MenuAction.run((_) => gate.future)));
+    unawaited(rig.runner.settled().then((_) => settled = true));
+    await tester.pump();
+    expect(settled, isFalse);
+    gate.complete();
+    await tester.pump();
+    expect(settled, isTrue);
+  });
+
+  testWidgets('settled completes at once when nothing is running', (
+    tester,
+  ) async {
+    final rig = await _pump(tester);
+    await rig.runner.settled();
+  });
+
+  testWidgets('settled also completes when the caller action throws', (
+    tester,
+  ) async {
+    final rig = await _pump(tester);
+    final gate = Completer<void>();
+    var settled = false;
+    unawaited(rig.runner.run(MenuAction.run((_) => gate.future)));
+    unawaited(rig.runner.settled().then((_) => settled = true));
+    await tester.pump();
+    expect(settled, isFalse);
+    gate.completeError(StateError('x'));
+    await tester.pump();
+    await tester.pump();
+    expect(settled, isTrue);
+    expect(find.text(l10n.libraryActionFailed), findsOneWidget);
+  });
 }

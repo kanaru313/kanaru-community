@@ -29,7 +29,6 @@ import 'package:kanaru/src/playback/ui/mini_player.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_now_playing.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/lyrics_screen.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/mobile_now_playing.dart';
-import 'package:kanaru/src/screens/now_playing/ui/mobile/more_sheet.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart' show Dialog, Navigator;
 
@@ -286,18 +285,18 @@ void main() {
     );
     expect(find.byType(MobileNowPlaying), findsOneWidget);
 
-    // 2. Now Playing more sheet -> "Nguồn lời bài", opened after it closes.
+    // 2. Now Playing song menu -> "Nguồn lời bài", opened after it closes.
     await tester.tap(iconButton(l10n().playbackMore));
     await app.pumpUntil(
-      () => find.byType(NowPlayingMoreSheet).evaluate().isNotEmpty,
-      what: 'the Now Playing more sheet',
+      () => find.text(l10n().playbackLyricsSource).evaluate().isNotEmpty,
+      what: 'the Now Playing song menu',
     );
     await shot('mobile-05-more-sheet');
     await tester.tap(find.text(l10n().playbackLyricsSource));
-    await waitOpen('mobile, more sheet item');
+    await waitOpen('mobile, song menu item');
     await app.pumpUntil(
-      () => find.byType(NowPlayingMoreSheet).evaluate().isEmpty,
-      what: 'the more sheet to be gone',
+      () => find.text(l10n().playbackLyricsSource).evaluate().isEmpty,
+      what: 'the song menu to be gone',
       timeout: const Duration(seconds: 15),
     );
     await expectModalContent(fileSelected: true);
@@ -309,8 +308,8 @@ void main() {
     await playPaused([noneId]);
     await tester.tap(iconButton(l10n().playbackMore));
     await app.pumpUntil(
-      () => find.byType(NowPlayingMoreSheet).evaluate().isNotEmpty,
-      what: 'the more sheet (no lyrics track)',
+      () => find.text(l10n().playbackLyricsSource).evaluate().isNotEmpty,
+      what: 'the song menu (no lyrics track)',
     );
     await tester.tap(find.text(l10n().playbackLyricsSource));
     await waitOpen('mobile, track without lyrics');
@@ -331,8 +330,8 @@ void main() {
     await playPaused([syltId, usltId]);
     await tester.tap(iconButton(l10n().playbackMore));
     await app.pumpUntil(
-      () => find.byType(NowPlayingMoreSheet).evaluate().isNotEmpty,
-      what: 'the more sheet (queue of two)',
+      () => find.text(l10n().playbackLyricsSource).evaluate().isNotEmpty,
+      what: 'the song menu (queue of two)',
     );
     await tester.tap(find.text(l10n().playbackLyricsSource));
     await waitOpen('mobile, before skipping');
@@ -491,7 +490,11 @@ void main() {
     await shot('desktop-04-more-menu');
     await tester.tap(find.text(l10n().playbackLyricsSource));
     await waitOpen('desktop, more menu item');
-    expect(find.text(l10n().playbackLyricsSource), findsNothing);
+    await app.pumpUntil(
+      () => find.text(l10n().playbackLyricsSource).evaluate().isEmpty,
+      what: 'the song menu to be gone',
+      timeout: const Duration(seconds: 15),
+    );
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await waitClosed('Esc after the menu item');
 

@@ -175,29 +175,87 @@ MenuItemSpec? _goAlbum(SongMenuData data, MenuOrigin origin, MenuEnv env) {
   );
 }
 
+/// Rows a caller adds around the song menu's lyrics row, in the same group:
+/// [before] above it, [after] below it.
+typedef SongMenuAroundLyrics = ({
+  List<MenuItemSpec> before,
+  List<MenuItemSpec> after,
+});
+
 /// Adds the page's own rows to a song menu: [playlistGroup] as a group of its
-/// own right after the "Go to" group (the first), and drops the heart row when
-/// [favoriteRow] is false. Defaults return [spec] as it is.
+/// own right after the "Go to" group (the first), [aroundLyrics] in the group
+/// of the lyrics row (a group of its own right after "Go to" when the menu has
+/// no lyrics row), drops the heart row when [favoriteRow] is false, the "Select"
+/// row when [selectRow] is false and the "Play next" / "Add to queue" footer
+/// when [queueButtons] is false. [leadingGroup] becomes the first group (before
+/// "Go to"), [selectReplacement] takes the place of the "Select" row (same
+/// position; ignored when [selectRow] is false), [beforeAdvanced] becomes a
+/// group right before the "Advanced" group (the last group when the menu has
+/// none). Defaults return [spec] as it is.
 MenuSpec withSongPageRows(
   MenuSpec spec, {
   List<MenuItemSpec> playlistGroup = const [],
   bool favoriteRow = true,
+  SongMenuAroundLyrics? aroundLyrics,
+  bool selectRow = true,
+  bool queueButtons = true,
+  List<MenuItemSpec> leadingGroup = const [],
+  MenuItemSpec? selectReplacement,
+  List<MenuItemSpec> beforeAdvanced = const [],
 }) {
-  if (playlistGroup.isEmpty && favoriteRow) return spec;
-  final groups = [
-    for (final g in spec.groups)
-      [
-        for (final item in g)
-          if (favoriteRow || item.id != MenuItemId.favorite) item,
+  final around =
+      aroundLyrics != null &&
+          (aroundLyrics.before.isNotEmpty || aroundLyrics.after.isNotEmpty)
+      ? aroundLyrics
+      : null;
+  if (playlistGroup.isEmpty &&
+      favoriteRow &&
+      around == null &&
+      selectRow &&
+      queueButtons &&
+      leadingGroup.isEmpty &&
+      selectReplacement == null &&
+      beforeAdvanced.isEmpty) {
+    return spec;
+  }
+  var placed = false;
+  final groups = <List<MenuItemSpec>>[];
+  for (final g in spec.groups) {
+    final hasLyrics = around != null && g.any((i) => i.id == MenuItemId.lyrics);
+    placed |= hasLyrics;
+    groups.add([
+      for (final item in g) ...[
+        if (hasLyrics && item.id == MenuItemId.lyrics) ...around.before,
+        if ((favoriteRow || item.id != MenuItemId.favorite) &&
+            (selectRow || item.id != MenuItemId.select))
+          if (selectRow &&
+              selectReplacement != null &&
+              item.id == MenuItemId.select)
+            selectReplacement
+          else
+            item,
+        if (hasLyrics && item.id == MenuItemId.lyrics) ...around.after,
       ],
-  ];
+    ]);
+  }
   if (playlistGroup.isNotEmpty) {
     groups.insert(groups.isEmpty ? 0 : 1, playlistGroup);
   }
+  if (around != null && !placed) {
+    groups.insert(groups.isEmpty ? 0 : 1, [...around.before, ...around.after]);
+  }
+  if (beforeAdvanced.isNotEmpty) {
+    final at = groups.indexWhere(
+      (g) => g.any((i) => i.id == MenuItemId.advanced),
+    );
+    groups.insert(at < 0 ? groups.length : at, beforeAdvanced);
+  }
+  if (leadingGroup.isNotEmpty) groups.insert(0, leadingGroup);
   return spec.copyWith(
     groups: [
       for (final g in groups)
         if (g.isNotEmpty) g,
     ],
+    queueIds: queueButtons ? null : const [],
   );
 }

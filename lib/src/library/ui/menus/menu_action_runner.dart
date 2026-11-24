@@ -50,6 +50,16 @@ class MenuActionRunner {
     return top is ImperativeRouteMatch ? top.matches.uri : config.uri;
   }
 
+  /// `MenuAction.run` calls still running; [settled] waits for them.
+  final List<Future<void>> _running = [];
+
+  /// Completes when every caller-supplied action started so far has finished.
+  Future<void> settled() async {
+    while (_running.isNotEmpty) {
+      await Future.wait(List.of(_running));
+    }
+  }
+
   AppLocalizations get _l10n => AppLocalizations.of(_context);
 
   Future<void> run(MenuAction action) async {
@@ -125,9 +135,17 @@ class MenuActionRunner {
       case RunAction(:final run):
         // The caller's own code: run with the root context. It reports its
         // own failures; one that escapes is logged and toasted here.
-        await _guard('running a menu action', _l10n.libraryActionFailed, () {
-          return run(_context);
-        });
+        final running = _guard(
+          'running a menu action',
+          _l10n.libraryActionFailed,
+          () => run(_context),
+        );
+        _running.add(running);
+        try {
+          await running;
+        } finally {
+          _running.remove(running);
+        }
       case RunOverAction():
         // Reached only when a row (not a header) carries it: the menu has
         // closed, so there is nothing left to keep open.

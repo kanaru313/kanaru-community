@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/library/ui/menus/song_lyrics_entry.dart';
+import 'package:kanaru/src/lyrics/ui/song_lyrics_entry_impl.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
 import 'package:kanaru/src/lyrics/state/playing_lyrics_providers.dart';
 import 'package:kanaru/src/lyrics/state/track_lyrics_providers.dart';
@@ -27,6 +29,7 @@ import '../../../playback/ui/sleep_timer/sleep_timer_modal_host.dart';
 import '../../../shell/support/desktop_now_playing_host.dart';
 import '../../../support/app_harness.dart';
 import '../../../support/icon_button_finders.dart';
+import '../support/song_menu_pump.dart';
 
 Future<DesktopHost> _open(
   WidgetTester tester, {
@@ -58,6 +61,7 @@ List<Override> _lyricsOverrides() => [
     ),
   ),
   trackLyricsProvider.overrideWith((ref, id) => LyricsShown(syncedLyrics(2))),
+  songLyricsEntryProvider.overrideWithValue(const LyricsSongEntry()),
 ];
 
 Future<void> _key(WidgetTester tester, LogicalKeyboardKey key) async {
@@ -139,8 +143,7 @@ void main() {
   testWidgets('V does nothing while the More menu is open', (tester) async {
     await _open(tester);
     await tester.tap(find.byIcon(KIcons.moreVert));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    await menuLoads(tester);
     await _key(tester, LogicalKeyboardKey.keyV);
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byType(DesktopTrackColumn), findsOneWidget);
@@ -204,8 +207,7 @@ void main() {
   ) async {
     final host = await _open(tester);
     await tester.tap(find.byIcon(KIcons.moreVert));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    await menuLoads(tester);
     expect(find.text('Go to album'), findsOneWidget);
     await _key(tester, LogicalKeyboardKey.escape);
     await tester.pump(const Duration(milliseconds: 300));
@@ -247,7 +249,7 @@ void main() {
           .first,
     );
     await tester.tap(find.byIcon(KIcons.moreVert));
-    await tester.pump();
+    await menuLoads(tester);
     await tester.pump(const Duration(seconds: 6));
     expect(fade().opacity, 1);
     await _key(tester, LogicalKeyboardKey.escape);
@@ -429,7 +431,7 @@ void main() {
       testWidgets('the ⋮ item opens it with the header pinned', (tester) async {
         await openLyricsHost(tester);
         await tester.tap(find.byIcon(KIcons.moreVert));
-        await tester.pumpAndSettle();
+        await menuLoads(tester);
         await tester.tap(find.text('Lyrics source'));
         await tester.pumpAndSettle();
         await expectPinnedThenReleased(tester);
