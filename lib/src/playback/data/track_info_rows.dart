@@ -41,7 +41,6 @@ TrackInfo trackInfoFromRow(
     albumKey: albumKey,
     genre: row.genre,
     language: row.language,
-    languageDetected: row.languageDetected == 1,
     format: row.codec ?? formatFromLocator(row.relPath),
     sampleRate: row.sampleRate,
     bitrate: row.bitrate,
