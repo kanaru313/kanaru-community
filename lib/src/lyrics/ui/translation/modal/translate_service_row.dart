@@ -26,16 +26,20 @@ class TranslateServiceIcon extends ConsumerWidget {
   );
 }
 
-/// The small "AI" tag after an AI plugin's name.
+/// The small "AI" tag after an AI plugin's name. On a chosen row ([onTint])
+/// the row tint is the same container colour, so the tag turns solid to stay
+/// a visible pill.
 class TranslateAiTag extends StatelessWidget {
-  const TranslateAiTag({super.key});
+  const TranslateAiTag({super.key, this.onTint = false});
+
+  final bool onTint;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: scheme.secondaryContainer,
+        color: onTint ? scheme.primary : scheme.secondaryContainer,
         borderRadius: KRadius.full,
       ),
       child: Padding(
@@ -46,7 +50,7 @@ class TranslateAiTag extends StatelessWidget {
         child: Text(
           AppLocalizations.of(context).lyricsTranslateAiTag,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: scheme.onSecondaryContainer,
+            color: onTint ? scheme.onPrimary : scheme.onSecondaryContainer,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -57,9 +61,12 @@ class TranslateAiTag extends StatelessWidget {
 
 /// Service name with its AI tag; a long name is cut, the tag stays.
 class TranslateServiceName extends StatelessWidget {
-  const TranslateServiceName(this.service, {super.key});
+  const TranslateServiceName(this.service, {super.key, this.selected = false});
 
   final TranslateService service;
+
+  /// The row is the chosen one (its tint is behind the tag).
+  final bool selected;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -68,7 +75,7 @@ class TranslateServiceName extends StatelessWidget {
       Flexible(
         child: Text(service.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       ),
-      if (service.ai) ...[const KGap(KSpace.x2), const TranslateAiTag()],
+      if (service.ai) ...[const KGap(KSpace.x2), TranslateAiTag(onTint: selected)],
     ],
   );
 }

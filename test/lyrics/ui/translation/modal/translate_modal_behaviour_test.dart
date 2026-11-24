@@ -196,7 +196,8 @@ void main() {
         await tester.tap(_button('Translate again'));
         await host.settle(tester);
         expect(host.calls, ['retranslate']);
-        expect(find.text('Translate lyrics'), findsNothing);
+        // The modal stays open while the run goes on.
+        expect(find.text('Translate lyrics'), findsOneWidget);
         // The run starts, then the new translation is there.
         host.setView(
           const TranslationView(

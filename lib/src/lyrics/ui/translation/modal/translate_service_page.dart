@@ -63,7 +63,10 @@ class TranslateServicePage extends ConsumerWidget {
                     in services?.all ?? const <TranslateService>[])
                   SelectionRow(
                     leading: TranslateServiceIcon(service: service),
-                    title: TranslateServiceName(service),
+                    title: TranslateServiceName(
+                      service,
+                      selected: service.installId == current?.installId,
+                    ),
                     selected: service.installId == current?.installId,
                     onTap: () => _pick(context, ref, service),
                   ),

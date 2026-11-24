@@ -327,9 +327,10 @@ void main() {
       );
       await host.settle(tester);
       expect(host.calls, ['retranslate']);
-      // The page and the modal are both gone.
-      expect(find.text('AI tuning'), findsNothing);
-      expect(find.text('Translate lyrics'), findsNothing);
+      // The page is gone; the modal stays on its main page.
+      // Only the modal's own tuning row is left.
+      expect(find.text('AI tuning'), findsOneWidget);
+      expect(find.text('Translate lyrics'), findsOneWidget);
       await tester.pump(const Duration(seconds: 6));
     });
   });

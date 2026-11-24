@@ -142,8 +142,8 @@ void main() {
         expect(host.calls, ['retranslate']);
         // Nothing started a run: the wait for it ends by itself.
         await tester.pump(retranslateStartWait);
-        // The modal closed; the old translation stays.
-        expect(find.text('Translate lyrics'), findsNothing);
+        // The modal stays open; the old translation stays.
+        expect(find.text('Translate lyrics'), findsOneWidget);
       });
 
       testWidgets('settings differ: the bar names what changed', (

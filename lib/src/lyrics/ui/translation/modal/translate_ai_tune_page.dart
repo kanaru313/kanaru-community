@@ -90,11 +90,9 @@ class _TranslateAiTunePageState extends ConsumerState<TranslateAiTunePage> {
     final saved = await _note.currentState?.flush() ?? true;
     // A refused note stays on screen with its error line.
     if (!mounted || !saved) return;
-    if (translate) {
-      retranslateInBackground(context, widget.control);
-    } else if (navigator.mounted) {
-      navigator.pop();
-    }
+    if (translate) retranslateInBackground(context, widget.control);
+    // Back to the modal's main page, which shows the run's status line.
+    if (navigator.mounted) navigator.pop();
   }
 
   @override

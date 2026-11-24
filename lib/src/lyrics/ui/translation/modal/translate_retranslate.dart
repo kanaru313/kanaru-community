@@ -17,10 +17,10 @@ import 'translate_frame.dart';
 /// waits for it any more.
 const Duration retranslateStartWait = Duration(seconds: 5);
 
-/// "Dịch lại": the modal and its pages close at once, the old translation
-/// stays on the lyrics, and a snack bar says when the new one is there. The
-/// listener below also keeps the track's translation watched until then, so
-/// the run is not dropped when the modal goes away.
+/// "Dịch lại": the modal stays open (progress and failure show on its status
+/// line), the old translation stays until the new one is there, and a snack
+/// bar says when it is. The listener below also keeps the track's translation
+/// watched until then, so the run is not dropped if the modal goes away.
 void retranslateInBackground(
   BuildContext context,
   TranslateModalControl control,
@@ -65,5 +65,4 @@ void retranslateInBackground(
     if (!started) end();
   });
   container.read(translationCommandsProvider).retranslate(id);
-  control.closeAll();
 }

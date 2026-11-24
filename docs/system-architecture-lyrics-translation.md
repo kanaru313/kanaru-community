@@ -245,7 +245,9 @@ and **Modal lỗi dịch**. The entry points are in "Entry points" below.
   dòng" with [Huỷ] (`cancelRetranslate`) only for a forced run; "đã là <ngôn
   ngữ>" for `same`. On the mobile shell two buttons go on their own row; with one button the text takes the remaining width and the button sits at the right end.
 - **Dịch vụ dịch** says what is sent behind a `KHelpIcon` after the page title (no visible caption). **Tinh chỉnh AI** shows Model / Phong cách as `KPickerField` cards.
-- **Dịch lại** (`retranslateInBackground`): the modal closes, the old
+- **Dịch lại** (`retranslateInBackground`): the modal stays open (the tune
+  page pops back to the main page; a run or a failure shows on the status
+  line, only ✕ / Back / scrim / swipe close it), the old
   translation stays, a listener on the track's translation (which also keeps
   the run held) shows "Đã dịch lại · <style or plugin>" when the forced run
   ends ready, and lets go when it fails or never starts (5 s).
