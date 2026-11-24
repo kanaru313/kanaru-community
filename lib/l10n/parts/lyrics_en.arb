@@ -613,5 +613,48 @@
         "type": "String"
       }
     }
-  }
+  },
+  "lyricsInfoGroup": "Lyrics",
+  "lyricsInfoSourceRow": "Lyrics source",
+  "lyricsInfoSourceTag": "In the file's tags",
+  "lyricsInfoSourceLrc": ".lrc file next to the song · {name}",
+  "@lyricsInfoSourceLrc": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsInfoSourceLrcBare": ".lrc file next to the song",
+  "lyricsInfoSourceKept": "Kept online copy · {plugin}",
+  "@lyricsInfoSourceKept": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsInfoNone": "No lyrics yet",
+  "lyricsInfoNoneHint": "Add lyrics from the song menu › Lyrics source",
+  "lyricsInfoLines": "{count, plural, =1{1 line} other{{count} lines}}",
+  "@lyricsInfoLines": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsInfoSeeAll": "See all lyrics",
+  "lyricsInfoCopy": "Copy lyrics",
+  "lyricsInfoCopied": "{count, plural, =1{Lyrics copied (1 line)} other{Lyrics copied ({count} lines)}}",
+  "@lyricsInfoCopied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsInfoShowStamps": "Show timestamps",
+  "lyricsInfoHideStamps": "Hide timestamps",
+  "lyricsInfoUnreadable": "Couldn't read the lyrics"
 }

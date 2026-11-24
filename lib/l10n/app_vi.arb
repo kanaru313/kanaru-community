@@ -3824,6 +3824,49 @@
       }
     }
   },
+  "lyricsInfoGroup": "Lời bài hát",
+  "lyricsInfoSourceRow": "Nguồn lời",
+  "lyricsInfoSourceTag": "Trong tag của tệp",
+  "lyricsInfoSourceLrc": "Tệp .lrc cạnh bài · {name}",
+  "@lyricsInfoSourceLrc": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsInfoSourceLrcBare": "Tệp .lrc cạnh bài",
+  "lyricsInfoSourceKept": "Bản trực tuyến đã giữ · {plugin}",
+  "@lyricsInfoSourceKept": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsInfoNone": "Chưa có lời",
+  "lyricsInfoNoneHint": "Thêm lời ở menu bài › Nguồn lời bài",
+  "lyricsInfoLines": "{count, plural, other{{count} dòng}}",
+  "@lyricsInfoLines": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsInfoSeeAll": "Xem cả lời",
+  "lyricsInfoCopy": "Chép lời",
+  "lyricsInfoCopied": "{count, plural, other{Đã chép lời ({count} dòng)}}",
+  "@lyricsInfoCopied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsInfoShowStamps": "Hiện mốc thời gian",
+  "lyricsInfoHideStamps": "Ẩn mốc thời gian",
+  "lyricsInfoUnreadable": "Không đọc được lời",
   "pluginsStoreTitle": "Kho plugin",
   "pluginsFilterTooltip": "Lọc",
   "pluginsFilterActiveLabel": "{count} đang bật",

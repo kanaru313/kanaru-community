@@ -14,13 +14,30 @@ Widget _headerRow(FocusNode node, List<Widget> children) => Focus(
   child: Row(children: children),
 );
 
-Widget _title(ThemeData theme, String text) => Semantics(
+Widget _title(ThemeData theme, String text, {String? subtitle}) => Semantics(
   header: true,
-  child: Text(
-    text,
-    maxLines: 1,
-    overflow: TextOverflow.ellipsis,
-    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      if (subtitle != null)
+        Text(
+          subtitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+    ],
   ),
 );
 
@@ -30,6 +47,7 @@ class KOverlayPageFrame extends StatelessWidget {
     super.key,
     required this.headerNode,
     required this.title,
+    this.subtitle,
     required this.actions,
     required this.backTooltip,
     required this.onClose,
@@ -38,6 +56,9 @@ class KOverlayPageFrame extends StatelessWidget {
 
   final FocusNode headerNode;
   final String title;
+
+  /// A quiet line under the title in the bar.
+  final String? subtitle;
   final List<Widget> actions;
   final String backTooltip;
   final VoidCallback onClose;
@@ -63,7 +84,7 @@ class KOverlayPageFrame extends StatelessWidget {
                   onPressed: onClose,
                 ),
                 const SizedBox(width: KSpace.x2),
-                Expanded(child: _title(theme, title)),
+                Expanded(child: _title(theme, title, subtitle: subtitle)),
                 ...actions,
                 const SizedBox(width: KSpace.x2),
               ]),
@@ -84,6 +105,7 @@ class KOverlayBoxFrame extends StatelessWidget {
     super.key,
     required this.headerNode,
     required this.title,
+    this.subtitle,
     required this.header,
     required this.actions,
     required this.closeTooltip,
@@ -95,6 +117,7 @@ class KOverlayBoxFrame extends StatelessWidget {
 
   final FocusNode headerNode;
   final String title;
+  final String? subtitle;
   final Widget? header;
   final List<Widget> actions;
   final String closeTooltip;
@@ -143,7 +166,11 @@ class KOverlayBoxFrame extends StatelessWidget {
                         KSpace.x3,
                       ),
                       child: _headerRow(headerNode, [
-                        Expanded(child: header ?? _title(theme, title)),
+                        Expanded(
+                          child:
+                              header ??
+                              _title(theme, title, subtitle: subtitle),
+                        ),
                         ...actions,
                         KIconButton(
                           tooltip: closeTooltip,

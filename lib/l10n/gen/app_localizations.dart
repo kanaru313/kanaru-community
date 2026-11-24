@@ -7842,6 +7842,96 @@ abstract class AppLocalizations {
   /// **'{name}: off · only searched when you tap'**
   String lyricsSettingsSourceOffToast(String name);
 
+  /// No description provided for @lyricsInfoGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get lyricsInfoGroup;
+
+  /// No description provided for @lyricsInfoSourceRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics source'**
+  String get lyricsInfoSourceRow;
+
+  /// No description provided for @lyricsInfoSourceTag.
+  ///
+  /// In en, this message translates to:
+  /// **'In the file\'s tags'**
+  String get lyricsInfoSourceTag;
+
+  /// No description provided for @lyricsInfoSourceLrc.
+  ///
+  /// In en, this message translates to:
+  /// **'.lrc file next to the song · {name}'**
+  String lyricsInfoSourceLrc(String name);
+
+  /// No description provided for @lyricsInfoSourceLrcBare.
+  ///
+  /// In en, this message translates to:
+  /// **'.lrc file next to the song'**
+  String get lyricsInfoSourceLrcBare;
+
+  /// No description provided for @lyricsInfoSourceKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept online copy · {plugin}'**
+  String lyricsInfoSourceKept(String plugin);
+
+  /// No description provided for @lyricsInfoNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics yet'**
+  String get lyricsInfoNone;
+
+  /// No description provided for @lyricsInfoNoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add lyrics from the song menu › Lyrics source'**
+  String get lyricsInfoNoneHint;
+
+  /// No description provided for @lyricsInfoLines.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 line} other{{count} lines}}'**
+  String lyricsInfoLines(int count);
+
+  /// No description provided for @lyricsInfoSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all lyrics'**
+  String get lyricsInfoSeeAll;
+
+  /// No description provided for @lyricsInfoCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy lyrics'**
+  String get lyricsInfoCopy;
+
+  /// No description provided for @lyricsInfoCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Lyrics copied (1 line)} other{Lyrics copied ({count} lines)}}'**
+  String lyricsInfoCopied(int count);
+
+  /// No description provided for @lyricsInfoShowStamps.
+  ///
+  /// In en, this message translates to:
+  /// **'Show timestamps'**
+  String get lyricsInfoShowStamps;
+
+  /// No description provided for @lyricsInfoHideStamps.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide timestamps'**
+  String get lyricsInfoHideStamps;
+
+  /// No description provided for @lyricsInfoUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the lyrics'**
+  String get lyricsInfoUnreadable;
+
   /// No description provided for @pluginsStoreTitle.
   ///
   /// In en, this message translates to:

@@ -170,6 +170,37 @@ void main() {
     });
   }
 
+  for (final (size, label) in [
+    (const Size(360, 800), 'page'),
+    (const Size(1000, 900), 'box'),
+  ]) {
+    testWidgets('a subtitle sits under the title in the $label', (
+      tester,
+    ) async {
+      useWindow(tester, size);
+      await tester.pumpWidget(
+        host(
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showKOverlayPage<void>(
+                context,
+                title: 'Lời bài hát',
+                subtitle: 'Tên bài',
+                builder: (_) => const SizedBox(),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await _show(tester);
+      final title = tester.getTopLeft(find.text('Lời bài hát'));
+      final sub = tester.getTopLeft(find.text('Tên bài'));
+      expect(sub.dy, greaterThan(title.dy));
+      expect(sub.dx, title.dx);
+    });
+  }
+
   testWidgets('maxWidth narrows the box (lyrics modal 560)', (tester) async {
     useWindow(tester, const Size(1440, 900));
     await tester.pumpWidget(host(_opener(maxWidth: 560)));

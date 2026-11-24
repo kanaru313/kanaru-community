@@ -12,6 +12,7 @@ class KOverlayPageShell extends StatefulWidget {
   const KOverlayPageShell({
     super.key,
     required this.title,
+    required this.subtitle,
     required this.builder,
     required this.actions,
     required this.boxHeader,
@@ -22,6 +23,7 @@ class KOverlayPageShell extends StatefulWidget {
   });
 
   final String title;
+  final String? subtitle;
   final WidgetBuilder builder;
   final List<Widget> actions;
   final WidgetBuilder? boxHeader;
@@ -101,6 +103,7 @@ class _KOverlayPageShellState extends State<KOverlayPageShell> {
                           ? KOverlayPageFrame(
                               headerNode: _pageHeader,
                               title: widget.title,
+                              subtitle: widget.subtitle,
                               actions: widget.actions,
                               backTooltip: widget.backTooltip,
                               onClose: _close,
@@ -109,6 +112,7 @@ class _KOverlayPageShellState extends State<KOverlayPageShell> {
                           : KOverlayBoxFrame(
                               headerNode: _boxHeader,
                               title: widget.title,
+                              subtitle: widget.subtitle,
                               header: widget.boxHeader?.call(context),
                               actions: widget.actions,
                               closeTooltip: widget.closeTooltip,

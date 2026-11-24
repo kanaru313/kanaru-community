@@ -449,6 +449,16 @@ commands are taken while the picker is alive; a refused or failed write is logge
   `lyricsPluginPageLocation` and closes the picker), paused until a time. Sources that are off are asked only by [Tìm] (end card, empty
   state, or "Nguồn tìm kiếm"); `OnlineSearchNotifier.searchDisabled` keeps settings as they are.
 
+## Song info: saved lyrics (04f) (`lyrics/ui/song_info/`)
+
+The song info page (`library`) draws a "Lời bài hát" group right after Tags. `library` cannot import `lyrics`, so `LyricsExtension` (`lyrics/lyrics_extension.dart`, in `builtInExtensions`) registers a `SongDetailSection` (id `lyrics`) in the registry slot; the slot passes a plain `int trackId`.
+
+- **Read-only state.** The section watches `storedTrackLyricsProvider(TrackId)` (`state/stored_track_lyrics_provider.dart`). It and `trackLyricsProvider` share one body, `resolveLyricsState(ref, id, lookup:)`: the same selection (choice, kept copy, local lyrics, cached online result) and the same file read (`localLyricsReadProvider`). With `lookup: false` it never watches `lookupDriverProvider`, never arms the retry timer and ignores which track is playing, so opening the info starts no plugin and no network request, even for the playing track with auto search on. A track that would need a lookup answers `LyricsNone(reason: notPlaying)`; a lookup still running for Now Playing reads the same until its result is cached, then the stored copy shows.
+- **State to group.** Shown: source row + preview block. Off: source "Lyrics off", preview of `available` when there is one. Instrumental: source row only. None, searching, not found, no source, failed, paused: "Chưa có lời" and the line "Thêm lời ở menu bài › Nguồn lời bài" (no search button). Loading: skeleton (still when animations are off). Unavailable: nothing, or one "Không đọc được lời" row when `songInfoShowEmptyProvider` (the info page's eye) is on (`lyrics` may import `library` state).
+- **Source row.** `song_info_lyrics_labels.dart`: tag, `.lrc` file name (from `LyricsFacts.lrcLocator`, copyable), kept online copy ("Bản trực tuyến đã giữ · plugin"). An auto-found online copy and an instrumental result use the lyrics area's own `onlineRowSubtitle` / `onlineRowInfoOf` (`online/online_labels.dart`), so both screens word them the same.
+- **Preview block.** One button (hover 8 %, `primary` focus border): kind pill, "N dòng", the first five lines without timestamps fading out, "Xem cả lời ›".
+- **Full lyrics modal.** `showKOverlayPage(maxWidth: 560)` (box on tablet and desktop, page on a phone); Back, Esc and ✕ close only it. Header: title with the song name (page bar) or "name · artist" (box), the `KIcons.timestamps` `KInfoToggleButton` for timestamps, "Chép lời". Timestamps default off and are remembered in `lyrics.info_show_timestamps` (`song_info_lyrics_prefs.dart`); plain lyrics disable the toggle and say why. On: a 44 px `m:ss` column and the gap mark at instrumental gaps. Lines use the lyrics area's plain style; desktop makes the text selectable.
+
 ## Settings › Lyrics (`screens/settings/ui/lyrics/`)
 
 Route `/settings/lyrics`: `lyricsSettingsLocation` (`lyrics/ui/lyrics_settings_link.dart`) is the single copy of the path;

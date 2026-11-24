@@ -24,6 +24,7 @@ import 'src/foundation/app_logger.dart';
 import 'src/library/library_extension.dart';
 import 'src/library/ui/menus/song_lyrics_entry.dart';
 import 'src/lyrics/data/native_local_lyrics_reader.dart';
+import 'src/lyrics/lyrics_extension.dart';
 import 'src/lyrics/state/lyrics_reader_provider.dart';
 import 'src/lyrics/ui/song_lyrics_entry_impl.dart';
 import 'src/online/online_extension.dart';
@@ -47,6 +48,7 @@ export 'src/extension/state/registry_entries.dart';
 const List<KanaruExtension> builtInExtensions = [
   ScreensExtension(),
   LibraryExtension(),
+  LyricsExtension(),
   OnlineExtension(),
 ];
 
