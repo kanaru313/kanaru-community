@@ -473,9 +473,12 @@ The ⚙ of "Lời cho bài này" takes the router and the Now Playing panel noti
 (`/settings/lyrics?focus=sources`). The lyrics row of a plugin page (`plugin_head_card.dart`) opens the same location. It works from
 Now Playing (mobile route and desktop panel) and from a song menu.
 
-**Deep link.** `LyricsSettingsPage` reads `?focus=sources` (no route change: the query reaches the page through `GoRouterState`),
-waits a first frame plus `KMotion.focusSettle`, scrolls down until the lazily built "Nguồn lời trực tuyến" section exists,
-`Scrollable.ensureVisible`s it and pulses it once (`SetupSectionPulse`; with animations off it only scrolls). A rebuild of the same
+**Deep link.** `LyricsSettingsPage` reads `?focus=sources` or `?focus=translation` (no route change: the query reaches the page
+through `GoRouterState`). `translation` is `lyricsTranslationSettingsLocation`, the ⚙ of the Dịch lời modal; the ⚙ of "Lời cho bài
+này" stays at the page top. The page waits a first frame plus `KMotion.focusSettle` and for the sources rows to load (they sit above
+the translation block and move it), scrolls down until the lazily built section exists, `Scrollable.ensureVisible`s it and pulses it
+once (`SetupSectionPulse`; with animations off it only scrolls). On desktop the keyboard focus then moves to the block's first row. A
+newer reveal cancels an older one still running. A rebuild of the same
 location never scrolls again.
 
 `LyricsChoiceRow<T>` is one value row plus its picker (anchored on desktop, a caption as the picker header, "Mặc định" as the

@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart'
-    show AsyncData, AsyncError;
+    show AsyncData, AsyncError, Notifier, NotifierProvider;
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/lyrics/domain/online/lyrics_source.dart';
+import 'package:kanaru/src/lyrics/state/online/lyrics_sources_provider.dart';
 import 'package:kanaru/src/lyrics/state/translation/translation_services_provider.dart';
 import 'package:kanaru/src/lyrics/state/translation/translation_settings.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_config_values.dart';
@@ -11,6 +15,7 @@ import 'package:kanaru/src/plugins/state/plugin_store_providers.dart';
 import 'package:kanaru/src/plugins/state/store_ops.dart'
     show pluginIconProvider;
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
+import 'package:kanaru/src/screens/settings/ui/lyrics/lyrics_translation_section.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -305,4 +310,140 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('?focus=translation scrolls the Translation block into view', (
+    tester,
+  ) async {
+    await pumpSettings(
+      tester,
+      location: '/settings/lyrics?focus=translation',
+      size: const Size(400, 600),
+      overrides: [
+        ..._services(const [_google]),
+        lyricsSourcesLoadedProvider.overrideWithValue(true),
+      ],
+    );
+    await tester.pump(KMotion.focusSettle);
+    for (var i = 0; i < 80; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    final title = find.text('Translation');
+    expect(title, findsOneWidget);
+    final rect = tester.getRect(title);
+    expect(rect.top, greaterThanOrEqualTo(0));
+    expect(rect.bottom, lessThan(600));
+    // At the top of the page body, not just barely on screen.
+    expect(rect.top, lessThan(200));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('without the param the Translation block stays below', (
+    tester,
+  ) async {
+    await pumpSettings(
+      tester,
+      location: SettingsPaths.lyrics,
+      size: const Size(400, 600),
+      overrides: _services(const [_google]),
+    );
+    await tester.pump(KMotion.focusSettle);
+    expect(find.text('Translation'), findsNothing);
+  });
+
+  group('deep link', () {
+    Future<void> settle(WidgetTester tester) async {
+      await tester.pump(KMotion.focusSettle);
+      for (var i = 0; i < 60; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    }
+
+    Future<SettingsHarness> open(
+      WidgetTester tester, {
+      Size size = const Size(400, 600),
+      List<Override> extra = const [],
+    }) => pumpSettings(
+      tester,
+      location: '/settings/lyrics?focus=translation',
+      size: size,
+      overrides: [
+        ..._services(const [_google]),
+        ...extra,
+      ],
+    );
+
+    bool insideBlock(FocusNode? node) =>
+        node?.context
+            ?.findAncestorWidgetOfExactType<LyricsTranslationSection>() !=
+        null;
+
+    testWidgets('the block pulses once it is in view', (tester) async {
+      await open(tester);
+      final pulse = find.ancestor(
+        of: find.byType(LyricsTranslationSection),
+        matching: find.byType(SetupSectionPulse),
+      );
+      var pulsed = false;
+      await tester.pump(KMotion.focusSettle);
+      for (var i = 0; i < 60; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+        if (pulse.evaluate().isNotEmpty &&
+            tester.state<SetupSectionPulseState>(pulse).isPulsing) {
+          pulsed = true;
+        }
+      }
+      expect(pulsed, isTrue);
+    });
+
+    testWidgets('desktop: the focus moves into the block', (tester) async {
+      await open(tester, size: const Size(1400, 600));
+      await settle(tester);
+      expect(insideBlock(FocusManager.instance.primaryFocus), isTrue);
+    });
+
+    testWidgets('mobile: the focus does not move', (tester) async {
+      await open(tester);
+      await settle(tester);
+      expect(insideBlock(FocusManager.instance.primaryFocus), isFalse);
+    });
+
+    testWidgets('sources that load late do not push the block out of view', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        extra: [
+          lyricsSourcesLoadedProvider.overrideWith(
+            (ref) => ref.watch(_slowFlag),
+          ),
+          lyricsSourcesProvider.overrideWithValue([
+            for (var i = 0; i < 6; i++)
+              LyricsSource(
+                id: 'id-$i',
+                name: 'Source $i',
+                version: 1,
+                origin: LyricsSourceOrigin.repo,
+                enabled: true,
+              ),
+          ]),
+        ],
+      );
+      await settle(tester);
+      final rect = tester.getRect(find.text('Translation'));
+      expect(rect.top, greaterThanOrEqualTo(0));
+      expect(rect.bottom, lessThan(600));
+      expect(rect.top, lessThan(200));
+    });
+  });
 }
+
+/// Turns on after 600 ms: the sources rows appear after the page opened.
+class _SlowFlag extends Notifier<bool> {
+  @override
+  bool build() {
+    Timer(const Duration(milliseconds: 600), () => state = true);
+    return false;
+  }
+}
+
+final _slowFlag = NotifierProvider<_SlowFlag, bool>(_SlowFlag.new);

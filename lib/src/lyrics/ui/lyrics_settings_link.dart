@@ -16,3 +16,8 @@ String lyricsPluginPageLocation(String installId) =>
 /// Settings › Lyrics scrolled to "Nguồn lời trực tuyến" with the section
 /// pulsed once. Where the ⚙ of the lyrics modals and a plugin page lead.
 const String lyricsSourcesSettingsLocation = '/settings/lyrics?focus=sources';
+
+/// Settings › Lyrics scrolled to "Dịch lời" with the section pulsed once.
+/// Where the ⚙ of the Dịch lời modal leads.
+const String lyricsTranslationSettingsLocation =
+    '/settings/lyrics?focus=translation';
