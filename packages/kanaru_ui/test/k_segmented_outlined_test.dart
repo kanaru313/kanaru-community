@@ -15,7 +15,7 @@ Widget _compact({
   bool disabled = false,
 }) => Align(
   alignment: Alignment.topLeft,
-  child: KSegmentedCompact<String>(
+  child: KSegmentedOutlined<String>(
     segments: _segments,
     value: value,
     onChanged: disabled ? null : (onChanged ?? (_) {}),
@@ -34,6 +34,7 @@ Color? _fill(WidgetTester tester, String label) {
 }
 
 void main() {
+  regularTests();
   for (final (name, brightness, scale) in hostVariants) {
     testWidgets('chosen segment reports selected in one exclusive group '
         '($name)', (tester) async {
@@ -104,7 +105,7 @@ void main() {
     );
     expect(pill.height, kSegmentedCompactHeight);
     expect(
-      tester.getSize(find.byType(KSegmentedCompact<String>)).height,
+      tester.getSize(find.byType(KSegmentedOutlined<String>)).height,
       kSegmentedCompactHit,
     );
     await tester.tapAt(Offset(pill.center.dx, pill.top - 10));
@@ -145,8 +146,69 @@ void main() {
   testWidgets('grows with the text scale', (tester) async {
     await tester.pumpWidget(host(_compact(), textScale: 2));
     expect(
-      tester.getSize(find.byType(KSegmentedCompact<String>)).height,
+      tester.getSize(find.byType(KSegmentedOutlined<String>)).height,
       greaterThanOrEqualTo(kSegmentedCompactHit),
     );
+  });
+}
+
+Widget _regular({
+  String value = 'a',
+  ValueChanged<String>? onChanged,
+  bool lockOthers = false,
+}) => Align(
+  alignment: Alignment.topLeft,
+  child: KSegmentedOutlined<String>(
+    size: KSegmentedOutlinedSize.regular,
+    segments: [
+      const KSegment(value: 'a', label: 'Bài này'),
+      KSegment(value: 'b', label: 'Hàng đợi', enabled: !lockOthers),
+      KSegment(value: 'c', label: 'Mọi bài', enabled: !lockOthers),
+    ],
+    value: value,
+    onChanged: onChanged ?? (_) {},
+  ),
+);
+
+void regularTests() {
+  testWidgets('regular: 36 dp pill in a 48 dp tap area, full width, tinted '
+      'chosen segment without a check', (tester) async {
+    await tester.pumpWidget(host(_regular()));
+    final pill = tester.getRect(
+      find
+          .ancestor(
+            of: find.text('Bài này'),
+            matching: find.byType(AnimatedContainer),
+          )
+          .last,
+    );
+    expect(pill.height, kSegmentedRegularHeight);
+    final size = tester.getSize(find.byType(KSegmentedOutlined<String>));
+    expect(size.height, kSegmentedCompactHit);
+    expect(size.width, 800);
+    final scheme = Theme.of(tester.element(find.text('Bài này'))).colorScheme;
+    expect(_fill(tester, 'Bài này'), scheme.secondaryContainer);
+    expect(_fill(tester, 'Hàng đợi')!.a, 0);
+    expect(find.byType(KCheckMark), findsNothing);
+    expect(find.byIcon(KIcons.check), findsNothing);
+  });
+
+  testWidgets('regular: a disabled segment is dimmed and inert', (
+    tester,
+  ) async {
+    String? chosen;
+    await tester.pumpWidget(
+      host(_regular(lockOthers: true, onChanged: (v) => chosen = v)),
+    );
+    final dim = tester.widget<Opacity>(
+      find
+          .ancestor(of: find.text('Mọi bài'), matching: find.byType(Opacity))
+          .first,
+    );
+    expect(dim.opacity, lessThan(1));
+    await tester.tap(find.text('Mọi bài'));
+    expect(chosen, isNull);
+    await tester.tap(find.text('Bài này'));
+    expect(chosen, 'a');
   });
 }

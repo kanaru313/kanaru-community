@@ -58,7 +58,7 @@ export 'src/widgets/k_row_edges.dart';
 export 'src/widgets/k_ruler.dart' show KRuler;
 export 'src/widgets/k_picker_field.dart';
 export 'src/widgets/k_segmented.dart';
-export 'src/widgets/k_segmented_compact.dart';
+export 'src/widgets/k_segmented_outlined.dart';
 export 'src/widgets/info/k_info_group.dart';
 export 'src/widgets/info/k_info_row.dart';
 export 'src/widgets/info/k_info_toggle_button.dart';
