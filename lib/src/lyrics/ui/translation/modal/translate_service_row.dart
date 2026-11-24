@@ -27,8 +27,8 @@ class TranslateServiceIcon extends ConsumerWidget {
 }
 
 /// The small "AI" tag after an AI plugin's name. On a chosen row ([onTint])
-/// the row tint is the same container colour, so the tag turns solid to stay
-/// a visible pill.
+/// the row tint is the same container colour, so the tag takes a 12 % pill of
+/// its own text colour (as the mockup) to stay visible.
 class TranslateAiTag extends StatelessWidget {
   const TranslateAiTag({super.key, this.onTint = false});
 
@@ -39,7 +39,9 @@ class TranslateAiTag extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: onTint ? scheme.primary : scheme.secondaryContainer,
+        color: onTint
+            ? scheme.onSecondaryContainer.withValues(alpha: 0.12)
+            : scheme.secondaryContainer,
         borderRadius: KRadius.full,
       ),
       child: Padding(
@@ -50,7 +52,7 @@ class TranslateAiTag extends StatelessWidget {
         child: Text(
           AppLocalizations.of(context).lyricsTranslateAiTag,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: onTint ? scheme.onPrimary : scheme.onSecondaryContainer,
+            color: scheme.onSecondaryContainer,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -75,7 +77,10 @@ class TranslateServiceName extends StatelessWidget {
       Flexible(
         child: Text(service.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       ),
-      if (service.ai) ...[const KGap(KSpace.x2), TranslateAiTag(onTint: selected)],
+      if (service.ai) ...[
+        const KGap(KSpace.x2),
+        TranslateAiTag(onTint: selected),
+      ],
     ],
   );
 }

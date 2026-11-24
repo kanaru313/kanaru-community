@@ -96,6 +96,9 @@ void aiTagTests() {
           )
           .first,
     );
-    expect((fill.decoration as BoxDecoration).color, scheme.primary);
+    expect(
+      (fill.decoration as BoxDecoration).color,
+      scheme.onSecondaryContainer.withValues(alpha: 0.12),
+    );
   });
 }
