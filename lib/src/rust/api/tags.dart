@@ -27,6 +27,7 @@ class TagFieldsDto {
   final List<String> genres;
   final String? composer;
   final int? year;
+  final String? releaseDate;
   final int? trackNo;
   final int? trackTotal;
   final int? discNo;
@@ -41,6 +42,7 @@ class TagFieldsDto {
   /// ISO 639-3 from the title; set only when the file has no language tag.
   final String? detectedLanguage;
   final String? comment;
+  final String? description;
   final PlatformInt64? durationMs;
   final int? bitrate;
   final int? sampleRate;
@@ -56,6 +58,7 @@ class TagFieldsDto {
     required this.genres,
     this.composer,
     this.year,
+    this.releaseDate,
     this.trackNo,
     this.trackTotal,
     this.discNo,
@@ -66,6 +69,7 @@ class TagFieldsDto {
     this.languageTag,
     this.detectedLanguage,
     this.comment,
+    this.description,
     this.durationMs,
     this.bitrate,
     this.sampleRate,
@@ -83,6 +87,7 @@ class TagFieldsDto {
       genres.hashCode ^
       composer.hashCode ^
       year.hashCode ^
+      releaseDate.hashCode ^
       trackNo.hashCode ^
       trackTotal.hashCode ^
       discNo.hashCode ^
@@ -93,6 +98,7 @@ class TagFieldsDto {
       languageTag.hashCode ^
       detectedLanguage.hashCode ^
       comment.hashCode ^
+      description.hashCode ^
       durationMs.hashCode ^
       bitrate.hashCode ^
       sampleRate.hashCode ^
@@ -112,6 +118,7 @@ class TagFieldsDto {
           genres == other.genres &&
           composer == other.composer &&
           year == other.year &&
+          releaseDate == other.releaseDate &&
           trackNo == other.trackNo &&
           trackTotal == other.trackTotal &&
           discNo == other.discNo &&
@@ -122,6 +129,7 @@ class TagFieldsDto {
           languageTag == other.languageTag &&
           detectedLanguage == other.detectedLanguage &&
           comment == other.comment &&
+          description == other.description &&
           durationMs == other.durationMs &&
           bitrate == other.bitrate &&
           sampleRate == other.sampleRate &&

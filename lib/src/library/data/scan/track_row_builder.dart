@@ -11,17 +11,23 @@ import '../../domain/scan/scan_diff.dart';
 import '../../domain/scan/scan_folder.dart';
 import '../../domain/scan/scan_versions.dart';
 import '../../domain/scan/tag_read.dart';
+import '../../domain/tags/extra_tags.dart';
 
 /// What to write to `track_details` for a track.
 class DetailsPatch {
   const DetailsPatch({
     this.comment = const Value.absent(),
+    this.extraTags = const Value.absent(),
     required this.lrcLocator,
     required this.lrcRevision,
   });
 
   /// Absent leaves the stored comment alone (sidecar-only updates).
   final Value<String?> comment;
+
+  /// Absent leaves `extra_tags` alone (sidecar-only updates). A tag read
+  /// always sets it, null included, so a field removed from the file goes.
+  final Value<String?> extraTags;
   final String? lrcLocator;
   final String? lrcRevision;
 }
@@ -166,14 +172,22 @@ BuiltTrack buildTrackRow({
   );
 
   final comment = _blank(f?.comment);
+  final extraTags = encodeExtraTags(
+    releaseDate: f?.releaseDate,
+    description: f?.description,
+  );
   final writeDetails =
-      comment != null || lrc != null || (stored?.hasDetails ?? false);
+      comment != null ||
+      extraTags != null ||
+      lrc != null ||
+      (stored?.hasDetails ?? false);
   return BuiltTrack(
     row: row,
     artists: artistsForRow(rawArtists, rules: splitRules),
     details: writeDetails
         ? DetailsPatch(
             comment: Value(comment),
+            extraTags: Value(extraTags),
             lrcLocator: lrc?.locator,
             lrcRevision: lrc?.revision,
           )

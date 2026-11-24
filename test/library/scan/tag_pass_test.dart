@@ -5,7 +5,9 @@ import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/library/data/scan/stored_rows.dart';
 import 'package:kanaru/src/library/data/scan/tag_pass.dart';
 import 'package:kanaru/src/library/domain/scan/scan_folder.dart';
+import 'package:kanaru/src/library/domain/scan/scan_versions.dart';
 import 'package:kanaru/src/library/domain/scan/tag_read.dart';
+import 'package:kanaru/src/library/domain/tags/extra_tags.dart';
 import 'package:kanaru/src/storage/domain/local_folder_listing.dart';
 
 import '../../database/support/test_db.dart';
@@ -111,6 +113,37 @@ void main() {
       final t = await trackAt(db, folder.sourceId, 'f00000.mp3');
       expect(t.keysVersion, 1);
       expect(t.coverScanVersion, 1);
+    });
+
+    test('an old tags_version re-reads extra tags and keeps covers', () async {
+      reader.byName['f00000.mp3'] = tagged(
+        'T',
+        fields: const TagFields(title: 'T', comment: 'c'),
+      );
+      await run(_listing(_files(1)));
+      await db.customStatement(
+        'UPDATE tracks SET tags_version = ${tagsPassVersion - 1}, '
+        'cover_scan_version = 1',
+      );
+      final before = await trackAt(db, folder.sourceId, 'f00000.mp3');
+      reader.byName['f00000.mp3'] = tagged(
+        'T',
+        fields: const TagFields(
+          title: 'T',
+          comment: 'c',
+          releaseDate: '2018-03-15',
+          description: 'About',
+        ),
+      );
+      final r = await run(_listing(_files(1)));
+      expect(r.report.read, 1);
+      final t = await trackAt(db, folder.sourceId, 'f00000.mp3');
+      expect(t.tagsVersion, tagsPassVersion);
+      expect(t.coverScanVersion, 1);
+      expect(t.addedAt, before.addedAt);
+      final d = await (db.select(db.trackDetails)).getSingle();
+      expect(d.comment, 'c');
+      expect(decodeExtraTags(d.extraTags).releaseDate, '2018-03-15');
     });
 
     test('a changed file resets cover_scan_version', () async {
@@ -354,7 +387,7 @@ void main() {
       final again = await trackAt(db, folder.sourceId, 'new.mp3');
       expect(again.id, t.id);
       expect(again.title, 'Real');
-      expect(again.tagsVersion, 1);
+      expect(again.tagsVersion, tagsPassVersion);
       expect(again.scanError, isNull);
     });
 

@@ -1504,8 +1504,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TagFieldsDto dco_decode_tag_fields_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 23)
-      throw Exception('unexpected arr length: expect 23 but see ${arr.length}');
+    if (arr.length != 25)
+      throw Exception('unexpected arr length: expect 25 but see ${arr.length}');
     return TagFieldsDto(
       title: dco_decode_opt_String(arr[0]),
       artists: dco_decode_list_String(arr[1]),
@@ -1514,22 +1514,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       genres: dco_decode_list_String(arr[4]),
       composer: dco_decode_opt_String(arr[5]),
       year: dco_decode_opt_box_autoadd_i_32(arr[6]),
-      trackNo: dco_decode_opt_box_autoadd_i_32(arr[7]),
-      trackTotal: dco_decode_opt_box_autoadd_i_32(arr[8]),
-      discNo: dco_decode_opt_box_autoadd_i_32(arr[9]),
-      discTotal: dco_decode_opt_box_autoadd_i_32(arr[10]),
-      titleSort: dco_decode_opt_String(arr[11]),
-      artistSort: dco_decode_opt_String(arr[12]),
-      albumSort: dco_decode_opt_String(arr[13]),
-      languageTag: dco_decode_opt_String(arr[14]),
-      detectedLanguage: dco_decode_opt_String(arr[15]),
-      comment: dco_decode_opt_String(arr[16]),
-      durationMs: dco_decode_opt_box_autoadd_i_64(arr[17]),
-      bitrate: dco_decode_opt_box_autoadd_i_32(arr[18]),
-      sampleRate: dco_decode_opt_box_autoadd_i_32(arr[19]),
-      bitDepth: dco_decode_opt_box_autoadd_i_32(arr[20]),
-      channels: dco_decode_opt_box_autoadd_i_32(arr[21]),
-      codec: dco_decode_opt_String(arr[22]),
+      releaseDate: dco_decode_opt_String(arr[7]),
+      trackNo: dco_decode_opt_box_autoadd_i_32(arr[8]),
+      trackTotal: dco_decode_opt_box_autoadd_i_32(arr[9]),
+      discNo: dco_decode_opt_box_autoadd_i_32(arr[10]),
+      discTotal: dco_decode_opt_box_autoadd_i_32(arr[11]),
+      titleSort: dco_decode_opt_String(arr[12]),
+      artistSort: dco_decode_opt_String(arr[13]),
+      albumSort: dco_decode_opt_String(arr[14]),
+      languageTag: dco_decode_opt_String(arr[15]),
+      detectedLanguage: dco_decode_opt_String(arr[16]),
+      comment: dco_decode_opt_String(arr[17]),
+      description: dco_decode_opt_String(arr[18]),
+      durationMs: dco_decode_opt_box_autoadd_i_64(arr[19]),
+      bitrate: dco_decode_opt_box_autoadd_i_32(arr[20]),
+      sampleRate: dco_decode_opt_box_autoadd_i_32(arr[21]),
+      bitDepth: dco_decode_opt_box_autoadd_i_32(arr[22]),
+      channels: dco_decode_opt_box_autoadd_i_32(arr[23]),
+      codec: dco_decode_opt_String(arr[24]),
     );
   }
 
@@ -2463,6 +2465,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_genres = sse_decode_list_String(deserializer);
     var var_composer = sse_decode_opt_String(deserializer);
     var var_year = sse_decode_opt_box_autoadd_i_32(deserializer);
+    var var_releaseDate = sse_decode_opt_String(deserializer);
     var var_trackNo = sse_decode_opt_box_autoadd_i_32(deserializer);
     var var_trackTotal = sse_decode_opt_box_autoadd_i_32(deserializer);
     var var_discNo = sse_decode_opt_box_autoadd_i_32(deserializer);
@@ -2473,6 +2476,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_languageTag = sse_decode_opt_String(deserializer);
     var var_detectedLanguage = sse_decode_opt_String(deserializer);
     var var_comment = sse_decode_opt_String(deserializer);
+    var var_description = sse_decode_opt_String(deserializer);
     var var_durationMs = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_bitrate = sse_decode_opt_box_autoadd_i_32(deserializer);
     var var_sampleRate = sse_decode_opt_box_autoadd_i_32(deserializer);
@@ -2487,6 +2491,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       genres: var_genres,
       composer: var_composer,
       year: var_year,
+      releaseDate: var_releaseDate,
       trackNo: var_trackNo,
       trackTotal: var_trackTotal,
       discNo: var_discNo,
@@ -2497,6 +2502,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       languageTag: var_languageTag,
       detectedLanguage: var_detectedLanguage,
       comment: var_comment,
+      description: var_description,
       durationMs: var_durationMs,
       bitrate: var_bitrate,
       sampleRate: var_sampleRate,
@@ -3422,6 +3428,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_list_String(self.genres, serializer);
     sse_encode_opt_String(self.composer, serializer);
     sse_encode_opt_box_autoadd_i_32(self.year, serializer);
+    sse_encode_opt_String(self.releaseDate, serializer);
     sse_encode_opt_box_autoadd_i_32(self.trackNo, serializer);
     sse_encode_opt_box_autoadd_i_32(self.trackTotal, serializer);
     sse_encode_opt_box_autoadd_i_32(self.discNo, serializer);
@@ -3432,6 +3439,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.languageTag, serializer);
     sse_encode_opt_String(self.detectedLanguage, serializer);
     sse_encode_opt_String(self.comment, serializer);
+    sse_encode_opt_String(self.description, serializer);
     sse_encode_opt_box_autoadd_i_64(self.durationMs, serializer);
     sse_encode_opt_box_autoadd_i_32(self.bitrate, serializer);
     sse_encode_opt_box_autoadd_i_32(self.sampleRate, serializer);

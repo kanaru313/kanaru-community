@@ -57,6 +57,7 @@ Future<void> _writeDetails(AppDatabase db, int trackId, DetailsPatch patch) =>
       TrackDetailsCompanion(
         trackId: Value(trackId),
         comment: patch.comment,
+        extraTags: patch.extraTags,
         lrcLocator: Value(patch.lrcLocator),
         lrcRevision: Value(patch.lrcRevision),
       ),

@@ -160,10 +160,13 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
   inside a root is `insideExisting`; a folder that contains a root is
   `containsExisting`; comparison is by whole path segments after dropping trailing
   slashes (`Live Albums` is not inside `Live`).
-- Versions: `tagsPassVersion` and `coverPassVersion` are 1
+- Versions: `tagsPassVersion` is 2 and `coverPassVersion` is 1
   (`library/domain/scan/scan_versions.dart`). Bump the first when the tag mapping
   changes, the second when the cover rules change; present rows below it are visited
-  again.
+  again. Version 2 added `extra_tags`: the next scan re-reads the tags of every
+  present row once; covers are not redone while the revision is unchanged and
+  `added_at` stays. A permanent read error on such an unchanged row keeps the old tags
+  (`permanentKept`), so `scan_error` does not grow from the bump.
 
 ## Tag pass
 
@@ -184,9 +187,15 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
    the detection supplied it. A blank title falls back to the file stem. An empty
    album stores `album` and both album keys as NULL. `cover_scan_version` is set to 0
    for a new row and when the revision changed; a keys-only re-read keeps it.
-   `track_details` gets the comment and the sidecar columns (written when there is a
-   comment or sidecar, or a details row already exists, so a removed sidecar is
-   cleared).
+   `track_details` gets `comment`, `extra_tags` (`encodeExtraTags(releaseDate,
+   description)`) and the sidecar columns, written when there is a comment, extra tag
+   or sidecar, or a details row already exists, so a removed sidecar or field is
+   cleared (`extra_tags` is NULL when empty). `LrcWrite` leaves `extra_tags` and the
+   comment absent. The reader returns the most precise raw date whose year equals
+   `year` (dashed or compact; an invalid month or day counts only up to the valid
+   part). The comment is the ID3 `COMM` with an empty descriptor, else the first one
+   that is not `description` or `iTun*`; a `COMM` with descriptor `description` is the
+   description (before tags version 2 it could be the comment).
 4. Errors: `notFound` means the listing was stale: no insert, an existing present row
    becomes a missing candidate (`staleListing`). These rows are marked only after
    the required `TagPassDeps.rootStillThere()` confirms the folder, built by
