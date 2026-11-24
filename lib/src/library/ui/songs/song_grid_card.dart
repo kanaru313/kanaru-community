@@ -16,6 +16,7 @@ import '../../../playback/ui/playback_time_label.dart' show formatClock;
 import '../../../playback/ui/track_cover.dart';
 import '../../state/browse/selection_providers.dart';
 import '../browse/play_actions.dart';
+import '../info/open_song_info.dart';
 import '../menus/menu_origin.dart';
 import '../menus/open_menu.dart';
 import 'song_tile.dart' show SongFavoriteButton;
@@ -66,35 +67,49 @@ class SongGridCard extends ConsumerWidget {
     return KContextRegion(
       longPressOpens: false,
       onOpen: (at) => _menu(context, ref, viaKeyboard: at == null),
-      child: KGridCard(
-        filled: true,
-        title: info.title,
-        subtitle: trackArtistLine(info),
-        detail: songCardDetail(info),
-        current: current,
-        currentLabel: l10n.libraryNowPlaying,
-        selected: selected,
-        selecting: selecting,
-        // Hidden while selecting, so a tap on the corner selects too.
-        coverBadge: selecting ? null : SongFavoriteButton(trackId: info.id),
-        menuLabel: l10n.libraryMenuMore,
-        onMenu: () => _menu(context, ref, viaKeyboard: true),
-        onTap: () => _tap(ref, context),
-        onLongPress: selected ? null : () => _select(ref),
-        coverBuilder: (context, side) => Stack(
-          children: [
-            TrackCover(
-              coverKey: info.coverKey,
-              seed: info.coverSeed,
-              size: CoverSize.thumb,
-              dimension: side,
-              radius: KGridCard.filledCoverRadius,
-            ),
-            if (current)
-              const Positioned.fill(
-                child: SongPlayingOverlay(radius: KGridCard.filledCoverRadius),
+      child: CallbackShortcuts(
+        bindings: {
+          // Alt+Enter: the focused card's info (no swipe or ⋮ here).
+          const SingleActivator(
+            LogicalKeyboardKey.enter,
+            alt: true,
+            includeRepeats: false,
+          ): () => unawaited(
+            openSongInfo(context, info, origin: origin, viaKeyboard: true),
+          ),
+        },
+        child: KGridCard(
+          filled: true,
+          title: info.title,
+          subtitle: trackArtistLine(info),
+          detail: songCardDetail(info),
+          current: current,
+          currentLabel: l10n.libraryNowPlaying,
+          selected: selected,
+          selecting: selecting,
+          // Hidden while selecting, so a tap on the corner selects too.
+          coverBadge: selecting ? null : SongFavoriteButton(trackId: info.id),
+          menuLabel: l10n.libraryMenuMore,
+          onMenu: () => _menu(context, ref, viaKeyboard: true),
+          onTap: () => _tap(ref, context),
+          onLongPress: selected ? null : () => _select(ref),
+          coverBuilder: (context, side) => Stack(
+            children: [
+              TrackCover(
+                coverKey: info.coverKey,
+                seed: info.coverSeed,
+                size: CoverSize.thumb,
+                dimension: side,
+                radius: KGridCard.filledCoverRadius,
               ),
-          ],
+              if (current)
+                const Positioned.fill(
+                  child: SongPlayingOverlay(
+                    radius: KGridCard.filledCoverRadius,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
