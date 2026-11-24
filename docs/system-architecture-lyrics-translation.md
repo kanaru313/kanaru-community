@@ -140,17 +140,171 @@ plus the script's wait, else the runner's default pause.
 ## Providers and commands
 
 - `trackTranslationProvider(TrackId)` → `TranslationView{status, map,
-  sourceLang, installId, settingsDiffer}`; a watcher is what asks for the
-  translation, so the UI must keep it watched while it shows or edits it.
+  sourceLang, installId, settingsDiffer, settingsJson, linesDone,
+  linesTotal}`; a watcher is what asks for the translation, so the UI must
+  keep it watched while it shows or edits it. `linesDone / linesTotal` count
+  unique lines (not chunks) while a run goes (`JobRunning.linesDone /
+  linesTotal`) and after a non-forced run that failed half way: then `map`
+  holds the lines of the saved incomplete row (`partialFailureView`), the
+  status stays `failed`, and the views read it as "dịch dở n/m dòng". A forced
+  run keeps its old complete row instead.
+- `effectiveTranslationTargetProvider(TrackId)`: the language the track is
+  translated into (song's own, else global, else the app language's default).
+  It and `readTranslationPlan` both call `pickTranslationTarget`, so the
+  modal's "Dịch sang" and the run never disagree.
+- `translationLayoutProvider(TrackId)`: null while translation is off, else
+  `{replace, rtl}` (display setting, target in `rtlLanguages`). Views watch it
+  and watch `trackTranslationProvider` only when it is non-null.
+- `translationCreditProvider(TrackId)`: who made the translation on screen
+  (plugin name; model and style titles read from the plugin's `model` / `style`
+  select fields by the ids in `settingsJson`; `other`; line counts of a partial
+  run), null when none is shown (same language, plugin gone, nothing yet).
 - `playingTranslationProvider`: the playing track's view, idle when nothing
   plays.
 - `translationCommandsProvider`: `toggle`, `setService`, `setDisplay`,
   `setTarget(track, lang)`, `retranslate(track)`, `retry(track)`,
   `cancelRetranslate(track)`, `setModel`, `setStyle`, `setNote`.
-- Seams: `translationAppLanguageProvider` (default `en`; the app overrides it
-  from the appearance setting where it wires the screens, the lyrics module
-  cannot read it), `translationDebounceProvider` (1 s) and
+- Seams: `translationAppLanguageProvider` (default `en`; `lib/kanaru.dart`
+  overrides it with `translationAppLanguageOverride` from the appearance
+  setting, the lyrics module cannot read it), `translationDebounceProvider` (1 s) and
   `translationTimerProvider` (tests).
+
+## UI: translated lines (`lyrics/ui/translation/`)
+
+Mockup: `mockups/screens/07-lyrics.md` (Dòng lời, Các lớp trong một dòng),
+legend **Dịch**.
+
+- **Per-line selection.** Synced, plain and card lines are built through
+  `TranslatedLineScope`, which watches
+  `trackTranslationProvider(id).select((v) => lineTranslationOf(line, v))`
+  (`LineTranslation`: text, pending, replace, rtl). A chunk that arrives
+  rebuilds only the built lines whose text it covers; the views never watch the
+  whole view. No watch happens while `translationLayoutProvider` is null, so
+  translation off asks for nothing.
+- **Line widget.** `LyricsLine` takes one optional `LineTranslation`;
+  `TranslatedLineText` draws it in the ambient (main) style: original with the
+  translation under it, or the translation as the main line over a small dim
+  original (Thay dòng; a line without a translation keeps its original). Gap
+  lines, blank lines, translations equal to the source and the `same` status
+  show nothing (`lineTranslationOf` over `translationFor`). Semantics label of
+  a translated line: "original, translation".
+- **Sizes and colours** (`translation_text_styles.dart`): synced translation
+  0.62 of the line, w500, `onSurface` 64 % on the sung line, the dim level
+  (never above 64 %) on the others; replaced original 0.5. Plain lyrics: 0.8 and
+  0.7 of the plain size, `onSurfaceVariant`. Card: 13, w500, 64 %, one fixed row
+  under the sung line while translation is on (blank for a gap), so the card
+  keeps its height.
+- **Pending.** `TranslationPlaceholder`: a bar 55 % wide, one translation line
+  high, a light sweep of `KMotion.slow * 3`; still with animations off. Shown
+  under every non-blank line while the status is loading and not a background
+  re-run (which keeps the old lines instead).
+- **Credit.** `TranslationCreditLine` is the last item of the synced and plain
+  lists: "Dịch bởi plugin · model · phong cách · ngôn ngữ", "Bản có sẵn của
+  plugin" for another plugin's saved translation, "… · dịch dở n/m dòng" for a
+  partial run; centred with centred lyrics. Language names are the `lyricsLang*`
+  keys (`translationLanguageName`).
+- **Anchor.** After a translation arrives, changes or goes away (the shown map,
+  the loading bars, the plugin or its settings change: `watchTranslationHeights`
+  in `synced_lyrics_translation.dart`), `SyncedLyricsView` invalidates the
+  measured heights and re-anchors the sung line once per frame without
+  animating (the font size never animates).
+- RTL: `Text.textDirection = rtl` on the translation when the target is in
+  `rtlLanguages`.
+
+## UI: the Dịch lời modal (`lyrics/ui/translation/modal/`)
+
+Mockup: `mockups/screens/07-lyrics.md` (Modal Dịch lời, T1–T9), legend **Modal**
+and **Modal lỗi dịch**. The entry points are in "Entry points" below.
+
+- **Frame.** `showTranslateModal(context, trackId, {followsPlaying})` opens a
+  sheet (mobile) or a 440 dp dialog (desktop) through `showTranslateFrame`.
+  Each sub-page (`Dịch vụ dịch`, `Dịch sang`, `Tinh chỉnh AI`) is its own route
+  over the modal, so Esc and Back close the topmost first. All routes of one
+  open modal register in `TranslateModalControl`; `closeAll()` pops them
+  topmost first (a store or settings link, "Dịch lại", the song changing).
+- **State read.** `trackTranslationProvider(id)` (status, map, source language,
+  `settingsDiffer`, line counts), `translationCreditProvider`,
+  `effectiveTranslationTargetProvider`, `translateServicesProvider` (installed
+  translate / AI plugins, the chosen one, "gone" when it is chosen but not
+  installed) and `translateTuneProvider(installId)` (model / style select
+  fields with the user's own choices, their stored values, the note).
+  `translateSettingsDiff` compares `settingsJson` of the shown translation with
+  the plugin now (model, style, note hash, version) for the bottom bar.
+- **Body.** Preview (sung line, else the first line with text, through
+  `TranslatedLineScope`; [Dưới dòng | Thay dòng] (`KSegmentedOutlined` compact, beside the caption; "Áp dụng cho" uses its regular size) writes `setDisplay`; credit and
+  ⟳) · language row (source = read-only label from the plugin's `detected`,
+  `KSwitch`, target ▾) · service row · "Tinh chỉnh AI" row (AI plugins only) ·
+  one status line · "Phiên âm" (dim, "Sắp có", only for ja / zh / ko lyrics) ·
+  bottom bar only for another plugin's copy or differing settings. With no
+  translate plugin the service rows are the "Chưa có tiện ích dịch" card.
+- **Status line** (`translate_status_line.dart`, strings in
+  `translate_failure_labels.dart`): one strip per `TranslationFailure`
+  (`errorContainer`; 429 shows the clock and no button; the buttons are
+  [Thử lại] `retry`, [Cấu hình] plugin page, [Đổi dịch vụ] / [Chọn] service
+  page); "dịch dở n/m dòng" for a failed run that left lines; "Đang dịch… n/m
+  dòng" with [Huỷ] (`cancelRetranslate`) only for a forced run; "đã là <ngôn
+  ngữ>" for `same`. On the mobile shell two buttons go on their own row; with one button the text takes the remaining width and the button sits at the right end.
+- **Dịch vụ dịch** says what is sent behind a `KHelpIcon` after the page title (no visible caption). **Tinh chỉnh AI** shows Model / Phong cách as `KPickerField` cards.
+- **Dịch lại** (`retranslateInBackground`): the modal stays open (the tune
+  page pops back to the main page; a run or a failure shows on the status
+  line, only ✕ / Back / scrim / swipe close it), the old
+  translation stays, a listener on the track's translation (which also keeps
+  the run held) shows "Đã dịch lại · <style or plugin>" when the forced run
+  ends ready, and lets go when it fails or never starts (5 s).
+- **Free limits.** "Áp dụng cho" is always on "Mọi bài" (the other two segments
+  are disabled: `KSegment.enabled: false`, dimmed, not focusable, with the Pro
+  caption and `ProBadge`); the model, style and
+  "Lời dặn thêm" write the plugin's own settings (`customInstruction`) through
+  `TranslationCommands`, one note for every song. A refused `ConfigWrite`
+  shows its error line under the field; the note saves on focus loss, on
+  [Xong] / [Dịch lại] and when the page closes.
+- Links (`translate_links.dart`): store `/settings/plugins?kind=translate`,
+  plugin page, ⚙ `/settings/lyrics`; the modal closes (and the desktop Now
+  Playing panel) before the router moves.
+
+## Entry points (`lyrics/ui/translation/translate_entry.dart`)
+
+Now Playing only places these widgets; what they show comes from one provider.
+
+- **State (passive).** Entry points never ask for a translation: a run starts
+  only while a lyrics view of the playing track is open (user decision D11 /
+  V12), so the pill, the button and the ⋮ subtitle never watch
+  `trackTranslationProvider`. The lyrics views (`SyncedLyricsView`,
+  `PlainLyricsView`, `CardSyncedLines`) and the modal wrap themselves in
+  `TranslationPresence`, which, while translation is on and it is mounted,
+  publishes the view they show to `shownTranslationProvider` (keep-alive,
+  by track, cleared when the last view of the track unmounts).
+  `translateEntryProvider` (autoDispose) reads `playingLyricsProvider`
+  (`available` = lyrics shown), `translationOnProvider`,
+  `effectiveTranslationTargetProvider` and that board: `working` (any
+  `StatusLoading`, forced re-run included), `failed` (every
+  `TranslationFailure`, a half-done run too), `translated` (a copy with lines
+  and an installed plugin, not working), the plugin and the target language.
+  With no lyrics view mounted it is on / off from the settings only. The
+  modal's preview counts as a lyrics view the user opened on purpose, so
+  opening "Dịch lời" with translation on may run a translation while it is
+  open (it publishes like any lyrics view and stops when it closes).
+- **Mobile button** (`TranslateButton`, in `lyrics_screen_header.dart`): icon;
+  on = primary icon + 6 dp primary dot under it; working = ring; failed =
+  `KAlertDot.corner` on the glyph; no lyrics = disabled (dimmed by `KIconButton`). Tap =
+  `showTranslateModal(followsPlaying: true)`.
+- **Desktop pill** (`TranslatePill`, a `KPressable` over a tonal fill, in `desktop_now_playing_header.dart`):
+  off "Dịch"; on `secondaryContainer`; translated [plugin icon · language];
+  working ring + "Đang dịch"; failed alert dot on the corner; no lyrics 0.5 and
+  inert. Click opens the modal through the header's `whilePinned` opener (the
+  header stays shown); right click = `toggleTranslation`.
+- **Toggle** (`translate_toggle.dart`): `toggleTranslation(context, ref)` turns
+  translation on or off for every song and shows "Bản dịch: <ngôn ngữ>" /
+  "Đã tắt bản dịch" through `showAppSnackBar`; no-op without lyrics. Used by the
+  pill's right click and the `T` key of `DesktopNowPlaying` (same guards as `L`:
+  no modifier, no text field focused, no floating surface; ignored without
+  lyrics).
+- **⋮ item** ("Dịch lời…" in `now_playing_song_menu.dart`, `MenuItemId.translate`):
+  `liveSubtitle` ("Đang dịch sang <ngôn ngữ>" / "Đang tắt", from
+  `translateEntryProvider`), key hint `T` on the desktop; dimmed without lyrics
+  (`translateMenuAvailableProvider`); opens `openTranslateModalForPlaying`.
+- Integration test: `integration_test/lyrics_translation_test.dart` (live
+  `google-translate`, cache replay, `T`, right click, screenshots).
 
 ## Not here (Pro or later)
 

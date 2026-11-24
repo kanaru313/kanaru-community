@@ -201,6 +201,7 @@ class TrackTranslation extends Notifier<TranslationView> {
           map: other.lines,
           sourceLang: other.sourceLang,
           installId: other.key.installId,
+          settingsJson: other.settingsJson,
         ),
         settled: true,
       );
@@ -243,10 +244,7 @@ class TrackTranslation extends Notifier<TranslationView> {
     final key = plan.keyFor(service);
     _hold(key);
     final status = ref.read(translationJobsProvider)[key];
-    _emit(
-      jobTranslationView(status, base: isForcedJob(status) ? _shown : null),
-      keepShown: isForcedJob(status),
-    );
+    _emitJob(status, key);
     final request = plan.request;
     if (status != null) {
       _engine.request(key, request, this);
@@ -270,10 +268,37 @@ class TrackTranslation extends Notifier<TranslationView> {
     if (now == null) {
       unawaited(_recompute(afterJob: true));
     } else {
-      _emit(
-        jobTranslationView(now, base: isForcedJob(now) ? _shown : null),
-        keepShown: isForcedJob(now),
-      );
+      _emitJob(now, key);
+    }
+  }
+
+  /// Publishes what the engine says about [key]. A run that failed half way
+  /// (not a forced one, which keeps its old row on screen) then adds the
+  /// lines its saved chunks hold.
+  void _emitJob(JobStatus? status, JobKey key) {
+    final forced = isForcedJob(status);
+    final view = jobTranslationView(status, base: forced ? _shown : null);
+    _emit(view, keepShown: forced);
+    if (status is JobFailed && !forced) unawaited(_addPartial(view, key));
+  }
+
+  Future<void> _addPartial(TranslationView failed, JobKey key) async {
+    final gen = _gen;
+    try {
+      final row = await ref.read(translationCacheStoreProvider).lookup((
+        contentHash: key.hash,
+        installId: key.installId,
+        targetLang: key.target,
+      ));
+      if (row == null || row.complete || row.lines.isEmpty) return;
+      // Still the same failure of the same input, and nothing newer shown.
+      if (!_isCurrent(gen) || _held != key || state != failed) return;
+      final total = readTranslationPlan(ref, trackId)?.lines.length ?? 0;
+      if (total == 0) return;
+      _emit(partialFailureView(failed, row, total));
+    } on Object catch (e) {
+      // The failure itself stays on screen; only the saved lines are missing.
+      _log.warning('Partial translation read failed: ${e.runtimeType}');
     }
   }
 

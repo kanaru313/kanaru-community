@@ -21,11 +21,21 @@ sealed class JobStatus {
 }
 
 /// Sending chunks. [total] is 0 until the plugin's limits are known.
+/// [linesDone] of [linesTotal] counts the unique lines already translated
+/// (0 / 0 until known), for "n/m dòng".
 final class JobRunning extends JobStatus {
-  const JobRunning(this.done, this.total, {this.forced = false});
+  const JobRunning(
+    this.done,
+    this.total, {
+    this.forced = false,
+    this.linesDone = 0,
+    this.linesTotal = 0,
+  });
 
   final int done;
   final int total;
+  final int linesDone;
+  final int linesTotal;
 
   /// A forced re-run (the old row stays visible).
   final bool forced;
@@ -35,10 +45,12 @@ final class JobRunning extends JobStatus {
       other is JobRunning &&
       other.done == done &&
       other.total == total &&
+      other.linesDone == linesDone &&
+      other.linesTotal == linesTotal &&
       other.forced == forced;
 
   @override
-  int get hashCode => Object.hash(done, total, forced);
+  int get hashCode => Object.hash(done, total, linesDone, linesTotal, forced);
 }
 
 /// The job stopped with [failure]; it stays until a retry, a forced run, a

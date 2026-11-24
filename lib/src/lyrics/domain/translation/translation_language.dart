@@ -46,3 +46,12 @@ String appTarget(String localeCode) {
   final base = baseLanguage(localeCode);
   return base == 'vi' ? 'vi' : 'en';
 }
+
+/// The language a track is translated into: the song's own choice
+/// ([trackPref]), else the global one ([global]), else the default for the
+/// app language. The one place that order lives.
+String pickTranslationTarget({
+  String? trackPref,
+  String? global,
+  required String appLanguage,
+}) => trackPref ?? global ?? appTarget(appLanguage);

@@ -623,7 +623,10 @@ void main() {
         expect(rig.runner.calls.map(sentLines), [
           ['a'],
         ]);
-        expect(rig.jobs.statuses[_key], const JobRunning(0, 1, forced: true));
+        expect(
+          rig.jobs.statuses[_key],
+          const JobRunning(0, 1, forced: true, linesDone: 0, linesTotal: 1),
+        );
         expect((await row())!.lines, {'a': 'OLD'});
         hand.answer(translated);
         await rig.jobs.whenIdle();
@@ -738,7 +741,10 @@ void main() {
       rig.jobs.request(_key, _req(['a']), w1, retry: true);
       expect(rig.jobs.statuses[_key], isA<JobRunning>());
       await pumpEventQueue();
-      expect(rig.jobs.statuses[_key], const JobRunning(0, 1, forced: true));
+      expect(
+        rig.jobs.statuses[_key],
+        const JobRunning(0, 1, forced: true, linesDone: 0, linesTotal: 1),
+      );
       hand.answer(translated);
       await rig.jobs.whenIdle();
     });

@@ -137,6 +137,7 @@ class _CardBody extends ConsumerWidget {
     switch (lyrics) {
       case LyricsShown(:final lyrics) when lyrics.synced:
         return CardSyncedLines(
+          trackId: ref.watch(playingLyricsProvider.select((p) => p.trackId)),
           lyrics: lyrics,
           size: KLyricsMetrics.cardLineSize * fontScale,
           dim: dim,

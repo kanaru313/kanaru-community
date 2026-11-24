@@ -3284,7 +3284,6 @@
       }
     }
   },
-  "lyricsTranslateSoon": "Translate lyrics · Coming soon",
   "lyricsForTrackTitle": "Lyrics for this song",
   "lyricsModalClose": "Close",
   "lyricsModalNoneOnDevice": "No lyrics on this device",
@@ -3902,6 +3901,444 @@
   "lyricsInfoShowStamps": "Show timestamps",
   "lyricsInfoHideStamps": "Hide timestamps",
   "lyricsInfoUnreadable": "Couldn't read the lyrics",
+  "lyricsTranslationCredit": "Translated by {by} · {language}",
+  "lyricsTranslationCreditPartial": "Translated by {by} · {language} · partial {done}/{total} lines",
+  "lyricsTranslationCreditOther": "Existing translation from {plugin}",
+  "@lyricsTranslationCredit": {
+    "placeholders": {
+      "by": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "@lyricsTranslationCreditPartial": {
+    "placeholders": {
+      "by": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@lyricsTranslationCreditOther": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLangVi": "Vietnamese",
+  "lyricsLangEn": "English",
+  "lyricsLangJa": "Japanese",
+  "lyricsLangKo": "Korean",
+  "lyricsLangZhHans": "Chinese (Simplified)",
+  "lyricsLangZhHant": "Chinese (Traditional)",
+  "lyricsLangFr": "French",
+  "lyricsLangDe": "German",
+  "lyricsLangEs": "Spanish",
+  "lyricsLangIt": "Italian",
+  "lyricsLangRu": "Russian",
+  "lyricsLangPt": "Portuguese",
+  "lyricsLangTh": "Thai",
+  "lyricsLangId": "Indonesian",
+  "lyricsLangHi": "Hindi",
+  "lyricsLangAr": "Arabic",
+  "lyricsLangNl": "Dutch",
+  "lyricsLangSv": "Swedish",
+  "lyricsLangPl": "Polish",
+  "lyricsLangTr": "Turkish",
+  "lyricsLangUk": "Ukrainian",
+  "lyricsLangCs": "Czech",
+  "lyricsLangEl": "Greek",
+  "lyricsLangFa": "Persian",
+  "lyricsLangRo": "Romanian",
+  "lyricsLangMs": "Malay",
+  "lyricsLangHe": "Hebrew",
+  "lyricsLangFi": "Finnish",
+  "lyricsLangDa": "Danish",
+  "lyricsLangNo": "Norwegian",
+  "lyricsLangHu": "Hungarian",
+  "lyricsLangCy": "Welsh",
+  "lyricsLangSk": "Slovak",
+  "lyricsLangSq": "Albanian",
+  "lyricsLangHy": "Armenian",
+  "lyricsLangEu": "Basque",
+  "lyricsLangMy": "Burmese",
+  "lyricsLangKa": "Georgian",
+  "lyricsLangIs": "Icelandic",
+  "lyricsLangMk": "Macedonian",
+  "lyricsLangMi": "Māori",
+  "lyricsTranslateTitle": "Translate lyrics",
+  "lyricsTranslateSettings": "Translation settings",
+  "lyricsTranslatePreview": "Preview",
+  "lyricsTranslateDisplay": "How the translation shows",
+  "lyricsTranslateDisplayUnder": "Below line",
+  "lyricsTranslateDisplayReplace": "Replace line",
+  "lyricsTranslateBy": "Translated by {by}",
+  "@lyricsTranslateBy": {
+    "placeholders": {
+      "by": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateByPartial": "Translated by {by} · {done}/{total} lines only",
+  "@lyricsTranslateByPartial": {
+    "placeholders": {
+      "by": {
+        "type": "String"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsTranslateRedoing": "Translating again, the old translation stays",
+  "lyricsTranslateRetranslate": "Translate again",
+  "lyricsTranslateSection": "Translation",
+  "lyricsTranslateSourceAuto": "Auto-detect",
+  "lyricsTranslateSourceDetected": "{language} · detected",
+  "@lyricsTranslateSourceDetected": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateSourceHint": "Language of the lyrics, detected by the translation service",
+  "lyricsTranslateSwitch": "Show translation",
+  "lyricsTranslateTarget": "Translate into {language}",
+  "@lyricsTranslateTarget": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateNoPluginTitle": "No translation plugin yet",
+  "lyricsTranslateNoPluginBody": "Install a translation plugin (Google, DeepL, Gemini…) from the plugin store to translate lyrics.",
+  "lyricsTranslateOpenStore": "Open plugin store",
+  "lyricsTranslateServiceTitle": "Service",
+  "lyricsTranslateServiceUnset": "No service chosen",
+  "lyricsTranslateServiceGone": "The default service was removed, choose another",
+  "lyricsTranslateServiceScope": "Default for every song",
+  "lyricsTranslateAiTag": "AI",
+  "lyricsTranslateTuneTitle": "AI tuning",
+  "lyricsTranslatePhoneticSection": "Transliteration",
+  "lyricsTranslatePhoneticTitle": "Furigana, Romaji",
+  "lyricsTranslatePhoneticDesc": "Transliteration of Japanese, Chinese and Korean lyrics",
+  "lyricsTranslateSoonTag": "Coming soon",
+  "lyricsTranslateWorking": "Translating…",
+  "lyricsTranslateWorkingCount": "Translating… {done}/{total} lines",
+  "@lyricsTranslateWorkingCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsTranslateWorkingAgain": "Translating again…",
+  "lyricsTranslateWorkingAgainCount": "Translating again… {done}/{total} lines",
+  "@lyricsTranslateWorkingAgainCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsTranslateCancel": "Cancel",
+  "lyricsTranslateSame": "The lyrics already are in {language} (per {service})",
+  "@lyricsTranslateSame": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      },
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslatePartialTitle": "Only {done}/{total} lines translated",
+  "@lyricsTranslatePartialTitle": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsTranslatePartialLine": "The rest failed: {reason}",
+  "@lyricsTranslatePartialLine": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslatePausedTitle": "{service} is paused",
+  "@lyricsTranslatePausedTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslatePausedLine": "The server reports too many requests (429) · Kanaru translates again after {time}",
+  "@lyricsTranslatePausedLine": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateNetworkTitle": "Cannot reach {service}",
+  "@lyricsTranslateNetworkTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateNetworkLine": "Network error or timeout",
+  "lyricsTranslateServerTitle": "{service} has an error",
+  "@lyricsTranslateServerTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateServerLine": "The service's server returned an error",
+  "lyricsTranslateQuotaTitle": "{service} is out of quota",
+  "@lyricsTranslateQuotaTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateQuotaLine": "This API key has no translations left · wait for the next period or change service",
+  "lyricsTranslateBadKeyTitle": "{service} reports an error",
+  "@lyricsTranslateBadKeyTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateBadKeyLine": "The API key is invalid or expired",
+  "lyricsTranslateConfigTitle": "{service} needs to be set up",
+  "@lyricsTranslateConfigTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateConfigLine": "Missing: {fields}",
+  "@lyricsTranslateConfigLine": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateInvalidTitle": "The translation has the wrong number of lines",
+  "lyricsTranslateInvalidLine": "{service} returned a different number of lines than the lyrics",
+  "@lyricsTranslateInvalidLine": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateTooLongTitle": "The lyrics are too long to translate",
+  "lyricsTranslateTooLongLine": "The lyrics exceed what {service} translates in one run",
+  "@lyricsTranslateTooLongLine": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateUnsupportedTitle": "{service} does not translate into {language}",
+  "@lyricsTranslateUnsupportedTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateUnsupportedLine": "Choose another language or change service",
+  "lyricsTranslateGoneTitle": "The translation service was removed",
+  "lyricsTranslateGoneLine": "Choose another service to keep translating",
+  "lyricsTranslateUnsetTitle": "No translation service chosen",
+  "lyricsTranslateUnsetLine": "The lyrics are sent only after you choose",
+  "lyricsTranslateReasonPaused": "{service} is paused",
+  "@lyricsTranslateReasonPaused": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateReasonNetwork": "cannot reach {service}",
+  "@lyricsTranslateReasonNetwork": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateReasonServer": "{service} has an error",
+  "@lyricsTranslateReasonServer": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateReasonQuota": "{service} is out of quota",
+  "@lyricsTranslateReasonQuota": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateReasonBadKey": "the API key is invalid or expired",
+  "lyricsTranslateReasonConfig": "{service} needs to be set up",
+  "@lyricsTranslateReasonConfig": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateReasonInvalid": "the translation had the wrong number of lines",
+  "lyricsTranslateReasonTooLong": "the lyrics are too long to translate",
+  "lyricsTranslateReasonUnsupported": "{service} does not translate into {language}",
+  "@lyricsTranslateReasonUnsupported": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateReasonGone": "the service was removed",
+  "lyricsTranslateReasonNoService": "no service chosen",
+  "lyricsTranslateRetry": "Try again",
+  "lyricsTranslateConfigure": "Set up",
+  "lyricsTranslateChangeService": "Change service",
+  "lyricsTranslateChoose": "Choose",
+  "lyricsTranslateBarOtherLine": "Translate again with {service}",
+  "@lyricsTranslateBarOtherLine": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateBarDiffTitle": "Settings differ from the translation shown",
+  "lyricsTranslateDiffNote": "instruction changed",
+  "lyricsTranslateDiffVersion": "plugin updated",
+  "lyricsTranslateRetranslated": "Translated again · {name}",
+  "@lyricsTranslateRetranslated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateServicePageTitle": "Translation service",
+  "lyricsTranslateServiceSent": "Lyrics, song title and artist are sent to the plugin when translating.",
+  "lyricsTranslateScopeTitle": "Apply to",
+  "lyricsTranslateScopeSong": "This song",
+  "lyricsTranslateScopeQueue": "Queue",
+  "lyricsTranslateScopeAll": "Every song",
+  "lyricsTranslateScopePro": "A service of its own for a song or the queue: a Pro feature",
+  "lyricsTranslateServiceSection": "Service",
+  "lyricsTranslateMoreServices": "Get more translation plugins",
+  "lyricsTranslateMoreServicesSub": "Open plugin store",
+  "lyricsTranslateTargetTitle": "Translate into",
+  "lyricsTranslateTargetApp": "Follows the app language",
+  "lyricsTranslateTargetFailed": "Could not save the language",
+  "lyricsTranslateModelTitle": "Model",
+  "lyricsTranslateStyleTitle": "Style",
+  "lyricsTranslateStylePickerTitle": "Translation style",
+  "lyricsTranslateNoteTitle": "Extra instructions",
+  "lyricsTranslateNoteHelper": "Extra instructions for every song (saved in the settings of {plugin}).",
+  "@lyricsTranslateNoteHelper": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateSearchHint": "Search {count} items",
+  "@lyricsTranslateSearchHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsTranslateDefaultTag": "default",
+  "lyricsTranslateLater": "Later",
+  "lyricsTranslateDone": "Done",
+  "lyricsTranslateWriteInvalid": "The value is not valid",
+  "lyricsTranslateWriteTooLarge": "The instructions are too long",
+  "lyricsTranslateWriteUnknown": "This plugin has no such setting",
+  "lyricsTranslateWriteFailed": "Could not save the setting",
+  "lyricsTranslateMenuOn": "Translating into {language}",
+  "@lyricsTranslateMenuOn": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateMenuOff": "Off",
+  "lyricsTranslateEntryFailed": "Translation failed",
+  "lyricsTranslateEntryNoLyrics": "No lyrics to translate",
+  "lyricsTranslatePillWorking": "Translating",
+  "lyricsTranslateToastOn": "Translation: {language}",
+  "@lyricsTranslateToastOn": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateToastOff": "Translation off",
+  "lyricsTranslateEntryHintDesktop": "Right-click or T: turn translation on or off",
   "pluginsStoreTitle": "Plugin store",
   "pluginsFilterTooltip": "Filter",
   "pluginsFilterActiveLabel": "{count} on",

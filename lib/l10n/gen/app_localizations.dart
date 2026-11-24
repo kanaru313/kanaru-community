@@ -6672,12 +6672,6 @@ abstract class AppLocalizations {
   /// **'{title} · {source}'**
   String lyricsCardLabel(String title, String source);
 
-  /// No description provided for @lyricsTranslateSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Translate lyrics · Coming soon'**
-  String get lyricsTranslateSoon;
-
   /// No description provided for @lyricsForTrackTitle.
   ///
   /// In en, this message translates to:
@@ -7931,6 +7925,953 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t read the lyrics'**
   String get lyricsInfoUnreadable;
+
+  /// No description provided for @lyricsTranslationCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated by {by} · {language}'**
+  String lyricsTranslationCredit(String by, String language);
+
+  /// No description provided for @lyricsTranslationCreditPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated by {by} · {language} · partial {done}/{total} lines'**
+  String lyricsTranslationCreditPartial(
+    String by,
+    String language,
+    int done,
+    int total,
+  );
+
+  /// No description provided for @lyricsTranslationCreditOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing translation from {plugin}'**
+  String lyricsTranslationCreditOther(String plugin);
+
+  /// No description provided for @lyricsLangVi.
+  ///
+  /// In en, this message translates to:
+  /// **'Vietnamese'**
+  String get lyricsLangVi;
+
+  /// No description provided for @lyricsLangEn.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get lyricsLangEn;
+
+  /// No description provided for @lyricsLangJa.
+  ///
+  /// In en, this message translates to:
+  /// **'Japanese'**
+  String get lyricsLangJa;
+
+  /// No description provided for @lyricsLangKo.
+  ///
+  /// In en, this message translates to:
+  /// **'Korean'**
+  String get lyricsLangKo;
+
+  /// No description provided for @lyricsLangZhHans.
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese (Simplified)'**
+  String get lyricsLangZhHans;
+
+  /// No description provided for @lyricsLangZhHant.
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese (Traditional)'**
+  String get lyricsLangZhHant;
+
+  /// No description provided for @lyricsLangFr.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get lyricsLangFr;
+
+  /// No description provided for @lyricsLangDe.
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get lyricsLangDe;
+
+  /// No description provided for @lyricsLangEs.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get lyricsLangEs;
+
+  /// No description provided for @lyricsLangIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Italian'**
+  String get lyricsLangIt;
+
+  /// No description provided for @lyricsLangRu.
+  ///
+  /// In en, this message translates to:
+  /// **'Russian'**
+  String get lyricsLangRu;
+
+  /// No description provided for @lyricsLangPt.
+  ///
+  /// In en, this message translates to:
+  /// **'Portuguese'**
+  String get lyricsLangPt;
+
+  /// No description provided for @lyricsLangTh.
+  ///
+  /// In en, this message translates to:
+  /// **'Thai'**
+  String get lyricsLangTh;
+
+  /// No description provided for @lyricsLangId.
+  ///
+  /// In en, this message translates to:
+  /// **'Indonesian'**
+  String get lyricsLangId;
+
+  /// No description provided for @lyricsLangHi.
+  ///
+  /// In en, this message translates to:
+  /// **'Hindi'**
+  String get lyricsLangHi;
+
+  /// No description provided for @lyricsLangAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get lyricsLangAr;
+
+  /// No description provided for @lyricsLangNl.
+  ///
+  /// In en, this message translates to:
+  /// **'Dutch'**
+  String get lyricsLangNl;
+
+  /// No description provided for @lyricsLangSv.
+  ///
+  /// In en, this message translates to:
+  /// **'Swedish'**
+  String get lyricsLangSv;
+
+  /// No description provided for @lyricsLangPl.
+  ///
+  /// In en, this message translates to:
+  /// **'Polish'**
+  String get lyricsLangPl;
+
+  /// No description provided for @lyricsLangTr.
+  ///
+  /// In en, this message translates to:
+  /// **'Turkish'**
+  String get lyricsLangTr;
+
+  /// No description provided for @lyricsLangUk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ukrainian'**
+  String get lyricsLangUk;
+
+  /// No description provided for @lyricsLangCs.
+  ///
+  /// In en, this message translates to:
+  /// **'Czech'**
+  String get lyricsLangCs;
+
+  /// No description provided for @lyricsLangEl.
+  ///
+  /// In en, this message translates to:
+  /// **'Greek'**
+  String get lyricsLangEl;
+
+  /// No description provided for @lyricsLangFa.
+  ///
+  /// In en, this message translates to:
+  /// **'Persian'**
+  String get lyricsLangFa;
+
+  /// No description provided for @lyricsLangRo.
+  ///
+  /// In en, this message translates to:
+  /// **'Romanian'**
+  String get lyricsLangRo;
+
+  /// No description provided for @lyricsLangMs.
+  ///
+  /// In en, this message translates to:
+  /// **'Malay'**
+  String get lyricsLangMs;
+
+  /// No description provided for @lyricsLangHe.
+  ///
+  /// In en, this message translates to:
+  /// **'Hebrew'**
+  String get lyricsLangHe;
+
+  /// No description provided for @lyricsLangFi.
+  ///
+  /// In en, this message translates to:
+  /// **'Finnish'**
+  String get lyricsLangFi;
+
+  /// No description provided for @lyricsLangDa.
+  ///
+  /// In en, this message translates to:
+  /// **'Danish'**
+  String get lyricsLangDa;
+
+  /// No description provided for @lyricsLangNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Norwegian'**
+  String get lyricsLangNo;
+
+  /// No description provided for @lyricsLangHu.
+  ///
+  /// In en, this message translates to:
+  /// **'Hungarian'**
+  String get lyricsLangHu;
+
+  /// No description provided for @lyricsLangCy.
+  ///
+  /// In en, this message translates to:
+  /// **'Welsh'**
+  String get lyricsLangCy;
+
+  /// No description provided for @lyricsLangSk.
+  ///
+  /// In en, this message translates to:
+  /// **'Slovak'**
+  String get lyricsLangSk;
+
+  /// No description provided for @lyricsLangSq.
+  ///
+  /// In en, this message translates to:
+  /// **'Albanian'**
+  String get lyricsLangSq;
+
+  /// No description provided for @lyricsLangHy.
+  ///
+  /// In en, this message translates to:
+  /// **'Armenian'**
+  String get lyricsLangHy;
+
+  /// No description provided for @lyricsLangEu.
+  ///
+  /// In en, this message translates to:
+  /// **'Basque'**
+  String get lyricsLangEu;
+
+  /// No description provided for @lyricsLangMy.
+  ///
+  /// In en, this message translates to:
+  /// **'Burmese'**
+  String get lyricsLangMy;
+
+  /// No description provided for @lyricsLangKa.
+  ///
+  /// In en, this message translates to:
+  /// **'Georgian'**
+  String get lyricsLangKa;
+
+  /// No description provided for @lyricsLangIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Icelandic'**
+  String get lyricsLangIs;
+
+  /// No description provided for @lyricsLangMk.
+  ///
+  /// In en, this message translates to:
+  /// **'Macedonian'**
+  String get lyricsLangMk;
+
+  /// No description provided for @lyricsLangMi.
+  ///
+  /// In en, this message translates to:
+  /// **'Māori'**
+  String get lyricsLangMi;
+
+  /// No description provided for @lyricsTranslateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate lyrics'**
+  String get lyricsTranslateTitle;
+
+  /// No description provided for @lyricsTranslateSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation settings'**
+  String get lyricsTranslateSettings;
+
+  /// No description provided for @lyricsTranslatePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get lyricsTranslatePreview;
+
+  /// No description provided for @lyricsTranslateDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'How the translation shows'**
+  String get lyricsTranslateDisplay;
+
+  /// No description provided for @lyricsTranslateDisplayUnder.
+  ///
+  /// In en, this message translates to:
+  /// **'Below line'**
+  String get lyricsTranslateDisplayUnder;
+
+  /// No description provided for @lyricsTranslateDisplayReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace line'**
+  String get lyricsTranslateDisplayReplace;
+
+  /// No description provided for @lyricsTranslateBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated by {by}'**
+  String lyricsTranslateBy(String by);
+
+  /// No description provided for @lyricsTranslateByPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated by {by} · {done}/{total} lines only'**
+  String lyricsTranslateByPartial(String by, int done, int total);
+
+  /// No description provided for @lyricsTranslateRedoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Translating again, the old translation stays'**
+  String get lyricsTranslateRedoing;
+
+  /// No description provided for @lyricsTranslateRetranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate again'**
+  String get lyricsTranslateRetranslate;
+
+  /// No description provided for @lyricsTranslateSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation'**
+  String get lyricsTranslateSection;
+
+  /// No description provided for @lyricsTranslateSourceAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-detect'**
+  String get lyricsTranslateSourceAuto;
+
+  /// No description provided for @lyricsTranslateSourceDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'{language} · detected'**
+  String lyricsTranslateSourceDetected(String language);
+
+  /// No description provided for @lyricsTranslateSourceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Language of the lyrics, detected by the translation service'**
+  String get lyricsTranslateSourceHint;
+
+  /// No description provided for @lyricsTranslateSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Show translation'**
+  String get lyricsTranslateSwitch;
+
+  /// No description provided for @lyricsTranslateTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate into {language}'**
+  String lyricsTranslateTarget(String language);
+
+  /// No description provided for @lyricsTranslateNoPluginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No translation plugin yet'**
+  String get lyricsTranslateNoPluginTitle;
+
+  /// No description provided for @lyricsTranslateNoPluginBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Install a translation plugin (Google, DeepL, Gemini…) from the plugin store to translate lyrics.'**
+  String get lyricsTranslateNoPluginBody;
+
+  /// No description provided for @lyricsTranslateOpenStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Open plugin store'**
+  String get lyricsTranslateOpenStore;
+
+  /// No description provided for @lyricsTranslateServiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get lyricsTranslateServiceTitle;
+
+  /// No description provided for @lyricsTranslateServiceUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'No service chosen'**
+  String get lyricsTranslateServiceUnset;
+
+  /// No description provided for @lyricsTranslateServiceGone.
+  ///
+  /// In en, this message translates to:
+  /// **'The default service was removed, choose another'**
+  String get lyricsTranslateServiceGone;
+
+  /// No description provided for @lyricsTranslateServiceScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Default for every song'**
+  String get lyricsTranslateServiceScope;
+
+  /// No description provided for @lyricsTranslateAiTag.
+  ///
+  /// In en, this message translates to:
+  /// **'AI'**
+  String get lyricsTranslateAiTag;
+
+  /// No description provided for @lyricsTranslateTuneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI tuning'**
+  String get lyricsTranslateTuneTitle;
+
+  /// No description provided for @lyricsTranslatePhoneticSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Transliteration'**
+  String get lyricsTranslatePhoneticSection;
+
+  /// No description provided for @lyricsTranslatePhoneticTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Furigana, Romaji'**
+  String get lyricsTranslatePhoneticTitle;
+
+  /// No description provided for @lyricsTranslatePhoneticDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Transliteration of Japanese, Chinese and Korean lyrics'**
+  String get lyricsTranslatePhoneticDesc;
+
+  /// No description provided for @lyricsTranslateSoonTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get lyricsTranslateSoonTag;
+
+  /// No description provided for @lyricsTranslateWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Translating…'**
+  String get lyricsTranslateWorking;
+
+  /// No description provided for @lyricsTranslateWorkingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Translating… {done}/{total} lines'**
+  String lyricsTranslateWorkingCount(int done, int total);
+
+  /// No description provided for @lyricsTranslateWorkingAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Translating again…'**
+  String get lyricsTranslateWorkingAgain;
+
+  /// No description provided for @lyricsTranslateWorkingAgainCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Translating again… {done}/{total} lines'**
+  String lyricsTranslateWorkingAgainCount(int done, int total);
+
+  /// No description provided for @lyricsTranslateCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get lyricsTranslateCancel;
+
+  /// No description provided for @lyricsTranslateSame.
+  ///
+  /// In en, this message translates to:
+  /// **'The lyrics already are in {language} (per {service})'**
+  String lyricsTranslateSame(String language, String service);
+
+  /// No description provided for @lyricsTranslatePartialTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Only {done}/{total} lines translated'**
+  String lyricsTranslatePartialTitle(int done, int total);
+
+  /// No description provided for @lyricsTranslatePartialLine.
+  ///
+  /// In en, this message translates to:
+  /// **'The rest failed: {reason}'**
+  String lyricsTranslatePartialLine(String reason);
+
+  /// No description provided for @lyricsTranslatePausedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} is paused'**
+  String lyricsTranslatePausedTitle(String service);
+
+  /// No description provided for @lyricsTranslatePausedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'The server reports too many requests (429) · Kanaru translates again after {time}'**
+  String lyricsTranslatePausedLine(String time);
+
+  /// No description provided for @lyricsTranslateNetworkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot reach {service}'**
+  String lyricsTranslateNetworkTitle(String service);
+
+  /// No description provided for @lyricsTranslateNetworkLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error or timeout'**
+  String get lyricsTranslateNetworkLine;
+
+  /// No description provided for @lyricsTranslateServerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} has an error'**
+  String lyricsTranslateServerTitle(String service);
+
+  /// No description provided for @lyricsTranslateServerLine.
+  ///
+  /// In en, this message translates to:
+  /// **'The service\'s server returned an error'**
+  String get lyricsTranslateServerLine;
+
+  /// No description provided for @lyricsTranslateQuotaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} is out of quota'**
+  String lyricsTranslateQuotaTitle(String service);
+
+  /// No description provided for @lyricsTranslateQuotaLine.
+  ///
+  /// In en, this message translates to:
+  /// **'This API key has no translations left · wait for the next period or change service'**
+  String get lyricsTranslateQuotaLine;
+
+  /// No description provided for @lyricsTranslateBadKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} reports an error'**
+  String lyricsTranslateBadKeyTitle(String service);
+
+  /// No description provided for @lyricsTranslateBadKeyLine.
+  ///
+  /// In en, this message translates to:
+  /// **'The API key is invalid or expired'**
+  String get lyricsTranslateBadKeyLine;
+
+  /// No description provided for @lyricsTranslateConfigTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} needs to be set up'**
+  String lyricsTranslateConfigTitle(String service);
+
+  /// No description provided for @lyricsTranslateConfigLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing: {fields}'**
+  String lyricsTranslateConfigLine(String fields);
+
+  /// No description provided for @lyricsTranslateInvalidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The translation has the wrong number of lines'**
+  String get lyricsTranslateInvalidTitle;
+
+  /// No description provided for @lyricsTranslateInvalidLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} returned a different number of lines than the lyrics'**
+  String lyricsTranslateInvalidLine(String service);
+
+  /// No description provided for @lyricsTranslateTooLongTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The lyrics are too long to translate'**
+  String get lyricsTranslateTooLongTitle;
+
+  /// No description provided for @lyricsTranslateTooLongLine.
+  ///
+  /// In en, this message translates to:
+  /// **'The lyrics exceed what {service} translates in one run'**
+  String lyricsTranslateTooLongLine(String service);
+
+  /// No description provided for @lyricsTranslateUnsupportedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} does not translate into {language}'**
+  String lyricsTranslateUnsupportedTitle(String service, String language);
+
+  /// No description provided for @lyricsTranslateUnsupportedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another language or change service'**
+  String get lyricsTranslateUnsupportedLine;
+
+  /// No description provided for @lyricsTranslateGoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The translation service was removed'**
+  String get lyricsTranslateGoneTitle;
+
+  /// No description provided for @lyricsTranslateGoneLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another service to keep translating'**
+  String get lyricsTranslateGoneLine;
+
+  /// No description provided for @lyricsTranslateUnsetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No translation service chosen'**
+  String get lyricsTranslateUnsetTitle;
+
+  /// No description provided for @lyricsTranslateUnsetLine.
+  ///
+  /// In en, this message translates to:
+  /// **'The lyrics are sent only after you choose'**
+  String get lyricsTranslateUnsetLine;
+
+  /// No description provided for @lyricsTranslateReasonPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} is paused'**
+  String lyricsTranslateReasonPaused(String service);
+
+  /// No description provided for @lyricsTranslateReasonNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'cannot reach {service}'**
+  String lyricsTranslateReasonNetwork(String service);
+
+  /// No description provided for @lyricsTranslateReasonServer.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} has an error'**
+  String lyricsTranslateReasonServer(String service);
+
+  /// No description provided for @lyricsTranslateReasonQuota.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} is out of quota'**
+  String lyricsTranslateReasonQuota(String service);
+
+  /// No description provided for @lyricsTranslateReasonBadKey.
+  ///
+  /// In en, this message translates to:
+  /// **'the API key is invalid or expired'**
+  String get lyricsTranslateReasonBadKey;
+
+  /// No description provided for @lyricsTranslateReasonConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} needs to be set up'**
+  String lyricsTranslateReasonConfig(String service);
+
+  /// No description provided for @lyricsTranslateReasonInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'the translation had the wrong number of lines'**
+  String get lyricsTranslateReasonInvalid;
+
+  /// No description provided for @lyricsTranslateReasonTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'the lyrics are too long to translate'**
+  String get lyricsTranslateReasonTooLong;
+
+  /// No description provided for @lyricsTranslateReasonUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} does not translate into {language}'**
+  String lyricsTranslateReasonUnsupported(String service, String language);
+
+  /// No description provided for @lyricsTranslateReasonGone.
+  ///
+  /// In en, this message translates to:
+  /// **'the service was removed'**
+  String get lyricsTranslateReasonGone;
+
+  /// No description provided for @lyricsTranslateReasonNoService.
+  ///
+  /// In en, this message translates to:
+  /// **'no service chosen'**
+  String get lyricsTranslateReasonNoService;
+
+  /// No description provided for @lyricsTranslateRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get lyricsTranslateRetry;
+
+  /// No description provided for @lyricsTranslateConfigure.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up'**
+  String get lyricsTranslateConfigure;
+
+  /// No description provided for @lyricsTranslateChangeService.
+  ///
+  /// In en, this message translates to:
+  /// **'Change service'**
+  String get lyricsTranslateChangeService;
+
+  /// No description provided for @lyricsTranslateChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get lyricsTranslateChoose;
+
+  /// No description provided for @lyricsTranslateBarOtherLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate again with {service}'**
+  String lyricsTranslateBarOtherLine(String service);
+
+  /// No description provided for @lyricsTranslateBarDiffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings differ from the translation shown'**
+  String get lyricsTranslateBarDiffTitle;
+
+  /// No description provided for @lyricsTranslateDiffNote.
+  ///
+  /// In en, this message translates to:
+  /// **'instruction changed'**
+  String get lyricsTranslateDiffNote;
+
+  /// No description provided for @lyricsTranslateDiffVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'plugin updated'**
+  String get lyricsTranslateDiffVersion;
+
+  /// No description provided for @lyricsTranslateRetranslated.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated again · {name}'**
+  String lyricsTranslateRetranslated(String name);
+
+  /// No description provided for @lyricsTranslateServicePageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation service'**
+  String get lyricsTranslateServicePageTitle;
+
+  /// No description provided for @lyricsTranslateServiceSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics, song title and artist are sent to the plugin when translating.'**
+  String get lyricsTranslateServiceSent;
+
+  /// No description provided for @lyricsTranslateScopeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to'**
+  String get lyricsTranslateScopeTitle;
+
+  /// No description provided for @lyricsTranslateScopeSong.
+  ///
+  /// In en, this message translates to:
+  /// **'This song'**
+  String get lyricsTranslateScopeSong;
+
+  /// No description provided for @lyricsTranslateScopeQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get lyricsTranslateScopeQueue;
+
+  /// No description provided for @lyricsTranslateScopeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Every song'**
+  String get lyricsTranslateScopeAll;
+
+  /// No description provided for @lyricsTranslateScopePro.
+  ///
+  /// In en, this message translates to:
+  /// **'A service of its own for a song or the queue: a Pro feature'**
+  String get lyricsTranslateScopePro;
+
+  /// No description provided for @lyricsTranslateServiceSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get lyricsTranslateServiceSection;
+
+  /// No description provided for @lyricsTranslateMoreServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Get more translation plugins'**
+  String get lyricsTranslateMoreServices;
+
+  /// No description provided for @lyricsTranslateMoreServicesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Open plugin store'**
+  String get lyricsTranslateMoreServicesSub;
+
+  /// No description provided for @lyricsTranslateTargetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate into'**
+  String get lyricsTranslateTargetTitle;
+
+  /// No description provided for @lyricsTranslateTargetApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows the app language'**
+  String get lyricsTranslateTargetApp;
+
+  /// No description provided for @lyricsTranslateTargetFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the language'**
+  String get lyricsTranslateTargetFailed;
+
+  /// No description provided for @lyricsTranslateModelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get lyricsTranslateModelTitle;
+
+  /// No description provided for @lyricsTranslateStyleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Style'**
+  String get lyricsTranslateStyleTitle;
+
+  /// No description provided for @lyricsTranslateStylePickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation style'**
+  String get lyricsTranslateStylePickerTitle;
+
+  /// No description provided for @lyricsTranslateNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra instructions'**
+  String get lyricsTranslateNoteTitle;
+
+  /// No description provided for @lyricsTranslateNoteHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra instructions for every song (saved in the settings of {plugin}).'**
+  String lyricsTranslateNoteHelper(String plugin);
+
+  /// No description provided for @lyricsTranslateSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search {count} items'**
+  String lyricsTranslateSearchHint(int count);
+
+  /// No description provided for @lyricsTranslateDefaultTag.
+  ///
+  /// In en, this message translates to:
+  /// **'default'**
+  String get lyricsTranslateDefaultTag;
+
+  /// No description provided for @lyricsTranslateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get lyricsTranslateLater;
+
+  /// No description provided for @lyricsTranslateDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get lyricsTranslateDone;
+
+  /// No description provided for @lyricsTranslateWriteInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The value is not valid'**
+  String get lyricsTranslateWriteInvalid;
+
+  /// No description provided for @lyricsTranslateWriteTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The instructions are too long'**
+  String get lyricsTranslateWriteTooLarge;
+
+  /// No description provided for @lyricsTranslateWriteUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'This plugin has no such setting'**
+  String get lyricsTranslateWriteUnknown;
+
+  /// No description provided for @lyricsTranslateWriteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the setting'**
+  String get lyricsTranslateWriteFailed;
+
+  /// No description provided for @lyricsTranslateMenuOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Translating into {language}'**
+  String lyricsTranslateMenuOn(String language);
+
+  /// No description provided for @lyricsTranslateMenuOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get lyricsTranslateMenuOff;
+
+  /// No description provided for @lyricsTranslateEntryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation failed'**
+  String get lyricsTranslateEntryFailed;
+
+  /// No description provided for @lyricsTranslateEntryNoLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'No lyrics to translate'**
+  String get lyricsTranslateEntryNoLyrics;
+
+  /// No description provided for @lyricsTranslatePillWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Translating'**
+  String get lyricsTranslatePillWorking;
+
+  /// No description provided for @lyricsTranslateToastOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation: {language}'**
+  String lyricsTranslateToastOn(String language);
+
+  /// No description provided for @lyricsTranslateToastOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation off'**
+  String get lyricsTranslateToastOff;
+
+  /// No description provided for @lyricsTranslateEntryHintDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click or T: turn translation on or off'**
+  String get lyricsTranslateEntryHintDesktop;
 
   /// No description provided for @pluginsStoreTitle.
   ///

@@ -6,12 +6,13 @@ import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
-import '../../../library/ui/menus/menu_items.dart';
 import '../../../library/ui/menus/menu_model.dart';
 import '../../../library/ui/menus/open_menu.dart';
 import '../../../library/ui/menus/song_lyrics_entry.dart';
 import '../../../lyrics/state/playing_lyrics_providers.dart';
 import '../../../lyrics/ui/lyrics_for_track_modal.dart';
+import '../../../lyrics/ui/translation/translate_entry.dart';
+import '../../../lyrics/ui/translation/translate_labels.dart';
 import '../../../media/domain/track_info.dart';
 import '../../../playback/state/playback_providers.dart';
 import '../../../playback/state/sleep_timer_provider.dart';
@@ -23,7 +24,7 @@ import 'desktop/now_playing_chrome.dart';
 final _log = Logger('NowPlayingSongMenu');
 
 /// Opens the ⋮ menu of Now Playing: the menu of the playing song, with
-/// "Sleep timer" before the lyrics row and "Translate lyrics…" (soon) and
+/// "Sleep timer" before the lyrics row and "Translate lyrics…" and
 /// "Visual effects" (Pro) after it. Both shells call this one function.
 ///
 /// The menu keeps the song it was opened for, even if the queue moves on while
@@ -51,6 +52,7 @@ Future<void> openNowPlayingSongMenu(
     closeNowPlaying: closeNowPlaying,
     returnFocus: returnFocus,
     viaKeyboard: viaKeyboard,
+    keyHints: chrome != null,
   );
   final root = Navigator.of(context, rootNavigator: true).context;
   final l10n = AppLocalizations.of(context);
@@ -73,6 +75,7 @@ Future<void> _open(
   required VoidCallback? closeNowPlaying,
   required FocusNode? returnFocus,
   required bool viaKeyboard,
+  required bool keyHints,
 }) async {
   final container = ProviderScope.containerOf(context, listen: false);
   final root = Navigator.of(context, rootNavigator: true).context;
@@ -97,6 +100,7 @@ Future<void> _open(
   if (!context.mounted) return;
 
   final sleepLabel = _SleepTimerLabel(container, texts);
+  final translateSubtitle = _TranslateSubtitle(container, l10n);
   // A "Go to" row closes Now Playing first: focus must not go back then.
   var navigated = false;
   final VoidCallback? beforeNavigate = closeNowPlaying == null
@@ -130,10 +134,19 @@ Future<void> _open(
           ),
         ],
         after: [
-          soonRow(
+          MenuItemSpec(
             MenuItemId.translate,
-            KIcons.language,
-            l10n.playbackTranslateLyrics,
+            icon: KIcons.language,
+            title: l10n.playbackTranslateLyrics,
+            subtitle: translateSubtitle.value,
+            liveSubtitle: translateSubtitle,
+            // Desktop only: the `T` key toggles translation there.
+            shortcut: keyHints ? 'T' : null,
+            // Dimmed while the playing song has no lyrics.
+            enabled: container.read(translateMenuAvailableProvider),
+            action: MenuAction.run(
+              (ctx) => _openTranslateOfPlaying(ctx, container),
+            ),
           ),
           MenuItemSpec(
             MenuItemId.visualEffects,
@@ -148,6 +161,7 @@ Future<void> _open(
     );
   } finally {
     sleepLabel.close();
+    translateSubtitle.close();
     // Esc / a finished row action: focus goes back to the ⋮ button (desktop).
     if (!navigated &&
         context.mounted &&
@@ -172,6 +186,34 @@ Future<void> _openLyricsOfPlaying(
     return;
   }
   await showLyricsForTrack(context, id, followsPlaying: true);
+}
+
+Future<void> _openTranslateOfPlaying(
+  BuildContext context,
+  ProviderContainer container,
+) async {
+  final id = container.read(playingLyricsProvider).trackId;
+  if (id == null) return;
+  await openTranslateModalForPlaying(context, id);
+}
+
+/// The translate row's second line while the menu is open: "Đang dịch sang
+/// {ngôn ngữ}" / "Đang tắt", following the translation settings.
+class _TranslateSubtitle extends ValueNotifier<String> {
+  _TranslateSubtitle(ProviderContainer container, AppLocalizations l10n)
+    : super(translateStateText(l10n, container.read(translateEntryProvider))) {
+    _sub = container.listen<TranslateEntryState>(
+      translateEntryProvider,
+      (_, s) => value = translateStateText(l10n, s),
+    );
+  }
+
+  late final ProviderSubscription<TranslateEntryState> _sub;
+
+  void close() {
+    _sub.close();
+    dispose();
+  }
 }
 
 /// The sleep timer row's title while the menu is open: "Sleep timer" or

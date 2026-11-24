@@ -88,6 +88,7 @@ class LyricsBody extends ConsumerWidget {
         lineSize: size,
         sidePadding: metrics.sidePadding,
         align: align,
+        trackId: playing.trackId,
       );
     }
     return SyncedLyricsView(
@@ -99,6 +100,7 @@ class LyricsBody extends ConsumerWidget {
       dim: dim,
       align: align,
       autoReturn: autoReturn,
+      trackId: playing.trackId,
     );
   }
 }

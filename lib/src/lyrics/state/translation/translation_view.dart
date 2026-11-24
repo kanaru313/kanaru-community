@@ -13,6 +13,9 @@ class TranslationView {
     this.sourceLang,
     this.installId,
     this.settingsDiffer = false,
+    this.settingsJson,
+    this.linesDone = 0,
+    this.linesTotal = 0,
   });
 
   /// Nothing asked, nothing to show.
@@ -35,6 +38,16 @@ class TranslationView {
   /// "Dịch lại"; nothing re-runs by itself.
   final bool settingsDiffer;
 
+  /// `{pluginVersion, model, style, instructionHash}` the shown [map] was
+  /// made with; null when there is none.
+  final String? settingsJson;
+
+  /// Unique lines translated of the lines to translate, while a run goes and
+  /// after a run that stopped half way (0 / 0 when unknown). With
+  /// [linesTotal] it is the "dịch dở n/m dòng" of a failed run.
+  final int linesDone;
+  final int linesTotal;
+
   @override
   bool operator ==(Object other) =>
       other is TranslationView &&
@@ -42,11 +55,21 @@ class TranslationView {
       mapEquals(other.map, map) &&
       other.sourceLang == sourceLang &&
       other.installId == installId &&
-      other.settingsDiffer == settingsDiffer;
+      other.settingsDiffer == settingsDiffer &&
+      other.settingsJson == settingsJson &&
+      other.linesDone == linesDone &&
+      other.linesTotal == linesTotal;
 
   @override
-  int get hashCode =>
-      Object.hash(status, map.length, sourceLang, installId, settingsDiffer);
+  int get hashCode => Object.hash(
+    status,
+    map.length,
+    sourceLang,
+    installId,
+    settingsDiffer,
+    linesDone,
+    linesTotal,
+  );
 }
 
 /// The view of a complete saved translation made by [service]. Lyrics that
@@ -67,6 +90,7 @@ TranslationView savedTranslationView(
     sourceLang: source,
     installId: service,
     settingsDiffer: differ,
+    settingsJson: row.settingsJson,
   );
 }
 
@@ -94,4 +118,24 @@ TranslationView jobTranslationView(
   sourceLang: base?.sourceLang,
   installId: base?.installId,
   settingsDiffer: base?.settingsDiffer ?? false,
+  settingsJson: base?.settingsJson,
+  linesDone: status is JobRunning ? status.linesDone : 0,
+  linesTotal: status is JobRunning ? status.linesTotal : 0,
+);
+
+/// The view of a failed run that left [row] half done (its chunks are saved,
+/// `complete` is false): the translated lines stay on screen and the counts
+/// say how many are there.
+TranslationView partialFailureView(
+  TranslationView failed,
+  TranslationCacheRow row,
+  int linesTotal,
+) => TranslationView(
+  status: failed.status,
+  map: row.lines,
+  sourceLang: row.sourceLang,
+  installId: row.key.installId,
+  settingsJson: row.settingsJson,
+  linesDone: row.lines.length,
+  linesTotal: linesTotal,
 );
