@@ -135,7 +135,7 @@ class PluginFetchRequest {
   final Uint8List body;
 
   /// Wall time left for this call, ms (15 s by default, at most 90 s). Dart
-  /// uses the smaller of this and 30 s as the overall timeout.
+  /// uses it as the overall timeout of the call, its spacing wait included.
   final int deadlineMs;
 
   /// HTTP sends still allowed for this call (10 minus the sends used so
