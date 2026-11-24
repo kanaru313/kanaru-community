@@ -5179,6 +5179,392 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lyricsLangMi => 'Tiếng Māori';
 
   @override
+  String get lyricsTranslateTitle => 'Dịch lời';
+
+  @override
+  String get lyricsTranslateSettings => 'Cài đặt dịch';
+
+  @override
+  String get lyricsTranslatePreview => 'Xem trước';
+
+  @override
+  String get lyricsTranslateDisplay => 'Cách hiện bản dịch';
+
+  @override
+  String get lyricsTranslateDisplayUnder => 'Dưới dòng';
+
+  @override
+  String get lyricsTranslateDisplayReplace => 'Thay dòng';
+
+  @override
+  String lyricsTranslateBy(String by) {
+    return 'Dịch bởi $by';
+  }
+
+  @override
+  String lyricsTranslateByPartial(String by, int done, int total) {
+    return 'Dịch bởi $by · dịch dở $done/$total dòng';
+  }
+
+  @override
+  String get lyricsTranslateRedoing => 'Đang dịch lại, bản cũ vẫn hiện';
+
+  @override
+  String get lyricsTranslateRetranslate => 'Dịch lại';
+
+  @override
+  String get lyricsTranslateSection => 'Bản dịch';
+
+  @override
+  String get lyricsTranslateSourceAuto => 'Tự nhận';
+
+  @override
+  String lyricsTranslateSourceDetected(String language) {
+    return '$language · tự nhận';
+  }
+
+  @override
+  String get lyricsTranslateSourceHint =>
+      'Ngôn ngữ của lời, do dịch vụ dịch nhận ra';
+
+  @override
+  String get lyricsTranslateSwitch => 'Bật bản dịch';
+
+  @override
+  String lyricsTranslateTarget(String language) {
+    return 'Dịch sang $language';
+  }
+
+  @override
+  String get lyricsTranslateNoPluginTitle => 'Chưa có tiện ích dịch';
+
+  @override
+  String get lyricsTranslateNoPluginBody =>
+      'Cài một tiện ích dịch (Google, DeepL, Gemini…) từ kho tiện ích để dịch lời bài hát.';
+
+  @override
+  String get lyricsTranslateOpenStore => 'Mở kho tiện ích';
+
+  @override
+  String get lyricsTranslateServiceTitle => 'Dịch vụ';
+
+  @override
+  String get lyricsTranslateServiceUnset => 'Chưa chọn dịch vụ';
+
+  @override
+  String get lyricsTranslateServiceGone =>
+      'Dịch vụ mặc định đã bị gỡ, chọn dịch vụ khác';
+
+  @override
+  String get lyricsTranslateServiceScope => 'Mặc định cho mọi bài';
+
+  @override
+  String get lyricsTranslateAiTag => 'AI';
+
+  @override
+  String get lyricsTranslateTuneTitle => 'Tinh chỉnh AI';
+
+  @override
+  String get lyricsTranslatePhoneticSection => 'Phiên âm';
+
+  @override
+  String get lyricsTranslatePhoneticTitle => 'Furigana, Romaji';
+
+  @override
+  String get lyricsTranslatePhoneticDesc =>
+      'Phiên âm lời tiếng Nhật, Trung, Hàn';
+
+  @override
+  String get lyricsTranslateSoonTag => 'Sắp có';
+
+  @override
+  String get lyricsTranslateWorking => 'Đang dịch…';
+
+  @override
+  String lyricsTranslateWorkingCount(int done, int total) {
+    return 'Đang dịch… $done/$total dòng';
+  }
+
+  @override
+  String get lyricsTranslateWorkingAgain => 'Đang dịch lại…';
+
+  @override
+  String lyricsTranslateWorkingAgainCount(int done, int total) {
+    return 'Đang dịch lại… $done/$total dòng';
+  }
+
+  @override
+  String get lyricsTranslateCancel => 'Huỷ';
+
+  @override
+  String lyricsTranslateSame(String language, String service) {
+    return 'Lời bài hát đã là $language (theo $service)';
+  }
+
+  @override
+  String lyricsTranslatePartialTitle(int done, int total) {
+    return 'Mới dịch được $done/$total dòng';
+  }
+
+  @override
+  String lyricsTranslatePartialLine(String reason) {
+    return 'Phần còn lại lỗi: $reason';
+  }
+
+  @override
+  String lyricsTranslatePausedTitle(String service) {
+    return '$service đang tạm dừng';
+  }
+
+  @override
+  String lyricsTranslatePausedLine(String time) {
+    return 'Máy chủ báo quá nhiều yêu cầu (429) · Kanaru dịch lại sau $time';
+  }
+
+  @override
+  String lyricsTranslateNetworkTitle(String service) {
+    return 'Không kết nối được tới $service';
+  }
+
+  @override
+  String get lyricsTranslateNetworkLine => 'Lỗi mạng hoặc hết thời gian chờ';
+
+  @override
+  String lyricsTranslateServerTitle(String service) {
+    return '$service đang lỗi';
+  }
+
+  @override
+  String get lyricsTranslateServerLine => 'Máy chủ của dịch vụ trả lỗi';
+
+  @override
+  String lyricsTranslateQuotaTitle(String service) {
+    return '$service đã hết hạn mức';
+  }
+
+  @override
+  String get lyricsTranslateQuotaLine =>
+      'Hết lượt dịch của API key này · đợi kỳ sau hoặc đổi dịch vụ';
+
+  @override
+  String lyricsTranslateBadKeyTitle(String service) {
+    return '$service báo lỗi';
+  }
+
+  @override
+  String get lyricsTranslateBadKeyLine =>
+      'API key không hợp lệ hoặc đã hết hạn';
+
+  @override
+  String lyricsTranslateConfigTitle(String service) {
+    return '$service cần được cấu hình';
+  }
+
+  @override
+  String lyricsTranslateConfigLine(String fields) {
+    return 'Thiếu: $fields';
+  }
+
+  @override
+  String get lyricsTranslateInvalidTitle => 'Bản dịch lệch số dòng';
+
+  @override
+  String lyricsTranslateInvalidLine(String service) {
+    return '$service trả về số dòng không khớp với lời';
+  }
+
+  @override
+  String get lyricsTranslateTooLongTitle => 'Lời quá dài để dịch';
+
+  @override
+  String lyricsTranslateTooLongLine(String service) {
+    return 'Lời bài vượt giới hạn một lần dịch của $service';
+  }
+
+  @override
+  String lyricsTranslateUnsupportedTitle(String service, String language) {
+    return '$service không dịch sang $language';
+  }
+
+  @override
+  String get lyricsTranslateUnsupportedLine =>
+      'Chọn ngôn ngữ khác hoặc đổi dịch vụ';
+
+  @override
+  String get lyricsTranslateGoneTitle => 'Dịch vụ dịch đã bị gỡ';
+
+  @override
+  String get lyricsTranslateGoneLine => 'Chọn dịch vụ khác để dịch tiếp';
+
+  @override
+  String get lyricsTranslateUnsetTitle => 'Chưa chọn dịch vụ dịch';
+
+  @override
+  String get lyricsTranslateUnsetLine =>
+      'Lời bài hát chỉ được gửi đi sau khi bạn chọn';
+
+  @override
+  String lyricsTranslateReasonPaused(String service) {
+    return '$service đang tạm dừng';
+  }
+
+  @override
+  String lyricsTranslateReasonNetwork(String service) {
+    return 'không kết nối được tới $service';
+  }
+
+  @override
+  String lyricsTranslateReasonServer(String service) {
+    return '$service đang lỗi';
+  }
+
+  @override
+  String lyricsTranslateReasonQuota(String service) {
+    return '$service đã hết hạn mức';
+  }
+
+  @override
+  String get lyricsTranslateReasonBadKey =>
+      'API key không hợp lệ hoặc đã hết hạn';
+
+  @override
+  String lyricsTranslateReasonConfig(String service) {
+    return '$service cần được cấu hình';
+  }
+
+  @override
+  String get lyricsTranslateReasonInvalid => 'bản dịch lệch số dòng';
+
+  @override
+  String get lyricsTranslateReasonTooLong => 'lời quá dài để dịch';
+
+  @override
+  String lyricsTranslateReasonUnsupported(String service, String language) {
+    return '$service không dịch sang $language';
+  }
+
+  @override
+  String get lyricsTranslateReasonGone => 'dịch vụ đã bị gỡ';
+
+  @override
+  String get lyricsTranslateReasonNoService => 'chưa chọn dịch vụ';
+
+  @override
+  String get lyricsTranslateRetry => 'Thử lại';
+
+  @override
+  String get lyricsTranslateConfigure => 'Cấu hình';
+
+  @override
+  String get lyricsTranslateChangeService => 'Đổi dịch vụ';
+
+  @override
+  String get lyricsTranslateChoose => 'Chọn';
+
+  @override
+  String lyricsTranslateBarOtherLine(String service) {
+    return 'Dịch lại bằng $service';
+  }
+
+  @override
+  String get lyricsTranslateBarDiffTitle => 'Lựa chọn khác bản đang hiện';
+
+  @override
+  String get lyricsTranslateDiffNote => 'đổi lời dặn';
+
+  @override
+  String get lyricsTranslateDiffVersion => 'plugin đã cập nhật';
+
+  @override
+  String lyricsTranslateRetranslated(String name) {
+    return 'Đã dịch lại · $name';
+  }
+
+  @override
+  String get lyricsTranslateServicePageTitle => 'Dịch vụ dịch';
+
+  @override
+  String get lyricsTranslateServiceSent =>
+      'Lời, tên bài và nghệ sĩ được gửi tới plugin khi dịch.';
+
+  @override
+  String get lyricsTranslateScopeTitle => 'Áp dụng cho';
+
+  @override
+  String get lyricsTranslateScopeSong => 'Bài này';
+
+  @override
+  String get lyricsTranslateScopeQueue => 'Hàng đợi';
+
+  @override
+  String get lyricsTranslateScopeAll => 'Mọi bài';
+
+  @override
+  String get lyricsTranslateScopePro =>
+      'Chọn dịch vụ riêng cho bài hoặc hàng đợi: tính năng Pro';
+
+  @override
+  String get lyricsTranslateServiceSection => 'Dịch vụ';
+
+  @override
+  String get lyricsTranslateMoreServices => 'Tải thêm tiện ích dịch';
+
+  @override
+  String get lyricsTranslateMoreServicesSub => 'Mở kho tiện ích';
+
+  @override
+  String get lyricsTranslateTargetTitle => 'Dịch sang';
+
+  @override
+  String get lyricsTranslateTargetApp => 'Theo ngôn ngữ ứng dụng';
+
+  @override
+  String get lyricsTranslateTargetFailed => 'Không lưu được ngôn ngữ';
+
+  @override
+  String get lyricsTranslateModelTitle => 'Model';
+
+  @override
+  String get lyricsTranslateStyleTitle => 'Phong cách';
+
+  @override
+  String get lyricsTranslateStylePickerTitle => 'Phong cách dịch';
+
+  @override
+  String get lyricsTranslateNoteTitle => 'Lời dặn thêm';
+
+  @override
+  String lyricsTranslateNoteHelper(String plugin) {
+    return 'Lời dặn thêm cho mọi bài (lưu vào cài đặt của $plugin).';
+  }
+
+  @override
+  String lyricsTranslateSearchHint(int count) {
+    return 'Tìm trong $count mục';
+  }
+
+  @override
+  String get lyricsTranslateDefaultTag => 'mặc định';
+
+  @override
+  String get lyricsTranslateLater => 'Để sau';
+
+  @override
+  String get lyricsTranslateDone => 'Xong';
+
+  @override
+  String get lyricsTranslateWriteInvalid => 'Giá trị không hợp lệ';
+
+  @override
+  String get lyricsTranslateWriteTooLarge => 'Lời dặn quá dài';
+
+  @override
+  String get lyricsTranslateWriteUnknown => 'Plugin này không có ô này';
+
+  @override
+  String get lyricsTranslateWriteFailed => 'Không lưu được cài đặt';
+
+  @override
   String get pluginsStoreTitle => 'Kho plugin';
 
   @override

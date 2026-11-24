@@ -5631,6 +5631,398 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsLangMi => 'Māori';
 
   @override
+  String get lyricsTranslateTitle => 'Translate lyrics';
+
+  @override
+  String get lyricsTranslateSettings => 'Translation settings';
+
+  @override
+  String get lyricsTranslatePreview => 'Preview';
+
+  @override
+  String get lyricsTranslateDisplay => 'How the translation shows';
+
+  @override
+  String get lyricsTranslateDisplayUnder => 'Below line';
+
+  @override
+  String get lyricsTranslateDisplayReplace => 'Replace line';
+
+  @override
+  String lyricsTranslateBy(String by) {
+    return 'Translated by $by';
+  }
+
+  @override
+  String lyricsTranslateByPartial(String by, int done, int total) {
+    return 'Translated by $by · $done/$total lines only';
+  }
+
+  @override
+  String get lyricsTranslateRedoing =>
+      'Translating again, the old translation stays';
+
+  @override
+  String get lyricsTranslateRetranslate => 'Translate again';
+
+  @override
+  String get lyricsTranslateSection => 'Translation';
+
+  @override
+  String get lyricsTranslateSourceAuto => 'Auto-detect';
+
+  @override
+  String lyricsTranslateSourceDetected(String language) {
+    return '$language · detected';
+  }
+
+  @override
+  String get lyricsTranslateSourceHint =>
+      'Language of the lyrics, detected by the translation service';
+
+  @override
+  String get lyricsTranslateSwitch => 'Show translation';
+
+  @override
+  String lyricsTranslateTarget(String language) {
+    return 'Translate into $language';
+  }
+
+  @override
+  String get lyricsTranslateNoPluginTitle => 'No translation plugin yet';
+
+  @override
+  String get lyricsTranslateNoPluginBody =>
+      'Install a translation plugin (Google, DeepL, Gemini…) from the plugin store to translate lyrics.';
+
+  @override
+  String get lyricsTranslateOpenStore => 'Open plugin store';
+
+  @override
+  String get lyricsTranslateServiceTitle => 'Service';
+
+  @override
+  String get lyricsTranslateServiceUnset => 'No service chosen';
+
+  @override
+  String get lyricsTranslateServiceGone =>
+      'The default service was removed, choose another';
+
+  @override
+  String get lyricsTranslateServiceScope => 'Default for every song';
+
+  @override
+  String get lyricsTranslateAiTag => 'AI';
+
+  @override
+  String get lyricsTranslateTuneTitle => 'AI tuning';
+
+  @override
+  String get lyricsTranslatePhoneticSection => 'Transliteration';
+
+  @override
+  String get lyricsTranslatePhoneticTitle => 'Furigana, Romaji';
+
+  @override
+  String get lyricsTranslatePhoneticDesc =>
+      'Transliteration of Japanese, Chinese and Korean lyrics';
+
+  @override
+  String get lyricsTranslateSoonTag => 'Coming soon';
+
+  @override
+  String get lyricsTranslateWorking => 'Translating…';
+
+  @override
+  String lyricsTranslateWorkingCount(int done, int total) {
+    return 'Translating… $done/$total lines';
+  }
+
+  @override
+  String get lyricsTranslateWorkingAgain => 'Translating again…';
+
+  @override
+  String lyricsTranslateWorkingAgainCount(int done, int total) {
+    return 'Translating again… $done/$total lines';
+  }
+
+  @override
+  String get lyricsTranslateCancel => 'Cancel';
+
+  @override
+  String lyricsTranslateSame(String language, String service) {
+    return 'The lyrics already are in $language (per $service)';
+  }
+
+  @override
+  String lyricsTranslatePartialTitle(int done, int total) {
+    return 'Only $done/$total lines translated';
+  }
+
+  @override
+  String lyricsTranslatePartialLine(String reason) {
+    return 'The rest failed: $reason';
+  }
+
+  @override
+  String lyricsTranslatePausedTitle(String service) {
+    return '$service is paused';
+  }
+
+  @override
+  String lyricsTranslatePausedLine(String time) {
+    return 'The server reports too many requests (429) · Kanaru translates again after $time';
+  }
+
+  @override
+  String lyricsTranslateNetworkTitle(String service) {
+    return 'Cannot reach $service';
+  }
+
+  @override
+  String get lyricsTranslateNetworkLine => 'Network error or timeout';
+
+  @override
+  String lyricsTranslateServerTitle(String service) {
+    return '$service has an error';
+  }
+
+  @override
+  String get lyricsTranslateServerLine =>
+      'The service\'s server returned an error';
+
+  @override
+  String lyricsTranslateQuotaTitle(String service) {
+    return '$service is out of quota';
+  }
+
+  @override
+  String get lyricsTranslateQuotaLine =>
+      'This API key has no translations left · wait for the next period or change service';
+
+  @override
+  String lyricsTranslateBadKeyTitle(String service) {
+    return '$service reports an error';
+  }
+
+  @override
+  String get lyricsTranslateBadKeyLine => 'The API key is invalid or expired';
+
+  @override
+  String lyricsTranslateConfigTitle(String service) {
+    return '$service needs to be set up';
+  }
+
+  @override
+  String lyricsTranslateConfigLine(String fields) {
+    return 'Missing: $fields';
+  }
+
+  @override
+  String get lyricsTranslateInvalidTitle =>
+      'The translation has the wrong number of lines';
+
+  @override
+  String lyricsTranslateInvalidLine(String service) {
+    return '$service returned a different number of lines than the lyrics';
+  }
+
+  @override
+  String get lyricsTranslateTooLongTitle =>
+      'The lyrics are too long to translate';
+
+  @override
+  String lyricsTranslateTooLongLine(String service) {
+    return 'The lyrics exceed what $service translates in one run';
+  }
+
+  @override
+  String lyricsTranslateUnsupportedTitle(String service, String language) {
+    return '$service does not translate into $language';
+  }
+
+  @override
+  String get lyricsTranslateUnsupportedLine =>
+      'Choose another language or change service';
+
+  @override
+  String get lyricsTranslateGoneTitle => 'The translation service was removed';
+
+  @override
+  String get lyricsTranslateGoneLine =>
+      'Choose another service to keep translating';
+
+  @override
+  String get lyricsTranslateUnsetTitle => 'No translation service chosen';
+
+  @override
+  String get lyricsTranslateUnsetLine =>
+      'The lyrics are sent only after you choose';
+
+  @override
+  String lyricsTranslateReasonPaused(String service) {
+    return '$service is paused';
+  }
+
+  @override
+  String lyricsTranslateReasonNetwork(String service) {
+    return 'cannot reach $service';
+  }
+
+  @override
+  String lyricsTranslateReasonServer(String service) {
+    return '$service has an error';
+  }
+
+  @override
+  String lyricsTranslateReasonQuota(String service) {
+    return '$service is out of quota';
+  }
+
+  @override
+  String get lyricsTranslateReasonBadKey => 'the API key is invalid or expired';
+
+  @override
+  String lyricsTranslateReasonConfig(String service) {
+    return '$service needs to be set up';
+  }
+
+  @override
+  String get lyricsTranslateReasonInvalid =>
+      'the translation had the wrong number of lines';
+
+  @override
+  String get lyricsTranslateReasonTooLong =>
+      'the lyrics are too long to translate';
+
+  @override
+  String lyricsTranslateReasonUnsupported(String service, String language) {
+    return '$service does not translate into $language';
+  }
+
+  @override
+  String get lyricsTranslateReasonGone => 'the service was removed';
+
+  @override
+  String get lyricsTranslateReasonNoService => 'no service chosen';
+
+  @override
+  String get lyricsTranslateRetry => 'Try again';
+
+  @override
+  String get lyricsTranslateConfigure => 'Set up';
+
+  @override
+  String get lyricsTranslateChangeService => 'Change service';
+
+  @override
+  String get lyricsTranslateChoose => 'Choose';
+
+  @override
+  String lyricsTranslateBarOtherLine(String service) {
+    return 'Translate again with $service';
+  }
+
+  @override
+  String get lyricsTranslateBarDiffTitle =>
+      'Settings differ from the translation shown';
+
+  @override
+  String get lyricsTranslateDiffNote => 'instruction changed';
+
+  @override
+  String get lyricsTranslateDiffVersion => 'plugin updated';
+
+  @override
+  String lyricsTranslateRetranslated(String name) {
+    return 'Translated again · $name';
+  }
+
+  @override
+  String get lyricsTranslateServicePageTitle => 'Translation service';
+
+  @override
+  String get lyricsTranslateServiceSent =>
+      'Lyrics, song title and artist are sent to the plugin when translating.';
+
+  @override
+  String get lyricsTranslateScopeTitle => 'Apply to';
+
+  @override
+  String get lyricsTranslateScopeSong => 'This song';
+
+  @override
+  String get lyricsTranslateScopeQueue => 'Queue';
+
+  @override
+  String get lyricsTranslateScopeAll => 'Every song';
+
+  @override
+  String get lyricsTranslateScopePro =>
+      'A service of its own for a song or the queue: a Pro feature';
+
+  @override
+  String get lyricsTranslateServiceSection => 'Service';
+
+  @override
+  String get lyricsTranslateMoreServices => 'Get more translation plugins';
+
+  @override
+  String get lyricsTranslateMoreServicesSub => 'Open plugin store';
+
+  @override
+  String get lyricsTranslateTargetTitle => 'Translate into';
+
+  @override
+  String get lyricsTranslateTargetApp => 'Follows the app language';
+
+  @override
+  String get lyricsTranslateTargetFailed => 'Could not save the language';
+
+  @override
+  String get lyricsTranslateModelTitle => 'Model';
+
+  @override
+  String get lyricsTranslateStyleTitle => 'Style';
+
+  @override
+  String get lyricsTranslateStylePickerTitle => 'Translation style';
+
+  @override
+  String get lyricsTranslateNoteTitle => 'Extra instructions';
+
+  @override
+  String lyricsTranslateNoteHelper(String plugin) {
+    return 'Extra instructions for every song (saved in the settings of $plugin).';
+  }
+
+  @override
+  String lyricsTranslateSearchHint(int count) {
+    return 'Search $count items';
+  }
+
+  @override
+  String get lyricsTranslateDefaultTag => 'default';
+
+  @override
+  String get lyricsTranslateLater => 'Later';
+
+  @override
+  String get lyricsTranslateDone => 'Done';
+
+  @override
+  String get lyricsTranslateWriteInvalid => 'The value is not valid';
+
+  @override
+  String get lyricsTranslateWriteTooLarge => 'The instructions are too long';
+
+  @override
+  String get lyricsTranslateWriteUnknown => 'This plugin has no such setting';
+
+  @override
+  String get lyricsTranslateWriteFailed => 'Could not save the setting';
+
+  @override
   String get pluginsStoreTitle => 'Plugin store';
 
   @override

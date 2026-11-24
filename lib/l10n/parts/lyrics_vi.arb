@@ -733,5 +733,344 @@
   "lyricsLangKa": "Tiếng Gruzia",
   "lyricsLangIs": "Tiếng Iceland",
   "lyricsLangMk": "Tiếng Macedonia",
-  "lyricsLangMi": "Tiếng Māori"
+  "lyricsLangMi": "Tiếng Māori",
+  "lyricsTranslateTitle": "Dịch lời",
+  "lyricsTranslateSettings": "Cài đặt dịch",
+  "lyricsTranslatePreview": "Xem trước",
+  "lyricsTranslateDisplay": "Cách hiện bản dịch",
+  "lyricsTranslateDisplayUnder": "Dưới dòng",
+  "lyricsTranslateDisplayReplace": "Thay dòng",
+  "lyricsTranslateBy": "Dịch bởi {by}",
+  "@lyricsTranslateBy": {
+    "placeholders": {
+      "by": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateByPartial": "Dịch bởi {by} · dịch dở {done}/{total} dòng",
+  "@lyricsTranslateByPartial": {
+    "placeholders": {
+      "by": {
+        "type": "String"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsTranslateRedoing": "Đang dịch lại, bản cũ vẫn hiện",
+  "lyricsTranslateRetranslate": "Dịch lại",
+  "lyricsTranslateSection": "Bản dịch",
+  "lyricsTranslateSourceAuto": "Tự nhận",
+  "lyricsTranslateSourceDetected": "{language} · tự nhận",
+  "@lyricsTranslateSourceDetected": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateSourceHint": "Ngôn ngữ của lời, do dịch vụ dịch nhận ra",
+  "lyricsTranslateSwitch": "Bật bản dịch",
+  "lyricsTranslateTarget": "Dịch sang {language}",
+  "@lyricsTranslateTarget": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateNoPluginTitle": "Chưa có tiện ích dịch",
+  "lyricsTranslateNoPluginBody": "Cài một tiện ích dịch (Google, DeepL, Gemini…) từ kho tiện ích để dịch lời bài hát.",
+  "lyricsTranslateOpenStore": "Mở kho tiện ích",
+  "lyricsTranslateServiceTitle": "Dịch vụ",
+  "lyricsTranslateServiceUnset": "Chưa chọn dịch vụ",
+  "lyricsTranslateServiceGone": "Dịch vụ mặc định đã bị gỡ, chọn dịch vụ khác",
+  "lyricsTranslateServiceScope": "Mặc định cho mọi bài",
+  "lyricsTranslateAiTag": "AI",
+  "lyricsTranslateTuneTitle": "Tinh chỉnh AI",
+  "lyricsTranslatePhoneticSection": "Phiên âm",
+  "lyricsTranslatePhoneticTitle": "Furigana, Romaji",
+  "lyricsTranslatePhoneticDesc": "Phiên âm lời tiếng Nhật, Trung, Hàn",
+  "lyricsTranslateSoonTag": "Sắp có",
+  "lyricsTranslateWorking": "Đang dịch…",
+  "lyricsTranslateWorkingCount": "Đang dịch… {done}/{total} dòng",
+  "@lyricsTranslateWorkingCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsTranslateWorkingAgain": "Đang dịch lại…",
+  "lyricsTranslateWorkingAgainCount": "Đang dịch lại… {done}/{total} dòng",
+  "@lyricsTranslateWorkingAgainCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsTranslateCancel": "Huỷ",
+  "lyricsTranslateSame": "Lời bài hát đã là {language} (theo {service})",
+  "@lyricsTranslateSame": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      },
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslatePartialTitle": "Mới dịch được {done}/{total} dòng",
+  "@lyricsTranslatePartialTitle": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsTranslatePartialLine": "Phần còn lại lỗi: {reason}",
+  "@lyricsTranslatePartialLine": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslatePausedTitle": "{service} đang tạm dừng",
+  "@lyricsTranslatePausedTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslatePausedLine": "Máy chủ báo quá nhiều yêu cầu (429) · Kanaru dịch lại sau {time}",
+  "@lyricsTranslatePausedLine": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateNetworkTitle": "Không kết nối được tới {service}",
+  "@lyricsTranslateNetworkTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateNetworkLine": "Lỗi mạng hoặc hết thời gian chờ",
+  "lyricsTranslateServerTitle": "{service} đang lỗi",
+  "@lyricsTranslateServerTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateServerLine": "Máy chủ của dịch vụ trả lỗi",
+  "lyricsTranslateQuotaTitle": "{service} đã hết hạn mức",
+  "@lyricsTranslateQuotaTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateQuotaLine": "Hết lượt dịch của API key này · đợi kỳ sau hoặc đổi dịch vụ",
+  "lyricsTranslateBadKeyTitle": "{service} báo lỗi",
+  "@lyricsTranslateBadKeyTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateBadKeyLine": "API key không hợp lệ hoặc đã hết hạn",
+  "lyricsTranslateConfigTitle": "{service} cần được cấu hình",
+  "@lyricsTranslateConfigTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateConfigLine": "Thiếu: {fields}",
+  "@lyricsTranslateConfigLine": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateInvalidTitle": "Bản dịch lệch số dòng",
+  "lyricsTranslateInvalidLine": "{service} trả về số dòng không khớp với lời",
+  "@lyricsTranslateInvalidLine": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateTooLongTitle": "Lời quá dài để dịch",
+  "lyricsTranslateTooLongLine": "Lời bài vượt giới hạn một lần dịch của {service}",
+  "@lyricsTranslateTooLongLine": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateUnsupportedTitle": "{service} không dịch sang {language}",
+  "@lyricsTranslateUnsupportedTitle": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateUnsupportedLine": "Chọn ngôn ngữ khác hoặc đổi dịch vụ",
+  "lyricsTranslateGoneTitle": "Dịch vụ dịch đã bị gỡ",
+  "lyricsTranslateGoneLine": "Chọn dịch vụ khác để dịch tiếp",
+  "lyricsTranslateUnsetTitle": "Chưa chọn dịch vụ dịch",
+  "lyricsTranslateUnsetLine": "Lời bài hát chỉ được gửi đi sau khi bạn chọn",
+  "lyricsTranslateReasonPaused": "{service} đang tạm dừng",
+  "@lyricsTranslateReasonPaused": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateReasonNetwork": "không kết nối được tới {service}",
+  "@lyricsTranslateReasonNetwork": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateReasonServer": "{service} đang lỗi",
+  "@lyricsTranslateReasonServer": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateReasonQuota": "{service} đã hết hạn mức",
+  "@lyricsTranslateReasonQuota": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateReasonBadKey": "API key không hợp lệ hoặc đã hết hạn",
+  "lyricsTranslateReasonConfig": "{service} cần được cấu hình",
+  "@lyricsTranslateReasonConfig": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateReasonInvalid": "bản dịch lệch số dòng",
+  "lyricsTranslateReasonTooLong": "lời quá dài để dịch",
+  "lyricsTranslateReasonUnsupported": "{service} không dịch sang {language}",
+  "@lyricsTranslateReasonUnsupported": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateReasonGone": "dịch vụ đã bị gỡ",
+  "lyricsTranslateReasonNoService": "chưa chọn dịch vụ",
+  "lyricsTranslateRetry": "Thử lại",
+  "lyricsTranslateConfigure": "Cấu hình",
+  "lyricsTranslateChangeService": "Đổi dịch vụ",
+  "lyricsTranslateChoose": "Chọn",
+  "lyricsTranslateBarOtherLine": "Dịch lại bằng {service}",
+  "@lyricsTranslateBarOtherLine": {
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateBarDiffTitle": "Lựa chọn khác bản đang hiện",
+  "lyricsTranslateDiffNote": "đổi lời dặn",
+  "lyricsTranslateDiffVersion": "plugin đã cập nhật",
+  "lyricsTranslateRetranslated": "Đã dịch lại · {name}",
+  "@lyricsTranslateRetranslated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateServicePageTitle": "Dịch vụ dịch",
+  "lyricsTranslateServiceSent": "Lời, tên bài và nghệ sĩ được gửi tới plugin khi dịch.",
+  "lyricsTranslateScopeTitle": "Áp dụng cho",
+  "lyricsTranslateScopeSong": "Bài này",
+  "lyricsTranslateScopeQueue": "Hàng đợi",
+  "lyricsTranslateScopeAll": "Mọi bài",
+  "lyricsTranslateScopePro": "Chọn dịch vụ riêng cho bài hoặc hàng đợi: tính năng Pro",
+  "lyricsTranslateServiceSection": "Dịch vụ",
+  "lyricsTranslateMoreServices": "Tải thêm tiện ích dịch",
+  "lyricsTranslateMoreServicesSub": "Mở kho tiện ích",
+  "lyricsTranslateTargetTitle": "Dịch sang",
+  "lyricsTranslateTargetApp": "Theo ngôn ngữ ứng dụng",
+  "lyricsTranslateTargetFailed": "Không lưu được ngôn ngữ",
+  "lyricsTranslateModelTitle": "Model",
+  "lyricsTranslateStyleTitle": "Phong cách",
+  "lyricsTranslateStylePickerTitle": "Phong cách dịch",
+  "lyricsTranslateNoteTitle": "Lời dặn thêm",
+  "lyricsTranslateNoteHelper": "Lời dặn thêm cho mọi bài (lưu vào cài đặt của {plugin}).",
+  "@lyricsTranslateNoteHelper": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsTranslateSearchHint": "Tìm trong {count} mục",
+  "@lyricsTranslateSearchHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsTranslateDefaultTag": "mặc định",
+  "lyricsTranslateLater": "Để sau",
+  "lyricsTranslateDone": "Xong",
+  "lyricsTranslateWriteInvalid": "Giá trị không hợp lệ",
+  "lyricsTranslateWriteTooLarge": "Lời dặn quá dài",
+  "lyricsTranslateWriteUnknown": "Plugin này không có ô này",
+  "lyricsTranslateWriteFailed": "Không lưu được cài đặt"
 }

@@ -209,6 +209,54 @@ legend **Dịch**.
 - RTL: `Text.textDirection = rtl` on the translation when the target is in
   `rtlLanguages`.
 
+## UI: the Dịch lời modal (`lyrics/ui/translation/modal/`)
+
+Mockup: `mockups/screens/07-lyrics.md` (Modal Dịch lời, T1–T9), legend **Modal**
+and **Modal lỗi dịch**. Entry points (header button, pill, `T`, ⋮) are a later
+change; they call `showTranslateModal`.
+
+- **Frame.** `showTranslateModal(context, trackId, {followsPlaying})` opens a
+  sheet (mobile) or a 440 dp dialog (desktop) through `showTranslateFrame`.
+  Each sub-page (`Dịch vụ dịch`, `Dịch sang`, `Tinh chỉnh AI`) is its own route
+  over the modal, so Esc and Back close the topmost first. All routes of one
+  open modal register in `TranslateModalControl`; `closeAll()` pops them
+  topmost first (a store or settings link, "Dịch lại", the song changing).
+- **State read.** `trackTranslationProvider(id)` (status, map, source language,
+  `settingsDiffer`, line counts), `translationCreditProvider`,
+  `effectiveTranslationTargetProvider`, `translateServicesProvider` (installed
+  translate / AI plugins, the chosen one, "gone" when it is chosen but not
+  installed) and `translateTuneProvider(installId)` (model / style select
+  fields with the user's own choices, their stored values, the note).
+  `translateSettingsDiff` compares `settingsJson` of the shown translation with
+  the plugin now (model, style, note hash, version) for the bottom bar.
+- **Body.** Preview (sung line, else the first line with text, through
+  `TranslatedLineScope`; [Dưới dòng | Thay dòng] writes `setDisplay`; credit and
+  ⟳) · language row (source = read-only label from the plugin's `detected`,
+  `KSwitch`, target ▾) · service row · "Tinh chỉnh AI" row (AI plugins only) ·
+  one status line · "Phiên âm" (dim, "Sắp có", only for ja / zh / ko lyrics) ·
+  bottom bar only for another plugin's copy or differing settings. With no
+  translate plugin the service rows are the "Chưa có tiện ích dịch" card.
+- **Status line** (`translate_status_line.dart`, strings in
+  `translate_failure_labels.dart`): one strip per `TranslationFailure`
+  (`errorContainer`; 429 shows the clock and no button; the buttons are
+  [Thử lại] `retry`, [Cấu hình] plugin page, [Đổi dịch vụ] / [Chọn] service
+  page); "dịch dở n/m dòng" for a failed run that left lines; "Đang dịch… n/m
+  dòng" with [Huỷ] (`cancelRetranslate`) only for a forced run; "đã là <ngôn
+  ngữ>" for `same`. On the mobile shell two buttons go on their own row.
+- **Dịch lại** (`retranslateInBackground`): the modal closes, the old
+  translation stays, a listener on the track's translation (which also keeps
+  the run held) shows "Đã dịch lại · <style or plugin>" when the forced run
+  ends ready, and lets go when it fails or never starts (5 s).
+- **Free limits.** "Áp dụng cho" is always on "Mọi bài" (the other two segments
+  are inert with the Pro caption and `ProBadge`); the model, style and
+  "Lời dặn thêm" write the plugin's own settings (`customInstruction`) through
+  `TranslationCommands`, one note for every song. A refused `ConfigWrite`
+  shows its error line under the field; the note saves on focus loss, on
+  [Xong] / [Dịch lại] and when the page closes.
+- Links (`translate_links.dart`): store `/settings/plugins?kind=translate`,
+  plugin page, ⚙ `/settings/lyrics`; the modal closes (and the desktop Now
+  Playing panel) before the router moves.
+
 ## Not here (Pro or later)
 
 Per-song or per-queue service and note, translate ahead ("Dịch trước"), the
