@@ -247,7 +247,10 @@ fn flac_date_of_another_year_is_none() {
     // belongs to 2020 and must not be shown next to it.
     let tag = tag_with(
         TagType::VorbisComments,
-        &[(ItemKey::Year, "2018"), (ItemKey::ReleaseDate, "2020-03-15")],
+        &[
+            (ItemKey::Year, "2018"),
+            (ItemKey::ReleaseDate, "2020-03-15"),
+        ],
     );
     save(&tag, &path);
     let tags = read(&path).expect("read");
@@ -261,10 +264,7 @@ fn mp3_comm_description_is_not_the_comment() {
     use lofty::tag::{ItemValue, TagItem};
     let dir = TempDir::new();
     let path = dir.write("song.mp3", &mp3_bytes());
-    let mut tag = tag_with(
-        TagType::Id3v2,
-        &[(ItemKey::RecordingDate, "2018-03-15")],
-    );
+    let mut tag = tag_with(TagType::Id3v2, &[(ItemKey::RecordingDate, "2018-03-15")]);
     let mut comment = TagItem::new(ItemKey::Comment, ItemValue::Text("the comment".into()));
     comment.set_description(String::new());
     let mut description = TagItem::new(ItemKey::Comment, ItemValue::Text("the description".into()));
