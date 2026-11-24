@@ -78,6 +78,7 @@ Future<void> openSongMenu(
           favoriteRow: favoriteRow,
           menuBelow: true,
           viaKeyboard: viaKeyboard,
+          beforeNavigate: beforeNavigate,
         ),
       );
     }
