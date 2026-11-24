@@ -33,17 +33,15 @@ class TranslateTuneField extends StatelessWidget {
         (value == null || value!.isEmpty
             ? null
             : ConfigOption(value: value!, title: value!));
-    final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TranslateSectionTitle(sectionTitle, count: field.options.length),
         if (shown != null)
-          KListRow(
-            selected: true,
+          KPickerField(
             title: tuneOptionTitle(field, shown),
-            subtitle: shown.subtitle == null ? null : Text(shown.subtitle!),
-            trailing: Icon(KIcons.collapse, color: scheme.onSecondaryContainer),
+            subtitle: shown.subtitle,
+            semanticLabel: '$sectionTitle: ${shown.title}',
             onTap: onOpen,
           ),
         if (error != null) TranslateCaption(error!, error: true),

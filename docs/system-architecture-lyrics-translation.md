@@ -231,7 +231,7 @@ and **Modal lỗi dịch**. The entry points are in "Entry points" below.
   `translateSettingsDiff` compares `settingsJson` of the shown translation with
   the plugin now (model, style, note hash, version) for the bottom bar.
 - **Body.** Preview (sung line, else the first line with text, through
-  `TranslatedLineScope`; [Dưới dòng | Thay dòng] writes `setDisplay`; credit and
+  `TranslatedLineScope`; [Dưới dòng | Thay dòng] (`KSegmentedCompact`, beside the caption) writes `setDisplay`; credit and
   ⟳) · language row (source = read-only label from the plugin's `detected`,
   `KSwitch`, target ▾) · service row · "Tinh chỉnh AI" row (AI plugins only) ·
   one status line · "Phiên âm" (dim, "Sắp có", only for ja / zh / ko lyrics) ·
@@ -243,7 +243,8 @@ and **Modal lỗi dịch**. The entry points are in "Entry points" below.
   [Thử lại] `retry`, [Cấu hình] plugin page, [Đổi dịch vụ] / [Chọn] service
   page); "dịch dở n/m dòng" for a failed run that left lines; "Đang dịch… n/m
   dòng" with [Huỷ] (`cancelRetranslate`) only for a forced run; "đã là <ngôn
-  ngữ>" for `same`. On the mobile shell two buttons go on their own row.
+  ngữ>" for `same`. On the mobile shell two buttons go on their own row; with one button the text takes the remaining width and the button sits at the right end.
+- **Dịch vụ dịch** says what is sent behind a `KHelpIcon` after the page title (no visible caption). **Tinh chỉnh AI** shows Model / Phong cách as `KPickerField` cards.
 - **Dịch lại** (`retranslateInBackground`): the modal closes, the old
   translation stays, a listener on the track's translation (which also keeps
   the run held) shows "Đã dịch lại · <style or plugin>" when the forced run
@@ -283,7 +284,7 @@ Now Playing only places these widgets; what they show comes from one provider.
   open (it publishes like any lyrics view and stops when it closes).
 - **Mobile button** (`TranslateButton`, in `lyrics_screen_header.dart`): icon;
   on = primary icon + 6 dp primary dot under it; working = ring; failed =
-  `KAlertDot.corner`; no lyrics = disabled (dimmed by `KIconButton`). Tap =
+  `KAlertDot.corner` on the glyph; no lyrics = disabled (dimmed by `KIconButton`). Tap =
   `showTranslateModal(followsPlaying: true)`.
 - **Desktop pill** (`TranslatePill`, a `KPressable` over a tonal fill, in `desktop_now_playing_header.dart`):
   off "Dịch"; on `secondaryContainer`; translated [plugin icon · language];

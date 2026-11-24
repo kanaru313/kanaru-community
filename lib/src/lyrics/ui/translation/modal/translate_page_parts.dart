@@ -11,9 +11,13 @@ class TranslatePageHeader extends StatelessWidget {
     required this.title,
     required this.onClose,
     this.onSettings,
+    this.hint,
   });
 
   final String title;
+
+  /// A note about the whole page, behind an ⓘ right after the title.
+  final String? hint;
   final VoidCallback onClose;
 
   /// The ⚙ that opens Cài đặt › Lời bài; null leaves it out.
@@ -32,13 +36,26 @@ class TranslatePageHeader extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Semantics(
-              header: true,
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w700),
-              ),
+            child: Row(
+              children: [
+                Flexible(
+                  child: Semantics(
+                    header: true,
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+                if (hint != null)
+                  KHelpIcon(
+                    message: hint!,
+                    tooltip: l10n.settingsSectionHintTooltip(title),
+                    title: title,
+                    closeLabel: l10n.lyricsModalClose,
+                  ),
+              ],
             ),
           ),
           if (onSettings != null)

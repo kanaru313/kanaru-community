@@ -5,17 +5,16 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../plugins/state/store_ops.dart' show pluginIconProvider;
 import '../lyrics_spinner.dart';
 import 'translate_entry_state.dart';
 import 'translate_labels.dart';
 import 'translate_toggle.dart';
 
-/// Size of the dot under the icon while translation is on.
-const double _onDot = 6;
-
 /// The lyrics-screen header button of the mobile shell: opens "Dịch lời".
-/// Translation on: icon in primary with a 6 dp primary dot under it; a run
-/// going: a ring instead of the icon; any failure: the red alert dot on the
+/// Translation on with a translation shown: the icon of the plugin in use (as
+/// the source button shows its lyrics plugin); on without one: the icon in
+/// primary; a run going: a ring instead of the icon; any failure: the red alert dot on the
 /// corner; no lyrics: dimmed and inert. Only this widget watches the entry
 /// state.
 class TranslateButton extends ConsumerWidget {
@@ -32,57 +31,32 @@ class TranslateButton extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final state = ref.watch(translateEntryProvider);
     final id = state.trackId;
-    final label = translateEntryLabel(l10n, state);
-    final button = KIconButton(
+    final installId = state.installId;
+    final shownPlugin = state.on && state.translated && installId != null;
+    final label = shownPlugin
+        ? '${translateEntryLabel(l10n, state)} · ${state.pluginName ?? ''}'
+        : translateEntryLabel(l10n, state);
+    final face = state.working
+        ? LyricsSpinner(
+            size: KIconSize.md - 2,
+            color: scheme.primary,
+            strokeWidth: 2.5,
+          )
+        : shownPlugin
+        ? KSourceAvatar(
+            label: state.pluginName ?? '',
+            size: KIconSize.md,
+            imageBytes: ref.watch(pluginIconProvider(installId)).value,
+          )
+        : const Icon(KIcons.languages);
+    return KIconButton(
       tooltip: label,
       color: state.on && state.available ? scheme.primary : null,
       onPressed: state.available && id != null
           ? () => unawaited(opener(context, id))
           : null,
-      child: state.working
-          ? LyricsSpinner(
-              size: KIconSize.md - 2,
-              color: scheme.primary,
-              strokeWidth: 2.5,
-            )
-          : _Glyph(dot: state.on && state.available),
-    );
-    return state.failed ? KAlertDot.corner(child: button) : button;
-  }
-}
-
-/// The translate icon, with the "on" dot under it when [dot].
-class _Glyph extends StatelessWidget {
-  const _Glyph({required this.dot});
-
-  final bool dot;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox.square(
-      dimension: KIconSize.md,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          const Icon(KIcons.languages),
-          if (dot)
-            Positioned(
-              bottom: -(_onDot / 2 + 2),
-              child: ExcludeSemantics(
-                child: SizedBox.square(
-                  dimension: _onDot,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
+      // The red dot sits on the glyph's corner, not the button's.
+      child: state.failed ? KAlertDot.corner(child: face) : face,
     );
   }
 }

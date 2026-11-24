@@ -128,10 +128,17 @@ class TranslateFailureStrip extends StatelessWidget {
                 children: [
                   Icon(text.icon, size: KIconSize.md, color: scheme.error),
                   const KGap(KSpace.x3),
-                  Expanded(child: words),
-                  if (!stacked) ...[
+                  // The text takes the remaining width; one button keeps its
+                  // own width at the right end. Two buttons side by side
+                  // (desktop) may wrap, so they get a flexible share.
+                  Expanded(flex: 3, child: words),
+                  if (!stacked && buttons.length == 1) ...[
+                    const KGap(KSpace.x2),
+                    ...buttons,
+                  ] else if (!stacked) ...[
                     const KGap(KSpace.x2),
                     Flexible(
+                      flex: 2,
                       child: Wrap(
                         alignment: WrapAlignment.end,
                         children: buttons,

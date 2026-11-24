@@ -66,36 +66,39 @@ Future<TranslateHost> _openTune(
 
 void main() {
   group('service page', () {
-    testWidgets('caption, Pro lock on "Apply to", services as icon rows', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-      await _openService(tester);
-      expect(
-        find.text(
-          'Lyrics, song title and artist are sent to the plugin when translating.',
-        ),
-        findsOneWidget,
-      );
-      expect(find.text('Apply to'), findsOneWidget);
-      // Free: always "Every song"; the Pro tag and its caption say why.
-      expect(_segmentSelected(tester, 'Every song'), isTrue);
-      expect(find.byType(ProBadge), findsOneWidget);
-      expect(
-        find.textContaining('A service of its own for a song or the queue'),
-        findsOneWidget,
-      );
-      await tester.tap(find.text('This song'));
-      await tester.pump();
-      expect(_segmentSelected(tester, 'This song'), isFalse);
-      expect(_segmentSelected(tester, 'Every song'), isTrue);
-      // The chosen service is selected; the AI one carries its tag.
-      expect(isSelectedRow(tester, 'Google Translate'), isTrue);
-      expect(isSelectedRow(tester, 'Gemini Translate'), isFalse);
-      expect(find.text('AI'), findsOneWidget);
-      expect(find.text('Get more translation plugins'), findsOneWidget);
-      handle.dispose();
-    });
+    testWidgets(
+      'ⓘ on the title, Pro lock on "Apply to", services as icon rows',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        await _openService(tester);
+        // The sentence sits behind the ⓘ of the title, not as a visible line.
+        expect(
+          find.text(
+            'Lyrics, song title and artist are sent to the plugin when translating.',
+          ),
+          findsNothing,
+        );
+        expect(find.byType(KHelpIcon), findsOneWidget);
+        expect(find.text('Apply to'), findsOneWidget);
+        // Free: always "Every song"; the Pro tag and its caption say why.
+        expect(_segmentSelected(tester, 'Every song'), isTrue);
+        expect(find.byType(ProBadge), findsOneWidget);
+        expect(
+          find.textContaining('A service of its own for a song or the queue'),
+          findsOneWidget,
+        );
+        await tester.tap(find.text('This song'));
+        await tester.pump();
+        expect(_segmentSelected(tester, 'This song'), isFalse);
+        expect(_segmentSelected(tester, 'Every song'), isTrue);
+        // The chosen service is selected; the AI one carries its tag.
+        expect(isSelectedRow(tester, 'Google Translate'), isTrue);
+        expect(isSelectedRow(tester, 'Gemini Translate'), isFalse);
+        expect(find.text('AI'), findsOneWidget);
+        expect(find.text('Get more translation plugins'), findsOneWidget);
+        handle.dispose();
+      },
+    );
 
     testWidgets('"This song" and "Queue" are disabled, "Every song" is not', (
       tester,

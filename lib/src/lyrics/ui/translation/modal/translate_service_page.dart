@@ -11,7 +11,7 @@ import 'translate_page_parts.dart';
 import 'translate_scope_segmented.dart';
 import 'translate_service_row.dart';
 
-/// "Dịch vụ dịch": what is sent (a visible caption), "Áp dụng cho", the
+/// "Dịch vụ dịch": what is sent (behind the ⓘ of the title), "Áp dụng cho", the
 /// installed translate plugins as icon rows (one choice, tint only) and
 /// "Tải thêm tiện ích dịch". Choosing a service closes the page.
 class TranslateServicePage extends ConsumerWidget {
@@ -48,6 +48,7 @@ class TranslateServicePage extends ConsumerWidget {
       children: [
         TranslatePageHeader(
           title: l10n.lyricsTranslateServicePageTitle,
+          hint: l10n.lyricsTranslateServiceSent,
           onClose: () => Navigator.of(context).pop(),
         ),
         Flexible(
@@ -56,7 +57,6 @@ class TranslateServicePage extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TranslateCaption(l10n.lyricsTranslateServiceSent),
                 const TranslateScopeSegmented(),
                 TranslateSectionTitle(l10n.lyricsTranslateServiceSection),
                 for (final service

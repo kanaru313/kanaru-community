@@ -88,28 +88,24 @@ class TranslatePreview extends ConsumerWidget {
                     ),
                   ),
                   if (on && canChoose)
-                    // Width follows the two labels (and the text scale), and
-                    // gives way when the row is narrower.
+                    // Gives way when the row is narrower (large text scale).
                     Flexible(
                       flex: 3,
-                      child: IntrinsicWidth(
-                        child: KSegmented<TranslationDisplay>(
-                          semanticLabel: l10n.lyricsTranslateDisplay,
-                          value: display,
-                          segments: [
-                            KSegment(
-                              value: TranslationDisplay.under,
-                              label: l10n.lyricsTranslateDisplayUnder,
-                            ),
-                            KSegment(
-                              value: TranslationDisplay.replace,
-                              label: l10n.lyricsTranslateDisplayReplace,
-                            ),
-                          ],
-                          onChanged: (v) => ref
-                              .read(translationCommandsProvider)
-                              .setDisplay(v),
-                        ),
+                      child: KSegmentedCompact<TranslationDisplay>(
+                        semanticLabel: l10n.lyricsTranslateDisplay,
+                        value: display,
+                        segments: [
+                          KSegment(
+                            value: TranslationDisplay.under,
+                            label: l10n.lyricsTranslateDisplayUnder,
+                          ),
+                          KSegment(
+                            value: TranslationDisplay.replace,
+                            label: l10n.lyricsTranslateDisplayReplace,
+                          ),
+                        ],
+                        onChanged: (v) =>
+                            ref.read(translationCommandsProvider).setDisplay(v),
                       ),
                     ),
                 ],

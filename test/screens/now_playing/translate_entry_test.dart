@@ -186,8 +186,16 @@ void main() {
       await tester.pump();
       final handle = tester.ensureSemantics();
       const on = 'Translate lyrics · Translating into Vietnamese';
-      expect(_label(tester, TranslateButton), on);
+      // The button names the plugin in use and shows its icon.
+      expect(_label(tester, TranslateButton), '$on · Google Translate');
       expect(_label(tester, TranslatePill), on);
+      expect(
+        find.descendant(
+          of: find.byType(TranslateButton),
+          matching: find.byType(KSourceAvatar),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Vietnamese'), findsOneWidget);
       expect(find.text('Translate'), findsNothing);
       expect(find.byType(KAlertDot), findsNothing);

@@ -68,13 +68,15 @@ class TranslateLanguageRow extends ConsumerWidget {
       child: Row(
         children: [
           Expanded(
+            flex: 3,
             child: Tooltip(
               message: l10n.lyricsTranslateSourceHint,
               child: Text(
                 label,
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
-                style: text?.copyWith(color: scheme.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: scheme.onSurfaceVariant),
               ),
             ),
           ),
@@ -86,6 +88,7 @@ class TranslateLanguageRow extends ConsumerWidget {
           ),
           const KGap(KSpace.x2),
           Expanded(
+            flex: 2,
             child: Semantics(
               label: l10n.lyricsTranslateTarget(targetName),
               excludeSemantics: true,
