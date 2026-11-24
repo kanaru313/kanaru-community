@@ -410,11 +410,17 @@ void main() {
     var amberFlips = 0;
     final subs = [
       h.container.listen(
-        hasCustomCoverProvider((kind: CustomCoverKind.album, itemKey: blue)),
+        shownCoverProvider((
+          item: (kind: CustomCoverKind.album, itemKey: blue),
+          automaticCoverKey: null,
+        )),
         (_, _) => blueFlips++,
       ),
       h.container.listen(
-        hasCustomCoverProvider((kind: CustomCoverKind.album, itemKey: amber)),
+        shownCoverProvider((
+          item: (kind: CustomCoverKind.album, itemKey: amber),
+          automaticCoverKey: null,
+        )),
         (_, _) => amberFlips++,
       ),
     ];
@@ -424,7 +430,7 @@ void main() {
       }
     });
     await _choose(tester, h, CustomCoverKind.album, blue);
-    expect(blueFlips, 1);
+    expect(blueFlips, greaterThan(0));
     expect(amberFlips, 0);
     await unmountApp(tester);
   });

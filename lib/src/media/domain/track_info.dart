@@ -37,7 +37,6 @@ class TrackInfo {
     this.albumKey,
     this.genre,
     this.language,
-    this.languageDetected = false,
     this.format,
     this.sampleRate,
     this.bitrate,
@@ -63,7 +62,6 @@ class TrackInfo {
   final AlbumKey? albumKey;
   final String? genre;
   final String? language;
-  final bool languageDetected;
 
   /// Upper-case codec/extension ('FLAC'): the `codec` column (database phase),
   /// falling back to `formatFromLocator(rel_path)`.
@@ -99,7 +97,6 @@ class TrackInfo {
         albumKey == other.albumKey &&
         genre == other.genre &&
         language == other.language &&
-        languageDetected == other.languageDetected &&
         format == other.format &&
         sampleRate == other.sampleRate &&
         bitrate == other.bitrate &&
@@ -125,7 +122,6 @@ class TrackInfo {
     albumKey,
     genre,
     language,
-    languageDetected,
     format,
     sampleRate,
     bitrate,

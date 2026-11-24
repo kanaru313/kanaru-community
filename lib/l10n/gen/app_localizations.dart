@@ -140,12 +140,6 @@ abstract class AppLocalizations {
   /// **'Nothing here yet. Your music will show up here.'**
   String get emptyHome;
 
-  /// No description provided for @emptyLibrary.
-  ///
-  /// In en, this message translates to:
-  /// **'Your library is empty.'**
-  String get emptyLibrary;
-
   /// No description provided for @emptyPlaylists.
   ///
   /// In en, this message translates to:
@@ -1292,12 +1286,6 @@ abstract class AppLocalizations {
   /// **'Lyrics'**
   String get playbackTabLyrics;
 
-  /// No description provided for @playbackLyricsTabSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Lyrics: coming soon'**
-  String get playbackLyricsTabSoon;
-
   /// No description provided for @playbackPanelClose.
   ///
   /// In en, this message translates to:
@@ -2216,12 +2204,6 @@ abstract class AppLocalizations {
   /// **'Advanced'**
   String get libraryMenuAdvanced;
 
-  /// No description provided for @libraryMenuFindLyrics.
-  ///
-  /// In en, this message translates to:
-  /// **'Find lyrics online…'**
-  String get libraryMenuFindLyrics;
-
   /// No description provided for @libraryMenuHide.
   ///
   /// In en, this message translates to:
@@ -2839,6 +2821,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get libraryInfoClose;
+
+  /// No description provided for @libraryInfoLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the song info'**
+  String get libraryInfoLoadFailed;
 
   /// No description provided for @libraryPanelLabel.
   ///

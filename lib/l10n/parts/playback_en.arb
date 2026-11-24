@@ -183,7 +183,6 @@
   "playbackToggleCoverColumn": "Show or hide the cover column",
   "playbackTranslate": "Translate",
   "playbackTabLyrics": "Lyrics",
-  "playbackLyricsTabSoon": "Lyrics: coming soon",
   "playbackPanelClose": "Close panel",
   "playbackQueuePanelCounts": "{total, plural, one{1 track} other{{total} tracks}} · {remaining} left",
   "@playbackQueuePanelCounts": {

@@ -31,9 +31,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emptyHome => 'Nothing here yet. Your music will show up here.';
 
   @override
-  String get emptyLibrary => 'Your library is empty.';
-
-  @override
   String get emptyPlaylists => 'No playlists yet.';
 
   @override
@@ -773,9 +770,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackTabLyrics => 'Lyrics';
 
   @override
-  String get playbackLyricsTabSoon => 'Lyrics: coming soon';
-
-  @override
   String get playbackPanelClose => 'Close panel';
 
   @override
@@ -1396,9 +1390,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryMenuAdvanced => 'Advanced';
 
   @override
-  String get libraryMenuFindLyrics => 'Find lyrics online…';
-
-  @override
   String get libraryMenuHide => 'Remove from library';
 
   @override
@@ -1795,6 +1786,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryInfoClose => 'Close';
+
+  @override
+  String get libraryInfoLoadFailed => 'Could not read the song info';
 
   @override
   String get libraryPanelLabel => 'Selected songs';

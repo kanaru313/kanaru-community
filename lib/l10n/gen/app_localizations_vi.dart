@@ -31,9 +31,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get emptyHome => 'Chưa có gì ở đây. Nhạc của bạn sẽ hiện ở đây.';
 
   @override
-  String get emptyLibrary => 'Thư viện đang trống.';
-
-  @override
   String get emptyPlaylists => 'Chưa có playlist nào.';
 
   @override
@@ -717,9 +714,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playbackTabLyrics => 'Lời bài';
 
   @override
-  String get playbackLyricsTabSoon => 'Lời bài: sắp có';
-
-  @override
   String get playbackPanelClose => 'Đóng khung';
 
   @override
@@ -1286,9 +1280,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get libraryMenuAdvanced => 'Nâng cao';
 
   @override
-  String get libraryMenuFindLyrics => 'Tìm lời online…';
-
-  @override
   String get libraryMenuHide => 'Loại khỏi thư viện';
 
   @override
@@ -1678,6 +1669,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get libraryInfoClose => 'Đóng';
+
+  @override
+  String get libraryInfoLoadFailed => 'Không đọc được thông tin bài';
 
   @override
   String get libraryPanelLabel => 'Các bài đã chọn';

@@ -27,8 +27,8 @@ const int _approachLines = 3;
 ///
 /// Only [scroll] moves, never an enclosing scrollable. A scroll the view did
 /// not start (drag, wheel, trackpad, keyboard) stops auto-scroll and turns
-/// [showBack] on; the line comes back through [backToLine] (the pill) or, when
-/// [autoReturnDelay] is set, by itself after that long without input.
+/// [paused] on; the line comes back through [backToLine] (the back button) or,
+/// when [autoReturnDelay] is set, by itself after that long without input.
 mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
   final scroll = ScrollController();
   final listController = ListController();
@@ -36,9 +36,9 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
   /// The current line, -1 before the first.
   int lineIndex = -1;
 
-  /// True while the user has taken over: the pill is shown and line changes
-  /// do not scroll.
-  final ValueNotifier<bool> showBack = ValueNotifier(false);
+  /// True while the user has taken over: the back button is shown and line
+  /// changes do not scroll.
+  bool _paused = false;
 
   /// Which way the current line lies from the anchor while the user has the
   /// scroll (the back button's arrow); none otherwise. Notifies only on a
@@ -65,14 +65,13 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
   /// Seconds without input before the view returns by itself; null = never.
   Duration? get autoReturnDelay;
 
-  bool get paused => showBack.value;
+  bool get paused => _paused;
 
   int get _target => lineIndex < 0 ? 0 : lineIndex;
 
   /// Cancels the timer and the controllers; call from `dispose`.
   void disposeScroll() {
     _autoReturn?.cancel();
-    showBack.dispose();
     locateSide.dispose();
     listController.dispose();
     scroll.dispose();
@@ -182,10 +181,10 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
         : KLocateSide.above;
   }
 
-  /// The user took over: stop auto-scroll, show the pill, start the
+  /// The user took over: stop auto-scroll, show the back button, start the
   /// auto-return timer when the setting asks for one.
   void takeOver() {
-    showBack.value = true;
+    _paused = true;
     updateDirection();
     _autoReturn?.cancel();
     final delay = autoReturnDelay;
@@ -225,7 +224,7 @@ mixin SyncedLyricsScroll<T extends StatefulWidget> on State<T> {
   void backToLine() {
     _autoReturn?.cancel();
     _autoReturn = null;
-    showBack.value = false;
+    _paused = false;
     locateSide.value = KLocateSide.none;
     reveal(animate: true);
   }

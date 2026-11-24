@@ -39,7 +39,7 @@ class SongInfoView extends ConsumerWidget {
     if (async.hasError && !async.hasValue) {
       child = _Message(
         icon: KIcons.warning,
-        message: l10n.libraryMenuLoadFailed,
+        message: l10n.libraryInfoLoadFailed,
         page: page,
         back: false,
       );

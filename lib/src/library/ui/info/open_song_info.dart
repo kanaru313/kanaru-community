@@ -56,8 +56,9 @@ Future<void> openSongInfo(
 /// Shows the info route of [info] on the root navigator. With [menuBelow] the
 /// song menu is the route right under it (the `›` of its header): the header
 /// has no ⋮, closing returns to the menu, and a link closes the menu too.
-/// [beforeNavigate] (the menu's own) runs before a link opens its page, so
-/// whatever sits over the app (Now Playing, the queue sheet) closes first.
+/// [beforeNavigate] runs before a link opens its page, so whatever sits over
+/// the app (Now Playing, the queue sheet) closes first. Only the menu passes
+/// it (its own, with [menuBelow]); a straight open ([openSongInfo]) has none.
 Future<void> showSongInfo(
   BuildContext context,
   TrackInfo info, {

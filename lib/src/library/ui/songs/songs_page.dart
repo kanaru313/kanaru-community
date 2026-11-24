@@ -3,18 +3,18 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
-import '../browse/play_shuffle_buttons.dart';
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
 import '../../domain/browse/list_sort.dart';
+import '../../domain/browse/list_view_prefs.dart';
 import '../../domain/browse/song_scope.dart';
 import '../../domain/library_tabs.dart';
 import '../../state/browse/song_list_providers.dart';
 import '../browse/library_list_frame.dart';
 import '../browse/library_list_scaffold.dart';
 import '../browse/play_actions.dart';
+import '../browse/play_shuffle_buttons.dart';
 import '../collections/collection_parts.dart' show CollectionViewSwitch;
-import '../../domain/browse/list_view_prefs.dart';
 import 'song_list.dart';
 
 /// The Songs list: every visible track, in the remembered sort.

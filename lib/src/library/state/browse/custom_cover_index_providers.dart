@@ -15,14 +15,3 @@ final customCoverIndexProvider =
           watchCustomCoverItemKeys(ref.watch(appDatabaseProvider), kind.name),
       isAutoDispose: true,
     );
-
-/// True when the item has a custom cover row. False while the index loads, so
-/// a tile starts on its automatic cover and switches once the set arrives.
-/// Watching this rebuilds the caller only when its own answer flips.
-final hasCustomCoverProvider = Provider.family<bool, CustomCoverItem>(
-  (ref, item) => ref.watch(
-    customCoverIndexProvider(item.kind)
-        .select((index) => index.value?.contains(item.itemKey) ?? false),
-  ),
-  isAutoDispose: true,
-);

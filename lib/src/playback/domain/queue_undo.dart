@@ -21,7 +21,7 @@ QueueEdit undo(QueueState s, UndoToken token, KeyGen keys) {
   if (toRestore.isEmpty) return QueueEdit.none(s);
 
   final bySort = s.shuffled
-      ? (List.of(s.items)..sort(_bySortKey))
+      ? (List.of(s.items)..sort(compareBySortKey))
       : List.of(s.items);
   final byShuffle = s.shuffled ? List.of(s.items) : null;
   final restored = <QueueItem>[];
@@ -57,11 +57,6 @@ QueueEdit undo(QueueState s, UndoToken token, KeyGen keys) {
     }),
     inserted: restored,
   );
-}
-
-int _bySortKey(QueueItem a, QueueItem b) {
-  final k = a.sortKey.compareTo(b.sortKey);
-  return k != 0 ? k : a.entryId.compareTo(b.entryId);
 }
 
 class _Slot {
