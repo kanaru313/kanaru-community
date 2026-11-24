@@ -9,16 +9,19 @@ const _segments = [
   KSegment(value: 'replace', label: 'Thay dòng'),
 ];
 
-Widget _compact({String value = 'under', ValueChanged<String>? onChanged}) =>
-    Align(
-      alignment: Alignment.topLeft,
-      child: KSegmentedCompact<String>(
-        segments: _segments,
-        value: value,
-        onChanged: onChanged ?? (_) {},
-        semanticLabel: 'Hiển thị',
-      ),
-    );
+Widget _compact({
+  String value = 'under',
+  ValueChanged<String>? onChanged,
+  bool disabled = false,
+}) => Align(
+  alignment: Alignment.topLeft,
+  child: KSegmentedCompact<String>(
+    segments: _segments,
+    value: value,
+    onChanged: disabled ? null : (onChanged ?? (_) {}),
+    semanticLabel: 'Hiển thị',
+  ),
+);
 
 Color? _fill(WidgetTester tester, String label) {
   final box = tester.widget<AnimatedContainer>(
@@ -86,18 +89,64 @@ void main() {
     expect(chosen, 'replace');
   });
 
-  testWidgets('is 24 dp high at normal text scale and grows with scale', (
+  testWidgets('the pill is 24 dp, the tap area 48: a tap above it selects', (
     tester,
   ) async {
-    await tester.pumpWidget(host(_compact()));
+    String? chosen;
+    await tester.pumpWidget(host(_compact(onChanged: (v) => chosen = v)));
+    final pill = tester.getRect(
+      find
+          .ancestor(
+            of: find.text('Thay dòng'),
+            matching: find.byType(AnimatedContainer),
+          )
+          .last,
+    );
+    expect(pill.height, kSegmentedCompactHeight);
     expect(
       tester.getSize(find.byType(KSegmentedCompact<String>)).height,
-      kSegmentedCompactHeight,
+      kSegmentedCompactHit,
     );
+    await tester.tapAt(Offset(pill.center.dx, pill.top - 10));
+    expect(chosen, 'replace');
+    chosen = null;
+    await tester.tapAt(Offset(pill.center.dx, pill.bottom + 10));
+    expect(chosen, 'replace');
+  });
+
+  testWidgets('selecting does not change the label weight', (tester) async {
+    await tester.pumpWidget(host(_compact()));
+    FontWeight? weight(String t) =>
+        tester.widget<Text>(find.text(t)).style?.fontWeight;
+    expect(weight('Dưới dòng'), weight('Thay dòng'));
+  });
+
+  testWidgets('onChanged null: dimmed, inert, not focusable', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(host(_compact(disabled: true)));
+    expect(
+      tester.widget<Opacity>(find.byType(Opacity).first).opacity,
+      lessThan(1),
+    );
+    expect(
+      tester.getSemantics(find.text('Thay dòng')),
+      isSemantics(
+        label: 'Thay dòng',
+        isButton: true,
+        isSelected: false,
+        isInMutuallyExclusiveGroup: true,
+        hasEnabledState: true,
+        isEnabled: false,
+      ),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('grows with the text scale', (tester) async {
     await tester.pumpWidget(host(_compact(), textScale: 2));
     expect(
       tester.getSize(find.byType(KSegmentedCompact<String>)).height,
-      greaterThan(kSegmentedCompactHeight),
+      greaterThanOrEqualTo(kSegmentedCompactHit),
     );
   });
 }

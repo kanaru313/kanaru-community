@@ -110,7 +110,8 @@ class TranslatePreview extends ConsumerWidget {
                     ),
                 ],
               ),
-              const KGap(KSpace.x2),
+              // The 48 dp tap area of the segmented already spaces the row.
+              KGap(on && canChoose ? 0 : KSpace.x2),
               if (line != null)
                 TranslatePreviewLine(trackId: id, line: line, layout: layout),
               if (on)
