@@ -8,6 +8,7 @@ import '../../data/translation/translation_cache_store.dart';
 import '../../data/translation/translation_job_types.dart';
 import '../../data/translation/translation_jobs.dart';
 import '../../domain/translation/translation_failure.dart';
+import '../../domain/translation/translation_status.dart';
 import '../track_lyrics_providers.dart';
 import 'translation_engine_providers.dart';
 import 'translation_plan.dart';

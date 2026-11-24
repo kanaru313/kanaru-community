@@ -51,6 +51,15 @@ class TranslationJobs {
   final _status = <JobKey, JobStatus>{};
   final _active = <JobKey, JobState>{};
   final _failed = <JobKey, JobState>{};
+
+  /// What a forced run finished before it stopped without completing (no
+  /// view left, or a failure): a later forced run of the same key, plugin
+  /// version and settings sends only the lines still missing. In memory only;
+  /// lost when the app is killed.
+  ///
+  /// At most [_maxForcedPartials] keys are kept; the oldest is dropped first.
+  final _forcedPartials = <JobKey, ForcedPartial>{};
+  static const _maxForcedPartials = 20;
   late final PluginConfigEpochs _epochs = PluginConfigEpochs(
     services,
     _onConfigSaved,
@@ -86,7 +95,21 @@ class TranslationJobs {
       return;
     }
     _failed.remove(key);
-    _begin(JobState(key, req, forced: forced, watchers: {watcher}));
+    if (failed != null && retry) {
+      // "Thử lại" restarts the failed job in its own mode (a failed forced
+      // run stays forced) with all its views.
+      failed.watchers.add(watcher);
+      _begin(failed.retry(keepFailure: false));
+      return;
+    }
+    _begin(
+      JobState(
+        key,
+        req,
+        forced: forced,
+        watchers: {...?failed?.watchers, watcher},
+      ),
+    );
   }
 
   /// [watcher] no longer wants [key]: when nobody does, the job's unsent
@@ -104,6 +127,7 @@ class TranslationJobs {
     job.cancelled = true;
     job.cancel?.cancel();
     _active.remove(key);
+    _forcedPartials.remove(key);
     _setStatus(key, null);
     _syncConfigWatch(key.installId);
   }
@@ -120,11 +144,16 @@ class TranslationJobs {
     _epochs.dispose();
     _active.clear();
     _failed.clear();
+    _forcedPartials.clear();
     _status.clear();
   }
 
   void _begin(JobState job) {
     _active[job.key] = job;
+    if (job.forced && !job.hasPartial) {
+      final kept = _forcedPartials[job.key];
+      if (kept != null) job.adoptPartial(kept);
+    }
     job.epochAtStart = _epochs.of(job.key.installId);
     if (!job.keepFailure) {
       _setStatus(job.key, JobRunning(0, 0, forced: job.forced));
@@ -164,6 +193,17 @@ class TranslationJobs {
     if (_disposed || !_isCurrent(job)) return;
     final key = job.key;
     _active.remove(key);
+    if (job.forced) {
+      if (end is JobFinished || !job.hasPartial) {
+        _forcedPartials.remove(key);
+      } else {
+        _forcedPartials.remove(key);
+        _forcedPartials[key] = job.toPartial();
+        if (_forcedPartials.length > _maxForcedPartials) {
+          _forcedPartials.remove(_forcedPartials.keys.first);
+        }
+      }
+    }
     switch (end) {
       case JobFinished():
         _setStatus(key, null);

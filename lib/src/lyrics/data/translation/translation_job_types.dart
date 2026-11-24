@@ -86,6 +86,22 @@ final class JobFailedEnd extends JobEnd {
   final int? version;
 }
 
+/// The lines a forced run finished before it stopped, kept in memory for the
+/// next forced run of the same key (never the views).
+class ForcedPartial {
+  const ForcedPartial({
+    required this.lines,
+    required this.detected,
+    required this.version,
+    required this.settings,
+  });
+
+  final Map<String, String> lines;
+  final Map<String, String?> detected;
+  final int? version;
+  final String? settings;
+}
+
 /// The mutable state of one job, owned by the engine.
 class JobState {
   JobState(
@@ -127,6 +143,10 @@ class JobState {
   final forcedLines = <String, String>{};
   final detected = <String, String?>{};
   int? partialVersion;
+  String? partialSettings;
+
+  /// The partial was compared with the plugin's settings once in this job.
+  bool partialChecked = false;
 
   TranslationKey get cacheKey =>
       (contentHash: key.hash, installId: key.installId, targetLang: key.target);
@@ -137,15 +157,38 @@ class JobState {
     forcedLines.clear();
     detected.clear();
     partialVersion = null;
+    partialSettings = null;
+  }
+
+  bool get hasPartial => forcedLines.isNotEmpty || detected.isNotEmpty;
+
+  /// What this job finished, without its views.
+  ForcedPartial toPartial() => ForcedPartial(
+    lines: Map.of(forcedLines),
+    detected: Map.of(detected),
+    version: partialVersion,
+    settings: partialSettings,
+  );
+
+  /// Takes over what an earlier forced run of the same key finished.
+  void adoptPartial(ForcedPartial from) {
+    forcedLines.addAll(from.lines);
+    detected.addAll(from.detected);
+    partialVersion = from.version;
+    partialSettings = from.settings;
   }
 
   /// A new pass for the same request after a failure.
-  JobState retry() => JobState(
+  ///
+  /// [keepFailure]: the failure stays on screen until the pass answers (an
+  /// automatic retry after a settings save). A user's "Thử lại" passes false
+  /// so the running status (and "Huỷ" of a forced run) shows at once.
+  JobState retry({bool keepFailure = true}) => JobState(
     key,
     request,
     forced: forced,
     watchers: {...watchers},
-    keepFailure: true,
+    keepFailure: keepFailure,
     priorFailure: failure,
   );
 }

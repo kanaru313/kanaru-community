@@ -185,7 +185,9 @@ class TranslationCacheStore {
                 targetLang: key.targetLang,
                 sourceLang: Value(existing?.sourceLang),
                 linesJson: json,
-                settingsJson: settingsJson,
+                // The first chunk's settings stay: a row whose chunks span a
+                // settings save reads as differing, so "Dịch lại" is offered.
+                settingsJson: existing?.settingsJson ?? settingsJson,
                 complete: const Value(false),
                 createdAt: existing?.createdAt ?? now,
               ),

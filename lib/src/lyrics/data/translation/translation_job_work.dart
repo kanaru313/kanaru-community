@@ -57,6 +57,12 @@ class TranslationJobWork {
         if (snap == null) {
           return const JobFailedEnd(TranslationFailure.pluginGone());
         }
+        if (!snap.spec.languages.contains(job.key.target)) {
+          return JobFailedEnd(
+            TranslationFailure.unsupportedLanguage(job.key.target),
+            version: snap.version,
+          );
+        }
         final lines = job.request.lines;
         final all = chunkLines(lines, snap.spec);
         if (exceedsTranslationCaps(lines, all)) {
@@ -65,8 +71,14 @@ class TranslationJobWork {
             version: snap.version,
           );
         }
-        // What an older version left in memory is never reused.
-        if (job.partialVersion != null && job.partialVersion != snap.version) {
+        // What an older version left in memory is never reused; what an
+        // earlier run kept (see TranslationJobs) is also dropped when the
+        // settings changed since. A save during this pass keeps its chunks.
+        final settingsChanged =
+            !job.partialChecked && job.partialSettings != snap.settingsJson;
+        job.partialChecked = true;
+        if (job.partialVersion != null &&
+            (job.partialVersion != snap.version || settingsChanged)) {
           job.dropPartial();
         }
         // A read failure is an error of this job (B1), never "no cache".
@@ -100,6 +112,8 @@ class TranslationJobWork {
             busyRetried = false;
             switches = 0;
             job.partialVersion = snap.version;
+            // The first chunk's settings stay for the whole run.
+            job.partialSettings ??= snap.settingsJson;
             job.detected.addAll(chunk.detected);
             final end = await _keep(job, snap, chunk.texts);
             if (end != null) return end;
@@ -194,7 +208,8 @@ class TranslationJobWork {
           key: job.cacheKey,
           sourceLang: source,
           lines: Map.of(job.forcedLines),
-          settingsJson: snap.settingsJson,
+          // A run that spanned a settings save reads as differing.
+          settingsJson: job.partialSettings ?? snap.settingsJson,
           complete: true,
           createdAt: now(),
         ),

@@ -103,6 +103,27 @@ void main() {
     });
   });
 
+  group('an unsupported target', () {
+    test('fails before sending anything and caches nothing', () async {
+      rig.runner.on(_a, 'translate', (r, _) => translated(r));
+      final ja = keyOf('h1', to: 'ja');
+      rig.jobs.request(ja, _req(['a']), w1);
+      await rig.jobs.whenIdle();
+      expect(rig.runner.calls, isEmpty);
+      expect(
+        rig.jobs.statuses[ja],
+        const JobFailed(
+          TranslationFailure.unsupportedLanguage('ja'),
+          version: 1,
+        ),
+      );
+      expect(
+        await row((contentHash: 'h1', installId: _a, targetLang: 'ja')),
+        isNull,
+      );
+    });
+  });
+
   group('the gate', () {
     test(
       'two songs requested never run at once, first come first served',
@@ -467,7 +488,9 @@ void main() {
         await rig.jobs.whenIdle();
         final saved = (await row())!;
         expect(saved.sourceLang, 'en');
-        expect(saved.settingsJson, '{"pluginVersion":2}');
+        // The row keeps the first chunk's settings, so a row that mixes two
+        // plugin versions reads as differing and "Dịch lại" is offered.
+        expect(saved.settingsJson, '{"pluginVersion":1}');
       },
     );
   });
@@ -649,6 +672,177 @@ void main() {
         const JobFailed(TranslationFailure.quota(), version: 1, forced: true),
       );
       expect((await row())!.lines, {'a': 'OLD'});
+    });
+
+    test('retry after a failed forced run stays forced and replaces the row '
+        'only when complete', () async {
+      await saveOld();
+      var n = 0;
+      rig.runner.on(_a, 'translate', (r, _) {
+        n++;
+        return n == 1
+            ? const RunScriptError(RunErrorKind.server, 'x')
+            : translated(r);
+      });
+      rig.jobs.request(_key, _req(['a']), w1, forced: true);
+      await rig.jobs.whenIdle();
+      expect(rig.jobs.statuses[_key], isA<JobFailed>());
+      expect((await row())!.lines, {'a': 'OLD'});
+
+      rig.jobs.request(_key, _req(['a']), w1, retry: true);
+      await rig.jobs.whenIdle();
+      expect(rig.runner.calls, hasLength(2));
+      expect((await row())!.lines, {'a': 'T:a'});
+      expect(rig.jobs.statuses, isEmpty);
+    });
+
+    test('a retry keeps the other watcher of the failed job', () async {
+      var n = 0;
+      final hand = HandRuns();
+      rig.runner.on(_a, 'translate', (r, c) {
+        n++;
+        return n == 1
+            ? const RunScriptError(RunErrorKind.server, 'x')
+            : hand.call(r, c);
+      });
+      final lines = ['a', 'b', 'c', 'd'];
+      rig.jobs.request(_key, _req(lines), w1);
+      rig.jobs.request(_key, _req(lines), w2);
+      await rig.jobs.whenIdle();
+      rig.jobs.request(_key, _req(lines), w1, retry: true);
+      await pumpEventQueue();
+      rig.jobs.release(_key, w1);
+      hand.answer(translated);
+      await pumpEventQueue();
+      // w2 still wants the second chunk.
+      expect(hand.running.map(sentLines), [
+        ['c', 'd'],
+      ]);
+      hand.answer(translated);
+      await rig.jobs.whenIdle();
+      expect((await row())!.complete, isTrue);
+    });
+
+    test('a user retry shows running at once, not the old failure', () async {
+      var n = 0;
+      final hand = HandRuns();
+      rig.runner.on(_a, 'translate', (r, c) {
+        n++;
+        return n == 1
+            ? const RunScriptError(RunErrorKind.server, 'x')
+            : hand.call(r, c);
+      });
+      rig.jobs.request(_key, _req(['a']), w1, forced: true);
+      await rig.jobs.whenIdle();
+      expect(rig.jobs.statuses[_key], isA<JobFailed>());
+      rig.jobs.request(_key, _req(['a']), w1, retry: true);
+      expect(rig.jobs.statuses[_key], isA<JobRunning>());
+      await pumpEventQueue();
+      expect(rig.jobs.statuses[_key], const JobRunning(0, 1, forced: true));
+      hand.answer(translated);
+      await rig.jobs.whenIdle();
+    });
+
+    test('a forced run spanning a settings change keeps the first chunk '
+        'settings', () async {
+      final hand = HandRuns();
+      rig.runner.on(_a, 'translate', hand.call);
+      rig.jobs.request(_key, _req(['a', 'b', 'c', 'd']), w1, forced: true);
+      await pumpEventQueue();
+      rig.services.plugins[_a] = snapshotOf(
+        _a,
+        maxLines: 2,
+        settings: '{"pluginVersion":1,"model":"x"}',
+      );
+      hand.answer(translated);
+      await pumpEventQueue();
+      hand.answer(translated);
+      await rig.jobs.whenIdle();
+      final saved = (await row())!;
+      expect(saved.complete, isTrue);
+      expect(saved.settingsJson, '{"pluginVersion":1}');
+    });
+
+    group('finished chunks of an unfinished run', () {
+      final lines = ['a', 'b', 'c', 'd'];
+
+      test('every view gone: the chunk in flight is kept, no new chunk is '
+          'sent, and the next run sends only the rest', () async {
+        await saveOld();
+        final hand = HandRuns();
+        rig.runner.on(_a, 'translate', hand.call);
+        rig.jobs.request(_key, _req(lines), w1, forced: true);
+        await pumpEventQueue();
+        rig.jobs.release(_key, w1);
+        hand.answer(translated);
+        await rig.jobs.whenIdle();
+        expect(rig.runner.calls.map(sentLines), [
+          ['a', 'b'],
+        ]);
+        expect((await row())!.lines, {'a': 'OLD'});
+
+        rig.runner.on(_a, 'translate', (r, _) => translated(r));
+        rig.jobs.request(_key, _req(lines), w1, forced: true);
+        await rig.jobs.whenIdle();
+        expect(rig.runner.calls.skip(1).map(sentLines), [
+          ['c', 'd'],
+        ]);
+        expect((await row())!.lines, {
+          'a': 'T:a',
+          'b': 'T:b',
+          'c': 'T:c',
+          'd': 'T:d',
+        });
+      });
+
+      test(
+        'a failure then a retry does not send the finished chunk again',
+        () async {
+          var n = 0;
+          rig.runner.on(_a, 'translate', (r, _) {
+            n++;
+            return n == 2
+                ? const RunScriptError(RunErrorKind.server, 'x')
+                : translated(r);
+          });
+          rig.jobs.request(_key, _req(lines), w1, forced: true);
+          await rig.jobs.whenIdle();
+          rig.jobs.request(_key, _req(lines), w1, retry: true);
+          await rig.jobs.whenIdle();
+          expect(rig.runner.calls.map(sentLines), [
+            ['a', 'b'],
+            ['c', 'd'],
+            ['c', 'd'],
+          ]);
+          expect((await row())!.complete, isTrue);
+        },
+      );
+
+      test('another plugin version or other settings drops them', () async {
+        var n = 0;
+        rig.runner.on(_a, 'translate', (r, _) {
+          n++;
+          return n == 2
+              ? const RunScriptError(RunErrorKind.server, 'x')
+              : translated(r);
+        });
+        rig.jobs.request(_key, _req(lines), w1, forced: true);
+        await rig.jobs.whenIdle();
+        rig.services.plugins[_a] = snapshotOf(
+          _a,
+          version: 1,
+          maxLines: 2,
+          settings: '{"pluginVersion":1,"model":"x"}',
+        );
+        rig.jobs.request(_key, _req(lines), w1, retry: true);
+        await rig.jobs.whenIdle();
+        expect(rig.runner.calls.map(sentLines), [
+          ['a', 'b'],
+          ['c', 'd'],
+          ['a', 'b'],
+          ['c', 'd'],
+        ]);
+      });
     });
   });
 }

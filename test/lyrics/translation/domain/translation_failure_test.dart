@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/lyrics/domain/translation/translation_failure.dart';
+import 'package:kanaru/src/lyrics/domain/translation/translation_status.dart';
 
 void main() {
   test('failures compare by value', () {

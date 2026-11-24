@@ -40,6 +40,9 @@ entry, the result of a finished job is the saved row.
 - Lines sent: the unique trimmed non-blank lines, chunked by the plugin's
   `translate.maxLines` / `maxChars`. Caps: 1000 lines, 20 000 characters, 20
   chunks per song; above them nothing is sent (`tooLong`).
+- A target language the plugin does not list in `spec.languages` (exact code
+  match; `zh-Hans` and `zh-Hant` differ) fails before any send with
+  `unsupportedLanguage(target)`; nothing is sent or cached.
 - A resume reads the row and sends only the lines it lacks, so a dispose, a
   kill or a failed chunk never loses billed work. After a restart the
   detected-language votes of the earlier chunks are gone: the source language
@@ -47,7 +50,9 @@ entry, the result of a finished job is the saved row.
 - `settings_json` = `{pluginVersion, model, style, instructionHash}` read from
   the plugin's stored config for the run (`PluginTranslationServices`); the
   instruction text is never stored. A saved row whose settings differ from the
-  plugin's now shows `settingsDiffer`; nothing re-runs by itself.
+  plugin's now shows `settingsDiffer`; nothing re-runs by itself. A row whose
+  chunks span a settings save keeps the settings of its first chunk, so it
+  reads as differing and "Dịch lại" is offered.
 - Model, style and the note ("Lời dặn thêm") are the plugin's own settings
   (`model`, `style`, `customInstruction`), written by the commands through
   `PluginActions.configWrites`; a key the manifest does not declare is
@@ -74,7 +79,12 @@ entry, the result of a finished job is the saved row.
   (detected languages, forced lines) is dropped.
 - Forced re-run: ignores the saved row, keeps it on screen
   (`loading(background: true)`), collects the lines in memory and replaces the
-  row only when every chunk is done (a kill in between loses that run).
+  row only when every chunk is done. When every view goes away the chunk in
+  flight still finishes, no new chunk is sent, and the finished lines stay in
+  memory as the forced partial of (key, plugin version, settings). A retry or
+  a new "Dịch lại" with the same version and settings sends only the missing
+  lines; another version or other settings drops the partial, and so does
+  cancelling. A kill of the app loses it (accepted).
 
 ## Failures
 
@@ -104,11 +114,14 @@ setup, a retry does not fix it); `invalidResponse` → `invalidResponse`.
 plus the script's wait, else the runner's default pause.
 
 - A failed job stays failed: no automatic retry (it would bill again). It is
-  tried again by `retry` ("Thử lại", sends only the missing lines), by a forced
+  tried again by `retry` ("Thử lại", sends only the missing lines, in the
+  failed job's own mode: a failed "Dịch lại" stays forced, and every view that
+  watched it keeps watching), by a forced
   re-run, by a newer plugin version (once), and by a save of that plugin's
   settings (once per save).
 - A save is counted while the plugin has a job (`PluginConfigEpochs`; the first
-  emission of the store's stream is the baseline). A job that fails in a later
+  emission of the store's stream is the baseline; a save landing between
+  `listen` and that first emission is taken as the baseline, which is accepted). A job that fails in a later
   epoch than it started in is tried once more at once; failed jobs that a view
   watches are retried once per save while their failure stays visible until
   the retry answers; failed jobs nobody watches are forgotten (they run when

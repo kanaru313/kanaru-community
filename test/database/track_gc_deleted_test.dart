@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' show Value, Variable;
+import 'package:drift/drift.dart' show TableUpdateQuery, Value, Variable;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
 
@@ -96,6 +96,28 @@ void main() {
     expect(await collectOrphanTracks(db, now: _now), 1);
     expect(await remaining(), {young});
   });
+
+  test(
+    'a watcher of every owned child table is told when the GC deletes',
+    () async {
+      await addAgedTrack(db, local, 'a', TrackStatus.missing);
+      final told = <String>{};
+      final subs = [
+        for (final t in [...trackOwnedChildTables, 'tracks', 'track_search'])
+          db
+              .tableUpdates(TableUpdateQuery.onTableName(t))
+              .listen((_) => told.add(t)),
+      ];
+      addTearDown(() async {
+        for (final s in subs) {
+          await s.cancel();
+        }
+      });
+      expect(await collectOrphanTracks(db, now: _now), 1);
+      await pumpEventQueue();
+      expect(told, {...trackOwnedChildTables, 'tracks', 'track_search'});
+    },
+  );
 
   test('children and the search row go with the track', () async {
     final id = await addAgedTrack(db, local, 'a', TrackStatus.missing);

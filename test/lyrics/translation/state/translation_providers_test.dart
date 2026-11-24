@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/lyrics/data/translation/translation_cache_store.dart';
 import 'package:kanaru/src/lyrics/domain/translation/translation_failure.dart';
+import 'package:kanaru/src/lyrics/domain/translation/translation_status.dart';
 import 'package:kanaru/src/lyrics/state/translation/translation_commands.dart';
 import 'package:kanaru/src/lyrics/state/translation/translation_providers.dart';
 import 'package:kanaru/src/lyrics/state/translation/translation_settings.dart';
@@ -497,13 +498,13 @@ void main() {
     });
 
     test('the global target applies when the song has none', () async {
-      await t.c.read(translationTargetProvider.notifier).set('fr');
+      await t.c.read(translationTargetProvider.notifier).set('en');
       t.show(id, ['hello']);
       final sub = watch(id);
       await t.h.until(() => t.armed.isNotEmpty);
       t.timers.last.fire();
       await untilStatus(sub, (s) => s is StatusReady);
-      expect((t.h.runner.calls.single.input! as Map)['to'], 'fr');
+      expect((t.h.runner.calls.single.input! as Map)['to'], 'en');
     });
   });
 

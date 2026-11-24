@@ -51,6 +51,27 @@ void main() {
 
   group('chunks', () {
     test(
+      'a chunk with other settings keeps the first chunk settings',
+      () async {
+        await store.mergeChunk(
+          _key(),
+          {'a': 'A'},
+          settingsJson: '{"m":1}',
+          now: 1,
+        );
+        await store.mergeChunk(
+          _key(),
+          {'b': 'B'},
+          settingsJson: '{"m":2}',
+          now: 2,
+        );
+        final row = await store.lookup(_key());
+        expect(row!.lines, {'a': 'A', 'b': 'B'});
+        expect(row.settingsJson, '{"m":1}');
+      },
+    );
+
+    test(
       'mergeChunk creates the row incomplete, a later chunk keeps the first',
       () async {
         expect(

@@ -142,18 +142,10 @@ Future<int> collectOrphanTracks(
     }
   });
   if (deleted > 0) {
-    // The FTS delete trigger writes `track_search` too.
     db.notifyUpdates({
-      for (final t in [
-        'tracks',
-        'track_details',
-        'play_stats',
-        'track_artists',
-        'lyrics_pins',
-        'lyrics_rejects',
-        'track_translation_prefs',
-        'track_search',
-      ])
+      // Every owned child, so a new one cannot be forgotten here; the FTS
+      // delete trigger also writes `track_search`.
+      for (final t in [...trackOwnedChildTables, 'tracks', 'track_search'])
         TableUpdate(t),
     });
   }

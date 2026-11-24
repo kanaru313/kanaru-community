@@ -750,7 +750,7 @@ Owner: lyrics (`tables/lyrics_translation_tables.dart`). Sync: cache (safe to dr
 | `install_id` | TEXT | PK | | The translate plugin's install id. |
 | `target_lang` | TEXT | PK | | `CHECK (length(target_lang) BETWEEN 2 AND 7)`. Only the shape is checked: the code list lives in the plugins module (`translationLanguageCodes`) and `database/` may not import it. |
 | `source_lang` | TEXT | NULL | | Dominant source language the plugin saw. |
-| `lines_json` | TEXT | NOT NULL | | JSON object, source line to translation. `CHECK (length(lines_json) <= 2097152)`. |
+| `lines_json` | TEXT | NOT NULL | | JSON object, source line to translation. `CHECK (length(lines_json) <= 2097152)`: the cap counts characters, not bytes (CJK or Vietnamese rows can take more on disk). |
 | `settings_json` | TEXT | NOT NULL | | `{pluginVersion, model, style, instructionHash}` of the run. |
 | `complete` | INTEGER | NOT NULL | 0 | `CHECK (complete IN (0, 1))`. Chunks merge into `lines_json` with `complete = 0`; only a complete row is reused. |
 | `created_at` | INTEGER | NOT NULL | | Epoch ms, set when the row is created. |

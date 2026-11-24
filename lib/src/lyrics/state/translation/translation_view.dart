@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart' show mapEquals;
 
 import '../../data/translation/translation_cache_store.dart';
 import '../../data/translation/translation_job_types.dart';
-import '../../domain/translation/translation_failure.dart';
+import '../../domain/translation/translation_status.dart';
 import '../../domain/translation/translation_language.dart';
 
 /// What the lyrics views show about the translation of one track.
