@@ -97,12 +97,20 @@ Future<void> _open(
   if (!context.mounted) return;
 
   final sleepLabel = _SleepTimerLabel(container, texts);
+  // A "Go to" row closes Now Playing first: focus must not go back then.
+  var navigated = false;
+  final VoidCallback? beforeNavigate = closeNowPlaying == null
+      ? null
+      : () {
+          navigated = true;
+          closeNowPlaying();
+        };
   try {
     await openSongMenu(
       context,
       info,
       viaKeyboard: viaKeyboard,
-      beforeNavigate: closeNowPlaying,
+      beforeNavigate: beforeNavigate,
       selectRow: false,
       queueButtons: false,
       // The lyrics row follows the playing song, as the source button does.
@@ -140,6 +148,14 @@ Future<void> _open(
     );
   } finally {
     sleepLabel.close();
+    // Esc / a finished row action: focus goes back to the ⋮ button (desktop).
+    if (!navigated &&
+        context.mounted &&
+        returnFocus != null &&
+        returnFocus.context != null &&
+        returnFocus.canRequestFocus) {
+      returnFocus.requestFocus();
+    }
   }
 }
 

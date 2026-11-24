@@ -372,4 +372,75 @@ void main() {
     expect(find.text('Remove from favorites'), findsOneWidget);
     expect(find.text('Add to favorites'), findsNothing);
   });
+
+  group('returnFocus', () {
+    Future<(UiHost, FocusNode)> pumpFocus(WidgetTester tester) async {
+      final node = FocusNode(debugLabel: 'more');
+      addTearDown(node.dispose);
+      final host = await pumpWithPlayer(
+        tester,
+        Focus(focusNode: node, child: const Text('home')),
+        routes: _routes,
+        size: const Size(390, 900),
+        play: false,
+        overrides: [
+          extensionRegistryProvider.overrideWithValue(ExtensionRegistry()),
+          sleepTimerProvider.overrideWith(FakeSleepTimer.new),
+          ...sleepEstimates(),
+          songLyricsEntryProvider.overrideWithValue(const LyricsSongEntry()),
+        ],
+      );
+      await host.run(tester, () async {
+        await host.h.db.customStatement(
+          "UPDATE tracks SET album = 'Alb', artist = 'Art One', "
+          "album_title_key = 'alb', album_artist_key = 'art one' "
+          "WHERE title = 'T0'",
+        );
+        await host.h.play();
+      });
+      host.router!.push('/now-playing');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await host.letStreamsArrive(tester);
+      return (host, node);
+    }
+
+    testWidgets('a dismissed menu gives focus back to the ⋮ button', (
+      tester,
+    ) async {
+      final (_, node) = await pumpFocus(tester);
+      unawaited(
+        openNowPlayingSongMenu(
+          tester.element(find.text('home', skipOffstage: false)),
+          returnFocus: node,
+        ),
+      );
+      await menuLoads(tester);
+      expect(node.hasFocus, isFalse);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(node.hasPrimaryFocus, isTrue);
+    });
+
+    testWidgets('Go to album does not request focus on the button', (
+      tester,
+    ) async {
+      final (_, node) = await pumpFocus(tester);
+      var closed = 0;
+      unawaited(
+        openNowPlayingSongMenu(
+          tester.element(find.text('home', skipOffstage: false)),
+          returnFocus: node,
+          closeNowPlaying: () => closed++,
+        ),
+      );
+      await menuLoads(tester);
+      await tester.tap(find.text('Go to album'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(closed, 1);
+      expect(node.hasFocus, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  });
 }
