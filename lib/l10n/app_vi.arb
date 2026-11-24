@@ -3867,6 +3867,83 @@
   "lyricsInfoShowStamps": "Hiện mốc thời gian",
   "lyricsInfoHideStamps": "Ẩn mốc thời gian",
   "lyricsInfoUnreadable": "Không đọc được lời",
+  "lyricsTranslationCredit": "Dịch bởi {by} · {language}",
+  "lyricsTranslationCreditPartial": "Dịch bởi {by} · {language} · dịch dở {done}/{total} dòng",
+  "lyricsTranslationCreditOther": "Bản có sẵn của {plugin}",
+  "@lyricsTranslationCredit": {
+    "placeholders": {
+      "by": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "@lyricsTranslationCreditPartial": {
+    "placeholders": {
+      "by": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@lyricsTranslationCreditOther": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLangVi": "Tiếng Việt",
+  "lyricsLangEn": "Tiếng Anh",
+  "lyricsLangJa": "Tiếng Nhật",
+  "lyricsLangKo": "Tiếng Hàn",
+  "lyricsLangZhHans": "Tiếng Trung (giản thể)",
+  "lyricsLangZhHant": "Tiếng Trung (phồn thể)",
+  "lyricsLangFr": "Tiếng Pháp",
+  "lyricsLangDe": "Tiếng Đức",
+  "lyricsLangEs": "Tiếng Tây Ban Nha",
+  "lyricsLangIt": "Tiếng Ý",
+  "lyricsLangRu": "Tiếng Nga",
+  "lyricsLangPt": "Tiếng Bồ Đào Nha",
+  "lyricsLangTh": "Tiếng Thái",
+  "lyricsLangId": "Tiếng Indonesia",
+  "lyricsLangHi": "Tiếng Hindi",
+  "lyricsLangAr": "Tiếng Ả Rập",
+  "lyricsLangNl": "Tiếng Hà Lan",
+  "lyricsLangSv": "Tiếng Thụy Điển",
+  "lyricsLangPl": "Tiếng Ba Lan",
+  "lyricsLangTr": "Tiếng Thổ Nhĩ Kỳ",
+  "lyricsLangUk": "Tiếng Ukraina",
+  "lyricsLangCs": "Tiếng Séc",
+  "lyricsLangEl": "Tiếng Hy Lạp",
+  "lyricsLangFa": "Tiếng Ba Tư",
+  "lyricsLangRo": "Tiếng Romania",
+  "lyricsLangMs": "Tiếng Mã Lai",
+  "lyricsLangHe": "Tiếng Do Thái",
+  "lyricsLangFi": "Tiếng Phần Lan",
+  "lyricsLangDa": "Tiếng Đan Mạch",
+  "lyricsLangNo": "Tiếng Na Uy",
+  "lyricsLangHu": "Tiếng Hungary",
+  "lyricsLangCy": "Tiếng Wales",
+  "lyricsLangSk": "Tiếng Slovakia",
+  "lyricsLangSq": "Tiếng Albania",
+  "lyricsLangHy": "Tiếng Armenia",
+  "lyricsLangEu": "Tiếng Basque",
+  "lyricsLangMy": "Tiếng Myanmar",
+  "lyricsLangKa": "Tiếng Gruzia",
+  "lyricsLangIs": "Tiếng Iceland",
+  "lyricsLangMk": "Tiếng Macedonia",
+  "lyricsLangMi": "Tiếng Māori",
   "pluginsStoreTitle": "Kho plugin",
   "pluginsFilterTooltip": "Lọc",
   "pluginsFilterActiveLabel": "{count} đang bật",

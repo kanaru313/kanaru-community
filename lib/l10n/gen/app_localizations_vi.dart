@@ -5036,6 +5036,149 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lyricsInfoUnreadable => 'Không đọc được lời';
 
   @override
+  String lyricsTranslationCredit(String by, String language) {
+    return 'Dịch bởi $by · $language';
+  }
+
+  @override
+  String lyricsTranslationCreditPartial(
+    String by,
+    String language,
+    int done,
+    int total,
+  ) {
+    return 'Dịch bởi $by · $language · dịch dở $done/$total dòng';
+  }
+
+  @override
+  String lyricsTranslationCreditOther(String plugin) {
+    return 'Bản có sẵn của $plugin';
+  }
+
+  @override
+  String get lyricsLangVi => 'Tiếng Việt';
+
+  @override
+  String get lyricsLangEn => 'Tiếng Anh';
+
+  @override
+  String get lyricsLangJa => 'Tiếng Nhật';
+
+  @override
+  String get lyricsLangKo => 'Tiếng Hàn';
+
+  @override
+  String get lyricsLangZhHans => 'Tiếng Trung (giản thể)';
+
+  @override
+  String get lyricsLangZhHant => 'Tiếng Trung (phồn thể)';
+
+  @override
+  String get lyricsLangFr => 'Tiếng Pháp';
+
+  @override
+  String get lyricsLangDe => 'Tiếng Đức';
+
+  @override
+  String get lyricsLangEs => 'Tiếng Tây Ban Nha';
+
+  @override
+  String get lyricsLangIt => 'Tiếng Ý';
+
+  @override
+  String get lyricsLangRu => 'Tiếng Nga';
+
+  @override
+  String get lyricsLangPt => 'Tiếng Bồ Đào Nha';
+
+  @override
+  String get lyricsLangTh => 'Tiếng Thái';
+
+  @override
+  String get lyricsLangId => 'Tiếng Indonesia';
+
+  @override
+  String get lyricsLangHi => 'Tiếng Hindi';
+
+  @override
+  String get lyricsLangAr => 'Tiếng Ả Rập';
+
+  @override
+  String get lyricsLangNl => 'Tiếng Hà Lan';
+
+  @override
+  String get lyricsLangSv => 'Tiếng Thụy Điển';
+
+  @override
+  String get lyricsLangPl => 'Tiếng Ba Lan';
+
+  @override
+  String get lyricsLangTr => 'Tiếng Thổ Nhĩ Kỳ';
+
+  @override
+  String get lyricsLangUk => 'Tiếng Ukraina';
+
+  @override
+  String get lyricsLangCs => 'Tiếng Séc';
+
+  @override
+  String get lyricsLangEl => 'Tiếng Hy Lạp';
+
+  @override
+  String get lyricsLangFa => 'Tiếng Ba Tư';
+
+  @override
+  String get lyricsLangRo => 'Tiếng Romania';
+
+  @override
+  String get lyricsLangMs => 'Tiếng Mã Lai';
+
+  @override
+  String get lyricsLangHe => 'Tiếng Do Thái';
+
+  @override
+  String get lyricsLangFi => 'Tiếng Phần Lan';
+
+  @override
+  String get lyricsLangDa => 'Tiếng Đan Mạch';
+
+  @override
+  String get lyricsLangNo => 'Tiếng Na Uy';
+
+  @override
+  String get lyricsLangHu => 'Tiếng Hungary';
+
+  @override
+  String get lyricsLangCy => 'Tiếng Wales';
+
+  @override
+  String get lyricsLangSk => 'Tiếng Slovakia';
+
+  @override
+  String get lyricsLangSq => 'Tiếng Albania';
+
+  @override
+  String get lyricsLangHy => 'Tiếng Armenia';
+
+  @override
+  String get lyricsLangEu => 'Tiếng Basque';
+
+  @override
+  String get lyricsLangMy => 'Tiếng Myanmar';
+
+  @override
+  String get lyricsLangKa => 'Tiếng Gruzia';
+
+  @override
+  String get lyricsLangIs => 'Tiếng Iceland';
+
+  @override
+  String get lyricsLangMk => 'Tiếng Macedonia';
+
+  @override
+  String get lyricsLangMi => 'Tiếng Māori';
+
+  @override
   String get pluginsStoreTitle => 'Kho plugin';
 
   @override

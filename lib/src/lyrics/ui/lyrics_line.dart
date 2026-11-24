@@ -7,6 +7,9 @@ import '../domain/lyrics.dart';
 import '../domain/lyrics_display_prefs.dart';
 import 'lyrics_gap_mark.dart';
 import 'lyrics_text_styles.dart';
+import 'translation/line_translation.dart';
+import 'translation/translated_line_text.dart';
+import 'translation/translation_text_styles.dart';
 
 /// Scale of the current line.
 const double _currentScale = 1.02;
@@ -43,6 +46,7 @@ class LyricsLine extends StatefulWidget {
     required this.size,
     required this.dim,
     required this.align,
+    this.translation,
   });
 
   final int index;
@@ -54,6 +58,9 @@ class LyricsLine extends StatefulWidget {
   final double size;
   final LyricsDim dim;
   final LyricsAlign align;
+
+  /// What the line shows of its translation; null while translation is off.
+  final LineTranslation? translation;
 
   @override
   State<LyricsLine> createState() => _LyricsLineState();
@@ -89,6 +96,36 @@ class _LyricsLineState extends State<LyricsLine> {
   void _onActive() {
     final current = _isCurrent();
     if (current != _current) setState(() => _current = current);
+  }
+
+  /// The text of a line that is not a gap: the original alone, or with its
+  /// translation under it (replacing it, in "Thay dòng").
+  Widget _text(
+    BuildContext context,
+    TextStyle style,
+    bool isCurrent,
+    Duration duration,
+  ) {
+    final translation = widget.translation;
+    if (translation == null) return Text(widget.line.text);
+    return TranslatedLineText(
+      original: widget.line.text,
+      translation: translation,
+      translationStyle: lyricsTranslationStyle(
+        context,
+        line: style,
+        current: isCurrent,
+        dim: widget.dim,
+      ),
+      originalStyle: lyricsReplacedOriginalStyle(
+        context,
+        line: style,
+        current: isCurrent,
+        dim: widget.dim,
+      ),
+      textAlign: lyricsTextAlign(widget.align),
+      duration: duration,
+    );
   }
 
   @override
@@ -147,7 +184,7 @@ class _LyricsLineState extends State<LyricsLine> {
                           centered: centered,
                           label: l10n.lyricsGapLabel,
                         )
-                      : Text(widget.line.text),
+                      : _text(context, style, isCurrent, duration),
                 ),
               ),
             ),

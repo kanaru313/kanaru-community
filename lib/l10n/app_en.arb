@@ -3902,6 +3902,83 @@
   "lyricsInfoShowStamps": "Show timestamps",
   "lyricsInfoHideStamps": "Hide timestamps",
   "lyricsInfoUnreadable": "Couldn't read the lyrics",
+  "lyricsTranslationCredit": "Translated by {by} · {language}",
+  "lyricsTranslationCreditPartial": "Translated by {by} · {language} · partial {done}/{total} lines",
+  "lyricsTranslationCreditOther": "Existing translation from {plugin}",
+  "@lyricsTranslationCredit": {
+    "placeholders": {
+      "by": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "@lyricsTranslationCreditPartial": {
+    "placeholders": {
+      "by": {
+        "type": "String"
+      },
+      "language": {
+        "type": "String"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@lyricsTranslationCreditOther": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsLangVi": "Vietnamese",
+  "lyricsLangEn": "English",
+  "lyricsLangJa": "Japanese",
+  "lyricsLangKo": "Korean",
+  "lyricsLangZhHans": "Chinese (Simplified)",
+  "lyricsLangZhHant": "Chinese (Traditional)",
+  "lyricsLangFr": "French",
+  "lyricsLangDe": "German",
+  "lyricsLangEs": "Spanish",
+  "lyricsLangIt": "Italian",
+  "lyricsLangRu": "Russian",
+  "lyricsLangPt": "Portuguese",
+  "lyricsLangTh": "Thai",
+  "lyricsLangId": "Indonesian",
+  "lyricsLangHi": "Hindi",
+  "lyricsLangAr": "Arabic",
+  "lyricsLangNl": "Dutch",
+  "lyricsLangSv": "Swedish",
+  "lyricsLangPl": "Polish",
+  "lyricsLangTr": "Turkish",
+  "lyricsLangUk": "Ukrainian",
+  "lyricsLangCs": "Czech",
+  "lyricsLangEl": "Greek",
+  "lyricsLangFa": "Persian",
+  "lyricsLangRo": "Romanian",
+  "lyricsLangMs": "Malay",
+  "lyricsLangHe": "Hebrew",
+  "lyricsLangFi": "Finnish",
+  "lyricsLangDa": "Danish",
+  "lyricsLangNo": "Norwegian",
+  "lyricsLangHu": "Hungarian",
+  "lyricsLangCy": "Welsh",
+  "lyricsLangSk": "Slovak",
+  "lyricsLangSq": "Albanian",
+  "lyricsLangHy": "Armenian",
+  "lyricsLangEu": "Basque",
+  "lyricsLangMy": "Burmese",
+  "lyricsLangKa": "Georgian",
+  "lyricsLangIs": "Icelandic",
+  "lyricsLangMk": "Macedonian",
+  "lyricsLangMi": "Māori",
   "pluginsStoreTitle": "Plugin store",
   "pluginsFilterTooltip": "Filter",
   "pluginsFilterActiveLabel": "{count} on",

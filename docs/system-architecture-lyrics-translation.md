@@ -140,17 +140,74 @@ plus the script's wait, else the runner's default pause.
 ## Providers and commands
 
 - `trackTranslationProvider(TrackId)` → `TranslationView{status, map,
-  sourceLang, installId, settingsDiffer}`; a watcher is what asks for the
-  translation, so the UI must keep it watched while it shows or edits it.
+  sourceLang, installId, settingsDiffer, settingsJson, linesDone,
+  linesTotal}`; a watcher is what asks for the translation, so the UI must
+  keep it watched while it shows or edits it. `linesDone / linesTotal` count
+  unique lines (not chunks) while a run goes (`JobRunning.linesDone /
+  linesTotal`) and after a non-forced run that failed half way: then `map`
+  holds the lines of the saved incomplete row (`partialFailureView`), the
+  status stays `failed`, and the views read it as "dịch dở n/m dòng". A forced
+  run keeps its old complete row instead.
+- `effectiveTranslationTargetProvider(TrackId)`: the language the track is
+  translated into (song's own, else global, else the app language's default).
+  It and `readTranslationPlan` both call `pickTranslationTarget`, so the
+  modal's "Dịch sang" and the run never disagree.
+- `translationLayoutProvider(TrackId)`: null while translation is off, else
+  `{replace, rtl}` (display setting, target in `rtlLanguages`). Views watch it
+  and watch `trackTranslationProvider` only when it is non-null.
+- `translationCreditProvider(TrackId)`: who made the translation on screen
+  (plugin name; model and style titles read from the plugin's `model` / `style`
+  select fields by the ids in `settingsJson`; `other`; line counts of a partial
+  run), null when none is shown (same language, plugin gone, nothing yet).
 - `playingTranslationProvider`: the playing track's view, idle when nothing
   plays.
 - `translationCommandsProvider`: `toggle`, `setService`, `setDisplay`,
   `setTarget(track, lang)`, `retranslate(track)`, `retry(track)`,
   `cancelRetranslate(track)`, `setModel`, `setStyle`, `setNote`.
-- Seams: `translationAppLanguageProvider` (default `en`; the app overrides it
-  from the appearance setting where it wires the screens, the lyrics module
-  cannot read it), `translationDebounceProvider` (1 s) and
+- Seams: `translationAppLanguageProvider` (default `en`; `lib/kanaru.dart`
+  overrides it with `translationAppLanguageOverride` from the appearance
+  setting, the lyrics module cannot read it), `translationDebounceProvider` (1 s) and
   `translationTimerProvider` (tests).
+
+## UI: translated lines (`lyrics/ui/translation/`)
+
+Mockup: `mockups/screens/07-lyrics.md` (Dòng lời, Các lớp trong một dòng),
+legend **Dịch**.
+
+- **Per-line selection.** Synced, plain and card lines are built through
+  `TranslatedLineScope`, which watches
+  `trackTranslationProvider(id).select((v) => lineTranslationOf(line, v))`
+  (`LineTranslation`: text, pending, replace, rtl). A chunk that arrives
+  rebuilds only the built lines whose text it covers; the views never watch the
+  whole view. No watch happens while `translationLayoutProvider` is null, so
+  translation off asks for nothing.
+- **Line widget.** `LyricsLine` takes one optional `LineTranslation`;
+  `TranslatedLineText` draws it in the ambient (main) style: original with the
+  translation under it, or the translation as the main line over a small dim
+  original (Thay dòng; a line without a translation keeps its original). Gap
+  lines, blank lines, translations equal to the source and the `same` status
+  show nothing (`lineTranslationOf` over `translationFor`). Semantics label of
+  a translated line: "original, translation".
+- **Sizes and colours** (`translation_text_styles.dart`): synced translation
+  0.62 of the line, w500, `onSurface` 64 % on the sung line, the dim level
+  (never above 64 %) on the others; replaced original 0.5. Plain lyrics: 0.8 and
+  0.7 of the plain size, `onSurfaceVariant`. Card: 13, w500, 64 %, one fixed row
+  under the sung line while translation is on (blank for a gap), so the card
+  keeps its height.
+- **Pending.** `TranslationPlaceholder`: a bar 55 % wide, one translation line
+  high, a light sweep of `KMotion.slow * 3`; still with animations off. Shown
+  under every non-blank line while the status is loading and not a background
+  re-run (which keeps the old lines instead).
+- **Credit.** `TranslationCreditLine` is the last item of the synced and plain
+  lists: "Dịch bởi plugin · model · phong cách · ngôn ngữ", "Bản có sẵn của
+  plugin" for another plugin's saved translation, "… · dịch dở n/m dòng" for a
+  partial run; centred with centred lyrics. Language names are the `lyricsLang*`
+  keys (`translationLanguageName`).
+- **Anchor.** After a translation arrives, changes or goes away,
+  `SyncedLyricsView` invalidates the measured heights and re-anchors the sung
+  line once per frame without animating (the font size never animates).
+- RTL: `Text.textDirection = rtl` on the translation when the target is in
+  `rtlLanguages`.
 
 ## Not here (Pro or later)
 

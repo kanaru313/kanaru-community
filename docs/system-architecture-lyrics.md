@@ -308,6 +308,11 @@ Code: `lib/src/lyrics/` (`domain/`, `data/`, `state/`). Only `data/` imports
   shows (online: "NetEase · Đồng bộ", short = the plugin name; lookup states: "Đang tìm…", "Chưa tìm được lời", "Nguồn lời tạm dừng").
   Strings are the `lyrics*` keys of `lib/l10n/parts/lyrics_*.arb`.
 
+- **Translated lines**: with translation on, `SyncedLyricsView`, `PlainLyricsView` and the card's `CardSyncedLines` take a `trackId` and
+  show each line's translation (under it or replacing it), a bar while it is coming, a credit line after the lyrics and, on the card, a
+  13 px line under the sung one; one arrival rebuilds only the lines it covers and the synced view re-anchors the sung line once. Details:
+  [system-architecture-lyrics-translation.md](./system-architecture-lyrics-translation.md) § UI.
+
 Where they are used: the card in `MobileNowPlaying`, the lyrics screen (`screens/now_playing/ui/mobile/lyrics_screen*.dart`, see
 [system-architecture-playback.md](./system-architecture-playback.md) Now Playing mobile) and the desktop `DesktopSidePane`.
 

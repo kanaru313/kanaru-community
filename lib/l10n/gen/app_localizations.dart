@@ -7932,6 +7932,275 @@ abstract class AppLocalizations {
   /// **'Couldn\'t read the lyrics'**
   String get lyricsInfoUnreadable;
 
+  /// No description provided for @lyricsTranslationCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated by {by} · {language}'**
+  String lyricsTranslationCredit(String by, String language);
+
+  /// No description provided for @lyricsTranslationCreditPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated by {by} · {language} · partial {done}/{total} lines'**
+  String lyricsTranslationCreditPartial(
+    String by,
+    String language,
+    int done,
+    int total,
+  );
+
+  /// No description provided for @lyricsTranslationCreditOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing translation from {plugin}'**
+  String lyricsTranslationCreditOther(String plugin);
+
+  /// No description provided for @lyricsLangVi.
+  ///
+  /// In en, this message translates to:
+  /// **'Vietnamese'**
+  String get lyricsLangVi;
+
+  /// No description provided for @lyricsLangEn.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get lyricsLangEn;
+
+  /// No description provided for @lyricsLangJa.
+  ///
+  /// In en, this message translates to:
+  /// **'Japanese'**
+  String get lyricsLangJa;
+
+  /// No description provided for @lyricsLangKo.
+  ///
+  /// In en, this message translates to:
+  /// **'Korean'**
+  String get lyricsLangKo;
+
+  /// No description provided for @lyricsLangZhHans.
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese (Simplified)'**
+  String get lyricsLangZhHans;
+
+  /// No description provided for @lyricsLangZhHant.
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese (Traditional)'**
+  String get lyricsLangZhHant;
+
+  /// No description provided for @lyricsLangFr.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get lyricsLangFr;
+
+  /// No description provided for @lyricsLangDe.
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get lyricsLangDe;
+
+  /// No description provided for @lyricsLangEs.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get lyricsLangEs;
+
+  /// No description provided for @lyricsLangIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Italian'**
+  String get lyricsLangIt;
+
+  /// No description provided for @lyricsLangRu.
+  ///
+  /// In en, this message translates to:
+  /// **'Russian'**
+  String get lyricsLangRu;
+
+  /// No description provided for @lyricsLangPt.
+  ///
+  /// In en, this message translates to:
+  /// **'Portuguese'**
+  String get lyricsLangPt;
+
+  /// No description provided for @lyricsLangTh.
+  ///
+  /// In en, this message translates to:
+  /// **'Thai'**
+  String get lyricsLangTh;
+
+  /// No description provided for @lyricsLangId.
+  ///
+  /// In en, this message translates to:
+  /// **'Indonesian'**
+  String get lyricsLangId;
+
+  /// No description provided for @lyricsLangHi.
+  ///
+  /// In en, this message translates to:
+  /// **'Hindi'**
+  String get lyricsLangHi;
+
+  /// No description provided for @lyricsLangAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get lyricsLangAr;
+
+  /// No description provided for @lyricsLangNl.
+  ///
+  /// In en, this message translates to:
+  /// **'Dutch'**
+  String get lyricsLangNl;
+
+  /// No description provided for @lyricsLangSv.
+  ///
+  /// In en, this message translates to:
+  /// **'Swedish'**
+  String get lyricsLangSv;
+
+  /// No description provided for @lyricsLangPl.
+  ///
+  /// In en, this message translates to:
+  /// **'Polish'**
+  String get lyricsLangPl;
+
+  /// No description provided for @lyricsLangTr.
+  ///
+  /// In en, this message translates to:
+  /// **'Turkish'**
+  String get lyricsLangTr;
+
+  /// No description provided for @lyricsLangUk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ukrainian'**
+  String get lyricsLangUk;
+
+  /// No description provided for @lyricsLangCs.
+  ///
+  /// In en, this message translates to:
+  /// **'Czech'**
+  String get lyricsLangCs;
+
+  /// No description provided for @lyricsLangEl.
+  ///
+  /// In en, this message translates to:
+  /// **'Greek'**
+  String get lyricsLangEl;
+
+  /// No description provided for @lyricsLangFa.
+  ///
+  /// In en, this message translates to:
+  /// **'Persian'**
+  String get lyricsLangFa;
+
+  /// No description provided for @lyricsLangRo.
+  ///
+  /// In en, this message translates to:
+  /// **'Romanian'**
+  String get lyricsLangRo;
+
+  /// No description provided for @lyricsLangMs.
+  ///
+  /// In en, this message translates to:
+  /// **'Malay'**
+  String get lyricsLangMs;
+
+  /// No description provided for @lyricsLangHe.
+  ///
+  /// In en, this message translates to:
+  /// **'Hebrew'**
+  String get lyricsLangHe;
+
+  /// No description provided for @lyricsLangFi.
+  ///
+  /// In en, this message translates to:
+  /// **'Finnish'**
+  String get lyricsLangFi;
+
+  /// No description provided for @lyricsLangDa.
+  ///
+  /// In en, this message translates to:
+  /// **'Danish'**
+  String get lyricsLangDa;
+
+  /// No description provided for @lyricsLangNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Norwegian'**
+  String get lyricsLangNo;
+
+  /// No description provided for @lyricsLangHu.
+  ///
+  /// In en, this message translates to:
+  /// **'Hungarian'**
+  String get lyricsLangHu;
+
+  /// No description provided for @lyricsLangCy.
+  ///
+  /// In en, this message translates to:
+  /// **'Welsh'**
+  String get lyricsLangCy;
+
+  /// No description provided for @lyricsLangSk.
+  ///
+  /// In en, this message translates to:
+  /// **'Slovak'**
+  String get lyricsLangSk;
+
+  /// No description provided for @lyricsLangSq.
+  ///
+  /// In en, this message translates to:
+  /// **'Albanian'**
+  String get lyricsLangSq;
+
+  /// No description provided for @lyricsLangHy.
+  ///
+  /// In en, this message translates to:
+  /// **'Armenian'**
+  String get lyricsLangHy;
+
+  /// No description provided for @lyricsLangEu.
+  ///
+  /// In en, this message translates to:
+  /// **'Basque'**
+  String get lyricsLangEu;
+
+  /// No description provided for @lyricsLangMy.
+  ///
+  /// In en, this message translates to:
+  /// **'Burmese'**
+  String get lyricsLangMy;
+
+  /// No description provided for @lyricsLangKa.
+  ///
+  /// In en, this message translates to:
+  /// **'Georgian'**
+  String get lyricsLangKa;
+
+  /// No description provided for @lyricsLangIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Icelandic'**
+  String get lyricsLangIs;
+
+  /// No description provided for @lyricsLangMk.
+  ///
+  /// In en, this message translates to:
+  /// **'Macedonian'**
+  String get lyricsLangMk;
+
+  /// No description provided for @lyricsLangMi.
+  ///
+  /// In en, this message translates to:
+  /// **'Māori'**
+  String get lyricsLangMi;
+
   /// No description provided for @pluginsStoreTitle.
   ///
   /// In en, this message translates to:

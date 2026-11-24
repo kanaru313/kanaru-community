@@ -5488,6 +5488,149 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsInfoUnreadable => 'Couldn\'t read the lyrics';
 
   @override
+  String lyricsTranslationCredit(String by, String language) {
+    return 'Translated by $by · $language';
+  }
+
+  @override
+  String lyricsTranslationCreditPartial(
+    String by,
+    String language,
+    int done,
+    int total,
+  ) {
+    return 'Translated by $by · $language · partial $done/$total lines';
+  }
+
+  @override
+  String lyricsTranslationCreditOther(String plugin) {
+    return 'Existing translation from $plugin';
+  }
+
+  @override
+  String get lyricsLangVi => 'Vietnamese';
+
+  @override
+  String get lyricsLangEn => 'English';
+
+  @override
+  String get lyricsLangJa => 'Japanese';
+
+  @override
+  String get lyricsLangKo => 'Korean';
+
+  @override
+  String get lyricsLangZhHans => 'Chinese (Simplified)';
+
+  @override
+  String get lyricsLangZhHant => 'Chinese (Traditional)';
+
+  @override
+  String get lyricsLangFr => 'French';
+
+  @override
+  String get lyricsLangDe => 'German';
+
+  @override
+  String get lyricsLangEs => 'Spanish';
+
+  @override
+  String get lyricsLangIt => 'Italian';
+
+  @override
+  String get lyricsLangRu => 'Russian';
+
+  @override
+  String get lyricsLangPt => 'Portuguese';
+
+  @override
+  String get lyricsLangTh => 'Thai';
+
+  @override
+  String get lyricsLangId => 'Indonesian';
+
+  @override
+  String get lyricsLangHi => 'Hindi';
+
+  @override
+  String get lyricsLangAr => 'Arabic';
+
+  @override
+  String get lyricsLangNl => 'Dutch';
+
+  @override
+  String get lyricsLangSv => 'Swedish';
+
+  @override
+  String get lyricsLangPl => 'Polish';
+
+  @override
+  String get lyricsLangTr => 'Turkish';
+
+  @override
+  String get lyricsLangUk => 'Ukrainian';
+
+  @override
+  String get lyricsLangCs => 'Czech';
+
+  @override
+  String get lyricsLangEl => 'Greek';
+
+  @override
+  String get lyricsLangFa => 'Persian';
+
+  @override
+  String get lyricsLangRo => 'Romanian';
+
+  @override
+  String get lyricsLangMs => 'Malay';
+
+  @override
+  String get lyricsLangHe => 'Hebrew';
+
+  @override
+  String get lyricsLangFi => 'Finnish';
+
+  @override
+  String get lyricsLangDa => 'Danish';
+
+  @override
+  String get lyricsLangNo => 'Norwegian';
+
+  @override
+  String get lyricsLangHu => 'Hungarian';
+
+  @override
+  String get lyricsLangCy => 'Welsh';
+
+  @override
+  String get lyricsLangSk => 'Slovak';
+
+  @override
+  String get lyricsLangSq => 'Albanian';
+
+  @override
+  String get lyricsLangHy => 'Armenian';
+
+  @override
+  String get lyricsLangEu => 'Basque';
+
+  @override
+  String get lyricsLangMy => 'Burmese';
+
+  @override
+  String get lyricsLangKa => 'Georgian';
+
+  @override
+  String get lyricsLangIs => 'Icelandic';
+
+  @override
+  String get lyricsLangMk => 'Macedonian';
+
+  @override
+  String get lyricsLangMi => 'Māori';
+
+  @override
   String get pluginsStoreTitle => 'Plugin store';
 
   @override

@@ -7,12 +7,18 @@ import 'package:material_ui/material_ui.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
+import '../../media/domain/track_id.dart';
 import '../../playback/state/playback_providers.dart';
 import '../domain/lyrics.dart';
 import '../domain/lyrics_display_prefs.dart';
+import '../domain/translation/translation_status.dart';
 import '../state/playing_lyrics_providers.dart';
+import '../state/translation/translation_layout_provider.dart';
+import '../state/translation/translation_providers.dart';
 import 'lyrics_line.dart';
 import 'synced_lyrics_scroll.dart';
+import 'translation/line_translation.dart';
+import 'translation/translation_credit.dart';
 
 final _log = Logger('lyrics_view');
 
@@ -39,6 +45,7 @@ class SyncedLyricsView extends ConsumerStatefulWidget {
     required this.dim,
     required this.align,
     required this.autoReturn,
+    this.trackId,
   });
 
   final Lyrics lyrics;
@@ -52,6 +59,11 @@ class SyncedLyricsView extends ConsumerStatefulWidget {
   final LyricsDim dim;
   final LyricsAlign align;
   final LyricsAutoReturn autoReturn;
+
+  /// The track whose translation the lines show; null shows none. Watching
+  /// it is what asks for the translation, so it is only watched while
+  /// translation is on.
+  final TrackId? trackId;
 
   @override
   ConsumerState<SyncedLyricsView> createState() => _SyncedLyricsViewState();
@@ -102,6 +114,23 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     super.dispose();
   }
 
+  bool _reanchoring = false;
+
+  /// A translation arrived, changed or went away: lines changed height, the
+  /// measured heights of those not on screen are stale and the current line
+  /// may have left the anchor. Once per frame, however many lines changed;
+  /// never animates (the text size does not change, only what is under it).
+  void _reanchor() {
+    if (_reanchoring) return;
+    _reanchoring = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _reanchoring = false;
+      if (!mounted) return;
+      if (listController.isAttached) listController.invalidateAllExtents();
+      revealAfterLayout();
+    });
+  }
+
   void _setIndex(int index) {
     if (index >= lineCount) index = lineCount - 1;
     lineIndex = index;
@@ -140,17 +169,61 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
   /// Wrapped lines are measured when they lay out.
   double _estimatedLine = 0;
 
-  double _estimateExtent(int? index, double crossAxisExtent) => _estimatedLine;
+  /// Height of the credit line after the lyrics before it is measured.
+  static const double _estimatedCredit = KSpace.x4 + 16;
+
+  double _estimateExtent(int? index, double crossAxisExtent) =>
+      index == lineCount ? _estimatedCredit : _estimatedLine;
+
+  /// Lines with a translation or a bar under them are taller: when what the
+  /// lines show changes, the view is anchored again.
+  void _watchTranslation(TrackId id) {
+    ref.listen(
+      trackTranslationProvider(id).select(
+        (v) => (
+          v.map.length,
+          v.status is StatusLoading && !(v.status as StatusLoading).background,
+        ),
+      ),
+      (_, _) => _reanchor(),
+    );
+    ref.listen(translationLayoutProvider(id), (_, _) => _reanchor());
+  }
+
+  Widget _line(int i, TrackId? id, TranslationLayout? layout) {
+    Widget make(LineTranslation? translation) => LyricsLine(
+      index: i,
+      line: widget.lyrics.lines[i],
+      active: _active,
+      onTap: () => _seek(i),
+      size: widget.lineSize,
+      dim: widget.dim,
+      align: widget.align,
+      translation: translation,
+    );
+    if (id == null || layout == null) return make(null);
+    return TranslatedLineScope(
+      trackId: id,
+      line: widget.lyrics.lines[i],
+      layout: layout,
+      builder: (context, translation) => make(translation),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final lyrics = widget.lyrics;
     ref.listen<int>(playingLyricsLineProvider, (_, i) => _onLineChanged(i));
     final height = widget.viewportHeight;
+    final id = widget.trackId;
+    final layout = id == null ? null : ref.watch(translationLayoutProvider(id));
+    if (id != null && layout != null) _watchTranslation(id);
+    final scaler = MediaQuery.textScalerOf(context);
     _estimatedLine =
-        MediaQuery.textScalerOf(context).scale(widget.lineSize) * 1.3 +
+        scaler.scale(widget.lineSize) * 1.3 +
         2 * KSpace.x2 +
-        KSpace.x1;
+        KSpace.x1 +
+        (layout == null ? 0 : scaler.scale(widget.lineSize * 0.62) * 1.3);
     final side = (widget.sidePadding - lyricsLineInset).clamp(
       0.0,
       double.infinity,
@@ -200,20 +273,26 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
                         side,
                         height * (1 - lyricsAnchor),
                       ),
-                      itemCount: lyrics.lines.length,
-                      itemBuilder: (context, i) => _BuiltLine(
-                        index: i,
-                        built: _built,
-                        child: LyricsLine(
+                      // With translation on, one more item: the credit line.
+                      itemCount: lyrics.lines.length + (layout == null ? 0 : 1),
+                      itemBuilder: (context, i) {
+                        if (i == lyrics.lines.length) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: lyricsLineInset,
+                            ),
+                            child: TranslationCreditLine(
+                              trackId: id!,
+                              centered: widget.align == LyricsAlign.center,
+                            ),
+                          );
+                        }
+                        return _BuiltLine(
                           index: i,
-                          line: lyrics.lines[i],
-                          active: _active,
-                          onTap: () => _seek(i),
-                          size: widget.lineSize,
-                          dim: widget.dim,
-                          align: widget.align,
-                        ),
-                      ),
+                          built: _built,
+                          child: _line(i, id, layout),
+                        );
+                      },
                     ),
                   ),
                 ),

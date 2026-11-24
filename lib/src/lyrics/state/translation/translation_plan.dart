@@ -57,10 +57,11 @@ TranslationPlan? readTranslationPlan(Ref ref, TrackId trackId) {
   return TranslationPlan(
     hash: lyricsContentHash(shown.lyrics.lines),
     lines: lines,
-    target:
-        pref.value ??
-        ref.read(translationTargetProvider) ??
-        appTarget(ref.read(translationAppLanguageProvider)),
+    target: pickTranslationTarget(
+      trackPref: pref.value,
+      global: ref.read(translationTargetProvider),
+      appLanguage: ref.read(translationAppLanguageProvider),
+    ),
     service: service.value,
     song: SongContext(title: facts?.title, artist: facts?.artist),
   );

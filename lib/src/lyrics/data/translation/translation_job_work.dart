@@ -98,6 +98,8 @@ class TranslationJobWork {
             all.length - remaining.length,
             all.length,
             forced: job.forced,
+            linesDone: lines.length - missing.length,
+            linesTotal: lines.length,
           ),
         );
         final result = await gate.run(
