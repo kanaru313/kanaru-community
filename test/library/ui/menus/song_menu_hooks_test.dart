@@ -104,4 +104,74 @@ void main() {
     expect(_ids(spec).expand((g) => g), isNot(contains(MenuItemId.select)));
     expect(spec.queueIds, isEmpty);
   });
+
+  test('leadingGroup is the first group, before Go to', () {
+    final spec = withSongPageRows(
+      _base(),
+      leadingGroup: [_row(MenuItemId.playThis), _row(MenuItemId.playNext)],
+    );
+    expect(_ids(spec).first, [MenuItemId.playThis, MenuItemId.playNext]);
+    expect(_ids(spec)[1], contains(MenuItemId.goArtist));
+    expect(_ids(spec).length, _ids(_base()).length + 1);
+  });
+
+  test('selectReplacement takes the Select row place, keeping its group', () {
+    final replacement = _row(MenuItemId.select);
+    final spec = withSongPageRows(_base(), selectReplacement: replacement);
+    final all = spec.groups.expand((g) => g).toList();
+    expect(all.where((i) => i.id == MenuItemId.select), [replacement]);
+    expect(_ids(spec), _ids(_base()));
+  });
+
+  test('selectRow false wins over selectReplacement', () {
+    final spec = withSongPageRows(
+      _base(),
+      selectRow: false,
+      selectReplacement: _row(MenuItemId.select),
+    );
+    expect(_ids(spec).expand((g) => g), isNot(contains(MenuItemId.select)));
+  });
+
+  test('beforeAdvanced is a group right before the Advanced group', () {
+    final spec = withSongPageRows(
+      _base(),
+      beforeAdvanced: [_row(MenuItemId.removeFromQueue)],
+    );
+    final ids = _ids(spec);
+    expect(ids[ids.length - 2], [MenuItemId.removeFromQueue]);
+    expect(ids.last, [MenuItemId.advanced]);
+  });
+
+  test('beforeAdvanced goes last when the menu has no Advanced group', () {
+    final base = _base();
+    final spec = withSongPageRows(
+      base.copyWith(
+        groups: [
+          for (final g in base.groups)
+            [
+              for (final i in g)
+                if (i.id != MenuItemId.advanced) i,
+            ],
+        ],
+      ),
+      beforeAdvanced: [_row(MenuItemId.removeFromQueue)],
+    );
+    expect(_ids(spec).last, [MenuItemId.removeFromQueue]);
+  });
+
+  test('all queue-row hooks together give the queue row menu order', () {
+    final spec = withSongPageRows(
+      _base(),
+      queueButtons: false,
+      leadingGroup: [_row(MenuItemId.playThis), _row(MenuItemId.playNext)],
+      selectReplacement: _row(MenuItemId.select),
+      beforeAdvanced: [_row(MenuItemId.removeFromQueue)],
+    );
+    final ids = _ids(spec);
+    expect(ids.first.first, MenuItemId.playThis);
+    expect(ids[1].first, MenuItemId.goAlbum);
+    expect(ids[ids.length - 2], [MenuItemId.removeFromQueue]);
+    expect(ids.last, [MenuItemId.advanced]);
+    expect(spec.queueIds, isEmpty);
+  });
 }

@@ -57,6 +57,9 @@ enum MenuItemId {
   sleepTimer,
   translate,
   visualEffects,
+  playThis,
+  playNext,
+  removeFromQueue,
 }
 
 /// A chip under a row: one of several targets.
@@ -118,6 +121,7 @@ class MenuItemSpec {
     this.pro = false,
     this.cover,
     this.hint,
+    this.shortcut,
     this.liveTitle,
     this.liveSubtitle,
   });
@@ -144,6 +148,10 @@ class MenuItemSpec {
   /// Explanation of the row (ui-hints): the row's accessible description,
   /// never shown as the subtitle.
   final String? hint;
+
+  /// Key hint shown at the row's end (desktop only: the caller sets it
+  /// there), e.g. "Delete".
+  final String? shortcut;
 
   /// Title / subtitle that change while the menu is open (a ticking timer);
   /// each shows instead of [title] / [subtitle] (keep those as the label at

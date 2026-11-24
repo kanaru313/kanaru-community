@@ -167,6 +167,7 @@ KMenuRow _row(
     soonLabel: item.soon ? l10n.appComingSoon : null,
     danger: item.danger,
     proLabel: item.pro ? l10n.proBadge : null,
+    shortcutLabel: item.shortcut,
     hint: item.hint,
     liveTitle: item.liveTitle,
     liveSubtitle: item.liveSubtitle,

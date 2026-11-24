@@ -876,10 +876,14 @@ to the list as hooks (`QueueRowMenu`, `QueueRowFavorite`, `QueueRowSelection`). 
   it opens; 0 = dimmed; opens up on the sheet, down on the panel; the toast counts what the controller removed when the choice ran, not what the menu promised), ⋮ (only "Select several": selects the current song). `QueueSaveButton(onSave:)` is
   enabled while the queue has a track; the host supplies the callback (`playback/` does not import `library/`), and without one it is dimmed "Coming soon". `screens/now_playing` passes
   `saveQueueToPlaylist` (ids in play order, repeats kept, taken at the tap).
-- **Row menu** (`screens/now_playing/ui/queue_row_menu.dart`): Play this | Play next (queues a **copy**) | Go to album,
-  Go to artist (a `showSelectionPicker` when the track has several artists), Select / Deselect, Ask AI (dimmed) | Remove. A popup at the
-  pointer on the panel, a sheet on mobile (⋮). Every action first checks the entry is still queued ("That track is
-  no longer in the queue"). The menu starts with the song's row (`QueueRowMenuHeader`: cover 56 r10, title, artist, `album • year`; no `›`); the popup is 320 wide with a divider under it, the mobile sheet shows it instead of the title line.
+- **Row menu** (`screens/now_playing/ui/queue_row_menu.dart`): the **song menu** of that entry (`openSongMenu`, the library's
+  renderer: a sheet with handle on mobile, a centred 400 dialog on desktop; ⋮, right click, Menu key). Order: header (`›` = song
+  info) | [Play this, Play next (queues a **copy**)] (`leadingGroup`) | the song menu's groups (Go to, lyrics source, add to
+  playlist, ♥, edit, Select / Deselect = the **queue selection** (`selectReplacement`, `QueueSelection.toggle`), Ask AI) |
+  [Remove from queue] (`beforeAdvanced`, danger, "Delete" hint on the panel only) | Advanced. `queueButtons: false` (no
+  footer) and no Now Playing rows. Every queue action first checks the entry is still queued ("That track is no longer in the
+  queue"); a track not in the library shows the "not in your library" toast. "Go to" closes the Queue sheet and Now Playing
+  (`beforeNavigate`). Delete on a focused row still removes directly.
 - **Undo** restores the entry that was current at removal time only if that removal took it out; if the player moved on
   meanwhile, the live current entry stays.
 

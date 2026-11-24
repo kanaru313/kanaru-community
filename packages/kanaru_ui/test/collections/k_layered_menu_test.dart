@@ -42,6 +42,7 @@ KMenuPage _page({List<String>? log, int filler = 0, bool footer = true}) {
         KMenuRow(
           title: 'Remove',
           danger: true,
+          shortcutLabel: 'Delete',
           icon: KIcons.delete,
           onTap: () => note('remove'),
         ),
@@ -130,6 +131,7 @@ void main() {
           'Soon',
           'Coming soon',
           'PRO',
+          'Delete',
           'Ann',
         ]) {
           expect(find.text(t), findsOneWidget, reason: t);

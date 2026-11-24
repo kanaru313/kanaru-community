@@ -3,6 +3,8 @@ import 'dart:ui' show Tristate;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/extension/state/extension_providers.dart';
+import 'package:kanaru/src/extension/state/extension_registry.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/library/ui/menus/song_lyrics_entry.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
@@ -23,6 +25,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../lyrics/ui/lyrics_ui_host.dart' show syncedLyrics;
 import '../../playback/support/ui_host.dart';
 import '../../playback/ui/sleep_timer/sleep_timer_modal_host.dart';
+import '../../library/ui/info/song_info_harness.dart' show link;
 import '../../support/icon_button_finders.dart';
 import 'support/song_menu_pump.dart';
 
@@ -56,6 +59,7 @@ Future<UiHost> _pump(
     size: const Size(390, 900),
     play: false,
     overrides: [
+      extensionRegistryProvider.overrideWithValue(ExtensionRegistry()),
       sleepTimerProvider.overrideWith(FakeSleepTimer.new),
       ...sleepEstimates(),
       songLyricsEntryProvider.overrideWithValue(const LyricsSongEntry()),
@@ -257,6 +261,26 @@ void main() {
       for (final m in stack) m.matchedLocation,
     ], isNot(contains('/now-playing')));
     expect(find.byType(NowPlayingPage, skipOffstage: false), findsNothing);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('an info link opened with › closes Now Playing too', (
+    tester,
+  ) async {
+    final host = await _pump(tester);
+    await tester.tap(
+      find.descendant(of: find.byType(BottomSheet), matching: find.text('T0')),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.tap(link('Alb').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(_location(host), LibraryLocations.album(AlbumKey('art one', 'alb')));
+    final stack = host.router!.routerDelegate.currentConfiguration.matches;
+    expect([
+      for (final m in stack) m.matchedLocation,
+    ], isNot(contains('/now-playing')));
     await tester.pump(const Duration(seconds: 1));
   });
 

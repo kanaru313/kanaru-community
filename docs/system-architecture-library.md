@@ -274,7 +274,13 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   their own right after "Go to" when there is none), `selectRow: false`,
   `queueButtons: false` (empty `queueIds`, no footer) and `openLyrics:` (replaces
   what the lyrics row opens, e.g. "Lyrics for this song" that follows the playing
-  track); its future also waits for a chosen `MenuAction.run` to finish
+  track), `leadingGroup:` (a group before "Go to"), `selectReplacement:` (a row
+  that takes the "Select" row's place, e.g. the queue selection) and
+  `beforeAdvanced:` (a group right before "Advanced", last when there is none);
+  all default to the old behaviour. `MenuItemSpec.shortcut` is a key hint at the
+  row's end (`KMenuRow.shortcutLabel`, plain text; the caller sets it on desktop
+  only). Ids `playThis`, `playNext`, `removeFromQueue` belong to the Now Playing
+  queue row menu. Its future also waits for a chosen `MenuAction.run` to finish
   (`MenuActionRunner.settled`). `MenuItemSpec.liveTitle` / `liveSubtitle`
   (`ValueListenable<String>`) become `KMenuRow.liveTitle` / `liveSubtitle`; ids
   `sleepTimer`, `translate`, `visualEffects`. The song menu's groups are Go to ·

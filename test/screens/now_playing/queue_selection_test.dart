@@ -14,6 +14,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../playback/support/controller_harness.dart' show ctx;
 import '../../playback/support/ui_host.dart';
+import 'support/song_menu_pump.dart';
 
 /// A router, which the selection panel's Back handling needs.
 final _routes = <RouteBase>[];
@@ -72,8 +73,7 @@ Future<void> _openRowMenu(WidgetTester tester, String title) async {
   await tester.tap(
     find.descendant(of: _row(title), matching: find.byIcon(KIcons.moreVert)),
   );
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 400));
+  await menuLoads(tester, until: find.text('Play this track'));
 }
 
 Future<void> _tapWith(
@@ -136,18 +136,17 @@ void main() {
     });
 
     _test('the row menu selects and deselects', (tester) async {
-      final host = await _pump(tester);
+      // Tall: the song menu is long and its rows build lazily.
+      final host = await _pump(tester, size: const Size(400, 1800));
       await _openRowMenu(tester, 'T2');
       expect(find.text('Deselect'), findsNothing);
-      await tester.tap(find.text('Select'));
-      await tester.pump(const Duration(milliseconds: 400));
+      await host.tap(tester, find.text('Select'));
       expect(_picked(host), [2]);
       expect(_check(_row('T2')), findsOneWidget);
 
       await _openRowMenu(tester, 'T2');
       expect(find.text('Select'), findsNothing);
-      await tester.tap(find.text('Deselect'));
-      await tester.pump(const Duration(milliseconds: 400));
+      await host.tap(tester, find.text('Deselect'));
       expect(_selected(host), isEmpty);
       expect(_check(_row('T2')), findsNothing);
     });

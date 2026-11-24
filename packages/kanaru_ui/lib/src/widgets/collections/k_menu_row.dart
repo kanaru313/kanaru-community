@@ -59,6 +59,7 @@ class KMenuRow {
     this.soonLabel,
     this.danger = false,
     this.proLabel,
+    this.shortcutLabel,
     this.hint,
     this.on,
     this.onTitle,
@@ -86,6 +87,9 @@ class KMenuRow {
 
   /// Shows a Pro badge with this text.
   final String? proLabel;
+
+  /// Key hint shown at the row's end (desktop: "Delete"); plain text.
+  final String? shortcutLabel;
 
   /// Accessible description of what the row does (no visible text).
   final String? hint;
@@ -295,6 +299,13 @@ class _KMenuRowTileState extends State<KMenuRowTile> {
                         if (row.proLabel != null) ...[
                           const KGap(KSpace.x2),
                           ProBadge(label: row.proLabel!),
+                        ],
+                        if (row.shortcutLabel != null) ...[
+                          const KGap(KSpace.x2),
+                          Text(
+                            row.shortcutLabel!,
+                            style: textTheme.labelSmall?.copyWith(color: soft),
+                          ),
                         ],
                         if (row.soonLabel != null) ...[
                           const KGap(KSpace.x2),

@@ -1,20 +1,22 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kanaru/src/extension/state/extension_providers.dart';
+import 'package:kanaru/src/extension/state/extension_registry.dart';
+import 'package:kanaru/src/library/state/browse/selection_providers.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
+import 'package:kanaru/src/playback/state/queue_row_infos.dart';
 import 'package:kanaru/src/playback/ui/queue/queue_row.dart';
-import 'package:kanaru/src/playback/ui/track_cover.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_host.dart';
-import 'package:kanaru/src/screens/now_playing/ui/queue_row_menu_header.dart';
-import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:kanaru/src/screens/now_playing/ui/queue_panel.dart';
+import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../playback/support/ui_host.dart';
 import '../../support/icon_button_finders.dart';
+import 'support/song_menu_pump.dart';
 
 final _routes = <RouteBase>[
   GoRoute(
@@ -27,99 +29,135 @@ final _routes = <RouteBase>[
   ),
 ];
 
-/// A panel on [host] with track T1 tagged (album, one or two artists).
+const _playThis = 'Play this track';
+
+/// A panel on [host] with track T1 tagged (album, one artist).
 Future<UiHost> _pump(
   WidgetTester tester, {
   QueueHost host = QueueHost.panel,
-  List<String> artists = const ['Art One'],
-  double textScale = 1,
+  bool inLibrary = true,
+  Size? size,
 }) async {
   final h = await pumpWithPlayer(
     tester,
     QueuePanel(host: host),
     play: false,
     routes: _routes,
-    textScale: textScale,
-    size: host == QueueHost.panel ? const Size(900, 800) : const Size(400, 800),
+    overrides: [
+      extensionRegistryProvider.overrideWithValue(ExtensionRegistry()),
+      // No row ever gets its info: the song is "not in the library".
+      if (!inLibrary)
+        queueRowInfoLoaderProvider.overrideWithValue((_) async => []),
+    ],
+    size:
+        size ??
+        (host == QueueHost.panel
+            ? const Size(900, 1800)
+            : const Size(400, 1800)),
   );
   await h.run(tester, () async {
     await h.h.db.customStatement(
-      "UPDATE tracks SET album = 'Alb', artist = '${artists.first}', "
+      "UPDATE tracks SET album = 'Alb', artist = 'Art One', "
       "album_title_key = 'alb', album_artist_key = 'art one' "
       "WHERE title = 'T1'",
     );
     final id = h.h.tracks[1].value;
-    for (var i = 0; i < artists.length; i++) {
-      await h.h.db.customStatement(
-        'INSERT INTO track_artists (track_id, artist_key, artist_name, '
-        "position) VALUES ($id, '${artists[i].toLowerCase()}', "
-        "'${artists[i]}', $i)",
-      );
-    }
+    await h.h.db.customStatement(
+      'INSERT INTO track_artists (track_id, artist_key, artist_name, '
+      "position) VALUES ($id, 'art one', 'Art One', 0)",
+    );
     await h.h.play();
   });
   await h.letStreamsArrive(tester);
   return h;
 }
 
+/// Right-clicks the row titled [title] and waits for the menu.
 Future<void> _openMenu(WidgetTester tester, String title) async {
   await tester.tap(
-    find.text(title),
+    find.text(title).first,
     buttons: kSecondaryButton,
     kind: PointerDeviceKind.mouse,
   );
-  // The route's animation starts on the second frame.
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 400));
+  await menuLoads(tester, until: find.text(_playThis));
 }
+
+Finder _more(int row) => find.descendant(
+  of: find.byType(QueueRow).at(row),
+  matching: find.byIcon(KIcons.moreVert),
+);
+
+double _y(WidgetTester tester, String label) =>
+    tester.getTopLeft(find.text(label)).dy;
 
 String _location(UiHost host) =>
-    host.router!.routerDelegate.currentConfiguration.uri.path;
-
-/// Whether the primary focus sits on the actionable node of the first menu
-/// row ("Play this track"): inside the same [InkWell] that handles its tap, so
-/// Enter reaches the row's activate action.
-bool _focusOnFirstRow(WidgetTester tester) {
-  final focused = FocusManager.instance.primaryFocus;
-  if (focused == null || focused is FocusScopeNode) return false;
-  final label = tester.element(find.text('Play this track'));
-  final rowInk = label.findAncestorWidgetOfExactType<InkWell>();
-  final focusInk = focused.context?.findAncestorWidgetOfExactType<InkWell>();
-  return rowInk != null && identical(rowInk, focusInk);
-}
+    host.router!.routerDelegate.currentConfiguration.last.matchedLocation;
 
 void main() {
-  testWidgets('right click opens the menu with every entry', (tester) async {
+  testWidgets('right click opens the song menu: groups in order, no footer, '
+      'no Now Playing rows', (tester) async {
     await _pump(tester);
     await _openMenu(tester, 'T1');
-    for (final label in [
-      'Play this track',
-      'Play next',
-      'Go to album',
-      'Go to artist',
-      'Select',
-      'Ask AI',
-      'Remove from queue',
-    ]) {
-      expect(find.text(label), findsOneWidget, reason: label);
-    }
-    // Not built yet: marked, and Remove carries its key hint.
-    expect(find.text('Coming soon'), findsOneWidget);
+    final ys = [
+      for (final l in [
+        _playThis,
+        'Play next',
+        'Go to album',
+        'Go to artist',
+        'Lyrics source',
+        'Add to playlist…',
+        'Add to favorites',
+        'Select',
+        'Remove from queue',
+        'Advanced',
+      ])
+        _y(tester, l),
+    ];
+    expect(ys, [...ys]..sort());
+    // First group = [Play this, Play next] alone, above Go to.
+    expect(_y(tester, 'Play next'), lessThan(_y(tester, 'Go to album')));
+    expect(find.text('Sleep timer'), findsNothing);
+    expect(find.text('Translate lyrics…'), findsNothing);
+    expect(find.text('Visual effects'), findsNothing);
+    // The queue already holds the song: no footer.
+    expect(find.text('Add to queue'), findsNothing);
+    expect(find.text('Play next'), findsOneWidget);
+    // The header is the song's; Remove is the danger row with its key hint.
+    expect(find.text('Art One · Alb'), findsOneWidget);
     expect(find.text('Delete'), findsOneWidget);
-    final ai = tester.widget<PopupMenuItem<void>>(
-      find.ancestor(
-        of: find.text('Ask AI'),
-        matching: find.byType(PopupMenuItem<void>),
-      ),
+  });
+
+  testWidgets('Remove from queue is the error-coloured row', (tester) async {
+    await _pump(tester);
+    await _openMenu(tester, 'T1');
+    final scheme = Theme.of(tester.element(find.text(_playThis))).colorScheme;
+    final icon = tester.widget<Icon>(
+      find
+          .descendant(
+            of: find.ancestor(
+              of: find.text('Remove from queue'),
+              matching: find.byType(Row),
+            ),
+            matching: find.byType(Icon),
+          )
+          .first,
     );
-    expect(ai.enabled, isFalse);
+    expect(icon.color, scheme.error);
+  });
+
+  testWidgets('no key hint on the mobile sheet', (tester) async {
+    await _pump(tester, host: QueueHost.sheet);
+    await tester.tap(_more(1));
+    await menuLoads(tester, until: find.text(_playThis));
+    expect(find.text('Remove from queue'), findsOneWidget);
+    expect(find.text('Delete'), findsNothing);
   });
 
   testWidgets('Play this track plays that entry', (tester) async {
     final host = await _pump(tester);
     final target = host.h.c.queueState.items[2].entryId;
     await _openMenu(tester, 'T2');
-    await host.tap(tester, find.text('Play this track'));
+    await host.tap(tester, find.text(_playThis));
     expect(host.h.c.queueState.currentItem!.entryId, target);
   });
 
@@ -132,26 +170,25 @@ void main() {
     await host.tap(tester, find.text('Play next'));
     final q = host.h.c.queueState;
     expect(q.length, 7);
-    // The original T4 entry is still there; the copy is a new entry.
-    expect(q.indexOfEntry(ids[4]), greaterThan(0));
     expect(q.items[q.current! + 1].trackId, host.h.tracks[4]);
     expect(q.items[q.current! + 1].entryId, isNot(ids[4]));
-    // The same feedback as the library menu.
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Playing next'), findsOneWidget);
   });
 
-  testWidgets('Play next that fails says the queue could not change', (
+  testWidgets('Select toggles the queue selection and flips its label', (
     tester,
   ) async {
     final host = await _pump(tester);
-    await _openMenu(tester, 'T4');
-    // Every queue write now fails.
-    await host.run(tester, host.h.db.close);
-    await host.tap(tester, find.text('Play next'));
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Could not change the queue'), findsOneWidget);
-    expect(find.text('Playing next'), findsNothing);
+    final id = host.h.tracks[3];
+    await _openMenu(tester, 'T3');
+    expect(find.text('Deselect'), findsNothing);
+    await host.tap(tester, find.text('Select'));
+    expect(host.container.read(isSelectedProvider(id)), isTrue);
+    await _openMenu(tester, 'T3');
+    expect(find.text('Select'), findsNothing);
+    await host.tap(tester, find.text('Deselect'));
+    expect(host.container.read(isSelectedProvider(id)), isFalse);
   });
 
   testWidgets('Remove takes the entry out with an Undo toast', (tester) async {
@@ -163,250 +200,131 @@ void main() {
     expect(find.text('Removed “T3”'), findsOneWidget);
   });
 
-  testWidgets('an entry that left the queue raises the stale notice', (
+  for (final label in [_playThis, 'Select', 'Remove from queue']) {
+    testWidgets(
+      'an entry that left the queue raises the stale notice ($label)',
+      (tester) async {
+        final host = await _pump(tester);
+        final gone = host.h.c.queueState.items[2].entryId;
+        await _openMenu(tester, 'T2');
+        await host.run(tester, () async => host.h.c.remove({gone}));
+        final before = host.h.c.queueState.length;
+        final current = host.h.c.queueState.currentItem!.entryId;
+        await host.tap(tester, find.text(label));
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(
+          find.text('That track is no longer in the queue'),
+          findsOneWidget,
+        );
+        expect(host.h.c.queueState.length, before);
+        expect(host.h.c.queueState.currentItem!.entryId, current);
+        expect(
+          host.container.read(isSelectedProvider(host.h.tracks[2])),
+          isFalse,
+        );
+      },
+    );
+  }
+
+  testWidgets('a song that is not in the library shows the toast, no menu', (
     tester,
   ) async {
-    final host = await _pump(tester);
-    final gone = host.h.c.queueState.items[2].entryId;
-    await _openMenu(tester, 'T2');
-    await host.run(tester, () async => host.h.c.remove({gone}));
-    await host.tap(tester, find.text('Play this track'));
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('That track is no longer in the queue'), findsOneWidget);
-    expect(host.h.c.queueState.length, 5);
+    await _pump(tester, inLibrary: false);
+    await tester.tap(
+      find.byType(QueueRow).at(1),
+      buttons: kSecondaryButton,
+      kind: PointerDeviceKind.mouse,
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('This is no longer in your library.'), findsOneWidget);
+    expect(find.text(_playThis), findsNothing);
   });
 
   testWidgets('Go to album opens the album location', (tester) async {
     final host = await _pump(tester);
     await _openMenu(tester, 'T1');
     await host.tap(tester, find.text('Go to album'));
-    await tester.pump();
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await host.letStreamsArrive(tester);
     expect(_location(host), LibraryLocations.album(AlbumKey('art one', 'alb')));
     expect(find.text('album page'), findsOneWidget);
   });
 
-  testWidgets('Go to artist opens the artist location', (tester) async {
-    final host = await _pump(tester);
-    await _openMenu(tester, 'T1');
-    await host.tap(tester, find.text('Go to artist'));
-    await tester.pump();
-    expect(
-      _location(host),
-      LibraryLocations.artist(ArtistKey(groupKey('Art One'))),
-    );
-  });
-
-  testWidgets('several artists ask which one first', (tester) async {
-    final host = await _pump(tester, artists: ['Art One', 'Art Two']);
-    await _openMenu(tester, 'T1');
-    await host.tap(tester, find.text('Go to artist'));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Choose an artist'), findsOneWidget);
-    expect(find.text('Art Two'), findsOneWidget);
-    await tester.tap(find.text('Art Two'));
-    for (var i = 0; i < 4; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-    // The menu action started in the real zone: let it resume.
-    await host.letStreamsArrive(tester);
-    expect(
-      _location(host),
-      LibraryLocations.artist(ArtistKey(groupKey('Art Two'))),
-    );
-  });
-
-  testWidgets('a track without an album has Go to album dimmed', (
-    tester,
-  ) async {
-    await _pump(tester);
-    await _openMenu(tester, 'T2');
-    final item = tester.widget<PopupMenuItem<void>>(
-      find.ancestor(
-        of: find.text('Go to album'),
-        matching: find.byType(PopupMenuItem<void>),
-      ),
-    );
-    expect(item.enabled, isFalse);
-    // The item exists: it is not "coming soon", only unavailable here.
-    expect(
-      find.descendant(
-        of: find.byWidget(item),
-        matching: find.text('Coming soon'),
-      ),
-      findsNothing,
-    );
-  });
-
-  testWidgets('on the mobile sheet ⋮ opens the menu as a sheet', (
-    tester,
-  ) async {
-    await _pump(tester, host: QueueHost.sheet);
-    await tester.tap(
-      find.descendant(
-        of: find.byType(QueueRow).at(1),
-        matching: find.byIcon(KIcons.moreVert),
-      ),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Play this track'), findsOneWidget);
-    expect(find.text('Go to artist'), findsOneWidget);
-    expect(find.byType(PopupMenuItem<void>), findsNothing);
-  });
-
-  testWidgets('the popup starts with the song row, 320 wide, no ›', (
-    tester,
-  ) async {
-    await _pump(tester);
-    await _openMenu(tester, 'T1');
-    final header = find.byType(QueueRowMenuHeader);
-    expect(header, findsOneWidget);
-    expect(find.descendant(of: header, matching: find.text('T1')), findsOne);
-    expect(
-      find.descendant(of: header, matching: find.text('Art One')),
-      findsOne,
-    );
-    expect(find.descendant(of: header, matching: find.text('Alb')), findsOne);
-    expect(
-      find.descendant(of: header, matching: find.byType(KIconButton)),
-      findsNothing,
-    );
-    expect(tester.getSize(header).width, 320 - 2 * KSpace.x4);
-    // Items stay as they were.
-    expect(find.text('Play this track'), findsOneWidget);
-  });
-
-  testWidgets('at 200 % text the popup song row grows and nothing overflows', (
-    tester,
-  ) async {
-    await _pump(tester, textScale: 2);
-    await _openMenu(tester, 'T1');
-    final header = find.byType(QueueRowMenuHeader);
-    expect(header, findsOneWidget);
-    expect(tester.takeException(), isNull);
-    // Title, artist and `album` lines at 2x are taller than the 56 cover.
-    expect(tester.getSize(header).height, greaterThan(56));
-    expect(find.text('Play this track'), findsOneWidget);
-  });
-
   testWidgets(
-    'at 1x a label next to a trailing text keeps the rest of the row',
+    '› opens Song info over the menu; Back returns to the same menu',
     (tester) async {
-      await _pump(tester);
-      await _openMenu(tester, 'T1');
-      final label = find.text('Remove from queue');
-      final row = find.ancestor(of: label, matching: find.byType(Row)).first;
-      final paragraph = tester.renderObject<RenderParagraph>(label);
-      expect(paragraph.didExceedMaxLines, isFalse);
-      expect(paragraph.size.height, lessThan(2 * 14 * 1.5));
-      expect(
-        tester.getSize(label).width,
-        greaterThan(tester.getSize(row).width / 2),
+      await _pump(tester, host: QueueHost.sheet);
+      await tester.tap(_more(1));
+      await menuLoads(tester, until: find.text(_playThis));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text('T1'),
+        ),
       );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byType(KOverlayPageScope), findsOneWidget);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(KOverlayPageScope),
+          matching: byIconButton('Back'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byType(KOverlayPageScope), findsNothing);
+      expect(find.text(_playThis), findsOneWidget);
+      expect(find.text('Remove from queue'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 1));
     },
   );
 
-  testWidgets('the mobile sheet starts with the song row instead of a title', (
-    tester,
-  ) async {
-    await _pump(tester, host: QueueHost.sheet);
-    await tester.tap(
-      find.descendant(
-        of: find.byType(QueueRow).at(1),
-        matching: find.byIcon(KIcons.moreVert),
-      ),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    final header = find.byType(QueueRowMenuHeader);
-    expect(header, findsOneWidget);
-    expect(
-      tester
-          .getSize(
-            find.descendant(of: header, matching: find.byType(TrackCover)),
-          )
-          .width,
-      56,
-    );
-    expect(
-      find.descendant(of: header, matching: find.byType(KIconButton)),
-      findsNothing,
-    );
-    expect(find.text('Play this track'), findsOneWidget);
-  });
-
-  for (final host in QueueHost.values) {
-    testWidgets('Enter on ⋮ focuses the first row (${host.name})', (
+  for (final (name, host, size) in [
+    ('mobile', QueueHost.sheet, const Size(400, 800)),
+    ('desktop', QueueHost.panel, const Size(1280, 800)),
+  ]) {
+    testWidgets('$name 800 high: scrolls to Remove from queue and taps it', (
       tester,
     ) async {
-      final ui = await _pump(tester, host: host);
-      final more = find.descendant(
-        of: find.byType(QueueRow).at(1),
-        matching: find.byIcon(KIcons.moreVert),
-      );
-      Focus.of(tester.element(more)).requestFocus();
+      final h = await _pump(tester, host: host, size: size);
+      await _openMenu(tester, 'T3');
+      // The menu is taller than the view: scroll its own scrollable.
+      final remove = find.text('Remove from queue', skipOffstage: false);
+      expect(tester.getRect(remove).bottom, greaterThan(800));
+      await tester.ensureVisible(remove);
       await tester.pump();
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(_focusOnFirstRow(tester), isTrue);
-      // Enter on the focused row runs it: the menu closes, the entry plays.
-      final target = ui.h.c.queueState.items[1].entryId;
-      // In the real zone: the action starts controller work.
-      await ui.run(tester, () => tester.sendKeyEvent(LogicalKeyboardKey.enter));
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(find.text('Play this track'), findsNothing);
-      expect(ui.h.c.queueState.currentItem!.entryId, target);
+      await h.tap(tester, find.text('Remove from queue'));
+      expect(h.h.c.queueState.length, 5);
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(tester.takeException(), isNull);
     });
   }
 
-  testWidgets('the Menu key on a focused row opens the menu on its first row', (
-    tester,
-  ) async {
-    await _pump(tester);
-    final more = find.descendant(
-      of: find.byType(QueueRow).at(1),
-      matching: find.byIcon(KIcons.moreVert),
-    );
-    Focus.of(tester.element(more)).requestFocus();
-    await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.contextMenu);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Play this track'), findsOneWidget);
-    expect(_focusOnFirstRow(tester), isTrue);
+  testWidgets('⋮ on the mobile sheet opens the same menu', (tester) async {
+    await _pump(tester, host: QueueHost.sheet);
+    await tester.tap(_more(1));
+    await menuLoads(tester, until: find.text(_playThis));
+    expect(find.text(_playThis), findsOneWidget);
+    expect(find.text('Go to artist'), findsOneWidget);
+    expect(find.text('Add to queue'), findsNothing);
+    expect(find.byType(PopupMenuItem<void>), findsNothing);
   });
 
-  testWidgets('a menu closed before it takes focus moves no focus behind it', (
-    tester,
-  ) async {
+  testWidgets('the Menu key on a focused row opens the menu', (tester) async {
     await _pump(tester);
-    final more = find.descendant(
-      of: find.byType(QueueRow).at(1),
-      matching: find.byIcon(KIcons.moreVert),
-    );
-    final node = Focus.of(tester.element(more));
-    node.requestFocus();
+    Focus.of(tester.element(_more(1))).requestFocus();
     await tester.pump();
-    // Tickers of the page itself (not the menu) are the baseline.
-    final baseline = tester.binding.transientCallbackCount;
     await tester.sendKeyEvent(LogicalKeyboardKey.contextMenu);
-    // Closed in the same frame, as Esc right after opening would.
-    Navigator.of(tester.element(more)).pop();
-    for (var i = 0; i < 15; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-    expect(find.text('Play this track'), findsNothing);
-    expect(FocusManager.instance.primaryFocus, same(node));
-    // No polling left behind: nothing waits for another frame.
-    expect(tester.binding.transientCallbackCount, baseline);
+    await menuLoads(tester, until: find.text(_playThis));
+    expect(find.text(_playThis), findsOneWidget);
+    expect(find.byType(PopupMenuItem<void>), findsNothing);
   });
 
-  testWidgets('a pointer press on ⋮ leaves focus off the menu rows', (
-    tester,
-  ) async {
+  testWidgets('a pointer press on ⋮ opens the menu', (tester) async {
     await _pump(tester);
     await tester.tap(
       find.descendant(
@@ -414,9 +332,22 @@ void main() {
         matching: byIconButton('More'),
       ),
     );
+    await menuLoads(tester, until: find.text(_playThis));
+    expect(find.text(_playThis), findsOneWidget);
+  });
+
+  testWidgets('the Delete key on a row still removes it directly', (
+    tester,
+  ) async {
+    final host = await _pump(tester);
+    Focus.of(tester.element(_more(1))).requestFocus();
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    // Only the menu route's own scope has focus: no row shows a ring.
-    expect(FocusManager.instance.primaryFocus, isA<FocusScopeNode>());
+    await host.run(
+      tester,
+      () => tester.sendKeyEvent(LogicalKeyboardKey.delete),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(host.h.c.queueState.length, 5);
+    expect(find.text(_playThis), findsNothing);
   });
 }

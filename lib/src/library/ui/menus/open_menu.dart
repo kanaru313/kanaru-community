@@ -36,6 +36,10 @@ Future<void> openMenu(
 /// waits for a `MenuAction.run` chosen in the menu to finish, so a caller can
 /// keep something pinned while its dialog is open.
 ///
+/// [leadingGroup] goes before the "Go to" group, [selectReplacement] replaces
+/// the "Select" row, [beforeAdvanced] is a group before "Advanced" (the queue
+/// row menu of Now Playing uses all three).
+///
 /// A menu opened over the song info ([headerCloses]) has a `›` that only
 /// closes the menu (the info is right under it), and [beforeNavigate] runs
 /// before a "Go to" row opens its page so the info can close first.
@@ -51,6 +55,9 @@ Future<void> openSongMenu(
   SongMenuAroundLyrics? aroundLyrics,
   bool selectRow = true,
   bool queueButtons = true,
+  List<MenuItemSpec> leadingGroup = const [],
+  MenuItemSpec? selectReplacement,
+  List<MenuItemSpec> beforeAdvanced = const [],
   Future<void> Function(BuildContext context)? openLyrics,
 }) => presentMenu(
   context,
@@ -61,6 +68,9 @@ Future<void> openSongMenu(
     aroundLyrics: aroundLyrics,
     selectRow: selectRow,
     queueButtons: queueButtons,
+    leadingGroup: leadingGroup,
+    selectReplacement: selectReplacement,
+    beforeAdvanced: beforeAdvanced,
   ),
   viaKeyboard: viaKeyboard,
   beforeNavigate: beforeNavigate,
