@@ -39,6 +39,9 @@ pub struct TrackTags {
     pub genres: Vec<String>,
     pub composer: Option<String>,
     pub year: Option<i32>,
+    /// Most precise raw date (`YYYY`, `YYYY-MM`, `YYYY-MM-DD...`) whose year
+    /// is `year`.
+    pub release_date: Option<String>,
     pub track_no: Option<i32>,
     pub track_total: Option<i32>,
     pub disc_no: Option<i32>,
@@ -51,6 +54,9 @@ pub struct TrackTags {
     /// ISO 639-3, from the title; only set when the file has no language tag.
     pub detected_language: Option<String>,
     pub comment: Option<String>,
+    /// Long description (Vorbis `DESCRIPTION`, MP4 `desc`, ID3 `COMM` with
+    /// descriptor `description`), apart from the comment.
+    pub description: Option<String>,
     pub duration_ms: Option<i64>,
     pub bitrate: Option<i32>,
     pub sample_rate: Option<i32>,

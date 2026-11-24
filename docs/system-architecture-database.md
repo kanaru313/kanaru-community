@@ -403,7 +403,7 @@ Owner: library. File: `tables/library_track_tables.dart`. Sync: derived. Owned c
 |---|---|---|---|---|
 | `track_id` | INTEGER | PK, FK | | `tracks.id` RESTRICT. |
 | `comment` | TEXT | NULL | | |
-| `extra_tags` | TEXT | NULL | | JSON. |
+| `extra_tags` | TEXT | NULL | | JSON v1 (`library/domain/tags/extra_tags.dart`): `{"v":1,"releaseDate":"2018-03-15","description":"…"}`. Null keys are left out; NULL when both are empty. `releaseDate` is the raw tag text (`YYYY`, `YYYY-MM`, `YYYY-MM-DD…`), at most 64 bytes, always of the same year as `tracks.year`; `description` is cut so the blob stays within 4096 bytes. Written by the tag read (Vorbis `DESCRIPTION`, MP4 `desc`, ID3 `COMM` with descriptor `description`); a sidecar-only update leaves it alone. |
 | `lrc_locator` | TEXT | NULL | | Sidecar `.lrc` locator (path or file id). |
 | `lrc_revision` | TEXT | NULL | | Revision of that sidecar file. |
 | `cover_src` | TEXT | NULL | | External cover image (locator or server image id). |

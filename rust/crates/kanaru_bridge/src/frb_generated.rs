@@ -1599,6 +1599,7 @@ impl SseDecode for crate::api::tags::TagFieldsDto {
         let mut var_genres = <Vec<String>>::sse_decode(deserializer);
         let mut var_composer = <Option<String>>::sse_decode(deserializer);
         let mut var_year = <Option<i32>>::sse_decode(deserializer);
+        let mut var_releaseDate = <Option<String>>::sse_decode(deserializer);
         let mut var_trackNo = <Option<i32>>::sse_decode(deserializer);
         let mut var_trackTotal = <Option<i32>>::sse_decode(deserializer);
         let mut var_discNo = <Option<i32>>::sse_decode(deserializer);
@@ -1609,6 +1610,7 @@ impl SseDecode for crate::api::tags::TagFieldsDto {
         let mut var_languageTag = <Option<String>>::sse_decode(deserializer);
         let mut var_detectedLanguage = <Option<String>>::sse_decode(deserializer);
         let mut var_comment = <Option<String>>::sse_decode(deserializer);
+        let mut var_description = <Option<String>>::sse_decode(deserializer);
         let mut var_durationMs = <Option<i64>>::sse_decode(deserializer);
         let mut var_bitrate = <Option<i32>>::sse_decode(deserializer);
         let mut var_sampleRate = <Option<i32>>::sse_decode(deserializer);
@@ -1623,6 +1625,7 @@ impl SseDecode for crate::api::tags::TagFieldsDto {
             genres: var_genres,
             composer: var_composer,
             year: var_year,
+            release_date: var_releaseDate,
             track_no: var_trackNo,
             track_total: var_trackTotal,
             disc_no: var_discNo,
@@ -1633,6 +1636,7 @@ impl SseDecode for crate::api::tags::TagFieldsDto {
             language_tag: var_languageTag,
             detected_language: var_detectedLanguage,
             comment: var_comment,
+            description: var_description,
             duration_ms: var_durationMs,
             bitrate: var_bitrate,
             sample_rate: var_sampleRate,
@@ -2460,6 +2464,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::tags::TagFieldsDto {
             self.genres.into_into_dart().into_dart(),
             self.composer.into_into_dart().into_dart(),
             self.year.into_into_dart().into_dart(),
+            self.release_date.into_into_dart().into_dart(),
             self.track_no.into_into_dart().into_dart(),
             self.track_total.into_into_dart().into_dart(),
             self.disc_no.into_into_dart().into_dart(),
@@ -2470,6 +2475,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::tags::TagFieldsDto {
             self.language_tag.into_into_dart().into_dart(),
             self.detected_language.into_into_dart().into_dart(),
             self.comment.into_into_dart().into_dart(),
+            self.description.into_into_dart().into_dart(),
             self.duration_ms.into_into_dart().into_dart(),
             self.bitrate.into_into_dart().into_dart(),
             self.sample_rate.into_into_dart().into_dart(),
@@ -3221,6 +3227,7 @@ impl SseEncode for crate::api::tags::TagFieldsDto {
         <Vec<String>>::sse_encode(self.genres, serializer);
         <Option<String>>::sse_encode(self.composer, serializer);
         <Option<i32>>::sse_encode(self.year, serializer);
+        <Option<String>>::sse_encode(self.release_date, serializer);
         <Option<i32>>::sse_encode(self.track_no, serializer);
         <Option<i32>>::sse_encode(self.track_total, serializer);
         <Option<i32>>::sse_encode(self.disc_no, serializer);
@@ -3231,6 +3238,7 @@ impl SseEncode for crate::api::tags::TagFieldsDto {
         <Option<String>>::sse_encode(self.language_tag, serializer);
         <Option<String>>::sse_encode(self.detected_language, serializer);
         <Option<String>>::sse_encode(self.comment, serializer);
+        <Option<String>>::sse_encode(self.description, serializer);
         <Option<i64>>::sse_encode(self.duration_ms, serializer);
         <Option<i32>>::sse_encode(self.bitrate, serializer);
         <Option<i32>>::sse_encode(self.sample_rate, serializer);

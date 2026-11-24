@@ -11,6 +11,7 @@ class TagFields {
     this.genres = const [],
     this.composer,
     this.year,
+    this.releaseDate,
     this.trackNo,
     this.trackTotal,
     this.discNo,
@@ -21,6 +22,7 @@ class TagFields {
     this.languageTag,
     this.detectedLanguage,
     this.comment,
+    this.description,
     this.durationMs,
     this.bitrate,
     this.sampleRate,
@@ -36,6 +38,9 @@ class TagFields {
   final List<String> genres;
   final String? composer;
   final int? year;
+
+  /// Raw date text whose year equals [year]; null when none agrees.
+  final String? releaseDate;
   final int? trackNo;
   final int? trackTotal;
   final int? discNo;
@@ -50,6 +55,9 @@ class TagFields {
   /// Language detected from the title; only set when there is no tag.
   final String? detectedLanguage;
   final String? comment;
+
+  /// Long description, apart from [comment].
+  final String? description;
   final int? durationMs;
   final int? bitrate;
   final int? sampleRate;

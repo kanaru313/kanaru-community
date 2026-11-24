@@ -1,10 +1,15 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/library/data/scan/scan_writer.dart';
 import 'package:kanaru/src/library/data/scan/track_row_builder.dart';
+import 'package:kanaru/src/library/domain/scan/scan_diff.dart';
 import 'package:kanaru/src/library/domain/scan/scan_folder.dart';
+import 'package:kanaru/src/library/domain/scan/scan_versions.dart';
 import 'package:kanaru/src/library/domain/scan/tag_read.dart';
+import 'package:kanaru/src/library/domain/tags/extra_tags.dart';
 
 import '../../database/support/test_db.dart';
 import 'support/scan_fixtures.dart';
@@ -16,6 +21,22 @@ SnapshotWrite _snap(ScanFolder folder, String locator, TagRead read) =>
         file: listed(locator),
         read: read,
         now: scanNow,
+      ),
+    );
+
+SnapshotWrite _snapStored(ScanFolder folder, String locator, TagRead read) =>
+    SnapshotWrite(
+      buildTrackRow(
+        folder: folder,
+        file: listed(locator),
+        read: read,
+        now: scanNow,
+        stored: StoredTrackRow(
+          id: 1,
+          locator: locator,
+          status: 'present',
+          hasDetails: true,
+        ),
       ),
     );
 
@@ -93,7 +114,7 @@ void main() {
       _snap(folder, 'bad.mp3', failed('corrupt', transient: false)),
     ]);
     final t = await trackAt(db, folder.sourceId, 'bad.mp3');
-    expect(t.tagsVersion, 1);
+    expect(t.tagsVersion, tagsPassVersion);
     expect(t.mtimeMs, 10);
     expect(t.revision, '10:100');
     expect(t.scanError, 'corrupt');
@@ -135,6 +156,72 @@ void main() {
     expect(cleared.lrcLocator, isNull);
     expect(cleared.lrcRevision, isNull);
   });
+
+  test(
+    'extra tags are written, kept by a sidecar update, cleared by a read',
+    () async {
+      const withBoth = TagFields(
+        title: 'A',
+        comment: 'c',
+        releaseDate: '2018-03-15',
+        description: 'About',
+      );
+      await writeBatch(db, folder.sourceId, [
+        _snap(folder, 'a.mp3', tagged('A', fields: withBoth)),
+      ]);
+      final t = await trackAt(db, folder.sourceId, 'a.mp3');
+      var d = await (db.select(db.trackDetails)).getSingle();
+      expect(
+        decodeExtraTags(d.extraTags),
+        const ExtraTags(releaseDate: '2018-03-15', description: 'About'),
+      );
+
+      await writeBatch(db, folder.sourceId, [
+        LrcWrite(
+          trackId: t.id,
+          details: const DetailsPatch(lrcLocator: 'a.lrc', lrcRevision: '1:2'),
+        ),
+      ]);
+      d = await (db.select(db.trackDetails)).getSingle();
+      expect(decodeExtraTags(d.extraTags).description, 'About');
+      expect(d.lrcLocator, 'a.lrc');
+
+      // DESCRIPTION removed from the file: only the date is left.
+      await writeBatch(db, folder.sourceId, [
+        _snapStored(
+          folder,
+          'a.mp3',
+          tagged(
+            'A',
+            fields: const TagFields(
+              title: 'A',
+              comment: 'c',
+              releaseDate: '2018-03-15',
+            ),
+          ),
+        ),
+      ]);
+      d = await (db.select(db.trackDetails)).getSingle();
+      final json = jsonDecode(d.extraTags!) as Map;
+      expect(json.containsKey('description'), isFalse);
+      expect(d.comment, 'c');
+
+      // Date gone too: NULL, comment kept.
+      await writeBatch(db, folder.sourceId, [
+        _snapStored(
+          folder,
+          'a.mp3',
+          tagged(
+            'A',
+            fields: const TagFields(title: 'A', comment: 'c'),
+          ),
+        ),
+      ]);
+      d = await (db.select(db.trackDetails)).getSingle();
+      expect(d.extraTags, isNull);
+      expect(d.comment, 'c');
+    },
+  );
 
   test('a sidecar update keeps the stored comment', () async {
     await writeBatch(db, folder.sourceId, [

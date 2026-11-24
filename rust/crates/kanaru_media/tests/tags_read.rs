@@ -218,3 +218,63 @@ fn cancelled_token_stops_before_reading() {
         Err(MediaError::Cancelled)
     );
 }
+
+#[test]
+fn flac_date_and_description() {
+    let dir = TempDir::new();
+    let path = dir.write("song.flac", &flac_bytes());
+    let tag = tag_with(
+        TagType::VorbisComments,
+        &[
+            (ItemKey::RecordingDate, "2018-03-15"),
+            (ItemKey::Description, "  Live at home "),
+            (ItemKey::Comment, "plain comment"),
+        ],
+    );
+    save(&tag, &path);
+    let tags = read(&path).expect("read");
+    assert_eq!(tags.year, Some(2018));
+    assert_eq!(tags.release_date.as_deref(), Some("2018-03-15"));
+    assert_eq!(tags.description.as_deref(), Some("Live at home"));
+    assert_eq!(tags.comment.as_deref(), Some("plain comment"));
+}
+
+#[test]
+fn flac_date_of_another_year_is_none() {
+    let dir = TempDir::new();
+    let path = dir.write("song.flac", &flac_bytes());
+    // `Year` is read before `ReleaseDate`, so 2018 is the year; the full date
+    // belongs to 2020 and must not be shown next to it.
+    let tag = tag_with(
+        TagType::VorbisComments,
+        &[(ItemKey::Year, "2018"), (ItemKey::ReleaseDate, "2020-03-15")],
+    );
+    save(&tag, &path);
+    let tags = read(&path).expect("read");
+    assert_eq!(tags.year, Some(2018));
+    assert_eq!(tags.release_date.as_deref(), Some("2018"));
+    assert_eq!(tags.description, None);
+}
+
+#[test]
+fn mp3_comm_description_is_not_the_comment() {
+    use lofty::tag::{ItemValue, TagItem};
+    let dir = TempDir::new();
+    let path = dir.write("song.mp3", &mp3_bytes());
+    let mut tag = tag_with(
+        TagType::Id3v2,
+        &[(ItemKey::RecordingDate, "2018-03-15")],
+    );
+    let mut comment = TagItem::new(ItemKey::Comment, ItemValue::Text("the comment".into()));
+    comment.set_description(String::new());
+    let mut description = TagItem::new(ItemKey::Comment, ItemValue::Text("the description".into()));
+    description.set_description("description".into());
+    // Described frame first: it must still not become the comment.
+    tag.push(description);
+    tag.push(comment);
+    save(&tag, &path);
+    let tags = read(&path).expect("read");
+    assert_eq!(tags.release_date.as_deref(), Some("2018-03-15"));
+    assert_eq!(tags.comment.as_deref(), Some("the comment"));
+    assert_eq!(tags.description.as_deref(), Some("the description"));
+}

@@ -49,6 +49,7 @@ pub fn apply_tag(out: &mut TrackTags, tag: &Tag) {
     out.genres = values(tag, ItemKey::Genre);
     out.composer = capped(tag.get_string(ItemKey::Composer), MAX_TEXT_BYTES);
     out.year = year(tag);
+    out.release_date = release_date(tag, out.year);
     out.track_no = tag.track().and_then(to_i32);
     out.track_total = tag.track_total().and_then(to_i32);
     out.disc_no = tag.disk().and_then(to_i32);
@@ -60,7 +61,44 @@ pub fn apply_tag(out: &mut TrackTags, tag: &Tag) {
     );
     out.album_sort = capped(tag.get_string(ItemKey::AlbumTitleSortOrder), MAX_TEXT_BYTES);
     out.language_tag = capped(tag.get_string(ItemKey::Language), MAX_TEXT_BYTES);
-    out.comment = capped(tag.comment().as_deref(), MAX_COMMENT_BYTES);
+    out.comment = capped(comment(tag), MAX_COMMENT_BYTES);
+    out.description = capped(description(tag), MAX_COMMENT_BYTES);
+}
+
+/// Descriptor of the ID3 `COMM` frame that carries the long description.
+const DESCRIPTION_DESCRIPTOR: &str = "description";
+
+fn is_description_frame(item: &lofty::tag::TagItem) -> bool {
+    item.description()
+        .trim()
+        .eq_ignore_ascii_case(DESCRIPTION_DESCRIPTOR)
+}
+
+/// The comment: the `COMM` frame with an empty descriptor if there is one,
+/// else the first one that is neither the description frame nor an iTunes
+/// bookkeeping frame (`iTunNORM`, `iTunSMPB`, ...).
+fn comment(tag: &Tag) -> Option<&str> {
+    let comments = || {
+        tag.items()
+            .filter(|i| i.key() == ItemKey::Comment && !is_description_frame(i))
+    };
+    comments()
+        .filter(|i| i.description().trim().is_empty())
+        .chain(comments().filter(|i| {
+            let d = i.description().trim();
+            !d.is_empty() && !d.to_ascii_lowercase().starts_with("itun")
+        }))
+        .find_map(|i| i.value().text())
+}
+
+/// Vorbis `DESCRIPTION`, MP4 `desc`, else an ID3 `COMM` whose descriptor is
+/// `description` (kept apart from the comment).
+fn description(tag: &Tag) -> Option<&str> {
+    tag.get_string(ItemKey::Description).or_else(|| {
+        tag.items()
+            .filter(|i| i.key() == ItemKey::Comment && is_description_frame(i))
+            .find_map(|i| i.value().text())
+    })
 }
 
 /// Copies the audio properties into `out`. Zero means "unknown" in several
@@ -85,15 +123,72 @@ fn year(tag: &Tag) -> Option<i32> {
     YEAR_KEYS
         .into_iter()
         .filter_map(|key| tag.get_string(key))
-        .map(|raw| {
-            raw.chars()
-                .filter(|c| !c.is_control())
-                .collect::<String>()
-                .trim()
-                .to_owned()
-        })
+        .map(clean_date)
         .filter(|v| v.len() <= MAX_RAW_DATE_BYTES)
         .find_map(|v| parse_year(&v))
+}
+
+/// Removes control characters and surrounding blanks from a raw date.
+fn clean_date(raw: &str) -> String {
+    raw.chars()
+        .filter(|c| !c.is_control())
+        .collect::<String>()
+        .trim()
+        .to_owned()
+}
+
+/// Precision of a date: 1 year, 2 year-month, 3 full date. Accepts the dashed
+/// (`YYYY-MM-DD`) and compact (`YYYYMM`, `YYYYMMDD`) forms, optionally
+/// followed by a time. A month outside 01-12 or a day outside 01-31 counts
+/// only up to the part that is valid (`2018-03-00` is a month).
+fn date_precision(value: &str) -> u8 {
+    let b = value.as_bytes();
+    let num = |from: usize| -> Option<u32> {
+        let s = b.get(from..from + 2)?;
+        s.iter()
+            .all(u8::is_ascii_digit)
+            .then(|| u32::from(s[0] - b'0') * 10 + u32::from(s[1] - b'0'))
+    };
+    if !b.get(..4).is_some_and(|s| s.iter().all(u8::is_ascii_digit)) {
+        return 0;
+    }
+    let dashed = b.get(4) == Some(&b'-');
+    let month_at = if dashed { 5 } else { 4 };
+    if !num(month_at).is_some_and(|m| (1..=12).contains(&m)) {
+        return 1;
+    }
+    let day_at = if dashed { 8 } else { 6 };
+    if dashed && b.get(7) != Some(&b'-') {
+        return 2;
+    }
+    if num(day_at).is_some_and(|d| (1..=31).contains(&d)) {
+        3
+    } else {
+        2
+    }
+}
+
+/// The most precise date among [`YEAR_KEYS`] whose year is `year` (the one
+/// chosen for the row); the first key wins a tie. `None` when no key agrees,
+/// so a date never contradicts the year shown next to it.
+fn release_date(tag: &Tag, year: Option<i32>) -> Option<String> {
+    let year = year?;
+    let mut best: Option<(u8, String)> = None;
+    for value in YEAR_KEYS
+        .into_iter()
+        .filter_map(|key| tag.get_string(key))
+        .map(clean_date)
+        .filter(|v| v.len() <= MAX_RAW_DATE_BYTES)
+    {
+        if parse_year(&value) != Some(year) {
+            continue;
+        }
+        let precision = date_precision(&value);
+        if best.as_ref().is_none_or(|(p, _)| precision > *p) {
+            best = Some((precision, value));
+        }
+    }
+    best.map(|(_, v)| v)
 }
 
 /// Every non-empty value of `key`, trimmed, each cut to [`MAX_TEXT_BYTES`],
@@ -200,6 +295,115 @@ mod tests {
         let mut tag = Tag::new(TagType::VorbisComments);
         push(&mut tag, ItemKey::RecordingDate, "20\u{0}19\n");
         assert_eq!(mapped(&tag).year, Some(2019));
+    }
+
+    #[test]
+    fn release_date_is_the_most_precise_one_of_the_chosen_year() {
+        let mut tag = Tag::new(TagType::VorbisComments);
+        push(&mut tag, ItemKey::RecordingDate, "2018");
+        push(&mut tag, ItemKey::ReleaseDate, "2018-03-15");
+        push(&mut tag, ItemKey::OriginalReleaseDate, "2018-03");
+        let out = mapped(&tag);
+        assert_eq!(out.year, Some(2018));
+        assert_eq!(out.release_date.as_deref(), Some("2018-03-15"));
+    }
+
+    #[test]
+    fn compact_dates_rank_like_dashed_ones() {
+        let mut tag = Tag::new(TagType::VorbisComments);
+        push(&mut tag, ItemKey::RecordingDate, "2018");
+        push(&mut tag, ItemKey::ReleaseDate, "20180315");
+        assert_eq!(mapped(&tag).release_date.as_deref(), Some("20180315"));
+        let mut month = Tag::new(TagType::VorbisComments);
+        push(&mut month, ItemKey::RecordingDate, "2018");
+        push(&mut month, ItemKey::ReleaseDate, "201803");
+        assert_eq!(mapped(&month).release_date.as_deref(), Some("201803"));
+    }
+
+    #[test]
+    fn invalid_month_or_day_ranks_at_the_valid_part_only() {
+        assert_eq!(date_precision("2018-00-00"), 1);
+        assert_eq!(date_precision("2018-13-01"), 1);
+        assert_eq!(date_precision("2018-03-00"), 2);
+        assert_eq!(date_precision("2018-03-32"), 2);
+        assert_eq!(date_precision("20180300"), 2);
+        assert_eq!(date_precision("2018-03-15T10:00:00"), 3);
+        let mut tag = Tag::new(TagType::VorbisComments);
+        push(&mut tag, ItemKey::RecordingDate, "2018-00-00");
+        push(&mut tag, ItemKey::ReleaseDate, "2018-03");
+        assert_eq!(mapped(&tag).release_date.as_deref(), Some("2018-03"));
+    }
+
+    #[test]
+    fn itunes_comm_frames_are_not_the_comment() {
+        let mut tag = Tag::new(TagType::Id3v2);
+        for (desc, text) in [
+            ("iTunNORM", "00000A2B 00000B3C"),
+            ("", "real comment"),
+            ("Other", "other"),
+        ] {
+            let mut item = TagItem::new(ItemKey::Comment, ItemValue::Text(text.into()));
+            item.set_description(desc.into());
+            tag.push(item);
+        }
+        assert_eq!(mapped(&tag).comment.as_deref(), Some("real comment"));
+        let mut only = Tag::new(TagType::Id3v2);
+        for (desc, text) in [("iTunSMPB", "x"), ("Other", "other")] {
+            let mut item = TagItem::new(ItemKey::Comment, ItemValue::Text(text.into()));
+            item.set_description(desc.into());
+            only.push(item);
+        }
+        assert_eq!(mapped(&only).comment.as_deref(), Some("other"));
+    }
+
+    #[test]
+    fn mp4_desc_item_is_the_description() {
+        let mut tag = Tag::new(TagType::Mp4Ilst);
+        push(&mut tag, ItemKey::Description, "From desc");
+        assert_eq!(mapped(&tag).description.as_deref(), Some("From desc"));
+    }
+
+    #[test]
+    fn release_date_of_another_year_is_dropped() {
+        let mut tag = Tag::new(TagType::VorbisComments);
+        push(&mut tag, ItemKey::RecordingDate, "2018");
+        push(&mut tag, ItemKey::ReleaseDate, "2020-03-15");
+        let out = mapped(&tag);
+        assert_eq!(out.release_date.as_deref(), Some("2018"));
+        let mut only_other = Tag::new(TagType::VorbisComments);
+        push(&mut only_other, ItemKey::Year, "2018");
+        push(&mut only_other, ItemKey::OriginalReleaseDate, "1999-01-01");
+        assert_eq!(mapped(&only_other).release_date.as_deref(), Some("2018"));
+        assert_eq!(mapped(&Tag::new(TagType::Id3v2)).release_date, None);
+    }
+
+    #[test]
+    fn release_date_is_cleaned_and_long_junk_is_none() {
+        let mut tag = Tag::new(TagType::VorbisComments);
+        push(&mut tag, ItemKey::RecordingDate, " 2019-07\u{0}-15\n");
+        assert_eq!(mapped(&tag).release_date.as_deref(), Some("2019-07-15"));
+        let mut long = Tag::new(TagType::VorbisComments);
+        push(
+            &mut long,
+            ItemKey::RecordingDate,
+            &format!("2019-{}", "1".repeat(70)),
+        );
+        let out = mapped(&long);
+        assert_eq!((out.year, out.release_date), (None, None));
+    }
+
+    #[test]
+    fn description_is_read_apart_from_the_comment() {
+        let mut tag = Tag::new(TagType::VorbisComments);
+        push(&mut tag, ItemKey::Description, "  About the song ");
+        push(&mut tag, ItemKey::Comment, "note");
+        let out = mapped(&tag);
+        assert_eq!(out.description.as_deref(), Some("About the song"));
+        assert_eq!(out.comment.as_deref(), Some("note"));
+        let mut long = Tag::new(TagType::VorbisComments);
+        push(&mut long, ItemKey::Description, &"é".repeat(5000));
+        assert_eq!(mapped(&long).description.map(|d| d.len()), Some(4096));
+        assert_eq!(mapped(&Tag::new(TagType::Id3v2)).description, None);
     }
 
     #[test]

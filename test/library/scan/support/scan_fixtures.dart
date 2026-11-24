@@ -14,6 +14,7 @@ import 'package:kanaru/src/library/data/scan/native_tag_reader.dart';
 import 'package:kanaru/src/library/data/scan/tag_pass.dart';
 import 'package:kanaru/src/library/domain/scan/native_failure.dart';
 import 'package:kanaru/src/library/domain/scan/scan_folder.dart';
+import 'package:kanaru/src/library/domain/scan/scan_versions.dart';
 import 'package:kanaru/src/library/domain/scan/tag_read.dart';
 import 'package:kanaru/src/storage/domain/local_folder_listing.dart';
 
@@ -196,7 +197,7 @@ Future<void> addManyTracks(AppDatabase db, int sourceId, int count) =>
             title: 'T$i',
             mtimeMs: const Value(10),
             sizeBytes: const Value(100),
-            tagsVersion: const Value(1),
+            tagsVersion: const Value(tagsPassVersion),
             keysVersion: const Value(1),
             addedAt: 1000,
             updatedAt: 1000,

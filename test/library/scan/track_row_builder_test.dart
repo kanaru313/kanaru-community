@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
@@ -9,6 +11,7 @@ import 'package:kanaru/src/library/domain/scan/scan_diff.dart';
 import 'package:kanaru/src/library/domain/scan/scan_folder.dart';
 import 'package:kanaru/src/library/domain/scan/scan_versions.dart';
 import 'package:kanaru/src/library/domain/scan/tag_read.dart';
+import 'package:kanaru/src/library/domain/tags/extra_tags.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/storage/domain/local_folder_listing.dart';
 
@@ -340,6 +343,55 @@ void main() {
       expect(b.details!.lrcLocator, isNull);
       expect(_v(b.details!.comment), isNull);
     });
+  });
+
+  group('extra tags', () {
+    test('release date and description are encoded together', () {
+      final b = _build(
+        _ok(
+          const TagFields(
+            title: 'T',
+            releaseDate: '2018-03-15',
+            description: 'About',
+          ),
+        ),
+      );
+      expect(
+        decodeExtraTags(_v(b.details!.extraTags)),
+        const ExtraTags(releaseDate: '2018-03-15', description: 'About'),
+      );
+    });
+
+    test('a date-only file has no description key', () {
+      final b = _build(
+        _ok(const TagFields(title: 'T', releaseDate: '2018-03-15')),
+      );
+      final json = jsonDecode(_v(b.details!.extraTags)!) as Map;
+      expect(json.containsKey('description'), isFalse);
+      expect(json['releaseDate'], '2018-03-15');
+    });
+
+    test('without either field and no details row nothing is written', () {
+      expect(_build(_ok(const TagFields(title: 'T'))).details, isNull);
+    });
+
+    test(
+      'an existing details row gets an explicit NULL when both are gone',
+      () {
+        final b = _build(
+          _ok(const TagFields(title: 'T')),
+          stored: StoredTrackRow(
+            id: 1,
+            locator: _file.locator,
+            status: 'present',
+            revision: '456:123',
+            hasDetails: true,
+          ),
+        );
+        expect(b.details!.extraTags.present, isTrue);
+        expect(_v(b.details!.extraTags), isNull);
+      },
+    );
   });
 
   test('the companion passes the snapshot helper pairing checks', () {
