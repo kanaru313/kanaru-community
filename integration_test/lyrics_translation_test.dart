@@ -339,19 +339,30 @@ void main() {
     );
     addTearDown(watching.close);
     await container.read(translationOnProvider.notifier).set(true);
-    // A run this short can finish between two frames; the shot is best effort.
-    var sawLoading = false;
+    // Poll without a shot inside the condition: a shot pumps too, and two
+    // pumps at once are a guarded-function conflict. A run this short can
+    // finish before it is seen loading; the loading shot is best effort.
+    void failIfFailed() {
+      final status = statusOf(syncedId);
+      if (status is StatusFailed) {
+        throw TestFailure('the translation failed: ${status.failure}');
+      }
+    }
+
     await app.pumpUntil(
       () {
+        failIfFailed();
         final status = statusOf(syncedId);
-        if (status is StatusLoading && !sawLoading) {
-          sawLoading = true;
-          unawaited(shot('tr-pill-loading'));
-        }
-        if (status is StatusFailed) {
-          throw TestFailure('the translation failed: ${status.failure}');
-        }
-        return status is StatusReady;
+        return status is StatusLoading || status is StatusReady;
+      },
+      what: 'the synced song to start or finish translating',
+      timeout: const Duration(seconds: 30),
+    );
+    if (statusOf(syncedId) is StatusLoading) await shot('tr-pill-loading');
+    await app.pumpUntil(
+      () {
+        failIfFailed();
+        return statusOf(syncedId) is StatusReady;
       },
       what: 'the synced song to be translated',
       timeout: const Duration(seconds: 90),
