@@ -7,8 +7,8 @@ import '../../../plugins/state/install_ops.dart';
 import '../common/reason_box.dart';
 
 /// "Xoá {tên}?": who wrote it and which version, then what goes and (for a
-/// lyrics plugin) what stays. Pops true on [Xoá]. Only what is true now is
-/// listed; nothing else is promised.
+/// lyrics or translate plugin) what stays. Pops true on [Xoá]. Only what is
+/// true now is listed; nothing else is promised.
 class RemovePluginDialog extends StatelessWidget {
   const RemovePluginDialog({
     super.key,
@@ -60,6 +60,13 @@ class RemovePluginDialog extends StatelessWidget {
                       : l10n.pluginsRemoveKeepPinned,
                   l10n.pluginsRemoveKeepLrc,
                 ],
+              ),
+            if (preview.kind == PluginKind.translate ||
+                preview.kind == PluginKind.aiTranslate)
+              ReasonBox(
+                error: false,
+                title: l10n.pluginsRemoveKeep,
+                lines: [l10n.pluginsRemoveKeepTranslations],
               ),
           ],
         ),

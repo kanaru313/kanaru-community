@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_display_prefs.dart';
 import 'package:kanaru/src/lyrics/domain/translation/translation_status.dart';
+import 'package:kanaru/src/lyrics/domain/translation/translation_size.dart';
+import 'package:kanaru/src/lyrics/state/translation/translation_settings.dart';
 import 'package:kanaru/src/lyrics/state/translation/translation_credit_provider.dart';
 import 'package:kanaru/src/lyrics/state/translation/translation_view.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_line.dart';
@@ -44,12 +46,14 @@ void main() {
     double textScale = 1,
     bool disableAnimations = false,
     TranslationCredit? credit,
+    TranslationSize size = TranslationSize.medium,
   }) async {
     host = LyricsUiHost(
       line: line,
       extra: translationOverrides(target: target),
     );
     if (on) await turnTranslationOn(host.container, replace: replace);
+    await host.container.read(translationSizeProvider.notifier).set(size);
     host.container.read(viewBox.notifier).set(view ?? TranslationView.idle);
     host.container.read(creditBox.notifier).set(credit);
     await host.pump(
@@ -294,6 +298,28 @@ void main() {
     expect(centre(), closeTo(800 * 0.4, 40));
   });
 
+  testWidgets('changing the translation size keeps the sung line at the '
+      'anchor', (tester) async {
+    final map50 = {for (var i = 0; i < 50; i++) 'Line $i': 'Dòng $i'};
+    await open(tester, syncedLyrics(50), view: readyView(map50), line: 20);
+    final sung = find
+        .byType(LyricsLine)
+        .evaluate()
+        .firstWhere((e) => (e.widget as LyricsLine).index == 20);
+    double centre() =>
+        tester.getCenter(find.byElementPredicate((e) => e == sung)).dy;
+    expect(centre(), closeTo(800 * 0.4, 40));
+    await host.container
+        .read(translationSizeProvider.notifier)
+        .set(TranslationSize.large);
+    await settleScroll(tester);
+    expect(
+      _styleOf(tester, 'Dòng 20').fontSize,
+      closeTo(_size * TranslationSize.large.translation, 1e-9),
+    );
+    expect(centre(), closeTo(800 * 0.4, 40));
+  });
+
   testWidgets('200 % text and animations off lay out without overflow', (
     tester,
   ) async {
@@ -319,4 +345,33 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.hasRunningAnimations, isFalse);
   });
+
+  for (final (size, under, original) in [
+    (TranslationSize.small, 0.52, 0.42),
+    (TranslationSize.medium, 0.62, 0.5),
+    (TranslationSize.large, 0.75, 0.6),
+  ]) {
+    testWidgets('size ${size.name}: under the line is $under, replaced '
+        'original is $original of the line', (tester) async {
+      await open(tester, lyrics, view: readyView(map), size: size);
+      expect(_styleOf(tester, 'Dòng 2').fontSize, closeTo(_size * under, 1e-9));
+    });
+
+    testWidgets('size ${size.name}: replace shows the original at $original', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        lyrics,
+        view: readyView({'Line 2': 'Dòng 2'}),
+        replace: true,
+        size: size,
+      );
+      expect(_styleOf(tester, 'Dòng 2').fontSize, _size);
+      expect(
+        _styleOf(tester, 'Line 2').fontSize,
+        closeTo(_size * original, 1e-9),
+      );
+    });
+  }
 }

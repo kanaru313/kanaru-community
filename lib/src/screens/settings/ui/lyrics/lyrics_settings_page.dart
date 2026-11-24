@@ -13,9 +13,11 @@ import 'lyrics_display_section.dart';
 import 'lyrics_find_section.dart';
 import 'lyrics_soon_sections.dart';
 import 'lyrics_sources_section.dart';
+import 'lyrics_translation_section.dart';
 
-/// Settings › Lyrics: live pickers and switches, the online sources, and a
-/// "coming soon" row for everything that waits for the engine.
+/// Settings › Lyrics: live pickers and switches, the online sources, the
+/// translation defaults, and a "coming soon" row for everything that waits
+/// for the engine.
 ///
 /// `?focus=sources` scrolls to the online sources and pulses them once.
 class LyricsSettingsPage extends ConsumerStatefulWidget {
@@ -123,7 +125,9 @@ class _LyricsSettingsPageState extends ConsumerState<LyricsSettingsPage> {
             child: const LyricsSourcesSection(),
           ),
         ),
-        ...lyricsSoonSections(context),
+        lyricsWhereSection(context),
+        const LyricsTranslationSection(),
+        lyricsSpeechSection(context),
       ],
     );
   }

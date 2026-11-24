@@ -106,10 +106,7 @@ void main() {
       'Keep the screen on',
       'Save found lyrics as .lrc',
       'Lyrics on the lock screen and notification',
-      'Default translation service',
-      'Default translation language',
       'Translate ahead',
-      'Add a translation service',
       'Add a speech-to-text plugin',
     ];
     for (final title in soon) {
@@ -145,7 +142,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Floating lyrics'), findsNothing);
-    expect(find.byType(ProBadge), findsNothing);
+    // Only "Translate ahead" carries the Pro badge.
+    expect(find.byType(ProBadge), findsOneWidget);
   });
 
   testWidgets('desktop shows floating lyrics with Pro, not the mobile rows', (
@@ -153,7 +151,7 @@ void main() {
   ) async {
     await _open(tester, size: _desktop);
     expect(find.text('Floating lyrics'), findsOneWidget);
-    expect(find.byType(ProBadge), findsOneWidget);
+    expect(find.byType(ProBadge), findsNWidgets(2));
     expect(find.text('Keep the screen on'), findsNothing);
     expect(
       find.text('Lyrics on the lock screen and notification'),

@@ -4839,9 +4839,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSettingsTrTarget => 'Default translation language';
 
   @override
-  String get lyricsSettingsTrTargetApp => 'Follows the app language';
-
-  @override
   String get lyricsSettingsTrAhead => 'Translate ahead';
 
   @override
@@ -4849,6 +4846,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsSettingsAddTrService => 'Add a translation service';
+
+  @override
+  String lyricsSettingsTrTargetAppNamed(String name) {
+    return 'Follows the app language ($name)';
+  }
+
+  @override
+  String get lyricsSettingsTrTargetCaption =>
+      'Used for songs that have no language of their own.';
+
+  @override
+  String get lyricsSettingsTrSize => 'Translation text size';
+
+  @override
+  String get lyricsSettingsTrSizeCaption =>
+      'The translation line under the lyrics, or the small original line when the translation replaces it. Applies to the lyrics screen, the Lyrics tab and the lyrics card.';
 
   @override
   String get lyricsSettingsAddSpeech => 'Add a speech-to-text plugin';
@@ -7126,6 +7139,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pluginsPageUseTranslate => 'Default translation service';
+
+  @override
+  String get pluginsPageUseTranslateAt =>
+      'Change in Settings › Lyrics › Translation';
+
+  @override
+  String get pluginsPageUseTranslateHint =>
+      'Songs with no service of their own use the default service.';
+
+  @override
+  String get pluginsPageUseTranslateIs => 'Default';
+
+  @override
+  String get pluginsPageUseTranslateSet => 'Set as default';
+
+  @override
+  String get pluginsRemoveKeepTranslations =>
+      'Saved translations, until you choose “Delete saved translations”';
 
   @override
   String get pluginsPageConnection => 'Connection';

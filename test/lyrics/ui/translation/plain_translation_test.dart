@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_display_prefs.dart';
+import 'package:kanaru/src/lyrics/domain/translation/translation_size.dart';
+import 'package:kanaru/src/lyrics/state/translation/translation_settings.dart';
 import 'package:kanaru/src/lyrics/state/translation/translation_credit_provider.dart';
 import 'package:kanaru/src/lyrics/state/translation/translation_view.dart';
 import 'package:kanaru/src/lyrics/ui/plain_lyrics_view.dart';
@@ -26,9 +28,11 @@ void main() {
     LyricsAlign align = LyricsAlign.start,
     TranslationCredit? credit,
     Lyrics? lyrics,
+    TranslationSize size = TranslationSize.medium,
   }) async {
     final host = LyricsUiHost(extra: translationOverrides());
     if (on) await turnTranslationOn(host.container, replace: replace);
+    await host.container.read(translationSizeProvider.notifier).set(size);
     host.container.read(viewBox.notifier).set(view ?? TranslationView.idle);
     host.container.read(creditBox.notifier).set(credit);
     await host.pump(
@@ -115,4 +119,32 @@ void main() {
     expect(find.bySemanticsLabel('Plain 1, Bản 1'), findsOneWidget);
     handle.dispose();
   });
+
+  for (final (size, under, original) in [
+    (TranslationSize.small, 0.672, 0.588),
+    (TranslationSize.medium, 0.8, 0.7),
+    (TranslationSize.large, 0.968, 0.847),
+  ]) {
+    testWidgets('size ${size.name}: under is $under, replaced original '
+        '$original of the plain text', (tester) async {
+      await open(tester, view: readyView(map), size: size);
+      expect(_styleOf(tester, 'Bản 0').fontSize, closeTo(_plain * under, 1e-9));
+    });
+
+    testWidgets('size ${size.name}: replace shows the original at $original', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        view: readyView({'Plain 0': 'Bản 0'}),
+        replace: true,
+        size: size,
+      );
+      expect(_styleOf(tester, 'Bản 0').fontSize, closeTo(_plain, 1e-9));
+      expect(
+        _styleOf(tester, 'Plain 0').fontSize,
+        closeTo(_plain * original, 1e-9),
+      );
+    });
+  }
 }

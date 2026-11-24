@@ -53,6 +53,35 @@ void main() {
         expect(find.text('Own storage (38 KB)'), findsOneWidget);
       });
 
+      testWidgets('a translate plugin lists the saved translations it leaves', (
+        tester,
+      ) async {
+        for (final kind in [PluginKind.translate, PluginKind.aiTranslate]) {
+          final ops = FakeInstallOps()
+            ..preview = RemovePreview(
+              installId: 'id-demo',
+              name: 'Demo',
+              author: 'someone',
+              version: 3,
+              kind: kind,
+            );
+          await pumpFlowHost(
+            tester,
+            ops: ops,
+            size: size,
+            onTap: (c) => removePluginFlow(c, ops, 'id-demo'),
+          );
+          expect(find.text('Kept'), findsOneWidget);
+          expect(
+            find.text(
+              'Saved translations, until you choose “Delete saved translations”',
+            ),
+            findsOneWidget,
+          );
+          expect(find.textContaining('lyrics'), findsNothing);
+        }
+      });
+
       testWidgets('a lyrics plugin lists the saved lyrics it leaves', (
         tester,
       ) async {

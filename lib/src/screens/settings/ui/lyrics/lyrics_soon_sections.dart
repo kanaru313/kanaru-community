@@ -3,66 +3,41 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../soon_row.dart';
+import 'pro_title.dart';
 
-/// Sections whose rows all wait for plugins or the engine: where lyrics
-/// show, translation, lyrics from audio.
-List<Widget> lyricsSoonSections(BuildContext context) {
+/// "Nơi hiện lời": every row waits for the engine.
+Widget lyricsWhereSection(BuildContext context) {
   final l10n = AppLocalizations.of(context);
   final desktop = FormFactor.of(context) == FormFactor.desktop;
-  return [
-    SetupSection(
-      title: Text(l10n.lyricsSettingsWhere),
-      children: [
-        if (desktop)
-          SoonRow(
-            icon: KIcons.openInNew,
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(child: Text(l10n.lyricsSettingsFloating)),
-                const KGap(KSpace.x2),
-                const ProBadge(),
-              ],
-            ),
-            desc: l10n.lyricsSettingsFloatingDesc,
-          )
-        else
-          SoonRow(
-            icon: KIcons.lyrics,
-            title: Text(l10n.lyricsSettingsLockScreen),
-            desc: l10n.lyricsSettingsLockScreenDesc,
-          ),
-      ],
-    ),
-    SetupSection(
-      title: Text(l10n.lyricsSettingsTranslation),
-      children: [
+  return SetupSection(
+    title: Text(l10n.lyricsSettingsWhere),
+    children: [
+      if (desktop)
         SoonRow(
-          icon: KIcons.extension,
-          title: Text(l10n.lyricsSettingsTrService),
-          desc: l10n.lyricsSettingsTrServiceNone,
-        ),
+          icon: KIcons.openInNew,
+          title: ProTitle(l10n.lyricsSettingsFloating),
+          desc: l10n.lyricsSettingsFloatingDesc,
+        )
+      else
         SoonRow(
-          icon: KIcons.language,
-          title: Text(l10n.lyricsSettingsTrTarget),
-          desc: l10n.lyricsSettingsTrTargetApp,
+          icon: KIcons.lyrics,
+          title: Text(l10n.lyricsSettingsLockScreen),
+          desc: l10n.lyricsSettingsLockScreenDesc,
         ),
-        SoonRow(
-          icon: KIcons.playlistPlay,
-          title: Text(l10n.lyricsSettingsTrAhead),
-          desc: l10n.lyricsSettingsTrAheadNow,
-        ),
-        SoonRow(icon: KIcons.add, title: Text(l10n.lyricsSettingsAddTrService)),
-      ],
-    ),
-    SetupSection(
-      title: Text(l10n.lyricsSettingsSpeech),
-      hint: l10n.lyricsSettingsSpeechHint,
-      hintTooltip: l10n.settingsSectionHintTooltip(l10n.lyricsSettingsSpeech),
-      hintTitle: l10n.lyricsSettingsSpeech,
-      children: [
-        SoonRow(icon: KIcons.add, title: Text(l10n.lyricsSettingsAddSpeech)),
-      ],
-    ),
-  ];
+    ],
+  );
+}
+
+/// "Tạo lời từ âm thanh": its only row waits for the speech plugins.
+Widget lyricsSpeechSection(BuildContext context) {
+  final l10n = AppLocalizations.of(context);
+  return SetupSection(
+    title: Text(l10n.lyricsSettingsSpeech),
+    hint: l10n.lyricsSettingsSpeechHint,
+    hintTooltip: l10n.settingsSectionHintTooltip(l10n.lyricsSettingsSpeech),
+    hintTitle: l10n.lyricsSettingsSpeech,
+    children: [
+      SoonRow(icon: KIcons.add, title: Text(l10n.lyricsSettingsAddSpeech)),
+    ],
+  );
 }

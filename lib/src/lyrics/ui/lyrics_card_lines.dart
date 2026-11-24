@@ -6,6 +6,7 @@ import '../domain/lyrics.dart';
 import '../domain/lyrics_display_prefs.dart';
 import '../state/playing_lyrics_providers.dart';
 import '../state/translation/translation_layout_provider.dart';
+import '../state/translation/translation_settings.dart';
 import '../state/translation/translation_providers.dart';
 import 'lyrics_gap_mark.dart';
 import 'lyrics_text_styles.dart';
@@ -41,6 +42,7 @@ class CardSyncedLines extends ConsumerWidget {
     final index = ref.watch(playingLyricsLineProvider);
     final id = trackId;
     final layout = id == null ? null : ref.watch(translationLayoutProvider(id));
+    final trSize = ref.watch(translationSizeProvider);
     final lines = lyrics.lines;
     // A gap line is the three-note mark; the slots outside the list are empty.
     LyricLine? lineAt(int i) => i < 0 || i >= lines.length ? null : lines[i];
@@ -83,7 +85,7 @@ class CardSyncedLines extends ConsumerWidget {
               trackId: id,
               line: current,
               rtl: layout.rtl,
-              style: cardTranslationStyle(context, style(true)),
+              style: cardTranslationStyle(context, style(true), trSize),
               textAlign: textAlign,
             ),
           _CardRow(
@@ -166,8 +168,9 @@ class CardOneLine extends StatelessWidget {
   );
 }
 
-/// The translation of the sung line, one line of 13: the text, a bar while it
-/// is coming, a blank of the same height otherwise (a gap, no translation).
+/// The translation of the sung line, one line (size from the setting): the
+/// text, a bar while it is coming, a blank of the same height otherwise (a
+/// gap, no translation).
 class _CardTranslation extends ConsumerWidget {
   const _CardTranslation({
     required this.trackId,

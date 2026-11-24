@@ -7,6 +7,7 @@ import '../../media/domain/track_id.dart';
 import '../domain/lyrics.dart';
 import '../domain/lyrics_display_prefs.dart';
 import '../state/translation/translation_layout_provider.dart';
+import '../state/translation/translation_settings.dart';
 import 'lyrics_text_styles.dart';
 import 'translation/line_translation.dart';
 import 'translation/shown_translation.dart';
@@ -50,6 +51,7 @@ class PlainLyricsView extends ConsumerWidget {
     final lines = lyrics.lines;
     final id = trackId;
     final layout = id == null ? null : ref.watch(translationLayoutProvider(id));
+    final trSize = ref.watch(translationSizeProvider);
     return TranslationPresence(
       trackId: id,
       active: layout != null,
@@ -122,10 +124,12 @@ class PlainLyricsView extends ConsumerWidget {
                                 translationStyle: plainTranslationStyle(
                                   context,
                                   style,
+                                  trSize,
                                 ),
                                 originalStyle: plainReplacedOriginalStyle(
                                   context,
                                   style,
+                                  trSize,
                                 ),
                                 textAlign: textAlign,
                                 duration: Duration.zero,
