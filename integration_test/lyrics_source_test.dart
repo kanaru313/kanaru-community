@@ -490,7 +490,11 @@ void main() {
     await shot('desktop-04-more-menu');
     await tester.tap(find.text(l10n().playbackLyricsSource));
     await waitOpen('desktop, more menu item');
-    expect(find.text(l10n().playbackLyricsSource), findsNothing);
+    await app.pumpUntil(
+      () => find.text(l10n().playbackLyricsSource).evaluate().isEmpty,
+      what: 'the song menu to be gone',
+      timeout: const Duration(seconds: 15),
+    );
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await waitClosed('Esc after the menu item');
 
