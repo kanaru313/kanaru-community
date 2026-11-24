@@ -16,6 +16,7 @@ import 'desktop_history_input.dart';
 import 'desktop_playback_keys.dart';
 import 'desktop_now_playing_overlay.dart';
 import 'desktop_sidebar.dart';
+import 'desktop_song_info_key.dart';
 import 'nav_groups.dart';
 import 'desktop_top_bar.dart';
 import 'player_bar.dart';
@@ -52,6 +53,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   /// Location of the last build, to close Now Playing when it changes.
   String? _lastLocation;
 
+  final SongInfoKey _songInfoKey = SongInfoKey();
   final FocusNode _historyNode = FocusNode(debugLabel: 'desktop history input');
 
   void _select(NavItem item) {
@@ -130,8 +132,21 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     return _onFocusedKey(event);
   }
 
-  bool _onFocusedKey(KeyEvent event) =>
-      handleDesktopPlaybackKey(event, ref.read(playerControllerProvider));
+  /// Alt+Enter the focused row or card did not take: the info of the single
+  /// selected song, else the playing one. A text field keeps the key.
+  bool _onSongInfoKey() {
+    if (ModalRoute.of(context)?.isCurrent == false) return false;
+    if (DesktopHistoryInput.textFieldFocused()) return false;
+    return _songInfoKey.open(context, ref);
+  }
+
+  /// Reached with nobody focused (from [_onPlaybackKey]) or by a key that
+  /// bubbled up from a focused widget that left it alone (a song row or card
+  /// takes Alt+Enter first).
+  bool _onFocusedKey(KeyEvent event) {
+    if (isSongInfoKey(event)) return _onSongInfoKey();
+    return handleDesktopPlaybackKey(event, ref.read(playerControllerProvider));
+  }
 
   /// Ctrl+Shift+Q toggles the queue panel, Ctrl+J the chat (when this build
   /// has one). Both work while Now Playing is open: the panel stays usable.

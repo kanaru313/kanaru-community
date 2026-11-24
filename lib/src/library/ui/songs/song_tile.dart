@@ -211,8 +211,24 @@ class SongTile extends ConsumerWidget {
                       LogicalKeyboardKey.delete,
                       includeRepeats: false,
                     ): ?onDelete,
+                    // Alt+Enter: the focused row's info, like the swipe.
+                    // A missing row consumes the key and does nothing, so it
+                    // never reaches the shell fallback.
+                    const SingleActivator(
+                      LogicalKeyboardKey.enter,
+                      alt: true,
+                      includeRepeats: false,
+                    ): unavailable
+                        ? () {}
+                        : () => _openInfo(context, viaKeyboard: true),
                   }
                 : {
+                    // An editing row has no info: consume, do nothing.
+                    const SingleActivator(
+                      LogicalKeyboardKey.enter,
+                      alt: true,
+                      includeRepeats: false,
+                    ): () {},
                     // No key repeat: a held key removes one entry.
                     const SingleActivator(
                       LogicalKeyboardKey.delete,
@@ -273,6 +289,19 @@ class SongTile extends ConsumerWidget {
     );
   }
 
+  /// Opens the info with the same page rows as the tile's menu, so the
+  /// info's ⋮ keeps them.
+  void _openInfo(BuildContext context, {bool viaKeyboard = false}) => unawaited(
+    openSongInfo(
+      context,
+      info,
+      origin: origin,
+      playlistGroup: menuExtras,
+      favoriteRow: menuFavoriteRow,
+      viaKeyboard: viaKeyboard,
+    ),
+  );
+
   /// Swipe left queues the song next, right opens its info (both stay on
   /// while a selection is active); in edit mode either way removes the entry;
   /// a missing row has neither.
@@ -301,15 +330,7 @@ class SongTile extends ConsumerWidget {
         icon: KIcons.info,
         label: l10n.libraryMenuSongInfo,
         // Same page rows as the tile's menu, so the info's ⋮ keeps them.
-        onTrigger: () => unawaited(
-          openSongInfo(
-            context,
-            info,
-            origin: origin,
-            playlistGroup: menuExtras,
-            favoriteRow: menuFavoriteRow,
-          ),
-        ),
+        onTrigger: () => _openInfo(context),
       ),
       child: child,
     );
