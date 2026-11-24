@@ -55,6 +55,13 @@ class QueueItem {
       'QueueItem($entryId, track $trackId, $sortKey/$shuffleKey)';
 }
 
+/// The order the user sees (shuffle off): by [QueueItem.sortKey], ties (a
+/// restored row, a duplicate from another writer) by [QueueItem.entryId].
+int compareBySortKey(QueueItem a, QueueItem b) {
+  final k = a.sortKey.compareTo(b.sortKey);
+  return k != 0 ? k : a.entryId.compareTo(b.entryId);
+}
+
 const Object _keep = Object();
 
 /// The queue in memory: [items] in play order (`shuffle_key` order while

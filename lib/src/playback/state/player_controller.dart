@@ -207,13 +207,7 @@ class PlayerController implements PlaybackCommands {
   ReplacedQueue _replacedNow(List<TrackId>? next) => ReplacedQueue(
     tracks: [for (final i in _queue.items) i.trackId],
     userOrder: [
-      for (final i in [
-        ..._queue.items,
-      ]..sort((a, b) {
-          final k = a.sortKey.compareTo(b.sortKey);
-          return k != 0 ? k : a.entryId.compareTo(b.entryId);
-        }))
-        i.trackId,
+      for (final i in [..._queue.items]..sort(compareBySortKey)) i.trackId,
     ],
     context: _context,
     next: next,

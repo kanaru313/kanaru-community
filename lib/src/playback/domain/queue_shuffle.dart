@@ -63,10 +63,7 @@ QueueEdit unshuffle(QueueState s) {
     return QueueEdit.none(s);
   }
   final items = [for (final i in s.items) i.withoutShuffleKey()]
-    ..sort((a, b) {
-      final k = a.sortKey.compareTo(b.sortKey);
-      return k != 0 ? k : a.entryId.compareTo(b.entryId);
-    });
+    ..sort(compareBySortKey);
   final curId = s.currentItem?.entryId;
   final cur = curId == null
       ? null
