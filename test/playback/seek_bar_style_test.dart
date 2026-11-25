@@ -39,7 +39,7 @@ class _CountingWaveform {
       entryId: now.entryId,
       levels: _levels,
       durationMs: 240000,
-      instant: true,
+      status: WaveformStatus.ready,
     );
   });
 }

@@ -36,14 +36,19 @@ final _playing = waveformProvider.overrideWith((ref) async* {
     entryId: now.entryId,
     levels: _levels,
     durationMs: 240000,
-    instant: true,
+    status: WaveformStatus.ready,
   );
 });
 
 /// A waveform that belongs to an entry other than the playing one.
 final _stale = waveformProvider.overrideWith(
   (ref) => Stream.value(
-    WaveformView(entryId: -1, levels: _levels, durationMs: 240000),
+    WaveformView(
+      entryId: -1,
+      status: WaveformStatus.ready,
+      levels: _levels,
+      durationMs: 240000,
+    ),
   ),
 );
 

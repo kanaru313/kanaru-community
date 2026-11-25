@@ -1035,13 +1035,11 @@ recently used down to 18 000. The sweep also deletes `.kwf.tmp*` files older tha
 - Only the error kind is logged; paths are personal data.
 
 **Loader** (`playback/state/waveform_{loader,providers}.dart`). `waveformProvider` is an auto-dispose `StreamProvider<WaveformView>`
-(`entryId`, `levels?`, `durationMs`, `instant`) fed by the queue view: the current entry, then the next in play order (none under
+(`entryId`, `status`, `levels?`, `durationMs`) fed by the queue view: the current entry, then the next in play order (none under
 repeat one; the first entry under repeat all). It runs jobs **only while a seek bar watches it**: with Now Playing closed nothing is
 decoded. One native job at a time, current first, then next; a job for an entry that is neither is cancelled, and every job when
 the last watcher goes (Riverpod disposes an unwatched provider after the frame, so a same-frame remount keeps the job). An 8-entry
-memory LRU (by cache key, so a changed file misses) survives the views. `instant` is decided at the entry change: levels in the memory or on disk show at once,
-levels that arrive from a decode fade in. A retry waits for a new entry or a new view; an entry dropped because the queue moved on
-may be tried again.
+memory LRU (by cache key, so a changed file misses) survives the views. `status` (`WaveformStatus`: `computing`, `ready`, `none`; `levels` non-null iff `ready`) is decided at the entry change: levels in the memory or on disk are `ready`; no entry, no local file (`pathOf` null), a cached negative or a failure earlier in this session are `none` (no job); nothing known is `computing`. A finished job emits `ready` or `none` for the current entry. A `RetryLater` that this session did not cause (timeout, busy disk) puts the entry in a session set of failed entries: it shows `none` (also when it was only the prefetched next entry and becomes current later) and is not started again until a new session (a new view). That set is the one for display and for "do not start again". A job cancelled because the queue moved on is no failure: nothing is emitted and the entry may be tried again.
 
 **Display** (`packages/kanaru_ui/lib/src/widgets/media/`). `KWaveformSeekBar` has the input of `KSeekBar` (`KSeekGestureArea`: tap,
 drag, left/right 5 s, slider semantics; options `seekOnTap` and `anyDirection` (a pan with the device touch slop) for the mini player band, `KSeekState.dragging` / `focused`; a cancelled touch never seeks) at 48 dp. Mirrored rounded bars 3 dp wide, 2 dp apart, 2 to 32 dp tall, centred; played

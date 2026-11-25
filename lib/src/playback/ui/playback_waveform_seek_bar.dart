@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../domain/seek_bar_style.dart';
+import '../domain/waveform.dart';
 import '../state/playback_position_provider.dart';
 import '../state/playback_providers.dart';
 import '../state/seek_bar_style_provider.dart';
@@ -28,16 +29,17 @@ class PlaybackWaveformSeekBar extends ConsumerWidget {
     // Not watched when flat, so the decoder never starts for a flat bar.
     final view = flat ? null : ref.watch(waveformProvider).value;
     // A view of another entry is the previous track's: draw it flat.
-    final mine = view != null && entry != null && view.entryId == entry;
+    final mine =
+        view != null &&
+        entry != null &&
+        view.entryId == entry &&
+        view.status == WaveformStatus.ready;
     return KWaveformSeekBar(
       track: entry ?? pos?.entryId,
       position: position,
       duration: duration,
       levels: mine ? view.levels : null,
-      levelsDuration: mine && view.levels != null
-          ? Duration(milliseconds: view.durationMs)
-          : null,
-      instant: mine && view.instant,
+      levelsDuration: mine ? Duration(milliseconds: view.durationMs) : null,
       semanticLabel: l10n.playbackSeek,
       semanticValue: duration == null
           ? null

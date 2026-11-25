@@ -110,9 +110,11 @@ class _Session {
   WaveformWant _want = WaveformWant.none;
   bool _closed = false;
 
-  /// Entries already tried in this session: a retry waits for a new entry or
-  /// a new view.
-  final _tried = <int>{};
+  /// Entries whose attempt failed for a reason that says nothing about the
+  /// file (timeout, busy disk), in this session. They show [WaveformStatus.none]
+  /// and are not tried again until a new session (a new view). The one set
+  /// serves both the display and "do not start again".
+  final _failed = <int>{};
   int? _runningEntry;
   WaveformLoad? _running;
 
@@ -159,14 +161,21 @@ class _Session {
     unawaited(_pump());
   }
 
-  /// Decides at the entry change what the bar shows first: the levels at once
-  /// when they are known (memory or disk cache), else the flat bar.
+  /// Decides at the entry change what the bar shows first: the levels when
+  /// they are known (memory or disk cache), none when no answer can come
+  /// (no local file, a known negative, a failure earlier in this session),
+  /// else computing.
   Future<void> _showCurrent(WaveformWant want) async {
     final entry = want.currentEntry;
     final track = want.currentTrack;
     if (entry == null || track == null) {
       _viewEntry = null;
       _emit(WaveformView.none);
+      return;
+    }
+    if (_failed.contains(entry)) {
+      _viewEntry = entry;
+      _emit(_viewOf(entry, null, none: true));
       return;
     }
     final path = await _loader._safePath(track);
@@ -176,24 +185,39 @@ class _Session {
       final key = await _loader.repository.cacheKey(path);
       known = _loader._remembered(key) ?? await _loader.repository.peek(path);
       if (_closed || _want.currentEntry != entry) return;
+      // A job (the prefetch of this entry) may have ended while we waited.
+      known ??= _loader._remembered(key);
       if (known != null && known is! RetryLater) _loader._remember(key, known);
     }
     _viewEntry = entry;
-    _emit(_viewOf(entry, known, instant: true));
+    // No file to decode: no job will ever run for this entry. A failure that
+    // landed while we waited also leaves no answer coming.
+    _emit(
+      _viewOf(
+        entry,
+        known,
+        none: path == null || (known == null && _failed.contains(entry)),
+      ),
+    );
   }
 
+  /// [none] forces the status for an entry that has no answer coming.
   WaveformView _viewOf(
     int entry,
     WaveformResult? result, {
-    required bool instant,
+    bool none = false,
   }) => switch (result) {
     Ready(:final levels, :final durationMs) => WaveformView(
       entryId: entry,
+      status: WaveformStatus.ready,
       levels: levels,
       durationMs: durationMs,
-      instant: instant,
     ),
-    _ => WaveformView(entryId: entry),
+    NoWaveform() => WaveformView(entryId: entry, status: WaveformStatus.none),
+    _ => WaveformView(
+      entryId: entry,
+      status: none ? WaveformStatus.none : WaveformStatus.computing,
+    ),
   };
 
   /// Runs the next wanted job, if none runs. Serial: one native job at a time.
@@ -215,15 +239,16 @@ class _Session {
         _runningEntry = null;
         final cancelledByUs = _cancelledEntry == entry;
         if (cancelledByUs) _cancelledEntry = null;
-        // A retry waits for a new entry or a new view; an entry dropped
-        // because the queue moved on is no failure.
-        if (result is RetryLater && !cancelledByUs) _tried.add(entry);
+        // A retry waits for a new view; an entry dropped because the queue
+        // moved on is no failure.
+        final failed = result is RetryLater && !cancelledByUs;
+        if (failed) _failed.add(entry);
         if (_closed) return;
         if (result is! RetryLater) _loader._remember(key, result);
-        if (result is Ready &&
+        if ((result is! RetryLater || failed) &&
             _want.currentEntry == entry &&
             _viewEntry == entry) {
-          _emit(_viewOf(entry, result, instant: false));
+          _emit(_viewOf(entry, result, none: failed));
         }
       }
     } finally {
@@ -231,14 +256,14 @@ class _Session {
     }
   }
 
-  /// The first of current, next that has a file, no known result and was not
-  /// tried yet; with its path.
+  /// The first of current, next that has a file, no known result and has not
+  /// failed yet; with its path.
   Future<(int, String)?> _nextTarget() async {
     for (final (entry, track) in [
       (_want.currentEntry, _want.currentTrack),
       (_want.nextEntry, _want.nextTrack),
     ]) {
-      if (entry == null || track == null || _tried.contains(entry)) continue;
+      if (entry == null || track == null || _failed.contains(entry)) continue;
       final path = await _loader._safePath(track);
       if (_closed) return null;
       if (path == null) continue;

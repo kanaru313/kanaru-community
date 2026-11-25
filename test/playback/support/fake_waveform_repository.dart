@@ -43,8 +43,14 @@ class FakeWaveformRepository extends WaveformRepository {
   Future<String?> cacheKey(String path) async =>
       changed.contains(path) ? '$path#changed' : path;
 
+  /// When set, [peek] waits for it first (opt-in, to hold a lookup open).
+  Completer<void>? peekGate;
+
   @override
-  Future<WaveformResult?> peek(String path) async => cached[path];
+  Future<WaveformResult?> peek(String path) async {
+    await peekGate?.future;
+    return cached[path];
+  }
 
   @override
   WaveformLoad load(String path) {
