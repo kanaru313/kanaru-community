@@ -15,7 +15,6 @@ import 'package:kanaru/src/library/state/scan/scan_controller.dart';
 import 'package:kanaru/src/library/state/scan/scan_controller_provider.dart';
 import 'package:kanaru/src/library/ui/scan/scan_progress_card.dart';
 import 'package:kanaru/src/platform/data/noop_window_close_guard.dart';
-import 'package:kanaru/src/platform/domain/app_paths.dart';
 import 'package:kanaru/src/platform/domain/media_permissions.dart';
 import 'package:kanaru/src/platform/state/device_id_provider.dart';
 import 'package:kanaru/src/platform/state/platform_providers.dart';

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,17 +20,59 @@ import '../fixtures/zip_builders.dart';
 import 'state_test_support.dart';
 
 class _License implements LicenseService {
-  LicenseStatus status = LicenseStatus.locked;
+  final _changes = StreamController<void>.broadcast();
+  LicenseStatus _status = LicenseStatus.locked;
+
+  /// Changes the status and reports it, as a real license does.
+  void set(LicenseStatus status) {
+    _status = status;
+    _changes.add(null);
+  }
 
   @override
   LicenseStatus statusOf(ProFeature feature) =>
-      feature == multiStreamingFeature ? status : LicenseStatus.locked;
+      feature == multiStreamingFeature ? _status : LicenseStatus.locked;
+
+  @override
+  Stream<void> get changes => _changes.stream;
+
+  Future<void> close() => _changes.close();
 }
 
 /// The real mapping, license service to Free rule, through the providers; the
 /// status changes while the container lives.
 void main() {
-  test('the license is asked at every check', () async {
+  test(
+    'a license change reported while the app runs reaches the screens',
+    () async {
+      final license = _License();
+      final container = ProviderContainer(
+        overrides: [licenseServiceProvider.overrideWithValue(license)],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await license.close();
+      });
+      final seen = <bool>[];
+      container.listen(
+        pluginStreamingUnlockedProvider,
+        (_, next) => seen.add(next),
+        fireImmediately: true,
+      );
+      expect(seen, [false]);
+
+      license.set(LicenseStatus.granted);
+      await pumpEventQueue();
+      expect(seen, [false, true]);
+      expect(container.read(pluginStreamingUnlockedProvider), isTrue);
+
+      license.set(LicenseStatus.locked);
+      await pumpEventQueue();
+      expect(seen, [false, true, false]);
+    },
+  );
+
+  test('the install gate follows a license change', () async {
     final db = openTestDb();
     final dir = tempDir();
     final license = _License();
@@ -52,6 +95,7 @@ void main() {
     );
     addTearDown(() async {
       container.dispose();
+      await license.close();
       await db.close();
       dir.deleteSync(recursive: true);
     });
@@ -73,8 +117,14 @@ void main() {
     final locked = await install('Two');
     expect((locked as InstallRefused).failure, InstallFailure.proRequired);
 
-    license.status = LicenseStatus.granted;
+    license.set(LicenseStatus.granted);
+    await pumpEventQueue();
     expect(await install('Two'), isA<Installed>());
+
+    license.set(LicenseStatus.locked);
+    await pumpEventQueue();
+    final third = await install('Three');
+    expect((third as InstallRefused).failure, InstallFailure.proRequired);
   });
 }
 

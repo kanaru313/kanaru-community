@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderContainer;
@@ -159,14 +161,35 @@ class TopBarAction {
 }
 
 /// What a startup hook may use. Hooks run after the public database is open and
-/// migrated, so an extension can migrate its own tables here.
+/// migrated, so an extension can migrate its own tables here. They run before
+/// the provider scope exists, so everything they need is handed over here.
 class StartupContext {
-  const StartupContext({required this.connection});
+  const StartupContext({
+    required this.connection,
+    required this.dataDir,
+    required this.cacheDir,
+    required this.configDir,
+    required this.deviceId,
+  });
 
   /// The public database's connection, already open and migrated (from
   /// `AppDatabase.openedConnection()`); an extension opens its own drift
   /// database on it (`ProDatabase.connect(context.connection)`).
   final DatabaseConnection connection;
+
+  /// The app's persistent data folder (`AppPaths.dataDir`), already created.
+  final Directory dataDir;
+
+  /// The app's re-creatable cache folder (`AppPaths.cacheDir`), already
+  /// created.
+  final Directory cacheDir;
+
+  /// The app's settings folder (`AppPaths.configDir`), already created.
+  final Directory configDir;
+
+  /// The app's public install id: random, stable for this install, the same
+  /// value as `deviceIdProvider`.
+  final String deviceId;
 }
 
 /// Runs when the app goes to the background or asks to exit, after the settings

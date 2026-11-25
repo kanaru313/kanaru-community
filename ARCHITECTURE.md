@@ -107,7 +107,8 @@ does, in this order:
    and `beforeOpen` (`PRAGMA foreign_keys = ON`) run now.
 6. Build the `ExtensionRegistry` and install built-in plus bundled
    extensions, in that order.
-7. Run each startup hook with a `StartupContext(connection: ...)`.
+7. Run each startup hook with one shared `StartupContext(connection, dataDir,
+   cacheDir, configDir, deviceId)`.
 
 Any failure in steps 5-7 closes the database and rethrows; `runKanaru` logs it
 and shows `KanaruErrorApp`. On success the results are injected as `ProviderScope`
