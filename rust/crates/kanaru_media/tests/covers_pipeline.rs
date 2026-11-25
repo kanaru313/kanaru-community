@@ -22,8 +22,9 @@ use covers_fixtures::{
     two_color_jpeg, varied_jpeg, webp_with_orientation, with_jpeg_orientation,
 };
 use lyrics_fixtures::{
-    aifc_with_chunks, broken_id3v2, flac_cut_inside_a_healthy_prefix, frame_that_ends_the_tag,
-    id3v2_frame, id3v2_tag, wav_with_chunks, Place,
+    aifc_with_chunks, broken_id3v2, flac_cut_inside_a_healthy_prefix,
+    frame_shorter_than_its_fixed_fields, frame_that_ends_the_tag, id3v2_frame, id3v2_tag,
+    wav_with_chunks, Place,
 };
 use tags_fixtures::{mp3_bytes, open_plain, save, tag_with, wav_bytes, TempDir};
 
@@ -240,15 +241,28 @@ fn unreadable_audio_is_a_permanent_error_unless_a_sidecar_exists() {
 }
 
 /// Files whose ID3v2 tag lofty refuses while their audio is fine.
-fn files_with_a_broken_tag(scene: &Scene) -> [PathBuf; 2] {
-    let frames = [id3v2_frame("TIT2", b"\x03Title"), frame_that_ends_the_tag()];
-    [
-        scene.root.write("broken.mp3", &broken_id3v2(&frames, None)),
-        scene.root.write(
-            "broken.wav",
-            &wav_with_chunks(&[(b"id3 ", &id3v2_tag(&frames, None))], Place::AfterAudio),
+fn files_with_a_broken_tag(scene: &Scene) -> Vec<PathBuf> {
+    let title = || id3v2_frame("TIT2", b"\x03Title");
+    let mut files = Vec::new();
+    for (name, frames) in [
+        ("broken", [title(), frame_that_ends_the_tag()]),
+        // lofty ends this one with an end-of-file inside the frame.
+        (
+            "short_comm",
+            [title(), frame_shorter_than_its_fixed_fields()],
         ),
-    ]
+    ] {
+        files.push(
+            scene
+                .root
+                .write(&format!("{name}.mp3"), &broken_id3v2(&frames, None)),
+        );
+        files.push(scene.root.write(
+            &format!("{name}.wav"),
+            &wav_with_chunks(&[(b"id3 ", &id3v2_tag(&frames, None))], Place::AfterAudio),
+        ));
+    }
+    files
 }
 
 #[test]

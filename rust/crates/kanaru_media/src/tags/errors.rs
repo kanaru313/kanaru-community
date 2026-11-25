@@ -41,16 +41,20 @@ pub fn from_parse_error(error: &FileParseError) -> MediaError {
 }
 
 /// Whether lofty refused the file because of a tag rather than its audio:
-/// `error` or one of its causes is a tag failure, and no cause is an I/O
-/// error.
+/// `error` or one of its causes is a tag failure, and no I/O error comes
+/// before an ID3v2 frame error in the chain.
 ///
 /// lofty wraps every tag failure of MP3, WAV, AIFF and FLAC in a
 /// `TagParseError` (ID3v2 header, frame, text and size failures, and the
 /// APE, ID3v1, RIFF INFO and AIFF text tags). The ID3v2-only causes it wraps
-/// count on their own too. An I/O error anywhere in the chain means the file
-/// ended or could not be read, not that the tag is broken: lofty reads a FLAC
-/// file's ID3v2 prefix with one exact-size read and wraps its end-of-file in
-/// a `TagParseError`, so a file cut inside a healthy prefix is not counted.
+/// count on their own too. A `FrameParseError` counts even when an I/O error
+/// caused it: lofty reads a frame's fixed fields (the `COMM` language, for
+/// one) from a reader limited to the frame, so a frame too short for them
+/// ends in an end-of-file inside a broken tag. An I/O error outside a frame
+/// means the file ended or could not be read, not that the tag is broken:
+/// lofty reads a FLAC file's ID3v2 prefix with one exact-size read and wraps
+/// its end-of-file in a `TagParseError`, so a file cut inside a healthy
+/// prefix is not counted.
 /// Not counted either: size and allocation errors, a bare
 /// `TextDecodingError` (lofty raises one for an AIFC compression name that
 /// is not UTF-8, an audio property) and `FakeTagError`, which lofty also
@@ -60,11 +64,15 @@ pub(crate) fn is_tag_failure(error: &(dyn Error + 'static)) -> bool {
     let mut tag = false;
     let mut source = Some(error);
     while let Some(current) = source {
+        // Checked before the I/O rule: the I/O error below a frame error is
+        // that frame's content ending early.
+        if current.is::<FrameParseError>() {
+            return true;
+        }
         if current.is::<std::io::Error>() {
             return false;
         }
         if current.is::<TagParseError>()
-            || current.is::<FrameParseError>()
             || current.is::<FrameIdParseError>()
             || current.is::<Id3v2HeaderError>()
             || current.is::<TimestampParseError>()
@@ -165,11 +173,11 @@ mod tests {
         [21, 14, 7, 0].map(|shift| ((n >> shift) & 0x7f) as u8)
     }
 
-    /// lofty's error for an MP3 holding an ID3v2.4 tag of one `frame` (id +
-    /// body) in front of `audio`.
-    fn mp3_error(frame: Option<(&[u8; 4], &[u8])>, audio: &[u8]) -> FileParseError {
+    /// lofty's error for an MP3 holding an ID3v2.4 tag of `frames` (id +
+    /// body each) in front of `audio`.
+    fn mp3_error(frames: &[(&[u8; 4], &[u8])], audio: &[u8]) -> FileParseError {
         let mut body = Vec::new();
-        if let Some((id, content)) = frame {
+        for &(id, content) in frames {
             body.extend_from_slice(id);
             body.extend_from_slice(&syncsafe(content.len()));
             body.extend_from_slice(&[0, 0]);
@@ -208,7 +216,7 @@ mod tests {
     #[test]
     fn a_broken_id3v2_frame_is_a_tag_failure_at_every_level() {
         // An unknown text encoding byte.
-        let e = mp3_error(Some((b"TIT2", b"\x09x")), &mp3_frames());
+        let e = mp3_error(&[(b"TIT2", b"\x09x")], &mp3_frames());
         assert!(is_tag_failure(&e));
         assert!(is_tag_failure(cause::<TagParseError>(&e)));
         assert!(is_tag_failure(cause::<FrameParseError>(&e)));
@@ -217,11 +225,30 @@ mod tests {
     #[test]
     fn text_that_does_not_decode_is_a_tag_failure() {
         // UTF-16 text one byte long.
-        let e = mp3_error(Some((b"TIT2", b"\x01\xAB")), &mp3_frames());
+        let e = mp3_error(&[(b"TIT2", b"\x01\xAB")], &mp3_frames());
         assert!(is_tag_failure(&e));
         assert!(is_tag_failure(cause::<TagParseError>(&e)));
         // The decoding error alone may come from audio properties.
         assert!(!is_tag_failure(cause::<TextDecodingError>(&e)));
+    }
+
+    #[test]
+    fn a_frame_too_short_for_its_fixed_fields_is_a_tag_failure() {
+        // A healthy title, then a COMM frame ending inside its language.
+        let e = mp3_error(
+            &[(b"TIT2", b"\x03Title"), (b"COMM", b"\x00e")],
+            &mp3_frames(),
+        );
+        // The chain ends in the end-of-file inside the frame.
+        let frame = cause::<FrameParseError>(&e);
+        let io = frame
+            .source()
+            .and_then(|s| s.downcast_ref::<std::io::Error>())
+            .expect("an I/O error under the frame error");
+        assert_eq!(io.kind(), ErrorKind::UnexpectedEof);
+        assert!(is_tag_failure(&e));
+        assert!(is_tag_failure(cause::<TagParseError>(&e)));
+        assert!(is_tag_failure(frame));
     }
 
     #[test]
@@ -240,7 +267,7 @@ mod tests {
     #[test]
     fn audio_failures_are_not_tag_failures() {
         // A healthy tag in front of bytes holding no MPEG frame.
-        let garbage = mp3_error(Some((b"TIT2", b"\x03Healthy")), &[0x41; 4000]);
+        let garbage = mp3_error(&[(b"TIT2", b"\x03Healthy")], &[0x41; 4000]);
         assert!(!is_tag_failure(&garbage));
         let io: FileParseError = std::io::Error::from(ErrorKind::UnexpectedEof).into();
         assert!(!is_tag_failure(&io));

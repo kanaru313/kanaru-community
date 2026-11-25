@@ -210,6 +210,12 @@ pub fn frame_with_a_bad_encoding() -> Vec<u8> {
     id3v2_frame("TXXX", b"\x09d\x00t")
 }
 
+/// A `COMM` frame that ends inside its language field: lofty refuses it with
+/// an end-of-file under the frame error, though the file itself is whole.
+pub fn frame_shorter_than_its_fixed_fields() -> Vec<u8> {
+    id3v2_frame("COMM", b"\x00e")
+}
+
 /// An ID3v2.4 tag made of `frames` (declaring exactly their length, or
 /// `declared` when given) in front of the in-memory MP3.
 pub fn broken_id3v2(frames: &[Vec<u8>], declared: Option<usize>) -> Vec<u8> {

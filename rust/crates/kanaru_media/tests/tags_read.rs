@@ -286,8 +286,9 @@ fn mp3_comm_description_is_not_the_comment() {
 use kanaru_media::tags::TrackTags;
 use lyrics_fixtures::{
     aifc_with_chunks, aiff_with_chunks, broken_id3v2, flac_cut_inside_a_healthy_prefix,
-    flac_with_comments, frame_that_ends_the_tag, frame_with_a_bad_encoding, id3v2_frame, id3v2_tag,
-    versioned_bad_frame, versioned_frame, versioned_id3v2_tag, wav_with_chunks, Place,
+    flac_with_comments, frame_shorter_than_its_fixed_fields, frame_that_ends_the_tag,
+    frame_with_a_bad_encoding, id3v2_frame, id3v2_tag, versioned_bad_frame, versioned_frame,
+    versioned_id3v2_tag, wav_with_chunks, Place,
 };
 
 /// A text frame of ID3v2.`version`: UTF-8 in 2.4, Latin-1 in 2.3.
@@ -503,6 +504,23 @@ fn an_unrecoverable_tag_with_readable_audio_is_not_an_error() {
     for ext in ["mp3", "wav", "aiff"] {
         let tags = read_bytes(&dir, &format!("song.{ext}"), &with_tag(ext, &broken), false);
         assert_eq!(tags.title, None, "{ext}");
+        assert!(tags.duration_ms.is_some(), "{ext}");
+    }
+}
+
+#[test]
+fn a_frame_too_short_for_its_fixed_fields_keeps_the_fields_before_it() {
+    let dir = TempDir::new();
+    let tag = id3v2_tag(
+        &[
+            id3v2_frame("TIT2", b"\x03Title"),
+            frame_shorter_than_its_fixed_fields(),
+        ],
+        None,
+    );
+    for ext in ["mp3", "wav"] {
+        let tags = read_bytes(&dir, &format!("song.{ext}"), &with_tag(ext, &tag), false);
+        assert_eq!(tags.title.as_deref(), Some("Title"), "{ext}");
         assert!(tags.duration_ms.is_some(), "{ext}");
     }
 }

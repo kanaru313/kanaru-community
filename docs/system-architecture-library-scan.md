@@ -1130,7 +1130,10 @@ end of its tags may lose its properties. Outcomes:
   after the damage are missing (a title without its artist is shown as such).
   Fields without properties count only when lofty failed on a tag (a
   `TagParseError`, or an ID3v2 frame, header or timestamp error, in its cause
-  chain, and no I/O error anywhere in that chain: `tags::errors::is_tag_failure`).
+  chain, and no I/O error outside a frame: `tags::errors::is_tag_failure`). An
+  I/O error under an ID3v2 frame error is that frame ending early (a `COMM` frame
+  too short for its language field), so it counts as a broken tag; an I/O error
+  outside a frame means the file ended or could not be read.
 - A healthy tag in front of broken or missing audio (garbage after the tag, a tag
   with nothing after it, a cut FLAC stream, a FLAC file that ends inside its ID3v2
   prefix, a WAV without `fmt `, an AIFC whose compression name is not UTF-8):
@@ -1143,6 +1146,11 @@ end of its tags may lose its properties. Outcomes:
 - Known gap: an MP3 with a healthy ID3v2 tag and a broken APE trailer. lofty counts
   the APE failure as a tag failure and the read from after the ID3v2 tag fails on
   the same trailer, so the row has the ID3v2 fields but no duration or audio details.
+- Known gap: an MP3 cut exactly inside the fixed fields of an ID3v2 frame (the end
+  of file falls in a frame's language or similar field) whose audio cannot be read
+  again from after the tag. The end-of-file sits under the frame error, so it counts
+  as a broken tag: the row has the fields before that frame but no duration instead
+  of a scan error.
 
 Rows already in the library are not re-read for this: `tagsPassVersion` is
 unchanged, so an unchanged file keeps its old row (filename-only, or its old
