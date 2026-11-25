@@ -2,6 +2,7 @@
 //! hostile images, writing to a temporary cache folder.
 
 mod covers_fixtures;
+mod lyrics_fixtures;
 #[path = "tags_fixtures/mod.rs"]
 mod tags_fixtures;
 
@@ -11,6 +12,7 @@ use kanaru_media::covers::key::{cover_key, is_cover_key};
 use kanaru_media::covers::{
     colors, import_cover, make_cover, CoverError, CoverOutcome, FolderMemo,
 };
+use kanaru_media::tags::errors::from_parse_error;
 use kanaru_media::{Cancel, MediaError};
 use lofty::picture::{MimeType, Picture, PictureType};
 use lofty::tag::{ItemKey, Tag, TagType};
@@ -18,6 +20,11 @@ use lofty::tag::{ItemKey, Tag, TagType};
 use covers_fixtures::{
     jpeg, jpeg_header_only, jpeg_size, pixel_at, png, png_header_only, transparent_png,
     two_color_jpeg, varied_jpeg, webp_with_orientation, with_jpeg_orientation,
+};
+use lyrics_fixtures::{
+    aifc_with_chunks, broken_id3v2, flac_cut_inside_a_healthy_prefix,
+    frame_shorter_than_its_fixed_fields, frame_that_ends_the_tag, id3v2_frame, id3v2_tag,
+    wav_with_chunks, Place,
 };
 use tags_fixtures::{mp3_bytes, open_plain, save, tag_with, wav_bytes, TempDir};
 
@@ -231,6 +238,92 @@ fn unreadable_audio_is_a_permanent_error_unless_a_sidecar_exists() {
         scene.run(&junk, true),
         Ok(CoverOutcome::Found { .. })
     ));
+}
+
+/// Files whose ID3v2 tag lofty refuses while their audio is fine.
+fn files_with_a_broken_tag(scene: &Scene) -> Vec<PathBuf> {
+    let title = || id3v2_frame("TIT2", b"\x03Title");
+    let mut files = Vec::new();
+    for (name, frames) in [
+        ("broken", [title(), frame_that_ends_the_tag()]),
+        // lofty ends this one with an end-of-file inside the frame.
+        (
+            "short_comm",
+            [title(), frame_shorter_than_its_fixed_fields()],
+        ),
+    ] {
+        files.push(
+            scene
+                .root
+                .write(&format!("{name}.mp3"), &broken_id3v2(&frames, None)),
+        );
+        files.push(scene.root.write(
+            &format!("{name}.wav"),
+            &wav_with_chunks(&[(b"id3 ", &id3v2_tag(&frames, None))], Place::AfterAudio),
+        ));
+    }
+    files
+}
+
+#[test]
+fn a_broken_tag_alone_is_no_cover_or_the_sidecar() {
+    let scene = Scene::new();
+    let files = files_with_a_broken_tag(&scene);
+    for audio in &files {
+        assert!(lofty::read_from_path(audio).is_err(), "{audio:?}");
+        let outcome = scene.run(audio, true);
+        assert!(
+            matches!(outcome, Ok(CoverOutcome::NoCover)),
+            "{audio:?}: {outcome:?}"
+        );
+    }
+    scene.root.write("folder.jpg", &varied_jpeg(120, 120, 9));
+    for audio in &files {
+        found(scene.run(audio, true));
+    }
+}
+
+#[test]
+fn a_healthy_tag_in_front_of_broken_audio_is_still_an_error() {
+    let scene = Scene::new();
+    let tag = id3v2_tag(&[id3v2_frame("TIT2", b"\x03Healthy")], None);
+    let mut garbage = tag.clone();
+    garbage.extend([0x41; 4000]);
+    let mut wav = wav_with_chunks(&[(b"id3 ", &tag)], Place::AfterAudio);
+    let at = wav
+        .windows(4)
+        .position(|w| w == b"fmt ")
+        .expect("fmt chunk");
+    wav[at..at + 4].copy_from_slice(b"fmX ");
+    let aifc = aifc_with_chunks(&[0x43, 0xE9, 0x41], &[(b"ID3 ", &tag)]);
+    for (name, bytes) in [
+        ("garbage.mp3", garbage),
+        ("no_fmt.wav", wav),
+        // The file ends inside its healthy ID3v2 prefix.
+        ("cut_in_prefix.flac", flac_cut_inside_a_healthy_prefix()),
+        // A compression name that is not UTF-8: unreadable audio properties.
+        ("latin1_name.aif", aifc),
+    ] {
+        let audio = scene.root.write(name, &bytes);
+        let lofty_error = lofty::probe::Probe::open(&audio)
+            .expect("open")
+            .options(
+                lofty::config::ParseOptions::new()
+                    .parsing_mode(lofty::config::ParsingMode::BestAttempt),
+            )
+            .guess_file_type()
+            .expect("sniff")
+            .read()
+            .err()
+            .unwrap_or_else(|| panic!("{name}: lofty reads it"));
+        match scene.run(&audio, true) {
+            Err(CoverError::Source(e)) => {
+                assert_eq!(e, from_parse_error(&lofty_error), "{name}");
+                assert!(!e.is_transient(), "{name}");
+            }
+            other => panic!("{name}: expected a source error, got {other:?}"),
+        }
+    }
 }
 
 #[test]

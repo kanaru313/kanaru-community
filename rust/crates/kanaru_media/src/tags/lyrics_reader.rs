@@ -9,22 +9,21 @@ use lofty::config::{ParseOptions, ParsingMode};
 use lofty::error::FileParseError;
 use lofty::file::{AudioFile, FileType, TaggedFile, TaggedFileExt};
 use lofty::flac::FlacFile;
-use lofty::id3::v2::{Frame, Id3v2Tag};
 use lofty::iff::aiff::AiffFile;
 use lofty::iff::wav::WavFile;
 use lofty::mpeg::MpegFile;
-use lofty::ogg::tag::VorbisComments;
 use lofty::ogg::{OpusFile, VorbisFile};
 use lofty::probe::Probe;
 use lofty::tag::ItemKey;
 
 use super::errors::{from_parse_error, from_sniff_error};
-use super::lyrics_sylt::synced_lines;
 use crate::MediaError;
 
-mod id3_bound;
+mod extract;
 mod id3_fallback;
-pub use id3_fallback::MAX_ID3_FALLBACK_BYTES;
+mod recover;
+pub use super::id3_recovery::{MAX_ID3_FALLBACK_BYTES, MAX_ID3_FALLBACK_FRAMES};
+use extract::{of_id3v2, of_vorbis, ConcreteLyrics};
 
 /// Largest lyrics text kept, in bytes. A song's lyrics are a few KiB; a
 /// larger value is junk or an attack and is dropped.
@@ -52,17 +51,21 @@ pub struct SyncedLine {
 ///
 /// Outcomes:
 /// - no lyrics, blank or oversized lyrics, no tag at all: `Ok(None)`;
-/// - an MP3 that fails the concrete read for a reason other than a transient
-///   I/O error: the lyrics kept before the first structural error of its
-///   ID3v2 tag (`id3_fallback`), else `Ok(None)`; plain text next to a broken
-///   tag is dropped. This includes an empty or truncated file;
-/// - a WAV or AIFF in the same case: `Ok(None)` for the whole file;
+/// - an MP3, WAV or AIFF that fails the concrete read for a reason other
+///   than a transient I/O error: the lyrics kept before the first structural
+///   error of its first ID3v2 tag (MP3 prefix, WAV/AIFF `id3 ` chunk) that
+///   still holds any (`recover`), else `Ok(None)`; plain text next to a
+///   broken tag is dropped. This includes an empty or truncated file;
+/// - a FLAC in the same case behind ID3v2 prefixes: when the stream starts
+///   exactly where they end and reads, the answer of a healthy FLAC (Vorbis
+///   lyrics, else the prefixes' lyrics, else `Ok(None)`); otherwise the
+///   prefixes' lyrics, and `Err` when they hold none;
 /// - a transient I/O error anywhere, a failure to sniff the content, or a
 ///   failed rewind before the concrete read: `Err` (mapped by `tags::errors`),
 ///   so the caller may retry when it is transient;
-/// - FLAC, Ogg Vorbis, Opus and every other format whose parse fails
-///   (unknown format, corrupt, empty or truncated, where lofty reports
-///   `UnexpectedEof`): `Err`.
+/// - FLAC without an ID3v2 prefix, Ogg Vorbis, Opus and every other format
+///   whose parse fails (unknown format, corrupt, empty or truncated, where
+///   lofty reports `UnexpectedEof`): `Err`.
 pub fn read_lyrics(
     file: File,
     ext_hint: Option<&str>,
@@ -86,7 +89,8 @@ pub fn read_lyrics(
     // Formats with data the generic tag drops are read as their concrete
     // type: binary `SYLT` and `TXXX` frames of ID3v2 (MP3, WAV, AIFF), the
     // unmapped `UNSYNCED LYRICS` key of Vorbis comments (FLAC, Ogg, Opus).
-    // A broken ID3 tag means no lyrics; a failed Vorbis parse is an error.
+    // A broken ID3 tag keeps what `recover` finds; a failed Vorbis parse is
+    // an error unless a broken ID3 prefix caused it.
     let id3 = OnFailure::NoLyrics;
     let vorbis = OnFailure::Error;
     let concrete_read = match probe.file_type() {
@@ -95,20 +99,28 @@ pub fn read_lyrics(
             options,
             id3,
             |f| of_id3v2(f.id3v2()),
-            Some(id3_fallback::recover),
+            Some(recover::recover_mp3),
         ),
-        Some(FileType::Wav) => {
-            concrete::<WavFile>(probe, options, id3, |f| of_id3v2(f.id3v2()), None)
-        }
-        Some(FileType::Aiff) => {
-            concrete::<AiffFile>(probe, options, id3, |f| of_id3v2(f.id3v2()), None)
-        }
+        Some(FileType::Wav) => concrete::<WavFile>(
+            probe,
+            options,
+            id3,
+            |f| of_id3v2(f.id3v2()),
+            Some(recover::recover_wav),
+        ),
+        Some(FileType::Aiff) => concrete::<AiffFile>(
+            probe,
+            options,
+            id3,
+            |f| of_id3v2(f.id3v2()),
+            Some(recover::recover_aiff),
+        ),
         Some(FileType::Flac) => concrete::<FlacFile>(
             probe,
             options,
             vorbis,
             |f| of_vorbis(f.vorbis_comments()),
-            None,
+            Some(recover::recover_flac),
         ),
         Some(FileType::Vorbis) => concrete::<VorbisFile>(
             probe,
@@ -135,19 +147,25 @@ pub fn read_lyrics(
         Err(Concrete::Unreadable) => return Ok(None),
         Err(Concrete::Recovered(result)) => return result,
     };
-    let text = lyrics_text(&tagged).or(concrete.fallback_text);
+    Ok(assemble(&tagged, concrete))
+}
+
+/// The lyrics of a read file: the generic tags' text first, then what only
+/// the concrete type held.
+fn assemble(tagged: &TaggedFile, concrete: ConcreteLyrics) -> Option<EmbeddedLyrics> {
+    let text = lyrics_text(tagged).or(concrete.fallback_text);
     let synced = concrete.synced;
     if text.is_none() && synced.is_empty() {
-        return Ok(None);
+        return None;
     }
-    Ok(Some(EmbeddedLyrics { text, synced }))
+    Some(EmbeddedLyrics { text, synced })
 }
 
 /// Why a concrete read gave nothing.
 enum Concrete {
     /// The tag or file did not parse: the whole file has no lyrics.
     Unreadable,
-    /// The concrete read failed and the fallback already gave the answer.
+    /// The concrete read failed and the recovery already gave the answer.
     Recovered(Result<Option<EmbeddedLyrics>, MediaError>),
     /// An error worth retrying, which says nothing about the file.
     Fatal(MediaError),
@@ -162,55 +180,9 @@ enum OnFailure {
     Error,
 }
 
-/// What only the concrete file holds: the generic tag drops binary `SYLT`
-/// frames, user text frames with lyrics descriptions and unmapped Vorbis keys.
-#[derive(Default)]
-struct ConcreteLyrics {
-    synced: Vec<SyncedLine>,
-    /// Plain text used only when the generic tags give none: ID3
-    /// `TXXX:LYRICS` / `TXXX:UNSYNCEDLYRICS`, Vorbis `UNSYNCED LYRICS`.
-    fallback_text: Option<String>,
-}
-
-fn of_id3v2(tag: Option<&Id3v2Tag>) -> ConcreteLyrics {
-    let Some(tag) = tag else {
-        return ConcreteLyrics::default();
-    };
-    // lofty's `get_user_text` matches the description exactly; taggers
-    // write `Lyrics` and `unsyncedlyrics` too, so match ignoring ASCII case.
-    let fallback_text = ["LYRICS", "UNSYNCEDLYRICS"]
-        .into_iter()
-        .find_map(|wanted| {
-            tag.into_iter()
-                .filter_map(|frame| match frame {
-                    Frame::UserText(text) if text.description.eq_ignore_ascii_case(wanted) => {
-                        Some(text.content.as_ref())
-                    }
-                    _ => None,
-                })
-                .find(|text| usable_text(text))
-        })
-        .map(str::to_owned);
-    ConcreteLyrics {
-        synced: synced_lines(tag),
-        fallback_text,
-    }
-}
-
-/// foobar2000 writes `UNSYNCED LYRICS` (with a space), which lofty does not
-/// map; the key is matched ignoring ASCII case.
-fn of_vorbis(comments: Option<&VorbisComments>) -> ConcreteLyrics {
-    let fallback_text = comments
-        .and_then(|c| c.get_all("UNSYNCED LYRICS").find(|text| usable_text(text)))
-        .map(str::to_owned);
-    ConcreteLyrics {
-        synced: Vec::new(),
-        fallback_text,
-    }
-}
-
-/// Reads the lyrics left in a file whose concrete read failed for good.
-type Recover = fn(&mut BufReader<File>) -> Result<Option<EmbeddedLyrics>, MediaError>;
+/// Reads the lyrics left in a file whose concrete read failed for good;
+/// `None` when that does not apply to the file.
+type Recover = fn(&mut BufReader<File>, ParseOptions) -> recover::Recovered;
 
 /// Reads the probed file as `F` and takes what only the concrete type holds
 /// before turning it into a generic [`TaggedFile`] (which consumes the file).
@@ -228,15 +200,25 @@ where
     reader
         .rewind()
         .map_err(|e| Concrete::Fatal(from_sniff_error(&e)))?;
+    // Only a failed read reaches the recovery: a file that reads costs no
+    // extra I/O, and a transient failure is retried instead.
     let file = F::read_from(&mut reader, options).map_err(|e| {
-        match (concrete_failure(&e, on_failure), recover) {
-            // A broken tag: keep what can still be read before the damage.
-            (Concrete::Unreadable, Some(recover)) => Concrete::Recovered(recover(&mut reader)),
-            (failure, _) => failure,
+        match recover
+            .filter(|_| should_recover(&e))
+            .and_then(|r| r(&mut reader, options))
+        {
+            Some(result) => Concrete::Recovered(result),
+            None => concrete_failure(&e, on_failure),
         }
     })?;
     let lyrics = extract(&file);
     Ok((file.into(), lyrics))
+}
+
+/// Whether a failed concrete read goes to the recovery: only a lasting
+/// failure does; a transient one is retried by the caller instead.
+fn should_recover(error: &FileParseError) -> bool {
+    !from_parse_error(error).is_transient()
 }
 
 /// Splits a failed concrete read: a transient error is worth retrying; any
@@ -275,46 +257,4 @@ fn lyrics_text(tagged: &TaggedFile) -> Option<String> {
 }
 
 #[cfg(test)]
-mod tests {
-    use std::io::ErrorKind;
-
-    use lofty::error::SizeMismatchError;
-
-    use super::*;
-
-    #[test]
-    fn a_transient_io_error_is_fatal() {
-        let e: FileParseError = std::io::Error::from(ErrorKind::TimedOut).into();
-        assert!(matches!(
-            concrete_failure(&e, OnFailure::NoLyrics),
-            Concrete::Fatal(MediaError::Io(ErrorKind::TimedOut))
-        ));
-    }
-
-    #[test]
-    fn a_non_transient_io_error_means_no_lyrics() {
-        let e: FileParseError = std::io::Error::from(ErrorKind::UnexpectedEof).into();
-        assert!(matches!(
-            concrete_failure(&e, OnFailure::NoLyrics),
-            Concrete::Unreadable
-        ));
-    }
-
-    #[test]
-    fn a_parse_failure_means_no_lyrics() {
-        let e: FileParseError = SizeMismatchError.into();
-        assert!(matches!(
-            concrete_failure(&e, OnFailure::NoLyrics),
-            Concrete::Unreadable
-        ));
-    }
-
-    #[test]
-    fn a_parse_failure_is_an_error_when_the_format_asks_for_it() {
-        let e: FileParseError = SizeMismatchError.into();
-        assert!(matches!(
-            concrete_failure(&e, OnFailure::Error),
-            Concrete::Fatal(_)
-        ));
-    }
-}
+mod tests;

@@ -207,7 +207,8 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
    mount that vanished only protects the files under it (`keptUnderLostMount`).
    Android: the catalog still reaches the folder. If the folder is not present,
    nothing is marked, the report says `unreachable` and the result has
-   `rootVanished`. A new file with another error gets a
+   `rootVanished`. A file whose ID3v2 tag lofty refuses is first recovered in Rust
+   (see Rust: tags › Broken ID3v2 tags); only what is left fails. A new file with another error gets a
    filename-only row with `scan_error = kind`; permanent: `tags_version` current with
    mtime, size and revision; transient: `tags_version` 0 and mtime, size, revision
    NULL, so the next scan reads it again. An existing row with a transient error is
@@ -334,7 +335,9 @@ when this call made the files), `noCover` (every source checked) or `failed`
 (`error`). Failure rules: an error writing under `cacheDir` is transient whatever
 its kind, and the batch stops: items not started come back `failed` and transient.
 The audio file itself unreadable (corrupt, unsupported) is permanent, but the
-sidecars are still tried first. A transient read error on the audio file or a
+sidecars are still tried first. A file whose tag alone lofty refuses (same
+`is_tag_failure` as the tag read) has no embedded picture and is no error: sidecars,
+else `noCover`; pictures of a broken tag are not recovered. A transient read error on the audio file or a
 sidecar is transient. A sidecar that opens but cannot be read, or a folder
 that cannot be listed (EIO on a dropped mount; anything but missing, refused or
 not-a-folder), is a transient failure of that item (`CoverError::Retry`), never a
@@ -1051,7 +1054,7 @@ to the old one stops matching; restoring the separators restores it).
 | `error` | `MediaError` (above) |
 | `cancel` | `Cancel::new()`, `with_timeout(Duration)`, `cancel()`, `check() -> Result<(), MediaError>` |
 | `limits` | `MAX_FILE_BYTES_UNSEEKABLE` 256 MiB, `MAX_COVER_BYTES` 32 MiB, `MAX_COVER_PIXELS` 40 000 000, `MAX_TAG_FILE_SECONDS` 30 |
-| `tags/` | `read_tags(path, open, cancel) -> Result<TrackTags, MediaError>`; `mapping`, `language`, `errors` |
+| `tags/` | `read_tags(path, open, cancel) -> Result<TrackTags, MediaError>`; `mapping`, `language`, `errors`, `tags_fallback` (broken ID3v2), `id3_recovery` (bounded symphonia read, chunk and prefix locators, views, `to_lofty`) |
 | `covers/` | `make_cover(audio, open, sidecars, cache_dir, memo, cancel)`; `sources`, `decode_limits`, `thumbnail`, `gate`, `jpeg_header`, `webp_exif`, `key`, `colors`, `cache` |
 
 `rust/crates/kanaru_bridge`:
@@ -1097,6 +1100,61 @@ multi-value field, a raw date over 64 bytes is skipped.
 Errors: a lofty failure is `Corrupt` or `Unsupported` (an unknown format), never an
 `Io` of kind `Other`; I/O errors keep their kind (so `TimedOut` is transient). A
 truncated or inconsistent file is `Corrupt`, a permanent result.
+
+**Broken ID3v2 tags** (`tags/tags_fallback.rs`). lofty fails the whole file at the
+first ID3v2 frame it rejects. When the read fails for a reason that is not
+transient, the file is read again from the same open reader, for MP3, WAV, AIFF
+and FLAC only (by the sniffed type); a healthy file never takes this path. The
+deadline is checked before each step of that read; once it has passed, lofty's
+error stands (never `Timeout`), and other types keep lofty's error untouched:
+
+| Type | Where the ID3v2 tag is | Read again with lofty | Tag used |
+|---|---|---|---|
+| MP3 | up to 4 tags in a row at the start | from after them (ID3v1, APE, properties) | recovered ID3v2, else ID3v1/APE |
+| WAV, AIFF | up to 4 top-level `id3 `/`ID3 ` chunks | whole file with those chunk ids read as `JUNK`; if that fails, once more without any tag (properties only) | recovered ID3v2, else RIFF INFO / AIFF text |
+| FLAC | up to 4 tags in front of `fLaC` (`fLaC` + STREAMINFO exactly where they end) | from `fLaC` (Vorbis comments, properties) | Vorbis comments, else recovered ID3v2 |
+
+The frames come from symphonia, which keeps the frames before the damage and skips a
+frame with bad content; they are rebuilt as a lofty ID3v2 tag (`to_lofty`: text
+frames, `TXXX`, `COMM`, ID3v2.2/2.3 ids upgraded, a 2.3 `TYER` joined with
+`TDAT`/`TIME`) and go through the same mapping as a healthy tag, so the same frames
+give the same fields. Only one difference: a recovered MP3's `bitrate` does not count
+the tag's bytes (lofty's MP3 overall bitrate is file bytes over duration). Bounds:
+16 MiB of ID3 bytes per file, 1024 frames per tag, 1024 chunk headers walked;
+pictures are not recovered (folder covers still apply). No forward scan for a
+mis-sized tag: a FLAC whose `fLaC` is not exactly where its prefixes end keeps only
+the prefixes' fields (no properties), and an MP3 whose audio is not near the declared
+end of its tags may lose its properties. Outcomes:
+
+- Some fields or the audio properties recovered: a normal result. Fields written
+  after the damage are missing (a title without its artist is shown as such).
+  Fields without properties count only when lofty failed on a tag (a
+  `TagParseError`, or an ID3v2 frame, header or timestamp error, in its cause
+  chain, and no I/O error outside a frame: `tags::errors::is_tag_failure`). An
+  I/O error under an ID3v2 frame error is that frame ending early (a `COMM` frame
+  too short for its language field), so it counts as a broken tag; an I/O error
+  outside a frame means the file ended or could not be read.
+- A healthy tag in front of broken or missing audio (garbage after the tag, a tag
+  with nothing after it, a cut FLAC stream, a FLAC file that ends inside its ID3v2
+  prefix, a WAV without `fmt `, an AIFC whose compression name is not UTF-8):
+  lofty's original error, still a scan error.
+- A tag that cannot be recovered at all but audio that reads: a result with the
+  properties and no tag fields (filename-only title), **no longer a scan error**.
+- Nothing recovered (no ID3v2 tag where the type keeps one, no frame and no readable
+  audio): lofty's original error, same `MediaError` class as before.
+- A transient I/O error during the second read: that error (the row is retried).
+- Known gap: an MP3 with a healthy ID3v2 tag and a broken APE trailer. lofty counts
+  the APE failure as a tag failure and the read from after the ID3v2 tag fails on
+  the same trailer, so the row has the ID3v2 fields but no duration or audio details.
+- Known gap: an MP3 cut exactly inside the fixed fields of an ID3v2 frame (the end
+  of file falls in a frame's language or similar field) whose audio cannot be read
+  again from after the tag. The end-of-file sits under the frame error, so it counts
+  as a broken tag: the row has the fields before that frame but no duration instead
+  of a scan error.
+
+Rows already in the library are not re-read for this: `tagsPassVersion` is
+unchanged, so an unchanged file keeps its old row (filename-only, or its old
+`scan_error`) until the file changes or a full rescan reads it again.
 
 ## Old prototype references
 

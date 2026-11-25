@@ -24,15 +24,18 @@ properties, `ParsingMode::BestAttempt`.
   as the concrete file type (`MpegFile`, `WavFile`, `AiffFile`). The concrete
   ID3v2 tag keeps what the generic tag drops: binary `SYLT` frames and `TXXX`
   user text.
-- MP3 only: when that concrete read fails for a reason that is not a
-  transient I/O error (a frame lofty refuses fails the whole tag; a damaged
-  APE or ID3v1 trailer also fails the read, and then an intact ID3v2 tag is
-  recovered in full), the ID3v2
-  tag at the start of the file is read again with symphonia
-  (`lyrics_reader/id3_fallback.rs`, tag bounding in `id3_bound.rs`; see below).
+- MP3, WAV, AIFF, FLAC: when that concrete read fails for a reason that is
+  not a transient I/O error (a frame lofty refuses fails the whole tag; a
+  damaged APE or ID3v1 trailer also fails the read, and then an intact ID3v2
+  tag is recovered in full), the file's ID3v2 tags are read again with
+  symphonia (`lyrics_reader/recover.rs` finds them, `lyrics_reader/id3_fallback.rs`
+  takes the lyrics from the frames, over the shared `tags/id3_recovery/`; tag
+  bounding in `id3_recovery/bound.rs`; see below). A file that reads never
+  reaches it.
 - FLAC, Ogg Vorbis, Opus: read the same way as `FlacFile`, `VorbisFile`,
   `OpusFile`, to reach the Vorbis comments the generic tag drops (keys lofty
-  does not map). Their parse failures stay errors (see Error outcomes).
+  does not map). Their parse failures stay errors (see Error outcomes), except
+  a FLAC behind a broken ID3v2 prefix.
 - Every other format: `probe.read()`, generic tag only.
 
 ### Plain text
@@ -56,7 +59,26 @@ text (same blank and size rules, the first usable value wins):
 Formats read through the generic tag only: MP4/M4A, APE, WavPack, Speex, and
 the non-ID3 tags of MP3/WAV/AIFF.
 
-### Broken ID3v2 tag (MP3)
+### Broken ID3v2 tag (MP3, WAV, AIFF, FLAC)
+
+Where the tags are looked for (`lyrics_reader/recover.rs`), in file order; the
+first tag with lyrics wins:
+
+- MP3: the ID3v2 tags in a row from offset 0 (`id3_recovery/prefix.rs`, at
+  most 4, each by its declared size plus the v2.4 footer).
+- WAV and AIFF: the top-level `id3 `/`ID3 ` chunks (`id3_recovery/iff.rs`,
+  at most 4 chunks among at most 1024 chunk headers, walked like lofty walks
+  them; only headers are read, `data`/`SSND` is seeked over). A tag is never
+  read past its chunk; a chunk cut short by the end of the file gives the
+  bytes it holds.
+- FLAC: the ID3v2 prefixes as for MP3. When `fLaC` and a STREAMINFO block
+  header sit exactly where the last prefix ends (no scan for a mis-sized
+  tag), the stream is read again with lofty through an offset view
+  (`id3_recovery/views.rs`, no copy of the file) as if the prefixes were not
+  there: its Vorbis lyrics (`LYRICS`, `UNSYNCED LYRICS`, same rules as a
+  healthy FLAC) come first, then the prefixes' frames.
+
+All tags of one file share one `MAX_ID3_FALLBACK_BYTES` budget.
 
 symphonia's ID3v2 reader keeps the frames it read before a structural error
 (a frame header or size that makes the rest of the tag unreadable) and skips
@@ -82,10 +104,12 @@ for each frame it skips and a hostile tag can hold millions of them:
   or before a frame header that does not fit. Lyrics frames after that point
   are not recovered.
 
-What it does not recover: frames after the first structural error; WAV and
-AIFF (ID3v2 in a chunk); a FLAC with a broken ID3v2 prefix (whole read fails,
-an error); the title and other tags used by the library scan (a failed tag read
-there lists the file by its name).
+What it does not recover: frames after the first structural error; a FLAC
+whose `fLaC` is not exactly at the end of its prefixes (only the prefixes'
+frames, else an error). The library scan recovers the title and other tags
+from the same broken tags (`tags/tags_fallback.rs`, see
+[system-architecture-library-scan.md](./system-architecture-library-scan.md)
+› Rust: tags).
 
 ### Synced lyrics (`SYLT`)
 
@@ -107,20 +131,22 @@ there lists the file by its name).
 | Case | Result |
 |---|---|
 | No lyrics, blank or oversized lyrics, no tag | `Ok(None)` |
-| MP3 whose concrete read fails (broken ID3 tag or file, including an empty or truncated file), not transient | The ID3v2 fallback's result: the lyrics kept before the first structural error (within the frame cap), else `Ok(None)`. Plain text stored elsewhere (an APE tag) is not read |
-| WAV/AIFF whose concrete read fails, not transient | `Ok(None)`: the whole file has no lyrics, even if plain text exists elsewhere |
+| MP3, WAV or AIFF whose concrete read fails (broken ID3 tag or file, including an empty or truncated file), not transient | The ID3v2 fallback's result: the lyrics kept before the first structural error of the first tag (MP3 prefix, WAV/AIFF chunk) that holds any (within the frame cap), else `Ok(None)`. Plain text stored elsewhere (an APE tag, RIFF INFO) is not read |
+| FLAC whose concrete read fails behind ID3v2 prefixes, not transient | `fLaC` exactly after them and the stream reads: as a healthy FLAC (Vorbis lyrics, else the prefixes' lyrics, else `Ok(None)`). Otherwise the prefixes' lyrics, else the original `Err` |
 | ID3v2 fallback: I/O error that is transient | `Err(MediaError::Io)` |
 | Concrete read fails with a transient I/O error, or rewind fails | `Err(MediaError::Io)` |
 | Sniffing the content fails | `Err`, via `errors::from_sniff_error` |
-| FLAC, Ogg Vorbis, Opus, other formats: parse fails (unknown format, corrupt, empty or truncated: `Io` `UnexpectedEof`, I/O) | `Err`, via `errors::from_parse_error` |
+| FLAC without an ID3v2 prefix, Ogg Vorbis, Opus, other formats: parse fails (unknown format, corrupt, empty or truncated: `Io` `UnexpectedEof`, I/O) | `Err`, via `errors::from_parse_error` |
 
 ### Known gaps
 
 - `SYLT` is read only from ID3v2 in MP3, WAV and AIFF; none in FLAC, MP4 or APE.
 - A broken ID3 tag: only the frames before the first structural error are
-  recovered (MP3); WAV and AIFF recover nothing; a FLAC with a broken ID3v2
-  prefix is an error. Plain text stored elsewhere in the same file (an APE
-  tag) is dropped.
+  recovered (MP3, WAV, AIFF, FLAC prefix). A FLAC or MP3 whose declared tag
+  size is wrong (`fLaC` or the audio not where the tag ends) recovers only
+  the prefix frames: no forward scan. Plain text stored elsewhere in the same
+  file (an APE tag, RIFF INFO, AIFF text chunks) is dropped. Covers from a
+  broken ID3 tag are not read.
 - A `SYLT` frame body over 4 MiB (`MAX_SYLT_FRAME_BYTES`) is skipped; below that lofty parses the whole frame before the line caps apply.
 
 ## Bridge API

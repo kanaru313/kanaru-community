@@ -23,3 +23,9 @@ dumping an `Id3v2Tag` and prepending its bytes to the file.
 ID3v2 tags with a damaged frame are built from bytes in `mod.rs` (helper
 `broken_id3v2`, with `frame_that_ends_the_tag`: a frame lofty refuses and
 symphonia treats as the end of the readable tag).
+
+WAV, AIFF and FLAC files with an ID3v2 tag where each container keeps it are
+built in `containers.rs`: `id3v2_tag` (tag bytes only, optional v2.4 footer),
+`wav_with_chunks` / `aiff_with_chunks` (top-level chunks added before or after
+the audio, padded, outer size fixed) and `flac_with_comments` (raw Vorbis
+keys, to put behind an ID3v2 prefix).
