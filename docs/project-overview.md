@@ -10,8 +10,8 @@ sources follow, then plugins for lyrics and sources.
   on both.
 - Local files before anything else: scan, index, play, show lyrics, with no
   network.
-- Open source core (GPL-3.0-or-later). The core remains complete and usable on
-  its own, while supporting additional capabilities through the extension
+- Source-available core under the Kanaru EULA (GPL-3.0-or-later before
+  25 November 2026). The core remains complete and usable on its own, while supporting additional capabilities through the extension
   mechanism ([ARCHITECTURE.md](../ARCHITECTURE.md)).
 - Strict module boundaries enforced by a gate, so the codebase stays easy to
   extend.

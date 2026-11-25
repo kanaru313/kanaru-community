@@ -88,7 +88,7 @@ Wave 1 follow-ups (not in wave 1 by decision; each needs its own design):
 - Font picker done (SET-03 font part): Settings › Appearance › Fonts with built-in, downloadable catalog (release `fonts-v1`) and custom imported fonts; spec: `docs/system-architecture-fonts.md`.
 - Golden tests for `kanaru_ui` widgets once a golden setup exists.
 - `cargo deny` license and duplicate check.
-- Linux packaging with an LGPL libmpv build before any Pro Linux build.
+- Linux packaging with an LGPL libmpv build (mpv `-Dgpl=false`, FFmpeg without `--enable-gpl`) before any Linux release: a GPL libmpv cannot ship with the EULA app.
 - Shared menu model for the queue row and the song menu.
 
 Gate and tooling:

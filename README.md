@@ -4,11 +4,13 @@ A Material 3 music player built with Flutter. Local files come first; remote
 sources and plugins follow. Targets Android (primary) and Linux desktop, each
 with its own shell (bottom bar on mobile, sidebar and top bar on desktop).
 
-This repository is the core open source app and the only Flutter runner.
+This repository is the core app (source available) and the only Flutter runner.
 Additional features can be added through extension packages (see
 [ARCHITECTURE.md](ARCHITECTURE.md)).
 
-License: GPL-3.0-or-later (see [LICENSE](LICENSE)).
+License: Kanaru EULA, source available for personal use (see [LICENSE](LICENSE)).
+Versions published before 25 November 2026 were released under
+GPL-3.0-or-later and stay under it for copies already received.
 
 Status: wave-1 foundation (shared contracts, settings, device id, navigation,
 design system, Rust base). The app starts on Android and Linux with an empty
