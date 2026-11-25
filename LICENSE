@@ -2,6 +2,7 @@
 
 **Software:** Kanaru (this repository, its packages and its native libraries)
 **Owner:** Nguyen Minh Hieu
+**Contact:** hieunm3103@gmail.com
 **Effective date:** 25 November 2026
 
 Copyright (C) 2026–present Nguyen Minh Hieu. All rights reserved, except as
@@ -15,38 +16,67 @@ By installing, building, accessing or using Kanaru (the "Software"), including
 its source code, you agree to this Agreement. If you do not agree, do not use
 the Software.
 
-## 2. What you may do
+## 2. Definitions
+
+- **Personal, non-commercial use** means using the Software yourself, on your
+  own devices, to listen to and manage your music, including at work or while
+  doing paid work that is not about the Software. It does **not** include
+  selling, renting or licensing the Software; offering it, or a service built
+  on it, to others; bundling it with a product or device; or using it, or its
+  code, to earn money or another commercial advantage.
+- **Official build** means a build of the Software published by the owner,
+  unmodified.
+- **Written permission** means permission from the owner sent from the contact
+  address above.
+
+## 3. What you may do
 
 Kanaru is **source available**. Subject to this Agreement, you get a personal,
-non-exclusive, non-transferable, revocable license to:
+non-exclusive, non-transferable license, without a fee, to:
 
-- install and use the Software for your own personal, non-commercial use;
-- read the source code, build it and modify it for your own personal use;
-- modify the source code to contribute changes back to Kanaru (section 8).
+- install and use the Software for personal, non-commercial use;
+- read the source code, build it and modify it for personal, non-commercial use
+  or personal learning;
+- modify the source code to contribute changes back to Kanaru (section 12).
 
-## 3. What you may not do
+## 4. What you may not do
 
-Unless the owner gives you written permission, you may not:
+Unless you have written permission, you may not:
 
-- use the Software, or any part of it, for a commercial purpose;
-- redistribute, sublicense, sell, rent or lease the Software, modified or not;
-- publish the Software, or a work based on it, under another name, brand,
-  owner or license, or as part of another product;
-- use the source code, or parts of it, for any purpose other than personal use,
-  personal learning or contributing to Kanaru;
+- use the Software, its source code or any part of them beyond section 3, in
+  particular for a commercial purpose or in another product;
+- redistribute, sublicense, sell, rent or lease the Software, modified or not,
+  except as section 5 allows;
 - remove or change this Agreement, copyright notices or attributions.
 
-**Exception: official builds.** Unmodified official builds of the Software may
-be redistributed free of charge through software stores and repositories that
-the owner has approved (for example Google Play or Flathub), as long as the
-name, branding and this Agreement stay intact.
+## 5. Approved distribution of official builds
 
-## 4. Ownership
+Official builds may be redistributed free of charge, with the name, branding
+and this Agreement intact, through:
+
+- Google Play;
+- GitHub Releases of the Kanaru repository;
+- Flathub;
+- the Arch User Repository (AUR) and Nix / nixpkgs, as packages that install an
+  official build or build the published source without changes other than
+  those needed to package it;
+- the Apple App Store, once an iOS version exists.
+
+The owner may add places to this list in later versions of this Agreement or by
+written permission.
+
+## 6. Name and logo
+
+"Kanaru" and the Kanaru logo identify the official Software. A modified version
+or fork may not use the name or the logo, or suggest that it is the official
+Software, without written permission.
+
+## 7. Ownership
 
 The Software and all intellectual property rights in it belong to the owner.
 This Agreement grants a license; it does not sell or transfer ownership.
 
-## 5. Third-party components
+## 8. Third-party components
 
 The Software includes or loads third-party components (for example libmpv and
 FFmpeg, Flutter and Dart packages, Rust crates, fonts, and the files under
@@ -56,58 +86,95 @@ kept with their source, and the app lists the licenses of the components it
 includes (Settings > About > Licenses).
 
 Nothing in this Agreement limits the rights those licenses give you. In
-particular, where a component is licensed under the GNU Lesser General Public
-License (such as the libmpv and FFmpeg builds the app loads), you may replace
-or modify that library and reverse engineer the Software as far as needed to
-debug such modifications.
+particular:
 
-## 6. Earlier versions
+- where a component is licensed under the GNU Lesser General Public License
+  (such as the libmpv and FFmpeg builds the app loads as shared libraries), you
+  may replace or modify that library, and reverse engineer the Software as far
+  as needed to debug such modifications;
+- the source of components under the Mozilla Public License 2.0 is available
+  from their own projects, and that license, not this Agreement, applies to
+  those files.
+
+## 9. Plugins
+
+Plugins are not part of the Software. Each plugin, whether installed from a
+repository, a file or a link, is provided by its author under its own terms.
+The owner does not control third-party plugins or the services they reach, and
+is not responsible for them. You are responsible for using plugins, and the
+content they reach, lawfully.
+
+## 10. Earlier versions
 
 Versions of this repository published before the effective date were released
 under the GNU General Public License, version 3 or later. Copies of those
-versions that you already received stay under that license. This Agreement
-applies to every version from the effective date onward.
+versions stay under that license. This Agreement applies to every version from
+the effective date onward.
 
-## 7. Paid features and accounts
+## 11. Paid features and accounts
 
-Kanaru may offer optional paid features. They are provided separately, and may
-require an account. Paying for them does not change the rights in this
-Agreement for the rest of the Software.
+Kanaru may offer optional paid features. They are provided separately, may need
+an account and may have their own terms. Paying for them does not change the
+rights in this Agreement for the rest of the Software.
 
-## 8. Contributions
+## 12. Contributions
 
 Contributions are welcome. By submitting a contribution you agree that it may
 be included in the Software under this Agreement. Contributions from people
 outside the project need a signed Contributor License Agreement before they
 are merged (see `CONTRIBUTING.md`).
 
-## 9. Data and privacy
+## 13. Data and privacy
 
 - The Software collects no analytics, crash reports or usage tracking, and it
   does not send your music or library data anywhere by itself.
 - Network access happens only for features you use. Plugins you install send
   data to the hosts they list, which the app shows before you install them.
 - If you sign in to an account, the account service stores your email address,
-  your devices and your purchases, only to provide the paid features.
+  your devices and your purchases, only to provide the paid features. How that
+  data is kept, for how long and how to delete it is set out in the privacy
+  policy (`PRIVACY.md`) published before the account service opens.
 - Logs are stored on your device and leave it only if you share them yourself.
 
-## 10. No warranty
+## 14. No warranty
 
-The Software is provided "as is", without warranty of any kind, express or
-implied, including merchantability, fitness for a particular purpose and
-non-infringement.
+To the extent allowed by law, the Software is provided "as is", without
+warranty of any kind, express or implied, including merchantability, fitness
+for a particular purpose and non-infringement.
 
-## 11. Limitation of liability
+## 15. Limitation of liability
 
 To the extent allowed by law, the owner is not liable for any damages arising
-from the use of, or the inability to use, the Software.
+from the use of, or the inability to use, the Software. Nothing in this
+Agreement limits rights that consumer law gives you and that cannot be waived.
 
-## 12. Termination
+## 16. Termination
 
-This license ends automatically if you break this Agreement. You must then stop
-using the Software and delete your copies.
+This license ends only if you break this Agreement. If you stop the breach
+within 30 days after the owner tells you about it, your license is restored,
+unless you have broken this Agreement before. When the license ends, you must
+stop using the Software and delete your copies.
 
-## 13. Changes
+## 17. Governing law
+
+This Agreement is governed by the laws of Vietnam, and disputes go to the
+competent courts of Vietnam. This does not take away protections that the
+consumer law of the country where you live gives you and that cannot be waived.
+
+## 18. Severability and entire agreement
+
+If a court finds part of this Agreement unenforceable, that part is applied as
+far as the law allows and the rest stays in force. This Agreement, together
+with the licenses of third-party components (section 8) and any separate terms
+for paid features (section 11), is the whole agreement between you and the
+owner about the Software.
+
+## 19. Changes
 
 The owner may change this Agreement for later versions of the Software. The
 version shipped with a release applies to that release.
+
+## 20. Contact
+
+Requests for written permission and questions about this Agreement go to the
+contact address above.
