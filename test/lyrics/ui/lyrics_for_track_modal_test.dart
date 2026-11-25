@@ -360,10 +360,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(LyricsForTrackBody), findsNothing);
       expect(setup.location, lyricsSettingsLocation);
-      // The ⚙ leads to the online sources block of that page.
+      // The ⚙ leads to the top of that page: no block to focus.
       expect(
         setup.router.routerDelegate.currentConfiguration.uri.toString(),
-        lyricsSourcesSettingsLocation,
+        lyricsSettingsLocation,
       );
       expect(find.text('settings page'), findsOneWidget);
       expect(setup.container.read(nowPlayingPanelProvider).open, isFalse);

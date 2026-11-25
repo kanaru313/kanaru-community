@@ -188,12 +188,27 @@ legend **Dịch**.
   lines, blank lines, translations equal to the source and the `same` status
   show nothing (`lineTranslationOf` over `translationFor`). Semantics label of
   a translated line: "original, translation".
-- **Sizes and colours** (`translation_text_styles.dart`): synced translation
-  0.62 of the line, w500, `onSurface` 64 % on the sung line, the dim level
-  (never above 64 %) on the others; replaced original 0.5. Plain lyrics: 0.8 and
-  0.7 of the plain size, `onSurfaceVariant`. Card: 13, w500, 64 %, one fixed row
-  under the sung line while translation is on (blank for a gap), so the card
-  keeps its height.
+- **Sizes and colours** (`translation_text_styles.dart`): w500, `onSurface`
+  64 % on the sung line, the dim level (never above 64 %) on the others; plain
+  lyrics `onSurfaceVariant`. The sizes come from `TranslationSize` (setting
+  `lyrics.translation.size`, Settings › Lời bài › Dịch lời › Cỡ chữ bản dịch,
+  one value for every song, default `medium` = the sizes before the setting
+  existed):
+
+  | | synced under | replaced original | plain under | plain original | card (size / line) |
+  |---|---|---|---|---|---|
+  | small | 0.52 | 0.42 | 0.672 | 0.588 | 11 / 15.2 |
+  | medium | 0.62 | 0.5 | 0.8 | 0.7 | 13 / 18 |
+  | large | 0.75 | 0.6 | 0.968 | 0.847 | 15 / 20.8 |
+
+  The card line height is the font size × 18 / 13. The synced view
+  re-anchors and invalidates its extents when the size changes.
+
+  The card shows one fixed row under the sung line while translation is on
+  (blank for a gap), so the card keeps its height. `SyncedLyricsView`,
+  `PlainLyricsView`, `CardSyncedLines` and the modal preview each watch
+  `translationSizeProvider` once where the style is built (not per line);
+  `SyncedLyricsView` also uses `size.translation` in its estimated line height.
 - **Pending.** `TranslationPlaceholder`: a bar 55 % wide, one translation line
   high, a light sweep of `KMotion.slow * 3`; still with animations off. Shown
   under every non-blank line while the status is loading and not a background

@@ -96,7 +96,7 @@ void main() {
         await host.open(tester, size: size);
         await tester.tap(_button('Translation settings'));
         await host.settle(tester);
-        expect(host.location, '/settings/lyrics');
+        expect(host.location, '/settings/lyrics?focus=translation');
         expect(find.text('Translate lyrics'), findsNothing);
       });
 

@@ -3354,10 +3354,28 @@
   "lyricsSettingsTrService": "Default translation service",
   "lyricsSettingsTrServiceNone": "Not chosen",
   "lyricsSettingsTrTarget": "Default translation language",
-  "lyricsSettingsTrTargetApp": "Follows the app language",
   "lyricsSettingsTrAhead": "Translate ahead",
   "lyricsSettingsTrAheadNow": "Current song only",
   "lyricsSettingsAddTrService": "Add a translation service",
+  "lyricsSettingsTrTargetAppNamed": "Follows the app language ({name})",
+  "@lyricsSettingsTrTargetAppNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSettingsTrTargetCaption": "Used for songs that have no language of their own.",
+  "lyricsSettingsTrSize": "Translation text size",
+  "lyricsSettingsTrSizeCaption": "The translation line under the lyrics, or the small original line when the translation replaces it. Applies to the lyrics screen, the Lyrics tab and the lyrics card.",
+  "lyricsSettingsTrServiceNeedsConfig": "Needs setup: {fields}",
+  "@lyricsSettingsTrServiceNeedsConfig": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
   "lyricsSettingsAddSpeech": "Add a speech-to-text plugin",
   "lyricsSearchingTitle": "Searching for lyrics…",
   "lyricsSearchingMessage": "No lyrics on this device yet · searching {count, plural, =1{1 enabled source} other{{count} enabled sources}}.",
@@ -5266,6 +5284,11 @@
   "pluginsPageSourceCode": "Source code",
   "pluginsPageUseLyrics": "Find lyrics automatically",
   "pluginsPageUseTranslate": "Default translation service",
+  "pluginsPageUseTranslateAt": "Change in Settings › Lyrics › Translation",
+  "pluginsPageUseTranslateHint": "Songs with no service of their own use the default service.",
+  "pluginsPageUseTranslateIs": "Default",
+  "pluginsPageUseTranslateSet": "Set as default",
+  "pluginsRemoveKeepTranslations": "Saved translations, until you choose “Delete saved translations”",
   "pluginsPageConnection": "Connection",
   "pluginsPageData": "Data",
   "pluginsPageOwnStorage": "Plugin’s own storage",

@@ -7,6 +7,7 @@ import '../../../../media/domain/track_id.dart';
 import '../../../domain/lyrics.dart';
 import '../../../domain/translation/translation_status.dart';
 import '../../../state/lyrics_settings.dart';
+import '../../../state/translation/translation_settings.dart';
 import '../../../state/translation/translation_credit_provider.dart';
 import '../../../state/translation/translation_layout_provider.dart';
 import '../../../state/translation/translation_providers.dart';
@@ -33,6 +34,7 @@ class TranslatePreviewLine extends ConsumerWidget {
     final base = Theme.of(context).textTheme.titleMedium!
         .copyWith(fontWeight: FontWeight.w700);
     final dim = ref.watch(lyricsDimProvider);
+    final size = ref.watch(translationSizeProvider);
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : KMotion.fast;
@@ -44,12 +46,14 @@ class TranslatePreviewLine extends ConsumerWidget {
         line: base,
         current: true,
         dim: dim,
+        size: size,
       ),
       originalStyle: lyricsReplacedOriginalStyle(
         context,
         line: base,
         current: true,
         dim: dim,
+        size: size,
       ),
       textAlign: TextAlign.center,
       duration: duration,

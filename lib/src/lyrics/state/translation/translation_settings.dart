@@ -8,6 +8,7 @@ import '../../../plugins/domain/package/translate_spec.dart'
     show translationLanguageCodes;
 import '../../../plugins/state/plugin_page_provider.dart';
 import '../../data/translation/translation_cache_store.dart';
+import '../../domain/translation/translation_size.dart';
 import '../../data/translation/translation_prefs_store.dart';
 
 /// How a translated line is shown.
@@ -60,6 +61,15 @@ final Setting<TranslationDisplay> translationDisplaySetting =
       encode: (v) => v.name,
     );
 
+/// Size of the translation line, for every song.
+final Setting<TranslationSize> translationSizeSetting =
+    Setting<TranslationSize>(
+      'lyrics.translation.size',
+      TranslationSize.medium,
+      decode: (json) => enumByName(TranslationSize.values, json),
+      encode: (v) => v.name,
+    );
+
 final translationOnProvider = settingNotifierProvider(translationOnSetting);
 final translationServiceProvider = settingNotifierProvider(
   translationServiceSetting,
@@ -67,6 +77,7 @@ final translationServiceProvider = settingNotifierProvider(
 final translationTargetProvider = settingNotifierProvider(
   translationTargetSetting,
 );
+final translationSizeProvider = settingNotifierProvider(translationSizeSetting);
 final translationDisplayProvider = settingNotifierProvider(
   translationDisplaySetting,
 );

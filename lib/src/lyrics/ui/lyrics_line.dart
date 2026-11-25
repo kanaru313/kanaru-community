@@ -7,6 +7,7 @@ import '../domain/lyrics.dart';
 import '../domain/lyrics_display_prefs.dart';
 import 'lyrics_gap_mark.dart';
 import 'lyrics_text_styles.dart';
+import '../domain/translation/translation_size.dart';
 import 'translation/line_translation.dart';
 import 'translation/translated_line_text.dart';
 import 'translation/translation_text_styles.dart';
@@ -47,6 +48,7 @@ class LyricsLine extends StatefulWidget {
     required this.dim,
     required this.align,
     this.translation,
+    this.translationSize = TranslationSize.medium,
   });
 
   final int index;
@@ -61,6 +63,9 @@ class LyricsLine extends StatefulWidget {
 
   /// What the line shows of its translation; null while translation is off.
   final LineTranslation? translation;
+
+  /// Size of the translation line (setting `lyrics.translation.size`).
+  final TranslationSize translationSize;
 
   @override
   State<LyricsLine> createState() => _LyricsLineState();
@@ -116,12 +121,14 @@ class _LyricsLineState extends State<LyricsLine> {
         line: style,
         current: isCurrent,
         dim: widget.dim,
+        size: widget.translationSize,
       ),
       originalStyle: lyricsReplacedOriginalStyle(
         context,
         line: style,
         current: isCurrent,
         dim: widget.dim,
+        size: widget.translationSize,
       ),
       textAlign: lyricsTextAlign(widget.align),
       duration: duration,

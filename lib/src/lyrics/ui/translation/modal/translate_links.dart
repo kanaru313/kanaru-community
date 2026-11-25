@@ -27,8 +27,8 @@ void openFromTranslateModal(
   router.go(location);
 }
 
-/// The ⚙ of the modal: Cài đặt › Lời bài.
-String get translateSettingsLocation => lyricsSettingsLocation;
+/// The ⚙ of the modal: Cài đặt › Lời bài, at the Dịch lời block.
+String get translateSettingsLocation => lyricsTranslationSettingsLocation;
 
 /// [installId]'s plugin page ("Cấu hình").
 String translatePluginPageLocation(String installId) =>

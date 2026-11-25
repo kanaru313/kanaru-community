@@ -13,6 +13,7 @@ import '../domain/lyrics.dart';
 import '../domain/lyrics_display_prefs.dart';
 import '../state/playing_lyrics_providers.dart';
 import '../state/translation/translation_layout_provider.dart';
+import '../state/translation/translation_settings.dart';
 import 'lyrics_line.dart';
 import 'synced_lyrics_scroll.dart';
 import 'synced_lyrics_translation.dart';
@@ -184,6 +185,7 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
       dim: widget.dim,
       align: widget.align,
       translation: translation,
+      translationSize: ref.read(translationSizeProvider),
     );
     return translatedLine(
       trackId: id,
@@ -203,13 +205,18 @@ class _SyncedLyricsViewState extends ConsumerState<SyncedLyricsView>
     if (id != null && layout != null) {
       watchTranslationHeights(ref, id, _reanchor);
       ref.listen(translationLayoutProvider(id), (_, _) => _reanchor());
+      // Every translated line changes height with the size.
+      ref.listen(translationSizeProvider, (_, _) => _reanchor());
     }
+    final trSize = ref.watch(translationSizeProvider);
     final scaler = MediaQuery.textScalerOf(context);
     _estimatedLine =
         scaler.scale(widget.lineSize) * 1.3 +
         2 * KSpace.x2 +
         KSpace.x1 +
-        (layout == null ? 0 : scaler.scale(widget.lineSize * 0.62) * 1.3);
+        (layout == null
+            ? 0
+            : scaler.scale(widget.lineSize * trSize.translation) * 1.3);
     final side = (widget.sidePadding - lyricsLineInset).clamp(
       0.0,
       double.infinity,

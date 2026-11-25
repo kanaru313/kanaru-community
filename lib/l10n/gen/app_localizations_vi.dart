@@ -4407,9 +4407,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lyricsSettingsTrTarget => 'Ngôn ngữ dịch mặc định';
 
   @override
-  String get lyricsSettingsTrTargetApp => 'Theo ngôn ngữ ứng dụng';
-
-  @override
   String get lyricsSettingsTrAhead => 'Dịch trước';
 
   @override
@@ -4417,6 +4414,27 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lyricsSettingsAddTrService => 'Thêm dịch vụ dịch';
+
+  @override
+  String lyricsSettingsTrTargetAppNamed(String name) {
+    return 'Theo ngôn ngữ ứng dụng ($name)';
+  }
+
+  @override
+  String get lyricsSettingsTrTargetCaption =>
+      'Dùng cho những bài chưa chọn ngôn ngữ riêng.';
+
+  @override
+  String get lyricsSettingsTrSize => 'Cỡ chữ bản dịch';
+
+  @override
+  String get lyricsSettingsTrSizeCaption =>
+      'Dòng dịch dưới lời, hoặc dòng lời gốc nhỏ khi Thay dòng. Áp cho màn lời, tab Lời bài và thẻ lời.';
+
+  @override
+  String lyricsSettingsTrServiceNeedsConfig(String fields) {
+    return 'Cần cấu hình: $fields';
+  }
 
   @override
   String get lyricsSettingsAddSpeech => 'Thêm plugin chuyển giọng nói';
@@ -6633,6 +6651,23 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pluginsPageUseTranslate => 'Dịch vụ dịch mặc định';
+
+  @override
+  String get pluginsPageUseTranslateAt => 'Đổi ở Cài đặt › Lời bài › Dịch lời';
+
+  @override
+  String get pluginsPageUseTranslateHint =>
+      'Bài chưa chọn dịch vụ riêng dùng dịch vụ mặc định.';
+
+  @override
+  String get pluginsPageUseTranslateIs => 'Mặc định';
+
+  @override
+  String get pluginsPageUseTranslateSet => 'Đặt làm mặc định';
+
+  @override
+  String get pluginsRemoveKeepTranslations =>
+      'Bản dịch đã lưu, cho đến khi bạn chọn Xoá các bản dịch đã lưu';
 
   @override
   String get pluginsPageConnection => 'Kết nối';

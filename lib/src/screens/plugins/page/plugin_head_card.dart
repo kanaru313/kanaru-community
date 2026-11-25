@@ -6,17 +6,18 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/domain/package/plugin_kind.dart';
 import '../../../lyrics/state/online/lyrics_sources_provider.dart';
+import '../../../lyrics/state/translation/translation_commands.dart';
+import '../../../lyrics/state/translation/translation_settings.dart';
 import '../../../lyrics/ui/lyrics_settings_link.dart';
 import '../../../plugins/state/plugin_page_provider.dart';
 import '../../settings/ui/settings_scaffold.dart';
-import '../../settings/ui/soon_row.dart';
 import '../common/plugin_icon.dart';
 
 /// The head card: icon, name, "author (tự khai báo) · bản N", and under a
 /// divider the row that says how the kind is used. The lyrics row shows the
 /// plugin's place in the lyrics sources and opens Settings › Lời bài; the
-/// translate row belongs to a feature that is not built yet, so it is dimmed
-/// "Sắp có".
+/// translate row says whether the plugin is the default translation service
+/// and sets it.
 class PluginHeadCard extends ConsumerWidget {
   const PluginHeadCard({super.key, required this.data, required this.nameKey});
 
@@ -43,10 +44,8 @@ class PluginHeadCard extends ConsumerWidget {
     );
     final use = switch (kind) {
       PluginKind.lyrics => _LyricsUseRow(installId: row.installId),
-      PluginKind.translate || PluginKind.aiTranslate => SoonRow(
-        icon: KIcons.language,
-        title: Text(l10n.pluginsPageUseTranslate),
-      ),
+      PluginKind.translate ||
+      PluginKind.aiTranslate => _TranslateUseRow(installId: row.installId),
       PluginKind.streaming || null => null,
     };
     return SettingsBlock(
@@ -129,6 +128,49 @@ class _LyricsUseRow extends ConsumerWidget {
       subtitle: state == null ? null : Text(state),
       trailing: Icon(KIcons.openInNew, color: scheme.onSurfaceVariant),
       onTap: () => context.push(lyricsSourcesSettingsLocation),
+    );
+  }
+}
+
+/// "Dịch vụ dịch mặc định": "✓ Mặc định" when this plugin is the chosen
+/// service, else the button that chooses it. The choice is the same setting
+/// as Settings › Lyrics › Translation and the translate modal.
+class _TranslateUseRow extends ConsumerWidget {
+  const _TranslateUseRow({required this.installId});
+
+  final String installId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final isDefault = ref.watch(translationServiceProvider) == installId;
+    return SetupRowFrame(
+      leading: const Icon(KIcons.language),
+      title: Text(l10n.pluginsPageUseTranslate),
+      subtitle: Text(
+        isDefault
+            ? l10n.pluginsPageUseTranslateAt
+            : l10n.pluginsPageUseTranslateHint,
+      ),
+      trailing: isDefault
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: KSpace.x1,
+              children: [
+                Icon(KIcons.check, size: KIconSize.xs, color: scheme.primary),
+                Text(
+                  l10n.pluginsPageUseTranslateIs,
+                  style: Theme.of(context).textTheme.labelLarge
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ],
+            )
+          : FilledButton.tonal(
+              onPressed: () =>
+                  ref.read(translationCommandsProvider).setService(installId),
+              child: Text(l10n.pluginsPageUseTranslateSet),
+            ),
     );
   }
 }

@@ -7050,12 +7050,6 @@ abstract class AppLocalizations {
   /// **'Default translation language'**
   String get lyricsSettingsTrTarget;
 
-  /// No description provided for @lyricsSettingsTrTargetApp.
-  ///
-  /// In en, this message translates to:
-  /// **'Follows the app language'**
-  String get lyricsSettingsTrTargetApp;
-
   /// No description provided for @lyricsSettingsTrAhead.
   ///
   /// In en, this message translates to:
@@ -7073,6 +7067,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a translation service'**
   String get lyricsSettingsAddTrService;
+
+  /// No description provided for @lyricsSettingsTrTargetAppNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows the app language ({name})'**
+  String lyricsSettingsTrTargetAppNamed(String name);
+
+  /// No description provided for @lyricsSettingsTrTargetCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for songs that have no language of their own.'**
+  String get lyricsSettingsTrTargetCaption;
+
+  /// No description provided for @lyricsSettingsTrSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation text size'**
+  String get lyricsSettingsTrSize;
+
+  /// No description provided for @lyricsSettingsTrSizeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'The translation line under the lyrics, or the small original line when the translation replaces it. Applies to the lyrics screen, the Lyrics tab and the lyrics card.'**
+  String get lyricsSettingsTrSizeCaption;
+
+  /// No description provided for @lyricsSettingsTrServiceNeedsConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs setup: {fields}'**
+  String lyricsSettingsTrServiceNeedsConfig(String fields);
 
   /// No description provided for @lyricsSettingsAddSpeech.
   ///
@@ -10486,6 +10510,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Default translation service'**
   String get pluginsPageUseTranslate;
+
+  /// No description provided for @pluginsPageUseTranslateAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Change in Settings › Lyrics › Translation'**
+  String get pluginsPageUseTranslateAt;
+
+  /// No description provided for @pluginsPageUseTranslateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Songs with no service of their own use the default service.'**
+  String get pluginsPageUseTranslateHint;
+
+  /// No description provided for @pluginsPageUseTranslateIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get pluginsPageUseTranslateIs;
+
+  /// No description provided for @pluginsPageUseTranslateSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as default'**
+  String get pluginsPageUseTranslateSet;
+
+  /// No description provided for @pluginsRemoveKeepTranslations.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved translations, until you choose “Delete saved translations”'**
+  String get pluginsRemoveKeepTranslations;
 
   /// No description provided for @pluginsPageConnection.
   ///

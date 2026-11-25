@@ -469,13 +469,16 @@ The song info page (`library`) draws a "Lời bài hát" group right after Tags.
 Route `/settings/lyrics`: `lyricsSettingsLocation` (`lyrics/ui/lyrics_settings_link.dart`) is the single copy of the path;
 `SettingsPaths.lyrics` points at it and `buildSettingsRoute` has one `GoRoute(path: 'lyrics')`. The root row "Lời bài" opens it.
 The ⚙ of "Lời cho bài này" takes the router and the Now Playing panel notifier first, closes the modal through its guarded close
-(nothing happens when it is already closing), closes the desktop Now Playing panel, then `go`es to `lyricsSourcesSettingsLocation`
-(`/settings/lyrics?focus=sources`). The lyrics row of a plugin page (`plugin_head_card.dart`) opens the same location. It works from
+(nothing happens when it is already closing), closes the desktop Now Playing panel, then `go`es to `lyricsSettingsLocation` (the page top).
+The lyrics row of a plugin page (`plugin_head_card.dart`) opens `lyricsSourcesSettingsLocation` (`?focus=sources`). It works from
 Now Playing (mobile route and desktop panel) and from a song menu.
 
-**Deep link.** `LyricsSettingsPage` reads `?focus=sources` (no route change: the query reaches the page through `GoRouterState`),
-waits a first frame plus `KMotion.focusSettle`, scrolls down until the lazily built "Nguồn lời trực tuyến" section exists,
-`Scrollable.ensureVisible`s it and pulses it once (`SetupSectionPulse`; with animations off it only scrolls). A rebuild of the same
+**Deep link.** `LyricsSettingsPage` reads `?focus=sources` or `?focus=translation` (no route change: the query reaches the page
+through `GoRouterState`). `translation` is `lyricsTranslationSettingsLocation`, the ⚙ of the Dịch lời modal; the ⚙ of "Lời cho bài
+này" stays at the page top. The page waits a first frame plus `KMotion.focusSettle` and for the sources rows to load (they sit above
+the translation block and move it), scrolls down until the lazily built section exists, `Scrollable.ensureVisible`s it and pulses it
+once (`SetupSectionPulse`; with animations off it only scrolls). On desktop the keyboard focus then moves to the block's first row. A
+newer reveal cancels an older one still running. A rebuild of the same
 location never scrolls again.
 
 `LyricsChoiceRow<T>` is one value row plus its picker (anchored on desktop, a caption as the picker header, "Mặc định" as the
@@ -489,7 +492,9 @@ subtitle of the default option); a choice is written at once through the setting
 | | Tự tìm lời khi bài không có lời | switch (`KSwitchRow`); with no source on it adds the line "Chưa có nguồn lời nào đang bật · bật một nguồn ở dưới" | `lyrics.auto_search` |
 | | Tự lưu lời tìm được thành .lrc | coming soon | none |
 | Nguồn lời trực tuyến | one row per lyrics plugin (drag handle, plugin icon, name, "Plugin · bản n" / "Cài từ tệp" / "Cài từ đường dẫn" + " · chỉ tìm khi bạn bấm" when off, switch; red problem line that opens the plugin page); last row "Thêm nguồn lời trực tuyến" opens the store at `?kind=lyrics` | reorder + switch, applied at once | `lyrics.online_sources` |
-| Dịch lời | dịch vụ, ngôn ngữ, dịch trước, thêm dịch vụ | coming soon | none |
+| Dịch lời (`lyrics_translation_section.dart`, rows in `lyrics_translation_rows.dart`) | Dịch vụ dịch mặc định: value line = plugin icon 16 + name, "Chưa chọn" when none is chosen or the chosen plugin is gone (with no translate plugin installed the row is dimmed, `enabled: false`, and does not open); a problem of the chosen plugin is one red sentence under it (`pluginsPageBrokenTitle`, `lyricsSettingsTrServiceNeedsConfig` "Cần cấu hình: <ô>", `pluginsPausedTitle` with the minutes left); a read error of the list shows no value and does not open; the picker shows the caption "Lời, tên bài và nghệ sĩ được gửi tới plugin khi dịch.", icon rows, "AI" subtitle for `ai-translate`. Ngôn ngữ dịch mặc định: text rows, "Theo ngôn ngữ ứng dụng (<tên>)" first (stored as no value), then every `translationLanguageCodes` entry. Cỡ chữ bản dịch: `LyricsChoiceRow`, Nhỏ / Vừa (Mặc định) / Lớn | pickers, applied at once | `lyrics.translation.service`, `lyrics.translation.target`, `lyrics.translation.size` |
+| | Dịch trước + `ProBadge` (`ProTitle`, a `Wrap`, shared with Lời nổi so 200 % text never overflows) | inert coming soon on every edition | none |
+| | Thêm dịch vụ dịch → `/settings/plugins?kind=translate` | `SetupAddRow` | none |
 | Nơi hiện lời | Lời nổi trên màn hình + Pro (desktop shell); Lời trên màn khoá và thông báo (mobile shell) | coming soon | none |
 | Tạo lời từ âm thanh | Thêm plugin chuyển giọng nói (section ⓘ) | coming soon | none |
 

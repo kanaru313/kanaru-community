@@ -3319,10 +3319,28 @@
   "lyricsSettingsTrService": "Dịch vụ dịch mặc định",
   "lyricsSettingsTrServiceNone": "Chưa chọn",
   "lyricsSettingsTrTarget": "Ngôn ngữ dịch mặc định",
-  "lyricsSettingsTrTargetApp": "Theo ngôn ngữ ứng dụng",
   "lyricsSettingsTrAhead": "Dịch trước",
   "lyricsSettingsTrAheadNow": "Chỉ bài đang phát",
   "lyricsSettingsAddTrService": "Thêm dịch vụ dịch",
+  "lyricsSettingsTrTargetAppNamed": "Theo ngôn ngữ ứng dụng ({name})",
+  "@lyricsSettingsTrTargetAppNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSettingsTrTargetCaption": "Dùng cho những bài chưa chọn ngôn ngữ riêng.",
+  "lyricsSettingsTrSize": "Cỡ chữ bản dịch",
+  "lyricsSettingsTrSizeCaption": "Dòng dịch dưới lời, hoặc dòng lời gốc nhỏ khi Thay dòng. Áp cho màn lời, tab Lời bài và thẻ lời.",
+  "lyricsSettingsTrServiceNeedsConfig": "Cần cấu hình: {fields}",
+  "@lyricsSettingsTrServiceNeedsConfig": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
   "lyricsSettingsAddSpeech": "Thêm plugin chuyển giọng nói",
   "lyricsSearchingTitle": "Đang tìm lời…",
   "lyricsSearchingMessage": "{count, plural, other{Bài này chưa có lời trong máy · đang tìm ở {count} nguồn đang bật.}}",
@@ -5231,6 +5249,11 @@
   "pluginsPageSourceCode": "Mã nguồn",
   "pluginsPageUseLyrics": "Tự tìm lời",
   "pluginsPageUseTranslate": "Dịch vụ dịch mặc định",
+  "pluginsPageUseTranslateAt": "Đổi ở Cài đặt › Lời bài › Dịch lời",
+  "pluginsPageUseTranslateHint": "Bài chưa chọn dịch vụ riêng dùng dịch vụ mặc định.",
+  "pluginsPageUseTranslateIs": "Mặc định",
+  "pluginsPageUseTranslateSet": "Đặt làm mặc định",
+  "pluginsRemoveKeepTranslations": "Bản dịch đã lưu, cho đến khi bạn chọn Xoá các bản dịch đã lưu",
   "pluginsPageConnection": "Kết nối",
   "pluginsPageData": "Dữ liệu",
   "pluginsPageOwnStorage": "Bộ nhớ riêng của plugin",

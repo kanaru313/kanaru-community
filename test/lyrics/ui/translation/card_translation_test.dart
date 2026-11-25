@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/lyrics/domain/lyrics_status.dart';
+import 'package:kanaru/src/lyrics/domain/translation/translation_size.dart';
+import 'package:kanaru/src/lyrics/state/translation/translation_settings.dart';
+
 import 'package:kanaru/src/lyrics/state/translation/translation_view.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_card.dart';
 import 'package:kanaru/src/lyrics/ui/translation/translation_placeholder.dart';
@@ -16,6 +19,7 @@ void main() {
     int line = 3,
     bool plain = false,
     String target = 'vi',
+    TranslationSize size = TranslationSize.medium,
   }) async {
     final host = LyricsUiHost(
       lyrics: LyricsShown(plain ? plainLyrics(5) : syncedLyrics(10)),
@@ -23,6 +27,7 @@ void main() {
       extra: translationOverrides(target: target),
     );
     if (on) await turnTranslationOn(host.container);
+    await host.container.read(translationSizeProvider.notifier).set(size);
     host.container.read(viewBox.notifier).set(view ?? TranslationView.idle);
     await host.pump(
       tester,
@@ -99,4 +104,19 @@ void main() {
     expect(find.text('Bản 0'), findsNothing);
     expect(find.text('Plain 0'), findsOneWidget);
   });
+
+  // The line height is the medium 18 / 13 at every size.
+  for (final (size, px, lineHeight) in [
+    (TranslationSize.small, 11.0, 15.230769),
+    (TranslationSize.medium, 13.0, 18.0),
+    (TranslationSize.large, 15.0, 20.769231),
+  ]) {
+    testWidgets('size ${size.name}: the card translation is $px with a '
+        '$lineHeight line', (tester) async {
+      await open(tester, view: readyView(map), size: size);
+      final style = tester.widget<Text>(find.text('Dòng 3')).style!;
+      expect(style.fontSize, px);
+      expect(style.height! * style.fontSize!, closeTo(lineHeight, 1e-5));
+    });
+  }
 }
