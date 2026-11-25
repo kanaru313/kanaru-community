@@ -87,12 +87,13 @@ void main() {
     await h.want(_want(1));
     expect(h.views.last.entryId, 1);
     expect(h.views.last.levels, isNull);
+    expect(h.views.last.status, WaveformStatus.computing);
     await h.finish(1, _ready(5));
     final view = h.views.last;
     expect(view.entryId, 1);
     expect(view.levels, [5, 6, 7]);
     expect(view.durationMs, 3000);
-    expect(view.instant, isFalse);
+    expect(view.status, WaveformStatus.ready);
     await h.close();
   });
 
@@ -102,7 +103,7 @@ void main() {
     h.watch();
     await h.want(_want(1));
     expect(h.views.last.levels, [9, 10, 11]);
-    expect(h.views.last.instant, isTrue);
+    expect(h.views.last.status, WaveformStatus.ready);
     expect(h.repo.loads, isEmpty);
     await h.close();
   });
@@ -114,7 +115,7 @@ void main() {
     await h.finish(2, _ready(2));
     await h.want(_want(2, 3));
     expect(h.views.last.entryId, 2);
-    expect(h.views.last.instant, isTrue);
+    expect(h.views.last.status, WaveformStatus.ready);
     expect(h.views.last.levels, [2, 3, 4]);
     await h.close();
   });
@@ -194,6 +195,7 @@ void main() {
     await h.want(_want(1, 2));
     await h.finish(1, const NoWaveform());
     expect(h.views.last.levels, isNull);
+    expect(h.views.last.status, WaveformStatus.none);
     await h.finish(2, _ready(2));
     await h.want(_want(2, 1));
     expect(h.repo.started.where((p) => p.endsWith('/1.flac')).length, 1);
@@ -206,6 +208,7 @@ void main() {
     await h.want(_want(1, 2));
     expect(h.views.last.entryId, 1);
     expect(h.views.last.levels, isNull);
+    expect(h.views.last.status, WaveformStatus.none);
     expect(h.repo.started, [_path(const TrackId(2))]);
     await h.close();
   });
@@ -224,7 +227,7 @@ void main() {
     // 3 is still in memory.
     await h.want(_want(3));
     expect(h.repo.started.where((p) => p.endsWith('/3.flac')).length, 1);
-    expect(h.views.last.instant, isTrue);
+    expect(h.views.last.status, WaveformStatus.ready);
     await h.close();
   });
 
@@ -241,6 +244,7 @@ void main() {
     await _settle();
     expect(views.last.entryId, 1);
     expect(views.last.levels, isNull);
+    expect(views.last.status, WaveformStatus.none);
     expect(h.repo.started, [_path(const TrackId(2))]);
     await sub.cancel();
   });
@@ -263,6 +267,129 @@ void main() {
     await h.want(_want(1));
     await h.want(WaveformWant.none);
     expect(h.views.last.entryId, isNull);
+    expect(h.views.last.status, WaveformStatus.none);
     await h.close();
   });
+
+  test('a non-local current entry is none with zero loads', () async {
+    final h = _Harness()..hasFile = (_) => false;
+    h.watch();
+    await h.want(_want(1));
+    expect(h.views.last.status, WaveformStatus.none);
+    expect(h.repo.loads, isEmpty);
+    await h.close();
+  });
+
+  test('a temporary failure of the current entry shows none', () async {
+    final h = _Harness()..watch();
+    await h.want(_want(1));
+    expect(h.views.last.status, WaveformStatus.computing);
+    await h.finish(1, const RetryLater());
+    expect(h.views.last.entryId, 1);
+    expect(h.views.last.status, WaveformStatus.none);
+    expect(h.views.last.levels, isNull);
+    await h.close();
+  });
+
+  test('a next entry that timed out is none at once when current', () async {
+    final h = _Harness()..watch();
+    await h.want(_want(1, 2));
+    await h.finish(1, _ready(1));
+    await h.finish(2, const RetryLater());
+    final loads = h.repo.loads.length;
+    await h.want(_want(2, 3));
+    expect(h.views.last.entryId, 2);
+    expect(h.views.last.status, WaveformStatus.none);
+    expect(h.repo.started.where((p) => p.endsWith('/2.flac')).length, 1);
+    expect(h.repo.loads.length, loads + 1); // only the new next entry (3)
+    await h.close();
+  });
+
+  test('back to an entry that failed is none with no new load', () async {
+    final h = _Harness()..watch();
+    await h.want(_want(1));
+    await h.finish(1, const RetryLater());
+    await h.want(_want(2));
+    await h.finish(2, _ready(2));
+    final loads = h.repo.loads.length;
+    await h.want(_want(1));
+    expect(h.views.last.entryId, 1);
+    expect(h.views.last.status, WaveformStatus.none);
+    expect(h.repo.loads.length, loads);
+    await h.close();
+  });
+
+  test('a job cancelled because the queue moved is not a failure', () async {
+    final h = _Harness()..watch();
+    await h.want(_want(1));
+    await h.want(_want(2));
+    expect(h.repo.loadOf(_path(const TrackId(1))).cancelled, isTrue);
+    // Nothing said "none" for entry 1 after the cancel.
+    expect(h.views.where((v) => v.entryId == 1).map((v) => v.status), [
+      WaveformStatus.computing,
+    ]);
+    await h.finish(2, _ready(2));
+    await h.want(_want(1));
+    expect(h.views.last.status, WaveformStatus.computing);
+    expect(h.repo.started.where((p) => p.endsWith('/1.flac')).length, 2);
+    await h.close();
+  });
+
+  test('a new session tries a failed entry again', () async {
+    final h = _Harness()..watch();
+    await h.want(_want(1));
+    await h.finish(1, const RetryLater());
+    await h.close();
+    final again = WaveformLoader(
+      repository: h.repo,
+      pathOf: (id) async => _path(id),
+    );
+    final wants = StreamController<WaveformWant>();
+    final views = <WaveformView>[];
+    final sub = again.watch(wants.stream).listen(views.add);
+    wants.add(_want(1));
+    await _settle();
+    expect(views.last.status, WaveformStatus.computing);
+    expect(h.repo.started.where((p) => p.endsWith('/1.flac')).length, 2);
+    await sub.cancel();
+    await wants.close();
+  });
+
+  test(
+    'a prefetch that fails while the entry change is decided is none',
+    () async {
+      final h = _Harness()..watch();
+      await h.want(_want(1, 2));
+      await h.finish(1, _ready(1));
+      // Same turn: the queue moves to 2 and the prefetch of 2 times out.
+      h.wants.add(_want(2, 3));
+      h.repo.loadOf(_path(const TrackId(2))).finish(const RetryLater());
+      await _settle();
+      expect(h.views.last.entryId, 2);
+      expect(h.views.last.status, WaveformStatus.none);
+      expect(h.repo.started.where((p) => p.endsWith('/2.flac')).length, 1);
+      await h.close();
+    },
+  );
+
+  test(
+    'a result that lands while the entry change is decided is kept',
+    () async {
+      final h = _Harness()..watch();
+      await h.want(_want(1, 2));
+      await h.finish(1, _ready(1));
+      // The disk lookup for entry 2 is held open while its job finishes.
+      final gate = h.repo.peekGate = Completer<void>();
+      h.wants.add(_want(2, 3));
+      await _settle();
+      h.repo.loadOf(_path(const TrackId(2))).finish(_ready(2));
+      await _settle();
+      gate.complete();
+      await _settle();
+      expect(h.views.last.entryId, 2);
+      expect(h.views.last.status, WaveformStatus.ready);
+      expect(h.views.last.levels, [2, 3, 4]);
+      await h.close();
+    },
+  );
 }

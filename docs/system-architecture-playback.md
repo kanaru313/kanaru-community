@@ -900,8 +900,8 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
 - `MobileNowPlaying` (`ui/mobile/`): header (56, 72 from 200 % text; `[⌄]` left, `[ring slot][⋮]` right, the title block
   centred on the full width; the ring slot is always reserved so the title never moves) with a drag-to-close area covering all of
   the space between the side slots (release past 120 dp closes, less
-  springs back; the ring shows while a sleep timer runs), cover, title row, `NowPlayingSeekSlot` (48 dp; flat bar for now), controls, button row, lyrics
-  card (`LyricsCard`, a button that opens the lyrics screen through `NowPlayingPage`), info card. It sits on `CoverTintBackground` fed by `playingCoverColorsProvider`; the seed of the playing cover also themes the app (see "Playing cover and app theme").
+  springs back; the ring shows while a sleep timer runs), cover, title row (always two lines: an empty artist line keeps its height), `NowPlayingSeekSlot`, controls, button row, lyrics
+  card (`LyricsCard`, a button that opens the lyrics screen through `NowPlayingPage`), info card (`TrackInfoCard`: always two one-line rows, ellipsized; `KSkeletonLine`s while the info loads; two empty lines of the same height when the track row is gone or the read failed). Every block has a height fixed per text scale, so nothing moves between songs. It sits on `CoverTintBackground` fed by `playingCoverColorsProvider`; the seed of the playing cover also themes the app (see "Playing cover and app theme").
   It owns a `FlightSource` (cover, text, play, next pieces) for the queue flights.
 - **Lyrics screen** (`ui/mobile/lyrics_screen_route.dart`, `lyrics_screen.dart`, `lyrics_screen_header.dart`): an opaque full-screen
   `ModalRoute` on the root navigator that slides up (`KMotion.pageIn`, none under reduced motion) over `/now-playing`, on the cover tint.
@@ -986,14 +986,14 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
   transport row 52; the text reserve counts two title lines (26 bold), an artist line and an album line under the text scale. The
   reserve is fixed, so a wrapping title or a late album moves nothing; a window too short even for 96 scales the block down
   (`FittedBox`). `DesktopTrackColumn` draws cover (radius 32, shadow), title, artist and album lines (each a link to the library),
-  the 48 dp seek slot, and elapsed | previous, play, next | total.
+  the 56 dp seek slot, and elapsed | previous, play, next | total.
 - **Side pane** (`desktop_side_pane.dart`): only the lyrics, titled like one tab with no other tab; the body is `LyricsBody(surface: tab,
   coverColumnShown: coverColumnShownProvider)`: sizes 28 / 40 with the cover column, 36 / 12 % without, 22 / 24 below a 900 dp pane. The queue is not here: it is the shell's right panel (see UI: widgets and shell). The player bar's Lyrics, cover and
   expand buttons open the screen.
 - **Queue nav item**: a dimmed "Coming soon" on both shells (saved queues, no mockup yet). The live queue is the right panel (desktop;
   top bar or player bar button) and the sheet (mobile; mini player long press, Queue button of Now Playing).
 - **Left out of the port**: the cover-only mode, the narrow tabs layout (it is the mobile page).
-- **Waveform**: `NowPlayingSeekSlot` holds `PlaybackWaveformSeekBar` in the same 48 dp slot (see Waveform).
+- **Waveform**: `NowPlayingSeekSlot` holds `PlaybackWaveformSeekBar` in a 56 dp slot (`nowPlayingSeekSlotHeight = seekBandHeight`), the same on the mobile page, the desktop track column and the lyrics screen footer (see Waveform).
 
 ## Waveform
 
@@ -1035,22 +1035,83 @@ recently used down to 18 000. The sweep also deletes `.kwf.tmp*` files older tha
 - Only the error kind is logged; paths are personal data.
 
 **Loader** (`playback/state/waveform_{loader,providers}.dart`). `waveformProvider` is an auto-dispose `StreamProvider<WaveformView>`
-(`entryId`, `levels?`, `durationMs`, `instant`) fed by the queue view: the current entry, then the next in play order (none under
+(`entryId`, `status`, `levels?`, `durationMs`) fed by the queue view: the current entry, then the next in play order (none under
 repeat one; the first entry under repeat all). It runs jobs **only while a seek bar watches it**: with Now Playing closed nothing is
 decoded. One native job at a time, current first, then next; a job for an entry that is neither is cancelled, and every job when
 the last watcher goes (Riverpod disposes an unwatched provider after the frame, so a same-frame remount keeps the job). An 8-entry
-memory LRU (by cache key, so a changed file misses) survives the views. `instant` is decided at the entry change: levels in the memory or on disk show at once,
-levels that arrive from a decode fade in. A retry waits for a new entry or a new view; an entry dropped because the queue moved on
-may be tried again.
+memory LRU (by cache key, so a changed file misses) survives the views. `status` (`WaveformStatus`: `computing`, `ready`, `none`; `levels` non-null iff `ready`) is decided at the entry change: levels in the memory or on disk are `ready`; no entry, no local file (`pathOf` null), a cached negative or a failure earlier in this session are `none` (no job); nothing known is `computing`. A finished job emits `ready` or `none` for the current entry. A `RetryLater` that this session did not cause (timeout, busy disk) puts the entry in a session set of failed entries: it shows `none` (also when it was only the prefetched next entry and becomes current later) and is not started again until a new session (a new view). That set is the one for display and for "do not start again". A job cancelled because the queue moved on is no failure: nothing is emitted and the entry may be tried again.
 
 **Display** (`packages/kanaru_ui/lib/src/widgets/media/`). `KWaveformSeekBar` has the input of `KSeekBar` (`KSeekGestureArea`: tap,
-drag, left/right 5 s, slider semantics; options `seekOnTap` and `anyDirection` (a pan with the device touch slop) for the mini player band, `KSeekState.dragging` / `focused`; a cancelled touch never seeks) at 48 dp. Mirrored rounded bars 3 dp wide, 2 dp apart, 2 to 32 dp tall, centred; played
-bars `primary` at 85 %, the rest at 35 %; an upright 4 x 36 dp thumb with 6 dp cleared on each side. `waveform_bars.dart` (pure):
-bars map time, not index (mean of the levels inside the bar's share of the duration; a shorter waveform leaves minimal bars; a
-longer one is cut), after a contrast stretch (the quietest tenth to 0, the loudest percent to full; a steady tone stays full;
-silence stays flat). The two colours are recorded once as pictures; a position tick only moves two clips and the thumb. Flat
-`KFlatSeekTrack` while there are no levels or no duration; the bars fade in over 200 ms (none with `instant` or reduced motion).
-`PlaybackWaveformSeekBar` draws the levels of the playing entry only, never the previous track's.
+drag, left/right 5 s, slider semantics; options `seekOnTap`, `anyDirection` (a pan with the device touch slop) and `horizontalInset` for the
+mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancelled touch never seeks). It is a 56 dp band (`seekBandHeight`, `ClipRect` +
+`RepaintBoundary`, effects never change layout); the bars use the 32 dp in the middle, 3 to 32 dp tall, 3 dp wide, 2 dp apart, with no thumb.
+- **Time axis.** `seekInset` = 6 dp at each side. Bars are counted over the inner width and centred in it
+  (`off = 6 + (iw - (n * pitch - gap)) / 2`). Input, bars and the fallback share one map: a tap at x seeks to `(x - 6) / (w - 12)`, bar j
+  stands for the fractions `(off + j * pitch - 6) / (w - 12)` to `(off + (j + 1) * pitch - 6) / (w - 12)` (the last window ends at the
+  duration), the played edge is at `6 + progress * (w - 12)`. No duration: not seekable, progress 0, the bars use `levelsDuration`.
+- **Look.** Played bars `primary` at 85 % clipped to `[0, x)`, the rest at 35 % clipped to `[x, w)` (x on a device pixel). Keyboard focus
+  only draws a 1.5 px `onSurface` 70 % line at the position (`KSeekState.keyboardFocus`: focused, `FocusManager.highlightMode ==
+  traditional`, no drag, and no pointer on the bar since the keyboard last brought focus or pressed a key). A mouse click or a touch
+  focuses the bar but draws none, also on desktop where a mouse leaves the highlight mode on keyboard, and also when focus comes back
+  without a key (a menu, dialog or page opened and closed by mouse); Tab, Shift+Tab, Esc closing a dialog, or a key after a click, draws
+  it. Focus state lives in `SeekFocusTracker` (`seek_focus_tracker.dart`). `waveform_bars.dart` (pure): bars map time, not index (mean of the levels inside the bar's window; a shorter waveform
+  leaves minimal bars; a longer one is cut), after a contrast stretch (the quietest tenth to 0, the loudest percent to full; a steady tone
+  stays full; silence stays flat). Steady state draws two recorded pictures (a position tick only moves two clips, nothing is recorded);
+  during a transition the rounded rectangles are drawn directly (about 70 per layer at 364 px).
+- **States** (`waveform_phase.dart`, pure `WaveformPhase`, one clock fed by one ticker that runs only while a gate or transition is pending;
+  no wall clock; `TickerMode` off means no frames). `KWaveformStatus` (`unknown`, `computing`, `ready`, `none`) mirrors the app's status;
+  `PlaybackWaveformSeekBar` passes `unknown` while the provider loads or its view belongs to another entry, `none` in the flat style.
+  Kinds: `unknown` and `dots` (the dotted row: bars at 3 dp, no animation), `growing` (600 ms `easeInOutQuart`, in place), `shown`,
+  `collapsing`, `fallback` (200 ms cross-fade; every fallback, custom or the default `KFlatSeekTrack`, sits
+  inside a 6 dp horizontal padding and gets the state of that inner width, so its box is `state.width` wide; the flat track keeps its own
+  4 x 16 dp thumb under the finger). The drawing of one frame (heights per kind, steady pictures, dotted row) is `WaveformBandFrames` (`waveform_band.dart`).
+  - The first decision after mount is applied at once (ready: `shown`, none: `fallback`, computing: `dots`), even when it comes after an async
+    gap: opening Now Playing on a cached track never animates. The first track after none is not a change.
+  - A track change snapshots the drawn heights and collapses them to 3 dp over 600 ms (also when the duration goes to zero); the new bars grow
+    once ready but no earlier than 800 ms after the change, cached or not. A change during a collapse restarts both.
+  - computing to ready: grow in place (not before the gate). none: the dots fade into the fallback; from the fallback, computing fades back to
+    dots and ready fades it out while growing. Reduced motion: every transition instant, no gate.
+  - Table (state / event, covered cell by cell by `waveform_phase_test.dart`): `unknown` mount: computing dots, ready shown, none fallback, all instant;
+    `unknown` after a change and `dots`: ready waits for the gate then grows, none fades to the fallback; `growing` / `shown`: ready keeps,
+    none fades from the current height, change collapses from the current heights; `collapsing`: statuses are held, grows after the collapse
+    and the gate, none fades during the rest of the collapse; `fallback`: computing fades back to dots, ready grows once the gate passed,
+    change fades back to dots and restarts the gate.
+- **Time bubble, hold, drag-up cancel** (opt-in; the mini band and the player bar use none of them). `KWaveformSeekBar(bubbleLabel:,
+  cancelLabel:)` turns on `KSeekGestureArea(holdDelay: seekHoldDelay (150 ms), cancelUpDistance: seekCancelUpDistance (48))`.
+  - Hold: `SeekHoldTracker` (`seek_hold_tracker.dart`), fed by the area's `Listener`, so it joins no gesture arena: a timer from pointer
+    down (primary button or touch, first pointer only) marks `KSeekState.holding` when the pointer has not moved past the touch slop. A
+    release is still the tap (one seek), a horizontal move still the drag (the hold turns into it), a vertical move still goes to an
+    ancestor (lyrics footer pull, Now Playing scroll): the drag recognizer is then rejected and its `onCancel` ends the hold, nothing
+    seeks. With no vertical ancestor the drag recognizer wins by default (the tap gives up past the slop), so a straight-up move scrubs,
+    and more than 48 dp up shows the cancel text. A release that is a tap seeks only when the track is still the one under the pointer
+    at its down. The hold ends on up, pointer cancel, track change, losing the duration and dispose.
+  - Drag-up cancel: a drag whose pointer is more than 48 dp above its pointer-down y is `cancelling`: `progress` is the real position,
+    a release does not seek (`onSeekEnd` still once); back below it seeks again. Android / iOS give one `HapticFeedback.selectionClick`
+    per upward crossing. Only after the horizontal lock: before it, an up move belongs to the ancestor.
+  - `KSeekState.pointerFraction` is the fraction under the finger while holding or dragging (also while cancelling).
+  - `KSeekTimeBubble` (`k_seek_time_bubble.dart`): an `OverlayPortal` + `CompositedTransformFollower` above the band (outside its `ClipRect`
+    and layout, 6 dp gap, `seekBubbleGap`), centred on the finger and kept at least half its width and 32 dp from the ends; a 24 dp box
+    (padding 2 / 8, line 20) with radius 8 (`KRadius.xs`), `inverseSurface` with `bubbleLabel(time)` in 12 w700 tabular `onInverseSurface`
+    (no letter spacing), or `errorContainer` with `cancelLabel` while
+    cancelling. Excluded from semantics (the slider speaks the value).
+  - `PlaybackWaveformSeekBar` passes `formatClock` and `playbackSeekCancel` ("Thả để huỷ" / "Release to cancel").
+  - Scrub time: `KSeekGestureArea(onScrub:)` (passed through by `KWaveformSeekBar`; the logic is `SeekScrubReporter`,
+    `seek_scrub_reporter.dart`) reports the time under the pointer while holding or dragging and not cancelling, null when that ends
+    (cancel, release, pointer cancel, track change, unmount; the last two after the frame), only on change. `PlaybackWaveformSeekBar`
+    writes it to `playbackScrubProvider` (`playback/state/playback_scrub_provider.dart`, tagged with the position's entry id; readers
+    ignore another entry's) and speaks it as the slider value; `PlaybackTimeLabel(followScrub: true)` (elapsed on the mobile page,
+    desktop track column and lyrics footer) shows it instead of the position. The player bar and mini player labels keep the default
+    and never follow.
+  - Settling: a seek from the waveform bar (release, tap, keys) keeps its target in `playbackScrubProvider` until the published
+    position is within `seekLandedWindow` (1 s, the controller's landed window) of the target, the entry changes or
+    `seekSettleTimeoutProvider` (1 s; tests override it) passes, so the label and spoken value go
+    straight to it instead of showing the old position while the engine seeks. A new scrub replaces it; unmount clears it after the
+    frame. Cancels never seek, so they return to the real position at once.
+  - Recognizers are built by `seekRecognizers` (`seek_recognizers.dart`), `KSeekState` lives in `k_seek_state.dart` (exported with the
+    area).
+
+`PlaybackWaveformSeekBar` draws the levels of the playing entry only, never the previous track's, and passes `isPlayingProvider` as
+`playing` (unused by the bars).
 
 ## Rules lane B keeps
 

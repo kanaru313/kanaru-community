@@ -18,7 +18,10 @@ class NowPlayingControls extends StatelessWidget {
       children: [
         const SizedBox(
           width: KSpace.x9,
-          child: PlaybackTimeLabel(textAlign: TextAlign.start),
+          child: PlaybackTimeLabel(
+            textAlign: TextAlign.start,
+            followScrub: true,
+          ),
         ),
         Expanded(
           // Scales down on a narrow screen instead of overflowing.

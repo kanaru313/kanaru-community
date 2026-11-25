@@ -530,6 +530,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playbackSeek => 'Vị trí phát';
 
   @override
+  String get playbackSeekCancel => 'Thả để huỷ';
+
+  @override
   String playbackPositionValue(String position, String duration) {
     return '$position trên $duration';
   }

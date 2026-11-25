@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
+import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
 import 'package:kanaru/src/playback/ui/playback_time_label.dart';
 import 'package:kanaru/src/playback/ui/track_cover.dart';
@@ -10,6 +11,7 @@ import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_track_column.dart';
 import 'package:kanaru/src/screens/now_playing/ui/now_playing_seek_slot.dart';
 import 'package:kanaru/src/playback/state/now_playing_panel.dart';
+import 'package:kanaru_ui/kanaru_ui.dart' show KWaveformSeekBar;
 import 'package:material_ui/material_ui.dart';
 
 import '../../../shell/support/desktop_now_playing_host.dart';
@@ -61,6 +63,51 @@ Future<DesktopHost> _open(
 }
 
 void main() {
+  testWidgets('dragging the column bar shows the finger time as elapsed', (
+    tester,
+  ) async {
+    final host = await _open(tester);
+    await host.run(
+      tester,
+      () async => host.h.engine.emit(
+        EngineLoaded(host.h.loadedToken, const Duration(seconds: 240)),
+      ),
+    );
+    await host.letStreamsArrive(tester);
+    final column = find.byType(DesktopTrackColumn);
+    bool isElapsed(Widget w) => w is PlaybackTimeLabel && !w.total;
+    String text(Finder label) => tester
+        .widget<Text>(find.descendant(of: label, matching: find.byType(Text)))
+        .data!;
+    final inColumn = find.descendant(
+      of: column,
+      matching: find.byWidgetPredicate(isElapsed),
+    );
+    expect(text(inColumn), '0:00');
+
+    final bar = tester.getRect(
+      find.descendant(of: column, matching: find.byType(KWaveformSeekBar)),
+    );
+    final g = await tester.startGesture(
+      Offset(bar.left + 40, bar.center.dy),
+      kind: PointerDeviceKind.mouse,
+    );
+    await g.moveTo(
+      Offset(bar.left + 6 + (bar.width - 12) * 65.5 / 240, bar.center.dy),
+    );
+    await tester.pump();
+    expect(text(inColumn), '1:05');
+    await g.moveBy(const Offset(0, -60));
+    await tester.pump();
+    expect(text(inColumn), '0:00');
+    await tester.runAsync(() async {
+      await g.up();
+      await host.h.settle();
+    });
+    await tester.pump();
+    expect(text(inColumn), '0:00');
+  });
+
   testWidgets('the column holds cover, title, seek slot, transport and times', (
     tester,
   ) async {
@@ -169,6 +216,34 @@ void main() {
     expect(find.text('Alb'), findsOneWidget);
     expect(tester.getTopLeft(find.byType(NowPlayingSeekSlot)), seek);
   });
+
+  for (final scale in [1.0, 2.0]) {
+    testWidgets('the 56 seek band stays put without artist and album '
+        '(text ×$scale)', (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final host = await _open(tester, tagged: true);
+      final slot = find.byType(NowPlayingSeekSlot);
+      expect(tester.getSize(slot).height, 56);
+      final cover = tester.getTopLeft(find.byType(TrackCover));
+      final seek = tester.getTopLeft(slot);
+      final play = tester.getTopLeft(find.byType(PlayPauseButton));
+      await host.run(tester, () async {
+        await host.h.db.customUpdate(
+          "UPDATE tracks SET album = NULL, artist = NULL, "
+          "album_title_key = NULL, album_artist_key = NULL "
+          "WHERE title = 'T0'",
+          updates: {host.h.db.tracks},
+        );
+      });
+      await host.letStreamsArrive(tester);
+      expect(find.text('Art One'), findsNothing);
+      expect(tester.getTopLeft(find.byType(TrackCover)), cover);
+      expect(tester.getTopLeft(slot), seek);
+      expect(tester.getTopLeft(find.byType(PlayPauseButton)), play);
+      expect(tester.getSize(slot).height, 56);
+    });
+  }
 
   testWidgets('a short window scales the block down instead of overflowing', (
     tester,

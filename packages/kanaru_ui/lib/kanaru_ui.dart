@@ -53,6 +53,7 @@ export 'src/widgets/k_page.dart';
 export 'src/widgets/k_pill.dart' show KPill, KPillPlacement;
 export 'src/widgets/k_pressable.dart';
 export 'src/widgets/k_sheet.dart';
+export 'src/widgets/k_skeleton_line.dart';
 export 'src/widgets/k_modal_button.dart';
 export 'src/widgets/k_row_edges.dart';
 export 'src/widgets/k_ruler.dart' show KRuler;

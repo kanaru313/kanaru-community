@@ -14,7 +14,11 @@ import 'package:kanaru/src/lyrics/ui/lyrics_source_button.dart';
 import 'package:kanaru/src/lyrics/ui/translation/modal/translate_body.dart';
 import 'package:kanaru/src/lyrics/ui/translation/translate_button.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
+import 'package:kanaru/src/media/domain/track_info.dart';
+import 'package:kanaru/src/playback/domain/audio_engine.dart';
+import 'package:kanaru/src/playback/state/track_info_providers.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
+import 'package:kanaru/src/playback/ui/playback_time_label.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_card.dart';
 import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
@@ -59,6 +63,7 @@ Future<UiHost> _openScreen(
   WidgetTester tester, {
   TrackLyrics lyrics = const LyricsNone(),
   int line = 5,
+  List<Override> extra = const [],
 }) async {
   final overrides = <Override>[
     playingLyricsProvider.overrideWithValue(
@@ -69,6 +74,7 @@ Future<UiHost> _openScreen(
     // The modal of the translate button reads the translation of the song;
     // its engine is the app root's, not this host's.
     trackTranslationProvider.overrideWith2((id) => _IdleTranslation(id)),
+    ...extra,
   ];
   final host = await pumpWithPlayer(
     tester,
@@ -89,6 +95,47 @@ Future<UiHost> _openScreen(
   await _pumpFor(tester);
   await host.letStreamsArrive(tester);
   return host;
+}
+
+/// Loads a 240 s duration for the playing entry, so the seek bar seeks.
+Future<void> _loadDuration(WidgetTester tester, UiHost host) async {
+  await host.run(
+    tester,
+    () async => host.h.engine.emit(
+      EngineLoaded(host.h.loadedToken, const Duration(seconds: 240)),
+    ),
+  );
+  await host.letStreamsArrive(tester);
+}
+
+/// The elapsed time label in the lyrics screen's footer.
+String _elapsed(WidgetTester tester) => tester
+    .widget<Text>(
+      find.descendant(
+        of: find.descendant(
+          of: find.byType(LyricsScreen),
+          matching: find.byWidgetPredicate(
+            (w) => w is PlaybackTimeLabel && !w.total,
+          ),
+        ),
+        matching: find.byType(Text),
+      ),
+    )
+    .data!;
+
+Iterable<String> _seeks(UiHost host) =>
+    host.h.engine.commands.where((c) => c.startsWith('seek:'));
+
+/// Lets go in the real zone, so a seek reaches the engine before checking.
+/// Real time runs once more after the frames: a spring the release started
+/// in the real zone finishes there, before the test ends.
+Future<void> _release(WidgetTester tester, UiHost host, TestGesture g) async {
+  await tester.runAsync(() async {
+    await g.up();
+    await host.h.settle();
+  });
+  await _pumpFor(tester);
+  await host.letStreamsArrive(tester);
 }
 
 Future<void> _back(WidgetTester tester) async {
@@ -226,6 +273,46 @@ void main() {
     expect(find.byType(MobileNowPlaying), findsOneWidget);
   });
 
+  testWidgets('the footer keeps its 56 band and its place between songs', (
+    tester,
+  ) async {
+    var known = true;
+    final host = await _openScreen(
+      tester,
+      lyrics: LyricsShown(syncedLyrics(40)),
+      extra: [
+        trackInfoProvider.overrideWith(
+          (ref, id) => Stream.value(
+            known
+                ? TrackInfo(
+                    id: id,
+                    title: 'Song',
+                    status: TrackAvailability.present,
+                    relPath: 'song.flac',
+                    artist: 'Art',
+                    album: 'A' * 200,
+                  )
+                : null,
+          ),
+        ),
+      ],
+    );
+    Finder inScreen(Finder f) =>
+        find.descendant(of: find.byType(LyricsScreen), matching: f);
+    final slot = inScreen(find.byType(NowPlayingSeekSlot));
+    expect(tester.getSize(slot).height, 56);
+    final seek = tester.getTopLeft(slot);
+    final play = tester.getTopLeft(inScreen(find.byType(PlayPauseButton)));
+    // A song whose info is not known yet (no title, no artist).
+    known = false;
+    host.container.invalidate(trackInfoProvider);
+    await tester.pump();
+    await host.letStreamsArrive(tester);
+    expect(find.byType(LyricsScreen), findsOneWidget);
+    expect(tester.getTopLeft(slot), seek);
+    expect(tester.getTopLeft(inScreen(find.byType(PlayPauseButton))), play);
+  });
+
   testWidgets('a short pull on the footer springs back', (tester) async {
     await _openScreen(tester);
     await tester.drag(
@@ -234,6 +321,108 @@ void main() {
     );
     await _pumpFor(tester);
     expect(find.byType(LyricsScreen), findsOneWidget);
+  });
+
+  group('seek bar in the footer', () {
+    double shift(WidgetTester tester) =>
+        tester.getTopLeft(find.byType(Scaffold).last).dy;
+
+    testWidgets('drag right then up 60: no seek, the screen stays put', (
+      tester,
+    ) async {
+      final host = await _openScreen(tester);
+      await _loadDuration(tester, host);
+      final bar = tester.getRect(find.byType(KWaveformSeekBar).last);
+      final g = await tester.startGesture(Offset(bar.left + 40, bar.center.dy));
+      await g.moveBy(const Offset(80, 0));
+      await tester.pump();
+      await g.moveBy(const Offset(0, -30));
+      await g.moveBy(const Offset(0, -30));
+      await tester.pump();
+      expect(find.text('Release to cancel'), findsOneWidget);
+      expect(shift(tester), 0);
+      await _release(tester, host, g);
+      expect(_seeks(host), isEmpty);
+      expect(find.text('Release to cancel'), findsNothing);
+      expect(find.byType(LyricsScreen), findsOneWidget);
+      expect(shift(tester), 0);
+
+      // The same drag without going up seeks once.
+      final again = await tester.startGesture(
+        Offset(bar.left + 40, bar.center.dy),
+      );
+      await again.moveBy(const Offset(80, 0));
+      await tester.pump();
+      await _release(tester, host, again);
+      expect(_seeks(host), hasLength(1));
+    });
+
+    testWidgets('a drag shows the finger time as elapsed in the footer', (
+      tester,
+    ) async {
+      final host = await _openScreen(tester);
+      await _loadDuration(tester, host);
+      String shown() => _elapsed(tester);
+      expect(shown(), '0:00');
+      final bar = tester.getRect(find.byType(KWaveformSeekBar).last);
+      final g = await tester.startGesture(Offset(bar.left + 40, bar.center.dy));
+      await g.moveTo(
+        Offset(bar.left + 6 + (bar.width - 12) * 65.5 / 240, bar.center.dy),
+      );
+      await tester.pump();
+      expect(shown(), '1:05');
+      await g.moveBy(const Offset(0, -60));
+      await tester.pump();
+      expect(shown(), '0:00');
+      await _release(tester, host, g);
+      expect(_seeks(host), isEmpty);
+      expect(shown(), '0:00');
+    });
+
+    testWidgets('a hold then a pull down pulls the screen, no seek', (
+      tester,
+    ) async {
+      final host = await _openScreen(tester);
+      await _loadDuration(tester, host);
+      final bar = tester.getRect(find.byType(KWaveformSeekBar).last);
+      final g = await tester.startGesture(bar.center);
+      await tester.pump(const Duration(milliseconds: 200));
+      // The middle of a 240 s bar, as the elapsed time (and in the bubble).
+      expect(_elapsed(tester), '2:00');
+      await g.moveBy(const Offset(0, 20));
+      await g.moveBy(const Offset(0, 20));
+      await tester.pump();
+      expect(shift(tester), greaterThan(20));
+      expect(find.text('2:00'), findsNothing);
+      expect(_elapsed(tester), '0:00');
+      expect(find.text('Release to cancel'), findsNothing);
+      await _release(tester, host, g);
+      expect(_seeks(host), isEmpty);
+      expect(find.byType(LyricsScreen), findsOneWidget);
+      expect(shift(tester), closeTo(0, 0.01));
+    });
+
+    testWidgets('a hold then straight up: no seek, no cancel text', (
+      tester,
+    ) async {
+      final host = await _openScreen(tester);
+      await _loadDuration(tester, host);
+      final bar = tester.getRect(find.byType(KWaveformSeekBar).last);
+      final g = await tester.startGesture(bar.center);
+      await tester.pump(const Duration(milliseconds: 200));
+      // As the elapsed time (and in the bubble).
+      expect(_elapsed(tester), '2:00');
+      await g.moveBy(const Offset(0, -30));
+      await g.moveBy(const Offset(0, -30));
+      await tester.pump();
+      expect(find.text('2:00'), findsNothing);
+      expect(_elapsed(tester), '0:00');
+      expect(find.text('Release to cancel'), findsNothing);
+      await _release(tester, host, g);
+      expect(_seeks(host), isEmpty);
+      expect(find.byType(LyricsScreen), findsOneWidget);
+      expect(shift(tester), 0);
+    });
   });
 
   testWidgets('scrolling the lyrics never closes it', (tester) async {

@@ -1,8 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_gap.dart';
+import '../k_skeleton_line.dart';
 
 /// Text sizes and line heights of a media card, shared by the text column and
 /// the card's height maths ([KMediaCard.extentOf]).
@@ -90,24 +90,12 @@ class KMediaCardText extends StatelessWidget {
       );
     }
 
-    Widget bar(double size, double fraction) {
-      return SizedBox(
-        height: KMediaCardMetrics.line(scaler, size),
-        child: Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: FractionallySizedBox(
-            widthFactor: fraction,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: barColor ?? ink.withValues(alpha: 0.12),
-                borderRadius: KRadius.sm,
-              ),
-              child: SizedBox(height: scaler.scale(size) * 0.8),
-            ),
-          ),
-        ),
-      );
-    }
+    Widget bar(double size, double fraction) => KSkeletonLine(
+      fontSize: size,
+      widthFactor: fraction,
+      lineHeight: KMediaCardMetrics.lineHeight,
+      color: barColor ?? ink.withValues(alpha: 0.12),
+    );
 
     if (loading) {
       return Column(

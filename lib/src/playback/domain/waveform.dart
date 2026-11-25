@@ -33,29 +33,44 @@ final class RetryLater extends WaveformResult {
   const RetryLater();
 }
 
+/// Where the waveform of one queue entry stands.
+enum WaveformStatus {
+  /// A decode is pending or running; no answer yet.
+  computing,
+
+  /// The levels are known.
+  ready,
+
+  /// There are no levels and none are coming: nothing playing, no local file,
+  /// a file without a waveform, or a failed attempt in this session.
+  none,
+}
+
 /// What the Now Playing seek bar draws for one queue entry.
 class WaveformView {
   const WaveformView({
     required this.entryId,
+    required this.status,
     this.levels,
     this.durationMs = 0,
-    this.instant = false,
-  });
+  }) : assert(
+         (status == WaveformStatus.ready) == (levels != null),
+         'levels are set exactly when the status is ready',
+       );
 
   /// Nothing is playing.
-  static const none = WaveformView(entryId: null);
+  static const none = WaveformView(entryId: null, status: WaveformStatus.none);
 
-  /// The entry the levels belong to; a view of another entry is not drawn.
+  /// The entry the view belongs to; a view of another entry is not drawn.
   final int? entryId;
 
-  /// Null while loading or when the file has no waveform: the bar is flat.
+  final WaveformStatus status;
+
+  /// Non-null exactly when [status] is [WaveformStatus.ready].
   final Uint8List? levels;
 
   /// Length of audio the levels were measured on.
   final int durationMs;
-
-  /// The levels were known when the entry changed: show them without a fade.
-  final bool instant;
 }
 
 /// A waveform job running in the native library.

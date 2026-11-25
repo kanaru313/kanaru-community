@@ -968,6 +968,12 @@ abstract class AppLocalizations {
   /// **'Playback position'**
   String get playbackSeek;
 
+  /// No description provided for @playbackSeekCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to cancel'**
+  String get playbackSeekCancel;
+
   /// No description provided for @playbackPositionValue.
   ///
   /// In en, this message translates to:

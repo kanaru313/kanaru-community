@@ -1,12 +1,18 @@
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_card.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
+import 'package:kanaru/src/media/domain/track_info.dart';
+import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
+import 'package:kanaru/src/playback/state/track_info_providers.dart';
+import 'package:kanaru/src/playback/ui/flight_source.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
+import 'package:kanaru/src/playback/ui/playback_time_label.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/cover_swiper.dart';
@@ -51,6 +57,95 @@ Future<UiHost> _open(
   await host.letStreamsArrive(tester);
   return host;
 }
+
+/// Loads a 240 s duration for the playing entry, so the seek bar seeks.
+Future<void> _loadDuration(WidgetTester tester, UiHost host) async {
+  await host.run(
+    tester,
+    () async => host.h.engine.emit(
+      EngineLoaded(host.h.loadedToken, const Duration(seconds: 240)),
+    ),
+  );
+  await host.letStreamsArrive(tester);
+}
+
+/// The elapsed time label of the page.
+String _elapsed(WidgetTester tester) => tester
+    .widget<Text>(
+      find.descendant(
+        of: find.byWidgetPredicate((w) => w is PlaybackTimeLabel && !w.total),
+        matching: find.byType(Text),
+      ),
+    )
+    .data!;
+
+Iterable<String> _seeks(UiHost host) =>
+    host.h.engine.commands.where((c) => c.startsWith('seek:'));
+
+/// Lets go in the real zone, so a seek reaches the engine before checking.
+/// Real time runs once more after the frames, so what the release started in
+/// the real zone finishes before the test ends.
+Future<void> _release(WidgetTester tester, UiHost host, TestGesture g) async {
+  await tester.runAsync(() async {
+    await g.up();
+    await host.h.settle();
+  });
+  await tester.pumpAndSettle();
+  await host.letStreamsArrive(tester);
+}
+
+/// What the page shows for the playing track, whatever its id. [shape]
+/// can change mid-test; invalidate [trackInfoProvider] to show the new one.
+/// A null result is a track without info (its row is gone). [stream], when
+/// set, replaces the shape (a read still loading, or one that failed).
+class _SwitchableInfo {
+  TrackInfo? Function(TrackInfo base) shape = _full;
+  Stream<TrackInfo?> Function()? stream;
+
+  Override get override => trackInfoProvider.overrideWith(
+    (ref, id) =>
+        stream?.call() ??
+        Stream.value(
+          shape(
+            TrackInfo(
+              id: id,
+              title: 'Song',
+              status: TrackAvailability.present,
+              relPath: 'song.flac',
+            ),
+          ),
+        ),
+  );
+}
+
+final _longTitle = '${'A very long song title ' * 4}end';
+final _longArtist = '${'Artist ' * 20}end';
+
+/// A full tag set with a 200-character album.
+TrackInfo _full(TrackInfo b) => TrackInfo(
+  id: b.id,
+  title: _longTitle,
+  status: b.status,
+  relPath: b.relPath,
+  artist: _longArtist,
+  album: 'A' * 200,
+  format: 'FLAC',
+  sampleRate: 44100,
+  bitrate: 900,
+  playCount: 12,
+);
+
+/// Info without artist, album or format.
+TrackInfo _bare(TrackInfo b) => b;
+
+/// Only an artist.
+TrackInfo _artistOnly(TrackInfo b) => TrackInfo(
+  id: b.id,
+  title: b.title,
+  status: b.status,
+  relPath: b.relPath,
+  artist: 'Art',
+);
 
 String _location(UiHost host) =>
     host.router!.routerDelegate.currentConfiguration.last.matchedLocation;
@@ -116,6 +211,71 @@ void main() {
     final scroll = tester.state<ScrollableState>(find.byType(Scrollable).first);
     expect(scroll.position.pixels, 0);
     expect(find.byType(MobileNowPlaying), findsOneWidget);
+  });
+
+  group('seek bar on the page', () {
+    double scrolled(WidgetTester tester) => tester
+        .state<ScrollableState>(find.byType(Scrollable).first)
+        .position
+        .pixels;
+
+    testWidgets('drag right then up 60: no seek, the page stays put', (
+      tester,
+    ) async {
+      final host = await _open(tester);
+      await _loadDuration(tester, host);
+      final bar = tester.getRect(find.byType(KWaveformSeekBar));
+      final g = await tester.startGesture(Offset(bar.left + 40, bar.center.dy));
+      await g.moveBy(const Offset(80, 0));
+      await tester.pump();
+      await g.moveBy(const Offset(0, -30));
+      await g.moveBy(const Offset(0, -30));
+      await tester.pump();
+      expect(find.text('Release to cancel'), findsOneWidget);
+      expect(scrolled(tester), 0);
+      await _release(tester, host, g);
+      expect(_seeks(host), isEmpty);
+      expect(scrolled(tester), 0);
+      expect(find.byType(MobileNowPlaying), findsOneWidget);
+      expect(_location(host), '/now-playing');
+
+      // The same drag without going up seeks once.
+      final again = await tester.startGesture(
+        Offset(bar.left + 40, bar.center.dy),
+      );
+      await again.moveBy(const Offset(80, 0));
+      await tester.pump();
+      await _release(tester, host, again);
+      expect(_seeks(host), hasLength(1));
+    });
+
+    testWidgets('a hold then straight up scrolls the page, no seek', (
+      tester,
+    ) async {
+      final host = await _open(tester);
+      await _loadDuration(tester, host);
+      // Without room to scroll there is no vertical ancestor and the bar's
+      // own drag would take the move.
+      final page = tester.state<ScrollableState>(find.byType(Scrollable).first);
+      expect(page.position.maxScrollExtent, greaterThan(0));
+      final bar = tester.getRect(find.byType(KWaveformSeekBar));
+      final g = await tester.startGesture(bar.center);
+      await tester.pump(const Duration(milliseconds: 200));
+      // The middle of a 240 s bar, as the elapsed time (and in the bubble).
+      expect(_elapsed(tester), '2:00');
+      await g.moveBy(const Offset(0, -30));
+      await g.moveBy(const Offset(0, -30));
+      await tester.pump();
+      // The page has little to scroll at this size; any scroll shows that
+      // the drag went to it.
+      expect(scrolled(tester), greaterThan(0));
+      expect(find.text('2:00'), findsNothing);
+      expect(_elapsed(tester), '0:00');
+      expect(find.text('Release to cancel'), findsNothing);
+      await _release(tester, host, g);
+      expect(_seeks(host), isEmpty);
+      expect(find.byType(MobileNowPlaying), findsOneWidget);
+    });
   });
 
   testWidgets('the header shows position over the album, empty without one', (
@@ -209,7 +369,7 @@ void main() {
       );
       expect(cover.width, NowPlayingCoverBox.sideFor(width));
       expect(cover.height, cover.width);
-      expect(tester.getSize(find.byType(NowPlayingSeekSlot)).height, 48);
+      expect(tester.getSize(find.byType(NowPlayingSeekSlot)).height, 56);
       expect(
         tester.getSize(find.byType(NowPlayingButtonRow)).height,
         nowPlayingButtonRowHeight,
@@ -218,6 +378,191 @@ void main() {
       expect(tester.getSize(find.byType(NowPlayingHeader)).height, 56);
     });
   }
+
+  group('nothing moves between songs', () {
+    Map<String, Offset> positions(WidgetTester tester) {
+      Offset at(Finder f) => tester.getTopLeft(f.first);
+      return {
+        'cover': at(find.byType(CoverSwiper)),
+        'seek': at(find.byType(NowPlayingSeekSlot)),
+        'controls': at(find.byType(PlayPauseButton)),
+        'buttons': at(find.byType(NowPlayingButtonRow)),
+        'lyrics card': at(find.byType(LyricsCard)),
+        'info card': at(find.byType(TrackInfoCard)),
+        'info card end': tester.getBottomLeft(find.byType(TrackInfoCard)),
+      };
+    }
+
+    for (final scale in [1.0, 2.0]) {
+      testWidgets('tags, missing parts and unknown info at text ×$scale', (
+        tester,
+      ) async {
+        final info = _SwitchableInfo();
+        final host = await _open(
+          tester,
+          textScale: scale,
+          overrides: [info.override],
+        );
+        expect(tester.takeException(), isNull);
+        final full = positions(tester);
+        final album = find.descendant(
+          of: find.byType(TrackInfoCard),
+          matching: find.textContaining('A' * 200),
+        );
+        expect(album, findsOneWidget);
+        // Each is one ellipsized line, not a block wrapped and clipped.
+        for (final long in [
+          find.text(_longTitle),
+          find.text(_longArtist),
+          album,
+        ]) {
+          expect(
+            tester.renderObject<RenderParagraph>(long.first).didExceedMaxLines,
+            isTrue,
+          );
+        }
+        final cases = <String, TrackInfo? Function(TrackInfo)>{
+          'no info (track row gone)': (_) => null,
+          'no artist, album or format': _bare,
+          'artist only': _artistOnly,
+          'full tags again': _full,
+        };
+        for (final MapEntry(key: name, value: shape) in cases.entries) {
+          info.shape = shape;
+          host.container.invalidate(trackInfoProvider);
+          await tester.pump();
+          await host.letStreamsArrive(tester);
+          expect(tester.takeException(), isNull, reason: name);
+          // The new shape is on screen, not the first one.
+          expect(album, shape == _full ? findsOneWidget : findsNothing);
+          expect(positions(tester), full, reason: name);
+        }
+        expect(tester.getSize(find.byType(NowPlayingSeekSlot)).height, 56);
+      });
+    }
+  });
+
+  group('the info card skeleton', () {
+    final cases = <String, (Stream<TrackInfo?> Function(), bool)>{
+      // Never emits: the read is still running.
+      'while the info loads': (() => Stream<TrackInfo?>.multi((_) {}), true),
+      // An Error is not retried, so no retry timer outlives the test.
+      'when reading the info failed': (
+        () => Stream<TrackInfo?>.error(StateError('read failed')),
+        false,
+      ),
+      'when the track has no info': (() => Stream.value(null), false),
+    };
+    for (final MapEntry(key: name, value: (stream, skeleton))
+        in cases.entries) {
+      testWidgets('${skeleton ? 'shows' : 'does not show'} skeleton $name, '
+          'at the height of a loaded card', (tester) async {
+        final info = _SwitchableInfo()..stream = stream;
+        final host = await _open(tester, overrides: [info.override]);
+        final skeletons = find.descendant(
+          of: find.byType(TrackInfoCard),
+          matching: find.byType(KSkeletonLine),
+        );
+        expect(skeletons, skeleton ? findsNWidgets(2) : findsNothing);
+        final height = tester.getSize(find.byType(TrackInfoCard)).height;
+        expect(tester.takeException(), isNull);
+        info.stream = null;
+        host.container.invalidate(trackInfoProvider);
+        await tester.pump();
+        await host.letStreamsArrive(tester);
+        expect(skeletons, findsNothing);
+        expect(
+          find.descendant(
+            of: find.byType(TrackInfoCard),
+            matching: find.textContaining('A' * 200),
+          ),
+          findsOneWidget,
+        );
+        expect(tester.getSize(find.byType(TrackInfoCard)).height, height);
+      });
+    }
+  });
+
+  group('the queue flight text starts on the title', () {
+    Rect flightText(WidgetTester tester) => tester
+        .widget<MobileNowPlaying>(find.byType(MobileNowPlaying))
+        .flight
+        .rectOf(FlightPiece.text)!;
+
+    testWidgets('a song without an artist: the title line only', (
+      tester,
+    ) async {
+      final info = _SwitchableInfo()..shape = _bare;
+      await _open(tester, overrides: [info.override]);
+      final title = tester.getRect(find.text('Song'));
+      final rect = flightText(tester);
+      // The flying text centres the title alone in this rect, so its y at
+      // t = 0 is the page title's y.
+      expect(rect.top, closeTo(title.top, 0.5));
+      expect(rect.center.dy, closeTo(title.center.dy, 0.5));
+      expect(
+        rect.right,
+        lessThanOrEqualTo(tester.getTopLeft(find.byType(FavoriteButton)).dx),
+      );
+    });
+
+    testWidgets('a song with an artist: title and artist lines', (
+      tester,
+    ) async {
+      final info = _SwitchableInfo()..shape = _artistOnly;
+      await _open(tester, overrides: [info.override]);
+      final title = tester.getRect(find.text('Song'));
+      final artist = tester.getRect(
+        // The info card below shows it too.
+        find.text('Art').first,
+      );
+      final rect = flightText(tester);
+      expect(rect.top, closeTo(title.top, 0.5));
+      expect(rect.bottom, closeTo(artist.bottom, 0.5));
+    });
+  });
+
+  testWidgets('the heart hides while the queue flies the text, then shows', (
+    tester,
+  ) async {
+    await _open(tester);
+    double heartOpacity() => tester
+        .widget<Opacity>(
+          find
+              .ancestor(
+                of: find.descendant(
+                  of: find.byType(MobileNowPlaying),
+                  matching: find.byType(FavoriteButton),
+                ),
+                matching: find.byType(Opacity),
+              )
+              .first,
+        )
+        .opacity;
+    expect(heartOpacity(), 1);
+    final row = find.byType(NowPlayingButtonRow);
+    await tester.tap(
+      find.descendant(of: row, matching: find.byIcon(KIcons.queueMusic)),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(
+      tester
+          .widget<MobileNowPlaying>(find.byType(MobileNowPlaying))
+          .flight
+          .hidden
+          .value,
+      isTrue,
+    );
+    expect(heartOpacity(), 0);
+    await tester.binding.handlePopRoute();
+    // The sheet flies the pieces home, then its route is disposed.
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byType(MobileNowPlaying), findsOneWidget);
+    expect(heartOpacity(), 1);
+  });
 
   testWidgets('title is 22 bold with the heart on the right', (tester) async {
     await _open(tester);
@@ -453,5 +798,26 @@ void main() {
       await swipePrevious(tester, host);
       expect(host.h.c.queueState.current, 0);
     });
+  });
+
+  testWidgets('dragging the bar shows the finger time as elapsed, the '
+      'release the real one', (tester) async {
+    final host = await _open(tester);
+    await _loadDuration(tester, host);
+    String shown() => _elapsed(tester);
+    expect(shown(), '0:00');
+    final bar = tester.getRect(find.byType(KWaveformSeekBar));
+    final g = await tester.startGesture(Offset(bar.left + 40, bar.center.dy));
+    await g.moveTo(
+      Offset(bar.left + 6 + (bar.width - 12) * 65.5 / 240, bar.center.dy),
+    );
+    await tester.pump();
+    expect(shown(), '1:05');
+    await g.moveBy(const Offset(0, -60));
+    await tester.pump();
+    expect(shown(), '0:00');
+    await _release(tester, host, g);
+    expect(_seeks(host), isEmpty);
+    expect(shown(), '0:00');
   });
 }

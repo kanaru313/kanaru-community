@@ -1,43 +1,24 @@
-import 'package:flutter/gestures.dart';
-import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// What a seek bar draws from: where the thumb is and whether the pointer or
-/// keyboard is on the bar.
-class KSeekState {
-  const KSeekState({
-    required this.progress,
-    required this.width,
-    required this.active,
-    required this.seekable,
-    this.dragging = false,
-    this.focused = false,
-  });
+import 'k_seek_state.dart';
+import 'seek_drag_tracker.dart';
+import 'seek_focus_tracker.dart';
+import 'seek_hold_tracker.dart';
+import 'seek_recognizers.dart';
+import 'seek_scrub_reporter.dart';
 
-  /// 0..1; follows the finger while dragging, [KSeekGestureArea.position]
-  /// otherwise.
-  final double progress;
-  final double width;
-
-  /// Hovered, focused or being dragged.
-  final bool active;
-
-  /// There is a duration to seek in.
-  final bool seekable;
-
-  /// A drag is in progress (a subset of [active]).
-  final bool dragging;
-
-  /// Has keyboard focus (a subset of [active]).
-  final bool focused;
-}
+export 'k_seek_state.dart';
 
 /// The input of every seek bar (flat and waveform), without a look of its own.
 ///
 /// - Tap or drag seeks. While dragging the bar follows the finger and ignores
 ///   [position]; [onSeek] fires once, on release (and on tap), so the engine
 ///   is not flooded.
+/// - Opt-in: a finger resting [holdDelay] marks the bar as held (a time
+///   bubble shows), and a drag that goes [cancelUpDistance] above where the
+///   pointer went down is cancelled while it stays there.
 /// - Left/Right seek by [keyStep] while it has focus.
+/// - [onScrub] reports the time under the finger while it holds or drags.
 /// - The slider semantics (value, increase/decrease) are here too.
 class KSeekGestureArea extends StatefulWidget {
   const KSeekGestureArea({
@@ -55,6 +36,10 @@ class KSeekGestureArea extends StatefulWidget {
     this.keyStep = const Duration(seconds: 5),
     this.seekOnTap = true,
     this.anyDirection = false,
+    this.horizontalInset = 0,
+    this.cancelUpDistance,
+    this.holdDelay,
+    this.onScrub,
   });
 
   final Duration position;
@@ -63,7 +48,7 @@ class KSeekGestureArea extends StatefulWidget {
   final Duration? duration;
 
   /// Identity of the playing item: a drag that outlives it is dropped instead
-  /// of seeking the next one.
+  /// of seeking the next one, and a hold on it ends.
   final Object? track;
   final ValueChanged<Duration> onSeek;
   final VoidCallback? onSeekStart;
@@ -82,6 +67,29 @@ class KSeekGestureArea extends StatefulWidget {
   /// device settings, not twice that). False: only horizontal drags seek.
   final bool anyDirection;
 
+  /// Room kept at each side of the time axis: x = [horizontalInset] is the
+  /// start and `width - horizontalInset` the end, taps and drags outside clamp.
+  final double horizontalInset;
+
+  /// A drag whose pointer is more than this many dp above where it went down
+  /// is cancelling: the real position shows and a release does not seek;
+  /// back below, it seeks again. Mobile gives one haptic tick per upward
+  /// crossing. Null: off.
+  final double? cancelUpDistance;
+
+  /// A pointer resting this long without moving past the touch slop marks the
+  /// bar as held ([KSeekState.holding]). It joins no gesture arena: a release
+  /// is still a tap, a horizontal move still a drag, and a vertical move still
+  /// goes to an ancestor (the hold then ends). Null: off.
+  final Duration? holdDelay;
+
+  /// The time under the pointer while the bar is held or dragged and the
+  /// drag is not cancelling; null again when that ends (cancel, release,
+  /// pointer cancel, track change, unmount). Called only when the value
+  /// changes. A change found while building (track change, unmount) is
+  /// reported after the frame.
+  final ValueChanged<Duration?>? onScrub;
+
   /// Height of the hit area.
   final double height;
   final Widget Function(BuildContext context, KSeekState state) builder;
@@ -92,31 +100,60 @@ class KSeekGestureArea extends StatefulWidget {
 
 class _KSeekGestureAreaState extends State<KSeekGestureArea> {
   bool _hover = false;
-  bool _focus = false;
+  late final _focus = SeekFocusTracker(_changed);
+  late final _hold = SeekHoldTracker(_changed);
 
-  /// 0..1 while dragging; null otherwise.
-  double? _drag;
+  final _drag = SeekDragTracker();
 
-  /// [KSeekGestureArea.track] when the drag began.
-  Object? _draggedTrack;
-  bool _seeking = false;
+  /// [KSeekGestureArea.track] when the latest pointer went down: a tap seeks
+  /// only on that track (a hold may outlive it).
+  Object? _downTrack;
 
   /// The latest touch was cancelled by the system.
   bool _cancelled = false;
 
+  late final _scrub = SeekScrubReporter(
+    drag: _drag,
+    hold: _hold,
+    timeAt: (fraction) => _seekable ? _at(fraction) : null,
+    fractionOf: _fractionOf,
+    onScrub: () => widget.onScrub,
+    mounted: () => mounted,
+  );
+
   bool get _seekable => (widget.duration?.inMilliseconds ?? 0) > 0;
+
+  void _changed() {
+    if (!mounted) return;
+    setState(() {});
+    _scrub.report();
+  }
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    _hold.dispose();
+    _scrub.dispose();
+    super.dispose();
+  }
 
   @override
   void didUpdateWidget(KSeekGestureArea oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_drag != null && (widget.track != _draggedTrack || !_seekable)) {
-      _drag = null;
-      _draggedTrack = null;
+    final trackChanged = widget.track != oldWidget.track;
+    if (trackChanged || !_seekable) {
+      _hold.stop(notify: false);
+      _drag.drop();
     }
+    _scrub.reportAfterFrame();
   }
 
-  double _fractionOf(double dx, double width) =>
-      width <= 0 ? 0 : (dx / width).clamp(0.0, 1.0);
+  double _fractionOf(double dx, double width) {
+    final inner = width - 2 * widget.horizontalInset;
+    return inner <= 0
+        ? 0
+        : ((dx - widget.horizontalInset) / inner).clamp(0.0, 1.0);
+  }
 
   Duration _at(double fraction) => Duration(
     milliseconds: (widget.duration!.inMilliseconds * fraction).round(),
@@ -132,131 +169,112 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
   }
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
-    if (event is KeyUpEvent || !_seekable) return KeyEventResult.ignored;
-    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-      _seekBy(-widget.keyStep);
-      return KeyEventResult.handled;
-    }
-    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-      _seekBy(widget.keyStep);
-      return KeyEventResult.handled;
-    }
-    return KeyEventResult.ignored;
+    final direction = _focus.arrowKey(event);
+    if (direction == null || !_seekable) return KeyEventResult.ignored;
+    _seekBy(widget.keyStep * direction);
+    return KeyEventResult.handled;
   }
 
   void _endDrag({required bool commit}) {
-    final fraction = _drag;
-    final valid =
-        commit &&
-        fraction != null &&
-        _seekable &&
-        widget.track == _draggedTrack;
-    if (_drag != null || _draggedTrack != null) {
-      setState(() {
-        _drag = null;
-        _draggedTrack = null;
-      });
-    }
-    if (valid) widget.onSeek(_at(fraction));
-    if (_seeking) {
-      _seeking = false;
-      widget.onSeekEnd?.call();
-    }
+    _hold.stop();
+    final wasDragging = _drag.dragging;
+    final (:seekTo, :ended) = _drag.end(
+      commit: commit && _seekable,
+      track: widget.track,
+    );
+    if (wasDragging) setState(() {});
+    _scrub.report();
+    if (seekTo != null) widget.onSeek(_at(seekTo));
+    if (ended) widget.onSeekEnd?.call();
   }
 
-  void _dragStart(Offset local, double width) {
+  void _dragStart(DragStartDetails d, double width) {
     if (!_seekable) return;
-    _draggedTrack = widget.track;
-    _seeking = true;
+    _hold.stop(notify: false);
+    _drag.start(
+      fraction: _fractionOf(d.localPosition.dx, width),
+      track: widget.track,
+      originY: _hold.downGlobal?.dy ?? d.globalPosition.dy,
+      globalY: d.globalPosition.dy,
+      cancelUp: widget.cancelUpDistance,
+    );
     widget.onSeekStart?.call();
-    setState(() => _drag = _fractionOf(local.dx, width));
+    setState(() {});
+    _scrub.report();
   }
 
-  void _dragUpdate(Offset local, double width) {
-    if (_drag != null) setState(() => _drag = _fractionOf(local.dx, width));
-  }
-
-  void _wireDrag(
-    DragGestureRecognizer r,
-    double width,
-    DeviceGestureSettings? settings,
-  ) {
-    r
-      ..gestureSettings = settings
-      ..onStart = (d) {
-        _dragStart(d.localPosition, width);
-      }
-      ..onUpdate = (d) {
-        _dragUpdate(d.localPosition, width);
-      }
-      // A cancelled touch after the drag started still ends it in Flutter;
-      // [_cancelled] tells the two apart so a cancel never seeks.
-      ..onEnd = (_) {
-        _endDrag(commit: !_cancelled);
-      }
-      ..onCancel = () {
-        _endDrag(commit: false);
-      };
+  void _dragUpdate(DragUpdateDetails d, double width) {
+    if (!_drag.dragging) return;
+    _drag.update(
+      fraction: _fractionOf(d.localPosition.dx, width),
+      globalY: d.globalPosition.dy,
+    );
+    setState(() {});
+    _scrub.report();
   }
 
   Map<Type, GestureRecognizerFactory> _gestures(
     BuildContext context,
     double width,
   ) {
-    final settings = MediaQuery.maybeGestureSettingsOf(context);
-    return {
-      if (widget.seekOnTap && _seekable)
-        TapGestureRecognizer:
-            GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
-              TapGestureRecognizer.new,
-              (r) => r
-                ..gestureSettings = settings
-                ..onTapUp = (d) {
-                  Focus.of(context).requestFocus();
-                  widget.onSeekStart?.call();
-                  widget.onSeek(_at(_fractionOf(d.localPosition.dx, width)));
-                  widget.onSeekEnd?.call();
-                },
-            ),
-      // The handlers check [_seekable] themselves: a recognizer dropped
-      // mid-drag (the track changed and the duration went to zero) would
-      // never report the end of the drag, so the horizontal one is always
-      // attached. A pan claims any drag, so without a duration it is left
-      // out (the drag then belongs to an ancestor), unless one is running.
-      if (widget.anyDirection)
-        if (_seekable || _drag != null)
-          PanGestureRecognizer:
-              GestureRecognizerFactoryWithHandlers<PanGestureRecognizer>(
-                PanGestureRecognizer.new,
-                (r) => _wireDrag(
-                  r,
-                  width,
-                  // Pan slop is twice the touch slop: halve it so a drag
-                  // locks after the same distance as a horizontal one.
-                  DeviceGestureSettings(
-                    touchSlop: (settings?.touchSlop ?? kTouchSlop) / 2,
-                  ),
-                ),
-              ),
-      if (!widget.anyDirection)
-        HorizontalDragGestureRecognizer:
-            GestureRecognizerFactoryWithHandlers<
-              HorizontalDragGestureRecognizer
-            >(
-              HorizontalDragGestureRecognizer.new,
-              (r) => _wireDrag(r, width, settings),
-            ),
-    };
+    return seekRecognizers(
+      settings: MediaQuery.maybeGestureSettingsOf(context),
+      onTapUp: widget.seekOnTap && _seekable
+          ? (d) {
+              _focus.pointerFocuses();
+              Focus.of(context).requestFocus();
+              // The track changed under a held finger: not this one's time.
+              if (widget.track != _downTrack) return;
+              widget.onSeekStart?.call();
+              widget.onSeek(_at(_fractionOf(d.localPosition.dx, width)));
+              widget.onSeekEnd?.call();
+            }
+          : null,
+      anyDirection: widget.anyDirection,
+      // The handlers check [_seekable] themselves, so the one-direction
+      // recognizer stays while a track change drops a drag and its release
+      // still reports the end. A pan claims any drag, so without a duration
+      // it is left out (the drag then belongs to an ancestor) unless one is
+      // running. Known gap: a track change drops the drag (no longer
+      // `dragging`), so when the duration also goes to zero the pan of an
+      // any-direction band is removed mid-drag and the end is NOT reported.
+      pan: _seekable || _drag.dragging,
+      drag: SeekDragHandlers(
+        onStart: (d) => _dragStart(d, width),
+        onUpdate: (d) => _dragUpdate(d, width),
+        // A cancelled touch after the drag started still ends it in Flutter;
+        // [_cancelled] tells the two apart so a cancel never seeks.
+        onEnd: (_) => _endDrag(commit: !_cancelled),
+        // Also when another recognizer won the pointer: that ends a hold.
+        onCancel: () => _endDrag(commit: false),
+      ),
+    );
+  }
+
+  KSeekState _state(double width) {
+    final total = widget.duration?.inMilliseconds ?? 0;
+    final real = total > 0
+        ? (widget.position.inMilliseconds / total).clamp(0.0, 1.0)
+        : 0.0;
+    final drag = _drag.fraction;
+    final heldX = drag == null ? _hold.heldX : null;
+    final holding = heldX != null && _seekable;
+    return KSeekState(
+      progress: drag != null && !_drag.cancelling ? drag : real,
+      width: width,
+      active: _hover || _focus.focused || drag != null || holding,
+      seekable: _seekable,
+      dragging: drag != null,
+      focused: _focus.focused,
+      keyboardFocus: _focus.keyboardFocus(dragging: drag != null),
+      holding: holding,
+      cancelling: drag != null && _drag.cancelling,
+      pointerFraction: drag ?? (holding ? _fractionOf(heldX, width) : null),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final total = widget.duration?.inMilliseconds ?? 0;
-    final shown =
-        _drag ??
-        (total > 0
-            ? (widget.position.inMilliseconds / total).clamp(0.0, 1.0)
-            : 0.0);
     return Semantics(
       slider: true,
       enabled: _seekable,
@@ -274,7 +292,7 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
           : null,
       child: Focus(
         onKeyEvent: _onKey,
-        onFocusChange: (v) => setState(() => _focus = v),
+        onFocusChange: _focus.focusChanged,
         child: MouseRegion(
           onEnter: (_) => setState(() => _hover = true),
           onExit: (_) => setState(() => _hover = false),
@@ -282,25 +300,31 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
           child: LayoutBuilder(
             builder: (context, box) {
               final width = box.maxWidth;
+              // Layout-time write, read only by pointer and timer callbacks.
+              _scrub.width = width;
               return Listener(
-                onPointerDown: (_) => _cancelled = false,
-                onPointerCancel: (_) => _cancelled = true,
+                onPointerDown: (e) {
+                  _cancelled = false;
+                  _downTrack = widget.track;
+                  _focus.pointerDown();
+                  _hold.down(
+                    e,
+                    delay: _seekable ? widget.holdDelay : null,
+                    settings: MediaQuery.maybeGestureSettingsOf(context),
+                  );
+                },
+                onPointerMove: _hold.move,
+                onPointerUp: _hold.end,
+                onPointerCancel: (e) {
+                  _cancelled = true;
+                  _hold.end(e);
+                },
                 child: RawGestureDetector(
                   behavior: HitTestBehavior.opaque,
                   gestures: _gestures(context, width),
                   child: SizedBox(
                     height: widget.height,
-                    child: widget.builder(
-                      context,
-                      KSeekState(
-                        progress: shown,
-                        width: width,
-                        active: _hover || _focus || _drag != null,
-                        seekable: _seekable,
-                        dragging: _drag != null,
-                        focused: _focus,
-                      ),
-                    ),
+                    child: widget.builder(context, _state(width)),
                   ),
                 ),
               );

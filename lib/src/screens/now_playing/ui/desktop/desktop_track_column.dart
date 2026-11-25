@@ -206,7 +206,7 @@ class _TransportRow extends StatelessWidget {
             child: FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
-              child: PlaybackTimeLabel(),
+              child: PlaybackTimeLabel(followScrub: true),
             ),
           ),
           Row(

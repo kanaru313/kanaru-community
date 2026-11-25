@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../state/playback_position_provider.dart';
 import '../state/playback_providers.dart';
+import '../state/playback_scrub_provider.dart';
 
 /// `m:ss`, or `h:mm:ss` from one hour.
 String formatClock(Duration d) {
@@ -19,14 +20,33 @@ String formatClock(Duration d) {
 /// Elapsed or total time of the loaded entry. It selects whole seconds, so it
 /// rebuilds once a second, not on every tick.
 class PlaybackTimeLabel extends ConsumerWidget {
-  const PlaybackTimeLabel({super.key, this.total = false, this.textAlign});
+  const PlaybackTimeLabel({
+    super.key,
+    this.total = false,
+    this.textAlign,
+    this.followScrub = false,
+  });
 
   /// Show the duration instead of the position.
   final bool total;
   final TextAlign? textAlign;
 
+  /// The elapsed time shows the time under the finger while a Now Playing
+  /// waveform bar is held or dragged ([playbackScrubProvider]), the real
+  /// position otherwise. Ignored with [total].
+  final bool followScrub;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (followScrub && !total) {
+      final entryId = ref.watch(
+        playbackPositionProvider.select((p) => p.value?.entryId),
+      );
+      final scrubbed = ref.watch(
+        playbackScrubProvider.select((s) => scrubSecondsFor(s, entryId)),
+      );
+      if (scrubbed != null) return _text(context, scrubbed);
+    }
     final seconds = ref.watch(
       playbackPositionProvider.select(
         (p) =>
@@ -36,6 +56,10 @@ class PlaybackTimeLabel extends ConsumerWidget {
             0,
       ),
     );
+    return _text(context, seconds);
+  }
+
+  Widget _text(BuildContext context, int seconds) {
     return Text(
       formatClock(Duration(seconds: seconds)),
       textAlign: textAlign,

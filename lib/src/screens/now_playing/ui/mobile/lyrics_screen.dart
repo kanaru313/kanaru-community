@@ -154,7 +154,10 @@ class _Footer extends StatelessWidget {
             children: [
               SizedBox(
                 width: KSpace.x9,
-                child: PlaybackTimeLabel(textAlign: TextAlign.start),
+                child: PlaybackTimeLabel(
+                  textAlign: TextAlign.start,
+                  followScrub: true,
+                ),
               ),
               Expanded(
                 child: FittedBox(

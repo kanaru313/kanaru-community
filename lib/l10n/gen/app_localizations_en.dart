@@ -574,6 +574,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackSeek => 'Playback position';
 
   @override
+  String get playbackSeekCancel => 'Release to cancel';
+
+  @override
   String playbackPositionValue(String position, String duration) {
     return '$position of $duration';
   }

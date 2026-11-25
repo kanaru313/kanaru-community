@@ -88,9 +88,14 @@ class _MobileNowPlayingState extends ConsumerState<MobileNowPlaying>
     final trackId = ref.watch(
       nowPlayingProvider.select((n) => n.value?.trackId),
     );
-    final info = trackId == null
+    final infoState = trackId == null
         ? null
-        : ref.watch(trackInfoProvider(trackId)).value;
+        : ref.watch(trackInfoProvider(trackId));
+    final info = infoState?.value;
+    // Loading only until the first value or error: a track whose row is gone
+    // (null) or whose read failed shows empty lines, not a skeleton forever.
+    final infoLoading =
+        infoState != null && !infoState.hasValue && !infoState.hasError;
     final cover = ref.watch(playingCoverColorsProvider);
     return CoverTintBackground(
       palette: cover.palette,
@@ -131,14 +136,11 @@ class _MobileNowPlayingState extends ConsumerState<MobileNowPlaying>
                         _Padded(
                           child: Column(
                             children: [
-                              FlightPieceHost(
-                                source: widget.flight,
-                                piece: FlightPiece.text,
-                                child: _TitleRow(
-                                  title: info?.title ?? '',
-                                  artist: info?.artist,
-                                  trackId: trackId,
-                                ),
+                              _TitleRow(
+                                flight: widget.flight,
+                                title: info?.title ?? '',
+                                artist: info?.artist,
+                                trackId: trackId,
                               ),
                               const SizedBox(height: KSpace.x2),
                               const NowPlayingSeekSlot(),
@@ -148,7 +150,7 @@ class _MobileNowPlayingState extends ConsumerState<MobileNowPlaying>
                               const SizedBox(height: KSpace.x5),
                               LyricsCard(onOpen: widget.onOpenLyrics),
                               const SizedBox(height: KSpace.x3),
-                              TrackInfoCard(info: info),
+                              TrackInfoCard(info: info, loading: infoLoading),
                               const SizedBox(height: KSpace.x6),
                             ],
                           ),
@@ -229,11 +231,14 @@ class _Cover extends ConsumerWidget {
 
 class _TitleRow extends StatelessWidget {
   const _TitleRow({
+    required this.flight,
     required this.title,
     required this.artist,
     required this.trackId,
   });
 
+  /// The text flies to the queue strip from here; the ♥ hides with it.
+  final FlightSource flight;
   final String title;
   final String? artist;
   final TrackId? trackId;
@@ -242,35 +247,96 @@ class _TitleRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: coverTitleStyle(text)
-                    ?.copyWith(height: nowPlayingTitleLineHeight),
-              ),
-              if (artist != null)
-                Text(
-                  artist!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: coverArtistStyle(text)?.copyWith(
-                    height: nowPlayingArtistLineHeight,
-                    color: scheme.onSurfaceVariant,
-                  ),
+    final scaler = MediaQuery.textScalerOf(context);
+    final titleStyle = coverTitleStyle(text)
+        ?.copyWith(height: nowPlayingTitleLineHeight);
+    final artistStyle = coverArtistStyle(text)?.copyWith(
+      height: nowPlayingArtistLineHeight,
+      color: scheme.onSurfaceVariant,
+    );
+    // Always two lines high at the current text scale: a song without an
+    // artist keeps an empty second line, and the ♥ never sets the height, so
+    // the seek bar below never moves between songs.
+    final titleExtent = _lineExtent(scaler, titleStyle);
+    final artistExtent = _lineExtent(scaler, artistStyle);
+    final a = artist;
+    return SizedBox(
+      height: titleExtent + artistExtent,
+      child: Row(
+        children: [
+          Expanded(
+            child: Align(
+              alignment: AlignmentDirectional.topStart,
+              // The flight's text piece covers only the lines drawn (the
+              // title, plus the artist when there is one): the flying text
+              // centres what it draws in this rect, so it starts and ends
+              // exactly on the title. The empty artist slot stays outside.
+              child: FlightPieceHost(
+                source: flight,
+                piece: FlightPiece.text,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _OneLine(
+                      text: title,
+                      style: titleStyle,
+                      height: titleExtent,
+                    ),
+                    if (a != null)
+                      _OneLine(
+                        text: a,
+                        style: artistStyle,
+                        height: artistExtent,
+                      ),
+                  ],
                 ),
-            ],
+              ),
+            ),
           ),
-        ),
-        if (trackId != null)
-          FavoriteButton(trackId: trackId!, iconSize: KIconSize.lg),
-      ],
+          if (trackId != null)
+            // Hidden with the text while the queue sheet flies it, as before.
+            ValueListenableBuilder<bool>(
+              valueListenable: flight.hidden,
+              builder: (context, hidden, child) =>
+                  Opacity(opacity: hidden ? 0 : 1, child: child),
+              child: FavoriteButton(trackId: trackId!, iconSize: KIconSize.lg),
+            ),
+        ],
+      ),
     );
   }
+
+  /// Height of one line of [style] (its explicit line height) under [scaler].
+  static double _lineExtent(TextScaler scaler, TextStyle? style) =>
+      scaler.scale(style?.fontSize ?? _fallbackFontSize) * (style?.height ?? 1);
+
+  static const double _fallbackFontSize = 14;
+}
+
+/// One line of text, ellipsized, in a box of exactly [height].
+class _OneLine extends StatelessWidget {
+  const _OneLine({
+    required this.text,
+    required this.style,
+    required this.height,
+  });
+
+  final String text;
+  final TextStyle? style;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: height,
+    child: Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: style,
+      ),
+    ),
+  );
 }

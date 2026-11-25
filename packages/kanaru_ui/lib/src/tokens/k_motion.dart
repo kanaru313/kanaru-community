@@ -46,6 +46,20 @@ abstract final class KMotion {
   /// `KCheckMark` on -> off: tick retracts, disc shrinks. Quicker than on.
   static const Duration checkOff = Duration(milliseconds: 220);
 
+  /// Waveform seek bar: bars growing from dots to their height, or collapsing
+  /// back, in place.
+  static const Duration waveformGrow = Duration(milliseconds: 600);
+
+  /// Least time after a track change before its bars start to grow, even when
+  /// the waveform is cached, so the old bars have collapsed and the change reads.
+  static const Duration waveformGrowGate = Duration(milliseconds: 800);
+
+  /// The dotted row cross-fading into the fallback seek bar (and back).
+  static const Duration waveformFallbackFade = Duration(milliseconds: 200);
+
+  /// Curve of [waveformGrow] (easeInOutQuart, as the mockup).
+  static const Curve waveformGrowCurve = Curves.easeInOutQuart;
+
   /// Animation style for a route a helper opens (dialog, sheet, popover):
   /// none when the platform or the app turns animations off, else null (the
   /// route's own default). Flutter routes do not read `disableAnimations`.
