@@ -194,8 +194,12 @@ fn tags_past_the_frame_cap_are_not_read() {
     let dir = TempDir::new();
     let frames = frames_with_a_title_past_the_frame_cap();
     let mp3 = dir.write("capped.mp3", &broken_id3v2(&frames, None));
-    let wav = Container::WavChunk.write(&dir, &id3v2_tag(&frames, None), true);
-    for (path, what) in [(mp3, "mp3"), (wav, "wav")] {
+    let tag = id3v2_tag(&frames, None);
+    let wav = Container::WavChunk.write(&dir, &tag, true);
+    let aiff = Container::AiffChunk.write(&dir, &tag, true);
+    // The FLAC stream has no Vorbis comments, so the prefix's tag is read.
+    let flac = Container::FlacPrefix.write(&dir, &tag, true);
+    for (path, what) in [(mp3, "mp3"), (wav, "wav"), (aiff, "aiff"), (flac, "flac")] {
         let tags = scanned(&path, what);
         assert_eq!(tags.album.as_deref(), Some("Inside"), "{what}");
         assert_eq!(tags.title, None, "{what}");
@@ -208,8 +212,9 @@ fn tags_in_a_tag_declaring_more_than_it_holds_are_read() {
     let dir = TempDir::new();
     // Past the frames held, symphonia would look for the next frame header
     // beyond the end of the copy and fail the whole read. The MP3 ends with
-    // its tag (no audio, so the title is all that can be recovered); the WAV
-    // chunk bounds the tag.
+    // its tag (no audio, so the title is all that can be recovered), and so
+    // does the FLAC (its stream has no Vorbis comments, so the prefix's tag
+    // is read); a WAV or AIFF chunk bounds the tag.
     let tag = id3v2_tag(
         &[
             id3v2_frame("TIT2", b"\x03Held"),
@@ -219,7 +224,9 @@ fn tags_in_a_tag_declaring_more_than_it_holds_are_read() {
     );
     let mp3 = dir.write("oversized.mp3", &tag);
     let wav = Container::WavChunk.write(&dir, &tag, true);
-    for (path, what) in [(mp3, "mp3"), (wav, "wav")] {
+    let aiff = Container::AiffChunk.write(&dir, &tag, true);
+    let flac = Container::FlacPrefix.write(&dir, &tag, false);
+    for (path, what) in [(mp3, "mp3"), (wav, "wav"), (aiff, "aiff"), (flac, "flac")] {
         let tags = scanned(&path, what);
         assert_eq!(tags.title.as_deref(), Some("Held"), "{what}");
     }

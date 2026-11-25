@@ -96,7 +96,9 @@ pub fn read_tags(
     }
     let file = open(path)?;
     cancel.check()?;
-    // The deadline only stops further work: a parse that finished is kept.
+    // The deadline only stops further work: a parse that finished is kept,
+    // and so is the error of one that failed (the recovery checks the
+    // deadline itself and keeps that error when it passed).
     let mut reader = BufReader::new(file);
     let options = parse_options(false);
     let (file_type, parsed) = parse(&mut reader, path, options)?;
@@ -107,11 +109,12 @@ pub fn read_tags(
             if error.is_transient() {
                 return Err(error);
             }
-            cancel.check()?;
             let Some(file_type) = file_type else {
                 return Err(error);
             };
-            return tags_fallback::recover(&mut reader, file_type, options, &cancel)?.ok_or(error);
+            let tag_failed = errors::is_tag_failure(&e);
+            return tags_fallback::recover(&mut reader, file_type, tag_failed, options, &cancel)?
+                .ok_or(error);
         }
     };
     Ok(assemble(

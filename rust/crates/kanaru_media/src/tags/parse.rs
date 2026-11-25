@@ -11,19 +11,31 @@ use lofty::error::FileParseError;
 use lofty::file::{FileType, TaggedFile};
 use lofty::probe::Probe;
 
-use super::errors::{from_parse_error, from_sniff_error};
+use super::errors::{from_parse_error, from_sniff_error, is_tag_failure};
 use crate::MediaError;
 
 /// Parses `file` with lofty. The extension is only a hint: the content is
 /// sniffed and decides. Pictures are read only when `with_pictures`.
+/// `Ok(None)`: lofty failed on a tag, not on the audio, for a lasting
+/// reason; the file has no tag to use.
 pub(crate) fn probe(
     file: File,
     path: &Path,
     with_pictures: bool,
-) -> Result<TaggedFile, MediaError> {
+) -> Result<Option<TaggedFile>, MediaError> {
     let mut reader = BufReader::new(file);
     let (_, parsed) = parse(&mut reader, path, parse_options(with_pictures))?;
-    parsed.map_err(|e| from_parse_error(&e))
+    match parsed {
+        Ok(tagged) => Ok(Some(tagged)),
+        Err(e) => {
+            let error = from_parse_error(&e);
+            if !error.is_transient() && is_tag_failure(&e) {
+                Ok(None)
+            } else {
+                Err(error)
+            }
+        }
+    }
 }
 
 pub(super) fn parse_options(with_pictures: bool) -> ParseOptions {

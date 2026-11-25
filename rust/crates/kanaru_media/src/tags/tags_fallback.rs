@@ -9,7 +9,9 @@
 //! - FLAC: the stream after the prefixes, read as a file of its own.
 //!
 //! As in a healthy file, the ID3v2 tag wins for MP3, WAV and AIFF, the
-//! Vorbis comments for FLAC. Other types are not recovered.
+//! Vorbis comments for FLAC. Other types are not recovered. Tags alone count
+//! only when lofty failed on a tag (a healthy tag before broken audio stays
+//! an error).
 
 use std::io::{self, Read, Seek, SeekFrom};
 
@@ -38,22 +40,29 @@ struct Found {
     reread: Option<TaggedFile>,
 }
 
-/// The tags of a `file_type` file lofty refused, read again from `reader`
-/// with `options`. `Ok(None)`: no tag item and no audio properties
-/// recovered; the caller keeps lofty's error. `Err`: a transient I/O error,
-/// or `cancel` fired.
+/// The tags of a `file_type` file lofty refused (`tag_failed`: on a tag),
+/// read again from `reader` with `options`. `Ok(None)`, the caller keeps
+/// lofty's error: nothing recovered, only tags after a failure that was not
+/// a tag's (the audio is broken), or the deadline passed. `Err`: a transient
+/// I/O error, or `cancel` was cancelled.
 pub(super) fn recover<R: Read + Seek>(
     reader: &mut R,
     file_type: FileType,
+    tag_failed: bool,
     options: ParseOptions,
     cancel: &Cancel,
 ) -> Result<Option<TrackTags>, MediaError> {
     let found = match file_type {
-        FileType::Mpeg => mp3(reader, options, cancel)?,
-        FileType::Wav => iff(reader, Iff::Riff, options, cancel)?,
-        FileType::Aiff => iff(reader, Iff::Form, options, cancel)?,
-        FileType::Flac => flac(reader, options, cancel)?,
+        FileType::Mpeg => mp3(reader, options, cancel),
+        FileType::Wav => iff(reader, Iff::Riff, options, cancel),
+        FileType::Aiff => iff(reader, Iff::Form, options, cancel),
+        FileType::Flac => flac(reader, options, cancel),
         _ => return Ok(None),
+    };
+    let found = match found {
+        // lofty's error is lasting; a timeout would have the scan retry it.
+        Err(MediaError::Timeout) => return Ok(None),
+        found => found?,
     };
     let reread_tag = found.reread.as_ref().and_then(tag_of);
     let tag = if file_type == FileType::Flac {
@@ -61,7 +70,7 @@ pub(super) fn recover<R: Read + Seek>(
     } else {
         found.id3.as_ref().or(reread_tag)
     };
-    if tag.is_none() && found.reread.is_none() {
+    if found.reread.is_none() && (tag.is_none() || !tag_failed) {
         return Ok(None);
     }
     let properties = found.reread.as_ref().map(TaggedFile::properties);
@@ -80,6 +89,7 @@ fn mp3<R: Read + Seek>(
     options: ParseOptions,
     cancel: &Cancel,
 ) -> Result<Found, MediaError> {
+    cancel.check()?;
     let prefixes = id3_prefixes(r)?;
     if prefixes.is_empty() {
         return Ok(Found::default());
@@ -101,6 +111,7 @@ fn iff<R: Read + Seek>(
     options: ParseOptions,
     cancel: &Cancel,
 ) -> Result<Found, MediaError> {
+    cancel.check()?;
     let chunks = id3_chunks(r, kind)?;
     if chunks.is_empty() {
         return Ok(Found::default());
@@ -132,6 +143,7 @@ fn flac<R: Read + Seek>(
     options: ParseOptions,
     cancel: &Cancel,
 ) -> Result<Found, MediaError> {
+    cancel.check()?;
     let prefixes = id3_prefixes(r)?;
     if prefixes.is_empty() {
         return Ok(Found::default());

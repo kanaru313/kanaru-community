@@ -335,7 +335,9 @@ when this call made the files), `noCover` (every source checked) or `failed`
 (`error`). Failure rules: an error writing under `cacheDir` is transient whatever
 its kind, and the batch stops: items not started come back `failed` and transient.
 The audio file itself unreadable (corrupt, unsupported) is permanent, but the
-sidecars are still tried first. A transient read error on the audio file or a
+sidecars are still tried first. A file whose tag alone lofty refuses (same
+`is_tag_failure` as the tag read) has no embedded picture and is no error: sidecars,
+else `noCover`; pictures of a broken tag are not recovered. A transient read error on the audio file or a
 sidecar is transient. A sidecar that opens but cannot be read, or a folder
 that cannot be listed (EIO on a dropped mount; anything but missing, refused or
 not-a-folder), is a transient failure of that item (`CoverError::Retry`), never a
@@ -1101,9 +1103,10 @@ truncated or inconsistent file is `Corrupt`, a permanent result.
 
 **Broken ID3v2 tags** (`tags/tags_fallback.rs`). lofty fails the whole file at the
 first ID3v2 frame it rejects. When the read fails for a reason that is not
-transient, the deadline is checked and the file is read again from the same open
-reader, for MP3, WAV, AIFF and FLAC only (by the sniffed type); a healthy file
-never takes this path:
+transient, the file is read again from the same open reader, for MP3, WAV, AIFF
+and FLAC only (by the sniffed type); a healthy file never takes this path. The
+deadline is checked before each step of that read; once it has passed, lofty's
+error stands (never `Timeout`), and other types keep lofty's error untouched:
 
 | Type | Where the ID3v2 tag is | Read again with lofty | Tag used |
 |---|---|---|---|
@@ -1125,11 +1128,20 @@ end of its tags may lose its properties. Outcomes:
 
 - Some fields or the audio properties recovered: a normal result. Fields written
   after the damage are missing (a title without its artist is shown as such).
+  Fields without properties count only when lofty failed on a tag (a
+  `TagParseError`, or an ID3v2 frame, header, text or timestamp error, in its cause
+  chain: `tags::errors::is_tag_failure`).
+- A healthy tag in front of broken or missing audio (garbage after the tag, a tag
+  with nothing after it, a cut FLAC stream, a WAV without `fmt `): lofty's original
+  error, still a scan error.
 - A tag that cannot be recovered at all but audio that reads: a result with the
   properties and no tag fields (filename-only title), **no longer a scan error**.
 - Nothing recovered (no ID3v2 tag where the type keeps one, no frame and no readable
   audio): lofty's original error, same `MediaError` class as before.
 - A transient I/O error during the second read: that error (the row is retried).
+- Known gap: an MP3 with a healthy ID3v2 tag and a broken APE trailer. lofty counts
+  the APE failure as a tag failure and the read from after the ID3v2 tag fails on
+  the same trailer, so the row has the ID3v2 fields but no duration or audio details.
 
 Rows already in the library are not re-read for this: `tagsPassVersion` is
 unchanged, so an unchanged file keeps its old row (filename-only, or its old

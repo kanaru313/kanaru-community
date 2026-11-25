@@ -85,7 +85,9 @@ pub fn check_header(bytes: &[u8]) -> Result<ImageHeader, MediaError> {
 }
 
 /// The embedded pictures of `path`, best first. Empty for a format that
-/// carries none (DSD). Errors are about the audio file itself.
+/// carries none (DSD), and for a file whose tag alone lofty refuses (its
+/// audio may be fine: the sidecars decide). Errors are about the audio file
+/// itself.
 pub fn embedded_pictures(
     path: &Path,
     open: &dyn Fn(&Path) -> Result<File, MediaError>,
@@ -104,7 +106,7 @@ pub fn embedded_pictures(
     // A parser panic is this file's problem: report it like any damaged file,
     // so the sidecars are still tried.
     catch_unwind(AssertUnwindSafe(|| {
-        probe(file, path, true).map(take_embedded_pictures)
+        probe(file, path, true).map(|tagged| tagged.map(take_embedded_pictures).unwrap_or_default())
     }))
     .unwrap_or_else(|_| Err(MediaError::Corrupt("tag parser panicked".into())))
 }

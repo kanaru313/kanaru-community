@@ -581,3 +581,56 @@ fn a_cancel_during_the_open_stops_a_broken_file_before_its_recovery() {
     };
     assert_eq!(read_tags(&path, &open, &cancel), Err(MediaError::Cancelled));
 }
+
+/// lofty's error for `path`, read as `read_tags` reads it.
+fn lofty_scan_error(path: &Path) -> lofty::error::FileParseError {
+    Probe::open(path)
+        .expect("open")
+        .options(
+            lofty::config::ParseOptions::new()
+                .read_cover_art(false)
+                .parsing_mode(lofty::config::ParsingMode::BestAttempt),
+        )
+        .guess_file_type()
+        .expect("sniff")
+        .read()
+        .err()
+        .unwrap_or_else(|| panic!("{}: lofty reads it", path.display()))
+}
+
+/// `bytes` with the first `from` replaced by `to`.
+fn renamed(mut bytes: Vec<u8>, from: &[u8; 4], to: &[u8; 4]) -> Vec<u8> {
+    let at = bytes
+        .windows(4)
+        .position(|w| w == from)
+        .expect("chunk id present");
+    bytes[at..at + 4].copy_from_slice(to);
+    bytes
+}
+
+#[test]
+fn a_healthy_tag_in_front_of_broken_audio_keeps_the_original_error() {
+    use kanaru_media::tags::errors::from_parse_error;
+    let dir = TempDir::new();
+    let tag = id3v2_tag(&[id3v2_frame("TIT2", b"\x03Healthy")], None);
+    let with = |tail: &[u8]| [tag.as_slice(), tail].concat();
+    let wav = wav_with_chunks(&[(b"id3 ", &tag)], Place::AfterAudio);
+    let aiff = aiff_with_chunks(&[(b"ID3 ", &tag)], Place::AfterAudio);
+    let cases: [(&str, Vec<u8>); 5] = [
+        // Bytes holding no MPEG frame.
+        ("garbage_audio.mp3", with(&[0x41; 4000])),
+        // The tag and nothing else.
+        ("stub.mp3", tag.clone()),
+        // A FLAC stream cut inside its STREAMINFO.
+        ("cut.flac", with(&flac_bytes()[..20])),
+        ("no_fmt.wav", renamed(wav, b"fmt ", b"fmX ")),
+        ("no_comm.aiff", renamed(aiff, b"COMM", b"COMX")),
+    ];
+    for (name, bytes) in cases {
+        let path = dir.write(name, &bytes);
+        let lofty_error = lofty_scan_error(&path);
+        let error = read(&path).expect_err(name);
+        assert_eq!(error, from_parse_error(&lofty_error), "{name}");
+        assert!(!error.is_transient(), "{name}");
+    }
+}

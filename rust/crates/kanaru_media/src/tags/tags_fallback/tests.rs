@@ -3,6 +3,7 @@
 //! tested through `read_tags` in `tests/tags_read.rs`.
 
 use std::io::{self, Cursor, Read, Seek, SeekFrom};
+use std::time::Duration;
 
 use lofty::config::ParseOptions;
 use lofty::file::FileType;
@@ -43,6 +44,7 @@ fn a_broken_mp3_is_recovered() {
     let tags = recover(
         &mut Cursor::new(broken_mp3()),
         FileType::Mpeg,
+        true,
         options(),
         &Cancel::new(),
     )
@@ -60,6 +62,7 @@ fn a_cancel_stops_before_the_file_is_read_again() {
     let result = recover(
         &mut Cursor::new(broken_mp3()),
         FileType::Mpeg,
+        true,
         options(),
         &cancel,
     );
@@ -72,6 +75,7 @@ fn types_without_an_id3v2_place_are_not_recovered() {
         let result = recover(
             &mut Cursor::new(broken_mp3()),
             file_type,
+            true,
             options(),
             &Cancel::new(),
         );
@@ -111,7 +115,7 @@ fn a_transient_error_while_reading_the_audio_again_is_an_error() {
         fail_from: tag_len,
         kind: io::ErrorKind::TimedOut,
     };
-    let result = recover(&mut reader, FileType::Mpeg, options(), &Cancel::new());
+    let result = recover(&mut reader, FileType::Mpeg, true, options(), &Cancel::new());
     assert_eq!(result, Err(MediaError::Io(io::ErrorKind::TimedOut)));
 }
 
@@ -124,9 +128,63 @@ fn a_lasting_error_while_reading_the_audio_again_keeps_the_tag() {
         fail_from: tag_len,
         kind: io::ErrorKind::InvalidData,
     };
-    let tags = recover(&mut reader, FileType::Mpeg, options(), &Cancel::new())
+    let tags = recover(&mut reader, FileType::Mpeg, true, options(), &Cancel::new())
         .unwrap()
         .expect("recovered");
     assert_eq!(tags.album.as_deref(), Some("Album"));
     assert_eq!(tags.sample_rate, None);
+}
+
+#[test]
+fn tags_alone_are_dropped_when_lofty_failed_on_something_else() {
+    let bytes = broken_mp3();
+    let tag_len = bytes.len() as u64 - 20 * 417;
+    let mut reader = FailsAfter {
+        inner: Cursor::new(bytes),
+        fail_from: tag_len,
+        kind: io::ErrorKind::InvalidData,
+    };
+    let result = recover(
+        &mut reader,
+        FileType::Mpeg,
+        false,
+        options(),
+        &Cancel::new(),
+    );
+    assert_eq!(result, Ok(None));
+}
+
+#[test]
+fn audio_that_reads_again_is_kept_whatever_lofty_failed_on() {
+    let tags = recover(
+        &mut Cursor::new(broken_mp3()),
+        FileType::Mpeg,
+        false,
+        options(),
+        &Cancel::new(),
+    )
+    .unwrap()
+    .expect("recovered");
+    assert_eq!(tags.album.as_deref(), Some("Album"));
+    assert_eq!(tags.sample_rate, Some(44_100));
+}
+
+#[test]
+fn past_the_deadline_lofty_error_stands() {
+    let cancel = Cancel::new().with_timeout(Duration::ZERO);
+    for file_type in [
+        FileType::Mpeg,
+        FileType::Wav,
+        FileType::Aiff,
+        FileType::Flac,
+    ] {
+        let result = recover(
+            &mut Cursor::new(broken_mp3()),
+            file_type,
+            true,
+            options(),
+            &cancel,
+        );
+        assert_eq!(result, Ok(None), "{file_type:?}");
+    }
 }
