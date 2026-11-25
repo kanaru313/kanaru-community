@@ -901,7 +901,7 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
   centred on the full width; the ring slot is always reserved so the title never moves) with a drag-to-close area covering all of
   the space between the side slots (release past 120 dp closes, less
   springs back; the ring shows while a sleep timer runs), cover, title row (always two lines: an empty artist line keeps its height), `NowPlayingSeekSlot`, controls, button row, lyrics
-  card (`LyricsCard`, a button that opens the lyrics screen through `NowPlayingPage`), info card (`TrackInfoCard`: always two one-line rows, ellipsized; `KSkeletonLine`s while the info is unknown). Every block has a height fixed per text scale, so nothing moves between songs. It sits on `CoverTintBackground` fed by `playingCoverColorsProvider`; the seed of the playing cover also themes the app (see "Playing cover and app theme").
+  card (`LyricsCard`, a button that opens the lyrics screen through `NowPlayingPage`), info card (`TrackInfoCard`: always two one-line rows, ellipsized; `KSkeletonLine`s while the info loads; two empty lines of the same height when the track row is gone or the read failed). Every block has a height fixed per text scale, so nothing moves between songs. It sits on `CoverTintBackground` fed by `playingCoverColorsProvider`; the seed of the playing cover also themes the app (see "Playing cover and app theme").
   It owns a `FlightSource` (cover, text, play, next pieces) for the queue flights.
 - **Lyrics screen** (`ui/mobile/lyrics_screen_route.dart`, `lyrics_screen.dart`, `lyrics_screen_header.dart`): an opaque full-screen
   `ModalRoute` on the root navigator that slides up (`KMotion.pageIn`, none under reduced motion) over `/now-playing`, on the cover tint.
@@ -1063,15 +1063,15 @@ mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancell
   `PlaybackWaveformSeekBar` passes `unknown` while the provider loads or its view belongs to another entry, `none` in the flat style.
   Kinds: `unknown` and `dots` (the dotted row: bars at 3 dp, no animation), `growing` (600 ms `easeInOutQuart`, in place), `shown`,
   `collapsing`, `fallback` (200 ms cross-fade; every fallback, custom or the default `KFlatSeekTrack`, sits
-  inside a 6 dp horizontal padding and gets the state of that inner width, so its box is `state.width` wide and its thumb sits under the
-  finger). The drawing of one frame (heights per kind, steady pictures, dotted row) is `WaveformBandFrames` (`waveform_band.dart`).
+  inside a 6 dp horizontal padding and gets the state of that inner width, so its box is `state.width` wide; the flat track keeps its own
+  4 x 16 dp thumb under the finger). The drawing of one frame (heights per kind, steady pictures, dotted row) is `WaveformBandFrames` (`waveform_band.dart`).
   - The first decision after mount is applied at once (ready: `shown`, none: `fallback`, computing: `dots`), even when it comes after an async
     gap: opening Now Playing on a cached track never animates. The first track after none is not a change.
   - A track change snapshots the drawn heights and collapses them to 3 dp over 600 ms (also when the duration goes to zero); the new bars grow
     once ready but no earlier than 800 ms after the change, cached or not. A change during a collapse restarts both.
   - computing to ready: grow in place (not before the gate). none: the dots fade into the fallback; from the fallback, computing fades back to
     dots and ready fades it out while growing. Reduced motion: every transition instant, no gate.
-  - Table (state / event, `waveform_phase_test.dart` has every cell): `unknown` mount: computing dots, ready shown, none fallback, all instant;
+  - Table (state / event, covered cell by cell by `waveform_phase_test.dart`): `unknown` mount: computing dots, ready shown, none fallback, all instant;
     `unknown` after a change and `dots`: ready waits for the gate then grows, none fades to the fallback; `growing` / `shown`: ready keeps,
     none fades from the current height, change collapses from the current heights; `collapsing`: statuses are held, grows after the collapse
     and the gate, none fades during the rest of the collapse; `fallback`: computing fades back to dots, ready grows once the gate passed,
