@@ -18,7 +18,10 @@ class SeekDragTracker {
   Object? _track;
 
   /// A drag started and its end was not reported yet; stays true when the
-  /// drag is dropped, so the end is still reported once.
+  /// drag is dropped, so the release reports the end once. That needs the
+  /// recognizer to survive: when an any-direction band loses its pan
+  /// mid-drag (dropped drag and no duration), no release comes and the end
+  /// is not reported today.
   bool _seeking = false;
 
   /// Global y the cancel is measured from: where the pointer went down.

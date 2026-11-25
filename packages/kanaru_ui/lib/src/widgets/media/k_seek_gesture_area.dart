@@ -205,11 +205,13 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
             }
           : null,
       anyDirection: widget.anyDirection,
-      // The handlers check [_seekable] themselves: a recognizer dropped
-      // mid-drag (the track changed and the duration went to zero) would
-      // never report the end of the drag. A pan claims any drag, so without
-      // a duration it is left out (the drag then belongs to an ancestor),
-      // unless one is running.
+      // The handlers check [_seekable] themselves, so the one-direction
+      // recognizer stays while a track change drops a drag and its release
+      // still reports the end. A pan claims any drag, so without a duration
+      // it is left out (the drag then belongs to an ancestor) unless one is
+      // running. Known gap: a track change drops the drag (no longer
+      // `dragging`), so when the duration also goes to zero the pan of an
+      // any-direction band is removed mid-drag and the end is NOT reported.
       pan: _seekable || _drag.dragging,
       drag: SeekDragHandlers(
         onStart: (d) => _dragStart(d, width),

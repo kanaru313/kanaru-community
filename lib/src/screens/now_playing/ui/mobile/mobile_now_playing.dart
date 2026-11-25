@@ -88,9 +88,14 @@ class _MobileNowPlayingState extends ConsumerState<MobileNowPlaying>
     final trackId = ref.watch(
       nowPlayingProvider.select((n) => n.value?.trackId),
     );
-    final info = trackId == null
+    final infoState = trackId == null
         ? null
-        : ref.watch(trackInfoProvider(trackId)).value;
+        : ref.watch(trackInfoProvider(trackId));
+    final info = infoState?.value;
+    // Loading only until the first value or error: a track whose row is gone
+    // (null) or whose read failed shows empty lines, not a skeleton forever.
+    final infoLoading =
+        infoState != null && !infoState.hasValue && !infoState.hasError;
     final cover = ref.watch(playingCoverColorsProvider);
     return CoverTintBackground(
       palette: cover.palette,
@@ -145,7 +150,7 @@ class _MobileNowPlayingState extends ConsumerState<MobileNowPlaying>
                               const SizedBox(height: KSpace.x5),
                               LyricsCard(onOpen: widget.onOpenLyrics),
                               const SizedBox(height: KSpace.x3),
-                              TrackInfoCard(info: info),
+                              TrackInfoCard(info: info, loading: infoLoading),
                               const SizedBox(height: KSpace.x6),
                             ],
                           ),

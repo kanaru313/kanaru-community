@@ -51,6 +51,7 @@ class _KSeekTimeBubbleState extends State<KSeekTimeBubble> {
   final _link = LayerLink();
   final _portal = OverlayPortalController();
 
+  static const double _fontSize = 12;
   static const double _lineHeight = 20;
   static const double _padV = 2;
   static const double _padH = 8;
@@ -95,10 +96,10 @@ class _KSeekTimeBubbleState extends State<KSeekTimeBubble> {
     final x = inset + fraction * (state.width - 2 * inset);
     final style = Theme.of(context).textTheme.labelMedium?.copyWith(
       color: foreground,
-      fontSize: 12,
+      fontSize: _fontSize,
       fontWeight: FontWeight.w700,
       letterSpacing: 0,
-      height: _lineHeight / 12,
+      height: _lineHeight / _fontSize,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
     // The overlay gives its child tight constraints: Align frees the follower
@@ -114,7 +115,11 @@ class _KSeekTimeBubbleState extends State<KSeekTimeBubble> {
         child: IgnorePointer(
           child: SizedBox(
             width: state.width,
-            height: scaler.scale(_lineHeight) + 2 * _padV,
+            // The same maths as the text line (scaled font size x height):
+            // a nonlinear scaler grows small text more than large text, so
+            // scaling the line height itself would leave the box too short.
+            height:
+                scaler.scale(_fontSize) * (_lineHeight / _fontSize) + 2 * _padV,
             child: CustomSingleChildLayout(
               delegate: _BubbleLayout(x),
               child: Semantics(

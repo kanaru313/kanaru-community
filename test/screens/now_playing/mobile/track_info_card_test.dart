@@ -31,6 +31,7 @@ final _full = TrackInfo(
 Future<void> _pump(
   WidgetTester tester,
   TrackInfo? info, {
+  bool loading = false,
   double textScale = 1,
   Brightness brightness = Brightness.light,
 }) async {
@@ -50,7 +51,7 @@ Future<void> _pump(
       home: Scaffold(
         body: Align(
           alignment: Alignment.topCenter,
-          child: TrackInfoCard(info: info),
+          child: TrackInfoCard(info: info, loading: loading),
         ),
       ),
     ),
@@ -85,11 +86,13 @@ void main() {
   });
 
   for (final scale in [1.0, 2.0]) {
-    testWidgets('same height with tags, without and while unknown '
+    testWidgets('same height with tags, without, loading and with no info '
         '(text ×$scale)', (tester) async {
       await _pump(tester, _full, textScale: scale);
       final full = _height(tester);
       await _pump(tester, _base, textScale: scale);
+      expect(_height(tester), full);
+      await _pump(tester, null, loading: true, textScale: scale);
       expect(_height(tester), full);
       await _pump(tester, null, textScale: scale);
       expect(_height(tester), full);
@@ -113,13 +116,13 @@ void main() {
     expect(_inCard(find.text('')), findsOneWidget);
   });
 
-  testWidgets('unknown info shows skeleton lines, hidden from screen readers', (
+  testWidgets('loading info shows skeleton lines, hidden from screen readers', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
     await _pump(tester, _full);
     final loaded = _height(tester);
-    await _pump(tester, null);
+    await _pump(tester, null, loading: true);
     expect(_inCard(find.byType(KSkeletonLine)), findsNWidgets(2));
     expect(_height(tester), loaded);
     expect(_inCard(find.byType(Text)), findsNothing);
@@ -129,9 +132,27 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('no info and not loading: two empty lines, no skeleton', (
+    tester,
+  ) async {
+    await _pump(tester, _full);
+    final loaded = _height(tester);
+    await _pump(tester, null);
+    expect(_inCard(find.byType(KSkeletonLine)), findsNothing);
+    expect(_inCard(find.text('')), findsNWidgets(2));
+    expect(_height(tester), loaded);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('known info wins over a loading flag', (tester) async {
+    await _pump(tester, _full, loading: true);
+    expect(_inCard(find.byType(KSkeletonLine)), findsNothing);
+    expect(find.textContaining('FLAC'), findsOneWidget);
+  });
+
   for (final brightness in Brightness.values) {
     testWidgets('lays out in the ${brightness.name} theme', (tester) async {
-      await _pump(tester, null, brightness: brightness);
+      await _pump(tester, null, loading: true, brightness: brightness);
       final skeleton = _height(tester);
       await _pump(tester, _full, brightness: brightness);
       expect(_height(tester), skeleton);

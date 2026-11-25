@@ -85,21 +85,25 @@ Future<void> _release(WidgetTester tester, UiHost host, TestGesture g) async {
 
 /// What the page shows for the playing track, whatever its id. [shape]
 /// can change mid-test; invalidate [trackInfoProvider] to show the new one.
-/// A null result is a track whose info is not known yet.
+/// A null result is a track without info (its row is gone). [stream], when
+/// set, replaces the shape (a read still loading, or one that failed).
 class _SwitchableInfo {
   TrackInfo? Function(TrackInfo base) shape = _full;
+  Stream<TrackInfo?> Function()? stream;
 
   Override get override => trackInfoProvider.overrideWith(
-    (ref, id) => Stream.value(
-      shape(
-        TrackInfo(
-          id: id,
-          title: 'Song',
-          status: TrackAvailability.present,
-          relPath: 'song.flac',
+    (ref, id) =>
+        stream?.call() ??
+        Stream.value(
+          shape(
+            TrackInfo(
+              id: id,
+              title: 'Song',
+              status: TrackAvailability.present,
+              relPath: 'song.flac',
+            ),
+          ),
         ),
-      ),
-    ),
   );
 }
 
@@ -406,7 +410,7 @@ void main() {
           );
         }
         final cases = <String, TrackInfo? Function(TrackInfo)>{
-          'info not known': (_) => null,
+          'no info (track row gone)': (_) => null,
           'no artist, album or format': _bare,
           'artist only': _artistOnly,
           'full tags again': _full,
@@ -422,6 +426,47 @@ void main() {
           expect(positions(tester), full, reason: name);
         }
         expect(tester.getSize(find.byType(NowPlayingSeekSlot)).height, 56);
+      });
+    }
+  });
+
+  group('the info card skeleton', () {
+    final cases = <String, (Stream<TrackInfo?> Function(), bool)>{
+      // Never emits: the read is still running.
+      'while the info loads': (() => Stream<TrackInfo?>.multi((_) {}), true),
+      // An Error is not retried, so no retry timer outlives the test.
+      'when reading the info failed': (
+        () => Stream<TrackInfo?>.error(StateError('read failed')),
+        false,
+      ),
+      'when the track has no info': (() => Stream.value(null), false),
+    };
+    for (final MapEntry(key: name, value: (stream, skeleton))
+        in cases.entries) {
+      testWidgets('${skeleton ? 'shows' : 'does not show'} skeleton $name, '
+          'at the height of a loaded card', (tester) async {
+        final info = _SwitchableInfo()..stream = stream;
+        final host = await _open(tester, overrides: [info.override]);
+        final skeletons = find.descendant(
+          of: find.byType(TrackInfoCard),
+          matching: find.byType(KSkeletonLine),
+        );
+        expect(skeletons, skeleton ? findsNWidgets(2) : findsNothing);
+        final height = tester.getSize(find.byType(TrackInfoCard)).height;
+        expect(tester.takeException(), isNull);
+        info.stream = null;
+        host.container.invalidate(trackInfoProvider);
+        await tester.pump();
+        await host.letStreamsArrive(tester);
+        expect(skeletons, findsNothing);
+        expect(
+          find.descendant(
+            of: find.byType(TrackInfoCard),
+            matching: find.textContaining('A' * 200),
+          ),
+          findsOneWidget,
+        );
+        expect(tester.getSize(find.byType(TrackInfoCard)).height, height);
       });
     }
   });

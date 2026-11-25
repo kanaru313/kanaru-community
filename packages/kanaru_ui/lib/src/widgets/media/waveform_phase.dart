@@ -231,7 +231,21 @@ class WaveformPhase {
       case KWaveformStatus.computing:
         _kind = WaveformPhaseKind.dots;
       case KWaveformStatus.unknown:
-        if (_kind != WaveformPhaseKind.unknown) _kind = WaveformPhaseKind.dots;
+        // A passing unknown on the same track keeps what is drawn: bars stay
+        // bars (growing ones end grown), the fallback stays. Only the old
+        // track's collapsing bars, left by a track change, settle on dots.
+        // (A track change never leaves the kind growing or shown.)
+        switch (_kind) {
+          case WaveformPhaseKind.collapsing:
+            _kind = WaveformPhaseKind.dots;
+          case WaveformPhaseKind.growing:
+            _kind = WaveformPhaseKind.shown;
+          case WaveformPhaseKind.unknown:
+          case WaveformPhaseKind.dots:
+          case WaveformPhaseKind.shown:
+          case WaveformPhaseKind.fallback:
+            break;
+        }
     }
     _growT = _growTarget;
     _fallbackT = _fallbackTarget;

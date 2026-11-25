@@ -340,6 +340,47 @@ void main() {
     });
   });
 
+  group('reduce motion, unknown on the same track', () {
+    test('shown bars stay shown', () {
+      final p = _mounted(ready)
+        ..onReduceMotion(true, ms(0))
+        ..onStatus(unknown, ms(10));
+      expectKind(p, WaveformPhaseKind.shown);
+      expect(p.growT, 1);
+    });
+    test('the fallback stays', () {
+      final p = _mounted(none)
+        ..onReduceMotion(true, ms(0))
+        ..onStatus(unknown, ms(10));
+      expectKind(p, WaveformPhaseKind.fallback);
+      expect(p.fallbackT, 1);
+    });
+    test('growing bars end grown when reduce motion turns on', () {
+      final p = _growing()
+        ..onStatus(unknown, ms(10))
+        ..onReduceMotion(true, ms(20));
+      expectKind(p, WaveformPhaseKind.shown);
+      expect(p.growT, 1);
+    });
+    test('a track change still settles on dots, then the new status', () {
+      final p = _mounted(ready)
+        ..onReduceMotion(true, ms(0))
+        ..onTrackChange(ms(10), snapshot: _snap);
+      expectKind(p, WaveformPhaseKind.dots);
+      expect(p.growT, 0);
+      expect(p.snapshot, isNull);
+      p.onStatus(unknown, ms(20));
+      expectKind(p, WaveformPhaseKind.dots);
+      p.onStatus(ready, ms(30));
+      expectKind(p, WaveformPhaseKind.shown);
+      final q = _mounted(none)
+        ..onReduceMotion(true, ms(0))
+        ..onTrackChange(ms(10));
+      expectKind(q, WaveformPhaseKind.dots);
+      expect(q.fallbackT, 0);
+    });
+  });
+
   group('clock', () {
     test('a cached track grows no earlier than 800 ms after the change', () {
       final p = _mounted(ready)..onTrackChange(ms(1000), snapshot: _snap);

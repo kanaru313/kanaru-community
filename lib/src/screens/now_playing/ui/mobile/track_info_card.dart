@@ -9,12 +9,17 @@ import '../../../../media/domain/track_info.dart';
 ///
 /// Always two lines of one line each at the current text scale, so the card
 /// is as high for every song: a missing album and artist keeps an empty first
-/// line, and while the track's info is not known ([info] null) the same box
-/// shows two skeleton lines (hidden from screen readers).
+/// line. While the track's info is still [loading] the same box shows two
+/// skeleton lines (hidden from screen readers); when no info comes (the track
+/// row is gone, or reading it failed) both lines stay empty.
 class TrackInfoCard extends StatelessWidget {
-  const TrackInfoCard({super.key, required this.info});
+  const TrackInfoCard({super.key, required this.info, this.loading = false});
 
+  /// The track's info; null while loading or when there is none.
   final TrackInfo? info;
+
+  /// The info is still being read. Only drawn while [info] is null.
+  final bool loading;
 
   /// Line height used when the theme's text style has none.
   static const double _fallbackLineHeight = KSkeletonLine.defaultLineHeight;
@@ -29,7 +34,7 @@ class TrackInfoCard extends StatelessWidget {
         .copyWith(color: scheme.onSurfaceVariant);
     final i = info;
     final Widget lines;
-    if (i == null) {
+    if (i == null && loading) {
       lines = ExcludeSemantics(
         child: _Lines(
           first: KSkeletonLine(
@@ -43,6 +48,11 @@ class TrackInfoCard extends StatelessWidget {
             widthFactor: 0.4,
           ),
         ),
+      );
+    } else if (i == null) {
+      lines = _Lines(
+        first: _line('', whoStyle, scaler),
+        second: _line('', techStyle, scaler),
       );
     } else {
       final l10n = AppLocalizations.of(context);

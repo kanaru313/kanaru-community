@@ -33,25 +33,39 @@ Widget _bubble(
   String? cancelLabel = _cancel,
   Brightness brightness = Brightness.light,
   double textScale = 1,
+  TextScaler? textScaler,
 }) => host(
   Center(
-    child: SizedBox(
-      key: const ValueKey('bar'),
-      width: state.width,
-      height: 56,
-      child: KSeekTimeBubble(
-        state: state,
-        duration: duration,
-        label: _label,
-        cancelLabel: cancelLabel,
-        horizontalInset: 6,
-        child: const SizedBox.expand(),
+    child: _withScaler(
+      textScaler,
+      SizedBox(
+        key: const ValueKey('bar'),
+        width: state.width,
+        height: 56,
+        child: KSeekTimeBubble(
+          state: state,
+          duration: duration,
+          label: _label,
+          cancelLabel: cancelLabel,
+          horizontalInset: 6,
+          child: const SizedBox.expand(),
+        ),
       ),
     ),
   ),
   brightness: brightness,
   textScale: textScale,
 );
+
+/// [child] under [scaler], or as it is when there is none.
+Widget _withScaler(TextScaler? scaler, Widget child) => scaler == null
+    ? child
+    : Builder(
+        builder: (context) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: scaler),
+          child: child,
+        ),
+      );
 
 Color _fill(WidgetTester tester, String text) {
   final box = tester.widget<DecoratedBox>(
@@ -150,6 +164,27 @@ void main() {
     expect(box.left, greaterThanOrEqualTo(bar.left - 0.5));
   });
 
+  testWidgets('the box fits its text under nonlinear text scaling', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _bubble(
+        _state(pointer: 0.5, dragging: true),
+        textScaler: const _SmallTextGrowsMore(),
+      ),
+    );
+    final text = tester.getRect(find.text('t50'));
+    final box = tester.getRect(
+      find.ancestor(of: find.text('t50'), matching: find.byType(DecoratedBox)),
+    );
+    // 12 sp scales by 2 (24 x 20/12 = 40), 20 sp only by 1.2 (24).
+    expect(text.height, moreOrLessEquals(40, epsilon: 0.5));
+    expect(box.height, greaterThanOrEqualTo(text.height + 4 - 0.5));
+    expect(text.top, greaterThanOrEqualTo(box.top - 0.5));
+    expect(text.bottom, lessThanOrEqualTo(box.bottom + 0.5));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a narrow bar centres the bubble', (tester) async {
     await tester.pumpWidget(
       _bubble(_state(pointer: 0, dragging: true, width: 40)),
@@ -176,4 +211,24 @@ void main() {
     expect(find.bySemanticsLabel('t50'), findsNothing);
     handle.dispose();
   });
+}
+
+/// Like Android 14+ nonlinear font scaling: small text grows more than large
+/// text (12 sp doubles, 20 sp grows by 20 %).
+class _SmallTextGrowsMore extends TextScaler {
+  const _SmallTextGrowsMore();
+
+  @override
+  double scale(double fontSize) =>
+      fontSize <= 12 ? fontSize * 2 : fontSize * 1.2;
+
+  @override
+  // A ratio for old callers only; the widgets under test call [scale].
+  double get textScaleFactor => 2;
+
+  @override
+  bool operator ==(Object other) => other is _SmallTextGrowsMore;
+
+  @override
+  int get hashCode => (_SmallTextGrowsMore).hashCode;
 }
