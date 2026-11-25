@@ -3,7 +3,7 @@
 
 use std::path::Path;
 
-use super::{aiff_bytes, syncsafe, write_vorbis_key};
+use super::{aiff_bytes, id3v2_frame, syncsafe, write_vorbis_key};
 use crate::tags_fixtures::{flac_bytes, wav_bytes, TempDir};
 
 /// An ID3v2.4 tag made of `frames`, declaring exactly their length or
@@ -94,4 +94,41 @@ pub fn flac_with_comments(comments: &[(&str, &str)]) -> Vec<u8> {
         write_vorbis_key(&path, key, text);
     }
     std::fs::read(Path::new(&path)).expect("read FLAC")
+}
+
+/// An AIFC file of an unknown compression type (`XXXX`) named `name`, with
+/// `chunks` added after the audio. lofty decodes the name as UTF-8 when it
+/// reads the audio properties.
+pub fn aifc_with_chunks(name: &[u8], chunks: &[(&[u8; 4], &[u8])]) -> Vec<u8> {
+    let mut comm = Vec::new();
+    comm.extend_from_slice(&1u16.to_be_bytes());
+    comm.extend_from_slice(&4410u32.to_be_bytes());
+    comm.extend_from_slice(&16u16.to_be_bytes());
+    // 44100 Hz as an 80-bit float.
+    comm.extend_from_slice(&[0x40, 0x0E, 0xAC, 0x44, 0, 0, 0, 0, 0, 0]);
+    comm.extend_from_slice(b"XXXX");
+    comm.push(u8::try_from(name.len()).expect("short name"));
+    comm.extend_from_slice(name);
+    let mut file = b"FORM\0\0\0\0AIFC".to_vec();
+    let ssnd = vec![0u8; 8 + 4410 * 2];
+    let audio: [(&[u8; 4], &[u8]); 2] = [(b"COMM", &comm), (b"SSND", &ssnd)];
+    file = add_chunks(file, 12, &audio, Place::AfterAudio, u32::to_be_bytes);
+    add_chunks(file, 12, chunks, Place::AfterAudio, u32::to_be_bytes)
+}
+
+/// A FLAC file with a healthy ID3v2 prefix (a title, then a 4 KB picture)
+/// that ends halfway through the prefix, after the title.
+pub fn flac_cut_inside_a_healthy_prefix() -> Vec<u8> {
+    let mut picture = b"\x00image/jpeg\x00\x03\x00\xFF\xD8\xFF".to_vec();
+    picture.resize(4000, 0x55);
+    let tag = id3v2_tag(
+        &[
+            id3v2_frame("TIT2", b"\x03Healthy"),
+            id3v2_frame("APIC", &picture),
+        ],
+        None,
+    );
+    let mut file = [tag.as_slice(), &flac_bytes()].concat();
+    file.truncate(tag.len() / 2);
+    file
 }

@@ -285,9 +285,9 @@ fn mp3_comm_description_is_not_the_comment() {
 
 use kanaru_media::tags::TrackTags;
 use lyrics_fixtures::{
-    aiff_with_chunks, broken_id3v2, flac_with_comments, frame_that_ends_the_tag,
-    frame_with_a_bad_encoding, id3v2_frame, id3v2_tag, versioned_bad_frame, versioned_frame,
-    versioned_id3v2_tag, wav_with_chunks, Place,
+    aifc_with_chunks, aiff_with_chunks, broken_id3v2, flac_cut_inside_a_healthy_prefix,
+    flac_with_comments, frame_that_ends_the_tag, frame_with_a_bad_encoding, id3v2_frame, id3v2_tag,
+    versioned_bad_frame, versioned_frame, versioned_id3v2_tag, wav_with_chunks, Place,
 };
 
 /// A text frame of ID3v2.`version`: UTF-8 in 2.4, Latin-1 in 2.3.
@@ -616,15 +616,23 @@ fn a_healthy_tag_in_front_of_broken_audio_keeps_the_original_error() {
     let with = |tail: &[u8]| [tag.as_slice(), tail].concat();
     let wav = wav_with_chunks(&[(b"id3 ", &tag)], Place::AfterAudio);
     let aiff = aiff_with_chunks(&[(b"ID3 ", &tag)], Place::AfterAudio);
-    let cases: [(&str, Vec<u8>); 5] = [
+    let cases: [(&str, Vec<u8>); 7] = [
         // Bytes holding no MPEG frame.
         ("garbage_audio.mp3", with(&[0x41; 4000])),
         // The tag and nothing else.
         ("stub.mp3", tag.clone()),
         // A FLAC stream cut inside its STREAMINFO.
         ("cut.flac", with(&flac_bytes()[..20])),
+        // A FLAC file that ends inside its healthy ID3v2 prefix.
+        ("cut_in_prefix.flac", flac_cut_inside_a_healthy_prefix()),
         ("no_fmt.wav", renamed(wav, b"fmt ", b"fmX ")),
         ("no_comm.aiff", renamed(aiff, b"COMM", b"COMX")),
+        // Audio properties lofty cannot decode: a compression name that is
+        // not UTF-8.
+        (
+            "latin1_name.aif",
+            aifc_with_chunks(&[0x43, 0xE9, 0x41], &[(b"ID3 ", &tag)]),
+        ),
     ];
     for (name, bytes) in cases {
         let path = dir.write(name, &bytes);
@@ -633,4 +641,18 @@ fn a_healthy_tag_in_front_of_broken_audio_keeps_the_original_error() {
         assert_eq!(error, from_parse_error(&lofty_error), "{name}");
         assert!(!error.is_transient(), "{name}");
     }
+}
+
+#[test]
+fn an_ascii_aifc_compression_name_reads() {
+    let dir = TempDir::new();
+    let tag = id3v2_tag(&[id3v2_frame("TIT2", b"\x03Healthy")], None);
+    let tags = read_bytes(
+        &dir,
+        "ascii_name.aif",
+        &aifc_with_chunks(b"Odd", &[(b"ID3 ", &tag)]),
+        true,
+    );
+    assert_eq!(tags.title.as_deref(), Some("Healthy"));
+    assert!(tags.duration_ms.is_some());
 }

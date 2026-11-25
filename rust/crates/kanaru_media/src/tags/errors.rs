@@ -6,8 +6,7 @@ use std::error::Error;
 use std::io::ErrorKind;
 
 use lofty::error::{
-    FileParseError, NotEnoughDataError, SizeMismatchError, TagParseError, TextDecodingError,
-    UnknownFormatError,
+    FileParseError, NotEnoughDataError, SizeMismatchError, TagParseError, UnknownFormatError,
 };
 use lofty::id3::v2::error::{
     BadSyncTextContentTypeError, BadTimestampFormatError, FrameIdParseError, FrameParseError,
@@ -42,32 +41,41 @@ pub fn from_parse_error(error: &FileParseError) -> MediaError {
 }
 
 /// Whether lofty refused the file because of a tag rather than its audio:
-/// `error` or one of its causes is a tag failure.
+/// `error` or one of its causes is a tag failure, and no cause is an I/O
+/// error.
 ///
 /// lofty wraps every tag failure of MP3, WAV, AIFF and FLAC in a
 /// `TagParseError` (ID3v2 header, frame, text and size failures, and the
-/// APE, ID3v1, RIFF INFO and AIFF text tags). The ID3v2 causes it wraps count
-/// on their own too, should a later lofty pass one up unwrapped. Not counted:
-/// I/O, size and allocation errors and `FakeTagError`, which lofty also
+/// APE, ID3v1, RIFF INFO and AIFF text tags). The ID3v2-only causes it wraps
+/// count on their own too. An I/O error anywhere in the chain means the file
+/// ended or could not be read, not that the tag is broken: lofty reads a FLAC
+/// file's ID3v2 prefix with one exact-size read and wraps its end-of-file in
+/// a `TagParseError`, so a file cut inside a healthy prefix is not counted.
+/// Not counted either: size and allocation errors, a bare
+/// `TextDecodingError` (lofty raises one for an AIFC compression name that
+/// is not UTF-8, an audio property) and `FakeTagError`, which lofty also
 /// raises for the audio (bare `FakeTagError`: `APET` junk at the start of an
 /// MP3).
 pub(crate) fn is_tag_failure(error: &(dyn Error + 'static)) -> bool {
+    let mut tag = false;
     let mut source = Some(error);
     while let Some(current) = source {
+        if current.is::<std::io::Error>() {
+            return false;
+        }
         if current.is::<TagParseError>()
             || current.is::<FrameParseError>()
             || current.is::<FrameIdParseError>()
             || current.is::<Id3v2HeaderError>()
-            || current.is::<TextDecodingError>()
             || current.is::<TimestampParseError>()
             || current.is::<BadTimestampFormatError>()
             || current.is::<BadSyncTextContentTypeError>()
         {
-            return true;
+            tag = true;
         }
         source = current.source();
     }
-    false
+    tag
 }
 
 /// Maps an I/O error from sniffing the content.
@@ -99,6 +107,8 @@ fn describe(error: &FileParseError) -> String {
 
 #[cfg(test)]
 mod tests {
+    use lofty::error::TextDecodingError;
+
     use super::*;
 
     #[test]
@@ -209,7 +219,9 @@ mod tests {
         // UTF-16 text one byte long.
         let e = mp3_error(Some((b"TIT2", b"\x01\xAB")), &mp3_frames());
         assert!(is_tag_failure(&e));
-        assert!(is_tag_failure(cause::<TextDecodingError>(&e)));
+        assert!(is_tag_failure(cause::<TagParseError>(&e)));
+        // The decoding error alone may come from audio properties.
+        assert!(!is_tag_failure(cause::<TextDecodingError>(&e)));
     }
 
     #[test]
@@ -232,6 +244,19 @@ mod tests {
         assert!(!is_tag_failure(&garbage));
         let io: FileParseError = std::io::Error::from(ErrorKind::UnexpectedEof).into();
         assert!(!is_tag_failure(&io));
+        // A FLAC file ending inside its ID3v2 prefix: lofty wraps the
+        // end-of-file in a tag error.
+        let mut cut = b"ID3\x04\x00\x00".to_vec();
+        cut.extend_from_slice(&syncsafe(100));
+        cut.extend_from_slice(&[0; 20]);
+        let cut = <lofty::flac::FlacFile as lofty::file::AudioFile>::read_from(
+            &mut std::io::Cursor::new(cut),
+            lofty::config::ParseOptions::new(),
+        )
+        .err()
+        .expect("lofty refuses the file");
+        cause::<TagParseError>(&cut);
+        assert!(!is_tag_failure(&cut));
         let size: FileParseError = SizeMismatchError.into();
         assert!(!is_tag_failure(&size));
         assert!(!caused_by(lofty::error::FakeTagError));

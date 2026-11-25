@@ -1129,11 +1129,12 @@ end of its tags may lose its properties. Outcomes:
 - Some fields or the audio properties recovered: a normal result. Fields written
   after the damage are missing (a title without its artist is shown as such).
   Fields without properties count only when lofty failed on a tag (a
-  `TagParseError`, or an ID3v2 frame, header, text or timestamp error, in its cause
-  chain: `tags::errors::is_tag_failure`).
+  `TagParseError`, or an ID3v2 frame, header or timestamp error, in its cause
+  chain, and no I/O error anywhere in that chain: `tags::errors::is_tag_failure`).
 - A healthy tag in front of broken or missing audio (garbage after the tag, a tag
-  with nothing after it, a cut FLAC stream, a WAV without `fmt `): lofty's original
-  error, still a scan error.
+  with nothing after it, a cut FLAC stream, a FLAC file that ends inside its ID3v2
+  prefix, a WAV without `fmt `, an AIFC whose compression name is not UTF-8):
+  lofty's original error, still a scan error.
 - A tag that cannot be recovered at all but audio that reads: a result with the
   properties and no tag fields (filename-only title), **no longer a scan error**.
 - Nothing recovered (no ID3v2 tag where the type keeps one, no frame and no readable

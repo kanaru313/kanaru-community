@@ -22,7 +22,8 @@ use covers_fixtures::{
     two_color_jpeg, varied_jpeg, webp_with_orientation, with_jpeg_orientation,
 };
 use lyrics_fixtures::{
-    broken_id3v2, frame_that_ends_the_tag, id3v2_frame, id3v2_tag, wav_with_chunks, Place,
+    aifc_with_chunks, broken_id3v2, flac_cut_inside_a_healthy_prefix, frame_that_ends_the_tag,
+    id3v2_frame, id3v2_tag, wav_with_chunks, Place,
 };
 use tags_fixtures::{mp3_bytes, open_plain, save, tag_with, wav_bytes, TempDir};
 
@@ -280,7 +281,15 @@ fn a_healthy_tag_in_front_of_broken_audio_is_still_an_error() {
         .position(|w| w == b"fmt ")
         .expect("fmt chunk");
     wav[at..at + 4].copy_from_slice(b"fmX ");
-    for (name, bytes) in [("garbage.mp3", garbage), ("no_fmt.wav", wav)] {
+    let aifc = aifc_with_chunks(&[0x43, 0xE9, 0x41], &[(b"ID3 ", &tag)]);
+    for (name, bytes) in [
+        ("garbage.mp3", garbage),
+        ("no_fmt.wav", wav),
+        // The file ends inside its healthy ID3v2 prefix.
+        ("cut_in_prefix.flac", flac_cut_inside_a_healthy_prefix()),
+        // A compression name that is not UTF-8: unreadable audio properties.
+        ("latin1_name.aif", aifc),
+    ] {
         let audio = scene.root.write(name, &bytes);
         let lofty_error = lofty::probe::Probe::open(&audio)
             .expect("open")
