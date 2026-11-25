@@ -1095,6 +1095,18 @@ mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancell
     (no letter spacing), or `errorContainer` with `cancelLabel` while
     cancelling. Excluded from semantics (the slider speaks the value).
   - `PlaybackWaveformSeekBar` passes `formatClock` and `playbackSeekCancel` ("Thả để huỷ" / "Release to cancel").
+  - Scrub time: `KSeekGestureArea(onScrub:)` (passed through by `KWaveformSeekBar`; the logic is `SeekScrubReporter`,
+    `seek_scrub_reporter.dart`) reports the time under the pointer while holding or dragging and not cancelling, null when that ends
+    (cancel, release, pointer cancel, track change, unmount; the last two after the frame), only on change. `PlaybackWaveformSeekBar`
+    writes it to `playbackScrubProvider` (`playback/state/playback_scrub_provider.dart`, tagged with the position's entry id; readers
+    ignore another entry's) and speaks it as the slider value; `PlaybackTimeLabel(followScrub: true)` (elapsed on the mobile page,
+    desktop track column and lyrics footer) shows it instead of the position. The player bar and mini player labels keep the default
+    and never follow.
+  - Settling: a seek from the waveform bar (release, tap, keys) keeps its target in `playbackScrubProvider` until the published
+    position is within `seekLandedWindow` (1 s, the controller's landed window) of the target, the entry changes or
+    `seekSettleTimeoutProvider` (1 s; tests override it) passes, so the label and spoken value go
+    straight to it instead of showing the old position while the engine seeks. A new scrub replaces it; unmount clears it after the
+    frame. Cancels never seek, so they return to the real position at once.
   - Recognizers are built by `seekRecognizers` (`seek_recognizers.dart`), `KSeekState` lives in `k_seek_state.dart` (exported with the
     area).
 

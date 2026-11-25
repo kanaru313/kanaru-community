@@ -36,6 +36,7 @@ Widget _bar({
   double width = 200,
   bool bubble = false,
   VoidCallback? onSeekEnd,
+  ValueChanged<Duration?>? onScrub,
 }) => SizedBox(
   width: width,
   child: KWaveformSeekBar(
@@ -47,6 +48,7 @@ Widget _bar({
     fallback: fallback,
     onSeek: (d) => seeks?.add(d),
     onSeekEnd: onSeekEnd,
+    onScrub: onScrub,
     bubbleLabel: bubble ? _clock : null,
     cancelLabel: bubble ? _cancelText : null,
     semanticLabel: 'Position',
@@ -686,6 +688,7 @@ void main() {
       VoidCallback? onSeekEnd,
       Object? track = 1,
       Duration? duration = _total,
+      ValueChanged<Duration?>? onScrub,
     }) async {
       await tester.pumpWidget(
         _hosted(
@@ -696,6 +699,7 @@ void main() {
             duration: duration,
             seeks: seeks,
             onSeekEnd: onSeekEnd,
+            onScrub: onScrub,
             bubble: true,
             fallback: states == null
                 ? null
@@ -1076,6 +1080,157 @@ void main() {
       expect(find.text(_cancelText), findsNothing);
       await g.up();
       expect(seeks.single.inMilliseconds, 65500);
+    });
+
+    group('scrub report', () {
+      /// Every value the bar reported, as whole milliseconds (null: none).
+      List<int?> ms(List<Duration?> scrubs) => [
+        for (final s in scrubs) s?.inMilliseconds,
+      ];
+
+      testWidgets('a drag reports the finger, up past 48 none, down again '
+          'the finger, the release none', (tester) async {
+        final scrubs = <Duration?>[];
+        final box = await pumpBubbleBar(tester, onScrub: scrubs.add);
+        final g = await tester.startGesture(
+          Offset(box.left + 20, box.center.dy),
+        );
+        await g.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+        await tester.pump();
+        expect(scrubs.last?.inMilliseconds, 65500);
+        await g.moveTo(Offset(xAt(box, 65.5), box.center.dy - 60));
+        await tester.pump();
+        expect(scrubs.last, isNull);
+        await g.moveTo(Offset(xAt(box, 40.5), box.center.dy - 10));
+        await tester.pump();
+        expect(scrubs.last?.inMilliseconds, 40500);
+        final before = scrubs.length;
+        await g.up();
+        await tester.pump();
+        expect(ms(scrubs.sublist(before)), [null]);
+      });
+
+      testWidgets('only changes are reported', (tester) async {
+        final scrubs = <Duration?>[];
+        final box = await pumpBubbleBar(tester, onScrub: scrubs.add);
+        final g = await tester.startGesture(
+          Offset(box.left + 20, box.center.dy),
+        );
+        await g.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+        await tester.pump();
+        // Moving up 20 changes no time and does not cancel yet.
+        await g.moveTo(Offset(xAt(box, 65.5), box.center.dy - 20));
+        await tester.pump();
+        await g.up();
+        await tester.pump();
+        expect(ms(scrubs).last, isNull);
+        for (var i = 1; i < scrubs.length; i++) {
+          expect(scrubs[i], isNot(scrubs[i - 1]));
+        }
+      });
+
+      testWidgets('a hold reports the finger, the release none', (
+        tester,
+      ) async {
+        final scrubs = <Duration?>[];
+        final box = await pumpBubbleBar(tester, onScrub: scrubs.add);
+        final g = await tester.startGesture(
+          Offset(xAt(box, 30.5), box.center.dy),
+        );
+        await tester.pump(_ms(100));
+        expect(scrubs, isEmpty);
+        await tester.pump(_ms(60));
+        expect(ms(scrubs), [30500]);
+        await g.up();
+        await tester.pump();
+        expect(ms(scrubs), [30500, null]);
+      });
+
+      testWidgets('a pointer cancel reports none, mid-hold and mid-drag', (
+        tester,
+      ) async {
+        final scrubs = <Duration?>[];
+        final box = await pumpBubbleBar(tester, onScrub: scrubs.add);
+        final held = await tester.startGesture(
+          Offset(xAt(box, 30.5), box.center.dy),
+        );
+        await tester.pump(_ms(200));
+        expect(scrubs.last?.inMilliseconds, 30500);
+        await held.cancel();
+        await tester.pump();
+        expect(scrubs.last, isNull);
+
+        final dragged = await tester.startGesture(
+          Offset(box.left + 20, box.center.dy),
+        );
+        await dragged.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+        await tester.pump();
+        expect(scrubs.last?.inMilliseconds, 65500);
+        await dragged.cancel();
+        await tester.pump();
+        expect(scrubs.last, isNull);
+      });
+
+      testWidgets('a track change reports none after the frame', (
+        tester,
+      ) async {
+        final scrubs = <Duration?>[];
+        var box = await pumpBubbleBar(tester, onScrub: scrubs.add);
+        final held = await tester.startGesture(
+          Offset(xAt(box, 30.5), box.center.dy),
+        );
+        await tester.pump(_ms(200));
+        expect(scrubs.last?.inMilliseconds, 30500);
+        box = await pumpBubbleBar(tester, onScrub: scrubs.add, track: 2);
+        expect(scrubs.last, isNull);
+        await held.up();
+
+        final dragged = await tester.startGesture(
+          Offset(box.left + 20, box.center.dy),
+        );
+        await dragged.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+        await tester.pump();
+        expect(scrubs.last?.inMilliseconds, 65500);
+        await pumpBubbleBar(tester, onScrub: scrubs.add, track: 3);
+        expect(scrubs.last, isNull);
+        await dragged.up();
+        await tester.pump();
+        expect(scrubs.last, isNull);
+      });
+
+      testWidgets('leaving the tree mid-drag reports none', (tester) async {
+        final scrubs = <Duration?>[];
+        final box = await pumpBubbleBar(tester, onScrub: scrubs.add);
+        final g = await tester.startGesture(
+          Offset(box.left + 20, box.center.dy),
+        );
+        await g.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+        await tester.pump();
+        expect(scrubs.last?.inMilliseconds, 65500);
+        await tester.pumpWidget(_hosted(const SizedBox()));
+        expect(scrubs.last, isNull);
+        await g.up();
+      });
+
+      testWidgets('a tap reports nothing', (tester) async {
+        final scrubs = <Duration?>[];
+        final box = await pumpBubbleBar(tester, onScrub: scrubs.add);
+        await tester.tapAt(Offset(xAt(box, 30.5), box.center.dy));
+        await tester.pump();
+        expect(scrubs, isEmpty);
+      });
+
+      testWidgets('without a callback a drag still seeks', (tester) async {
+        final seeks = <Duration>[];
+        final box = await pumpBubbleBar(tester, seeks: seeks);
+        final g = await tester.startGesture(
+          Offset(box.left + 20, box.center.dy),
+        );
+        await g.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+        await tester.pump();
+        await g.up();
+        expect(seeks.single.inMilliseconds, 65500);
+      });
     });
   });
 }

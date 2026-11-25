@@ -39,7 +39,9 @@ const Duration seekHoldDelay = Duration(milliseconds: 150);
 ///
 /// With [bubbleLabel] a hold or drag floats the time under the finger above
 /// the band ([KSeekTimeBubble]); with [cancelLabel] a drag that goes
-/// [seekCancelUpDistance] up is cancelled while it stays there.
+/// [seekCancelUpDistance] up is cancelled while it stays there. [onScrub]
+/// reports that time to the caller (for its elapsed label and the spoken
+/// [semanticValue]), null when it is no longer shown.
 class KWaveformSeekBar extends StatefulWidget {
   const KWaveformSeekBar({
     super.key,
@@ -59,6 +61,7 @@ class KWaveformSeekBar extends StatefulWidget {
     this.keyStep = const Duration(seconds: 5),
     this.bubbleLabel,
     this.cancelLabel,
+    this.onScrub,
   });
 
   final Duration position;
@@ -98,6 +101,9 @@ class KWaveformSeekBar extends StatefulWidget {
 
   /// Text of the bubble while a drag is cancelling. Null: no drag-up cancel.
   final String? cancelLabel;
+
+  /// See [KSeekGestureArea.onScrub].
+  final ValueChanged<Duration?>? onScrub;
 
   @override
   State<KWaveformSeekBar> createState() => _KWaveformSeekBarState();
@@ -252,6 +258,7 @@ class _KWaveformSeekBarState extends State<KWaveformSeekBar>
           ? seekCancelUpDistance
           : null,
       holdDelay: widget.bubbleLabel != null ? seekHoldDelay : null,
+      onScrub: widget.onScrub,
       builder: _withBubble,
     );
   }

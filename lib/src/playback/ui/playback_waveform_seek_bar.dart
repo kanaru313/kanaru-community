@@ -1,12 +1,17 @@
+import 'dart:async';
+
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
+import '../domain/playback_views.dart';
 import '../domain/seek_bar_style.dart';
 import '../domain/waveform.dart';
 import '../state/playback_position_provider.dart';
 import '../state/playback_providers.dart';
+import '../state/playback_scrub_provider.dart';
 import '../state/seek_bar_style_provider.dart';
 import '../state/waveform_providers.dart';
 import 'playback_time_label.dart';
@@ -16,15 +21,98 @@ import 'playback_time_label.dart';
 /// these is mounted in the waveform style. The band shows the dotted row until
 /// the playing entry's status is known, then bars or the flat fallback; the flat
 /// style does not watch the waveform and passes `none` (the flat track).
-class PlaybackWaveformSeekBar extends ConsumerWidget {
+///
+/// A hold or drag is published as [playbackScrubProvider], so the elapsed
+/// labels that follow it and the spoken value show the time under the finger.
+/// A seek from the bar (release, tap, keys) keeps its target there while it
+/// settles, so they go straight to it instead of showing the old position
+/// until the player reports the new one: until the position is within
+/// [seekLandedWindow] of the target, the entry changes, or
+/// [seekSettleTimeoutProvider] passes.
+class PlaybackWaveformSeekBar extends ConsumerStatefulWidget {
   const PlaybackWaveformSeekBar({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlaybackWaveformSeekBar> createState() =>
+      _PlaybackWaveformSeekBarState();
+}
+
+/// A published position this close to the seek target means the seek
+/// landed (the controller's own landed window).
+const Duration seekLandedWindow = Duration(seconds: 1);
+
+class _PlaybackWaveformSeekBarState
+    extends ConsumerState<PlaybackWaveformSeekBar> {
+  late final PlaybackScrubNotifier _scrub;
+
+  /// The target this bar wrote while its seek settles; null otherwise.
+  PlaybackScrub? _settling;
+  Timer? _settleTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrub = ref.read(playbackScrubProvider.notifier);
+  }
+
+  @override
+  void dispose() {
+    _settleTimer?.cancel();
+    final settling = _settling;
+    if (settling != null) {
+      // Not while the tree is being torn down: after the frame.
+      final scrub = _scrub;
+      SchedulerBinding.instance.addPostFrameCallback(
+        (_) => scrub.clear(settling),
+      );
+    }
+    super.dispose();
+  }
+
+  void _onScrub(int? entryId, Duration? at) {
+    _endSettle(clear: false);
+    _scrub.report(entryId, at);
+  }
+
+  void _onSeek(int? entryId, Duration to) {
+    ref.read(playerControllerProvider).seek(to);
+    _endSettle(clear: false);
+    _settling = _scrub.report(entryId, to);
+    if (_settling != null) {
+      _settleTimer = Timer(ref.read(seekSettleTimeoutProvider), _endSettle);
+    }
+  }
+
+  void _onPosition(PlaybackPosition? p) {
+    final settling = _settling;
+    if (settling == null) return;
+    if (p == null ||
+        p.entryId != settling.entryId ||
+        (p.position - settling.at).abs() <= seekLandedWindow) {
+      _endSettle();
+    }
+  }
+
+  void _endSettle({bool clear = true}) {
+    _settleTimer?.cancel();
+    _settleTimer = null;
+    final settling = _settling;
+    _settling = null;
+    if (clear && settling != null) _scrub.clear(settling);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    ref.listen(playbackPositionProvider, (_, next) => _onPosition(next.value));
     final pos = ref.watch(playbackPositionProvider).value;
     final position = pos?.position ?? Duration.zero;
     final duration = pos?.duration;
+    final positionEntry = pos?.entryId;
+    final scrubbed = ref.watch(
+      playbackScrubProvider.select((s) => scrubSecondsFor(s, positionEntry)),
+    );
+    final shown = scrubbed != null ? Duration(seconds: scrubbed) : position;
     final entry = ref.watch(nowPlayingProvider.select((n) => n.value?.entryId));
     final flat = ref.watch(seekBarStyleProvider) == SeekBarStyle.flat;
     // Not watched when flat, so the decoder never starts for a flat bar.
@@ -58,10 +146,11 @@ class PlaybackWaveformSeekBar extends ConsumerWidget {
       semanticValue: duration == null
           ? null
           : l10n.playbackPositionValue(
-              formatClock(position),
+              formatClock(shown),
               formatClock(duration),
             ),
-      onSeek: (to) => ref.read(playerControllerProvider).seek(to),
+      onScrub: (at) => _onScrub(positionEntry, at),
+      onSeek: (to) => _onSeek(positionEntry, to),
     );
   }
 }

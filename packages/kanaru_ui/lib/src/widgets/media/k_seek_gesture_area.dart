@@ -5,6 +5,7 @@ import 'seek_drag_tracker.dart';
 import 'seek_focus_tracker.dart';
 import 'seek_hold_tracker.dart';
 import 'seek_recognizers.dart';
+import 'seek_scrub_reporter.dart';
 
 export 'k_seek_state.dart';
 
@@ -17,6 +18,7 @@ export 'k_seek_state.dart';
 ///   bubble shows), and a drag that goes [cancelUpDistance] above where the
 ///   pointer went down is cancelled while it stays there.
 /// - Left/Right seek by [keyStep] while it has focus.
+/// - [onScrub] reports the time under the finger while it holds or drags.
 /// - The slider semantics (value, increase/decrease) are here too.
 class KSeekGestureArea extends StatefulWidget {
   const KSeekGestureArea({
@@ -37,6 +39,7 @@ class KSeekGestureArea extends StatefulWidget {
     this.horizontalInset = 0,
     this.cancelUpDistance,
     this.holdDelay,
+    this.onScrub,
   });
 
   final Duration position;
@@ -80,6 +83,13 @@ class KSeekGestureArea extends StatefulWidget {
   /// goes to an ancestor (the hold then ends). Null: off.
   final Duration? holdDelay;
 
+  /// The time under the pointer while the bar is held or dragged and the
+  /// drag is not cancelling; null again when that ends (cancel, release,
+  /// pointer cancel, track change, unmount). Called only when the value
+  /// changes. A change found while building (track change, unmount) is
+  /// reported after the frame.
+  final ValueChanged<Duration?>? onScrub;
+
   /// Height of the hit area.
   final double height;
   final Widget Function(BuildContext context, KSeekState state) builder;
@@ -102,16 +112,28 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
   /// The latest touch was cancelled by the system.
   bool _cancelled = false;
 
+  late final _scrub = SeekScrubReporter(
+    drag: _drag,
+    hold: _hold,
+    timeAt: (fraction) => _seekable ? _at(fraction) : null,
+    fractionOf: _fractionOf,
+    onScrub: () => widget.onScrub,
+    mounted: () => mounted,
+  );
+
   bool get _seekable => (widget.duration?.inMilliseconds ?? 0) > 0;
 
   void _changed() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    _scrub.report();
   }
 
   @override
   void dispose() {
     _focus.dispose();
     _hold.dispose();
+    _scrub.dispose();
     super.dispose();
   }
 
@@ -123,6 +145,7 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
       _hold.stop(notify: false);
       _drag.drop();
     }
+    _scrub.reportAfterFrame();
   }
 
   double _fractionOf(double dx, double width) {
@@ -160,6 +183,7 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
       track: widget.track,
     );
     if (wasDragging) setState(() {});
+    _scrub.report();
     if (seekTo != null) widget.onSeek(_at(seekTo));
     if (ended) widget.onSeekEnd?.call();
   }
@@ -176,6 +200,7 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
     );
     widget.onSeekStart?.call();
     setState(() {});
+    _scrub.report();
   }
 
   void _dragUpdate(DragUpdateDetails d, double width) {
@@ -185,6 +210,7 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
       globalY: d.globalPosition.dy,
     );
     setState(() {});
+    _scrub.report();
   }
 
   Map<Type, GestureRecognizerFactory> _gestures(
@@ -274,6 +300,8 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
           child: LayoutBuilder(
             builder: (context, box) {
               final width = box.maxWidth;
+              // Layout-time write, read only by pointer and timer callbacks.
+              _scrub.width = width;
               return Listener(
                 onPointerDown: (e) {
                   _cancelled = false;

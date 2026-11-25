@@ -12,6 +12,7 @@ import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
 import 'package:kanaru/src/playback/state/track_info_providers.dart';
 import 'package:kanaru/src/playback/ui/flight_source.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
+import 'package:kanaru/src/playback/ui/playback_time_label.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
 import 'package:kanaru/src/screens/now_playing/ui/mobile/cover_swiper.dart';
@@ -67,6 +68,16 @@ Future<void> _loadDuration(WidgetTester tester, UiHost host) async {
   );
   await host.letStreamsArrive(tester);
 }
+
+/// The elapsed time label of the page.
+String _elapsed(WidgetTester tester) => tester
+    .widget<Text>(
+      find.descendant(
+        of: find.byWidgetPredicate((w) => w is PlaybackTimeLabel && !w.total),
+        matching: find.byType(Text),
+      ),
+    )
+    .data!;
 
 Iterable<String> _seeks(UiHost host) =>
     host.h.engine.commands.where((c) => c.startsWith('seek:'));
@@ -250,8 +261,8 @@ void main() {
       final bar = tester.getRect(find.byType(KWaveformSeekBar));
       final g = await tester.startGesture(bar.center);
       await tester.pump(const Duration(milliseconds: 200));
-      // The middle of a 240 s bar.
-      expect(find.text('2:00'), findsOneWidget);
+      // The middle of a 240 s bar, as the elapsed time (and in the bubble).
+      expect(_elapsed(tester), '2:00');
       await g.moveBy(const Offset(0, -30));
       await g.moveBy(const Offset(0, -30));
       await tester.pump();
@@ -259,6 +270,7 @@ void main() {
       // the drag went to it.
       expect(scrolled(tester), greaterThan(0));
       expect(find.text('2:00'), findsNothing);
+      expect(_elapsed(tester), '0:00');
       expect(find.text('Release to cancel'), findsNothing);
       await _release(tester, host, g);
       expect(_seeks(host), isEmpty);
@@ -786,5 +798,26 @@ void main() {
       await swipePrevious(tester, host);
       expect(host.h.c.queueState.current, 0);
     });
+  });
+
+  testWidgets('dragging the bar shows the finger time as elapsed, the '
+      'release the real one', (tester) async {
+    final host = await _open(tester);
+    await _loadDuration(tester, host);
+    String shown() => _elapsed(tester);
+    expect(shown(), '0:00');
+    final bar = tester.getRect(find.byType(KWaveformSeekBar));
+    final g = await tester.startGesture(Offset(bar.left + 40, bar.center.dy));
+    await g.moveTo(
+      Offset(bar.left + 6 + (bar.width - 12) * 65.5 / 240, bar.center.dy),
+    );
+    await tester.pump();
+    expect(shown(), '1:05');
+    await g.moveBy(const Offset(0, -60));
+    await tester.pump();
+    expect(shown(), '0:00');
+    await _release(tester, host, g);
+    expect(_seeks(host), isEmpty);
+    expect(shown(), '0:00');
   });
 }
