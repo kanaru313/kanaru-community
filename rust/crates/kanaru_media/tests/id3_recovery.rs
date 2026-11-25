@@ -82,32 +82,40 @@ fn probed(path: &Path) -> Option<FileType> {
         .file_type()
 }
 
-/// lofty refuses the tag for its first frame; symphonia skips only that frame
-/// and would read on through every filler to the lyrics after the cap.
-fn tag_with_lyrics_past_the_frame_cap() -> Vec<u8> {
-    let mut frames = vec![frame_with_a_bad_encoding()];
+/// Frames of a tag lofty refuses for its first frame; symphonia skips only
+/// that frame and reads on. `TXXX:LYRICS` sits inside the frame cap, `USLT`
+/// after it: with the cap the text frame is all that is read; without it the
+/// `USLT` past the fillers would win, as it is preferred.
+fn frames_with_lyrics_past_the_frame_cap() -> Vec<Vec<u8>> {
+    let mut frames = vec![
+        frame_with_a_bad_encoding(),
+        id3v2_frame("TXXX", b"\x03LYRICS\x00Inside the cap"),
+    ];
     frames.extend(std::iter::repeat_n(
         id3v2_frame("TIT2", b"\x03x"),
         MAX_ID3_FALLBACK_FRAMES,
     ));
     frames.push(uslt_frame("Beyond the cap"));
-    id3v2_tag(&frames, None)
+    frames
+}
+
+/// The lyrics text `read_lyrics` gives for `path`, which lofty must refuse.
+fn recovered_text(path: &Path, what: &str) -> Option<String> {
+    assert!(lofty::read_from_path(path).is_err(), "{what}");
+    read(path)
+        .unwrap_or_else(|e| panic!("{what}: {e:?}"))
+        .and_then(|lyrics| lyrics.text)
 }
 
 #[test]
 fn mp3_lyrics_past_the_frame_cap_are_not_read() {
     let dir = TempDir::new();
-    // lofty refuses the tag for its first frame; symphonia skips only that
-    // frame and would read on through every filler to the lyrics.
-    let mut frames = vec![frame_with_a_bad_encoding()];
-    frames.extend(std::iter::repeat_n(
-        id3v2_frame("TIT2", b"\x03x"),
-        MAX_ID3_FALLBACK_FRAMES,
-    ));
-    frames.push(uslt_frame("Beyond the cap"));
-    let path = dir.write("capped.mp3", &broken_id3v2(&frames, None));
-    assert!(lofty::read_from_path(&path).is_err());
-    assert_eq!(read(&path), Ok(None));
+    let tag = broken_id3v2(&frames_with_lyrics_past_the_frame_cap(), None);
+    let path = dir.write("capped.mp3", &tag);
+    assert_eq!(
+        recovered_text(&path, "mp3").as_deref(),
+        Some("Inside the cap")
+    );
 }
 
 #[test]
@@ -126,11 +134,15 @@ fn mp3_lyrics_in_a_tag_declaring_more_than_the_file_holds_are_read() {
 #[test]
 fn container_lyrics_past_the_frame_cap_are_not_read() {
     let dir = TempDir::new();
-    let tag = tag_with_lyrics_past_the_frame_cap();
+    let tag = id3v2_tag(&frames_with_lyrics_past_the_frame_cap(), None);
     for container in CONTAINERS {
         let path = container.write(&dir, &tag, true);
-        assert!(lofty::read_from_path(&path).is_err(), "{container:?}");
-        assert_eq!(read(&path), Ok(None), "{container:?}");
+        let what = format!("{container:?}");
+        assert_eq!(
+            recovered_text(&path, &what).as_deref(),
+            Some("Inside the cap"),
+            "{what}"
+        );
     }
 }
 

@@ -48,6 +48,9 @@ pub(crate) struct OffsetView<R> {
 
 impl<R: Seek> OffsetView<R> {
     /// A view of `inner` starting at `offset`, positioned at its start.
+    /// `offset` must lie inside the stream: past its end, `SeekFrom::End`
+    /// seeks fail with `InvalidInput`. Callers only build views at offsets
+    /// they just read bytes from.
     pub(crate) fn new(mut inner: R, offset: u64) -> io::Result<Self> {
         inner.seek(SeekFrom::Start(offset))?;
         Ok(Self {

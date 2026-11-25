@@ -8,7 +8,10 @@
 //! the walk; an odd-sized chunk is followed by a pad byte unless the byte
 //! there starts a valid fourcc. Only headers (and pad probes) are read:
 //! chunk bodies, `data` and `SSND` included, are seeked over. `LIST` is not
-//! entered: an ID3 chunk is a top-level chunk.
+//! entered: an ID3 chunk is a top-level chunk. After a damaged `LIST`/`INFO`
+//! chunk lofty may lose its place, while this walker seeks to the end the
+//! chunk declares; the tag fallback's second lofty read, with
+//! `ParseOptions::read_tags(false)`, covers that case.
 
 use std::io::{self, Read, Seek, SeekFrom};
 

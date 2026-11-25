@@ -18,8 +18,9 @@ use lofty::config::ParseOptions;
 use lofty::file::{AudioFile, TaggedFile};
 use lofty::flac::FlacFile;
 
+use super::extract::of_vorbis;
 use super::id3_fallback::lyrics_of;
-use super::{assemble, of_vorbis, EmbeddedLyrics};
+use super::{assemble, EmbeddedLyrics};
 use crate::tags::errors::from_parse_error;
 use crate::tags::id3_recovery::iff::{id3_chunks, Iff};
 use crate::tags::id3_recovery::prefix::{flac_start, id3_prefixes, PrefixSpan};

@@ -39,3 +39,15 @@ fn a_parse_failure_is_an_error_when_the_format_asks_for_it() {
         Concrete::Fatal(_)
     ));
 }
+
+#[test]
+fn a_transient_failure_is_not_recovered() {
+    let e: FileParseError = std::io::Error::from(ErrorKind::TimedOut).into();
+    assert!(!should_recover(&e));
+}
+
+#[test]
+fn a_lasting_failure_is_recovered() {
+    let e: FileParseError = SizeMismatchError.into();
+    assert!(should_recover(&e));
+}

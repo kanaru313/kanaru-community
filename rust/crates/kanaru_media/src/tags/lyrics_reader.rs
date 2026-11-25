@@ -9,22 +9,21 @@ use lofty::config::{ParseOptions, ParsingMode};
 use lofty::error::FileParseError;
 use lofty::file::{AudioFile, FileType, TaggedFile, TaggedFileExt};
 use lofty::flac::FlacFile;
-use lofty::id3::v2::{Frame, Id3v2Tag};
 use lofty::iff::aiff::AiffFile;
 use lofty::iff::wav::WavFile;
 use lofty::mpeg::MpegFile;
-use lofty::ogg::tag::VorbisComments;
 use lofty::ogg::{OpusFile, VorbisFile};
 use lofty::probe::Probe;
 use lofty::tag::ItemKey;
 
 use super::errors::{from_parse_error, from_sniff_error};
-use super::lyrics_sylt::synced_lines;
 use crate::MediaError;
 
+mod extract;
 mod id3_fallback;
 mod recover;
 pub use super::id3_recovery::{MAX_ID3_FALLBACK_BYTES, MAX_ID3_FALLBACK_FRAMES};
+use extract::{of_id3v2, of_vorbis, ConcreteLyrics};
 
 /// Largest lyrics text kept, in bytes. A song's lyrics are a few KiB; a
 /// larger value is junk or an attack and is dropped.
@@ -181,53 +180,6 @@ enum OnFailure {
     Error,
 }
 
-/// What only the concrete file holds: the generic tag drops binary `SYLT`
-/// frames, user text frames with lyrics descriptions and unmapped Vorbis keys.
-#[derive(Default)]
-struct ConcreteLyrics {
-    synced: Vec<SyncedLine>,
-    /// Plain text used only when the generic tags give none: ID3
-    /// `TXXX:LYRICS` / `TXXX:UNSYNCEDLYRICS`, Vorbis `UNSYNCED LYRICS`.
-    fallback_text: Option<String>,
-}
-
-fn of_id3v2(tag: Option<&Id3v2Tag>) -> ConcreteLyrics {
-    let Some(tag) = tag else {
-        return ConcreteLyrics::default();
-    };
-    // lofty's `get_user_text` matches the description exactly; taggers
-    // write `Lyrics` and `unsyncedlyrics` too, so match ignoring ASCII case.
-    let fallback_text = ["LYRICS", "UNSYNCEDLYRICS"]
-        .into_iter()
-        .find_map(|wanted| {
-            tag.into_iter()
-                .filter_map(|frame| match frame {
-                    Frame::UserText(text) if text.description.eq_ignore_ascii_case(wanted) => {
-                        Some(text.content.as_ref())
-                    }
-                    _ => None,
-                })
-                .find(|text| usable_text(text))
-        })
-        .map(str::to_owned);
-    ConcreteLyrics {
-        synced: synced_lines(tag),
-        fallback_text,
-    }
-}
-
-/// foobar2000 writes `UNSYNCED LYRICS` (with a space), which lofty does not
-/// map; the key is matched ignoring ASCII case.
-fn of_vorbis(comments: Option<&VorbisComments>) -> ConcreteLyrics {
-    let fallback_text = comments
-        .and_then(|c| c.get_all("UNSYNCED LYRICS").find(|text| usable_text(text)))
-        .map(str::to_owned);
-    ConcreteLyrics {
-        synced: Vec::new(),
-        fallback_text,
-    }
-}
-
 /// Reads the lyrics left in a file whose concrete read failed for good;
 /// `None` when that does not apply to the file.
 type Recover = fn(&mut BufReader<File>, ParseOptions) -> recover::Recovered;
@@ -251,9 +203,8 @@ where
     // Only a failed read reaches the recovery: a file that reads costs no
     // extra I/O, and a transient failure is retried instead.
     let file = F::read_from(&mut reader, options).map_err(|e| {
-        let lasting = !from_parse_error(&e).is_transient();
         match recover
-            .filter(|_| lasting)
+            .filter(|_| should_recover(&e))
             .and_then(|r| r(&mut reader, options))
         {
             Some(result) => Concrete::Recovered(result),
@@ -262,6 +213,12 @@ where
     })?;
     let lyrics = extract(&file);
     Ok((file.into(), lyrics))
+}
+
+/// Whether a failed concrete read goes to the recovery: only a lasting
+/// failure does; a transient one is retried by the caller instead.
+fn should_recover(error: &FileParseError) -> bool {
+    !from_parse_error(error).is_transient()
 }
 
 /// Splits a failed concrete read: a transient error is worth retrying; any

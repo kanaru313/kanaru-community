@@ -56,7 +56,8 @@ fn a_v24_footer_is_part_of_the_prefix() {
     bytes.extend(flac_head());
     assert_eq!(prefixes(&bytes), vec![span(0, 20, 40)]);
     assert_eq!(flac(bytes), Some(40));
-    // The footer flag means nothing before v2.4.
+    // The ID3 spec has no footer before v2.4 (lofty honours the flag on
+    // v2.3 too; we keep to the spec).
     let mut bytes = tag(3, 0x10, 20, 20);
     bytes.extend(flac_head());
     assert_eq!(flac(bytes), Some(30));

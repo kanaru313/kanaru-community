@@ -55,6 +55,9 @@ fn walk<R: Read + Seek>(reader: &mut R, found: &mut Vec<PrefixSpan>) -> io::Resu
         // At most 256 MiB (28 bits): the additions below cannot overflow
         // for an `at` that lies inside the file, checked all the same.
         let declared = declared_size(&header) as u64;
+        // The ID3 spec defines the footer for v2.4 only, so the flag counts
+        // there alone. lofty also honours it on v2.3; a deliberate difference:
+        // a v2.3 writer that sets the bit writes no footer.
         let footer = if header[3] == 4 && header[5] & 0x10 != 0 {
             FOOTER_LEN
         } else {
