@@ -1,12 +1,16 @@
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_card.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
+import 'package:kanaru/src/media/domain/track_info.dart';
 import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
+import 'package:kanaru/src/playback/state/track_info_providers.dart';
+import 'package:kanaru/src/playback/ui/flight_source.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/screens/now_playing/ui/favorite_button.dart';
@@ -78,6 +82,55 @@ Future<void> _release(WidgetTester tester, UiHost host, TestGesture g) async {
   await tester.pumpAndSettle();
   await host.letStreamsArrive(tester);
 }
+
+/// What the page shows for the playing track, whatever its id. [shape]
+/// can change mid-test; invalidate [trackInfoProvider] to show the new one.
+/// A null result is a track whose info is not known yet.
+class _SwitchableInfo {
+  TrackInfo? Function(TrackInfo base) shape = _full;
+
+  Override get override => trackInfoProvider.overrideWith(
+    (ref, id) => Stream.value(
+      shape(
+        TrackInfo(
+          id: id,
+          title: 'Song',
+          status: TrackAvailability.present,
+          relPath: 'song.flac',
+        ),
+      ),
+    ),
+  );
+}
+
+final _longTitle = '${'A very long song title ' * 4}end';
+final _longArtist = '${'Artist ' * 20}end';
+
+/// A full tag set with a 200-character album.
+TrackInfo _full(TrackInfo b) => TrackInfo(
+  id: b.id,
+  title: _longTitle,
+  status: b.status,
+  relPath: b.relPath,
+  artist: _longArtist,
+  album: 'A' * 200,
+  format: 'FLAC',
+  sampleRate: 44100,
+  bitrate: 900,
+  playCount: 12,
+);
+
+/// Info without artist, album or format.
+TrackInfo _bare(TrackInfo b) => b;
+
+/// Only an artist.
+TrackInfo _artistOnly(TrackInfo b) => TrackInfo(
+  id: b.id,
+  title: b.title,
+  status: b.status,
+  relPath: b.relPath,
+  artist: 'Art',
+);
 
 String _location(UiHost host) =>
     host.router!.routerDelegate.currentConfiguration.last.matchedLocation;
@@ -300,7 +353,7 @@ void main() {
       );
       expect(cover.width, NowPlayingCoverBox.sideFor(width));
       expect(cover.height, cover.width);
-      expect(tester.getSize(find.byType(NowPlayingSeekSlot)).height, 48);
+      expect(tester.getSize(find.byType(NowPlayingSeekSlot)).height, 56);
       expect(
         tester.getSize(find.byType(NowPlayingButtonRow)).height,
         nowPlayingButtonRowHeight,
@@ -309,6 +362,150 @@ void main() {
       expect(tester.getSize(find.byType(NowPlayingHeader)).height, 56);
     });
   }
+
+  group('nothing moves between songs', () {
+    Map<String, Offset> positions(WidgetTester tester) {
+      Offset at(Finder f) => tester.getTopLeft(f.first);
+      return {
+        'cover': at(find.byType(CoverSwiper)),
+        'seek': at(find.byType(NowPlayingSeekSlot)),
+        'controls': at(find.byType(PlayPauseButton)),
+        'buttons': at(find.byType(NowPlayingButtonRow)),
+        'lyrics card': at(find.byType(LyricsCard)),
+        'info card': at(find.byType(TrackInfoCard)),
+        'info card end': tester.getBottomLeft(find.byType(TrackInfoCard)),
+      };
+    }
+
+    for (final scale in [1.0, 2.0]) {
+      testWidgets('tags, missing parts and unknown info at text ×$scale', (
+        tester,
+      ) async {
+        final info = _SwitchableInfo();
+        final host = await _open(
+          tester,
+          textScale: scale,
+          overrides: [info.override],
+        );
+        expect(tester.takeException(), isNull);
+        final full = positions(tester);
+        final album = find.descendant(
+          of: find.byType(TrackInfoCard),
+          matching: find.textContaining('A' * 200),
+        );
+        expect(album, findsOneWidget);
+        // Each is one ellipsized line, not a block wrapped and clipped.
+        for (final long in [
+          find.text(_longTitle),
+          find.text(_longArtist),
+          album,
+        ]) {
+          expect(
+            tester.renderObject<RenderParagraph>(long.first).didExceedMaxLines,
+            isTrue,
+          );
+        }
+        final cases = <String, TrackInfo? Function(TrackInfo)>{
+          'info not known': (_) => null,
+          'no artist, album or format': _bare,
+          'artist only': _artistOnly,
+          'full tags again': _full,
+        };
+        for (final MapEntry(key: name, value: shape) in cases.entries) {
+          info.shape = shape;
+          host.container.invalidate(trackInfoProvider);
+          await tester.pump();
+          await host.letStreamsArrive(tester);
+          expect(tester.takeException(), isNull, reason: name);
+          // The new shape is on screen, not the first one.
+          expect(album, shape == _full ? findsOneWidget : findsNothing);
+          expect(positions(tester), full, reason: name);
+        }
+        expect(tester.getSize(find.byType(NowPlayingSeekSlot)).height, 56);
+      });
+    }
+  });
+
+  group('the queue flight text starts on the title', () {
+    Rect flightText(WidgetTester tester) => tester
+        .widget<MobileNowPlaying>(find.byType(MobileNowPlaying))
+        .flight
+        .rectOf(FlightPiece.text)!;
+
+    testWidgets('a song without an artist: the title line only', (
+      tester,
+    ) async {
+      final info = _SwitchableInfo()..shape = _bare;
+      await _open(tester, overrides: [info.override]);
+      final title = tester.getRect(find.text('Song'));
+      final rect = flightText(tester);
+      // The flying text centres the title alone in this rect, so its y at
+      // t = 0 is the page title's y.
+      expect(rect.top, closeTo(title.top, 0.5));
+      expect(rect.center.dy, closeTo(title.center.dy, 0.5));
+      expect(
+        rect.right,
+        lessThanOrEqualTo(tester.getTopLeft(find.byType(FavoriteButton)).dx),
+      );
+    });
+
+    testWidgets('a song with an artist: title and artist lines', (
+      tester,
+    ) async {
+      final info = _SwitchableInfo()..shape = _artistOnly;
+      await _open(tester, overrides: [info.override]);
+      final title = tester.getRect(find.text('Song'));
+      final artist = tester.getRect(
+        // The info card below shows it too.
+        find.text('Art').first,
+      );
+      final rect = flightText(tester);
+      expect(rect.top, closeTo(title.top, 0.5));
+      expect(rect.bottom, closeTo(artist.bottom, 0.5));
+    });
+  });
+
+  testWidgets('the heart hides while the queue flies the text, then shows', (
+    tester,
+  ) async {
+    await _open(tester);
+    double heartOpacity() => tester
+        .widget<Opacity>(
+          find
+              .ancestor(
+                of: find.descendant(
+                  of: find.byType(MobileNowPlaying),
+                  matching: find.byType(FavoriteButton),
+                ),
+                matching: find.byType(Opacity),
+              )
+              .first,
+        )
+        .opacity;
+    expect(heartOpacity(), 1);
+    final row = find.byType(NowPlayingButtonRow);
+    await tester.tap(
+      find.descendant(of: row, matching: find.byIcon(KIcons.queueMusic)),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(
+      tester
+          .widget<MobileNowPlaying>(find.byType(MobileNowPlaying))
+          .flight
+          .hidden
+          .value,
+      isTrue,
+    );
+    expect(heartOpacity(), 0);
+    await tester.binding.handlePopRoute();
+    // The sheet flies the pieces home, then its route is disposed.
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byType(MobileNowPlaying), findsOneWidget);
+    expect(heartOpacity(), 1);
+  });
 
   testWidgets('title is 22 bold with the heart on the right', (tester) async {
     await _open(tester);

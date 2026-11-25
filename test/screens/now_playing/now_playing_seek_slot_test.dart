@@ -76,17 +76,16 @@ void main() {
   // 390 is the phone page, 560 the desktop track column.
   for (final width in [390.0, 560.0]) {
     group('slot at $width dp', () {
-      testWidgets('holds the waveform bar at 48 dp', (tester) async {
+      testWidgets('holds the waveform bar in the 56 dp band', (tester) async {
         final host = await _pump(tester, width);
         await host.letStreamsArrive(tester);
         expect(find.byType(PlaybackWaveformSeekBar), findsOneWidget);
         expect(find.byType(KWaveformSeekBar), findsOneWidget);
-        expect(find.byType(KSeekBar), findsNothing);
-        expect(
-          tester.getSize(find.byType(NowPlayingSeekSlot)).height,
-          nowPlayingSeekSlotHeight,
-        );
-        expect(nowPlayingSeekSlotHeight, 48);
+        // One source for the slot and the band it holds.
+        expect(nowPlayingSeekSlotHeight, seekBandHeight);
+        expect(nowPlayingSeekSlotHeight, 56);
+        expect(tester.getSize(find.byType(NowPlayingSeekSlot)).height, 56);
+        expect(tester.getSize(find.byKey(waveformBandKey)).height, 56);
       });
 
       testWidgets('shows the dotted band while nothing is known', (
@@ -100,7 +99,6 @@ void main() {
         // The band layer stays (dots), no fallback seek bar.
         expect(find.byKey(waveformBandKey), findsOneWidget);
         expect(find.byKey(waveformFallbackKey), findsNothing);
-        expect(find.byType(KFlatSeekTrack), findsNothing);
       });
 
       testWidgets('draws the bars of the playing entry', (tester) async {
@@ -130,7 +128,7 @@ void main() {
         expect(_bar(tester).status, KWaveformStatus.none);
         expect(_bar(tester).levels, isNull);
         expect(find.byKey(waveformFallbackKey), findsOneWidget);
-        expect(find.byType(KFlatSeekTrack), findsOneWidget);
+        expect(tester.getSize(find.byType(NowPlayingSeekSlot)).height, 56);
       });
 
       testWidgets('computing for the playing entry: dots, no fallback', (
@@ -146,7 +144,6 @@ void main() {
         expect(_bar(tester).status, KWaveformStatus.computing);
         expect(find.byKey(waveformBandKey), findsOneWidget);
         expect(find.byKey(waveformFallbackKey), findsNothing);
-        expect(find.byType(KFlatSeekTrack), findsNothing);
       });
 
       testWidgets('passes the time bubble and the cancel text', (tester) async {

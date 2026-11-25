@@ -170,6 +170,34 @@ void main() {
     expect(tester.getTopLeft(find.byType(NowPlayingSeekSlot)), seek);
   });
 
+  for (final scale in [1.0, 2.0]) {
+    testWidgets('the 56 seek band stays put without artist and album '
+        '(text ×$scale)', (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final host = await _open(tester, tagged: true);
+      final slot = find.byType(NowPlayingSeekSlot);
+      expect(tester.getSize(slot).height, 56);
+      final cover = tester.getTopLeft(find.byType(TrackCover));
+      final seek = tester.getTopLeft(slot);
+      final play = tester.getTopLeft(find.byType(PlayPauseButton));
+      await host.run(tester, () async {
+        await host.h.db.customUpdate(
+          "UPDATE tracks SET album = NULL, artist = NULL, "
+          "album_title_key = NULL, album_artist_key = NULL "
+          "WHERE title = 'T0'",
+          updates: {host.h.db.tracks},
+        );
+      });
+      await host.letStreamsArrive(tester);
+      expect(find.text('Art One'), findsNothing);
+      expect(tester.getTopLeft(find.byType(TrackCover)), cover);
+      expect(tester.getTopLeft(slot), seek);
+      expect(tester.getTopLeft(find.byType(PlayPauseButton)), play);
+      expect(tester.getSize(slot).height, 56);
+    });
+  }
+
   testWidgets('a short window scales the block down instead of overflowing', (
     tester,
   ) async {

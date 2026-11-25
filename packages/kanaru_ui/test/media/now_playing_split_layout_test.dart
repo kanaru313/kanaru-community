@@ -18,7 +18,7 @@ Future<SplitMetrics> _pump(
       NowPlayingSplitLayout(
         titleStyle: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
         lineStyle: const TextStyle(fontSize: 16),
-        seekHeight: 48,
+        seekHeight: seekBandHeight,
         columnBuilder: (context, m) {
           seen = m;
           return ColoredBox(
@@ -64,7 +64,7 @@ void main() {
       TextScaler.noScaling,
       titleStyle: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
       lineStyle: const TextStyle(fontSize: 16),
-      seekHeight: 48,
+      seekHeight: seekBandHeight,
     );
     expect(m.blockHeight, m.coverSide + reserve);
   });

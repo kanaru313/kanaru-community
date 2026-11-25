@@ -14,7 +14,9 @@ import 'package:kanaru/src/lyrics/ui/lyrics_source_button.dart';
 import 'package:kanaru/src/lyrics/ui/translation/modal/translate_body.dart';
 import 'package:kanaru/src/lyrics/ui/translation/translate_button.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
+import 'package:kanaru/src/media/domain/track_info.dart';
 import 'package:kanaru/src/playback/domain/audio_engine.dart';
+import 'package:kanaru/src/playback/state/track_info_providers.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
 import 'package:kanaru/src/playback/ui/transport_buttons.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_card.dart';
@@ -60,6 +62,7 @@ Future<UiHost> _openScreen(
   WidgetTester tester, {
   TrackLyrics lyrics = const LyricsNone(),
   int line = 5,
+  List<Override> extra = const [],
 }) async {
   final overrides = <Override>[
     playingLyricsProvider.overrideWithValue(
@@ -70,6 +73,7 @@ Future<UiHost> _openScreen(
     // The modal of the translate button reads the translation of the song;
     // its engine is the app root's, not this host's.
     trackTranslationProvider.overrideWith2((id) => _IdleTranslation(id)),
+    ...extra,
   ];
   final host = await pumpWithPlayer(
     tester,
@@ -251,6 +255,46 @@ void main() {
     await _pumpFor(tester);
     expect(find.byType(LyricsScreen), findsNothing);
     expect(find.byType(MobileNowPlaying), findsOneWidget);
+  });
+
+  testWidgets('the footer keeps its 56 band and its place between songs', (
+    tester,
+  ) async {
+    var known = true;
+    final host = await _openScreen(
+      tester,
+      lyrics: LyricsShown(syncedLyrics(40)),
+      extra: [
+        trackInfoProvider.overrideWith(
+          (ref, id) => Stream.value(
+            known
+                ? TrackInfo(
+                    id: id,
+                    title: 'Song',
+                    status: TrackAvailability.present,
+                    relPath: 'song.flac',
+                    artist: 'Art',
+                    album: 'A' * 200,
+                  )
+                : null,
+          ),
+        ),
+      ],
+    );
+    Finder inScreen(Finder f) =>
+        find.descendant(of: find.byType(LyricsScreen), matching: f);
+    final slot = inScreen(find.byType(NowPlayingSeekSlot));
+    expect(tester.getSize(slot).height, 56);
+    final seek = tester.getTopLeft(slot);
+    final play = tester.getTopLeft(inScreen(find.byType(PlayPauseButton)));
+    // A song whose info is not known yet (no title, no artist).
+    known = false;
+    host.container.invalidate(trackInfoProvider);
+    await tester.pump();
+    await host.letStreamsArrive(tester);
+    expect(find.byType(LyricsScreen), findsOneWidget);
+    expect(tester.getTopLeft(slot), seek);
+    expect(tester.getTopLeft(inScreen(find.byType(PlayPauseButton))), play);
   });
 
   testWidgets('a short pull on the footer springs back', (tester) async {

@@ -900,8 +900,8 @@ route above the shell. It slides up with the `bouncy` spring played as a curve o
 - `MobileNowPlaying` (`ui/mobile/`): header (56, 72 from 200 % text; `[⌄]` left, `[ring slot][⋮]` right, the title block
   centred on the full width; the ring slot is always reserved so the title never moves) with a drag-to-close area covering all of
   the space between the side slots (release past 120 dp closes, less
-  springs back; the ring shows while a sleep timer runs), cover, title row, `NowPlayingSeekSlot` (48 dp; flat bar for now), controls, button row, lyrics
-  card (`LyricsCard`, a button that opens the lyrics screen through `NowPlayingPage`), info card. It sits on `CoverTintBackground` fed by `playingCoverColorsProvider`; the seed of the playing cover also themes the app (see "Playing cover and app theme").
+  springs back; the ring shows while a sleep timer runs), cover, title row (always two lines: an empty artist line keeps its height), `NowPlayingSeekSlot`, controls, button row, lyrics
+  card (`LyricsCard`, a button that opens the lyrics screen through `NowPlayingPage`), info card (`TrackInfoCard`: always two one-line rows, ellipsized; `KSkeletonLine`s while the info is unknown). Every block has a height fixed per text scale, so nothing moves between songs. It sits on `CoverTintBackground` fed by `playingCoverColorsProvider`; the seed of the playing cover also themes the app (see "Playing cover and app theme").
   It owns a `FlightSource` (cover, text, play, next pieces) for the queue flights.
 - **Lyrics screen** (`ui/mobile/lyrics_screen_route.dart`, `lyrics_screen.dart`, `lyrics_screen_header.dart`): an opaque full-screen
   `ModalRoute` on the root navigator that slides up (`KMotion.pageIn`, none under reduced motion) over `/now-playing`, on the cover tint.
@@ -986,14 +986,14 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
   transport row 52; the text reserve counts two title lines (26 bold), an artist line and an album line under the text scale. The
   reserve is fixed, so a wrapping title or a late album moves nothing; a window too short even for 96 scales the block down
   (`FittedBox`). `DesktopTrackColumn` draws cover (radius 32, shadow), title, artist and album lines (each a link to the library),
-  the 48 dp seek slot, and elapsed | previous, play, next | total.
+  the 56 dp seek slot, and elapsed | previous, play, next | total.
 - **Side pane** (`desktop_side_pane.dart`): only the lyrics, titled like one tab with no other tab; the body is `LyricsBody(surface: tab,
   coverColumnShown: coverColumnShownProvider)`: sizes 28 / 40 with the cover column, 36 / 12 % without, 22 / 24 below a 900 dp pane. The queue is not here: it is the shell's right panel (see UI: widgets and shell). The player bar's Lyrics, cover and
   expand buttons open the screen.
 - **Queue nav item**: a dimmed "Coming soon" on both shells (saved queues, no mockup yet). The live queue is the right panel (desktop;
   top bar or player bar button) and the sheet (mobile; mini player long press, Queue button of Now Playing).
 - **Left out of the port**: the cover-only mode, the narrow tabs layout (it is the mobile page).
-- **Waveform**: `NowPlayingSeekSlot` holds `PlaybackWaveformSeekBar` in the same 48 dp slot (see Waveform).
+- **Waveform**: `NowPlayingSeekSlot` holds `PlaybackWaveformSeekBar` in a 56 dp slot (`nowPlayingSeekSlotHeight = seekBandHeight`), the same on the mobile page, the desktop track column and the lyrics screen footer (see Waveform).
 
 ## Waveform
 
