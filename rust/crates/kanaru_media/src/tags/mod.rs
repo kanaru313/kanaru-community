@@ -3,6 +3,7 @@
 //! path itself.
 
 pub mod errors;
+mod id3_recovery;
 pub mod language;
 pub mod lyrics_reader;
 mod lyrics_sylt;

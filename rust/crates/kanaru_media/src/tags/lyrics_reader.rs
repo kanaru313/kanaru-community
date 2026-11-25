@@ -22,9 +22,8 @@ use super::errors::{from_parse_error, from_sniff_error};
 use super::lyrics_sylt::synced_lines;
 use crate::MediaError;
 
-mod id3_bound;
 mod id3_fallback;
-pub use id3_fallback::MAX_ID3_FALLBACK_BYTES;
+pub use super::id3_recovery::{MAX_ID3_FALLBACK_BYTES, MAX_ID3_FALLBACK_FRAMES};
 
 /// Largest lyrics text kept, in bytes. A song's lyrics are a few KiB; a
 /// larger value is junk or an attack and is dropped.
@@ -95,7 +94,7 @@ pub fn read_lyrics(
             options,
             id3,
             |f| of_id3v2(f.id3v2()),
-            Some(id3_fallback::recover),
+            Some(id3_fallback::recover_mp3),
         ),
         Some(FileType::Wav) => {
             concrete::<WavFile>(probe, options, id3, |f| of_id3v2(f.id3v2()), None)

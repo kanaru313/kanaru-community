@@ -29,7 +29,8 @@ properties, `ParsingMode::BestAttempt`.
   APE or ID3v1 trailer also fails the read, and then an intact ID3v2 tag is
   recovered in full), the ID3v2
   tag at the start of the file is read again with symphonia
-  (`lyrics_reader/id3_fallback.rs`, tag bounding in `id3_bound.rs`; see below).
+  (`lyrics_reader/id3_fallback.rs` over the shared `tags/id3_recovery/`, tag
+  bounding in `id3_recovery/bound.rs`; see below).
 - FLAC, Ogg Vorbis, Opus: read the same way as `FlacFile`, `VorbisFile`,
   `OpusFile`, to reach the Vorbis comments the generic tag drops (keys lofty
   does not map). Their parse failures stay errors (see Error outcomes).

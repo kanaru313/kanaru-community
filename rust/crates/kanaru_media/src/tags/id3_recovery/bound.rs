@@ -138,7 +138,7 @@ fn syncsafe_size(bytes: &[u8]) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tags::lyrics_reader::id3_fallback::MAX_ID3_FALLBACK_BYTES;
+    use crate::tags::id3_recovery::MAX_ID3_FALLBACK_BYTES;
 
     fn header(major: u8, flags: u8, declared: usize) -> Vec<u8> {
         let mut bytes = vec![b'I', b'D', b'3', major, 0, flags];
