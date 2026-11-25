@@ -1051,7 +1051,7 @@ to the old one stops matching; restoring the separators restores it).
 | `error` | `MediaError` (above) |
 | `cancel` | `Cancel::new()`, `with_timeout(Duration)`, `cancel()`, `check() -> Result<(), MediaError>` |
 | `limits` | `MAX_FILE_BYTES_UNSEEKABLE` 256 MiB, `MAX_COVER_BYTES` 32 MiB, `MAX_COVER_PIXELS` 40 000 000, `MAX_TAG_FILE_SECONDS` 30 |
-| `tags/` | `read_tags(path, open, cancel) -> Result<TrackTags, MediaError>`; `mapping`, `language`, `errors` |
+| `tags/` | `read_tags(path, open, cancel) -> Result<TrackTags, MediaError>`; `mapping`, `language`, `errors`, `tags_fallback` (broken ID3v2), `id3_recovery` (bounded symphonia read, chunk and prefix locators, views, `to_lofty`) |
 | `covers/` | `make_cover(audio, open, sidecars, cache_dir, memo, cancel)`; `sources`, `decode_limits`, `thumbnail`, `gate`, `jpeg_header`, `webp_exif`, `key`, `colors`, `cache` |
 
 `rust/crates/kanaru_bridge`:
@@ -1097,6 +1097,39 @@ multi-value field, a raw date over 64 bytes is skipped.
 Errors: a lofty failure is `Corrupt` or `Unsupported` (an unknown format), never an
 `Io` of kind `Other`; I/O errors keep their kind (so `TimedOut` is transient). A
 truncated or inconsistent file is `Corrupt`, a permanent result.
+
+**Broken ID3v2 tags** (`tags/tags_fallback.rs`). lofty fails the whole file at the
+first ID3v2 frame it rejects. When the read fails for a reason that is not
+transient, the deadline is checked and the file is read again from the same open
+reader, for MP3, WAV, AIFF and FLAC only (by the sniffed type); a healthy file
+never takes this path:
+
+| Type | Where the ID3v2 tag is | Read again with lofty | Tag used |
+|---|---|---|---|
+| MP3 | up to 4 tags in a row at the start | from after them (ID3v1, APE, properties) | recovered ID3v2, else ID3v1/APE |
+| WAV, AIFF | up to 4 top-level `id3 `/`ID3 ` chunks | whole file with those chunk ids read as `JUNK`; if that fails, once more without any tag (properties only) | recovered ID3v2, else RIFF INFO / AIFF text |
+| FLAC | up to 4 tags in front of `fLaC` (`fLaC` + STREAMINFO exactly where they end) | from `fLaC` (Vorbis comments, properties) | Vorbis comments, else recovered ID3v2 |
+
+The frames come from symphonia, which keeps the frames before the damage and skips a
+frame with bad content; they are rebuilt as a lofty ID3v2 tag (`to_lofty`: text
+frames, `TXXX`, `COMM`, ID3v2.2/2.3 ids upgraded, a 2.3 `TYER` joined with
+`TDAT`/`TIME`) and go through the same mapping as a healthy tag, so the same frames
+give the same fields. Only one difference: a recovered MP3's `bitrate` does not count
+the tag's bytes (lofty's MP3 overall bitrate is file bytes over duration). Bounds:
+16 MiB of ID3 bytes per file, 1024 frames per tag, 1024 chunk headers walked;
+pictures are not recovered (folder covers still apply). Outcomes:
+
+- Some fields or the audio properties recovered: a normal result. Fields written
+  after the damage are missing (a title without its artist is shown as such).
+- A tag that cannot be recovered at all but audio that reads: a result with the
+  properties and no tag fields (filename-only title), **no longer a scan error**.
+- Nothing recovered (no ID3v2 tag where the type keeps one, no frame and no readable
+  audio): lofty's original error, same `MediaError` class as before.
+- A transient I/O error during the second read: that error (the row is retried).
+
+Rows already in the library are not re-read for this: `tagsPassVersion` is
+unchanged, so an unchanged file keeps its old row (filename-only, or its old
+`scan_error`) until the file changes or a full rescan reads it again.
 
 ## Old prototype references
 

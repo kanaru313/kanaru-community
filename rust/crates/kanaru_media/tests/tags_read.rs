@@ -1,5 +1,6 @@
 //! `read_tags` on small generated files.
 
+mod lyrics_fixtures;
 mod tags_fixtures;
 
 use std::cell::Cell;
@@ -277,4 +278,306 @@ fn mp3_comm_description_is_not_the_comment() {
     assert_eq!(tags.release_date.as_deref(), Some("2018-03-15"));
     assert_eq!(tags.comment.as_deref(), Some("the comment"));
     assert_eq!(tags.description.as_deref(), Some("the description"));
+}
+
+// Files with a broken ID3v2 tag: lofty refuses them, the scan keeps what was
+// written before the damage.
+
+use kanaru_media::tags::TrackTags;
+use lyrics_fixtures::{
+    aiff_with_chunks, broken_id3v2, flac_with_comments, frame_that_ends_the_tag,
+    frame_with_a_bad_encoding, id3v2_frame, id3v2_tag, versioned_bad_frame, versioned_frame,
+    versioned_id3v2_tag, wav_with_chunks, Place,
+};
+
+/// A text frame of ID3v2.`version`: UTF-8 in 2.4, Latin-1 in 2.3.
+fn text(version: u8, id: &str, value: &str) -> Vec<u8> {
+    let mut body = vec![if version == 4 { 3 } else { 0 }];
+    body.extend_from_slice(value.as_bytes());
+    versioned_frame(version, id, &body)
+}
+
+/// A `COMM` frame of ID3v2.`version` with `descriptor`.
+fn comment(version: u8, descriptor: &str, value: &str) -> Vec<u8> {
+    text(version, "COMM", &format!("eng{descriptor}\0{value}"))
+}
+
+/// A frame of every field the scan reads, in ID3v2.`version` (3 or 4).
+fn every_field(version: u8) -> Vec<Vec<u8>> {
+    let mut frames = Vec::new();
+    if version == 4 {
+        frames.push(text(4, "TIT2", "Những ngày tháng cũ"));
+        frames.push(text(4, "TDRC", "2019-05-01"));
+    } else {
+        // UTF-16 with a byte order mark: 2.3 has no UTF-8.
+        let mut title = vec![1, 0xFF, 0xFE];
+        title.extend(
+            "Những ngày tháng cũ"
+                .encode_utf16()
+                .flat_map(u16::to_le_bytes),
+        );
+        frames.push(versioned_frame(3, "TIT2", &title));
+        frames.push(text(3, "TYER", "2019"));
+        frames.push(text(3, "TDAT", "0105"));
+    }
+    for (id, value) in [
+        ("TPE1", "First\0Second"),
+        ("TALB", "Album"),
+        ("TPE2", "Band"),
+        ("TCON", "(13)"),
+        ("TCOM", "Composer"),
+        ("TRCK", "3/12"),
+        ("TPOS", "1/2"),
+        ("TSOT", "Title sort"),
+        ("TSOP", "Artist sort"),
+        ("TSOA", "Album sort"),
+        ("TLAN", "vie"),
+    ] {
+        frames.push(text(version, id, value));
+    }
+    frames.push(comment(version, "", "Plain comment"));
+    frames.push(comment(version, "description", "Long description"));
+    frames.push(text(version, "TXXX", "CATALOGNUMBER\0CAT-1"));
+    frames
+}
+
+/// A frame lofty refuses, in ID3v2.`version`, that ends what symphonia
+/// reads of the tag (2.4) or that it skips (2.3, nothing follows it).
+fn damage(version: u8) -> Vec<u8> {
+    if version == 4 {
+        frame_that_ends_the_tag()
+    } else {
+        versioned_bad_frame(3)
+    }
+}
+
+/// `tag` where `ext` keeps an ID3v2 tag, with audio.
+fn with_tag(ext: &str, tag: &[u8]) -> Vec<u8> {
+    match ext {
+        "mp3" => [tag, &mp3_bytes()].concat(),
+        "wav" => wav_with_chunks(&[(b"id3 ", tag)], Place::AfterAudio),
+        "aiff" => aiff_with_chunks(&[(b"ID3 ", tag)], Place::AfterAudio),
+        other => panic!("no ID3v2 place in .{other}"),
+    }
+}
+
+/// `read_tags` of `bytes` written as `name`, checking lofty's verdict first.
+fn read_bytes(dir: &TempDir, name: &str, bytes: &[u8], lofty_reads: bool) -> TrackTags {
+    let path = dir.write(name, bytes);
+    assert_eq!(lofty::read_from_path(&path).is_ok(), lofty_reads, "{name}");
+    read(&path).unwrap_or_else(|e| panic!("{name}: {e:?}"))
+}
+
+#[test]
+fn broken_id3_keeps_the_fields_read_before_the_damage() {
+    let dir = TempDir::new();
+    for version in [3, 4] {
+        for ext in ["mp3", "wav", "aiff"] {
+            let frames = every_field(version);
+            // Padding as long as the damaged frame keeps both files the same
+            // length, so properties computed from it agree.
+            let mut healthy_frames = frames.clone();
+            healthy_frames.push(vec![0; damage(version).len()]);
+            let healthy = with_tag(ext, &versioned_id3v2_tag(version, &healthy_frames));
+            let mut broken_frames = frames;
+            broken_frames.push(damage(version));
+            let broken = with_tag(ext, &versioned_id3v2_tag(version, &broken_frames));
+            assert_eq!(healthy.len(), broken.len());
+            let what = format!("v2.{version} .{ext}");
+            let mut expected = read_bytes(&dir, &format!("healthy.{ext}"), &healthy, true);
+            assert_eq!(expected.artists, ["First", "Second"], "{what}");
+            assert_eq!(
+                expected.release_date.as_deref(),
+                Some("2019-05-01"),
+                "{what}"
+            );
+            assert_eq!(expected.description.as_deref(), Some("Long description"));
+            assert!(expected.duration_ms.is_some(), "{what}");
+            let recovered = read_bytes(&dir, &format!("broken.{ext}"), &broken, false);
+            if ext == "mp3" {
+                // lofty's MP3 overall bitrate is the bytes it reads over the
+                // duration. The recovered file is read from after its tag,
+                // so the tag is not counted: the audio's own 128 kbps.
+                let duration = expected.duration_ms.expect("duration") as usize;
+                let kbps = |len: usize| Some((len * 8 / duration) as i32);
+                assert_eq!(expected.bitrate, kbps(healthy.len()), "{what}");
+                assert_eq!(recovered.bitrate, kbps(mp3_bytes().len()), "{what}");
+                assert_eq!(recovered.bitrate, Some(128), "{what}");
+                expected.bitrate = recovered.bitrate;
+            }
+            assert_eq!(recovered, expected, "{what}");
+        }
+    }
+}
+
+#[test]
+fn fields_after_the_damage_are_lost() {
+    let dir = TempDir::new();
+    let bytes = broken_id3v2(
+        &[
+            id3v2_frame("TIT2", b"\x03Kept"),
+            frame_that_ends_the_tag(),
+            id3v2_frame("TPE1", b"\x03Lost"),
+        ],
+        None,
+    );
+    let tags = read_bytes(&dir, "song.mp3", &bytes, false);
+    assert_eq!(tags.title.as_deref(), Some("Kept"));
+    assert!(tags.artists.is_empty());
+    assert_eq!(tags.sample_rate, Some(44_100));
+    assert_eq!(tags.codec.as_deref(), Some("MP3"));
+}
+
+/// An ID3v1 trailer with `title` and `artist`.
+fn id3v1(title: &str, artist: &str) -> Vec<u8> {
+    let field = |text: &str, len: usize| {
+        let mut bytes = text.as_bytes().to_vec();
+        bytes.resize(len, 0);
+        bytes
+    };
+    let mut tag = b"TAG".to_vec();
+    tag.extend(field(title, 30));
+    tag.extend(field(artist, 30));
+    tag.extend(field("", 30 + 4 + 30));
+    tag.push(255); // no genre
+    tag
+}
+
+#[test]
+fn a_broken_mp3_falls_back_to_its_id3v1_trailer_when_no_id3v2_frame_survives() {
+    let dir = TempDir::new();
+    let mut bytes = broken_id3v2(
+        &[frame_that_ends_the_tag(), id3v2_frame("TIT2", b"\x03Lost")],
+        None,
+    );
+    bytes.extend(id3v1("Trailer title", "Trailer artist"));
+    let tags = read_bytes(&dir, "song.mp3", &bytes, false);
+    assert_eq!(tags.title.as_deref(), Some("Trailer title"));
+    assert_eq!(tags.artists, ["Trailer artist"]);
+    assert_eq!(tags.sample_rate, Some(44_100));
+}
+
+#[test]
+fn a_broken_wav_falls_back_to_riff_info() {
+    let dir = TempDir::new();
+    let mut info = b"INFOINAM".to_vec();
+    info.extend_from_slice(&11u32.to_le_bytes());
+    info.extend_from_slice(b"Info Title\0\0");
+    let broken = id3v2_tag(
+        &[frame_that_ends_the_tag(), id3v2_frame("TIT2", b"\x03Lost")],
+        None,
+    );
+    let bytes = wav_with_chunks(&[(b"LIST", &info), (b"id3 ", &broken)], Place::AfterAudio);
+    let tags = read_bytes(&dir, "song.wav", &bytes, false);
+    assert_eq!(tags.title.as_deref(), Some("Info Title"));
+    assert_eq!(tags.duration_ms, Some(1000));
+    assert_eq!(tags.codec.as_deref(), Some("WAV"));
+}
+
+#[test]
+fn a_broken_wav_whose_riff_info_fails_too_keeps_its_properties() {
+    let dir = TempDir::new();
+    // The last chunk, an `INAM` declaring 10 bytes where the file holds 4:
+    // lofty refuses the INFO list as well, so only a read without tags gets
+    // the properties.
+    let mut info = b"INFOINAM".to_vec();
+    info.extend_from_slice(&10u32.to_le_bytes());
+    info.extend_from_slice(b"abcd");
+    let broken = id3v2_tag(
+        &[
+            id3v2_frame("TIT2", b"\x03Recovered"),
+            frame_that_ends_the_tag(),
+        ],
+        None,
+    );
+    let bytes = wav_with_chunks(&[(b"id3 ", &broken), (b"LIST", &info)], Place::AfterAudio);
+    let tags = read_bytes(&dir, "song.wav", &bytes, false);
+    assert_eq!(tags.title.as_deref(), Some("Recovered"));
+    assert_eq!(tags.duration_ms, Some(1000));
+}
+
+#[test]
+fn an_unrecoverable_tag_with_readable_audio_is_not_an_error() {
+    let dir = TempDir::new();
+    let broken = id3v2_tag(&[frame_that_ends_the_tag()], None);
+    for ext in ["mp3", "wav", "aiff"] {
+        let tags = read_bytes(&dir, &format!("song.{ext}"), &with_tag(ext, &broken), false);
+        assert_eq!(tags.title, None, "{ext}");
+        assert!(tags.duration_ms.is_some(), "{ext}");
+    }
+}
+
+#[test]
+fn a_flac_behind_a_broken_prefix_reads_vorbis_and_properties() {
+    let dir = TempDir::new();
+    let prefix = id3v2_tag(
+        &[
+            id3v2_frame("TIT2", b"\x03Prefix title"),
+            frame_that_ends_the_tag(),
+        ],
+        None,
+    );
+    let vorbis = flac_with_comments(&[("TITLE", "Vorbis title"), ("ARTIST", "Vorbis artist")]);
+    let tags = read_bytes(&dir, "song.flac", &[&prefix[..], &vorbis].concat(), false);
+    assert_eq!(tags.title.as_deref(), Some("Vorbis title"));
+    assert_eq!(tags.artists, ["Vorbis artist"]);
+    assert_eq!(tags.sample_rate, Some(44_100));
+    assert_eq!(tags.duration_ms, Some(1000));
+    assert_eq!(tags.codec.as_deref(), Some("FLAC"));
+
+    // Without Vorbis comments, the prefix's frames are the tag.
+    let tags = read_bytes(
+        &dir,
+        "bare.flac",
+        &[&prefix[..], &flac_bytes()].concat(),
+        false,
+    );
+    assert_eq!(tags.title.as_deref(), Some("Prefix title"));
+    assert_eq!(tags.sample_rate, Some(44_100));
+}
+
+#[test]
+fn a_broken_tag_with_nothing_recoverable_keeps_the_original_error() {
+    use kanaru_media::tags::errors::from_parse_error;
+    let dir = TempDir::new();
+    // A tag with no frame and nothing after it.
+    let cases: [(&str, Vec<u8>); 3] = [
+        ("empty.mp3", id3v2_tag(&[], None)),
+        ("bad.mp3", id3v2_tag(&[frame_with_a_bad_encoding()], None)),
+        ("bad.flac", id3v2_tag(&[frame_that_ends_the_tag()], None)),
+    ];
+    for (name, bytes) in cases {
+        let path = dir.write(name, &bytes);
+        let lofty_error = Probe::open(&path)
+            .expect("open")
+            .options(
+                lofty::config::ParseOptions::new()
+                    .read_cover_art(false)
+                    .parsing_mode(lofty::config::ParsingMode::BestAttempt),
+            )
+            .guess_file_type()
+            .expect("sniff")
+            .read()
+            .err()
+            .unwrap_or_else(|| panic!("{name}: lofty reads it"));
+        let error = read(&path).expect_err(name);
+        assert_eq!(error, from_parse_error(&lofty_error), "{name}");
+        assert!(!error.is_transient(), "{name}");
+    }
+}
+
+#[test]
+fn a_cancel_during_the_open_stops_a_broken_file_before_its_recovery() {
+    let dir = TempDir::new();
+    let bytes = broken_id3v2(
+        &[id3v2_frame("TIT2", b"\x03Title"), frame_that_ends_the_tag()],
+        None,
+    );
+    let path = dir.write("song.mp3", &bytes);
+    let cancel = Cancel::new();
+    let open = |p: &Path| {
+        cancel.cancel();
+        open_plain(p)
+    };
+    assert_eq!(read_tags(&path, &open, &cancel), Err(MediaError::Cancelled));
 }

@@ -8,7 +8,8 @@
 //!   they were not there (Vorbis lyrics), then the prefixes themselves.
 //!
 //! Each tag or chunk is looked at in file order and the first one with
-//! lyrics wins; all of them share one [`MAX_ID3_FALLBACK_BYTES`] budget.
+//! lyrics wins; all of them share one byte budget
+//! ([`MAX_ID3_FALLBACK_BYTES`](crate::tags::id3_recovery::MAX_ID3_FALLBACK_BYTES)).
 //! Returns `None` when recovery does not apply to the file (the caller then
 //! answers as without it), `Some(Err)` for a transient I/O error.
 
@@ -25,7 +26,7 @@ use crate::tags::errors::from_parse_error;
 use crate::tags::id3_recovery::iff::{id3_chunks, Iff};
 use crate::tags::id3_recovery::prefix::{flac_start, id3_prefixes, PrefixSpan};
 use crate::tags::id3_recovery::views::OffsetView;
-use crate::tags::id3_recovery::{load_tag, non_transient, read_frames, MAX_ID3_FALLBACK_BYTES};
+use crate::tags::id3_recovery::{first_recovered, non_transient};
 use crate::MediaError;
 
 /// What a recovery gives: `None` = not applicable, else the answer.
@@ -115,29 +116,12 @@ fn chunk_lyrics<R: Read + Seek>(
     first_lyrics(reader, chunks.iter().map(|c| (c.body_at, c.body_len)))
 }
 
-/// The lyrics of the first tag with any, among tags whose header starts at
-/// `at` and which may not reach past `at + limit`. A tag that does not read
-/// for a reason that is not transient holds no lyrics.
+/// The lyrics of the first tag with any (see [`first_recovered`]).
 fn first_lyrics<R: Read + Seek>(
     reader: &mut R,
     tags: impl IntoIterator<Item = (u64, u64)>,
 ) -> Result<Option<EmbeddedLyrics>, MediaError> {
-    let mut budget = MAX_ID3_FALLBACK_BYTES;
-    for (at, limit) in tags {
-        let Some(bytes) = load_tag(reader, at, limit, &mut budget)? else {
-            continue;
-        };
-        match read_frames(bytes) {
-            Ok(frames) => {
-                if let Some(lyrics) = lyrics_of(&frames) {
-                    return Ok(Some(lyrics));
-                }
-            }
-            Err(e) if e.is_transient() => return Err(e),
-            Err(_) => {}
-        }
-    }
-    Ok(None)
+    first_recovered(reader, tags, |frames| lyrics_of(&frames))
 }
 
 #[cfg(test)]

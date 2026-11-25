@@ -16,6 +16,14 @@ pub fn id3v2_tag(frames: &[Vec<u8>], declared: Option<usize>) -> Vec<u8> {
     bytes
 }
 
+/// An ID3v2.`version` tag (2, 3 or 4) made of `frames`, declaring exactly
+/// their length, with nothing after it.
+pub fn versioned_id3v2_tag(version: u8, frames: &[Vec<u8>]) -> Vec<u8> {
+    let mut bytes = id3v2_tag(frames, None);
+    bytes[3] = version;
+    bytes
+}
+
 /// Like [`id3v2_tag`] with the v2.4 footer flag set and the footer written.
 pub fn id3v2_tag_with_footer(frames: &[Vec<u8>]) -> Vec<u8> {
     let mut bytes = id3v2_tag(frames, None);

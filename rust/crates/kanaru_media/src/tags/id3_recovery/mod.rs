@@ -24,10 +24,12 @@ use crate::MediaError;
 mod bound;
 pub(crate) mod iff;
 pub(crate) mod prefix;
+mod to_lofty;
 pub(crate) mod views;
 
 pub use bound::MAX_ID3_FALLBACK_FRAMES;
 use bound::{bound_tag, declared_size, HEADER_LEN};
+pub(crate) use to_lofty::to_lofty;
 
 /// Most bytes of ID3v2 tags read into memory for one file, headers
 /// included. A tag may declare up to 256 MiB; real ones are a few hundred
@@ -102,6 +104,34 @@ pub(crate) fn read_frames(tag_bytes: Vec<u8>) -> Result<Vec<Tag>, MediaError> {
         .map_err(|e| symphonia_failure(&e))?;
     let buffer = id3.read_all().map_err(|e| symphonia_failure(&e))?;
     Ok(buffer.revision.media.tags)
+}
+
+/// The first value `pick` makes of the frames of a tag, over tags whose
+/// header starts at `at` and which may not reach past `at + limit`, in
+/// order. All of them share one [`MAX_ID3_FALLBACK_BYTES`] budget. A tag
+/// that does not read for a reason that is not transient gives nothing;
+/// `Err` is a transient I/O error.
+pub(crate) fn first_recovered<R: Read + Seek, T>(
+    reader: &mut R,
+    tags: impl IntoIterator<Item = (u64, u64)>,
+    mut pick: impl FnMut(Vec<Tag>) -> Option<T>,
+) -> Result<Option<T>, MediaError> {
+    let mut budget = MAX_ID3_FALLBACK_BYTES;
+    for (at, limit) in tags {
+        let Some(bytes) = load_tag(reader, at, limit, &mut budget)? else {
+            continue;
+        };
+        match read_frames(bytes) {
+            Ok(frames) => {
+                if let Some(value) = pick(frames) {
+                    return Ok(Some(value));
+                }
+            }
+            Err(e) if e.is_transient() => return Err(e),
+            Err(_) => {}
+        }
+    }
+    Ok(None)
 }
 
 /// A failure that says nothing about the file is retried; any other means

@@ -8,15 +8,20 @@ pub mod language;
 pub mod lyrics_reader;
 mod lyrics_sylt;
 pub mod mapping;
+mod parse;
+mod tags_fallback;
+
+pub(crate) use parse::probe;
+use parse::{parse, parse_options};
 
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 use std::time::Duration;
 
-use lofty::config::{ParseOptions, ParsingMode};
 use lofty::file::{AudioFile, FileType, TaggedFileExt};
-use lofty::probe::Probe;
+use lofty::properties::FileProperties;
+use lofty::tag::Tag;
 
 use crate::limits::MAX_TAG_FILE_SECONDS;
 use crate::{Cancel, MediaError};
@@ -92,14 +97,45 @@ pub fn read_tags(
     let file = open(path)?;
     cancel.check()?;
     // The deadline only stops further work: a parse that finished is kept.
-    let tagged = probe(file, path, false)?;
+    let mut reader = BufReader::new(file);
+    let options = parse_options(false);
+    let (file_type, parsed) = parse(&mut reader, path, options)?;
+    let tagged = match parsed {
+        Ok(tagged) => tagged,
+        Err(e) => {
+            let error = errors::from_parse_error(&e);
+            if error.is_transient() {
+                return Err(error);
+            }
+            cancel.check()?;
+            let Some(file_type) = file_type else {
+                return Err(error);
+            };
+            return tags_fallback::recover(&mut reader, file_type, options, &cancel)?.ok_or(error);
+        }
+    };
+    Ok(assemble(
+        tagged.file_type(),
+        Some(tagged.properties()),
+        tagged.primary_tag().or_else(|| tagged.first_tag()),
+    ))
+}
 
+/// The tags of a file of `file_type` from its audio `properties` and its
+/// `tag`, as the library stores them.
+fn assemble(
+    file_type: FileType,
+    properties: Option<&FileProperties>,
+    tag: Option<&Tag>,
+) -> TrackTags {
     let mut tags = TrackTags {
-        codec: codec_name(tagged.file_type()),
+        codec: codec_name(file_type),
         ..TrackTags::default()
     };
-    mapping::apply_properties(&mut tags, tagged.properties());
-    if let Some(tag) = tagged.primary_tag().or_else(|| tagged.first_tag()) {
+    if let Some(properties) = properties {
+        mapping::apply_properties(&mut tags, properties);
+    }
+    if let Some(tag) = tag {
         mapping::apply_tag(&mut tags, tag);
     }
     if tags.language_tag.is_none() {
@@ -108,7 +144,7 @@ pub fn read_tags(
             .as_deref()
             .and_then(language::detect_title_language);
     }
-    Ok(tags)
+    tags
 }
 
 /// How the extension changes what is read.
@@ -134,29 +170,6 @@ pub(crate) fn extension_rule(path: &Path) -> ExtensionRule {
     } else {
         ExtensionRule::Normal
     }
-}
-
-/// Parses `file` with lofty. The extension is only a hint: the content is
-/// sniffed and decides. Pictures are read only when `with_pictures`.
-pub(crate) fn probe(
-    file: File,
-    path: &Path,
-    with_pictures: bool,
-) -> Result<lofty::file::TaggedFile, MediaError> {
-    let options = ParseOptions::new()
-        .read_cover_art(with_pictures)
-        .parsing_mode(ParsingMode::BestAttempt);
-    let reader = BufReader::new(file);
-    let probe = match FileType::from_path(path) {
-        Some(file_type) => Probe::with_file_type(reader, file_type),
-        None => Probe::new(reader),
-    };
-    probe
-        .options(options)
-        .guess_file_type()
-        .map_err(|e| errors::from_sniff_error(&e))?
-        .read()
-        .map_err(|e| errors::from_parse_error(&e))
 }
 
 fn codec_name(file_type: FileType) -> Option<String> {
