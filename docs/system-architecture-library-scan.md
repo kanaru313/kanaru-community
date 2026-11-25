@@ -207,7 +207,8 @@ The consumer side (scan status as shown, folder exclusions, the lists) is in
    mount that vanished only protects the files under it (`keptUnderLostMount`).
    Android: the catalog still reaches the folder. If the folder is not present,
    nothing is marked, the report says `unreachable` and the result has
-   `rootVanished`. A new file with another error gets a
+   `rootVanished`. A file whose ID3v2 tag lofty refuses is first recovered in Rust
+   (see Rust: tags › Broken ID3v2 tags); only what is left fails. A new file with another error gets a
    filename-only row with `scan_error = kind`; permanent: `tags_version` current with
    mtime, size and revision; transient: `tags_version` 0 and mtime, size, revision
    NULL, so the next scan reads it again. An existing row with a transient error is
@@ -1117,7 +1118,10 @@ frames, `TXXX`, `COMM`, ID3v2.2/2.3 ids upgraded, a 2.3 `TYER` joined with
 give the same fields. Only one difference: a recovered MP3's `bitrate` does not count
 the tag's bytes (lofty's MP3 overall bitrate is file bytes over duration). Bounds:
 16 MiB of ID3 bytes per file, 1024 frames per tag, 1024 chunk headers walked;
-pictures are not recovered (folder covers still apply). Outcomes:
+pictures are not recovered (folder covers still apply). No forward scan for a
+mis-sized tag: a FLAC whose `fLaC` is not exactly where its prefixes end keeps only
+the prefixes' fields (no properties), and an MP3 whose audio is not near the declared
+end of its tags may lose its properties. Outcomes:
 
 - Some fields or the audio properties recovered: a normal result. Fields written
   after the damage are missing (a title without its artist is shown as such).

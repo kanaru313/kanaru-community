@@ -106,8 +106,10 @@ for each frame it skips and a hostile tag can hold millions of them:
 
 What it does not recover: frames after the first structural error; a FLAC
 whose `fLaC` is not exactly at the end of its prefixes (only the prefixes'
-frames, else an error); the title and other tags used by the library scan (a
-failed tag read there lists the file by its name).
+frames, else an error). The library scan recovers the title and other tags
+from the same broken tags (`tags/tags_fallback.rs`, see
+[system-architecture-library-scan.md](./system-architecture-library-scan.md)
+› Rust: tags).
 
 ### Synced lyrics (`SYLT`)
 
