@@ -13,11 +13,11 @@ import 'plugin_store_providers.dart';
 const multiStreamingFeature = ProFeature('plugins.multi-streaming');
 
 /// Whether more than one streaming plugin may work, for the screens. It
-/// follows `licenseServiceProvider` (and is rebuilt only when that changes);
-/// the services do not use it, they ask the license at every check.
+/// follows the license's `changes` through `proFeatureStatusProvider`, so a
+/// purchase or an expiry while the app runs updates the screens.
 final pluginStreamingUnlockedProvider = Provider<bool>(
   (ref) =>
-      ref.watch(licenseServiceProvider).statusOf(multiStreamingFeature) ==
+      ref.watch(proFeatureStatusProvider(multiStreamingFeature)) ==
       LicenseStatus.granted,
 );
 
@@ -36,10 +36,10 @@ final pluginActionsProvider = Provider<PluginActions>((ref) {
     held: services.held,
     catalogs: services.catalogs,
     runGate: services.runGate,
-    // Asked at every check, never cached, so a change of license applies at
-    // once.
+    // Read at every check; the provider follows the license's `changes`, so a
+    // change of license applies to the next check.
     streamingUnlocked: () =>
-        ref.read(licenseServiceProvider).statusOf(multiStreamingFeature) ==
+        ref.read(proFeatureStatusProvider(multiStreamingFeature)) ==
         LicenseStatus.granted,
     startupRestore: services.startupRestore,
     findMissing: services.findMissingPackages,

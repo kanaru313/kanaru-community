@@ -14,7 +14,7 @@ main.dart
       device id           (dataDir/device_id)
       AppDatabase         (database/, dataDir/kanaru.db, migrated)
       ExtensionRegistry   (extension/): built-in extensions, then bundled ones
-      startup hooks       (receive the database connection)
+      startup hooks       (receive the database connection, the app folders, the device id)
       startup font        (fonts/, loads app.font, falls back to Nunito)
     ProviderScope(overrides: paths, settings, device id, database, registry, native versions)
       KanaruApp           (router/)
@@ -49,6 +49,14 @@ main.dart
   Desktop keeps its own back/forward history, a sidebar grouped by order band
   (ARCHITECTURE.md), Rescan in the top bar, a page-header search icon and
   Ctrl+F / Ctrl+K. Both shells render the library selection bar slot.
+- **Licensing**: `LicenseService` (`extension/domain/license.dart`) answers
+  `statusOf(feature)` and emits on its broadcast `changes` stream after an
+  answer may differ. UI and state code read a feature only through
+  `proFeatureStatusProvider(feature)`, which re-asks on every event, so a
+  purchase or an expiry applies while the app runs. Readers keep the last
+  answer until `changes` emits, so a time-based answer (an expiry) must be
+  emitted by the implementation itself when it comes (its own timer). The Free build
+  (`FreeLicenseService`) is always `locked` and never emits.
 - **Flush and exit**: `KanaruApp` owns one `AppLifecycleListener`. On hidden or
   paused it flushes the settings store, then the registry's flush hooks. On an
   exit request it first runs the registry's before-exit hooks (pause), then does

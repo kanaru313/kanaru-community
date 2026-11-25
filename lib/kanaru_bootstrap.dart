@@ -49,8 +49,18 @@ Future<BootstrapResult> bootstrap({
     await database.doWhenOpened((_) async {});
     final registry = ExtensionRegistry()..install(extensions);
     // After the public database is open, so extensions can migrate their tables.
-    for (final hook in registry.startupHooks) {
-      await hook(StartupContext(connection: await database.openedConnection()));
+    final hooks = registry.startupHooks;
+    if (hooks.isNotEmpty) {
+      final context = StartupContext(
+        connection: await database.openedConnection(),
+        dataDir: paths.dataDir,
+        cacheDir: paths.cacheDir,
+        configDir: paths.configDir,
+        deviceId: deviceId,
+      );
+      for (final hook in hooks) {
+        await hook(context);
+      }
     }
     return BootstrapResult(
       nativeVersions: nativeVersions,

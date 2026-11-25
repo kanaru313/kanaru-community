@@ -43,8 +43,11 @@ import 'src/screens/settings/state/appearance_settings.dart';
 export 'src/database/database.dart';
 export 'src/extension/domain/license.dart';
 export 'src/extension/kanaru_extension.dart';
+export 'src/extension/state/extension_providers.dart'
+    show proFeatureStatusProvider;
 export 'src/extension/state/extension_registry.dart';
 export 'src/extension/state/registry_entries.dart';
+export 'src/platform/domain/app_paths.dart' show AppPaths;
 
 /// Extensions of the public app, registered before any bundled (Pro) ones.
 const List<KanaruExtension> builtInExtensions = [

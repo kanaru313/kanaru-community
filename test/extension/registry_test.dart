@@ -261,4 +261,7 @@ void main() {
 class _Granted implements LicenseService {
   @override
   LicenseStatus statusOf(ProFeature feature) => LicenseStatus.granted;
+
+  @override
+  Stream<void> get changes => const Stream<void>.empty();
 }

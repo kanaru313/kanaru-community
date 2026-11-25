@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
@@ -14,6 +15,10 @@ void main() {
   setUp(() {
     context = StartupContext(
       connection: DatabaseConnection(NativeDatabase.memory()),
+      dataDir: Directory.systemTemp,
+      cacheDir: Directory.systemTemp,
+      configDir: Directory.systemTemp,
+      deviceId: 'device',
     );
   });
 
