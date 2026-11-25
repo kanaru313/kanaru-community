@@ -129,4 +129,9 @@ from `packages/kanaru_ui`. Pages are shell-agnostic and use `KPage` /
 ## Toolchain and CI
 
 `flake.nix` pins the toolchain. `.github/workflows/ci.yml` runs the Dart gate
-(`tool/check`) and the Rust checks on every push and pull request.
+(`tool/check`) and the Rust checks on every pull request and on pushes to
+`main`. `.github/workflows/build.yml` builds the public app in release mode (APK
+through `tool/build_apk.sh`, Linux x64 bundle as a tarball) on pull requests
+into `main`, on pushes to `main` and by hand, and uploads both as workflow
+artifacts kept 14 days. These builds never contain Pro code (private repo) and
+the APK is signed with the debug key: test builds, not releases.
