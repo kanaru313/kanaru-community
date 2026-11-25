@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'k_seek_bar.dart';
 import 'k_seek_gesture_area.dart';
+import 'k_seek_time_bubble.dart';
 import 'waveform_band.dart';
 import 'waveform_bars.dart';
 import 'waveform_phase.dart';
@@ -16,6 +17,12 @@ const ValueKey<String> waveformBandKey = ValueKey('waveform band');
 
 /// Key of the layer that holds the fallback seek bar.
 const ValueKey<String> waveformFallbackKey = ValueKey('waveform fallback');
+
+/// How far above the pointer-down point a drag is cancelled.
+const double seekCancelUpDistance = 48;
+
+/// How long a finger rests on the bar before the time bubble shows.
+const Duration seekHoldDelay = Duration(milliseconds: 150);
 
 /// Seek bar that draws the loudness of the track as bars in a 56 dp band (the
 /// bars use the 32 dp in the middle), without a thumb: the played bars are one
@@ -29,6 +36,10 @@ const ValueKey<String> waveformFallbackKey = ValueKey('waveform fallback');
 /// the waveform is unknown or computing, bars growing from the dots when it is
 /// ready, the old bars collapsing when [track] changes, and [fallback] when
 /// there is no waveform. The first status after mount shows at once.
+///
+/// With [bubbleLabel] a hold or drag floats the time under the finger above
+/// the band ([KSeekTimeBubble]); with [cancelLabel] a drag that goes
+/// [seekCancelUpDistance] up is cancelled while it stays there.
 class KWaveformSeekBar extends StatefulWidget {
   const KWaveformSeekBar({
     super.key,
@@ -46,6 +57,8 @@ class KWaveformSeekBar extends StatefulWidget {
     this.semanticLabel,
     this.semanticValue,
     this.keyStep = const Duration(seconds: 5),
+    this.bubbleLabel,
+    this.cancelLabel,
   });
 
   final Duration position;
@@ -78,6 +91,13 @@ class KWaveformSeekBar extends StatefulWidget {
 
   /// The player is playing. Not used by the bars; a fallback may animate on it.
   final bool playing;
+
+  /// Time text of the bubble shown while the bar is held or dragged. Null:
+  /// no bubble and no hold.
+  final String Function(Duration at)? bubbleLabel;
+
+  /// Text of the bubble while a drag is cancelling. Null: no drag-up cancel.
+  final String? cancelLabel;
 
   @override
   State<KWaveformSeekBar> createState() => _KWaveformSeekBarState();
@@ -157,6 +177,9 @@ class _KWaveformSeekBarState extends State<KWaveformSeekBar>
       dragging: state.dragging,
       focused: state.focused,
       keyboardFocus: state.keyboardFocus,
+      holding: state.holding,
+      cancelling: state.cancelling,
+      pointerFraction: state.pointerFraction,
     );
     final build = widget.fallback;
     return Padding(
@@ -164,6 +187,20 @@ class _KWaveformSeekBarState extends State<KWaveformSeekBar>
       child: build != null
           ? build(context, inner)
           : KFlatSeekTrack(state: inner),
+    );
+  }
+
+  Widget _withBubble(BuildContext context, KSeekState state) {
+    final band = _band(context, state);
+    final label = widget.bubbleLabel;
+    if (label == null) return band;
+    return KSeekTimeBubble(
+      state: state,
+      duration: widget.duration,
+      label: label,
+      cancelLabel: widget.cancelLabel,
+      horizontalInset: seekInset,
+      child: band,
     );
   }
 
@@ -211,7 +248,11 @@ class _KWaveformSeekBarState extends State<KWaveformSeekBar>
       keyStep: widget.keyStep,
       height: seekBandHeight,
       horizontalInset: seekInset,
-      builder: _band,
+      cancelUpDistance: widget.cancelLabel != null
+          ? seekCancelUpDistance
+          : null,
+      holdDelay: widget.bubbleLabel != null ? seekHoldDelay : null,
+      builder: _withBubble,
     );
   }
 }

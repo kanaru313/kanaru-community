@@ -40,6 +40,13 @@ final _playing = waveformProvider.overrideWith((ref) async* {
   );
 });
 
+/// The playing entry's waveform in [status] (computing or none: no levels).
+Override _playingWithStatus(WaveformStatus status) =>
+    waveformProvider.overrideWith((ref) async* {
+      final now = await ref.watch(nowPlayingProvider.future);
+      yield WaveformView(entryId: now.entryId, status: status);
+    });
+
 /// A waveform that belongs to an entry other than the playing one.
 final _stale = waveformProvider.overrideWith(
   (ref) => Stream.value(
@@ -108,6 +115,45 @@ void main() {
           tester.getSize(find.byType(NowPlayingSeekSlot)).height,
           nowPlayingSeekSlotHeight,
         );
+      });
+
+      testWidgets('no waveform for the playing entry: the fallback bar', (
+        tester,
+      ) async {
+        final host = await _pump(
+          tester,
+          width,
+          waveform: _playingWithStatus(WaveformStatus.none),
+        );
+        await host.letStreamsArrive(tester);
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(_bar(tester).status, KWaveformStatus.none);
+        expect(_bar(tester).levels, isNull);
+        expect(find.byKey(waveformFallbackKey), findsOneWidget);
+        expect(find.byType(KFlatSeekTrack), findsOneWidget);
+      });
+
+      testWidgets('computing for the playing entry: dots, no fallback', (
+        tester,
+      ) async {
+        final host = await _pump(
+          tester,
+          width,
+          waveform: _playingWithStatus(WaveformStatus.computing),
+        );
+        await host.letStreamsArrive(tester);
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(_bar(tester).status, KWaveformStatus.computing);
+        expect(find.byKey(waveformBandKey), findsOneWidget);
+        expect(find.byKey(waveformFallbackKey), findsNothing);
+        expect(find.byType(KFlatSeekTrack), findsNothing);
+      });
+
+      testWidgets('passes the time bubble and the cancel text', (tester) async {
+        final host = await _pump(tester, width, waveform: _playing);
+        await host.letStreamsArrive(tester);
+        expect(_bar(tester).bubbleLabel!(const Duration(seconds: 65)), '1:05');
+        expect(_bar(tester).cancelLabel, 'Release to cancel');
       });
 
       testWidgets("never draws another entry's bars", (tester) async {

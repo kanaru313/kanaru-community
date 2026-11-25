@@ -293,6 +293,7 @@
   "playbackOpenNowPlaying": "Open Now Playing",
   "playbackPlayer": "Player",
   "playbackSeek": "Playback position",
+  "playbackSeekCancel": "Release to cancel",
   "playbackPositionValue": "{position} of {duration}",
   "@playbackPositionValue": {
     "placeholders": {

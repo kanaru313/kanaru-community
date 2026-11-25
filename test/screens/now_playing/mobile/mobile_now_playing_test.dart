@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/src/lyrics/ui/lyrics_card.dart';
 import 'package:kanaru/src/media/domain/cover_colors.dart';
+import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/repeat_mode.dart';
 import 'package:kanaru/src/playback/state/playing_cover_colors.dart';
 import 'package:kanaru/src/playback/state/playback_settings_providers.dart';
@@ -50,6 +51,32 @@ Future<UiHost> _open(
   await tester.pump(const Duration(milliseconds: 400));
   await host.letStreamsArrive(tester);
   return host;
+}
+
+/// Loads a 240 s duration for the playing entry, so the seek bar seeks.
+Future<void> _loadDuration(WidgetTester tester, UiHost host) async {
+  await host.run(
+    tester,
+    () async => host.h.engine.emit(
+      EngineLoaded(host.h.loadedToken, const Duration(seconds: 240)),
+    ),
+  );
+  await host.letStreamsArrive(tester);
+}
+
+Iterable<String> _seeks(UiHost host) =>
+    host.h.engine.commands.where((c) => c.startsWith('seek:'));
+
+/// Lets go in the real zone, so a seek reaches the engine before checking.
+/// Real time runs once more after the frames, so what the release started in
+/// the real zone finishes before the test ends.
+Future<void> _release(WidgetTester tester, UiHost host, TestGesture g) async {
+  await tester.runAsync(() async {
+    await g.up();
+    await host.h.settle();
+  });
+  await tester.pumpAndSettle();
+  await host.letStreamsArrive(tester);
 }
 
 String _location(UiHost host) =>
@@ -116,6 +143,70 @@ void main() {
     final scroll = tester.state<ScrollableState>(find.byType(Scrollable).first);
     expect(scroll.position.pixels, 0);
     expect(find.byType(MobileNowPlaying), findsOneWidget);
+  });
+
+  group('seek bar on the page', () {
+    double scrolled(WidgetTester tester) => tester
+        .state<ScrollableState>(find.byType(Scrollable).first)
+        .position
+        .pixels;
+
+    testWidgets('drag right then up 60: no seek, the page stays put', (
+      tester,
+    ) async {
+      final host = await _open(tester);
+      await _loadDuration(tester, host);
+      final bar = tester.getRect(find.byType(KWaveformSeekBar));
+      final g = await tester.startGesture(Offset(bar.left + 40, bar.center.dy));
+      await g.moveBy(const Offset(80, 0));
+      await tester.pump();
+      await g.moveBy(const Offset(0, -30));
+      await g.moveBy(const Offset(0, -30));
+      await tester.pump();
+      expect(find.text('Release to cancel'), findsOneWidget);
+      expect(scrolled(tester), 0);
+      await _release(tester, host, g);
+      expect(_seeks(host), isEmpty);
+      expect(scrolled(tester), 0);
+      expect(find.byType(MobileNowPlaying), findsOneWidget);
+      expect(_location(host), '/now-playing');
+
+      // The same drag without going up seeks once.
+      final again = await tester.startGesture(
+        Offset(bar.left + 40, bar.center.dy),
+      );
+      await again.moveBy(const Offset(80, 0));
+      await tester.pump();
+      await _release(tester, host, again);
+      expect(_seeks(host), hasLength(1));
+    });
+
+    testWidgets('a hold then straight up scrolls the page, no seek', (
+      tester,
+    ) async {
+      final host = await _open(tester);
+      await _loadDuration(tester, host);
+      // Without room to scroll there is no vertical ancestor and the bar's
+      // own drag would take the move.
+      final page = tester.state<ScrollableState>(find.byType(Scrollable).first);
+      expect(page.position.maxScrollExtent, greaterThan(0));
+      final bar = tester.getRect(find.byType(KWaveformSeekBar));
+      final g = await tester.startGesture(bar.center);
+      await tester.pump(const Duration(milliseconds: 200));
+      // The middle of a 240 s bar.
+      expect(find.text('2:00'), findsOneWidget);
+      await g.moveBy(const Offset(0, -30));
+      await g.moveBy(const Offset(0, -30));
+      await tester.pump();
+      // The page has little to scroll at this size; any scroll shows that
+      // the drag went to it.
+      expect(scrolled(tester), greaterThan(0));
+      expect(find.text('2:00'), findsNothing);
+      expect(find.text('Release to cancel'), findsNothing);
+      await _release(tester, host, g);
+      expect(_seeks(host), isEmpty);
+      expect(find.byType(MobileNowPlaying), findsOneWidget);
+    });
   });
 
   testWidgets('the header shows position over the album, empty without one', (

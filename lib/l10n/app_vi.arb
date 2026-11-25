@@ -293,6 +293,7 @@
   "playbackOpenNowPlaying": "Mở Now Playing",
   "playbackPlayer": "Trình phát",
   "playbackSeek": "Vị trí phát",
+  "playbackSeekCancel": "Thả để huỷ",
   "playbackPositionValue": "{position} trên {duration}",
   "@playbackPositionValue": {
     "placeholders": {

@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:ui' show SemanticsAction;
 
 import 'package:flutter/foundation.dart'
@@ -19,6 +20,11 @@ const _unknown = KWaveformStatus.unknown;
 
 Duration _ms(int v) => Duration(milliseconds: v);
 
+const _cancelText = 'Release to cancel';
+
+String _clock(Duration d) =>
+    '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+
 Widget _bar({
   Uint8List? levels,
   KWaveformStatus status = _unknown,
@@ -28,6 +34,8 @@ Widget _bar({
   List<Duration>? seeks,
   Widget Function(BuildContext, KSeekState)? fallback,
   double width = 200,
+  bool bubble = false,
+  VoidCallback? onSeekEnd,
 }) => SizedBox(
   width: width,
   child: KWaveformSeekBar(
@@ -38,6 +46,9 @@ Widget _bar({
     status: status,
     fallback: fallback,
     onSeek: (d) => seeks?.add(d),
+    onSeekEnd: onSeekEnd,
+    bubbleLabel: bubble ? _clock : null,
+    cancelLabel: bubble ? _cancelText : null,
     semanticLabel: 'Position',
     semanticValue: '0:20 of 1:40',
   ),
@@ -429,6 +440,89 @@ void main() {
         await tester.pump();
         expect(_painter(tester)!.focusLine, isFalse);
       });
+
+      desktopTest('Tab draws the line, a touch elsewhere hides it', (
+        tester,
+      ) async {
+        await pumpBar(tester);
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
+        expect(_painter(tester)!.focusLine, isTrue);
+        // Touch outside the bar: focus stays, the highlight mode turns touch.
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pump();
+        expect(FocusManager.instance.highlightMode, FocusHighlightMode.touch);
+        expect(_painter(tester)!.focusLine, isFalse);
+      });
+
+      desktopTest('focus back from a route opened and closed by mouse: no '
+          'line', (tester) async {
+        final box = await pumpBar(tester);
+        await mouseClick(tester, Offset(box.left + 100, box.center.dy));
+        final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+        unawaited(
+          navigator.push(
+            MaterialPageRoute<void>(builder: (_) => const Text('page')),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('page'), findsOneWidget);
+        navigator.pop();
+        await tester.pumpAndSettle();
+        expect(
+          FocusManager.instance.highlightMode,
+          FocusHighlightMode.traditional,
+        );
+        expect(_painter(tester)!.focusLine, isFalse);
+        // Focus did come back to the bar: a key shows its line.
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pump();
+        expect(_painter(tester)!.focusLine, isTrue);
+      });
+
+      desktopTest('focus back from a dialog closed with Esc: line', (
+        tester,
+      ) async {
+        final box = await pumpBar(tester);
+        await mouseClick(tester, Offset(box.left + 100, box.center.dy));
+        unawaited(
+          showDialog<void>(
+            context: tester.element(find.byType(KWaveformSeekBar)),
+            builder: (_) => const AlertDialog(content: Text('dialog')),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('dialog'), findsOneWidget);
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+        expect(find.text('dialog'), findsNothing);
+        expect(_painter(tester)!.focusLine, isTrue);
+      });
+
+      desktopTest('Shift+Tab back after a mouse click elsewhere: line', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _hosted(
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _bar(levels: _levels, status: _ready, track: 1),
+                const SizedBox(width: 200, child: TextField()),
+              ],
+            ),
+          ),
+        );
+        final box = tester.getRect(find.byType(KWaveformSeekBar));
+        await mouseClick(tester, Offset(box.left + 100, box.center.dy));
+        await mouseClick(tester, tester.getCenter(find.byType(TextField)));
+        expect(_painter(tester)!.focusLine, isFalse);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pump();
+        expect(_painter(tester)!.focusLine, isTrue);
+      });
     });
   });
 
@@ -576,6 +670,412 @@ void main() {
       expect(data.hasAction(SemanticsAction.increase), isTrue);
       expect(data.hasAction(SemanticsAction.decrease), isTrue);
       handle.dispose();
+    });
+  });
+
+  group('time bubble and drag-up cancel', () {
+    /// x of [seconds] on a 200 dp bar of 100 s: (x - 6) / 188 of the length.
+    double xAt(Rect box, double seconds) => box.left + 6 + 188 * seconds / 100;
+
+    /// Pumps a bar with the bubble on; [states] gets every state it draws
+    /// (through the fallback: status none).
+    Future<Rect> pumpBubbleBar(
+      WidgetTester tester, {
+      List<Duration>? seeks,
+      List<KSeekState>? states,
+      VoidCallback? onSeekEnd,
+      Object? track = 1,
+      Duration? duration = _total,
+    }) async {
+      await tester.pumpWidget(
+        _hosted(
+          _bar(
+            status: states == null ? _ready : _none,
+            levels: states == null ? _levels : null,
+            track: track,
+            duration: duration,
+            seeks: seeks,
+            onSeekEnd: onSeekEnd,
+            bubble: true,
+            fallback: states == null
+                ? null
+                : (context, state) {
+                    states.add(state);
+                    return const SizedBox.expand();
+                  },
+          ),
+        ),
+      );
+      return tester.getRect(find.byType(KWaveformSeekBar));
+    }
+
+    testWidgets('a drag shows the time at the finger above the band', (
+      tester,
+    ) async {
+      final box = await pumpBubbleBar(tester);
+      final g = await tester.startGesture(Offset(box.left + 20, box.center.dy));
+      await g.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+      await tester.pump();
+      expect(find.text('1:05'), findsOneWidget);
+      final bubble = tester.getRect(find.text('1:05'));
+      expect(bubble.center.dx, moreOrLessEquals(xAt(box, 65.5), epsilon: 1));
+      expect(bubble.bottom, lessThanOrEqualTo(box.top - seekBubbleGap));
+      // The band keeps its height: the bubble is in the overlay.
+      expect(tester.getSize(find.byType(KWaveformSeekBar)).height, 56);
+      await g.up();
+      await tester.pump();
+      expect(find.text('1:05'), findsNothing);
+    });
+
+    testWidgets('the bubble stays off the ends of the bar', (tester) async {
+      final box = await pumpBubbleBar(tester);
+      final g = await tester.startGesture(Offset(box.left + 60, box.center.dy));
+      await g.moveTo(Offset(box.left + 1, box.center.dy));
+      await tester.pump();
+      final left = tester.getRect(find.text('0:00'));
+      expect(left.center.dx, greaterThanOrEqualTo(box.left + 32 - 0.5));
+      await g.moveTo(Offset(box.right - 1, box.center.dy));
+      await tester.pump();
+      final right = tester.getRect(find.text('1:40'));
+      expect(right.center.dx, lessThanOrEqualTo(box.right - 32 + 0.5));
+      await g.up();
+    });
+
+    testWidgets('drag right then up 60: the real position, no seek', (
+      tester,
+    ) async {
+      final seeks = <Duration>[];
+      final states = <KSeekState>[];
+      var ends = 0;
+      final box = await pumpBubbleBar(
+        tester,
+        seeks: seeks,
+        states: states,
+        onSeekEnd: () => ends++,
+      );
+      final g = await tester.startGesture(Offset(box.left + 20, box.center.dy));
+      await g.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+      await tester.pump();
+      expect(states.last.progress, moreOrLessEquals(0.655, epsilon: 0.001));
+      await g.moveTo(Offset(xAt(box, 65.5), box.center.dy - 60));
+      await tester.pump();
+      expect(find.text(_cancelText), findsOneWidget);
+      expect(find.text('1:05'), findsNothing);
+      expect(states.last.cancelling, isTrue);
+      expect(states.last.dragging, isTrue);
+      // The real position (20 s) shows while cancelling.
+      expect(states.last.progress, 0.2);
+      expect(
+        states.last.pointerFraction,
+        moreOrLessEquals(0.655, epsilon: 1e-3),
+      );
+      await g.up();
+      await tester.pump();
+      expect(seeks, isEmpty);
+      expect(ends, 1);
+      expect(find.text(_cancelText), findsNothing);
+      expect(states.last.cancelling, isFalse);
+      expect(states.last.dragging, isFalse);
+    });
+
+    testWidgets('up 60 then back down to 10: seeking resumes, one seek', (
+      tester,
+    ) async {
+      final seeks = <Duration>[];
+      var ends = 0;
+      final box = await pumpBubbleBar(
+        tester,
+        seeks: seeks,
+        onSeekEnd: () => ends++,
+      );
+      final g = await tester.startGesture(Offset(box.left + 20, box.center.dy));
+      await g.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+      await g.moveTo(Offset(xAt(box, 65.5), box.center.dy - 60));
+      await tester.pump();
+      expect(find.text(_cancelText), findsOneWidget);
+      await g.moveTo(Offset(xAt(box, 65.5), box.center.dy - 10));
+      await tester.pump();
+      expect(find.text(_cancelText), findsNothing);
+      expect(find.text('1:05'), findsOneWidget);
+      await g.up();
+      expect(seeks, hasLength(1));
+      expect(seeks.single.inMilliseconds, 65500);
+      expect(ends, 1);
+    });
+
+    testWidgets('the cancel is measured from the pointer down, not the '
+        'drag start', (tester) async {
+      final states = <KSeekState>[];
+      final box = await pumpBubbleBar(tester, states: states);
+      final g = await tester.startGesture(Offset(box.left + 20, box.center.dy));
+      // Up 15 before the horizontal lock, then right: the drag starts 15 up.
+      await g.moveBy(const Offset(0, -15));
+      await g.moveBy(const Offset(40, 0));
+      await tester.pump();
+      expect(states.last.dragging, isTrue);
+      expect(states.last.cancelling, isFalse);
+      // 50 above the down point, 35 above the drag start.
+      await g.moveBy(const Offset(0, -35));
+      await tester.pump();
+      expect(states.last.cancelling, isTrue);
+      expect(find.text(_cancelText), findsOneWidget);
+      await g.up();
+    });
+
+    testWidgets('48 dp up is not yet cancelling, 49 is', (tester) async {
+      final box = await pumpBubbleBar(tester);
+      final g = await tester.startGesture(Offset(box.left + 20, box.center.dy));
+      await g.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+      await g.moveTo(Offset(xAt(box, 65.5), box.center.dy - 48));
+      await tester.pump();
+      expect(find.text(_cancelText), findsNothing);
+      await g.moveTo(Offset(xAt(box, 65.5), box.center.dy - 49));
+      await tester.pump();
+      expect(find.text(_cancelText), findsOneWidget);
+      await g.up();
+    });
+
+    group('haptic tick', () {
+      Future<List<Object?>> recordHaptics(WidgetTester tester) async {
+        final calls = <Object?>[];
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          (call) async {
+            if (call.method == 'HapticFeedback.vibrate') {
+              calls.add(call.arguments);
+            }
+            return null;
+          },
+        );
+        addTearDown(
+          () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+            SystemChannels.platform,
+            null,
+          ),
+        );
+        return calls;
+      }
+
+      Future<void> crossTwice(WidgetTester tester, Rect box) async {
+        final g = await tester.startGesture(
+          Offset(box.left + 20, box.center.dy),
+        );
+        final x = xAt(box, 65.5);
+        await g.moveTo(Offset(x, box.center.dy));
+        await g.moveTo(Offset(x, box.center.dy - 60));
+        await g.moveTo(Offset(x - 10, box.center.dy - 80));
+        await g.moveTo(Offset(x, box.center.dy - 10));
+        await g.moveTo(Offset(x, box.center.dy - 70));
+        await g.up();
+        await tester.pump();
+      }
+
+      testWidgets('mobile: once per upward crossing', (tester) async {
+        final calls = await recordHaptics(tester);
+        final box = await pumpBubbleBar(tester);
+        await crossTwice(tester, box);
+        expect(calls, [
+          'HapticFeedbackType.selectionClick',
+          'HapticFeedbackType.selectionClick',
+        ]);
+      });
+
+      testWidgets('desktop: none', (tester) async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+        try {
+          final calls = await recordHaptics(tester);
+          final box = await pumpBubbleBar(tester);
+          await crossTwice(tester, box);
+          expect(calls, isEmpty);
+        } finally {
+          debugDefaultTargetPlatformOverride = null;
+        }
+      });
+    });
+
+    testWidgets('a hold shows the time, the release seeks once', (
+      tester,
+    ) async {
+      final seeks = <Duration>[];
+      final states = <KSeekState>[];
+      var ends = 0;
+      final box = await pumpBubbleBar(
+        tester,
+        seeks: seeks,
+        states: states,
+        onSeekEnd: () => ends++,
+      );
+      final g = await tester.startGesture(
+        Offset(xAt(box, 30.5), box.center.dy),
+      );
+      await tester.pump(_ms(100));
+      expect(find.text('0:30'), findsNothing);
+      await tester.pump(_ms(60));
+      expect(find.text('0:30'), findsOneWidget);
+      expect(states.last.holding, isTrue);
+      expect(states.last.dragging, isFalse);
+      // Nothing seeks while held: the played part stays at 20 s.
+      expect(states.last.progress, 0.2);
+      expect(seeks, isEmpty);
+      await g.up();
+      await tester.pump();
+      expect(find.text('0:30'), findsNothing);
+      expect(states.last.holding, isFalse);
+      expect(seeks.single.inMilliseconds, 30500);
+      expect(ends, 1);
+    });
+
+    testWidgets('a hold turns into a drag the bubble follows', (tester) async {
+      final seeks = <Duration>[];
+      final box = await pumpBubbleBar(tester, seeks: seeks);
+      final g = await tester.startGesture(
+        Offset(xAt(box, 30.5), box.center.dy),
+      );
+      await tester.pump(_ms(200));
+      expect(find.text('0:30'), findsOneWidget);
+      await g.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+      await tester.pump();
+      expect(find.text('0:30'), findsNothing);
+      expect(find.text('1:05'), findsOneWidget);
+      await g.up();
+      expect(seeks.single.inMilliseconds, 65500);
+    });
+
+    testWidgets('a move past the slop before the delay is no hold', (
+      tester,
+    ) async {
+      final states = <KSeekState>[];
+      final box = await pumpBubbleBar(tester, states: states);
+      final g = await tester.startGesture(
+        Offset(xAt(box, 30.5), box.center.dy),
+      );
+      await tester.pump(_ms(50));
+      await g.moveBy(const Offset(30, 0));
+      await tester.pump(_ms(200));
+      expect(states.last.holding, isFalse);
+      expect(states.last.dragging, isTrue);
+      await g.up();
+    });
+
+    testWidgets('a pointer cancel never seeks, mid-hold or mid-drag', (
+      tester,
+    ) async {
+      final seeks = <Duration>[];
+      var ends = 0;
+      final box = await pumpBubbleBar(
+        tester,
+        seeks: seeks,
+        onSeekEnd: () => ends++,
+      );
+      final held = await tester.startGesture(
+        Offset(xAt(box, 30.5), box.center.dy),
+      );
+      await tester.pump(_ms(200));
+      expect(find.text('0:30'), findsOneWidget);
+      await held.cancel();
+      await tester.pump();
+      expect(find.text('0:30'), findsNothing);
+
+      final dragged = await tester.startGesture(
+        Offset(box.left + 20, box.center.dy),
+      );
+      await dragged.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+      await tester.pump();
+      expect(find.text('1:05'), findsOneWidget);
+      await dragged.cancel();
+      await tester.pump();
+      expect(find.text('1:05'), findsNothing);
+      expect(seeks, isEmpty);
+      expect(ends, 1);
+    });
+
+    testWidgets('a track change ends a hold and drops a drag', (tester) async {
+      final seeks = <Duration>[];
+      var ends = 0;
+      var box = await pumpBubbleBar(
+        tester,
+        seeks: seeks,
+        onSeekEnd: () => ends++,
+      );
+      final held = await tester.startGesture(
+        Offset(xAt(box, 30.5), box.center.dy),
+      );
+      await tester.pump(_ms(200));
+      expect(find.text('0:30'), findsOneWidget);
+      box = await pumpBubbleBar(
+        tester,
+        seeks: seeks,
+        onSeekEnd: () => ends++,
+        track: 2,
+      );
+      expect(find.text('0:30'), findsNothing);
+      await held.up();
+      await tester.pump();
+      // The time held was the old track's: the release seeks nothing.
+      expect(seeks, isEmpty);
+      expect(ends, 0);
+
+      final dragged = await tester.startGesture(
+        Offset(box.left + 20, box.center.dy),
+      );
+      await dragged.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+      await tester.pump();
+      expect(find.text('1:05'), findsOneWidget);
+      await pumpBubbleBar(
+        tester,
+        seeks: seeks,
+        onSeekEnd: () => ends++,
+        track: 3,
+      );
+      expect(find.text('1:05'), findsNothing);
+      await dragged.moveTo(Offset(xAt(box, 80), box.center.dy));
+      await dragged.up();
+      await tester.pump();
+      expect(seeks, isEmpty);
+      expect(ends, 1);
+    });
+
+    testWidgets('leaving the tree mid-hold leaves no bubble or timer', (
+      tester,
+    ) async {
+      final box = await pumpBubbleBar(tester);
+      final early = await tester.startGesture(
+        Offset(xAt(box, 30.5), box.center.dy),
+      );
+      await tester.pump(_ms(50));
+      await tester.pumpWidget(_hosted(const SizedBox()));
+      await tester.pump(_ms(200));
+      expect(find.text('0:30'), findsNothing);
+      await early.up();
+
+      final box2 = await pumpBubbleBar(tester);
+      final held = await tester.startGesture(
+        Offset(xAt(box2, 30.5), box2.center.dy),
+      );
+      await tester.pump(_ms(200));
+      expect(find.text('0:30'), findsOneWidget);
+      await tester.pumpWidget(_hosted(const SizedBox()));
+      expect(find.text('0:30'), findsNothing);
+      await held.up();
+    });
+
+    testWidgets('without a label: no bubble, no hold, no cancel', (
+      tester,
+    ) async {
+      final seeks = <Duration>[];
+      await tester.pumpWidget(
+        _hosted(_bar(levels: _levels, status: _ready, seeks: seeks)),
+      );
+      final box = tester.getRect(find.byType(KWaveformSeekBar));
+      final g = await tester.startGesture(Offset(box.left + 20, box.center.dy));
+      await tester.pump(_ms(200));
+      await g.moveTo(Offset(xAt(box, 65.5), box.center.dy));
+      await g.moveTo(Offset(xAt(box, 65.5), box.center.dy - 60));
+      await tester.pump();
+      expect(find.text('1:05'), findsNothing);
+      expect(find.text(_cancelText), findsNothing);
+      await g.up();
+      expect(seeks.single.inMilliseconds, 65500);
     });
   });
 }

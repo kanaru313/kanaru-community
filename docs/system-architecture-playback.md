@@ -1051,8 +1051,10 @@ mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancell
   duration), the played edge is at `6 + progress * (w - 12)`. No duration: not seekable, progress 0, the bars use `levelsDuration`.
 - **Look.** Played bars `primary` at 85 % clipped to `[0, x)`, the rest at 35 % clipped to `[x, w)` (x on a device pixel). Keyboard focus
   only draws a 1.5 px `onSurface` 70 % line at the position (`KSeekState.keyboardFocus`: focused, `FocusManager.highlightMode ==
-  traditional`, no drag, and no pointer on the bar since focus came or since the last key). A mouse click or a touch focuses the bar but
-  draws none, also on desktop where a mouse leaves the highlight mode on keyboard; Tab, or a key after a click, draws it. `waveform_bars.dart` (pure): bars map time, not index (mean of the levels inside the bar's window; a shorter waveform
+  traditional`, no drag, and no pointer on the bar since the keyboard last brought focus or pressed a key). A mouse click or a touch
+  focuses the bar but draws none, also on desktop where a mouse leaves the highlight mode on keyboard, and also when focus comes back
+  without a key (a menu, dialog or page opened and closed by mouse); Tab, Shift+Tab, Esc closing a dialog, or a key after a click, draws
+  it. Focus state lives in `SeekFocusTracker` (`seek_focus_tracker.dart`). `waveform_bars.dart` (pure): bars map time, not index (mean of the levels inside the bar's window; a shorter waveform
   leaves minimal bars; a longer one is cut), after a contrast stretch (the quietest tenth to 0, the loudest percent to full; a steady tone
   stays full; silence stays flat). Steady state draws two recorded pictures (a position tick only moves two clips, nothing is recorded);
   during a transition the rounded rectangles are drawn directly (about 70 per layer at 364 px).
@@ -1074,6 +1076,28 @@ mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancell
     none fades from the current height, change collapses from the current heights; `collapsing`: statuses are held, grows after the collapse
     and the gate, none fades during the rest of the collapse; `fallback`: computing fades back to dots, ready grows once the gate passed,
     change fades back to dots and restarts the gate.
+- **Time bubble, hold, drag-up cancel** (opt-in; the mini band and the player bar use none of them). `KWaveformSeekBar(bubbleLabel:,
+  cancelLabel:)` turns on `KSeekGestureArea(holdDelay: seekHoldDelay (150 ms), cancelUpDistance: seekCancelUpDistance (48))`.
+  - Hold: `SeekHoldTracker` (`seek_hold_tracker.dart`), fed by the area's `Listener`, so it joins no gesture arena: a timer from pointer
+    down (primary button or touch, first pointer only) marks `KSeekState.holding` when the pointer has not moved past the touch slop. A
+    release is still the tap (one seek), a horizontal move still the drag (the hold turns into it), a vertical move still goes to an
+    ancestor (lyrics footer pull, Now Playing scroll): the drag recognizer is then rejected and its `onCancel` ends the hold, nothing
+    seeks. With no vertical ancestor the drag recognizer wins by default (the tap gives up past the slop), so a straight-up move scrubs,
+    and more than 48 dp up shows the cancel text. A release that is a tap seeks only when the track is still the one under the pointer
+    at its down. The hold ends on up, pointer cancel, track change, losing the duration and dispose.
+  - Drag-up cancel: a drag whose pointer is more than 48 dp above its pointer-down y is `cancelling`: `progress` is the real position,
+    a release does not seek (`onSeekEnd` still once); back below it seeks again. Android / iOS give one `HapticFeedback.selectionClick`
+    per upward crossing. Only after the horizontal lock: before it, an up move belongs to the ancestor.
+  - `KSeekState.pointerFraction` is the fraction under the finger while holding or dragging (also while cancelling).
+  - `KSeekTimeBubble` (`k_seek_time_bubble.dart`): an `OverlayPortal` + `CompositedTransformFollower` above the band (outside its `ClipRect`
+    and layout, 6 dp gap, `seekBubbleGap`), centred on the finger and kept at least half its width and 32 dp from the ends; a 24 dp box
+    (padding 2 / 8, line 20) with radius 8 (`KRadius.xs`), `inverseSurface` with `bubbleLabel(time)` in 12 w700 tabular `onInverseSurface`
+    (no letter spacing), or `errorContainer` with `cancelLabel` while
+    cancelling. Excluded from semantics (the slider speaks the value).
+  - `PlaybackWaveformSeekBar` passes `formatClock` and `playbackSeekCancel` ("Thả để huỷ" / "Release to cancel").
+  - Recognizers are built by `seekRecognizers` (`seek_recognizers.dart`), `KSeekState` lives in `k_seek_state.dart` (exported with the
+    area).
+
 `PlaybackWaveformSeekBar` draws the levels of the playing entry only, never the previous track's, and passes `isPlayingProvider` as
 `playing` (unused by the bars).
 

@@ -52,6 +52,9 @@ class PlaybackWaveformSeekBar extends ConsumerWidget {
       levels: ready ? view.levels : null,
       levelsDuration: ready ? Duration(milliseconds: view.durationMs) : null,
       semanticLabel: l10n.playbackSeek,
+      // Hold or drag shows the time under the finger; a drag up cancels.
+      bubbleLabel: formatClock,
+      cancelLabel: l10n.playbackSeekCancel,
       semanticValue: duration == null
           ? null
           : l10n.playbackPositionValue(
