@@ -56,7 +56,11 @@ pub fn aiff_with_chunks(chunks: &[(&[u8; 4], &[u8])], place: Place) -> Vec<u8> {
     add_chunks(aiff_bytes(), 38, chunks, place, u32::to_be_bytes)
 }
 
-fn add_chunks(
+/// `file` (a RIFF or FORM container) with `chunks` added at `place`, each
+/// padded to an even size, and the outer size fixed. `audio_at` is where
+/// [`Place::BeforeAudio`] inserts; `size` writes a chunk size in the
+/// container's byte order.
+pub fn add_chunks(
     mut file: Vec<u8>,
     audio_at: usize,
     chunks: &[(&[u8; 4], &[u8])],
