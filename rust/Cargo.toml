@@ -18,7 +18,7 @@ version = "0.1.0"
 # edition 2024 rejects without `unsafe(...)`.
 edition = "2021"
 rust-version = "1.89"
-license = "GPL-3.0-or-later"
+license-file = "../LICENSE"
 publish = false
 
 # Every third-party version lives here, pinned exactly with the reason.

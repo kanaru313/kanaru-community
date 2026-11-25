@@ -30,8 +30,9 @@ Conventional commits: `type(scope): summary`, with types such as `feat`, `fix`,
 ## Contributor License Agreement
 
 Contributions from outside the project need a signed Contributor License
-Agreement before they can be merged. The project is GPL-3.0-or-later; a
-maintainer will provide the agreement on your first pull request.
+Agreement before they can be merged. The project is source available under
+the Kanaru EULA ([LICENSE](LICENSE)); a maintainer will provide the agreement
+on your first pull request.
 
 ## Plugins
 
