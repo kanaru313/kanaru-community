@@ -22,6 +22,8 @@ use symphonia::default::meta::Id3v2Reader;
 use crate::MediaError;
 
 mod bound;
+pub(crate) mod iff;
+pub(crate) mod prefix;
 pub(crate) mod views;
 
 pub use bound::MAX_ID3_FALLBACK_FRAMES;
@@ -35,6 +37,21 @@ pub const MAX_ID3_FALLBACK_BYTES: usize = 16 * 1024 * 1024;
 /// Most ID3 chunks of one WAV or AIFF file looked at (and masked when the
 /// file is read again).
 pub(crate) const MAX_ID3_CHUNKS: usize = 4;
+
+/// Most top-level chunk headers of one WAV or AIFF file walked while looking
+/// for ID3 chunks. Real files have a handful.
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "used once the container recovery lands")
+)]
+const MAX_IFF_CHUNKS: usize = 1024;
+
+/// Most ID3v2 tags looked at in a row at the start of an MP3 or FLAC file.
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "used once the container recovery lands")
+)]
+const MAX_ID3_PREFIXES: usize = 4;
 
 /// The ID3v2 tag whose header starts at `at`: the 10-byte header and as much
 /// of the body as the tag declares, `limit` allows and `budget` has left,
@@ -102,6 +119,20 @@ pub(crate) fn non_transient<T>(error: MediaError) -> Result<Option<T>, MediaErro
         Err(error)
     } else {
         Ok(None)
+    }
+}
+
+/// The spans a locator `found` before `walked` ended: a transient I/O error
+/// is retried by the caller; any other failure (the file ends inside a
+/// header) only ends the walk.
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "used once the container recovery lands")
+)]
+fn keep_found<T>(walked: std::io::Result<()>, found: Vec<T>) -> Result<Vec<T>, MediaError> {
+    match walked.map_err(MediaError::from) {
+        Err(e) if e.is_transient() => Err(e),
+        _ => Ok(found),
     }
 }
 
