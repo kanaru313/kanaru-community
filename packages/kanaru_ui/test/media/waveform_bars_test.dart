@@ -27,12 +27,19 @@ void main() {
       int lengthMs = 10000,
       int durationMs = 10000,
       double width = 50,
+      double inset = 0,
     }) => waveformBarExtents(
       levels: _levels(levels),
       length: Duration(milliseconds: lengthMs),
       duration: Duration(milliseconds: durationMs),
       width: width,
+      inset: inset,
     );
+
+    test('a bar is at least 3 dp tall and at most 32', () {
+      expect(waveformMinExtent, 3);
+      expect(waveformMaxExtent, 32);
+    });
 
     test('0 maps to the minimum height, 255 to the maximum', () {
       expect(extents([0], width: 3), [waveformMinExtent]);
@@ -40,29 +47,19 @@ void main() {
     });
 
     test('a bar takes the mean of the levels inside its time', () {
-      // 10 bars over 10 levels: one level each.
-      final one = extents(List.generate(10, (i) => i * 25), width: 50);
-      expect(one.length, 10);
-      // 5 bars over 10 levels: two levels each, the mean of the pair.
-      final two = extents([
-        0,
-        100,
-        100,
-        200,
-        0,
-        0,
-        255,
-        255,
-        50,
-        50,
-      ], width: 25);
-      expect(two.length, 5);
       double extentOf(num level) =>
           waveformMinExtent +
           (waveformMaxExtent - waveformMinExtent) * (level / 255);
-      expect(two[0], closeTo(extentOf(50), 1e-9));
-      expect(two[1], closeTo(extentOf(150), 1e-9));
-      expect(two[3], closeTo(extentOf(255), 1e-9));
+      // Width 48 holds 10 bars exactly (no offset): bar j covers 5 of 48
+      // levels, so a block of 5 equal levels per bar comes back as its value.
+      const blocks = [0, 100, 200, 255, 50, 0, 10, 20, 30, 40];
+      final e = extents([
+        for (var i = 0; i < 48; i++) blocks[i ~/ 5],
+      ], width: 48);
+      expect(e.length, 10);
+      for (var j = 0; j < 10; j++) {
+        expect(e[j], closeTo(extentOf(blocks[j]), 1e-9), reason: 'bar $j');
+      }
     });
 
     test('fewer levels than bars repeats the level under the bar start', () {
@@ -88,6 +85,97 @@ void main() {
       expect(extents([1, 2], lengthMs: 0), isEmpty);
       expect(extents([]), isEmpty);
       expect(extents([1, 2], width: 2), isEmpty);
+    });
+  });
+
+  group('inset and offset', () {
+    // 1000 levels rising evenly over the whole duration.
+    final ramp = Uint8List.fromList(
+      List.generate(1000, (i) => (i * 255 / 999).round()),
+    );
+    double extentOf(double level) =>
+        waveformMinExtent +
+        (waveformMaxExtent - waveformMinExtent) * (level / 255);
+
+    test('bars are centred in the inner width', () {
+      // Inner 181: 36 bars span 178, 1.5 free at each side.
+      expect(waveformBarsOffset(count: 36, width: 193, inset: 6), 7.5);
+      expect(waveformBarsOffset(count: 38, width: 200, inset: 6), 6);
+    });
+
+    test('the bar count follows the inner width', () {
+      final e = waveformBarExtents(
+        levels: ramp,
+        length: const Duration(seconds: 100),
+        duration: const Duration(seconds: 100),
+        width: 200,
+        inset: 6,
+      );
+      expect(e.length, waveformBarCount(188));
+    });
+
+    test('the bar under x stands for the time fraction (x - 6) / (w - 12)', () {
+      const w = 193.0;
+      const inset = 6.0;
+      final e = waveformBarExtents(
+        levels: ramp,
+        length: const Duration(seconds: 100),
+        duration: const Duration(seconds: 100),
+        width: w,
+        inset: inset,
+      );
+      final offset = waveformBarsOffset(
+        count: e.length,
+        width: w,
+        inset: inset,
+      );
+      const pitch = waveformBarWidth + waveformBarGap;
+      for (final x in [20.0, 60.5, 101.0, 150.0, 180.0]) {
+        final j = ((x - offset) / pitch).floor();
+        final fraction = (x - inset) / (w - 2 * inset);
+        // The ramp is the fraction itself, so the bar's extent is that of the
+        // middle of its time window, which holds the fraction under x.
+        final from = (offset + j * pitch - inset) / (w - 2 * inset);
+        final to = (offset + (j + 1) * pitch - inset) / (w - 2 * inset);
+        expect(fraction, inInclusiveRange(from, to), reason: 'x $x');
+        expect(
+          e[j],
+          closeTo(extentOf(255 * (from + to) / 2), 0.2),
+          reason: 'x $x',
+        );
+      }
+    });
+
+    test('the first bar starts no earlier than the time axis', () {
+      final e = waveformBarExtents(
+        levels: Uint8List.fromList([255, 255]),
+        length: const Duration(seconds: 10),
+        duration: const Duration(seconds: 10),
+        width: 193,
+        inset: 6,
+      );
+      expect(e.first, waveformMaxExtent);
+    });
+
+    test('grown extents interpolate between a dot and the bar', () {
+      expect(waveformGrownExtents([3, 32], 0), [3, 3]);
+      expect(waveformGrownExtents([3, 32], 1), [3, 32]);
+      expect(waveformGrownExtents([3, 23], 0.5), [3, 13]);
+    });
+
+    test('the cache keeps the list until an input changes', () {
+      final cache = WaveformExtentsCache();
+      List<double> get(Uint8List l, double w) => cache.of(
+        levels: l,
+        length: const Duration(seconds: 10),
+        duration: const Duration(seconds: 10),
+        width: w,
+        inset: 6,
+      );
+      final a = get(ramp, 200);
+      expect(identical(get(ramp, 200), a), isTrue);
+      expect(identical(get(ramp, 220), a), isFalse);
+      expect(identical(get(Uint8List.fromList([1, 2, 3]), 220), a), isFalse);
     });
   });
 

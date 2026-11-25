@@ -1,25 +1,24 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-/// Height of the waveform seek track.
-const double waveformTrackHeight = 48;
+/// Height of the seek band (hit area and paint area) of the waveform bar. The
+/// bars live in a 32 dp zone in the middle; the rest is room for the touch
+/// feedback and the focus line.
+const double seekBandHeight = 56;
+
+/// Room kept free at the left and right of the band: the time axis runs over
+/// the width minus twice this.
+const double seekInset = 6;
 
 /// One bar's width and the empty space between two bars.
 const double waveformBarWidth = 3;
 const double waveformBarGap = 2;
 const double waveformBarRadius = 1.5;
 
-/// A bar is never shorter or taller than these, centred in the track.
-const double waveformMinExtent = 2;
+/// A bar is never shorter or taller than these, centred in the band. At the
+/// minimum a bar is a dot.
+const double waveformMinExtent = 3;
 const double waveformMaxExtent = 32;
-
-/// The thumb is an upright pill a little taller than the tallest bar.
-const double waveformThumbWidth = 4;
-const double waveformThumbHeight = waveformMaxExtent + 4;
-
-/// Room kept free on each side of the thumb's centre: half the thumb plus the
-/// same gap the straight track leaves around it.
-const double waveformThumbClearance = waveformThumbWidth / 2 + 4;
 
 /// Percentile of a track's levels that maps to 0 (the quietest tenth).
 const int waveformContrastFloorPercentile = 10;
@@ -31,47 +30,69 @@ const int waveformContrastCeilingPercentile = 99;
 /// (a steady tone): the floor drops to silence and the level just fills up.
 const double _flatSpreadShare = 0.05;
 
-/// Number of bars that fit in [width]: bars start at x = 0, and the last one
-/// ends at or before [width].
+/// Number of bars that fit in [width] (the inner width, inset excluded): bars
+/// start at its left edge, and the last one ends at or before its right edge.
 int waveformBarCount(double width) {
   if (!width.isFinite || width < waveformBarWidth) return 0;
   return ((width + waveformBarGap) / (waveformBarWidth + waveformBarGap))
       .floor();
 }
 
-/// Heights of the bars across [width], from [levels] (0 to 255, evenly spaced
-/// over [length]).
+/// Left x of the first of [count] bars centred in the inner width of a band
+/// [width] wide with [inset] free at each side.
+double waveformBarsOffset({
+  required int count,
+  required double width,
+  required double inset,
+}) {
+  const pitch = waveformBarWidth + waveformBarGap;
+  final inner = width - 2 * inset;
+  return inset + (inner - (count * pitch - waveformBarGap)) / 2;
+}
+
+/// Heights of the bars across a band [width] wide with [inset] free at each
+/// side, from [levels] (0 to 255, evenly spaced over [length]).
 ///
-/// Bars map time, not index: bar `j` covers a share of the player's [duration]
-/// equal to its share of [width], and takes the mean of the levels whose time
-/// falls in it (the level under its start when none does, as when there are
-/// fewer levels than bars). A waveform shorter than the duration leaves the
-/// bars after it at the minimum; a longer one is cut at the duration. A zero
-/// [duration] or [length] gives no bars.
+/// The bars are centred in the inner width ([waveformBarsOffset]). Bars map
+/// time, not index: the time axis runs over the inner width, so bar `j` covers
+/// the fractions `(offset + j * pitch - inset) / inner` to
+/// `(offset + (j + 1) * pitch - inset) / inner` of the player's [duration]
+/// (the same fraction a tap at that x seeks to) and takes the mean of the
+/// levels whose time falls in it (the level under its start when none does,
+/// as when there are fewer levels than bars). A waveform shorter than the
+/// duration leaves the bars after it at the minimum; a longer one is cut at
+/// the duration (the last window ends at the duration, not in the gap after
+/// the last bar). A zero [duration] or [length] gives no bars.
 List<double> waveformBarExtents({
   required Uint8List levels,
   required Duration length,
   required Duration duration,
   required double width,
+  required double inset,
 }) {
-  final count = waveformBarCount(width);
+  final inner = width - 2 * inset;
+  final count = waveformBarCount(inner);
   final lengthUs = length.inMicroseconds;
   final durationUs = duration.inMicroseconds;
   if (count == 0 || levels.isEmpty || lengthUs <= 0 || durationUs <= 0) {
     return const [];
   }
   const pitch = waveformBarWidth + waveformBarGap;
+  final offset = waveformBarsOffset(count: count, width: width, inset: inset);
   final n = levels.length;
   double extentOf(double level) =>
       waveformMinExtent +
       (waveformMaxExtent - waveformMinExtent) * (level / 255);
 
   return List<double>.generate(count, (j) {
-    final startUs = j * pitch / width * durationUs;
+    final startUs = (offset + j * pitch - inset) / inner * durationUs;
     if (startUs >= lengthUs) return waveformMinExtent;
-    final endUs = (j + 1) * pitch / width * durationUs;
+    final endUs = math.min(
+      (offset + (j + 1) * pitch - inset) / inner * durationUs,
+      durationUs.toDouble(),
+    );
     // Levels i with startUs <= i / n * length < endUs.
-    final first = (startUs / lengthUs * n).ceil();
+    final first = (startUs / lengthUs * n).ceil().clamp(0, n);
     final end = (endUs / lengthUs * n).ceil().clamp(0, n);
     if (first >= end) {
       final under = (startUs / lengthUs * n).floor().clamp(0, n - 1);
@@ -83,6 +104,52 @@ List<double> waveformBarExtents({
     }
     return extentOf(sum / (end - first));
   }, growable: false);
+}
+
+/// [base] heights grown by [t] (0 = every bar a dot, 1 = [base]); [t] is the
+/// eased value. A new list.
+List<double> waveformGrownExtents(List<double> base, double t) => [
+  for (final h in base) waveformMinExtent + (h - waveformMinExtent) * t,
+];
+
+/// Remembers the bar heights of one waveform so a position tick or a frame of
+/// a transition does not compute them again: [of] returns the same list until
+/// the levels (by identity), the lengths or the width change.
+class WaveformExtentsCache {
+  Uint8List? _levels;
+  Duration? _length;
+  Duration? _duration;
+  double? _width;
+  double? _inset;
+  List<double> _extents = const [];
+
+  List<double> of({
+    required Uint8List levels,
+    required Duration length,
+    required Duration duration,
+    required double width,
+    required double inset,
+  }) {
+    if (!identical(levels, _levels) ||
+        length != _length ||
+        duration != _duration ||
+        width != _width ||
+        inset != _inset) {
+      _levels = levels;
+      _length = length;
+      _duration = duration;
+      _width = width;
+      _inset = inset;
+      _extents = waveformBarExtents(
+        levels: waveformContrastLevels(levels),
+        length: length,
+        duration: duration,
+        width: width,
+        inset: inset,
+      );
+    }
+    return _extents;
+  }
 }
 
 /// [levels] spread so the track's quieter tenth maps to 0 and its loudest

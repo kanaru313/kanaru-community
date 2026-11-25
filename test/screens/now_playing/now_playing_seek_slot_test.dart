@@ -60,6 +60,11 @@ Future<UiHost> _pump(WidgetTester tester, double width, {Override? waveform}) =>
       overrides: [_fourMinutes, ?waveform],
     );
 
+/// What the slot hands to the bar; how the bar draws it is tested in
+/// kanaru_ui.
+KWaveformSeekBar _bar(WidgetTester tester) =>
+    tester.widget<KWaveformSeekBar>(find.byType(KWaveformSeekBar));
+
 void main() {
   // 390 is the phone page, 560 the desktop track column.
   for (final width in [390.0, 560.0]) {
@@ -77,19 +82,28 @@ void main() {
         expect(nowPlayingSeekSlotHeight, 48);
       });
 
-      testWidgets('is flat while there are no levels', (tester) async {
+      testWidgets('shows the dotted band while nothing is known', (
+        tester,
+      ) async {
         final host = await _pump(tester, width);
         await host.letStreamsArrive(tester);
-        expect(find.byType(KFlatSeekTrack), findsOneWidget);
-        expect(find.byKey(const ValueKey('waveform bars')), findsNothing);
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(_bar(tester).status, KWaveformStatus.unknown);
+        expect(_bar(tester).levels, isNull);
+        // The band layer stays (dots), no fallback seek bar.
+        expect(find.byKey(waveformBandKey), findsOneWidget);
+        expect(find.byKey(waveformFallbackKey), findsNothing);
+        expect(find.byType(KFlatSeekTrack), findsNothing);
       });
 
       testWidgets('draws the bars of the playing entry', (tester) async {
         final host = await _pump(tester, width, waveform: _playing);
         await host.letStreamsArrive(tester);
         await tester.pump(const Duration(milliseconds: 300));
-        expect(find.byKey(const ValueKey('waveform bars')), findsOneWidget);
-        expect(find.byType(KFlatSeekTrack), findsNothing);
+        expect(_bar(tester).status, KWaveformStatus.ready);
+        expect(_bar(tester).levels, _levels);
+        expect(find.byKey(waveformBandKey), findsOneWidget);
+        expect(find.byKey(waveformFallbackKey), findsNothing);
         expect(
           tester.getSize(find.byType(NowPlayingSeekSlot)).height,
           nowPlayingSeekSlotHeight,
@@ -100,8 +114,9 @@ void main() {
         final host = await _pump(tester, width, waveform: _stale);
         await host.letStreamsArrive(tester);
         await tester.pump(const Duration(milliseconds: 300));
-        expect(find.byKey(const ValueKey('waveform bars')), findsNothing);
-        expect(find.byType(KFlatSeekTrack), findsOneWidget);
+        expect(_bar(tester).levels, isNull);
+        expect(_bar(tester).status, KWaveformStatus.unknown);
+        expect(find.byKey(waveformFallbackKey), findsNothing);
       });
 
       testWidgets('a drag that outlives its track does not seek the next one', (

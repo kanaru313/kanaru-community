@@ -12,6 +12,7 @@ class KSeekState {
     required this.seekable,
     this.dragging = false,
     this.focused = false,
+    this.keyboardFocus = false,
   });
 
   /// 0..1; follows the finger while dragging, [KSeekGestureArea.position]
@@ -28,8 +29,14 @@ class KSeekState {
   /// A drag is in progress (a subset of [active]).
   final bool dragging;
 
-  /// Has keyboard focus (a subset of [active]).
+  /// Has focus (a subset of [active]), from a click or tap too.
   final bool focused;
+
+  /// Has focus the user is driving with the keyboard: focused, the keyboard
+  /// highlight mode is on, no drag runs, and no pointer touched the bar since
+  /// focus came or since the last key. A focus ring is drawn only for this
+  /// (a mouse click on desktop leaves the highlight mode on keyboard).
+  final bool keyboardFocus;
 }
 
 /// The input of every seek bar (flat and waveform), without a look of its own.
@@ -55,6 +62,7 @@ class KSeekGestureArea extends StatefulWidget {
     this.keyStep = const Duration(seconds: 5),
     this.seekOnTap = true,
     this.anyDirection = false,
+    this.horizontalInset = 0,
   });
 
   final Duration position;
@@ -82,6 +90,10 @@ class KSeekGestureArea extends StatefulWidget {
   /// device settings, not twice that). False: only horizontal drags seek.
   final bool anyDirection;
 
+  /// Room kept at each side of the time axis: x = [horizontalInset] is the
+  /// start and `width - horizontalInset` the end, taps and drags outside clamp.
+  final double horizontalInset;
+
   /// Height of the hit area.
   final double height;
   final Widget Function(BuildContext context, KSeekState state) builder;
@@ -93,6 +105,10 @@ class KSeekGestureArea extends StatefulWidget {
 class _KSeekGestureAreaState extends State<KSeekGestureArea> {
   bool _hover = false;
   bool _focus = false;
+
+  /// A pointer focused the bar or touched it while focused; cleared by a key
+  /// and when focus goes.
+  bool _pointerFocus = false;
 
   /// 0..1 while dragging; null otherwise.
   double? _drag;
@@ -107,6 +123,29 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
   bool get _seekable => (widget.duration?.inMilliseconds ?? 0) > 0;
 
   @override
+  void initState() {
+    super.initState();
+    FocusManager.instance.addHighlightModeListener(_onHighlightMode);
+  }
+
+  @override
+  void dispose() {
+    FocusManager.instance.removeHighlightModeListener(_onHighlightMode);
+    super.dispose();
+  }
+
+  void _onHighlightMode(FocusHighlightMode mode) {
+    if (mounted && _focus) setState(() {});
+  }
+
+  void _onFocusChange(bool focused) {
+    setState(() {
+      _focus = focused;
+      if (!focused) _pointerFocus = false;
+    });
+  }
+
+  @override
   void didUpdateWidget(KSeekGestureArea oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (_drag != null && (widget.track != _draggedTrack || !_seekable)) {
@@ -115,8 +154,12 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
     }
   }
 
-  double _fractionOf(double dx, double width) =>
-      width <= 0 ? 0 : (dx / width).clamp(0.0, 1.0);
+  double _fractionOf(double dx, double width) {
+    final inner = width - 2 * widget.horizontalInset;
+    return inner <= 0
+        ? 0
+        : ((dx - widget.horizontalInset) / inner).clamp(0.0, 1.0);
+  }
 
   Duration _at(double fraction) => Duration(
     milliseconds: (widget.duration!.inMilliseconds * fraction).round(),
@@ -132,6 +175,8 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
   }
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    // Any key means the keyboard drives the bar now: show its focus ring.
+    if (_pointerFocus) setState(() => _pointerFocus = false);
     if (event is KeyUpEvent || !_seekable) return KeyEventResult.ignored;
     if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
       _seekBy(-widget.keyStep);
@@ -212,6 +257,7 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
               (r) => r
                 ..gestureSettings = settings
                 ..onTapUp = (d) {
+                  _pointerFocus = true;
                   Focus.of(context).requestFocus();
                   widget.onSeekStart?.call();
                   widget.onSeek(_at(_fractionOf(d.localPosition.dx, width)));
@@ -274,7 +320,7 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
           : null,
       child: Focus(
         onKeyEvent: _onKey,
-        onFocusChange: (v) => setState(() => _focus = v),
+        onFocusChange: _onFocusChange,
         child: MouseRegion(
           onEnter: (_) => setState(() => _hover = true),
           onExit: (_) => setState(() => _hover = false),
@@ -283,7 +329,14 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
             builder: (context, box) {
               final width = box.maxWidth;
               return Listener(
-                onPointerDown: (_) => _cancelled = false,
+                onPointerDown: (_) {
+                  _cancelled = false;
+                  // A pointer on a focused bar hides its keyboard focus ring;
+                  // a tap that brings focus sets this itself.
+                  if (_focus && !_pointerFocus) {
+                    setState(() => _pointerFocus = true);
+                  }
+                },
                 onPointerCancel: (_) => _cancelled = true,
                 child: RawGestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -299,6 +352,12 @@ class _KSeekGestureAreaState extends State<KSeekGestureArea> {
                         seekable: _seekable,
                         dragging: _drag != null,
                         focused: _focus,
+                        keyboardFocus:
+                            _focus &&
+                            !_pointerFocus &&
+                            _drag == null &&
+                            FocusManager.instance.highlightMode ==
+                                FocusHighlightMode.traditional,
                       ),
                     ),
                   ),

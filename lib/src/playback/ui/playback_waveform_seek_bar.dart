@@ -13,8 +13,9 @@ import 'playback_time_label.dart';
 
 /// Waveform seek bar bound to the player: position in, `seek` out. Watching
 /// the waveform here is what keeps the decoder busy: it runs only while one of
-/// these is mounted in the waveform style. Flat until the levels of the playing
-/// entry arrive, and always flat (waveform not watched) in the flat style.
+/// these is mounted in the waveform style. The band shows the dotted row until
+/// the playing entry's status is known, then bars or the flat fallback; the flat
+/// style does not watch the waveform and passes `none` (the flat track).
 class PlaybackWaveformSeekBar extends ConsumerWidget {
   const PlaybackWaveformSeekBar({super.key});
 
@@ -27,19 +28,29 @@ class PlaybackWaveformSeekBar extends ConsumerWidget {
     final entry = ref.watch(nowPlayingProvider.select((n) => n.value?.entryId));
     final flat = ref.watch(seekBarStyleProvider) == SeekBarStyle.flat;
     // Not watched when flat, so the decoder never starts for a flat bar.
-    final view = flat ? null : ref.watch(waveformProvider).value;
-    // A view of another entry is the previous track's: draw it flat.
-    final mine =
-        view != null &&
-        entry != null &&
-        view.entryId == entry &&
-        view.status == WaveformStatus.ready;
+    final loaded = flat ? null : ref.watch(waveformProvider);
+    final view = loaded?.value;
+    // A view of another entry (or none yet, while the provider loads) is no
+    // decision about this track: `unknown`, never the previous track's.
+    final mine = view != null && view.entryId == entry;
+    final ready = mine && view.status == WaveformStatus.ready;
+    final status = flat
+        ? KWaveformStatus.none
+        : !mine
+        ? KWaveformStatus.unknown
+        : switch (view.status) {
+            WaveformStatus.computing => KWaveformStatus.computing,
+            WaveformStatus.ready => KWaveformStatus.ready,
+            WaveformStatus.none => KWaveformStatus.none,
+          };
     return KWaveformSeekBar(
       track: entry ?? pos?.entryId,
       position: position,
       duration: duration,
-      levels: mine ? view.levels : null,
-      levelsDuration: mine ? Duration(milliseconds: view.durationMs) : null,
+      status: status,
+      playing: ref.watch(isPlayingProvider),
+      levels: ready ? view.levels : null,
+      levelsDuration: ready ? Duration(milliseconds: view.durationMs) : null,
       semanticLabel: l10n.playbackSeek,
       semanticValue: duration == null
           ? null

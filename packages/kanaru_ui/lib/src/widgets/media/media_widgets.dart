@@ -21,6 +21,7 @@ export 'k_source_avatar.dart';
 export 'k_waveform_seek_bar.dart';
 export 'waveform_bars.dart';
 export 'waveform_painter.dart';
+export 'waveform_phase.dart' show KWaveformStatus;
 export 'k_toggle_icon_button.dart';
 export 'now_playing_cover_box.dart';
 export 'now_playing_split_geometry.dart';

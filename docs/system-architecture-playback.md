@@ -1042,13 +1042,40 @@ the last watcher goes (Riverpod disposes an unwatched provider after the frame, 
 memory LRU (by cache key, so a changed file misses) survives the views. `status` (`WaveformStatus`: `computing`, `ready`, `none`; `levels` non-null iff `ready`) is decided at the entry change: levels in the memory or on disk are `ready`; no entry, no local file (`pathOf` null), a cached negative or a failure earlier in this session are `none` (no job); nothing known is `computing`. A finished job emits `ready` or `none` for the current entry. A `RetryLater` that this session did not cause (timeout, busy disk) puts the entry in a session set of failed entries: it shows `none` (also when it was only the prefetched next entry and becomes current later) and is not started again until a new session (a new view). That set is the one for display and for "do not start again". A job cancelled because the queue moved on is no failure: nothing is emitted and the entry may be tried again.
 
 **Display** (`packages/kanaru_ui/lib/src/widgets/media/`). `KWaveformSeekBar` has the input of `KSeekBar` (`KSeekGestureArea`: tap,
-drag, left/right 5 s, slider semantics; options `seekOnTap` and `anyDirection` (a pan with the device touch slop) for the mini player band, `KSeekState.dragging` / `focused`; a cancelled touch never seeks) at 48 dp. Mirrored rounded bars 3 dp wide, 2 dp apart, 2 to 32 dp tall, centred; played
-bars `primary` at 85 %, the rest at 35 %; an upright 4 x 36 dp thumb with 6 dp cleared on each side. `waveform_bars.dart` (pure):
-bars map time, not index (mean of the levels inside the bar's share of the duration; a shorter waveform leaves minimal bars; a
-longer one is cut), after a contrast stretch (the quietest tenth to 0, the loudest percent to full; a steady tone stays full;
-silence stays flat). The two colours are recorded once as pictures; a position tick only moves two clips and the thumb. Flat
-`KFlatSeekTrack` while there are no levels or no duration; the bars fade in over 200 ms (none with `instant` or reduced motion).
-`PlaybackWaveformSeekBar` draws the levels of the playing entry only, never the previous track's.
+drag, left/right 5 s, slider semantics; options `seekOnTap`, `anyDirection` (a pan with the device touch slop) and `horizontalInset` for the
+mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancelled touch never seeks). It is a 56 dp band (`seekBandHeight`, `ClipRect` +
+`RepaintBoundary`, effects never change layout); the bars use the 32 dp in the middle, 3 to 32 dp tall, 3 dp wide, 2 dp apart, with no thumb.
+- **Time axis.** `seekInset` = 6 dp at each side. Bars are counted over the inner width and centred in it
+  (`off = 6 + (iw - (n * pitch - gap)) / 2`). Input, bars and the fallback share one map: a tap at x seeks to `(x - 6) / (w - 12)`, bar j
+  stands for the fractions `(off + j * pitch - 6) / (w - 12)` to `(off + (j + 1) * pitch - 6) / (w - 12)` (the last window ends at the
+  duration), the played edge is at `6 + progress * (w - 12)`. No duration: not seekable, progress 0, the bars use `levelsDuration`.
+- **Look.** Played bars `primary` at 85 % clipped to `[0, x)`, the rest at 35 % clipped to `[x, w)` (x on a device pixel). Keyboard focus
+  only draws a 1.5 px `onSurface` 70 % line at the position (`KSeekState.keyboardFocus`: focused, `FocusManager.highlightMode ==
+  traditional`, no drag, and no pointer on the bar since focus came or since the last key). A mouse click or a touch focuses the bar but
+  draws none, also on desktop where a mouse leaves the highlight mode on keyboard; Tab, or a key after a click, draws it. `waveform_bars.dart` (pure): bars map time, not index (mean of the levels inside the bar's window; a shorter waveform
+  leaves minimal bars; a longer one is cut), after a contrast stretch (the quietest tenth to 0, the loudest percent to full; a steady tone
+  stays full; silence stays flat). Steady state draws two recorded pictures (a position tick only moves two clips, nothing is recorded);
+  during a transition the rounded rectangles are drawn directly (about 70 per layer at 364 px).
+- **States** (`waveform_phase.dart`, pure `WaveformPhase`, one clock fed by one ticker that runs only while a gate or transition is pending;
+  no wall clock; `TickerMode` off means no frames). `KWaveformStatus` (`unknown`, `computing`, `ready`, `none`) mirrors the app's status;
+  `PlaybackWaveformSeekBar` passes `unknown` while the provider loads or its view belongs to another entry, `none` in the flat style.
+  Kinds: `unknown` and `dots` (the dotted row: bars at 3 dp, no animation), `growing` (600 ms `easeInOutQuart`, in place), `shown`,
+  `collapsing`, `fallback` (200 ms cross-fade; every fallback, custom or the default `KFlatSeekTrack`, sits
+  inside a 6 dp horizontal padding and gets the state of that inner width, so its box is `state.width` wide and its thumb sits under the
+  finger). The drawing of one frame (heights per kind, steady pictures, dotted row) is `WaveformBandFrames` (`waveform_band.dart`).
+  - The first decision after mount is applied at once (ready: `shown`, none: `fallback`, computing: `dots`), even when it comes after an async
+    gap: opening Now Playing on a cached track never animates. The first track after none is not a change.
+  - A track change snapshots the drawn heights and collapses them to 3 dp over 600 ms (also when the duration goes to zero); the new bars grow
+    once ready but no earlier than 800 ms after the change, cached or not. A change during a collapse restarts both.
+  - computing to ready: grow in place (not before the gate). none: the dots fade into the fallback; from the fallback, computing fades back to
+    dots and ready fades it out while growing. Reduced motion: every transition instant, no gate.
+  - Table (state / event, `waveform_phase_test.dart` has every cell): `unknown` mount: computing dots, ready shown, none fallback, all instant;
+    `unknown` after a change and `dots`: ready waits for the gate then grows, none fades to the fallback; `growing` / `shown`: ready keeps,
+    none fades from the current height, change collapses from the current heights; `collapsing`: statuses are held, grows after the collapse
+    and the gate, none fades during the rest of the collapse; `fallback`: computing fades back to dots, ready grows once the gate passed,
+    change fades back to dots and restarts the gate.
+`PlaybackWaveformSeekBar` draws the levels of the playing entry only, never the previous track's, and passes `isPlayingProvider` as
+`playing` (unused by the bars).
 
 ## Rules lane B keeps
 
