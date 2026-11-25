@@ -13,11 +13,12 @@ use lofty::id3::v2::{ExtendedTextFrame, Frame, Id3v2Tag, SyncTextContentType, Ti
 use lofty::tag::{ItemKey, Tag, TagExt, TagType};
 use lofty::TextEncoding;
 use lyrics_fixtures::{
-    broken_id3v2, frame_that_ends_the_tag, frame_with_a_bad_encoding, id3v2_frame, id3v2_tag_bytes,
+    aiff_with_chunks, broken_id3v2, flac_with_comments, frame_that_ends_the_tag,
+    frame_with_a_bad_encoding, id3v2_frame, id3v2_tag, id3v2_tag_bytes, id3v2_tag_with_footer,
     read, sample, sylt, sylt_with, unsynchronised, uslt, uslt_frame, versioned_bad_frame,
-    versioned_uslt, write_generic, write_id3v2, write_vorbis_key,
+    versioned_uslt, wav_with_chunks, write_generic, write_id3v2, write_vorbis_key, Place,
 };
-use tags_fixtures::{flac_bytes, mp3_bytes, TempDir};
+use tags_fixtures::{flac_bytes, TempDir};
 
 fn line(time_ms: u32, text: &str) -> SyncedLine {
     SyncedLine {
@@ -512,14 +513,144 @@ fn synced_lines_before_a_broken_id3_frame_are_kept() {
 }
 
 #[test]
-fn a_flac_with_a_broken_id3v2_prefix_is_an_error() {
+fn a_flac_behind_a_broken_prefix_without_vorbis_lyrics_uses_the_prefix_frames() {
     let dir = TempDir::new();
-    let mut bytes = broken_id3v2(&[uslt_frame("Not read"), frame_that_ends_the_tag()], None);
-    bytes.truncate(bytes.len() - mp3_bytes().len());
+    let mut bytes = id3v2_tag(
+        &[uslt_frame("From the prefix"), frame_that_ends_the_tag()],
+        None,
+    );
+    bytes.extend(flac_bytes());
+    let path = dir.write("broken.flac", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("From the prefix"));
+}
+
+#[test]
+fn a_broken_prefix_with_nothing_recoverable_is_still_an_error() {
+    let dir = TempDir::new();
+    let mut bytes = id3v2_tag(&[frame_that_ends_the_tag(), uslt_frame("Lost")], None);
+    // One stray byte: `fLaC` is not where the prefix ends.
+    bytes.push(0);
     bytes.extend(flac_bytes());
     let path = dir.write("broken.flac", &bytes);
     let result = read(&path);
     assert!(matches!(result, Err(MediaError::Corrupt(_))), "{result:?}");
+}
+
+#[test]
+fn a_flac_behind_a_broken_id3v2_prefix_reads_its_vorbis_lyrics() {
+    let dir = TempDir::new();
+    let broken = [uslt_frame("From the prefix"), frame_that_ends_the_tag()];
+    let healthy = [uslt_frame("Second prefix")];
+    let prefixes = [
+        ("plain", id3v2_tag(&broken, None)),
+        ("footer", id3v2_tag_with_footer(&broken)),
+        (
+            "two",
+            [id3v2_tag(&broken, None), id3v2_tag(&healthy, None)].concat(),
+        ),
+    ];
+    for key in ["LYRICS", "UNSYNCED LYRICS"] {
+        let flac = flac_with_comments(&[(key, "From Vorbis")]);
+        for (name, prefix) in &prefixes {
+            let path = dir.write("broken.flac", &[prefix.clone(), flac.clone()].concat());
+            assert!(lofty::read_from_path(&path).is_err(), "{key} {name}");
+            let lyrics = read(&path).unwrap().expect("lyrics");
+            assert_eq!(lyrics.text.as_deref(), Some("From Vorbis"), "{key} {name}");
+        }
+    }
+}
+
+#[test]
+fn a_flac_behind_a_broken_prefix_without_any_lyrics_has_none() {
+    let dir = TempDir::new();
+    let mut bytes = id3v2_tag(&[frame_that_ends_the_tag(), uslt_frame("Lost")], None);
+    bytes.extend(flac_bytes());
+    let path = dir.write("broken.flac", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    assert_eq!(read(&path), Ok(None));
+}
+
+/// A WAV or AIFF holding `chunks` at `place`.
+fn iff_file(
+    dir: &TempDir,
+    aiff: bool,
+    chunks: &[(&[u8; 4], &[u8])],
+    place: Place,
+) -> std::path::PathBuf {
+    if aiff {
+        dir.write("broken.aiff", &aiff_with_chunks(chunks, place))
+    } else {
+        dir.write("broken.wav", &wav_with_chunks(chunks, place))
+    }
+}
+
+#[test]
+fn lyrics_before_a_broken_id3_frame_are_kept_in_wav_and_aiff() {
+    let dir = TempDir::new();
+    let even = id3v2_tag(&[uslt_frame("Kept!"), frame_that_ends_the_tag()], None);
+    // One byte less of text makes the chunk odd-sized (a pad byte follows).
+    let odd = id3v2_tag(&[uslt_frame("Kept"), frame_that_ends_the_tag()], None);
+    assert_eq!((even.len() % 2, odd.len() % 2), (0, 1));
+    for aiff in [false, true] {
+        for id in [b"id3 ", b"ID3 "] {
+            for place in [Place::BeforeAudio, Place::AfterAudio] {
+                for (tag, text) in [(&even, "Kept!"), (&odd, "Kept")] {
+                    let path = iff_file(&dir, aiff, &[(id, tag)], place);
+                    let case = format!("aiff={aiff} {id:?} {place:?} {text}");
+                    assert!(lofty::read_from_path(&path).is_err(), "{case}");
+                    let lyrics = read(&path).unwrap().unwrap_or_else(|| panic!("{case}"));
+                    assert_eq!(lyrics.text.as_deref(), Some(text), "{case}");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn a_wav_with_a_truncated_id3_chunk_keeps_the_frames_held() {
+    let dir = TempDir::new();
+    let tag = id3v2_tag(
+        &[
+            uslt_frame("Held"),
+            frame_with_a_bad_encoding(),
+            uslt_frame("Cut"),
+        ],
+        None,
+    );
+    let mut bytes = wav_with_chunks(&[(b"id3 ", &tag)], Place::AfterAudio);
+    // The file ends inside the last frame.
+    bytes.truncate(bytes.len() - (tag.len() % 2) - 3);
+    let path = dir.write("cut.wav", &bytes);
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("Held"));
+}
+
+#[test]
+fn a_wav_with_two_id3_chunks_reads_the_first_with_lyrics() {
+    let dir = TempDir::new();
+    let without = id3v2_tag(&[frame_that_ends_the_tag(), uslt_frame("Lost")], None);
+    let first = id3v2_tag(&[uslt_frame("First"), frame_that_ends_the_tag()], None);
+    let second = id3v2_tag(&[uslt_frame("Second")], None);
+    let chunks: [(&[u8; 4], &[u8]); 3] =
+        [(b"id3 ", &without), (b"ID3 ", &first), (b"id3 ", &second)];
+    let path = dir.write("two.wav", &wav_with_chunks(&chunks, Place::AfterAudio));
+    assert!(lofty::read_from_path(&path).is_err());
+    let lyrics = read(&path).unwrap().expect("lyrics");
+    assert_eq!(lyrics.text.as_deref(), Some("First"));
+}
+
+#[test]
+fn a_broken_wav_without_lyrics_still_gives_none() {
+    let dir = TempDir::new();
+    let tag = id3v2_tag(&[frame_that_ends_the_tag(), uslt_frame("Lost")], None);
+    for aiff in [false, true] {
+        let path = iff_file(&dir, aiff, &[(b"id3 ", &tag)], Place::AfterAudio);
+        assert!(lofty::read_from_path(&path).is_err(), "aiff={aiff}");
+        assert_eq!(read(&path), Ok(None), "aiff={aiff}");
+    }
 }
 
 #[test]

@@ -23,6 +23,9 @@ use lofty::TextEncoding;
 
 use crate::tags_fixtures::{flac_bytes, mp3_bytes, wav_bytes, TempDir};
 
+mod containers;
+pub use containers::*;
+
 /// Names of the files made with ffmpeg and checked in.
 pub const CHECKED_IN: [&str; 4] = ["sample.ogg", "sample.opus", "sample.m4a", "sample.wv"];
 
@@ -210,10 +213,7 @@ pub fn frame_with_a_bad_encoding() -> Vec<u8> {
 /// An ID3v2.4 tag made of `frames` (declaring exactly their length, or
 /// `declared` when given) in front of the in-memory MP3.
 pub fn broken_id3v2(frames: &[Vec<u8>], declared: Option<usize>) -> Vec<u8> {
-    let body: Vec<u8> = frames.concat();
-    let mut bytes = b"ID3\x04\x00\x00".to_vec();
-    bytes.extend_from_slice(&syncsafe(declared.unwrap_or(body.len())));
-    bytes.extend_from_slice(&body);
+    let mut bytes = id3v2_tag(frames, declared);
     bytes.extend_from_slice(&mp3_bytes());
     bytes
 }

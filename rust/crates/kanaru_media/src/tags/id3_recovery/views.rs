@@ -8,18 +8,18 @@
 //!
 //! Neither allocates per read.
 
-// The container recovery that re-reads WAV, AIFF and FLAC files through these
-// views is not wired in yet; until then only the unit tests use them.
-#![cfg_attr(
-    not(test),
-    expect(dead_code, reason = "used once the container recovery lands")
-)]
-
 use std::io::{self, Read, Seek, SeekFrom};
 
 use super::MAX_ID3_CHUNKS;
 
 /// What a masked chunk id reads as. WAV and AIFF readers skip unknown chunks.
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "the tag recovery of the scan masks chunks; not wired in yet"
+    )
+)]
 const MASK: &[u8; 4] = b"JUNK";
 
 fn invalid_seek() -> io::Error {
@@ -105,6 +105,13 @@ impl<R: Seek> Seek for OffsetView<R> {
 
 /// The inner stream with the 4 bytes at each mask offset read as `JUNK`,
 /// also when a read covers only part of them. Seeks pass through.
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "the tag recovery of the scan masks chunks; not wired in yet"
+    )
+)]
 pub(crate) struct MaskedView<R> {
     inner: R,
     masks: [u64; MAX_ID3_CHUNKS],
@@ -113,6 +120,13 @@ pub(crate) struct MaskedView<R> {
     pos: u64,
 }
 
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "the tag recovery of the scan masks chunks; not wired in yet"
+    )
+)]
 impl<R: Seek> MaskedView<R> {
     /// A view of `inner` at its current position. At most
     /// [`MAX_ID3_CHUNKS`] masks; more is an `InvalidInput` error.

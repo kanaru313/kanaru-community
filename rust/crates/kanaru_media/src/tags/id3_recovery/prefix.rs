@@ -2,13 +2,6 @@
 //! the audio after them starts. Sizes come from the tag headers only: no
 //! forward scan for a mis-sized tag.
 
-// The container recovery that skips these prefixes is not wired in yet;
-// until then only the unit tests use them.
-#![cfg_attr(
-    not(test),
-    expect(dead_code, reason = "used once the container recovery lands")
-)]
-
 use std::io::{self, Read, Seek, SeekFrom};
 
 use super::bound::{declared_size, HEADER_LEN};

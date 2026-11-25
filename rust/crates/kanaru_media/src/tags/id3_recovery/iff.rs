@@ -10,13 +10,6 @@
 //! chunk bodies, `data` and `SSND` included, are seeked over. `LIST` is not
 //! entered: an ID3 chunk is a top-level chunk.
 
-// The container recovery that reads these chunks is not wired in yet; until
-// then only the unit tests use the walker.
-#![cfg_attr(
-    not(test),
-    expect(dead_code, reason = "used once the container recovery lands")
-)]
-
 use std::io::{self, Read, Seek, SeekFrom};
 
 use super::{keep_found, MAX_ID3_CHUNKS, MAX_IFF_CHUNKS};
