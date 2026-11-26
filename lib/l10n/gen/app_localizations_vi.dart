@@ -5729,6 +5729,12 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tìm và phát nhạc từ một dịch vụ trực tuyến.';
 
   @override
+  String get pluginsKindAiChat => 'Trò chuyện AI';
+
+  @override
+  String get pluginsKindHelpAiChat => 'Kết nối một dịch vụ AI để trò chuyện.';
+
+  @override
   String get pluginsAuthorUnknown => 'Không rõ tác giả';
 
   @override

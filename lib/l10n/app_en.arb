@@ -4459,6 +4459,8 @@
   "pluginsKindHelpLyrics": "Finds lyrics for the song playing, with lines that follow the song.",
   "pluginsKindHelpTranslate": "Translates lyrics into the language you choose.",
   "pluginsKindHelpStreaming": "Searches and plays music from an online service.",
+  "pluginsKindAiChat": "AI chat",
+  "pluginsKindHelpAiChat": "Connects an AI service you can chat with.",
   "pluginsAuthorUnknown": "Unknown author",
   "pluginsFooterNewer": "{count, plural, one{1 plugin needs a newer Kanaru} other{{count} plugins need a newer Kanaru}}",
   "@pluginsFooterNewer": {

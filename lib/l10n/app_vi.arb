@@ -4424,6 +4424,8 @@
   "pluginsKindHelpLyrics": "Tìm lời cho bài đang nghe, có lời chạy theo dòng.",
   "pluginsKindHelpTranslate": "Dịch lời bài sang ngôn ngữ bạn chọn.",
   "pluginsKindHelpStreaming": "Tìm và phát nhạc từ một dịch vụ trực tuyến.",
+  "pluginsKindAiChat": "Trò chuyện AI",
+  "pluginsKindHelpAiChat": "Kết nối một dịch vụ AI để trò chuyện.",
   "pluginsAuthorUnknown": "Không rõ tác giả",
   "pluginsFooterNewer": "{count, plural, other{{count} plugin cần Kanaru mới hơn}}",
   "@pluginsFooterNewer": {

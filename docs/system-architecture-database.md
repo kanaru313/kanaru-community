@@ -657,7 +657,7 @@ Removing a repository deletes only its row; plugins keep their own `repo_url` an
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `install_id` | TEXT | PK | | `plugin-` + 32 hex (128 bits): repository install `stableHashHex(['repo', url, slug], 32)`, file and link install `stableHashHex(['file', name, author ?? ''], 32)`. The id is not a trust boundary: an update comes only from the install source of the row. |
-| `kind` | TEXT | NOT NULL | | `CHECK (kind IN ('lyrics', 'translate', 'ai-translate', 'streaming'))`. A new kind is a table rebuild. |
+| `kind` | TEXT | NOT NULL | | `CHECK (kind IN ('lyrics', 'translate', 'ai-translate', 'streaming', 'ai-chat'))`, built from `PluginKindValues.values` (raw strings: `database` imports no plugin code). A test compares that set with the `PluginKind` wire names, so a new kind cannot be added to one and forgotten in the other. A new kind is a table rebuild after the first release; before it the check changes in place (stale dev databases are cleared). |
 | `name` | TEXT | NOT NULL | | |
 | `author` | TEXT | NULL | | |
 | `version` | INTEGER | NOT NULL | | |

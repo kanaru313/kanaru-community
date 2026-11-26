@@ -6189,6 +6189,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Searches and plays music from an online service.';
 
   @override
+  String get pluginsKindAiChat => 'AI chat';
+
+  @override
+  String get pluginsKindHelpAiChat =>
+      'Connects an AI service you can chat with.';
+
+  @override
   String get pluginsAuthorUnknown => 'Unknown author';
 
   @override

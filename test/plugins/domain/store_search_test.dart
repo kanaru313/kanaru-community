@@ -72,4 +72,16 @@ void main() {
       StoreTagKind.lyrics,
     });
   });
+
+  test('#ai tag filters ai-chat', () {
+    expect(parseStoreSearch('#ai').kinds, {PluginKind.aiChat});
+  });
+
+  test('#chat alias filters ai-chat', () {
+    expect(parseStoreSearch('#chat gemini').tags, {StoreTagKind.aiChat});
+  });
+
+  test('storeSearchForKind opens the AI filter', () {
+    expect(storeSearchForKind('aiChat'), '#ai ');
+  });
 }
