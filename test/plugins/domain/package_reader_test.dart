@@ -66,7 +66,7 @@ void main() {
         .listSync()
         .whereType<File>()
         .where((f) => f.path.endsWith('.json'));
-    expect(files, hasLength(42));
+    expect(files, hasLength(44));
     for (final file in files) {
       final bytes = file.readAsBytesSync();
       final package = readOk(zipOfManifest(bytes));

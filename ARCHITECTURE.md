@@ -23,7 +23,8 @@ storage     -> media, platform
 library     -> playback, storage, media, database, extension, platform
 lyrics      -> library, playback, plugins
 online      -> library, playback, plugins
-screens     -> fonts, lyrics, online, library, playback, plugins, storage, extension, platform
+ai          -> lyrics, library, playback, plugins
+screens     -> ai, fonts, lyrics, online, library, playback, plugins, storage, extension, platform
 shell       -> screens
 router      -> shell, screens
 ```
@@ -36,7 +37,7 @@ implements it.
 Present in `lib/src/` today: `foundation`, `platform`, `database`,
 `extension`, `media` (domain types only), `playback` (contracts and seeds),
 `library` (contracts and seeds, plus the Library and Playlists pages),
-`lyrics` (domain, data, state and UI), `online`, `screens`, `shell`, `router`, and
+`lyrics` (domain, data, state and UI), `online`, `ai` (chat engine: domain, data, state; see [docs/system-architecture-ai.md](docs/system-architecture-ai.md)), `screens`, `shell`, `router`, and
 `lib/src/rust/` (generated FFI).
 `plugins` has its package, config, catalog and install rules (`domain/`), the
 network seams (`domain/net`, `data/net`), and its store, install and native
@@ -339,6 +340,12 @@ never 1000 or more, which belongs to the Settings footer.
 | `app.font` | font id string (`nunito`, `inter`, `system`, catalog ids, `custom_*`; matches `^[a-zA-Z0-9_-]{1,128}$`) | `nunito` (an invalid value falls back and is rewritten at startup) | `fonts/domain/font_setting.dart` |
 | `playback.seek_bar_style` | `SeekBarStyle` (`waveform`, `flat`) | `waveform` | `playback/domain/seek_bar_style.dart` |
 | `app.text_scale` | int percent: 80, 90, 100, 110, 125, 150 | 100 (another whole number snaps to the nearest step; the app caps system x factor at 2.0) | same |
+| `ai.default_permission` | `AiPermission` (`readOnly`, `ask`, `auto`) | `ask` | `ai/data/ai_settings_store.dart` |
+| `ai.instructions` | string, at most 2000 characters | empty | same |
+| `ai.tools.<group>` (11 keys: `now_playing`, `queue`, `library_search`, `lyrics`, `track_info`, `listening_stats`, `playlists`, `play_control`, `queue_edit`, `playlist_create`, `playlist_edit`) | bool | true | same |
+| `ai.var_bypass`, `ai.auto_ask` | bool | false, true | same |
+| `ai.last_plugin` | install id string or null (a removed plugin falls back to the first installed chat plugin) | null | same |
+| `ai.prompts` | list of prompt templates (6 builtin keys; unreadable items kept) | the 6 builtins | same |
 | `library.tabs` | `LibraryTabsConfig` | all tabs, default order | `library/state/library_tabs_providers.dart` |
 | `library.setup_done` | bool | false | reserved, scanner lane (A) |
 | `playback.queue.current_entry`, `playback.position_ms`, `playback.shuffle`, `playback.repeat` | reserved | | playback lane (B) |
@@ -382,6 +389,8 @@ Strings live in parts, one file per part and locale:
 | `playlist` | `playlist_en.arb`, `playlist_vi.arb` | `playlist` | playlist foundation (frozen) |
 | `settings` | `settings_en.arb`, `settings_vi.arb` | `settings` | Settings lane (every Settings string) |
 | `fonts` | `fonts_en.arb`, `fonts_vi.arb` | `fonts` | font picker |
+| `aichat` | `aichat_en.arb`, `aichat_vi.arb` | `aiChat` | AI chat engine (engine strings: errors, cards, tool results) |
+| `aiset` | `aiset_en.arb`, `aiset_vi.arb` | `aiSet` | AI settings pages (labels and texts of the builtin prompt templates by key) |
 | `plscreens`, `pladd`, `m3u` | `plscreens_*.arb`, `pladd_*.arb`, `m3u_*.arb` (created by the lane that needs one) | `plScreens`, `plAdd`, `m3u` | spare parts of the playlist screens, add-to-playlist and M3U lanes, so a lane never edits `playlist_*` |
 
 `dart run tool/merge_arb.dart` merges the parts into `lib/l10n/app_<locale>.arb`,

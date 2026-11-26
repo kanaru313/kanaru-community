@@ -7836,4 +7836,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fontsRemoved => 'Font deleted';
+
+  @override
+  String get aiChatPlayContextLabel => 'AI assistant';
 }

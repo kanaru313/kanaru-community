@@ -1,3 +1,7 @@
 {
-  "@@locale": "vi"
+  "@@locale": "vi",
+  "aiChatPlayContextLabel": "Trợ lý AI",
+  "@aiChatPlayContextLabel": {
+    "description": "Tên ngữ cảnh phát khi trợ lý AI bắt đầu một hàng đợi."
+  }
 }
