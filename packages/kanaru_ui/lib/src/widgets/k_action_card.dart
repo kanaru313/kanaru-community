@@ -1,12 +1,10 @@
-import 'dart:async';
-
-import 'package:flutter/semantics.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens/k_icon_size.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 import 'k_action_card_buttons.dart';
+import 'k_action_card_clock.dart';
 import 'k_action_card_countdown.dart';
 
 export 'k_action_card_buttons.dart' show KActionCardAction;
@@ -52,7 +50,7 @@ enum KActionCardEmphasis {
 /// and the caller words it through [KActionCardCountdown.labelOf] with a
 /// typed [KCountdownLeft]. At zero the action turns on with its own label;
 /// nothing is sent by itself.
-class KActionCard extends StatefulWidget {
+class KActionCard extends StatelessWidget {
   const KActionCard({
     super.key,
     required this.icon,
@@ -83,82 +81,17 @@ class KActionCard extends StatefulWidget {
   final bool readOnly;
 
   @override
-  State<KActionCard> createState() => _KActionCardState();
-}
-
-class _KActionCardState extends State<KActionCard> {
-  late final KCountdownTicker _ticker = KCountdownTicker(_onTick);
-
-  /// The clock was running (time left) at the last look: the next time-up is
-  /// announced once.
-  bool _counting = false;
-
-  KActionCardCountdown? get _clock =>
-      widget.readOnly || widget.actions.isEmpty ? null : widget.countdown;
-
-  @override
-  void initState() {
-    super.initState();
-    _arm();
-  }
-
-  @override
-  void didUpdateWidget(KActionCard old) {
-    super.didUpdateWidget(old);
-    if (old.countdown?.until != widget.countdown?.until ||
-        old.readOnly != widget.readOnly ||
-        old.actions.isEmpty != widget.actions.isEmpty) {
-      _counting = false;
-      _arm();
-    }
-  }
-
-  @override
-  void dispose() {
-    _ticker.cancel();
-    super.dispose();
-  }
-
-  void _onTick() {
-    if (!mounted) return;
-    final clock = _clock;
-    final timeUp = clock != null && !clock.until.isAfter(clock.now());
-    if (timeUp && _counting) {
-      unawaited(
-        SemanticsService.sendAnnouncement(
-          View.of(context),
-          clock.readyAnnouncement,
-          Directionality.of(context),
-        ),
-      );
-    }
-    setState(() {});
-    _arm();
-  }
-
-  void _arm() {
-    final clock = _clock;
-    if (clock == null || !clock.until.isAfter(clock.now())) {
-      _counting = false;
-      _ticker.cancel();
-      return;
-    }
-    _counting = true;
-    _ticker.schedule(clock.until, clock.now());
-  }
-
-  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final texts = Theme.of(context).textTheme;
-    final error = widget.tone == KActionCardTone.error;
-    final finished = widget.tone == KActionCardTone.finished;
+    final error = tone == KActionCardTone.error;
+    final finished = tone == KActionCardTone.finished;
     final foreground = error ? scheme.onErrorContainer : scheme.onSurface;
     final muted = error
         ? scheme.onErrorContainer.withValues(alpha: 0.85)
         : scheme.onSurfaceVariant;
     final (iconBg, iconFg) = _iconColors(scheme);
-    final live = !widget.readOnly && !finished && widget.actions.isNotEmpty;
+    final live = !readOnly && !finished && actions.isNotEmpty;
 
     final card = DecoratedBox(
       decoration: ShapeDecoration(
@@ -180,7 +113,7 @@ class _KActionCardState extends State<KActionCard> {
                   ),
                   child: SizedBox.square(
                     dimension: KIconSize.lg,
-                    child: Icon(widget.icon, size: KIconSize.sm, color: iconFg),
+                    child: Icon(icon, size: KIconSize.sm, color: iconFg),
                   ),
                 ),
                 const SizedBox(width: KSpace.x3),
@@ -189,25 +122,25 @@ class _KActionCardState extends State<KActionCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.title,
+                        title,
                         style: texts.titleSmall?.copyWith(
                           color: foreground,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      if (widget.subtitle != null)
+                      if (subtitle != null)
                         Padding(
                           padding: const EdgeInsets.only(top: KSpace.x1 / 2),
                           child: Text(
-                            widget.subtitle!,
+                            subtitle!,
                             style: texts.bodySmall?.copyWith(color: muted),
                           ),
                         ),
-                      if (widget.reason != null)
+                      if (reason != null)
                         Padding(
                           padding: const EdgeInsets.only(top: KSpace.x1),
                           child: Text(
-                            widget.reason!,
+                            reason!,
                             style: texts.bodySmall?.copyWith(color: foreground),
                           ),
                         ),
@@ -216,11 +149,11 @@ class _KActionCardState extends State<KActionCard> {
                 ),
               ],
             ),
-            ?widget.body,
+            ?body,
             if (live)
-              KActionCardButtons(
-                actions: widget.actions,
-                countdown: _clock,
+              KActionCardClockButtons(
+                actions: actions,
+                countdown: countdown,
                 error: error,
               ),
           ],
@@ -230,7 +163,7 @@ class _KActionCardState extends State<KActionCard> {
 
     return Semantics(
       container: true,
-      liveRegion: error && !widget.readOnly,
+      liveRegion: error && !readOnly,
       child: finished ? Opacity(opacity: _finishedOpacity, child: card) : card,
     );
   }
@@ -238,13 +171,13 @@ class _KActionCardState extends State<KActionCard> {
   static const double _finishedOpacity = 0.62;
 
   (Color, Color) _iconColors(ColorScheme scheme) {
-    if (widget.tone == KActionCardTone.error) {
+    if (tone == KActionCardTone.error) {
       return (scheme.error, scheme.onError);
     }
-    if (widget.tone == KActionCardTone.finished) {
+    if (tone == KActionCardTone.finished) {
       return (scheme.surfaceContainerHighest, scheme.onSurfaceVariant);
     }
-    return switch (widget.emphasis) {
+    return switch (emphasis) {
       KActionCardEmphasis.normal => (
         scheme.secondaryContainer,
         scheme.onSecondaryContainer,

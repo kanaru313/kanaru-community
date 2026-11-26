@@ -68,6 +68,9 @@ abstract final class KMotion {
   /// a route transition needs a duration.
   static const Curve chatPageSlideCurve = Curves.easeOutCubic;
 
+  /// Curve of each dot rise and fall in `KStreamingDots`.
+  static const Curve streamingDotsCurve = Curves.easeInOut;
+
   /// One full cycle of the three answering dots (`KStreamingDots`).
   static const Duration streamingDots = Duration(milliseconds: 1200);
 

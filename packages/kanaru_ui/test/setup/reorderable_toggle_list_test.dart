@@ -264,7 +264,10 @@ void main() {
       final toggles = <(String, bool)>[];
       await tester.pumpWidget(
         host(
-          tappable(onTap: () => taps++, onToggle: (v, on) => toggles.add((v, on))),
+          tappable(
+            onTap: () => taps++,
+            onToggle: (v, on) => toggles.add((v, on)),
+          ),
         ),
       );
       await tester.tap(find.text('Prompt'));
@@ -278,7 +281,10 @@ void main() {
       final toggles = <(String, bool)>[];
       await tester.pumpWidget(
         host(
-          tappable(onTap: () => taps++, onToggle: (v, on) => toggles.add((v, on))),
+          tappable(
+            onTap: () => taps++,
+            onToggle: (v, on) => toggles.add((v, on)),
+          ),
         ),
       );
       await tester.tap(find.byType(KSwitch));
@@ -294,12 +300,42 @@ void main() {
       await tester.pumpWidget(
         host(tappable(onTap: () {}, onToggle: (_, _) {})),
       );
-      expect(
-        find.semantics.byLabel('Prompt, open to edit'),
-        findsOneWidget,
-      );
+      expect(find.semantics.byLabel('Prompt, open to edit'), findsOneWidget);
       expect(byToggledState('Turn on Prompt'), findsOneWidget);
       expect(find.semantics.byLabel('Drag'), findsOneWidget);
+      handle.dispose();
+    });
+  });
+
+  group('row without onTap', () {
+    Widget plain(void Function(String, bool) onToggle) => SingleChildScrollView(
+      child: ReorderableToggleList<String>(
+        items: const [
+          ReorderableToggleItem(
+            value: 'p',
+            title: Text('Prompt'),
+            enabled: true,
+            switchLabel: 'Turn on Prompt',
+          ),
+        ],
+        dragLabel: 'Drag',
+        keepOneOn: false,
+        onReorder: (_, _) {},
+        onToggle: onToggle,
+      ),
+    );
+
+    testWidgets('handle is its own node, switch is announced, tap toggles', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      final handle = tester.ensureSemantics();
+      final toggles = <(String, bool)>[];
+      await tester.pumpWidget(host(plain((v, on) => toggles.add((v, on)))));
+      expect(find.semantics.byLabel('Drag'), findsOneWidget);
+      expect(byToggledState('Turn on Prompt'), findsOneWidget);
+      await tester.tap(find.text('Prompt'));
+      expect(toggles, [('p', false)]);
       handle.dispose();
     });
   });

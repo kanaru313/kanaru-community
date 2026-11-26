@@ -23,6 +23,8 @@ class KStreamingDots extends StatefulWidget {
   static ValueKey<String> dotKey(int i) => ValueKey('k-streaming-dot-$i');
 
   static const double _dot = 6;
+  // Wave geometry (shape, not timing): dot height, rise and the quarter
+  // splits of one cycle below.
   static const double _rise = 5;
   static const double _restOpacity = 0.45;
   static const double _stillOpacity = 0.7;
@@ -63,8 +65,8 @@ class _KStreamingDotsState extends State<KStreamingDots>
   /// back down over the second, then at rest.
   static double _lift(double t, int i) {
     final p = (t - i * KStreamingDots._stagger) % 1.0;
-    if (p < 0.25) return Curves.easeInOut.transform(p / 0.25);
-    if (p < 0.5) return Curves.easeInOut.transform((0.5 - p) / 0.25);
+    if (p < 0.25) return KMotion.streamingDotsCurve.transform(p / 0.25);
+    if (p < 0.5) return KMotion.streamingDotsCurve.transform((0.5 - p) / 0.25);
     return 0;
   }
 

@@ -40,10 +40,13 @@ class KContextChip extends StatefulWidget {
     required this.icon,
     required this.state,
     required this.onTap,
-    required this.onRemove,
-    required this.removeLabel,
+    this.onRemove,
+    this.removeLabel,
     this.struckHint,
-  });
+  }) : assert(
+         onRemove == null || removeLabel != null,
+         'a removable chip needs removeLabel',
+       );
 
   final String label;
 
@@ -55,11 +58,11 @@ class KContextChip extends StatefulWidget {
   /// the caller's call.
   final VoidCallback onTap;
 
-  /// × tapped (attached and struck chips).
-  final VoidCallback onRemove;
+  /// × tapped (attached and struck chips). Null: no ×.
+  final VoidCallback? onRemove;
 
   /// Tooltip and screen-reader label of the × ("Bỏ thẻ" + the name).
-  final String removeLabel;
+  final String? removeLabel;
 
   /// Screen-reader hint while [state] is struck ("Công cụ của thẻ này đang
   /// tắt").
@@ -142,12 +145,12 @@ class _KContextChipState extends State<KContextChip> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Flexible(child: tap),
-        if (!suggested)
+        if (!suggested && widget.onRemove != null)
           KIconButton(
             icon: KIcons.close,
             size: KIconSize.xs,
             padding: const EdgeInsets.all(KSpace.x1),
-            tooltip: widget.removeLabel,
+            tooltip: widget.removeLabel!,
             onPressed: widget.onRemove,
             color: foreground,
           ),
@@ -164,7 +167,7 @@ class _KContextChipState extends State<KContextChip> {
     if (suggested) {
       chip = DashedOutline(
         color: scheme.outlineVariant,
-        radius: 8,
+        radius: KRadius.xs.topLeft.x,
         child: chip,
       );
     }

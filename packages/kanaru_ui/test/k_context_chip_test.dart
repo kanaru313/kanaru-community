@@ -110,4 +110,21 @@ void main() {
       }
     });
   }
+
+  testWidgets('a chip without onRemove has no ×', (tester) async {
+    await tester.pumpWidget(
+      host(
+        Align(
+          alignment: Alignment.topLeft,
+          child: KContextChip(
+            label: 'Bài đang phát',
+            icon: KIcons.info,
+            state: KContextChipState.attached,
+            onTap: () {},
+          ),
+        ),
+      ),
+    );
+    expect(byIconButton('Bỏ thẻ Bài đang phát'), findsNothing);
+  });
 }

@@ -2,10 +2,11 @@ import 'package:material_ui/material_ui.dart';
 
 import '../icons/k_icons.dart';
 import '../tokens/k_icon_size.dart';
-import '../tokens/k_layout.dart';
 import '../tokens/k_shape.dart';
 import '../tokens/k_space.dart';
 import 'k_icon_button.dart';
+import 'k_inline_notice_action.dart';
+import 'k_inline_notice_layout.dart';
 
 /// Colour intent of a [KInlineNotice]. [normal] and [error] only change the
 /// icon colour; [errorFilled] and [primaryFilled] tint the whole strip
@@ -106,62 +107,6 @@ class KInlineNotice extends StatelessWidget {
       tone == KInlineNoticeTone.primaryFilled ||
       tone == KInlineNoticeTone.warning;
 
-  Widget _button(
-    String label,
-    VoidCallback? onTap,
-    Color foreground,
-    ColorScheme scheme, {
-    required bool primary,
-  }) {
-    final busy = primary && actionBusy;
-    final prominent = primary && prominentAction;
-    final child = busy
-        ? SizedBox.square(
-            dimension: KIconSize.xs,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: prominent ? scheme.onPrimary : foreground,
-            ),
-          )
-        : Text(label);
-    final onPressed = busy ? null : onTap;
-    if (prominent) {
-      return FilledButton(
-        onPressed: onPressed,
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(0, KLayout.compactButton),
-        ),
-        child: child,
-      );
-    }
-    return TextButton(
-      onPressed: onPressed,
-      style: _filled ? TextButton.styleFrom(foregroundColor: foreground) : null,
-      child: child,
-    );
-  }
-
-  Widget _action(
-    String label,
-    VoidCallback? onTap,
-    Color foreground,
-    ColorScheme scheme, {
-    required bool primary,
-  }) {
-    final busy = primary && actionBusy;
-    return Semantics(
-      container: true,
-      button: true,
-      enabled: true,
-      onTap: busy ? null : onTap,
-      label: busy
-          ? (actionBusyLabel ?? label)
-          : (primary ? (actionSemanticsLabel ?? label) : label),
-      excludeSemantics: true,
-      child: _button(label, onTap, foreground, scheme, primary: primary),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -225,15 +170,25 @@ class KInlineNotice extends StatelessWidget {
       ),
     );
     final action = hasAction
-        ? _action(actionLabel!, onAction, foreground, scheme, primary: true)
+        ? KInlineNoticeAction(
+            label: actionLabel!,
+            onTap: onAction,
+            foreground: foreground,
+            filled: filled,
+            primary: true,
+            prominent: prominentAction,
+            busy: actionBusy,
+            busyLabel: actionBusyLabel,
+            semanticsLabel: actionSemanticsLabel,
+          )
         : null;
     final second = secondaryActionLabel == null
         ? null
-        : _action(
-            secondaryActionLabel!,
-            onSecondaryAction,
-            foreground,
-            scheme,
+        : KInlineNoticeAction(
+            label: secondaryActionLabel!,
+            onTap: onSecondaryAction,
+            foreground: foreground,
+            filled: filled,
             primary: false,
           );
     final dismiss = onDismiss == null
@@ -246,65 +201,16 @@ class KInlineNotice extends StatelessWidget {
             padding: const EdgeInsets.all(KSpace.x2),
             onPressed: onDismiss,
           );
-    const gap = KSpace.x3;
-
-    final Widget content;
-    if (underText) {
-      content = Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          iconWidget,
-          const SizedBox(width: gap),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                text,
-                if (action != null)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: KSpace.x1,
-                      bottom: _compact ? 0 : KSpace.x1,
-                    ),
-                    child: Wrap(
-                      spacing: KSpace.x2,
-                      runSpacing: KSpace.x1,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [action, ?second],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          ?dismiss,
-        ],
-      );
-    } else if (stacked) {
-      content = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              iconWidget,
-              const SizedBox(width: gap),
-              Expanded(child: text),
-            ],
-          ),
-          Align(alignment: Alignment.centerRight, child: action),
-        ],
-      );
-    } else {
-      content = Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          iconWidget,
-          const SizedBox(width: gap),
-          Expanded(child: text),
-          if (action != null) ...[const SizedBox(width: gap), action],
-        ],
-      );
-    }
+    final content = KInlineNoticeLayout(
+      icon: iconWidget,
+      text: text,
+      action: action,
+      second: second,
+      dismiss: dismiss,
+      underText: underText,
+      stacked: stacked,
+      compact: _compact,
+    );
 
     final EdgeInsets padding = _compact
         ? (tone == KInlineNoticeTone.quiet

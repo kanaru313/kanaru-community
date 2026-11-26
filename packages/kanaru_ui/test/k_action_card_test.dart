@@ -362,4 +362,20 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('a finished card with a countdown runs no clock', (tester) async {
+    final clock = _Clock(_t0);
+    await tester.pumpWidget(
+      host(
+        _card(
+          tone: KActionCardTone.finished,
+          actions: [_act('Thử lại')],
+          countdown: _countdown(clock, const Duration(seconds: 30)),
+        ),
+      ),
+    );
+    expect(find.byType(OutlinedButton), findsNothing);
+    // A pending timer would fail the test at teardown.
+    await tester.pump(const Duration(seconds: 2));
+  });
 }

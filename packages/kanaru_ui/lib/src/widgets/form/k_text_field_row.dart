@@ -166,7 +166,6 @@ class KTextFieldRow extends StatelessWidget {
           : spec?.keyboard ?? keyboard,
       inputFormatters: spec?.formatters,
       maxLength: maxLength,
-      maxLengthEnforcement: MaxLengthEnforcement.enforced,
       minLines: lines,
       maxLines: lines == null ? 1 : (grow ? lines * 3 : lines),
       textInputAction: lines != null

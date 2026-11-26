@@ -23,6 +23,9 @@ class ReorderableToggleItem<T> {
 
   /// Identifies the row (and keys it while it moves).
   final T value;
+
+  /// The row name. A badge after the name (a "broken" tag on a row with a
+  /// [problem]) belongs here, drawn by the caller.
   final Widget title;
   final bool enabled;
 
