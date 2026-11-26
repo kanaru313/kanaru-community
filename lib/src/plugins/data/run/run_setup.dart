@@ -123,7 +123,10 @@ Future<RunSetup> prepareRun(
   // One read of the stored values: the run config (stored, then defaults) and
   // the user's saved endpoints come from the same snapshot.
   final stored = await config.read(request.installId);
-  final kept = await storage.read(request.installId);
+  // A run that keeps no storage starts empty and is never written back.
+  final StoredStorage kept = request.persistStorage
+      ? await storage.read(request.installId)
+      : (json: '', rev: 0);
   final values = resolveRunConfig(manifest.config, stored);
   final missing = missingRequiredConfig(manifest.config, values);
   if (missing.isNotEmpty) {

@@ -179,7 +179,7 @@ host can keep per-plugin state (cookies, consent) without the script knowing it.
 looking at the cancel flag every 50 ms. A host that never answers ends the call
 as `Timeout`; a host call that panics is answered as `Network`; a cancel ends
 the call `Cancelled` within about 100 ms. The request carries `deadline_ms`
-(what is left of the call). The app uses it as the overall timeout of the HTTP exchange, as given: connect is bounded separately (10 s) and there is no extra shorter cap, so a long request (an AI translation, 80 s) completes inside it. Time the host spends waiting between request starts of one plugin counts against `deadline_ms`.
+(what is left of the call; in a streaming run each call, a stream open included, gets at most 90 s of it, `MAX_WALL_TIME` in `host/fetch/mod.rs`, however long the run may last). The app uses it as the overall timeout of the HTTP exchange, as given: connect is bounded separately (10 s) and there is no extra shorter cap, so a long request (an AI translation, 80 s) completes inside it. Time the host spends waiting between request starts of one plugin counts against `deadline_ms`.
 
 **Memory.** Unread response bodies are charged to one 16 MiB Rust-side budget per
 call (the heap cap does not see Rust memory). Going over throws `RangeError` and
@@ -326,6 +326,19 @@ idle time, then throws `NetworkError`. After an error, a limit or a give-up the
 stream is dead and later reads return `null`; a dead stream keeps its place among
 the 2 streams until the host answered the close. Opening counts as one HTTP send;
 reads and closes count none. In a normal run the `stream` option is ignored.
+
+**Host side (app).** A stream open is judged exactly like a one-shot `fetch`
+(consent, allowlist, public address, `https`, header rules, 1 MiB request body,
+per-plugin spacing, 10 HTTP sends per call) and nothing is followed: a redirect
+is an answer. The body stays open for as long as the run lasts (the stream is
+closed by itself when the run's wall passes) and is read in chunks of at most
+64 KiB; a read that gets no bytes within the idle time is `NetworkError`. The
+app keeps one stream table per run and closes every stream when the run ends or
+is cancelled. A streaming run takes the app's single stream slot: another one
+waits at most 10 s for it, then ends busy (nothing is run). The run log of a
+streaming run keeps only its status, error kind and the `ai:<code>` start of the
+error message (no input, console, stack or message text). Details:
+[system-architecture-plugin-runtime.md](./system-architecture-plugin-runtime.md#streaming-runs-dart-side).
 
 `emit(value)` exists only in streaming runs (`typeof emit` is `'undefined'`
 otherwise). It serialises with `JSON.stringify` and hands the text to the host

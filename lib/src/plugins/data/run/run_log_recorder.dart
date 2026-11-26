@@ -47,7 +47,12 @@ class RunLogRecorder {
     EngineResult? result,
   }) {
     try {
-      final console = result?.logs ?? const <String>[];
+      // A streaming (chat) run writes status and error kind only: its console,
+      // stack and message text may carry the conversation.
+      final streaming = request.stream != null;
+      final console = streaming
+          ? const <String>[]
+          : result?.logs ?? const <String>[];
       final kind = _kindOf(outcome, hasConsole: console.isNotEmpty);
       if (kind == null) return;
       final redactor = LogRedactor(
@@ -56,7 +61,7 @@ class RunLogRecorder {
         configAppend: request.configAppend.values,
         storageJsons: [prepared.storageJson, ?result?.storageJson],
         headerSecrets: context.maskValues,
-        hiddenInput: request.logInput ? null : request.input,
+        hiddenInput: request.logInput || streaming ? null : request.input,
       );
       final jsError = result?.jsError;
       final event = RunLogEvent(
@@ -65,14 +70,16 @@ class RunLogRecorder {
         pluginName: prepared.pluginName,
         version: prepared.pluginVersion,
         script: request.script,
-        query: request.logInput ? request.input : null,
+        query: request.logInput && !streaming ? request.input : null,
         kind: kind,
-        message: _firstText([
-          result?.errorMessage,
-          jsError?.message,
-          _fetchFailureOf(outcome)?.message,
-        ]),
-        stack: _firstText([jsError?.stack]),
+        message: streaming
+            ? _codePrefix(_firstText([result?.errorMessage, jsError?.message]))
+            : _firstText([
+                result?.errorMessage,
+                jsError?.message,
+                _fetchFailureOf(outcome)?.message,
+              ]),
+        stack: streaming ? null : _firstText([jsError?.stack]),
         console: console,
         requests: context.requests,
       );
@@ -185,3 +192,10 @@ FetchFailureInfo? _fetchFailureOf(RunOutcome outcome) => switch (outcome) {
 
 String? _firstText(List<String?> texts) =>
     texts.where((t) => t != null && t.isNotEmpty).firstOrNull;
+
+final _errorCode = RegExp(r'^ai:[A-Za-z0-9_]+');
+
+/// The leading `ai:<code>` of a chat error message; null when it has none.
+/// The rest of the text may hold provider output and is never logged.
+String? _codePrefix(String? message) =>
+    message == null ? null : _errorCode.firstMatch(message)?.group(0);

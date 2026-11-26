@@ -67,9 +67,19 @@ sealed class RunOutcome {
 /// The script returned data. A sticky [fetchFailure] or [rateLimitSeen] never
 /// turns this into a failure: the caller decides.
 final class RunOk extends RunOutcome {
-  const RunOk(this.outputJson, {this.fetchFailure, this.rateLimitSeen});
+  const RunOk(
+    this.outputJson, {
+    this.fetchFailure,
+    this.rateLimitSeen,
+    this.pluginVersion = '',
+  });
 
   final String outputJson;
+
+  /// The version of the plugin that really ran (a silent restart after a
+  /// plugin switch may have run a newer one than the caller saw); empty when
+  /// unknown.
+  final String pluginVersion;
   final FetchFailureInfo? fetchFailure;
 
   /// A 429 / 503 answer reached the script in this run: its `Retry-After`
@@ -84,9 +94,13 @@ final class RunScriptError extends RunOutcome {
     this.message, {
     this.retryAfter,
     this.fetchFailure,
+    this.pluginVersion = '',
   });
 
   final RunErrorKind kind;
+
+  /// As [RunOk.pluginVersion].
+  final String pluginVersion;
   final String message;
 
   /// The script's own wait request, clamped to 1 s .. 15 min.

@@ -13,6 +13,9 @@ class RunSlot {
   final RunAdmission _admission;
   bool _released = false;
 
+  /// Whether the slot was given back already.
+  bool get isReleased => _released;
+
   void release() {
     if (_released) return;
     _released = true;
@@ -58,6 +61,39 @@ class RunAdmission {
     }
   }
 
+  /// Like [acquire], but gives up after [wait]. A slot granted in the same
+  /// tick as the timer is released at once and the answer is [AdmissionTimedOut].
+  Future<AdmissionResult> acquireWithin(
+    Duration wait, {
+    CancelToken? abort,
+  }) async {
+    final giveUp = CancelToken();
+    var timedOut = false;
+    final timer = Timer(wait, () {
+      timedOut = true;
+      giveUp.cancel();
+    });
+    final stopAbort = abort?.listen(giveUp.cancel);
+    try {
+      final slot = await acquire(abort: giveUp);
+      if (slot == null) {
+        return timedOut ? const AdmissionTimedOut() : const AdmissionAborted();
+      }
+      if (timedOut) {
+        slot.release();
+        return const AdmissionTimedOut();
+      }
+      if (abort != null && abort.isCancelled) {
+        slot.release();
+        return const AdmissionAborted();
+      }
+      return AdmissionGranted(slot);
+    } finally {
+      timer.cancel();
+      stopAbort?.call();
+    }
+  }
+
   void _release() {
     if (_waiting.isNotEmpty) {
       // The slot stays counted: it moves to the next waiter.
@@ -66,6 +102,28 @@ class RunAdmission {
     }
     _inUse--;
   }
+}
+
+/// How a bounded wait for a slot ended.
+sealed class AdmissionResult {
+  const AdmissionResult();
+}
+
+/// The caller holds [slot] and must release it.
+final class AdmissionGranted extends AdmissionResult {
+  const AdmissionGranted(this.slot);
+
+  final RunSlot slot;
+}
+
+/// The abort token fired first; nothing is held.
+final class AdmissionAborted extends AdmissionResult {
+  const AdmissionAborted();
+}
+
+/// The wait ran out; nothing is held.
+final class AdmissionTimedOut extends AdmissionResult {
+  const AdmissionTimedOut();
 }
 
 /// One run waiting for a slot.
