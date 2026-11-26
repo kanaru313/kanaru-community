@@ -53,6 +53,9 @@ class ModelRound {
   /// Writes the streamed text so far (the app is going to the background).
   Future<void> flushLive() => _live?.flush() ?? Future.value();
 
+  /// A turn step ended: the next one re-reads once after a lost start.
+  void resetLost() => _lostInARow = 0;
+
   Future<RoundResult> run(LoopSnapshot snap, RunModel action) async {
     final conversation = snap.conversation;
     final transcript = snap.transcript!;

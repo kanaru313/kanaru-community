@@ -10,6 +10,7 @@ import 'package:kanaru/src/ai/domain/tools/write_tools.dart';
 import 'package:kanaru/src/ai/state/chat_providers.dart';
 import 'package:kanaru/src/ai/state/chat_session.dart';
 import 'package:kanaru/src/ai/state/tool_env_provider.dart';
+import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:kanaru/src/plugins/data/logs/plugin_log_reader.dart';
@@ -56,6 +57,7 @@ class ChatHarness {
     Duration streamWait = const Duration(seconds: 10),
     List<AiTool> tools = const [],
     FakePlaybackWrite? playbackWrite,
+    ConversationStore Function(AppDatabase db)? makeStore,
   }) async {
     final c = ChatHarness._();
     c.playbackWrite = playbackWrite ?? FakePlaybackWrite();
@@ -73,6 +75,12 @@ class ChatHarness {
     c.container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWithValue(c.h.db),
+        if (makeStore != null)
+          aiConversationStoreProvider.overrideWith((ref) {
+            final store = makeStore(c.h.db);
+            ref.onDispose(store.dispose);
+            return store;
+          }),
         settingsStoreProvider.overrideWithValue(c.settings),
         pluginRowsProvider.overrideWithValue(c.h.rows),
         pluginConfigStoreProvider.overrideWithValue(c.h.config),

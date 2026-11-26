@@ -433,10 +433,11 @@ registry and `ToolEnv`, fresh `LoopSettings` and `LoopPlugin` reads) and a clock
   and revision, no blobs).
 - **`runExclusive(body)`:** claims the flight for [body] (a plugin, model or
   rebind write). A round or tool run in flight is stopped first and awaited;
-  a send, retry, Allow or Deny meanwhile finds the gate taken (`DriverBusy`,
-  or the answer is stored and the turn goes on at the next tap). A turn that
-  only waits on cards is left alone, its cards stay `pending`. `inspect()`
-  runs after it.
+  a send or retry meanwhile finds the gate taken (`DriverBusy`). An Allow or
+  Deny meanwhile is stored and recorded as a wake: on release the driver
+  starts a flight for it (the call runs, or the model is told of the deny),
+  else it runs `inspect()`. A turn that only waits on cards is left alone,
+  its cards stay `pending`.
 - **Allow:** stores `callHash` (sha256 over the name and key-sorted args) in
   the card's `ConfirmPart(allowed).approvalHash` in the same compare-and-set
   that allows it, so the binding survives a restart. Execution recomputes the
@@ -473,7 +474,12 @@ registry and `ToolEnv`, fresh `LoopSettings` and `LoopPlugin` reads) and a clock
   `dispose()` (open, new chat, switch, app exit) stops only a flight that is
   active (round or tool run) and awaits it; cards of a turn that only waits
   on the user stay `pending` (valid until the next user message or 24 h).
-  Only the user's Stop and a new user message deny them. Delete removes the
+  That holds even when the stop lands on a flight an Allow just started: the
+  flight skips only the `allowed` calls that did not run and leaves the
+  `pending` ones (turn stays `awaitingConfirm`). A flight about to park
+  checks the stop flag first. Only the user's Stop and a new user message
+  deny pending cards. The lost-start counter of a round resets when a flight
+  ends, so the first loss of a later turn is re-read once. Delete removes the
   chat with its cards. `dispose()` marks the driver closed first, so no
   trigger starts a flight after it.
 - **Crash rules:** after a restart (`sweepAfterCrash`) `streaming -> stopped`

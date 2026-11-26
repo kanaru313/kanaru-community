@@ -94,6 +94,9 @@ class LoopDriver {
   final _gate = FlightGate();
   bool _disposed = false;
 
+  /// The stop comes from the user's Stop (not a switch, open or dispose).
+  bool _userStop = false;
+
   TurnState get turnState => _state;
 
   /// Changes of [turnState].
@@ -200,7 +203,7 @@ class LoopDriver {
   /// when the turn future has ended.
   Future<void> stop() async {
     if (_gate.busy) {
-      await _stopActive();
+      await _stopActive(byUser: true);
       return;
     }
     final parked = _reserve();
@@ -233,15 +236,20 @@ class LoopDriver {
       return await body();
     } finally {
       _release(flight);
-      await inspect();
+      // An answer that landed during the body found the gate taken: run it.
+      if (_gate.takeWake()) {
+        _kick();
+      } else {
+        await inspect();
+      }
     }
   }
 
-  /// Stops the flight in flight, if any, and waits for it. Cards waiting for
-  /// the user's answer are not touched.
-  Future<void> _stopActive() async {
+  /// Stops the flight in flight, if any, and waits for it.
+  Future<void> _stopActive({bool byUser = false}) async {
     final flight = _gate.current;
     if (flight == null) return;
+    if (byUser) _userStop = true;
     _ctx.stopRequested = true;
     _runner.cancel();
     await flight.future;
@@ -279,6 +287,7 @@ class LoopDriver {
   Completer<void>? _reserve() => _gate.reserve(
     onClaim: () {
       _ctx.stopRequested = false;
+      _userStop = false;
       _lastView = null;
     },
   );
@@ -308,6 +317,7 @@ class LoopDriver {
       _lastView = internalErrorView;
       _setState(TurnState.error);
     } finally {
+      _round.resetLost();
       _release(flight);
     }
   }
@@ -321,8 +331,22 @@ class LoopDriver {
         return;
       }
       if (_ctx.stopRequested) {
-        await _cards.skipOpen(stoppedByUserText, ConfirmStatus.denied);
-        await _finish(TurnState.idle, endTurn: true, turnId: transcript.turnId);
+        await _cards.skipOpen(
+          stoppedByUserText,
+          ConfirmStatus.denied,
+          onlyAllowed: !_userStop,
+        );
+        final waiting =
+            !_userStop && (await _store.openCards(conversationId)).isNotEmpty;
+        if (waiting) {
+          await _finish(TurnState.awaitingConfirm);
+        } else {
+          await _finish(
+            TurnState.idle,
+            endTurn: true,
+            turnId: transcript.turnId,
+          );
+        }
         return;
       }
       final plugin = await _env.plugin(snap.conversation);
@@ -350,7 +374,8 @@ class LoopDriver {
         case AwaitConfirms():
           // An answer that came in while this step ran is picked up here;
           // the flight is released in the same step as the check.
-          if (_gate.takeWake()) continue;
+          // A stop that came in meanwhile is handled at the top, not parked.
+          if (_ctx.stopRequested || _gate.takeWake()) continue;
           _setState(TurnState.awaitingConfirm);
           _release(_gate.current!);
           return;

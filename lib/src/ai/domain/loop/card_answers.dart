@@ -71,9 +71,16 @@ class CardAnswers {
   /// Skips every pending and allowed card of the conversation, the latest
   /// turn and earlier ones: a card is valid until the next user message, so
   /// none may stay open behind it (an open card keeps its turn from being
-  /// flattened).
-  Future<void> skipOpen(String text, ConfirmStatus status) async {
+  /// flattened). With [onlyAllowed], calls the user said yes to but that did
+  /// not run are skipped and the ones still waiting for an answer stay
+  /// pending.
+  Future<void> skipOpen(
+    String text,
+    ConfirmStatus status, {
+    bool onlyAllowed = false,
+  }) async {
     for (final card in await ctx.store.openCards(ctx.conversationId)) {
+      if (onlyAllowed && card.state != AiMessageState.allowed) continue;
       final call = callOf(card);
       if (call != null) await answer(card, call, text, status);
     }

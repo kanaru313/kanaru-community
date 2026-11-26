@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/ai/data/conversation_store.dart';
 import 'package:kanaru/src/ai/data/loop_store_adapter.dart';
 import 'package:kanaru/src/ai/domain/conversation/ai_message.dart';
 import 'package:kanaru/src/ai/domain/conversation/parts.dart';
@@ -171,6 +172,147 @@ void main() {
       ]);
       expect(rig.driver.turnState, TurnState.awaitingConfirm);
     });
+  });
+
+  group('an answer that lands while runExclusive holds the gate', () {
+    test('Allow runs the call after the release', () async {
+      rig = await Rig.create(
+        script: [
+          replies('', calls: [toolCall('write_a')]),
+          replies('done'),
+        ],
+      );
+      await rig.send('go');
+      final id = callIdOf((await rig.cards()).single);
+      final entered = Completer<void>();
+      final release = Completer<void>();
+      final run = rig.driver.runExclusive(() async {
+        entered.complete();
+        await release.future;
+      });
+      await entered.future;
+
+      expect(await rig.driver.allow(id), CardAnswer.accepted);
+      expect(rig.tool('write_a').runs, isEmpty);
+      release.complete();
+      await run;
+      await rig.driver.inFlight;
+
+      expect(rig.tool('write_a').runs, hasLength(1));
+      expect(cardStates(await rig.cards()), ['write_a:done']);
+      expect(rig.runner.runs, 2);
+      expect(rig.driver.turnState, TurnState.idle);
+    });
+
+    test('Deny tells the model after the release', () async {
+      rig = await Rig.create(
+        script: [
+          replies('', calls: [toolCall('write_a')]),
+          replies('understood'),
+        ],
+      );
+      await rig.send('go');
+      final id = callIdOf((await rig.cards()).single);
+      final entered = Completer<void>();
+      final release = Completer<void>();
+      final run = rig.driver.runExclusive(() async {
+        entered.complete();
+        await release.future;
+      });
+      await entered.future;
+
+      expect(await rig.driver.deny(id), CardAnswer.accepted);
+      release.complete();
+      await run;
+      await rig.driver.inFlight;
+
+      expect(rig.tool('write_a').runs, isEmpty);
+      expect(cardStates(await rig.cards()), ['write_a:skipped']);
+      expect(rig.runner.runs, 2);
+      expect(rig.driver.turnState, TurnState.idle);
+    });
+  });
+
+  group('a flight started by one answer, then a stop', () {
+    // Two cards; Allow on the first starts a flight, held where it reads the
+    // plugin, before it parks or runs. The stop lands there.
+    Future<Future<void> Function()> held() async {
+      rig = await Rig.create(
+        script: [
+          replies('', calls: [toolCall('write_a'), toolCall('write_b')]),
+        ],
+      );
+      await rig.send('go');
+      final id = callIdOf((await rig.cards()).first);
+      final reached = Completer<void>();
+      final release = Completer<void>();
+      rig.env.onPlugin = () async {
+        rig.env.onPlugin = null;
+        reached.complete();
+        await release.future;
+      };
+      expect(await rig.driver.allow(id), CardAnswer.accepted);
+      await reached.future;
+      return () async => release.complete();
+    }
+
+    test('from a switch leaves the other cards pending', () async {
+      final release = await held();
+      final exclusive = rig.driver.runExclusive(() async {});
+      await release();
+      await exclusive;
+
+      expect(cardStates(await rig.cards()), [
+        'write_a:skipped',
+        'write_b:pending',
+      ]);
+      expect(rig.tool('write_a').runs, isEmpty);
+      expect(rig.driver.turnState, TurnState.awaitingConfirm);
+    });
+
+    test('from the user denies them', () async {
+      final release = await held();
+      final stopped = rig.driver.stop();
+      await release();
+      await stopped;
+
+      expect(cardStates(await rig.cards()), [
+        'write_a:skipped',
+        'write_b:skipped',
+      ]);
+      expect(rig.driver.turnState, TurnState.idle);
+    });
+  });
+
+  test('a lost start before a stop does not count in the next turn', () async {
+    rig = await Rig.create(script: [replies('second turn')]);
+    var calls = 0;
+    Future<void>? stopped;
+    // Per step the loop reads the plugin twice (decide, run). Turn one: a row
+    // lands before the first round (one loss), then the user stops. Turn
+    // two: one more loss, which must be retried once, not end in a card.
+    Future<void> race() => rig.store.append(
+      NewAiMessage(
+        conversationId: rig.conv.id,
+        role: AiMessageRole.user,
+        parts: [TextPart('raced $calls')],
+      ),
+    );
+    rig.env.onPlugin = () async {
+      calls++;
+      if (calls == 1 || calls == 5) await race();
+      if (calls == 3) stopped = rig.driver.stop();
+    };
+
+    await rig.send('one');
+    await stopped;
+    expect(rig.runner.runs, 0);
+
+    await rig.send('two');
+
+    expect(rig.runner.runs, 1);
+    expect(rig.driver.turnState, TurnState.idle);
+    expect((await rig.rows()).last.state, AiMessageState.complete);
   });
 
   test('the loop reads whole transcripts only to build a round', () async {

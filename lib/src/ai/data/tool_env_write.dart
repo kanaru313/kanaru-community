@@ -113,7 +113,8 @@ class PlaylistsWritePortImpl implements PlaylistsWritePort {
       final held = await store.loadPlaylist(uid);
       if (held != null) count = held.entries.length;
     } on Object catch (e, s) {
-      // Keep what is known; the type only, never the text of the error.
+      // Keep what is known; the error comes from the local playlist store, no
+      // provider data.
       _log.warning('reading the new playlist failed: ${e.runtimeType}', e, s);
     }
     return (id: id, count: count);
