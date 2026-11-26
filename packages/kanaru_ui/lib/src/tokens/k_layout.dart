@@ -10,6 +10,9 @@ abstract final class KLayout {
   /// Max width of reading content and of settings pages.
   static const double readable = 720;
   static const double settings = 720;
+
+  /// Settings page with a card grid (the seek bar styles), wider than the rest.
+  static const double settingsWide = 760;
   static const double dialog = 440;
 
   /// Wide dialog: playlist Edit, song info.

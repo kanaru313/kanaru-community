@@ -48,6 +48,67 @@
   "settingsSeekBarStyleMirrorCaption": "Wave on top, a faint reflection below",
   "settingsSeekBarStyleSquiggleCaption": "A wavy line that drifts while playing, flat when paused",
   "settingsSeekBarFlatCaption": "Every track, no waveform needed",
+  "settingsSeekBarPreviewHint": "Tap or drag to try seeking · drag up to cancel",
+  "settingsSeekBarStylesTitle": "Style",
+  "settingsSeekBarStylesHint": "Used in Now Playing and the lyrics screen. The mini player and the player bar keep the flat bar.\n\n★ on Squiggle or Flat bar: the style shown while a track has no waveform yet (being computed, or the source has none), with that style's options. The wave grows in place when it arrives. Only one style has the ★.",
+  "settingsSeekBarFallbackUse": "Use {style} while a track has no waveform",
+  "@settingsSeekBarFallbackUse": {
+    "placeholders": {
+      "style": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSeekBarFallbackActive": "Shown while a track has no waveform",
+  "settingsSeekBarCustomise": "Customise",
+  "settingsSeekBarCustomiseTitle": "Customise · {style}",
+  "@settingsSeekBarCustomiseTitle": {
+    "placeholders": {
+      "style": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSeekBarCustomiseClose": "Close",
+  "settingsSeekBarReset": "Reset to default",
+  "settingsSeekBarDriftNote": "A track with no waveform drifts steadily.",
+  "settingsSeekBarRowDensity": "Density",
+  "settingsSeekBarRowPlayed": "Played colour",
+  "settingsSeekBarRowRest": "Unplayed part",
+  "settingsSeekBarRowFeedback": "Seek feedback",
+  "settingsSeekBarRowAmplitude": "Wave height",
+  "settingsSeekBarRowWavelength": "Wave length",
+  "settingsSeekBarRowMotion": "Motion",
+  "settingsSeekBarRowThumb": "Thumb",
+  "settingsSeekBarRowThickness": "Thickness",
+  "settingsSeekBarRowEffect": "Effect while playing",
+  "settingsSeekBarOptLoose": "Loose",
+  "settingsSeekBarOptMid": "Medium",
+  "settingsSeekBarOptThick": "Thick",
+  "settingsSeekBarOptDense": "Dense",
+  "settingsSeekBarOptLow": "Low",
+  "settingsSeekBarOptHigh": "High",
+  "settingsSeekBarOptShort": "Short",
+  "settingsSeekBarOptLong": "Long",
+  "settingsSeekBarOptThin": "Thin",
+  "settingsSeekBarOptSingle": "One colour",
+  "settingsSeekBarOptGradient": "Gradient",
+  "settingsSeekBarOptByHeight": "By height",
+  "settingsSeekBarOptDim": "Faded",
+  "settingsSeekBarOptOutline": "Outline",
+  "settingsSeekBarOptHidden": "Hidden",
+  "settingsSeekBarOptJelly": "Jelly",
+  "settingsSeekBarOptLens": "Magnify",
+  "settingsSeekBarOptOff": "Off",
+  "settingsSeekBarOptDrift": "Drift",
+  "settingsSeekBarOptMusic": "Follow music",
+  "settingsSeekBarOptStill": "Still",
+  "settingsSeekBarOptThumbBar": "Bar",
+  "settingsSeekBarOptThumbDot": "Dot",
+  "settingsSeekBarOptThumbNone": "None",
+  "settingsSeekBarOptShine": "Shine",
+  "settingsSeekBarOptComet": "Comet",
+  "settingsSeekBarOptSparks": "Sparks",
   "settingsAboutEditionFree": "Free edition",
   "settingsAboutEditionPro": "Kanaru Pro",
   "settingsAboutLicenses": "Open source licenses",

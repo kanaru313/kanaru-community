@@ -2723,6 +2723,153 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsSeekBarFlatCaption => 'Mọi bài, không cần dạng sóng';
 
   @override
+  String get settingsSeekBarPreviewHint =>
+      'Chạm hoặc kéo để thử tua · kéo lên để huỷ';
+
+  @override
+  String get settingsSeekBarStylesTitle => 'Kiểu';
+
+  @override
+  String get settingsSeekBarStylesHint =>
+      'Dùng ở Now Playing và màn lời. Mini player và thanh phát nhạc giữ thanh phẳng.\n\n★ trên Lượn hoặc Thanh phẳng: kiểu hiện khi bài chưa có dạng sóng (đang tính, hoặc nguồn không có), với tuỳ chỉnh của kiểu đó. Sóng mọc lên tại chỗ khi có. Chỉ một kiểu có ★.';
+
+  @override
+  String settingsSeekBarFallbackUse(String style) {
+    return 'Dùng $style khi bài chưa có dạng sóng';
+  }
+
+  @override
+  String get settingsSeekBarFallbackActive => 'Hiện khi bài chưa có dạng sóng';
+
+  @override
+  String get settingsSeekBarCustomise => 'Tuỳ chỉnh';
+
+  @override
+  String settingsSeekBarCustomiseTitle(String style) {
+    return 'Tuỳ chỉnh · $style';
+  }
+
+  @override
+  String get settingsSeekBarCustomiseClose => 'Đóng';
+
+  @override
+  String get settingsSeekBarReset => 'Đặt lại mặc định';
+
+  @override
+  String get settingsSeekBarDriftNote => 'Bài chưa có dạng sóng thì trôi đều.';
+
+  @override
+  String get settingsSeekBarRowDensity => 'Mật độ';
+
+  @override
+  String get settingsSeekBarRowPlayed => 'Màu phần đã phát';
+
+  @override
+  String get settingsSeekBarRowRest => 'Phần chưa phát';
+
+  @override
+  String get settingsSeekBarRowFeedback => 'Phản hồi khi tua';
+
+  @override
+  String get settingsSeekBarRowAmplitude => 'Độ cao sóng';
+
+  @override
+  String get settingsSeekBarRowWavelength => 'Độ dài sóng';
+
+  @override
+  String get settingsSeekBarRowMotion => 'Chuyển động';
+
+  @override
+  String get settingsSeekBarRowThumb => 'Con trỏ';
+
+  @override
+  String get settingsSeekBarRowThickness => 'Độ dày';
+
+  @override
+  String get settingsSeekBarRowEffect => 'Hiệu ứng khi phát';
+
+  @override
+  String get settingsSeekBarOptLoose => 'Thưa';
+
+  @override
+  String get settingsSeekBarOptMid => 'Vừa';
+
+  @override
+  String get settingsSeekBarOptThick => 'Dày';
+
+  @override
+  String get settingsSeekBarOptDense => 'Dày';
+
+  @override
+  String get settingsSeekBarOptLow => 'Thấp';
+
+  @override
+  String get settingsSeekBarOptHigh => 'Cao';
+
+  @override
+  String get settingsSeekBarOptShort => 'Ngắn';
+
+  @override
+  String get settingsSeekBarOptLong => 'Dài';
+
+  @override
+  String get settingsSeekBarOptThin => 'Mảnh';
+
+  @override
+  String get settingsSeekBarOptSingle => 'Một màu';
+
+  @override
+  String get settingsSeekBarOptGradient => 'Chuyển màu';
+
+  @override
+  String get settingsSeekBarOptByHeight => 'Theo độ cao';
+
+  @override
+  String get settingsSeekBarOptDim => 'Mờ';
+
+  @override
+  String get settingsSeekBarOptOutline => 'Viền';
+
+  @override
+  String get settingsSeekBarOptHidden => 'Ẩn';
+
+  @override
+  String get settingsSeekBarOptJelly => 'Jelly';
+
+  @override
+  String get settingsSeekBarOptLens => 'Phóng to';
+
+  @override
+  String get settingsSeekBarOptOff => 'Tắt';
+
+  @override
+  String get settingsSeekBarOptDrift => 'Trôi đều';
+
+  @override
+  String get settingsSeekBarOptMusic => 'Theo nhạc';
+
+  @override
+  String get settingsSeekBarOptStill => 'Đứng yên';
+
+  @override
+  String get settingsSeekBarOptThumbBar => 'Vạch';
+
+  @override
+  String get settingsSeekBarOptThumbDot => 'Tròn';
+
+  @override
+  String get settingsSeekBarOptThumbNone => 'Không';
+
+  @override
+  String get settingsSeekBarOptShine => 'Vệt sáng';
+
+  @override
+  String get settingsSeekBarOptComet => 'Sao chổi';
+
+  @override
+  String get settingsSeekBarOptSparks => 'Hạt';
+
+  @override
   String get settingsAboutEditionFree => 'Bản miễn phí';
 
   @override

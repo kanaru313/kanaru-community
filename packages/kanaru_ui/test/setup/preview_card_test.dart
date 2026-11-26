@@ -40,14 +40,14 @@ void main() {
     expect(bySelected('Dạng sóng'), findsOneWidget);
     expect(bySelected('Thanh phẳng'), findsNothing);
     expect(
-      tester.getSemantics(find.text('Dạng sóng')),
+      tester.getSemantics(find.byType(KSeekStyleCard).first),
       matchesSemantics(
         label: 'Dạng sóng',
         hint: 'Vẽ theo âm thanh của bài.',
-        isButton: true,
         isSelected: true,
         hasSelectedState: true,
         isInMutuallyExclusiveGroup: true,
+        isFocusable: true,
         hasTapAction: true,
       ),
     );
@@ -184,7 +184,10 @@ void main() {
     useWindow(tester, const Size(500, 800));
     await tester.pumpWidget(host(_group(_Bar.wave, (_) {})));
     final card = tester.getRect(
-      find.ancestor(of: find.text('Dạng sóng'), matching: find.byType(InkWell)),
+      find.ancestor(
+        of: find.text('Dạng sóng'),
+        matching: find.byType(KSeekStyleCard),
+      ),
     );
     final wells = find.descendant(
       of: find.byType(KPreviewCardGroup<_Bar>),
@@ -245,30 +248,23 @@ void main() {
   });
 
   bool cardHasFocus(WidgetTester tester, String title) {
-    final ink = find.ancestor(
+    final card = find.ancestor(
       of: find.text(title),
-      matching: find.byType(InkWell),
+      matching: find.byType(KSeekStyleCard),
     );
-    return tester.widget<InkWell>(ink.first).focusNode!.hasPrimaryFocus;
+    return tester.widget<KSeekStyleCard>(card.first).focusNode!.hasPrimaryFocus;
   }
 
-  testWidgets('Tab lands on the chosen card, also after an outside change', (
-    tester,
-  ) async {
+  testWidgets('Tab visits every card in order, chosen or not', (tester) async {
     useWindow(tester, const Size(500, 800));
-    Widget group(_Bar v) => host(_group(v, (_) {}));
-    await tester.pumpWidget(group(_Bar.flat));
+    await tester.pumpWidget(host(_group(_Bar.flat, (_) {})));
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    expect(cardHasFocus(tester, 'Dạng sóng'), isTrue);
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pump();
     expect(cardHasFocus(tester, 'Thanh phẳng'), isTrue);
     expect(cardHasFocus(tester, 'Dạng sóng'), isFalse);
-    // Leave the group, change the choice from outside, Tab back in.
-    FocusManager.instance.primaryFocus?.unfocus();
-    await tester.pumpWidget(group(_Bar.wave));
-    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-    await tester.pump();
-    expect(cardHasFocus(tester, 'Dạng sóng'), isTrue);
-    expect(cardHasFocus(tester, 'Thanh phẳng'), isFalse);
   });
 
   testWidgets('keyboard focus shows the ring, pointer focus does not', (

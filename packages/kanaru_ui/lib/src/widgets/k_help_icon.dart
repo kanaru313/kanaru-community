@@ -55,6 +55,9 @@ class _KHelpIconState extends State<KHelpIcon> with WidgetsBindingObserver {
   final _portal = OverlayPortalController();
   ScrollPosition? _scroll;
   Timer? _timer;
+  final _panelFocus = FocusNode(debugLabel: 'KHelpIcon panel');
+  FocusNode? _previousFocus;
+  bool _hadPanelFocus = false;
   bool _pinned = false;
 
   bool get _long => widget.message.length > KHelpIcon.longMessageLength;
@@ -62,8 +65,10 @@ class _KHelpIconState extends State<KHelpIcon> with WidgetsBindingObserver {
 
   void _open({required bool pin}) {
     _timer?.cancel();
+    final wasPinned = _pinned;
     if (pin) _pinned = true;
     if (_portal.isShowing) {
+      if (pin && !wasPinned && !_mobile) _takeFocus();
       setState(() {});
       return;
     }
@@ -72,7 +77,35 @@ class _KHelpIconState extends State<KHelpIcon> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _scroll = Scrollable.maybeOf(context)?.position;
     _scroll?.addListener(_close);
+    if (pin && !_mobile) _takeFocus();
     setState(() {});
+  }
+
+  /// A pinned desktop popover holds focus so Esc is consumed here and never reaches
+  /// the page's own Esc shortcut; focus goes back on close.
+  void _takeFocus() {
+    _hadPanelFocus = false;
+    _previousFocus = FocusManager.instance.primaryFocus;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _portal.isShowing) _panelFocus.requestFocus();
+    });
+  }
+
+  /// Tab out of a pinned panel closes it, so Esc never hits a stale one.
+  void _panelFocusChanged() {
+    if (_panelFocus.hasFocus) {
+      _hadPanelFocus = true;
+    } else if (_hadPanelFocus) {
+      _hadPanelFocus = false;
+      _previousFocus = null;
+      _close();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _panelFocus.addListener(_panelFocusChanged);
   }
 
   void _close() {
@@ -84,15 +117,22 @@ class _KHelpIconState extends State<KHelpIcon> with WidgetsBindingObserver {
     _scroll = null;
     HardwareKeyboard.instance.removeHandler(_onKey);
     WidgetsBinding.instance.removeObserver(this);
+    final previous = _previousFocus;
+    _previousFocus = null;
+    if (_panelFocus.hasFocus && previous?.context?.mounted == true) {
+      previous!.requestFocus();
+    }
     setState(() {});
   }
 
   bool _onKey(KeyEvent event) {
     if (event is KeyDownEvent &&
         event.logicalKey == LogicalKeyboardKey.escape) {
+      // The pinned panel holds focus and consumes Esc itself; a hover popover
+      // only closes.
       _close();
     }
-    // Never consumed: dialogs or fields above still see Esc.
+    // Never consumed here: dialogs or fields above still see Esc.
     return false;
   }
 
@@ -128,6 +168,8 @@ class _KHelpIconState extends State<KHelpIcon> with WidgetsBindingObserver {
   @override
   void dispose() {
     _timer?.cancel();
+    _panelFocus.removeListener(_panelFocusChanged);
+    _panelFocus.dispose();
     _scroll?.removeListener(_close);
     HardwareKeyboard.instance.removeHandler(_onKey);
     WidgetsBinding.instance.removeObserver(this);
@@ -166,10 +208,21 @@ class _KHelpIconState extends State<KHelpIcon> with WidgetsBindingObserver {
             MouseRegion(
               onEnter: (_) => _timer?.cancel(),
               onExit: (_) => _hover(false),
-              child: KHelpPopoverCard(
-                message: widget.message,
-                title: _long ? widget.title : null,
-                maxWidth: KHelpIcon.panelWidth,
+              child: Focus(
+                focusNode: _panelFocus,
+                onKeyEvent: (_, event) {
+                  if (event is KeyDownEvent &&
+                      event.logicalKey == LogicalKeyboardKey.escape) {
+                    _close();
+                    return KeyEventResult.handled;
+                  }
+                  return KeyEventResult.ignored;
+                },
+                child: KHelpPopoverCard(
+                  message: widget.message,
+                  title: _long ? widget.title : null,
+                  maxWidth: KHelpIcon.panelWidth,
+                ),
               ),
             ),
           ),

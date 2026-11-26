@@ -3023,6 +3023,155 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSeekBarFlatCaption => 'Every track, no waveform needed';
 
   @override
+  String get settingsSeekBarPreviewHint =>
+      'Tap or drag to try seeking · drag up to cancel';
+
+  @override
+  String get settingsSeekBarStylesTitle => 'Style';
+
+  @override
+  String get settingsSeekBarStylesHint =>
+      'Used in Now Playing and the lyrics screen. The mini player and the player bar keep the flat bar.\n\n★ on Squiggle or Flat bar: the style shown while a track has no waveform yet (being computed, or the source has none), with that style\'s options. The wave grows in place when it arrives. Only one style has the ★.';
+
+  @override
+  String settingsSeekBarFallbackUse(String style) {
+    return 'Use $style while a track has no waveform';
+  }
+
+  @override
+  String get settingsSeekBarFallbackActive =>
+      'Shown while a track has no waveform';
+
+  @override
+  String get settingsSeekBarCustomise => 'Customise';
+
+  @override
+  String settingsSeekBarCustomiseTitle(String style) {
+    return 'Customise · $style';
+  }
+
+  @override
+  String get settingsSeekBarCustomiseClose => 'Close';
+
+  @override
+  String get settingsSeekBarReset => 'Reset to default';
+
+  @override
+  String get settingsSeekBarDriftNote =>
+      'A track with no waveform drifts steadily.';
+
+  @override
+  String get settingsSeekBarRowDensity => 'Density';
+
+  @override
+  String get settingsSeekBarRowPlayed => 'Played colour';
+
+  @override
+  String get settingsSeekBarRowRest => 'Unplayed part';
+
+  @override
+  String get settingsSeekBarRowFeedback => 'Seek feedback';
+
+  @override
+  String get settingsSeekBarRowAmplitude => 'Wave height';
+
+  @override
+  String get settingsSeekBarRowWavelength => 'Wave length';
+
+  @override
+  String get settingsSeekBarRowMotion => 'Motion';
+
+  @override
+  String get settingsSeekBarRowThumb => 'Thumb';
+
+  @override
+  String get settingsSeekBarRowThickness => 'Thickness';
+
+  @override
+  String get settingsSeekBarRowEffect => 'Effect while playing';
+
+  @override
+  String get settingsSeekBarOptLoose => 'Loose';
+
+  @override
+  String get settingsSeekBarOptMid => 'Medium';
+
+  @override
+  String get settingsSeekBarOptThick => 'Thick';
+
+  @override
+  String get settingsSeekBarOptDense => 'Dense';
+
+  @override
+  String get settingsSeekBarOptLow => 'Low';
+
+  @override
+  String get settingsSeekBarOptHigh => 'High';
+
+  @override
+  String get settingsSeekBarOptShort => 'Short';
+
+  @override
+  String get settingsSeekBarOptLong => 'Long';
+
+  @override
+  String get settingsSeekBarOptThin => 'Thin';
+
+  @override
+  String get settingsSeekBarOptSingle => 'One colour';
+
+  @override
+  String get settingsSeekBarOptGradient => 'Gradient';
+
+  @override
+  String get settingsSeekBarOptByHeight => 'By height';
+
+  @override
+  String get settingsSeekBarOptDim => 'Faded';
+
+  @override
+  String get settingsSeekBarOptOutline => 'Outline';
+
+  @override
+  String get settingsSeekBarOptHidden => 'Hidden';
+
+  @override
+  String get settingsSeekBarOptJelly => 'Jelly';
+
+  @override
+  String get settingsSeekBarOptLens => 'Magnify';
+
+  @override
+  String get settingsSeekBarOptOff => 'Off';
+
+  @override
+  String get settingsSeekBarOptDrift => 'Drift';
+
+  @override
+  String get settingsSeekBarOptMusic => 'Follow music';
+
+  @override
+  String get settingsSeekBarOptStill => 'Still';
+
+  @override
+  String get settingsSeekBarOptThumbBar => 'Bar';
+
+  @override
+  String get settingsSeekBarOptThumbDot => 'Dot';
+
+  @override
+  String get settingsSeekBarOptThumbNone => 'None';
+
+  @override
+  String get settingsSeekBarOptShine => 'Shine';
+
+  @override
+  String get settingsSeekBarOptComet => 'Comet';
+
+  @override
+  String get settingsSeekBarOptSparks => 'Sparks';
+
+  @override
   String get settingsAboutEditionFree => 'Free edition';
 
   @override

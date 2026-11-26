@@ -2,34 +2,42 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../layout/form_factor.dart';
-import '../../tokens/k_motion.dart';
-import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
-import '../k_check_mark.dart';
-import '../k_focus_ring.dart';
-import '../k_gap.dart';
+import 'k_seek_style_card.dart';
 
 /// One card of a [KPreviewCardGroup]: a [preview] picture of the choice, its
 /// [title] and a one-line [caption].
+///
+/// [fallback] puts a ★ at the end of the title line, [action] a button row
+/// on the card while it is chosen, [onReselect] runs when the already chosen
+/// card is tapped again (instead of choosing it once more).
 class KPreviewOption<T> {
   const KPreviewOption({
     required this.value,
     required this.preview,
     required this.title,
     required this.caption,
+    this.fallback,
+    this.action,
+    this.onReselect,
   });
 
   final T value;
   final Widget preview;
   final String title;
   final String caption;
+  final KFallbackMark? fallback;
+  final KCardAction? action;
+  final VoidCallback? onReselect;
 }
 
 /// A single choice made by how it looks (progress bar style, layout): cards
 /// in a grid whose column count the group picks itself: 2 on the mobile
-/// shell, 3 on the desktop shell, 1 from 200 % text ([columnsFor]). The chosen card has
-/// a 2 px `primary` border and a small tick badge. Tapping chooses at once;
-/// the arrow keys move the choice and the focus. Needs at least two options.
+/// shell, 3 on the desktop shell, 1 from 200 % text ([columnsFor]). Every card
+/// is a [KSeekStyleCard]: the chosen one has a 2 px `primary` border and a
+/// small tick badge. Tapping chooses at once; the arrow keys move the choice
+/// and the focus while a card itself (not its ★ or action) has focus. Needs
+/// at least two options.
 class KPreviewCardGroup<T> extends StatefulWidget {
   const KPreviewCardGroup({
     super.key,
@@ -77,13 +85,6 @@ class _KPreviewCardGroupState<T> extends State<KPreviewCardGroup<T>> {
         }
       });
     }
-    // Roving focus: only the chosen card (the first when none is chosen) is
-    // reached by Tab; the arrow keys move inside the group.
-    var tabStop = widget.options.indexWhere((o) => o.value == widget.selected);
-    if (tabStop < 0) tabStop = 0;
-    for (var i = 0; i < count; i++) {
-      _nodes[i].skipTraversal = i != tabStop;
-    }
   }
 
   @override
@@ -126,13 +127,30 @@ class _KPreviewCardGroupState<T> extends State<KPreviewCardGroup<T>> {
     } else {
       return KeyEventResult.ignored;
     }
-    final focused = _nodes.indexWhere((n) => n.hasFocus);
+    final focused = _nodes.indexWhere((n) => n.hasPrimaryFocus);
     if (focused < 0) return KeyEventResult.ignored;
     final next = focused + step;
     if (next < 0 || next >= _nodes.length) return KeyEventResult.handled;
     _nodes[next].requestFocus();
     widget.onChanged(widget.options[next].value);
     return KeyEventResult.handled;
+  }
+
+  Widget _card(int i) {
+    final option = widget.options[i];
+    final selected = option.value == widget.selected;
+    return KSeekStyleCard(
+      preview: option.preview,
+      title: option.title,
+      caption: option.caption,
+      focusNode: _nodes[i],
+      selected: selected,
+      fallback: option.fallback,
+      action: option.action,
+      onTap: () => selected && option.onReselect != null
+          ? option.onReselect!()
+          : widget.onChanged(option.value),
+    );
   }
 
   @override
@@ -156,135 +174,10 @@ class _KPreviewCardGroupState<T> extends State<KPreviewCardGroup<T>> {
             runSpacing: gap,
             children: [
               for (var i = 0; i < widget.options.length; i++)
-                SizedBox(
-                  width: width,
-                  child: _PreviewCard(
-                    option: widget.options[i],
-                    focusNode: _nodes[i],
-                    selected: widget.options[i].value == widget.selected,
-                    onTap: () => widget.onChanged(widget.options[i].value),
-                  ),
-                ),
+                SizedBox(width: width, child: _card(i)),
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _PreviewCard extends StatefulWidget {
-  const _PreviewCard({
-    required this.option,
-    required this.focusNode,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final KPreviewOption<Object?> option;
-  final FocusNode focusNode;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  State<_PreviewCard> createState() => _PreviewCardState();
-}
-
-class _PreviewCardState extends State<_PreviewCard> {
-  bool _focused = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final selected = widget.selected;
-    final animate = !MediaQuery.disableAnimationsOf(context);
-    final option = widget.option;
-    return Semantics(
-      container: true,
-      button: true,
-      selected: selected,
-      inMutuallyExclusiveGroup: true,
-      label: option.title,
-      hint: option.caption,
-      onTap: widget.onTap,
-      excludeSemantics: true,
-      child: KFocusRing(
-        focused: _focused,
-        radius: KRadius.md,
-        child: Padding(
-          padding: const EdgeInsets.all(2),
-          child: Material(
-            color: scheme.surfaceContainerLow,
-            shape: RoundedRectangleBorder(
-              borderRadius: KRadius.md,
-              side: BorderSide(
-                color: selected ? scheme.primary : const Color(0x00000000),
-                width: 2,
-              ),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              focusNode: widget.focusNode,
-              onFocusChange: (v) => setState(() => _focused = v),
-              onTap: widget.onTap,
-              child: Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(KSpace.x3),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // The well: a lighter inset box the picture sits in.
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: scheme.surface,
-                            borderRadius: KRadius.md,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: KSpace.x1,
-                            ),
-                            child: Center(child: option.preview),
-                          ),
-                        ),
-                        const KGap(KSpace.x2),
-                        Text(
-                          option.title,
-                          style: textTheme.bodyLarge?.copyWith(
-                            fontWeight: selected
-                                ? FontWeight.w700
-                                : FontWeight.w400,
-                          ),
-                        ),
-                        Text(
-                          option.caption,
-                          style: textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PositionedDirectional(
-                    top: KSpace.x2,
-                    end: KSpace.x2,
-                    child: AnimatedScale(
-                      scale: selected ? 1 : 0,
-                      duration: animate ? KMotion.fast : Duration.zero,
-                      curve: KMotion.emphasized,
-                      child: const KCheckMark(
-                        state: KCheckState.on,
-                        size: 20,
-                        style: KCheckMarkStyle.cover,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

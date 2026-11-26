@@ -33,6 +33,40 @@ void main() {
     });
   }
 
+  for (final style in [SeekBarStyle.squiggle, SeekBarStyle.flat]) {
+    testWidgets('a playing ${style.name} preview stands still when covered or '
+        'under reduced motion', (tester) async {
+      for (final (covered, reduce) in [(true, false), (false, true)]) {
+        await tester.pumpWidget(
+          TickerMode(
+            enabled: !covered,
+            child: MaterialApp(
+              home: Builder(
+                builder: (context) => MediaQuery(
+                  data: MediaQuery.of(context)
+                      .copyWith(disableAnimations: reduce),
+                  child: Scaffold(
+                    body: SizedBox(
+                      width: 300,
+                      child: SeekStylePreview(style: style, playing: true),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(seconds: 1));
+        expect(tester.takeException(), isNull);
+        expect(
+          tester.binding.hasScheduledFrame,
+          isFalse,
+          reason: 'covered: $covered, reduced motion: $reduce',
+        );
+      }
+    });
+  }
+
   testWidgets('a preview takes no input and has no semantics', (tester) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(

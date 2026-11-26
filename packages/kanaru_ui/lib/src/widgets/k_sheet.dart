@@ -37,6 +37,8 @@ enum KSheetDialog {
 /// for the sheet and the window minus margins for the dialog).
 /// Esc closes the modal and is consumed by it. [returnFocus] gets focus after
 /// the route closes, only while it is still attached to the tree.
+/// [alwaysBottom] keeps the bottom sheet on wide windows too (the mobile shell
+/// is up to 1200 dp wide) instead of switching to a dialog from 600 dp.
 Future<T?> showKSheet<T>(
   BuildContext context, {
   required WidgetBuilder builder,
@@ -45,6 +47,32 @@ Future<T?> showKSheet<T>(
   bool fixedHeight = false,
   bool useRootNavigator = false,
   KSheetDialog dialog = KSheetDialog.standard,
+  bool alwaysBottom = false,
+  FocusNode? returnFocus,
+}) => showKSheetScrimmed<T>(
+  context,
+  builder: builder,
+  draggable: draggable,
+  maxHeightFraction: maxHeightFraction,
+  fixedHeight: fixedHeight,
+  useRootNavigator: useRootNavigator,
+  dialog: dialog,
+  alwaysBottom: alwaysBottom,
+  returnFocus: returnFocus,
+);
+
+/// [showKSheet] with a scrim alpha for the plain bottom sheet. Internal to
+/// kanaru_ui (hidden from the barrel): only [showKAdaptiveSheet] uses it.
+Future<T?> showKSheetScrimmed<T>(
+  BuildContext context, {
+  required WidgetBuilder builder,
+  bool draggable = true,
+  double maxHeightFraction = 0.85,
+  bool fixedHeight = false,
+  bool useRootNavigator = false,
+  KSheetDialog dialog = KSheetDialog.standard,
+  bool alwaysBottom = false,
+  double? scrimAlpha,
   FocusNode? returnFocus,
 }) {
   final result = _show<T>(
@@ -55,6 +83,8 @@ Future<T?> showKSheet<T>(
     fixedHeight: fixedHeight,
     useRootNavigator: useRootNavigator,
     dialog: dialog,
+    alwaysBottom: alwaysBottom,
+    scrimAlpha: scrimAlpha,
   );
   if (returnFocus == null) return result;
   return result.whenComplete(() {
@@ -73,10 +103,12 @@ Future<T?> _show<T>(
   required bool fixedHeight,
   required bool useRootNavigator,
   required KSheetDialog dialog,
+  required bool alwaysBottom,
+  double? scrimAlpha,
 }) {
   final modal = dialog == KSheetDialog.modal;
   final size = MediaQuery.sizeOf(context);
-  if (size.width >= KBreakpoints.compactSheet) {
+  if (size.width >= KBreakpoints.compactSheet && !alwaysBottom) {
     if (modal) {
       return showKModalDialog<T>(
         context,
@@ -123,6 +155,9 @@ Future<T?> _show<T>(
     useSafeArea: true,
     showDragHandle: true,
     enableDrag: draggable,
+    barrierColor: scrimAlpha == null
+        ? null
+        : Theme.of(context).colorScheme.scrim.withValues(alpha: scrimAlpha),
     shape: KShape.of(
       BorderRadius.vertical(top: KRadius.xl.topLeft),
       continuous: true,

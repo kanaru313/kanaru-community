@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -312,6 +313,50 @@ void main() {
     await tester.pump();
     final scheme = Theme.of(tester.element(find.text('Phút'))).colorScheme;
     expect(_fill(tester, 'Số bài'), scheme.secondaryContainer);
+  });
+
+  testWidgets('200 % text wraps labels, grows the height, no ellipsis', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    const long = [
+      KSegment(value: 'a', label: 'Theo độ cao'),
+      KSegment(value: 'b', label: 'Chuyển màu'),
+    ];
+    Widget build(double scale) => host(
+      MediaQuery(
+        data: MediaQueryData(
+          size: const Size(400, 800),
+          textScaler: TextScaler.linear(scale),
+        ),
+        child: Center(
+          child: SizedBox(
+            width: 360,
+            child: KSegmented<String>(
+              segments: long,
+              value: 'a',
+              onChanged: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpWidget(build(2));
+    expect(
+      tester.getSize(find.byType(KSegmented<String>)).height,
+      greaterThan(48),
+    );
+    final first = tester.renderObject<RenderParagraph>(
+      find.text('Theo độ cao'),
+    );
+    expect(
+      first.size.height,
+      greaterThan(first.getMaxIntrinsicHeight(double.infinity) * 1.5),
+    );
+    for (final label in ['Theo độ cao', 'Chuyển màu']) {
+      final p = tester.renderObject<RenderParagraph>(find.text(label));
+      expect(p.didExceedMaxLines, isFalse);
+    }
   });
 }
 

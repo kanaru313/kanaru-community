@@ -42,6 +42,7 @@ class KSegmented<T> extends StatefulWidget {
     required this.value,
     required this.onChanged,
     this.semanticLabel,
+    this.comfortable = false,
   });
 
   final List<KSegment<T>> segments;
@@ -50,6 +51,10 @@ class KSegmented<T> extends StatefulWidget {
 
   /// Spoken name of the whole group.
   final String? semanticLabel;
+
+  /// A roomier control for a row of its own (a customise sheet): 40 dp on
+  /// desktop instead of 36. The touch shells are 48 either way.
+  final bool comfortable;
 
   @override
   State<KSegmented<T>> createState() => _KSegmentedState<T>();
@@ -111,7 +116,9 @@ class _KSegmentedState<T> extends State<KSegmented<T>> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final height = FormFactor.of(context) == FormFactor.mobile ? 48.0 : 36.0;
+    final height = FormFactor.of(context) == FormFactor.mobile
+        ? 48.0
+        : (widget.comfortable ? 40.0 : 36.0);
     final rtl = Directionality.of(context) == TextDirection.rtl;
     return Semantics(
       container: true,
@@ -124,39 +131,43 @@ class _KSegmentedState<T> extends State<KSegmented<T>> {
           color: scheme.surfaceContainerHigh,
           shape: KShape.of(KRadius.full),
         ),
-        child: Row(
-          children: [
-            for (var i = 0; i < widget.segments.length; i++)
-              Expanded(
-                child: Shortcuts(
-                  shortcuts: {
-                    const SingleActivator(LogicalKeyboardKey.arrowLeft):
-                        _MoveFocus(rtl ? 1 : -1),
-                    const SingleActivator(LogicalKeyboardKey.arrowRight):
-                        _MoveFocus(rtl ? -1 : 1),
-                  },
-                  child: Actions(
-                    actions: {
-                      _MoveFocus: CallbackAction<_MoveFocus>(
-                        onInvoke: (intent) {
-                          _move(i, intent.delta);
-                          return null;
-                        },
-                      ),
+        // Equal-height segments: one wrapped label grows them all.
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < widget.segments.length; i++)
+                Expanded(
+                  child: Shortcuts(
+                    shortcuts: {
+                      const SingleActivator(LogicalKeyboardKey.arrowLeft):
+                          _MoveFocus(rtl ? 1 : -1),
+                      const SingleActivator(LogicalKeyboardKey.arrowRight):
+                          _MoveFocus(rtl ? -1 : 1),
                     },
-                    child: _Segment(
-                      label: widget.segments[i].label,
-                      selected: widget.segments[i].value == widget.value,
-                      focusNode: _nodes[i],
-                      onTap: widget.segments[i].enabled
-                          ? () => widget.onChanged(widget.segments[i].value)
-                          : null,
-                      minHeight: height - 2 * _kTrackPad,
+                    child: Actions(
+                      actions: {
+                        _MoveFocus: CallbackAction<_MoveFocus>(
+                          onInvoke: (intent) {
+                            _move(i, intent.delta);
+                            return null;
+                          },
+                        ),
+                      },
+                      child: _Segment(
+                        label: widget.segments[i].label,
+                        selected: widget.segments[i].value == widget.value,
+                        focusNode: _nodes[i],
+                        onTap: widget.segments[i].enabled
+                            ? () => widget.onChanged(widget.segments[i].value)
+                            : null,
+                        minHeight: height - 2 * _kTrackPad,
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -204,17 +215,23 @@ class _Segment extends StatelessWidget {
           ),
           shape: KShape.of(KRadius.full),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
+        padding: const EdgeInsets.symmetric(
+          horizontal: KSpace.x2,
+          vertical: KSpace.x1 / 2,
+        ),
         // heightFactor 1: no stretching to the track's room; the minimum
         // height centres the label.
         child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: minHeight),
+          constraints: BoxConstraints(minHeight: minHeight - KSpace.x1),
           child: Center(
             heightFactor: 1,
             child: Text(
               label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              // Wraps (up to 3 lines) at large text scales, the segment grows;
+              // never ellipsizes.
+              maxLines: 3,
+              softWrap: true,
+              textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 color: fg,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,

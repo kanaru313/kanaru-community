@@ -4482,6 +4482,288 @@ abstract class AppLocalizations {
   /// **'Every track, no waveform needed'**
   String get settingsSeekBarFlatCaption;
 
+  /// No description provided for @settingsSeekBarPreviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap or drag to try seeking · drag up to cancel'**
+  String get settingsSeekBarPreviewHint;
+
+  /// No description provided for @settingsSeekBarStylesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Style'**
+  String get settingsSeekBarStylesTitle;
+
+  /// No description provided for @settingsSeekBarStylesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Used in Now Playing and the lyrics screen. The mini player and the player bar keep the flat bar.\n\n★ on Squiggle or Flat bar: the style shown while a track has no waveform yet (being computed, or the source has none), with that style\'s options. The wave grows in place when it arrives. Only one style has the ★.'**
+  String get settingsSeekBarStylesHint;
+
+  /// No description provided for @settingsSeekBarFallbackUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {style} while a track has no waveform'**
+  String settingsSeekBarFallbackUse(String style);
+
+  /// No description provided for @settingsSeekBarFallbackActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown while a track has no waveform'**
+  String get settingsSeekBarFallbackActive;
+
+  /// No description provided for @settingsSeekBarCustomise.
+  ///
+  /// In en, this message translates to:
+  /// **'Customise'**
+  String get settingsSeekBarCustomise;
+
+  /// No description provided for @settingsSeekBarCustomiseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customise · {style}'**
+  String settingsSeekBarCustomiseTitle(String style);
+
+  /// No description provided for @settingsSeekBarCustomiseClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get settingsSeekBarCustomiseClose;
+
+  /// No description provided for @settingsSeekBarReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to default'**
+  String get settingsSeekBarReset;
+
+  /// No description provided for @settingsSeekBarDriftNote.
+  ///
+  /// In en, this message translates to:
+  /// **'A track with no waveform drifts steadily.'**
+  String get settingsSeekBarDriftNote;
+
+  /// No description provided for @settingsSeekBarRowDensity.
+  ///
+  /// In en, this message translates to:
+  /// **'Density'**
+  String get settingsSeekBarRowDensity;
+
+  /// No description provided for @settingsSeekBarRowPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Played colour'**
+  String get settingsSeekBarRowPlayed;
+
+  /// No description provided for @settingsSeekBarRowRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Unplayed part'**
+  String get settingsSeekBarRowRest;
+
+  /// No description provided for @settingsSeekBarRowFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Seek feedback'**
+  String get settingsSeekBarRowFeedback;
+
+  /// No description provided for @settingsSeekBarRowAmplitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Wave height'**
+  String get settingsSeekBarRowAmplitude;
+
+  /// No description provided for @settingsSeekBarRowWavelength.
+  ///
+  /// In en, this message translates to:
+  /// **'Wave length'**
+  String get settingsSeekBarRowWavelength;
+
+  /// No description provided for @settingsSeekBarRowMotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Motion'**
+  String get settingsSeekBarRowMotion;
+
+  /// No description provided for @settingsSeekBarRowThumb.
+  ///
+  /// In en, this message translates to:
+  /// **'Thumb'**
+  String get settingsSeekBarRowThumb;
+
+  /// No description provided for @settingsSeekBarRowThickness.
+  ///
+  /// In en, this message translates to:
+  /// **'Thickness'**
+  String get settingsSeekBarRowThickness;
+
+  /// No description provided for @settingsSeekBarRowEffect.
+  ///
+  /// In en, this message translates to:
+  /// **'Effect while playing'**
+  String get settingsSeekBarRowEffect;
+
+  /// No description provided for @settingsSeekBarOptLoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Loose'**
+  String get settingsSeekBarOptLoose;
+
+  /// No description provided for @settingsSeekBarOptMid.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get settingsSeekBarOptMid;
+
+  /// No description provided for @settingsSeekBarOptThick.
+  ///
+  /// In en, this message translates to:
+  /// **'Thick'**
+  String get settingsSeekBarOptThick;
+
+  /// No description provided for @settingsSeekBarOptDense.
+  ///
+  /// In en, this message translates to:
+  /// **'Dense'**
+  String get settingsSeekBarOptDense;
+
+  /// No description provided for @settingsSeekBarOptLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get settingsSeekBarOptLow;
+
+  /// No description provided for @settingsSeekBarOptHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get settingsSeekBarOptHigh;
+
+  /// No description provided for @settingsSeekBarOptShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Short'**
+  String get settingsSeekBarOptShort;
+
+  /// No description provided for @settingsSeekBarOptLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Long'**
+  String get settingsSeekBarOptLong;
+
+  /// No description provided for @settingsSeekBarOptThin.
+  ///
+  /// In en, this message translates to:
+  /// **'Thin'**
+  String get settingsSeekBarOptThin;
+
+  /// No description provided for @settingsSeekBarOptSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'One colour'**
+  String get settingsSeekBarOptSingle;
+
+  /// No description provided for @settingsSeekBarOptGradient.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradient'**
+  String get settingsSeekBarOptGradient;
+
+  /// No description provided for @settingsSeekBarOptByHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'By height'**
+  String get settingsSeekBarOptByHeight;
+
+  /// No description provided for @settingsSeekBarOptDim.
+  ///
+  /// In en, this message translates to:
+  /// **'Faded'**
+  String get settingsSeekBarOptDim;
+
+  /// No description provided for @settingsSeekBarOptOutline.
+  ///
+  /// In en, this message translates to:
+  /// **'Outline'**
+  String get settingsSeekBarOptOutline;
+
+  /// No description provided for @settingsSeekBarOptHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get settingsSeekBarOptHidden;
+
+  /// No description provided for @settingsSeekBarOptJelly.
+  ///
+  /// In en, this message translates to:
+  /// **'Jelly'**
+  String get settingsSeekBarOptJelly;
+
+  /// No description provided for @settingsSeekBarOptLens.
+  ///
+  /// In en, this message translates to:
+  /// **'Magnify'**
+  String get settingsSeekBarOptLens;
+
+  /// No description provided for @settingsSeekBarOptOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get settingsSeekBarOptOff;
+
+  /// No description provided for @settingsSeekBarOptDrift.
+  ///
+  /// In en, this message translates to:
+  /// **'Drift'**
+  String get settingsSeekBarOptDrift;
+
+  /// No description provided for @settingsSeekBarOptMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow music'**
+  String get settingsSeekBarOptMusic;
+
+  /// No description provided for @settingsSeekBarOptStill.
+  ///
+  /// In en, this message translates to:
+  /// **'Still'**
+  String get settingsSeekBarOptStill;
+
+  /// No description provided for @settingsSeekBarOptThumbBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar'**
+  String get settingsSeekBarOptThumbBar;
+
+  /// No description provided for @settingsSeekBarOptThumbDot.
+  ///
+  /// In en, this message translates to:
+  /// **'Dot'**
+  String get settingsSeekBarOptThumbDot;
+
+  /// No description provided for @settingsSeekBarOptThumbNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get settingsSeekBarOptThumbNone;
+
+  /// No description provided for @settingsSeekBarOptShine.
+  ///
+  /// In en, this message translates to:
+  /// **'Shine'**
+  String get settingsSeekBarOptShine;
+
+  /// No description provided for @settingsSeekBarOptComet.
+  ///
+  /// In en, this message translates to:
+  /// **'Comet'**
+  String get settingsSeekBarOptComet;
+
+  /// No description provided for @settingsSeekBarOptSparks.
+  ///
+  /// In en, this message translates to:
+  /// **'Sparks'**
+  String get settingsSeekBarOptSparks;
+
   /// No description provided for @settingsAboutEditionFree.
   ///
   /// In en, this message translates to:

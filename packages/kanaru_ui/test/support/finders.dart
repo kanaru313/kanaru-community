@@ -98,3 +98,13 @@ void useKeyboardHighlight() {
         FocusHighlightStrategy.automatic,
   );
 }
+
+/// Finds the semantics node labelled [label] whose enabled state is [enabled]
+/// (a button that may be switched off). Needs semantics enabled in the test.
+SemanticsFinder byEnabledState(String label, {required bool enabled}) =>
+    find.semantics.byPredicate((node) {
+      final data = node.getSemanticsData();
+      return data.label.split('\n').contains(label) &&
+          data.flagsCollection.isEnabled ==
+              (enabled ? Tristate.isTrue : Tristate.isFalse);
+    }, describeMatch: (_) => '${enabled ? 'enabled' : 'disabled'} "$label"');
