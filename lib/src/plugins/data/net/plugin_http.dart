@@ -91,13 +91,51 @@ class PluginHttpClient {
     required Duration deadline,
     CancelToken? cancel,
   }) {
+    final session = newSession(request);
+
+    final result = Completer<Result<PluginHttpResponse, PluginHttpFailure>>();
+    void stop() => session.stop();
+
+    void abort(PluginHttpFailure why) {
+      if (result.isCompleted) return;
+      // Complete first: stopping fails the work in flight, and that failure
+      // must not replace the real reason.
+      result.complete(Err(why));
+      stop();
+    }
+
+    final timer = Timer(deadline, () => abort(PluginHttpFailure.timeout));
+    final unlisten = cancel?.listen(() => abort(PluginHttpFailure.cancelled));
+    if (!result.isCompleted) {
+      _exchange(session, request).then(
+        (ok) {
+          if (!result.isCompleted) result.complete(Ok(ok));
+        },
+        onError: (Object e) {
+          if (!result.isCompleted) result.complete(Err(pluginHttpFailureOf(e)));
+        },
+      );
+    }
+    return result.future.whenComplete(() {
+      timer.cancel();
+      unlisten?.call();
+      stop();
+    });
+  }
+
+  /// One new transport for one exchange: its own `HttpClient`, no proxy, the
+  /// pinned connection rules. Shared by [send] and the stream reader so both
+  /// obey the same rules. The caller must [PluginHttpSession.stop] it.
+  PluginHttpSession newSession(PluginHttpRequest request) {
     final client = HttpClient()
       ..findProxy = ((_) => 'DIRECT')
       ..userAgent = request.headers['user-agent'] ?? defaultUserAgent;
-    var stopped = false;
+    final session = PluginHttpSession._(client);
     final pinned = pinnedConnectionFactory(
       check: (url, addresses) {
-        if (stopped) throw const FetchFailure(FetchFailureKind.cancelled);
+        if (session.stopped) {
+          throw const FetchFailure(FetchFailureKind.cancelled);
+        }
         if (!isPublicOnly([for (final a in addresses) a.rawAddress])) {
           throw const _BlockedAddress();
         }
@@ -112,14 +150,14 @@ class PluginHttpClient {
     client.connectionFactory = (url, proxyHost, proxyPort) async {
       final task = await pinned(url, proxyHost, proxyPort);
       void refuse() => throw const FetchFailure(FetchFailureKind.cancelled);
-      if (stopped) {
+      if (session.stopped) {
         task.cancel();
         unawaited(task.socket.then((s) => s.destroy(), onError: (_) {}));
         refuse();
       }
       return ConnectionTask.fromSocket(
         task.socket.then((socket) {
-          if (stopped) {
+          if (session.stopped) {
             socket.destroy();
             refuse();
           }
@@ -128,59 +166,71 @@ class PluginHttpClient {
         task.cancel,
       );
     };
-
-    final result = Completer<Result<PluginHttpResponse, PluginHttpFailure>>();
-    void stop() {
-      stopped = true;
-      try {
-        client.close(force: true);
-      } on Object {
-        // Closing a client that already failed is not an error to report.
-      }
-    }
-
-    void abort(PluginHttpFailure why) {
-      if (result.isCompleted) return;
-      // Complete first: stopping fails the work in flight, and that failure
-      // must not replace the real reason.
-      result.complete(Err(why));
-      stop();
-    }
-
-    final timer = Timer(deadline, () => abort(PluginHttpFailure.timeout));
-    final unlisten = cancel?.listen(() => abort(PluginHttpFailure.cancelled));
-    if (!result.isCompleted) {
-      _exchange(client, request, () => stopped).then(
-        (ok) {
-          if (!result.isCompleted) result.complete(Ok(ok));
-        },
-        onError: (Object e) {
-          if (!result.isCompleted) result.complete(Err(_asFailure(e)));
-        },
-      );
-    }
-    return result.future.whenComplete(() {
-      timer.cancel();
-      unlisten?.call();
-      stop();
-    });
+    return session;
   }
 
   Future<PluginHttpResponse> _exchange(
-    HttpClient client,
+    PluginHttpSession session,
     PluginHttpRequest request,
-    bool Function() isStopped,
   ) async {
-    void ensureActive() {
-      if (isStopped()) throw const FetchFailure(FetchFailureKind.cancelled);
-    }
+    final response = await session.start(request);
+    final body = await readCappedBody(
+      response,
+      pluginMaxResponseBytes,
+      ensureActive: session.ensureActive,
+    );
+    return PluginHttpResponse(
+      status: response.statusCode,
+      headers: pluginResponseHeaders(response),
+      body: body,
+    );
+  }
+}
 
-    final call = await client.openUrl(request.method, request.url);
+/// The header pairs of [response], lower-case names, one pair per value.
+List<(String, String)> pluginResponseHeaders(HttpClientResponse response) {
+  final headers = <(String, String)>[];
+  response.headers.forEach((name, values) {
+    for (final value in values) {
+      headers.add((name.toLowerCase(), value));
+    }
+  });
+  return headers;
+}
+
+/// One exchange on its own transport (see [PluginHttpClient.newSession]).
+class PluginHttpSession {
+  PluginHttpSession._(this._client);
+
+  final HttpClient _client;
+
+  /// Set by [stop]; a dial that finishes after it is destroyed.
+  bool stopped = false;
+
+  /// Destroys every socket of the session. Safe to call again.
+  void stop() {
+    stopped = true;
+    try {
+      _client.close(force: true);
+    } on Object {
+      // Closing a client that already failed is not an error to report.
+    }
+  }
+
+  /// Throws a `cancelled` failure once the session was stopped.
+  void ensureActive() {
+    if (stopped) throw const FetchFailure(FetchFailureKind.cancelled);
+  }
+
+  /// Sends [request] and returns once the response head is in; redirects are
+  /// not followed and the connection is not kept alive.
+  Future<HttpClientResponse> start(PluginHttpRequest request) async {
+    final call = await _client.openUrl(request.method, request.url);
     call
       ..followRedirects = false
       ..persistentConnection = false;
     for (final MapEntry(key: name, value: value) in request.headers.entries) {
-      // Set through `HttpClient.userAgent` above.
+      // Set through `HttpClient.userAgent`.
       if (name == 'user-agent') continue;
       call.headers.set(name, value);
     }
@@ -190,22 +240,7 @@ class PluginHttpClient {
     }
     final response = await call.close();
     ensureActive();
-    final body = await readCappedBody(
-      response,
-      pluginMaxResponseBytes,
-      ensureActive: ensureActive,
-    );
-    final headers = <(String, String)>[];
-    response.headers.forEach((name, values) {
-      for (final value in values) {
-        headers.add((name.toLowerCase(), value));
-      }
-    });
-    return PluginHttpResponse(
-      status: response.statusCode,
-      headers: headers,
-      body: body,
-    );
+    return response;
   }
 }
 
@@ -217,7 +252,8 @@ class _BlockedAddress implements Exception {
   String toString() => 'BlockedAddress';
 }
 
-PluginHttpFailure _asFailure(Object error) {
+/// Maps anything an exchange threw to a failure that carries no text.
+PluginHttpFailure pluginHttpFailureOf(Object error) {
   if (error is _BlockedAddress) return PluginHttpFailure.blockedAddress;
   if (error is FetchFailure) {
     return switch (error.kind) {

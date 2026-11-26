@@ -113,6 +113,24 @@ class _CountingEngine implements PluginEngine {
     runs.add(request.installId);
     return _inner.run(request, fetch);
   }
+
+  @override
+  Future<EngineResult> runStreaming(
+    EngineRequest request,
+    EngineFetch fetch,
+    EngineStream stream, {
+    required Duration idle,
+    required void Function(String json) onEvent,
+  }) {
+    runs.add(request.installId);
+    return _inner.runStreaming(
+      request,
+      fetch,
+      stream,
+      idle: idle,
+      onEvent: onEvent,
+    );
+  }
 }
 
 Future<bool> _catalogReachable() async {

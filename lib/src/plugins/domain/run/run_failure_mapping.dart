@@ -22,6 +22,7 @@ RunOutcome mapEngineResult(
   EngineResult result, {
   RunCancelCause cause = RunCancelCause.none,
   Duration? rateLimitSeen,
+  String pluginVersion = '',
 }) {
   final failure = result.fetchFailure;
   return switch (result.status) {
@@ -29,12 +30,14 @@ RunOutcome mapEngineResult(
       result.outputJson,
       fetchFailure: failure,
       rateLimitSeen: rateLimitSeen,
+      pluginVersion: pluginVersion,
     ),
     EngineStatus.scriptError => RunScriptError(
       _kindOf(result.errorKind),
       result.errorMessage,
       retryAfter: clampRetryAfter(result.retryAfterSec),
       fetchFailure: failure,
+      pluginVersion: pluginVersion,
     ),
     EngineStatus.timeout => RunFailed(
       RunFailReason.timeout,

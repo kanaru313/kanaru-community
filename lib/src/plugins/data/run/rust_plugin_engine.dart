@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 
 import '../../../rust/api/plugin_runtime.dart' as rust;
+import '../../../rust/api/plugin_stream.dart' as rust;
 import '../../domain/run/plugin_engine.dart';
 import '../../domain/run/run_outcome.dart';
+import 'stream_event_gate.dart';
 
 final _log = Logger('plugin_run');
 
@@ -45,19 +47,7 @@ class RustPluginEngine implements PluginEngine {
   Future<EngineResult> run(EngineRequest request, EngineFetch fetch) async {
     try {
       final result = await rust.runPluginScript(
-        request: rust.PluginScriptRequest(
-          job: request.job,
-          installId: request.installId,
-          files: [
-            for (final f in request.files)
-              rust.PluginSourceFile(name: f.name, code: f.code),
-          ],
-          entry: request.entry,
-          inputJson: request.inputJson,
-          timeoutMs: request.timeoutMs,
-          config: request.config,
-          storageJson: request.storageJson,
-        ),
+        request: _toBridgeRequest(request),
         fetch: (req) async => _toBridge(await fetch(_fromBridge(req))),
       );
       return _fromBridgeResult(result);
@@ -66,7 +56,82 @@ class RustPluginEngine implements PluginEngine {
       return const EngineResult(status: EngineStatus.internal);
     }
   }
+
+  @override
+  Future<EngineResult> runStreaming(
+    EngineRequest request,
+    EngineFetch fetch,
+    EngineStream stream, {
+    required Duration idle,
+    required void Function(String json) onEvent,
+  }) async {
+    StreamEventGate? gate;
+    try {
+      // Attached (sync) before the run starts, so no event is missed.
+      gate = StreamEventGate(rust.pluginJobEvents(job: request.job), onEvent);
+      final result = await rust.runPluginStreamScript(
+        request: _toBridgeRequest(request),
+        options: rust.PluginStreamOptions(
+          idleTimeoutMs: idle.inMilliseconds,
+          events: true,
+        ),
+        fetch: (req) async => _toBridge(await fetch(_fromBridge(req))),
+        stream: (call) async =>
+            streamReplyToBridge(await stream(streamCallFromBridge(call))),
+      );
+      await gate.finish();
+      return _fromBridgeResult(result);
+    } on Object catch (error) {
+      _log.warning('The plugin runtime call failed: ${error.runtimeType}');
+      gate?.close();
+      return const EngineResult(status: EngineStatus.internal);
+    }
+  }
 }
+
+rust.PluginScriptRequest _toBridgeRequest(EngineRequest request) =>
+    rust.PluginScriptRequest(
+      job: request.job,
+      installId: request.installId,
+      files: [
+        for (final f in request.files)
+          rust.PluginSourceFile(name: f.name, code: f.code),
+      ],
+      entry: request.entry,
+      inputJson: request.inputJson,
+      timeoutMs: request.timeoutMs,
+      config: request.config,
+      storageJson: request.storageJson,
+    );
+
+/// A bridge stream call as the engine's plain type.
+EngineStreamCall streamCallFromBridge(rust.PluginStreamCall c) =>
+    EngineStreamCall(
+      installId: c.installId,
+      stream: c.stream,
+      op: switch (c.op) {
+        rust.PluginStreamOp.open => EngineStreamOp.open,
+        rust.PluginStreamOp.read => EngineStreamOp.read,
+        rust.PluginStreamOp.close => EngineStreamOp.close,
+      },
+      request: c.request == null ? null : _fromBridge(c.request!),
+      maxBytes: c.maxBytes,
+      waitMs: c.waitMs,
+      lifetimeMs: c.lifetimeMs,
+    );
+
+/// The engine's stream reply as the bridge type.
+rust.PluginStreamReply streamReplyToBridge(EngineStreamReply r) =>
+    rust.PluginStreamReply(
+      outcome: _outcomeToBridge(r.outcome),
+      status: r.status,
+      url: r.url,
+      headers: r.headers,
+      retryAfterSec: r.retryAfterSec,
+      chunk: r.chunk,
+      done: r.done,
+      sends: r.sends,
+    );
 
 EngineFetchRequest _fromBridge(rust.PluginFetchRequest r) => EngineFetchRequest(
   installId: r.installId,
@@ -80,18 +145,7 @@ EngineFetchRequest _fromBridge(rust.PluginFetchRequest r) => EngineFetchRequest(
 
 rust.PluginFetchResponse _toBridge(EngineFetchResponse r) =>
     rust.PluginFetchResponse(
-      outcome: switch (r.outcome) {
-        EngineFetchOutcome.ok => rust.PluginFetchOutcome.ok,
-        EngineFetchOutcome.network => rust.PluginFetchOutcome.network,
-        EngineFetchOutcome.blockedHost => rust.PluginFetchOutcome.blockedHost,
-        EngineFetchOutcome.notConsented => rust.PluginFetchOutcome.notConsented,
-        EngineFetchOutcome.abandoned => rust.PluginFetchOutcome.abandoned,
-        EngineFetchOutcome.invalidRequest =>
-          rust.PluginFetchOutcome.invalidRequest,
-        EngineFetchOutcome.invalidResponse =>
-          rust.PluginFetchOutcome.invalidResponse,
-        EngineFetchOutcome.rateLimited => rust.PluginFetchOutcome.rateLimited,
-      },
+      outcome: _outcomeToBridge(r.outcome),
       status: r.status,
       url: r.url,
       headers: r.headers,
@@ -148,3 +202,14 @@ FetchFailureInfo _failureOf(rust.PluginFetchFailure f) => FetchFailureInfo(
       : Duration(seconds: f.retryAfterSec!),
   message: f.message,
 );
+
+rust.PluginFetchOutcome _outcomeToBridge(EngineFetchOutcome o) => switch (o) {
+  EngineFetchOutcome.ok => rust.PluginFetchOutcome.ok,
+  EngineFetchOutcome.network => rust.PluginFetchOutcome.network,
+  EngineFetchOutcome.blockedHost => rust.PluginFetchOutcome.blockedHost,
+  EngineFetchOutcome.notConsented => rust.PluginFetchOutcome.notConsented,
+  EngineFetchOutcome.abandoned => rust.PluginFetchOutcome.abandoned,
+  EngineFetchOutcome.invalidRequest => rust.PluginFetchOutcome.invalidRequest,
+  EngineFetchOutcome.invalidResponse => rust.PluginFetchOutcome.invalidResponse,
+  EngineFetchOutcome.rateLimited => rust.PluginFetchOutcome.rateLimited,
+};

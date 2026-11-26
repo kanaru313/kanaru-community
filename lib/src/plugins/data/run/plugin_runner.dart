@@ -19,12 +19,15 @@ import 'run_admission.dart';
 import 'run_cancel.dart';
 import 'run_gate.dart';
 import 'run_log_recorder.dart';
+import 'run_dispatch_support.dart';
 import 'run_setup.dart';
+import 'stream_dispatch.dart';
+import 'stream_fetch_handler.dart';
+import 'stream_table.dart';
+
+export 'run_dispatch_support.dart' show maxRunWall;
 
 final _log = Logger('plugin_run');
-
-/// Longest wall time of one run, whatever its request asks for.
-const maxRunWall = Duration(seconds: 90);
 
 /// Time the runtime gets after the run wall before the runner gives up on it.
 const outerDeadlineGrace = Duration(seconds: 30);
@@ -50,9 +53,15 @@ class PluginRunner {
     required this._storage,
     required this._recorder,
     RunAdmission? admission,
+    RunAdmission? streamAdmission,
+    this._streamHandler,
+    this._streamTables = StreamTable.new,
     this.spacing = pluginSpacing,
     this.grace = outerDeadlineGrace,
-  }) : _admission = admission ?? RunAdmission();
+    this._streamWait = streamAdmissionWait,
+    this._settle = streamSettle,
+  }) : _admission = admission ?? RunAdmission(),
+       _streamAdmission = streamAdmission ?? RunAdmission(slots: 1);
 
   final PluginEngine _engine;
   final PluginFetchHandler _handler;
@@ -64,8 +73,23 @@ class PluginRunner {
   final PluginStorageStore _storage;
   final RunLogRecorder _recorder;
   final RunAdmission _admission;
+
+  /// The one slot of streaming runs. Owned by the app (a provider nothing
+  /// rebuilds), so a rebuilt runner still sees a stream that is running.
+  final RunAdmission _streamAdmission;
+
+  /// Null: a streaming request ends `RunFailed(internal)`.
+  final StreamFetchHandler? _streamHandler;
+  final StreamTableFactory _streamTables;
   final Duration spacing;
   final Duration grace;
+
+  /// Longest wait of a streaming run for its slot.
+  final Duration _streamWait;
+
+  /// Time after the outer deadline before a stream job the runtime has not
+  /// released is given up on (see [streamSettle]).
+  final Duration _settle;
   bool _engineReset = false;
 
   /// Runs [request]. Waits for the plugin's gate and for a runtime slot; a
@@ -119,6 +143,10 @@ class PluginRunner {
     if (cancel != null && cancel.isCancelled) {
       return const RunCancelled(RunCancelReason.caller);
     }
+    if (request.stream != null && _streamHandler == null) {
+      _log.warning('A streaming run was asked for without a stream handler');
+      return const RunFailed(RunFailReason.internal);
+    }
     final until = _pauses.until(id);
     if (until != null) return RunPaused(until);
 
@@ -142,19 +170,28 @@ class PluginRunner {
       ?cancel?.listen(abort.cancel),
       lease.changed.listen(abort.cancel),
     ];
-    final RunSlot? slot;
+    final AdmissionResult granted;
     try {
-      slot = await _admission.acquire(abort: abort);
+      granted = await _takeSlot(request, abort);
     } finally {
       for (final stop in stopWaiting) {
         stop();
       }
     }
-    if (slot != null && (abort.isCancelled)) {
-      slot.release();
-      return _beforeDispatch(cancel);
+    final RunSlot slot;
+    switch (granted) {
+      // A wait that ran out is a busy answer, never a restart.
+      case AdmissionTimedOut():
+        return const RunBusy();
+      case AdmissionAborted():
+        return _beforeDispatch(cancel);
+      case AdmissionGranted(slot: final taken):
+        if (abort.isCancelled) {
+          taken.release();
+          return _beforeDispatch(cancel);
+        }
+        slot = taken;
     }
-    if (slot == null) return _beforeDispatch(cancel);
 
     try {
       if (!_engineReset) {
@@ -166,6 +203,21 @@ class PluginRunner {
       slot.release();
       rethrow;
     }
+  }
+
+  Future<AdmissionResult> _takeSlot(
+    PluginRunRequest request,
+    CancelToken abort,
+  ) {
+    if (request.stream != null) {
+      return _streamAdmission.acquireWithin(_streamWait, abort: abort);
+    }
+    return _admission
+        .acquire(abort: abort)
+        .then<AdmissionResult>(
+          (slot) =>
+              slot == null ? const AdmissionAborted() : AdmissionGranted(slot),
+        );
   }
 
   RunOutcome? _beforeDispatch(RunCancel? cancel) =>
@@ -181,7 +233,8 @@ class PluginRunner {
     RunSlot slot,
   ) async {
     final id = request.installId;
-    final wall = _wallOf(request.timeout);
+    final stream = request.stream;
+    final wall = runWall(request.timeout, spacing, streaming: stream != null);
     // Encoded before the job is begun: a failure here leaves no job behind.
     final inputJson = jsonEncode(request.input);
     final job = _engine.begin();
@@ -214,29 +267,39 @@ class PluginRunner {
       }
     }
 
-    final Future<EngineResult> started;
+    final engineRequest = EngineRequest(
+      job: job,
+      installId: id,
+      files: prepared.files,
+      entry: prepared.entry,
+      inputJson: inputJson,
+      timeoutMs: wall.inMilliseconds,
+      config: prepared.config,
+      storageJson: prepared.storageJson,
+    );
+    Future<EngineFetchResponse> fetch(EngineFetchRequest req) =>
+        _fetch(req, context);
+    final StartedRun startedRun;
     try {
-      started = _engine.run(
-        EngineRequest(
-          job: job,
-          installId: id,
-          files: prepared.files,
-          entry: prepared.entry,
-          inputJson: inputJson,
-          timeoutMs: wall.inMilliseconds,
-          config: prepared.config,
-          storageJson: prepared.storageJson,
-        ),
-        (req) => _fetch(req, context),
+      startedRun = startEngineRun(
+        engine: _engine,
+        request: engineRequest,
+        fetch: fetch,
+        context: context,
+        jobCancel: jobCancel,
+        slot: slot,
+        hungAfter: wall + grace + _settle,
+        stream: stream,
+        streamHandler: _streamHandler,
+        streamTables: _streamTables,
       );
     } on Object {
       // The job was begun but never ran: tell the runtime to forget it.
       _cancelQuietly(job);
       rethrow;
     }
-    // The slot stays taken until the runtime really let go of the job, even
-    // when the run was already answered at its deadline.
-    final running = started.whenComplete(slot.release);
+    final streamRun = startedRun.streamRun;
+    final running = startedRun.running;
 
     final unlisten = <void Function()>[];
     Timer? timer;
@@ -259,22 +322,26 @@ class PluginRunner {
               result,
               cause: cause,
               rateLimitSeen: context.rateLimitSeen,
+              pluginVersion: prepared.pluginVersion,
             );
       // Read before the listeners go: a cause after the result is ignored.
       final switched =
           cause == RunCancelCause.pluginChanged || lease.changed.isCancelled;
-      final storageWritable = cause == RunCancelCause.none && !switched;
+      final storageWritable =
+          cause == RunCancelCause.none && !switched && request.persistStorage;
       // The job is over: a late cancel or the deadline must not reach it
       // while the write-back waits in the queue.
       deadlineTimer.cancel();
       for (final off in unlisten) {
         off();
       }
+      // Events and streams of this run end here, whatever the engine still does.
+      streamRun?.close();
       // A run the gate or the caller stopped, or that hit its deadline, leaves
       // the storage as it was.
       final newStorage = result?.storageJson;
       if (newStorage != null && storageWritable) {
-        await _writeBack(id, newStorage, prepared);
+        await writeBackStorage(_storage, id, newStorage, prepared);
       }
       // A run the plugin switch stopped is not a plugin fault: not logged.
       if (!switched) {
@@ -293,32 +360,8 @@ class PluginRunner {
       for (final off in unlisten) {
         off();
       }
+      streamRun?.close();
       jobCancel.cancel();
-    }
-  }
-
-  /// Saves the storage the script changed, before the outcome is returned, so
-  /// the next run of the plugin reads it. The slot is already free (it goes
-  /// with the engine job). A refused write (the plugin was updated, removed or
-  /// its storage cleared meanwhile) is silent; a failed one logs its type and
-  /// the outcome still stands.
-  ///
-  /// The write is a job of the plugin write queue and the run waits for it, so
-  /// no queue job may ever wait on a plugin run (it would wait for itself).
-  Future<void> _writeBack(
-    String installId,
-    String storageJson,
-    PreparedRun prepared,
-  ) async {
-    try {
-      await _storage.writeBack(
-        installId,
-        storageJson,
-        expectedRev: prepared.storageRev,
-        expectedUpdatedAt: prepared.rowUpdatedAt,
-      );
-    } on Object catch (error) {
-      _log.warning('Plugin storage was not saved: ${error.runtimeType}');
     }
   }
 
@@ -330,13 +373,6 @@ class PluginRunner {
     } on Object catch (error) {
       _log.warning('A plugin job could not be cancelled: ${error.runtimeType}');
     }
-  }
-
-  /// `min(90 s, timeout + 9 x spacing)`: the allowance for the pauses between
-  /// the up-to-ten sends of one call.
-  Duration _wallOf(Duration timeout) {
-    final wall = timeout + spacing * 9;
-    return wall > maxRunWall ? maxRunWall : wall;
   }
 
   Future<EngineFetchResponse> _fetch(

@@ -428,14 +428,14 @@ fn an_answer_that_forgets_to_count_still_costs_one_send() {
 }
 
 #[test]
-fn a_request_body_over_256_kib_is_refused_before_it_crosses() {
+fn a_request_body_over_1_mib_is_refused_before_it_crosses() {
     let _t = common::test();
     let host = FakeHost::answering(|_| ok_response(200, b""));
     let r = run(
         "function execute() {
-           var big = 'x'.repeat(256 * 1024 + 1), name;
+           var big = 'x'.repeat(1024 * 1024 + 1), name;
            try { fetch('https://t.test/', {method: 'POST', body: big}); } catch (e) { name = e.name; }
-           fetch('https://t.test/', {method: 'POST', body: 'x'.repeat(256 * 1024)});
+           fetch('https://t.test/', {method: 'POST', body: 'x'.repeat(1024 * 1024)});
            return Response.success(name);
          }",
         host.clone(),

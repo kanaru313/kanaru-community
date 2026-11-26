@@ -24,8 +24,9 @@ pub const MAX_OUTPUT_BYTES: usize = 2 * 1024 * 1024;
 pub const MAX_ERROR_MESSAGE_CHARS: usize = 1000;
 /// Longest thrown-error stack kept, in bytes.
 pub const MAX_ERROR_STACK_BYTES: usize = 16 * 1024;
-/// Largest request body a script may hand to `fetch`.
-pub const MAX_FETCH_REQUEST_BODY_BYTES: usize = 256 * 1024;
+/// Largest request body a script may hand to `fetch`, for every plugin kind
+/// (a chat keeps its whole conversation in the body); fits the heap above.
+pub const MAX_FETCH_REQUEST_BODY_BYTES: usize = 1024 * 1024;
 /// HTTP sends (retries included) one call may use; the next `fetch` is refused.
 pub const MAX_FETCH_SENDS: u32 = 10;
 /// Rust-side bytes one job may hold in fetch bodies that were not read yet.
@@ -187,7 +188,7 @@ mod tests {
         assert_eq!(MAX_OUTPUT_BYTES, 2 * MIB);
         assert_eq!(MAX_ERROR_MESSAGE_CHARS, 1000);
         assert_eq!(MAX_ERROR_STACK_BYTES, 16 * 1024);
-        assert_eq!(MAX_FETCH_REQUEST_BODY_BYTES, 256 * 1024);
+        assert_eq!(MAX_FETCH_REQUEST_BODY_BYTES, 1024 * 1024);
         assert_eq!(MAX_FETCH_SENDS, 10);
         assert_eq!(RUST_BYTE_BUDGET, 16 * MIB);
         assert_eq!(MAX_HTML_INPUT_BYTES, 4 * MIB);

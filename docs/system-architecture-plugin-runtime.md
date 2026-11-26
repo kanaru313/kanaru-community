@@ -189,6 +189,19 @@ The only Dart caller is `PluginRunner` (`lib/src/plugins/data/run/`, see [system
 - **Cancel.** The runner calls `cancelPluginJob` for a caller's cancel, a plugin switch (run gate) and the outer deadline. A job that ends `Cancelled` is mapped by who stopped it.
 - **Fetch.** Each run passes its own fetch closure (the callback is per call; a request carries `install_id` but no job id), so the handler judges a request against the snapshot of its own run. The Dart handler (`HttpPluginFetchHandler`, see [system-architecture-plugins.md](./system-architecture-plugins.md) Runs) is the only network path: allowlist, public-only address check, header drops, no redirects, 4 MiB cap, 100 ms spacing per plugin.
 
+### Streaming runs (Dart side)
+
+A request with `stream` set (`PluginRunRequest.stream`: idle time and an `onEvent` callback) goes through the same `PluginRunner.run` path as any run (gate, pause, setup, required settings, run log, pause from the outcome); only these parts differ:
+
+- **Engine call.** `engine.runStreaming` instead of `run`. `RustPluginEngine` attaches a `StreamEventGate` to the job's event stream before the run starts, delivers the events in order, and after the script result waits for the event stream to end for at most 2 s (`settle`), then closes the gate. A throw from `onEvent` is logged by type only and does not end the run.
+- **Stream host.** `StreamFetchHandler` answers the runtime's `open` / `read` / `close` calls. An open is judged and recorded exactly like a one-shot fetch (`judgeFetch`, `recordFetch`: consent, allowlist, public address, spacing, headers) and the body is read through `PluginHttpStreamClient`. Each dispatch owns one `StreamTable` (at most 2 streams, as in the runtime), built by a factory from the job's cancel token. The table seals when the job is cancelled and is disposed when the run ends, which closes every stream still open.
+- **Event door.** `StreamDispatch` wraps the caller's `onEvent`: after the run returned its outcome (deadline, settle timeout, error or normal end) events that still arrive are dropped.
+- **Admission.** A second `RunAdmission(slots: 1)` (`streamRunAdmissionProvider`, a provider that watches nothing, so rebuilding `pluginRunnerProvider` does not forget a stream that is running). A run waits at most 10 s for it: the wait ends as granted, aborted (caller cancel or plugin switch: the run is started over or cancelled as for any run) or timed out. A timed-out wait is `RunBusy` and never starts the run over. A slot granted in the same tick as the timer is released and the answer is `RunBusy`. Normal runs use the 4-slot admission and are never blocked by a stream.
+- **Wall.** `min(300 s, timeout + 9 x spacing)` for a stream run (90 s for a normal one), outer deadline wall + 30 s (`RunFailed(timeout)`). The slot is kept until the engine releases the job; if it has not by wall + 30 s + 2 s the runner logs it, releases the slot and the caller has already seen `RunFailed(timeout)`. A later `Busy` from the runtime is `RunBusy`.
+- **Storage.** `persistStorage: false` (chat runs): the run starts with empty storage (the stored value is not read) and what the script returns is never written back.
+- **Outcome.** `RunOk` and `RunScriptError` carry `pluginVersion`, the version of the package that really ran (a silent restart after a plugin switch re-reads the row).
+- **Logs.** `RunLogRecorder` writes a failed stream run with its status, error kind and only the leading `ai:<code>` of the message: no input, message tail, console lines or stack. Masks (settings, storage, request headers) still apply to what is written. Clearing the log uses the existing `PluginLogOps.clear`.
+
 ## Tests
 
 `crates/kanaru_plugin_runtime/tests/` share one runtime per test binary behind a

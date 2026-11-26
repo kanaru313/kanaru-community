@@ -6,6 +6,8 @@ import 'package:kanaru/src/plugins/data/run/plugin_pauses.dart';
 import 'package:kanaru/src/plugins/data/run/plugin_runner.dart';
 import 'package:kanaru/src/plugins/data/run/run_admission.dart';
 import 'package:kanaru/src/plugins/data/run/run_log_recorder.dart';
+import 'package:kanaru/src/plugins/data/run/stream_fetch_handler.dart';
+import 'package:kanaru/src/plugins/data/run/stream_table.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_config_store.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_storage_store.dart';
 import 'package:kanaru/src/plugins/domain/install/install_id.dart';
@@ -13,6 +15,8 @@ import 'package:kanaru/src/plugins/domain/install/install_result.dart';
 import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
 import 'package:kanaru/src/plugins/domain/run/plugin_engine.dart';
 import 'package:kanaru/src/plugins/domain/run/run_request.dart';
+
+import 'stream_runner_support.dart';
 
 import '../../data/install_test_support.dart';
 import 'fake_plugin_engine.dart';
@@ -60,9 +64,14 @@ class RunnerHarness {
     PluginConfigStore? config,
     PluginStorageStore? storage,
     DateTime Function()? clock,
+    StreamFetchHandler? streamHandler,
+    RunAdmission? streamAdmission,
+    Duration streamWait = const Duration(seconds: 10),
+    Duration settle = const Duration(milliseconds: 50),
   }) : engine = engine ?? FakePluginEngine(),
        handler = handler ?? RecordingFetchHandler(),
-       pauses = PluginPauses() {
+       pauses = PluginPauses(),
+       streamAdmission = streamAdmission ?? RunAdmission(slots: 1) {
     runner = PluginRunner(
       engine: this.engine,
       handler: this.handler,
@@ -80,6 +89,15 @@ class RunnerHarness {
         clock: clock,
       ),
       admission: RunAdmission(slots: slots),
+      streamAdmission: this.streamAdmission,
+      streamHandler: streamHandler ?? FakeStreamHandler(),
+      streamTables: (cancel) {
+        final table = StreamTable(cancel);
+        tables.add(table);
+        return table;
+      },
+      streamWait: streamWait,
+      settle: settle,
       spacing: spacing,
       grace: grace,
     );
@@ -89,6 +107,10 @@ class RunnerHarness {
   final FakePluginEngine engine;
   final RecordingFetchHandler handler;
   final PluginPauses pauses;
+  final RunAdmission streamAdmission;
+
+  /// The stream table of every streaming dispatch, in order.
+  final tables = <StreamTable>[];
   late final PluginRunner runner;
 
   void dispose() => pauses.dispose();
@@ -113,6 +135,8 @@ PluginRunRequest runRequest({
   Duration timeout = const Duration(seconds: 30),
   Map<String, String> configAppend = const {},
   Set<PluginKind> kinds = const {},
+  StreamOptions? stream,
+  bool persistStorage = true,
 }) => PluginRunRequest(
   installId: installId ?? demoPluginId,
   script: script,
@@ -120,6 +144,8 @@ PluginRunRequest runRequest({
   timeout: timeout,
   configAppend: configAppend,
   kinds: kinds,
+  stream: stream,
+  persistStorage: persistStorage,
 );
 
 /// Spins the event loop until [done] (at most ~2 s).

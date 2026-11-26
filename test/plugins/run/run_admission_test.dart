@@ -76,4 +76,59 @@ void main() {
     expect(await admission.acquire(abort: abort), isNull);
     expect(admission.inUse, 0);
   });
+
+  group('acquireWithin', () {
+    test('grants a free slot and a slot freed in time', () async {
+      final admission = RunAdmission(slots: 1);
+      final free = await admission.acquireWithin(const Duration(seconds: 1));
+      final held = (free as AdmissionGranted).slot;
+
+      final waiting = admission.acquireWithin(const Duration(seconds: 5));
+      await turns();
+      held.release();
+
+      final granted = await waiting as AdmissionGranted;
+      expect(admission.inUse, 1);
+      granted.slot.release();
+      expect(admission.inUse, 0);
+    });
+
+    test('times out without holding anything', () async {
+      final admission = RunAdmission(slots: 1);
+      final held = (await admission.acquire())!;
+
+      final result = await admission.acquireWithin(
+        const Duration(milliseconds: 30),
+      );
+
+      expect(result, isA<AdmissionTimedOut>());
+      expect(admission.waiting, 0);
+      held.release();
+      expect(admission.inUse, 0);
+    });
+
+    test('an abort ends the wait as aborted, before and during', () async {
+      final admission = RunAdmission(slots: 1);
+      final held = (await admission.acquire())!;
+      final before = RunCancel()..cancel();
+      expect(
+        await admission.acquireWithin(
+          const Duration(seconds: 1),
+          abort: before,
+        ),
+        isA<AdmissionAborted>(),
+      );
+
+      final during = RunCancel();
+      final waiting = admission.acquireWithin(
+        const Duration(seconds: 5),
+        abort: during,
+      );
+      await turns();
+      during.cancel();
+      expect(await waiting, isA<AdmissionAborted>());
+      expect(admission.waiting, 0);
+      held.release();
+    });
+  });
 }
