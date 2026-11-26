@@ -2091,6 +2091,7 @@
   "settingsSeekBarOptLoose": "Loose",
   "settingsSeekBarOptMid": "Medium",
   "settingsSeekBarOptThick": "Thick",
+  "settingsSeekBarOptDense": "Dense",
   "settingsSeekBarOptLow": "Low",
   "settingsSeekBarOptHigh": "High",
   "settingsSeekBarOptShort": "Short",

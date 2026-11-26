@@ -68,7 +68,7 @@ void main() {
         ]) {
           expect(find.text(row), findsOneWidget);
         }
-        await _pick(tester, 'Thick');
+        await _pick(tester, 'Dense');
         await _pick(tester, 'By height');
         await _pick(tester, 'Outline');
         await _pick(tester, 'Jelly');
@@ -162,7 +162,7 @@ void main() {
     const flat = FlatSeekOptions(effect: FlatEffect.sparks);
     await h.container.read(squiggleSeekOptionsProvider.notifier).set(squiggle);
     await h.container.read(flatSeekOptionsProvider.notifier).set(flat);
-    await _pick(tester, 'Thick');
+    await _pick(tester, 'Dense');
     await tester.tap(find.text('Reset to default'));
     await tester.pumpAndSettle();
     expect(h.container.read(waveSeekOptionsProvider), WaveSeekOptions.defaults);
@@ -210,7 +210,7 @@ void main() {
         )
         .look;
     expect(look().density, KWaveDensity.mid);
-    await _pick(tester, 'Thick');
+    await _pick(tester, 'Dense');
     expect(look().density, KWaveDensity.dense);
   });
 

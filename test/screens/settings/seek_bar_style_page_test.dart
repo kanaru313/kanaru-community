@@ -1,6 +1,7 @@
 import 'dart:ui' show Tristate;
 
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart' show IconButton;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/screens/settings/ui/appearance/seek_bar_preview_card.dart';
@@ -154,19 +155,19 @@ void main() {
       location: SettingsPaths.seekBar,
       reduceMotion: true,
     );
-    expect(byIconButton('Play'), findsOneWidget);
-    expect(byIconButton('Pause'), findsNothing);
-    await tester.tap(byIconButton('Play'));
+    expect(_playPause('Play'), findsOneWidget);
+    expect(_playPause('Pause'), findsNothing);
+    await tester.tap(_playPause('Play'));
     await tester.pump();
     final clock = tester.widget<SeekDemoBar>(find.byType(SeekDemoBar)).clock;
     final at = clock.position;
     await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 16));
-    expect(byIconButton('Pause'), findsOneWidget);
+    expect(_playPause('Pause'), findsOneWidget);
     expect(clock.position, greaterThan(at));
-    await tester.tap(byIconButton('Pause'));
+    await tester.tap(_playPause('Pause'));
     await tester.pump();
-    expect(byIconButton('Play'), findsOneWidget);
+    expect(_playPause('Play'), findsOneWidget);
   });
 
   testWidgets('the preview seeks its own clock and no player', (tester) async {
@@ -322,3 +323,9 @@ void main() {
     expect(KLayout.settingsWide, 760);
   });
 }
+
+/// The filled play / pause button of the preview block, by its tooltip.
+Finder _playPause(String tooltip) => find.byWidgetPredicate(
+  (w) => w is IconButton && w.tooltip == tooltip,
+  description: 'IconButton "$tooltip"',
+);

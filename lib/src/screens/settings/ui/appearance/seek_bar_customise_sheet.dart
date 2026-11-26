@@ -70,7 +70,7 @@ class SeekBarCustomiseSheet extends ConsumerWidget {
         _row(l10n.settingsSeekBarRowDensity, o.density, {
           WaveDensity.loose: l10n.settingsSeekBarOptLoose,
           WaveDensity.mid: l10n.settingsSeekBarOptMid,
-          WaveDensity.dense: l10n.settingsSeekBarOptThick,
+          WaveDensity.dense: l10n.settingsSeekBarOptDense,
         }, (v) => notifier.set(o.copyWith(density: v))),
         _row(l10n.settingsSeekBarRowPlayed, o.played, {
           WavePlayed.single: l10n.settingsSeekBarOptSingle,

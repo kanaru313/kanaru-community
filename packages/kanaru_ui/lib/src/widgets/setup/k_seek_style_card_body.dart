@@ -40,7 +40,14 @@ class SeekStyleCardBody extends StatelessWidget {
     final fallback = this.fallback;
     final action = this.action;
     final column = Padding(
-      padding: const EdgeInsets.all(KSpace.x3),
+      // The mockup's 10 / 10 / 12 inside its 2 px border: the border here
+      // is paint only, so it is part of the padding.
+      padding: const EdgeInsets.fromLTRB(
+        KSpace.x3,
+        KSpace.x3,
+        KSpace.x3,
+        KSpace.x3 + 2,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

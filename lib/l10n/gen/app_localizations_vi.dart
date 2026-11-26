@@ -2798,6 +2798,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsSeekBarOptThick => 'Dày';
 
   @override
+  String get settingsSeekBarOptDense => 'Dày';
+
+  @override
   String get settingsSeekBarOptLow => 'Thấp';
 
   @override

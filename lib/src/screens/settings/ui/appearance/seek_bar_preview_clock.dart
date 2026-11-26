@@ -19,8 +19,8 @@ const Duration _maxStep = Duration(milliseconds: 50);
 /// It runs a single [Ticker] only while the clock is [playing]. Under reduced
 /// motion the clock starts paused (the button shows Play, never a frozen
 /// "playing"); pressing Play runs it, because the position is playback, not
-/// decoration (the bars switch their own effects off). The ticker comes from the page's
-/// [TickerProvider], so it is muted (no frames scheduled) while that page is
+/// decoration (the bars switch their own effects off). The ticker comes from
+/// the page's [TickerProvider], so it is muted (no frames scheduled) while that page is
 /// covered by an opaque route (`TickerMode`).
 ///
 /// [notifyListeners] fires on every position change. [playingListenable] only
@@ -60,11 +60,12 @@ class SeekPreviewClock extends ChangeNotifier {
 
   set motionAllowed(bool value) {
     if (_disposed) return;
+    final changed = value != _motionAllowed;
     _motionAllowed = value;
     if (!_motionKnown) {
       _motionKnown = true;
       _playing.value = value;
-    } else if (!value) {
+    } else if (changed && !value) {
       _playing.value = false;
     }
     _sync();

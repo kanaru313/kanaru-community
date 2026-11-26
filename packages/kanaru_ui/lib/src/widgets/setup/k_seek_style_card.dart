@@ -143,7 +143,7 @@ class _KSeekStyleCardState extends State<KSeekStyleCard> {
                           scheme.surfaceContainerLow,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: KRadius.md,
+                          borderRadius: KRadius.lg,
                           side: BorderSide(
                             color: selected
                                 ? scheme.primary

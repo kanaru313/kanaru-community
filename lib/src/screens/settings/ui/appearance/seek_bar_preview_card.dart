@@ -111,24 +111,34 @@ class SeekPreviewCard extends ConsumerWidget {
       color: scheme.surfaceContainerLow,
       shape: KShape.of(KRadius.lg),
       child: Padding(
-        padding: const EdgeInsets.all(KSpace.x4),
+        padding: const EdgeInsets.fromLTRB(
+          KSpace.x3,
+          KSpace.x3,
+          KSpace.x3,
+          KSpace.x2,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SeekDemoBar(clock: clock, style: style),
-            const KGap(KSpace.x2),
+            const KGap(6),
             Row(
               children: [
                 ValueListenableBuilder<bool>(
                   valueListenable: clock.playingListenable,
-                  builder: (context, playing, _) => KIconButton(
-                    icon: playing ? KIcons.pause : KIcons.play,
-                    size: KIconSize.sm,
-                    tooltip: playing ? l10n.playbackPause : l10n.playbackPlay,
-                    onPressed: clock.togglePlaying,
+                  // The filled disc of the Now Playing button, 40 dp.
+                  builder: (context, playing, _) => KIconButton.yieldSpace(
+                    child: IconButton.filled(
+                      icon: Icon(playing ? KIcons.pause : KIcons.play),
+                      style: IconButton.styleFrom(
+                        fixedSize: const Size.square(40),
+                      ),
+                      tooltip: playing ? l10n.playbackPause : l10n.playbackPlay,
+                      onPressed: clock.togglePlaying,
+                    ),
                   ),
                 ),
-                const KGap(KSpace.x2),
+                const KGap(KSpace.x3),
                 Expanded(
                   child: Text(
                     l10n.settingsSeekBarPreviewHint,

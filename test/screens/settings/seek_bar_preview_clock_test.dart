@@ -135,6 +135,24 @@ void main() {
     expect(clock.position, greaterThan(at));
   });
 
+  testWidgets('repeating reduced motion does not pause a preview the user '
+      'started', (tester) async {
+    final clock = await _pump(tester, motion: false);
+    clock.togglePlaying();
+    await tester.pump();
+    clock.motionAllowed = false;
+    expect(clock.playing, isTrue);
+  });
+
+  testWidgets('motion turning off after it was on pauses the preview', (
+    tester,
+  ) async {
+    final clock = await _pump(tester);
+    expect(clock.playing, isTrue);
+    clock.motionAllowed = false;
+    expect(clock.playing, isFalse);
+  });
+
   testWidgets('a clock used after it is disposed does not throw', (
     tester,
   ) async {

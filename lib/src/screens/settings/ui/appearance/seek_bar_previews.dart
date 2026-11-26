@@ -42,8 +42,7 @@ Widget buildSeekStyleBar({
   VoidCallback? onSeekStart,
   VoidCallback? onSeekEnd,
 }) {
-  final kind = seekKindOf(style);
-  if (kind != null) {
+  Widget waveBar(KSeekKind kind) {
     return KWaveformSeekBar(
       position: position,
       duration: duration,
@@ -61,7 +60,8 @@ Widget buildSeekStyleBar({
       onSeekEnd: onSeekEnd,
     );
   }
-  if (style == SeekBarStyle.squiggle) {
+
+  Widget squiggleBar() {
     return KSquiggleSeekBar(
       position: position,
       duration: duration,
@@ -78,20 +78,32 @@ Widget buildSeekStyleBar({
       onSeekEnd: onSeekEnd,
     );
   }
-  return KFlatStyledSeekBar(
-    position: position,
-    duration: duration,
-    onSeek: onSeek,
-    look: flatLookOf(flat),
-    playing: playing,
-    semanticLabel: semanticLabel,
-    semanticValue: semanticValue,
-    bubbleLabel: bubbleLabel,
-    cancelLabel: cancelLabel,
-    onScrub: onScrub,
-    onSeekStart: onSeekStart,
-    onSeekEnd: onSeekEnd,
-  );
+
+  Widget flatBar() {
+    return KFlatStyledSeekBar(
+      position: position,
+      duration: duration,
+      onSeek: onSeek,
+      look: flatLookOf(flat),
+      playing: playing,
+      semanticLabel: semanticLabel,
+      semanticValue: semanticValue,
+      bubbleLabel: bubbleLabel,
+      cancelLabel: cancelLabel,
+      onScrub: onScrub,
+      onSeekStart: onSeekStart,
+      onSeekEnd: onSeekEnd,
+    );
+  }
+
+  return switch (style) {
+    SeekBarStyle.bars => waveBar(KSeekKind.bars),
+    SeekBarStyle.dots => waveBar(KSeekKind.dots),
+    SeekBarStyle.line => waveBar(KSeekKind.line),
+    SeekBarStyle.mirror => waveBar(KSeekKind.mirror),
+    SeekBarStyle.squiggle => squiggleBar(),
+    SeekBarStyle.flat => flatBar(),
+  };
 }
 
 /// A picture of one seek bar style on a style card, drawn at the options of

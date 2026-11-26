@@ -4620,6 +4620,12 @@ abstract class AppLocalizations {
   /// **'Thick'**
   String get settingsSeekBarOptThick;
 
+  /// No description provided for @settingsSeekBarOptDense.
+  ///
+  /// In en, this message translates to:
+  /// **'Dense'**
+  String get settingsSeekBarOptDense;
+
   /// No description provided for @settingsSeekBarOptLow.
   ///
   /// In en, this message translates to:

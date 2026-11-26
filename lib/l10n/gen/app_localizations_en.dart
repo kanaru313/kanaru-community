@@ -3100,6 +3100,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSeekBarOptThick => 'Thick';
 
   @override
+  String get settingsSeekBarOptDense => 'Dense';
+
+  @override
   String get settingsSeekBarOptLow => 'Low';
 
   @override
