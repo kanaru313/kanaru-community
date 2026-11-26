@@ -3,8 +3,11 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:kanaru_ui/src/widgets/media/flat_effects_painter.dart';
+import 'package:kanaru_ui/src/widgets/media/flat_geometry.dart';
 
 import '../support/host.dart';
+import '../support/paint_probe.dart';
 
 const _total = Duration(seconds: 100);
 
@@ -177,18 +180,106 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('hover grows the track', (tester) async {
-    await tester.pumpWidget(host(Center(child: _bar(seeks: []))));
-    double trackHeight() => tester
-        .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
-        .first
-        .constraints!
-        .maxHeight;
-    expect(trackHeight(), KSeekBar.trackHeight);
-    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
-    await mouse.addPointer(location: tester.getCenter(find.byType(KSeekBar)));
-    await tester.pump(const Duration(milliseconds: 200));
-    expect(trackHeight(), KSeekBar.trackHeightActive);
+  group('default flat look', () {
+    FlatSeekPainter painter(WidgetTester tester) => tester
+        .widgetList<CustomPaint>(
+          find.descendant(
+            of: find.byType(KSeekBar),
+            matching: find.byType(CustomPaint),
+          ),
+        )
+        .map((c) => c.painter)
+        .whereType<FlatSeekPainter>()
+        .single;
+
+    testWidgets('hover grows the track', (tester) async {
+      await tester.pumpWidget(host(Center(child: _bar(seeks: []))));
+      expect(painter(tester).thickness, KSeekBar.trackHeight);
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: tester.getCenter(find.byType(KSeekBar)));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(painter(tester).thickness, KSeekBar.trackHeightActive);
+    });
+
+    testWidgets('the bar keeps the default look and never schedules a frame', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(Center(child: _bar(seeks: []))));
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(painter(tester).look, const KFlatLook());
+      expect(painter(tester).clock, isNull);
+      expect(tester.binding.transientCallbackCount, 0);
+    });
+
+    testWidgets('the played part slides over 120 ms, the thumb jumps', (
+      tester,
+    ) async {
+      Widget at(int seconds) => host(
+        Center(
+          child: _bar(
+            seeks: [],
+            position: Duration(seconds: seconds),
+          ),
+        ),
+      );
+      await tester.pumpWidget(at(20));
+      await tester.pumpWidget(at(60));
+      await tester.pump();
+      expect(painter(tester).progress, closeTo(0.6, 1e-9));
+      await tester.pump(const Duration(milliseconds: 60));
+      final mid = painter(tester).playedProgress!;
+      expect(mid, inExclusiveRange(0.2, 0.6));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(painter(tester).playedProgress, closeTo(0.6, 1e-9));
+      expect(tester.binding.transientCallbackCount, 0);
+    });
+
+    test('geometry: 4 dp track, played part, 4 x 16 thumb kept inside', () {
+      const size = Size(200, 24);
+      final g = FlatGeometry(size: size, progress: 0.2, thickness: 4);
+      expect(g.track, const Rect.fromLTWH(0, 10, 200, 4));
+      expect(g.played, const Rect.fromLTWH(0, 10, 40, 4));
+      expect(g.barX, 40);
+      expect(
+        FlatGeometry(size: size, progress: 0, thickness: 4).barX,
+        2,
+        reason: 'the thumb never leaves the track',
+      );
+      expect(FlatGeometry(size: size, progress: 1, thickness: 4).barX, 198);
+      // Active: 6 dp, same centre line.
+      expect(
+        FlatGeometry(size: size, progress: 0.2, thickness: 6).track,
+        const Rect.fromLTWH(0, 9, 200, 6),
+      );
+    });
+
+    testWidgets('pixels: 4 dp track at 24 %, played, 4 x 16 thumb', (
+      tester,
+    ) async {
+      final probe = await PaintProbe.of(
+        tester,
+        FlatSeekPainter(
+          progress: 0.2,
+          thickness: 4,
+          look: const KFlatLook(),
+          primary: const Color(0xFF3355CC),
+          tertiary: const Color(0xFFCC5533),
+          surface: const Color(0xFFFFFFFF),
+          showThumb: true,
+          cache: FlatPaintCache(),
+        ),
+        const Size(200, 24),
+      );
+      expect(probe.alpha(150, 12), closeTo(0.24 * 255, 2));
+      expect(probe.alpha(150, 9), 0);
+      expect(probe.alpha(150, 14), 0);
+      expect(probe.alpha(20, 10), 255);
+      expect(probe.alpha(20, 9), 0);
+      expect(probe.alpha(40, 5), 255, reason: 'thumb top, 16 tall');
+      expect(probe.alpha(40, 3), 0);
+      expect(probe.alpha(37, 4), 0);
+    });
   });
 
   group('KSeekGestureArea options', () {

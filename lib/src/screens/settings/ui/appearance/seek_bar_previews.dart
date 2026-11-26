@@ -1,87 +1,69 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
-const double _previewHeight = 40;
-const int _waveBars = 44;
-const double _playedFraction = 0.38;
+import '../../../../playback/domain/seek_bar_style.dart';
+import '../../../../playback/ui/seek_bar_look.dart';
 
-/// A small drawing of the waveform seek bar for its preview card.
-class WaveformSeekPreview extends StatelessWidget {
-  const WaveformSeekPreview({super.key});
+/// Where the preview is drawn: 38 % of the track.
+const double seekPreviewPosition = 0.38;
+
+const Duration _length = Duration(seconds: 100);
+const int _levelCount = 200;
+
+/// Loudness of the sample waveform: fixed and varied, so a preview never
+/// changes between builds.
+final Uint8List _sampleLevels = Uint8List.fromList([
+  for (var i = 0; i < _levelCount; i++)
+    (40 + 215 * (math.sin(i * 0.37) * math.cos(i * 0.11 + 1)).abs()).round(),
+]);
+
+/// A still picture of one seek bar style at its default options, drawn by the
+/// same painters as the real bar ([KWaveformSeekBar], [KSquiggleSeekBar] or
+/// [KFlatStyledSeekBar]). It takes no input, has no semantics and schedules no
+/// frames: the squiggle stands still instead of drifting.
+class SeekStylePreview extends StatelessWidget {
+  const SeekStylePreview({super.key, required this.style});
+
+  final SeekBarStyle style;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final played = (_waveBars * _playedFraction).round();
     return ExcludeSemantics(
-      child: SizedBox(
-        height: _previewHeight,
-        child: Row(
-          children: [
-            for (var i = 0; i < _waveBars; i++) ...[
-              if (i > 0) const SizedBox(width: 2),
-              Expanded(
-                child: Center(
-                  child: FractionallySizedBox(
-                    widthFactor: 1,
-                    heightFactor: _barHeight(i),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: i < played
-                            ? scheme.primary
-                            : scheme.onSurfaceVariant.withValues(alpha: 0.4),
-                        borderRadius: KRadius.full,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
+      child: ExcludeFocus(
+        child: IgnorePointer(
+          child: SizedBox(height: seekBandHeight, child: _bar()),
         ),
       ),
     );
   }
 
-  /// A fixed, varied height in 0.2 .. 1 so the drawing never changes.
-  static double _barHeight(int i) =>
-      0.2 + 0.8 * (math.sin(i * 1.7) * math.cos(i * 0.45)).abs();
-}
-
-/// A small drawing of the flat seek bar for its preview card.
-class FlatSeekPreview extends StatelessWidget {
-  const FlatSeekPreview({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    const played = 38, left = 62; // flex of the two sides of the thumb
-    Widget track(Color color) => DecoratedBox(
-      decoration: BoxDecoration(color: color, borderRadius: KRadius.full),
-      child: const SizedBox(height: 4),
-    );
-    return ExcludeSemantics(
-      child: SizedBox(
-        height: _previewHeight,
-        child: Row(
-          children: [
-            Expanded(flex: played, child: track(scheme.primary)),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: scheme.primary,
-                shape: BoxShape.circle,
-              ),
-              child: const SizedBox.square(dimension: 12),
-            ),
-            Expanded(
-              flex: left,
-              child: track(scheme.onSurfaceVariant.withValues(alpha: 0.3)),
-            ),
-          ],
-        ),
-      ),
+  Widget _bar() {
+    final kind = seekKindOf(style);
+    if (kind != null) {
+      return KWaveformSeekBar(
+        position: _length * seekPreviewPosition,
+        duration: _length,
+        onSeek: (_) {},
+        levels: _sampleLevels,
+        status: KWaveformStatus.ready,
+        kind: kind,
+      );
+    }
+    if (style == SeekBarStyle.squiggle) {
+      return KSquiggleSeekBar(
+        position: _length * seekPreviewPosition,
+        duration: _length,
+        onSeek: (_) {},
+        look: const KSquiggleLook(motion: KSquiggleMotion.still),
+      );
+    }
+    return KFlatStyledSeekBar(
+      position: _length * seekPreviewPosition,
+      duration: _length,
+      onSeek: (_) {},
     );
   }
 }

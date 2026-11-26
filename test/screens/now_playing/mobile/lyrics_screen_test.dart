@@ -16,6 +16,8 @@ import 'package:kanaru/src/lyrics/ui/translation/translate_button.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/media/domain/track_info.dart';
 import 'package:kanaru/src/playback/domain/audio_engine.dart';
+import 'package:kanaru/src/playback/domain/seek_bar_style.dart';
+import 'package:kanaru/src/playback/state/seek_bar_style_provider.dart';
 import 'package:kanaru/src/playback/state/track_info_providers.dart';
 import 'package:kanaru/src/playback/ui/play_pause_button.dart';
 import 'package:kanaru/src/playback/ui/playback_time_label.dart';
@@ -272,6 +274,33 @@ void main() {
     expect(find.byType(LyricsScreen), findsNothing);
     expect(find.byType(MobileNowPlaying), findsOneWidget);
   });
+
+  for (final style in SeekBarStyle.values) {
+    testWidgets('the footer is 56 dp in the ${style.name} style', (
+      tester,
+    ) async {
+      final host = await _openScreen(
+        tester,
+        lyrics: LyricsShown(syncedLyrics(40)),
+      );
+      await host.container.read(seekBarStyleProvider.notifier).set(style);
+      await _pumpFor(tester);
+      final slot = find.descendant(
+        of: find.byType(LyricsScreen),
+        matching: find.byType(NowPlayingSeekSlot),
+      );
+      expect(tester.getSize(slot).height, 56);
+      final bar = switch (style) {
+        SeekBarStyle.squiggle => find.byType(KSquiggleSeekBar),
+        SeekBarStyle.flat => find.byType(KFlatStyledSeekBar),
+        _ => find.byType(KWaveformSeekBar),
+      };
+      expect(
+        find.descendant(of: find.byType(LyricsScreen), matching: bar),
+        findsOneWidget,
+      );
+    });
+  }
 
   testWidgets('the footer keeps its 56 band and its place between songs', (
     tester,

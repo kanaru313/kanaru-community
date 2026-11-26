@@ -577,7 +577,9 @@ The UI only reads the queue, shuffle, repeat and volume keys. (`shell.right_pane
 | `playback.context` | `contextSetting` | `{kind, ref, label}` of the `PlayContext`; an unknown kind reads as `queue` |
 | `playback.volume` | `volumeSetting` | 0-100 (default 100; out of range is clamped) |
 | `playback.volume_before_mute` | `volumeBeforeMuteSetting` | Level 1-100 to restore on unmute when muted (null otherwise) |
-| `playback.seek_bar_style` | `seekBarStyleSetting` | `'waveform'` (default) or `'flat'`; written by the Settings page |
+| `playback.seek_bar_style` | `seekBarStyleSetting` | `bars` (default), `dots`, `line`, `mirror`, `squiggle`, `flat`; a stored `'waveform'` reads as `bars` (never rewritten on read) |
+| `playback.seek_bar_fallback` | `seekBarFallbackSetting` | `squiggle` or `flat` (default): the style shown while the chosen one has no waveform |
+| `playback.seek_bar_wave` / `_squiggle` / `_flat` | `waveSeekOptionsSetting` etc. (`seek_bar_options.dart`) | JSON map of per-group options; each field decoded on its own (bad or missing field takes its default, unknown keys ignored) |
 | `playback.previous_button` | `previousButtonSetting` | `'alwaysPrevious'` (default) or `'restartAfter3s'`; read by `previousPressed()` when it runs |
 | `playback.listen_rule` | `listenRuleSetting` | `{afterMs, percent}` (default 240000 / 50; snapped to the stops; a non-map, missing or non-finite number reads as the default) |
 | `playback.history_enabled` | `historyEnabledSetting` | Bool, default on; off stops new `play_log` rows |
@@ -999,7 +1001,9 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
 
 Levels for the Now Playing seek bar on both shells. The mini player and the player bar keep the flat `KSeekBar`.
 
-**Style setting.** `playback.seek_bar_style` (`playback/domain/seek_bar_style.dart`, `SeekBarStyle.waveform` default | `flat`, `seekBarStyleProvider`), chosen on Settings > Appearance > Seek bar. `PlaybackWaveformSeekBar` watches `waveformProvider` only in the waveform style; in the flat style it does not, so no decode job starts, and it passes `levels: null` (the flat track).
+**Style setting.** `playback.seek_bar_style` (`playback/domain/seek_bar_style.dart`, `SeekBarStyle` bars (default) | dots | line | mirror | squiggle | flat, `seekBarStyleProvider`), chosen on Settings > Appearance > Seek bar (cards below); fallback and option groups in the settings table. `needsWaveform(style, squiggleOptions)` is true for the wave kinds and for a chosen squiggle with `motion: music`. `PlaybackWaveformSeekBar` watches `waveformProvider` only then; otherwise no decode job starts. The squiggle as the fallback never decodes (music behaves as drift). The style picks the bar: the wave kinds a `KWaveformSeekBar` (shapes below), `squiggle` a `KSquiggleSeekBar` (it gets the levels only while its motion is music and they are ready; no levels means drift), `flat` a `KFlatStyledSeekBar` (no status, no phase machine, no ticker of its own unless an effect runs). A squiggle that follows the music never draws the waveform bar.
+
+**Style cards** (`screens/settings/ui/appearance/seek_bar_style_page.dart`). Settings > Appearance > Seek bar shows one `KPreviewCardGroup` card per `SeekBarStyle` (name and caption from `settingsSeekBarStyle*` / `settingsSeekBarFlat*`; the Appearance row uses the same names through `seekBarStyleTitle`). Choosing a card writes `seekBarStyleProvider` only: the fallback key and the option keys stay at their defaults until their own controls exist, and a stored `waveform` shows Bars without being rewritten. The group picks its columns itself (`KPreviewCardGroup.columnsFor`: 2 on the mobile shell, 3 on the desktop shell, 1 from 200 % text). Each preview (`SeekStylePreview`) is the real renderer at default options and position 0.38: a ready `KWaveformSeekBar` on a fixed sample waveform for the wave kinds, `KSquiggleSeekBar` (`still`) and `KFlatStyledSeekBar`; no input, no semantics and no frames are scheduled.
 
 **Decode** (`rust/crates/kanaru_media/src/waveform/`, no FFI). `compute(source, ext_hint, cancel) -> Waveform { levels, duration_ms }`
 with symphonia 0.6 (`next_packet() -> Result<Option<Packet>>`), codecs of the Cargo features: MP3, FLAC, Ogg Vorbis, AAC and
@@ -1044,7 +1048,7 @@ memory LRU (by cache key, so a changed file misses) survives the views. `status`
 **Display** (`packages/kanaru_ui/lib/src/widgets/media/`). `KWaveformSeekBar` has the input of `KSeekBar` (`KSeekGestureArea`: tap,
 drag, left/right 5 s, slider semantics; options `seekOnTap`, `anyDirection` (a pan with the device touch slop) and `horizontalInset` for the
 mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancelled touch never seeks). It is a 56 dp band (`seekBandHeight`, `ClipRect` +
-`RepaintBoundary`, effects never change layout); the bars use the 32 dp in the middle, 3 to 32 dp tall, 3 dp wide, 2 dp apart, with no thumb.
+`RepaintBoundary`, effects never change layout); the shapes use the 32 dp in the middle (bars 3 to 32 dp tall; width / gap 4 / 3, 3 / 2 or 2 / 1 by density), with no thumb.
 - **Time axis.** `seekInset` = 6 dp at each side. Bars are counted over the inner width and centred in it
   (`off = 6 + (iw - (n * pitch - gap)) / 2`). Input, bars and the fallback share one map: a tap at x seeks to `(x - 6) / (w - 12)`, bar j
   stands for the fractions `(off + j * pitch - 6) / (w - 12)` to `(off + (j + 1) * pitch - 6) / (w - 12)` (the last window ends at the
@@ -1056,14 +1060,48 @@ mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancell
   without a key (a menu, dialog or page opened and closed by mouse); Tab, Shift+Tab, Esc closing a dialog, or a key after a click, draws
   it. Focus state lives in `SeekFocusTracker` (`seek_focus_tracker.dart`). `waveform_bars.dart` (pure): bars map time, not index (mean of the levels inside the bar's window; a shorter waveform
   leaves minimal bars; a longer one is cut), after a contrast stretch (the quietest tenth to 0, the loudest percent to full; a steady tone
-  stays full; silence stays flat). Steady state draws two recorded pictures (a position tick only moves two clips, nothing is recorded);
+  stays at 60 % of the content height instead of a solid block; silence stays flat). Steady state draws two recorded pictures (a position tick only moves two clips, nothing is recorded);
   during a transition the rounded rectangles are drawn directly (about 70 per layer at 364 px).
+- **Kinds and look** (`seek_look.dart`, `wave_style_painter.dart`). `KWaveformSeekBar.kind` (`KSeekKind` bars, dots, line, mirror) and
+  `look` (`KWaveLook`: density, played single / gradient / by height, rest dim / outline / hidden, feedback jelly / lens / off). One painter
+  (`paintWaveShapes`) draws every kind for the played and the rest layer (clipped at the exact position) and records them as pictures keyed
+  by levels, size, dpr, kind, look (without the feedback) and the theme colours the pictures use, so a position tick still only moves two clips. Dots: Ø `max(w, 2.5)`,
+  step `Ø + max(g, 1.5)`; line: a closed mirrored outline through the bar tops; mirror: baseline at 66 % of the band, reflection at 40 %
+  alpha. A hidden rest draws a thin `outlineVariant` line from the position on. `lib/src/playback/ui/seek_bar_look.dart` maps the domain
+  style and `WaveSeekOptions` to them (exhaustive switches; `seekKindOf` is null for squiggle and flat, which have `squiggleLookOf` / `flatLookOf`).
+- **Squiggle, flat look and the ★ fallback** (`k_squiggle_seek_bar.dart`, `k_flat_styled_seek_bar.dart`, `k_seek_band.dart`; looks `KSquiggleLook`, `KFlatLook`
+  in `seek_look.dart`). Every style has a *track* (paints from `KSeekState`, look, `playing`; no input, no semantics, no `Focus`) and a *bar* (`KSeekBand`:
+  56 dp band, 6 dp insets, `KSeekGestureArea` with hold, drag-up cancel and `KSeekTimeBubble`, so the bubble works the same in every style, plus the one
+  slider semantics node). `KSquiggleTrack` / `KFlatSeekTrack` are what `KWaveformSeekBar.fallback` (`Widget Function(BuildContext, KSeekState)`) builds, so a
+  fallback is never a second bar. The app builds the ★ track from `seekBarFallbackProvider` with that style's own options and the theme colours (never the
+  wave look's); the app captures `playing` (`isPlayingProvider`) in the fallback builder so the ★ track animates with playback, and a squiggle with `music` motion drifts there.
+  - *Squiggle* (`squiggle_painter.dart`): 4 dp round-cap stroke in `primary`; amplitude 2.5 / 4.5 / 7, wavelength 18 / 28 / 44; the played part waves, the rest is a
+    straight 4 dp line at 24 %, 6 dp gap to the thumb (none: no gap); the wave grows from 0.2 over a quarter wavelength and tapers to 0 over the last half
+    wavelength (`squiggleTaper`, `squiggleWaveY`, pure). Motion: `drift` 0.9 cycle / s; `music` scales the height by `0.35 + 1.3 * loudness * (0.85 + 0.15 sin 9t)`
+    with the loudness at the position (`squiggleLevelAt`: mean of the contrast-stretched level and the ones 3 steps either side, level index by time over
+    `levelsDuration`; one sample per build, no allocation per frame); `still` stands full. Thumb bar 4 x 20, dot 16 with a `surface` ring, or none.
+  - *Flat* (`flat_effects_painter.dart`): thickness 2 / 4 / 8 dp (+2 while hovered, focused or dragged, 120 ms), thumb bar 4 x 16 (taller on a thick track) / dot 16 /
+    none, played single or a primary to tertiary gradient over the whole track, effect off / `shine` (a white band every 2.4 s) / `comet` (played part fades in
+    from the start, glow at the head from one unit radial gradient, no blur) / `sparks` (`SparkPool`: a fixed pool of 60 particles, no allocation, no per-particle
+    blur). Paints, shaders and the pool live in a `FlatPaintCache` owned by the widget state, so a position tick that rebuilds the painter keeps them.
+  - *One flat renderer.* `KFlatSeekTrack(look: KFlatLook())` is also the plain bar of `KSeekBar` (mini player, player bar): the default look is 4 dp (6 active), thumb 4 x 16,
+    120 ms, no effect and no clock (`FlatGeometry` and a pixel test pin it).
+  - *Frames.* `SeekClock` (`seek_clock.dart`) holds `energy` (0..1, 300 ms fade) and `time`; its ticker runs only while the energy moves or it is above 0 and the look
+    uses time, so a paused bar that has settled schedules no frame; the painters repaint on the clock without a widget rebuild; `TickerMode` off mutes it. Reduced
+    motion: squiggle still and full (no drift, no flatten), flat effects off. A covered but mounted Now Playing keeps its drift running (`TickerMode` is the only
+    guard); a follow-up if it measures as costly.
+- **Touch feedback** (`seek_feedback.dart`, pure Dart). Jelly: `JellySprings`, a row of springs coupled to their neighbours at a fixed step of
+  1/240 s (a frame covers at most 0.05 s, 12 steps), factor per bar clamped to 0.35..2.2; a press dents the bars under the finger, a seek (release, tap,
+  keys at half strength) pokes a ripple. Lens: `LensEnvelope` eases 0..1 in about 120 ms and grows bars near the finger by up to x1.7.
+  Bar height never exceeds the band less 2 dp. `KWaveformSeekBar` runs its one ticker for it only while a finger is down or a wobble
+  settles, and only while the bars stand fully grown (not on the dotted row, a transition or the fallback); a finger resting on one bar after the dent settled needs no more frames. Frames draw the bars directly, scaled per bar, skipping those outside each layer; steady playback schedules no extra frames, and reduced motion or a muted
+  `TickerMode` means none.
 - **States** (`waveform_phase.dart`, pure `WaveformPhase`, one clock fed by one ticker that runs only while a gate or transition is pending;
   no wall clock; `TickerMode` off means no frames). `KWaveformStatus` (`unknown`, `computing`, `ready`, `none`) mirrors the app's status;
-  `PlaybackWaveformSeekBar` passes `unknown` while the provider loads or its view belongs to another entry, `none` in the flat style.
+  `PlaybackWaveformSeekBar` passes `unknown` while the provider loads or its view belongs to another entry.
   Kinds: `unknown` and `dots` (the dotted row: bars at 3 dp, no animation), `growing` (600 ms `easeInOutQuart`, in place), `shown`,
   `collapsing`, `fallback` (200 ms cross-fade; every fallback, custom or the default `KFlatSeekTrack`, sits
-  inside a 6 dp horizontal padding and gets the state of that inner width, so its box is `state.width` wide; the flat track keeps its own
+  inside a 6 dp horizontal padding and gets the state of that inner width (`insetSeekState`), so its box is `state.width` wide; the flat track keeps its own
   4 x 16 dp thumb under the finger). The drawing of one frame (heights per kind, steady pictures, dotted row) is `WaveformBandFrames` (`waveform_band.dart`).
   - The first decision after mount is applied at once (ready: `shown`, none: `fallback`, computing: `dots`), even when it comes after an async
     gap: opening Now Playing on a cached track never animates. The first track after none is not a change.
@@ -1110,8 +1148,8 @@ mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancell
   - Recognizers are built by `seekRecognizers` (`seek_recognizers.dart`), `KSeekState` lives in `k_seek_state.dart` (exported with the
     area).
 
-`PlaybackWaveformSeekBar` draws the levels of the playing entry only, never the previous track's, and passes `isPlayingProvider` as
-`playing` (unused by the bars).
+`PlaybackWaveformSeekBar` draws the levels of the playing entry only, never the previous track's, and reads `isPlayingProvider` only for the ★ fallback track
+(captured in the fallback builder; the wave bars ignore it).
 
 ## Rules lane B keeps
 

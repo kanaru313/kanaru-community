@@ -2982,21 +2982,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAppearanceWindowFrame => 'System window frame';
 
   @override
-  String get settingsSeekBarCaption =>
-      'Used in Now Playing and the lyrics screen.';
+  String get settingsSeekBarStyleBars => 'Bars';
 
   @override
-  String get settingsSeekBarWaveform => 'Waveform';
+  String get settingsSeekBarStyleDots => 'Dots';
 
   @override
-  String get settingsSeekBarWaveformCaption =>
-      'Local files and some plugins. Tracks without a waveform use the flat bar.';
+  String get settingsSeekBarStyleLine => 'Line';
+
+  @override
+  String get settingsSeekBarStyleMirror => 'Mirror';
+
+  @override
+  String get settingsSeekBarStyleSquiggle => 'Squiggle';
 
   @override
   String get settingsSeekBarFlat => 'Flat bar';
 
   @override
-  String get settingsSeekBarFlatCaption => 'Every track';
+  String get settingsSeekBarStyleBarsCaption =>
+      'Default, compact and easy to read';
+
+  @override
+  String get settingsSeekBarStyleDotsCaption =>
+      'A column of dots like an LED meter';
+
+  @override
+  String get settingsSeekBarStyleLineCaption =>
+      'A continuous wave outline, filled in';
+
+  @override
+  String get settingsSeekBarStyleMirrorCaption =>
+      'Wave on top, a faint reflection below';
+
+  @override
+  String get settingsSeekBarStyleSquiggleCaption =>
+      'A wavy line that drifts while playing, flat when paused';
+
+  @override
+  String get settingsSeekBarFlatCaption => 'Every track, no waveform needed';
 
   @override
   String get settingsAboutEditionFree => 'Free edition';

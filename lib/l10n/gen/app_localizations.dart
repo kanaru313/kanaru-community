@@ -4410,23 +4410,35 @@ abstract class AppLocalizations {
   /// **'System window frame'**
   String get settingsAppearanceWindowFrame;
 
-  /// No description provided for @settingsSeekBarCaption.
+  /// No description provided for @settingsSeekBarStyleBars.
   ///
   /// In en, this message translates to:
-  /// **'Used in Now Playing and the lyrics screen.'**
-  String get settingsSeekBarCaption;
+  /// **'Bars'**
+  String get settingsSeekBarStyleBars;
 
-  /// No description provided for @settingsSeekBarWaveform.
+  /// No description provided for @settingsSeekBarStyleDots.
   ///
   /// In en, this message translates to:
-  /// **'Waveform'**
-  String get settingsSeekBarWaveform;
+  /// **'Dots'**
+  String get settingsSeekBarStyleDots;
 
-  /// No description provided for @settingsSeekBarWaveformCaption.
+  /// No description provided for @settingsSeekBarStyleLine.
   ///
   /// In en, this message translates to:
-  /// **'Local files and some plugins. Tracks without a waveform use the flat bar.'**
-  String get settingsSeekBarWaveformCaption;
+  /// **'Line'**
+  String get settingsSeekBarStyleLine;
+
+  /// No description provided for @settingsSeekBarStyleMirror.
+  ///
+  /// In en, this message translates to:
+  /// **'Mirror'**
+  String get settingsSeekBarStyleMirror;
+
+  /// No description provided for @settingsSeekBarStyleSquiggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Squiggle'**
+  String get settingsSeekBarStyleSquiggle;
 
   /// No description provided for @settingsSeekBarFlat.
   ///
@@ -4434,10 +4446,40 @@ abstract class AppLocalizations {
   /// **'Flat bar'**
   String get settingsSeekBarFlat;
 
+  /// No description provided for @settingsSeekBarStyleBarsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Default, compact and easy to read'**
+  String get settingsSeekBarStyleBarsCaption;
+
+  /// No description provided for @settingsSeekBarStyleDotsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'A column of dots like an LED meter'**
+  String get settingsSeekBarStyleDotsCaption;
+
+  /// No description provided for @settingsSeekBarStyleLineCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'A continuous wave outline, filled in'**
+  String get settingsSeekBarStyleLineCaption;
+
+  /// No description provided for @settingsSeekBarStyleMirrorCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Wave on top, a faint reflection below'**
+  String get settingsSeekBarStyleMirrorCaption;
+
+  /// No description provided for @settingsSeekBarStyleSquiggleCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'A wavy line that drifts while playing, flat when paused'**
+  String get settingsSeekBarStyleSquiggleCaption;
+
   /// No description provided for @settingsSeekBarFlatCaption.
   ///
   /// In en, this message translates to:
-  /// **'Every track'**
+  /// **'Every track, no waveform needed'**
   String get settingsSeekBarFlatCaption;
 
   /// No description provided for @settingsAboutEditionFree.

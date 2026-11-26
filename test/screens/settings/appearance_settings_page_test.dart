@@ -187,7 +187,10 @@ void main() {
       location: SettingsPaths.appearance,
       size: tall,
     );
-    expect(find.text('Waveform'), findsOneWidget);
+    expect(find.text('Bars'), findsOneWidget);
+    await h.store.write('playback.seek_bar_style', 'squiggle');
+    await tester.pumpAndSettle();
+    expect(find.text('Squiggle'), findsOneWidget);
     await h.store.write('playback.seek_bar_style', 'flat');
     await tester.pumpAndSettle();
     expect(find.text('Flat bar'), findsOneWidget);

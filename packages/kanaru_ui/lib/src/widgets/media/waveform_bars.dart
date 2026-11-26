@@ -10,10 +10,10 @@ const double seekBandHeight = 56;
 /// the width minus twice this.
 const double seekInset = 6;
 
-/// One bar's width and the empty space between two bars.
+/// One bar's width and the empty space between two bars at the default
+/// (mid) density; the other densities pass their own to the functions below.
 const double waveformBarWidth = 3;
 const double waveformBarGap = 2;
-const double waveformBarRadius = 1.5;
 
 /// A bar is never shorter or taller than these, centred in the band. At the
 /// minimum a bar is a dot.
@@ -30,12 +30,25 @@ const int waveformContrastCeilingPercentile = 99;
 /// (a steady tone): the floor drops to silence and the level just fills up.
 const double _flatSpreadShare = 0.05;
 
+/// Height of the bars of a steady tone as a share of the content zone: there
+/// is nothing to stretch, so they stay calm instead of a solid block.
+const double waveformSteadyShare = 0.6;
+
+/// The stored level whose bar is [waveformSteadyShare] of the content zone.
+final double _steadyLevel =
+    255 *
+    (waveformSteadyShare * waveformMaxExtent - waveformMinExtent) /
+    (waveformMaxExtent - waveformMinExtent);
+
 /// Number of bars that fit in [width] (the inner width, inset excluded): bars
 /// start at its left edge, and the last one ends at or before its right edge.
-int waveformBarCount(double width) {
-  if (!width.isFinite || width < waveformBarWidth) return 0;
-  return ((width + waveformBarGap) / (waveformBarWidth + waveformBarGap))
-      .floor();
+int waveformBarCount(
+  double width, {
+  double barWidth = waveformBarWidth,
+  double barGap = waveformBarGap,
+}) {
+  if (!width.isFinite || width < barWidth) return 0;
+  return ((width + barGap) / (barWidth + barGap)).floor();
 }
 
 /// Left x of the first of [count] bars centred in the inner width of a band
@@ -44,10 +57,11 @@ double waveformBarsOffset({
   required int count,
   required double width,
   required double inset,
+  double barWidth = waveformBarWidth,
+  double barGap = waveformBarGap,
 }) {
-  const pitch = waveformBarWidth + waveformBarGap;
   final inner = width - 2 * inset;
-  return inset + (inner - (count * pitch - waveformBarGap)) / 2;
+  return inset + (inner - (count * (barWidth + barGap) - barGap)) / 2;
 }
 
 /// Heights of the bars across a band [width] wide with [inset] free at each
@@ -69,16 +83,24 @@ List<double> waveformBarExtents({
   required Duration duration,
   required double width,
   required double inset,
+  double barWidth = waveformBarWidth,
+  double barGap = waveformBarGap,
 }) {
   final inner = width - 2 * inset;
-  final count = waveformBarCount(inner);
+  final count = waveformBarCount(inner, barWidth: barWidth, barGap: barGap);
   final lengthUs = length.inMicroseconds;
   final durationUs = duration.inMicroseconds;
   if (count == 0 || levels.isEmpty || lengthUs <= 0 || durationUs <= 0) {
     return const [];
   }
-  const pitch = waveformBarWidth + waveformBarGap;
-  final offset = waveformBarsOffset(count: count, width: width, inset: inset);
+  final pitch = barWidth + barGap;
+  final offset = waveformBarsOffset(
+    count: count,
+    width: width,
+    inset: inset,
+    barWidth: barWidth,
+    barGap: barGap,
+  );
   final n = levels.length;
   double extentOf(double level) =>
       waveformMinExtent +
@@ -121,6 +143,8 @@ class WaveformExtentsCache {
   Duration? _duration;
   double? _width;
   double? _inset;
+  double? _barWidth;
+  double? _barGap;
   List<double> _extents = const [];
 
   List<double> of({
@@ -129,23 +153,31 @@ class WaveformExtentsCache {
     required Duration duration,
     required double width,
     required double inset,
+    double barWidth = waveformBarWidth,
+    double barGap = waveformBarGap,
   }) {
     if (!identical(levels, _levels) ||
         length != _length ||
         duration != _duration ||
         width != _width ||
-        inset != _inset) {
+        inset != _inset ||
+        barWidth != _barWidth ||
+        barGap != _barGap) {
       _levels = levels;
       _length = length;
       _duration = duration;
       _width = width;
       _inset = inset;
+      _barWidth = barWidth;
+      _barGap = barGap;
       _extents = waveformBarExtents(
         levels: waveformContrastLevels(levels),
         length: length,
         duration: duration,
         width: width,
         inset: inset,
+        barWidth: barWidth,
+        barGap: barGap,
       );
     }
     return _extents;
@@ -161,8 +193,9 @@ class WaveformExtentsCache {
 /// because squaring keeps the order. Each level then becomes
 /// `255 * clamp((x - xlo) / (xhi - xlo), 0, 1)`, through a 256-entry table. A
 /// ceiling of 0 (a mostly silent file) falls back to the loudest level so a
-/// short sound survives; silence stays all zeros; a flat track stays at full
-/// height.
+/// short sound survives; silence stays all zeros; a steady tone (floor and
+/// ceiling the same) has nothing to stretch, so its loudest bars stand at
+/// [waveformSteadyShare] of the content zone instead of a solid block.
 Uint8List waveformContrastLevels(Uint8List levels) {
   final n = levels.length;
   if (n == 0) return Uint8List(0);
@@ -190,12 +223,14 @@ Uint8List waveformContrastLevels(Uint8List levels) {
   double linear(int l) => math.pow(l / 255, 2).toDouble();
   var xlo = linear(lo);
   final xhi = linear(hi);
-  if (xhi - xlo < _flatSpreadShare * xhi) xlo = 0;
+  final steady = xhi - xlo < _flatSpreadShare * xhi;
+  if (steady) xlo = 0;
+  final top = steady ? _steadyLevel : 255.0;
 
   final table = Uint8List(256);
   for (var l = 0; l < 256; l++) {
     final t = ((linear(l) - xlo) / (xhi - xlo)).clamp(0.0, 1.0);
-    table[l] = (255 * t).round();
+    table[l] = (top * t).round();
   }
   final out = Uint8List(n);
   for (var i = 0; i < n; i++) {
