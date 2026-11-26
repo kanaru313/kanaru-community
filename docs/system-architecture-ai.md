@@ -125,3 +125,96 @@ Gaps the adapters work around (all inside `ai/data`):
   `enqueue` replace an empty queue). The result text says so.
 - **`get_lyrics` for a track that is not playing** answers only what is stored
   or local (`storedTrackLyricsProvider`); it never triggers an online lookup.
+
+## Tools (`ai/domain/tools/`, `ai/data/tool_env_*.dart`)
+
+- `AiTool` (`ai_tool.dart`): `name`, `description`, `group` (the privacy
+  group), `source` (builtin, plugin, mcp), `risk` (read, write, external),
+  `parameters` (JSON Schema, the chat contract's subset), `call`, and for
+  writes `describe(args, env)` (the confirm-card preview). `run(args, env)` is
+  the only entry the loop uses: it validates `args` against `parameters`
+  (`schema_validator.dart`, unknown arguments rejected), then calls `call`;
+  a schema failure or a thrown error becomes an error `ToolOutcome` whose
+  text never carries exception details. A write tool re-checks its own
+  arguments in `call`, because the library may change between preview and run.
+- `AiToolRegistry` (`ai_tool_registry.dart`): tools from `AiToolProvider`s by
+  name (duplicate or over-64-character names throw). v1 has the built-in
+  provider only (`readToolProvider`). The permission gate (`mayExecute`) reads
+  a tool's `group` and `risk`; the registry offers no filtering of its own
+  beyond `where`.
+- `ToolEnv` (`tool_env.dart`): ports the tools call, with no Flutter or
+  Riverpod: `LibraryPort` (visibleOf, search, details), `PlaybackPort`,
+  `LyricsPort`, `HistoryPort`, `PlaylistsPort`. Adapters: `tool_env_impl.dart`
+  (library, playlists, history) and `tool_env_player.dart` (playback, lyrics)
+  take the concrete stores and small reader functions;
+  `ai/state/tool_env_provider.dart` wires them on the live providers.
+- Results are JSON text: `{total, offset, items: ["id|title|artist|album|year",
+  ...], ...}` (`tool_rows.dart`). A cell is stripped of control, bidi and
+  zero-width characters (`text/text_sanitizer.dart`, `sanitizeText`, reused by
+  the write tools and the prompt data fences), cut at 200 characters, and has
+  `\`, `|`, CR and LF escaped, so text can never forge a row. Over 16 KiB the
+  `items` array is compacted to the rows that fit (at least one) and the result
+  adds `truncated: true` and `nextOffset`; a row is never cut.
+- Read tools: `get_now_playing`, `get_queue` (window of 50 around the current
+  entry unless `offset` is given; items carry the entry id), `search_library`,
+  `get_lyrics` (stored or local lyrics only, no timestamps, at most 12000
+  characters, cut at a line), `get_track_info` (at most 50 ids, `notFound`
+  lists absent ones), `get_listening_stats` (error while history recording is
+  off; hidden and missing songs are dropped, totals still count the whole
+  range), `list_playlists`, `get_playlist_tracks` (entries of hidden tracks are
+  left out). Every track id goes through `TrackLookup.visibleOf`.
+
+## Conversation store (`ai/data/conversation_store.dart`)
+
+`ConversationStore` over `ai_conversations` / `ai_messages`, split into
+`conversation_rows.dart` (types, caps, error shape), `conversation_maintenance.dart`
+(turns, flattening, blob caps, startup sweep) and `conversation_queries.dart`
+(search, stats). `aiConversationStoreProvider` and `aiChatStatsProvider`
+(count, bytes) live in `ai/state/`; the stats reload when `store.changes`
+fires (append, completed round, delete; not for live-text flushes).
+
+- **Turn:** a user message and every row after it (assistant, tool, event)
+  up to the next user message. Its id is the id of the user message
+  (`turnIdOf(messageId)`). Rows before the first user message belong to no
+  turn.
+- **Rows:** `append` takes `seq = max + 1` inside a transaction. `messages`
+  returns one page in `seq` order: the newest `limit` (default 50) before
+  `beforeSeq`. `search` matches title and message text (user and assistant
+  text, live text), case-insensitive; it reads message text in pages, so its
+  cost grows with the stored text.
+- **State changes** are compare-and-set (`UPDATE … WHERE state = from`);
+  false means another caller won. Legal moves (`transition`): streaming →
+  complete | stopped | error; pending → allowed | skipped; allowed → running |
+  skipped; running → done | error | unknown. `resolveConfirm` answers a
+  pending card: allowed → `allowed`; denied, deniedByNewMessage, expired →
+  `skipped` (the confirm part keeps the status).
+- **`completeRound(messageId, finalParts, blob, calls)`:** one transaction:
+  CAS `streaming → complete`, live text cleared, one `tool` row per call
+  (`[call, ConfirmPart(pending)]` in `pending` for ask-mode writes,
+  `[call]` in `allowed` otherwise), blob cap enforced. A lost CAS writes
+  nothing.
+- **Caps (Dart only, no SQL CHECK; `ConversationStoreLimits`):** live text
+  256 KiB UTF-8, cut on a character boundary and ending with `\n[…]` (later
+  deltas store the same cut text); `parts_json` 1 MiB per row; provider blob
+  256 KiB per message and 4 MiB per conversation. A blob over 256 KiB is
+  stored as the marker `{"tooLarge":true}` and `completeRound` reports
+  `blobTooLarge`; `endTurn(turnId)` then stores the turn flattened. Past 4 MiB
+  the oldest turns are flattened in the same transaction (the running turn
+  is never touched). Parts over 1 MiB, or blobs that still do not fit, mark
+  the message `error(too_large)` and throw `AiStoreTooLarge`; the round is
+  rolled back.
+- **Flatten** (`flattenTurn`): text kept; assistant tool-call parts, tool rows
+  and blobs dropped together, an assistant row left empty is deleted. A turn
+  with a streaming, pending, allowed or running row is not flattened (false).
+  `clearProviderBlobs(installId)` (plugin removed or reinstalled) flattens
+  every turn that held a blob of that install; a version or model switch
+  flattens at send time instead.
+- **`error_json`** is `{code, kind, retryAfterSec?}` only.
+  `AiStoredError.fromPlugin("ai:<code>…", kind:, retryAfterSec:)` keeps the
+  code and drops everything after it; an unknown code or kind is `server`.
+- **Binding:** conversations and messages carry `installId` and
+  `installGeneration`; `bind` moves a chat to another plugin.
+- **Startup sweep** (`sweepAfterCrash`, once before any chat opens):
+  `streaming → stopped` (live text kept, cut to the cap, plus an `ErrorPart`
+  with code `cutOffByClose`), `running → unknown`. Blobs stay; pending and
+  allowed cards are left for the engine to expire. No model call follows.
