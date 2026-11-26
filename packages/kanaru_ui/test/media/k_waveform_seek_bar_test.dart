@@ -4,6 +4,7 @@ import 'dart:ui' show SemanticsAction;
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'package:flutter/semantics.dart' show SemanticsFlag;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -1550,6 +1551,58 @@ void main() {
       );
       expect(WaveformPictures.recordings, before + 1);
       expect(_isSteady(tester), isTrue);
+    });
+  });
+
+  group('fallback track', () {
+    Widget bar({
+      required Widget Function(BuildContext, KSeekState) fallback,
+      KWaveformStatus status = _none,
+    }) => _hosted(
+      SizedBox(
+        width: 200,
+        child: KWaveformSeekBar(
+          position: const Duration(seconds: 20),
+          duration: _total,
+          status: status,
+          look: const KWaveLook(played: KWavePlayed.gradient),
+          fallback: fallback,
+          onSeek: (_) {},
+          semanticLabel: 'Position',
+          semanticValue: '0:20 of 1:40',
+        ),
+      ),
+    );
+
+    Widget squiggle(BuildContext _, KSeekState s) => KSquiggleTrack(state: s);
+    Widget flat(BuildContext _, KSeekState s) => KFlatSeekTrack(state: s);
+
+    for (final (name, build) in [('squiggle', squiggle), ('flat', flat)]) {
+      testWidgets('$name as the fallback is one slider, one Focus', (
+        tester,
+      ) async {
+        final handle = tester.ensureSemantics();
+        await tester.pumpWidget(bar(fallback: build));
+        expect(_fallbackShown(), isTrue);
+        expect(find.semantics.byLabel('Position').evaluate(), hasLength(1));
+        expect(
+          find.semantics.byFlag(SemanticsFlag.isSlider).evaluate(),
+          hasLength(1),
+        );
+        Finder inBar(Finder f) =>
+            find.descendant(of: find.byType(KWaveformSeekBar), matching: f);
+        expect(inBar(find.byType(KSeekGestureArea)), findsOneWidget);
+        expect(inBar(find.byType(Focus)), findsOneWidget);
+        handle.dispose();
+      });
+    }
+
+    testWidgets('a still fallback with no waveform costs no frames', (
+      tester,
+    ) async {
+      await tester.pumpWidget(bar(fallback: flat));
+      await tester.pump(const Duration(seconds: 1));
+      expect(_idle(tester), isTrue);
     });
   });
 }

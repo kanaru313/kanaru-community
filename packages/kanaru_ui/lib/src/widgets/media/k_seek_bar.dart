@@ -1,6 +1,11 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'flat_effects_painter.dart';
+import 'flat_geometry.dart';
 import 'k_seek_gesture_area.dart';
+import 'seek_clock.dart';
+import 'seek_look.dart';
+import 'seek_thumb_painter.dart';
 
 /// Flat seek bar: 4 dp track, 4 x 16 dp thumb, in a 24 dp tall hit area.
 ///
@@ -22,9 +27,10 @@ class KSeekBar extends StatelessWidget {
 
   static const double hitHeight = 24;
   static const double trackHeight = 4;
-  static const double trackHeightActive = 6;
-  static const double thumbWidth = 4;
-  static const double thumbHeight = 16;
+  static const double trackHeightActive =
+      trackHeight + KFlatSeekTrack.activeGrowth;
+  static const double thumbWidth = seekThumbBarWidth;
+  static const double thumbHeight = flatThumbBarHeight;
 
   final Duration position;
 
@@ -61,61 +67,105 @@ class KSeekBar extends StatelessWidget {
   }
 }
 
-/// The straight track and thumb of the flat seek bar, centred in the height
-/// it is given. The waveform bar shows it while it has no bars.
-class KFlatSeekTrack extends StatelessWidget {
-  const KFlatSeekTrack({super.key, required this.state});
+/// The straight track and thumb of the flat seek bars, centred in the height
+/// it is given. The one renderer of the plain bar (mini player, player bar:
+/// the default [look]) and of the Now Playing flat style ([KFlatLook]); the
+/// waveform bar shows it while it has no bars.
+///
+/// The track is [KFlatLook.thickness] thick (the default look: 4 dp) and
+/// grows by 2 dp while [KSeekState.active], over 120 ms; the played part slides
+/// to a new position over the same 120 ms. An effect of the look
+/// runs only while [playing], fades out over 300 ms on pause and is off with
+/// reduced motion; with no effect the track never schedules a frame itself.
+class KFlatSeekTrack extends StatefulWidget {
+  const KFlatSeekTrack({
+    super.key,
+    required this.state,
+    this.look = const KFlatLook(),
+    this.playing = false,
+  });
+
+  /// Growth of the track while the bar is active, in dp.
+  static const double activeGrowth = 2;
+
+  /// How long the track takes to grow or shrink.
+  static const Duration growDuration = Duration(milliseconds: 120);
 
   final KSeekState state;
+  final KFlatLook look;
+
+  /// The player is playing: effects of [look] run.
+  final bool playing;
+
+  @override
+  State<KFlatSeekTrack> createState() => _KFlatSeekTrackState();
+}
+
+class _KFlatSeekTrackState extends State<KFlatSeekTrack>
+    with SingleTickerProviderStateMixin {
+  late final SeekClock _clock = SeekClock(this);
+  final _cache = FlatPaintCache();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _configure();
+  }
+
+  @override
+  void didUpdateWidget(KFlatSeekTrack old) {
+    super.didUpdateWidget(old);
+    _configure();
+  }
+
+  void _configure() {
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    final effect = widget.look.effect != KFlatEffect.off;
+    _clock.configure(
+      target: effect && widget.playing && !reduce ? 1 : 0,
+      usesTime: effect,
+      instant: reduce,
+    );
+  }
+
+  @override
+  void dispose() {
+    _clock.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final width = state.width;
-    final trackHeight = state.active
-        ? KSeekBar.trackHeightActive
-        : KSeekBar.trackHeight;
-    return Stack(
-      alignment: Alignment.centerLeft,
-      children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
-          height: trackHeight,
-          decoration: BoxDecoration(
-            color: scheme.primary.withValues(alpha: 0.24),
-            borderRadius: BorderRadius.circular(trackHeight / 2),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            height: trackHeight,
-            width: width * state.progress,
-            decoration: BoxDecoration(
-              color: scheme.primary,
-              borderRadius: BorderRadius.circular(trackHeight / 2),
+    final look = widget.look;
+    final state = widget.state;
+    final thickness =
+        look.thickness.dp + (state.active ? KFlatSeekTrack.activeGrowth : 0);
+    // The played part slides to its target over the same 120 ms as the track
+    // grows (the plain bar always did); the thumb jumps.
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(end: state.progress),
+      duration: KFlatSeekTrack.growDuration,
+      builder: (context, played, _) => TweenAnimationBuilder<double>(
+        tween: Tween<double>(end: thickness),
+        duration: KFlatSeekTrack.growDuration,
+        builder: (context, animated, _) => SizedBox.expand(
+          child: CustomPaint(
+            painter: FlatSeekPainter(
+              progress: state.progress,
+              playedProgress: played,
+              thickness: animated,
+              look: look,
+              primary: scheme.primary,
+              tertiary: scheme.tertiary,
+              surface: scheme.surface,
+              showThumb: state.seekable,
+              cache: _cache,
+              clock: look.effect == KFlatEffect.off ? null : _clock,
             ),
           ),
         ),
-        if (state.seekable)
-          Positioned(
-            left: (width * state.progress - KSeekBar.thumbWidth / 2).clamp(
-              0.0,
-              (width - KSeekBar.thumbWidth).clamp(0.0, width),
-            ),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: scheme.primary,
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: const SizedBox(
-                width: KSeekBar.thumbWidth,
-                height: KSeekBar.thumbHeight,
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 }

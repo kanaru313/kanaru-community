@@ -8,12 +8,14 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/playback/domain/audio_engine.dart';
 import 'package:kanaru/src/playback/domain/playback_views.dart';
+import 'package:kanaru/src/playback/domain/seek_bar_style.dart';
 import 'package:kanaru/src/playback/domain/waveform.dart';
 import 'package:kanaru/src/playback/state/playback_position_provider.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
 import 'package:kanaru/src/playback/state/playback_scrub_provider.dart';
-import 'package:kanaru/src/playback/ui/playback_time_label.dart';
+import 'package:kanaru/src/playback/state/seek_bar_style_provider.dart';
 import 'package:kanaru/src/playback/state/waveform_providers.dart';
+import 'package:kanaru/src/playback/ui/playback_time_label.dart';
 import 'package:kanaru/src/playback/ui/playback_waveform_seek_bar.dart';
 import 'package:kanaru/src/screens/now_playing/ui/now_playing_seek_slot.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -190,6 +192,26 @@ void main() {
         expect(tester.getSize(find.byType(NowPlayingSeekSlot)).height, 56);
         expect(tester.getSize(find.byKey(waveformBandKey)).height, 56);
       });
+
+      for (final style in SeekBarStyle.values) {
+        testWidgets('${style.name} keeps the 56 dp band and its own bar', (
+          tester,
+        ) async {
+          final host = await _pump(tester, width, waveform: _playing);
+          await host.container.read(seekBarStyleProvider.notifier).set(style);
+          await host.letStreamsArrive(tester);
+          await tester.pump(const Duration(milliseconds: 300));
+          expect(tester.getSize(find.byType(NowPlayingSeekSlot)).height, 56);
+          final bar = switch (style) {
+            SeekBarStyle.squiggle => find.byType(KSquiggleSeekBar),
+            SeekBarStyle.flat => find.byType(KFlatStyledSeekBar),
+            _ => find.byType(KWaveformSeekBar),
+          };
+          expect(bar, findsOneWidget);
+          expect(tester.getSize(bar).height, 56);
+          expect(find.byType(KSeekGestureArea), findsOneWidget);
+        });
+      }
 
       testWidgets('shows the dotted band while nothing is known', (
         tester,

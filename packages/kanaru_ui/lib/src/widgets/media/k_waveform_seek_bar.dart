@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/scheduler.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'k_seek_band.dart';
 import 'k_seek_bar.dart';
 import 'k_seek_gesture_area.dart';
 import 'k_seek_time_bubble.dart';
@@ -12,6 +13,7 @@ import 'waveform_band.dart';
 import 'waveform_bars.dart';
 import 'waveform_phase.dart';
 
+export 'k_seek_band.dart' show seekCancelUpDistance, seekHoldDelay;
 export 'wave_style.dart' show waveformPlayedAlpha, waveformRestAlpha;
 
 /// Key of the layer that draws the bars.
@@ -19,12 +21,6 @@ const ValueKey<String> waveformBandKey = ValueKey('waveform band');
 
 /// Key of the layer that holds the fallback seek bar.
 const ValueKey<String> waveformFallbackKey = ValueKey('waveform fallback');
-
-/// How far above the pointer-down point a drag is cancelled.
-const double seekCancelUpDistance = 48;
-
-/// How long a finger rests on the bar before the time bubble shows.
-const Duration seekHoldDelay = Duration(milliseconds: 150);
 
 /// Seek bar that draws the loudness of the track as bars, dots, a line or a
 /// mirror ([kind], looking as [look] says) in a 56 dp band (the shapes use the
@@ -60,7 +56,6 @@ class KWaveformSeekBar extends StatefulWidget {
     this.levelsDuration,
     this.status = KWaveformStatus.unknown,
     this.fallback,
-    this.playing = false,
     this.onSeekStart,
     this.onSeekEnd,
     this.semanticLabel,
@@ -106,9 +101,6 @@ class KWaveformSeekBar extends StatefulWidget {
   /// given the state of that inner width, so its box width is `state.width`.
   /// Default: [KFlatSeekTrack].
   final Widget Function(BuildContext context, KSeekState state)? fallback;
-
-  /// The player is playing. Not used by the bars; a fallback may animate on it.
-  final bool playing;
 
   /// Time text of the bubble shown while the bar is held or dragged. Null:
   /// no bubble and no hold.
@@ -255,18 +247,7 @@ class _KWaveformSeekBarState extends State<KWaveformSeekBar>
   /// Every fallback sits inside the insets, so its box is as wide as the
   /// state it gets and `state.progress * state.width` lands on the time axis.
   Widget _fallback(BuildContext context, KSeekState state) {
-    final inner = KSeekState(
-      progress: state.progress,
-      width: (state.width - 2 * seekInset).clamp(0.0, double.infinity),
-      active: state.active,
-      seekable: state.seekable,
-      dragging: state.dragging,
-      focused: state.focused,
-      keyboardFocus: state.keyboardFocus,
-      holding: state.holding,
-      cancelling: state.cancelling,
-      pointerFraction: state.pointerFraction,
-    );
+    final inner = insetSeekState(state, seekInset);
     final build = widget.fallback;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: seekInset),
