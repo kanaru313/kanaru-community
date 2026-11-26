@@ -20,7 +20,8 @@ import 'package:kanaru/src/database/tables/lyrics_tables.drift.dart' as i10;
 import 'package:kanaru/src/database/tables/lyrics_translation_tables.drift.dart'
     as i11;
 import 'package:kanaru/src/database/tables/plugin_tables.drift.dart' as i12;
-import 'package:drift/internal/modular.dart' as i13;
+import 'package:kanaru/src/database/tables/ai_tables.drift.dart' as i13;
+import 'package:drift/internal/modular.dart' as i14;
 
 abstract class $AppDatabase extends i0.GeneratedDatabase {
   $AppDatabase(i0.QueryExecutor e) : super(e);
@@ -59,8 +60,11 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
   late final i12.$PluginReposTable pluginRepos = i12.$PluginReposTable(this);
   late final i12.$PluginsTable plugins = i12.$PluginsTable(this);
   late final i12.$PluginDataTable pluginData = i12.$PluginDataTable(this);
+  late final i13.$AiConversationsTable aiConversations = i13
+      .$AiConversationsTable(this);
+  late final i13.$AiMessagesTable aiMessages = i13.$AiMessagesTable(this);
   i1.PlaybackStatsDrift get playbackStatsDrift =>
-      i13.ReadDatabaseContainer(this)
+      i14.ReadDatabaseContainer(this)
           .accessor<i1.PlaybackStatsDrift>(i1.PlaybackStatsDrift.new);
   @override
   Iterable<i0.TableInfo<i0.Table, Object?>> get allTables =>
@@ -132,8 +136,12 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
     pluginRepos,
     plugins,
     pluginData,
+    aiConversations,
+    aiMessages,
     i11.lyricsTranslationsLookup,
     i12.pluginsRepoEntry,
+    i13.aiConversationsLastMessage,
+    i13.aiMessagesConversationSeq,
   ];
   @override
   i0.StreamQueryUpdateRules get streamUpdateRules =>
@@ -233,6 +241,13 @@ abstract class $AppDatabase extends i0.GeneratedDatabase {
             i0.TableUpdate('playlist_entries', kind: i0.UpdateKind.delete),
           ],
         ),
+        i0.WritePropagation(
+          on: i0.TableUpdateQuery.onTableName(
+            'ai_conversations',
+            limitUpdateKind: i0.UpdateKind.delete,
+          ),
+          result: [i0.TableUpdate('ai_messages', kind: i0.UpdateKind.delete)],
+        ),
       ]);
 }
 
@@ -291,4 +306,8 @@ class $AppDatabaseManager {
       i12.$$PluginsTableTableManager(_db, _db.plugins);
   i12.$$PluginDataTableTableManager get pluginData =>
       i12.$$PluginDataTableTableManager(_db, _db.pluginData);
+  i13.$$AiConversationsTableTableManager get aiConversations =>
+      i13.$$AiConversationsTableTableManager(_db, _db.aiConversations);
+  i13.$$AiMessagesTableTableManager get aiMessages =>
+      i13.$$AiMessagesTableTableManager(_db, _db.aiMessages);
 }

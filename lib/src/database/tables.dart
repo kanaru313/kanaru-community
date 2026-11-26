@@ -16,3 +16,5 @@ export 'tables/lyrics_translation_tables.dart';
 export 'tables/lyrics_translation_tables.drift.dart';
 export 'tables/plugin_tables.dart';
 export 'tables/plugin_tables.drift.dart';
+export 'tables/ai_tables.dart';
+export 'tables/ai_tables.drift.dart';

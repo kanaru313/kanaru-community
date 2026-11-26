@@ -35,6 +35,7 @@ main.dart
 - [system-architecture-plugin-runtime.md](./system-architecture-plugin-runtime.md): plugin runtime instance, threads and thread budget, `PluginHost`, park and waker, cancel, late drain, bindgen on Android.
 - [system-architecture-plugins.md](./system-architecture-plugins.md): plugin package, catalog and install rules, network seams (address rules, pinned fetcher), backup rules.
 - [system-architecture-fonts.md](./system-architecture-fonts.md): font setting, catalog and custom fonts, data layout `dataDir/fonts`, startup resolution.
+- AI chat (added by the AI chat engine, UI and settings work): `system-architecture-ai.md`, `system-architecture-ai-ui.md`, `system-architecture-ai-settings.md`. The `ai` module sits above `lyrics`, `library`, `playback` and `plugins` and below `screens` (`architecture.yaml`); tables are in the database document.
 - [plugin-host-api.md](./plugin-host-api.md): what a plugin script sees (globals, errors, limits, streaming runs, what is absent).
 
 ## Runtime pieces
