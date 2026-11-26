@@ -12,7 +12,8 @@ enum ToolSource { builtin, plugin, mcp }
 enum ToolRisk { read, write, external }
 
 /// A tool's answer. [text] is what the model reads (JSON for the built-in
-/// tools); an error is sent to the model as `Error: <text>`.
+/// tools). An error is sent with `isError: true` and this plain text; the
+/// chat plugin adds any `Error: ` prefix its provider needs, never the app.
 class ToolOutcome {
   const ToolOutcome.ok(this.text, {this.done})
     : isError = false,

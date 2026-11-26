@@ -319,3 +319,107 @@ Pure Dart (no Flutter); they read the chat contract of `docs/plugin-host-api.md`
   (default 60 s) and the plugin pause. `RunBusy` is "stuck" from the third in a
   row with no stream active. `ChatOutcomeView.interrupted()` is the card for a
   turn cut off by closing the app.
+
+## Variables and chips (`ai/domain/variables/`)
+
+Pure Dart. Values and chip contents reach the model only as fenced
+`DataPart`s, never as `TextPart`s.
+
+- **Catalogue** (`variable_catalog.dart`): `AiVariable` (`now_playing`,
+  `title`, `artist`, `album`, `lyrics`, `queue`, `input`) with its data
+  `source`, privacy group (now_playing, title, artist, album -> nowPlaying;
+  lyrics -> lyrics; queue -> queue; input -> none) and `l10nKey` (key only;
+  the strings belong to the AI settings l10n part). `variableCatalog` lists
+  them; `ToolGroupSwitches` is the "is this group on" callback.
+- **Validator** (`template_analysis.dart`): `analyzeTemplate(body, switches)`
+  returns spans `ok | unknown | groupOff`. One rule for the composer, the
+  prompt list and the editor: an unknown `{{x}}` is literal text when sent
+  from the composer and an error (`invalidAsSaved`) in a saved template.
+- **Filler** (`variable_filler.dart`): `fillVariables` returns `FillDone`
+  (text and data parts interleaved, `displayText` with values inline),
+  `FillBlocked` (every `FillMissing(reason)`, `FillGroupOff`,
+  `FillLeftoverInput`) or `FillOversize` (a value over 24 KiB UTF-8; call
+  again with `shortVersion: true`: queue = 50 entries around the loaded one,
+  other values cut with `\n[…]`). A group that is off blocks unless
+  `varBypass`. `{{input}}` is never filled by the app. Values come from the
+  tool-env ports (`variable_values.dart`).
+- **Fence** (`data_fence.dart`): `fencedData` strips C0/C1, bidi and
+  zero-width characters and breaks every `<data` / `</data` (same
+  `fenceSafe` the input builder applies on the way out). The per-request
+  `boundary` is `newChatBoundary` (`Random.secure`), the only source.
+- **Chips** (`chip_ref.dart`, `chip_resolver.dart`): `chipRefOf` is the one
+  mapping from `AskAiTarget` (`library/domain/ask_ai_target.dart`) to a
+  `ChipRef`. `ChipResolver` checks the group (nowPlaying chip: nowPlaying;
+  song, songs, album, artist, genre, language: trackInfo; playlist: playlists;
+  same `varBypass`), reads data through `ToolEnv` plus `ChipScopePort`
+  (album / artist / genre / language tracks and playlist uid -> model id),
+  and returns `ChipResolved(chip, data)`, `ChipBlocked` or `ChipMissing`.
+  There is no lyrics chip.
+- **Title** (`title_rule.dart`): `conversationTitle(displayText)`: sanitised,
+  first 40 characters, "…" added when cut.
+
+## Loop (`ai/domain/loop/`, `ai/data/loop_store_adapter.dart`)
+
+Pure Dart. `LoopDriver` runs the turns of one conversation on ports:
+`LoopStore` (the stored transcript; `LoopStoreAdapter` implements it on
+`ConversationStore`), `ModelRoundRunner` (one plugin run: input in, `RunOutcome`
+out, text deltas through a callback, `cancel()`), `LoopEnvironment` (tool
+registry and `ToolEnv`, fresh `LoopSettings` and `LoopPlugin` reads) and a clock.
+
+- **Next step** (`ChatLoop.next`, pure): from the rows of the latest turn it
+  returns `RunModel(round, finalRound)`, `AwaitConfirms`, `RunTools` (the
+  allowed calls, in the model's order), `ExpireCards`, `Done` or
+  `NeedsUserTap`. A round's calls run only after every card of that round is
+  resolved (nothing `pending`); then the next round starts. Rounds 1 to 6 offer
+  tools; round 7 is the final round (`toolChoice: "none"`); after it the turn is
+  done. A call in the final round, an unknown tool or unparsed arguments is
+  answered with an error result and never runs.
+- **Turn state:** `TurnState { idle, streaming, runningTools, awaitingConfirm,
+  error }` (`turnState`, `states`). `liveText` streams the deltas so the list
+  does not rebuild per delta; the text is flushed to the store about once a
+  second, at the end of a round, and by `flushLive()`.
+- **Single flight:** one in-flight future (`inFlight`). `send` and `retry`
+  return `DriverBusy` while it runs (the trigger is dropped, never queued).
+  Allow and Deny are compare-and-set answers on the stored card, so they work
+  during a flight (it re-reads the store before it parks) and two Allows of one
+  card run the tool once. The flight ends when the turn is done, failed,
+  stopped, or waits on a card (`awaitingConfirm`); Allow, Deny and Retry start
+  the next flight. Before a model round the transcript revision (`seq` of the
+  newest row) is compared in the same transaction as the streaming message
+  insert (`ConversationStore.appendIfLatest`): a round never starts on a
+  transcript that moved.
+- **Allow:** binds `{callId, hash(name + args), conversationId}` in memory
+  (`callHash`: sha256 over the name and key-sorted args). Execution recomputes
+  the hash from the stored call; any difference is a refusal.
+- **`mayExecute`** runs right before every `allowed -> running` (reads too):
+  no write in a read-only chat, the tool's group switch, external tools never,
+  the plugin install id + generation and the model the round was made with
+  unchanged. A refusal stores `skipped` with the result "not run: not allowed
+  now (...)". A pending card is valid until the next user message (denied by
+  it) or 24 h (`expired`, also on a late Allow). `applyPermission()` after a
+  switch to read-only denies pending and allowed-not-run writes at once.
+- **Tools:** each call is stored `running` before it runs, then `done`, `error`
+  or `skipped`; a 30 s timeout fails a read and marks a write `unknown` (it
+  may have happened; never re-run). `ToolEnv.turnUsage` reads the `DonePart`s
+  of the turn from the store before each call. A `limitReached` outcome stores
+  the call as failed with an `ErrorPart` code `limit_reached`, skips the rest
+  of the batch with "not run: the limit for this turn was reached" and ends
+  the turn in `error`; the parser's `ChatLimitExceeded` ends the round the same
+  way. `limit_reached` is a stored code of the app, not a plugin contract code.
+- **Stop:** `stop()` sets a turn-level flag and cancels the runner. Streamed
+  text stays (`stopped`), the call being run finishes, later calls are
+  `skipped` with "not run: stopped by the user", pending cards are skipped the
+  same way, no next round. Switch, delete and dispose use it and await the
+  returned future.
+- **Crash rules:** after a restart (`sweepAfterCrash`) `streaming -> stopped`
+  and `running -> unknown`. `inspect()` only reads: it sets `turnState` and
+  returns `NeedsUserTap` for a model round or allowed calls that wait, or
+  `AwaitConfirms` for pending cards. Nothing runs until the user taps (Retry,
+  Allow, Deny, send). Pending cards act only on tap; `unknown` writes are
+  never re-run (the model reads "the result is unknown").
+- **Failures:** a round that ends without a reply stores `stopped` or `error`
+  with the contract code (or the card name in snake case, e.g. `timeout`,
+  `plugin_updated`) and kind; `lastView` keeps the `ChatOutcomeView` of the
+  last failed round. A plugin that is gone ends the turn in `error` with no
+  stored row (the chat's readiness shows it). The plugin version that really
+  ran (`RunOk.pluginVersion`) is stamped on the message.

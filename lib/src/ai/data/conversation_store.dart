@@ -261,6 +261,60 @@ class ConversationStore {
     return (await message(id))!;
   }
 
+  /// The `seq` of the newest row of the conversation (0 when it has none):
+  /// the revision of its transcript.
+  Future<int> latestSeq(int conversationId) async {
+    final row = await _db
+        .customSelect(
+          'SELECT COALESCE(MAX(seq), 0) AS m FROM ai_messages '
+          'WHERE conversation_id = ?',
+          variables: [Variable.withInt(conversationId)],
+        )
+        .getSingle();
+    return row.read<int>('m');
+  }
+
+  /// [append] only when the newest row still has `seq == expectedSeq`; null
+  /// (nothing written) when another row got in first. The check and the
+  /// insert share one transaction.
+  Future<StoredMessage?> appendIfLatest(
+    NewAiMessage m, {
+    required int expectedSeq,
+  }) async {
+    final parts = encodeParts(m.parts);
+    _checkPartsSize(parts);
+    final live = m.liveText == null
+        ? null
+        : capLiveText(m.liveText!, limits.liveTextBytes);
+    final id = await _db.transaction<int?>(() async {
+      if (await latestSeq(m.conversationId) != expectedSeq) return null;
+      return _insertRow(
+        conversationId: m.conversationId,
+        role: m.role.wire,
+        state: m.state.wire,
+        partsJson: parts,
+        liveText: live,
+        providerJson: m.providerJson,
+        installId: m.installId,
+        installGeneration: m.installGeneration,
+        pluginVersion: m.pluginVersion,
+        model: m.model,
+      );
+    });
+    if (id == null) return null;
+    _notify();
+    return message(id);
+  }
+
+  /// Records the plugin version that really ran a round (the run may have
+  /// used a newer one than the message was created with).
+  Future<bool> stampPluginVersion(int messageId, int version) async {
+    final n =
+        await (_db.update(_db.aiMessages)..where((m) => m.id.equals(messageId)))
+            .write(AiMessagesCompanion(pluginVersion: Value(version)));
+    return n > 0;
+  }
+
   Future<int> _insertRow({
     required int conversationId,
     required String role,
