@@ -60,6 +60,23 @@ abstract final class KMotion {
   /// Curve of [waveformGrow] (easeInOutQuart, as the mockup).
   static const Curve waveformGrowCurve = Curves.easeInOutQuart;
 
+  /// The AI chat page sliding up on mobile (and back down).
+  static const Duration chatPageSlide = Duration(milliseconds: 420);
+
+  /// Curve of [chatPageSlide]: the "gentle" feel of [KSpring.gentle] (a
+  /// critically damped spring, no overshoot) as a fixed-duration curve, since
+  /// a route transition needs a duration.
+  static const Curve chatPageSlideCurve = Curves.easeOutCubic;
+
+  /// Curve of each dot rise and fall in `KStreamingDots`.
+  static const Curve streamingDotsCurve = Curves.easeInOut;
+
+  /// One full cycle of the three answering dots (`KStreamingDots`).
+  static const Duration streamingDots = Duration(milliseconds: 1200);
+
+  /// Step of a countdown label (`KActionCard`) while under an hour is left.
+  static const Duration countdownTick = Duration(seconds: 1);
+
   /// Animation style for a route a helper opens (dialog, sheet, popover):
   /// none when the platform or the app turns animations off, else null (the
   /// route's own default). Flutter routes do not read `disableAnimations`.

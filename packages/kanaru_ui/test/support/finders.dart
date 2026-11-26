@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -40,6 +42,26 @@ Finder byToggled(String label) => find.byWidgetPredicate(
       widget.properties.toggled == true,
   description: 'toggled on "$label"',
 );
+
+/// Finds the semantics node labelled [label] that reports itself selected,
+/// including nodes Material or our widgets build without an own [Semantics]
+/// widget (icon rows). Needs semantics enabled in the test.
+SemanticsFinder bySemanticsSelected(String label) =>
+    find.semantics.byPredicate((node) {
+      final data = node.getSemanticsData();
+      return data.label.split('\n').contains(label) &&
+          data.flagsCollection.isSelected == Tristate.isTrue;
+    }, describeMatch: (_) => 'selected "$label"');
+
+/// Finds the semantics node labelled [label] whose toggle state is [on]
+/// (a switch row). Needs semantics enabled in the test.
+SemanticsFinder byToggledState(String label, {bool on = true}) =>
+    find.semantics.byPredicate((node) {
+      final data = node.getSemanticsData();
+      return data.label.split('\n').contains(label) &&
+          data.flagsCollection.isToggled ==
+              (on ? Tristate.isTrue : Tristate.isFalse);
+    }, describeMatch: (_) => 'toggled ${on ? 'on' : 'off'} "$label"');
 
 /// Finds the stop slider whose spoken value is [label] (its live label).
 Finder bySliderValue(String label) => find.byWidgetPredicate(

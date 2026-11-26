@@ -1,7 +1,9 @@
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../support/finders.dart';
 import '../support/host.dart';
 
 void main() {
@@ -85,5 +87,69 @@ void main() {
       tester.getSize(find.byType(KSwitchRow)).height,
       greaterThanOrEqualTo(56),
     );
+  });
+
+  testWidgets('onTap replaces the row toggle; the switch still toggles', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    final seen = <bool>[];
+    var taps = 0;
+    await tester.pumpWidget(
+      host(
+        KSwitchRow(
+          title: const Text('Prompt'),
+          value: false,
+          onChanged: seen.add,
+          onTap: () => taps++,
+          tapSemanticsLabel: 'Prompt, open',
+        ),
+      ),
+    );
+    await tester.tap(find.text('Prompt'));
+    expect(taps, 1);
+    expect(seen, isEmpty);
+    await tester.tap(find.byType(KSwitch));
+    expect(taps, 1);
+    expect(seen, [true]);
+  });
+
+  group('onTap semantics', () {
+    Widget row({required ValueChanged<bool>? onChanged}) => KSwitchRow(
+      title: const Text('Prompt'),
+      value: true,
+      onChanged: onChanged,
+      onTap: () {},
+      tapSemanticsLabel: 'Prompt, open',
+      switchLabel: 'Turn on Prompt',
+    );
+
+    testWidgets('row is a button, the switch a separate toggled node', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(host(row(onChanged: (_) {})));
+      expect(
+        find.semantics.byPredicate((n) {
+          final d = n.getSemanticsData();
+          return d.label.contains('Prompt, open') &&
+              d.hasAction(SemanticsAction.tap);
+        }, describeMatch: (_) => 'row button "Prompt, open"'),
+        findsOneWidget,
+      );
+      expect(byToggledState('Turn on Prompt'), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('locked switch keeps the row button', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(host(row(onChanged: null)));
+      expect(find.semantics.byLabel('Prompt, open'), findsOneWidget);
+      final sw = tester.widget<KSwitch>(find.byType(KSwitch));
+      expect(sw.onChanged, isNull);
+      handle.dispose();
+    });
   });
 }

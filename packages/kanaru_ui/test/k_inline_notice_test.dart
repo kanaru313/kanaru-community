@@ -307,4 +307,217 @@ void main() {
     );
     expect(pressed, 0);
   });
+
+  group('warning and quiet tones, two actions, dismiss', () {
+    Widget strip({
+      KInlineNoticeTone tone = KInlineNoticeTone.warning,
+      String? action = 'Mở cài đặt',
+      String? second,
+      VoidCallback? onDismiss,
+    }) => host(
+      KInlineNotice(
+        icon: KIcons.info,
+        message: _msg,
+        tone: tone,
+        actionLabel: action,
+        onAction: action == null ? null : () {},
+        secondaryActionLabel: second,
+        onSecondaryAction: second == null ? null : () {},
+        onDismiss: onDismiss,
+        dismissLabel: onDismiss == null ? null : 'Đóng thông báo',
+      ),
+    );
+
+    testWidgets('warning is tertiary and an alert', (tester) async {
+      final handle = tester.ensureSemantics();
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(strip());
+      final scheme = Theme.of(tester.element(find.byType(KInlineNotice)))
+          .colorScheme;
+      final box = tester.widget<DecoratedBox>(
+        find.descendant(
+          of: find.byType(KInlineNotice),
+          matching: find.byType(DecoratedBox),
+        ),
+      );
+      expect((box.decoration as BoxDecoration).color, scheme.tertiaryContainer);
+      expect(
+        tester.getSemantics(find.byType(KInlineNotice)),
+        isSemantics(isLiveRegion: true),
+      );
+      handle.dispose();
+    });
+
+    testWidgets('quiet has no background and is not a live region', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        strip(tone: KInlineNoticeTone.quiet, action: null),
+      );
+      final box = tester.widget<DecoratedBox>(
+        find.descendant(
+          of: find.byType(KInlineNotice),
+          matching: find.byType(DecoratedBox),
+        ),
+      );
+      expect((box.decoration as BoxDecoration).color, isNull);
+      expect(
+        tester.getSemantics(find.byType(KInlineNotice)),
+        isNot(isSemantics(isLiveRegion: true)),
+      );
+      handle.dispose();
+    });
+
+    testWidgets('the button sits under the text, always', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(strip());
+      expect(
+        tester.getTopLeft(find.byType(TextButton)).dy,
+        greaterThanOrEqualTo(tester.getBottomLeft(find.text(_msg)).dy),
+      );
+    });
+
+    testWidgets('two buttons: the first is left of the second', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(strip(second: 'Cài đặt AI'));
+      expect(
+        tester.getRect(find.text('Mở cài đặt')).right,
+        lessThan(tester.getRect(find.text('Cài đặt AI')).left),
+      );
+    });
+
+    testWidgets('two long buttons wrap onto two rows without overflow', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(300, 800));
+      await tester.pumpWidget(
+        strip(
+          action: 'Gửi bản rút gọn: 50 bài quanh bài đang phát',
+          second: 'Huỷ',
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getTopLeft(find.text('Huỷ')).dy,
+        greaterThan(
+          tester
+              .getTopLeft(
+                find.text('Gửi bản rút gọn: 50 bài quanh bài đang phát'),
+              )
+              .dy,
+        ),
+      );
+    });
+
+    testWidgets('the second button runs its own callback', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      var first = 0, second = 0;
+      await tester.pumpWidget(
+        host(
+          KInlineNotice(
+            icon: KIcons.info,
+            message: _msg,
+            actionLabel: 'A',
+            onAction: () => first++,
+            secondaryActionLabel: 'B',
+            onSecondaryAction: () => second++,
+          ),
+        ),
+      );
+      await tester.tap(find.text('B'));
+      expect((first, second), (0, 1));
+    });
+
+    testWidgets('dismiss shows a labelled button at the top right', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      var closed = 0;
+      await tester.pumpWidget(
+        strip(second: 'Cài đặt AI', onDismiss: () => closed++),
+      );
+      final x = find.byWidgetPredicate(
+        (w) => w is KIconButton && w.tooltip == 'Đóng thông báo',
+      );
+      expect(x, findsOneWidget);
+      final strip0 = tester.getRect(find.byType(KInlineNotice));
+      expect(tester.getRect(x).right, greaterThan(strip0.right - 24));
+      expect(tester.getRect(x).top, lessThan(strip0.top + 24));
+      await tester.tap(x);
+      expect(closed, 1);
+    });
+
+    testWidgets('dismiss alone (no button) works', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(strip(action: null, onDismiss: () {}));
+      expect(find.byType(TextButton), findsNothing);
+      expect(find.byType(KIconButton), findsOneWidget);
+    });
+
+    testWidgets('a plain tone with no new option renders as before', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(_notice(message: 'Đã tắt ghi.', action: 'Bật', onAction: () {})),
+      );
+      final line = tester.getRect(find.text('Đã tắt ghi.'));
+      expect(
+        (tester.getRect(find.byType(TextButton)).center.dy - line.center.dy)
+            .abs(),
+        lessThan(6),
+      );
+    });
+
+    testWidgets('200 % text: no overflow with two buttons and a dismiss', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(360, 900));
+      await tester.pumpWidget(
+        host(
+          KInlineNotice(
+            icon: KIcons.info,
+            message: _msg,
+            tone: KInlineNoticeTone.warning,
+            actionLabel: 'Huỷ',
+            onAction: () {},
+            secondaryActionLabel: 'Gửi bản rút gọn',
+            onSecondaryAction: () {},
+            onDismiss: () {},
+            dismissLabel: 'Đóng thông báo',
+          ),
+          textScale: 2.0,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    test('asserts pairs and the dismiss label', () {
+      expect(
+        () => KInlineNotice(
+          icon: KIcons.info,
+          message: 'm',
+          actionLabel: 'A',
+          onAction: () {},
+          secondaryActionLabel: 'B',
+        ),
+        throwsAssertionError,
+      );
+      expect(
+        () => KInlineNotice(
+          icon: KIcons.info,
+          message: 'm',
+          secondaryActionLabel: 'B',
+          onSecondaryAction: () {},
+        ),
+        throwsAssertionError,
+      );
+      expect(
+        () => KInlineNotice(icon: KIcons.info, message: 'm', onDismiss: () {}),
+        throwsAssertionError,
+      );
+    });
+  });
 }

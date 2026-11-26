@@ -17,10 +17,15 @@ class ReorderableToggleItem<T> {
     this.subtitle,
     this.problem,
     this.onProblemTap,
+    this.onTap,
+    this.tapLabel,
   });
 
   /// Identifies the row (and keys it while it moves).
   final T value;
+
+  /// The row name. A badge after the name (a "broken" tag on a row with a
+  /// [problem]) belongs here, drawn by the caller.
   final Widget title;
   final bool enabled;
 
@@ -33,10 +38,19 @@ class ReorderableToggleItem<T> {
   /// A line under the title.
   final String? subtitle;
 
-  /// Why the row cannot work right now: a line under [subtitle] in the error
-  /// colour. With [onProblemTap] it is a button that leads to the fix.
+  /// Why the row cannot work right now: a line in the error colour, shown
+  /// under [subtitle] when both are given. A caller that wants the problem to
+  /// replace the subtitle passes no [subtitle] while a problem exists. With
+  /// [onProblemTap] it is a button that leads to the fix.
   final String? problem;
   final VoidCallback? onProblemTap;
+
+  /// Tapping the row runs this (open, edit) and does not toggle; only the
+  /// switch toggles. Null: a row tap toggles.
+  final VoidCallback? onTap;
+
+  /// Spoken name of the [onTap] action, for example "Name, open to edit".
+  final String? tapLabel;
 }
 
 /// Rows with a drag handle on the left and a switch on the right. By default
@@ -86,6 +100,8 @@ class ReorderableToggleList<T> extends StatelessWidget {
           value: item.enabled,
           lockedLabel: locked ? lockedLabel : null,
           switchLabel: item.switchLabel,
+          onTap: item.onTap,
+          tapSemanticsLabel: item.tapLabel,
           subtitle: _subtitle(context, item),
           onChanged: locked ? null : (on) => onToggle(item.value, on),
           leading: _leading(index, item),
@@ -106,6 +122,7 @@ class ReorderableToggleList<T> extends StatelessWidget {
         child: Tooltip(
           message: dragLabel,
           child: Semantics(
+            container: true,
             label: dragLabel,
             child: const SizedBox(
               width: KSpace.x7,
