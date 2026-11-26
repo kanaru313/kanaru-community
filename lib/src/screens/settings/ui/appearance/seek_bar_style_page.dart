@@ -40,7 +40,7 @@ class SeekBarStylePage extends ConsumerWidget {
                   ref.read(seekBarStyleProvider.notifier).set(value),
               options: [
                 KPreviewOption(
-                  value: SeekBarStyle.waveform,
+                  value: SeekBarStyle.bars,
                   preview: const WaveformSeekPreview(),
                   title: l10n.settingsSeekBarWaveform,
                   caption: l10n.settingsSeekBarWaveformCaption,

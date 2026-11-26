@@ -114,8 +114,11 @@ class _PlaybackWaveformSeekBarState
     );
     final shown = scrubbed != null ? Duration(seconds: scrubbed) : position;
     final entry = ref.watch(nowPlayingProvider.select((n) => n.value?.entryId));
-    final flat = ref.watch(seekBarStyleProvider) == SeekBarStyle.flat;
-    // Not watched when flat, so the decoder never starts for a flat bar.
+    final style = ref.watch(seekBarStyleProvider);
+    final squiggle = ref.watch(squiggleSeekOptionsProvider);
+    final flat = !needsWaveform(style, squiggle);
+    // Not watched when no waveform is needed, so the decoder never starts for
+    // a flat bar or a squiggle that does not follow the music.
     final loaded = flat ? null : ref.watch(waveformProvider);
     final view = loaded?.value;
     // A view of another entry (or none yet, while the provider loads) is no

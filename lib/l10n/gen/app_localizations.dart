@@ -4428,6 +4428,36 @@ abstract class AppLocalizations {
   /// **'Local files and some plugins. Tracks without a waveform use the flat bar.'**
   String get settingsSeekBarWaveformCaption;
 
+  /// No description provided for @settingsSeekBarStyleBars.
+  ///
+  /// In en, this message translates to:
+  /// **'Bars'**
+  String get settingsSeekBarStyleBars;
+
+  /// No description provided for @settingsSeekBarStyleDots.
+  ///
+  /// In en, this message translates to:
+  /// **'Dots'**
+  String get settingsSeekBarStyleDots;
+
+  /// No description provided for @settingsSeekBarStyleLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Line'**
+  String get settingsSeekBarStyleLine;
+
+  /// No description provided for @settingsSeekBarStyleMirror.
+  ///
+  /// In en, this message translates to:
+  /// **'Mirror'**
+  String get settingsSeekBarStyleMirror;
+
+  /// No description provided for @settingsSeekBarStyleSquiggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Squiggle'**
+  String get settingsSeekBarStyleSquiggle;
+
   /// No description provided for @settingsSeekBarFlat.
   ///
   /// In en, this message translates to:

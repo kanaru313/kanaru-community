@@ -577,7 +577,9 @@ The UI only reads the queue, shuffle, repeat and volume keys. (`shell.right_pane
 | `playback.context` | `contextSetting` | `{kind, ref, label}` of the `PlayContext`; an unknown kind reads as `queue` |
 | `playback.volume` | `volumeSetting` | 0-100 (default 100; out of range is clamped) |
 | `playback.volume_before_mute` | `volumeBeforeMuteSetting` | Level 1-100 to restore on unmute when muted (null otherwise) |
-| `playback.seek_bar_style` | `seekBarStyleSetting` | `'waveform'` (default) or `'flat'`; written by the Settings page |
+| `playback.seek_bar_style` | `seekBarStyleSetting` | `bars` (default), `dots`, `line`, `mirror`, `squiggle`, `flat`; a stored `'waveform'` reads as `bars` (never rewritten on read) |
+| `playback.seek_bar_fallback` | `seekBarFallbackSetting` | `squiggle` or `flat` (default): the style shown while the chosen one has no waveform |
+| `playback.seek_bar_wave` / `_squiggle` / `_flat` | `waveSeekOptionsSetting` etc. (`seek_bar_options.dart`) | JSON map of per-group options; each field decoded on its own (bad or missing field takes its default, unknown keys ignored) |
 | `playback.previous_button` | `previousButtonSetting` | `'alwaysPrevious'` (default) or `'restartAfter3s'`; read by `previousPressed()` when it runs |
 | `playback.listen_rule` | `listenRuleSetting` | `{afterMs, percent}` (default 240000 / 50; snapped to the stops; a non-map, missing or non-finite number reads as the default) |
 | `playback.history_enabled` | `historyEnabledSetting` | Bool, default on; off stops new `play_log` rows |
@@ -999,7 +1001,7 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
 
 Levels for the Now Playing seek bar on both shells. The mini player and the player bar keep the flat `KSeekBar`.
 
-**Style setting.** `playback.seek_bar_style` (`playback/domain/seek_bar_style.dart`, `SeekBarStyle.waveform` default | `flat`, `seekBarStyleProvider`), chosen on Settings > Appearance > Seek bar. `PlaybackWaveformSeekBar` watches `waveformProvider` only in the waveform style; in the flat style it does not, so no decode job starts, and it passes `levels: null` (the flat track).
+**Style setting.** `playback.seek_bar_style` (`playback/domain/seek_bar_style.dart`, `SeekBarStyle` bars (default) | dots | line | mirror | squiggle | flat, `seekBarStyleProvider`), chosen on Settings > Appearance > Seek bar; fallback and option groups in the settings table. `needsWaveform(style, squiggleOptions)` is true for the wave kinds and for a chosen squiggle with `motion: music`. `PlaybackWaveformSeekBar` watches `waveformProvider` only then; otherwise no decode job starts and it passes `levels: null` (the flat track). The squiggle as the fallback never decodes (music behaves as drift). Until the new painters land, wave kinds draw the waveform bar and squiggle / flat draw the flat track.
 
 **Decode** (`rust/crates/kanaru_media/src/waveform/`, no FFI). `compute(source, ext_hint, cancel) -> Waveform { levels, duration_ms }`
 with symphonia 0.6 (`next_packet() -> Result<Option<Packet>>`), codecs of the Cargo features: MP3, FLAC, Ogg Vorbis, AAC and

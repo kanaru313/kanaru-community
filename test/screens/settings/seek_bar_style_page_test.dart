@@ -45,10 +45,22 @@ void main() {
         expect(h.store.read('playback.seek_bar_style'), 'flat');
         await tester.tap(find.text('Waveform'));
         await tester.pumpAndSettle();
-        expect(h.store.read('playback.seek_bar_style'), 'waveform');
+        expect(h.store.read('playback.seek_bar_style'), 'bars');
       });
     });
   }
+
+  testWidgets('a style stored before the split loads as bars, unchanged', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final h = await pumpSettings(tester, location: SettingsPaths.seekBar);
+    await h.store.write('playback.seek_bar_style', 'waveform');
+    await tester.pumpAndSettle();
+    expect(_selected('Waveform'), findsOneWidget);
+    expect(h.store.read('playback.seek_bar_style'), 'waveform');
+    semantics.dispose();
+  });
 
   testWidgets('an unknown stored style falls back to the waveform', (
     tester,

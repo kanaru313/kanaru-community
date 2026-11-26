@@ -128,7 +128,11 @@ class _AppearanceSettingsPageState
               icon: KIcons.seekBar,
               title: Text(l10n.settingsAppearanceSeekBar),
               value: Text(switch (seekStyle) {
-                SeekBarStyle.waveform => l10n.settingsSeekBarWaveform,
+                SeekBarStyle.bars => l10n.settingsSeekBarStyleBars,
+                SeekBarStyle.dots => l10n.settingsSeekBarStyleDots,
+                SeekBarStyle.line => l10n.settingsSeekBarStyleLine,
+                SeekBarStyle.mirror => l10n.settingsSeekBarStyleMirror,
+                SeekBarStyle.squiggle => l10n.settingsSeekBarStyleSquiggle,
                 SeekBarStyle.flat => l10n.settingsSeekBarFlat,
               }),
               onTap: () => context.push(SettingsPaths.seekBar),

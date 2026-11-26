@@ -2993,6 +2993,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Local files and some plugins. Tracks without a waveform use the flat bar.';
 
   @override
+  String get settingsSeekBarStyleBars => 'Bars';
+
+  @override
+  String get settingsSeekBarStyleDots => 'Dots';
+
+  @override
+  String get settingsSeekBarStyleLine => 'Line';
+
+  @override
+  String get settingsSeekBarStyleMirror => 'Mirror';
+
+  @override
+  String get settingsSeekBarStyleSquiggle => 'Squiggle';
+
+  @override
   String get settingsSeekBarFlat => 'Flat bar';
 
   @override

@@ -2695,6 +2695,21 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tệp trong máy và một số plugin. Bài không có dạng sóng dùng thanh phẳng.';
 
   @override
+  String get settingsSeekBarStyleBars => 'Vạch';
+
+  @override
+  String get settingsSeekBarStyleDots => 'Chấm';
+
+  @override
+  String get settingsSeekBarStyleLine => 'Đường';
+
+  @override
+  String get settingsSeekBarStyleMirror => 'Phản chiếu';
+
+  @override
+  String get settingsSeekBarStyleSquiggle => 'Lượn';
+
+  @override
   String get settingsSeekBarFlat => 'Thanh phẳng';
 
   @override
