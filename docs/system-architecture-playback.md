@@ -1001,7 +1001,7 @@ A port of the old app's screen (`~/dev/kanaru/lib/features/player/now_playing/`)
 
 Levels for the Now Playing seek bar on both shells. The mini player and the player bar keep the flat `KSeekBar`.
 
-**Style setting.** `playback.seek_bar_style` (`playback/domain/seek_bar_style.dart`, `SeekBarStyle` bars (default) | dots | line | mirror | squiggle | flat, `seekBarStyleProvider`), chosen on Settings > Appearance > Seek bar; fallback and option groups in the settings table. `needsWaveform(style, squiggleOptions)` is true for the wave kinds and for a chosen squiggle with `motion: music`. `PlaybackWaveformSeekBar` watches `waveformProvider` only then; otherwise no decode job starts and it passes `levels: null` (the flat track). The squiggle as the fallback never decodes (music behaves as drift). Until the new painters land, wave kinds draw the waveform bar and squiggle / flat draw the flat track.
+**Style setting.** `playback.seek_bar_style` (`playback/domain/seek_bar_style.dart`, `SeekBarStyle` bars (default) | dots | line | mirror | squiggle | flat, `seekBarStyleProvider`), chosen on Settings > Appearance > Seek bar; fallback and option groups in the settings table. `needsWaveform(style, squiggleOptions)` is true for the wave kinds and for a chosen squiggle with `motion: music`. `PlaybackWaveformSeekBar` watches `waveformProvider` only then; otherwise no decode job starts and it passes `levels: null` (the flat track). The squiggle as the fallback never decodes (music behaves as drift). The wave kinds draw their own shapes (below); until the squiggle and flat painters land, a squiggle that follows the music draws the waveform bar, and a squiggle or flat that does not draws the flat track.
 
 **Decode** (`rust/crates/kanaru_media/src/waveform/`, no FFI). `compute(source, ext_hint, cancel) -> Waveform { levels, duration_ms }`
 with symphonia 0.6 (`next_packet() -> Result<Option<Packet>>`), codecs of the Cargo features: MP3, FLAC, Ogg Vorbis, AAC and
@@ -1046,7 +1046,7 @@ memory LRU (by cache key, so a changed file misses) survives the views. `status`
 **Display** (`packages/kanaru_ui/lib/src/widgets/media/`). `KWaveformSeekBar` has the input of `KSeekBar` (`KSeekGestureArea`: tap,
 drag, left/right 5 s, slider semantics; options `seekOnTap`, `anyDirection` (a pan with the device touch slop) and `horizontalInset` for the
 mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancelled touch never seeks). It is a 56 dp band (`seekBandHeight`, `ClipRect` +
-`RepaintBoundary`, effects never change layout); the bars use the 32 dp in the middle, 3 to 32 dp tall, 3 dp wide, 2 dp apart, with no thumb.
+`RepaintBoundary`, effects never change layout); the shapes use the 32 dp in the middle (bars 3 to 32 dp tall; width / gap 4 / 3, 3 / 2 or 2 / 1 by density), with no thumb.
 - **Time axis.** `seekInset` = 6 dp at each side. Bars are counted over the inner width and centred in it
   (`off = 6 + (iw - (n * pitch - gap)) / 2`). Input, bars and the fallback share one map: a tap at x seeks to `(x - 6) / (w - 12)`, bar j
   stands for the fractions `(off + j * pitch - 6) / (w - 12)` to `(off + (j + 1) * pitch - 6) / (w - 12)` (the last window ends at the
@@ -1058,8 +1058,21 @@ mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancell
   without a key (a menu, dialog or page opened and closed by mouse); Tab, Shift+Tab, Esc closing a dialog, or a key after a click, draws
   it. Focus state lives in `SeekFocusTracker` (`seek_focus_tracker.dart`). `waveform_bars.dart` (pure): bars map time, not index (mean of the levels inside the bar's window; a shorter waveform
   leaves minimal bars; a longer one is cut), after a contrast stretch (the quietest tenth to 0, the loudest percent to full; a steady tone
-  stays full; silence stays flat). Steady state draws two recorded pictures (a position tick only moves two clips, nothing is recorded);
+  stays at 60 % of the content height instead of a solid block; silence stays flat). Steady state draws two recorded pictures (a position tick only moves two clips, nothing is recorded);
   during a transition the rounded rectangles are drawn directly (about 70 per layer at 364 px).
+- **Kinds and look** (`seek_look.dart`, `wave_style_painter.dart`). `KWaveformSeekBar.kind` (`KSeekKind` bars, dots, line, mirror) and
+  `look` (`KWaveLook`: density, played single / gradient / by height, rest dim / outline / hidden, feedback jelly / lens / off). One painter
+  (`paintWaveShapes`) draws every kind for the played and the rest layer (clipped at the exact position) and records them as pictures keyed
+  by levels, size, dpr, kind, look (without the feedback) and the theme colours the pictures use, so a position tick still only moves two clips. Dots: Ø `max(w, 2.5)`,
+  step `Ø + max(g, 1.5)`; line: a closed mirrored outline through the bar tops; mirror: baseline at 66 % of the band, reflection at 40 %
+  alpha. A hidden rest draws a thin `outlineVariant` line from the position on. `lib/src/playback/ui/seek_bar_look.dart` maps the domain
+  style and `WaveSeekOptions` to them (exhaustive switches); squiggle and flat map to bars until their painters exist.
+- **Touch feedback** (`seek_feedback.dart`, pure Dart). Jelly: `JellySprings`, a row of springs coupled to their neighbours at a fixed step of
+  1/240 s (a frame covers at most 0.05 s, 12 steps), factor per bar clamped to 0.35..2.2; a press dents the bars under the finger, a seek (release, tap,
+  keys at half strength) pokes a ripple. Lens: `LensEnvelope` eases 0..1 in about 120 ms and grows bars near the finger by up to x1.7.
+  Bar height never exceeds the band less 2 dp. `KWaveformSeekBar` runs its one ticker for it only while a finger is down or a wobble
+  settles, and only while the bars stand fully grown (not on the dotted row, a transition or the fallback); a finger resting on one bar after the dent settled needs no more frames. Frames draw the bars directly, scaled per bar, skipping those outside each layer; steady playback schedules no extra frames, and reduced motion or a muted
+  `TickerMode` means none.
 - **States** (`waveform_phase.dart`, pure `WaveformPhase`, one clock fed by one ticker that runs only while a gate or transition is pending;
   no wall clock; `TickerMode` off means no frames). `KWaveformStatus` (`unknown`, `computing`, `ready`, `none`) mirrors the app's status;
   `PlaybackWaveformSeekBar` passes `unknown` while the provider loads or its view belongs to another entry, `none` in the flat style.

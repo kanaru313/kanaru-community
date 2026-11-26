@@ -22,8 +22,9 @@ enum FlatPlayed { single, gradient }
 
 enum FlatEffect { off, shine, comet, sparks }
 
-/// One field of an options map: the value named [raw] when it is a member of
-/// [values], else [fallback]. A bad field never affects the others.
+/// One field of an options map: the value of [map] under [key] when it names
+/// a member of [values], else [fallback]. A bad field never affects the
+/// others.
 T _field<T extends Enum>(
   List<T> values,
   Map<String, Object?> map,

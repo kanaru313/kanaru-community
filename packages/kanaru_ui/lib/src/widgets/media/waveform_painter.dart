@@ -1,52 +1,27 @@
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:material_ui/material_ui.dart';
 
-import 'waveform_bars.dart';
+import 'seek_look.dart';
+import 'wave_style.dart';
+import 'wave_style_painter.dart';
+
+export 'wave_style.dart' show snapToDevicePixel;
 
 /// What the recorded bars depend on: change any of it and they are recorded
-/// again. [extents] is compared by identity, so new levels re-record.
+/// again. [extents] is compared by identity, so new levels re-record. [style]
+/// holds the kind, the look and the colours.
 typedef WaveformPicturesKey = ({
   List<double> extents,
   Size size,
   double inset,
   double devicePixelRatio,
-  Color played,
-  Color rest,
+  WaveStyle style,
 });
 
-/// The bars drawn once in the played colour and once in the rest colour.
+/// The shapes drawn once as played and once as rest.
 typedef WaveformPicturePair = ({ui.Picture played, ui.Picture rest});
-
-/// Rounds [v] to a device pixel.
-double snapToDevicePixel(double v, double devicePixelRatio) =>
-    (v * devicePixelRatio).roundToDouble() / devicePixelRatio;
-
-/// Draws one bar per entry of [heights], centred on [centreY], the first at
-/// [offset], both edges on a device pixel so the bars stay crisp.
-void paintWaveformBars(
-  Canvas canvas, {
-  required List<double> heights,
-  required double offset,
-  required double centreY,
-  required double devicePixelRatio,
-  required Color color,
-}) {
-  final paint = Paint()..color = color;
-  for (var j = 0; j < heights.length; j++) {
-    final start = offset + j * (waveformBarWidth + waveformBarGap);
-    canvas.drawRRect(
-      RRect.fromLTRBR(
-        snapToDevicePixel(start, devicePixelRatio),
-        centreY - heights[j] / 2,
-        snapToDevicePixel(start + waveformBarWidth, devicePixelRatio),
-        centreY + heights[j] / 2,
-        const Radius.circular(waveformBarRadius),
-      ),
-      paint,
-    );
-  }
-}
 
 /// Keeps the recorded bars of one waveform bar. A position tick must not
 /// record again: [pair] returns the same pictures until its key changes.
@@ -77,45 +52,44 @@ class WaveformPictures {
   }
 
   static WaveformPicturePair _record(WaveformPicturesKey key) {
-    final offset = waveformBarsOffset(
-      count: key.extents.length,
-      width: key.size.width,
-      inset: key.inset,
-    );
-    ui.Picture draw(Color color) {
+    ui.Picture draw({required bool played}) {
       final recorder = ui.PictureRecorder();
-      paintWaveformBars(
+      paintWaveShapes(
         Canvas(recorder),
-        heights: key.extents,
-        offset: offset,
-        centreY: key.size.height / 2,
+        style: key.style,
+        size: key.size,
+        inset: key.inset,
         devicePixelRatio: key.devicePixelRatio,
-        color: color,
+        heights: key.extents,
+        played: played,
       );
       return recorder.endRecording();
     }
 
-    return (played: draw(key.played), rest: draw(key.rest));
+    return (played: draw(played: true), rest: draw(played: false));
   }
 }
 
-/// Draws the band of the waveform seek bar: the bars played up to [progress]
+/// Draws the band of the waveform seek bar: the shapes played up to [progress]
 /// in one colour and the rest in another, and the keyboard focus line. No
 /// thumb.
 ///
 /// Steady state passes [pictures] (two clipped `drawPicture`s per frame, no
-/// recording). During a transition [heights] are drawn directly instead, at
-/// most about 70 rounded rectangles per layer. [opacity] scales both colours.
+/// recording). During a transition or a touch feedback [heights] are drawn
+/// directly instead, with [factors] scaling each bar for the feedback;
+/// [factorsRevision] says when they changed in place. [opacity] scales the
+/// colours.
 class WaveformBandPainter extends CustomPainter {
   const WaveformBandPainter({
     required this.progress,
     required this.inset,
     required this.devicePixelRatio,
-    required this.playedColor,
-    required this.restColor,
+    required this.style,
     required this.focusColor,
     this.pictures,
     this.heights,
+    this.factors,
+    this.factorsRevision = 0,
     this.opacity = 1,
     this.focusLine = false,
   }) : assert(
@@ -127,11 +101,12 @@ class WaveformBandPainter extends CustomPainter {
   final double progress;
   final double inset;
   final double devicePixelRatio;
-  final Color playedColor;
-  final Color restColor;
+  final WaveStyle style;
   final Color focusColor;
   final WaveformPicturePair? pictures;
   final List<double>? heights;
+  final Float32List? factors;
+  final int factorsRevision;
   final double opacity;
 
   /// Draw the thin mark at the position (keyboard focus only).
@@ -139,14 +114,35 @@ class WaveformBandPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final direct = heights;
+    // One outline for both layers of a line drawn directly.
+    final line = pictures == null && style.kind == KSeekKind.line
+        ? waveLinePath(
+            style: style,
+            size: size,
+            inset: inset,
+            heights: direct!,
+            factors: factors,
+          )
+        : null;
     final inner = size.width - 2 * inset;
     final at = inner <= 0
         ? size.width / 2
         : inset + progress.clamp(0.0, 1.0) * inner;
     final edge = snapToDevicePixel(at, devicePixelRatio);
-    if (edge > 0) _layer(canvas, size, 0, edge, played: true);
-    if (edge < size.width) {
-      _layer(canvas, size, edge, size.width, played: false);
+    if (edge > 0) _layer(canvas, size, 0, edge, played: true, line: line);
+    if (edge < size.width && style.look.rest != KWaveRest.hidden) {
+      _layer(canvas, size, edge, size.width, played: false, line: line);
+    }
+    if (style.look.rest == KWaveRest.hidden) {
+      paintRestLine(
+        canvas,
+        style: style,
+        size: size,
+        inset: inset,
+        from: at,
+        opacity: opacity,
+      );
     }
     if (focusLine) {
       canvas.drawRect(
@@ -162,6 +158,7 @@ class WaveformBandPainter extends CustomPainter {
     double from,
     double to, {
     required bool played,
+    Path? line,
   }) {
     canvas
       ..save()
@@ -170,20 +167,19 @@ class WaveformBandPainter extends CustomPainter {
     if (recorded != null) {
       canvas.drawPicture(played ? recorded.played : recorded.rest);
     } else {
-      final bars = heights!;
-      paintWaveformBars(
+      paintWaveShapes(
         canvas,
-        heights: bars,
-        offset: waveformBarsOffset(
-          count: bars.length,
-          width: size.width,
-          inset: inset,
-        ),
-        centreY: size.height / 2,
+        style: style,
+        size: size,
+        inset: inset,
         devicePixelRatio: devicePixelRatio,
-        color: (played ? playedColor : restColor).withValues(
-          alpha: (played ? playedColor : restColor).a * opacity,
-        ),
+        heights: heights!,
+        played: played,
+        factors: factors,
+        opacity: opacity,
+        clipFrom: from,
+        clipTo: to,
+        linePath: line,
       );
     }
     canvas.restore();
@@ -194,11 +190,12 @@ class WaveformBandPainter extends CustomPainter {
       old.progress != progress ||
       old.inset != inset ||
       old.devicePixelRatio != devicePixelRatio ||
-      old.playedColor != playedColor ||
-      old.restColor != restColor ||
+      old.style != style ||
       old.focusColor != focusColor ||
       old.pictures != pictures ||
       !identical(old.heights, heights) ||
+      !identical(old.factors, factors) ||
+      old.factorsRevision != factorsRevision ||
       old.opacity != opacity ||
       old.focusLine != focusLine;
 }

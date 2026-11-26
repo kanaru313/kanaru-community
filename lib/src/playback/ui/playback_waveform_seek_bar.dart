@@ -15,12 +15,14 @@ import '../state/playback_scrub_provider.dart';
 import '../state/seek_bar_style_provider.dart';
 import '../state/waveform_providers.dart';
 import 'playback_time_label.dart';
+import 'seek_bar_look.dart';
 
 /// Waveform seek bar bound to the player: position in, `seek` out. Watching
 /// the waveform here is what keeps the decoder busy: it runs only while one of
-/// these is mounted in the waveform style. The band shows the dotted row until
-/// the playing entry's status is known, then bars or the flat fallback; the flat
-/// style does not watch the waveform and passes `none` (the flat track).
+/// these is mounted in a style that [needsWaveform]. The band shows the dotted
+/// row until the playing entry's status is known, then the shapes of the
+/// chosen kind (look from the wave options) or the flat fallback; a style that
+/// needs no waveform does not watch it and passes `none` (the flat track).
 ///
 /// A hold or drag is published as [playbackScrubProvider], so the elapsed
 /// labels that follow it and the spoken value show the time under the finger.
@@ -116,6 +118,7 @@ class _PlaybackWaveformSeekBarState
     final entry = ref.watch(nowPlayingProvider.select((n) => n.value?.entryId));
     final style = ref.watch(seekBarStyleProvider);
     final squiggle = ref.watch(squiggleSeekOptionsProvider);
+    final wave = ref.watch(waveSeekOptionsProvider);
     final flat = !needsWaveform(style, squiggle);
     // Not watched when no waveform is needed, so the decoder never starts for
     // a flat bar or a squiggle that does not follow the music.
@@ -139,6 +142,8 @@ class _PlaybackWaveformSeekBarState
       position: position,
       duration: duration,
       status: status,
+      kind: seekKindOf(style),
+      look: waveLookOf(wave),
       playing: ref.watch(isPlayingProvider),
       levels: ready ? view.levels : null,
       levelsDuration: ready ? Duration(milliseconds: view.durationMs) : null,

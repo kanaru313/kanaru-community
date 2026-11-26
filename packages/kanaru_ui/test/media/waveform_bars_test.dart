@@ -6,6 +6,30 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 Uint8List _levels(List<int> v) => Uint8List.fromList(v);
 
 void main() {
+  group('density', () {
+    test('the bar count follows the width and gap of the density', () {
+      expect(waveformBarCount(100, barWidth: 4, barGap: 3), 14);
+      expect(waveformBarCount(100, barWidth: 3, barGap: 2), 20);
+      expect(waveformBarCount(100, barWidth: 2, barGap: 1), 33);
+    });
+
+    test('the bars stay centred in the inner width', () {
+      for (final (w, g) in [(4.0, 3.0), (3.0, 2.0), (2.0, 1.0)]) {
+        final n = waveformBarCount(100, barWidth: w, barGap: g);
+        final offset = waveformBarsOffset(
+          count: n,
+          width: 112,
+          inset: 6,
+          barWidth: w,
+          barGap: g,
+        );
+        final right = offset + n * (w + g) - g;
+        expect(offset - 6, closeTo(112 - 6 - right, 1e-9));
+        expect(offset, greaterThanOrEqualTo(6));
+      }
+    });
+  });
+
   group('waveformBarCount', () {
     test('3 dp bars with 2 dp gaps, the last one inside the width', () {
       expect(waveformBarCount(3), 1);
@@ -189,15 +213,24 @@ void main() {
       expect(out.length, 10);
     });
 
-    test('silence stays silent and a steady tone stays full height', () {
+    test('silence stays silent', () {
       expect(
         waveformContrastLevels(_levels(List.filled(8, 0))),
         everyElement(0),
       );
-      expect(
-        waveformContrastLevels(_levels(List.filled(8, 200))),
-        everyElement(255),
+    });
+
+    test('a steady tone draws every bar at 60 % of the content height', () {
+      final out = waveformContrastLevels(_levels(List.filled(8, 200)));
+      expect(out, everyElement(out.first));
+      final extents = waveformBarExtents(
+        levels: out,
+        length: const Duration(seconds: 8),
+        duration: const Duration(seconds: 8),
+        width: 112,
+        inset: 6,
       );
+      expect(extents, everyElement(closeTo(0.6 * waveformMaxExtent, 0.2)));
     });
 
     test('a short sound in a mostly silent file survives', () {

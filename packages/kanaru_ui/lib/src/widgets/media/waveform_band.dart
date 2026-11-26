@@ -4,16 +4,11 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../tokens/k_motion.dart';
 import 'k_seek_gesture_area.dart';
+import 'seek_look.dart';
+import 'wave_style.dart';
 import 'waveform_bars.dart';
 import 'waveform_painter.dart';
 import 'waveform_phase.dart';
-
-/// Opacity of the unplayed bars (the cover tint under Now Playing washes out
-/// `secondaryContainer`, so the rest is `primary`, faded).
-const double waveformRestAlpha = 0.35;
-
-/// Opacity of the played bars: a little darker than the rest, not a block.
-const double waveformPlayedAlpha = 0.85;
 
 /// The drawing of one frame of the waveform band: which heights the bars have
 /// for the current [WaveformPhase], and the painter that draws them.
@@ -56,6 +51,7 @@ class WaveformBandFrames {
     required Duration? levelsDuration,
     required Duration? duration,
     required double width,
+    required KWaveDensity density,
   }) {
     final length = levelsDuration ?? duration;
     final axis = (duration ?? Duration.zero) > Duration.zero
@@ -75,11 +71,17 @@ class WaveformBandFrames {
       duration: axis,
       width: width,
       inset: seekInset,
+      barWidth: density.barWidth,
+      barGap: density.barGap,
     );
   }
 
-  List<double> _dotsFor(double width) {
-    final n = waveformBarCount(width - 2 * seekInset);
+  List<double> _dotsFor(double width, KWaveDensity density) {
+    final n = waveformBarCount(
+      width - 2 * seekInset,
+      barWidth: density.barWidth,
+      barGap: density.barGap,
+    );
     if (_dots.length != n) {
       _dots = List.filled(n, waveformMinExtent, growable: false);
     }
@@ -88,6 +90,8 @@ class WaveformBandFrames {
 
   /// The painter of the bars for this frame. Steady bars (fully grown, no
   /// fade) draw from recorded pictures; everything else draws its heights.
+  /// [factors] (touch feedback in progress) make steady bars draw directly
+  /// too, scaled per bar; [factorsRevision] says they changed in place.
   WaveformBandPainter painter({
     required BuildContext context,
     required KSeekState state,
@@ -95,6 +99,10 @@ class WaveformBandFrames {
     required Uint8List? levels,
     required Duration? levelsDuration,
     required Duration? duration,
+    KSeekKind kind = KSeekKind.bars,
+    KWaveLook look = const KWaveLook(),
+    Float32List? factors,
+    int factorsRevision = 0,
   }) {
     final scheme = Theme.of(context).colorScheme;
     final dpr = MediaQuery.devicePixelRatioOf(context);
@@ -103,35 +111,47 @@ class WaveformBandFrames {
       levelsDuration: levelsDuration,
       duration: duration,
       width: state.width,
+      density: look.density,
     );
     final fade = phase.fallbackT;
     final grown = phase.kind == WaveformPhaseKind.shown && phase.growT >= 1;
     final steady = grown && fade <= 0 && live != null && live.isNotEmpty;
-    final played = scheme.primary.withValues(alpha: waveformPlayedAlpha);
-    final rest = scheme.primary.withValues(alpha: waveformRestAlpha);
+    final style = WaveStyle(
+      kind: kind,
+      look: look,
+      palette: WavePalette(
+        primary: scheme.primary,
+        tertiary: scheme.tertiary,
+        outline: scheme.outlineVariant,
+      ),
+    );
+    // Feedback frames draw the bars directly; the pictures stay for after.
+    final direct = steady && factors != null;
 
     final painter = WaveformBandPainter(
       progress: state.progress,
       inset: seekInset,
       devicePixelRatio: dpr,
-      playedColor: played,
-      restColor: rest,
+      style: style,
       focusColor: scheme.onSurface.withValues(alpha: 0.7),
       focusLine: state.keyboardFocus && !state.dragging,
       opacity: 1 - fade,
-      pictures: steady
+      pictures: steady && !direct
           ? _pictures.pair((
               extents: live,
               size: Size(state.width, seekBandHeight),
               inset: seekInset,
               devicePixelRatio: dpr,
-              played: played,
-              rest: rest,
+              style: style.recorded,
             ))
           : null,
-      heights: steady
+      heights: steady && !direct
           ? null
-          : (drawnHeights(phase, live) ?? _dotsFor(state.width)),
+          : direct
+          ? live
+          : (drawnHeights(phase, live) ?? _dotsFor(state.width, look.density)),
+      factors: direct ? factors : null,
+      factorsRevision: factorsRevision,
     );
     if (!steady) _pictures.dispose();
     return painter;

@@ -20,6 +20,7 @@ export 'k_seek_gesture_area.dart';
 export 'k_seek_time_bubble.dart';
 export 'k_source_avatar.dart';
 export 'k_waveform_seek_bar.dart';
+export 'seek_look.dart';
 export 'waveform_bars.dart';
 export 'waveform_painter.dart';
 export 'waveform_phase.dart' show KWaveformStatus;

@@ -37,6 +37,8 @@ Widget _bar({
   bool bubble = false,
   VoidCallback? onSeekEnd,
   ValueChanged<Duration?>? onScrub,
+  KSeekKind kind = KSeekKind.bars,
+  KWaveLook look = const KWaveLook(),
 }) => SizedBox(
   width: width,
   child: KWaveformSeekBar(
@@ -45,6 +47,8 @@ Widget _bar({
     track: track,
     levels: levels,
     status: status,
+    kind: kind,
+    look: look,
     fallback: fallback,
     onSeek: (d) => seeks?.add(d),
     onSeekEnd: onSeekEnd,
@@ -1231,6 +1235,321 @@ void main() {
         await g.up();
         expect(seeks.single.inMilliseconds, 65500);
       });
+    });
+  });
+
+  group('touch feedback', () {
+    const jelly = KWaveLook(feedback: KSeekFeedback.jelly);
+    const lens = KWaveLook(feedback: KSeekFeedback.lens);
+
+    Widget feedbackBar({
+      KWaveLook look = jelly,
+      List<Duration>? seeks,
+      KSeekKind kind = KSeekKind.bars,
+    }) => _bar(
+      levels: _levels,
+      status: _ready,
+      track: 1,
+      look: look,
+      kind: kind,
+      seeks: seeks,
+      bubble: true,
+    );
+
+    Future<Rect> pumpSteady(
+      WidgetTester tester,
+      Widget bar, {
+      bool reduceMotion = false,
+    }) async {
+      await tester.pumpWidget(_hosted(bar, reduceMotion: reduceMotion));
+      await tester.pump();
+      return tester.getRect(find.byType(KWaveformSeekBar));
+    }
+
+    testWidgets('steady playback with feedback on schedules no frames', (
+      tester,
+    ) async {
+      await pumpSteady(tester, feedbackBar());
+      expect(_isSteady(tester), isTrue);
+      expect(_idle(tester), isTrue);
+      final recorded = WaveformPictures.recordings;
+      for (var i = 1; i <= 20; i++) {
+        await tester.pumpWidget(
+          _hosted(
+            _bar(
+              levels: _levels,
+              status: _ready,
+              track: 1,
+              look: jelly,
+              position: Duration(milliseconds: 20000 + i * 100),
+            ),
+          ),
+        );
+        expect(_idle(tester), isTrue);
+      }
+      expect(WaveformPictures.recordings, recorded);
+    });
+
+    // Mid density at 200 dp: 38 bars, the first at x 6, 5 dp apart.
+    double barAt(double dx) => (dx - 6) / 5;
+
+    for (final (name, look) in [('jelly', jelly), ('lens', lens)]) {
+      testWidgets('$name: a held finger draws scaled bars directly, the '
+          'extreme is on the bar under it, the release returns to the '
+          'pictures and a stopped ticker', (tester) async {
+        final box = await pumpSteady(tester, feedbackBar(look: look));
+        final g = await tester.startGesture(
+          Offset(box.left + 100, box.center.dy),
+        );
+        await tester.pump(_ms(200));
+        for (var i = 0; i < 40; i++) {
+          await tester.pump(_ms(16));
+        }
+        expect(_painter(tester)!.pictures, isNull);
+        final factors = _painter(tester)!.factors!;
+        var extreme = 0;
+        for (var i = 0; i < factors.length; i++) {
+          final more = look == lens
+              ? factors[i] > factors[extreme]
+              : factors[i] < factors[extreme];
+          if (more) extreme = i;
+        }
+        expect(extreme, closeTo(barAt(100), 1));
+        expect(
+          look == lens ? factors[extreme] : 1 - factors[extreme],
+          greaterThan(0.2),
+        );
+        await g.up();
+        for (var i = 0; i < 120; i++) {
+          await tester.pump(_ms(16));
+        }
+        expect(_idle(tester), isTrue);
+        expect(_isSteady(tester), isTrue);
+        expect(_painter(tester)!.factors, isNull);
+      });
+
+      testWidgets('$name: a finger resting still schedules no more frames '
+          'but keeps the bars scaled', (tester) async {
+        final box = await pumpSteady(tester, feedbackBar(look: look));
+        final g = await tester.startGesture(
+          Offset(box.left + 100, box.center.dy),
+        );
+        await tester.pump(_ms(200));
+        for (var i = 0; i < 150; i++) {
+          await tester.pump(_ms(16));
+        }
+        expect(_idle(tester), isTrue);
+        expect(_painter(tester)!.pictures, isNull);
+        expect(_painter(tester)!.factors!.any((f) => f != 1), isTrue);
+        await g.up();
+        for (var i = 0; i < 120; i++) {
+          await tester.pump(_ms(16));
+        }
+        expect(_idle(tester), isTrue);
+        expect(_isSteady(tester), isTrue);
+      });
+
+      testWidgets('$name: on the fallback (no waveform) it costs no frames', (
+        tester,
+      ) async {
+        // The flat fallback animates under a finger by itself: the feedback
+        // must add nothing to what a bar without feedback schedules.
+        Future<List<int>> run(KWaveLook look) async {
+          final seeks = <Duration>[];
+          await tester.pumpWidget(
+            _hosted(
+              _bar(
+                status: _none,
+                track: 1,
+                look: look,
+                bubble: true,
+                seeks: seeks,
+              ),
+            ),
+          );
+          await tester.pump();
+          final box = tester.getRect(find.byType(KWaveformSeekBar));
+          final g = await tester.startGesture(
+            Offset(box.left + 100, box.center.dy),
+          );
+          final counts = <int>[];
+          for (var i = 0; i < 30; i++) {
+            await tester.pump(_ms(16));
+            counts.add(tester.binding.transientCallbackCount);
+          }
+          await g.up();
+          await tester.pump();
+          expect(seeks, hasLength(1));
+          for (var i = 0; i < 60; i++) {
+            await tester.pump(_ms(16));
+            counts.add(tester.binding.transientCallbackCount);
+          }
+          return counts;
+        }
+
+        final without = await run(const KWaveLook());
+        await tester.pumpWidget(const SizedBox());
+        expect(await run(look), without);
+      });
+
+      testWidgets('$name: on the dotted row (computing) no frames run', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _hosted(_bar(status: _computing, track: 1, look: look, bubble: true)),
+        );
+        await tester.pump();
+        final box = tester.getRect(find.byType(KWaveformSeekBar));
+        final g = await tester.startGesture(
+          Offset(box.left + 100, box.center.dy),
+        );
+        await tester.pump(_ms(300));
+        await tester.pump(_ms(100));
+        expect(_idle(tester), isTrue);
+        expect(_painter(tester)!.factors, isNull);
+        await g.up();
+      });
+    }
+
+    testWidgets('a tap pokes a ripple that settles and stops the ticker', (
+      tester,
+    ) async {
+      final seeks = <Duration>[];
+      final box = await pumpSteady(tester, feedbackBar(seeks: seeks));
+      await tester.tapAt(Offset(box.left + 100, box.center.dy));
+      await tester.pump();
+      expect(seeks, hasLength(1));
+      expect(_idle(tester), isFalse);
+      await tester.pump(_ms(16));
+      final factors = _painter(tester)!.factors!;
+      var widest = 0;
+      for (var i = 0; i < factors.length; i++) {
+        if ((factors[i] - 1).abs() > (factors[widest] - 1).abs()) widest = i;
+      }
+      expect(widest, closeTo(barAt(100), 2));
+      expect((factors[widest] - 1).abs(), greaterThan(0.02));
+      for (var i = 0; i < 120; i++) {
+        await tester.pump(_ms(16));
+      }
+      expect(_idle(tester), isTrue);
+      expect(_isSteady(tester), isTrue);
+    });
+
+    testWidgets('a key seek pokes a small ripple', (tester) async {
+      final seeks = <Duration>[];
+      await pumpSteady(tester, feedbackBar(seeks: seeks));
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      expect(seeks, hasLength(1));
+      expect(_idle(tester), isFalse);
+      for (var i = 0; i < 120; i++) {
+        await tester.pump(_ms(16));
+      }
+      expect(_idle(tester), isTrue);
+    });
+
+    testWidgets('a muted ticker (TickerMode off) schedules no frames', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(Center(child: TickerMode(enabled: false, child: feedbackBar()))),
+      );
+      await tester.pump();
+      final box = tester.getRect(find.byType(KWaveformSeekBar));
+      final g = await tester.startGesture(
+        Offset(box.left + 100, box.center.dy),
+      );
+      await tester.pump(_ms(300));
+      expect(_idle(tester), isTrue);
+      await g.up();
+    });
+
+    testWidgets('reduced motion: no feedback at all', (tester) async {
+      final seeks = <Duration>[];
+      final box = await pumpSteady(
+        tester,
+        feedbackBar(seeks: seeks),
+        reduceMotion: true,
+      );
+      final g = await tester.startGesture(
+        Offset(box.left + 100, box.center.dy),
+      );
+      await tester.pump(_ms(300));
+      expect(_idle(tester), isTrue);
+      expect(_painter(tester)!.factors, isNull);
+      expect(_isSteady(tester), isTrue);
+      await g.up();
+      await tester.pump();
+      expect(seeks, hasLength(1));
+      expect(_idle(tester), isTrue);
+    });
+
+    testWidgets('feedback off: a press schedules no frames', (tester) async {
+      final box = await pumpSteady(
+        tester,
+        feedbackBar(look: const KWaveLook()),
+      );
+      final g = await tester.startGesture(
+        Offset(box.left + 100, box.center.dy),
+      );
+      await tester.pump(_ms(300));
+      expect(_idle(tester), isTrue);
+      expect(_isSteady(tester), isTrue);
+      await g.up();
+    });
+
+    testWidgets('a drag cancelled upwards stops denting', (tester) async {
+      final box = await pumpSteady(tester, feedbackBar());
+      final g = await tester.startGesture(
+        Offset(box.left + 100, box.center.dy),
+      );
+      await tester.pump(_ms(200));
+      await g.moveBy(const Offset(20, 0));
+      await tester.pump(_ms(16));
+      await g.moveBy(const Offset(0, -80));
+      for (var i = 0; i < 120; i++) {
+        await tester.pump(_ms(16));
+      }
+      expect(_idle(tester), isTrue);
+      await g.up();
+    });
+
+    testWidgets('leaving the tree mid-wobble is clean', (tester) async {
+      final box = await pumpSteady(tester, feedbackBar());
+      await tester.tapAt(Offset(box.left + 100, box.center.dy));
+      await tester.pump(_ms(32));
+      await tester.pumpWidget(host(const SizedBox()));
+      expect(tester.takeException(), isNull);
+      expect(_idle(tester), isTrue);
+    });
+
+    for (final kind in KSeekKind.values) {
+      testWidgets('${kind.name} draws steady and under feedback', (
+        tester,
+      ) async {
+        final box = await pumpSteady(tester, feedbackBar(kind: kind));
+        expect(_painter(tester)!.style.kind, kind);
+        final g = await tester.startGesture(
+          Offset(box.left + 100, box.center.dy),
+        );
+        await tester.pump(_ms(250));
+        await tester.pump(_ms(50));
+        expect(tester.takeException(), isNull);
+        await g.up();
+        await tester.pump(_ms(16));
+      });
+    }
+
+    testWidgets('a changed look records the bars again', (tester) async {
+      await pumpSteady(tester, feedbackBar(look: const KWaveLook()));
+      final before = WaveformPictures.recordings;
+      await pumpSteady(
+        tester,
+        feedbackBar(look: const KWaveLook(density: KWaveDensity.dense)),
+      );
+      expect(WaveformPictures.recordings, before + 1);
+      expect(_isSteady(tester), isTrue);
     });
   });
 }
