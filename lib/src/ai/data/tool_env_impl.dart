@@ -156,13 +156,11 @@ class HistoryPortImpl implements HistoryPort {
       StatsRange.all => MostPlayedPreset.all,
     };
     final window = MostPlayedRange(preset: preset).window(_now());
-    // The store's list is not filtered by visibility: read extra rows so the
-    // page still fills after hidden and missing songs are dropped.
-    final want = (offset + limit) * 3;
-    final top = await store.top(
-      window: window,
-      limit: want > maxMostPlayedLimit ? maxMostPlayedLimit : want,
-    );
+    // The store's list and its totals count hidden and missing songs, which
+    // must not reach the model: read the longest list the store gives, keep
+    // the visible rows and total those. Past that length (1000 songs) the
+    // totals cover the visible part of the top list only.
+    final top = await store.top(window: window, limit: maxMostPlayedLimit);
     final visible = await lookup.visibleOf([
       for (final e in top.entries) e.track.id.value,
     ]);
@@ -174,8 +172,8 @@ class HistoryPortImpl implements HistoryPort {
     ];
     return (
       rows: rows.skip(offset).take(limit).toList(),
-      songs: top.songs,
-      plays: top.plays,
+      songs: rows.length,
+      plays: rows.fold(0, (sum, r) => sum + r.plays),
     );
   }
 }

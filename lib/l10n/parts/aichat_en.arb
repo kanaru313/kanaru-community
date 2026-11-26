@@ -1,3 +1,7 @@
 {
-  "@@locale": "en"
+  "@@locale": "en",
+  "aiChatPlayContextLabel": "AI assistant",
+  "@aiChatPlayContextLabel": {
+    "description": "Name of the play context when the AI assistant starts a queue."
+  }
 }

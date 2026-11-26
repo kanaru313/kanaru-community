@@ -1,3 +1,4 @@
+import '../conversation/parts.dart';
 import '../conversation/track_ref_snapshot.dart';
 import '../settings/tool_groups.dart';
 import 'schema_validator.dart';
@@ -13,19 +14,69 @@ enum ToolRisk { read, write, external }
 /// A tool's answer. [text] is what the model reads (JSON for the built-in
 /// tools); an error is sent to the model as `Error: <text>`.
 class ToolOutcome {
-  const ToolOutcome.ok(this.text) : isError = false;
-  const ToolOutcome.error(this.text) : isError = true;
+  const ToolOutcome.ok(this.text, {this.done})
+    : isError = false,
+      limitReached = false;
+  const ToolOutcome.error(this.text)
+    : isError = true,
+      limitReached = false,
+      done = null;
+
+  /// The call was refused because the turn's item limit is used up (the loop
+  /// shows the limit card instead of a plain error).
+  const ToolOutcome.limit(this.text)
+    : isError = true,
+      limitReached = true,
+      done = null;
 
   final String text;
   final bool isError;
+  final bool limitReached;
+
+  /// What a write changed, built from the API's return values; the loop adds
+  /// the call id and stores it as a `DonePart`. Null for reads.
+  final ToolDone? done;
+}
+
+/// The effect of one write tool call (a [DonePart] without its call id).
+class ToolDone {
+  const ToolDone({
+    this.added = const [],
+    this.removed = const [],
+    this.absent = const [],
+    this.replacedQueue,
+  });
+
+  final List<TrackRefSnapshot> added;
+  final List<TrackRefSnapshot> removed;
+  final List<int> absent;
+  final ReplacedQueueSnapshot? replacedQueue;
+
+  DonePart toPart(String callId) => DonePart(
+    callId: callId,
+    added: added,
+    removed: removed,
+    absent: absent,
+    replacedQueue: replacedQueue,
+  );
 }
 
 /// What a confirm card shows before a write runs.
 class ToolPreview {
-  const ToolPreview({required this.summary, this.tracks = const []});
+  const ToolPreview({required this.summary, this.tracks = const []})
+    : refusal = null,
+      limitReached = false;
+
+  /// The call cannot run: no card is shown and the model gets [reason] as an
+  /// error ([limitReached]: the turn's item limit is used up).
+  const ToolPreview.refused(String this.refusal, {this.limitReached = false})
+    : summary = '',
+      tracks = const [];
 
   final String summary;
   final List<TrackRefSnapshot> tracks;
+  final String? refusal;
+  final bool limitReached;
 }
 
 /// One tool the assistant may call.

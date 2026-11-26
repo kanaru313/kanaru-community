@@ -11362,6 +11362,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Font deleted'**
   String get fontsRemoved;
+
+  /// Name of the play context when the AI assistant starts a queue.
+  ///
+  /// In en, this message translates to:
+  /// **'AI assistant'**
+  String get aiChatPlayContextLabel;
 }
 
 class _AppLocalizationsDelegate

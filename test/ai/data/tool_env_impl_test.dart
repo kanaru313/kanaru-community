@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/ai/data/tool_env_impl.dart';
+import 'package:kanaru/src/ai/data/tool_env_write.dart';
 import 'package:kanaru/src/ai/domain/tools/ai_tool_registry.dart';
 import 'package:kanaru/src/ai/domain/tools/read_tools.dart';
 import 'package:kanaru/src/ai/domain/tools/tool_env.dart';
@@ -49,6 +50,8 @@ void main() {
         now: () => now,
       ),
       playlists: PlaylistsPortImpl(store: playlists, lookup: lookup),
+      playbackWrite: FakePlaybackWrite(),
+      playlistsWrite: PlaylistsWritePortImpl(store: playlists),
     );
     registry = AiToolRegistry([readToolProvider]);
   });
@@ -174,6 +177,9 @@ void main() {
       expect(items, hasLength(1));
       expect(items.single, startsWith('2|$a|Often'));
       expect(items.single, endsWith('|3'));
+      // Totals count visible songs only: the hidden song's 5 plays stay out.
+      expect(r['total'], 1);
+      expect(r['totalPlays'], 3);
 
       recording = false;
       final off = await registry.byName('get_listening_stats')!.run({}, env);

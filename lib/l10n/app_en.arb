@@ -5733,5 +5733,9 @@
   "fontsRemoved": "Font deleted",
   "@fontsRemoved": {
     "description": "Snack bar after an imported font was deleted."
+  },
+  "aiChatPlayContextLabel": "AI assistant",
+  "@aiChatPlayContextLabel": {
+    "description": "Name of the play context when the AI assistant starts a queue."
   }
 }

@@ -1,4 +1,7 @@
+import 'package:kanaru/src/ai/domain/conversation/parts.dart';
+import 'package:kanaru/src/ai/domain/tools/item_caps.dart';
 import 'package:kanaru/src/ai/domain/tools/tool_env.dart';
+import 'package:kanaru/src/ai/domain/tools/tool_env_write.dart';
 
 TrackRow fakeTrack(int id, {String? title}) => TrackRow(
   id: id,
@@ -129,16 +132,115 @@ class FakePlaylists implements PlaylistsPort {
   ) async => entriesById[id];
 }
 
+/// Records what the write tools sent and answers like the real player.
+class FakePlaybackWrite implements PlaybackWritePort {
+  ReplacedQueueSnapshot? replaced;
+  bool startedPlayback = false;
+
+  /// Entries the "player" really holds; removal returns the ones asked for
+  /// that are in it.
+  List<QueueEntryRef> entries = [];
+
+  final List<({List<int> ids, int startIndex, String label})> plays = [];
+  final List<({List<int> ids, bool next})> queued = [];
+  final List<List<int>> removals = [];
+
+  @override
+  Future<ReplacedQueueSnapshot?> play(
+    List<int> trackIds, {
+    required int startIndex,
+    required String contextLabel,
+  }) async {
+    plays.add((ids: trackIds, startIndex: startIndex, label: contextLabel));
+    return replaced;
+  }
+
+  @override
+  Future<({bool startedPlayback})> queue(
+    List<int> trackIds, {
+    required bool next,
+  }) async {
+    queued.add((ids: trackIds, next: next));
+    return (startedPlayback: startedPlayback);
+  }
+
+  @override
+  Future<List<QueueEntryRef>> removeEntries(List<int> entryIds) async {
+    removals.add(entryIds);
+    return [
+      for (final e in entries)
+        if (entryIds.contains(e.entryId)) e,
+    ];
+  }
+}
+
+class FakePlaylistsWrite implements PlaylistsWritePort {
+  /// Ids of playlists that exist (0 = Favorites).
+  Set<int> known = {0, 7};
+  int nextId = 11;
+  List<int> alreadyThere = [];
+  List<QueueEntryRef> held = [];
+  final List<({String name, List<int> ids})> created = [];
+  final List<({int id, List<int> ids})> adds = [];
+  final List<({int id, List<int> ids})> removals = [];
+
+  @override
+  Future<({int id, int count})> create(String name, List<int> trackIds) async {
+    created.add((name: name, ids: trackIds));
+    return (id: nextId, count: trackIds.length);
+  }
+
+  @override
+  Future<({String name, List<int> addedTrackIds, int skipped})?> add(
+    int playlistId,
+    List<int> trackIds,
+  ) async {
+    if (!known.contains(playlistId)) return null;
+    adds.add((id: playlistId, ids: trackIds));
+    return (
+      name: 'P',
+      addedTrackIds: [
+        for (final t in trackIds)
+          if (!alreadyThere.contains(t)) t,
+      ],
+      skipped: alreadyThere.length,
+    );
+  }
+
+  @override
+  Future<({String name, List<QueueEntryRef> removed})?> removeEntries(
+    int playlistId,
+    List<int> entryIds,
+  ) async {
+    if (!known.contains(playlistId)) return null;
+    removals.add((id: playlistId, ids: entryIds));
+    return (
+      name: 'P',
+      removed: [
+        for (final e in held)
+          if (entryIds.contains(e.entryId)) e,
+      ],
+    );
+  }
+}
+
 ToolEnv fakeEnv({
   FakeLibrary? library,
   FakePlayback? playback,
   FakeLyrics? lyrics,
   FakeHistory? history,
   FakePlaylists? playlists,
+  FakePlaybackWrite? playbackWrite,
+  FakePlaylistsWrite? playlistsWrite,
+  TurnItemUsage usage = TurnItemUsage.none,
 }) => ToolEnv(
   library: library ?? FakeLibrary(),
   playback: playback ?? FakePlayback(),
   lyrics: lyrics ?? FakeLyrics(const LyricsAbsent('none')),
   history: history ?? FakeHistory(),
   playlists: playlists ?? FakePlaylists(),
+  playbackWrite: playbackWrite ?? FakePlaybackWrite(),
+  playlistsWrite: playlistsWrite ?? FakePlaylistsWrite(),
+  playContextLabel: 'Trợ lý AI',
+  turnUsage: () async => usage,
 );

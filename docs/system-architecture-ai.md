@@ -160,9 +160,49 @@ Gaps the adapters work around (all inside `ai/data`):
   `get_lyrics` (stored or local lyrics only, no timestamps, at most 12000
   characters, cut at a line), `get_track_info` (at most 50 ids, `notFound`
   lists absent ones), `get_listening_stats` (error while history recording is
-  off; hidden and missing songs are dropped, totals still count the whole
-  range), `list_playlists`, `get_playlist_tracks` (entries of hidden tracks are
+  off; hidden and missing songs are dropped and the totals count visible
+  songs only, within the 1000 most played), `list_playlists`, `get_playlist_tracks` (entries of hidden tracks are
   left out). Every track id goes through `TrackLookup.visibleOf`.
+
+### Write tools (`write_tools.dart`, `queue_write_tools.dart`, `playlist_write_tools.dart`)
+
+`play_tracks`, `queue_tracks`, `remove_from_queue` (queue groups) and
+`create_playlist`, `add_to_playlist`, `remove_from_playlist` (playlist groups),
+all `ToolRisk.write` on `WriteTool` (`write_tool_base.dart`).
+
+- `plan(args, env)` is the one place a write is checked: it looks every track
+  id up through `visibleOf`, applies the item caps and returns the confirm
+  card (`describe`) and the action (`call`). `run` calls it again, so a library
+  that changed since the card is re-checked. Absent ids are never sent to a
+  store; they are listed in the result (`notFound`) and in `ToolDone.absent`.
+  No visible id at all is a refusal.
+- `ToolOutcome.done` (`ToolDone`) carries what the call changed; the loop adds
+  the call id (`toPart`) and stores a `DonePart`. It is built from what the
+  ports return, not from the request: removals list exactly the entries the
+  player or store removed, a restored queue comes from `ToolPlayResult`
+  (`ReplacedQueueSnapshot`: tracks in play order, `userOrder`, `shuffled`,
+  `previousIndex`). `play_tracks` drops the user's pending undo like any play;
+  `remove_from_queue` leaves it untouched.
+- `ToolPreview.refused(reason)` (no card, the model gets the reason) covers a
+  bad name, an unknown playlist and the caps. `ToolOutcome.limit` marks a cap
+  refusal so the loop shows the limit card, also in Auto.
+- Item caps (`item_caps.dart`): at most 50 removed (queue plus playlist) and
+  200 added items per user turn. `TurnItemUsage.fromParts` counts the
+  `DonePart`s of the turn's persisted messages; the session supplies it as
+  `ToolEnv.turnUsage`, read at call time, so a retry or restart never resets
+  it. A call that would cross a cap is refused whole. `play_tracks` counts as
+  added items.
+- Model-written text (playlist names) goes through `sanitizeModelText`
+  (`model_text.dart`): control, bidi and zero-width characters removed, spaces
+  collapsed, cut at 100 characters; a name that is empty afterwards is
+  refused. Track titles in cards and done parts are cleaned the same way.
+- `play_tracks.startIndex` counts in the given `trackIds`; if the song there
+  is not visible the call is refused. The play context label is
+  `ToolEnv.playContextLabel` (`aiChatPlayContextLabel`, localized by the
+  session; the provider default is English).
+- Ports: `PlaybackWritePort`, `PlaylistsWritePort` (`tool_env_write.dart`),
+  adapters in `ai/data/tool_env_write.dart`. `add_to_playlist` names the added
+  tracks by reading the playlist before the add (counts are the store's).
 
 ## Conversation store (`ai/data/conversation_store.dart`)
 
@@ -218,3 +258,64 @@ fires (append, completed round, delete; not for live-text flushes).
   `streaming → stopped` (live text kept, cut to the cap, plus an `ErrorPart`
   with code `cutOffByClose`), `running → unknown`. Blobs stay; pending and
   allowed cards are left for the engine to expire. No model call follows.
+## Input and outcomes (`ai/domain/input/`, `ai/domain/output/`)
+
+Pure Dart (no Flutter); they read the chat contract of `docs/plugin-host-api.md`.
+
+- **Input** (`chat_input_builder.dart`): `buildChatInput(binding, history,
+  tools, capabilities, system, boundary, finalRound)` returns the plugin's
+  `input` (`{v:1, model, system, boundary, messages, tools, toolChoice,
+  options}`) or `ChatInputTooLarge`. `history` is `HistoryRow`s (message plus
+  blob text) in `seq` order; the last turn is the current one.
+  - A turn is a user message and the rows up to the next user message. An
+    assistant row gives one assistant message (text and `tool_call` parts,
+    `provider` = its blob); the tool rows after it give one `tool` message
+    with a `tool_result` per call, in call order. A call with no result
+    (denied, skipped, unknown, never ran) gets an error result, so every call
+    has its result. Neighbours of one role are merged. The app sends
+    `isError`; the plugin adds the `Error: ` prefix the model reads, the app
+    never does.
+  - **Binding:** a turn is sent whole only when every assistant row that has
+    calls or a blob carries the current install id, generation, plugin
+    version and model and a readable blob (the store's oversize marker is not
+    readable); else the whole turn is flattened to its text.
+  - **Limit** (`byte_budget.dart`): `min(768 KiB, context x 2 x 0.75 -
+    maxOutputTokens)` UTF-8 bytes of `jsonEncode(input)`. Over it, in order:
+    flatten the oldest turns, drop the oldest turns (the first user message
+    stays), elide the oldest tool-result contents of the current turn
+    (calls, results and blobs stay), then `ChatInputTooLarge`.
+  - `data` parts are cleaned (`sanitizeText`) and every `<data` / `</data`
+    is broken; chips are not sent (their data parts are).
+- **Tools offered** (`tool_selection.dart`): none when the model has no
+  `tools` capability; else the tools whose group switch is on, without
+  external tools, and without writes in a read-only chat. The final round
+  sends the same list with `toolChoice: "none"`.
+- **System prompt** (`system_prompt.dart`): English, rules for ids, row
+  format, untrusted data, approvals, `[[t:ID]]` citations; the user's general
+  instructions last. `newChatBoundary` makes the per-request fence token.
+- **Output** (`chat_output_parser.dart`): `parseChatOutput` returns
+  `ChatOutputOk(ChatRoundOutput)`, `ChatOutputRejected` (shape, 9+ calls in a
+  round, empty reply; the card is `bad_request`) or `ChatOutputLimit`
+  (`ChatLimitExceeded`: more than 24 calls in the turn, or the loop's item
+  counter via the `itemLimit` hook; its own card, never retried). Call ids
+  are `t<turn>-r<round>-<n>`; a provider id outside
+  `^[A-Za-z0-9_.:-]{1,64}$` is dropped; each call carries a `ChatCallRefusal`
+  (unknown or over-long name: stored without args; raw args; any call in a
+  final round) that the loop answers with an error result.
+  `finish: "blocked"` is a normal result.
+- **Readiness** (`chat_readiness.dart`): `chatReadiness(manifest,
+  storedConfig, conversationModel, reinstalled)` is `ChatReady`,
+  `ChatNeedsKey` (`chat.keyField` empty), `ChatNeedsModel` (neither the chat
+  nor the plugin names one), `ChatNeedsConfig(titles)`, `ChatPluginRemoved`
+  (manifest null) or `ChatPluginReinstalled`.
+- **Outcomes** (`outcome_mapper.dart`): `mapChatOutcome(RunOutcome,
+  ChatOutcomeContext)` returns a `ChatOutcomeView`: message end (complete,
+  error, stopped, blocked), card kind, one action, the contract code to store,
+  and parameters (host, retryAt, titles, the valid reply). No UI strings.
+  Success wins over a sticky fetch failure or `rateLimitSeen`; a rejected
+  `RunOk` shows the rate-limit or fetch card when one is behind it. A script
+  `server` error with a failing fetch shows the fetch card; any other code
+  shows its own. Rate-limit `retryAt` is the later of `now + retryAfter`
+  (default 60 s) and the plugin pause. `RunBusy` is "stuck" from the third in a
+  row with no stream active. `ChatOutcomeView.interrupted()` is the card for a
+  turn cut off by closing the app.

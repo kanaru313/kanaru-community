@@ -12,9 +12,14 @@ import '../../playback/state/queue_view_provider.dart';
 import '../../playback/state/track_info_providers.dart';
 import '../data/tool_env_impl.dart';
 import '../data/tool_env_player.dart';
+import '../data/tool_env_write.dart';
 import '../domain/tools/tool_env.dart';
 
 /// The ports the assistant's tools use, wired on the live app state.
+///
+/// `playContextLabel` (a localized string) and `turnUsage` (read from the
+/// conversation's transcript) are set by the chat session with
+/// `ToolEnv.copyWith`; the defaults here are English text and "nothing used".
 final toolEnvProvider = Provider<ToolEnv>((ref) {
   final lookup = ref.watch(trackLookupProvider);
   return ToolEnv(
@@ -41,6 +46,24 @@ final toolEnvProvider = Provider<ToolEnv>((ref) {
     playlists: PlaylistsPortImpl(
       store: ref.watch(playlistStoreProvider),
       lookup: lookup,
+    ),
+    playbackWrite: PlaybackWritePortImpl(
+      playTracks: (visible, {required contextLabel, startIndex = 0}) => ref
+          .read(playerControllerProvider)
+          .playTracksForTool(
+            visible,
+            contextLabel: contextLabel,
+            startIndex: startIndex,
+          ),
+      playNext: (tracks) => ref.read(playbackCommandsProvider).playNext(tracks),
+      enqueue: (tracks) => ref.read(playbackCommandsProvider).enqueue(tracks),
+      removeQueueEntries: (ids) =>
+          ref.read(playerControllerProvider).removeEntriesForTool(ids),
+      queueIsEmpty: () =>
+          ref.read(playerControllerProvider).queueState.items.isEmpty,
+    ),
+    playlistsWrite: PlaylistsWritePortImpl(
+      store: ref.watch(playlistStoreProvider),
     ),
   );
 });

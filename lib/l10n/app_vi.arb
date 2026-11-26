@@ -5645,5 +5645,9 @@
   "fontsRemoveConfirm": "Xoá",
   "@fontsRemoveConfirm": {},
   "fontsRemoved": "Đã xoá phông",
-  "@fontsRemoved": {}
+  "@fontsRemoved": {},
+  "aiChatPlayContextLabel": "Trợ lý AI",
+  "@aiChatPlayContextLabel": {
+    "description": "Tên ngữ cảnh phát khi trợ lý AI bắt đầu một hàng đợi."
+  }
 }

@@ -6,6 +6,9 @@
 /// a hidden, missing, remote or duplicate-hidden track is "not found".
 library;
 
+import 'item_caps.dart';
+import 'tool_env_write.dart';
+
 /// One visible track as a tool answer shows it.
 class TrackRow {
   const TrackRow({
@@ -171,7 +174,8 @@ abstract interface class HistoryPort {
   Future<bool> isRecording();
 
   /// Most played visible songs of [range], starting after [offset] rows, at
-  /// most [limit]; `songs` and `plays` are the totals of the whole range.
+  /// most [limit]; `songs` and `plays` are the totals of the visible songs
+  /// of the range.
   Future<({List<StatsRow> rows, int songs, int plays})> mostPlayed(
     StatsRange range, {
     required int offset,
@@ -217,6 +221,10 @@ class ToolEnv {
     required this.lyrics,
     required this.history,
     required this.playlists,
+    required this.playbackWrite,
+    required this.playlistsWrite,
+    this.playContextLabel = 'AI assistant',
+    this.turnUsage = _noUsage,
   });
 
   final LibraryPort library;
@@ -224,4 +232,32 @@ class ToolEnv {
   final LyricsPort lyrics;
   final HistoryPort history;
   final PlaylistsPort playlists;
+  final PlaybackWritePort playbackWrite;
+  final PlaylistsWritePort playlistsWrite;
+
+  /// Localized name of the play context `play_tracks` starts. The chat
+  /// session passes the l10n string; domain code cannot read it.
+  final String playContextLabel;
+
+  /// What the assistant already changed in the current user turn, read from
+  /// the persisted transcript at call time. The chat session supplies it; the
+  /// default says nothing was changed.
+  final Future<TurnItemUsage> Function() turnUsage;
+
+  ToolEnv copyWith({
+    String? playContextLabel,
+    Future<TurnItemUsage> Function()? turnUsage,
+  }) => ToolEnv(
+    library: library,
+    playback: playback,
+    lyrics: lyrics,
+    history: history,
+    playlists: playlists,
+    playbackWrite: playbackWrite,
+    playlistsWrite: playlistsWrite,
+    playContextLabel: playContextLabel ?? this.playContextLabel,
+    turnUsage: turnUsage ?? this.turnUsage,
+  );
 }
+
+Future<TurnItemUsage> _noUsage() async => TurnItemUsage.none;

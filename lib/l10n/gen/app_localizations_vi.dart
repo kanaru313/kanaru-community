@@ -7153,4 +7153,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get fontsRemoved => 'Đã xoá phông';
+
+  @override
+  String get aiChatPlayContextLabel => 'Trợ lý AI';
 }
