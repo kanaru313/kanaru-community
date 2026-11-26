@@ -15,16 +15,26 @@ import '../data/tool_env_player.dart';
 import '../data/tool_env_write.dart';
 import '../domain/tools/tool_env.dart';
 
+/// How the session builds its tool env; tests override it with fakes.
+final toolEnvFactoryProvider = Provider<ToolEnv Function(Ref ref)>(
+  (ref) => buildToolEnv,
+);
+
 /// The ports the assistant's tools use, wired on the live app state.
 ///
+/// A plain function, not a provider: a provider value would keep its `ref`
+/// in the port closures and fail after the provider rebuilt. The chat session
+/// calls this each time it needs the env, with its own long-lived `ref`, and
+/// every dependency is read at that moment (`read`, never `watch`).
+///
 /// `playContextLabel` (a localized string) and `turnUsage` (read from the
-/// conversation's transcript) are set by the chat session with
-/// `ToolEnv.copyWith`; the defaults here are English text and "nothing used".
-final toolEnvProvider = Provider<ToolEnv>((ref) {
-  final lookup = ref.watch(trackLookupProvider);
+/// conversation's transcript) are set by the caller with `ToolEnv.copyWith`;
+/// the defaults here are English text and "nothing used".
+ToolEnv buildToolEnv(Ref ref) {
+  final lookup = ref.read(trackLookupProvider);
   return ToolEnv(
     library: LibraryPortImpl(
-      trackSearch: ref.watch(trackSearchProvider),
+      trackSearch: ref.read(trackSearchProvider),
       trackLookup: lookup,
       trackInfo: (id) => ref.read(trackInfoProvider(id).future),
     ),
@@ -39,12 +49,12 @@ final toolEnvProvider = Provider<ToolEnv>((ref) {
       return ref.read(storedTrackLyricsProvider(id));
     }),
     history: HistoryPortImpl(
-      store: ref.watch(historyStoreProvider),
+      store: ref.read(historyStoreProvider),
       lookup: lookup,
       enabled: () async => ref.read(historyEnabledProvider),
     ),
     playlists: PlaylistsPortImpl(
-      store: ref.watch(playlistStoreProvider),
+      store: ref.read(playlistStoreProvider),
       lookup: lookup,
     ),
     playbackWrite: PlaybackWritePortImpl(
@@ -63,7 +73,7 @@ final toolEnvProvider = Provider<ToolEnv>((ref) {
           ref.read(playerControllerProvider).queueState.items.isEmpty,
     ),
     playlistsWrite: PlaylistsWritePortImpl(
-      store: ref.watch(playlistStoreProvider),
+      store: ref.read(playlistStoreProvider),
     ),
   );
-});
+}

@@ -157,12 +157,16 @@ Gaps the adapters work around (all inside `ai/data`):
   adds `truncated: true` and `nextOffset`; a row is never cut.
 - Read tools: `get_now_playing`, `get_queue` (window of 50 around the current
   entry unless `offset` is given; items carry the entry id), `search_library`,
-  `get_lyrics` (stored or local lyrics only, no timestamps, at most 12000
-  characters, cut at a line), `get_track_info` (at most 50 ids, `notFound`
-  lists absent ones), `get_listening_stats` (error while history recording is
+  `get_lyrics` (stored or local lyrics only, no timestamps; the result stays
+  within 16 KiB of UTF-8 bytes, cut at a line, with `offset` (line) and
+  `nextOffset` to page), `get_track_info` (at most 50 ids, `offset` pages over
+  them, `notFound` lists absent ones), `get_listening_stats` (error while history recording is
   off; hidden and missing songs are dropped and the totals count visible
   songs only, within the 1000 most played), `list_playlists`, `get_playlist_tracks` (entries of hidden tracks are
-  left out). Every track id goes through `TrackLookup.visibleOf`.
+  left out). Every track id goes through `TrackLookup.visibleOf`. A song that
+  is not visible never reaches the model: `get_now_playing` says
+  `track: "unavailable"` with no `trackId`, and `get_queue` rows for it are
+  `entryId||(unavailable)` (the entry id stays so the entry can be removed).
 
 ### Write tools (`write_tools.dart`, `queue_write_tools.dart`, `playlist_write_tools.dart`)
 
@@ -175,7 +179,9 @@ all `ToolRisk.write` on `WriteTool` (`write_tool_base.dart`).
   card (`describe`) and the action (`call`). `run` calls it again, so a library
   that changed since the card is re-checked. Absent ids are never sent to a
   store; they are listed in the result (`notFound`) and in `ToolDone.absent`.
-  No visible id at all is a refusal.
+  No visible id at all is a refusal. `remove_from_playlist` removes only the
+  entries the card shows (entries of a song the user cannot see are reported
+  as `notInPlaylist` and never sent to the store); none shown is a refusal.
 - `ToolOutcome.done` (`ToolDone`) carries what the call changed; the loop adds
   the call id (`toPart`) and stores a `DonePart`. It is built from what the
   ports return, not from the request: removals list exactly the entries the
@@ -203,6 +209,9 @@ all `ToolRisk.write` on `WriteTool` (`write_tool_base.dart`).
 - Ports: `PlaybackWritePort`, `PlaylistsWritePort` (`tool_env_write.dart`),
   adapters in `ai/data/tool_env_write.dart`. `add_to_playlist` names the added
   tracks by reading the playlist before the add (counts are the store's).
+  `create_playlist` never fails after the playlist exists: if reading its id
+  back fails the result has no `playlistId` (and a note), so the model does not
+  create it twice.
 
 ## Conversation store (`ai/data/conversation_store.dart`)
 
@@ -226,8 +235,9 @@ fires (append, completed round, delete; not for live-text flushes).
   false means another caller won. Legal moves (`transition`): streaming →
   complete | stopped | error; pending → allowed | skipped; allowed → running |
   skipped; running → done | error | unknown. `resolveConfirm` answers a
-  pending card: allowed → `allowed`; denied, deniedByNewMessage, expired →
-  `skipped` (the confirm part keeps the status).
+  pending card: allowed → `allowed` (the confirm part also keeps the
+  `approvalHash` of the call the user saw); denied, deniedByNewMessage,
+  expired → `skipped` (the confirm part keeps the status).
 - **`completeRound(messageId, finalParts, blob, calls)`:** one transaction:
   CAS `streaming → complete`, live text cleared, one `tool` row per call
   (`[call, ConfirmPart(pending)]` in `pending` for ask-mode writes,
@@ -243,8 +253,12 @@ fires (append, completed round, delete; not for live-text flushes).
   is never touched). Parts over 1 MiB, or blobs that still do not fit, mark
   the message `error(too_large)` and throw `AiStoreTooLarge`; the round is
   rolled back.
-- **Flatten** (`flattenTurn`): text kept; assistant tool-call parts, tool rows
-  and blobs dropped together, an assistant row left empty is deleted. A turn
+- **Flatten** (`flattenTurn`): text kept; tool-call and tool-result parts and
+  blobs dropped together, an assistant row left empty is deleted. Tool rows
+  stay with their display parts (done, confirm, error), so the turn's item
+  usage and its "what the AI changed" cards survive, and a row left with
+  nothing is deleted. A flattened turn is sent as plain text (no call, no
+  blob); the loop treats a last round without calls as the end. A turn
   with a streaming, pending, allowed or running row is not flattened (false).
   `clearProviderBlobs(installId)` (plugin removed or reinstalled) flattens
   every turn that held a blob of that install; a version or model switch
@@ -252,12 +266,18 @@ fires (append, completed round, delete; not for live-text flushes).
 - **`error_json`** is `{code, kind, retryAfterSec?}` only.
   `AiStoredError.fromPlugin("ai:<code>…", kind:, retryAfterSec:)` keeps the
   code and drops everything after it; an unknown code or kind is `server`.
+  Besides the contract codes (`AiErrorCode`) the app stores its own
+  (`appErrorCodes`, `ai_error_code.dart`): `network`, `host_not_allowed`,
+  `limit_reached`, and the snake-case name of any other card (`timeout`,
+  `plugin_error`, ...). A plugin can never produce them. The host of a network
+  card is not stored, so a reloaded card names no host.
 - **Binding:** conversations and messages carry `installId` and
   `installGeneration`; `bind` moves a chat to another plugin.
 - **Startup sweep** (`sweepAfterCrash`, once before any chat opens):
   `streaming → stopped` (live text kept, cut to the cap, plus an `ErrorPart`
   with code `cutOffByClose`), `running → unknown`. Blobs stay; pending and
-  allowed cards are left for the engine to expire. No model call follows.
+  allowed cards are left alone: a new user message resolves them (see Loop)
+  and the 24 h expiry covers the latest turn. No model call follows.
 ## Input and outcomes (`ai/domain/input/`, `ai/domain/output/`)
 
 Pure Dart (no Flutter); they read the chat contract of `docs/plugin-host-api.md`.
@@ -280,10 +300,17 @@ Pure Dart (no Flutter); they read the chat contract of `docs/plugin-host-api.md`
     version and model and a readable blob (the store's oversize marker is not
     readable); else the whole turn is flattened to its text.
   - **Limit** (`byte_budget.dart`): `min(768 KiB, context x 2 x 0.75 -
-    maxOutputTokens)` UTF-8 bytes of `jsonEncode(input)`. Over it, in order:
-    flatten the oldest turns, drop the oldest turns (the first user message
-    stays), elide the oldest tool-result contents of the current turn
-    (calls, results and blobs stay), then `ChatInputTooLarge`.
+    maxOutputTokens x 2)` UTF-8 bytes of `jsonEncode(input)` (the loop passes
+    the plugin's own `maxOutputTokens` when the chat sets none). Over it, in
+    order: flatten the oldest turns, drop the oldest turns (the first user
+    message stays), elide the oldest tool-result contents of the current turn
+    (calls, results and blobs stay), then `ChatInputTooLarge`. Trimming sums
+    per-turn sizes (each turn is encoded once per mode); only the first try
+    and the final result are encoded whole.
+  - **The running turn is never flattened:** when its blob is the store's
+    oversize marker the builder returns `ChatInputTooLarge` instead of hiding
+    its calls and results. The loop ends such a turn right after the round
+    (see Loop); the turn is flattened when it ends.
   - `data` parts are cleaned (`sanitizeText`) and every `<data` / `</data`
     is broken; chips are not sent (their data parts are).
 - **Tools offered** (`tool_selection.dart`): none when the model has no
@@ -388,15 +415,20 @@ registry and `ToolEnv`, fresh `LoopSettings` and `LoopPlugin` reads) and a clock
   newest row) is compared in the same transaction as the streaming message
   insert (`ConversationStore.appendIfLatest`): a round never starts on a
   transcript that moved.
-- **Allow:** binds `{callId, hash(name + args), conversationId}` in memory
-  (`callHash`: sha256 over the name and key-sorted args). Execution recomputes
-  the hash from the stored call; any difference is a refusal.
+- **Allow:** stores `callHash` (sha256 over the name and key-sorted args) in
+  the card's `ConfirmPart(allowed).approvalHash` in the same compare-and-set
+  that allows it, so the binding survives a restart. Execution recomputes the
+  hash from the stored call; any difference is a refusal. A card that needed
+  no confirmation has no hash.
 - **`mayExecute`** runs right before every `allowed -> running` (reads too):
   no write in a read-only chat, the tool's group switch, external tools never,
   the plugin install id + generation and the model the round was made with
   unchanged. A refusal stores `skipped` with the result "not run: not allowed
-  now (...)". A pending card is valid until the next user message (denied by
-  it) or 24 h (`expired`, also on a late Allow). `applyPermission()` after a
+  now (...)". A pending card is valid until the next user message or 24 h
+  (`expired`, also on a late Allow). A new user message moves every pending
+  and allowed-not-run card of the conversation, earlier turns included, to
+  `skipped` with `deniedByNewMessage` before the message is stored, so no
+  older turn stays live and every turn can be flattened. `applyPermission()` after a
   switch to read-only denies pending and allowed-not-run writes at once.
 - **Tools:** each call is stored `running` before it runs, then `done`, `error`
   or `skipped`; a 30 s timeout fails a read and marks a write `unknown` (it
@@ -417,9 +449,81 @@ registry and `ToolEnv`, fresh `LoopSettings` and `LoopPlugin` reads) and a clock
   `AwaitConfirms` for pending cards. Nothing runs until the user taps (Retry,
   Allow, Deny, send). Pending cards act only on tap; `unknown` writes are
   never re-run (the model reads "the result is unknown").
+- **Blob over its cap:** when `completeRound` reports `blobTooLarge` and the
+  reply has calls, the calls do not run (their cards go `skipped`, "not run:
+  the conversation grew too large to go on", a confirm part is `denied` with
+  reason `too_large`), the turn ends in `error` with the `too_large` card and
+  is flattened at its end. A reply without calls ends the turn normally.
 - **Failures:** a round that ends without a reply stores `stopped` or `error`
   with the contract code (or the card name in snake case, e.g. `timeout`,
-  `plugin_updated`) and kind; `lastView` keeps the `ChatOutcomeView` of the
+  `plugin_updated`; a network or blocked-host failure is `network` /
+  `host_not_allowed`, see Conversation store) and kind; `lastView` keeps the `ChatOutcomeView` of the
   last failed round. A plugin that is gone ends the turn in `error` with no
   stored row (the chat's readiness shows it). The plugin version that really
   ran (`RunOk.pluginVersion`) is stamped on the message.
+
+## Session controller (`ai/state/chat_session*.dart`, `ai/data/chat_turn_runner.dart`)
+
+`chatSessionProvider` (`ChatSessionController`, kept alive) is the chat UI's
+only entry. It owns one `LoopDriver` for the open conversation and builds
+everything the driver needs when it is needed; no dependency is kept across
+an await. `state` is `{conversationId, turnState, lastView}`.
+
+- **API:** `newConversation()` (reuses the open chat while it is empty; else a
+  new one on the default plugin, the plugin's own `model`, the default
+  permission), `open(id)`, `rename`, `delete(id)`, `deleteAll()`,
+  `send(text, {shortVersion})`, `stop()`, `retry()`, `allow(callId)`,
+  `deny(callId)`, `replayQueue(messageId)`, `switchPlugin(installId)`,
+  `switchModel(model)`, `setPermission(permission)`, `flush()`. Switching
+  operations run one at a time. The first open sweeps a crashed run once
+  (`sweepAfterCrash`).
+- **`send` returns** `SendSent(done, userMessageId)`, `SendMissingData(issues)`
+  (a `{{variable}}` or an attached chip with no data or a group off; the
+  attachments stay), `SendOversize(variables)` (call again with
+  `shortVersion: true`), `SendBlocked(readiness)`, `SendBusy`, `SendFailed`.
+  The message is chips (each with its fenced data) then the filled text.
+  Attachments (`chatAttachmentsProvider`: `attach`, `attachTarget`, `detach`,
+  `setSuggestions`) are cleared only by an accepted send. The first message of
+  a chat sets its auto title.
+- **Open, delete, switch** stop the turn and await its future (the run and the
+  tool being run), then act. Deleting the open chat opens a new empty one in
+  the same call; `deleteAll` also clears the run log of every installed chat
+  plugin (`PluginLogOps.clear`). `switchPlugin` and `switchModel` stop the turn
+  first; a plugin switch also writes the `EventPart.pluginSwitch` line.
+  `setPermission(readOnly)` calls `applyPermission()`.
+- **Reads for the UI:** `chatPluginsProvider` (installed chat plugins with
+  model list and readiness), `chatModelOptions` (the `model` select's options
+  plus the user's choices, capabilities from the overlay or `chat.custom`),
+  `chatConversationProvider(id)`, `chatReadinessProvider(id)`,
+  `chatMessagesProvider(id)` (newest 50, `loadOlder`; polls every 500 ms while
+  a turn runs because the store does not notify card state changes),
+  `liveTextProvider(messageId)` (streamed text, so a delta rebuilds one
+  bubble), `chatStreamStatusProvider` (`thinking` / `generating`).
+  `cardOfStoredError` maps a stored `{code, kind, retryAfterSec}` to a card
+  after a reload (`network`, `host_not_allowed` and `limit_reached` are
+  stored under their own codes, so those cards come back; an unknown code
+  falls back to its kind, then to the server card).
+- **Runner** (`ChatTurnRunner`): one streaming run of the `chat` script on
+  `PluginRunner`: kinds `{aiChat}`, `persistStorage: false`, no input log, 300 s
+  wall, idle from `chat.idleTimeoutSec`. `text` and `status` emits are parsed;
+  a generation counter drops every event after a cancel or the outcome. The
+  outcome's plugin version stamps the message (the loop does that).
+- **Tool env:** `buildToolEnv(ref)` is a function, called per access with the
+  session's `ref` (`toolEnvFactoryProvider` lets tests swap it); the play
+  context label comes from `aiPlayContextLabelProvider` (the chat screen sets
+  it from its localizations; until then the English default of `ToolEnv`).
+- **Chips:** `ChipScopeAdapter` reads album, artist, genre, language scopes
+  through `songIds` and `TrackLookup` (at most 200 rows, true total kept) and
+  maps a playlist uid to its model id with `PlaylistStore.loadPlaylist`.
+- **`replayQueue(messageId)`:** only a tool row of the latest turn; rebuilds the
+  replaced queue from its still visible tracks in play order, starts at the
+  entry that was playing (first when none) through
+  `PlaybackWritePort.play`; the shuffle flag is not restored.
+- **Blobs:** a listener on the installed plugins calls
+  `clearProviderBlobs(installId)` when a chat plugin is removed or installed
+  again (its install time changed). An update or a model switch clears
+  nothing: those turns are sent flattened by the binding rule.
+- **Flush:** the loop writes streamed text about once a second and at each
+  round end. `flushChat(container)` (hook of `AiExtension`, registered in
+  `builtInExtensions` by the chat UI) writes it on pause and exit; it does
+  nothing when the session was never created.
