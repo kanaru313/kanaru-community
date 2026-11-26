@@ -69,3 +69,32 @@ String _textOf(String partsJson, String? liveText) {
   }
   return b.toString();
 }
+
+/// Every column of `ai_messages` except the provider blob, which is read as
+/// NULL (the blob is up to 256 KiB a row and only the model input needs it).
+const _columnsNoBlob =
+    'id, conversation_id, seq, role, parts_json, live_text, '
+    'NULL AS provider_json, install_id, plugin_version, install_generation, '
+    'model, state, error_json, usage_json, created_at';
+
+/// Message rows without their provider blob, in `seq` order. [where] is the
+/// SQL after `WHERE` and may use `?` for [variables]; [descLimit] reads the
+/// newest rows first (the caller reverses them).
+Future<List<AiMessageRow>> selectMessagesNoBlob(
+  AppDatabase db, {
+  required String where,
+  List<Variable> variables = const [],
+  int? descLimit,
+}) async {
+  final order = descLimit == null ? 'ASC' : 'DESC';
+  final limit = descLimit == null ? '' : ' LIMIT $descLimit';
+  final rows = await db
+      .customSelect(
+        'SELECT $_columnsNoBlob FROM ai_messages WHERE $where '
+        'ORDER BY seq $order$limit',
+        variables: variables,
+        readsFrom: {db.aiMessages},
+      )
+      .get();
+  return [for (final r in rows) db.aiMessages.map(r.data)];
+}

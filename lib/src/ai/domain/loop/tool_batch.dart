@@ -33,6 +33,25 @@ class ToolBatch {
     return limitHit;
   }
 
+  /// Marks calls left `running` by a run that never stored its result as
+  /// `unknown` (what the startup sweep does after a restart). False when a
+  /// row could not be moved.
+  Future<bool> healRunning(List<AiMessage> cards) async {
+    for (final card in cards) {
+      try {
+        await ctx.store.transition(
+          card.id,
+          from: AiMessageState.running,
+          to: AiMessageState.unknown,
+        );
+      } on Object catch (e, s) {
+        ctx.report(e, s);
+        return false;
+      }
+    }
+    return true;
+  }
+
   Future<void> _skip(
     AiMessage card,
     String text, {
@@ -115,13 +134,25 @@ class ToolBatch {
       return false;
     }
 
-    final started = await ctx.store.transition(
+    // The permission is checked again in the step that starts the call, so a
+    // switch to read-only that committed after the check above still wins.
+    final started = await ctx.store.startCall(
       card.id,
-      from: AiMessageState.allowed,
-      to: AiMessageState.running,
+      write: tool!.risk == ToolRisk.write,
     );
-    if (!started) return false;
-    return _execute(card, call, tool!);
+    switch (started) {
+      case CallStart.moved:
+        return false;
+      case CallStart.readOnly:
+        await _skip(
+          card,
+          notAllowedNowText(ExecRefusal.readOnly),
+          reason: ExecRefusal.readOnly.code,
+        );
+        return false;
+      case CallStart.started:
+        return _execute(card, call, tool);
+    }
   }
 
   Future<bool> _execute(AiMessage card, ToolCallPart call, AiTool tool) async {

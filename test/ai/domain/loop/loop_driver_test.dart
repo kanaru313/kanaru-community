@@ -503,8 +503,8 @@ void main() {
     },
   );
 
-  test('a row written after the input was built stops the round', () async {
-    rig = await Rig.create(script: [replies('never run')]);
+  test('a row written after the transcript was read is read again', () async {
+    rig = await Rig.create(script: [replies('answer')]);
     rig.env.onPlugin = () async {
       rig.env.onPlugin = null;
       await rig.store.append(
@@ -516,7 +516,36 @@ void main() {
       );
     };
     await rig.send('go');
+    // The round never ran on the stale transcript: it ran once, on the new
+    // latest turn, and its reply is stored.
+    expect(rig.runner.runs, 1);
+    final rows = await rig.rows();
+    expect(rows.last.role, AiMessageRole.assistant);
+    expect(rows.last.state, AiMessageState.complete);
+    expect(rig.driver.turnState, TurnState.idle);
+  });
+
+  test('a second lost append in a row ends the turn with a card', () async {
+    rig = await Rig.create(script: [replies('never run')]);
+    var calls = 0;
+    // The loop asks for the plugin twice per step: once to decide, once to
+    // run the round. A row lands between those two reads, twice in a row.
+    rig.env.onPlugin = () async {
+      calls++;
+      if (calls == 1 || calls == 3) {
+        await rig.store.append(
+          NewAiMessage(
+            conversationId: rig.conv.id,
+            role: AiMessageRole.user,
+            parts: [TextPart('raced $calls')],
+          ),
+        );
+      }
+    };
+    await rig.send('go');
     expect(rig.runner.runs, 0);
+    expect(rig.driver.turnState, TurnState.error);
+    expect(rig.driver.lastView?.card, isNotNull);
     final rows = await rig.rows();
     expect(rows.where((m) => m.role == AiMessageRole.assistant), isEmpty);
   });

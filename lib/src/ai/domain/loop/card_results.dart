@@ -1,6 +1,17 @@
 import '../conversation/ai_message.dart';
 import '../conversation/parts.dart';
+import '../output/ai_error_code.dart';
+import '../output/chat_outcome.dart';
 import '../output/chat_output_parser.dart';
+
+/// The card of a turn that failed for a reason inside the app (a flight that
+/// threw, a round that could not be written).
+const internalErrorView = ChatOutcomeView(
+  end: ChatMessageEnd.error,
+  card: ChatCardKind.server,
+  action: ChatCardAction.retry,
+  errorCode: AiErrorCode.server,
+);
 
 /// What the model reads for a call that did not run.
 const stoppedByUserText = 'not run: stopped by the user';

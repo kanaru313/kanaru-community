@@ -61,8 +61,16 @@ class ChatLoop {
         if (c.state == AiMessageState.pending) c.id,
     ];
     if (pending.isNotEmpty) return AwaitConfirms(pending);
-    if (cards.any((c) => c.state == AiMessageState.running)) {
-      return const NeedsUserTap(TapReason.strayRunning);
+    final running = [
+      for (final c in cards)
+        if (c.state == AiMessageState.running) c,
+    ];
+    if (running.isNotEmpty) {
+      // An armed flight runs the calls itself, one at a time, so a row still
+      // `running` here is left over from a run that never stored its result.
+      return armed
+          ? HealRunning(running)
+          : const NeedsUserTap(TapReason.strayRunning);
     }
     final allowed = [
       for (final c in cards)

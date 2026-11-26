@@ -9,8 +9,8 @@ import '../domain/output/chat_readiness.dart';
 import 'ai_conversation_store_provider.dart';
 
 /// One conversation row; null when it does not exist (deleted). Reloads when
-/// the store reports a change. Renames, permission and plugin switches do not
-/// notify the store, so the session invalidates this provider after them.
+/// the store reports a change (renames, permission and plugin switches
+/// included).
 final chatConversationProvider = FutureProvider.autoDispose
     .family<AiConversation?, int>((ref, id) {
       final store = ref.watch(aiConversationStoreProvider);

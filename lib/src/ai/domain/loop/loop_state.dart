@@ -78,6 +78,14 @@ final class ExpireCards extends LoopAction {
   final List<int> cardIds;
 }
 
+/// A call is `running` in an app session that runs nothing: its run ended
+/// without storing a result. Mark these `unknown`, as the startup sweep does.
+final class HealRunning extends LoopAction {
+  const HealRunning(this.cards);
+
+  final List<AiMessage> cards;
+}
+
 /// The turn is over.
 final class Done extends LoopAction {
   const Done();

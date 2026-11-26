@@ -175,13 +175,20 @@ void main() {
 
     test('a call still running without an owner is not restarted', () {
       expect(
-        _next(_round([AiMessageState.running])),
+        _next(_round([AiMessageState.running]), armed: false),
         isA<NeedsUserTap>().having(
           (a) => a.reason,
           'reason',
           TapReason.strayRunning,
         ),
       );
+    });
+
+    test('an armed flight heals a stray running call instead of waiting', () {
+      final rows = _round([AiMessageState.running, done]);
+      final a = _next(rows);
+      expect(a, isA<HealRunning>());
+      expect((a as HealRunning).cards, [rows[1]]);
     });
 
     test('unknown and failed calls count as resolved', () {

@@ -160,7 +160,7 @@ Gaps the adapters work around (all inside `ai/data`):
   `get_lyrics` (stored or local lyrics only, no timestamps; the result stays
   within 16 KiB of UTF-8 bytes, cut at a line, with `offset` (line) and
   `nextOffset` to page), `get_track_info` (at most 50 ids, `offset` pages over
-  them, `notFound` lists absent ones), `get_listening_stats` (error while history recording is
+  them and `nextOffset` counts ids, rows come in the order asked, `notFound` lists absent ones), `get_listening_stats` (error while history recording is
   off; hidden and missing songs are dropped and the totals count visible
   songs only, within the 1000 most played), `list_playlists`, `get_playlist_tracks` (entries of hidden tracks are
   left out). Every track id goes through `TrackLookup.visibleOf`. A song that
@@ -220,7 +220,12 @@ all `ToolRisk.write` on `WriteTool` (`write_tool_base.dart`).
 (turns, flattening, blob caps, startup sweep) and `conversation_queries.dart`
 (search, stats). `aiConversationStoreProvider` and `aiChatStatsProvider`
 (count, bytes) live in `ai/state/`; the stats reload when `store.changes`
-fires (append, completed round, delete; not for live-text flushes).
+fires. It fires after every stored change a screen shows: an append, a
+completed round, any won state move of a message (`transition`,
+`resolveConfirm`, `startCall`), `endTurn` / `flattenTurn` that flattened,
+`clearProviderBlobs`, the sweep, rename, auto title, permission, bind and
+delete. Not for live-text flushes or a lost compare-and-set. Writes wake the
+listeners once per microtask (coalesced), so nothing polls.
 
 - **Turn:** a user message and every row after it (assistant, tool, event)
   up to the next user message. Its id is the id of the user message
@@ -228,7 +233,14 @@ fires (append, completed round, delete; not for live-text flushes).
   turn.
 - **Rows:** `append` takes `seq = max + 1` inside a transaction. `messages`
   returns one page in `seq` order: the newest `limit` (default 50) before
-  `beforeSeq`. `search` matches title and message text (user and assistant
+  `beforeSeq`; `blobs: false` reads the page with the provider blob left out
+  (a list on screen never needs it). `latestTurn(conversationId)` reads the
+  last user message and what follows, `openToolCards(conversationId)` the
+  `pending` / `allowed` tool rows of the whole chat, both without blobs: they
+  are what the loop reads. Only `ModelRound` reads the whole transcript with
+  blobs (`LoopStore.history`), once per round. `startCall(messageId, write:)`
+  moves `allowed -> running` and, for a write, reads the chat's permission in
+  the same transaction: read-only wins. `search` matches title and message text (user and assistant
   text, live text), case-insensitive; it reads message text in pages, so its
   cost grows with the stored text.
 - **State changes** are compare-and-set (`UPDATE … WHERE state = from`);
@@ -414,16 +426,30 @@ registry and `ToolEnv`, fresh `LoopSettings` and `LoopPlugin` reads) and a clock
   the next flight. Before a model round the transcript revision (`seq` of the
   newest row) is compared in the same transaction as the streaming message
   insert (`ConversationStore.appendIfLatest`): a round never starts on a
-  transcript that moved.
+  transcript that moved. A lost compare (or a history that no longer matches
+  the snapshot) makes the pump read again and decide again; a second loss in
+  a row ends the turn in `error` with the app's own error card, never
+  silently. Every decision reads the latest turn only (`LoopSnapshot`: turn
+  and revision, no blobs).
+- **`runExclusive(body)`:** claims the flight for [body] (a plugin, model or
+  rebind write). A round or tool run in flight is stopped first and awaited;
+  a send, retry, Allow or Deny meanwhile finds the gate taken (`DriverBusy`,
+  or the answer is stored and the turn goes on at the next tap). A turn that
+  only waits on cards is left alone, its cards stay `pending`. `inspect()`
+  runs after it.
 - **Allow:** stores `callHash` (sha256 over the name and key-sorted args) in
   the card's `ConfirmPart(allowed).approvalHash` in the same compare-and-set
   that allows it, so the binding survives a restart. Execution recomputes the
   hash from the stored call; any difference is a refusal. A card that needed
   no confirmation has no hash.
+- **Allow on an expired card** answers it `expired` and starts a flight, so
+  the model reads the result and the turn goes on (or parks on the cards that
+  are left).
 - **`mayExecute`** runs right before every `allowed -> running` (reads too):
   no write in a read-only chat, the tool's group switch, external tools never,
   the plugin install id + generation and the model the round was made with
-  unchanged. A refusal stores `skipped` with the result "not run: not allowed
+  unchanged; the read-only check is repeated inside `startCall`, in the same
+  transaction as the move. A refusal stores `skipped` with the result "not run: not allowed
   now (...)". A pending card is valid until the next user message or 24 h
   (`expired`, also on a late Allow). A new user message moves every pending
   and allowed-not-run card of the conversation, earlier turns included, to
@@ -441,14 +467,24 @@ registry and `ToolEnv`, fresh `LoopSettings` and `LoopPlugin` reads) and a clock
 - **Stop:** `stop()` sets a turn-level flag and cancels the runner. Streamed
   text stays (`stopped`), the call being run finishes, later calls are
   `skipped` with "not run: stopped by the user", pending cards are skipped the
-  same way, no next round. Switch, delete and dispose use it and await the
-  returned future.
+  same way, no next round. A stop that lands while a round is being set up
+  (before the plugin run exists) is honoured: the round checks the flag after
+  its last read and after it stored the streaming message, and starts no run.
+  `dispose()` (open, new chat, switch, app exit) stops only a flight that is
+  active (round or tool run) and awaits it; cards of a turn that only waits
+  on the user stay `pending` (valid until the next user message or 24 h).
+  Only the user's Stop and a new user message deny them. Delete removes the
+  chat with its cards. `dispose()` marks the driver closed first, so no
+  trigger starts a flight after it.
 - **Crash rules:** after a restart (`sweepAfterCrash`) `streaming -> stopped`
   and `running -> unknown`. `inspect()` only reads: it sets `turnState` and
   returns `NeedsUserTap` for a model round or allowed calls that wait, or
   `AwaitConfirms` for pending cards. Nothing runs until the user taps (Retry,
   Allow, Deny, send). Pending cards act only on tap; `unknown` writes are
-  never re-run (the model reads "the result is unknown").
+  never re-run (the model reads "the result is unknown"). A call left
+  `running` inside one app session (its run ended without storing a result)
+  is moved to `unknown` by the next armed flight (`HealRunning`), so Retry
+  never waits on it.
 - **Blob over its cap:** when `completeRound` reports `blobTooLarge` and the
   reply has calls, the calls do not run (their cards go `skipped`, "not run:
   the conversation grew too large to go on", a confirm part is `denied` with
@@ -458,7 +494,8 @@ registry and `ToolEnv`, fresh `LoopSettings` and `LoopPlugin` reads) and a clock
   with the contract code (or the card name in snake case, e.g. `timeout`,
   `plugin_updated`; a network or blocked-host failure is `network` /
   `host_not_allowed`, see Conversation store) and kind; `lastView` keeps the `ChatOutcomeView` of the
-  last failed round. A plugin that is gone ends the turn in `error` with no
+  last failed round and is cleared when a new flight starts; a flight that
+  threw shows the app's own error card (`internalErrorView`). A plugin that is gone ends the turn in `error` with no
   stored row (the chat's readiness shows it). The plugin version that really
   ran (`RunOk.pluginVersion`) is stamped on the message.
 
@@ -483,20 +520,23 @@ an await. `state` is `{conversationId, turnState, lastView}`.
   `shortVersion: true`), `SendBlocked(readiness)`, `SendBusy`, `SendFailed`.
   The message is chips (each with its fenced data) then the filled text.
   Attachments (`chatAttachmentsProvider`: `attach`, `attachTarget`, `detach`,
-  `setSuggestions`) are cleared only by an accepted send. The first message of
+  `setSuggestions`) are cleared only by an accepted send, and only the chips that were sent
+  (one attached while the send was prepared stays). The first message of
   a chat sets its auto title.
-- **Open, delete, switch** stop the turn and await its future (the run and the
-  tool being run), then act. Deleting the open chat opens a new empty one in
+- **Open, delete, switch** stop a flight in flight and await its future (the
+  run and the tool being run), then act; cards waiting on the user stay
+  pending (delete removes them with the chat). Deleting the open chat opens a new empty one in
   the same call; `deleteAll` also clears the run log of every installed chat
-  plugin (`PluginLogOps.clear`). `switchPlugin` and `switchModel` stop the turn
-  first; a plugin switch also writes the `EventPart.pluginSwitch` line.
+  plugin (`PluginLogOps.clear`). `switchPlugin` and `switchModel` run their writes inside
+  `runExclusive`, so no send, retry, Allow or Deny starts a round on the old
+  binding meanwhile; a plugin switch also writes the `EventPart.pluginSwitch` line.
   `setPermission(readOnly)` calls `applyPermission()`.
 - **Reads for the UI:** `chatPluginsProvider` (installed chat plugins with
   model list and readiness), `chatModelOptions` (the `model` select's options
   plus the user's choices, capabilities from the overlay or `chat.custom`),
   `chatConversationProvider(id)`, `chatReadinessProvider(id)`,
-  `chatMessagesProvider(id)` (newest 50, `loadOlder`; polls every 500 ms while
-  a turn runs because the store does not notify card state changes),
+  `chatMessagesProvider(id)` (newest 50 without blobs, `loadOlder`; reloads on
+  `store.changes`, the latest read wins),
   `liveTextProvider(messageId)` (streamed text, so a delta rebuilds one
   bubble), `chatStreamStatusProvider` (`thinking` / `generating`).
   `cardOfStoredError` maps a stored `{code, kind, retryAfterSec}` to a card

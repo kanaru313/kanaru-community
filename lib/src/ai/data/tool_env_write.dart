@@ -1,3 +1,5 @@
+import 'package:logging/logging.dart';
+
 import '../../library/domain/playlists/playlist_models.dart';
 import '../../library/domain/playlists/playlist_store.dart';
 import '../../media/domain/track_id.dart';
@@ -5,6 +7,8 @@ import '../../playback/domain/removed_queue_entry.dart';
 import '../domain/conversation/parts.dart';
 import '../domain/tools/tool_env.dart';
 import '../domain/tools/tool_env_write.dart';
+
+final _log = Logger('ai.tools');
 
 /// [PlaybackWritePort] over the player's tool entry points. The functions
 /// hide whether they belong to a controller or a test fake.
@@ -108,8 +112,9 @@ class PlaylistsWritePortImpl implements PlaylistsWritePort {
       }
       final held = await store.loadPlaylist(uid);
       if (held != null) count = held.entries.length;
-    } on Object {
-      // keep what is known
+    } on Object catch (e, s) {
+      // Keep what is known; the type only, never the text of the error.
+      _log.warning('reading the new playlist failed: ${e.runtimeType}', e, s);
     }
     return (id: id, count: count);
   }

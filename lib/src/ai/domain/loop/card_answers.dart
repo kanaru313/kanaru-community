@@ -73,18 +73,9 @@ class CardAnswers {
   /// none may stay open behind it (an open card keeps its turn from being
   /// flattened).
   Future<void> skipOpen(String text, ConfirmStatus status) async {
-    final snap = await ctx.snapshot();
-    if (snap == null) return;
-    for (final row in snap.history) {
-      final card = row.message;
-      final open =
-          card.role == AiMessageRole.tool &&
-          (card.state == AiMessageState.pending ||
-              card.state == AiMessageState.allowed);
+    for (final card in await ctx.store.openCards(ctx.conversationId)) {
       final call = callOf(card);
-      if (open && call != null) {
-        await answer(card, call, text, status);
-      }
+      if (call != null) await answer(card, call, text, status);
     }
   }
 

@@ -20,6 +20,7 @@ import 'loop_state.dart';
 import 'may_execute.dart';
 import 'model_round.dart';
 import 'tool_batch.dart';
+import 'turn_inspector.dart';
 
 /// Runs the turns of one conversation. One in-flight future at most: a
 /// second trigger while it runs is dropped, so two model rounds never run
@@ -61,6 +62,14 @@ class LoopDriver {
     _round = ModelRound(_ctx);
     _tools = ToolBatch(_ctx);
     _cards = CardAnswers(_ctx);
+    _inspector = TurnInspector(
+      ctx: _ctx,
+      loop: loop,
+      cards: _cards,
+      busy: () => _gate.busy,
+      setState: _setState,
+      report: _report,
+    );
   }
 
   final int conversationId;
@@ -75,6 +84,7 @@ class LoopDriver {
   late final ModelRound _round;
   late final ToolBatch _tools;
   late final CardAnswers _cards;
+  late final TurnInspector _inspector;
 
   final _states = StreamController<TurnState>.broadcast();
   final _live = StreamController<({int messageId, String text})>.broadcast();
@@ -145,6 +155,8 @@ class LoopDriver {
     final (snap, card, call) = found;
     if (cardExpired(card.createdAt, _ctx.now())) {
       await _cards.answer(card, call, expiredText, ConfirmStatus.expired);
+      // The answer may have been the last one the turn waited for.
+      _kick();
       return CardAnswer.expired;
     }
     final tool = _env.registry.byName(call.name);
@@ -187,11 +199,8 @@ class LoopDriver {
   /// finishes, later calls are `skipped`, no next round starts. Completes
   /// when the turn future has ended.
   Future<void> stop() async {
-    final flight = _gate.current;
-    if (flight != null) {
-      _ctx.stopRequested = true;
-      _runner.cancel();
-      await flight.future;
+    if (_gate.busy) {
+      await _stopActive();
       return;
     }
     final parked = _reserve();
@@ -208,6 +217,36 @@ class LoopDriver {
     );
   }
 
+  /// Runs [body] while no turn step runs and none can start (a send, retry,
+  /// Allow or Deny meanwhile is refused or waits). A round or a tool run in
+  /// flight is stopped and awaited first; a turn that only waits on cards is
+  /// left as it is, its cards stay pending. Null when the driver is closed.
+  Future<T?> runExclusive<T>(Future<T> Function() body) async {
+    if (_disposed) return null;
+    var flight = _reserve();
+    while (flight == null) {
+      await _stopActive();
+      if (_disposed) return null;
+      flight = _reserve();
+    }
+    try {
+      return await body();
+    } finally {
+      _release(flight);
+      await inspect();
+    }
+  }
+
+  /// Stops the flight in flight, if any, and waits for it. Cards waiting for
+  /// the user's answer are not touched.
+  Future<void> _stopActive() async {
+    final flight = _gate.current;
+    if (flight == null) return;
+    _ctx.stopRequested = true;
+    _runner.cancel();
+    await flight.future;
+  }
+
   /// The chat's permission was changed to read-only: write calls still
   /// pending or allowed and not run are denied at once.
   Future<void> applyPermission() async {
@@ -218,32 +257,18 @@ class LoopDriver {
   /// Reads the stored turn and sets [turnState] without running anything
   /// (call it when a conversation opens). Cards past 24 hours are marked
   /// expired. Returns what a tap could do next; null while a turn runs.
-  Future<LoopAction?> inspect() async {
-    if (_gate.busy) return null;
-    try {
-      var action = await _peek();
-      if (action is ExpireCards) {
-        final snap = await _ctx.snapshot();
-        if (snap != null && !_gate.busy) {
-          await _cards.expire(snap, action.cardIds);
-          action = await _peek();
-        }
-      }
-      return action;
-    } on Object catch (e, s) {
-      _report(e, s);
-      return const Done();
-    }
-  }
+  Future<LoopAction?> inspect() => _inspector.inspect();
 
   /// Writes the streamed text so far (the app goes to the background).
   Future<void> flushLive() => _round.flushLive();
 
-  /// Stops the turn and closes the streams. Awaits the turn future.
+  /// Closes the driver: a round or tool run in flight is stopped and awaited
+  /// (calls that did not run are skipped), cards waiting for an answer stay
+  /// pending. Nothing starts after this is called.
   Future<void> dispose() async {
     if (_disposed) return;
-    await stop();
     _disposed = true;
+    await _stopActive();
     await _states.close();
     await _live.close();
   }
@@ -251,8 +276,12 @@ class LoopDriver {
   // ── Flight ─────────────────────────────────────────────────────────────
 
   /// Claims the single flight, or null when one is running.
-  Completer<void>? _reserve() =>
-      _gate.reserve(onClaim: () => _ctx.stopRequested = false);
+  Completer<void>? _reserve() => _gate.reserve(
+    onClaim: () {
+      _ctx.stopRequested = false;
+      _lastView = null;
+    },
+  );
 
   void _release(Completer<void> flight) => _gate.release(flight);
 
@@ -276,6 +305,7 @@ class LoopDriver {
       await (body ?? _pump)();
     } on Object catch (e, s) {
       _report(e, s);
+      _lastView = internalErrorView;
       _setState(TurnState.error);
     } finally {
       _release(flight);
@@ -324,6 +354,12 @@ class LoopDriver {
           _setState(TurnState.awaitingConfirm);
           _release(_gate.current!);
           return;
+        case HealRunning(:final cards):
+          // Never loop on a row that cannot be moved.
+          if (!await _tools.healRunning(cards)) {
+            _setState(TurnState.error);
+            return;
+          }
         case RunTools(:final cards):
           _setState(TurnState.runningTools);
           final limit = await _tools.run(cards);
@@ -382,32 +418,6 @@ class LoopDriver {
     if (last != null && last.state == AiMessageState.streaming) {
       await _store.endRound(last.id, to: AiMessageState.stopped);
     }
-  }
-
-  Future<LoopAction> _peek() async {
-    final snap = await _ctx.snapshot();
-    final transcript = snap?.transcript;
-    if (snap == null || transcript == null) {
-      _setState(TurnState.idle);
-      return const Done();
-    }
-    final plugin = await _env.plugin(snap.conversation);
-    final settings = await _env.settings();
-    final action = loop.next(
-      transcript,
-      settings,
-      plugin?.capabilities ?? const ChatCapabilities(),
-      armed: false,
-      now: _ctx.now(),
-    );
-    final last = transcript.assistants.lastOrNull;
-    _setState(switch (action) {
-      AwaitConfirms() => TurnState.awaitingConfirm,
-      _ when last != null && last.state == AiMessageState.error =>
-        TurnState.error,
-      _ => TurnState.idle,
-    });
-    return action;
   }
 
   void _setState(TurnState state) {

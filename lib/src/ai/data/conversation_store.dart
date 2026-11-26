@@ -18,6 +18,18 @@ export 'conversation_rows.dart';
 /// Pages of [ConversationStore.messages] hold this many messages by default.
 const defaultMessagePage = 50;
 
+/// How [ConversationStore.startCall] ended.
+enum StartCall {
+  /// The call is `running` now.
+  started,
+
+  /// Another caller moved the call first.
+  moved,
+
+  /// A write while the chat is read-only: nothing was written.
+  readOnly,
+}
+
 // Message states a row can leave, and where it may go. A confirm answer other
 // than "allowed" (denied, deniedByNewMessage, expired) ends in `skipped`
 // through [ConversationStore.resolveConfirm].
@@ -53,14 +65,23 @@ class ConversationStore {
   final int Function() _clock;
   final _changes = StreamController<void>.broadcast();
 
-  /// Fires after a message is appended, a round completes, or a conversation
-  /// is deleted (not for each live-text flush).
+  bool _notifyScheduled = false;
+
+  /// Fires after any stored change a screen shows: a message appended, a
+  /// card or round moved to another state, a conversation renamed, bound or
+  /// deleted (not for each live-text flush). Writes of one batch fire once.
   Stream<void> get changes => _changes.stream;
 
   void dispose() => unawaited(_changes.close());
 
+  /// One event per microtask: a batch of writes wakes listeners once.
   void _notify() {
-    if (!_changes.isClosed) _changes.add(null);
+    if (_notifyScheduled) return;
+    _notifyScheduled = true;
+    scheduleMicrotask(() {
+      _notifyScheduled = false;
+      if (!_changes.isClosed) _changes.add(null);
+    });
   }
 
   // ── Conversations ──────────────────────────────────────────────────────
@@ -143,6 +164,7 @@ class ConversationStore {
         updatedAt: Value(_clock()),
       ),
     );
+    _notify();
   }
 
   /// A title made by the app; ignored once the user renamed the chat.
@@ -156,6 +178,7 @@ class ConversationStore {
             updatedAt: Value(_clock()),
           ),
         );
+    if (n > 0) _notify();
     return n > 0;
   }
 
@@ -168,6 +191,7 @@ class ConversationStore {
         updatedAt: Value(_clock()),
       ),
     );
+    _notify();
   }
 
   /// Binds the chat to another plugin (or model).
@@ -187,6 +211,7 @@ class ConversationStore {
         updatedAt: Value(_clock()),
       ),
     );
+    _notify();
   }
 
   /// Hard delete; the messages go by cascade.
@@ -206,12 +231,29 @@ class ConversationStore {
 
   /// One page of messages in `seq` order: the newest [limit] messages with a
   /// `seq` below [beforeSeq] (all of them when null). Pass the first `seq` of
-  /// the previous page to read the page before it.
+  /// the previous page to read the page before it. With [blobs] false the
+  /// provider blobs are not read (`providerJson` is null): a list on screen
+  /// never needs them.
   Future<List<StoredMessage>> messages(
     int conversationId, {
     int? beforeSeq,
     int limit = defaultMessagePage,
+    bool blobs = true,
   }) async {
+    if (!blobs) {
+      final rows = await selectMessagesNoBlob(
+        _db,
+        where: beforeSeq == null
+            ? 'conversation_id = ?'
+            : 'conversation_id = ? AND seq < ?',
+        variables: [
+          Variable.withInt(conversationId),
+          if (beforeSeq != null) Variable.withInt(beforeSeq),
+        ],
+        descLimit: limit,
+      );
+      return [for (final r in rows.reversed) messageFromRow(r)];
+    }
     final rows =
         await (_db.select(_db.aiMessages)
               ..where(
@@ -225,6 +267,35 @@ class ConversationStore {
               ..limit(limit))
             .get();
     return [for (final r in rows.reversed) messageFromRow(r)];
+  }
+
+  /// The latest turn: its user message and every row after it, in order,
+  /// without provider blobs. Empty when the chat has no user message.
+  Future<List<StoredMessage>> latestTurn(int conversationId) async {
+    final rows = await selectMessagesNoBlob(
+      _db,
+      where:
+          'conversation_id = ? AND seq >= (SELECT MAX(seq) FROM ai_messages '
+          "WHERE conversation_id = ? AND role = 'user')",
+      variables: [
+        Variable.withInt(conversationId),
+        Variable.withInt(conversationId),
+      ],
+    );
+    return [for (final r in rows) messageFromRow(r)];
+  }
+
+  /// The tool rows of the whole chat that are still `pending` or `allowed`,
+  /// without provider blobs.
+  Future<List<StoredMessage>> openToolCards(int conversationId) async {
+    final rows = await selectMessagesNoBlob(
+      _db,
+      where:
+          "conversation_id = ? AND role = 'tool' "
+          "AND state IN ('pending', 'allowed')",
+      variables: [Variable.withInt(conversationId)],
+    );
+    return [for (final r in rows) messageFromRow(r)];
   }
 
   Future<StoredMessage?> message(int id) async {
@@ -426,7 +497,32 @@ class ConversationStore {
             : Value(error.toJsonText()),
       ),
     );
+    if (n > 0) _notify();
     return n > 0;
+  }
+
+  /// Moves an `allowed` call to `running` and, for a [write], only while the
+  /// chat is not read-only: the permission is read in the same transaction as
+  /// the move, so a switch to read-only that commits first always wins.
+  Future<StartCall> startCall(int messageId, {required bool write}) async {
+    final result = await _db.transaction(() async {
+      final row = await (_db.select(
+        _db.aiMessages,
+      )..where((m) => m.id.equals(messageId))).getSingleOrNull();
+      if (row == null || row.state != 'allowed') return StartCall.moved;
+      if (write) {
+        final c = await conversation(row.conversationId);
+        if (c?.permission == AiPermission.readOnly) return StartCall.readOnly;
+      }
+      final n = await _cas(
+        messageId,
+        from: AiMessageState.allowed,
+        companion: const AiMessagesCompanion(state: Value('running')),
+      );
+      return n > 0 ? StartCall.started : StartCall.moved;
+    });
+    if (result == StartCall.started) _notify();
+    return result;
   }
 
   Future<int> _cas(
@@ -438,16 +534,18 @@ class ConversationStore {
             ..where((m) => m.id.equals(messageId) & m.state.equals(from.wire)))
           .write(companion);
 
-  Future<bool> _markTooLarge(int messageId, AiMessageState from) async =>
-      await _cas(
-        messageId,
-        from: from,
-        companion: AiMessagesCompanion(
-          state: const Value('error'),
-          errorJson: Value(const AiStoredError.local('too_large').toJsonText()),
-        ),
-      ) >
-      0;
+  Future<bool> _markTooLarge(int messageId, AiMessageState from) async {
+    final n = await _cas(
+      messageId,
+      from: from,
+      companion: AiMessagesCompanion(
+        state: const Value('error'),
+        errorJson: Value(const AiStoredError.local('too_large').toJsonText()),
+      ),
+    );
+    if (n > 0) _notify();
+    return n > 0;
+  }
 
   /// Answers a pending confirmation card. `allowed` moves the row to
   /// `allowed`; denied, deniedByNewMessage and expired move it to `skipped`.
@@ -462,7 +560,7 @@ class ConversationStore {
     if (status == ConfirmStatus.pending) {
       throw ArgumentError('pending is not an answer');
     }
-    return _db.transaction(() async {
+    final won = await _db.transaction(() async {
       final row = await (_db.select(
         _db.aiMessages,
       )..where((m) => m.id.equals(messageId))).getSingleOrNull();
@@ -493,6 +591,8 @@ class ConversationStore {
       );
       return n > 0;
     });
+    if (won) _notify();
+    return won;
   }
 
   /// Ends a streaming round in one transaction: `streaming → complete` with
@@ -582,19 +682,31 @@ class ConversationStore {
 
   /// Stores the turn as text only (see `flattenTurnIn`), atomically. False
   /// when the turn is still running.
-  Future<bool> flattenTurn(int turnId) =>
-      _db.transaction(() => flattenTurnIn(_db, turnId));
+  Future<bool> flattenTurn(int turnId) async {
+    final done = await _db.transaction(() => flattenTurnIn(_db, turnId));
+    if (done) _notify();
+    return done;
+  }
 
   /// Call when a turn ends: flattens it if a blob of it was over its cap.
-  Future<bool> endTurn(int turnId) =>
-      _db.transaction(() => endTurnIn(_db, turnId));
+  Future<bool> endTurn(int turnId) async {
+    final done = await _db.transaction(() => endTurnIn(_db, turnId));
+    if (done) _notify();
+    return done;
+  }
 
   /// Plugin removed or reinstalled: drops its blobs, flattening each turn
   /// that held one. A version or model switch flattens at send time instead.
-  Future<int> clearProviderBlobs({required String installId}) =>
-      _db.transaction(() => clearProviderBlobsIn(_db, installId));
+  Future<int> clearProviderBlobs({required String installId}) async {
+    final n = await _db.transaction(() => clearProviderBlobsIn(_db, installId));
+    if (n > 0) _notify();
+    return n;
+  }
 
   /// Run once at startup, before any chat opens. See `sweepIn`.
-  Future<SweepResult> sweepAfterCrash() =>
-      _db.transaction(() => sweepIn(_db, limits.liveTextBytes));
+  Future<SweepResult> sweepAfterCrash() async {
+    final r = await _db.transaction(() => sweepIn(_db, limits.liveTextBytes));
+    if (r.stopped > 0 || r.unknown > 0) _notify();
+    return r;
+  }
 }

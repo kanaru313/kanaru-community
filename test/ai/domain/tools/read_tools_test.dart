@@ -214,6 +214,36 @@ void main() {
       expect((second['items'] as List).first, startsWith('${next + 1}|'));
     });
 
+    test(
+      'nextOffset counts ids, not rows, when some ids have no row',
+      () async {
+        final titles = {for (var i = 1; i <= 40; i++) i: '|' * 199};
+        final env = fakeEnv(
+          library: FakeLibrary(trackCount: 40, titles: titles),
+        );
+        // Two ids that are not in the library come first.
+        final ids = [901, 902, for (var i = 1; i <= 40; i++) i];
+        final first = _decode(
+          await tool('get_track_info').run({'trackIds': ids}, env),
+        );
+        expect(first['truncated'], true);
+        final items = (first['items'] as List).cast<String>();
+        final lastShown = int.parse(items.last.split('|').first);
+
+        final second = _decode(
+          await tool('get_track_info')
+              .run({'trackIds': ids, 'offset': first['nextOffset']}, env),
+        );
+
+        // The next page starts at the id after the last one shown: no row is
+        // sent twice.
+        expect(
+          (second['items'] as List).first,
+          startsWith('${lastShown + 1}|'),
+        );
+      },
+    );
+
     test('empty list and more than 50 ids are refused', () async {
       final empty = await tool('get_track_info')
           .run({'trackIds': []}, fakeEnv());

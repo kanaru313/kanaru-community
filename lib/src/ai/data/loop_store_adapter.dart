@@ -23,6 +23,25 @@ class LoopStoreAdapter implements LoopStore {
   }
 
   @override
+  Future<List<HistoryRow>> latestTurn(int conversationId) async => [
+    for (final r in await store.latestTurn(conversationId))
+      HistoryRow(r.message),
+  ];
+
+  @override
+  Future<List<AiMessage>> openCards(int conversationId) async => [
+    for (final r in await store.openToolCards(conversationId)) r.message,
+  ];
+
+  @override
+  Future<CallStart> startCall(int messageId, {required bool write}) async =>
+      switch (await store.startCall(messageId, write: write)) {
+        StartCall.started => CallStart.started,
+        StartCall.moved => CallStart.moved,
+        StartCall.readOnly => CallStart.readOnly,
+      };
+
+  @override
   Future<int> appendUser(int conversationId, List<AiPart> parts) async {
     final m = await store.append(
       NewAiMessage(
@@ -123,8 +142,8 @@ class LoopStoreAdapter implements LoopStore {
   }
 
   @override
-  Future<bool> approve(int messageId, {required String approvalHash}) => store
-      .resolveConfirm(
+  Future<bool> approve(int messageId, {required String approvalHash}) =>
+      store.resolveConfirm(
         messageId,
         ConfirmStatus.allowed,
         approvalHash: approvalHash,

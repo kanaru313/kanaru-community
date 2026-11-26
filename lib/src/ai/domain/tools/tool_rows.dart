@@ -38,21 +38,29 @@ String trackRowText(TrackRow t) =>
 /// whole list and the [offset] of its first row. When the encoded result
 /// would pass [maxBytes], only the first rows that fit are kept and the
 /// result says `"truncated": true` with the `nextOffset` to ask for next.
-/// [head] adds fixed fields (they come first and always stay).
+/// [head] adds fixed fields (they come first and always stay). [spans] says
+/// how many input positions each row stands for (a row can follow ids that
+/// have no row): the next page starts after the spans of the kept rows.
+/// Without it every row is one position.
 String listResult({
   required List<String> rows,
   required int total,
   required int offset,
   Map<String, Object?> head = const {},
+  List<int>? spans,
   int maxBytes = toolResultMaxBytes,
 }) {
+  assert(spans == null || spans.length == rows.length);
+  int consumed(int n) =>
+      spans == null ? n : spans.take(n).fold(0, (a, b) => a + b);
+
   String encode(int n) => jsonEncode({
     ...head,
     'total': total,
     'offset': offset,
     'items': rows.sublist(0, n),
     if (n < rows.length) 'truncated': true,
-    if (n < rows.length) 'nextOffset': offset + n,
+    if (n < rows.length) 'nextOffset': offset + consumed(n),
   });
 
   var n = rows.length;

@@ -21,7 +21,6 @@ import '../domain/variables/title_rule.dart';
 import 'ai_conversation_store_provider.dart';
 import 'ai_settings_providers.dart';
 import 'chat_attachments.dart';
-import 'chat_conversation_providers.dart';
 import 'chat_providers.dart';
 import 'chat_send.dart';
 import 'chat_session_env.dart';
@@ -90,8 +89,9 @@ class ChatSessionController extends Notifier<ChatSessionState> {
     return _openNew();
   });
 
-  /// Opens [id], stopping the turn of the open conversation first (received
-  /// text stays, calls that did not run are skipped). False when it does not
+  /// Opens [id]. A round or tool run of the open conversation is stopped
+  /// first (received text stays, calls that did not run are skipped); a turn
+  /// that only waits on cards keeps them pending. False when it does not
   /// exist.
   Future<bool> open(int id) => _exclusive(() async {
     if (_driver != null && state.conversationId == id) return true;
@@ -105,7 +105,6 @@ class ChatSessionController extends Notifier<ChatSessionState> {
     final clean = title.trim();
     if (clean.isEmpty) return;
     await _store.rename(id, clean);
-    ref.invalidate(chatConversationProvider(id));
   }
 
   /// Stops its turn, waits for it (the run and the tool being run), deletes
@@ -114,7 +113,6 @@ class ChatSessionController extends Notifier<ChatSessionState> {
     final wasOpen = state.conversationId == id;
     if (wasOpen) await _closeDriver();
     await _store.delete(id);
-    ref.invalidate(chatConversationProvider(id));
     if (wasOpen) await _openNew();
   });
 
@@ -123,7 +121,6 @@ class ChatSessionController extends Notifier<ChatSessionState> {
   Future<void> deleteAll() => _exclusive(() async {
     await _closeDriver();
     await _store.deleteAll();
-    ref.invalidate(chatConversationProvider);
     for (final row in await installedChatRows(ref)) {
       try {
         await ref.read(pluginLogOpsProvider).clear(row.installId);
@@ -168,13 +165,14 @@ class ChatSessionController extends Notifier<ChatSessionState> {
       final start = await driver.send(prepared.parts);
       switch (start) {
         case DriverStarted(:final done, :final userMessageId):
-          ref.read(chatAttachmentsProvider.notifier).clearAttached();
+          // Only the chips that went with this message: one attached while
+          // it was being prepared stays for the next.
+          ref.read(chatAttachmentsProvider.notifier).clearAttached(attached);
           if (first && conversation.titleAuto) {
             await _store.setAutoTitle(
               id,
               conversationTitle(prepared.displayText),
             );
-            ref.invalidate(chatConversationProvider(id));
           }
           return SendSent(done, userMessageId: userMessageId);
         case DriverBusy():
@@ -221,38 +219,41 @@ class ChatSessionController extends Notifier<ChatSessionState> {
 
   // ── The chat's settings ────────────────────────────────────────────────
 
-  /// Moves the open chat to another installed chat plugin (stopping its
-  /// turn) and writes a plugin-switch line into the transcript. False when
+  /// Moves the open chat to another installed chat plugin and writes a
+  /// plugin-switch line into the transcript. A round or tool run in flight is
+  /// stopped first and no turn starts while the chat is rebound. False when
   /// the plugin is not installed.
   Future<bool> switchPlugin(String installId) => _exclusive(() async {
     final id = state.conversationId;
     if (id == null) return false;
-    final conversation = await _store.conversation(id);
-    if (conversation == null) return false;
     final target = (await installedChatRows(ref))
         .where((r) => r.installId == installId)
         .firstOrNull;
     if (target == null) return false;
-    await _driver?.stop();
-    await rebindChatPlugin(ref, _store, conversation, target);
-    ref.invalidate(chatConversationProvider(id));
-    return true;
+    return await _whileIdle(() async {
+          final conversation = await _store.conversation(id);
+          if (conversation == null) return false;
+          await rebindChatPlugin(ref, _store, conversation, target);
+          return true;
+        }) ??
+        false;
   });
 
-  /// Changes the open chat's model (stopping its turn first).
+  /// Changes the open chat's model (stopping a round in flight first).
   Future<void> switchModel(String model) => _exclusive(() async {
     final id = state.conversationId;
-    final conversation = id == null ? null : await _store.conversation(id);
     final clean = model.trim();
-    if (id == null || conversation == null || clean.isEmpty) return;
-    await _driver?.stop();
-    await _store.bind(
-      id,
-      installId: conversation.installId,
-      installGeneration: conversation.installGeneration,
-      model: clean,
-    );
-    ref.invalidate(chatConversationProvider(id));
+    if (id == null || clean.isEmpty) return;
+    await _whileIdle(() async {
+      final conversation = await _store.conversation(id);
+      if (conversation == null) return;
+      await _store.bind(
+        id,
+        installId: conversation.installId,
+        installGeneration: conversation.installGeneration,
+        model: clean,
+      );
+    });
   });
 
   /// Sets the open chat's permission. Read-only denies every pending call
@@ -261,7 +262,6 @@ class ChatSessionController extends Notifier<ChatSessionState> {
     final id = state.conversationId;
     if (id == null) return;
     await _store.setPermission(id, permission);
-    ref.invalidate(chatConversationProvider(id));
     if (permission == AiPermission.readOnly) await _driver?.applyPermission();
   }
 
@@ -274,6 +274,13 @@ class ChatSessionController extends Notifier<ChatSessionState> {
   ConversationStore get _store => ref.read(aiConversationStoreProvider);
 
   late final SessionEnvironment _env = SessionEnvironment(ref);
+
+  /// Runs [op] while the driver runs no turn step and starts none; without a
+  /// driver, just runs it.
+  Future<T?> _whileIdle<T>(Future<T> Function() op) {
+    final driver = _driver;
+    return driver == null ? op() : driver.runExclusive(op);
+  }
 
   /// Runs [op] after the earlier switching operations; one at a time.
   Future<T> _exclusive<T>(Future<T> Function() op) {

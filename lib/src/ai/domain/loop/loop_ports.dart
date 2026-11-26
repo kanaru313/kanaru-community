@@ -131,13 +131,28 @@ class LoopStoreTooLarge implements Exception {
   String toString() => 'LoopStoreTooLarge: $what';
 }
 
+/// How [LoopStore.startCall] ended.
+enum CallStart { started, moved, readOnly }
+
 /// The conversation store as the loop uses it. `data/loop_store_adapter.dart`
 /// implements it on `ConversationStore`.
 abstract interface class LoopStore {
   Future<AiConversation?> conversation(int id);
 
-  /// Every row of the conversation in `seq` order, with blob text.
+  /// Every row of the conversation in `seq` order, with blob text. Only the
+  /// model input needs this: it can be megabytes.
   Future<List<HistoryRow>> history(int conversationId);
+
+  /// The latest turn (its user message and what followed), without blobs;
+  /// empty when the chat has no user message. Every loop decision reads this.
+  Future<List<HistoryRow>> latestTurn(int conversationId);
+
+  /// The tool rows of the whole chat still `pending` or `allowed`.
+  Future<List<AiMessage>> openCards(int conversationId);
+
+  /// `allowed -> running` in one step. A write is refused while the chat is
+  /// read-only; the permission is read in the same step.
+  Future<CallStart> startCall(int messageId, {required bool write});
 
   /// Appends a user message; returns its id.
   Future<int> appendUser(int conversationId, List<AiPart> parts);

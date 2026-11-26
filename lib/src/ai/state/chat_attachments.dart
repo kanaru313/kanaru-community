@@ -72,10 +72,18 @@ class ChatAttachmentsNotifier extends Notifier<ChatAttachments> {
     state = state.copyWith(suggestions: List.unmodifiable(suggestions));
   }
 
-  /// Called by the session once a send was accepted.
-  void clearAttached() {
-    if (state.attached.isEmpty) return;
-    state = state.copyWith(attached: const []);
+  /// Called by the session once a send was accepted: drops the chips that
+  /// were [sent] with the message (all of them when null). A chip attached
+  /// while the send was being prepared stays.
+  void clearAttached([List<ChipPart>? sent]) {
+    final keep = sent == null
+        ? const <ChipPart>[]
+        : [
+            for (final c in state.attached)
+              if (!sent.any((s) => sameChip(s, c))) c,
+          ];
+    if (keep.length == state.attached.length) return;
+    state = state.copyWith(attached: keep);
   }
 }
 

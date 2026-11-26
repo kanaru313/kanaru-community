@@ -213,8 +213,18 @@ class GetTrackInfoTool extends AiTool {
       );
     }
     final r = await env.library.details(ids);
-    final rows = [
-      for (final d in r.found)
+    // One row per found id, in the order the ids were asked. A row's span is
+    // the ids from the previous row up to itself, so a cut result's
+    // `nextOffset` counts ids, not rows (ids with no row come before it).
+    final byId = {for (final d in r.found) d.row.id: d};
+    final rows = <String>[];
+    final spans = <int>[];
+    var span = 0;
+    for (final id in ids) {
+      span++;
+      final d = byId.remove(id);
+      if (d == null) continue;
+      rows.add(
         joinRow([
           d.row.id,
           d.row.title,
@@ -225,10 +235,14 @@ class GetTrackInfoTool extends AiTool {
           d.language,
           d.durationMs == null ? null : d.durationMs! ~/ 1000,
         ]),
-    ];
+      );
+      spans.add(span);
+      span = 0;
+    }
     return ToolOutcome.ok(
       listResult(
         rows: rows,
+        spans: spans,
         total: all.length,
         offset: offset,
         head: {if (r.absent.isNotEmpty) 'notFound': r.absent},

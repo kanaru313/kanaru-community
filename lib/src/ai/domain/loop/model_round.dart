@@ -47,6 +47,7 @@ class ModelRound {
 
   int _generation = 0;
   int _busyInARow = 0;
+  int _lostInARow = 0;
   _LiveText? _live;
 
   /// Writes the streamed text so far (the app is going to the background).
@@ -73,10 +74,16 @@ class ModelRound {
       groupEnabled: settings.groupEnabled,
       modelSupportsTools: plugin.capabilities.tools,
     );
+    // The only read of the whole transcript with its blobs.
+    final history = await ctx.store.history(ctx.conversationId);
+    // A stop that came in while the round was being set up: nothing runs.
+    if (ctx.stopRequested) return const RoundResult.end(TurnState.idle);
+    final revision = history.isEmpty ? 0 : history.last.message.seq;
+    if (revision != snap.revision) return _lost();
     final boundary = ctx.newBoundary();
     final built = buildChatInput(
       binding: bindingOf(plugin),
-      history: snap.history,
+      history: history,
       tools: offered,
       capabilities: plugin.capabilities,
       system: buildChatSystemPrompt(
@@ -93,10 +100,15 @@ class ModelRound {
     // else has added a row since.
     final messageId = await ctx.store.beginRound(
       ctx.conversationId,
-      expectedRevision: snap.revision,
+      expectedRevision: revision,
       binding: bindingOf(plugin),
     );
-    if (messageId == null) return const RoundResult.end(TurnState.idle);
+    if (messageId == null) return _lost();
+    _lostInARow = 0;
+    if (ctx.stopRequested) {
+      await ctx.store.endRound(messageId, to: AiMessageState.stopped);
+      return const RoundResult.end(TurnState.idle);
+    }
 
     if (built is ChatInputTooLarge) {
       return _storeFailure(messageId, _tooLargeView);
@@ -152,6 +164,15 @@ class ModelRound {
       return result;
     }
     return _storeFailure(messageId, view);
+  }
+
+  /// Another write got in between the read and the append. The pump reads
+  /// again and decides again; a second loss in a row ends the turn with a
+  /// card instead of ending silently.
+  RoundResult _lost() {
+    if (++_lostInARow < 2) return const RoundResult.next();
+    _lostInARow = 0;
+    return const RoundResult.end(TurnState.error, internalErrorView);
   }
 
   int _callsSoFar(LoopTranscript t) => [

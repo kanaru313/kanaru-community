@@ -10,18 +10,18 @@ import 'loop_state.dart';
 class LoopSnapshot {
   const LoopSnapshot({
     required this.conversation,
-    required this.history,
     required this.turn,
+    required this.revision,
   });
 
   final AiConversation conversation;
-  final List<HistoryRow> history;
 
-  /// The latest turn; null while the conversation has no user message.
+  /// The latest turn, without provider blobs; null while the conversation has
+  /// no user message.
   final HistoryTurn? turn;
 
   /// The `seq` of the newest row: what the next round's append compares.
-  int get revision => history.isEmpty ? 0 : history.last.message.seq;
+  final int revision;
 
   LoopTranscript? get transcript => turn == null
       ? null
@@ -70,12 +70,12 @@ class LoopContext {
   Future<LoopSnapshot?> snapshot() async {
     final conversation = await store.conversation(conversationId);
     if (conversation == null) return null;
-    final history = await store.history(conversationId);
-    final turns = groupTurns(history);
+    final rows = await store.latestTurn(conversationId);
+    final turns = groupTurns(rows);
     return LoopSnapshot(
       conversation: conversation,
-      history: history,
       turn: turns.isEmpty ? null : turns.last,
+      revision: rows.isEmpty ? 0 : rows.last.message.seq,
     );
   }
 
