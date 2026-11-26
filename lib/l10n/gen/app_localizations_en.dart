@@ -2913,7 +2913,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsRootAiDesc =>
-      'AI services, permissions, tools, skills, history';
+      'AI services, permissions, tools, prompts, history';
 
   @override
   String get settingsRootIntegrations => 'Integrations';
@@ -7839,4 +7839,277 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiChatPlayContextLabel => 'AI assistant';
+
+  @override
+  String get aiSetServicesTitle => 'AI services';
+
+  @override
+  String get aiSetServicesHint =>
+      'Tap a service to open its plugin settings (API key, default model). New chats use the service you picked last in the chat.';
+
+  @override
+  String get aiSetServicesEmpty =>
+      'No AI service installed. AI chat needs an AI plugin (for example Gemini or OpenAI-compatible) and your own API key.';
+
+  @override
+  String get aiSetServiceAdd => 'Add AI service';
+
+  @override
+  String aiSetServiceModelLastUsed(String model) {
+    return '$model · last used';
+  }
+
+  @override
+  String get aiSetServiceLastUsed => 'Last used';
+
+  @override
+  String get aiSetServiceNeedsKey => 'Needs API key';
+
+  @override
+  String get aiSetServiceNeedsModel => 'No model chosen';
+
+  @override
+  String aiSetServiceNeedsConfig(String fields) {
+    return 'Needs setup: $fields';
+  }
+
+  @override
+  String aiSetServicesGone(String removed, String next) {
+    return 'The service you used last ($removed) was removed. New chats use $next until you pick another service in the chat.';
+  }
+
+  @override
+  String get aiSetPermTitle => 'Permission';
+
+  @override
+  String get aiSetPermRow => 'Default permission for new chats';
+
+  @override
+  String get aiSetPermCaption =>
+      'Each chat keeps its own permission and you can change it at once in the input box.';
+
+  @override
+  String get aiSetPermReadOnly => 'Read only';
+
+  @override
+  String get aiSetPermReadOnlyDesc => 'Reads and suggests, never changes data';
+
+  @override
+  String get aiSetPermAsk => 'Ask first';
+
+  @override
+  String get aiSetPermAskDesc => 'Asks before changing anything · default';
+
+  @override
+  String get aiSetPermAuto => 'Automatic';
+
+  @override
+  String get aiSetPermAutoDesc => 'Makes changes without asking';
+
+  @override
+  String get aiSetInstructionsTitle => 'General instructions';
+
+  @override
+  String get aiSetInstructionsHint =>
+      'Sent with every chat, to every AI service.';
+
+  @override
+  String get aiSetInstructionsPlaceholder =>
+      'For example: answer in English, keep it short';
+
+  @override
+  String get aiSetToolsTitle => 'Tools';
+
+  @override
+  String get aiSetToolsHint =>
+      'The AI fetches data through the tools that are on. With a tool off, it does not fetch that data by itself.';
+
+  @override
+  String get aiSetToolsGroupRead => 'Read';
+
+  @override
+  String get aiSetToolsGroupWrite => 'Changes · follow the chat permission';
+
+  @override
+  String get aiSetToolsStatsLocked =>
+      'Turn on “Record listening history” in Playback first';
+
+  @override
+  String get aiSetToolNowPlaying => 'Now playing';
+
+  @override
+  String aiSetToolNowPlayingDesc(String variables) {
+    return 'Title, artist, album · variables $variables';
+  }
+
+  @override
+  String get aiSetToolQueue => 'Queue';
+
+  @override
+  String aiSetToolQueueDesc(String variables) {
+    return 'Up to 50 songs around the playing one · variable $variables';
+  }
+
+  @override
+  String get aiSetToolLibrarySearch => 'Search the library';
+
+  @override
+  String get aiSetToolLibrarySearchDesc =>
+      'Up to 50 results at a time, the AI can ask for more';
+
+  @override
+  String get aiSetToolLyrics => 'Lyrics';
+
+  @override
+  String aiSetToolLyricsDesc(String variables) {
+    return 'Plain text, no timestamps · variable $variables';
+  }
+
+  @override
+  String get aiSetToolTrackInfo => 'Song info';
+
+  @override
+  String get aiSetToolTrackInfoDesc =>
+      'Song tags, album, the selected songs · Album and N selected songs cards';
+
+  @override
+  String get aiSetToolListeningStats => 'Listening stats';
+
+  @override
+  String get aiSetToolListeningStatsDesc => 'History, most played';
+
+  @override
+  String get aiSetToolPlaylists => 'Playlist list';
+
+  @override
+  String get aiSetToolPlaylistsDesc =>
+      'Names, song counts and the songs in each playlist';
+
+  @override
+  String get aiSetToolPlayControl => 'Playback control';
+
+  @override
+  String get aiSetToolPlayControlDesc => 'Play a song';
+
+  @override
+  String get aiSetToolQueueEdit => 'Edit queue';
+
+  @override
+  String get aiSetToolQueueEditDesc => 'Add, remove';
+
+  @override
+  String get aiSetToolPlaylistCreate => 'Create playlist';
+
+  @override
+  String get aiSetToolPlaylistEdit => 'Edit playlist';
+
+  @override
+  String get aiSetToolPlaylistEditDesc => 'Add, remove songs';
+
+  @override
+  String get aiSetVarBypassTitle => 'Send variables even when a tool is off';
+
+  @override
+  String get aiSetVarBypassDesc =>
+      'Variables and context cards you send yourself still insert data (lyrics, queue, now playing…) even if its tool is off. A tool that is off then only stops the AI from fetching the data by itself.';
+
+  @override
+  String get aiSetAutoTitleDefault => 'Turn on Automatic for new chats?';
+
+  @override
+  String get aiSetAutoTitleConversation => 'Turn on Automatic for this chat?';
+
+  @override
+  String get aiSetAutoBody =>
+      'The AI will create and edit playlists, edit the queue and control playback without asking again. Every change still shows as a “Done” card. There is no undo.';
+
+  @override
+  String get aiSetAutoShowAgain => 'Show this again next time';
+
+  @override
+  String get aiSetAutoConfirm => 'Turn on Automatic';
+
+  @override
+  String get aiSetAutoToastDefault => 'New chats: Automatic';
+
+  @override
+  String get aiSetAutoToastConversation => 'This chat: Automatic';
+
+  @override
+  String get aiSetAutoToastDefaultQuiet =>
+      'New chats: Automatic · will not ask next time (turn it back on in the Confirmation box block)';
+
+  @override
+  String get aiSetAutoToastConversationQuiet =>
+      'This chat: Automatic · will not ask next time (turn it back on in Settings › AI chat)';
+
+  @override
+  String get aiSetTemplateExplainLyricsLabel => 'Explain the lyrics';
+
+  @override
+  String aiSetTemplateExplainLyricsBody(String lyrics, String nowPlaying) {
+    return 'Explain the lyrics of $nowPlaying: $lyrics';
+  }
+
+  @override
+  String get aiSetTemplateSimilarSongsLabel => 'Similar songs in my library';
+
+  @override
+  String aiSetTemplateSimilarSongsBody(String nowPlaying) {
+    return 'Find songs in my library like $nowPlaying';
+  }
+
+  @override
+  String get aiSetTemplateMoodPlaylistLabel => 'Playlist for a mood';
+
+  @override
+  String aiSetTemplateMoodPlaylistBody(String input) {
+    return 'Create a playlist for this mood: $input';
+  }
+
+  @override
+  String get aiSetTemplateSongStoryLabel => 'About this song';
+
+  @override
+  String aiSetTemplateSongStoryBody(String nowPlaying) {
+    return 'Tell me about $nowPlaying';
+  }
+
+  @override
+  String get aiSetTemplateTranslateLyricsLabel => 'Translate the lyrics';
+
+  @override
+  String aiSetTemplateTranslateLyricsBody(String lyrics, String nowPlaying) {
+    return 'Translate the lyrics of $nowPlaying into English: $lyrics';
+  }
+
+  @override
+  String get aiSetTemplateTasteSummaryLabel => 'Summarise my listening';
+
+  @override
+  String get aiSetTemplateTasteSummaryBody =>
+      'Summarise my listening habits this month';
+
+  @override
+  String get aiSetVarNowPlaying => 'Now playing: title and artist';
+
+  @override
+  String get aiSetVarTitle => 'Title of the playing song';
+
+  @override
+  String get aiSetVarArtist => 'Artist of the playing song';
+
+  @override
+  String get aiSetVarAlbum => 'Album of the playing song';
+
+  @override
+  String get aiSetVarLyrics => 'Lyrics of the playing song, plain text';
+
+  @override
+  String get aiSetVarQueue =>
+      'The queue, up to 50 songs around the playing one';
+
+  @override
+  String get aiSetVarInput =>
+      'Where you type next: tapping the chip only fills the prompt into the box, with the cursor here';
 }

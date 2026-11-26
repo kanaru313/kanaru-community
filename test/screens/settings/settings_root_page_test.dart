@@ -47,9 +47,9 @@ void main() {
     ]) {
       expect(find.text(name), findsOneWidget, reason: name);
     }
-    // Appearance, Library, Playback, Lyrics, Plugins and About are built here;
-    // the rest wait.
-    expect(find.text('Coming soon'), findsNWidgets(5));
+    // Appearance, Library, Playback, Lyrics, Plugins, AI chat and About are
+    // built here; the rest wait.
+    expect(find.text('Coming soon'), findsNWidgets(4));
   });
 
   testWidgets('the Playback row opens its page', (tester) async {
@@ -242,7 +242,7 @@ void main() {
       expect(find.text('Activated · thank you'), findsOneWidget);
       expect(find.text('PRO'), findsNothing);
       // The Pro row is no longer one of the coming-soon rows.
-      expect(find.text('Coming soon'), findsNWidgets(4));
+      expect(find.text('Coming soon'), findsNWidgets(3));
     });
   });
 

@@ -14,7 +14,7 @@
   "settingsRootPlugins": "Plugins",
   "settingsRootPluginsDesc": "Installed plugins, plugin store, updates",
   "settingsRootAi": "AI chat",
-  "settingsRootAiDesc": "AI services, permissions, tools, skills, history",
+  "settingsRootAiDesc": "AI services, permissions, tools, prompts, history",
   "settingsRootIntegrations": "Integrations",
   "settingsRootIntegrationsDescDesktop": "MCP server, web server on the local network",
   "settingsRootIntegrationsDescMobile": "Web server on the local network",

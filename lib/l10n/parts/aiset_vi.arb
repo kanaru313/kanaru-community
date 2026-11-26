@@ -1,3 +1,167 @@
 {
-  "@@locale": "vi"
+  "@@locale": "vi",
+  "aiSetServicesTitle": "Dịch vụ AI",
+  "aiSetServicesHint": "Bấm một dịch vụ để mở cài đặt của plugin (API key, model mặc định). Cuộc mới dùng dịch vụ bạn chọn gần nhất trong chat.",
+  "aiSetServicesEmpty": "Chưa cài dịch vụ AI nào. Trò chuyện AI cần một plugin AI (vd. Gemini, OpenAI-compatible) và API key của bạn.",
+  "aiSetServiceAdd": "Thêm dịch vụ AI",
+  "aiSetServiceModelLastUsed": "{model} · dùng gần nhất",
+  "@aiSetServiceModelLastUsed": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetServiceLastUsed": "Dùng gần nhất",
+  "aiSetServiceNeedsKey": "Cần API key",
+  "aiSetServiceNeedsModel": "Chưa chọn model",
+  "aiSetServiceNeedsConfig": "Cần thiết lập: {fields}",
+  "@aiSetServiceNeedsConfig": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetServicesGone": "Dịch vụ bạn dùng gần nhất ({removed}) đã bị gỡ. Cuộc mới dùng {next} tới khi bạn chọn dịch vụ khác trong chat.",
+  "@aiSetServicesGone": {
+    "placeholders": {
+      "removed": {
+        "type": "String"
+      },
+      "next": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetPermTitle": "Quyền",
+  "aiSetPermRow": "Quyền mặc định cho cuộc mới",
+  "aiSetPermCaption": "Mỗi cuộc trò chuyện giữ quyền riêng và đổi được ngay ở ô nhập.",
+  "aiSetPermReadOnly": "Chỉ đọc",
+  "aiSetPermReadOnlyDesc": "Chỉ đọc và gợi ý, không bao giờ thay đổi dữ liệu",
+  "aiSetPermAsk": "Hỏi trước",
+  "aiSetPermAskDesc": "Hỏi trước khi thay đổi bất cứ điều gì · mặc định",
+  "aiSetPermAuto": "Tự động",
+  "aiSetPermAutoDesc": "Thực hiện thay đổi mà không cần hỏi",
+  "aiSetInstructionsTitle": "Hướng dẫn chung",
+  "aiSetInstructionsHint": "Gửi kèm mọi cuộc trò chuyện, cho mọi dịch vụ AI.",
+  "aiSetInstructionsPlaceholder": "Ví dụ: trả lời bằng tiếng Việt, ngắn gọn",
+  "aiSetToolsTitle": "Công cụ",
+  "aiSetToolsHint": "AI tự lấy dữ liệu qua các công cụ đang bật. Công cụ tắt thì AI không tự lấy dữ liệu đó.",
+  "aiSetToolsGroupRead": "Đọc",
+  "aiSetToolsGroupWrite": "Thay đổi · theo quyền của cuộc",
+  "aiSetToolsStatsLocked": "Cần bật “Ghi lịch sử nghe” trong Phát nhạc",
+  "aiSetToolNowPlaying": "Bài đang phát",
+  "aiSetToolNowPlayingDesc": "Tên, nghệ sĩ, album · biến {variables}",
+  "@aiSetToolNowPlayingDesc": {
+    "placeholders": {
+      "variables": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetToolQueue": "Hàng đợi",
+  "aiSetToolQueueDesc": "Tối đa 50 bài quanh bài đang phát · biến {variables}",
+  "@aiSetToolQueueDesc": {
+    "placeholders": {
+      "variables": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetToolLibrarySearch": "Tìm trong thư viện",
+  "aiSetToolLibrarySearchDesc": "Tối đa 50 kết quả mỗi lần, AI xem tiếp được",
+  "aiSetToolLyrics": "Lời bài hát",
+  "aiSetToolLyricsDesc": "Chữ trơn, bỏ thời gian · biến {variables}",
+  "@aiSetToolLyricsDesc": {
+    "placeholders": {
+      "variables": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetToolTrackInfo": "Thông tin bài",
+  "aiSetToolTrackInfoDesc": "Tag của bài, album, các bài đã chọn · thẻ Album, N bài đã chọn",
+  "aiSetToolListeningStats": "Thống kê nghe",
+  "aiSetToolListeningStatsDesc": "Lịch sử, phát nhiều nhất",
+  "aiSetToolPlaylists": "Danh sách playlist",
+  "aiSetToolPlaylistsDesc": "Tên, số bài và các bài trong playlist",
+  "aiSetToolPlayControl": "Điều khiển phát",
+  "aiSetToolPlayControlDesc": "Phát bài",
+  "aiSetToolQueueEdit": "Sửa hàng đợi",
+  "aiSetToolQueueEditDesc": "Thêm, bỏ",
+  "aiSetToolPlaylistCreate": "Tạo playlist",
+  "aiSetToolPlaylistEdit": "Sửa playlist",
+  "aiSetToolPlaylistEditDesc": "Thêm, bỏ bài",
+  "aiSetVarBypassTitle": "Biến vẫn gửi khi công cụ tắt",
+  "aiSetVarBypassDesc": "Biến và thẻ ngữ cảnh bạn chủ động gửi vẫn chèn dữ liệu (lời bài, hàng đợi, bài đang phát…) dù công cụ của nó đã tắt. Công cụ tắt khi đó chỉ chặn AI tự lấy dữ liệu.",
+  "aiSetAutoTitleDefault": "Bật Tự động cho cuộc mới?",
+  "aiSetAutoTitleConversation": "Bật Tự động cho cuộc này?",
+  "aiSetAutoBody": "AI sẽ tạo, sửa playlist, sửa hàng đợi và điều khiển phát mà không hỏi lại. Mỗi thay đổi vẫn hiện thành thẻ “Đã làm”. Không có hoàn tác.",
+  "aiSetAutoShowAgain": "Hiện lại lần sau",
+  "aiSetAutoConfirm": "Bật Tự động",
+  "aiSetAutoToastDefault": "Cuộc mới: Tự động",
+  "aiSetAutoToastConversation": "Cuộc này: Tự động",
+  "aiSetAutoToastDefaultQuiet": "Cuộc mới: Tự động · lần sau không hỏi (bật lại ở khối Hộp xác nhận)",
+  "aiSetAutoToastConversationQuiet": "Cuộc này: Tự động · lần sau không hỏi (bật lại trong Cài đặt › Trò chuyện AI)",
+  "aiSetTemplateExplainLyricsLabel": "Giải nghĩa lời",
+  "aiSetTemplateExplainLyricsBody": "Giải nghĩa lời bài {nowPlaying}: {lyrics}",
+  "@aiSetTemplateExplainLyricsBody": {
+    "placeholders": {
+      "lyrics": {
+        "type": "String"
+      },
+      "nowPlaying": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateSimilarSongsLabel": "Bài tương tự trong thư viện",
+  "aiSetTemplateSimilarSongsBody": "Tìm trong thư viện các bài giống {nowPlaying}",
+  "@aiSetTemplateSimilarSongsBody": {
+    "placeholders": {
+      "nowPlaying": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateMoodPlaylistLabel": "Playlist theo mood",
+  "aiSetTemplateMoodPlaylistBody": "Tạo playlist cho tâm trạng: {input}",
+  "@aiSetTemplateMoodPlaylistBody": {
+    "placeholders": {
+      "input": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateSongStoryLabel": "Về bài này",
+  "aiSetTemplateSongStoryBody": "Kể cho mình về bài {nowPlaying}",
+  "@aiSetTemplateSongStoryBody": {
+    "placeholders": {
+      "nowPlaying": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateTranslateLyricsLabel": "Dịch lời",
+  "aiSetTemplateTranslateLyricsBody": "Dịch lời bài {nowPlaying} sang tiếng Việt: {lyrics}",
+  "@aiSetTemplateTranslateLyricsBody": {
+    "placeholders": {
+      "lyrics": {
+        "type": "String"
+      },
+      "nowPlaying": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateTasteSummaryLabel": "Tóm tắt thói quen nghe",
+  "aiSetTemplateTasteSummaryBody": "Tóm tắt thói quen nghe nhạc của mình tháng này",
+  "aiSetVarNowPlaying": "Bài đang phát: tên và nghệ sĩ",
+  "aiSetVarTitle": "Tên bài đang phát",
+  "aiSetVarArtist": "Nghệ sĩ của bài đang phát",
+  "aiSetVarAlbum": "Album của bài đang phát",
+  "aiSetVarLyrics": "Lời bài đang phát, chữ trơn",
+  "aiSetVarQueue": "Hàng đợi, tối đa 50 bài quanh bài đang phát",
+  "aiSetVarInput": "Chỗ bạn gõ tiếp: bấm chip chỉ điền prompt vào ô, con trỏ ở đây"
 }

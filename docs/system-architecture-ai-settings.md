@@ -1,0 +1,61 @@
+# AI chat settings (Settings › AI chat)
+
+The settings page of the AI chat. It sits in `screens/settings/` and reads the
+engine's per-key settings providers (`ai/state/ai_settings_providers.dart`,
+keys in `system-architecture-ai.md`). Every control applies and saves at once;
+there is no Save button. This file grows with each part of the page; it
+describes what has landed.
+
+## Route and links
+
+- `SettingsPaths.ai` (`/settings/ai`, `screens/settings/settings_routes.dart`)
+  opens `AiSettingsPage`. The root row "Trò chuyện AI" is a normal row now (it
+  was a "Coming soon" row); its desc is `settingsRootAiDesc`.
+- `ai/ui/ai_settings_link.dart` declares `aiSettingsLocation`,
+  `aiPluginStoreLocation` (`/settings/plugins?kind=aiChat`) and
+  `aiPluginPageLocation(installId)`. The route reads the first; the chat UI
+  imports them instead of `SettingsPaths` (`ai/ui` never imports `screens`).
+  Same pattern as `lyrics/ui/lyrics_settings_link.dart`.
+
+## Page sections (`screens/settings/ui/ai/`)
+
+Order: Dịch vụ AI, Quyền, Hướng dẫn chung, Công cụ. Texts come from the `aiset`
+l10n part (key prefix `aiSet`).
+
+| Section | File | Reads / writes |
+|---|---|---|
+| Dịch vụ AI | `ai_services_section.dart` | `chatPluginsProvider` (installed ai-chat plugins with readiness and default model), `aiLastPluginProvider` ("dùng gần nhất"). A tap opens the plugin page; "Thêm dịch vụ AI" opens the store filtered to AI. |
+| Quyền | `ai_permission_section.dart` | `aiDefaultPermissionProvider` through `LyricsChoiceRow<AiPermission>`; choosing Tự động goes through `confirmAutoMode` as the picker's `confirm:`. |
+| Hướng dẫn chung | `ai_instructions_section.dart` | `aiInstructionsProvider` through `KTextFieldRow(maxLength: 2000)`. The setting counts code points: text over the limit (a multi-code-point character) is cut to it. |
+| Công cụ | `ai_tools_section.dart` | one `KSwitchRow` per `AiToolGroup` (`aiToolGroupProvider(group)`: one key each), "Thống kê nghe" locked while the history is off (`historyEnabledProvider`), `aiVarBypassProvider` (no dialog). |
+
+Service line (`ChatReadiness`): ready = default model, plus " · dùng gần nhất"
+for the plugin in `ai.last_plugin`; needs a key / a model / other fields = a
+red line. A loading or failing plugin list shows no rows and no empty note.
+When the plugin used last was removed and others are installed, a line under
+the title says which one new chats use (`resolveChatPlugin`); the removed
+plugin's name comes from its tombstone row (`aiRemovedPluginNameProvider`).
+
+## Shared "Bật Tự động?" box (`ai/ui/auto_mode_confirm.dart`)
+
+`confirmAutoMode(context, ref, scope: AutoModeScope)` is the `confirm:` of the
+settings picker and of the chat's permission picker. With `ai.auto_ask` off it
+returns true at once. Otherwise it opens the box over the picker (scope picks
+the title): cancel, Esc and Back return false and change nothing; confirming
+returns true, and with "Hiện lại lần sau" unticked it writes `ai.auto_ask`
+false. A toast names the new state and, when unticked, where to turn the
+question back on.
+
+## Template and variable labels (`ai_catalog_labels.dart`)
+
+The engine stores keys only. `builtinTemplateText(l10n, key)` returns the
+label and body of a builtin template (`BuiltinTemplateKeys`), `null` for any
+other key; `variableDescription(l10n, variable)` the description of an
+`AiVariable`; `variableToken` writes `{{name}}`. ARB messages cannot hold a
+literal `{{x}}` (no `use-escaping`), so bodies take the tokens as placeholders
+and this file fills them.
+
+## Not here yet
+
+Prompt list, history block, "Hộp xác nhận" block (same page, next phase) and
+the prompt editor (separate PR).

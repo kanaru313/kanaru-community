@@ -14,7 +14,7 @@
   "settingsRootPlugins": "Plugin",
   "settingsRootPluginsDesc": "Plugin đã cài, kho plugin, cập nhật",
   "settingsRootAi": "Trò chuyện AI",
-  "settingsRootAiDesc": "Dịch vụ AI, quyền, công cụ, skill, lịch sử",
+  "settingsRootAiDesc": "Dịch vụ AI, quyền, công cụ, prompt, lịch sử",
   "settingsRootIntegrations": "Tích hợp",
   "settingsRootIntegrationsDescDesktop": "Máy chủ MCP, web server trong mạng LAN",
   "settingsRootIntegrationsDescMobile": "Web server trong mạng LAN",
