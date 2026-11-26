@@ -9,6 +9,7 @@ import '../../platform/domain/settings_store.dart';
 import '../data/queue_repository.dart';
 import '../domain/audio_engine.dart';
 import '../domain/cleanup_kind.dart';
+import '../domain/removed_queue_entry.dart';
 import '../domain/replaced_queue.dart';
 import '../domain/now_playing.dart';
 import '../domain/play_intent.dart';
@@ -771,6 +772,11 @@ class PlayerController implements PlaybackCommands {
 
   // ---- queue edits ----
 
+  static const _aiContext = PlayContext(
+    PlayContextKind.selection,
+    label: 'Trợ lý AI',
+  );
+
   /// Removes entries; the result undoes it for a few seconds. Null when
   /// nothing matched.
   Future<UndoToken?> remove(Set<int> entryIds) => _cmd(() async {
@@ -790,6 +796,59 @@ class PlayerController implements PlaybackCommands {
     }
     return _remember(edit.undo);
   });
+
+  /// [remove] for an AI tool: returns the entries that were really removed
+  /// (ids not in the queue are ignored). It does not touch the user's pending
+  /// undo token, which stays valid, and returns no token of its own.
+  Future<List<RemovedQueueEntry>> removeEntriesForTool(Set<int> entryIds) =>
+      _cmd(() async {
+        final currentId = _queue.currentItem?.entryId;
+        final present = [
+          for (final i in _queue.items)
+            if (entryIds.contains(i.entryId))
+              RemovedQueueEntry(entryId: i.entryId, trackId: i.trackId),
+        ];
+        if (present.isEmpty) return const <RemovedQueueEntry>[];
+        final edit = q.remove(
+          _queue,
+          {for (final e in present) e.entryId},
+          positionMs: _position.inMilliseconds,
+          playing: _intent == PlayIntent.playing,
+        );
+        if (edit.isNoop) return const <RemovedQueueEntry>[];
+        await _applyEdit(edit);
+        if (currentId != null && present.any((e) => e.entryId == currentId)) {
+          _thaw();
+          _resetPlayback();
+          if (_queue.current == null) _intent = PlayIntent.stopped;
+        }
+        return present;
+      });
+
+  /// Replaces the queue with [visible] for an AI tool and starts playing at
+  /// [startIndex], with the context "Trợ lý AI". Returns the queue it
+  /// replaced and its current position (in play order; 0 when it was empty)
+  /// so the tool can offer to restore it. Like every play it drops the user's
+  /// pending undo token. The caller passes ids already checked visible.
+  /// An empty list throws [ArgumentError]; a [startIndex] out of range
+  /// throws [RangeError]; nothing changes in either case.
+  Future<({ReplacedQueue previous, int previousIndex})> playTracksForTool(
+    List<TrackId> visible, {
+    int startIndex = 0,
+  }) {
+    if (visible.isEmpty) {
+      return Future.error(ArgumentError.value(visible, 'visible', 'is empty'));
+    }
+    if (startIndex < 0 || startIndex >= visible.length) {
+      return Future.error(RangeError.index(startIndex, visible, 'startIndex'));
+    }
+    return _cmd(() async {
+      final previous = _replacedNow(visible);
+      final previousIndex = _queue.current ?? 0;
+      await _replaceQueue(visible, startIndex, false, _aiContext);
+      return (previous: previous, previousIndex: previousIndex);
+    });
+  }
 
   /// Empties the queue and the saved session: nothing is loaded, playback is
   /// stopped, shuffle and repeat stay. No undo. Does nothing on an empty

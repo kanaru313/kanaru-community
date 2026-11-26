@@ -943,6 +943,13 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
 - The providers are throttled streams (`artistAlbumsProvider`,
   `groupShelvesProvider`, `groupTotalsProvider`), deduplicated.
 
+## Track search and visibility lookup
+
+Two read APIs in `library/domain/search/`, implemented in `library/data/search/` and exposed by `library/state/track_search_provider.dart` (`trackSearchProvider`, `trackLookupProvider`). Both return `TrackHit {id, title, artist, album, year}`, not `TrackSnapshot`, and both use `visibleTrackWhere` (present, not duplicate-hidden; missing, hidden and remote rows never show).
+
+- `TrackSearch.searchTracks(query, {offset, limit})` is the shared search backend (AI tools now, the search screen later). It matches `ftsPrefixQuery(searchForm(query))` against `track_search`, best rank first, ties by `title_sort` then id. `limit` is clamped to 1..50, a negative `offset` is 0, `total` counts all matches. A blank query or one with no word gives an empty result without touching SQL. FTS operators are plain text (quoted by `ftsPrefixQuery`).
+- `TrackLookup.visibleOf(ids)` splits ids into `visible` (input order, each track once) and `absent` (hidden, missing, remote, dup-hidden or unknown ids, input order, once). Reads in chunks of 900 ids. Every tool, chip and variable that takes a track id goes through it before reaching a store or the player.
+
 ## Menu data
 
 `lib/src/library/data/browse/menu_queries.dart`,
