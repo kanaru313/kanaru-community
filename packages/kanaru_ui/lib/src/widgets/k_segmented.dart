@@ -42,6 +42,7 @@ class KSegmented<T> extends StatefulWidget {
     required this.value,
     required this.onChanged,
     this.semanticLabel,
+    this.comfortable = false,
   });
 
   final List<KSegment<T>> segments;
@@ -50,6 +51,10 @@ class KSegmented<T> extends StatefulWidget {
 
   /// Spoken name of the whole group.
   final String? semanticLabel;
+
+  /// A roomier control for a row of its own (a customise sheet): 40 dp on
+  /// desktop instead of 36. The touch shells are 48 either way.
+  final bool comfortable;
 
   @override
   State<KSegmented<T>> createState() => _KSegmentedState<T>();
@@ -111,7 +116,9 @@ class _KSegmentedState<T> extends State<KSegmented<T>> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final height = FormFactor.of(context) == FormFactor.mobile ? 48.0 : 36.0;
+    final height = FormFactor.of(context) == FormFactor.mobile
+        ? 48.0
+        : (widget.comfortable ? 40.0 : 36.0);
     final rtl = Directionality.of(context) == TextDirection.rtl;
     return Semantics(
       container: true,

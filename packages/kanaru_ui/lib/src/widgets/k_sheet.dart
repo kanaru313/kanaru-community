@@ -37,6 +37,8 @@ enum KSheetDialog {
 /// for the sheet and the window minus margins for the dialog).
 /// Esc closes the modal and is consumed by it. [returnFocus] gets focus after
 /// the route closes, only while it is still attached to the tree.
+/// [alwaysBottom] keeps the bottom sheet on wide windows too (the mobile shell
+/// is up to 1200 dp wide) instead of switching to a dialog from 600 dp.
 Future<T?> showKSheet<T>(
   BuildContext context, {
   required WidgetBuilder builder,
@@ -45,6 +47,7 @@ Future<T?> showKSheet<T>(
   bool fixedHeight = false,
   bool useRootNavigator = false,
   KSheetDialog dialog = KSheetDialog.standard,
+  bool alwaysBottom = false,
   FocusNode? returnFocus,
 }) {
   final result = _show<T>(
@@ -55,6 +58,7 @@ Future<T?> showKSheet<T>(
     fixedHeight: fixedHeight,
     useRootNavigator: useRootNavigator,
     dialog: dialog,
+    alwaysBottom: alwaysBottom,
   );
   if (returnFocus == null) return result;
   return result.whenComplete(() {
@@ -73,10 +77,11 @@ Future<T?> _show<T>(
   required bool fixedHeight,
   required bool useRootNavigator,
   required KSheetDialog dialog,
+  required bool alwaysBottom,
 }) {
   final modal = dialog == KSheetDialog.modal;
   final size = MediaQuery.sizeOf(context);
-  if (size.width >= KBreakpoints.compactSheet) {
+  if (size.width >= KBreakpoints.compactSheet && !alwaysBottom) {
     if (modal) {
       return showKModalDialog<T>(
         context,

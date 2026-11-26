@@ -107,6 +107,13 @@ abstract final class KIcons {
   static const IconData flatList = FluentIcons.text_bullet_list_24_regular;
   static const IconData filter = FluentIcons.filter_24_regular;
   static const IconData close = FluentIcons.dismiss_24_regular;
+
+  /// Fallback mark of a preview card: outline when off, filled when on.
+  static const IconData fallbackStar = FluentIcons.star_24_regular;
+  static const IconData fallbackStarFilled = FluentIcons.star_24_filled;
+
+  /// "Tuỳ chỉnh" action of a preview card.
+  static const IconData customise = FluentIcons.options_24_regular;
   static const IconData sortAsc = FluentIcons.arrow_sort_up_24_regular;
   static const IconData sortDesc = FluentIcons.arrow_sort_down_24_regular;
 
