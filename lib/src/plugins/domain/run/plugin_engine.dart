@@ -162,6 +162,89 @@ typedef EngineFetch = FutureOr<EngineFetchResponse> Function(
   EngineFetchRequest request,
 );
 
+/// What a stream call of the script asks for.
+enum EngineStreamOp { open, read, close }
+
+/// One call of the runtime about a streamed `fetch`. Mirrors the bridge call.
+class EngineStreamCall {
+  const EngineStreamCall({
+    required this.installId,
+    required this.stream,
+    required this.op,
+    this.request,
+    this.maxBytes = 0,
+    this.waitMs = 0,
+    this.lifetimeMs = 0,
+  });
+
+  final String installId;
+
+  /// Stream id, unique within the run.
+  final int stream;
+  final EngineStreamOp op;
+
+  /// For [EngineStreamOp.open] only.
+  final EngineFetchRequest? request;
+
+  /// For read: most bytes to return.
+  final int maxBytes;
+
+  /// For read: longest wait for bytes, in ms.
+  final int waitMs;
+
+  /// For open: wall time left for the run, in ms; the host closes the stream
+  /// by itself once it has passed.
+  final int lifetimeMs;
+}
+
+/// The host's answer to an [EngineStreamCall].
+class EngineStreamReply {
+  const EngineStreamReply({
+    required this.outcome,
+    this.status = 0,
+    this.url = '',
+    this.headers = const [],
+    this.retryAfterSec,
+    required this.chunk,
+    this.done = false,
+    this.sends = 0,
+  });
+
+  /// An answer that carries nothing, only [outcome] (`ok` for an answered
+  /// close).
+  EngineStreamReply.empty(this.outcome, {this.retryAfterSec})
+    : status = 0,
+      url = '',
+      headers = const [],
+      chunk = Uint8List(0),
+      done = false,
+      sends = 0;
+
+  /// `ok`, or why the call failed (`network` also stands for idle).
+  final EngineFetchOutcome outcome;
+
+  /// For open: the HTTP status.
+  final int status;
+
+  /// For open: the requested URL (nothing is followed).
+  final String url;
+  final List<(String, String)> headers;
+  final int? retryAfterSec;
+
+  /// For read: bytes that arrived; never empty unless [done].
+  final Uint8List chunk;
+
+  /// For read: the body really ended.
+  final bool done;
+
+  /// For open: HTTP sends made.
+  final int sends;
+}
+
+typedef EngineStream = Future<EngineStreamReply> Function(
+  EngineStreamCall call,
+);
+
 /// The plugin runtime as the runner sees it. The production implementation
 /// is the Rust runtime; tests use a fake.
 abstract interface class PluginEngine {
