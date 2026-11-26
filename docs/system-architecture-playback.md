@@ -1074,7 +1074,7 @@ mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancell
   56 dp band, 6 dp insets, `KSeekGestureArea` with hold, drag-up cancel and `KSeekTimeBubble`, so the bubble works the same in every style, plus the one
   slider semantics node). `KSquiggleTrack` / `KFlatSeekTrack` are what `KWaveformSeekBar.fallback` (`Widget Function(BuildContext, KSeekState)`) builds, so a
   fallback is never a second bar. The app builds the ★ track from `seekBarFallbackProvider` with that style's own options and the theme colours (never the
-  wave look's); `KWaveformSeekBar.playing` is passed on to it, and a squiggle with `music` motion drifts there.
+  wave look's); the app captures `playing` (`isPlayingProvider`) in the fallback builder so the ★ track animates with playback, and a squiggle with `music` motion drifts there.
   - *Squiggle* (`squiggle_painter.dart`): 4 dp round-cap stroke in `primary`; amplitude 2.5 / 4.5 / 7, wavelength 18 / 28 / 44; the played part waves, the rest is a
     straight 4 dp line at 24 %, 6 dp gap to the thumb (none: no gap); the wave grows from 0.2 over a quarter wavelength and tapers to 0 over the last half
     wavelength (`squiggleTaper`, `squiggleWaveY`, pure). Motion: `drift` 0.9 cycle / s; `music` scales the height by `0.35 + 1.3 * loudness * (0.85 + 0.15 sin 9t)`
@@ -1148,8 +1148,8 @@ mini player band, `KSeekState.dragging` / `focused` / `keyboardFocus`; a cancell
   - Recognizers are built by `seekRecognizers` (`seek_recognizers.dart`), `KSeekState` lives in `k_seek_state.dart` (exported with the
     area).
 
-`PlaybackWaveformSeekBar` draws the levels of the playing entry only, never the previous track's, and passes `isPlayingProvider` as
-`playing` (unused by the bars).
+`PlaybackWaveformSeekBar` draws the levels of the playing entry only, never the previous track's, and reads `isPlayingProvider` only for the ★ fallback track
+(captured in the fallback builder; the wave bars ignore it).
 
 ## Rules lane B keeps
 

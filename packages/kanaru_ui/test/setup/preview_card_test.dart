@@ -178,6 +178,30 @@ void main() {
     });
   }
 
+  testWidgets('the preview sits in a lighter inset well, not selectable', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(500, 800));
+    await tester.pumpWidget(host(_group(_Bar.wave, (_) {})));
+    final card = tester.getRect(
+      find.ancestor(of: find.text('Dạng sóng'), matching: find.byType(InkWell)),
+    );
+    final wells = find.descendant(
+      of: find.byType(KPreviewCardGroup<_Bar>),
+      matching: find.byWidgetPredicate(
+        (w) =>
+            w is DecoratedBox &&
+            w.decoration is BoxDecoration &&
+            (w.decoration as BoxDecoration).borderRadius == KRadius.md,
+      ),
+    );
+    expect(wells, findsWidgets);
+    final well = tester.getRect(wells.first);
+    expect(well.left, greaterThan(card.left));
+    expect(well.right, lessThan(card.right));
+    expect(bySelected('Dạng sóng'), findsOneWidget);
+  });
+
   testWidgets('animations off: the choice shows at once', (tester) async {
     useWindow(tester, const Size(500, 800));
     await tester.pumpWidget(

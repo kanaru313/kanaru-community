@@ -24,7 +24,8 @@ export 'k_source_avatar.dart';
 export 'k_waveform_seek_bar.dart';
 export 'seek_look.dart';
 export 'waveform_bars.dart';
-export 'waveform_painter.dart';
+// The band painter needs the unexported WaveStyle, so it is internal.
+export 'waveform_painter.dart' hide WaveformBandPainter;
 export 'waveform_phase.dart' show KWaveformStatus;
 export 'k_toggle_icon_button.dart';
 export 'now_playing_cover_box.dart';

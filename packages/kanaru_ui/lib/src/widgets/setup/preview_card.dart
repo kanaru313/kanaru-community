@@ -235,7 +235,19 @@ class _PreviewCardState extends State<_PreviewCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        option.preview,
+                        // The well: a lighter inset box the picture sits in.
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: scheme.surface,
+                            borderRadius: KRadius.md,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: KSpace.x1,
+                            ),
+                            child: Center(child: option.preview),
+                          ),
+                        ),
                         const KGap(KSpace.x2),
                         Text(
                           option.title,
