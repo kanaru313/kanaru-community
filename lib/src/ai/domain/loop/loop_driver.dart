@@ -94,12 +94,6 @@ class LoopDriver {
   final _gate = FlightGate();
   bool _disposed = false;
 
-  /// How many [runExclusive] calls wait for the gate.
-  int _exclusiveWaiting = 0;
-
-  /// An answer landed in a flight that a waiting [runExclusive] stopped.
-  bool _wakeAfterExclusive = false;
-
   /// The stop comes from the user's Stop (not a switch, open or dispose).
   bool _userStop = false;
 
@@ -208,6 +202,7 @@ class LoopDriver {
   /// finishes, later calls are `skipped`, no next round starts. Completes
   /// when the turn future has ended.
   Future<void> stop() async {
+    if (_disposed) return;
     if (_gate.busy) {
       await _stopActive(byUser: true);
       return;
@@ -233,7 +228,7 @@ class LoopDriver {
   Future<T?> runExclusive<T>(Future<T> Function() body) async {
     if (_disposed) return null;
     var flight = _reserve();
-    _exclusiveWaiting++;
+    _gate.exclusiveWaiting++;
     try {
       while (flight == null) {
         await _stopActive();
@@ -241,17 +236,16 @@ class LoopDriver {
         flight = _reserve();
       }
     } finally {
-      _exclusiveWaiting--;
+      _gate.exclusiveWaiting--;
     }
     try {
       return await body();
     } finally {
       _release(flight);
       // An answer that landed during the body found the gate taken: run it.
-      final woke = _gate.takeWake() || _wakeAfterExclusive;
-      _wakeAfterExclusive = false;
+      final woke = _gate.takeWake() | _gate.takeDeferred();
       if (woke) {
-        _kick();
+        if (_gate.startNow()) _kick();
       } else {
         await inspect();
       }
@@ -332,16 +326,11 @@ class LoopDriver {
     } finally {
       _round.resetLost();
       _release(flight);
-      // An answer that landed after the last look (a stop branch that had
-      // read the open cards) found the gate taken: run it now. A runExclusive
-      // waiting for the gate runs it when its body ends instead.
-      if (_gate.takeWake()) {
-        if (_exclusiveWaiting == 0) {
-          _kick();
-        } else {
-          _wakeAfterExclusive = true;
-        }
-      }
+      // An answer that landed after the last look of a stop branch that
+      // parked the turn found the gate taken: run it now. Any other wake is
+      // left alone (a stop that ended the turn drops it; a newer flight owns
+      // it).
+      if (_gate.stopParked && _gate.takeWake() && _gate.startNow()) _kick();
     }
   }
 
@@ -354,14 +343,20 @@ class LoopDriver {
         return;
       }
       if (_ctx.stopRequested) {
+        // An answer recorded before this read is covered by it.
+        _gate.takeWake();
         await _cards.skipOpen(
           stoppedByUserText,
           ConfirmStatus.denied,
           onlyAllowed: !_userStop,
         );
+        // An answer that landed after the read above still needs a flight.
         final waiting =
-            !_userStop && (await _store.openCards(conversationId)).isNotEmpty;
+            !_userStop &&
+            (_gate.hasWake ||
+                (await _store.openCards(conversationId)).isNotEmpty);
         if (waiting) {
+          _gate.stopParked = true;
           await _finish(TurnState.awaitingConfirm);
         } else {
           await _finish(

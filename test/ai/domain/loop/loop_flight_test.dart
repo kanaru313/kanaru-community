@@ -364,6 +364,169 @@ void main() {
     });
   });
 
+  group('an answer recorded around a stop', () {
+    Future<(String, String, Future<void> Function())> twoCardsHeld() async {
+      rig = await Rig.create(
+        script: [
+          replies('', calls: [toolCall('write_a'), toolCall('write_b')]),
+          replies('unexpected second round'),
+        ],
+      );
+      await rig.send('go');
+      final cards = await rig.cards();
+      final reached = Completer<void>();
+      final release = Completer<void>();
+      rig.env.onPlugin = () async {
+        rig.env.onPlugin = null;
+        reached.complete();
+        await release.future;
+      };
+      final a = callIdOf(cards.first);
+      final b = callIdOf(cards.last);
+      expect(await rig.driver.allow(a), CardAnswer.accepted);
+      await reached.future;
+      return (a, b, () async => release.complete());
+    }
+
+    test(
+      'a user Stop drops an Allow that landed while the flight ran',
+      () async {
+        final (_, b, release) = await twoCardsHeld();
+        expect(await rig.driver.allow(b), CardAnswer.accepted);
+        final stopped = rig.driver.stop();
+        await release();
+        await stopped;
+        await rig.driver.inFlight;
+        await settle();
+
+        expect(rig.runner.runs, 1);
+        expect(rig.tool('write_b').runs, isEmpty);
+        expect(cardStates(await rig.cards()), [
+          'write_a:skipped',
+          'write_b:skipped',
+        ]);
+        expect(rig.driver.turnState, TurnState.idle);
+      },
+    );
+
+    test(
+      'the parked stop starts no round for a Deny that lands in it',
+      () async {
+        rig = await Rig.create(
+          script: [
+            replies('', calls: [toolCall('write_a'), toolCall('write_b')]),
+            replies('unexpected second round'),
+          ],
+        );
+        final spy = _AnswerAfterRead(rig.store);
+        await rig.driver.dispose();
+        rig.driver = LoopDriver(
+          conversationId: rig.conv.id,
+          store: spy,
+          runner: rig.runner,
+          env: rig.env,
+          newBoundary: () => 'kfixedbound',
+          onInternalError: (e, s) => rig.errors.add(e),
+        );
+        await rig.send('go');
+        final second = callIdOf((await rig.cards()).last);
+        spy.onOpenCards = () async {
+          expect(await rig.driver.deny(second), CardAnswer.accepted);
+        };
+
+        await rig.driver.stop();
+        await rig.driver.inFlight;
+        await settle();
+
+        expect(rig.runner.runs, 1);
+        expect(rig.driver.turnState, TurnState.idle);
+        expect(rig.errors, isEmpty);
+      },
+    );
+
+    test(
+      'a switch that ends the turn starts no round for an earlier Allow',
+      () async {
+        final (_, b, release) = await twoCardsHeld();
+        expect(await rig.driver.allow(b), CardAnswer.accepted);
+        final exclusive = rig.driver.runExclusive(() async {});
+        await release();
+        await exclusive;
+        await rig.driver.inFlight;
+        await settle();
+
+        expect(rig.runner.runs, 1);
+        expect(rig.tool('write_b').runs, isEmpty);
+        expect(rig.driver.turnState, TurnState.idle);
+      },
+    );
+
+    test('two queued switches: the Allow runs after the last one', () async {
+      rig = await Rig.create(
+        script: [
+          replies('', calls: [toolCall('write_a'), toolCall('write_b')]),
+          replies('done'),
+        ],
+      );
+      final spy = _AnswerAfterRead(rig.store);
+      await rig.driver.dispose();
+      rig.driver = LoopDriver(
+        conversationId: rig.conv.id,
+        store: spy,
+        runner: rig.runner,
+        env: rig.env,
+        newBoundary: () => 'kfixedbound',
+        onInternalError: (e, s) => rig.errors.add(e),
+      );
+      await rig.send('go');
+      final cards = await rig.cards();
+      final reached = Completer<void>();
+      final release = Completer<void>();
+      rig.env.onPlugin = () async {
+        rig.env.onPlugin = null;
+        reached.complete();
+        await release.future;
+      };
+      expect(
+        await rig.driver.allow(callIdOf(cards.first)),
+        CardAnswer.accepted,
+      );
+      await reached.future;
+      final second = callIdOf(cards.last);
+      spy.onOpenCards = () async {
+        expect(await rig.driver.allow(second), CardAnswer.accepted);
+      };
+
+      final first = rig.driver.runExclusive(() async {});
+      final next = rig.driver.runExclusive(() async {});
+      release.complete();
+      await first;
+      await next;
+      await rig.driver.inFlight;
+      await settle();
+
+      expect(rig.tool('write_b').runs, hasLength(1));
+      expect(cardStates(await rig.cards()), [
+        'write_a:skipped',
+        'write_b:done',
+      ]);
+      expect(rig.errors, isEmpty);
+    });
+
+    test('stop after dispose leaves the pending cards pending', () async {
+      rig = await Rig.create(
+        script: [
+          replies('', calls: [toolCall('write_a')]),
+        ],
+      );
+      await rig.send('go');
+      await rig.driver.dispose();
+      await rig.driver.stop();
+
+      expect(cardStates(await rig.cards()), ['write_a:pending']);
+    });
+  });
+
   test('a lost start before a stop does not count in the next turn', () async {
     rig = await Rig.create(script: [replies('second turn')]);
     Future<void>? stopped;

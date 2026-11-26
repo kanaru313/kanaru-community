@@ -437,7 +437,14 @@ registry and `ToolEnv`, fresh `LoopSettings` and `LoopPlugin` reads) and a clock
   Deny meanwhile is stored and recorded as a wake: on release the driver
   starts a flight for it (the call runs, or the model is told of the deny),
   else it runs `inspect()`. A turn that only waits on cards is left alone,
-  its cards stay `pending`.
+  its cards stay `pending`. Two switches
+  queued: the answer waits for the last one.
+- **Answers around a stop:** a wake is acted on only when the stop branch
+  parked the turn (`awaitingConfirm`) for a non-user stop (a switch). The
+  branch drops wakes recorded before its read; one that lands after it
+  parks the turn instead of ending it. A user Stop, or a stop that ended the
+  turn, drops the wake: Stop is never followed by a model round. `stop()` does
+  nothing after `dispose()`.
 - **Allow:** stores `callHash` (sha256 over the name and key-sorted args) in
   the card's `ConfirmPart(allowed).approvalHash` in the same compare-and-set
   that allows it, so the binding survives a restart. Execution recomputes the
