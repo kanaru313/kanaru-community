@@ -46,8 +46,8 @@ Map<String, Object?> streamingManifestWith(Map<String, Object?> config) =>
 void main() {
   final texts = _fixtureTexts();
 
-  test('all 42 shipped manifests are present', () {
-    expect(texts, hasLength(42));
+  test('all 44 shipped manifests are present', () {
+    expect(texts, hasLength(44));
   });
 
   group('every shipped manifest', () {
