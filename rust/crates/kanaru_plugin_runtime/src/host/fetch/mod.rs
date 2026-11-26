@@ -56,7 +56,7 @@ fn fetch<'js>(
             env,
             Kind::InvalidRequest,
             "InvalidRequestError",
-            "the request body is larger than 256 KiB",
+            "the request body is larger than 1 MiB",
             None,
         );
     }
