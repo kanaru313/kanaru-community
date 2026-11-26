@@ -29,14 +29,14 @@ through typed helpers (`json_read.dart`); no member access is dynamic.
 |---|---|
 | BOM | a leading U+FEFF is dropped before decoding |
 | `metadata.apiVersion` | int >= 1; supported = 1; above that `NeedsNewerApp` |
-| `metadata.type` | `lyrics`, `translate`, `ai-translate`, `streaming`; anything else `UnsupportedKind` ("needs a newer Kanaru") |
+| `metadata.type` | `lyrics`, `translate`, `ai-translate`, `streaming`, `ai-chat`; anything else `UnsupportedKind` ("needs a newer Kanaru") |
 | `name` | 1-80 code points after cleaning |
 | `version` | int, 1 to 2^31-1 |
 | `author` | optional, <= 80 |
 | `description` | optional, <= 500, newlines kept |
 | `hosts` | 1-20 strings, trimmed, lower-cased, deduplicated, then the host rules below |
 | `languages` | optional, never invalid; library keys via `languageKey` (ISO 639-3; a code it does not know is dropped); `*` / `all` / `any`, a non-list or a list over 50 = global (empty); <= 20 kept |
-| `script` | object, at most 50 entries; key `^[A-Za-z0-9_.-]{1,64}$`, file `^[A-Za-z0-9_.-]{1,100}\.js$`; **every key is kept** in `PluginManifest.scripts`; required: lyrics `search` + `lyrics`, translate and ai-translate `translate`, streaming `search` + `stream`. Shipped streaming manifests declare 10 keys (`search, stream, home, genre, album, playlist, artist, related, autocomplete, resolve`). That the files exist is checked against the unpacked package (§ Catalog) |
+| `script` | object, at most 50 entries; key `^[A-Za-z0-9_.-]{1,64}$`, file `^[A-Za-z0-9_.-]{1,100}\.js$`; **every key is kept** in `PluginManifest.scripts`; required: lyrics `search` + `lyrics`, translate and ai-translate `translate`, ai-chat `chat`, streaming `search` + `stream`. Shipped streaming manifests declare 10 keys (`search, stream, home, genre, album, playlist, artist, related, autocomplete, resolve`). That the files exist is checked against the unpacked package (§ Catalog) |
 | `metadata.regexp` | optional string <= 500 code points that compiles as a Dart `RegExp`. **Untrusted:** a backtracking pattern can run for minutes, so never match it on the UI isolate without a bound (QuickJS with the run interrupt, or a short-lived isolate with a timeout, and a capped input length) |
 | `translate` | translate-family kinds only; see below |
 | `config` | optional object, see below |
@@ -76,6 +76,10 @@ code points.
 repeated are dropped (a block with none left is refused). `maxLines`
 10-200 (default 50), `maxChars` 1000-20000 (4000), `timeoutSec` 1-600
 (15), clamped to 90 at read time.
+
+### Chat block (`chat_spec.dart`)
+
+Required for `ai-chat`, refused (`InvalidManifest('chat')`) on any other kind; an `ai-chat` has no wildcard hosts and updates only replace the same kind. `ChatSpec {models, custom, keyField, idleTimeoutSec}`: `models` are a capability overlay (0-50, unique ids, `tools` / `vision` / `context` 1024-10,000,000), `custom` the capabilities of any other model (default no tools, no vision, 32768), `idleTimeoutSec` 1-90 (default 90). `requireChatFields` (`manifest_rules.dart`): the config declares `model` as a single select with options and/or `custom` (`config.model`; it may be non-required), and `keyField` names a required input or list field (`chat.keyField`). The script contract is in `plugin-host-api.md` § Chat scripts.
 
 ### Config schema
 

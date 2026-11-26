@@ -1,4 +1,5 @@
 import '../config/config_field.dart';
+import 'chat_spec.dart';
 import 'host_rules.dart';
 import 'json_read.dart';
 import 'package_problem.dart';
@@ -101,5 +102,34 @@ void requireTuneFields(List<ConfigField> config) {
   final instruction = find('customInstruction');
   if (instruction is! InputField || instruction.format != InputFormat.text) {
     invalid('config.customInstruction');
+  }
+}
+
+/// An `ai-chat` plugin must declare `model` as a single select with options
+/// and/or `custom: true`. It need not be `required`: the composer always
+/// passes the conversation's model, the stored value only seeds new
+/// conversations. `chat.keyField`, when set, must name a `required` input or
+/// list field.
+void requireChatFields(List<ConfigField> config, ChatSpec chat) {
+  ConfigField? find(String key) {
+    for (final field in config) {
+      if (field.key == key) return field;
+    }
+    return null;
+  }
+
+  final model = find('model');
+  if (model is! SelectField ||
+      model.format != SelectFormat.single ||
+      (model.options.isEmpty && !model.custom)) {
+    invalid('config.model');
+  }
+  final keyField = chat.keyField;
+  if (keyField == null) return;
+  final key = find(keyField);
+  if (key == null ||
+      !key.required ||
+      !(key is InputField || key is ListField)) {
+    invalid('chat.keyField');
   }
 }

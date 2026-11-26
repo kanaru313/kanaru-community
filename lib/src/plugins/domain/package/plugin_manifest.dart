@@ -1,4 +1,5 @@
 import '../config/config_field.dart';
+import 'chat_spec.dart';
 import 'plugin_kind.dart';
 import 'translate_spec.dart';
 
@@ -18,6 +19,7 @@ class PluginManifest {
     this.languages = const [],
     this.regexp,
     this.translate,
+    this.chat,
     this.config = const [],
   });
 
@@ -51,6 +53,9 @@ class PluginManifest {
 
   /// The `translate` block; set exactly for a translate-family plugin.
   final TranslateSpec? translate;
+
+  /// The `chat` block; set exactly for an `ai-chat` plugin.
+  final ChatSpec? chat;
 
   /// Config fields in manifest order.
   final List<ConfigField> config;

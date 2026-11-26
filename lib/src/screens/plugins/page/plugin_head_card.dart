@@ -46,7 +46,7 @@ class PluginHeadCard extends ConsumerWidget {
       PluginKind.lyrics => _LyricsUseRow(installId: row.installId),
       PluginKind.translate ||
       PluginKind.aiTranslate => _TranslateUseRow(installId: row.installId),
-      PluginKind.streaming || null => null,
+      PluginKind.streaming || PluginKind.aiChat || null => null,
     };
     return SettingsBlock(
       children: [
