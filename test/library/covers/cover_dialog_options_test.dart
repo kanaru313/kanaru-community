@@ -152,6 +152,7 @@ void main() {
           (ref, uid) => Stream.value(
             PlaylistDetail(
               summary: PlaylistSummary(
+                id: 0,
                 uid: uid,
                 name: 'Mix',
                 description: '',
@@ -164,7 +165,7 @@ void main() {
               ),
               entries: [
                 for (final t in tracks)
-                  PlaylistEntryView(uid: 'e${t.id.value}', info: t),
+                  PlaylistEntryView(id: 0, uid: 'e${t.id.value}', info: t),
               ],
             ),
           ),
@@ -202,6 +203,7 @@ void main() {
           (ref, uid) => Stream.value(
             PlaylistDetail(
               summary: PlaylistSummary(
+                id: 0,
                 uid: uid,
                 name: 'Mix',
                 description: '',
@@ -214,7 +216,7 @@ void main() {
               ),
               entries: [
                 for (final t in tracks)
-                  PlaylistEntryView(uid: 'e${t.id.value}', info: t),
+                  PlaylistEntryView(id: 0, uid: 'e${t.id.value}', info: t),
               ],
             ),
           ),
@@ -273,6 +275,7 @@ void main() {
             (ref, uid) => Stream.value(
               PlaylistDetail(
                 summary: PlaylistSummary(
+                  id: 0,
                   uid: uid,
                   name: 'Mix',
                   description: '',
@@ -286,10 +289,12 @@ void main() {
                 entries: [
                   // The track carries other art than its album.
                   PlaylistEntryView(
+                    id: 0,
                     uid: 'e1',
                     info: track(1, album: 'plain', cover: coverKeyOf(5)),
                   ),
                   PlaylistEntryView(
+                    id: 0,
                     uid: 'e2',
                     info: track(2, album: 'custom', cover: coverKeyOf(6)),
                   ),

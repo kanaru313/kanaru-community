@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' show TableUpdate;
+import 'package:drift/drift.dart' show TableUpdate, Variable;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/library/data/playlists/playlist_reads.dart';
@@ -297,6 +297,30 @@ void main() {
     await addPlay(f.db, a.value, playedAt: 5);
     await pumpUntil(() => seen.length == 2);
     expect(seen.last!.entries.single.info.playCount, 1);
+  });
+
+  test('summaries and entries carry integer ids', () async {
+    final tracks = await f.tracks(2);
+    final uid = await f.repo.createPlaylist(name: 'A', tracks: tracks);
+    final row = await f.db
+        .customSelect(
+          'SELECT id FROM playlists WHERE uid = ?',
+          variables: [Variable.withString(uid)],
+        )
+        .getSingle();
+    final entryIds = [
+      for (final r
+          in await f.db
+              .customSelect('SELECT id FROM playlist_entries ORDER BY sort_key')
+              .get())
+        r.read<int>('id'),
+    ];
+    final summaries = await f.repo.watchSummaries().first;
+    expect(summaries.playlists.single.id, row.read<int>('id'));
+    expect(summaries.favorites.id, 0);
+    final detail = (await f.repo.loadPlaylist(uid))!;
+    expect(detail.summary.id, row.read<int>('id'));
+    expect([for (final e in detail.entries) e.id], entryIds);
   });
 }
 

@@ -14,6 +14,7 @@ PlaylistEntryView e(
   int? duration,
   int plays = 0,
 }) => PlaylistEntryView(
+  id: 0,
   uid: 'e$id',
   info: TrackInfo(
     id: TrackId(id),
@@ -29,6 +30,7 @@ PlaylistEntryView e(
 
 PlaylistSummary p(String uid, String name, int updated, {String d = ''}) =>
     PlaylistSummary(
+      id: 0,
       uid: uid,
       name: name,
       description: d,

@@ -7,6 +7,7 @@ PlaylistSummary summary({
   List<String> covers = const ['a'],
   SavedQueueInfo? savedQueue,
 }) => PlaylistSummary(
+  id: 0,
   uid: 'u',
   name: 'n',
   description: '',
@@ -21,6 +22,7 @@ PlaylistSummary summary({
 
 PlaylistEntryView entry(String uid, int id, TrackAvailability s) =>
     PlaylistEntryView(
+      id: 0,
       uid: uid,
       info: TrackInfo(id: TrackId(id), title: 't$id', status: s, relPath: 'p'),
     );

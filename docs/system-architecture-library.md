@@ -165,6 +165,20 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   deletes them. Tombstones nobody settled are purged by the track GC
   (`runTrackGc`) once older than `removedEntryGraceMs` (1 h), so a removal never
   pins its tracks for good.
+- **Integer ids (AI chat).** `PlaylistSummary.id` and `PlaylistEntryView.id`
+  carry `playlists.id` / `playlist_entries.id`. Favorites is always id `0`
+  (`favoritesPlaylistId`) in summaries and `listWritable`, also before its row
+  exists; its real row id is never shown and `resolvePlaylistIds` does not
+  resolve it. `resolvePlaylistIds(ids)` maps ids to uids for live, writable
+  playlists only, with the same predicate as `livePlaylistId`
+  (`writablePlaylistPredicate`), so queues, moods and deleted playlists are
+  absent; id 0 resolves to `PlaylistUids.favorites` before any lookup.
+  `listWritable()` returns Favorites first, then user playlists by creation.
+  `resolveEntryIds(playlistUid, ids)` maps entry ids of that playlist only, live
+  entries only (tombstones pending undo are absent). `removeEntriesNow` removes
+  and commits in one transaction and returns exactly the entries removed;
+  only rows live at that moment are touched, so a user's pending-undo removal
+  from another call stays undoable.
 - **`updated_at`.** Every real write sets the playlist's `updated_at` to
   `MAX(now, updated_at + 1)`: strictly increasing per playlist, also when two
   writes share a millisecond or the clock steps back, and also for un-favoriting

@@ -228,6 +228,7 @@ void main() {
     ) async {
       final playlist = PlaylistDetail(
         summary: PlaylistSummary(
+          id: 0,
           uid: 'p',
           name: 'Mix',
           description: '',

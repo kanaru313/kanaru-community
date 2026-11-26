@@ -14,6 +14,7 @@ const _favoritesName = 'Favorites';
 const _coverCandidates = 64;
 
 PlaylistSummary _emptyFavorites() => PlaylistSummary(
+  id: favoritesPlaylistId,
   uid: PlaylistUids.favorites,
   name: _favoritesName,
   description: '',
@@ -65,7 +66,7 @@ const playlistStatsSql =
 /// The playlist list: user playlists and Favorites, never mood or queue rows.
 const summarySql =
     '''
-SELECT p.uid, p.name, p.description, p.kind, p.created_at, p.updated_at,
+SELECT p.id, p.uid, p.name, p.description, p.kind, p.created_at, p.updated_at,
 $playlistStatsSql
 FROM playlists p
 WHERE p.deleted_at IS NULL AND (p.kind IS NULL OR p.kind = 'favorites')
@@ -87,6 +88,8 @@ PlaylistSummary summaryOfRow(
       ((jsonDecode(r.read<String>('covers')) as List).cast<List<Object?>>())
           .map((c) => (group: c[1] as String, coverKey: c[0] as String?));
   return PlaylistSummary(
+    // A query without `p.id` (saved queues, never targeted by id) gets 0.
+    id: isFavorites ? favoritesPlaylistId : (r.readNullable<int>('id') ?? 0),
     uid: r.read<String>('uid'),
     name: r.read<String>('name'),
     description: r.read<String>('description'),
@@ -173,7 +176,7 @@ Future<PlaylistDetail?> loadDetail(
   final p = rows.single;
   final entryRows = await db
       .customSelect(
-        'SELECT e.uid AS uid, e.track_id AS track_id, e.added_at AS added_at '
+        'SELECT e.id AS id, e.uid AS uid, e.track_id AS track_id, e.added_at AS added_at '
         'FROM playlist_entries e JOIN tracks t ON t.id = e.track_id '
         'WHERE e.playlist_id = ? AND e.deleted_at IS NULL '
         // Favorites follows duplicate hiding; other playlists keep copies.
@@ -199,13 +202,18 @@ Future<PlaylistDetail?> loadDetail(
   final entries = [
     for (final r in entryRows)
       if (byId[TrackId(r.read<int>('track_id'))] case final info?)
-        PlaylistEntryView(uid: r.read<String>('uid'), info: info),
+        PlaylistEntryView(
+          id: r.read<int>('id'),
+          uid: r.read<String>('uid'),
+          info: info,
+        ),
   ];
   final distinct = <TrackId, int>{
     for (final e in entries) e.info.id: e.info.durationMs ?? 0,
   };
   return PlaylistDetail(
     summary: PlaylistSummary(
+      id: isFavorites ? favoritesPlaylistId : p.read<int>('id'),
       uid: uid,
       name: p.read<String>('name'),
       description: p.read<String>('description'),
@@ -275,4 +283,36 @@ Future<Map<String, int>> countExistingTracks(
       )
       .get();
   return {for (final r in rows) r.read<String>('uid'): r.read<int>('c')};
+}
+
+/// Entries `[entryUids]` of playlist [playlistId] that are live, in playlist
+/// order, as [PlaylistEntryView]s (no duplicate-hiding filter: used to report
+/// what a removal touched).
+Future<List<PlaylistEntryView>> liveEntryViews(
+  AppDatabase db,
+  int playlistId,
+  List<String> entryUids,
+) async {
+  if (entryUids.isEmpty) return const [];
+  final rows = await db
+      .customSelect(
+        'SELECT id, uid, track_id FROM playlist_entries '
+        'WHERE playlist_id = ? AND deleted_at IS NULL AND uid IN $jsonEach '
+        'ORDER BY sort_key, uid',
+        variables: [Variable.withInt(playlistId), jsonList(entryUids.toSet())],
+      )
+      .get();
+  final infos = await loadTrackInfos(db, [
+    for (final r in rows) TrackId(r.read<int>('track_id')),
+  ]);
+  final byId = {for (final i in infos) i.id: i};
+  return [
+    for (final r in rows)
+      PlaylistEntryView(
+        id: r.read<int>('id'),
+        uid: r.read<String>('uid'),
+        // `tracks` rows outlive their entries (FK RESTRICT): never absent.
+        info: byId[TrackId(r.read<int>('track_id'))]!,
+      ),
+  ];
 }

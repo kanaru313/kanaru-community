@@ -48,6 +48,7 @@ class SavedQueueInfo {
 /// A playlist as the list page shows it.
 class PlaylistSummary {
   PlaylistSummary({
+    required this.id,
     required this.uid,
     required this.name,
     required this.description,
@@ -60,6 +61,10 @@ class PlaylistSummary {
     this.savedQueue,
   }) : autoCoverKeys = List.unmodifiable(autoCoverKeys);
 
+  /// Integer id the AI chat uses (`playlists.id`). Favorites is always `0`
+  /// ([favoritesPlaylistId]), also before its row exists, so the real row id
+  /// never leaks.
+  final int id;
   final String uid;
   final String name;
   final String description;
@@ -83,6 +88,7 @@ class PlaylistSummary {
   @override
   bool operator ==(Object other) =>
       other is PlaylistSummary &&
+      other.id == id &&
       other.uid == uid &&
       other.name == name &&
       other.description == description &&
@@ -96,6 +102,7 @@ class PlaylistSummary {
 
   @override
   int get hashCode => Object.hash(
+    id,
     uid,
     name,
     description,
@@ -134,8 +141,14 @@ class PlaylistSummaries {
 
 /// One row of a playlist: the entry [uid] (stable across moves) and its track.
 class PlaylistEntryView {
-  const PlaylistEntryView({required this.uid, required this.info});
+  const PlaylistEntryView({
+    required this.id,
+    required this.uid,
+    required this.info,
+  });
 
+  /// Integer id of the entry row (`playlist_entries.id`), for the AI chat.
+  final int id;
   final String uid;
   final TrackInfo info;
 
@@ -147,10 +160,43 @@ class PlaylistEntryView {
 
   @override
   bool operator ==(Object other) =>
-      other is PlaylistEntryView && other.uid == uid && other.info == info;
+      other is PlaylistEntryView &&
+      other.id == id &&
+      other.uid == uid &&
+      other.info == info;
 
   @override
-  int get hashCode => Object.hash(uid, info);
+  int get hashCode => Object.hash(id, uid, info);
+}
+
+/// Model-facing id of Favorites: reserved, valid before the row exists.
+const favoritesPlaylistId = 0;
+
+/// A playlist the AI chat may write to (a user playlist or Favorites).
+class WritablePlaylist {
+  const WritablePlaylist({
+    required this.id,
+    required this.uid,
+    required this.name,
+  });
+
+  /// `playlists.id`, or [favoritesPlaylistId] for Favorites.
+  final int id;
+  final String uid;
+  final String name;
+
+  @override
+  bool operator ==(Object other) =>
+      other is WritablePlaylist &&
+      other.id == id &&
+      other.uid == uid &&
+      other.name == name;
+
+  @override
+  int get hashCode => Object.hash(id, uid, name);
+
+  @override
+  String toString() => 'WritablePlaylist($id, $uid, $name)';
 }
 
 /// A playlist with its entries in playlist order (sort_key, then uid).

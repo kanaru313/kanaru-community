@@ -87,6 +87,7 @@ void main() {
   });
 
   PlaylistSummary summary() => PlaylistSummary(
+    id: 0,
     uid: 'pl',
     name: '10 bài lặp lại',
     description: '',
@@ -102,10 +103,12 @@ void main() {
     summary: summary(),
     entries: [
       PlaylistEntryView(
+        id: 0,
         uid: 'e1',
         info: track(1, album: 'Alpha', cover: coverKeyOf(1)),
       ),
       PlaylistEntryView(
+        id: 0,
         uid: 'e2',
         info: track(2, album: 'Beta', cover: coverKeyOf(2)),
       ),

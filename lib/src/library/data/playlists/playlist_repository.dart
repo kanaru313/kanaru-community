@@ -202,4 +202,77 @@ class PlaylistRepository implements PlaylistStore {
   @override
   Future<AddToPlaylistsResult> addAllToFavorites(String uid) =>
       _db.transaction(() => addAllToFavoritesWrite(_db, uid, _now()));
+
+  @override
+  Future<Map<int, String>> resolvePlaylistIds(List<int> ids) async {
+    final result = <int, String>{
+      if (ids.contains(favoritesPlaylistId))
+        favoritesPlaylistId: PlaylistUids.favorites,
+    };
+    final rowIds = ids.toSet()..remove(favoritesPlaylistId);
+    if (rowIds.isEmpty) return result;
+    final rows = await _db
+        .customSelect(
+          'SELECT id, uid FROM playlists WHERE id IN $jsonEach '
+          'AND uid != ? AND $writablePlaylistPredicate',
+          variables: [
+            jsonList(rowIds),
+            Variable.withString(PlaylistUids.favorites),
+          ],
+        )
+        .get();
+    for (final r in rows) {
+      result[r.read<int>('id')] = r.read<String>('uid');
+    }
+    return result;
+  }
+
+  @override
+  Future<List<WritablePlaylist>> listWritable() async {
+    final rows = await _db
+        .customSelect(
+          'SELECT id, uid, name FROM playlists WHERE uid != ? '
+          'AND $writablePlaylistPredicate ORDER BY created_at, id',
+          variables: [Variable.withString(PlaylistUids.favorites)],
+        )
+        .get();
+    return [
+      const WritablePlaylist(
+        id: favoritesPlaylistId,
+        uid: PlaylistUids.favorites,
+        name: 'Favorites',
+      ),
+      for (final r in rows)
+        WritablePlaylist(
+          id: r.read<int>('id'),
+          uid: r.read<String>('uid'),
+          name: r.read<String>('name'),
+        ),
+    ];
+  }
+
+  @override
+  Future<Map<int, String>> resolveEntryIds(
+    String playlistUid,
+    List<int> entryIds,
+  ) => _db.transaction(() async {
+    final playlistId = await livePlaylistId(_db, playlistUid);
+    if (playlistId == null || entryIds.isEmpty) return const <int, String>{};
+    final rows = await _db
+        .customSelect(
+          'SELECT id, uid FROM playlist_entries WHERE playlist_id = ? '
+          'AND deleted_at IS NULL AND id IN $jsonEach',
+          variables: [Variable.withInt(playlistId), jsonList(entryIds.toSet())],
+        )
+        .get();
+    return {for (final r in rows) r.read<int>('id'): r.read<String>('uid')};
+  });
+
+  @override
+  Future<List<PlaylistEntryView>> removeEntriesNow(
+    String playlistUid,
+    List<String> entryUids,
+  ) => _db.transaction(
+    () => removeEntriesNowWrite(_db, playlistUid, entryUids, _now()),
+  );
 }

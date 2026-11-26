@@ -14,6 +14,7 @@ PlaylistEntryView _e(
   int? duration,
   bool missing = false,
 }) => PlaylistEntryView(
+  id: 0,
   uid: uid,
   info: TrackInfo(
     id: TrackId(track),
@@ -27,6 +28,7 @@ PlaylistEntryView _e(
 
 PlaylistDetail _detail(List<PlaylistEntryView> entries) => PlaylistDetail(
   summary: PlaylistSummary(
+    id: 0,
     uid: 'u',
     name: 'N',
     description: '',
