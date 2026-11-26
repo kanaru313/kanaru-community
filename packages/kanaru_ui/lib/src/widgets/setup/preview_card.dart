@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../layout/form_factor.dart';
 import '../../tokens/k_motion.dart';
 import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
@@ -25,7 +26,8 @@ class KPreviewOption<T> {
 }
 
 /// A single choice made by how it looks (progress bar style, layout): cards
-/// in a wrapping grid, each at least [minCardWidth] wide. The chosen card has
+/// in a grid whose column count the group picks itself: 2 on the mobile
+/// shell, 3 on the desktop shell, 1 from 200 % text ([columnsFor]). The chosen card has
 /// a 2 px `primary` border and a small tick badge. Tapping chooses at once;
 /// the arrow keys move the choice and the focus. Needs at least two options.
 class KPreviewCardGroup<T> extends StatefulWidget {
@@ -36,7 +38,17 @@ class KPreviewCardGroup<T> extends StatefulWidget {
     required this.onChanged,
   }) : assert(options.length >= 2, 'preview cards need at least two options');
 
-  static const double minCardWidth = 220;
+  /// Text scale from which the cards stack in one column.
+  static const double stackTextScale = 2;
+
+  /// Columns of the grid for a [formFactor] and [textScale].
+  static int columnsFor(FormFactor formFactor, double textScale) {
+    if (textScale >= stackTextScale) return 1;
+    return switch (formFactor) {
+      FormFactor.mobile => 2,
+      FormFactor.desktop => 3,
+    };
+  }
 
   final List<KPreviewOption<T>> options;
   final T selected;
@@ -132,11 +144,13 @@ class _KPreviewCardGroupState<T> extends State<KPreviewCardGroup<T>> {
       child: LayoutBuilder(
         builder: (context, box) {
           const gap = KSpace.x3;
-          final fit =
-              ((box.maxWidth + gap) / (KPreviewCardGroup.minCardWidth + gap))
-                  .floor();
-          final columns = fit.clamp(1, widget.options.length);
-          final width = (box.maxWidth - gap * (columns - 1)) / columns;
+          final columns = KPreviewCardGroup.columnsFor(
+            FormFactor.of(context),
+            MediaQuery.textScalerOf(context).scale(1),
+          ).clamp(1, widget.options.length);
+          // Floored so rounding never pushes the last card of a row to the next.
+          final width = ((box.maxWidth - gap * (columns - 1)) / columns)
+              .floorToDouble();
           return Wrap(
             spacing: gap,
             runSpacing: gap,

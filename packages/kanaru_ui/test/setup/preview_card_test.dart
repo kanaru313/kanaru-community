@@ -89,19 +89,76 @@ void main() {
     expect(selected, _Bar.wave);
   });
 
-  testWidgets('wide: cards sit side by side; narrow: stacked', (tester) async {
-    useWindow(tester, const Size(700, 800));
-    await tester.pumpWidget(host(_group(_Bar.wave, (_) {})));
-    expect(
-      tester.getTopLeft(find.text('Dạng sóng')).dy,
-      tester.getTopLeft(find.text('Thanh phẳng')).dy,
+  /// Number of cards on the first row of six cards in a window of [size].
+  Future<int> firstRowCount(
+    WidgetTester tester,
+    Size size, {
+    double textScale = 1,
+  }) async {
+    useWindow(tester, size);
+    await tester.pumpWidget(
+      host(
+        KPreviewCardGroup<int>(
+          options: [
+            for (var i = 0; i < 6; i++)
+              KPreviewOption<int>(
+                value: i,
+                preview: const SizedBox(height: 20),
+                title: 'Kiểu $i',
+                caption: 'Chú thích $i',
+              ),
+          ],
+          selected: 0,
+          onChanged: (_) {},
+        ),
+        textScale: textScale,
+      ),
     );
-    useWindow(tester, const Size(400, 800));
-    await tester.pumpWidget(host(_group(_Bar.wave, (_) {})));
-    await tester.pump();
+    final top = tester.getTopLeft(find.text('Kiểu 0')).dy;
+    var count = 0;
+    for (var i = 0; i < 6; i++) {
+      if (tester.getTopLeft(find.text('Kiểu $i')).dy == top) count++;
+    }
+    expect(tester.takeException(), isNull);
+    return count;
+  }
+
+  testWidgets('mobile shell: two columns, also on a wide phone', (
+    tester,
+  ) async {
+    expect(await firstRowCount(tester, const Size(400, 900)), 2);
+    expect(await firstRowCount(tester, const Size(1100, 900)), 2);
+  });
+
+  testWidgets('desktop shell: three columns', (tester) async {
+    expect(await firstRowCount(tester, const Size(1200, 900)), 3);
+    expect(await firstRowCount(tester, const Size(1600, 900)), 3);
+  });
+
+  testWidgets('text scale 200 % or more: one column on both shells', (
+    tester,
+  ) async {
+    expect(await firstRowCount(tester, const Size(400, 900), textScale: 2), 1);
+    expect(await firstRowCount(tester, const Size(1400, 900), textScale: 2), 1);
     expect(
-      tester.getTopLeft(find.text('Thanh phẳng')).dy,
-      greaterThan(tester.getTopLeft(find.text('Dạng sóng')).dy),
+      await firstRowCount(tester, const Size(400, 900), textScale: 1.9),
+      2,
+    );
+  });
+
+  testWidgets('two options on the desktop shell fill one row of two columns', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(1400, 900));
+    await tester.pumpWidget(host(_group(_Bar.wave, (_) {})));
+    final wave = tester.getSize(find.text('Dạng sóng')).width;
+    expect(
+      tester.getTopLeft(find.text('Thanh phẳng')).dx,
+      greaterThan(tester.getTopLeft(find.text('Dạng sóng')).dx + wave),
+    );
+    expect(
+      tester.getTopLeft(find.text('Thanh phẳng')).dx,
+      lessThan(1400 / 2 + 40),
     );
   });
 

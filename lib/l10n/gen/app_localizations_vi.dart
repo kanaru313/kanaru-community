@@ -2685,16 +2685,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsAppearanceWindowFrame => 'Khung cửa sổ của hệ thống';
 
   @override
-  String get settingsSeekBarCaption => 'Dùng ở Now Playing và màn lời.';
-
-  @override
-  String get settingsSeekBarWaveform => 'Dạng sóng';
-
-  @override
-  String get settingsSeekBarWaveformCaption =>
-      'Tệp trong máy và một số plugin. Bài không có dạng sóng dùng thanh phẳng.';
-
-  @override
   String get settingsSeekBarStyleBars => 'Vạch';
 
   @override
@@ -2713,7 +2703,24 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsSeekBarFlat => 'Thanh phẳng';
 
   @override
-  String get settingsSeekBarFlatCaption => 'Mọi bài';
+  String get settingsSeekBarStyleBarsCaption => 'Mặc định, gọn và dễ đọc';
+
+  @override
+  String get settingsSeekBarStyleDotsCaption => 'Cột chấm như đèn LED';
+
+  @override
+  String get settingsSeekBarStyleLineCaption => 'Viền sóng liền, tô kín';
+
+  @override
+  String get settingsSeekBarStyleMirrorCaption =>
+      'Sóng phía trên, bóng mờ phía dưới';
+
+  @override
+  String get settingsSeekBarStyleSquiggleCaption =>
+      'Đường lượn trôi khi phát, phẳng khi dừng';
+
+  @override
+  String get settingsSeekBarFlatCaption => 'Mọi bài, không cần dạng sóng';
 
   @override
   String get settingsAboutEditionFree => 'Bản miễn phí';

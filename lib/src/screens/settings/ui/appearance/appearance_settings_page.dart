@@ -5,7 +5,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../fonts/state/font_selector.dart';
-import '../../../../playback/domain/seek_bar_style.dart';
 import '../../../../playback/state/seek_bar_style_provider.dart';
 import '../../settings_routes.dart';
 import '../../state/appearance_settings.dart';
@@ -13,6 +12,7 @@ import '../../state/display_settings.dart';
 import '../settings_scaffold.dart';
 import '../soon_row.dart';
 import 'fonts/font_labels.dart';
+import 'seek_bar_style_page.dart' show seekBarStyleTitle;
 import 'theme_language_rows.dart';
 
 /// Text size step shown as "Default".
@@ -127,14 +127,7 @@ class _AppearanceSettingsPageState
             SetupValueRow(
               icon: KIcons.seekBar,
               title: Text(l10n.settingsAppearanceSeekBar),
-              value: Text(switch (seekStyle) {
-                SeekBarStyle.bars => l10n.settingsSeekBarStyleBars,
-                SeekBarStyle.dots => l10n.settingsSeekBarStyleDots,
-                SeekBarStyle.line => l10n.settingsSeekBarStyleLine,
-                SeekBarStyle.mirror => l10n.settingsSeekBarStyleMirror,
-                SeekBarStyle.squiggle => l10n.settingsSeekBarStyleSquiggle,
-                SeekBarStyle.flat => l10n.settingsSeekBarFlat,
-              }),
+              value: Text(seekBarStyleTitle(l10n, seekStyle)),
               onTap: () => context.push(SettingsPaths.seekBar),
             ),
             if (desktop)

@@ -16,46 +16,46 @@ class SeekBarStylePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
     final style = ref.watch(seekBarStyleProvider);
     return SettingsScaffold(
       title: l10n.settingsAppearanceSeekBar,
       parentPath: SettingsPaths.appearance,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: KSpace.x3,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: KSpace.x1),
-              child: Text(
-                l10n.settingsSeekBarCaption,
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: scheme.onSurfaceVariant),
+        KPreviewCardGroup<SeekBarStyle>(
+          selected: style,
+          onChanged: (value) =>
+              ref.read(seekBarStyleProvider.notifier).set(value),
+          options: [
+            for (final kind in SeekBarStyle.values)
+              KPreviewOption(
+                value: kind,
+                preview: SeekStylePreview(style: kind),
+                title: seekBarStyleTitle(l10n, kind),
+                caption: _caption(l10n, kind),
               ),
-            ),
-            KPreviewCardGroup<SeekBarStyle>(
-              selected: style,
-              onChanged: (value) =>
-                  ref.read(seekBarStyleProvider.notifier).set(value),
-              options: [
-                KPreviewOption(
-                  value: SeekBarStyle.bars,
-                  preview: const WaveformSeekPreview(),
-                  title: l10n.settingsSeekBarWaveform,
-                  caption: l10n.settingsSeekBarWaveformCaption,
-                ),
-                KPreviewOption(
-                  value: SeekBarStyle.flat,
-                  preview: const FlatSeekPreview(),
-                  title: l10n.settingsSeekBarFlat,
-                  caption: l10n.settingsSeekBarFlatCaption,
-                ),
-              ],
-            ),
           ],
         ),
       ],
     );
   }
 }
+
+/// Style names, the same ones the Appearance row shows.
+String seekBarStyleTitle(AppLocalizations l10n, SeekBarStyle style) =>
+    switch (style) {
+      SeekBarStyle.bars => l10n.settingsSeekBarStyleBars,
+      SeekBarStyle.dots => l10n.settingsSeekBarStyleDots,
+      SeekBarStyle.line => l10n.settingsSeekBarStyleLine,
+      SeekBarStyle.mirror => l10n.settingsSeekBarStyleMirror,
+      SeekBarStyle.squiggle => l10n.settingsSeekBarStyleSquiggle,
+      SeekBarStyle.flat => l10n.settingsSeekBarFlat,
+    };
+
+String _caption(AppLocalizations l10n, SeekBarStyle style) => switch (style) {
+  SeekBarStyle.bars => l10n.settingsSeekBarStyleBarsCaption,
+  SeekBarStyle.dots => l10n.settingsSeekBarStyleDotsCaption,
+  SeekBarStyle.line => l10n.settingsSeekBarStyleLineCaption,
+  SeekBarStyle.mirror => l10n.settingsSeekBarStyleMirrorCaption,
+  SeekBarStyle.squiggle => l10n.settingsSeekBarStyleSquiggleCaption,
+  SeekBarStyle.flat => l10n.settingsSeekBarFlatCaption,
+};
