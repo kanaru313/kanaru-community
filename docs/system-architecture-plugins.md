@@ -29,14 +29,14 @@ through typed helpers (`json_read.dart`); no member access is dynamic.
 |---|---|
 | BOM | a leading U+FEFF is dropped before decoding |
 | `metadata.apiVersion` | int >= 1; supported = 1; above that `NeedsNewerApp` |
-| `metadata.type` | `lyrics`, `translate`, `ai-translate`, `streaming`; anything else `UnsupportedKind` ("needs a newer Kanaru") |
+| `metadata.type` | `lyrics`, `translate`, `ai-translate`, `streaming`, `ai-chat`; anything else `UnsupportedKind` ("needs a newer Kanaru") |
 | `name` | 1-80 code points after cleaning |
 | `version` | int, 1 to 2^31-1 |
 | `author` | optional, <= 80 |
 | `description` | optional, <= 500, newlines kept |
 | `hosts` | 1-20 strings, trimmed, lower-cased, deduplicated, then the host rules below |
 | `languages` | optional, never invalid; library keys via `languageKey` (ISO 639-3; a code it does not know is dropped); `*` / `all` / `any`, a non-list or a list over 50 = global (empty); <= 20 kept |
-| `script` | object, at most 50 entries; key `^[A-Za-z0-9_.-]{1,64}$`, file `^[A-Za-z0-9_.-]{1,100}\.js$`; **every key is kept** in `PluginManifest.scripts`; required: lyrics `search` + `lyrics`, translate and ai-translate `translate`, streaming `search` + `stream`. Shipped streaming manifests declare 10 keys (`search, stream, home, genre, album, playlist, artist, related, autocomplete, resolve`). That the files exist is checked against the unpacked package (§ Catalog) |
+| `script` | object, at most 50 entries; key `^[A-Za-z0-9_.-]{1,64}$`, file `^[A-Za-z0-9_.-]{1,100}\.js$`; **every key is kept** in `PluginManifest.scripts`; required: lyrics `search` + `lyrics`, translate and ai-translate `translate`, ai-chat `chat`, streaming `search` + `stream`. Shipped streaming manifests declare 10 keys (`search, stream, home, genre, album, playlist, artist, related, autocomplete, resolve`). That the files exist is checked against the unpacked package (§ Catalog) |
 | `metadata.regexp` | optional string <= 500 code points that compiles as a Dart `RegExp`. **Untrusted:** a backtracking pattern can run for minutes, so never match it on the UI isolate without a bound (QuickJS with the run interrupt, or a short-lived isolate with a timeout, and a capped input length) |
 | `translate` | translate-family kinds only; see below |
 | `config` | optional object, see below |
@@ -76,6 +76,10 @@ code points.
 repeated are dropped (a block with none left is refused). `maxLines`
 10-200 (default 50), `maxChars` 1000-20000 (4000), `timeoutSec` 1-600
 (15), clamped to 90 at read time.
+
+### Chat block (`chat_spec.dart`)
+
+Required for `ai-chat`, refused (`InvalidManifest('chat')`) on any other kind; an `ai-chat` has no wildcard hosts and updates only replace the same kind. `ChatSpec {models, custom, keyField, idleTimeoutSec}`: `models` are a capability overlay (0-50, unique ids, `tools` / `vision` / `context` 1024-10,000,000), `custom` the capabilities of any other model (default no tools, no vision, 32768), `idleTimeoutSec` 1-90 (default 90). `requireChatFields` (`manifest_rules.dart`): the config declares `model` as a single select with options and/or `custom` (`config.model`; it may be non-required), and `keyField` names a required input or list field (`chat.keyField`). The script contract is in `plugin-host-api.md` § Chat scripts.
 
 ### Config schema
 
@@ -467,17 +471,17 @@ All in `lib/src/plugins/state/`, all mapping a database error to the error state
 
 ## Screens
 
-`lib/src/screens/plugins/` (imports only `plugins/{domain,state}`, `kanaru_ui`, the settings frame widgets and l10n; texts in `lib/l10n/parts/plugins_{en,vi}.arb`). Routes (`plugin_routes.dart`, mounted from `settings_routes.dart`, paths in `PluginPaths`): `/settings/plugins` (optional `?kind=lyrics|translate|streaming`), `/settings/plugins/repositories`, `/settings/plugins/p/:installId` (`PluginPaths.plugin(id)`), `/settings/plugins/p/:installId/logs` (`PluginPaths.pluginLogs(id)`, the Nhật ký page).
+`lib/src/screens/plugins/` (imports only `plugins/{domain,state}`, `kanaru_ui`, the settings frame widgets and l10n; texts in `lib/l10n/parts/plugins_{en,vi}.arb`). Routes (`plugin_routes.dart`, mounted from `settings_routes.dart`, paths in `PluginPaths`): `/settings/plugins` (optional `?kind=lyrics|translate|streaming|aiChat`), `/settings/plugins/repositories`, `/settings/plugins/p/:installId` (`PluginPaths.plugin(id)`), `/settings/plugins/p/:installId/logs` (`PluginPaths.pluginLogs(id)`, the Nhật ký page).
 
 **Kho plugin** (`store/`). `SettingsScaffold(pinnedBelowHeader: search, actions: [Lọc, ⋮])`: header and the `KFilterField(persistent)` stay, the blocks scroll. Data is `storeViewProvider` (state): `storeSectionsProvider` plus the installed plugins that have no catalog entry (file / link installs), through the same `StoreFilter`; it returns domain-only rows (`StoreRowView`) so screens never see database rows. An entry that needs a newer app has no row, only the footer count. Blocks Cập nhật → Đã cài → Chưa cài, empty ones left out; nothing installed and no repository: only the guide card; repositories but no match: "Không có plugin khớp." with [Xoá bộ lọc]. Failed repositories show one `KInlineNotice` (filled error tone) at the top of the scrolling list: one repo (name, reason, saved time, retry), several, or offline (every repository failed with a network error).
 
-Opening the store starts from a fresh filter (the route's `kind` fills the search with that kind's first English tag, `#lyric ` / `#translate ` / `#streaming `, via `storeSearchForKind`; Lọc stays empty, an unknown kind leaves the search empty), calls `StoreOps.onOpen()` (`refreshStale()` + `restorer.restoreMissing()`, each never throws) and reads `pluginRestoreProvider`. The Settings root plugin row reads the same provider (fire and forget, a failure is logged), because nothing at app start does yet. The row's dot (`SetupValueRow.alert`) shows when `pluginAlertsProvider.any` or an update needs review; it never shows while loading or after a database error.
+Opening the store starts from a fresh filter (the route's `kind` fills the search with that kind's first English tag, `#lyric ` / `#translate ` / `#streaming ` / `#ai `, via `storeSearchForKind`; Lọc stays empty, an unknown kind leaves the search empty), calls `StoreOps.onOpen()` (`refreshStale()` + `restorer.restoreMissing()`, each never throws) and reads `pluginRestoreProvider`. The Settings root plugin row reads the same provider (fire and forget, a failure is logged), because nothing at app start does yet. The row's dot (`SetupValueRow.alert`) shows when `pluginAlertsProvider.any` or an update needs review; it never shows while loading or after a database error.
 
 **What the screens call.** `storeOpsProvider` (`StoreOps`, an interface: open tasks, refresh all / one, add, describe, remove a repository) and `repoViewsProvider` / `pluginIconProvider` are the only service reach; widgets never name data types. The flows that own their own screens plug into `storeActionsProvider` (`StoreActions`: open plugin, install, update, review, remove, update all, install from file, install from link); a null callback shows its control disabled; `storeActionsProvider` is wired to the plugin page (a tap on an installed row pushes `PluginPaths.plugin`) and to the install, update, update-all and remove flows below. `showAddRepositoryDialog(context, initialUrl:)` is public for the install-from-link flow.
 
-**Search tags** (`plugins/domain/search/store_search.dart`): in the search field a `#word` naming an alias (English, case-insensitive: lyrics `lyric` `lyrics`; translate `translate` `translation`, covering `ai-translate` too; streaming `streaming` `music` `source`) keeps only that kind; several tags are the union; the other words search as before. An unknown `#word` is plain text; a `#…` that is still the start of an alias (`#ly`, a bare `#`) filters nothing. The tags are ANDed with Lọc, never counted in its badge or shown in its sheet, and vanish with the text. No suggestion row: the placeholder "#loại" is the only hint.
+**Search tags** (`plugins/domain/search/store_search.dart`): in the search field a `#word` naming an alias (English, case-insensitive: lyrics `lyric` `lyrics`; translate `translate` `translation`, covering `ai-translate` too; streaming `streaming` `music` `source`; ai-chat `ai` `chat`) keeps only that kind; several tags are the union; the other words search as before. An unknown `#word` is plain text; a `#…` that is still the start of an alias (`#ly`, a bare `#`) filters nothing. The tags are ANDed with Lọc, never counted in its badge or shown in its sheet, and vanish with the text. No suggestion row: the placeholder "#loại" is the only hint.
 
-**Lọc** (`store_filter_*.dart`): a bottom sheet on mobile, a 360 panel under the Lọc button on desktop (`AnchoredPanelLayout`, right edges aligned, flips above). Groups Loại plugin (Lời bài · Dịch · Nguồn nhạc; Dịch covers `translate` and `ai-translate`) · Trạng thái (the three blocks) · Ngôn ngữ · Tác giả · Repository; empty groups are left out. Every tap edits the filter as it is at that moment. The badge counts chosen values, a kind group once.
+**Lọc** (`store_filter_*.dart`): a bottom sheet on mobile, a 360 panel under the Lọc button on desktop (`AnchoredPanelLayout`, right edges aligned, flips above). Groups Loại plugin (Lời bài · Dịch · Nguồn nhạc · Trò chuyện AI; Dịch covers `translate` and `ai-translate`) · Trạng thái (the three blocks) · Ngôn ngữ · Tác giả · Repository; empty groups are left out. Every tap edits the filter as it is at that moment. The badge counts chosen values, a kind group once.
 
 **Repository** (`repos/`): rows, an icon-only `KFab` (bottom end, the list is padded below it), `showAddRepositoryDialog` (the service's typed result is mapped to the spec's lines; the field and Cancel are locked while it loads) and a Gỡ confirm.
 

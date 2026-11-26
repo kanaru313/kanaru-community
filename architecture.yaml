@@ -37,6 +37,7 @@ modules:
   library: [playback, storage, media, database, extension, platform]
   lyrics: [library, playback, plugins]
   online: [library, playback, plugins]
-  screens: [fonts, lyrics, online, library, playback, plugins, storage, extension, platform]
+  ai: [lyrics, library, playback, plugins]
+  screens: [ai, fonts, lyrics, online, library, playback, plugins, storage, extension, platform]
   shell: [screens]
   router: [shell, screens]

@@ -8,6 +8,7 @@ import 'package:kanaru/src/plugins/domain/package/package_problem.dart';
 import 'package:kanaru/src/plugins/domain/package/plugin_manifest.dart';
 import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
 
+import 'chat_test_support.dart';
 import 'config_test_support.dart';
 import 'plugin_test_support.dart';
 
@@ -114,6 +115,7 @@ void main() {
       PluginKind.translate: translateManifest(),
       PluginKind.aiTranslate: aiManifest(),
       PluginKind.streaming: streamingManifest(),
+      PluginKind.aiChat: chatManifest(),
     };
     for (final MapEntry(key: kind, value: json) in manifests.entries) {
       test(kind.wire, () => expect(parseOk(json).kind, kind));

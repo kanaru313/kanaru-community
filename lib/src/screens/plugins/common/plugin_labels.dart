@@ -9,7 +9,8 @@ import '../../../plugins/domain/package/plugin_kind.dart';
 enum StoreKindGroup {
   lyrics({PluginKind.lyrics}),
   translate({PluginKind.translate, PluginKind.aiTranslate}),
-  streaming({PluginKind.streaming});
+  streaming({PluginKind.streaming}),
+  aiChat({PluginKind.aiChat});
 
   const StoreKindGroup(this.kinds);
 
@@ -28,6 +29,7 @@ String kindGroupLabel(AppLocalizations l10n, StoreKindGroup group) =>
       StoreKindGroup.lyrics => l10n.pluginsKindLyrics,
       StoreKindGroup.translate => l10n.pluginsKindTranslate,
       StoreKindGroup.streaming => l10n.pluginsKindStreaming,
+      StoreKindGroup.aiChat => l10n.pluginsKindAiChat,
     };
 
 /// One line saying what the kind is (the tooltip of its filter chip).
@@ -36,6 +38,7 @@ String kindGroupHelp(AppLocalizations l10n, StoreKindGroup group) =>
       StoreKindGroup.lyrics => l10n.pluginsKindHelpLyrics,
       StoreKindGroup.translate => l10n.pluginsKindHelpTranslate,
       StoreKindGroup.streaming => l10n.pluginsKindHelpStreaming,
+      StoreKindGroup.aiChat => l10n.pluginsKindHelpAiChat,
     };
 
 /// The kind chip of a row; null for a kind this app does not know.

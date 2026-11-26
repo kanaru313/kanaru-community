@@ -333,6 +333,95 @@ at once. `TypeError` when the value cannot be serialised or has a lone
 surrogate; `RangeError` over the event or total limit. The payload never appears
 in an error message or log.
 
+## Chat scripts
+
+A plugin of type `ai-chat` declares one script, `chat`. `execute(input)` runs as a streaming run (`emit` exists) with `logInput: false` and **no persistent `localStorage`**: a chat run starts with empty storage and nothing it writes is saved, so key-rotation state lives inside one run. Settings are read with `localConfig`.
+
+**Manifest.** `metadata.type` `ai-chat`, no wildcard hosts, `script.chat` required. The `chat` block is required for this kind and refused on every other kind (`InvalidManifest('chat')`). An update may only replace a plugin of the same kind.
+
+```json
+"chat": {
+  "models": [
+    {"id": "gemini-2.5-flash", "title": "Gemini 2.5 Flash", "tools": true, "vision": true, "context": 1048576}
+  ],
+  "custom": {"tools": true, "vision": false, "context": 32768},
+  "keyField": "apiKeys",
+  "idleTimeoutSec": 90
+}
+```
+
+- `models` (optional, 0-50): a **capability overlay** keyed by model id, not the model list. `id` `^[A-Za-z0-9._:/@-]{1,120}$`, unique (`chat.models.id`); `title` 1-80 (default: the id); `tools` and `vision` booleans (default false); `context` an integer of 1024-10,000,000 tokens (default 32768).
+- `custom` (optional): capabilities of any model without an overlay entry; default `{tools: false, vision: false, context: 32768}`.
+- `keyField` (optional): key of the config field holding the API key(s). It must name a `required` input or list field (`chat.keyField` otherwise). The app uses it for "Cần API key" (composer, settings, store rows) and to tell "needs a key" from "needs a model".
+- `idleTimeoutSec` (optional): 1-90, default 90. The longest silence between emits.
+- The config must declare `model` as a single select with options and/or `custom: true` (`config.model` otherwise). It is **not** required (it may be): the composer always passes the conversation's model in the input, and the stored value only seeds new conversations. The composer's model list is the `model` options plus the user's custom choices.
+
+**Input.**
+
+```jsonc
+{
+  "v": 1,
+  "model": "gemini-2.5-flash",              // wins over the config `model`
+  "system": "…",                            // app system prompt + general instructions
+  "boundary": "k7f3a9c2e1",                 // per-request random token for data fences
+  "messages": [
+    {"role": "user", "parts": [
+        {"type": "text", "text": "…"},
+        {"type": "data", "source": "lyrics", "text": "…"}]},
+    {"role": "assistant", "parts": [
+        {"type": "text", "text": "…"},
+        {"type": "tool_call", "id": "t3-r1-0", "providerId": "call_abc", "name": "search_library", "args": {"query": "…"}}],
+     "provider": { /* opaque; from this plugin install + version + model only */ }},
+    {"role": "tool", "parts": [{"type": "tool_result", "id": "t3-r1-0", "providerId": "call_abc", "name": "search_library",
+        "content": [{"type": "text", "text": "…"}], "isError": false}]}
+  ],
+  "tools": [{"name": "search_library", "description": "…", "parameters": { /* JSON Schema subset */ }}],
+  "toolChoice": "auto",                     // "auto" | "none"
+  "options": {"maxOutputTokens": null}      // non-null wins over the plugin config
+}
+```
+
+- **Parts.** `text`, `data`, `tool_call`, `tool_result` (`content` is a list of parts). `image {mime, data(base64)}` is reserved (message part and inside `tool_result.content`); plugins drop image parts. A plugin refuses a `v` it does not know with `ai:bad_request`.
+- **Tool parameters** are a plain JSON Schema subset: `type` (object, string, integer, number, boolean, array), `properties`, `required`, `items`, `enum`, `minimum`, `maximum`, `maxItems`, `description`.
+- **`data` parts** carry untrusted text (`source` is one of `lyrics`, `queue`, `now_playing`, `track`, `album`, `artist`, `genre`, `language`, `playlist`, `input`). The app strips C0/C1 controls, bidi and zero-width characters and breaks every `<data` / `</data` in the text. A plugin renders each part as `<data-{boundary} source="…">…</data-{boundary}>` inside the user turn and never as plain instructions.
+- **Tool call ids.** The app assigns `id` (`t<turn>-r<round>-<n>`, unique in the conversation). A provider id matching `^[A-Za-z0-9_.:-]{1,64}$` is kept as `providerId` and echoed back only to the same plugin install, version and model (see Binding), for the whole conversation; otherwise it is dropped. `name` must match a declared tool (at most 64 characters); a refused call is stored with its name cut to 64 and no args.
+- **Provider-side tools are banned.** A plugin must not enable search grounding, URL context, code execution, web search, MCP connectors, or models whose name implies such tools. Only `tools[]` from the input is offered.
+- **Final round.** The app sends the same `tools[]` with `toolChoice: "none"`; a call that arrives anyway is refused by the app.
+- **Binding.** Conversations, provider blobs and provider ids are bound to the `installId` plus the install generation (the `plugins` row's install time when bound), the plugin version and the model. A different generation (remove, then reinstall) reads as "Plugin đã gỡ" with a way to choose another plugin. A turn whose binding no longer matches (plugin, version or model changed) is sent **flattened to text**: its tool calls, results and blob are dropped together, never a blob removed while its tool calls stay.
+- **App guarantees.** Same-role turns are merged; every `tool_call` has its `tool_result`; every sent `tool_call` keeps its turn's blob (turns are atomic). The input is at most 768 KiB (UTF-8 bytes of `jsonEncode(input)`) and within the token budget from the model's `context`; each tool result is at most 16 KiB (arrays are compacted and paged, never cut inside a string); a provider blob is at most 256 KiB per message and 4 MiB per conversation. The runtime refuses request bodies over 1 MiB. The app does no LLM summarising.
+
+**Emits.** At most 64 KiB each and 8 MiB per run (runtime limits): `{"t":"text","d":"<delta>"}` and `{"t":"status","s":"thinking"|"generating"}`. A plugin coalesces text deltas: at most one `text` emit per 50 ms or per 256 characters, flushed before it returns. Emitted text is shown live and kept as the message **only when no final result arrives** (stop, timeout, failure), capped at 256 KiB with a "…" marker. An unknown `t` is ignored.
+
+**Time.** A run is cut after `idleTimeoutSec` without an emit or a returned result, and by the run's wall time; the emit limits above apply.
+
+**Final result.** `Response.success({...})`, at most 2 MiB:
+
+```jsonc
+{"finish": "stop" | "tool_calls" | "length" | "blocked",
+ "text": "<full assistant text, thinking excluded>",
+ "toolCalls": [{"providerId": "call_abc", "name": "search_library", "args": {}}],
+ "usage": {"input": 1234, "output": 321},
+ "provider": { /* optional, at most 256 KiB */ }}
+```
+
+`toolCalls` holds at most 8 per round. Arguments that do not parse are sent as the raw string (`"args": "<raw>"`, never `{}`) and become an error result. `provider` stays with this message for the whole conversation and goes back only to the same install, version and model; it is never storage. The app treats tool calls as untrusted plugin output: caps per round (8) and per turn (24 calls); unknown names, bad or raw args, and calls not offered become error results.
+
+**Errors.** `Response.error("ai:<code>", {kind, retryAfterSec})`: the code only, **no provider text in the message** (provider text may go to the plugin's run log, masked). The app stores `{code, kind, retryAfterSec?}` and never shows or logs provider text in full. An unknown code is `server`. `no_key` is never a plugin code.
+
+| code | kind | Meaning |
+|---|---|---|
+| `key` | `auth` | Wrong API key |
+| `quota` | `quota` | The provider account is out of quota |
+| `rate_limit` | `rateLimited` (+ `retryAfterSec`) | Rate limited; no automatic retry |
+| `config` | `invalidResponse` | Plugin settings incomplete (for example a "custom" preset without a base URL) |
+| `bad_request` | `invalidResponse` | The provider refused the request |
+| `model_not_found` | `invalidResponse` | The model no longer exists, or is refused because its name implies provider-side tools |
+| `context_length` | `invalidResponse` | The conversation is too long for the model |
+| `too_large` | `invalidResponse` | Too large to send; never triggers key rotation |
+| `blocked` | `invalidResponse` | The model refused |
+| `empty` | `invalidResponse` | The model returned nothing |
+| `server` | `server` | Provider or plugin failure |
+
 ## What is absent
 
 `XMLHttpRequest`, `WebSocket`, `require`, `import`, `setTimeout` and

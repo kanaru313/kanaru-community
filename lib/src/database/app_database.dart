@@ -49,6 +49,8 @@ void configureConnection(CommonDatabase db) {
     PluginRepos,
     Plugins,
     PluginData,
+    AiConversations,
+    AiMessages,
   ],
   include: {
     'tables/custom_cover_triggers.drift',

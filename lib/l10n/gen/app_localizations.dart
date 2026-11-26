@@ -9089,6 +9089,18 @@ abstract class AppLocalizations {
   /// **'Searches and plays music from an online service.'**
   String get pluginsKindHelpStreaming;
 
+  /// No description provided for @pluginsKindAiChat.
+  ///
+  /// In en, this message translates to:
+  /// **'AI chat'**
+  String get pluginsKindAiChat;
+
+  /// No description provided for @pluginsKindHelpAiChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Connects an AI service you can chat with.'**
+  String get pluginsKindHelpAiChat;
+
   /// No description provided for @pluginsAuthorUnknown.
   ///
   /// In en, this message translates to:

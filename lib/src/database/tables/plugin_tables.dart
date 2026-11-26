@@ -25,9 +25,16 @@ abstract final class PluginAddressClassValues {
 
 /// Values of `plugins.kind`: the wire names of the plugin kinds. Raw strings:
 /// the database layer knows no plugin types. The column has a CHECK on this
-/// set.
+/// set. A test compares it with the wire names of `PluginKind`, so the two
+/// cannot drift apart.
 abstract final class PluginKindValues {
-  static const values = {'lyrics', 'translate', 'ai-translate', 'streaming'};
+  static const values = {
+    'lyrics',
+    'translate',
+    'ai-translate',
+    'streaming',
+    'ai-chat',
+  };
 }
 
 /// A plugin repository the user added. Per device; a plugin keeps its own

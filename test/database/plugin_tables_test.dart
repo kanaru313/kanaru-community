@@ -109,13 +109,16 @@ void main() {
 
     test('every kind of the app is accepted', () async {
       var n = 10;
-      for (final kind in ['lyrics', 'translate', 'ai-translate', 'streaming']) {
+      for (final kind in PluginKindValues.values) {
         await _insertPlugin(db, {
           'install_id': 'plugin-${'${n++}'.padLeft(32, '0')}',
           'kind': kind,
         });
       }
-      expect(await db.select(db.plugins).get(), hasLength(4));
+      expect(
+        await db.select(db.plugins).get(),
+        hasLength(PluginKindValues.values.length),
+      );
     });
   });
 

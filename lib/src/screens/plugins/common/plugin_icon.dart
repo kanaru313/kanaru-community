@@ -67,6 +67,7 @@ class PluginIcon extends ConsumerWidget {
     PluginKind.lyrics => KIcons.lyrics,
     PluginKind.translate || PluginKind.aiTranslate => KIcons.languages,
     PluginKind.streaming => KIcons.online,
+    PluginKind.aiChat => KIcons.ai,
     null => KIcons.extension,
   };
 }

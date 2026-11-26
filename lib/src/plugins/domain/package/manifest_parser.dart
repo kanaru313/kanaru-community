@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../../foundation/result.dart';
 import '../config/config_schema_parser.dart';
+import 'chat_spec.dart';
 import 'json_read.dart';
 import 'manifest_rules.dart';
 import 'package_problem.dart';
@@ -74,8 +75,12 @@ PluginManifest _read(String text) {
   final translate = kind.isTranslation
       ? readTranslateSpec(root['translate']).spec
       : null;
+  final isChat = kind == PluginKind.aiChat;
+  if (!isChat && root['chat'] != null) invalid('chat');
+  final chat = isChat ? readChatSpec(root['chat']) : null;
   final config = readConfigSchema(root['config']);
   if (kind == PluginKind.aiTranslate) requireTuneFields(config);
+  if (chat != null) requireChatFields(config, chat);
   return PluginManifest(
     apiVersion: apiVersion,
     kind: kind,
@@ -88,6 +93,7 @@ PluginManifest _read(String text) {
     scripts: scripts,
     regexp: regexp,
     translate: translate,
+    chat: chat,
     config: config,
   );
 }

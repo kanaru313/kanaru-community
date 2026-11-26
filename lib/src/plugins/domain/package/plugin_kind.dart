@@ -3,7 +3,8 @@ enum PluginKind {
   lyrics('lyrics', ['search', 'lyrics']),
   translate('translate', ['translate']),
   aiTranslate('ai-translate', ['translate']),
-  streaming('streaming', ['search', 'stream']);
+  streaming('streaming', ['search', 'stream']),
+  aiChat('ai-chat', ['chat']);
 
   const PluginKind(this.wire, this.requiredScripts);
 

@@ -31,6 +31,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 | Kept online lyrics, rejected results, lookup cache | `lyrics_pins`, `lyrics_rejects`, `online_lyrics`; [online lyrics tables](#lyrics_pins-coded-with-online-lyrics) |
 | Lyrics translation cache, translation language per track | `lyrics_translations`, `track_translation_prefs`; [lyrics translation tables](#lyrics_translations-coded-with-lyrics-translation) |
 | Cover chosen by the user (playlist, album, artist) | `custom_covers`; [custom_covers](#custom_covers-coded-in-wave-1) |
+| AI chat conversations and messages | `ai_conversations`, `ai_messages`; [ai](#ai-coded-with-the-ai-chat-foundation) |
 | DATA-10 Rating and mood playlists | `tracks.rating`, `playlists.name_key` |
 | DATA-11 Plugin install ids | `plugins.install_id`, 128-bit, derived from the install source; [plugins](#plugins-coded-with-the-plugin-store) |
 
@@ -85,7 +86,7 @@ Overview of the database and its place in the app: [ARCHITECTURE.md](../ARCHITEC
 ### Foreign keys
 
 - Every foreign key into `tracks` (public and Pro) is `ON DELETE RESTRICT`. No `CASCADE` and no `SET NULL` into `tracks`.
-- `CASCADE` only runs from a parent to a pure child outside `tracks`: playlist to entries, source to mount, source to excluded folders.
+- `CASCADE` only runs from a parent to a pure child outside `tracks`: playlist to entries, source to mount, source to excluded folders, AI conversation to messages.
 - Owned one-to-one children of a track (`track_details`, `play_stats`, `track_artists`, `track_lyrics_choices`, `lyrics_pins`, `lyrics_rejects` and `track_translation_prefs`) are `RESTRICT` too. The track GC deletes them before the track. Nothing may reference an owned child: the GC throws when a foreign key points at one.
 - Every `*track_id` column has a foreign key into `tracks` and an index whose first column is that column. A single `INTEGER PRIMARY KEY` counts as that index.
 - Every foreign key column is the first column of an index, or the primary key.
@@ -198,7 +199,7 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 - `tracks.status` values are `present`, `missing`, `hidden`, `remote`. A new value is an API change.
 - Pro views of online tracks expect `remote`. Library-style views use the visibility helper (`present` only).
 - Albums are derived, with no table. History is `play_log`.
-- Pro tables live in `kanaru-pro` (AI chat, per-track translation config, smart playlists). They are versioned in `extension_schema`, and any foreign key into `tracks` is `RESTRICT`.
+- Pro tables live in `kanaru-pro` (per-track translation config, smart playlists). They are versioned in `extension_schema`, and any foreign key into `tracks` is `RESTRICT`.
 - Extensions never add indexes or triggers to public tables.
 - `play_stats_ctl` is private to `database/` and is not exported.
 - `kanaru-pro` runs the same foreign-key check against `trackOwnedChildTables` in its CI.
@@ -230,6 +231,8 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 | `queue_entries.track_id` | `tracks.id` | RESTRICT | playback (coded) |
 | `custom_covers.item_key` | none | none | library (coded): not a foreign key, see [custom_covers](#custom_covers-coded-in-wave-1) |
 | `plugin_data.install_id` | `plugins.install_id` | RESTRICT | plugins (coded) |
+| `ai_messages.conversation_id` | `ai_conversations.id` | CASCADE | ai (coded): a pure child outside `tracks` |
+| `ai_conversations.install_id` | none | none | ai (coded): not a foreign key, see [ai](#ai-coded-with-the-ai-chat-foundation) |
 | `lyrics_pins.track_id` | `tracks.id` | RESTRICT | lyrics (coded) |
 | `lyrics_rejects.track_id` | `tracks.id` | RESTRICT | lyrics (coded) |
 | `track_translation_prefs.track_id` | `tracks.id` | RESTRICT | lyrics (coded) |
@@ -657,7 +660,7 @@ Removing a repository deletes only its row; plugins keep their own `repo_url` an
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `install_id` | TEXT | PK | | `plugin-` + 32 hex (128 bits): repository install `stableHashHex(['repo', url, slug], 32)`, file and link install `stableHashHex(['file', name, author ?? ''], 32)`. The id is not a trust boundary: an update comes only from the install source of the row. |
-| `kind` | TEXT | NOT NULL | | `CHECK (kind IN ('lyrics', 'translate', 'ai-translate', 'streaming'))`. A new kind is a table rebuild. |
+| `kind` | TEXT | NOT NULL | | `CHECK (kind IN ('lyrics', 'translate', 'ai-translate', 'streaming', 'ai-chat'))`, built from `PluginKindValues.values` (raw strings: `database` imports no plugin code). A test compares that set with the `PluginKind` wire names, so a new kind cannot be added to one and forgotten in the other. A new kind is a table rebuild after the first release; before it the check changes in place (stale dev databases are cleared). |
 | `name` | TEXT | NOT NULL | | |
 | `author` | TEXT | NULL | | |
 | `version` | INTEGER | NOT NULL | | |
@@ -690,6 +693,44 @@ The storage is kept when the plugin is updated or repaired (the row is not touch
 **Tombstone.** A plugin row is never deleted. Remove, in one transaction, deletes the `plugin_data` row, sets `removed_at` and clears `package_dir`; the package folder is deleted after the commit (a failure is left to the sweep). Installing the same id again revives the row: `removed_at` cleared, new source and package columns, new consented hosts, `installed_at` = now, an empty `plugin_data` row. `PluginRows.installOrRevive` leaves a live row alone. `lyrics_source_prefs` of the first spec is not a table of this group: source order and enabled flags belong to the modules that consume plugins.
 
 The schema is still v1 and changed in place; the schema guard runs only in debug builds, so a release build over an older dev database opens without these tables. Clear dev data after updating (phone: `pm clear`, Linux: isolated XDG dirs).
+
+### ai: Coded with the AI chat foundation
+
+Owner: the AI chat engine (`tables/ai_tables.dart`). Per device, no `uid`, no foreign key into `tracks` (message parts carry `{trackId, title, artist, album?}` snapshots) and none into `plugins` (`install_id` is plain text, so removing a plugin never blocks or deletes a chat). Times are epoch ms. No length CHECKs and no SQL CHECK on the value sets: Dart validates them (`AiPermissionValues`, `AiMessageRoleValues`, `AiMessageStateValues`) and the engine's store enforces the size caps.
+
+**ai_conversations**
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` | INTEGER | PK | autoincrement | |
+| `title` | TEXT | NOT NULL | | |
+| `title_auto` | INTEGER (bool) | NOT NULL | `1` | 1 while the app may replace the title; 0 after the user renamed it. |
+| `install_id` | TEXT | NULL | | Plugin the chat is bound to. Not a foreign key. |
+| `install_generation` | INTEGER | NULL | | `plugins.installed_at` at bind time; tells a reinstalled plugin from the bound one. |
+| `model` | TEXT | NULL | | |
+| `permission` | TEXT | NOT NULL | | `readOnly`, `ask` or `auto`. |
+| `created_at`, `updated_at`, `last_message_at` | INTEGER | NOT NULL | | |
+
+Index `ai_conversations_last_message (last_message_at)`.
+
+**ai_messages**
+
+| Column | Type | Null | Default | Notes |
+|---|---|---|---|---|
+| `id` | INTEGER | PK | autoincrement | |
+| `conversation_id` | INTEGER | NOT NULL, FK | | `ai_conversations.id` CASCADE. |
+| `seq` | INTEGER | NOT NULL | | Order inside the conversation. |
+| `role` | TEXT | NOT NULL | | `user`, `assistant`, `tool` or `event`. |
+| `parts_json` | TEXT | NOT NULL | | |
+| `live_text` | TEXT | NULL | | Text streamed so far, flushed apart from `parts_json`. At most 256 KiB (store). |
+| `provider_json` | TEXT | NULL | | Kept for the whole conversation; at most 256 KiB per message and 4 MiB per conversation (store). |
+| `install_id`, `plugin_version`, `install_generation`, `model` | TEXT / INTEGER | NULL | | What produced the message. |
+| `state` | TEXT | NOT NULL | | `complete`, `streaming`, `stopped`, `error`, `pending`, `allowed`, `running`, `done`, `skipped` or `unknown`. |
+| `error_json` | TEXT | NULL | | Only `{code, kind, retryAfterSec?}`, never provider text. |
+| `usage_json` | TEXT | NULL | | |
+| `created_at` | INTEGER | NOT NULL | | |
+
+Unique index `ai_messages_conversation_seq (conversation_id, seq)`; its first column also serves the foreign key. Deleting a conversation is a hard `DELETE` and cascades its messages.
 
 ## Spec-only groups
 
@@ -786,7 +827,7 @@ Decision: the key is not `tracks.song_key`. `song_key` has no album and no durat
 
 ### Pro: Spec only, added by kanaru-pro before first release
 
-AI chat, per-song translation note and service, and smart playlists. Their spec lives in `kanaru-pro`. They are versioned in `extension_schema`, and any foreign key into `tracks` is `RESTRICT`. See [Pro contract](#pro-contract).
+Per-song translation note and service, and smart playlists. Their spec lives in `kanaru-pro`. They are versioned in `extension_schema`, and any foreign key into `tracks` is `RESTRICT`. See [Pro contract](#pro-contract).
 
 ## Helpers
 

@@ -8,7 +8,8 @@ enum StoreTagKind {
     ['translate', 'translation'],
     {PluginKind.translate, PluginKind.aiTranslate},
   ),
-  streaming(['streaming', 'music', 'source'], {PluginKind.streaming});
+  streaming(['streaming', 'music', 'source'], {PluginKind.streaming}),
+  aiChat(['ai', 'chat'], {PluginKind.aiChat});
 
   const StoreTagKind(this.aliases, this.kinds);
 

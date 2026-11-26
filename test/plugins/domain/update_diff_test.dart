@@ -131,6 +131,25 @@ void main() {
       expect(_diff(kind: PluginKind.streaming).kindChange, KindChange.refused);
       expect(
         _diff(
+          installedKind: PluginKind.aiTranslate,
+          kind: PluginKind.aiChat,
+        ).kindChange,
+        KindChange.refused,
+      );
+      expect(
+        _diff(
+          installedKind: PluginKind.aiChat,
+          kind: PluginKind.aiTranslate,
+        ).kindChange,
+        KindChange.refused,
+      );
+      expect(
+        _diff(installedKind: PluginKind.aiChat, kind: PluginKind.aiChat)
+            .kindChange,
+        KindChange.none,
+      );
+      expect(
+        _diff(
           installedKind: PluginKind.translate,
           kind: PluginKind.lyrics,
         ).kindChange,
