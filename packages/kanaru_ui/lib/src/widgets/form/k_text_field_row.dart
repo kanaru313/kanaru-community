@@ -8,6 +8,7 @@ import '../../tokens/k_shape.dart';
 import '../../tokens/k_space.dart';
 import '../k_icon_button.dart';
 import 'k_number_spec.dart';
+import 'k_text_field_footer.dart';
 
 /// Outlined text field, 56 dp (48 when [dense]): the label floats inside the
 /// box, the [hint] shows while focused (always, without a label), [helper]
@@ -24,6 +25,7 @@ import 'k_number_spec.dart';
 ///   [KNumberSpec].
 /// - [keyboard]: e.g. [TextInputType.url].
 /// - [isRequired]: a `*` after the label.
+/// - [maxLength]: a limit with a counter, see there. [warning] is a soft note line.
 /// - [invalid]: the red outline without an error line (an item of a list
 ///   whose one shared error sits under the whole list).
 /// - [enabled] false: dimmed, not focusable, ignores input.
@@ -49,9 +51,12 @@ class KTextFieldRow extends StatelessWidget {
     this.dense = false,
     this.rows,
     this.number,
+    this.maxLength,
+    this.warning,
   }) : assert(label != null || hint != null, 'needs a label or a hint'),
        assert(rows == null || rows >= 1, 'rows is at least 1'),
-       assert(rows == null || number == null, 'a number field is one line');
+       assert(rows == null || number == null, 'a number field is one line'),
+       assert(maxLength == null || maxLength > 0, 'maxLength is positive');
 
   final String? label;
   final TextEditingController controller;
@@ -82,6 +87,16 @@ class KTextFieldRow extends StatelessWidget {
 
   /// Makes it a number field (filter, keyboard, − / + buttons, ↑ / ↓).
   final KNumberSpec? number;
+
+  /// Hard limit in characters: typing and paste stop there. Shows "n / max"
+  /// at the right of the supporting line (digits grouped by locale), in the
+  /// normal colour also when full. An [error] replaces the line, counter
+  /// included.
+  final int? maxLength;
+
+  /// Soft note on its own tinted line under the helper / counter line; the
+  /// outline turns tertiary. Not an error: an [error] replaces it.
+  final String? warning;
 
   static const double height = 56;
   static const double denseHeight = 48;
@@ -130,6 +145,7 @@ class KTextFieldRow extends StatelessWidget {
     final scheme = theme.colorScheme;
     final hasError = error != null && error!.isNotEmpty;
     final bad = hasError || invalid;
+    final soft = !hasError && warning != null && warning!.isNotEmpty;
     OutlineInputBorder border(Color color, [double width = 1]) =>
         OutlineInputBorder(
           borderRadius: KRadius.xs,
@@ -138,6 +154,8 @@ class KTextFieldRow extends StatelessWidget {
     final lines = rows;
     final grow = lines != null && FormFactor.of(context) == FormFactor.desktop;
     final text = label;
+    final footer =
+        maxLength != null || (warning != null && warning!.isNotEmpty);
     return TextField(
       controller: controller,
       focusNode: focusNode,
@@ -147,6 +165,8 @@ class KTextFieldRow extends StatelessWidget {
           ? TextInputType.multiline
           : spec?.keyboard ?? keyboard,
       inputFormatters: spec?.formatters,
+      maxLength: maxLength,
+      maxLengthEnforcement: MaxLengthEnforcement.enforced,
       minLines: lines,
       maxLines: lines == null ? 1 : (grow ? lines * 3 : lines),
       textInputAction: lines != null
@@ -175,8 +195,18 @@ class KTextFieldRow extends StatelessWidget {
         // Hint only while focused: the floating label owns the empty box.
         floatingLabelBehavior: FloatingLabelBehavior.auto,
         // Replaces the helper line; an empty error would still reserve it.
-        helperText: hasError ? null : helper,
+        helperText: hasError || footer ? null : helper,
+        helper: hasError || !footer
+            ? null
+            : KTextFieldFooter(
+                controller: controller,
+                maxLength: maxLength,
+                helper: helper,
+                warning: warning,
+              ),
         helperMaxLines: 6,
+        // Our own counter lives in the footer; hide the framework's.
+        counterText: '',
         errorText: hasError ? error : null,
         errorMaxLines: 3,
         isDense: false,
@@ -191,9 +221,22 @@ class KTextFieldRow extends StatelessWidget {
         suffixIcon: spec == null ? null : _stepButtons(spec),
         suffixIconConstraints: const BoxConstraints(),
         border: border(scheme.outline),
-        enabledBorder: border(bad ? scheme.error : scheme.outline),
+        enabledBorder: border(
+          bad
+              ? scheme.error
+              : soft
+              ? scheme.tertiary
+              : scheme.outline,
+        ),
         disabledBorder: border(scheme.outlineVariant),
-        focusedBorder: border(bad ? scheme.error : scheme.primary, 2),
+        focusedBorder: border(
+          bad
+              ? scheme.error
+              : soft
+              ? scheme.tertiary
+              : scheme.primary,
+          2,
+        ),
         errorBorder: border(scheme.error),
         focusedErrorBorder: border(scheme.error, 2),
       ),
