@@ -182,10 +182,13 @@ void main() {
   testWidgets('Seek bar row shows the style and opens its page', (
     tester,
   ) async {
+    // The seek bar page plays a pretend clock on open; reduced motion keeps
+    // it from scheduling frames forever.
     final h = await pumpSettings(
       tester,
       location: SettingsPaths.appearance,
       size: tall,
+      reduceMotion: true,
     );
     expect(find.text('Bars'), findsOneWidget);
     await h.store.write('playback.seek_bar_style', 'squiggle');

@@ -2041,6 +2041,66 @@
   "settingsSeekBarStyleMirrorCaption": "Sóng phía trên, bóng mờ phía dưới",
   "settingsSeekBarStyleSquiggleCaption": "Đường lượn trôi khi phát, phẳng khi dừng",
   "settingsSeekBarFlatCaption": "Mọi bài, không cần dạng sóng",
+  "settingsSeekBarPreviewHint": "Chạm hoặc kéo để thử tua · kéo lên để huỷ",
+  "settingsSeekBarStylesTitle": "Kiểu",
+  "settingsSeekBarStylesHint": "Dùng ở Now Playing và màn lời. Mini player và thanh phát nhạc giữ thanh phẳng.\n\n★ trên Lượn hoặc Thanh phẳng: kiểu hiện khi bài chưa có dạng sóng (đang tính, hoặc nguồn không có), với tuỳ chỉnh của kiểu đó. Sóng mọc lên tại chỗ khi có. Chỉ một kiểu có ★.",
+  "settingsSeekBarFallbackUse": "Dùng {style} khi bài chưa có dạng sóng",
+  "@settingsSeekBarFallbackUse": {
+    "placeholders": {
+      "style": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSeekBarFallbackActive": "Hiện khi bài chưa có dạng sóng",
+  "settingsSeekBarCustomise": "Tuỳ chỉnh",
+  "settingsSeekBarCustomiseTitle": "Tuỳ chỉnh · {style}",
+  "@settingsSeekBarCustomiseTitle": {
+    "placeholders": {
+      "style": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSeekBarCustomiseClose": "Đóng",
+  "settingsSeekBarReset": "Đặt lại mặc định",
+  "settingsSeekBarDriftNote": "Bài chưa có dạng sóng thì trôi đều.",
+  "settingsSeekBarRowDensity": "Mật độ",
+  "settingsSeekBarRowPlayed": "Màu phần đã phát",
+  "settingsSeekBarRowRest": "Phần chưa phát",
+  "settingsSeekBarRowFeedback": "Phản hồi khi tua",
+  "settingsSeekBarRowAmplitude": "Độ cao sóng",
+  "settingsSeekBarRowWavelength": "Độ dài sóng",
+  "settingsSeekBarRowMotion": "Chuyển động",
+  "settingsSeekBarRowThumb": "Con trỏ",
+  "settingsSeekBarRowThickness": "Độ dày",
+  "settingsSeekBarRowEffect": "Hiệu ứng khi phát",
+  "settingsSeekBarOptLoose": "Thưa",
+  "settingsSeekBarOptMid": "Vừa",
+  "settingsSeekBarOptThick": "Dày",
+  "settingsSeekBarOptLow": "Thấp",
+  "settingsSeekBarOptHigh": "Cao",
+  "settingsSeekBarOptShort": "Ngắn",
+  "settingsSeekBarOptLong": "Dài",
+  "settingsSeekBarOptThin": "Mảnh",
+  "settingsSeekBarOptSingle": "Một màu",
+  "settingsSeekBarOptGradient": "Chuyển màu",
+  "settingsSeekBarOptByHeight": "Theo độ cao",
+  "settingsSeekBarOptDim": "Mờ",
+  "settingsSeekBarOptOutline": "Viền",
+  "settingsSeekBarOptHidden": "Ẩn",
+  "settingsSeekBarOptJelly": "Jelly",
+  "settingsSeekBarOptLens": "Phóng to",
+  "settingsSeekBarOptOff": "Tắt",
+  "settingsSeekBarOptDrift": "Trôi đều",
+  "settingsSeekBarOptMusic": "Theo nhạc",
+  "settingsSeekBarOptStill": "Đứng yên",
+  "settingsSeekBarOptThumbBar": "Vạch",
+  "settingsSeekBarOptThumbDot": "Tròn",
+  "settingsSeekBarOptThumbNone": "Không",
+  "settingsSeekBarOptShine": "Vệt sáng",
+  "settingsSeekBarOptComet": "Sao chổi",
+  "settingsSeekBarOptSparks": "Hạt",
   "settingsAboutEditionFree": "Bản miễn phí",
   "settingsAboutEditionPro": "Kanaru Pro",
   "settingsAboutLicenses": "Giấy phép mã nguồn mở",

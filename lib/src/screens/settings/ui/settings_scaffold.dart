@@ -20,6 +20,7 @@ class SettingsScaffold extends ConsumerWidget {
     this.headerBuilder,
     this.actions = const [],
     this.spaced = true,
+    this.maxWidth = KLayout.settings,
   });
 
   final String title;
@@ -47,6 +48,10 @@ class SettingsScaffold extends ConsumerWidget {
   /// list items (one per row) sets false and draws its own gaps.
   final bool spaced;
 
+  /// Content width cap on wide windows; only a page with a card grid asks
+  /// for [KLayout.settingsWide].
+  final double maxWidth;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -57,7 +62,7 @@ class SettingsScaffold extends ConsumerWidget {
       return _pinnedLayout(context, l10n, failing, pinned);
     }
     return KPage(
-      maxWidth: KLayout.settings,
+      maxWidth: maxWidth,
       children: [
         PageHeader(
           title: title,
@@ -93,7 +98,7 @@ class SettingsScaffold extends ConsumerWidget {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: KLayout.settings),
+        constraints: BoxConstraints(maxWidth: maxWidth),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -126,7 +131,7 @@ class SettingsScaffold extends ConsumerWidget {
             ),
             Expanded(
               child: KPage(
-                maxWidth: KLayout.settings,
+                maxWidth: maxWidth,
                 children: [
                   if (failing) ...[
                     FolderSheetBanner(
