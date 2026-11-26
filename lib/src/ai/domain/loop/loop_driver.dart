@@ -94,6 +94,12 @@ class LoopDriver {
   final _gate = FlightGate();
   bool _disposed = false;
 
+  /// How many [runExclusive] calls wait for the gate.
+  int _exclusiveWaiting = 0;
+
+  /// An answer landed in a flight that a waiting [runExclusive] stopped.
+  bool _wakeAfterExclusive = false;
+
   /// The stop comes from the user's Stop (not a switch, open or dispose).
   bool _userStop = false;
 
@@ -227,17 +233,24 @@ class LoopDriver {
   Future<T?> runExclusive<T>(Future<T> Function() body) async {
     if (_disposed) return null;
     var flight = _reserve();
-    while (flight == null) {
-      await _stopActive();
-      if (_disposed) return null;
-      flight = _reserve();
+    _exclusiveWaiting++;
+    try {
+      while (flight == null) {
+        await _stopActive();
+        if (_disposed) return null;
+        flight = _reserve();
+      }
+    } finally {
+      _exclusiveWaiting--;
     }
     try {
       return await body();
     } finally {
       _release(flight);
       // An answer that landed during the body found the gate taken: run it.
-      if (_gate.takeWake()) {
+      final woke = _gate.takeWake() || _wakeAfterExclusive;
+      _wakeAfterExclusive = false;
+      if (woke) {
         _kick();
       } else {
         await inspect();
@@ -319,6 +332,16 @@ class LoopDriver {
     } finally {
       _round.resetLost();
       _release(flight);
+      // An answer that landed after the last look (a stop branch that had
+      // read the open cards) found the gate taken: run it now. A runExclusive
+      // waiting for the gate runs it when its body ends instead.
+      if (_gate.takeWake()) {
+        if (_exclusiveWaiting == 0) {
+          _kick();
+        } else {
+          _wakeAfterExclusive = true;
+        }
+      }
     }
   }
 

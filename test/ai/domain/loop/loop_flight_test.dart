@@ -27,6 +27,23 @@ class _SpyStore extends LoopStoreAdapter {
   }
 }
 
+/// Runs [onOpenCards] once, right after the open cards were read (the stop
+/// branch of the pump), and still returns what was read before it.
+class _AnswerAfterRead extends LoopStoreAdapter {
+  _AnswerAfterRead(super.store);
+
+  Future<void> Function()? onOpenCards;
+
+  @override
+  Future<List<AiMessage>> openCards(int conversationId) async {
+    final rows = await super.openCards(conversationId);
+    final hook = onOpenCards;
+    onOpenCards = null;
+    await hook?.call();
+    return rows;
+  }
+}
+
 Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 20));
 
 void main() {
@@ -270,6 +287,69 @@ void main() {
       expect(rig.driver.turnState, TurnState.awaitingConfirm);
     });
 
+    for (final deny in [false, true]) {
+      test('from a switch, ${deny ? 'a Deny' : 'an Allow'} that lands in the '
+          'stop branch is not lost', () async {
+        rig = await Rig.create(
+          script: [
+            replies('', calls: [toolCall('write_a'), toolCall('write_b')]),
+            replies('understood'),
+          ],
+        );
+        final spy = _AnswerAfterRead(rig.store);
+        await rig.driver.dispose();
+        rig.driver = LoopDriver(
+          conversationId: rig.conv.id,
+          store: spy,
+          runner: rig.runner,
+          env: rig.env,
+          newBoundary: () => 'kfixedbound',
+          onInternalError: (e, s) => rig.errors.add(e),
+        );
+        await rig.send('go');
+        final cards = await rig.cards();
+        final first = callIdOf(cards.first);
+        final second = callIdOf(cards.last);
+        final reached = Completer<void>();
+        final release = Completer<void>();
+        rig.env.onPlugin = () async {
+          rig.env.onPlugin = null;
+          reached.complete();
+          await release.future;
+        };
+        expect(await rig.driver.allow(first), CardAnswer.accepted);
+        await reached.future;
+        spy.onOpenCards = () async {
+          final answer = deny
+              ? await rig.driver.deny(second)
+              : await rig.driver.allow(second);
+          expect(answer, CardAnswer.accepted);
+        };
+
+        final exclusive = rig.driver.runExclusive(() async {});
+        release.complete();
+        await exclusive;
+        await rig.driver.inFlight;
+
+        expect(rig.tool('write_a').runs, isEmpty);
+        if (deny) {
+          expect(rig.tool('write_b').runs, isEmpty);
+          expect(cardStates(await rig.cards()), [
+            'write_a:skipped',
+            'write_b:skipped',
+          ]);
+          expect(rig.runner.runs, 2);
+        } else {
+          expect(rig.tool('write_b').runs, hasLength(1));
+          expect(cardStates(await rig.cards()), [
+            'write_a:skipped',
+            'write_b:done',
+          ]);
+        }
+        expect(rig.errors, isEmpty);
+      });
+    }
+
     test('from the user denies them', () async {
       final release = await held();
       final stopped = rig.driver.stop();
@@ -286,32 +366,40 @@ void main() {
 
   test('a lost start before a stop does not count in the next turn', () async {
     rig = await Rig.create(script: [replies('second turn')]);
-    var calls = 0;
     Future<void>? stopped;
-    // Per step the loop reads the plugin twice (decide, run). Turn one: a row
-    // lands before the first round (one loss), then the user stops. Turn
-    // two: one more loss, which must be retried once, not end in a card.
+    // Turn one: a row lands before the first round (a lost start), then the
+    // user stops. Turn two: one more lost start must be retried once and end
+    // in a reply, not in the error card the earlier loss would have caused.
+    var racing = false;
+    // Reads left before the stop: the lost start is retried once first.
+    var readsBeforeStop = 0;
     Future<void> race() => rig.store.append(
       NewAiMessage(
         conversationId: rig.conv.id,
         role: AiMessageRole.user,
-        parts: [TextPart('raced $calls')],
+        parts: const [TextPart('raced')],
       ),
     );
     rig.env.onPlugin = () async {
-      calls++;
-      if (calls == 1 || calls == 5) await race();
-      if (calls == 3) stopped = rig.driver.stop();
+      if (racing) {
+        racing = false;
+        await race();
+      } else if (readsBeforeStop > 0 && --readsBeforeStop == 0) {
+        stopped = rig.driver.stop();
+      }
     };
 
+    racing = true;
+    readsBeforeStop = 3;
     await rig.send('one');
     await stopped;
     expect(rig.runner.runs, 0);
-
+    racing = true;
     await rig.send('two');
 
     expect(rig.runner.runs, 1);
     expect(rig.driver.turnState, TurnState.idle);
+    expect(rig.driver.lastView, isNull);
     expect((await rig.rows()).last.state, AiMessageState.complete);
   });
 
