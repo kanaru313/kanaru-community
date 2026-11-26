@@ -439,12 +439,19 @@ registry and `ToolEnv`, fresh `LoopSettings` and `LoopPlugin` reads) and a clock
   else it runs `inspect()`. A turn that only waits on cards is left alone,
   its cards stay `pending`. Two switches
   queued: the answer waits for the last one.
-- **Answers around a stop:** a wake is acted on only when the stop branch
-  parked the turn (`awaitingConfirm`) for a non-user stop (a switch). The
-  branch drops wakes recorded before its read; one that lands after it
-  parks the turn instead of ending it. A user Stop, or a stop that ended the
-  turn, drops the wake: Stop is never followed by a model round. `stop()` does
-  nothing after `dispose()`.
+- **Answers around a stop:** a wake (an Allow or Deny recorded while the gate
+  was taken, with its call id) is acted on only when the stop branch parked the
+  turn (`awaitingConfirm`) for a non-user stop (a switch). The branch drops
+  wakes recorded before its read, and the wakes of Allows that show as
+  `allowed` cards in the read (they are skipped); one that lands after the
+  read parks the turn instead of ending it.
+- **User Stop wins:** `stop()` on a taken gate sets `FlightGate.userStopPending`,
+  which `reserve` does not clear. Every release (`runExclusive`, `_fly`) checks
+  it first: it drops the wake and any deferred answer, denies every open card
+  and ends the turn (idle), so a switch holding or about to take the gate never
+  swallows the Stop and no model round follows it. A Stop that lands between
+  the allowed-only skip and the park also denies the cards left pending.
+  `stop()` does nothing after `dispose()`.
 - **Allow:** stores `callHash` (sha256 over the name and key-sorted args) in
   the card's `ConfirmPart(allowed).approvalHash` in the same compare-and-set
   that allows it, so the binding survives a restart. Execution recomputes the

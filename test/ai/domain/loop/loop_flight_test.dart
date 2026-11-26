@@ -44,6 +44,22 @@ class _AnswerAfterRead extends LoopStoreAdapter {
   }
 }
 
+/// Runs a hook before the open cards are read (an answer whose
+/// compare-and-set commits before the read returns).
+class _AnswerBeforeRead extends LoopStoreAdapter {
+  _AnswerBeforeRead(super.store);
+
+  Future<void> Function()? onOpenCards;
+
+  @override
+  Future<List<AiMessage>> openCards(int conversationId) async {
+    final hook = onOpenCards;
+    onOpenCards = null;
+    await hook?.call();
+    return super.openCards(conversationId);
+  }
+}
+
 Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 20));
 
 void main() {
@@ -512,6 +528,156 @@ void main() {
       ]);
       expect(rig.errors, isEmpty);
     });
+
+    Future<void> useStore(LoopStoreAdapter store) async {
+      await rig.driver.dispose();
+      rig.driver = LoopDriver(
+        conversationId: rig.conv.id,
+        store: store,
+        runner: rig.runner,
+        env: rig.env,
+        newBoundary: () => 'kfixedbound',
+        onInternalError: (e, s) => rig.errors.add(e),
+      );
+    }
+
+    test(
+      'an Allow that commits before the read returns starts no round',
+      () async {
+        rig = await Rig.create(
+          script: [
+            replies('', calls: [toolCall('write_a'), toolCall('write_b')]),
+            replies('unexpected second round'),
+          ],
+        );
+        final spy = _AnswerBeforeRead(rig.store);
+        await useStore(spy);
+        await rig.send('go');
+        final cards = await rig.cards();
+        final reached = Completer<void>();
+        final release = Completer<void>();
+        rig.env.onPlugin = () async {
+          rig.env.onPlugin = null;
+          reached.complete();
+          await release.future;
+        };
+        expect(
+          await rig.driver.allow(callIdOf(cards.first)),
+          CardAnswer.accepted,
+        );
+        await reached.future;
+        final b = callIdOf(cards.last);
+        spy.onOpenCards = () async {
+          expect(await rig.driver.allow(b), CardAnswer.accepted);
+        };
+
+        final exclusive = rig.driver.runExclusive(() async {});
+        release.complete();
+        await exclusive;
+        await rig.driver.inFlight;
+        await settle();
+
+        expect(rig.runner.runs, 1);
+        expect(rig.tool('write_b').runs, isEmpty);
+        expect(cardStates(await rig.cards()), [
+          'write_a:skipped',
+          'write_b:skipped',
+        ]);
+        expect(rig.driver.turnState, TurnState.idle);
+      },
+    );
+
+    test(
+      'a user Stop during a switch skips an allowed call, no round',
+      () async {
+        rig = await Rig.create(
+          script: [
+            replies('', calls: [toolCall('write_a')]),
+            replies('unexpected second round'),
+          ],
+        );
+        await rig.send('go');
+        final a = callIdOf((await rig.cards()).single);
+        Future<void>? stopped;
+        await rig.driver.runExclusive(() async {
+          expect(await rig.driver.allow(a), CardAnswer.accepted);
+          stopped = rig.driver.stop();
+        });
+        await stopped;
+        await rig.driver.inFlight;
+        await settle();
+
+        expect(rig.runner.runs, 1);
+        expect(rig.tool('write_a').runs, isEmpty);
+        expect(cardStates(await rig.cards()), ['write_a:skipped']);
+        expect(rig.driver.turnState, TurnState.idle);
+      },
+    );
+
+    test(
+      'a user Stop during a switch with no answer denies the cards',
+      () async {
+        rig = await Rig.create(
+          script: [
+            replies('', calls: [toolCall('write_a')]),
+          ],
+        );
+        await rig.send('go');
+        Future<void>? stopped;
+        await rig.driver.runExclusive(() async {
+          stopped = rig.driver.stop();
+        });
+        await stopped;
+        await settle();
+
+        expect(rig.tool('write_a').runs, isEmpty);
+        expect(cardStates(await rig.cards()), ['write_a:skipped']);
+        expect(rig.driver.turnState, TurnState.idle);
+      },
+    );
+
+    test(
+      'a user Stop between the allowed-only skip and the park denies all',
+      () async {
+        rig = await Rig.create(
+          script: [
+            replies('', calls: [toolCall('write_a'), toolCall('write_b')]),
+            replies('unexpected second round'),
+          ],
+        );
+        final spy = _AnswerAfterRead(rig.store);
+        await useStore(spy);
+        await rig.send('go');
+        final reached = Completer<void>();
+        final release = Completer<void>();
+        rig.env.onPlugin = () async {
+          rig.env.onPlugin = null;
+          reached.complete();
+          await release.future;
+        };
+        expect(
+          await rig.driver.allow(callIdOf((await rig.cards()).first)),
+          CardAnswer.accepted,
+        );
+        await reached.future;
+        Future<void>? stopped;
+        spy.onOpenCards = () async {
+          stopped = rig.driver.stop();
+        };
+        final exclusive = rig.driver.runExclusive(() async {});
+        release.complete();
+        await exclusive;
+        await stopped;
+        await settle();
+
+        expect(rig.runner.runs, 1);
+        expect(cardStates(await rig.cards()), [
+          'write_a:skipped',
+          'write_b:skipped',
+        ]);
+        expect(rig.driver.turnState, TurnState.idle);
+      },
+    );
 
     test('stop after dispose leaves the pending cards pending', () async {
       rig = await Rig.create(

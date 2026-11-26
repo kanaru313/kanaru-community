@@ -73,13 +73,17 @@ class CardAnswers {
   /// none may stay open behind it (an open card keeps its turn from being
   /// flattened). With [onlyAllowed], calls the user said yes to but that did
   /// not run are skipped and the ones still waiting for an answer stay
-  /// pending.
+  /// pending. [onRead] gets the open cards right after the read, before any
+  /// is answered.
   Future<void> skipOpen(
     String text,
     ConfirmStatus status, {
     bool onlyAllowed = false,
+    void Function(List<AiMessage> open)? onRead,
   }) async {
-    for (final card in await ctx.store.openCards(ctx.conversationId)) {
+    final open = await ctx.store.openCards(ctx.conversationId);
+    onRead?.call(open);
+    for (final card in open) {
       if (onlyAllowed && card.state != AiMessageState.allowed) continue;
       final call = callOf(card);
       if (call != null) await answer(card, call, text, status);

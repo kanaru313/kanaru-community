@@ -6,6 +6,7 @@ import 'dart:async';
 class FlightGate {
   Completer<void>? _current;
   bool _wake = false;
+  final _wakeCalls = <String>{};
   bool _deferred = false;
 
   /// How many switches (`runExclusive`) wait for the gate.
@@ -15,6 +16,28 @@ class FlightGate {
   /// landed meanwhile still needs a flight. Any other stop ends the turn and
   /// drops such an answer (Stop is never followed by a model round).
   bool stopParked = false;
+
+  /// The user pressed Stop while the gate was taken. Unlike the driver's
+  /// stop flag, [reserve] does not clear it: whoever releases the gate acts
+  /// on it first (drops answers, ends the turn), so a switch that holds or
+  /// takes the gate never swallows the Stop.
+  bool userStopPending = false;
+
+  /// Whether a user Stop is recorded; reading it clears it.
+  bool takeUserStop() {
+    final pending = userStopPending;
+    userStopPending = false;
+    return pending;
+  }
+
+  /// Consumes the user Stop and drops every answer waiting for a flight
+  /// (Stop is never followed by a model round).
+  void consumeUserStop() {
+    userStopPending = false;
+    _wake = false;
+    _wakeCalls.clear();
+    _deferred = false;
+  }
 
   /// The running flight; null when nothing runs.
   Completer<void>? get current => _current;
@@ -27,6 +50,7 @@ class FlightGate {
     if (_current != null) return null;
     onClaim?.call();
     _wake = false;
+    _wakeCalls.clear();
     stopParked = false;
     return _current = Completer<void>();
   }
@@ -38,7 +62,17 @@ class FlightGate {
   }
 
   /// Tells the running flight to look again before it parks.
-  void wakeRunning() => _wake = true;
+  void wakeRunning(String callId) {
+    _wake = true;
+    _wakeCalls.add(callId);
+  }
+
+  /// Forgets the answers to [callIds] (their cards were skipped). The wake
+  /// stays when an answer to another call is recorded.
+  void dropWakesFor(Set<String> callIds) {
+    _wakeCalls.removeAll(callIds);
+    if (_wakeCalls.isEmpty) _wake = false;
+  }
 
   /// Whether an answer is recorded, without clearing it.
   bool get hasWake => _wake;
@@ -47,6 +81,7 @@ class FlightGate {
   bool takeWake() {
     final woke = _wake;
     _wake = false;
+    _wakeCalls.clear();
     return woke;
   }
 

@@ -78,7 +78,6 @@ class LoopDriver {
   final LoopEnvironment _env;
   final ModelRoundRunner _runner;
 
-  /// Called with every failure the driver caught instead of throwing.
   final void Function(Object error, StackTrace stack)? onInternalError;
   late final LoopContext _ctx;
   late final ModelRound _round;
@@ -94,7 +93,6 @@ class LoopDriver {
   final _gate = FlightGate();
   bool _disposed = false;
 
-  /// The stop comes from the user's Stop (not a switch, open or dispose).
   bool _userStop = false;
 
   TurnState get turnState => _state;
@@ -127,6 +125,7 @@ class LoopDriver {
       id = await _store.appendUser(conversationId, parts);
     } on Object catch (e, s) {
       _report(e, s);
+      _gate.takeUserStop();
       _release(flight);
       return const DriverFailed();
     }
@@ -159,7 +158,7 @@ class LoopDriver {
     if (cardExpired(card.createdAt, _ctx.now())) {
       await _cards.answer(card, call, expiredText, ConfirmStatus.expired);
       // The answer may have been the last one the turn waited for.
-      _kick();
+      _kick(callId);
       return CardAnswer.expired;
     }
     final tool = _env.registry.byName(call.name);
@@ -177,7 +176,7 @@ class LoopDriver {
     }
     final won = await _store.approve(card.id, approvalHash: callHash(call));
     if (!won) return CardAnswer.notPending;
-    _kick();
+    _kick(callId);
     return CardAnswer.accepted;
   }
 
@@ -194,7 +193,7 @@ class LoopDriver {
       reason: 'user',
     );
     if (!won) return CardAnswer.notPending;
-    _kick();
+    _kick(callId);
     return CardAnswer.accepted;
   }
 
@@ -204,7 +203,9 @@ class LoopDriver {
   Future<void> stop() async {
     if (_disposed) return;
     if (_gate.busy) {
+      _gate.userStopPending = true; // the releaser acts on it
       await _stopActive(byUser: true);
+      await _gate.current?.future; // the parked-stop flight, if started
       return;
     }
     final parked = _reserve();
@@ -212,19 +213,27 @@ class LoopDriver {
       await _gate.current?.future;
       return;
     }
-    await _fly(
-      parked,
-      body: () async {
-        await _cards.skipOpen(stoppedByUserText, ConfirmStatus.denied);
-        await _finish(TurnState.idle, endTurn: true);
-      },
-    );
+    await _fly(parked, body: _stopBody);
   }
 
-  /// Runs [body] while no turn step runs and none can start (a send, retry,
-  /// Allow or Deny meanwhile is refused or waits). A round or a tool run in
-  /// flight is stopped and awaited first; a turn that only waits on cards is
-  /// left as it is, its cards stay pending. Null when the driver is closed.
+  Future<void> _stopBody() async {
+    await _cards.skipOpen(stoppedByUserText, ConfirmStatus.denied);
+    await _finish(TurnState.idle, endTurn: true);
+  }
+
+  /// Acts on a user Stop recorded while the gate was taken (call right after
+  /// releasing it): drops waiting answers and ends the turn.
+  Future<void> _endPendingUserStop() async {
+    _gate.consumeUserStop();
+    if (_disposed) return;
+    final parked = _reserve();
+    if (parked == null) return;
+    await _fly(parked, body: _stopBody);
+  }
+
+  /// Runs [body] while no turn step runs and none can start. A round or tool
+  /// run in flight is stopped and awaited first; a turn that only waits on
+  /// cards is left as it is. Null when the driver is closed.
   Future<T?> runExclusive<T>(Future<T> Function() body) async {
     if (_disposed) return null;
     var flight = _reserve();
@@ -242,12 +251,16 @@ class LoopDriver {
       return await body();
     } finally {
       _release(flight);
-      // An answer that landed during the body found the gate taken: run it.
-      final woke = _gate.takeWake() | _gate.takeDeferred();
-      if (woke) {
-        if (_gate.startNow()) _kick();
+      if (_gate.userStopPending) {
+        await _endPendingUserStop();
       } else {
-        await inspect();
+        // An answer that landed during the body found the gate taken: run it.
+        final woke = _gate.takeWake() | _gate.takeDeferred();
+        if (woke) {
+          if (_gate.startNow()) _kick();
+        } else {
+          await inspect();
+        }
       }
     }
   }
@@ -277,9 +290,8 @@ class LoopDriver {
   /// Writes the streamed text so far (the app goes to the background).
   Future<void> flushLive() => _round.flushLive();
 
-  /// Closes the driver: a round or tool run in flight is stopped and awaited
-  /// (calls that did not run are skipped), cards waiting for an answer stay
-  /// pending. Nothing starts after this is called.
+  /// Closes the driver: a round or tool run in flight is stopped and awaited;
+  /// cards waiting for an answer stay pending. Nothing starts afterwards.
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
@@ -303,11 +315,11 @@ class LoopDriver {
 
   /// A user answer arrived: start a flight, or tell the one running to look
   /// again before it parks.
-  void _kick() {
+  void _kick([String? callId]) {
     if (_disposed) return;
     final flight = _reserve();
     if (flight == null) {
-      _gate.wakeRunning();
+      _gate.wakeRunning(callId ?? '');
       return;
     }
     unawaited(_fly(flight));
@@ -326,11 +338,13 @@ class LoopDriver {
     } finally {
       _round.resetLost();
       _release(flight);
-      // An answer that landed after the last look of a stop branch that
-      // parked the turn found the gate taken: run it now. Any other wake is
-      // left alone (a stop that ended the turn drops it; a newer flight owns
-      // it).
-      if (_gate.stopParked && _gate.takeWake() && _gate.startNow()) _kick();
+      if (_gate.userStopPending) {
+        await _endPendingUserStop();
+      } else if (_gate.stopParked && _gate.takeWake() && _gate.startNow()) {
+        // A wake after a parking stop branch's last look runs now; any
+        // other wake is left alone.
+        _kick();
+      }
     }
   }
 
@@ -343,14 +357,24 @@ class LoopDriver {
         return;
       }
       if (_ctx.stopRequested) {
-        // An answer recorded before this read is covered by it.
+        // Answers recorded before the read are covered by it; an Allow that
+        // shows as an allowed card there is skipped, so its wake goes too.
         _gate.takeWake();
+        final userAtStart = _userStop;
         await _cards.skipOpen(
           stoppedByUserText,
           ConfirmStatus.denied,
-          onlyAllowed: !_userStop,
+          onlyAllowed: !userAtStart,
+          onRead: (open) => _gate.dropWakesFor({
+            for (final c in open)
+              if (c.state == AiMessageState.allowed) ?callOf(c)?.id,
+          }),
         );
-        // An answer that landed after the read above still needs a flight.
+        if (_userStop && !userAtStart) {
+          // Stop came in during the read: deny what is left.
+          await _cards.skipOpen(stoppedByUserText, ConfirmStatus.denied);
+        }
+        if (_userStop) _gate.takeUserStop();
         final waiting =
             !_userStop &&
             (_gate.hasWake ||
@@ -390,9 +414,8 @@ class LoopDriver {
         case ExpireCards(:final cardIds):
           await _cards.expire(snap, cardIds);
         case AwaitConfirms():
-          // An answer that came in while this step ran is picked up here;
-          // the flight is released in the same step as the check.
-          // A stop that came in meanwhile is handled at the top, not parked.
+          // An answer that came in meanwhile is picked up here (the flight
+          // is released in the same step); a stop is handled at the top.
           if (_ctx.stopRequested || _gate.takeWake()) continue;
           _setState(TurnState.awaitingConfirm);
           _release(_gate.current!);
