@@ -9,6 +9,7 @@ import '../../platform/domain/settings_store.dart';
 import '../data/queue_repository.dart';
 import '../domain/audio_engine.dart';
 import '../domain/cleanup_kind.dart';
+import '../domain/removed_queue_entry.dart';
 import '../domain/replaced_queue.dart';
 import '../domain/now_playing.dart';
 import '../domain/play_intent.dart';
@@ -771,9 +772,9 @@ class PlayerController implements PlaybackCommands {
 
   // ---- queue edits ----
 
-  /// Removes entries; the result undoes it for a few seconds. Null when
-  /// nothing matched.
-  Future<UndoToken?> remove(Set<int> entryIds) => _cmd(() async {
+  /// Removes [entryIds] now (current-entry handling included); null when
+  /// nothing matched. Shared by [remove] and [removeEntriesForTool].
+  Future<QueueEdit?> _removeNow(Set<int> entryIds) async {
     final currentId = _queue.currentItem?.entryId;
     final edit = q.remove(
       _queue,
@@ -788,8 +789,78 @@ class PlayerController implements PlaybackCommands {
       _resetPlayback();
       if (_queue.current == null) _intent = PlayIntent.stopped;
     }
-    return _remember(edit.undo);
+    return edit;
+  }
+
+  /// Removes entries; the result undoes it for a few seconds. Null when
+  /// nothing matched.
+  Future<UndoToken?> remove(Set<int> entryIds) => _cmd(() async {
+    final edit = await _removeNow(entryIds);
+    return edit == null ? null : _remember(edit.undo);
   });
+
+  /// [remove] for an AI tool: returns the entries that were really removed
+  /// (ids not in the queue are ignored). It does not touch the user's pending
+  /// undo token, which stays valid, and returns no token of its own.
+  Future<List<RemovedQueueEntry>> removeEntriesForTool(Set<int> entryIds) =>
+      _cmd(() async {
+        final present = [
+          for (final i in _queue.items)
+            if (entryIds.contains(i.entryId))
+              RemovedQueueEntry(entryId: i.entryId, trackId: i.trackId),
+        ];
+        if (present.isEmpty) return const <RemovedQueueEntry>[];
+        await _removeNow({for (final e in present) e.entryId});
+        return present;
+      });
+
+  /// Replaces the queue with [visible] for an AI tool and starts playing at
+  /// [startIndex], with the context `PlayContextKind.selection` labelled
+  /// [contextLabel] (the caller passes its localized text). Shuffle is turned
+  /// off, as for any new queue.
+  ///
+  /// Returns what the tool needs to offer a restore:
+  /// - `previous`: the queue it replaced, null when the queue was empty.
+  ///   `previous.tracks` is in play order (shuffled order when `shuffled`),
+  ///   `previous.userOrder` the order the user built.
+  /// - `previousIndex`: the current position in play order, null when nothing
+  ///   was loaded.
+  /// - `shuffled`: whether shuffle was on. To restore, play `userOrder` and
+  ///   re-enable shuffle when `shuffled`; `tracks[previousIndex]` is the entry
+  ///   that was playing.
+  ///
+  /// Like every play it drops the user's pending undo token. The caller
+  /// passes ids already checked visible. An empty list throws
+  /// [ArgumentError]; a [startIndex] out of range throws [RangeError];
+  /// nothing changes in either case.
+  Future<ToolPlayResult> playTracksForTool(
+    List<TrackId> visible, {
+    required String contextLabel,
+    int startIndex = 0,
+  }) {
+    if (visible.isEmpty) {
+      return Future.error(ArgumentError.value(visible, 'visible', 'is empty'));
+    }
+    if (startIndex < 0 || startIndex >= visible.length) {
+      return Future.error(RangeError.index(startIndex, visible, 'startIndex'));
+    }
+    return _cmd(() async {
+      final previous = _queue.items.isEmpty ? null : _replacedNow(visible);
+      final previousIndex = _queue.current;
+      final shuffled = _queue.shuffled;
+      await _replaceQueue(
+        visible,
+        startIndex,
+        false,
+        PlayContext(PlayContextKind.selection, label: contextLabel),
+      );
+      return (
+        previous: previous,
+        previousIndex: previousIndex,
+        shuffled: shuffled,
+      );
+    });
+  }
 
   /// Empties the queue and the saved session: nothing is loaded, playback is
   /// stopped, shuffle and repeat stay. No undo. Does nothing on an empty

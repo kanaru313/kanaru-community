@@ -138,6 +138,7 @@ void main() {
   MenuSpec playlistSpec() => buildPlaylistMenu(
     PlaylistDetail(
       summary: PlaylistSummary(
+        id: 0,
         uid: 'pl',
         name: 'Mix',
         description: '',

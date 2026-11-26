@@ -241,6 +241,7 @@ void main() {
   ) async {
     PlaylistSummary summary(String uid, String name, {bool fav = false}) =>
         PlaylistSummary(
+          id: 0,
           uid: uid,
           name: name,
           description: '',
@@ -272,6 +273,7 @@ void main() {
     expect(playlistDisplayName(l10n, summary('p1', 'Road trip')), 'Road trip');
     // A saved queue is named by the day it was saved, never "Today".
     final queue = PlaylistSummary(
+      id: 0,
       uid: 'q',
       name: 'Queue',
       description: '',

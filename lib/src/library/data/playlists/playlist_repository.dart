@@ -12,6 +12,7 @@ import 'playlist_add_writes.dart';
 import 'playlist_copy_writes.dart';
 import 'playlist_edit_writes.dart';
 import 'playlist_entry_writes.dart';
+import 'playlist_id_lookups.dart';
 import 'playlist_import_writes.dart';
 import 'playlist_reads.dart';
 import 'playlist_sql.dart';
@@ -202,4 +203,25 @@ class PlaylistRepository implements PlaylistStore {
   @override
   Future<AddToPlaylistsResult> addAllToFavorites(String uid) =>
       _db.transaction(() => addAllToFavoritesWrite(_db, uid, _now()));
+
+  @override
+  Future<Map<int, String>> resolvePlaylistIds(List<int> ids) =>
+      resolvePlaylistIdsQuery(_db, ids);
+
+  @override
+  Future<List<WritablePlaylist>> listWritable() => listWritableQuery(_db);
+
+  @override
+  Future<Map<int, String>> resolveEntryIds(
+    String playlistUid,
+    List<int> entryIds,
+  ) => resolveEntryIdsQuery(_db, playlistUid, entryIds);
+
+  @override
+  Future<List<PlaylistEntryView>> removeEntriesNow(
+    String playlistUid,
+    List<String> entryUids,
+  ) => _db.transaction(
+    () => removeEntriesNowWrite(_db, playlistUid, entryUids, _now()),
+  );
 }

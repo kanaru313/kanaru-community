@@ -6,6 +6,7 @@ import 'package:kanaru/src/media/domain/track_info.dart';
 
 PlaylistEntryView _entry(String uid, int track, {bool available = true}) =>
     PlaylistEntryView(
+      id: 0,
       uid: uid,
       info: TrackInfo(
         id: TrackId(track),

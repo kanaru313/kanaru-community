@@ -184,4 +184,23 @@ class TestStore implements PlaylistStore {
     if (addAllError != null) throw addAllError!;
     return inner.addAllToFavorites(uid);
   }
+
+  @override
+  Future<Map<int, String>> resolvePlaylistIds(List<int> ids) =>
+      inner.resolvePlaylistIds(ids);
+
+  @override
+  Future<List<WritablePlaylist>> listWritable() => inner.listWritable();
+
+  @override
+  Future<Map<int, String>> resolveEntryIds(
+    String playlistUid,
+    List<int> entryIds,
+  ) => inner.resolveEntryIds(playlistUid, entryIds);
+
+  @override
+  Future<List<PlaylistEntryView>> removeEntriesNow(
+    String playlistUid,
+    List<String> entryUids,
+  ) => inner.removeEntriesNow(playlistUid, entryUids);
 }

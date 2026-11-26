@@ -33,6 +33,7 @@ PlaylistDetail savedQueue(
   final entries = [
     for (var i = 0; i < ids.length; i++)
       PlaylistEntryView(
+        id: 0,
         uid: '$uid-e$i',
         info: song(
           ids[i],
@@ -45,6 +46,7 @@ PlaylistDetail savedQueue(
   final distinct = {for (final e in entries) e.info.id.value: e.info};
   return PlaylistDetail(
     summary: PlaylistSummary(
+      id: 0,
       uid: uid,
       name: 'Queue',
       description: '',
@@ -69,6 +71,7 @@ extension PlainPlaylist on PlaylistDetail {
   /// The same entries as an ordinary playlist (no saved-queue info).
   PlaylistDetail copyWithoutSavedQueue() => PlaylistDetail(
     summary: PlaylistSummary(
+      id: 0,
       uid: summary.uid,
       name: summary.name,
       description: '',

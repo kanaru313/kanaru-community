@@ -18,13 +18,18 @@ Future<void> touchPlaylist(AppDatabase db, int playlistId, int now) =>
       updateKind: UpdateKind.update,
     );
 
+/// `WHERE` predicate (unqualified `playlists` columns) of a live, writable
+/// playlist: normal, imported or Favorites. Rows of other kinds (mood, queue)
+/// count as gone. Shared by every guard so UI and AI paths cannot drift.
+const writablePlaylistPredicate =
+    "deleted_at IS NULL AND (kind IS NULL OR kind = 'favorites')";
+
 /// Id of the live user playlist [uid] (normal, imported or Favorites), or
 /// null. Rows of other kinds (mood, queue) count as gone for every write.
 Future<int?> livePlaylistId(AppDatabase db, String uid) async {
   final rows = await db
       .customSelect(
-        'SELECT id FROM playlists WHERE uid = ? AND deleted_at IS NULL '
-        "AND (kind IS NULL OR kind = 'favorites')",
+        'SELECT id FROM playlists WHERE uid = ? AND $writablePlaylistPredicate',
         variables: [Variable.withString(uid)],
       )
       .get();

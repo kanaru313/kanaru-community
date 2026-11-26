@@ -2,9 +2,8 @@ import 'package:drift/drift.dart';
 
 import '../../../database/database.dart';
 import '../../../foundation/ordering/fractional_keys.dart';
+import '../../domain/playlists/playlist_models.dart';
 import 'playlist_sql.dart';
-
-const _favoritesName = 'Favorites';
 
 /// Adds [trackIds] to Favorites; a track that is already a live favorite
 /// keeps its place. Creates the Favorites row lazily. Throws [ArgumentError]
@@ -44,7 +43,7 @@ Future<({List<int> added, List<int> skipped})> appendFavoriteEntries(
     db.playlists,
     PlaylistsCompanion.insert(
       uid: favoritesPlaylistUid,
-      name: _favoritesName,
+      name: favoritesPlaylistName,
       kind: const Value(PlaylistKind.favorites),
       createdAt: now,
       updatedAt: now,

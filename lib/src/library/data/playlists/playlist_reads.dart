@@ -10,12 +10,12 @@ import '../../domain/playlists/playlist_ids.dart';
 import '../../domain/playlists/playlist_models.dart';
 import 'playlist_sql.dart';
 
-const _favoritesName = 'Favorites';
 const _coverCandidates = 64;
 
 PlaylistSummary _emptyFavorites() => PlaylistSummary(
+  id: favoritesPlaylistId,
   uid: PlaylistUids.favorites,
-  name: _favoritesName,
+  name: favoritesPlaylistName,
   description: '',
   isFavorites: true,
   trackCount: 0,
@@ -65,7 +65,7 @@ const playlistStatsSql =
 /// The playlist list: user playlists and Favorites, never mood or queue rows.
 const summarySql =
     '''
-SELECT p.uid, p.name, p.description, p.kind, p.created_at, p.updated_at,
+SELECT p.id, p.uid, p.name, p.description, p.kind, p.created_at, p.updated_at,
 $playlistStatsSql
 FROM playlists p
 WHERE p.deleted_at IS NULL AND (p.kind IS NULL OR p.kind = 'favorites')
@@ -87,6 +87,9 @@ PlaylistSummary summaryOfRow(
       ((jsonDecode(r.read<String>('covers')) as List).cast<List<Object?>>())
           .map((c) => (group: c[1] as String, coverKey: c[0] as String?));
   return PlaylistSummary(
+    // The saved-queue list query does not select `p.id` yet. 0 is the
+    // Favorites id, so use -1: it never resolves (real ids are above 0).
+    id: isFavorites ? favoritesPlaylistId : (r.readNullable<int>('id') ?? -1),
     uid: r.read<String>('uid'),
     name: r.read<String>('name'),
     description: r.read<String>('description'),
@@ -173,7 +176,7 @@ Future<PlaylistDetail?> loadDetail(
   final p = rows.single;
   final entryRows = await db
       .customSelect(
-        'SELECT e.uid AS uid, e.track_id AS track_id, e.added_at AS added_at '
+        'SELECT e.id AS id, e.uid AS uid, e.track_id AS track_id, e.added_at AS added_at '
         'FROM playlist_entries e JOIN tracks t ON t.id = e.track_id '
         'WHERE e.playlist_id = ? AND e.deleted_at IS NULL '
         // Favorites follows duplicate hiding; other playlists keep copies.
@@ -199,13 +202,18 @@ Future<PlaylistDetail?> loadDetail(
   final entries = [
     for (final r in entryRows)
       if (byId[TrackId(r.read<int>('track_id'))] case final info?)
-        PlaylistEntryView(uid: r.read<String>('uid'), info: info),
+        PlaylistEntryView(
+          id: r.read<int>('id'),
+          uid: r.read<String>('uid'),
+          info: info,
+        ),
   ];
   final distinct = <TrackId, int>{
     for (final e in entries) e.info.id: e.info.durationMs ?? 0,
   };
   return PlaylistDetail(
     summary: PlaylistSummary(
+      id: isFavorites ? favoritesPlaylistId : p.read<int>('id'),
       uid: uid,
       name: p.read<String>('name'),
       description: p.read<String>('description'),

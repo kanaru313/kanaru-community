@@ -96,4 +96,32 @@ abstract interface class PlaylistStore {
 
   /// Adds every available track of playlist [uid] to Favorites.
   Future<AddToPlaylistsResult> addAllToFavorites(String uid);
+
+  /// Maps integer playlist [ids] to uids. Only live, writable playlists (the
+  /// ones every write accepts) are present; saved queues, mood playlists,
+  /// deleted playlists and unknown ids are absent. Id [favoritesPlaylistId]
+  /// (0) is Favorites and resolves even before its row exists; the row's own
+  /// database id is not resolvable.
+  Future<Map<int, String>> resolvePlaylistIds(List<int> ids);
+
+  /// Every playlist a write may target: Favorites (id 0, always present) then
+  /// the user playlists in creation order.
+  Future<List<WritablePlaylist>> listWritable();
+
+  /// Maps integer entry [entryIds] of playlist [playlistUid] to entry uids.
+  /// Only live entries of that playlist are present (tombstones, entries of
+  /// other playlists and unknown ids are absent).
+  Future<Map<int, String>> resolveEntryIds(
+    String playlistUid,
+    List<int> entryIds,
+  );
+
+  /// Removes the live entries [entryUids] and commits at once, in one
+  /// transaction. Returns exactly the entries removed (empty when none was
+  /// live); entries already gone or pending undo from another call are not
+  /// touched.
+  Future<List<PlaylistEntryView>> removeEntriesNow(
+    String playlistUid,
+    List<String> entryUids,
+  );
 }

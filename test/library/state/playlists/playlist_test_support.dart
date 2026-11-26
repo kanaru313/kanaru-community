@@ -12,6 +12,7 @@ PlaylistSummary summary({
   int updatedAt = 1,
   int trackCount = 0,
 }) => PlaylistSummary(
+  id: 0,
   uid: uid,
   name: name,
   description: '',
@@ -35,6 +36,7 @@ PlaylistDetail detail(
   entries: [
     for (var i = 0; i < uids.length; i++)
       PlaylistEntryView(
+        id: 0,
         uid: uids[i],
         info: TrackInfo(
           id: TrackId(trackOf[uids[i]] ?? i + 1),

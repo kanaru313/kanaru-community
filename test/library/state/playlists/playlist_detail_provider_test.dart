@@ -23,6 +23,7 @@ class _Store implements PlaylistStore {
 
 PlaylistDetail _queueDetail() => PlaylistDetail(
   summary: PlaylistSummary(
+    id: 0,
     uid: 'q1',
     name: 'Queue',
     description: '',

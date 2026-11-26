@@ -4,6 +4,7 @@ import 'package:logging/logging.dart';
 import '../../../database/database.dart';
 import '../../../foundation/ordering/fractional_keys.dart';
 import '../../domain/playlists/playlist_models.dart';
+import 'playlist_id_lookups.dart';
 import 'playlist_sql.dart';
 
 final _log = Logger('library.playlists');
@@ -125,6 +126,29 @@ Future<PlaylistRemoval?> removeEntriesWrite(
   return _tombstone(db, playlistId, playlistUid, [
     for (final r in rows) r.read<String>('uid'),
   ], now);
+}
+
+/// Removes the live [entryUids] and deletes them for good in the caller's
+/// transaction; returns the entries removed. Only rows that were live are
+/// touched, so another call's pending (tombstoned) removal stays as it is.
+Future<List<PlaylistEntryView>> removeEntriesNowWrite(
+  AppDatabase db,
+  String playlistUid,
+  List<String> entryUids,
+  int now,
+) async {
+  final playlistId = await livePlaylistId(db, playlistUid);
+  if (playlistId == null || entryUids.isEmpty) return const [];
+  // Read the live rows first: tombstoned rows no longer count as live.
+  final views = await liveEntryViews(db, playlistId, entryUids);
+  final removal = await removeEntriesWrite(db, playlistUid, entryUids, now);
+  if (removal == null) return const [];
+  await commitRemovalWrite(db, removal);
+  final removed = removal.entryUids.toSet();
+  return [
+    for (final v in views)
+      if (removed.contains(v.uid)) v,
+  ];
 }
 
 /// Tombstones every live entry that repeats an earlier track of the playlist.

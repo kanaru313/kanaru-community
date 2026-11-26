@@ -6,6 +6,7 @@ import 'package:kanaru/src/media/domain/track_id.dart';
 
 PlaylistSummary _pl(String uid, {String? name, int updatedAt = 0}) =>
     PlaylistSummary(
+      id: 0,
       uid: uid,
       name: name ?? uid,
       description: '',

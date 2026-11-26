@@ -406,6 +406,13 @@ Events: `EngineAdvanced`, `EngineLoaded(token, duration)`, `EngineFailed`, `Engi
 - **Debug bound:** `playTracks` with 20 000 entries stays under 2 s in debug (test). The profile-mode
   budget (150 ms of UI-isolate work) is not measured yet.
 
+### Tool variants of queue edits
+
+Two controller commands for the AI tools; both run through `_cmd`, so they keep command order with user edits.
+
+- `removeEntriesForTool(Set<int>)` removes entries like `remove` and returns the `RemovedQueueEntry` list (entry id + track id) of those really removed (unknown ids are ignored). It does not call `_remember`: the user's pending undo token stays valid and the tool gets no token.
+- `playTracksForTool(List<TrackId>, {startIndex})` replaces the queue with `PlayContext(selection, label: contextLabel)` (required; the `ai` module passes its l10n text, `Trợ lý AI` in vi) and turns shuffle off. It returns `ToolPlayResult = (previous, previousIndex, shuffled)`: `previous` is the replaced queue (null when it was empty), `previousIndex` its current position in play order (null when nothing was loaded), `shuffled` whether shuffle was on (`previous.tracks` is then in shuffled play order). To restore: play `previous.userOrder` and turn shuffle back on when `shuffled`; `previous.tracks[previousIndex]` was playing. Like any play it drops the user's pending undo. An empty list throws `ArgumentError`, a bad `startIndex` `RangeError`; nothing changes. Callers pass ids already checked with `TrackLookup.visibleOf`.
+
 ## Sleep timer
 
 `playback/state/sleep_timer_provider.dart`: `sleepTimerProvider` (`NotifierProvider<SleepTimer,
