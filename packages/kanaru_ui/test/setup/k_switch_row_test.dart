@@ -86,4 +86,29 @@ void main() {
       greaterThanOrEqualTo(56),
     );
   });
+
+  testWidgets('onTap replaces the row toggle; the switch still toggles', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    final seen = <bool>[];
+    var taps = 0;
+    await tester.pumpWidget(
+      host(
+        KSwitchRow(
+          title: const Text('Prompt'),
+          value: false,
+          onChanged: seen.add,
+          onTap: () => taps++,
+          tapSemanticsLabel: 'Prompt, open',
+        ),
+      ),
+    );
+    await tester.tap(find.text('Prompt'));
+    expect(taps, 1);
+    expect(seen, isEmpty);
+    await tester.tap(find.byType(KSwitch));
+    expect(taps, 1);
+    expect(seen, [true]);
+  });
 }

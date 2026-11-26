@@ -16,6 +16,8 @@ class KSwitchRow extends StatelessWidget {
     this.leading,
     this.lockedLabel,
     this.switchLabel,
+    this.onTap,
+    this.tapSemanticsLabel,
   });
 
   final Widget title;
@@ -32,19 +34,32 @@ class KSwitchRow extends StatelessWidget {
   /// Spoken name of the switch (for example "Show the Albums tab").
   final String? switchLabel;
 
+  /// Row action that replaces "tap the row toggles" (open, edit). The switch
+  /// alone toggles then. Null keeps the default: a row tap toggles.
+  final VoidCallback? onTap;
+
+  /// Spoken name of the [onTap] action (the caller localises it). The row is
+  /// announced as a button with this label; the title is not read twice.
+  final String? tapSemanticsLabel;
+
   @override
   Widget build(BuildContext context) {
     final locked = onChanged == null;
     final changed = onChanged;
+    final tap = onTap;
+    final tapLabel = tap == null ? null : tapSemanticsLabel;
     return Semantics(
       container: true,
       hint: locked ? lockedLabel : null,
+      label: tapLabel,
+      button: tap != null ? true : null,
       child: SetupRowFrame(
-        title: title,
+        title: tapLabel == null ? title : ExcludeSemantics(child: title),
         subtitle: subtitle,
         leading: leading,
-        onTap: changed == null ? null : () => changed(!value),
+        onTap: tap ?? (changed == null ? null : () => changed(!value)),
         trailing: Semantics(
+          container: tap != null,
           label: switchLabel,
           child: KSwitch(value: value, onChanged: changed),
         ),

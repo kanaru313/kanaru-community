@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../support/finders.dart';
 import '../support/host.dart';
 
 List<ReorderableToggleItem<String>> _items(Set<String> on) => [
@@ -192,6 +193,114 @@ void main() {
         tester.getSemantics(find.text('Paused')),
         isNot(isSemantics(isButton: true)),
       );
+    });
+
+    testWidgets('a problem alone replaces the subtitle', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(
+        host(
+          SingleChildScrollView(
+            child: ReorderableToggleList<String>(
+              items: const [
+                ReorderableToggleItem(
+                  value: 'a',
+                  title: Text('A'),
+                  enabled: true,
+                  problem: 'Broken variable',
+                ),
+                ReorderableToggleItem(
+                  value: 'b',
+                  title: Text('B'),
+                  enabled: true,
+                  subtitle: 'Plugin',
+                  problem: 'Needs setup',
+                ),
+              ],
+              dragLabel: 'Drag',
+              keepOneOn: false,
+              onReorder: (_, _) {},
+              onToggle: (_, _) {},
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Broken variable'), findsOneWidget);
+      expect(find.text('Plugin'), findsOneWidget);
+      expect(find.text('Needs setup'), findsOneWidget);
+      final context = tester.element(find.text('Broken variable'));
+      expect(
+        tester.widget<Text>(find.text('Broken variable')).style?.color,
+        Theme.of(context).colorScheme.error,
+      );
+    });
+  });
+
+  group('row tap', () {
+    Widget tappable({
+      required VoidCallback onTap,
+      required void Function(String, bool) onToggle,
+    }) => SingleChildScrollView(
+      child: ReorderableToggleList<String>(
+        items: [
+          ReorderableToggleItem(
+            value: 'p',
+            title: const Text('Prompt'),
+            enabled: true,
+            switchLabel: 'Turn on Prompt',
+            tapLabel: 'Prompt, open to edit',
+            onTap: onTap,
+          ),
+        ],
+        dragLabel: 'Drag',
+        keepOneOn: false,
+        onReorder: (_, _) {},
+        onToggle: onToggle,
+      ),
+    );
+
+    testWidgets('row tap calls onTap and does not toggle', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      var taps = 0;
+      final toggles = <(String, bool)>[];
+      await tester.pumpWidget(
+        host(
+          tappable(onTap: () => taps++, onToggle: (v, on) => toggles.add((v, on))),
+        ),
+      );
+      await tester.tap(find.text('Prompt'));
+      expect(taps, 1);
+      expect(toggles, isEmpty);
+    });
+
+    testWidgets('switch tap toggles only', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      var taps = 0;
+      final toggles = <(String, bool)>[];
+      await tester.pumpWidget(
+        host(
+          tappable(onTap: () => taps++, onToggle: (v, on) => toggles.add((v, on))),
+        ),
+      );
+      await tester.tap(find.byType(KSwitch));
+      expect(taps, 0);
+      expect(toggles, [('p', false)]);
+    });
+
+    testWidgets('row, switch and handle are announced separately', (
+      tester,
+    ) async {
+      useWindow(tester, const Size(400, 800));
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        host(tappable(onTap: () {}, onToggle: (_, _) {})),
+      );
+      expect(
+        find.semantics.byLabel('Prompt, open to edit'),
+        findsOneWidget,
+      );
+      expect(byToggledState('Turn on Prompt'), findsOneWidget);
+      expect(find.semantics.byLabel('Drag'), findsOneWidget);
+      handle.dispose();
     });
   });
 }
