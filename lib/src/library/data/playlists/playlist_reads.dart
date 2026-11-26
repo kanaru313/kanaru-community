@@ -10,13 +10,12 @@ import '../../domain/playlists/playlist_ids.dart';
 import '../../domain/playlists/playlist_models.dart';
 import 'playlist_sql.dart';
 
-const _favoritesName = 'Favorites';
 const _coverCandidates = 64;
 
 PlaylistSummary _emptyFavorites() => PlaylistSummary(
   id: favoritesPlaylistId,
   uid: PlaylistUids.favorites,
-  name: _favoritesName,
+  name: favoritesPlaylistName,
   description: '',
   isFavorites: true,
   trackCount: 0,
@@ -88,8 +87,9 @@ PlaylistSummary summaryOfRow(
       ((jsonDecode(r.read<String>('covers')) as List).cast<List<Object?>>())
           .map((c) => (group: c[1] as String, coverKey: c[0] as String?));
   return PlaylistSummary(
-    // A query without `p.id` (saved queues, never targeted by id) gets 0.
-    id: isFavorites ? favoritesPlaylistId : (r.readNullable<int>('id') ?? 0),
+    // The saved-queue list query does not select `p.id` yet. 0 is the
+    // Favorites id, so use -1: it never resolves (real ids are above 0).
+    id: isFavorites ? favoritesPlaylistId : (r.readNullable<int>('id') ?? -1),
     uid: r.read<String>('uid'),
     name: r.read<String>('name'),
     description: r.read<String>('description'),
@@ -283,36 +283,4 @@ Future<Map<String, int>> countExistingTracks(
       )
       .get();
   return {for (final r in rows) r.read<String>('uid'): r.read<int>('c')};
-}
-
-/// Entries `[entryUids]` of playlist [playlistId] that are live, in playlist
-/// order, as [PlaylistEntryView]s (no duplicate-hiding filter: used to report
-/// what a removal touched).
-Future<List<PlaylistEntryView>> liveEntryViews(
-  AppDatabase db,
-  int playlistId,
-  List<String> entryUids,
-) async {
-  if (entryUids.isEmpty) return const [];
-  final rows = await db
-      .customSelect(
-        'SELECT id, uid, track_id FROM playlist_entries '
-        'WHERE playlist_id = ? AND deleted_at IS NULL AND uid IN $jsonEach '
-        'ORDER BY sort_key, uid',
-        variables: [Variable.withInt(playlistId), jsonList(entryUids.toSet())],
-      )
-      .get();
-  final infos = await loadTrackInfos(db, [
-    for (final r in rows) TrackId(r.read<int>('track_id')),
-  ]);
-  final byId = {for (final i in infos) i.id: i};
-  return [
-    for (final r in rows)
-      PlaylistEntryView(
-        id: r.read<int>('id'),
-        uid: r.read<String>('uid'),
-        // `tracks` rows outlive their entries (FK RESTRICT): never absent.
-        info: byId[TrackId(r.read<int>('track_id'))]!,
-      ),
-  ];
 }

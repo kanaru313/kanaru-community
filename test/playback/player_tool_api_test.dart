@@ -58,29 +58,40 @@ void main() {
     await h.c.playEntry(h.c.queueState.items[2].entryId);
     await h.settle();
     final next = h.tracks.sublist(1, 4);
-    final r = await h.c.playTracksForTool(next, startIndex: 1);
+    final r = await h.c.playTracksForTool(
+      next,
+      contextLabel: 'Trợ lý AI',
+      startIndex: 1,
+    );
     await h.settle();
-    expect(r.previous.tracks, h.tracks);
-    expect(r.previous.next, next);
+    expect(r.previous!.tracks, h.tracks);
+    expect(r.previous!.next, next);
+    expect(r.shuffled, isFalse);
     expect(r.previousIndex, 2);
     expect(h.c.queueState.items.map((i) => i.trackId), next);
     expect(h.c.queueState.currentItem!.trackId, next[1]);
   });
 
   test(
-    'playTracksForTool on an empty queue returns an empty previous',
+    'playTracksForTool on an empty queue returns no previous and no index',
     () async {
       await h.c.clearQueue();
       await h.settle();
-      final r = await h.c.playTracksForTool(h.tracks.sublist(0, 2));
-      expect(r.previous.tracks, isEmpty);
-      expect(r.previousIndex, 0);
+      final r = await h.c.playTracksForTool(
+        h.tracks.sublist(0, 2),
+        contextLabel: 'Trợ lý AI',
+      );
+      expect(r.previous, isNull);
+      expect(r.previousIndex, isNull);
       expect(h.c.queueState.items, hasLength(2));
     },
   );
 
   test('playTracksForTool uses the AI play context', () async {
-    await h.c.playTracksForTool(h.tracks.sublist(0, 2));
+    await h.c.playTracksForTool(
+      h.tracks.sublist(0, 2),
+      contextLabel: 'Trợ lý AI',
+    );
     await h.settle();
     expect(
       h.c.context,
@@ -90,7 +101,10 @@ void main() {
 
   test("playTracksForTool drops the user's pending undo", () async {
     final token = await h.c.remove({entryIds()[5]});
-    await h.c.playTracksForTool(h.tracks.sublist(0, 2));
+    await h.c.playTracksForTool(
+      h.tracks.sublist(0, 2),
+      contextLabel: 'Trợ lý AI',
+    );
     await h.settle();
     final before = h.c.queueState.items.length;
     await h.c.undo(token!);
@@ -99,13 +113,24 @@ void main() {
   });
 
   test('playTracksForTool rejects an empty list and a bad start', () async {
-    await expectLater(h.c.playTracksForTool(const []), throwsArgumentError);
     await expectLater(
-      h.c.playTracksForTool(h.tracks.sublist(0, 2), startIndex: 2),
+      h.c.playTracksForTool(const [], contextLabel: 'x'),
+      throwsArgumentError,
+    );
+    await expectLater(
+      h.c.playTracksForTool(
+        h.tracks.sublist(0, 2),
+        contextLabel: 'x',
+        startIndex: 2,
+      ),
       throwsRangeError,
     );
     await expectLater(
-      h.c.playTracksForTool(h.tracks.sublist(0, 2), startIndex: -1),
+      h.c.playTracksForTool(
+        h.tracks.sublist(0, 2),
+        contextLabel: 'x',
+        startIndex: -1,
+      ),
       throwsRangeError,
     );
     expect(h.c.queueState.items, hasLength(6));
@@ -115,7 +140,10 @@ void main() {
     final ids = entryIds();
     final a = h.c.remove({ids[0]});
     final b = h.c.removeEntriesForTool({ids[0], ids[1]});
-    final c = h.c.playTracksForTool(h.tracks.sublist(0, 2));
+    final c = h.c.playTracksForTool(
+      h.tracks.sublist(0, 2),
+      contextLabel: 'Trợ lý AI',
+    );
     final first = await a;
     final removed = await b;
     final play = await c;
@@ -123,7 +151,30 @@ void main() {
     expect(first, isNotNull);
     // The user's removal ran first, so the tool saw only the second entry.
     expect(removed.map((e) => e.entryId), [ids[1]]);
-    expect(play.previous.tracks, hasLength(4));
+    expect(play.previous!.tracks, hasLength(4));
     expect(h.c.queueState.items, hasLength(2));
+  });
+
+  test('playTracksForTool reports shuffle was on', () async {
+    await h.c.setShuffle(true);
+    await h.settle();
+    final r = await h.c.playTracksForTool(
+      h.tracks.sublist(0, 2),
+      contextLabel: 'Trợ lý AI',
+    );
+    expect(r.shuffled, isTrue);
+    expect(r.previous!.tracks, hasLength(6));
+  });
+
+  test('tool variants after dispose fail with StateError', () async {
+    await h.c.dispose();
+    await expectLater(
+      h.c.removeEntriesForTool({entryIds().first}),
+      throwsStateError,
+    );
+    await expectLater(
+      h.c.playTracksForTool(h.tracks.sublist(0, 2), contextLabel: 'x'),
+      throwsStateError,
+    );
   });
 }

@@ -174,7 +174,7 @@ state `library/state/playlists/`. A repository on the existing `playlists` and
   (`writablePlaylistPredicate`), so queues, moods and deleted playlists are
   absent; id 0 resolves to `PlaylistUids.favorites` before any lookup.
   `listWritable()` returns Favorites first, then user playlists by creation.
-  `resolveEntryIds(playlistUid, ids)` maps entry ids of that playlist only, live
+  `resolveEntryIds(playlistUid, ids)` (not for dup-hidden Favorites entries, like the detail view) maps entry ids of that playlist only, live
   entries only (tombstones pending undo are absent). `removeEntriesNow` removes
   and commits in one transaction and returns exactly the entries removed;
   only rows live at that moment are touched, so a user's pending-undo removal
@@ -947,7 +947,7 @@ values (see [system-architecture-library-scan.md](./system-architecture-library-
 
 Two read APIs in `library/domain/search/`, implemented in `library/data/search/` and exposed by `library/state/track_search_provider.dart` (`trackSearchProvider`, `trackLookupProvider`). Both return `TrackHit {id, title, artist, album, year}`, not `TrackSnapshot`, and both use `visibleTrackWhere` (present, not duplicate-hidden; missing, hidden and remote rows never show).
 
-- `TrackSearch.searchTracks(query, {offset, limit})` is the shared search backend (AI tools now, the search screen later). It matches `ftsPrefixQuery(searchForm(query))` against `track_search`, best rank first, ties by `title_sort` then id. `limit` is clamped to 1..50, a negative `offset` is 0, `total` counts all matches. A blank query or one with no word gives an empty result without touching SQL. FTS operators are plain text (quoted by `ftsPrefixQuery`).
+- `TrackSearch.searchTracks(query, {offset, limit})` is the shared search backend (AI tools now, the search screen later). It matches `ftsPrefixQuery(searchForm(query))` against `track_search`, best rank first, ties by `title_sort` then id. The query is cut to its first 16 words and 200 characters (an AND of thousands of prefix terms would block the single connection). Accents, case and spacing are folded like the indexed columns (`dung` finds `Đừng`). Count and page are read in one transaction. `limit` is clamped to 1..50, a negative `offset` is 0, `total` counts all matches. A blank query or one with no word gives an empty result without touching SQL. FTS operators are plain text (quoted by `ftsPrefixQuery`).
 - `TrackLookup.visibleOf(ids)` splits ids into `visible` (input order, each track once) and `absent` (hidden, missing, remote, dup-hidden or unknown ids, input order, once). Reads in chunks of 900 ids. Every tool, chip and variable that takes a track id goes through it before reaching a store or the player.
 
 ## Menu data

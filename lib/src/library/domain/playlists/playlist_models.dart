@@ -172,6 +172,10 @@ class PlaylistEntryView {
 /// Model-facing id of Favorites: reserved, valid before the row exists.
 const favoritesPlaylistId = 0;
 
+/// Display name of the Favorites playlist (stored on its row, never
+/// localized in the database).
+const favoritesPlaylistName = 'Favorites';
+
 /// A playlist the AI chat may write to (a user playlist or Favorites).
 class WritablePlaylist {
   const WritablePlaylist({

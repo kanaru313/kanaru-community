@@ -20,33 +20,48 @@ class TrackSearchQuery implements TrackSearch {
     int offset = 0,
     int limit = trackSearchMaxLimit,
   }) async {
-    final match = ftsPrefixQuery(searchForm(query));
+    final match = ftsPrefixQuery(_capped(searchForm(query)));
     if (match == null) return (rows: <TrackHit>[], total: 0);
     final from =
         'FROM track_search JOIN tracks t ON t.id = track_search.rowid '
         'WHERE track_search MATCH ? AND ${visibleTrackWhere('t')}';
-    final totalRow = await _db
-        .customSelect(
-          'SELECT COUNT(*) AS n $from',
-          variables: [Variable.withString(match)],
-          readsFrom: {_db.tracks},
-        )
-        .getSingle();
-    final rows = await _db
-        .customSelect(
-          'SELECT t.id, t.title, t.artist, t.album, t.year $from '
-          'ORDER BY track_search.rank, t.title_sort, t.id LIMIT ? OFFSET ?',
-          variables: [
-            Variable.withString(match),
-            Variable.withInt(limit.clamp(1, trackSearchMaxLimit)),
-            Variable.withInt(offset < 0 ? 0 : offset),
-          ],
-          readsFrom: {_db.tracks},
-        )
-        .get();
-    return (
-      rows: [for (final r in rows) trackHitFromRow(r)],
-      total: totalRow.read<int>('n'),
-    );
+    // One transaction: a scan commit between the two reads cannot make the
+    // total disagree with the page.
+    return _db.transaction(() async {
+      final totalRow = await _db
+          .customSelect(
+            'SELECT COUNT(*) AS n $from',
+            variables: [Variable.withString(match)],
+            readsFrom: {_db.tracks},
+          )
+          .getSingle();
+      final rows = await _db
+          .customSelect(
+            'SELECT t.id, t.title, t.artist, t.album, t.year $from '
+            'ORDER BY track_search.rank, t.title_sort, t.id LIMIT ? OFFSET ?',
+            variables: [
+              Variable.withString(match),
+              Variable.withInt(limit.clamp(1, trackSearchMaxLimit)),
+              Variable.withInt(offset < 0 ? 0 : offset),
+            ],
+            readsFrom: {_db.tracks},
+          )
+          .get();
+      return (
+        rows: [for (final r in rows) trackHitFromRow(r)],
+        total: totalRow.read<int>('n'),
+      );
+    });
+  }
+
+  /// The first [trackSearchMaxWords] words of [folded], at most
+  /// [trackSearchMaxChars] characters: an AND of thousands of prefix terms
+  /// would hold the single database connection for seconds.
+  static String _capped(String folded) {
+    final head = folded.length > trackSearchMaxChars
+        ? folded.substring(0, trackSearchMaxChars)
+        : folded;
+    final words = head.split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
+    return words.take(trackSearchMaxWords).join(' ');
   }
 }

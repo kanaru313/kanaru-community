@@ -34,6 +34,20 @@ void main() {
     expect(await titles('ĐỪNG'), ['Đừng Làm Trái Tim Anh Đau']);
   });
 
+  test('unaccented query matches an accented title', () async {
+    await addSearchTrack(db, src, locator: 'a', title: 'Đừng Làm');
+    expect(await titles('dung lam'), ['Đừng Làm']);
+  });
+
+  test('very long query is cut to its first words', () async {
+    final head = [for (var i = 0; i < 16; i++) 'w$i'].join(' ');
+    await addSearchTrack(db, src, locator: 'a', title: head);
+    final long = '$head ${List.generate(5000, (i) => 'zz$i').join(' ')}';
+    final sw = Stopwatch()..start();
+    expect(await titles(long), [head]);
+    expect(sw.elapsed, lessThan(const Duration(seconds: 2)));
+  });
+
   test('mixed-case Vietnamese artist matches', () async {
     await addSearchTrack(
       db,
@@ -60,6 +74,13 @@ void main() {
       locator: 'c',
       title: 'Love three',
       status: TrackStatus.missing,
+    );
+    await addSearchTrack(
+      db,
+      src,
+      locator: 'e',
+      title: 'Love five',
+      status: TrackStatus.remote,
     );
     final dup = await addSearchTrack(db, src, locator: 'd', title: 'Love four');
     await db.customStatement(

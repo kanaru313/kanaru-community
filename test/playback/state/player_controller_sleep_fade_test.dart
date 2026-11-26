@@ -283,6 +283,10 @@ void main() {
       'reshuffleUpcoming': (_) => h.c.reshuffleUpcoming(),
       'remove': (_) => h.c.remove({h.c.queueState.currentItem!.entryId}),
       'clearQueue': (_) => h.c.clearQueue(),
+      'removeEntriesForTool': (_) =>
+          h.c.removeEntriesForTool({h.c.queueState.currentItem!.entryId}),
+      'playTracksForTool': (_) =>
+          h.c.playTracksForTool(h.tracks.sublist(0, 2), contextLabel: 'x'),
       'cleanup': (_) => h.c.cleanup(CleanupKind.allButCurrent),
       'undo': (t) => h.c.undo(t),
       'move': (_) => h.c.move(h.c.queueState.items.first.entryId, 3),

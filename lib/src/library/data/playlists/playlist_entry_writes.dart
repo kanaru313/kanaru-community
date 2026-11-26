@@ -4,7 +4,7 @@ import 'package:logging/logging.dart';
 import '../../../database/database.dart';
 import '../../../foundation/ordering/fractional_keys.dart';
 import '../../domain/playlists/playlist_models.dart';
-import 'playlist_reads.dart';
+import 'playlist_id_lookups.dart';
 import 'playlist_sql.dart';
 
 final _log = Logger('library.playlists');

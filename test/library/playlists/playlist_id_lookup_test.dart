@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' show Variable;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/database.dart';
+import 'package:kanaru/src/library/data/saved_queues/saved_queue_reads.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_ids.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 
@@ -124,5 +125,33 @@ void main() {
     expect(await f.repo.resolveEntryIds(p, [entries[0].id]), {
       entries[0].id: entries[0].uid,
     });
+  });
+
+  test('dup-hidden Favorites entry is not resolved', () async {
+    final tracks = await f.tracks(2);
+    await f.repo.addToPlaylists(
+      tracks: tracks,
+      playlistUids: [PlaylistUids.favorites],
+    );
+    final entries = (await f.repo.loadPlaylist(PlaylistUids.favorites))!
+        .entries;
+    expect(entries, hasLength(2));
+    await f.db.customStatement(
+      'UPDATE tracks SET dup_hidden = 1 WHERE id = ?',
+      [tracks[0].value],
+    );
+    final ids = [for (final e in entries) e.id];
+    final shown = (await f.repo.loadPlaylist(PlaylistUids.favorites))!.entries;
+    expect(shown, hasLength(1));
+    expect(await f.repo.resolveEntryIds(PlaylistUids.favorites, ids), {
+      shown.single.id: shown.single.uid,
+    });
+  });
+
+  test('a saved queue summary from the list never carries id 0', () async {
+    await addPlaylist(f.db, kind: PlaylistKind.queue, uid: 'q1');
+    final rows = await loadSavedQueues(f.db);
+    expect(rows, hasLength(1));
+    expect(rows.single.summary.id, isNot(favoritesPlaylistId));
   });
 }

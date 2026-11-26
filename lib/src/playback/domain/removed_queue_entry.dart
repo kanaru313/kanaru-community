@@ -1,4 +1,5 @@
 import '../../media/domain/track_id.dart';
+import 'replaced_queue.dart';
 
 /// A queue entry a tool removed: the entry and the track it played.
 class RemovedQueueEntry {
@@ -19,3 +20,13 @@ class RemovedQueueEntry {
   @override
   String toString() => 'RemovedQueueEntry($entryId, $trackId)';
 }
+
+/// What `PlayerController.playTracksForTool` returns: the queue it replaced
+/// (null when it was empty), the position that was current in play order
+/// (null when nothing was loaded) and whether shuffle was on, so `tracks` of
+/// `previous` is in play order.
+typedef ToolPlayResult = ({
+  ReplacedQueue? previous,
+  int? previousIndex,
+  bool shuffled,
+});
