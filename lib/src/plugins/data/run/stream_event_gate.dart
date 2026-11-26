@@ -20,7 +20,11 @@ class StreamEventGate {
   }) {
     _sub = events.listen(
       _deliver,
-      onError: (Object error) => _end(),
+      onError: (Object error) {
+        // Type only: the text may carry the plugin's own data.
+        _log.warning('The plugin event stream failed: ${error.runtimeType}');
+        _end();
+      },
       onDone: _end,
       cancelOnError: false,
     );

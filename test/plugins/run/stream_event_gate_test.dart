@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 import 'package:kanaru/src/plugins/data/run/stream_event_gate.dart';
 
 // Short settle so the timeout path runs in real time.
@@ -31,6 +32,21 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     expect(seen, isEmpty);
     expect(controller.hasListener, isFalse);
+  });
+
+  test('a stream error ends the wait and is logged by type only', () async {
+    final records = <LogRecord>[];
+    final sub = Logger('plugin_run').onRecord.listen(records.add);
+    addTearDown(sub.cancel);
+    final controller = StreamController<String>();
+    final gate = StreamEventGate(controller.stream, (_) {}, settle: _settle);
+    controller.addError(StateError('secret-detail'));
+    final watch = Stopwatch()..start();
+    await gate.finish();
+    expect(watch.elapsed, lessThan(_settle));
+    final text = records.map((r) => r.message).join('\n');
+    expect(text, contains('StateError'));
+    expect(text, isNot(contains('secret-detail')));
   });
 
   test('a throwing handler does not stop later events', () async {

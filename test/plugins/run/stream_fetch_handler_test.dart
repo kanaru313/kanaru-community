@@ -112,14 +112,22 @@ void main() {
         );
         final record = ctx.requests.single;
         if (c.expected == null) {
-          // Judged allowed: the transport was reached (a host other than the
-          // test certificate's fails its TLS check as a network failure).
+          // Judged allowed: the transport was reached. The test certificate
+          // covers only the judgement host; any other host fails its TLS
+          // check, which is exactly a network failure (and no stream).
+          final covered = Uri.parse(c.url).host == judgementHost;
           expect(resolver.lookups, isNotEmpty);
           expect(
             reply.outcome,
-            anyOf(EngineFetchOutcome.ok, EngineFetchOutcome.network),
+            covered ? EngineFetchOutcome.ok : EngineFetchOutcome.network,
           );
-          expect(table.length, reply.outcome == EngineFetchOutcome.ok ? 1 : 0);
+          expect(table.length, covered ? 1 : 0);
+          if (c.name.startsWith('host owned header')) {
+            // The dropped header never reached the server: it saw the real host.
+            final host = server.requests.single.headers.value('host');
+            expect(host, startsWith(judgementHost));
+            expect(host, isNot(contains('evil')));
+          }
         } else {
           expect(reply.outcome, c.expected);
           expect(resolver.lookups, isEmpty);

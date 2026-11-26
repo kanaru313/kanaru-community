@@ -279,47 +279,27 @@ class PluginRunner {
     );
     Future<EngineFetchResponse> fetch(EngineFetchRequest req) =>
         _fetch(req, context);
-    final streamRun = stream == null
-        ? null
-        : StreamDispatch(
-            options: stream,
-            handler: _streamHandler!,
-            context: context,
-            table: _streamTables(jobCancel),
-          );
-
-    final Future<EngineResult> started;
+    final StartedRun startedRun;
     try {
-      started = streamRun == null
-          ? _engine.run(engineRequest, fetch)
-          : _engine.runStreaming(
-              engineRequest,
-              fetch,
-              streamRun.call,
-              idle: streamRun.idle,
-              onEvent: streamRun.onEvent,
-            );
+      startedRun = startEngineRun(
+        engine: _engine,
+        request: engineRequest,
+        fetch: fetch,
+        context: context,
+        jobCancel: jobCancel,
+        slot: slot,
+        hungAfter: wall + grace + _settle,
+        stream: stream,
+        streamHandler: _streamHandler,
+        streamTables: _streamTables,
+      );
     } on Object {
       // The job was begun but never ran: tell the runtime to forget it.
       _cancelQuietly(job);
-      streamRun?.close();
       rethrow;
     }
-    // The slot stays taken until the runtime really let go of the job, even
-    // when the run was already answered at its deadline. A streaming job that
-    // is still not released a settle after that deadline is given up on, so
-    // one stuck job cannot hold the only stream slot for good.
-    final hung = streamRun == null
-        ? null
-        : Timer(wall + grace + _settle, () {
-            if (slot.isReleased) return;
-            _log.warning('A stream job did not end: its slot was released');
-            slot.release();
-          });
-    final running = started.whenComplete(() {
-      hung?.cancel();
-      slot.release();
-    });
+    final streamRun = startedRun.streamRun;
+    final running = startedRun.running;
 
     final unlisten = <void Function()>[];
     Timer? timer;

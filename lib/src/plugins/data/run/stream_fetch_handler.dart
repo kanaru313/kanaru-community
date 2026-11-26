@@ -40,12 +40,13 @@ class StreamFetchHandler {
     }
   }
 
-  /// Answered at once; the abort runs after the answer, so a slow socket
-  /// never holds up the runtime's short close grace.
+  /// Answered at once: the id and the slot are freed before the reply, and the
+  /// abort (cancel + force close, both sync and cheap) runs in a microtask, so
+  /// a slow socket never holds up the runtime's short close grace.
   EngineStreamReply _close(EngineStreamCall call, StreamTable table) {
     final entry = table.find(call.stream);
     if (entry != null) {
-      // Reads of the id fail from here on; the abort follows the answer.
+      // Reads of the id fail from here on; the abort follows in a microtask.
       table.release(entry);
       scheduleMicrotask(() => table.end(entry));
     }

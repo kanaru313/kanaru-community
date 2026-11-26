@@ -47,13 +47,29 @@ fn a_768_kib_vietnamese_input_and_a_1_mib_body_fit_the_32_mib_heap() {
     let host = streams_host();
     let input = vietnamese_input(768 * KIB);
     assert!(input.len() >= 768 * KIB);
+    // The body is built from the Vietnamese input (a UTF-16 string in the
+    // heap, a UTF-8 copy at the host boundary) and padded with an ASCII tail
+    // to exactly 1 MiB of UTF-8.
     let code = format!(
-        "function execute(input) {{
-           var copy = JSON.stringify(input);
-           var pad = {MIB} - JSON.stringify({{a: ''}}).length;
-           var body = JSON.stringify({{a: 'x'.repeat(pad)}});
+        "function utf8Len(s) {{
+           var n = 0;
+           for (var i = 0; i < s.length; i++) {{
+             var c = s.charCodeAt(i);
+             if (c < 0x80) n += 1;
+             else if (c < 0x800) n += 2;
+             else if (c >= 0xD800 && c <= 0xDBFF) {{ n += 4; i++; }}
+             else n += 3;
+           }}
+           return n;
+         }}
+         function execute(input) {{
+           var base = JSON.stringify({{text: input.text, pad: ''}});
+           var pad = {MIB} - utf8Len(base);
+           if (pad < 0) return Response.error('input too long');
+           var body = JSON.stringify({{text: input.text, pad: 'x'.repeat(pad)}});
+           if (utf8Len(body) !== {MIB}) return Response.error('bad length');
            fetch('https://t.test/chat', {{method: 'POST', body: body, stream: true}});
-           return Response.success(copy.length > 0 && input.text.length > 0);
+           return Response.success(true);
          }}"
     );
     let r = run(&code, &input, &host);

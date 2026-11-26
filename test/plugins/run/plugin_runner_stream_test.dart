@@ -1,4 +1,3 @@
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/plugins/data/install/remover.dart';
 import 'package:kanaru/src/plugins/data/run/run_admission.dart';
@@ -143,17 +142,20 @@ void main() {
     expect(events, isEmpty);
   });
 
-  test('event arriving after settle timeout is dropped', () async {
-    await start(settle: const Duration(milliseconds: 40));
-    r.engine.streamNeverCompletes = true;
-    await r.runner.run(
-      streamRequest(timeout: const Duration(milliseconds: 40)),
-    );
-    await Future<void>.delayed(const Duration(milliseconds: 100));
+  test(
+    'an event after the runner\'s hung-slot delay is still dropped',
+    () async {
+      await start(settle: const Duration(milliseconds: 40));
+      r.engine.streamNeverCompletes = true;
+      await r.runner.run(
+        streamRequest(timeout: const Duration(milliseconds: 40)),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
 
-    r.engine.lastOnEvent!('{"late":1}');
-    expect(events, isEmpty);
-  });
+      r.engine.lastOnEvent!('{"late":1}');
+      expect(events, isEmpty);
+    },
+  );
 
   test('onEvent throwing does not end the run and is logged by type', () async {
     await start();
@@ -256,22 +258,25 @@ void main() {
     await first;
   });
 
-  test('timer and slot grant in the same tick → slot released, RunBusy, no restart', () async {
-    final admission = _LateAdmission();
-    await start(
-      streamAdmission: admission,
-      streamWait: const Duration(milliseconds: 30),
-    );
-    final readsBefore = spy.reads;
+  test(
+    'a slot granted after the wait ran out is released, RunBusy, no restart',
+    () async {
+      final admission = _LateAdmission();
+      await start(
+        streamAdmission: admission,
+        streamWait: const Duration(milliseconds: 30),
+      );
+      final readsBefore = spy.reads;
 
-    final outcome = await r.runner.run(streamRequest());
+      final outcome = await r.runner.run(streamRequest());
 
-    expect(outcome, isA<RunBusy>());
-    expect(admission.inUse, 0, reason: 'the late slot was given back');
-    expect(spy.reads - readsBefore, 1);
-    expect(r.engine.streamRequests, isEmpty);
-    expect(r.engine.beginCalls, 0);
-  });
+      expect(outcome, isA<RunBusy>());
+      expect(admission.inUse, 0, reason: 'the late slot was given back');
+      expect(spy.reads - readsBefore, 1);
+      expect(r.engine.streamRequests, isEmpty);
+      expect(r.engine.beginCalls, 0);
+    },
+  );
 
   test('rebuilding pluginRunnerProvider keeps the stream slot held', () async {
     // Only so the shared tear-down has something to dispose.
