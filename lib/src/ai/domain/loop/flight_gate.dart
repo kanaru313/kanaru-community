@@ -23,12 +23,8 @@ class FlightGate {
   /// takes the gate never swallows the Stop.
   bool userStopPending = false;
 
-  /// Whether a user Stop is recorded; reading it clears it.
-  bool takeUserStop() {
-    final pending = userStopPending;
-    userStopPending = false;
-    return pending;
-  }
+  /// Forgets a recorded user Stop.
+  void clearUserStop() => userStopPending = false;
 
   /// Consumes the user Stop and drops every answer waiting for a flight
   /// (Stop is never followed by a model round).

@@ -78,6 +78,7 @@ class LoopDriver {
   final LoopEnvironment _env;
   final ModelRoundRunner _runner;
 
+  /// Called with every failure the driver caught instead of throwing.
   final void Function(Object error, StackTrace stack)? onInternalError;
   late final LoopContext _ctx;
   late final ModelRound _round;
@@ -93,6 +94,7 @@ class LoopDriver {
   final _gate = FlightGate();
   bool _disposed = false;
 
+  /// The stop comes from the user's Stop (not a switch, open or dispose).
   bool _userStop = false;
 
   TurnState get turnState => _state;
@@ -125,7 +127,7 @@ class LoopDriver {
       id = await _store.appendUser(conversationId, parts);
     } on Object catch (e, s) {
       _report(e, s);
-      _gate.takeUserStop();
+      _gate.clearUserStop();
       _release(flight);
       return const DriverFailed();
     }
@@ -199,7 +201,9 @@ class LoopDriver {
 
   /// Stops the turn: the text streamed so far stays, the call being run
   /// finishes, later calls are `skipped`, no next round starts. Completes
-  /// when the turn future has ended.
+  /// when the turn future has ended. While a switch ([runExclusive]) holds
+  /// the gate, it may also wait for the short switch body queued before it.
+  /// Must not be awaited from inside a [runExclusive] body.
   Future<void> stop() async {
     if (_disposed) return;
     if (_gate.busy) {
@@ -234,6 +238,9 @@ class LoopDriver {
   /// Runs [body] while no turn step runs and none can start. A round or tool
   /// run in flight is stopped and awaited first; a turn that only waits on
   /// cards is left as it is. Null when the driver is closed.
+  ///
+  /// The [body] must not await [stop] or [dispose]: both wait for the gate
+  /// the body holds, so the await never completes.
   Future<T?> runExclusive<T>(Future<T> Function() body) async {
     if (_disposed) return null;
     var flight = _reserve();
@@ -290,8 +297,10 @@ class LoopDriver {
   /// Writes the streamed text so far (the app goes to the background).
   Future<void> flushLive() => _round.flushLive();
 
-  /// Closes the driver: a round or tool run in flight is stopped and awaited;
-  /// cards waiting for an answer stay pending. Nothing starts afterwards.
+  /// Closes the driver: a round or tool run in flight is stopped and awaited
+  /// (calls that did not run are skipped), cards waiting for an answer stay
+  /// pending. Nothing starts after this is called. Must not be awaited from
+  /// inside a [runExclusive] body.
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
@@ -374,7 +383,7 @@ class LoopDriver {
           // Stop came in during the read: deny what is left.
           await _cards.skipOpen(stoppedByUserText, ConfirmStatus.denied);
         }
-        if (_userStop) _gate.takeUserStop();
+        if (_userStop) _gate.clearUserStop();
         final waiting =
             !_userStop &&
             (_gate.hasWake ||

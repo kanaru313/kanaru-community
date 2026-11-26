@@ -147,7 +147,10 @@ abstract interface class LoopStore {
   /// empty when the chat has no user message. Every loop decision reads this.
   Future<List<HistoryRow>> latestTurn(int conversationId);
 
-  /// The tool rows of the whole chat still `pending` or `allowed`.
+  /// The tool rows of the whole chat still `pending` or `allowed`. A read
+  /// issued after an [approve] or deny write returned must see that write and
+  /// return after the caller's continuation ran (the loop relies on this
+  /// write-before-read ordering to drop answers it is about to skip).
   Future<List<AiMessage>> openCards(int conversationId);
 
   /// `allowed -> running` in one step. A write is refused while the chat is
