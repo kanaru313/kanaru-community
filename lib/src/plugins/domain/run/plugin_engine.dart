@@ -262,4 +262,18 @@ abstract interface class PluginEngine {
 
   /// Runs the script; [fetch] answers its host `fetch` calls. Never throws.
   Future<EngineResult> run(EngineRequest request, EngineFetch fetch);
+
+  /// Like [run], plus the script's `emit` events (JSON texts, in order, through
+  /// [onEvent]) and streamed fetch bodies answered through [stream]. [idle] is
+  /// the longest wait for data in one read. Completes after the events of the
+  /// run were delivered (a short settle at most); once it has completed
+  /// [onEvent] is never called again, and a throw from it does not end the
+  /// run. Never throws; a busy stream worker is `EngineStatus.busy`.
+  Future<EngineResult> runStreaming(
+    EngineRequest request,
+    EngineFetch fetch,
+    EngineStream stream, {
+    required Duration idle,
+    required void Function(String json) onEvent,
+  });
 }
